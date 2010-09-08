@@ -2,6 +2,10 @@
 
 <!-- First page of the wizard -->
 
+<!ENTITY setup.pickSetupType.description "Welcome, if you've never used &syncBrand.fullName.label; before, you will need to create a new account.">
+<!ENTITY button.createNewAccount.label "Create a New Account">
+<!ENTITY button.haveAccount.label "I Have a &syncBrand.fullName.label; Account">
+
 <!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.fullName.label; before?">
 <!ENTITY setup.choicePage.new.label       "I've never used &syncBrand.shortName.label; before">
 <!ENTITY setup.choicePage.existing.label  "I'm already using &syncBrand.shortName.label; on another computer">

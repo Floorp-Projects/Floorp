@@ -148,6 +148,10 @@
           <groupbox>
             <caption label="&syncPrefsCaption.label;"/>
             <grid>
+              <columns>
+                <column/>
+                <column flex="1"/>
+              </columns>
               <rows>
                 <row align="center">
                   <label value="&syncComputerName.label;"
@@ -156,29 +160,28 @@
                   <textbox id="syncComputerName"
                            onchange="gSyncUtils.changeName(this)"/>
                 </row>
+                <row>
+                  <label value="&syncMy.label;" />
+                  <vbox>
+                    <checkbox label="&engine.bookmarks.label;"
+                              accesskey="&engine.bookmarks.accesskey;"
+                              preference="engine.bookmarks"/>
+                    <checkbox label="&engine.passwords.label;"
+                              accesskey="&engine.passwords.accesskey;"
+                              preference="engine.passwords"/>
+                    <checkbox label="&engine.prefs.label;"
+                              accesskey="&engine.prefs.accesskey;"
+                              preference="engine.prefs"/>
+                    <checkbox label="&engine.history.label;"
+                              accesskey="&engine.history.accesskey;"
+                              preference="engine.history"/>
+                    <checkbox label="&engine.tabs.label;"
+                              accesskey="&engine.tabs.accesskey;"
+                              preference="engine.tabs"/>
+                  </vbox>
+                </row>
               </rows>
             </grid>
-            <separator/>
-            <vbox>
-              <label value="&syncMy.label;" />
-              <vbox class="indent">
-                <checkbox label="&engine.bookmarks.label;"
-                          accesskey="&engine.bookmarks.accesskey;"
-                          preference="engine.bookmarks"/>
-                <checkbox label="&engine.passwords.label;"
-                          accesskey="&engine.passwords.accesskey;"
-                          preference="engine.passwords"/>
-                <checkbox label="&engine.prefs.label;"
-                          accesskey="&engine.prefs.accesskey;"
-                          preference="engine.prefs"/>
-                <checkbox label="&engine.history.label;"
-                          accesskey="&engine.history.accesskey;"
-                          preference="engine.history"/>
-                <checkbox label="&engine.tabs.label;"
-                          accesskey="&engine.tabs.accesskey;"
-                          preference="engine.tabs"/>
-              </vbox>
-            </vbox>
             <separator/>
           </groupbox>
           <hbox id="tosPP" pack="center">
