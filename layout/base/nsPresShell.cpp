@@ -4528,7 +4528,10 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 void
 PresShell::UnsuppressAndInvalidate()
 {
-  if (!mPresContext->EnsureVisible() || mHaveShutDown) {
+  // Note: We ignore the EnsureVisible check for resource documents, because
+  // they won't have a docshell, so they'll always fail EnsureVisible.
+  if ((!mDocument->IsResourceDoc() && !mPresContext->EnsureVisible()) ||
+      mHaveShutDown) {
     // No point; we're about to be torn down anyway.
     return;
   }
