@@ -59,7 +59,7 @@ function TabItem(tab) {
   // ___ set up div
   var $div = iQ('<div>')
     .addClass('tab')
-    .html("<div class='thumb'><div class='thumb-shadow'></div>" +
+    .html("<div class='thumb'>" +
           "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
           "<div class='favicon'><img/></div>" +
           "<span class='tab-title'>&nbsp;</span>"
@@ -489,17 +489,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: makeActive
   // Updates this item to visually indicate that it's active.
   makeActive: function TabItem_makeActive() {
-   iQ(this.container).find("canvas").addClass("focus");
-   iQ(this.container).find("img.cached-thumb").addClass("focus");
-
+    iQ(this.container).addClass("focus");
   },
 
   // ----------
   // Function: makeDeactive
   // Updates this item to visually indicate that it's not active.
   makeDeactive: function TabItem_makeDeactive() {
-   iQ(this.container).find("canvas").removeClass("focus");
-   iQ(this.container).find("img.cached-thumb").removeClass("focus");
+    iQ(this.container).removeClass("focus");
   },
 
   // ----------
