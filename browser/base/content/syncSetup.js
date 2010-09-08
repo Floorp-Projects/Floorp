@@ -56,7 +56,7 @@ const EXISTING_ACCOUNT_MERGE_PAGE   = 7;
 const EXISTING_ACCOUNT_CONFIRM_PAGE = 8;
 const SETUP_SUCCESS_PAGE            = 9;
 
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 

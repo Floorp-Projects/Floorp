@@ -151,7 +151,7 @@ __defineSetter__("PluralForm", function (val) {
 #ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyGetter(this, "Weave", function() {
   let tmp = {};
-  Cu.import("resource://services-sync/service.js", tmp);
+  Cu.import("resource://services-sync/main.js", tmp);
   return tmp.Weave;
 });
 #endif
