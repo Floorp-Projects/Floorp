@@ -52,6 +52,7 @@ interface imgIDecoderObserver;
 #include "gfxPattern.h"
 #include "gfxASurface.h"
 #include "nsRect.h"
+class nsIFrame;
 %}
 
 [ptr] native gfxImageSurface(gfxImageSurface);
@@ -62,6 +63,7 @@ native gfxImageFormat(gfxASurface::gfxImageFormat);
 [ref] native gfxRect(gfxRect);
 native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
+[ptr] native nsIFrame(nsIFrame);
 
 /**
  * imgIContainer is the interface that represents an image. It allows
@@ -198,6 +200,16 @@ interface imgIContainer : nsISupports
                        [const] in gfxRect aFill,
                        [const] in nsIntRect aSubimage,
                        in PRUint32 aFlags);
+
+  /**
+   * If this image is TYPE_VECTOR, i.e. is really an embedded SVG document,
+   * this method returns a pointer to the root nsIFrame of that document. If
+   * not (or if the root nsIFrame isn't available for some reason), this method
+   * returns nsnull.
+   *
+   * "notxpcom" for convenience, since we have no need for nsresult return-val.
+   */
+  [notxpcom] nsIFrame GetRootLayoutFrame();
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that
