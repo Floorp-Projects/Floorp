@@ -41,9 +41,14 @@
 
 #include "Image.h"
 #include "nsIStreamListener.h"
+#include "nsWeakReference.h"
+
+class imgIDecoderObserver;
 
 namespace mozilla {
 namespace imagelib {
+
+class SVGDocumentWrapper;
 
 class VectorImage : public Image,
                     public nsIStreamListener
@@ -70,6 +75,31 @@ public:
 protected:
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();
+
+private:
+  nsWeakPtr                          mObserver;   //! imgIDecoderObserver
+  nsRefPtr<SVGDocumentWrapper>       mSVGDocumentWrapper;
+
+  nsIntRect      mRestrictedRegion;       // If we were created by
+                                          // ExtractFrame, this is the region
+                                          // that we're restricted to using.
+                                          // Otherwise, this is ignored.
+
+  nsIntSize      mLastRenderedSize;       // The viewport-size that we've
+                                          // most recently passed to
+                                          // mSVGDocumentWrapper as its
+                                          // viewport-bounds.
+
+  PRUint16       mAnimationMode;          // Are we allowed to animate?
+
+  PRPackedBool   mIsInitialized:1;        // Have we been initalized?
+  PRPackedBool   mIsFullyLoaded:1;        // Has OnStopRequest been called?
+  PRPackedBool   mHaveAnimations:1;       // Is our SVG content SMIL-animated?
+                                          // (Only set after mIsFullyLoaded.)
+  PRPackedBool   mHaveRestrictedRegion:1; // Are we a restricted-region clone
+                                          // created via ExtractFrame?
+
+  PRPackedBool   mError:1;                // Error handling
 };
 
 } // namespace imagelib
