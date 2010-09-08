@@ -749,3 +749,15 @@ Line: 1 Col: 35 Unexpected character in comment found.
 |     ">"
 |     <!-- <!--x -->
 |     "-->"
+
+#data
+<!doctype html><div><form></form><div></div></div>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       <form>
+|       <div>
