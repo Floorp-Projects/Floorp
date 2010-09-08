@@ -48,7 +48,6 @@
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
-#include "nsTransform2D.h"
 #include "imgIRequest.h"
 #include "nsStubImageDecoderObserver.h"
 #include "imgIDecoderObserver.h"
@@ -62,8 +61,8 @@ struct nsHTMLReflowMetrics;
 struct nsSize;
 class nsDisplayImage;
 class nsPresContext;
-
 class nsImageFrame;
+class nsTransform2D;
 
 class nsImageListener : public nsStubImageDecoderObserver
 {
@@ -257,9 +256,15 @@ private:
   PRBool UpdateIntrinsicRatio(imgIContainer* aImage);
 
   /**
-   * This function will recalculate mTransform.
+   * This function calculates the transform for converting between
+   * source space & destination space. May fail if our image has a
+   * percent-valued or zero-valued height or width.
+   *
+   * @param aTransform The transform object to populate.
+   *
+   * @return whether we succeeded in creating the transform.
    */
-  void RecalculateTransform(PRBool aInnerAreaChanged);
+  PRBool GetSourceToDestTransform(nsTransform2D& aTransform);
 
   /**
    * Helper functions to check whether the request or image container
@@ -283,7 +288,6 @@ private:
   nsIFrame::IntrinsicSize mIntrinsicSize;
   nsSize mIntrinsicRatio;
 
-  nsTransform2D mTransform;
   PRBool mDisplayingIcon;
 
   static nsIIOService* sIOService;
