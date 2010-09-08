@@ -118,6 +118,7 @@ public:
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 9"); }
 
   /*
    * Helper methods.
@@ -145,6 +146,10 @@ public:
       mDeviceManager = nsnull;
   }
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const { return "D3D9"; }
+#endif // MOZ_LAYERS_HAVE_LOG
+
 private:
   /* Device manager instance */
   static DeviceManagerD3D9 *mDeviceManager;
@@ -159,9 +164,6 @@ private:
    * Context target, NULL when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
-
-  /* Current root layer. */
-  LayerD3D9 *mRootLayer;
 
   /* Callback info for current transaction */
   CallbackInfo mCurrentCallbackInfo;

@@ -324,11 +324,6 @@ function SetClickAndHoldHandlers() {
 }
 #endif
 
-function BookmarkThisTab(aTab) {
-  PlacesCommandHook.bookmarkPage(aTab.linkedBrowser,
-                                 PlacesUtils.bookmarksMenuFolderId, true);
-}
-
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
@@ -2365,10 +2360,13 @@ function UpdateUrlbarSearchSplitterState()
   var splitter = document.getElementById("urlbar-search-splitter");
   var urlbar = document.getElementById("urlbar-container");
   var searchbar = document.getElementById("search-container");
+  var stop = document.getElementById("stop-button");
 
   var ibefore = null;
   if (urlbar && searchbar) {
-    if (urlbar.nextSibling == searchbar)
+    if (urlbar.nextSibling == searchbar ||
+        urlbar.getAttribute("combined") &&
+        stop && stop.nextSibling == searchbar)
       ibefore = searchbar;
     else if (searchbar.nextSibling == urlbar)
       ibefore = urlbar;
@@ -4461,23 +4459,30 @@ var CombinedStopReload = {
     if (this._initialized)
       return;
 
-    var stop = document.getElementById("stop-button");
-    if (!stop)
-      return;
-
+    var urlbar = document.getElementById("urlbar-container");
     var reload = document.getElementById("reload-button");
-    if (!reload)
-      return;
+    var stop = document.getElementById("stop-button");
 
-    if (!(reload.nextSibling == stop))
+    if (urlbar) {
+      if (urlbar.parentNode.getAttribute("mode") != "icons" ||
+          !reload || urlbar.nextSibling != reload ||
+          !stop || reload.nextSibling != stop)
+        urlbar.removeAttribute("combined");
+      else {
+        urlbar.setAttribute("combined", "true");
+        reload = document.getElementById("urlbar-reload-button");
+        stop = document.getElementById("urlbar-stop-button");
+      }
+    }
+    if (!stop || !reload || reload.nextSibling != stop)
       return;
 
     this._initialized = true;
     if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true")
       reload.setAttribute("displaystop", "true");
     stop.addEventListener("click", this, false);
-    this.stop = stop;
     this.reload = reload;
+    this.stop = stop;
   },
 
   uninit: function () {

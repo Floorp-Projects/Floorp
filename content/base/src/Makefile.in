@@ -163,6 +163,8 @@ EXTRA_COMPONENTS = \
 		contentSecurityPolicy.manifest \
 		contentAreaDropListener.js \
 		contentAreaDropListener.manifest \
+		messageWakeupService.js \
+		messageWakeupService.manifest \
 		$(NULL)
 
 EXTRA_JS_MODULES = \

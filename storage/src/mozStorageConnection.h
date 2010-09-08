@@ -100,8 +100,12 @@ public:
    *        The nsIFile of the location of the database to open, or create if it
    *        does not exist.  Passing in nsnull here creates an in-memory
    *        database.
+   * @param aVFSName
+   *        The VFS that SQLite will use when opening this database. NULL means
+   *        "default".
    */
-  nsresult initialize(nsIFile *aDatabaseFile);
+  nsresult initialize(nsIFile *aDatabaseFile,
+                      const char* aVFSName = NULL);
 
   // fetch the native handle
   sqlite3 *GetNativeConnection() { return mDBConn; }

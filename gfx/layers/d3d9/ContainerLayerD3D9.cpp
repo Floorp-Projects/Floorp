@@ -141,6 +141,7 @@ ContainerLayerD3D9::RenderLayer()
   nsRefPtr<IDirect3DSurface9> previousRenderTarget;
   nsRefPtr<IDirect3DTexture9> renderTexture;
   float previousRenderTargetOffset[4];
+  RECT oldClipRect;
   float renderTargetOffset[] = { 0, 0, 0, 0 };
   float oldViewMatrix[4][4];
 
@@ -149,6 +150,7 @@ ContainerLayerD3D9::RenderLayer()
 
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
+    device()->GetScissorRect(&oldClipRect);
     device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
                             D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
@@ -224,6 +226,7 @@ ContainerLayerD3D9::RenderLayer()
 
   if (useIntermediate) {
     device()->SetRenderTarget(0, previousRenderTarget);
+    device()->SetScissorRect(&oldClipRect);
     device()->SetVertexShaderConstantF(12, previousRenderTargetOffset, 1);
     device()->SetVertexShaderConstantF(8, &oldViewMatrix[0][0], 4);
 
@@ -254,7 +257,7 @@ ContainerLayerD3D9::RenderLayer()
     opacityVector[0] = opacity;
     device()->SetPixelShaderConstantF(0, opacityVector, 1);
 
-    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
     device()->SetTexture(0, renderTexture);
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);

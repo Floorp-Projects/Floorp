@@ -39,9 +39,17 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
   return outp;
 }
 
-float4 RGBShader(const VS_OUTPUT aVertex) : COLOR
+float4 RGBAShader(const VS_OUTPUT aVertex) : COLOR
 {
   return tex2D(s2D, aVertex.vTexCoords) * fLayerOpacity;
+}
+
+float4 RGBShader(const VS_OUTPUT aVertex) : COLOR
+{
+  float4 result;
+  result = tex2D(s2D, aVertex.vTexCoords) * fLayerOpacity;
+  result.a = 1.0;
+  return result;
 }
 
 float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR

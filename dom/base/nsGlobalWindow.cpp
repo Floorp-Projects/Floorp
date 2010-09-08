@@ -1757,6 +1757,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
       mInnerWindowHolder = wsh->GetInnerWindowHolder();
+      
+      NS_ASSERTION(newInnerWindow, "Got a state without inner window");
 
       // These assignments addref.
       mNavigator = wsh->GetNavigator();
@@ -1766,22 +1768,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         mNavigator->SetDocShell(mDocShell);
         mNavigator->LoadingNewDocument();
       }
+    } else if (thisChrome) {
+      newInnerWindow = new nsGlobalChromeWindow(this);
+      isChrome = PR_TRUE;
+    } else if (mIsModalContentWindow) {
+      newInnerWindow = new nsGlobalModalWindow(this);
     } else {
-      if (thisChrome) {
-        newInnerWindow = new nsGlobalChromeWindow(this);
-
-        isChrome = PR_TRUE;
-      } else {
-        if (mIsModalContentWindow) {
-          newInnerWindow = new nsGlobalModalWindow(this);
-        } else {
-          newInnerWindow = new nsGlobalWindow(this);
-        }
-      }
-    }
-
-    if (!newInnerWindow) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      newInnerWindow = new nsGlobalWindow(this);
     }
 
     if (currentInner && currentInner->mJSObject) {
@@ -2047,8 +2040,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                        wrapper, nsIXPConnect::XPC_XOW_NAVIGATED);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+  if (!aState && !reUseInnerWindow) {
+    nsContentUtils::AddScriptRunner(
+      NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+  }
 
   return NS_OK;
 }

@@ -172,7 +172,7 @@ nsPrintingPromptService::GetHWNDForDOMWindow(nsIDOMWindow *aWindow)
     baseWin->GetMainWidget(getter_AddRefs(widget));
     if (!widget) return nsnull;
 
-    return (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
+    return (HWND)widget->GetNativeData(NS_NATIVE_TMP_WINDOW);
 
 }
 

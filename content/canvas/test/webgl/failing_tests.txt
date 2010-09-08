@@ -8,7 +8,6 @@ conformance/context-attributes-alpha-depth-stencil-antialias.html
 conformance/context-attributes.html
 conformance/context-type-test.html
 conformance/framebuffer-object-attachment.html
-conformance/framebuffer-test.html
 conformance/get-active-test.html
 conformance/gl-bind-attrib-location-test.html
 conformance/gl-enum-tests.html
@@ -19,7 +18,6 @@ conformance/gl-scissor-test.html
 conformance/gl-teximage.html
 conformance/gl-uniform-arrays.html
 conformance/gl-unknown-uniform.html
-conformance/gl-vertex-attrib.html
 conformance/glsl-2types-of-textures-on-same-unit.html
 conformance/glsl-conformance.html
 conformance/invalid-passed-params.html
@@ -38,14 +36,12 @@ conformance/tex-input-validation.html
 conformance/texparameter-test.html
 conformance/texture-active-bind-2.html
 conformance/texture-formats-test.html
-conformance/texture-npot.html
 conformance/uniform-samplers-test.html
 conformance/viewport-unchanged-upon-resize.html
 more/conformance/constants.html
 more/conformance/getContext.html
 more/conformance/quickCheckAPI.html
 more/conformance/quickCheckAPIBadArgs.html
-more/conformance/webGLArrays.html
 more/functions/bufferDataBadArgs.html
 more/functions/copyTexImage2D.html
 more/functions/copyTexImage2DBadArgs.html
@@ -61,7 +57,5 @@ more/functions/texSubImage2DHTMLBadArgs.html
 more/functions/uniformfBadArgs.html
 more/functions/uniformiBadArgs.html
 more/functions/uniformMatrixBadArgs.html
-more/functions/vertexAttribPointer.html
-more/functions/vertexAttribPointerBadArgs.html
 more/glsl/arrayOutOfBounds.html
 conformance/renderbuffer-initialization.html

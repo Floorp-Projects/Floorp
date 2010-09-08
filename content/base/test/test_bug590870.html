@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for creating XUL elements, bug 590870</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="gen.next()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590870">Mozilla Bug 590870</a>
+<p id="display"></p>
+<iframe id=iframe></iframe>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("message", function(e) { gen.send(e.data) }, false);
+
+var gen = runTest();
+
+function runTest() {
+  var iframe = $('iframe');
+  iframe.src = "http://noxul.example.com/tests/content/base/test/file_bug590870.html";
+  is((yield), "true", "shouldn't be able to create XUL elements");
+
+  iframe.src = "file_bug590870.html";
+  is((yield), "false", "should be able to create XUL elements");
+
+  SimpleTest.finish();
+  yield;
+}
+
+</script>
+</pre>
+</body>
+</html>

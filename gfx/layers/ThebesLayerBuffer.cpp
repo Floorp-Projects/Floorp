@@ -39,22 +39,10 @@
 #include "Layers.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "gfxUtils.h"
 
 namespace mozilla {
 namespace layers {
-
-/*static*/ void
-ThebesLayerBuffer::ClipToRegion(gfxContext* aContext,
-                                const nsIntRegion& aRegion)
-{
-  aContext->NewPath();
-  nsIntRegionRectIterator iter(aRegion);
-  const nsIntRect* r;
-  while ((r = iter.Next()) != nsnull) {
-    aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
-  }
-  aContext->Clip();
-}
 
 nsIntRect
 ThebesLayerBuffer::GetQuadrantRectangle(XSide aXSide, YSide aYSide)
@@ -238,7 +226,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType)
   NS_ASSERTION(quadrantRect.Contains(drawBounds), "Messed up quadrants");
   result.mContext->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
 
-  ClipToRegion(result.mContext, result.mRegionToDraw);
+  gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
   if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
     result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
     result.mContext->Paint();

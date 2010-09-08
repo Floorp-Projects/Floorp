@@ -65,8 +65,8 @@ LayerManagerD3D9::~LayerManagerD3D9()
    */
   mSwapChain = nsnull;
 
-  if (mDeviceManager) {
-    mDeviceManager->Release();
+  if (mDeviceManager && mDeviceManager->Release() == 0) {
+    mDeviceManager = nsnull;
   }
 }
 
@@ -79,14 +79,16 @@ LayerManagerD3D9::Initialize()
 
   if (!mDeviceManager) {
     mDeviceManager = new DeviceManagerD3D9;
+    mDeviceManager->AddRef();
 
     if (!mDeviceManager->Init()) {
+      mDeviceManager->Release();
       mDeviceManager = nsnull;
       return PR_FALSE;
     }
+  } else {
+    mDeviceManager->AddRef();
   }
-
-  mDeviceManager->AddRef();
 
   mSwapChain = mDeviceManager->
     CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
@@ -137,7 +139,7 @@ LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
 void
 LayerManagerD3D9::SetRoot(Layer *aLayer)
 {
-  mRootLayer = static_cast<LayerD3D9*>(aLayer->ImplData());
+  mRoot = aLayer;
 }
 
 already_AddRefed<ThebesLayer>
@@ -198,8 +200,8 @@ LayerManagerD3D9::Render()
 
   device()->BeginScene();
 
-  if (mRootLayer) {
-    const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
+  if (mRoot) {
+    const nsIntRect *clipRect = mRoot->GetClipRect();
     RECT r;
     if (clipRect) {
       r.left = (LONG)clipRect->x;
@@ -213,7 +215,7 @@ LayerManagerD3D9::Render()
     }
     device()->SetScissorRect(&r);
 
-    mRootLayer->RenderLayer();
+    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
   }
 
   device()->EndScene();
