@@ -66,7 +66,7 @@ struct VMFrame
     } u;
 
     VMFrame      *previous;
-    JSFrameRegs  *oldRegs;
+    void         *unused;
     JSFrameRegs  regs;
     JSContext    *cx;
     Value        *stackLimit;

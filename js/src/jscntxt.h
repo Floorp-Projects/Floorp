@@ -2050,7 +2050,7 @@ struct JSContext
 
   public:
     friend class js::StackSpace;
-    friend bool js::Interpret(JSContext *, JSStackFrame *, uintN);
+    friend bool js::Interpret(JSContext *, JSStackFrame *, uintN, uintN);
 
     /* 'regs' must only be changed by calling this function. */
     void setCurrentRegs(JSFrameRegs *regs) {
