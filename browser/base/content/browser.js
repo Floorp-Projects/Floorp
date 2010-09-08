@@ -77,6 +77,7 @@ const nsIWebNavigation = Ci.nsIWebNavigation;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
+var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gDownloadMgr = null;
@@ -2390,7 +2391,7 @@ var LocationBarHelpers = {
   _searchBegin: function LocBar_searchBegin() {
     function delayedBegin(self) {
       self._timeoutID = null;
-      gURLBar.setAttribute("searching", "true");
+      document.getElementById("urlbar-throbber").setAttribute("busy", "true");
     }
 
     this._timeoutID = setTimeout(delayedBegin, 500, this);
@@ -2402,7 +2403,7 @@ var LocationBarHelpers = {
       clearTimeout(this._timeoutID);
       this._timeoutID = null;
     }
-    gURLBar.removeAttribute("searching");
+    document.getElementById("urlbar-throbber").removeAttribute("busy");
   }
 };
 
@@ -2417,16 +2418,45 @@ function SetPageProxyState(aState)
   if (!gURLBar)
     return;
 
+  if (!gProxyFavIcon)
+    gProxyFavIcon = document.getElementById("page-proxy-favicon");
+
   gURLBar.setAttribute("pageproxystate", aState);
+  gProxyFavIcon.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
   // gets called when we switch tabs.
   if (aState == "valid") {
     gLastValidURLStr = gURLBar.value;
     gURLBar.addEventListener("input", UpdatePageProxyState, false);
+
+    PageProxySetIcon(gBrowser.getIcon());
   } else if (aState == "invalid") {
     gURLBar.removeEventListener("input", UpdatePageProxyState, false);
+    PageProxyClearIcon();
   }
+}
+
+function PageProxySetIcon (aURL)
+{
+  if (!gProxyFavIcon)
+    return;
+
+  if (!aURL)
+    PageProxyClearIcon();
+  else if (gProxyFavIcon.getAttribute("src") != aURL)
+    gProxyFavIcon.setAttribute("src", aURL);
+}
+
+function PageProxyClearIcon ()
+{
+  gProxyFavIcon.removeAttribute("src");
+}
+
+function PageProxyClickHandler(aEvent)
+{
+  if (aEvent.button == 1 && gPrefService.getBoolPref("middlemouse.paste"))
+    middleMousePaste(aEvent);
 }
 
 function BrowserImport()
@@ -2840,6 +2870,24 @@ var browserDragAndDrop = {
   },
 
   drop: function (aEvent, aName) Services.droppedLinkHandler.dropLink(aEvent, aName)
+}
+
+var proxyIconDNDObserver = {
+  onDragStart: function (aEvent, aXferData, aDragAction)
+    {
+      if (gProxyFavIcon.getAttribute("pageproxystate") != "valid")
+        return;
+
+      var value = content.location.href;
+      var urlString = value + "\n" + content.document.title;
+      var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
+
+      var dt = aEvent.dataTransfer;
+      dt.setData("text/x-moz-url", urlString);
+      dt.setData("text/uri-list", value);
+      dt.setData("text/plain", value);
+      dt.setData("text/html", htmlString);
+    }
 }
 
 var homeButtonObserver = {
@@ -3455,6 +3503,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
 
+    gProxyFavIcon = document.getElementById("page-proxy-favicon");
     gHomeButton.updateTooltip();
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
@@ -4005,6 +4054,11 @@ var XULBrowserWindow = {
       this.statusTextField.label = text;
       this.statusText = text;
     }
+  },
+
+  onLinkIconAvailable: function (aIconURL) {
+    if (gProxyFavIcon && gBrowser.userTypedValue === null)
+      PageProxySetIcon(aIconURL); // update the favicon in the URL bar
   },
 
   onProgressChange: function (aWebProgress, aRequest,
@@ -7057,13 +7111,6 @@ var gIdentityHandler = {
       icon_label = "";
       icon_country_label = "";
       icon_labels_dir = "ltr";
-      switch (Services.prefs.getIntPref("browser.identity.domain_display")) {
-        case 2 : // Show full domain
-          icon_label = this._lastLocation.hostname;
-          break;
-        case 1 : // Show eTLD.
-          icon_label = this.getEffectiveHost();
-      }
     }
 
     // Push the appropriate strings out to the UI
@@ -7145,11 +7192,6 @@ var gIdentityHandler = {
 
     event.stopPropagation();
 
-    if (event.button == 1 && Services.prefs.getBoolPref("middlemouse.paste")) {
-      middleMousePaste(event);
-      return;
-    }
-
     if ((event.type == "click" && event.button != 0) ||
         (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
          event.keyCode != KeyEvent.DOM_VK_RETURN))
@@ -7183,22 +7225,6 @@ var gIdentityHandler = {
 
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, position);
-  },
-
-  onDragStart: function (event) {
-    if (gURLBar.getAttribute("pageproxystate") != "valid")
-      return;
-
-    var value = content.location.href;
-    var urlString = value + "\n" + content.document.title;
-    var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
-
-    var dt = event.dataTransfer;
-    dt.setData("text/x-moz-url", urlString);
-    dt.setData("text/uri-list", value);
-    dt.setData("text/plain", value);
-    dt.setData("text/html", htmlString);
-    dt.setDragImage(event.currentTarget, 0, 0);
   }
 };
 
