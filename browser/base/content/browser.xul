@@ -876,26 +876,30 @@
                  onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
+          <box id="notification-popup-box" hidden="true" align="center">
+            <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
+          </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
                We only add the identity-box button to the tab order when the location bar
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
-          <box id="identity-container">
-            <hbox id="notification-popup-box" hidden="true" align="center">
-              <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
-              <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
-            </hbox>
-            <hbox id="identity-box"
-                  align="center"
-                  role="button"
-                  onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
-                  onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
-                  ondragstart="gIdentityHandler.onDragStart(event);">
+          <box id="identity-box" role="button"
+               onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
+               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
+            <hbox id="identity-box-inner" align="center">
+              <stack id="page-proxy-stack"
+                     onclick="PageProxyClickHandler(event);">
+                <image id="urlbar-throbber" busy="false"/>
+                <image id="page-proxy-favicon" validate="never"
+                       pageproxystate="invalid"
+                       ondragstart="proxyIconDNDObserver.onDragStart(event);"
+                       onerror="this.removeAttribute('src');"/>
+              </stack>
               <hbox id="identity-icon-labels">
                 <label id="identity-icon-label" class="plain" flex="1"/>
                 <label id="identity-icon-country-label" class="plain"/>
               </hbox>
-              <image id="identity-dropmarker"/>
             </hbox>
           </box>
           <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
