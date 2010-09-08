@@ -121,7 +121,7 @@
                              value="&changePassword.label;"/>
                       <label class="text-link"
                              onclick="gSyncUtils.resetPassphrase(); return false;"
-                             value="&changePassphrase.label;"/>
+                             value="&mySyncKey.label;"/>
                       <label class="text-link"
                              onclick="gSyncPane.resetSync(); return false;"
                              value="&resetSync.label;"/>
