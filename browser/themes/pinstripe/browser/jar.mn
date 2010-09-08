@@ -128,12 +128,9 @@ browser.jar:
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.png
-  skin/classic/browser/sync-merge.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-usedBefore.png
   skin/classic/browser/sync-usedNever.png
-  skin/classic/browser/sync-wipeClient.png
-  skin/classic/browser/sync-wipeServer.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
 #endif
