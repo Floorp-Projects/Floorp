@@ -2,7 +2,7 @@
 dump("###################################### content loaded\n");
 
 // how many milliseconds before the mousedown and the overlay of an element
-const kTapOverlayTimeout = 200;
+const kTapOverlayTimeout = 300;
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -392,7 +392,7 @@ Content.prototype = {
 
         // We add a few milliseconds because of how the InputHandler wait before
         // dispatching a single click (default: 500)
-        this._contextTimeout.once(500 + 200, function() {
+        this._contextTimeout.once(500 + kTapOverlayTimeout, function() {
           let event = content.document.createEvent("PopupEvents");
           event.initEvent("contextmenu", true, true);
           element.dispatchEvent(event);

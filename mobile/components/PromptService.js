@@ -38,7 +38,53 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+var gPromptService = null;
+
 function PromptService() {
+  // Depending on if we are in the parent or child, prepare to remote
+  // certain calls
+  var appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    // Parent process
+
+    this.inContentProcess = false;
+
+    // Used for wakeups service. FIXME: clean up with bug 593407
+    this.wrappedJSObject = this;
+
+    // Setup listener for child messages. We don't need to call
+    // addMessageListener as the wakeup service will do that for us.
+    this.receiveMessage = function(aMessage) {
+      var json = aMessage.json;
+      switch (aMessage.name) {
+        case "Prompt:Call":
+          // List of methods we remote - to check against malicious data.
+          // For example, it would be dangerous to allow content to show
+          // auth prompts. We allow only the methods that web content
+          // is allowed to show.
+          const ALL_METHODS = ['alert', 'confirm', 'prompt'];
+          var method = aMessage.json.method;
+          if (ALL_METHODS.indexOf(method) == -1)
+            throw 'PromptServiceRemoter received an invalid method';
+          var arguments = aMessage.json.arguments;
+          arguments.unshift(null); // No need for window, child is already on top
+                                   // (see mobile browser's PromptService.js)
+          var ret = this[method].apply(this, arguments);
+          // Return multiple return values in objects of form { value: ... },
+          // and also with the actual return value at the end
+          arguments.push(ret);
+          return arguments;
+      }
+    };
+  } else {
+    // Child process
+
+    this.inContentProcess = true;
+
+    this.messageManager = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+  }
+
+  gPromptService = this;
 }
 
 PromptService.prototype = {
@@ -63,7 +109,7 @@ PromptService.prototype = {
     }
 
     let doc = this.getDocument();
-    if (!doc) {
+    if (!doc && !this.inContentProcess) {
       let fallback = this._getFallbackService();
       return fallback.getPrompt(domWin, iid);
     }
@@ -73,7 +119,7 @@ PromptService.prototype = {
   },
 
   /* ----------  private memebers  ---------- */
-  
+
   _getFallbackService: function _getFallbackService() {
     return Components.classesByID["{7ad1b327-6dfa-46ec-9234-f2a620ea7e00}"]
                      .getService(Ci.nsIPromptService);
@@ -87,6 +133,35 @@ PromptService.prototype = {
   // nsIPromptService and nsIPromptService2 methods proxy to our Prompt class
   // if we can show in-document popups, or to the fallback service otherwise.
   callProxy: function(aMethod, aArguments) {
+    if (this.inContentProcess) {
+      // Bring this tab to the front, so prompt appears on the right tab
+      var window = aArguments[0];
+      if (window && window.document) {
+        var event = window.document.createEvent("Events");
+        event.initEvent("DOMWillOpenModalDialog", true, false);
+        window.dispatchEvent(event);
+      }
+
+      // Send message to parent
+      var json = { method: aMethod,
+                   arguments: Array.prototype.slice.call(aArguments, 1) };
+      // We send all prompts as sync, even alert (which has no important
+      // return value), as otherwise program flow will continue, and the
+      // script can theoretically show several alerts at once. In particular
+      // this can lead to a bug where you cannot click the earlier one, which
+      // is now hidden by a new one (and Fennec is helplessly frozen).
+      var response =
+        this.messageManager.sendSyncMessage("Prompt:Call", json)[0];
+      // Args copying - for methods that have out values
+      const ARGS_COPY_MAP = {
+        'prompt': [3,5],
+      };
+      if (ARGS_COPY_MAP[aMethod]) {
+        ARGS_COPY_MAP[aMethod].forEach(function(i) { aArguments[i].value = response[i].value; });
+      }
+      return response.pop(); // final return value was given at the end
+    }
+
     let doc = this.getDocument();
     if (!doc) {
       let fallback = this._getFallbackService();
@@ -259,6 +334,14 @@ Prompt.prototype = {
   /* ----------  nsIPrompt  ---------- */
   
   alert: function alert(aTitle, aText) {
+    // In addition to the remoting above, C++ can directly request this
+    // kind of prompt, so we remote that as well. This can happen, for
+    // example, if an invalid scheme is entered (e.g. garbage://something).
+    // That shows an alert() through this code here.
+    if (gPromptService.inContentProcess) {
+      return gPromptService.callProxy("alert", ['Alert'].concat(Array.prototype.slice.call(arguments, 0)));
+    }
+
     let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", null);
     let doc = this._doc;
     doc.getElementById("prompt-alert-title").value = aTitle;
