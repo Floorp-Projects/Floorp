@@ -83,6 +83,7 @@ static nsTArray<nsWindow*> gTopLevelWindows;
 static nsWindow* gFocusedWindow = nsnull;
 
 static nsRefPtr<gl::GLContext> sGLContext;
+static bool sFailedToCreateGLContext = false;
 
 // Multitouch swipe thresholds (in screen pixels)
 static const double SWIPE_MAX_PINCH_DELTA = 100;
@@ -575,6 +576,56 @@ NS_IMETHODIMP
 nsWindow::SetWindowClass(const nsAString& xulWinType)
 {
     return NS_OK;
+}
+
+mozilla::layers::LayerManager*
+nsWindow::GetLayerManager()
+{
+    if (mLayerManager) {
+        return mLayerManager;
+    }
+
+    printf_stderr("nsWindow::GetLayerManager\n");
+
+    nsWindow *topWindow = TopWindow();
+
+    if (!topWindow) {
+        printf_stderr(" -- no topwindow\n");
+        mLayerManager = new BasicLayerManager(this);
+        return mLayerManager;
+    }
+
+    mUseAcceleratedRendering = GetShouldAccelerate();
+
+    if (!mUseAcceleratedRendering ||
+        sFailedToCreateGLContext)
+    {
+        printf_stderr(" -- creating basic, not accelerated\n");
+        mLayerManager = new BasicLayerManager(this);
+        return mLayerManager;
+    }
+
+    if (!sGLContext) {
+        // the window we give doesn't matter here
+        sGLContext = mozilla::gl::GLContextProvider::CreateForWindow(this);
+    }
+
+    if (sGLContext) {
+        nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+            new mozilla::layers::LayerManagerOGL(this);
+
+        if (layerManager && layerManager->Initialize(sGLContext))
+            mLayerManager = layerManager;
+    }
+
+    if (!sGLContext || !mLayerManager) {
+        sGLContext = nsnull;
+        sFailedToCreateGLContext = PR_TRUE;
+
+        mLayerManager = new BasicLayerManager(this);
+    }
+
+    return mLayerManager;
 }
 
 gfxASurface*
