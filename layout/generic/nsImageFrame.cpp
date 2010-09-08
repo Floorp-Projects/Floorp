@@ -55,6 +55,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsStyleCoord.h"
+#include "nsTransform2D.h"
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
@@ -325,36 +326,33 @@ nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage)
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
-void
-nsImageFrame::RecalculateTransform(PRBool aInnerAreaChanged)
+PRBool
+nsImageFrame::GetSourceToDestTransform(nsTransform2D& aTransform)
 {
-  // In any case, we need to translate this over appropriately.  Set
-  // translation _before_ setting scaling so that it does not get
-  // scaled!
-
+  // Set the translation components.
   // XXXbz does this introduce rounding errors because of the cast to
   // float?  Should we just manually add that stuff in every time
   // instead?
-  if (aInnerAreaChanged) {
-    nsRect innerArea = GetInnerArea();
-    mTransform.SetToTranslate(float(innerArea.x),
-                              float(innerArea.y - GetContinuationOffset()));
-  }
-  
-  // Set the scale factors
+  nsRect innerArea = GetInnerArea();
+  aTransform.SetToTranslate(float(innerArea.x),
+                            float(innerArea.y - GetContinuationOffset()));
+
+  // Set the scale factors.
   if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
       mIntrinsicSize.width.GetCoordValue() != 0 &&
       mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
       mIntrinsicSize.height.GetCoordValue() != 0 &&
       mIntrinsicSize.width.GetCoordValue() != mComputedSize.width &&
       mIntrinsicSize.height.GetCoordValue() != mComputedSize.height) {
-    mTransform.SetScale(float(mComputedSize.width)  /
+
+    aTransform.SetScale(float(mComputedSize.width)  /
                         float(mIntrinsicSize.width.GetCoordValue()),
                         float(mComputedSize.height) /
                         float(mIntrinsicSize.height.GetCoordValue()));
-  } else {
-    mTransform.SetScale(1.0f, 1.0f);
+    return PR_TRUE;
   }
+
+  return PR_FALSE;
 }
 
 /*
@@ -418,10 +416,18 @@ nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
            nsPresContext::CSSPixelsToAppUnits(aRect.width + 2),
            nsPresContext::CSSPixelsToAppUnits(aRect.height + 2));
 
-  mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
+  nsTransform2D sourceToDest;
+  if (!GetSourceToDestTransform(sourceToDest)) {
+    // Failed to generate transform matrix. Return our whole inner area,
+    // to be on the safe side (since this method is used for generating
+    // invalidation rects).
+    return GetInnerArea();
+  }
+
+  sourceToDest.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
   // Now, round the edges out to the pixel boundary.
-  int scale = nsPresContext::CSSPixelsToAppUnits(1);
+  nscoord scale = nsPresContext::CSSPixelsToAppUnits(1);
   nscoord right = r.x + r.width;
   nscoord bottom = r.y + r.height;
 
@@ -528,14 +534,6 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
   UpdateIntrinsicRatio(aImage);
 
   if (mState & IMAGE_GOTINITIALREFLOW) {
-    // If we previously set the intrinsic size (in EnsureIntrinsicSizeAndRatio)
-    // to the size of the loading-image icon and reflowed the frame,
-    // we'll have an mTransform computed from that intrinsic size.  But
-    // if we still have that transform when we get OnDataAvailable
-    // calls, we'll invalidate the wrong area.  So update the transform
-    // now.
-    RecalculateTransform(PR_FALSE);
-
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow
     if (!(mState & IMAGE_SIZECONSTRAINED)) { 
@@ -810,7 +808,6 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   mComputedSize = 
     nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
-  RecalculateTransform(PR_TRUE);
 
   aMetrics.width = mComputedSize.width;
   aMetrics.height = mComputedSize.height;
