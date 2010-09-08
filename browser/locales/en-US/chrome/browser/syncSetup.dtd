@@ -46,6 +46,9 @@
 <!ENTITY setup.newAccountPrefs2.title.label "Browser Sync Preferences">
 <!ENTITY syncComputerName.label       "Computer Name:">
 <!ENTITY syncComputerName.accesskey   "c">
+
+<!ENTITY page.syncKeyBackup.title     "Your Firefox Sync Key">
+<!ENTITY page.syncKeyBackup.descr     "This secret key is used to encrypt your personal data. It is not uploaded to the server and cannot be recovered. Do not lose it or share with other people.">
 <!ENTITY syncModeSwitchDesc.label     "&brandShortName; will: ">
 <!ENTITY syncModeSwitchDesc.accesskey "w">
 <!ENTITY syncEverything.label         "Sync Everything">
