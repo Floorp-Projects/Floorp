@@ -575,6 +575,7 @@ private:
 
 nsObjectFrame::nsObjectFrame(nsStyleContext* aContext)
   : nsObjectFrameSuper(aContext)
+  , mReflowCallbackPosted(PR_FALSE)
 {
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Created new nsObjectFrame %p\n", this));
@@ -932,11 +933,31 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   FixupWindow(r.Size());
+  if (!mReflowCallbackPosted) {
+    mReflowCallbackPosted = PR_TRUE;
+    aPresContext->PresShell()->PostReflowCallback(this);
+  }
 
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
+}
+
+///////////// nsIReflowCallback ///////////////
+
+PRBool
+nsObjectFrame::ReflowFinished()
+{
+  mReflowCallbackPosted = PR_FALSE;
+  CallSetWindow();
+  return PR_TRUE;
+}
+
+void
+nsObjectFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackPosted = PR_FALSE;
 }
 
 nsresult
@@ -1152,9 +1173,6 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     if (vm)
       vm->SetViewVisibility(view, IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
-
-  // WMP10 needs an additional SetWindow call here (bug 391261)
-  CallSetWindow();
 
   return rv;
 }
