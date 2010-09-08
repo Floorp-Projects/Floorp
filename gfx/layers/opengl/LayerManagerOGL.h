@@ -136,6 +136,7 @@ public:
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("OpenGL"); }
 
   /**
    * Image Container management.
@@ -292,6 +293,10 @@ public:
                     aProg->AttribLocation(LayerProgram::TexCoordAttrib),
                     aFlipped);
   }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+   virtual const char* Name() const { return "OGL"; }
+#endif // MOZ_LAYERS_HAVE_LOG
 
 private:
   /** Widget associated with this layer manager */

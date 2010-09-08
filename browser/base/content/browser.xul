@@ -136,10 +136,6 @@
         </menupopup>
       </menu>
       <menuseparator/>
-      <menuitem id="context_bookmarkTab"
-                label="&bookmarkThisTab.label;"
-                accesskey="&bookmarkThisTab.accesskey;"
-                oncommand="BookmarkThisTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
@@ -234,13 +230,15 @@
            onmousemove="InspectorUI.highlighter.handleMouseMove(event);"
            onMozMousePixelScroll="InspectorUI.highlighter.handlePixelScroll(event);"/>
 
-    <panel id="inspector-panel"
+    <panel id="inspector-tree-panel"
            orient="vertical"
            hidden="true"
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
            titlebar="normal"
+           close="true"
+           onpopuphiding="InspectorUI.closeInspectorUI(true);"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
                nowindowdrag="true">
@@ -270,20 +268,11 @@
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
-      <tree id="inspector-tree" class="plain"
-            seltype="single"
-            treelines="true"
-            onselect="InspectorUI.onTreeSelected()"
-            flex="1">
-        <treecols>
-          <treecol id="colNodeName" label="nodeName" primary="true"
-                   persist="width,hidden,ordinal" flex="1"/>
-          <splitter class="tree-splitter"/>
-          <treecol id="colNodeValue" label="nodeValue"
-                   persist="width,hidden,ordinal" flex="1"/>
-        </treecols>
-        <treechildren id="inspector-tree-body"/>
-      </tree>
+      <iframe id="inspector-tree-iframe"
+               flex="1"
+               type="content"
+               src="chrome://browser/content/inspector.html"
+               onclick="InspectorUI.onTreeClick(event);" />
       <hbox align="end">
         <spacer flex="1" />
         <resizer dir="bottomend" />
@@ -488,7 +477,7 @@
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"/>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <hbox class="split-menuitem">
             <menuitem id="appmenu-edit-menuitem"
                       label="&editMenu.label;"
@@ -512,7 +501,7 @@
           <menuitem id="appmenu_find"
                     label="&appMenuFind.label;"
                     command="cmd_find"/>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_savePage"
                     label="&savePageCmd.label;"
                     command="Browser:SavePage"/>
@@ -541,7 +530,7 @@
               </menupopup>
             </menu>
           </hbox>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menu id="appmenu_developer"
                 label="&developerMenu.label;">
             <menupopup id="appmenu_developer_popup">
@@ -563,7 +552,7 @@
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
           </menu>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_fullScreen"
                     label="&fullScreenCmd.label;"
                     type="checkbox"
@@ -604,8 +593,8 @@
                           label="&appMenuUnsorted.label;"
                           oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
                           class="menuitem-iconic"/>
-                <menuitem id="appmenu_organizeBookmarks"
-                          label="&organizeBookmarks.label;"
+                <menuitem id="appmenu_showAllBookmarks"
+                          label="&showAllBookmarks.label;"
                           key="manBookmarkKb"
                           command="Browser:ShowAllBookmarks"
                           context=""/>
@@ -794,10 +783,10 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
 #ifdef WINCE
              iconsize="small" defaulticonsize="small"
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              iconsize="large"
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 
@@ -831,17 +820,6 @@
         </toolbarbutton>
       </toolbaritem>
 
-      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&reloadCmd.label;" removable="true"
-                     command="Browser:ReloadOrDuplicate"
-                     onclick="checkForMiddleClick(this, event);"
-                     tooltiptext="&reloadButton.tooltip;"/>
-
-      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&stopCmd.label;" removable="true"
-                     command="Browser:Stop"
-                     tooltiptext="&stopButton.tooltip;"/>
-
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class" removable="true"
                      label="&homeButton.label;"
@@ -851,7 +829,7 @@
                      ondragleave="homeButtonObserver.onDragLeave(event)"
                      onclick="BrowserGoHome(event);"/>
 
-      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
+      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
                  placeholder="&urlbar.placeholder;"
@@ -923,8 +901,29 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
+          <toolbarbutton id="urlbar-go-button"
+                         onclick="gURLBar.handleCommand(event);"
+                         tooltiptext="&goEndCap.tooltip;"/>
+          <toolbarbutton id="urlbar-reload-button"
+                         command="Browser:ReloadOrDuplicate"
+                         onclick="checkForMiddleClick(this, event);"
+                         tooltiptext="&reloadButton.tooltip;"/>
+          <toolbarbutton id="urlbar-stop-button"
+                         command="Browser:Stop"
+                         tooltiptext="&stopButton.tooltip;"/>
         </textbox>
       </toolbaritem>
+
+      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&reloadCmd.label;" removable="true"
+                     command="Browser:ReloadOrDuplicate"
+                     onclick="checkForMiddleClick(this, event);"
+                     tooltiptext="&reloadButton.tooltip;"/>
+
+      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&stopCmd.label;" removable="true"
+                     command="Browser:Stop"
+                     tooltiptext="&stopButton.tooltip;"/>
 
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
@@ -960,7 +959,7 @@
                       command="Browser:BookmarkAllTabs"
                       key="bookmarkAllTabsKb"/>
             <menuitem id="BMB_bookmarksShowAll"
-                      label="&organizeBookmarks.label;"
+                      label="&showAllBookmarks.label;"
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>

@@ -59,6 +59,9 @@ const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 
+const PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME = PREF_APP_UPDATE_CERTS_BRANCH +
+                                               "1.invalidName";
+
 const PREF_APP_PARTNER_BRANCH             = "app.partner.";
 const PREF_DISTRIBUTION_ID                = "distribution.id";
 const PREF_DISTRIBUTION_VERSION           = "distribution.version";

@@ -73,7 +73,7 @@ typedef PRInt16 int16;
 #define ARCH_CPU_SPARC 1
 #define ARCH_CPU_64_BITS 1
 #else
-#error Please add support for your architecture in chromium_types.h
+#warning Please add support for your architecture in chromium_types.h
 #endif
 
 #endif // GFX_CHROMIUMTYPES_H

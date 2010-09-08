@@ -226,7 +226,7 @@ class WebGLBuffer;
 
 struct WebGLVertexAttribData {
     WebGLVertexAttribData()
-        : buf(0), stride(0), size(0), byteOffset(0), type(0), enabled(PR_FALSE)
+        : buf(0), stride(0), size(0), byteOffset(0), type(0), enabled(PR_FALSE), normalized(PR_FALSE)
     { }
 
     WebGLObjectRefPtr<WebGLBuffer> buf;
@@ -235,6 +235,7 @@ struct WebGLVertexAttribData {
     GLuint byteOffset;
     GLenum type;
     PRBool enabled;
+    PRBool normalized;
 
     GLuint componentSize() const {
         switch(type) {
@@ -331,9 +332,12 @@ public:
     }
 
     PRBool NeedFakeBlack();
-
     void BindFakeBlackTextures();
     void UnbindFakeBlackTextures();
+
+    PRBool NeedFakeVertexAttrib0();
+    void DoFakeVertexAttrib0(WebGLuint vertexCount);
+    void UndoFakeVertexAttrib0();
 
 protected:
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
@@ -474,6 +478,9 @@ protected:
 
     WebGLuint mBlackTexture2D, mBlackTextureCubeMap;
     PRBool mBlackTexturesAreInitialized;
+
+    WebGLfloat mVertexAttrib0Vector[4];
+    nsAutoArrayPtr<WebGLfloat> mFakeVertexAttrib0Array;
 
 public:
     // console logging helpers
@@ -685,7 +692,7 @@ public:
         mFacesCount(0),
         mMaxLevelWithCustomImages(0),
         mHaveGeneratedMipmap(PR_FALSE),
-        mFakeBlackStatus(DontKnowIfNeedFakeBlack)
+        mFakeBlackStatus(DoNotNeedFakeBlack)
     {}
 
     void Delete() {
@@ -913,12 +920,13 @@ public:
         mHaveGeneratedMipmap = PR_FALSE;
     }
 
-    PRBool IsGenerateMipmapAllowed() const {
-        const ImageInfo &first = ImageInfoAt(0, 0);
-        if (!first.IsPowerOfTwo())
-            return PR_FALSE;
-        for (size_t face = 0; face < mFacesCount; ++face) {
-            if (ImageInfoAt(0, face) != first)
+    PRBool IsFirstImagePowerOfTwo() const {
+        return ImageInfoAt(0, 0).IsPowerOfTwo();
+    }
+
+    PRBool AreAllLevel0ImageInfosEqual() const {
+        for (size_t face = 1; face < mFacesCount; ++face) {
+            if (ImageInfoAt(0, face) != ImageInfoAt(0, 0))
                 return PR_FALSE;
         }
         return PR_TRUE;
@@ -927,7 +935,7 @@ public:
     PRBool IsMipmapTexture2DComplete() const {
         if (mTarget != LOCAL_GL_TEXTURE_2D)
             return PR_FALSE;
-        if (!mImageInfos[0].IsPositive())
+        if (!ImageInfoAt(0, 0).IsPositive())
             return PR_FALSE;
         if (mHaveGeneratedMipmap)
             return PR_TRUE;
@@ -940,11 +948,7 @@ public:
         const ImageInfo &first = ImageInfoAt(0, 0);
         if (!first.IsPositive() || !first.IsSquare())
             return PR_FALSE;
-        for (size_t face = 0; face < mFacesCount; ++face) {
-            if (ImageInfoAt(0, face) != first)
-                return PR_FALSE;
-        }
-        return PR_TRUE;
+        return AreAllLevel0ImageInfosEqual();
     }
 
     PRBool IsMipmapCubeComplete() const {
@@ -966,26 +970,39 @@ public:
             // Determine if the texture needs to be faked as a black texture.
             // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
 
+            const char *msg_rendering_as_black
+                = "A texture is going to be rendered as if it were black, as per the OpenGL ES 2.0.24 spec section 3.8.2, "
+                  "because it";
+
             if (mTarget == LOCAL_GL_TEXTURE_2D)
             {
                 if (DoesMinFilterRequireMipmap())
                 {
-                    if (!IsMipmapTexture2DComplete() ||
-                        !mImageInfos[0].IsPowerOfTwo())
-                    {
+                    if (!IsMipmapTexture2DComplete()) {
+                        mContext->LogMessage("%s is a 2D texture, with a minification filter requiring a mipmap, "
+                                   "and is not mipmap complete (as defined in section 3.7.10).", msg_rendering_as_black);
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    } else if (!ImageInfoAt(0, 0).IsPowerOfTwo()) {
+                        mContext->LogMessage("%s is a 2D texture, with a minification filter requiring a mipmap, "
+                                   "and either its width or height is not a power of two.", msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
                     }
                 }
                 else // no mipmap required
                 {
-                    if (!mImageInfos[0].IsPositive() ||
-                        (!AreBothWrapModesClampToEdge() && !mImageInfos[0].IsPowerOfTwo()))
-                    {
+                    if (!ImageInfoAt(0, 0).IsPositive()) {
+                        mContext->LogMessage("%s is a 2D texture and its width or height is equal to zero.",
+                                   msg_rendering_as_black);
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(0, 0).IsPowerOfTwo()) {
+                        mContext->LogMessage("%s is a 2D texture, with a minification filter not requiring a mipmap, "
+                                   "with its width or height not a power of two, and with a wrap mode "
+                                   "different from CLAMP_TO_EDGE.", msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
                     }
                 }
             }
-            else if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP)
+            else // cube map
             {
                 PRBool areAllLevel0ImagesPOT = PR_TRUE;
                 for (size_t face = 0; face < mFacesCount; ++face)
@@ -993,17 +1010,29 @@ public:
 
                 if (DoesMinFilterRequireMipmap())
                 {
-                    if (!IsMipmapCubeComplete() ||
-                        !areAllLevel0ImagesPOT)
-                    {
+                    if (!IsMipmapCubeComplete()) {
+                        mContext->LogMessage("%s is a cube map texture, with a minification filter requiring a mipmap, "
+                                   "and is not mipmap cube complete (as defined in section 3.7.10).",
+                                   msg_rendering_as_black);
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    } else if (!areAllLevel0ImagesPOT) {
+                        mContext->LogMessage("%s is a cube map texture, with a minification filter requiring a mipmap, "
+                                   "and either the width or the height of some level 0 image is not a power of two.",
+                                   msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
                     }
                 }
                 else // no mipmap required
                 {
-                    if (!IsCubeComplete() ||
-                        (!AreBothWrapModesClampToEdge() && !areAllLevel0ImagesPOT))
-                    {
+                    if (!IsCubeComplete()) {
+                        mContext->LogMessage("%s is a cube map texture, with a minification filter not requiring a mipmap, "
+                                   "and is not cube complete (as defined in section 3.7.10).",
+                                   msg_rendering_as_black);
+                        mFakeBlackStatus = DoNeedFakeBlack;
+                    } else if (!AreBothWrapModesClampToEdge() && !areAllLevel0ImagesPOT) {
+                        mContext->LogMessage("%s is a cube map texture, with a minification filter not requiring a mipmap, "
+                                   "with some level 0 image having width or height not a power of two, and with a wrap mode "
+                                   "different from CLAMP_TO_EDGE.", msg_rendering_as_black);
                         mFakeBlackStatus = DoNeedFakeBlack;
                     }
                 }
@@ -1319,7 +1348,6 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
-
 
 /**
  ** Template implementations

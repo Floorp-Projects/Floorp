@@ -756,6 +756,23 @@ DDRAW_FAILED:
     }
   }
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  if(event.region.Intersects(mCaptionButtons)) {
+    // Temporary workaround to make the captions buttons visible for D3D9
+    const nsIntRect* r;
+    RECT rect;
+    HBRUSH blackBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    for (nsIntRegionRectIterator iter(mCaptionButtonsRoundedRegion);
+         (r = iter.Next()) != nsnull;) {
+      rect.top = r->y;
+      rect.left = r->x;
+      rect.right = r->XMost();
+      rect.bottom = r->YMost();
+      FillRect(hDC, &rect, blackBrush);
+    }
+  }
+#endif
+
   if (!aDC) {
     ::EndPaint(mWnd, &ps);
   }
