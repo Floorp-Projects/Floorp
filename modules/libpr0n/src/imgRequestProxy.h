@@ -127,6 +127,12 @@ public:
   // instantiates an Image.
   void SetImage(mozilla::imagelib::Image* aImage);
 
+  // Removes all animation consumers that were created with
+  // IncrementAnimationConsumers. This is necessary since we need
+  // to do it before the proxy itself is destroyed. See
+  // imgRequest::RemoveProxy
+  void ClearAnimationConsumers();
+
 protected:
   friend class imgStatusTracker;
   friend class imgStatusNotifyRunnable;
@@ -220,6 +226,7 @@ private:
 
   nsLoadFlags mLoadFlags;
   PRUint32    mLockCount;
+  PRUint32    mAnimationConsumers;
   PRPackedBool mCanceled;
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;

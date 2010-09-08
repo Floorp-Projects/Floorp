@@ -86,8 +86,8 @@ class nsIInputStream;
  * with StartAnimation().
  *
  * @par
- * StartAnimation() checks if animating is allowed, and creates a timer.  The
- * timer calls Notify when the specified frame delay time is up.
+ * StartAnimation() creates a timer.  The timer calls Notify when the
+ * specified frame delay time is up.
  *
  * @par
  * Notify() moves on to the next frame, sets up the new timer delay, destroys
@@ -158,6 +158,9 @@ public:
 
   RasterImage(imgStatusTracker* aStatusTracker = nsnull);
   virtual ~RasterImage();
+
+  virtual nsresult StartAnimation();
+  virtual nsresult StopAnimation();
 
   // C++-only version of imgIContainer::GetType, for convenience
   virtual PRUint16 GetType() { return imgIContainer::TYPE_RASTER; }
@@ -326,16 +329,13 @@ private:
     //! Whether we can assume there will be no more frames
     //! (and thus loop the animation)
     PRPackedBool               doneDecoding;
-    //! Are we currently animating the image?
-    PRPackedBool               animating;
 
     Anim() :
       firstFrameRefreshArea(),
       currentDecodingFrameIndex(0),
       currentAnimationFrameIndex(0),
       lastCompositedFrameIndex(-1),
-      doneDecoding(PR_FALSE),
-      animating(PR_FALSE)
+      doneDecoding(PR_FALSE)
     {
       ;
     }
@@ -490,6 +490,10 @@ private: // data
 
   PRPackedBool               mError:1;  // Error handling
 
+  // Whether the animation can stop, due to running out
+  // of frames, or no more owning request
+  PRPackedBool               mAnimationFinished:1;
+
   // Decoding
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
@@ -513,6 +517,8 @@ private: // data
   PRBool DiscardingActive();
   PRBool StoringSourceData();
 
+protected:
+  PRBool ShouldAnimate();
 };
 
 // XXXdholbert These helper classes should move to be inside the
