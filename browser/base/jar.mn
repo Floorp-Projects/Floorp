@@ -66,6 +66,7 @@ browser.jar:
         content/browser/syncSetup.js                  (content/syncSetup.js)
 *       content/browser/syncGenericChange.xul         (content/syncGenericChange.xul)
         content/browser/syncGenericChange.js          (content/syncGenericChange.js)
+*       content/browser/syncKey.xhtml                 (content/syncKey.xhtml)
 *       content/browser/syncNotification.xml          (content/syncNotification.xml)
         content/browser/syncUtils.js                  (content/syncUtils.js)
 #endif

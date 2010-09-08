@@ -103,7 +103,15 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * object.  The object will be released when the cache entry is destroyed.
      */
     attribute nsISupports cacheElement;
-     
+    
+    /**
+      * Stores the Content-Length specified in the HTTP header for this
+      * entry. Checked before we write to the cache entry, to prevent ever
+      * taking up space in the cache for an entry that we know up front 
+      * is going to have to be evicted anyway. See bug 588507.
+      */
+    attribute PRInt64    predictedDataSize;
+
     /**
      * Get the access granted to this descriptor.  See nsICache.idl for the
      * definitions of the access modes and a thorough description of their

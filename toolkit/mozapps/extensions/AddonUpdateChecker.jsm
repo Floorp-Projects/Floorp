@@ -56,6 +56,8 @@ const PREFIX_THEME          = "urn:mozilla:theme:";
 const TOOLKIT_ID            = "toolkit@mozilla.org"
 const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
 
+const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 // shared code for suppressing bad cert dialogs
 Components.utils.import("resource://gre/modules/CertUtils.jsm");
@@ -423,11 +425,18 @@ function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
                createInstance(Ci.nsITimer);
   this.timer.initWithCallback(this, TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
 
+  let requireBuiltIn = true;
+  try {
+    requireBuiltIn = Services.prefs.getBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS);
+  }
+  catch (e) {
+  }
+
   LOG("Requesting " + aUrl);
   this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                  createInstance(Ci.nsIXMLHttpRequest);
   this.request.open("GET", aUrl, true);
-  this.request.channel.notificationCallbacks = new BadCertHandler();
+  this.request.channel.notificationCallbacks = new BadCertHandler(!requireBuiltIn);
   this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
   this.request.overrideMimeType("text/xml");
   var self = this;
@@ -453,8 +462,15 @@ UpdateParser.prototype = {
     let request = this.request;
     this.request = null;
 
+    let requireBuiltIn = true;
     try {
-      checkCert(request.channel);
+      requireBuiltIn = Services.prefs.getBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS);
+    }
+    catch (e) {
+    }
+
+    try {
+      checkCert(request.channel, !requireBuiltIn);
     }
     catch (e) {
       this.notifyError(AddonUpdateChecker.ERROR_DOWNLOAD_ERROR);

@@ -509,8 +509,10 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
 {
   NS_ENSURE_ARG_POINTER(image);
 
-  // Ensure the animation (if any) is started
-  image->StartAnimation();
+  // Ensure the animation (if any) is started. Note: There is no
+  // corresponding call to Decrement for this. This Increment will be
+  // 'cleaned up' by the Request when it is destroyed, but only then.
+  request->IncrementAnimationConsumers();
 
   nscoord w, h;
   image->GetWidth(&w);

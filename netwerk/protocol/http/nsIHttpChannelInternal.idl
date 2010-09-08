@@ -89,3 +89,13 @@ interface nsIHttpChannelInternal : nsISupports
      */
     readonly attribute boolean canceled;
 };
+
+[uuid(b18290f1-ff34-4e33-93a2-29aeb7b95425)]
+interface nsIHttpChannelParentInternal : nsISupports
+{
+    /**
+     * True for a chrome channel that is servicing a child channel (i.e. request
+     * originated in child process, not chrome).
+     */
+    [noscript] attribute boolean servicingRemoteChannel;
+};

@@ -24,6 +24,7 @@
 #   Edward Lee <edilee@mozilla.com>
 #   Mike Connor <mconnor@mozilla.com>
 #   Paul O’Shannessy <paul@oshannessy.com>
+#   Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,38 +68,38 @@
           src="chrome://browser/content/syncUtils.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/printUtils.js"/>
 
   <wizardpage id="pickSetupType"
-              label="&setup.choicePage.title.label;"
+              label="&syncBrand.fullName.label;"
               onpageshow="gSyncSetup.onPageShow()">
-    <button id="newAccount"
-            class="accountChoiceButton"
-            aria-labelledby="createNewDesc"
-            oncommand="gSyncSetup.startNewAccountSetup()"
-            align="center">
-      <image class="mergeChoiceImage"/>
-      <vbox class="mergeChoiceButtonBox" flex="1">
-        <description class="mainDesc" id="createNewDesc">
-          &setup.choicePage.new.label;
-        </description>
-      </vbox>
-    </button>
-    <button id="existingAccount"
-            class="accountChoiceButton"
-            aria-labelledby="useExistingButton"
-            oncommand="gSyncSetup.useExistingAccount()"
-            align="center">
-      <image class="mergeChoiceImage"/>
-      <vbox class="mergeChoiceButtonBox" flex="1">
-        <description class="mainDesc" id="useExistingDesc">
-          &setup.choicePage.existing.label;
-        </description>
-      </vbox>
-    </button>
+    <vbox align="center" flex="1">
+      <description style="padding: 0 7em;">
+        &setup.pickSetupType.description;
+      </description>
+      <spacer flex="1"/>
+      <button id="newAccount"
+              class="accountChoiceButton"
+              label="&button.createNewAccount.label;"
+              oncommand="gSyncSetup.startNewAccountSetup()"
+              align="center"/>
+      <spacer flex="3"/>
+    </vbox>
+    <separator class="groove"/>
+    <vbox align="center" flex="1">
+      <spacer flex="3"/>
+      <button id="existingAccount"
+              class="accountChoiceButton"
+              label="&button.haveAccount.label;"
+              oncommand="gSyncSetup.useExistingAccount()"/>
+      <spacer flex="3"/>
+    </vbox>
   </wizardpage>
 
-  <wizardpage label="&setup.newAccountPage.title.label;"
+  <wizardpage label="&setup.newAccountDetailsPage.title.label;"
               id="newAccountStart"
+              onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow();">
     <grid>
       <columns>
@@ -106,31 +107,6 @@
         <column class="inputColumn" flex="1"/>
       </columns>
       <rows>
-        <row align="center">
-          <label control="serverType"
-                 value="&connectTo.label;"/>
-          <menulist id="serverType" oncommand="gSyncSetup.onServerChange()">
-            <menupopup>
-              <menuitem label="&serverType.main.label;"
-                        value="main"/>
-              <menuitem label="&serverType.custom.label;"
-                        value="custom"/>
-            </menupopup>
-          </menulist>
-        </row>
-        <row id="serverRow" hidden="true" align="center">
-          <label value="&signIn.serverURL.label;"
-                 accesskey="&signIn.serverURL.accesskey;"
-                 control="weaveServerURL"/>
-          <textbox id="weaveServerURL" onchange="gSyncSetup.onServerChange()"/>
-        </row>
-        <row id="serverFeedbackRow" align="center" hidden="true">
-          <spacer/>
-          <hbox>
-            <image class="statusIcon"/>
-            <label class="status" value=" "/>
-          </hbox>
-        </row>
         <row id="usernameRow" align="center">
           <label value="&signIn.username.label;"
                  accesskey="&signIn.username.accesskey;"
@@ -175,7 +151,7 @@
                  accesskey="&setup.emailAddress.accesskey;"
                  control="weaveEmail"/>
           <textbox id="weaveEmail"
-                   oninput="gSyncSetup.onEmailChange()"/>
+                   onchange="gSyncSetup.onEmailChange()"/>
         </row>
         <row id="emailFeedbackRow" align="center" hidden="true">
           <spacer/>
@@ -184,13 +160,40 @@
             <label class="status" value=" "/>
           </hbox>
         </row>
+        <row align="center">
+          <label control="serverType"
+                 value="&server.label;"/>
+          <menulist id="serverType" oncommand="gSyncSetup.onServerChange()">
+            <menupopup>
+              <menuitem label="&serverType.main.label;"
+                        value="main"/>
+              <menuitem label="&serverType.custom.label;"
+                        value="custom"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row id="serverRow" hidden="true" align="center">
+          <label value="&signIn.serverURL.label;"
+                 accesskey="&signIn.serverURL.accesskey;"
+                 control="weaveServerURL"/>
+          <textbox id="weaveServerURL" onchange="gSyncSetup.onServerChange()"/>
+        </row>
+        <row id="serverFeedbackRow" align="center" hidden="true">
+          <spacer/>
+          <hbox>
+            <image class="statusIcon"/>
+            <label class="status" value=" "/>
+          </hbox>
+        </row>
         <row id="TOSRow" align="center">
           <spacer/>
-          <hbox align="top">
+          <hbox align="center">
             <checkbox id="tos"
                       accesskey="&setup.tosAgree1.accesskey;"
                       oncommand="gSyncSetup.checkFields();"/>
-            <description id="tosDesc" onclick="document.getElementById('tos').click()">
+            <description id="tosDesc"
+                         onclick="document.getElementById('tos').focus();
+                                  document.getElementById('tos').click()">
               &setup.tosAgree1.label;
               <label class="text-link inline-link"
                      onclick="event.stopPropagation();gSyncUtils.openToS();"
@@ -207,124 +210,87 @@
     </grid>
   </wizardpage>
 
-  <wizardpage label="&setup.newPPPage.title.label;"
+  <wizardpage label="&setup.newSyncKeyPage.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow();">
     <description>
-      &passphraseDesc.label;
+      &setup.newSyncKeyPage.description.label;
     </description>
     <spacer/>
-    <grid>
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row align="center">
-          <label value="&passphraseEntry.label;"
-                 accesskey="&passphraseEntry.accesskey;"
-                 control="weavePassphrase"/>
-          <textbox type="password" id="weavePassphrase"
-                   onkeyup="gSyncSetup.checkFields()"
-                   onchange="gSyncSetup.checkFields()"/>
-        </row>
-        <row align="center">
-          <label value="&passphraseConfirm.label;"
-                 accesskey="&passphraseConfirm.accesskey;"
-                 control="weavePassphraseConfirm"/>
-          <textbox type="password" id="weavePassphraseConfirm"
-                   onkeyup="gSyncSetup.checkFields()"
-                   onchange="gSyncSetup.checkFields()"/>
-        </row>
-      </rows>
-    </grid>
-    <hbox id="passphraseFeedbackRow" align="center" hidden="true">
-      <spacer/>
+
+    <groupbox>
       <hbox>
+        <label value="&syncKeyEntry.label;"
+               accesskey="&syncKeyEntry.accesskey;"
+               control="weavePassphrase"/>
+        <label id="generatePassphraseButton"
+               value="&syncKeyGenerate.label;"
+               class="text-link inline-link"
+               onclick="event.stopPropagation();
+                        gSyncSetup.onPassphraseGenerate();"/>
+      </hbox>
+      <textbox id="weavePassphrase"
+               onkeyup="gSyncSetup.onPassphraseChange()"
+               onchange="gSyncSetup.onPassphraseChange()"
+               onfocus="this.select()"/>
+      <hbox id="passphraseFeedbackRow" align="center" hidden="true">
+        <spacer/>
+        <hbox>
+          <image class="statusIcon"/>
+          <label class="status" value=" "/>
+        </hbox>
+      </hbox>
+    </groupbox>
+
+    <groupbox align="center">
+      <description>&syncKeyBackup.description;</description>
+      <hbox>
+        <button label="&button.syncKeyBackup.email.label;"
+                accesskey="&button.syncKeyBackup.email.accesskey;"
+                oncommand="gSyncUtils.passphraseEmail('weavePassphrase');
+                           gSyncSetup.afterBackup();"/>
+        <button label="&button.syncKeyBackup.print.label;"
+                accesskey="&button.syncKeyBackup.print.accesskey;"
+                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');
+                           gSyncSetup.afterBackup();"/>
+        <button label="&button.syncKeyBackup.save.label;"
+                accesskey="&button.syncKeyBackup.save.accesskey;"
+                oncommand="gSyncUtils.passphraseSave('weavePassphrase');
+                           gSyncSetup.afterBackup();"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&setup.captchaPage2.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()">
+    <vbox flex="1" align="center">
+      <browser height="150"
+               width="450"
+               id="captcha"
+               type="content"
+               disablehistory="true"/>
+      <spacer flex="1"/>
+      <hbox id="captchaFeedback" hidden="true">
         <image class="statusIcon"/>
         <label class="status" value=" "/>
       </hbox>
-    </hbox>
-    <separator/>
-    <description class="small">
-      &passphraseDesc2.label;
-    </description>
-  </wizardpage>
-
-  <wizardpage label="&setup.newAccountPrefs2.title.label;">
-    <grid>
-      <rows>
-        <row align="center">
-          <label value="&syncComputerName.label;"
-                 accesskey="&syncComputerName.accesskey;"
-                 control="syncComputerName"/>
-          <textbox id="syncComputerName" flex="1"
-                   onchange="gSyncUtils.changeName(this)"/>
-        </row>
-        <row align="center">
-      <label value="&syncModeSwitchDesc.label;"
-             accesskey="&syncModeSwitchDesc.accesskey;"
-             control="weaveSyncMode"/>
-      <menulist id="weaveSyncMode"
-                oncommand="gSyncSetup.updateSyncPrefs()">
-        <menupopup>
-          <menuitem label="&syncEverything.label;" value="syncEverything"/>
-          <menuitem label="&customSync.label;"     value="customSync"/>
-        </menupopup>
-      </menulist>
-        </row>
-      </rows>
-    </grid>
-    <separator/>
-    <deck id="syncModeOptions" class="indent">
-      <description id="syncEverythingDesc">
-        &syncEverythingDescription.label;
-      </description>
-      <vbox>
-        <checkbox label="&syncItem.bookmarks.label;"
-                  accesskey="&syncItem.bookmarks.accesskey;"
-                  id="engine.bookmarks"
-                  checked="true"/>
-        <checkbox label="&syncItem.passwords.label;"
-                  accesskey="&syncItem.passwords.accesskey;"
-                  id="engine.passwords"
-                  checked="true"/>
-        <checkbox label="&syncItem.prefs.label;"
-                  accesskey="&syncItem.prefs.accesskey;"
-                  id="engine.prefs"
-                  checked="true"/>
-        <checkbox label="&syncItem.history.label;"
-                  accesskey="&syncItem.history.accesskey;"
-                  id="engine.history"
-                  checked="true"/>
-        <checkbox label="&syncItem.tabs.label;"
-                  accesskey="&syncItem.tabs.accesskey;"
-                  id="engine.tabs"
-                  checked="true"/>
-      </vbox>
-    </deck>
-
-  </wizardpage>
-
-  <wizardpage label="&setup.captchaPage.title.label;">
-    <browser height="150"
-             width="322"
-             id="captcha"
-             type="content"
-             disablehistory="true"/>
+      <spacer flex="3"/>
+    </vbox>
   </wizardpage>
 
   <wizardpage id="useExisting"
               label="&setup.existingAccount.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow()">
       <grid>
         <columns>
           <column/>
-          <column/>
+          <column class="inputColumn" flex="1"/>
         </columns>
         <rows>
           <row align="center">
             <label control="existingServerType"
-                   value="&connectTo.label;"/>
+                   value="&server.label;"/>
             <menulist id="existingServerType" oncommand="gSyncSetup.onServerChange()">
               <menupopup>
                 <menuitem label="&serverType.main.label;"
@@ -386,9 +352,12 @@
         </rows>
       </grid>
   </wizardpage>
-  <wizardpage id="existingPassphraseEntry" label="&passphraseGroupbox.label;">
-    <description>&passphraseDesc3.label;</description>
-    <textbox type="password" id="existingPassphrase"
+
+  <wizardpage id="existingPassphraseEntry"
+              onextra1="gSyncSetup.onSyncOptions()"
+              label="&setup.existingSyncKeyPage.title;">
+    <description>&setup.existingSyncKeyPage.description;</description>
+    <textbox id="existingPassphrase"
              onkeyup="gSyncSetup.checkFields(event)"
              onchange="gSyncSetup.checkFields(event)"/>
     <hbox id="passphrase-throbber" hidden="true">
@@ -403,71 +372,107 @@
       </hbox>
     </hbox>
     <vbox class="small" id="passphraseHelpBox" hidden="true">
-      <description class="small">&passphraseHelp.label;</description>
-      <label class="text-link small" value="&changePassphrase.label;"
+      <description class="small">&existingSyncKeyHelp.description;</description>
+      <label class="text-link small" value="&lostSyncKey.label;"
              onclick="gSyncUtils.resetPassphrase(); return false;"/>
     </vbox>
   </wizardpage>
-  <wizardpage id="mergeOptionsChoice"
-              label="&setup.mergeChoicePage.title.label;"
+
+  <wizardpage id="syncOptionsPage"
+              label="&setup.optionsPage.title;"
               onpageshow="gSyncSetup.onPageShow()">
-      <radiogroup id="mergeChoiceRadio" pack="start">
-        <radio id="resetClient"
-               class="mergeChoiceButton"
-               aria-labelledby="mergeMain"
-               aria-describedby="mergeSecondary1 mergeSecondary2"
-               align="top">
-          <image class="mergeChoiceImage"/>
-          <vbox class="mergeChoiceButtonBox" flex="1">
-            <description class="mainDesc" id="mergeMain">
-              &choice.merge.main.label;
-            </description>
-            <separator class="thin"/>
-            <description class="normal" id="mergeSecondary2">
-              &choice.merge.recommend.label;
-            </description>
+    <groupbox id="syncOptions">
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1" style="-moz-margin-end: 2px"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="&syncComputerName.label;"
+                 accesskey="&syncComputerName.accesskey;"
+                 control="syncComputerName"/>
+          <textbox id="syncComputerName" flex="1"
+                   onchange="gSyncUtils.changeName(this)"/>
+        </row>
+        <row>
+          <label value="&syncMy.label;" />
+          <vbox>
+            <checkbox label="&engine.bookmarks.label;"
+                      accesskey="&engine.bookmarks.accesskey;"
+                      id="engine.bookmarks"
+                      checked="true"/>
+            <checkbox label="&engine.passwords.label;"
+                      accesskey="&engine.passwords.accesskey;"
+                      id="engine.passwords"
+                      checked="true"/>
+            <checkbox label="&engine.prefs.label;"
+                      accesskey="&engine.prefs.accesskey;"
+                      id="engine.prefs"
+                      checked="true"/>
+            <checkbox label="&engine.history.label;"
+                      accesskey="&engine.history.accesskey;"
+                      id="engine.history"
+                      checked="true"/>
+            <checkbox label="&engine.tabs.label;"
+                      accesskey="&engine.tabs.accesskey;"
+                      id="engine.tabs"
+                      checked="true"/>
           </vbox>
-        </radio>
-        <radio id="wipeClient"
-               class="mergeChoiceButton"
-               aria-labelledby="wipeClientMain"
-               align="top">
-            <image class="mergeChoiceImage"/>
-            <vbox class="mergeChoiceButtonBox" flex="1">
-              <description class="mainDesc" id="wipeClientMain">
-                &choice.client.main.label;
-              </description>
-            </vbox>
-        </radio>
-        <radio id="wipeRemote"
-               class="mergeChoiceButton"
-               aria-labelledby="wipeServerMain"
-               align="top">
-            <image class="mergeChoiceImage"/>
-            <vbox class="mergeChoiceButtonBox" flex="1">
-              <description class="mainDesc" id="wipeServerMain">
-                &choice.server.main.label;
-              </description>
-            </vbox>
-        </radio>
-    </radiogroup>
+        </row>
+      </rows>
+    </grid>
+    </groupbox>
+
+    <groupbox id="mergeOptions">
+      <radiogroup id="mergeChoiceRadio" pack="start">
+        <grid>
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <radio id="resetClient"
+                     class="mergeChoiceButton"
+                     aria-labelledby="resetClientLabel"/>
+              <label id="resetClientLabel" control="resetClient">
+                <html:strong>&choice2.merge.recommended.label;</html:strong>
+                &choice2.merge.main.label;
+              </label>
+            </row>
+            <row align="center">
+              <radio id="wipeClient"
+                     class="mergeChoiceButton"
+                     aria-labelledby="wipeClientLabel"/>
+              <label id="wipeClientLabel"
+                     control="wipeClient"
+                     value="&choice2.client.main.label;"/>
+            </row>
+            <row align="center">
+              <radio id="wipeRemote"
+                     class="mergeChoiceButton"
+                     aria-labelledby="wipeRemoteLabel"/>
+              <label id="wipeRemoteLabel"
+                     control="wipeRemote"
+                     value="&choice2.server.main.label;"/>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
+    </groupbox>
   </wizardpage>
-  <wizardpage id="mergeOptionsConfirm" label="&confirm.caption.label;">
+
+  <wizardpage id="syncOptionsConfirm"
+              label="&setup.optionsConfirmPage.title;"
+              onpageshow="gSyncSetup.onPageShow()">
       <deck id="chosenActionDeck">
-        <vbox id="chosenActionMerge">
-          <hbox pack="start" align="baseline">
-            <image/>
-          </hbox>
-          <separator class="thin"/>
+        <vbox id="chosenActionMerge" class="confirm">
           <description class="normal">
             &confirm.merge.label;
           </description>
         </vbox>
-        <vbox id="chosenActionWipeClient">
-          <hbox pack="start" align="baseline">
-            <image/>
-          </hbox>
-          <separator class="thin"/>
+        <vbox id="chosenActionWipeClient" class="confirm">
           <description class="normal">
             &confirm.client.label;
           </description>
@@ -486,11 +491,7 @@
             &confirm.client.warning.label;
           </description>
         </vbox>
-        <vbox id="chosenActionWipeServer">
-          <hbox pack="start" align="baseline">
-            <image/>
-          </hbox>
-          <separator class="thin"/>
+        <vbox id="chosenActionWipeServer" class="confirm">
           <description class="normal">
             &confirm.server.label;
           </description>
@@ -504,12 +505,24 @@
         </vbox>
       </deck>
   </wizardpage>
-  <wizardpage label="&setup.successPage.title.label;" 
+
+  <wizardpage label="&setup.successPage.title;" 
               id="successfulSetup"
+              onextra1="gSyncSetup.onSyncOptions()"
               onpageshow="gSyncSetup.onPageShow()">
-    <description>
-      &setup.successPage.desc.label;
+    <vbox align="center">
+      <image id="successPageIcon"/>
+    </vbox>
+    <separator/>
+    <description class="normal">
+      <html:span id="firstSyncAction">replace me</html:span>
+      <html:strong id="firstSyncActionWarning">replace me</html:strong>
+      <html:span id="firstSyncActionChange">replace me</html:span>
     </description>
+    <description>
+      &continueUsing.label;
+    </description>
+    <separator flex="1"/>
   </wizardpage>
 </wizard>
 
