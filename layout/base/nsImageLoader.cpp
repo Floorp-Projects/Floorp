@@ -147,8 +147,6 @@ NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
    *   one loop = 2
    */
   aImage->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
-  // Ensure the animation (if any) is started.
-  aImage->StartAnimation();
 
   return NS_OK;
 }

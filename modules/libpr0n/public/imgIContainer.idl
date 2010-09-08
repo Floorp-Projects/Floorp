@@ -71,7 +71,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(362e5b5f-f677-49e0-9a3c-03249c794624)]
+[scriptable, uuid(8bb94fa2-f57a-482c-bef8-e0b0424b0b3c)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -242,7 +242,5 @@ interface imgIContainer : nsISupports
   attribute unsigned short animationMode;
 
   /* Methods to control animation */
-  void startAnimation();
-  void stopAnimation();
   void resetAnimation();
 };
