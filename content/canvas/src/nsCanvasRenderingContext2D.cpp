@@ -1095,8 +1095,22 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
         if (PR_GetEnv("MOZ_CANVAS_IMAGE_SURFACE")) {
             surface = new gfxImageSurface(gfxIntSize(width, height), format);
         } else {
-            surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
-                (gfxIntSize(width, height), format);
+            nsCOMPtr<nsIContent> content =
+                do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
+            nsIDocument* ownerDoc = nsnull;
+            if (content)
+                ownerDoc = content->GetOwnerDoc();
+            nsRefPtr<LayerManager> layerManager = nsnull;
+
+            if (ownerDoc)
+              layerManager = nsContentUtils::LayerManagerForDocument(ownerDoc);
+
+            if (layerManager) {
+              surface = layerManager->CreateOptimalSurface(gfxIntSize(width, height), format);
+            } else {
+              surface = gfxPlatform::GetPlatform()->
+                CreateOffscreenSurface(gfxIntSize(width, height), format);
+            }
         }
 
         if (surface && surface->CairoStatus() != 0)
