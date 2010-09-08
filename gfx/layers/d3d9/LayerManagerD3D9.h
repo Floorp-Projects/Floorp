@@ -56,6 +56,24 @@ extern cairo_user_data_key_t gKeyD3D9Texture;
 class LayerD3D9;
 class ThebesLayerD3D9;
 
+/**
+ * This structure is used to pass rectangles to our shader constant. We can use
+ * this for passing rectangular areas to SetVertexShaderConstant. In the format
+ * of a 4 component float(x,y,width,height). Our vertex shader can then use
+ * this to construct rectangular positions from the 0,0-1,1 quad that we source
+ * it with.
+ */
+struct ShaderConstantRect
+{
+  float mX, mY, mWidth, mHeight;
+  ShaderConstantRect(float aX, float aY, float aWidth, float aHeight)
+    : mX(aX), mY(aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  // For easy passing to SetVertexShaderConstantF.
+  operator float* () { return &mX; }
+};
+
 /*
  * This is the LayerManager used for Direct3D 9. For now this will render on
  * the main thread.

@@ -304,6 +304,12 @@ LayerManagerD3D9::SetupPipeline()
   if (FAILED(hr)) {
     NS_WARNING("Failed to set projection shader constant!");
   }
+
+  hr = device()->SetVertexShaderConstantF(13, ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to set texCoords shader constant!");
+  }
 }
 
 void

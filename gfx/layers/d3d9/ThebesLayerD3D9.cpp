@@ -200,7 +200,7 @@ ThebesLayerD3D9::RenderLayer()
     mValidRegion.SetEmpty();
   }
 
-  if (!mValidRegion.IsEqual(mVisibleRegion.GetBounds())) {
+  if (!mValidRegion.IsEqual(mVisibleRegion)) {
     /* We use the bounds of the visible region because we draw the bounds of
      * this region when we draw this entire texture. We have to make sure that
      * the areas that aren't filled with content get their background drawn.
@@ -208,30 +208,22 @@ ThebesLayerD3D9::RenderLayer()
      * background painted.
      */
     nsIntRegion region;
-    region.Sub(mVisibleRegion.GetBounds(), mValidRegion);
+    region.Sub(mVisibleRegion, mValidRegion);
 
     DrawRegion(region);
 
-    mValidRegion = mVisibleRegion.GetBounds();
+    mValidRegion = mVisibleRegion;
   }
 
   float quadTransform[4][4];
   /*
    * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-   * and size. To get pixel perfect mapping we offset the quad half a pixel
-   * to the top-left.
-   *
-   * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
+   * and size.
    */
   memset(&quadTransform, 0, sizeof(quadTransform));
-  quadTransform[0][0] = (float)visibleRect.width;
-  quadTransform[1][1] = (float)visibleRect.height;
   quadTransform[2][2] = 1.0f;
-  quadTransform[3][0] = (float)visibleRect.x;
-  quadTransform[3][1] = (float)visibleRect.y;
   quadTransform[3][3] = 1.0f;
 
-  device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
   device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
 
   float opacity[4];
@@ -250,7 +242,27 @@ ThebesLayerD3D9::RenderLayer()
   mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
   device()->SetTexture(0, mTexture);
-  device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+
+  nsIntRegionRectIterator iter(mVisibleRegion);
+
+  const nsIntRect *iterRect;
+  while ((iterRect = iter.Next())) {
+    quadTransform[0][0] = (float)iterRect->width;
+    quadTransform[1][1] = (float)iterRect->height;
+    quadTransform[3][0] = (float)iterRect->x;
+    quadTransform[3][1] = (float)iterRect->y;
+    
+    device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
+    device()->SetVertexShaderConstantF(13, ShaderConstantRect(
+        (float)(iterRect->x - visibleRect.x) / (float)visibleRect.width,
+        (float)(iterRect->y - visibleRect.y) / (float)visibleRect.height,
+        (float)iterRect->width / (float)visibleRect.width,
+        (float)iterRect->height / (float)visibleRect.height), 1);
+    device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  }
+
+  // Set back to default.
+  device()->SetVertexShaderConstantF(13, ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
 }
 
 void
