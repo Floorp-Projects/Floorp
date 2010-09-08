@@ -194,27 +194,28 @@ mjit::Compiler::jsop_rsh_int_unknown(FrameEntry *lhs, FrameEntry *rhs)
 void
 mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
 {
-    JS_ASSERT(!lhs->isTypeKnown() && !rhs->isTypeKnown());
-
-    /* Allocate registers. */
     RegisterID rhsData = rightRegForShift(rhs);
-    RegisterID rhsType = frame.tempRegForType(rhs);
-    frame.pinReg(rhsType);
+
+    MaybeRegisterID rhsType;
+    if (rhs->isNotType(JSVAL_TYPE_INT32)) {
+        rhsType.setReg(frame.tempRegForType(rhs));
+        frame.pinReg(rhsType.reg());
+    }
 
     RegisterID lhsType = frame.tempRegForType(lhs);
     frame.pinReg(lhsType);
     RegisterID lhsData = frame.copyDataIntoReg(lhs);
     frame.unpinReg(lhsType);
+    if (rhsType.isSet())
+        frame.unpinReg(rhsType.reg());
 
-    /* Non-integer rhs jumps to stub. */
-    Jump rhsIntGuard = masm.testInt32(Assembler::NotEqual, rhsType);
-    frame.unpinReg(rhsType);
+    MaybeJump rhsIntGuard;
+    if (rhs->isNotType(JSVAL_TYPE_INT32))
+        rhsIntGuard.setJump(masm.testInt32(Assembler::NotEqual, rhsType.reg()));
 
-    /* Non-integer lhs goes to double guard. */
     Jump lhsIntGuard = masm.testInt32(Assembler::NotEqual, lhsType);
     stubcc.linkExitDirect(lhsIntGuard, stubcc.masm.label());
 
-    /* Attempt to convert lhs double to int32. */
     Jump lhsDoubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, lhsType);
     frame.loadDouble(lhs, FPRegisters::First, stubcc.masm);
     Jump lhsTruncateGuard = stubcc.masm.branchTruncateDoubleToInt32(FPRegisters::First, lhsData);
@@ -223,13 +224,12 @@ mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
     lhsDoubleGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
     lhsTruncateGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
 
-    stubcc.linkExitDirect(rhsIntGuard, stubcc.masm.label());
-
+    if (rhsIntGuard.isSet())
+        stubcc.linkExitDirect(rhsIntGuard.getJump(), stubcc.masm.label());
     frame.sync(stubcc.masm, Uses(2));
     stubcc.call(stubs::Rsh);
 
     masm.rshift32(rhsData, lhsData);
-
     frame.freeReg(rhsData);
     frame.popn(2);
     frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
