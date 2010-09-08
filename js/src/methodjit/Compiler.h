@@ -383,6 +383,7 @@ class Compiler
     STUB_CALL_TYPE(VoidVpStub);
     STUB_CALL_TYPE(VoidStubPC);
     STUB_CALL_TYPE(BoolStubUInt32);
+    STUB_CALL_TYPE(VoidStubFun);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall(Uses uses);
