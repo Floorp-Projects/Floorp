@@ -1487,14 +1487,13 @@ WeaveSvc.prototype = {
         continue;
       }
 
-      if (Svc.Prefs.get("engineStatusChanged." + engineName, false)) {
+      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
         // The engine was disabled locally. Wipe server data and
         // disable it everywhere.
         this._log.trace("Wiping data for " + engineName + " engine.");
         engine.wipeServer();
         delete meta.payload.engines[engineName];
         meta.changed = true;
-        Svc.Prefs.reset("engineStatusChanged." + engineName);
       } else {
         // The engine was enabled remotely. Enable it locally.
         this._log.trace(engineName + " engine was enabled remotely.");
@@ -1504,15 +1503,16 @@ WeaveSvc.prototype = {
 
     // Any remaining engines were either enabled locally or disabled remotely.
     for each (engineName in enabled) {
-      if (Svc.Prefs.get("engineStatusChanged." + engineName, false)) {
+      let engine = Engines.get(engineName);
+      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
         this._log.trace("The " + engineName + " engine was enabled locally.");
-        Svc.Prefs.reset("engineStatusChanged." + engineName);
       } else {
         this._log.trace("The " + engineName + " engine was disabled remotely.");
-        Engines.get(engineName).enabled = false;
+        engine.enabled = false;
       }
     }
 
+    Svc.Prefs.resetBranch("engineStatusChanged.");
     this._ignorePrefObserver = false;
   },
 

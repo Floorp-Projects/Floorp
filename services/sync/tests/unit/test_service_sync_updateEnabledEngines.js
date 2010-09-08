@@ -18,6 +18,17 @@ SteamEngine.prototype = {
 };
 Engines.register(SteamEngine);
 
+function StirlingEngine() {
+  SyncEngine.call(this, "Stirling");
+}
+StirlingEngine.prototype = {
+  __proto__: SteamEngine.prototype,
+  // This engine's enabled state is the same as the SteamEngine's.
+  get prefName() "steam"
+};
+Engines.register(StirlingEngine);
+
+
 function sync_httpd_setup(handlers) {
   handlers["/1.0/johndoe/info/collections"]
       = (new ServerWBO("collections", {})).handler(),
@@ -198,9 +209,110 @@ function test_disabledRemotely() {
   }
 }
 
+function test_dependentEnginesEnabledLocally() {
+  _("Test: Engine is disabled on remote clients and enabled locally");
+  Service.syncID = "abcdefghij";
+  let steamEngine = Engines.get("steam");
+  let stirlingEngine = Engines.get("stirling");
+  let metaWBO = new ServerWBO("global", {syncID: Service.syncID,
+                                         storageVersion: STORAGE_VERSION,
+                                         engines: {}});
+  let server = sync_httpd_setup({
+    "/1.0/johndoe/storage/meta/global": metaWBO.handler(),
+    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
+    "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
+    "/1.0/johndoe/storage/crypto/stirling": new ServerWBO("stirling", {}).handler(),
+    "/1.0/johndoe/storage/stirling": new ServerWBO("stirling", {}).handler()
+  });
+  do_test_pending();
+  setUp();
+
+  try {
+    _("Enable engine locally. Doing it on one is enough.");
+    steamEngine.enabled = true;
+
+    _("Sync.");
+    Weave.Service.login();
+    Weave.Service.sync();
+
+    _("Meta record now contains the new engines.");
+    do_check_true(!!metaWBO.data.engines.steam);
+    do_check_true(!!metaWBO.data.engines.stirling);
+
+    _("Engines continue to be enabled.");
+    do_check_true(steamEngine.enabled);
+    do_check_true(stirlingEngine.enabled);
+  } finally {
+    server.stop(do_test_finished);
+    Service.startOver();
+  }
+}
+
+function test_dependentEnginesDisabledLocally() {
+  _("Test: Two dependent engines are enabled on remote clients and disabled locally");
+  Service.syncID = "abcdefghij";
+  let steamEngine = Engines.get("steam");
+  let stirlingEngine = Engines.get("stirling");
+  let metaWBO = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    engines: {steam: {syncID: steamEngine.syncID,
+                      version: steamEngine.version},
+              stirling: {syncID: stirlingEngine.syncID,
+                         version: stirlingEngine.version}}
+  });
+
+  let steamCrypto = new ServerWBO("steam", PAYLOAD);
+  let steamCollection = new ServerWBO("steam", PAYLOAD);
+  let stirlingCrypto = new ServerWBO("stirling", PAYLOAD);
+  let stirlingCollection = new ServerWBO("stirling", PAYLOAD);
+  let server = sync_httpd_setup({
+    "/1.0/johndoe/storage/meta/global":     metaWBO.handler(),
+    "/1.0/johndoe/storage/crypto/steam":    steamCrypto.handler(),
+    "/1.0/johndoe/storage/steam":           steamCollection.handler(),
+    "/1.0/johndoe/storage/crypto/stirling": stirlingCrypto.handler(),
+    "/1.0/johndoe/storage/stirling":        stirlingCollection.handler()
+  });
+  do_test_pending();
+  setUp();
+
+  try {
+    _("Disable engines locally. Doing it on one is enough.");
+    Service._ignorePrefObserver = true;
+    steamEngine.enabled = true;
+    do_check_true(stirlingEngine.enabled);
+    Service._ignorePrefObserver = false;
+    steamEngine.enabled = false;
+    do_check_false(stirlingEngine.enabled);
+
+    _("Sync.");
+    Weave.Service.login();
+    Weave.Service.sync();
+
+    _("Meta record no longer contains engines.");
+    do_check_false(!!metaWBO.data.engines.steam);
+    do_check_false(!!metaWBO.data.engines.stirling);
+
+    _("Server records are wiped.");
+    do_check_eq(steamCollection.payload, undefined);
+    do_check_eq(steamCrypto.payload, undefined);
+    do_check_eq(stirlingCollection.payload, undefined);
+    do_check_eq(stirlingCrypto.payload, undefined);
+
+    _("Engines continue to be disabled.");
+    do_check_false(steamEngine.enabled);
+    do_check_false(stirlingEngine.enabled);
+  } finally {
+    server.stop(do_test_finished);
+    Service.startOver();
+  }
+}
+
 function run_test() {
   test_enabledLocally();
   test_disabledLocally();
   test_enabledRemotely();
   test_disabledRemotely();
+  test_dependentEnginesEnabledLocally();
+  test_dependentEnginesDisabledLocally();
 }
