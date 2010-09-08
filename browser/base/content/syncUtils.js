@@ -244,68 +244,65 @@ let gSyncUtils = {
     });
   },
 
-
   /**
-   * validatePassword / validatePassphrase
+   * validatePassword
    *
    * @param el1 : the first textbox element in the form
    * @param el2 : the second textbox element, if omitted it's an update form
    * 
    * returns [valid, errorString]
    */
-
   validatePassword: function (el1, el2) {
-    return this._validate(el1, el2, true);
-  },
-
-  validatePassphrase: function (el1, el2) {
-    return this._validate(el1, el2, false);
-  },
-
-  _validate: function (el1, el2, isPassword) {
     let valid = false;
     let val1 = el1.value;
     let val2 = el2 ? el2.value : "";
     let error = "";
 
-    if (isPassword) {
-      if (!el2)
-        valid = val1.length >= Weave.MIN_PASS_LENGTH;
-      else if (val1 && val1 == Weave.Service.username)
-        error = "change.password.pwSameAsUsername";
-      else if (val1 && val1 == Weave.Service.password)
-        error = "change.password.pwSameAsPassword";
-      else if (val1 && val1 == Weave.Service.passphrase)
-        error = "change.password.pwSameAsPassphrase";
-      else if (val1 && val2) {
-        if (val1 == val2 && val1.length >= Weave.MIN_PASS_LENGTH)
-          valid = true;
-        else if (val1.length < Weave.MIN_PASS_LENGTH)
-          error = "change.password.tooShort";
-        else if (val1 != val2)
-          error = "change.password.mismatch";
-      }
-    }
-    else {
-      if (!el2)
-        valid = val1.length >= Weave.MIN_PP_LENGTH;
-      else if (val1 == Weave.Service.username)
-        error = "change.passphrase.ppSameAsUsername";
-      else if (val1 == Weave.Service.password)
-        error = "change.passphrase.ppSameAsPassword";
-      else if (val1 == Weave.Service.passphrase)
-        error = "change.passphrase.ppSameAsPassphrase";
-      else if (val1 && val2) {
-        if (val1 == val2 && val1.length >= Weave.MIN_PP_LENGTH)
-          valid = true;
-        else if (val1.length < Weave.MIN_PP_LENGTH)
-          error = "change.passphrase.tooShort";
-        else if (val1 != val2)
-          error = "change.passphrase.mismatch";
-      }
+    if (!el2)
+      valid = val1.length >= Weave.MIN_PASS_LENGTH;
+    else if (val1 && val1 == Weave.Service.username)
+      error = "change.password.pwSameAsUsername";
+    else if (val1 && val1 == Weave.Service.password)
+      error = "change.password.pwSameAsPassword";
+    else if (val1 && val1 == Weave.Service.passphrase)
+      error = "change.password.pwSameAsSyncKey";
+    else if (val1 && val2) {
+      if (val1 == val2 && val1.length >= Weave.MIN_PASS_LENGTH)
+        valid = true;
+      else if (val1.length < Weave.MIN_PASS_LENGTH)
+        error = "change.password.tooShort";
+      else if (val1 != val2)
+        error = "change.password.mismatch";
     }
     let errorString = error ? Weave.Utils.getErrorString(error) : "";
-    dump("valid: " + valid + " error: " + errorString + "\n");
+    return [valid, errorString];
+  },
+
+  /**
+   * validatePassphrase
+   *
+   * @param el : the textbox element
+   * @param change : indicate whether this signifies a passphrase change
+   * 
+   * returns [valid, errorString]
+   */
+  validatePassphrase: function (el, change) {
+    let valid = false;
+    let val = el.value;
+    let error = "";
+
+    if (val == Weave.Service.username)
+      error = "change.synckey.sameAsUsername";
+    else if (val == Weave.Service.password)
+      error = "change.synckey.sameAsPassword";
+    else if (change && val == Weave.Service.passphrase)
+      error = "change.synckey.sameAsSyncKey";
+    else if (val.length < Weave.MIN_PP_LENGTH)
+      error = "change.synckey.tooShort";
+    else
+      valid = true;
+
+    let errorString = error ? Weave.Utils.getErrorString(error) : "";
     return [valid, errorString];
   }
 }
