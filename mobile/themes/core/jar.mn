@@ -10,7 +10,7 @@ chrome.jar:
   skin/firstRun.css                         (firstRun.css)
   skin/header.css                           (header.css)
   skin/platform.css                         (platform.css)
-  skin/browser.css                          (browser.css)
+* skin/browser.css                          (browser.css)
   skin/notification.css                     (notification.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 
@@ -42,8 +42,6 @@ chrome.jar:
   skin/images/folder-32.png                 (images/folder-32.png)
   skin/images/stop-30.png                   (images/stop-30.png)
   skin/images/reload-30.png                 (images/reload-30.png)
-  skin/images/go-30.png                     (images/go-30.png)
-  skin/images/go-rtl-30.png                 (images/go-rtl-30.png)
   skin/images/alert-addons-30.png           (images/alert-addons-30.png)
   skin/images/alert-downloads-30.png        (images/alert-downloads-30.png)
   skin/images/addons-default-64.png         (images/addons-default-64.png)

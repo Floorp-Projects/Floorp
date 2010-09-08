@@ -1317,11 +1317,13 @@ ContentCustomClicker.prototype = {
 
     this._dispatchMouseEvent("Browser:MouseCancel");
 
-    const kDoubleClickRadius = 32;
+    const kDoubleClickRadius = 100;
 
     let maxRadius = kDoubleClickRadius * getBrowser().scale;
-    let isClickInRadius = (Math.abs(aX1 - aX2) < maxRadius && Math.abs(aY1 - aY2) < maxRadius);
-    if (isClickInRadius)
+    let dx = aX2 - aX1;
+    let dy = aY1 - aY2;
+
+    if (dx*dx + dy*dy < maxRadius*maxRadius)
       this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
   },
 

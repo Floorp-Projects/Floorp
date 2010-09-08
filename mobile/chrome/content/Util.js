@@ -46,12 +46,6 @@
 Cu.import("resource://gre/modules/Geometry.jsm");
 
 let Util = {
-  bind: function bind(f, thisObj) {
-    return function() {
-      return f.apply(thisObj, arguments);
-    };
-  },
-
   /** printf-like dump function */
   dumpf: function dumpf(str) {
     let args = arguments;

@@ -46,7 +46,7 @@
 const kDoubleClickInterval = 400;
 
 // threshold in ms to detect if the click is possibly a dblClick
-const kDoubleClickThreshold = 200;
+const kDoubleClickThreshold = 300;
 
 // threshold in pixels for sensing a tap as opposed to a pan
 const kTapRadius = 25;
@@ -339,8 +339,8 @@ function MouseModule(owner, browserViewContainer) {
   this._targetScrollInterface = null;
 
   var self = this;
-  this._kinetic = new KineticController(Util.bind(this._dragBy, this),
-                                        Util.bind(this._kineticStop, this));
+  this._kinetic = new KineticController(this._dragBy.bind(this),
+                                        this._kineticStop.bind(this));
 
   messageManager.addMessageListener("Browser:ContextMenu", this);
 }
