@@ -2,7 +2,7 @@
 
 const HAVE_TM = 'tracemonkey' in this;
 
-const HOTLOOP = HAVE_TM ? tracemonkey.HOTLOOP : 2;
+const HOTLOOP = HAVE_TM ? tracemonkey.HOTLOOP : 8;
 const RECORDLOOP = HOTLOOP;
 const RUNLOOP = HOTLOOP + 1;
 
