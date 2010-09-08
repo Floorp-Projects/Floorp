@@ -1071,13 +1071,23 @@ nsObjectFrame::CallSetWindow()
 
   PRBool windowless = (window->type == NPWindowTypeDrawable);
 
-  nsIntPoint origin = GetWindowOriginInPixels(windowless);
-
-  window->x = origin.x;
-  window->y = origin.y;
-
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPortFromWidget();
+
+  // Adjust plugin dimensions according to pixel snap results
+  // and reduce amount of SetWindow calls
+  nsPresContext* presContext = PresContext();
+  nsRootPresContext* rootPC = presContext->GetRootPresContext();
+  if (!rootPC)
+    return;
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
+  nsRect bounds = GetContentRect() + GetParent()->GetOffsetToCrossDoc(rootFrame);
+  nsIntRect intBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
+  window->x = intBounds.x;
+  window->y = intBounds.y;
+  window->width = intBounds.width;
+  window->height = intBounds.height;
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
