@@ -2305,7 +2305,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             NS_HTML5_BREAK(endtagloop);
           }
           case NS_HTML5TREE_BUILDER_P: {
-            eltPos = findLastInScope(nsHtml5Atoms::p);
+            eltPos = findLastInButtonScope(nsHtml5Atoms::p);
             if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
 
               if (inForeign) {
@@ -2737,6 +2737,19 @@ nsHtml5TreeBuilder::findLastInTableScope(nsIAtom* name)
 }
 
 PRInt32 
+nsHtml5TreeBuilder::findLastInButtonScope(nsIAtom* name)
+{
+  for (PRInt32 i = currentPtr; i > 0; i--) {
+    if (stack[i]->name == name) {
+      return i;
+    } else if (stack[i]->scoping || stack[i]->name == nsHtml5Atoms::button) {
+      return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+    }
+  }
+  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+}
+
+PRInt32 
 nsHtml5TreeBuilder::findLastInScope(nsIAtom* name)
 {
   for (PRInt32 i = currentPtr; i > 0; i--) {
@@ -3006,7 +3019,7 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
 void 
 nsHtml5TreeBuilder::implicitlyCloseP()
 {
-  PRInt32 eltPos = findLastInScope(nsHtml5Atoms::p);
+  PRInt32 eltPos = findLastInButtonScope(nsHtml5Atoms::p);
   if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
     return;
   }

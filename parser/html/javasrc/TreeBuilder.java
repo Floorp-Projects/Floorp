@@ -3432,7 +3432,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             removeFromStack(eltPos);
                             break endtagloop;
                         case P:
-                            eltPos = findLastInScope("p");
+                            eltPos = findLastInButtonScope("p");
                             if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
                                 err("No \u201Cp\u201D element in scope but a \u201Cp\u201D end tag seen.");
                                 // XXX inline this case
@@ -3905,6 +3905,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return TreeBuilder.NOT_FOUND_ON_STACK;
     }
 
+    private int findLastInButtonScope(@Local String name) {
+        for (int i = currentPtr; i > 0; i--) {
+            if (stack[i].name == name) {
+                return i;
+            } else if (stack[i].scoping || stack[i].name == "button") {
+                return TreeBuilder.NOT_FOUND_ON_STACK;
+            }
+        }
+        return TreeBuilder.NOT_FOUND_ON_STACK;
+    }
+
     private int findLastInScope(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
             if (stack[i].name == name) {
@@ -4177,7 +4188,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      * 
      */
     private void implicitlyCloseP() throws SAXException {
-        int eltPos = findLastInScope("p");
+        int eltPos = findLastInButtonScope("p");
         if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
             return;
         }
