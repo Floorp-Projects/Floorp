@@ -2870,25 +2870,7 @@ var browserDragAndDrop = {
   },
 
   drop: function (aEvent, aName) Services.droppedLinkHandler.dropLink(aEvent, aName)
-}
-
-var proxyIconDNDObserver = {
-  onDragStart: function (aEvent, aXferData, aDragAction)
-    {
-      if (gProxyFavIcon.getAttribute("pageproxystate") != "valid")
-        return;
-
-      var value = content.location.href;
-      var urlString = value + "\n" + content.document.title;
-      var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
-
-      var dt = aEvent.dataTransfer;
-      dt.setData("text/x-moz-url", urlString);
-      dt.setData("text/uri-list", value);
-      dt.setData("text/plain", value);
-      dt.setData("text/html", htmlString);
-    }
-}
+};
 
 var homeButtonObserver = {
   onDrop: function (aEvent)
@@ -7225,6 +7207,22 @@ var gIdentityHandler = {
 
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, position);
+  },
+
+  onDragStart: function (event) {
+    if (gURLBar.getAttribute("pageproxystate") != "valid")
+      return;
+
+    var value = content.location.href;
+    var urlString = value + "\n" + content.document.title;
+    var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
+
+    var dt = event.dataTransfer;
+    dt.setData("text/x-moz-url", urlString);
+    dt.setData("text/uri-list", value);
+    dt.setData("text/plain", value);
+    dt.setData("text/html", htmlString);
+    dt.setDragImage(event.currentTarget, 0, 0);
   }
 };
 
