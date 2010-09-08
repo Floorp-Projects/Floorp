@@ -15,7 +15,7 @@
 <!ENTITY manageAccount.label          "Manage Account">
 <!ENTITY manageAccount.accesskey      "A">
 <!ENTITY changePassword.label         "Change Password">
-<!ENTITY changePassphrase.label       "Change Secret Phrase">
+<!ENTITY mySyncKey.label              "My Sync Key">
 <!ENTITY resetSync.label              "Reset Sync">
 <!ENTITY differentAccount.label       "Use a Different Account">
 
