@@ -42,11 +42,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// how many msecs elapse before two taps are not a double tap
+// Maximum delay in ms between the two taps of a double-tap
 const kDoubleClickInterval = 400;
 
-// threshold in ms to detect if the click is possibly a dblClick
-const kDoubleClickThreshold = 300;
+// If a tap lasts longer than this duration in ms, treat it as a single-tap
+// immediately instead of waiting for a possible double tap.
+const kDoubleClickThreshold = 200;
 
 // threshold in pixels for sensing a tap as opposed to a pan
 const kTapRadius = 25;
