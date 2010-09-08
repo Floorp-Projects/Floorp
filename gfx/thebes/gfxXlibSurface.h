@@ -86,6 +86,7 @@ public:
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }
+    XRenderPictFormat* XRenderFormat();
 
     static int DepthOfVisual(const Screen* screen, const Visual* visual);
     static Visual* FindVisual(Screen* screen, gfxImageFormat format);
