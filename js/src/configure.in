@@ -1880,12 +1880,7 @@ ia64*-hpux*)
         MOZ_DEBUG_FLAGS="-g"
     elif test "$GNU_CXX"; then
         GCC_VERSION=`$CXX -v 2>&1 | awk '/^gcc version/ { print $3 }'`
-        case $GCC_VERSION in
-        4.1.*|4.2.*|4.5.*)
-            # -Os is broken on gcc 4.1.x 4.2.x, 4.5.x we need to tweak it to get good results.
-            MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
-        esac
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -4198,7 +4193,6 @@ fi # COMPILE_ENVIRONMENT
 AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
-AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 
 dnl ========================================================
 dnl = (Deprecated) generation of debugger info for specific modules
