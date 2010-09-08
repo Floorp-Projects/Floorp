@@ -834,8 +834,8 @@
             this._pendingPixelsX += x;
             this._pendingPixelsY += y;
 
-            if (Math.abs(this._pendingPixelsX) >= this._pendingThresholdX ||
-                Math.abs(this._pendingPixelsY) >= this._pendingThresholdY)
+            if (Math.abs(this._pendingPixelsX) > Math.max(0, this._pendingThresholdX - bcr.width / 2) ||
+                Math.abs(this._pendingPixelsY) > Math.max(0, this._pendingThresholdY - bcr.height / 2))
               this._updateCacheViewport();
           ]]>
         </body>
