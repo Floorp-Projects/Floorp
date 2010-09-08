@@ -419,6 +419,21 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     aContext->SetOperator(op);
 }
 
+/* static */ int
+gfxUtils::ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat)
+{
+    switch (aFormat) {
+        case gfxASurface::ImageFormatARGB32:
+            return 32;
+        case gfxASurface::ImageFormatRGB24:
+            return 24;
+        case gfxASurface::ImageFormatRGB16_565:
+            return 16;
+        default:
+            break;
+    }
+    return 0;
+}
 static void
 ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
                      PRBool aSnap)

@@ -82,7 +82,7 @@ public:
       return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
     }
 
-    const gfxIntSize& GetSize() { return mSize; }
+    virtual const gfxIntSize GetSize() const { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }
