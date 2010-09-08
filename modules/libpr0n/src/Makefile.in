@@ -55,6 +55,7 @@ CPPSRCS		= \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			RasterImage.cpp \
+			SVGDocumentWrapper.cpp \
 			VectorImage.cpp \
 			imgFrame.cpp \
 			imgLoader.cpp    \
@@ -66,6 +67,12 @@ CPPSRCS		= \
 
 # We need to instantiate the decoders
 LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/decoders
+
+# Because SVGDocumentWrapper.cpp includes "nsSVGSVGElement.h"
+LOCAL_INCLUDES += \
+			-I$(topsrcdir)/content/svg/content/src \
+			-I$(topsrcdir)/content/base/src \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
