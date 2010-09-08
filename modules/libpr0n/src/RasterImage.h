@@ -64,6 +64,9 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
+#ifdef DEBUG
+  #include "imgIContainerDebug.h"
+#endif
 
 class imgIDecoder;
 class nsIInputStream;
@@ -145,16 +148,22 @@ namespace imagelib {
 class imgDecodeWorker;
 class Decoder;
 
-class RasterImage : public mozilla::imagelib::Image,
-                    public nsITimerCallback,
-                    public nsIProperties,
-                    public nsSupportsWeakReference
+class RasterImage : public mozilla::imagelib::Image
+                  , public nsITimerCallback
+                  , public nsIProperties
+                  , public nsSupportsWeakReference
+#ifdef DEBUG
+                  , public imgIContainerDebug
+#endif
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICONTAINER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
+#ifdef DEBUG
+  NS_DECL_IMGICONTAINERDEBUG
+#endif
 
   RasterImage(imgStatusTracker* aStatusTracker = nsnull);
   virtual ~RasterImage();
@@ -472,6 +481,10 @@ private: // data
   nsRefPtr<Decoder>              mDecoder;
   nsRefPtr<imgDecodeWorker>      mWorker;
   PRUint32                       mBytesDecoded;
+
+#ifdef DEBUG
+  PRUint32                       mFramesNotified;
+#endif
 
   // Boolean flags (clustered together to conserve space):
   PRPackedBool               mHasSize:1;       // Has SetSize() been called?

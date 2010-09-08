@@ -166,8 +166,13 @@ DiscardingEnabled()
 namespace mozilla {
 namespace imagelib {
 
+#ifndef DEBUG
 NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
                    nsISupportsWeakReference)
+#else
+NS_IMPL_ISUPPORTS5(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
+                   imgIContainerDebug, nsISupportsWeakReference)
+#endif
 
 //******************************************************************************
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
@@ -181,6 +186,9 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
+#ifdef DEBUG
+  mFramesNotified(0),
+#endif
   mHasSize(PR_FALSE),
   mDecodeOnDraw(PR_FALSE),
   mMultipart(PR_FALSE),
@@ -1406,6 +1414,10 @@ RasterImage::SetSourceSizeHint(PRUint32 sizeHint)
 NS_IMETHODIMP
 RasterImage::Notify(nsITimer *timer)
 {
+#ifdef DEBUG
+  mFramesNotified++;
+#endif
+
   // This should never happen since the timer is only set up in StartAnimation()
   // after mAnim is checked to exist.
   NS_ABORT_IF_FALSE(mAnim, "Need anim for Notify()");
@@ -2731,6 +2743,20 @@ RasterImage::ShouldAnimate()
   return Image::ShouldAnimate() && mFrames.Length() >= 2 &&
          mAnimationMode != kDontAnimMode && !mAnimationFinished;
 }
+
+//******************************************************************************
+/* readonly attribute PRUint32 framesNotified; */
+#ifdef DEBUG
+NS_IMETHODIMP
+RasterImage::GetFramesNotified(PRUint32 *aFramesNotified)
+{
+  NS_ENSURE_ARG_POINTER(aFramesNotified);
+
+  *aFramesNotified = mFramesNotified;
+
+  return NS_OK;
+}
+#endif
 
 } // namespace imagelib
 } // namespace mozilla
