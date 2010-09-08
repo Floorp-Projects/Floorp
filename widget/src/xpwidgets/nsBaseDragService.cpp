@@ -628,7 +628,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
       gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
     nsIntRect imgSize(0, 0, srcSize.width, srcSize.height);
     imgContainer->Draw(ctx, gfxPattern::FILTER_GOOD, scale, outRect, imgSize,
-                       imgIContainer::FLAG_SYNC_DECODE);
+                       destSize, imgIContainer::FLAG_SYNC_DECODE);
     return NS_OK;
   } else {
     return aCanvas->RenderContextsExternal(ctx, gfxPattern::FILTER_GOOD);
