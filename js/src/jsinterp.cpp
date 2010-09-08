@@ -1958,7 +1958,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 namespace js {
 
 JS_REQUIRES_STACK bool
-Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
+Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN interpFlags)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
@@ -2115,8 +2115,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
     JSAtom **atoms = script->atomMap.vector;
 
 #ifdef JS_METHODJIT
-    bool leaveOnTracePoint = (fp->flags & JSFRAME_BAILING) && !fp->hasIMacroPC();
-# define CLEAR_LEAVE_ON_TRACE_POINT() ((void) (leaveOnTracePoint = false))
+# define CLEAR_LEAVE_ON_TRACE_POINT() ((void) (leaveOnSafePoint = false))
 #else
 # define CLEAR_LEAVE_ON_TRACE_POINT() ((void) 0)
 #endif
@@ -2212,16 +2211,18 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 #endif
 
 #ifdef JS_METHODJIT
-# define LEAVE_ON_TRACE_POINT()                                               \
+# define LEAVE_ON_SAFE_POINT()                                               \
     do {                                                                      \
-        if (leaveOnTracePoint && !fp->hasIMacroPC() &&                        \
+        JS_ASSERT_IF(leaveOnSafePoint, !TRACE_RECORDER(cx));                  \
+        if (leaveOnSafePoint && !fp->hasIMacroPC() &&                         \
             script->nmap && script->nmap[regs.pc - script->code]) {           \
+            JS_ASSERT(!TRACE_RECORDER(cx));                                   \
             interpReturnOK = true;                                            \
             goto stop_recording;                                              \
         }                                                                     \
     } while (0)
 #else
-# define LEAVE_ON_TRACE_POINT() /* nop */
+# define LEAVE_ON_SAFE_POINT() /* nop */
 #endif
 
 #define BRANCH(n)                                                             \
@@ -2242,15 +2243,14 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
                 op = (JSOp) *regs.pc;                                         \
             }                                                                 \
         }                                                                     \
-        LEAVE_ON_TRACE_POINT();                                               \
+        LEAVE_ON_SAFE_POINT();                                                \
         DO_OP();                                                              \
     JS_END_MACRO
 
     MUST_FLOW_THROUGH("exit");
 
-#ifdef JS_TRACER
-    bool wasRecording = !!(fp->flags & JSFRAME_RECORDING);
-    bool wasImacroRun = fp->hasIMacroPC() && !TRACE_RECORDER(cx);
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
+    bool leaveOnSafePoint = !!(interpFlags & JSINTERP_SAFEPOINT);
 #endif
 
     ++cx->interpLevel;
@@ -2312,7 +2312,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
      * there should already be a valid recorder. Otherwise...
      * we cannot reenter the interpreter while recording.
      */
-    if (wasRecording) {
+    if (interpFlags & JSINTERP_RECORD) {
         JS_ASSERT(TRACE_RECORDER(cx));
         ENABLE_INTERRUPTS();
     } else if (TRACE_RECORDER(cx)) {
@@ -2407,6 +2407,21 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
         if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
             AbortableRecordingStatus status = tr->monitorRecording(op);
             JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
+
+            if (interpFlags & (JSINTERP_RECORD | JSINTERP_SAFEPOINT)) {
+                switch (status) {
+                  case ARECORD_IMACRO_ABORTED:
+                  case ARECORD_ABORTED:
+                  case ARECORD_COMPLETED:
+                  case ARECORD_STOP:
+                    leaveOnSafePoint = true;
+                    LEAVE_ON_SAFE_POINT();
+                    break;
+                  default:
+                    break;
+                }
+            }
+
             switch (status) {
               case ARECORD_CONTINUE:
                 moreInterrupts = true;
@@ -2430,9 +2445,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
               default:
                 JS_NOT_REACHED("Bad recording status");
             }
-        } else if (wasRecording) {
-            interpReturnOK = true;
-            goto stop_recording;
         }
 #endif /* !JS_TRACER */
 
@@ -2463,7 +2475,7 @@ END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_TRACE)
 #ifdef JS_METHODJIT
-    LEAVE_ON_TRACE_POINT();
+    LEAVE_ON_SAFE_POINT();
 #endif
 END_CASE(JSOP_TRACE)
 
@@ -2556,17 +2568,7 @@ BEGIN_CASE(JSOP_STOP)
         jsbytecode *imacpc = fp->getIMacroPC();
         regs.pc = imacpc + js_CodeSpec[*imacpc].length;
         fp->clearIMacroPC();
-# ifdef JS_METHODJIT
-        if ((wasImacroRun || wasRecording) && !TRACE_RECORDER(cx)) {
-            if (script->nmap && script->nmap[regs.pc - script->code]) {
-                interpReturnOK = true;
-                goto stop_recording;
-            }
-            leaveOnTracePoint = true;
-        }
-# endif
-        JS_ASSERT_IF(!(op == JSOP_STOP || (wasImacroRun && op == JSOP_IMACOP)),
-                     !(fp->flags & JSFRAME_RECORDING));
+        LEAVE_ON_SAFE_POINT();
         atoms = script->atomMap.vector;
         op = JSOp(*regs.pc);
         DO_OP();
@@ -6868,7 +6870,7 @@ END_CASE(JSOP_ARRAYPUSH)
     cx->setCurrentRegs(prevContextRegs);
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(interpReturnOK && wasRecording, !TRACE_RECORDER(cx));
+    JS_ASSERT_IF(interpReturnOK && (interpFlags & JSINTERP_RECORD), !TRACE_RECORDER(cx));
     if (TRACE_RECORDER(cx))
         AbortRecording(cx, "recording out of Interpret");
 #endif

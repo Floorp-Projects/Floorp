@@ -781,9 +781,7 @@ PartialInterpret(VMFrame &f)
               !fp->getScript()->nmap[cx->regs->pc - fp->getScript()->code]);
 
     JSBool ok = JS_TRUE;
-    fp->flags |= JSFRAME_BAILING;
-    ok = Interpret(cx, fp);
-    fp->flags &= ~JSFRAME_BAILING;
+    ok = Interpret(cx, fp, 0, JSINTERP_SAFEPOINT);
 
     f.fp() = cx->fp();
 
@@ -807,9 +805,8 @@ static bool
 RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 {
     JSContext *cx = f.cx;
-    while (cx->fp() != entryFrame) {
+    while (cx->fp() != entryFrame || entryFrame->hasIMacroPC()) {
         JSStackFrame *fp = cx->fp();
-        fp->flags &= ~JSFRAME_RECORDING;
 
         if (AtSafePoint(cx)) {
             JSScript *script = fp->getScript();
@@ -826,12 +823,13 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
             if (!PartialInterpret(f)) {
                 if (!SwallowErrors(f, entryFrame))
                     return false;
-            } else {
+            } else if (cx->fp() != entryFrame) {
                 /*
                  * Partial interpret could have dropped us anywhere. Deduce the
                  * edge case: at a RETURN, needing to pop a frame.
                  */
-                if (!cx->fp()->hasIMacroPC() && FrameIsFinished(cx)) {
+                JS_ASSERT(!cx->fp()->hasIMacroPC());
+                if (FrameIsFinished(cx)) {
                     JSOp op = JSOp(*cx->regs->pc);
                     if (op == JSOP_RETURN && !(cx->fp()->flags & JSFRAME_BAILED_AT_RETURN))
                         fp->setReturnValue(f.regs.sp[-1]);
@@ -949,26 +947,17 @@ RunTracer(VMFrame &f)
     if (!RemoveExcessFrames(f, entryFrame))
         THROWV(NULL);
 
-    /* Step 2. If there's an imacro on the entry frame, remove it. */
-    entryFrame->flags &= ~JSFRAME_RECORDING;
-    while (entryFrame->hasIMacroPC()) {
-        if (!PartialInterpret(f)) {
-            if (!SwallowErrors(f, entryFrame))
-                THROWV(NULL);
-        }
+    /* IMacros are guaranteed to have been removed by now. */
+    JS_ASSERT(!entryFrame->hasIMacroPC());
 
-        /* After partial interpreting, we could have more frames again. */
-        goto restart;
-    }
-
-    /* Step 3.1. If entryFrame is at a safe point, just leave. */
+    /* Step 2. If entryFrame is at a safe point, just leave. */
     if (AtSafePoint(cx)) {
         uint32 offs = uint32(cx->regs->pc - entryFrame->getScript()->code);
         JS_ASSERT(entryFrame->getScript()->nmap[offs]);
         return entryFrame->getScript()->nmap[offs];
     }
 
-    /* Step 3.2. If entryFrame is at a RETURN, then leave slightly differently. */
+    /* Step 3. If entryFrame is at a RETURN, then leave slightly differently. */
     if (JSOp op = FrameIsFinished(cx)) {
         /* We're not guaranteed that the RETURN was run. */
         if (op == JSOP_RETURN && !(entryFrame->flags & JSFRAME_BAILED_AT_RETURN))
@@ -984,7 +973,7 @@ RunTracer(VMFrame &f)
         return NULL;
     }
 
-    /* Step 3.3. Do a partial interp, then restart the whole process. */
+    /* Step 4. Do a partial interp, then restart the whole process. */
     if (!PartialInterpret(f)) {
         if (!SwallowErrors(f, entryFrame))
             THROWV(NULL);
