@@ -24,30 +24,71 @@ var gClickCount = 0;
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
+var input = document.getElementById("input");
+
 function runTests()
 {
-  var input = document.getElementById("input");
-  // click on border of input
-  synthesizeMouse(input, 5, 5, { });
-  is(gClickCount, 1, "click event doesn't fired on input element");
-
-  gClickCount = 0;
-  // down on border
-  synthesizeMouse(input, 5, 5, { type: "mousedown" });
-  // up on anonymous div of input
-  synthesizeMouse(input, 20, 20, { type: "mouseup" });
-  is(gClickCount, 1, "click event doesn't fired on input element");
-
-  gClickCount = 0;
-  // down on anonymous div of input
-  synthesizeMouse(input, 20, 20, { type: "mousedown" });
-  // up on border
-  synthesizeMouse(input, 5, 5, { type: "mouseup" });
-  is(gClickCount, 1, "click event doesn't fired on input element");
-
+  for (var i = 0; i < 3; i++) {
+    doTest(i);
+  }
   input.style.display = "none";
-
   SimpleTest.finish();
+}
+
+function isEnabledMiddleClickPaste()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                         getService(Components.interfaces.nsIPrefBranch2);
+  try {
+    return prefs.getBoolPref("middlemouse.paste");
+  } catch (e) {
+    return false;
+  }
+}
+
+function doTest(aButton)
+{
+  // NOTE #1: Right click causes a context menu to popup, then, the click event
+  //          isn't generated.
+  // NOTE #2: If middle click causes text to be pasted, then, the click event
+  //          isn't generated.
+  if (aButton != 2 && (aButton != 1 || !isEnabledMiddleClickPaste())) {
+    gClickCount = 0;
+    // click on border of input
+    synthesizeMouse(input, 5, 5, { button: aButton });
+    is(gClickCount, 1,
+       "click event doesn't fired on input element (button is " +
+         aButton + ")");
+
+    gClickCount = 0;
+    // down on border
+    synthesizeMouse(input, 5, 5, { type: "mousedown", button: aButton });
+    // up on anonymous div of input
+    synthesizeMouse(input, 20, 20, { type: "mouseup", button: aButton });
+    is(gClickCount, 1,
+       "click event doesn't fired on input element (button is " +
+         aButton + ")");
+
+    gClickCount = 0;
+    // down on anonymous div of input
+    synthesizeMouse(input, 20, 20, { type: "mousedown", button: aButton });
+    // up on border
+    synthesizeMouse(input, 5, 5, { type: "mouseup", button: aButton });
+    is(gClickCount, 1,
+       "click event doesn't fired on input element (button is " +
+         aButton + ")");
+  }
+
+  gClickCount = 0;
+  // down on outside of input
+  synthesizeMouse(input, -3, -3, { type: "mousedown", button: aButton });
+  // up on border
+  synthesizeMouse(input, 5, 5, { type: "mouseup", button: aButton });
+  is(gClickCount, 0,
+     "click event is fired on input element unexpectedly (button is " +
+       aButton + ")");
 }
 
 </script>
