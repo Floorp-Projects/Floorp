@@ -1,4 +1,4 @@
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/constants.js");
 
 function run_test() {
