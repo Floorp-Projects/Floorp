@@ -55,6 +55,7 @@ CPPSRCS		= \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			RasterImage.cpp \
+			VectorImage.cpp \
 			imgFrame.cpp \
 			imgLoader.cpp    \
 			imgRequest.cpp   \

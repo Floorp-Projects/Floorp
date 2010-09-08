@@ -51,6 +51,7 @@
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 #include "RasterImage.h"
+#include "VectorImage.h"
 
 #include "imgILoader.h"
 #include "ImageLogging.h"
@@ -1028,9 +1029,11 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
 
     /* now we have mimetype, so we can infer the image type that we want */
-    // XXXdholbert When VectorImage lands, this is where we'd instantiate that
-    // (if mContentType matches SVG_MIMETYPE).  For now, just assume raster.
-    mImage = new RasterImage(mStatusTracker.forget());
+    if (mContentType.EqualsLiteral(SVG_MIMETYPE)) {
+      mImage = new VectorImage(mStatusTracker.forget());
+    } else {
+      mImage = new RasterImage(mStatusTracker.forget());
+    }
     imageType = mImage->GetType();
 
     // Notify any imgRequestProxys that are observing us that we have an Image.
