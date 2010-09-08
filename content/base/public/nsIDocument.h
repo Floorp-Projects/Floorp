@@ -119,8 +119,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xe1779840, 0x1ae4, 0x479d, \
-  { 0x8a, 0xa1, 0x40, 0x4f, 0x6e, 0x20, 0x1a, 0x0a } }
+{ 0x73d79167, 0xacba, 0x46eb, \
+  { 0xad, 0x45, 0xa3, 0x4b, 0x92, 0xf6, 0x01, 0x5b } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1154,6 +1154,11 @@ public:
 
   void SetIsBeingUsedAsImage() {
     mIsBeingUsedAsImage = PR_TRUE;
+  }
+
+  PRBool IsResourceDoc() const {
+    return IsBeingUsedAsImage() || // Are we a helper-doc for an SVG image?
+      !!mDisplayDocument;          // Are we an external resource doc?
   }
 
   /**
