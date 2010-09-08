@@ -70,7 +70,6 @@
 #include "jsregexp.h"
 #include "jsutil.h"
 #include "jsarray.h"
-#include "jstask.h"
 #include "jsvector.h"
 #include "prmjtime.h"
 
@@ -187,7 +186,7 @@ class ContextAllocPolicy
 };
 
 /* Holds the execution state during trace execution. */
-struct TracerState 
+struct TracerState
 {
     JSContext*     cx;                  // current VM context handle
     double*        stackBase;           // native stack base
@@ -1111,7 +1110,7 @@ struct JSThreadData {
     /* State used by dtoa.c. */
     DtoaState           *dtoaState;
 
-    /* 
+    /*
      * State used to cache some double-to-string conversions.  A stupid
      * optimization aimed directly at v8-splay.js, which stupidly converts
      * many doubles multiple times in a row.
@@ -1176,12 +1175,6 @@ struct JSThread {
     JSTitle             *titleToShare;
 
     /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    ptrdiff_t           gcThreadMallocBytes;
-
-    /*
      * This thread is inside js_GC, either waiting until it can start GC, or
      * waiting for GC to finish on another thread. This thread holds no locks;
      * other threads may steal titles from it.
@@ -1198,7 +1191,7 @@ struct JSThread {
 
 # ifdef DEBUG
     unsigned            checkRequestDepth;
-# endif   
+# endif
 
     /* Weak ref, for low-cost sealed title locking */
     JSTitle             *lockedSealedTitle;
@@ -1206,13 +1199,6 @@ struct JSThread {
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
-
-/*
- * Only when JSThread::gcThreadMallocBytes exhausts the following limit we
- * update JSRuntime::gcMallocBytes.
- * .
- */
-const size_t JS_GC_THREAD_MALLOC_LIMIT = 1 << 19;
 
 #define JS_THREAD_DATA(cx)      (&(cx)->thread->data)
 
@@ -1260,7 +1246,7 @@ namespace js {
 struct GCPtrHasher
 {
     typedef void *Lookup;
-    
+
     static HashNumber hash(void *key) {
         return HashNumber(uintptr_t(key) >> JS_GCTHING_ZEROBITS);
     }
@@ -1286,7 +1272,7 @@ typedef js::HashMap<void *,
 
 /* If HashNumber grows, need to change WrapperHasher. */
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-    
+
 struct WrapperHasher
 {
     typedef Value Lookup;
@@ -1431,18 +1417,16 @@ struct JSRuntime {
 
     JSGCCallback        gcCallback;
 
+  private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs
      * from gcMaxMallocBytes down to zero.
      */
-    ptrdiff_t           gcMallocBytes;
+    volatile ptrdiff_t  gcMallocBytes;
 
-#ifdef JS_THREADSAFE
-    JSBackgroundThread  gcHelperThread;
-#endif
-
+  public:
     js::GCChunkAllocator    *gcChunkAllocator;
-    
+
     void setCustomGCChunkAllocator(js::GCChunkAllocator *allocator) {
         JS_ASSERT(allocator);
         JS_ASSERT(state == JSRTS_DOWN);
@@ -1493,6 +1477,8 @@ struct JSRuntime {
     PRCondVar           *requestDone;
     uint32              requestCount;
     JSThread            *gcThread;
+
+    js::GCHelperThread  gcHelperThread;
 
     /* Lock and owning thread pointer for JS_LOCK_RUNTIME. */
     PRLock              *rtLock;
@@ -1744,11 +1730,36 @@ struct JSRuntime {
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
 
-    void* malloc(size_t bytes) { return ::js_malloc(bytes); }
+    /*
+     * Call the system malloc while checking for GC memory pressure and
+     * reporting OOM error when cx is not null.
+     */
+    void* malloc(size_t bytes, JSContext *cx = NULL) {
+        updateMallocCounter(bytes);
+        void *p = ::js_malloc(bytes);
+        return JS_LIKELY(!!p) ? p : onOutOfMemory(NULL, bytes, cx);
+    }
 
-    void* calloc(size_t bytes) { return ::js_calloc(bytes); }
+    /*
+     * Call the system calloc while checking for GC memory pressure and
+     * reporting OOM error when cx is not null.
+     */
+    void* calloc(size_t bytes, JSContext *cx = NULL) {
+        updateMallocCounter(bytes);
+        void *p = ::js_calloc(bytes);
+        return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
+    }
 
-    void* realloc(void* p, size_t bytes) { return ::js_realloc(p, bytes); }
+    void* realloc(void* p, size_t bytes, JSContext *cx = NULL) {
+        /*
+         * For compatibility we do not account for realloc that increases
+         * previously allocated memory.
+         */
+        if (!p)
+            updateMallocCounter(bytes);
+        void *p2 = ::js_realloc(p, bytes);
+        return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
+    }
 
     void free(void* p) { ::js_free(p); }
 
@@ -1764,6 +1775,38 @@ struct JSRuntime {
         gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
         resetGCMallocBytes();
     }
+
+    /*
+     * Call this after allocating memory held by GC things, to update memory
+     * pressure counters or report the OOM error if necessary. If oomError and
+     * cx is not null the function also reports OOM error.
+     *
+     * The function must be called outside the GC lock and in case of OOM error
+     * the caller must ensure that no deadlock possible during OOM reporting.
+     */
+    void updateMallocCounter(size_t nbytes) {
+        /* We tolerate any thread races when updating gcMallocBytes. */
+        ptrdiff_t newCount = gcMallocBytes - ptrdiff_t(nbytes);
+        gcMallocBytes = newCount;
+        if (JS_UNLIKELY(newCount <= 0))
+            onTooMuchMalloc();
+    }
+
+  private:
+    /*
+     * The function must be called outside the GC lock.
+     */
+    JS_FRIEND_API(void) onTooMuchMalloc();
+
+    /*
+     * This should be called after system malloc/realloc returns NULL to try
+     * to recove some memory or to report an error. Failures in malloc and
+     * calloc are signaled by p == null and p == reinterpret_cast<void *>(1).
+     * Other values of p mean a realloc failure.
+     *
+     * The function must be called outside the GC lock.
+     */
+    JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes, JSContext *cx);
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
@@ -2119,7 +2162,7 @@ struct JSContext
         }
         return fp;
     }
- 
+
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls
@@ -2226,87 +2269,34 @@ struct JSContext
 
 #ifdef JS_THREADSAFE
     /*
-     * The sweep task for this context.
+     * When non-null JSContext::free delegates the job to the background
+     * thread.
      */
-    js::BackgroundSweepTask *gcSweepTask;
+    js::GCHelperThread *gcBackgroundFree;
 #endif
-
-    ptrdiff_t &getMallocCounter() {
-#ifdef JS_THREADSAFE
-        return thread->gcThreadMallocBytes;
-#else
-        return runtime->gcMallocBytes;
-#endif
-    }
-
-    /*
-     * Call this after allocating memory held by GC things, to update memory
-     * pressure counters or report the OOM error if necessary.
-     */
-    inline void updateMallocCounter(void *p, size_t nbytes) {
-        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
-        ptrdiff_t &counter = getMallocCounter();
-        counter -= ptrdiff_t(nbytes);
-        if (!p || counter <= 0)
-            checkMallocGCPressure(p);
-    }
-
-    /*
-     * Call this after successfully allocating memory held by GC things, to
-     * update memory pressure counters.
-     */
-    inline void updateMallocCounter(size_t nbytes) {
-        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
-        ptrdiff_t &counter = getMallocCounter();
-        counter -= ptrdiff_t(nbytes);
-        if (counter <= 0) {
-            /*
-             * Use 1 as an arbitrary non-null pointer indicating successful
-             * allocation.
-             */
-            checkMallocGCPressure(reinterpret_cast<void *>(jsuword(1)));
-        }
-    }
 
     inline void* malloc(size_t bytes) {
-        JS_ASSERT(bytes != 0);
-        void *p = runtime->malloc(bytes);
-        updateMallocCounter(p, bytes);
-        return p;
+        return runtime->malloc(bytes, this);
     }
 
     inline void* mallocNoReport(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        void *p = runtime->malloc(bytes);
-        if (!p)
-            return NULL;
-        updateMallocCounter(bytes);
-        return p;
+        return runtime->malloc(bytes, NULL);
     }
 
     inline void* calloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        void *p = runtime->calloc(bytes);
-        updateMallocCounter(p, bytes);
-        return p;
+        return runtime->calloc(bytes, this);
     }
 
     inline void* realloc(void* p, size_t bytes) {
-        void *orig = p;
-        p = runtime->realloc(p, bytes);
-
-        /*
-         * For compatibility we do not account for realloc that increases
-         * previously allocated memory.
-         */
-        updateMallocCounter(p, orig ? 0 : bytes);
-        return p;
+        return runtime->realloc(p, bytes, this);
     }
 
     inline void free(void* p) {
 #ifdef JS_THREADSAFE
-        if (gcSweepTask) {
-            gcSweepTask->freeLater(p);
+        if (gcBackgroundFree) {
+            gcBackgroundFree->freeLater(p);
             return;
         }
 #endif
@@ -3247,14 +3237,13 @@ js_InvokeOperationCallback(JSContext *cx);
 extern JSBool
 js_HandleExecutionInterrupt(JSContext *cx);
 
+namespace js {
 
-#ifndef JS_THREADSAFE
-# define js_TriggerAllOperationCallbacks(rt, gcLocked) \
-    js_TriggerAllOperationCallbacks (rt)
-#endif
-
+/* Must be called with GC lock taken. */
 void
-js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
+TriggerAllOperationCallbacks(JSRuntime *rt);
+
+} /* namespace js */
 
 extern JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
@@ -3433,7 +3422,7 @@ class AutoValueVector : private AutoGCRooter
     const Value &back() const { return vector.back(); }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    
+
   private:
     Vector<Value, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -3493,7 +3482,7 @@ class AutoIdVector : private AutoGCRooter
     const jsid &back() const { return vector.back(); }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    
+
   private:
     Vector<jsid, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER

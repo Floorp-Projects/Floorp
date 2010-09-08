@@ -11148,7 +11148,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                  * - call / not / ifeq
                  * - call / trace / not / ifeq
                  *
-                 * In either case, we call RegExp.test() because "r.exec(s) !=
+                 * In either case, we replace the call to RegExp.exec() on the
+                 * stack with a call to RegExp.test() because "r.exec(s) !=
                  * null" is equivalent to "r.test(s)".  This avoids building
                  * the result array, which can be expensive.
                  */
@@ -11165,7 +11166,22 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                          pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_NOT &&
                          pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ))
                     {
-                        fun->u.n.native = js_regexp_test;
+                        /*
+                         * FIXME: Bug 594205 -- RegExp.prototype.test() may
+                         * have been overwritten.
+                         */
+                        JSObject* proto;
+                        Value test;
+                        jsid testId = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
+                        if (js_GetClassPrototype(cx, funobj->getParent(), JSProto_RegExp, &proto) &&
+                            js_GetProperty(cx, proto, testId, &test))
+                        {
+                            vp[0] = test;
+                            /* Recompute these values from the new vp[0] value. */
+                            funobj = &vp[0].toObject();
+                            fun = GET_FUNCTION_PRIVATE(cx, funobj);
+                            native = fun->u.n.native;
+                        }
                     }
                 }
             }

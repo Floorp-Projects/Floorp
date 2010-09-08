@@ -115,7 +115,7 @@ void JS_FASTCALL IncElem(VMFrame &f);
 void JS_FASTCALL DecElem(VMFrame &f);
 void JS_FASTCALL CallProp(VMFrame &f, JSAtom *atom);
 
-void JS_FASTCALL DefFun(VMFrame &f, uint32 index);
+void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun_FC(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL RegExp(VMFrame &f, JSObject *regex);
