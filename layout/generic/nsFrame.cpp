@@ -736,6 +736,149 @@ nsIFrame::GetContentRect() const
   return r;
 }
 
+PRBool
+nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
+                             const nsSize& aFrameSize,
+                             const nsSize& aBorderArea,
+                             PRIntn aSkipSides,
+                             nscoord aRadii[8])
+{
+  // Percentages are relative to whichever side they're on.
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    const nsStyleCoord c = aBorderRadius.Get(i);
+    nscoord axis =
+      NS_HALF_CORNER_IS_X(i) ? aFrameSize.width : aFrameSize.height;
+
+    switch (c.GetUnit()) {
+      case eStyleUnit_Percent:
+        aRadii[i] = (nscoord)(c.GetPercentValue() * axis);
+        break;
+
+      case eStyleUnit_Coord:
+        aRadii[i] = c.GetCoordValue();
+        break;
+
+      default:
+        NS_NOTREACHED("ComputeBorderRadii: bad unit");
+        aRadii[i] = 0;
+        break;
+    }
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_TOP)) {
+    aRadii[NS_CORNER_TOP_LEFT_X] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_RIGHT)) {
+    aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_BOTTOM)) {
+    aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_LEFT)) {
+    aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_X] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
+  }
+
+  // css3-background specifies this algorithm for reducing
+  // corner radii when they are too big.
+  PRBool haveRadius = PR_FALSE;
+  double ratio = 1.0f;
+  NS_FOR_CSS_SIDES(side) {
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_TRUE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_TRUE);
+    nscoord length =
+      NS_SIDE_IS_VERTICAL(side) ? aBorderArea.height : aBorderArea.width;
+    nscoord sum = aRadii[hc1] + aRadii[hc2];
+    if (sum)
+      haveRadius = PR_TRUE;
+
+    // avoid floating point division in the normal case
+    if (length < sum)
+      ratio = NS_MIN(ratio, double(length)/sum);
+  }
+  if (ratio < 1.0) {
+    NS_FOR_CSS_HALF_CORNERS(corner) {
+      aRadii[corner] *= ratio;
+    }
+  }
+
+  return haveRadius;
+}
+
+/* static */ void
+nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
+{
+  NS_FOR_CSS_SIDES(side) {
+    nscoord offset = aOffsets.side(side);
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_FALSE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_FALSE);
+    aRadii[hc1] = NS_MAX(0, aRadii[hc1] - offset);
+    aRadii[hc2] = NS_MAX(0, aRadii[hc2] - offset);
+  }
+}
+
+/* static */ void
+nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
+{
+  NS_FOR_CSS_SIDES(side) {
+    nscoord offset = aOffsets.side(side);
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_FALSE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_FALSE);
+    if (aRadii[hc1] > 0)
+      aRadii[hc1] += offset;
+    if (aRadii[hc2] > 0)
+      aRadii[hc2] += offset;
+  }
+}
+
+/* virtual */ PRBool
+nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
+{
+  nsSize size = GetSize();
+  return ComputeBorderRadii(GetStyleBorder()->mBorderRadius, size, size,
+                            GetSkipSides(), aRadii);
+}
+
+PRBool
+nsIFrame::GetPaddingBoxBorderRadii(nscoord aRadii[8]) const
+{
+  if (!GetBorderRadii(aRadii))
+    return PR_FALSE;
+  InsetBorderRadii(aRadii, GetUsedBorder());
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (aRadii[corner])
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsIFrame::GetContentBoxBorderRadii(nscoord aRadii[8]) const
+{
+  if (!GetBorderRadii(aRadii))
+    return PR_FALSE;
+  InsetBorderRadii(aRadii, GetUsedBorderAndPadding());
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (aRadii[corner])
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsStyleContext*
 nsFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {

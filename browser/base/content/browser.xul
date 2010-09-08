@@ -451,32 +451,37 @@
         <vbox id="appmenuPrimaryPane">
           <hbox flex="1"
                 class="split-menuitem">
-            <menuitem id="appmenu_newTab"
+            <menuitem id="menuitem-tooltip appmenu_newTab"
                       class="split-menuitem-item"
                       flex="1"
                       label="&tabCmd.label;"
-                      command="cmd_newNavigatorTab"/>
+                      command="cmd_newNavigatorTab"
+                      key="key_newNavigatorTab"/>
               <menu class="split-menuitem-menu">
                 <menupopup>
                   <menuitem id="appmenu_newTab_popup"
                             label="&tabCmd.label;"
-                            command="cmd_newNavigatorTab"/>
+                            command="cmd_newNavigatorTab"
+                            key="key_newNavigatorTab"/>
                   <menuitem id="appmenu_newNavigator"
                             label="&newNavigatorCmd.label;"
-                            command="cmd_newNavigator"/>
+                            command="cmd_newNavigator"
+                            key="key_newNavigator"/>
                   <menuseparator/>
                   <menuitem id="appmenu_openFile"
                             label="&openFileCmd.label;"
-                            command="Browser:OpenFile"/>
+                            command="Browser:OpenFile"
+                            key="openFileKb"/>
                 </menupopup>
                </menu>
           </hbox>
           <menuitem id="appmenu_privateBrowsing"
-                    class="menuitem-iconic"
+                    class="menuitem-iconic menuitem-iconic-tooltip"
                     label="&privateBrowsingCmd.start.label;"
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
-                    command="Tools:PrivateBrowsing"/>
+                    command="Tools:PrivateBrowsing"
+                    key="key_privatebrowsing"/>
           <menuseparator class="appmenu-menuseparator"/>
           <hbox class="split-menuitem">
             <menuitem id="appmenu-edit-menuitem"
@@ -499,22 +504,27 @@
                            tooltiptext="&pasteButton.tooltip;"/>
           </hbox>
           <menuitem id="appmenu_find"
+                    class="menuitem-tooltip"
                     label="&appMenuFind.label;"
-                    command="cmd_find"/>
+                    command="cmd_find"
+                    key="key_find"/>
           <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_savePage"
+                    class="menuitem-tooltip"
                     label="&savePageCmd.label;"
-                    command="Browser:SavePage"/>
+                    command="Browser:SavePage"
+                    key="key_savePage"/>
           <menuitem id="appmenu_sendLink"
                     label="&sendPageCmd.label;"
                     command="Browser:SendLink"/>
           <hbox flex="1"
                 class="split-menuitem">
             <menuitem id="appmenu_print"
-                      class="menuitem-iconic split-menuitem-item"
+                      class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
                       flex="1"
                       label="&printCmd.label;"
-                      command="cmd_print"/>
+                      command="cmd_print"
+                      key="printKb"/>
             <menu class="split-menuitem-menu">
               <menupopup>
                 <menuitem id="appmenu_print_popup"
@@ -537,15 +547,22 @@
               <menuitem id="appmenu_webConsole"
                         label="&webConsoleCmd.label;"
                         type="checkbox"
-                        oncommand="HUDConsoleUI.toggleHUD();"/>
+                        oncommand="HUDConsoleUI.toggleHUD();"
+                        key="key_webConsole"/>
               <menuitem id="appmenu_pageInspect"
                         label="&inspectMenu.label;"
                         type="checkbox"
-                        command="Tools:Inspect"/>
+                        command="Tools:Inspect"
+                        key="key_inspect"/>
               <menuseparator/>
               <menuitem id="appmenu_pageSource"
                         label="&viewPageSourceCmd.label;"
-                        command="View:PageSource"/>
+                        command="View:PageSource"
+                        key="key_viewSource"/>
+              <menuseparator/>
+#define ID_PREFIX appmenu_
+#include browser-charsetmenu.inc
+#undef ID_PREFIX
               <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
                         type="checkbox"
@@ -554,9 +571,11 @@
           </menu>
           <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_fullScreen"
+                    class="menuitem-tooltip"
                     label="&fullScreenCmd.label;"
                     type="checkbox"
-                    observes="View:FullScreen"/>
+                    observes="View:FullScreen"
+                    key="key_fullScreen"/>
           <menuitem id="appmenu-quit"
                     class="menuitem-iconic"
 #ifdef XP_WIN
@@ -569,10 +588,11 @@
         <vbox id="appmenuSecondaryPane">
           <hbox class="split-menuitem">
             <menuitem id="appmenu_bookmarks"
-                      class="menuitem-iconic split-menuitem-item"
+                      class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
                       flex="1"
                       label="&bookmarksMenu.label;"
-                      command="Browser:ShowAllBookmarks"/>
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
             <menu id="appmenu_bookmarksMenu"
                   class="split-menuitem-menu">
               <menupopup id="appmenu_bookmarksMenupopup"
@@ -595,9 +615,9 @@
                           class="menuitem-iconic"/>
                 <menuitem id="appmenu_showAllBookmarks"
                           label="&showAllBookmarks.label;"
-                          key="manBookmarkKb"
                           command="Browser:ShowAllBookmarks"
-                          context=""/>
+                          context=""
+                          key="manBookmarkKb"/>
                 <menuseparator/>
                 <menuitem id="appmenu_bookmarkThisPage"
                           class="menuitem-iconic"
@@ -625,10 +645,11 @@
           </hbox>
           <hbox class="split-menuitem">
             <menuitem id="appmenu_history"
-                      class="menuitem-iconic split-menuitem-item"
+                      class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
                       flex="1"
                       label="&historyMenu.label;"
-                      command="Browser:ShowAllHistory"/>
+                      command="Browser:ShowAllHistory"
+                      key="showAllHistoryKb"/>
             <menu id="appmenu_historyMenu"
                   class="split-menuitem-menu">
               <menupopup id="appmenu_historyMenupopup"
@@ -641,8 +662,8 @@
                          popupsinherittooltip="true">
                 <menuitem id="appmenu_showAllHistory"
                           label="&showAllHistoryCmd2.label;"
-                          key="showAllHistoryKb"
-                          command="Browser:ShowAllHistory"/>
+                          command="Browser:ShowAllHistory"
+                          key="showAllHistoryKb"/>
                 <menuseparator/>
                 <menuitem id="appmenu_sanitizeHistory"
                           label="&clearRecentHistory.label;"
@@ -668,13 +689,16 @@
             </menu>
           </hbox>
             <menuitem id="appmenu_downloads"
+                      class="menuitem-tooltip"
                       label="&downloads.label;"
-                      command="Tools:Downloads"/>
+                      command="Tools:Downloads"
+                      key="key_openDownloads"/>
             <spacer id="appmenuSecondaryPane-spacer"/>
             <menuitem id="appmenu_addons"
-                      class="menuitem-iconic"
+                      class="menuitem-iconic menuitem-iconic-tooltip"
                       label="&addons.label;"
-                      command="Tools:Addons"/>
+                      command="Tools:Addons"
+                      key="key_openAddons"/>
             <hbox class="split-menuitem">
               <menuitem id="appmenu_customize"
                         label="&preferencesCmd.label;"

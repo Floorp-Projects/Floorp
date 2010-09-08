@@ -23,6 +23,7 @@
 #   Edward Lee <edilee@mozilla.com>
 #   Mike Connor <mconnor@mozilla.com>
 #   Paul O’Shannessy <paul@oshannessy.com>
+#   Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -121,7 +122,7 @@
                              value="&changePassword.label;"/>
                       <label class="text-link"
                              onclick="gSyncUtils.resetPassphrase(); return false;"
-                             value="&changePassphrase.label;"/>
+                             value="&mySyncKey.label;"/>
                       <label class="text-link"
                              onclick="gSyncPane.resetSync(); return false;"
                              value="&resetSync.label;"/>
@@ -147,6 +148,10 @@
           <groupbox>
             <caption label="&syncPrefsCaption.label;"/>
             <grid>
+              <columns>
+                <column/>
+                <column flex="1"/>
+              </columns>
               <rows>
                 <row align="center">
                   <label value="&syncComputerName.label;"
@@ -155,42 +160,28 @@
                   <textbox id="syncComputerName"
                            onchange="gSyncUtils.changeName(this)"/>
                 </row>
-                <row align="center">
-              <label value="&syncModeSwitchDesc.label;"
-                     accesskey="&syncModeSwitchDesc.accesskey;"
-                     control="weaveSyncMode"/>
-              <menulist id="weaveSyncMode" oncommand="gSyncPane.updateSyncPrefs()">
-                <menupopup>
-                  <menuitem label="&syncEverything.label;" value="syncEverything"/>
-                  <menuitem label="&customSync.label;"     value="customSync"/>
-                </menupopup>
-              </menulist>
+                <row>
+                  <label value="&syncMy.label;" />
+                  <vbox>
+                    <checkbox label="&engine.bookmarks.label;"
+                              accesskey="&engine.bookmarks.accesskey;"
+                              preference="engine.bookmarks"/>
+                    <checkbox label="&engine.passwords.label;"
+                              accesskey="&engine.passwords.accesskey;"
+                              preference="engine.passwords"/>
+                    <checkbox label="&engine.prefs.label;"
+                              accesskey="&engine.prefs.accesskey;"
+                              preference="engine.prefs"/>
+                    <checkbox label="&engine.history.label;"
+                              accesskey="&engine.history.accesskey;"
+                              preference="engine.history"/>
+                    <checkbox label="&engine.tabs.label;"
+                              accesskey="&engine.tabs.accesskey;"
+                              preference="engine.tabs"/>
+                  </vbox>
                 </row>
               </rows>
             </grid>
-            <separator/>
-            <deck id="syncModeOptions" class="indent">
-              <description id="syncEverythingDesc">
-                &syncEverythingDescription.label;
-              </description>
-              <vbox>
-                <checkbox label="&syncItem.bookmarks.label;"
-                          accesskey="&syncItem.bookmarks.accesskey;"
-                          preference="engine.bookmarks"/>
-                <checkbox label="&syncItem.passwords.label;"
-                          accesskey="&syncItem.passwords.accesskey;"
-                          preference="engine.passwords"/>
-                <checkbox label="&syncItem.prefs.label;"
-                          accesskey="&syncItem.prefs.accesskey;"
-                          preference="engine.prefs"/>
-                <checkbox label="&syncItem.history.label;"
-                          accesskey="&syncItem.history.accesskey;"
-                          preference="engine.history"/>
-                <checkbox label="&syncItem.tabs.label;"
-                          accesskey="&syncItem.tabs.accesskey;"
-                          preference="engine.tabs"/>
-              </vbox>
-            </deck>
             <separator/>
           </groupbox>
           <hbox id="tosPP" pack="center">

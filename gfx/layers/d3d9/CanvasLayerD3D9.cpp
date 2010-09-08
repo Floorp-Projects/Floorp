@@ -40,6 +40,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
+#include "gfxWindowsPlatform.h"
 
 namespace mozilla {
 namespace layers {
@@ -71,6 +72,17 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
 
+  if (mSurface && mSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+    void *data = mSurface->GetData(&gKeyD3D9Texture);
+    if (data) {
+      mTexture = static_cast<IDirect3DTexture9*>(data);
+      mIsInteropTexture = true;
+      return;
+    }
+  }
+
+  mIsInteropTexture = false;
+
   if (mD3DManager->deviceManager()->HasDynamicTextures()) {
     device()->CreateTexture(mBounds.width, mBounds.height, 1, D3DUSAGE_DYNAMIC,
                             D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
@@ -91,6 +103,14 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
     NS_WARNING("CanvasLayerD3D9::Updated called but no texture present!");
     return;
   }
+
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mIsInteropTexture) {
+    mSurface->Flush();
+    cairo_d2d_finish_device(gfxWindowsPlatform::GetPlatform()->GetD2DDevice());
+    return;
+  }
+#endif
 
   if (mGLContext) {
     // WebGL reads entire surface.

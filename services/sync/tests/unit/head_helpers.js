@@ -410,6 +410,4 @@ let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
 
 _("Setting the identity for passphrase");
 Cu.import("resource://services-sync/identity.js");
-let passphrase = ID.set("WeaveCryptoID", new Identity());
-passphrase.password = "passphrase";
 

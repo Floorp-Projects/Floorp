@@ -3973,7 +3973,7 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastMiddleMouseDownContent == mouseContent ||
           mLastMiddleMouseDownContentParent == mouseContent ||
-          mLastLeftMouseDownContent == mouseContentParent) {
+          mLastMiddleMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mMClickCount;
         mMClickCount = 0;
       } else {
@@ -3991,7 +3991,7 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastRightMouseDownContent == mouseContent ||
           mLastRightMouseDownContentParent == mouseContent ||
-          mLastLeftMouseDownContent == mouseContentParent) {
+          mLastRightMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mRClickCount;
         mRClickCount = 0;
       } else {
