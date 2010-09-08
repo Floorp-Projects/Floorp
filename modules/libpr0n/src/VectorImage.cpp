@@ -53,9 +53,70 @@
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
+#include "nsSVGSVGElement.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace imagelib {
+
+#ifdef MOZ_ENABLE_LIBXUL
+// Helper-class: SVGRootRenderingObserver
+class SVGRootRenderingObserver : public nsSVGRenderingObserver {
+public:
+  SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
+                           VectorImage*        aVectorImage)
+    : nsSVGRenderingObserver(),
+      mDocWrapper(aDocWrapper),
+      mVectorImage(aVectorImage)
+  {
+    StartListening();
+    Element* elem = GetTarget();
+    if (elem) {
+      nsSVGEffects::AddRenderingObserver(elem, this);
+    }
+  }
+
+  virtual ~SVGRootRenderingObserver()
+  {
+    StopListening();
+  }
+
+protected:
+  virtual Element* GetTarget()
+  {
+    return mDocWrapper->GetRootSVGElem();
+  }
+
+  virtual void DoUpdate()
+  {
+    Element* elem = GetTarget();
+    if (!elem)
+      return;
+
+    if (!mDocWrapper->ShouldIgnoreInvalidation()) {
+      nsIFrame* frame = elem->GetPrimaryFrame();
+      if (!frame || frame->PresContext()->PresShell()->IsDestroying()) {
+        // We're being destroyed. Bail out.
+        return;
+      }
+
+      mVectorImage->InvalidateObserver();
+    }
+
+    // Our caller might've removed us from rendering-observer list.
+    // Add ourselves back!
+    if (!mInObserverList) {
+      nsSVGEffects::AddRenderingObserver(elem, this);
+      mInObserverList = PR_TRUE;
+    }
+  }
+
+  // Private data
+  nsRefPtr<SVGDocumentWrapper> mDocWrapper;
+  VectorImage* mVectorImage;   // Raw pointer because it owns me.
+};
+#endif // MOZ_ENABLE_LIBXUL
 
 // Helper-class: SVGDrawingCallback
 class SVGDrawingCallback : public gfxDrawingCallback {
@@ -574,6 +635,12 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
     mSVGDocumentWrapper->StopAnimation();
   }
 
+#ifdef MOZ_ENABLE_LIBXUL
+  // Start listening to our image for rendering updates
+  mRenderingObserver = new SVGRootRenderingObserver(mSVGDocumentWrapper, this);
+#endif // MOZ_ENABLE_LIBXUL
+
+  // Tell *our* observers that we're done loading
   nsCOMPtr<imgIDecoderObserver> observer = do_QueryReferent(mObserver);
   if (observer) {
     // NOTE: This signals that width/height are available.
@@ -601,6 +668,18 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 {
   return mSVGDocumentWrapper->OnDataAvailable(aRequest, aCtxt, aInStr,
                                               aSourceOffset, aCount);
+}
+
+// --------------------------
+// Invalidation helper method
+
+void
+VectorImage::InvalidateObserver()
+{
+  nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+  if (observer) {
+    observer->FrameChanged(this, &kFullImageSpaceRect);
+  }
 }
 
 } // namespace imagelib
