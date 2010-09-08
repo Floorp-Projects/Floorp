@@ -33,14 +33,20 @@
 <!ENTITY setup.tosAgree3.label      "">
 <!ENTITY setup.tosAgree2.accesskey  "">
 
-<!-- New Account Page 2: Passphrase Entry -->
-<!ENTITY setup.newPPPage.title.label       "Enter your Secret Phrase">
-<!ENTITY passphraseDesc.label         "Please enter a secret phrase. This will be used to encrypt all your data so only you can access it. It is never stored on the server, so don't lose this!">
-<!ENTITY passphraseDesc2.label        "This must be at least 12 characters long and cannot match your account password.">
-<!ENTITY passphraseEntry.label        "Secret Phrase">
-<!ENTITY passphraseEntry.accesskey    "S">
-<!ENTITY passphraseConfirm.label      "Confirm">
-<!ENTITY passphraseConfirm.accesskey  "m">
+<!-- New Account Page 2: Sync Key -->
+<!ENTITY setup.newSyncKeyPage.title.label "&brandShortName; Cares About Your Privacy">
+<!ENTITY setup.newSyncKeyPage.description.label "To ensure your total privacy, all of your data is encrypted prior to being uploaded. The Sync Key which is necessary to decrypt your data is not uploaded.">
+<!ENTITY syncKeyEntry.label        "Your Sync Key">
+<!ENTITY syncKeyEntry.accesskey    "K">
+<!ENTITY syncKeyGenerate.label     "Generate">
+<!ENTITY syncKeyBackup.description "Your Sync Key is required to access &syncBrand.fullName.label; on other machines. Please create a backup copy. We cannot help you recover your Sync Key.">
+
+<!ENTITY button.syncKeyBackup.email.label     "Email…">
+<!ENTITY button.syncKeyBackup.email.accesskey "E">
+<!ENTITY button.syncKeyBackup.print.label     "Print…">
+<!ENTITY button.syncKeyBackup.print.accesskey "P">
+<!ENTITY button.syncKeyBackup.save.label      "Save…">
+<!ENTITY button.syncKeyBackup.save.accesskey  "S">
 
 <!-- New Account Page 3: Sync Type Options -->
 <!ENTITY setup.newAccountPrefs2.title.label "Browser Sync Preferences">
@@ -73,11 +79,11 @@
 <!ENTITY resetPassword.label          "Reset Password">
 <!ENTITY connecting.label             "Connecting…">
 
-<!-- Existing Account Page 2: Passphrase -->
-<!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
-<!ENTITY passphraseDesc3.label        "Please enter your secret phrase. This must be the same secret phrase that you used to encrypt your data.">
-<!ENTITY passphraseHelp.label         "Your secret phrase is at least 12 characters long and is not your password. You can find your saved secret phrase by going to your other computer and checking the Saved Passwords under Security. If you still cannot get the correct secret phrase, you can choose to reset it, but you will lose any data stored on the server.">
-<!ENTITY changePassphrase.label       "Change Secret Phrase">
+<!-- Existing Account Page 2: Sync Key -->
+<!ENTITY setup.existingSyncKeyPage.title "Please Enter Your Sync Key">
+<!ENTITY setup.existingSyncKeyPage.description "The Sync Key was generated for you, or you entered your own, when you first signed up for &syncBrand.fullName.label;. It is not the same as your password.">
+<!ENTITY existingSyncKeyHelp.description "You can find your saved Sync Key by going to your other computer and checking the Saved Passwords under Security. If you still cannot get the correct Sync Key, you can choose to reset it, but you will lose any data stored on the server.">
+<!ENTITY lostSyncKey.label            "I have lost my Sync Key">
 <!ENTITY verifying.label              "Verifying…">
 
 <!-- New & Existing Account: Merge Options -->
