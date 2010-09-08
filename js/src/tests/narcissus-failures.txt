@@ -127,6 +127,7 @@ e4x/Regress/regress-465063.js
 e4x/Regress/regress-470619.js
 e4x/Regress/regress-474319.js
 e4x/Regress/regress-561031.js
+e4x/Regress/regress-587434.js
 e4x/Statements/12.1.js
 e4x/Statements/12.2.js
 e4x/TypeConversion/10.1.1.js
@@ -493,8 +494,6 @@ ecma_2/Exceptions/string-002.js
 ecma_2/FunctionObjects/apply-001-n.js
 ecma_2/LexicalConventions/keywords-001.js
 ecma_2/LexicalConventions/regexp-literals-002.js
-ecma_2/RegExp/exec-002.js
-ecma_2/RegExp/octal-003.js
 ecma_2/Statements/forin-002.js
 ecma_2/String/split-001.js
 ecma_2/String/split-003.js
@@ -698,8 +697,8 @@ js1_5/Regress/regress-179524.js
 js1_5/Regress/regress-214761.js
 js1_5/Regress/regress-224956.js
 js1_5/Regress/regress-234389.js
-js1_5/Regress/regress-238945.js
 js1_5/Regress/regress-243389-n.js
+js1_5/Regress/regress-244470.js
 js1_5/Regress/regress-245113.js
 js1_5/Regress/regress-252892.js
 js1_5/Regress/regress-253150.js
@@ -1028,6 +1027,7 @@ js1_7/extensions/regress-470300-02.js
 js1_7/extensions/regress-474771-01.js
 js1_7/extensions/regress-476257.js
 js1_7/extensions/regress-477048.js
+js1_7/extensions/regress-590813.js
 js1_7/geniter/326466-01.js
 js1_7/geniter/builtin-Iterator-function.js
 js1_7/geniter/evens.js
@@ -1140,6 +1140,8 @@ js1_8/extensions/regress-385393-01.js
 js1_8/extensions/regress-385393-10.js
 js1_8/extensions/regress-385393-11.js
 js1_8/extensions/regress-385729.js
+js1_8/extensions/regress-394709.js
+js1_8/extensions/regress-422269.js
 js1_8/extensions/regress-452476.js
 js1_8/extensions/regress-452913.js
 js1_8/extensions/regress-455973.js
@@ -1326,6 +1328,7 @@ js1_8_1/strict/12.2.1.js
 js1_8_1/strict/generator-eval-arguments.js
 js1_8_1/strict/let-block-eval-arguments.js
 js1_8_1/trace/math-trace-tests.js
+js1_8_1/trace/testDeepBailFromNonNative.js
 js1_8_1/trace/trace-test.js
 js1_8_5/extensions/censor-strict-caller.js
 js1_8_5/extensions/destructure-accessor.js
