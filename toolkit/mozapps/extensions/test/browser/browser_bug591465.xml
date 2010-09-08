@@ -21,6 +21,12 @@
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
     <install size="2">http://example.com/browser/toolkit/mozapps/extensions/test/browser/addons/browser_searching.xpi</install>
