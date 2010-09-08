@@ -120,15 +120,7 @@ PopActiveVMFrame(VMFrame &f)
 extern "C" void JS_FASTCALL
 SetVMFrameRegs(VMFrame &f)
 {
-    f.oldRegs = f.cx->regs;
     f.cx->setCurrentRegs(&f.regs);
-}
-
-extern "C" void JS_FASTCALL
-UnsetVMFrameRegs(VMFrame &f)
-{
-    *f.oldRegs = f.regs;
-    f.cx->setCurrentRegs(f.oldRegs);
 }
 
 #if defined(__APPLE__) || defined(XP_WIN)
@@ -227,8 +219,6 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "call *0(%rsp)"                      "\n"
     "movq %rsp, %rdi"                    "\n"
     "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
-    "movq %rsp, %rdi"                    "\n"
-    "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
     "addq $0x58, %rsp"                   "\n"
     "popq %rbx"                          "\n"
@@ -334,8 +324,6 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "call  *16(%ebp)"                    "\n"
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
-    "movl  %esp, %ecx"                   "\n"
-    "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
     "addl $0x2C, %esp"                   "\n"
     "popl %ebx"                          "\n"
@@ -509,8 +497,6 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /* Tidy up. */
 "   mov     r0, sp"                             "\n"
 "   bl  " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
-"   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
 "   add     sp, sp, #(4*7 + 4*4)"               "\n"
@@ -628,8 +614,6 @@ extern "C" {
             call [ebp + 16];
             mov  ecx, esp;
             call PopActiveVMFrame;
-            mov  ecx, esp;
-            call UnsetVMFrameRegs;
 
             add esp, 0x2C;
 
@@ -770,8 +754,12 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
         return false;
     }
 
+    JSFrameRegs *oldRegs = cx->regs;
+
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
     JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit, safePoint);
+
+    cx->setCurrentRegs(oldRegs);
 
     JS_ASSERT(checkFp == cx->fp());
 
