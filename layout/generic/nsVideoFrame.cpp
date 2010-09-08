@@ -554,8 +554,9 @@ nsVideoFrame::GetVideoIntrinsicSize(nsIRenderingContext *aRenderingContext)
     if (child && child->GetType() == nsGkAtoms::imageFrame) {
       nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
       nsSize imgsize;
-      imageFrame->GetIntrinsicImageSize(imgsize);
-      return imgsize;
+      if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(imgsize))) {
+        return imgsize;
+      }
     }
   }
 

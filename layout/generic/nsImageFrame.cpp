@@ -54,6 +54,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsStyleCoord.h"
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
@@ -164,11 +165,13 @@ NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
   ImageFrameSuper(aContext),
   mComputedSize(0, 0),
-  mIntrinsicSize(0, 0),
+  mIntrinsicRatio(0, 0),
   mDisplayingIcon(PR_FALSE)
 {
   // We assume our size is not constrained and we haven't gotten an
   // initial reflow yet, so don't touch those flags.
+  mIntrinsicSize.width.SetCoordValue(0);
+  mIntrinsicSize.height.SetCoordValue(0);
 }
 
 nsImageFrame::~nsImageFrame()
@@ -271,24 +274,55 @@ PRBool
 nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
 {
   NS_PRECONDITION(aImage, "null image");
+  if (!aImage)
+    return PR_FALSE;
 
-  PRBool intrinsicSizeChanged = PR_FALSE;
-  
-  if (aImage) {
+  nsIFrame::IntrinsicSize oldIntrinsicSize = mIntrinsicSize;
+
+  nsIFrame* rootFrame = aImage->GetRootLayoutFrame();
+  if (rootFrame) {
+    // Set intrinsic size to match that of aImage's rootFrame.
+    mIntrinsicSize = rootFrame->GetIntrinsicSize();
+  } else {
+    // Set intrinsic size to match aImage's reported width & height.
     nsIntSize imageSizeInPx;
     if (NS_FAILED(aImage->GetWidth(&imageSizeInPx.width)) ||
         NS_FAILED(aImage->GetHeight(&imageSizeInPx.height))) {
       imageSizeInPx.SizeTo(0, 0);
     }
-    nsSize newSize(nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.width),
-                   nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.height));
-    if (mIntrinsicSize != newSize) {
-      intrinsicSizeChanged = PR_TRUE;
-      mIntrinsicSize = newSize;
-    }
+    mIntrinsicSize.width.SetCoordValue(
+      nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.width));
+    mIntrinsicSize.height.SetCoordValue(
+      nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.height));
   }
 
-  return intrinsicSizeChanged;
+  return mIntrinsicSize != oldIntrinsicSize;
+}
+
+PRBool
+nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage)
+{
+  NS_PRECONDITION(aImage, "null image");
+
+  if (!aImage)
+    return PR_FALSE;
+
+  nsSize oldIntrinsicRatio = mIntrinsicRatio;
+
+  nsIFrame* rootFrame = aImage->GetRootLayoutFrame();
+  if (rootFrame) {
+    // Set intrinsic ratio to match that of aImage's rootFrame.
+    mIntrinsicRatio = rootFrame->GetIntrinsicRatio();
+  } else {
+    NS_ABORT_IF_FALSE(mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
+                      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord,
+                      "since aImage doesn't have a rootFrame, our intrinsic "
+                      "dimensions must have coord units (not percent units)");
+    mIntrinsicRatio.width = mIntrinsicSize.width.GetCoordValue();
+    mIntrinsicRatio.height = mIntrinsicSize.height.GetCoordValue();
+  }
+
+  return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
 void
@@ -308,10 +342,16 @@ nsImageFrame::RecalculateTransform(PRBool aInnerAreaChanged)
   }
   
   // Set the scale factors
-  if (mIntrinsicSize.width != 0 && mIntrinsicSize.height != 0 &&
-      mIntrinsicSize != mComputedSize) {
-    mTransform.SetScale(float(mComputedSize.width)  / float(mIntrinsicSize.width),
-                        float(mComputedSize.height) / float(mIntrinsicSize.height));
+  if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
+      mIntrinsicSize.width.GetCoordValue() != 0 &&
+      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
+      mIntrinsicSize.height.GetCoordValue() != 0 &&
+      mIntrinsicSize.width.GetCoordValue() != mComputedSize.width &&
+      mIntrinsicSize.height.GetCoordValue() != mComputedSize.height) {
+    mTransform.SetScale(float(mComputedSize.width)  /
+                        float(mIntrinsicSize.width.GetCoordValue()),
+                        float(mComputedSize.height) /
+                        float(mIntrinsicSize.height.GetCoordValue()));
   } else {
     mTransform.SetScale(1.0f, 1.0f);
   }
@@ -485,9 +525,10 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
   }
   
   UpdateIntrinsicSize(aImage);
+  UpdateIntrinsicRatio(aImage);
 
   if (mState & IMAGE_GOTINITIALREFLOW) {
-    // If we previously set the intrinsic size (in EnsureIntrinsicSize)
+    // If we previously set the intrinsic size (in EnsureIntrinsicSizeAndRatio)
     // to the size of the loading-image icon and reflowed the frame,
     // we'll have an mTransform computed from that intrinsic size.  But
     // if we still have that transform when we get OnDataAvailable
@@ -578,10 +619,14 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
       aRequest->GetImage(getter_AddRefs(imageContainer));
       NS_ASSERTION(imageContainer, "Successful load with no container?");
       intrinsicSizeChanged = UpdateIntrinsicSize(imageContainer);
+      intrinsicSizeChanged = UpdateIntrinsicRatio(imageContainer) ||
+        intrinsicSizeChanged;
     }
     else {
       // Have to size to 0,0 so that GetDesiredSize recalculates the size
-      mIntrinsicSize.SizeTo(0, 0);
+      mIntrinsicSize.width.SetCoordValue(0);
+      mIntrinsicSize.height.SetCoordValue(0);
+      mIntrinsicRatio.SizeTo(0, 0);
     }
 
     if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we haven't gotten the initial reflow yet
@@ -623,11 +668,14 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
 }
 
 void
-nsImageFrame::EnsureIntrinsicSize(nsPresContext* aPresContext)
+nsImageFrame::EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext)
 {
   // if mIntrinsicSize.width and height are 0, then we should
   // check to see if the size is already known by the image container.
-  if (mIntrinsicSize.width == 0 && mIntrinsicSize.height == 0) {
+  if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
+      mIntrinsicSize.width.GetCoordValue() == 0 &&
+      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
+      mIntrinsicSize.height.GetCoordValue() == 0) {
 
     // Jump through all the hoops to get the status of the request
     nsCOMPtr<imgIRequest> currentRequest;
@@ -645,6 +693,7 @@ nsImageFrame::EnsureIntrinsicSize(nsPresContext* aPresContext)
       currentRequest->GetImage(getter_AddRefs(imgCon));
       NS_ABORT_IF_FALSE(imgCon, "SIZE_AVAILABLE, but no imgContainer?");
       UpdateIntrinsicSize(imgCon);
+      UpdateIntrinsicRatio(imgCon);
     } else {
       // image request is null or image size not known, probably an
       // invalid image specified
@@ -653,8 +702,12 @@ nsImageFrame::EnsureIntrinsicSize(nsPresContext* aPresContext)
       // XXX: we need this in composer, but it is also good for
       // XXX: general quirks mode to always have room for the icon
       if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
-        mIntrinsicSize.SizeTo(nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+(2*(ICON_PADDING+ALT_BORDER_WIDTH))),
-                              nsPresContext::CSSPixelsToAppUnits(ICON_SIZE+(2*(ICON_PADDING+ALT_BORDER_WIDTH))));
+        nscoord edgeLengthToUse =
+          nsPresContext::CSSPixelsToAppUnits(
+            ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
+        mIntrinsicSize.width.SetCoordValue(edgeLengthToUse);
+        mIntrinsicSize.height.SetCoordValue(edgeLengthToUse);
+        mIntrinsicRatio.SizeTo(1, 1);
       }
     }
   }
@@ -667,17 +720,11 @@ nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                           PRBool aShrinkWrap)
 {
   nsPresContext *presContext = PresContext();
-  EnsureIntrinsicSize(presContext);
-
-  IntrinsicSize intrinsicSize;
-  intrinsicSize.width.SetCoordValue(mIntrinsicSize.width);
-  intrinsicSize.height.SetCoordValue(mIntrinsicSize.height);
-
-  nsSize& intrinsicRatio = mIntrinsicSize; // won't actually be used
+  EnsureIntrinsicSizeAndRatio(presContext);
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            intrinsicSize, intrinsicRatio, aCBSize,
+                            mIntrinsicSize, mIntrinsicRatio, aCBSize,
                             aMargin, aBorder, aPadding);
 }
 
@@ -707,9 +754,9 @@ nsImageFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
   nsPresContext *presContext = PresContext();
-  EnsureIntrinsicSize(presContext);
-  result = mIntrinsicSize.width;
-  return result;
+  EnsureIntrinsicSizeAndRatio(presContext);
+  return mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ?
+    mIntrinsicSize.width.GetCoordValue() : 0;
 }
 
 /* virtual */ nscoord
@@ -720,17 +767,16 @@ nsImageFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
   nsPresContext *presContext = PresContext();
-  EnsureIntrinsicSize(presContext);
+  EnsureIntrinsicSizeAndRatio(presContext);
   // convert from normal twips to scaled twips (printing...)
-  result = mIntrinsicSize.width;
-  return result;
+  return mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ?
+    mIntrinsicSize.width.GetCoordValue() : 0;
 }
 
 /* virtual */ nsSize
 nsImageFrame::GetIntrinsicRatio()
 {
-  EnsureIntrinsicSize(PresContext());
-  return mIntrinsicSize;
+  return mIntrinsicRatio;
 }
 
 NS_IMETHODIMP
@@ -1630,8 +1676,14 @@ nsImageFrame::GetSkipSides() const
 NS_IMETHODIMP 
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
-  aSize = mIntrinsicSize;
-  return NS_OK;
+  if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
+      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
+    aSize.SizeTo(mIntrinsicSize.width.GetCoordValue(),
+                 mIntrinsicSize.height.GetCoordValue());
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
