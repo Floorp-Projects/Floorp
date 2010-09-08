@@ -868,6 +868,11 @@ struct nsStyleBorder {
   inline void SetBorderImage(imgIRequest* aImage);
   inline imgIRequest* GetBorderImage() const;
 
+  bool HasBorderImage() {return !!mBorderImage;}
+
+  void TrackImage(nsPresContext* aContext);
+  void UntrackImage(nsPresContext* aContext);
+
   // These methods are used for the caller to caches the sub images created during
   // a border-image paint operation
   inline void SetSubImage(PRUint8 aIndex, imgIContainer* aSubImage) const;
@@ -903,6 +908,10 @@ struct nsStyleBorder {
     mBorderStyle[aSide] |= BORDER_COLOR_FOREGROUND;
   }
 
+#ifdef DEBUG
+  bool mImageTracked;
+#endif
+
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.  In
   // particular, these widths take into account the border-style for the
@@ -936,6 +945,8 @@ private:
   nsCOMArray<imgIContainer> mSubImages;
 
   nscoord       mTwipsPerPixel;
+
+  nsStyleBorder& operator=(const nsStyleBorder& aOther); // Not to be implemented
 };
 
 

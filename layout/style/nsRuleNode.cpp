@@ -5283,6 +5283,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                          parentBorder->GetBorderImage())
   }
 
+  if (border->HasBorderImage())
+    border->TrackImage(aContext->PresContext());
+
   COMPUTE_END_RESET(Border, border)
 }
 

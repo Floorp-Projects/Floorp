@@ -1171,6 +1171,11 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   GetBorderWidth(borderWidth);
 
   nsStyleBorder myBorder(*GetStyleBorder());
+  // We're making an ephemeral stack copy here, so just copy this debug-only
+  // member to prevent assertions.
+#ifdef DEBUG
+  myBorder.mImageTracked = GetStyleBorder()->mImageTracked;
+#endif
 
   NS_FOR_CSS_SIDES(side) {
     myBorder.SetBorderWidth(side, borderWidth.side(side));
@@ -1183,4 +1188,8 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
                                         aDirtyRect, rect,
                                         GetStyleContext(), myBorder,
                                         aFlags, nsnull);
+
+#ifdef DEBUG
+  myBorder.mImageTracked = false;
+#endif
 }
