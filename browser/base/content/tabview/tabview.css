@@ -171,3 +171,34 @@ body {
 .iq-resizable-autohide .iq-resizable-handle {
   display: none;
 }
+
+
+/* Search
+----------------------------------*/
+
+#search{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 1000;  
+}
+
+#searchbox{
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  z-index: 1050;
+}
+
+#actions{
+  position: absolute;
+  top: 100px;
+  right: 0px;
+  z-index:10;
+}
+
+#actions #searchbutton{
+  position: relative;
+  top: 0;
+  left: 0;
+}
