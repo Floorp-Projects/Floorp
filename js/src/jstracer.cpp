@@ -9467,6 +9467,15 @@ TraceRecorder::stobj_get_fslot_uint32(LIns* obj_ins, unsigned slot)
                         offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
                         ACCSET_OTHER);
 }
+
+LIns*
+TraceRecorder::stobj_set_fslot_uint32(LIns* value_ins, LIns* obj_ins, unsigned slot)
+{
+    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
+    return lir->insStore(LIR_sti, value_ins, obj_ins,
+                         offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
+                         ACCSET_OTHER);
+}
 #endif
 
 LIns*
@@ -9985,14 +9994,12 @@ TraceRecorder::guardHasPrototype(JSObject* obj, LIns* obj_ins,
 }
 
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins, ExitType exitType)
+TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins, VMSideExit *exit)
 {
     /*
      * Guard that no object along the prototype chain has any indexed
      * properties which might become visible through holes in the array.
      */
-    VMSideExit* exit = snapshot(exitType);
-
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return RECORD_STOP;
 
@@ -12683,9 +12690,10 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                                              *cx->regs->pc == JSOP_INITELEM));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Fast path: assigning to element of typed array.
+        VMSideExit* branchExit = snapshot(BRANCH_EXIT);
 
         // Ensure array is a typed array and is the same type as what was written
-        guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), LOAD_CONST);
+        guardClass(obj_ins, obj->getClass(), branchExit, LOAD_CONST);
 
         js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
 
@@ -12693,8 +12701,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         // The index was on the stack and is therefore a LIR float; force it to
         // be an integer.                              
-        idx_ins = makeNumberInt32(idx_ins);            
-                                                       
+        idx_ins = makeNumberInt32(idx_ins);
+
         // Ensure idx >= 0 && idx < length (by using uint32)
         lir->insGuard(LIR_xf,
                       lir->ins2(LIR_ltui,
@@ -12798,47 +12806,71 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                                                 *cx->regs->pc == JSOP_INITELEM));
     } else {
         // Fast path: assigning to element of dense array.
+        VMSideExit* branchExit = snapshot(BRANCH_EXIT);
+        VMSideExit* mismatchExit = snapshot(MISMATCH_EXIT);
 
         // Make sure the array is actually dense.
         if (!obj->isDenseArray()) 
             return ARECORD_STOP;
-        guardDenseArray(obj_ins, BRANCH_EXIT);
+        guardDenseArray(obj_ins, branchExit);
 
         // The index was on the stack and is therefore a LIR float. Force it to
         // be an integer.
         idx_ins = makeNumberInt32(idx_ins);
 
-        // Box the value so we can use one builtin instead of having to add
-        // one builtin for every storage type. Special case for integers
-        // though, since they are so common;  but make sure we don't rebox
-        // unnecessarily.
-        LIns* res_ins;
-        LIns* args[] = { NULL, idx_ins, obj_ins, cx_ins };
-        if (v.isNumber()) {
-            if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
-#if JS_BITS_PER_WORD == 32
-                LIns *boxed = lir->insAlloc(sizeof(Value));
-                LIns *tag_ins = fcallarg(v_ins, 0);
-                LIns *payload_ins = fcallarg(v_ins, 1);
-                lir->insStore(tag_ins, boxed, sTagOffset, ACCSET_OTHER);
-                lir->insStore(payload_ins, boxed, sPayloadOffset, ACCSET_OTHER);
-                args[0] = boxed;
-#else
-                args[0] = fcallarg(v_ins, 0);
-#endif
-                res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
-            } else if (isPromoteInt(v_ins)) {
-                args[0] = demote(lir, v_ins);
-                res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
-            } else {
-                args[0] = v_ins;
-                res_ins = lir->insCall(&js_Array_dense_setelem_double_ci, args);
-            }
-        } else {
-            args[0] = box_value_for_native_call(v, v_ins);
-            res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
+        if (MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32) {
+            /*
+             * Check for negative values bleeding through on 64-bit machines only,
+             * since we can't allocate large enough arrays for this on 32-bit
+             * machines.
+             */
+            guard(true, lir->ins2ImmI(LIR_gei, idx_ins, 0), mismatchExit);
         }
-        guard(false, lir->insEqI_0(res_ins), MISMATCH_EXIT);
+
+        if (!js_EnsureDenseArrayCapacity(cx, obj, idx.toInt32()))
+            RETURN_STOP_A("couldn't ensure dense array capacity for setelem");
+
+        // Grow the array if the index exceeds the capacity.  This happens
+        // rarely, eg. less than 1% of the time in SunSpider.
+        LIns* capacity_ins =
+            addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_CAPACITY),
+                    "capacity");
+        LIns* br = lir->insBranch(LIR_jt, lir->ins2(LIR_ltui, idx_ins, capacity_ins), NULL);
+        LIns* args[] = { idx_ins, obj_ins, cx_ins };
+        LIns* res_ins = lir->insCall(&js_EnsureDenseArrayCapacity_ci, args);
+        guard(false, lir->insEqI_0(res_ins), mismatchExit);
+        br->setTarget(lir->ins0(LIR_label));
+
+        // Get the address of the element.
+        LIns *dslots_ins =
+            addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER), "dslots");
+        JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
+        LIns *addr_ins = lir->ins2(LIR_addp, dslots_ins,
+                                   lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
+
+        // If we are overwriting a hole:
+        // - Guard that we don't have any indexed properties along the prototype chain.
+        // - Check if the length has changed;  if so, update it to index+1.
+        // This happens moderately often, eg. close to 10% of the time in
+        // SunSpider, and for some benchmarks it's close to 100%.
+        LIns* cond = lir->ins2(LIR_eqi,
+#if JS_BITS_PER_WORD == 32
+                               lir->insLoad(LIR_ldi, addr_ins, sTagOffset, ACCSET_OTHER),
+#else
+                               lir->ins1(LIR_q2i, lir->ins2ImmI(LIR_rshuq,
+                                                                lir->insLoad(LIR_ldq, addr_ins, 0, ACCSET_OTHER),
+                                                                JSVAL_TAG_SHIFT)),
+#endif
+                               INS_CONSTU(JSVAL_TAG_MAGIC));
+        LIns* br2 = lir->insBranch(LIR_jf, cond, NULL);
+        LIns* args2[] = { idx_ins, obj_ins, cx_ins };
+        LIns* res_ins2 = addName(lir->insCall(&js_Array_dense_setelem_hole_ci, args2),
+                                 "hasNoIndexedProperties");
+        guard(false, lir->insEqI_0(res_ins2), mismatchExit);
+        br2->setTarget(lir->ins0(LIR_label));
+
+        // Right, actually set the element.
+        box_value_into(v, v_ins, addr_ins, 0, ACCSET_OTHER);
     }
 
     jsbytecode* pc = cx->regs->pc;
@@ -13666,7 +13698,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
         /* If not idx < capacity, stay on trace (and read value as undefined). */
         guard(true, lir->ins2(LIR_geui, idx_ins, capacity_ins), exit);
 
-        CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
+        CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, snapshot(MISMATCH_EXIT)));
 
         // Return undefined and indicate that we didn't actually read this (addr_ins).
         v_ins = INS_UNDEFINED();
@@ -13688,7 +13720,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 
     /* Don't let the hole value escape. Turn it into an undefined. */
     if (vp->isMagic()) {
-        CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
+        CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, snapshot(MISMATCH_EXIT)));
         v_ins = INS_UNDEFINED();
     }
     return RECORD_CONTINUE;
