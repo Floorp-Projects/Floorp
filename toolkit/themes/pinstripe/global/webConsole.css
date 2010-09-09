@@ -174,3 +174,16 @@
     -moz-appearance: none !important;
     -moz-box-align: center;
 }
+
+.jsterm-close-button {
+    list-style-image: url("chrome://global/skin/icons/console-close.png");
+    margin: 0px !important;
+    min-width: 0px !important;
+    padding: 1px 3px 1px 7px !important;
+    -moz-appearance: none !important;
+}
+
+.jsterm-close-button:active {
+    background-color: rgb(175, 175, 175);
+}
+
