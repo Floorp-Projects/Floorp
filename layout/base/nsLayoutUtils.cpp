@@ -3262,14 +3262,13 @@ nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
 
 static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
 {
-  switch (aCoord.GetUnit()) {
-  case eStyleUnit_Percent:
-    return aCoord.GetPercentValue() > 0;
-  case eStyleUnit_Coord:
-    return aCoord.GetCoordValue() > 0;
-  default:
-    return PR_TRUE;
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    // Since negative results are clamped to 0, check > 0.
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) > 0 ||
+           nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) > 0;
   }
+
+  return PR_TRUE;
 }
 
 /* static */ PRBool
