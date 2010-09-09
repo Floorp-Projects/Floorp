@@ -60,6 +60,11 @@ pref("general.warnOnAboutConfig", true);
 pref("browser.bookmarks.max_backups",       5);
 
 pref("browser.cache.disk.enable",           true);
+// Is this the first-time smartsizing has been introduced?
+pref("browser.cache.disk.smart_size.first_run", true);
+// Does the user want smart-sizing?
+pref("browser.cache.disk.smart_size.enabled", true);
+// Size explicitly set by the user. Used when smart_size.enabled == false
 #ifndef WINCE
 pref("browser.cache.disk.capacity",         256000);
 #else
