@@ -162,6 +162,7 @@ var gCSSProperties = {
 		domProp: "MozBorderRadius",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
 		initial_values: [ "0", "0px", "0px 0 0 0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
@@ -184,6 +185,7 @@ var gCSSProperties = {
 		domProp: "MozBorderRadiusBottomleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -203,6 +205,7 @@ var gCSSProperties = {
 		domProp: "MozBorderRadiusBottomright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -222,6 +225,7 @@ var gCSSProperties = {
 		domProp: "MozBorderRadiusTopleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -241,6 +245,7 @@ var gCSSProperties = {
 		domProp: "MozBorderRadiusTopright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -651,6 +656,7 @@ var gCSSProperties = {
 		domProp: "MozOutlineRadius",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		subproperties: [ "-moz-outline-radius-bottomleft", "-moz-outline-radius-bottomright", "-moz-outline-radius-topleft", "-moz-outline-radius-topright" ],
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
@@ -673,6 +679,7 @@ var gCSSProperties = {
 		domProp: "MozOutlineRadiusBottomleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -692,6 +699,7 @@ var gCSSProperties = {
 		domProp: "MozOutlineRadiusBottomright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -711,6 +719,7 @@ var gCSSProperties = {
 		domProp: "MozOutlineRadiusTopleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
@@ -730,6 +739,7 @@ var gCSSProperties = {
 		domProp: "MozOutlineRadiusTopright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
 						"3% 2%", "1px 4px", "2em 2pt", // elliptical
