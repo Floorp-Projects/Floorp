@@ -217,14 +217,17 @@ var BrowserUI = {
         urlString = "";
       this._edit.value = urlString;
 
-      if (!this._edit.readOnly) {
+      if (!this._edit.readOnly || Util.isPortrait()) {
+        this._edit.readOnly = false;
+
         // This is a workaround needed to cycle focus for the IME state
         // to be set properly (bug 488420)
         this._edit.blur();
         gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
       }
-
-      this._edit.readOnly = !isOpened;
+      else {
+        this._edit.readOnly = !isOpened;
+      }
     }
     else if (!aEdit) {
       this._updateToolbar();
