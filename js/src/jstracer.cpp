@@ -8701,7 +8701,7 @@ TraceRecorder::incElem(jsint incr, bool pre)
 
     if (!l.isPrimitive() && l.toObject().isDenseArray() && r.isInt32()) {
         guardDenseArray(get(&l), MISMATCH_EXIT);
-        CHECK_STATUS(denseArrayElement(l, r, vp, v_ins, addr_ins));
+        CHECK_STATUS(denseArrayElement(l, r, vp, v_ins, addr_ins, snapshot(BRANCH_EXIT)));
         if (!addr_ins) // if we read a hole, abort
             return RECORD_STOP;
         CHECK_STATUS(inc(*vp, v_ins, incr, pre));
@@ -12527,8 +12527,9 @@ TraceRecorder::record_JSOP_GETELEM()
         Value* vp;
         LIns* addr_ins;
 
-        guardDenseArray(obj_ins, BRANCH_EXIT);
-        CHECK_STATUS_A(denseArrayElement(lval, idx, vp, v_ins, addr_ins));
+        VMSideExit* branchExit = snapshot(BRANCH_EXIT);
+        guardDenseArray(obj_ins, branchExit);
+        CHECK_STATUS_A(denseArrayElement(lval, idx, vp, v_ins, addr_ins, branchExit));
         set(&lval, v_ins);
         if (call)
             set(&idx, obj_ins);
@@ -13671,7 +13672,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
 
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_ins,
-                                 LIns*& addr_ins)
+                                 LIns*& addr_ins, VMSideExit* branchExit)
 {
     JS_ASSERT(oval.isObject() && ival.isInt32());
 
@@ -13679,8 +13680,6 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     LIns* obj_ins = get(&oval);
     jsint idx = ival.toInt32();
     LIns* idx_ins = makeNumberInt32(get(&ival));
-
-    VMSideExit* exit = snapshot(BRANCH_EXIT);
 
     /*
      * Arrays have both a length and a capacity, but we only need to check
@@ -13696,7 +13695,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     bool within = (jsuint(idx) < capacity);
     if (!within) {
         /* If not idx < capacity, stay on trace (and read value as undefined). */
-        guard(true, lir->ins2(LIR_geui, idx_ins, capacity_ins), exit);
+        guard(true, lir->ins2(LIR_geui, idx_ins, capacity_ins), branchExit);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, snapshot(MISMATCH_EXIT)));
 
@@ -13707,7 +13706,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     }
 
     /* Guard that index is within capacity. */
-    guard(true, lir->ins2(LIR_ltui, idx_ins, capacity_ins), exit);
+    guard(true, lir->ins2(LIR_ltui, idx_ins, capacity_ins), branchExit);
 
     /* Load the value and guard on its type to unbox it. */
     LIns* dslots_ins =
@@ -13716,7 +13715,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
                          lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
-    v_ins = unbox_value(*vp, addr_ins, 0, exit);
+    v_ins = unbox_value(*vp, addr_ins, 0, branchExit);
 
     /* Don't let the hole value escape. Turn it into an undefined. */
     if (vp->isMagic()) {
