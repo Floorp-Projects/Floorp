@@ -3810,7 +3810,7 @@ JSTerm.prototype = {
     this.history.push(aExecuteString);
     this.historyIndex++;
     this.historyPlaceHolder = this.history.length;
-    this.inputNode.value = "";
+    this.setInputValue("");
   },
 
   /**
@@ -3967,12 +3967,46 @@ JSTerm.prototype = {
     outputNode.lastTimestamp = 0;
   },
 
+  /**
+   * Updates the size of the input field (command line) to fit its contents.
+   *
+   * @returns void
+   */
+  resizeInput: function JST_resizeInput()
+  {
+    let inputNode = this.inputNode;
+
+    // Reset the height so that scrollHeight will reflect the natural height of
+    // the contents of the input field.
+    inputNode.style.height = "auto";
+
+    // Now resize the input field to fit its contents.
+    let scrollHeight = inputNode.inputField.scrollHeight;
+    if (scrollHeight > 0) {
+      inputNode.style.height = scrollHeight + "px";
+    }
+  },
+
+  /**
+   * Sets the value of the input field (command line), and resizes the field to
+   * fit its contents. This method is preferred over setting "inputNode.value"
+   * directly, because it correctly resizes the field.
+   *
+   * @param string aNewValue
+   *        The new value to set.
+   * @returns void
+   */
+  setInputValue: function JST_setInputValue(aNewValue)
+  {
+    this.inputNode.value = aNewValue;
+    this.resizeInput();
+  },
+
   inputEventHandler: function JSTF_inputEventHandler()
   {
     var self = this;
     function handleInputEvent(aEvent) {
-      self.inputNode.setAttribute("rows",
-        Math.min(8, self.inputNode.value.split("\n").length));
+      self.resizeInput();
     }
     return handleInputEvent;
   },
@@ -3992,17 +4026,16 @@ JSTerm.prototype = {
             // control-a
             tmp = self.codeInputString;
             setTimeout(function() {
-              self.inputNode.value = tmp;
+              self.setInputValue(tmp);
               self.inputNode.setSelectionRange(0, 0);
             }, 0);
             break;
           case 101:
             // control-e
             tmp = self.codeInputString;
-            self.inputNode.value = "";
+            self.setInputValue("");
             setTimeout(function(){
-              var endPos = tmp.length + 1;
-              self.inputNode.value = tmp;
+              self.setInputValue(tmp);
             }, 0);
             break;
           default:
@@ -4103,14 +4136,14 @@ JSTerm.prototype = {
 
       let inputVal = this.history[--this.historyPlaceHolder];
       if (inputVal){
-        this.inputNode.value = inputVal;
+        this.setInputValue(inputVal);
       }
     }
     // Down Arrow key
     else {
       if (this.historyPlaceHolder == this.history.length - 1) {
         this.historyPlaceHolder ++;
-        this.inputNode.value = "";
+        this.setInputValue("");
         return;
       }
       else if (this.historyPlaceHolder >= (this.history.length)) {
@@ -4119,7 +4152,7 @@ JSTerm.prototype = {
       else {
         let inputVal = this.history[++this.historyPlaceHolder];
         if (inputVal){
-          this.inputNode.value = inputVal;
+          this.setInputValue(inputVal);
         }
       }
     }
@@ -4250,7 +4283,7 @@ JSTerm.prototype = {
       }
 
       completionStr = matches[matchIndexToUse].substring(matchOffset);
-      this.inputNode.value = inputValue +  completionStr;
+      this.setInputValue(inputValue + completionStr);
 
       selEnd = inputValue.length + completionStr.length;
 
