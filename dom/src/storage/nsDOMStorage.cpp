@@ -687,8 +687,8 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
   if (NS_SUCCEEDED(aPrincipal->GetURI(getter_AddRefs(URI))) && URI) {
     PRBool isAbout;
     mCanUseChromePersist =
-      (NS_SUCCEEDED(URI->SchemeIs("moz-safe-about", &isAbout) && isAbout)) ||
-      (NS_SUCCEEDED(URI->SchemeIs("about", &isAbout), && isAbout));
+      (NS_SUCCEEDED(URI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
+      (NS_SUCCEEDED(URI->SchemeIs("about", &isAbout)) && isAbout);
   }
 
   return NS_OK;
