@@ -52,10 +52,6 @@ function onTabViewWindowLoaded() {
   let [originalTab] = gBrowser.visibleTabs;
 
   // create group one and two
-  let padding = 10;
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
   let boxOne = new contentWindow.Rect(20, 20, 300, 300);
   let groupOne = new contentWindow.GroupItem([], { bounds: boxOne });
   ok(groupOne.isEmpty(), "This group is empty");
