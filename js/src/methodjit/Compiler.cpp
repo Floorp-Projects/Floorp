@@ -273,10 +273,6 @@ mjit::Compiler::generatePrologue()
                       Address(JSFrameReg, offsetof(JSStackFrame, savedPC)));
 #endif
 
-        /* :TODO: This is entirely wrong. */
-        masm.store32(Imm32(cx->version),
-                     Address(JSFrameReg, JSStackFrame::offsetCallerVersion()));
-
         /* Set cx->fp */
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ReturnReg);
 

@@ -1979,6 +1979,78 @@ class RegExpStatics
     void getRightContext(JSSubString *out) const;
 };
 
+#define JS_HAS_OPTION(cx,option)        (((cx)->options & (option)) != 0)
+#define JS_HAS_STRICT_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_STRICT)
+#define JS_HAS_WERROR_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_WERROR)
+#define JS_HAS_COMPILE_N_GO_OPTION(cx)  JS_HAS_OPTION(cx, JSOPTION_COMPILE_N_GO)
+#define JS_HAS_ATLINE_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_ATLINE)
+
+namespace VersionFlags {
+static const uint32 MASK =        0x0FFF; /* see JSVersion in jspubtd.h */
+static const uint32 HAS_XML =     0x1000; /* flag induced by XML option */
+static const uint32 ANONFUNFIX =  0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
+}
+
+static inline bool
+VersionHasXML(JSVersion version)
+{
+    return !!(version & VersionFlags::HAS_XML);
+}
+
+static inline bool
+VersionHasAnonFunFix(JSVersion version)
+{
+    return !!(version & VersionFlags::ANONFUNFIX);
+}
+
+static inline void
+VersionSetXML(JSVersion *version, bool enable)
+{
+    if (enable)
+        *version = JSVersion(uint32(*version) | VersionFlags::HAS_XML);
+    else
+        *version = JSVersion(uint32(*version) & ~VersionFlags::HAS_XML);
+}
+
+static inline void
+VersionSetAnonFunFix(JSVersion *version, bool enable)
+{
+    if (enable)
+        *version = JSVersion(uint32(*version) | VersionFlags::ANONFUNFIX);
+    else
+        *version = JSVersion(uint32(*version) & ~VersionFlags::ANONFUNFIX);
+}
+
+static inline JSVersion
+VersionExtractFlags(JSVersion version)
+{
+    return JSVersion(uint32(version) & ~VersionFlags::MASK);
+}
+
+static inline bool
+VersionHasFlags(JSVersion version)
+{
+    return !!VersionExtractFlags(version);
+}
+
+static inline JSVersion
+VersionNumber(JSVersion version)
+{
+    return JSVersion(uint32(version) & VersionFlags::MASK);
+}
+
+static inline bool
+VersionIsKnown(JSVersion version)
+{
+    return VersionNumber(version) != JSVERSION_UNKNOWN;
+}
+
+static inline void
+VersionCloneFlags(JSVersion src, JSVersion *dst)
+{
+    *dst = JSVersion(uint32(VersionNumber(*dst)) | uint32(VersionExtractFlags(src)));
+}
+
 } /* namespace js */
 
 struct JSContext
@@ -1988,9 +2060,13 @@ struct JSContext
     /* JSRuntime contextList linkage. */
     JSCList             link;
 
-    /* Runtime version control identifier. */
-    uint16              version;
+  private:
+    /* See JSContext::findVersion. */
+    JSVersion           defaultVersion;      /* script compilation version */
+    JSVersion           versionOverride;     /* supercedes defaultVersion when valid */
+    bool                hasVersionOverride;
 
+  public:
     /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */
 
@@ -2149,11 +2225,9 @@ struct JSContext
      */
     js::StackSegment *containingSegment(const JSStackFrame *target);
 
-    /*
-     * Search the call stack for the nearest frame with static level targetLevel.
-     */
-    JSStackFrame *findFrameAtLevel(uintN targetLevel) {
-        JSStackFrame *fp = this->regs->fp;
+    /* Search the call stack for the nearest frame with static level targetLevel. */
+    JSStackFrame *findFrameAtLevel(uintN targetLevel) const {
+        JSStackFrame *fp = regs->fp;
         while (true) {
             JS_ASSERT(fp && fp->hasScript());
             if (fp->getScript()->staticLevel == targetLevel)
@@ -2161,6 +2235,58 @@ struct JSContext
             fp = fp->down;
         }
         return fp;
+    }
+
+    void clearVersionOverride() { hasVersionOverride = false; }
+
+  private:
+    /* Set the default script compilation version. */
+    void setDefaultVersion(JSVersion version) { defaultVersion = version; }
+
+    /*
+     * The default script compilation version can be set iff there is no code running.
+     * This typically occurs via the JSAPI right after a context is constructed.
+     */
+    bool canSetDefaultVersion() const { return !regs && !hasVersionOverride; }
+
+    /* Force a version for future script compilation. */
+    void overrideVersion(JSVersion newVersion) {
+        JS_ASSERT(!canSetDefaultVersion());
+        versionOverride = newVersion;
+        hasVersionOverride = true;
+    }
+
+  public:
+    /* Set the default version if possible; otherwise, force the version. */
+    void maybeOverrideVersion(JSVersion newVersion) {
+        if (canSetDefaultVersion())
+            setDefaultVersion(newVersion);
+        else
+            overrideVersion(newVersion);
+    }
+
+    /*
+     * Return:
+     * - The override version, if there is an override version.
+     * - The newest scripted frame's version, if there is such a frame. 
+     * - The default verion.
+     *
+     * @note    If this ever shows up in a profile, just add caching!
+     */
+    JSVersion findVersion() const {
+        if (hasVersionOverride)
+            return versionOverride;
+
+        if (regs) {
+            /* There may be a scripted function somewhere on the stack! */
+            JSStackFrame *fp = regs->fp;
+            while (fp && !fp->hasScript())
+                fp = fp->down;
+            if (fp)
+                return fp->getScript()->getVersion();
+        }
+
+        return defaultVersion;
     }
 
 #ifdef JS_THREADSAFE
@@ -2931,49 +3057,6 @@ class JSAutoResolveFlags
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-/*
- * Slightly more readable macros for testing per-context option settings (also
- * to hide bitset implementation detail).
- *
- * JSOPTION_XML must be handled specially in order to propagate from compile-
- * to run-time (from cx->options to script->version/cx->version).  To do that,
- * we copy JSOPTION_XML from cx->options into cx->version as JSVERSION_HAS_XML
- * whenever options are set, and preserve this XML flag across version number
- * changes done via the JS_SetVersion API.
- *
- * But when executing a script or scripted function, the interpreter changes
- * cx->version, including the XML flag, to script->version.  Thus JSOPTION_XML
- * is a compile-time option that causes a run-time version change during each
- * activation of the compiled script.  That version change has the effect of
- * changing JS_HAS_XML_OPTION, so that any compiling done via eval enables XML
- * support.  If an XML-enabled script or function calls a non-XML function,
- * the flag bit will be cleared during the callee's activation.
- *
- * Note that JS_SetVersion API calls never pass JSVERSION_HAS_XML or'd into
- * that API's version parameter.
- *
- * Note also that script->version must contain this XML option flag in order
- * for XDR'ed scripts to serialize and deserialize with that option preserved
- * for detection at run-time.  We can't copy other compile-time options into
- * script->version because that would break backward compatibility (certain
- * other options, e.g. JSOPTION_VAROBJFIX, are analogous to JSOPTION_XML).
- */
-#define JS_HAS_OPTION(cx,option)        (((cx)->options & (option)) != 0)
-#define JS_HAS_STRICT_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_STRICT)
-#define JS_HAS_WERROR_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_WERROR)
-#define JS_HAS_COMPILE_N_GO_OPTION(cx)  JS_HAS_OPTION(cx, JSOPTION_COMPILE_N_GO)
-#define JS_HAS_ATLINE_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_ATLINE)
-
-#define JSVERSION_MASK                  0x0FFF  /* see JSVersion in jspubtd.h */
-#define JSVERSION_HAS_XML               0x1000  /* flag induced by XML option */
-#define JSVERSION_ANONFUNFIX            0x2000  /* see jsapi.h, the comments
-                                                   for JSOPTION_ANONFUNFIX */
-
-#define JSVERSION_NUMBER(cx)            ((JSVersion)((cx)->version &          \
-                                                     JSVERSION_MASK))
-#define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
-                                         JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
-
 extern JSThreadData *
 js_CurrentThreadData(JSRuntime *rt);
 
@@ -3027,29 +3110,14 @@ class ThreadDataIter
 
 #endif  /* !JS_THREADSAFE */
 
+/*
+ * If necessary, push the option flags that affect script compilation to the current version.
+ * Note this may cause a version override -- see JSContext::overrideVersion.
+ */
+extern void
+SyncOptionsToVersion(JSContext *cx);
+
 } /* namespace js */
-
-/*
- * Ensures the JSOPTION_XML and JSOPTION_ANONFUNFIX bits of cx->options are
- * reflected in cx->version, since each bit must travel with a script that has
- * it set.
- */
-extern void
-js_SyncOptionsToVersion(JSContext *cx);
-
-/*
- * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
- * data that depends on version.
- */
-extern void
-js_OnVersionChange(JSContext *cx);
-
-/*
- * Unlike the JS_SetVersion API, this function stores JSVERSION_HAS_XML and
- * any future non-version-number flags induced by compiler options.
- */
-extern void
-js_SetVersion(JSContext *cx, JSVersion version);
 
 /*
  * Create and destroy functions for JSContext, which is manually allocated
