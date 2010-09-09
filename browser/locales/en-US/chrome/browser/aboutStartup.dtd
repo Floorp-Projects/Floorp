@@ -1,0 +1,13 @@
+<!ENTITY title "Application Startup Timing">
+<!ENTITY timestamp "Timestamp">
+<!ENTITY elapsed "Elapsed Time">
+<!ENTITY applaunched "Application Launched">
+<!ENTITY launchdur "Launch Duration">
+<!ENTITY appstarted "Application Started">
+<!ENTITY startupdur "Startup Duration">
+<!ENTITY sessrestored "Session Restored">
+<!ENTITY version "Version">
+<!ENTITY chart "Chart">
+<!ENTITY graph "Graph">
+<!ENTITY eventdesc "Event Description">
+<!ENTITY noevents "No Events Recorded">
