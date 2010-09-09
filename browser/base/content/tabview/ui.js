@@ -163,7 +163,7 @@ let UI = {
       if (firstTime) {
         var padding = 10;
         var infoWidth = 350;
-        var infoHeight = 350;
+        var infoHeight = 232;
         var pageBounds = Items.getPageBounds();
         pageBounds.inset(padding, padding);
 
@@ -187,15 +187,10 @@ let UI = {
         });
 
         // ___ make info item
-        let welcome = "How to organize your tabs";
-        let more = "";
         let video = "http://videos-cdn.mozilla.net/firefox4beta/tabcandy_howto.webm";
         var html =
           "<div class='intro'>"
-            + "<h1>" + welcome + "</h1>"
-            + ( more && more.length ? "<div>" + more + "</div><br>" : "")
-            + "<video src='" + video + "' "
-            + "width='100%' preload controls>"
+            + "<video src='" + video + "' width='100%' preload controls>"
           + "</div>";
 
         box.left = box.right + padding;
