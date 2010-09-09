@@ -349,21 +349,6 @@ input.defaultName {
   bottom: 1px;
 }
 
-/* Exit button
-+----------------------------------*/
-#exit-button {
-  cursor: default;
-  top: 0;
-  right: 0;
-  width: 28px;
-  height: 27px;
-  background: url(chrome://browser/skin/tabview/tabview.png) no-repeat scroll 4px 4px #b7b7b7;
-  border-bottom: 1px solid #909090;
-  border-left: 1px solid #B7B7B7;
-  border-top: 1px solid #CFCFCF;
-  -moz-border-radius: 3px 0 0 3px;
-}
-
 /* Search
 ----------------------------------*/
 
