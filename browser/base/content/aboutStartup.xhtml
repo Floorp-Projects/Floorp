@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % aboutStartupDTD SYSTEM "chrome://browser/locale/aboutStartup.dtd">
+  %aboutStartupDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&title;</title>
+    <link rel="stylesheet" href="chrome://global/skin/aboutSupport.css" type="text/css"/>
+  </head>
+
+  <body>
+    <h1>&title;</h1>
+    <table>
+      <tr><th></th><th>&timestamp;</th><th>&elapsed;</th></tr>
+      <tr><td>&applaunched;</td><td id="launched">—</td><td>—</td></tr>
+      <tr><td>&appstarted;</td><td id="started">—</td><td>—</td></tr>
+      <tr><td>&sessrestored;</td><td id="restored">—</td><td>—</td></tr>
+    </table>
+
+    <h1>&chart;</h1>
+    <table>
+      <tr><th>&timestamp;</th><th>&launchdur;</th><th>&startupdur;</th><th>&elapsed;</th><th colspan="4">&version;</th></tr>
+      <tr><td colspan="8"><i>&noevents;</i></td></tr>
+    </table>
+    <table>
+      <tr><th>&timestamp;</th><th>&eventdesc;</th></tr>
+      <tr><td colspan="2"><i>&noevents;</i></td></tr>
+    </table>
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutStartup.js"/>
+  </body>
+</html>
