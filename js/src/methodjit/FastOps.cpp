@@ -340,6 +340,41 @@ mjit::Compiler::jsop_bitop(JSOp op)
         return;
     }
 
+    bool lhsIntOrDouble = !(lhs->isNotType(JSVAL_TYPE_DOUBLE) && 
+                            lhs->isNotType(JSVAL_TYPE_INT32));
+    
+    /* Fast-path double to int conversion. */
+    if (!lhs->isConstant() && rhs->isConstant() && lhsIntOrDouble &&
+        rhs->isType(JSVAL_TYPE_INT32) && rhs->getValue().toInt32() == 0 &&
+        (op == JSOP_BITOR || op == JSOP_LSH)) {
+        RegisterID reg = frame.copyDataIntoReg(lhs);
+        if (lhs->isType(JSVAL_TYPE_INT32)) {
+            frame.popn(2);
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
+            return;
+        }
+        MaybeJump isInt;
+        if (!lhs->isType(JSVAL_TYPE_DOUBLE)) {
+            RegisterID typeReg = frame.tempRegForType(lhs);
+            isInt = masm.testInt32(Assembler::Equal, typeReg);
+            Jump notDouble = masm.testDouble(Assembler::NotEqual, typeReg);
+            stubcc.linkExit(notDouble, Uses(2));
+        }
+        frame.loadDouble(lhs, FPRegisters::First, masm);
+        
+        Jump truncateGuard = masm.branchTruncateDoubleToInt32(FPRegisters::First, reg);
+        stubcc.linkExit(truncateGuard, Uses(2));
+        stubcc.leave();
+        stubcc.call(stub);
+        
+        if (isInt.isSet())
+            isInt.get().linkTo(masm.label(), &masm);
+        frame.popn(2);
+        frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
+        stubcc.rejoin(Changes(1));
+        return;
+    }
+
     /* We only want to handle integers here. */
     if (rhs->isNotType(JSVAL_TYPE_INT32) || lhs->isNotType(JSVAL_TYPE_INT32) || 
         (op == JSOP_URSH && rhs->isConstant() && rhs->getValue().toInt32() % 32 == 0)) {
