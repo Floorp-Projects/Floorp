@@ -319,12 +319,37 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
+struct CSSPropertyAlias {
+  char name[sizeof("-moz-border-radius-bottomright")];
+  nsCSSProperty id;
+};
+
+static const CSSPropertyAlias gAliases[] = {
+  { "-moz-border-radius", eCSSProperty_border_radius },
+  { "-moz-border-radius-bottomleft", eCSSProperty_border_bottom_left_radius },
+  { "-moz-border-radius-bottomright", eCSSProperty_border_bottom_right_radius },
+  { "-moz-border-radius-topleft", eCSSProperty_border_top_left_radius },
+  { "-moz-border-radius-topright", eCSSProperty_border_top_right_radius },
+  // Don't forget to update the sizeof in CSSPropertyAlias above with the
+  // longest string when you add stuff here.
+};
+
 nsCSSProperty
 nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
   NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
 
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  if (res == eCSSProperty_UNKNOWN) {
+    for (const CSSPropertyAlias *alias = gAliases,
+                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
+         alias < alias_end; ++alias) {
+      if (aProperty.LowerCaseEqualsASCII(alias->name)) {
+        res = alias->id;
+        break;
+      }
+    }
+  }
   return res;
 }
 
@@ -336,6 +361,16 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   // converting and avoid a PromiseFlatCString() call.
   NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  if (res == eCSSProperty_UNKNOWN) {
+    for (const CSSPropertyAlias *alias = gAliases,
+                            *alias_end = gAliases + NS_ARRAY_LENGTH(gAliases);
+         alias < alias_end; ++alias) {
+      if (aProperty.LowerCaseEqualsASCII(alias->name)) {
+        res = alias->id;
+        break;
+      }
+    }
+  }
   return res;
 }
 
