@@ -541,7 +541,6 @@
                         key="key_inspect"
                         command="Tools:Inspect"/>
               <menuitem id="javascriptConsole"
-                        hidden="true"
                         label="&errorConsoleCmd.label;"
                         accesskey="&errorConsoleCmd.accesskey;"
                         key="key_errorConsole"

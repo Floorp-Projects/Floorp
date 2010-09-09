@@ -395,9 +395,11 @@ pref("browser.bookmarks.max_backups",             10);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
-pref("javascript.options.showInConsole",          true);
 #ifdef DEBUG
+pref("javascript.options.showInConsole",          true);
 pref("general.warnOnAboutConfig",                 false);
+#else
+pref("javascript.options.showInConsole",          false);
 #endif
 
 #ifdef WINCE
@@ -1028,9 +1030,6 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
-
-// Disable the Error Console
-pref("devtools.errorconsole.enabled", false);
 
 // disable the Inspector
 pref("devtools.inspector.enabled", false);
