@@ -2522,7 +2522,7 @@ var gCSSProperties = {
 			"-moz-calc(2px) -moz-calc(2px)",
 			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
 		],
-		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit",
+		invalid_values: [ "3% 3%", "2px 2px -5px", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit",
 			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
 		]
 	},
