@@ -3788,15 +3788,14 @@ TraceRecorder::setImpl(void* p, LIns* i, bool demote)
         JS_ASSERT( x->isop(LIR_sti) || x->isop(LIR_std));
 #endif
 
-        int disp;
+        ptrdiff_t disp;
         LIns *base = x->oprnd2();
-#ifdef NANOJIT_ARM
-        if (base->isop(LIR_addp)) {
-            disp = base->oprnd2()->immI();
+        if (base->isop(LIR_addp) && base->oprnd2()->isImmP()) {
+            disp = ptrdiff_t(base->oprnd2()->immP());
             base = base->oprnd1();
-        } else
-#endif
-        disp = x->disp();
+        } else {
+            disp = x->disp();
+        }
 
         JS_ASSERT(base == lirbuf->sp || base == eos_ins);
         JS_ASSERT(disp == ((base == lirbuf->sp)
