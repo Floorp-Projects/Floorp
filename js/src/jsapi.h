@@ -968,9 +968,17 @@ class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
 
     bool enter(JSContext *cx, JSObject *target);
 
+    bool entered() const { return call != NULL; }
+
     ~JSAutoCrossCompartmentCall() {
         if (call)
             JS_LeaveCrossCompartmentCall(call);
+    }
+
+    void swap(JSAutoCrossCompartmentCall &other) {
+        JSCrossCompartmentCall *tmp = call;
+        call = other.call;
+        other.call = tmp;
     }
 };
 
