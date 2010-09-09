@@ -156,6 +156,8 @@ public:
   reverse_line_iterator rend_lines() { return mLines.rend(); }
   const_reverse_line_iterator rbegin_lines() const { return mLines.rbegin(); }
   const_reverse_line_iterator rend_lines() const { return mLines.rend(); }
+  line_iterator line(nsLineBox* aList) { return mLines.begin(aList); }
+  reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
 
   friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
