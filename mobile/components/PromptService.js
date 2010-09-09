@@ -60,12 +60,11 @@ function PromptService() {
         case "Prompt:Call":
           // List of methods we remote - to check against malicious data.
           // For example, it would be dangerous to allow content to show
-          // auth prompts. We allow only the methods that web content
-          // is allowed to show.
-          const ALL_METHODS = ['alert', 'confirm', 'prompt'];
+          // auth prompts.
+          const ALL_METHODS = ["alert", "alertCheck", "confirm", "prompt", "confirmEx", "confirmCheck", "select"];
           var method = aMessage.json.method;
           if (ALL_METHODS.indexOf(method) == -1)
-            throw 'PromptServiceRemoter received an invalid method';
+            throw "PromptServiceRemoter received an invalid method "+method;
           var arguments = aMessage.json.arguments;
           arguments.unshift(null); // No need for window, child is already on top
                                    // (see mobile browser's PromptService.js)
