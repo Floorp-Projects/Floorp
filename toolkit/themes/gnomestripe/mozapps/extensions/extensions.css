@@ -43,7 +43,7 @@
   background-color: -moz-field;
   color: -moz-fieldtext;
   border: 1px solid black;
-  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
 
 .nav-button {
@@ -146,13 +146,13 @@
 }
 
 .category:-moz-locale-dir(ltr) {
-  -moz-border-radius-topleft: 5px;
-  -moz-border-radius-bottomleft: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
 .category:-moz-locale-dir(rtl) {
-  -moz-border-radius-topright: 5px;
-  -moz-border-radius-bottomright: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
 .category[disabled] {
@@ -182,7 +182,7 @@
   background-color: #55D4FF;
   padding: 2px 8px;
   margin: 6px 0px;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   color: #FFF;
   font-weight: bold;
   text-align: center;
@@ -288,7 +288,7 @@
   -moz-appearance: none;
   border: none;
   background-color: transparent;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   padding: 0px 6px;
   margin: 0px 6px;
   min-width: 12px !important;
@@ -473,7 +473,7 @@
   -moz-box-align: center;
   padding: 4px 20px;
   background-color: #FDFFA8;
-  -moz-border-radius: 8px;
+  border-radius: 8px;
   font-size: 120%;
 }
 
@@ -584,7 +584,7 @@
 }
 
 #detail-contributions {
-  -moz-border-radius: 5px;
+  border-radius: 5px;
   border: 1px solid #B0C8D1;
   margin-bottom: 2em;
   padding: 1em;
@@ -657,7 +657,7 @@
 
 .download-progress {
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: 1px solid #555;
   -moz-box-shadow: #777 1px 1px 2px;
   width: 200px;
@@ -682,12 +682,12 @@
 
 .download-progress .start-cap:-moz-locale-dir(ltr),
 .download-progress .end-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 10000px 0 0 10000px;
+  border-radius: 10000px 0 0 10000px;
 }
 
 .download-progress .end-cap:-moz-locale-dir(ltr),
 .download-progress .start-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 0 10000px 10000px 0;
+  border-radius: 0 10000px 10000px 0;
 }
 
 .download-progress .progress {
@@ -705,7 +705,7 @@
   border-style: solid;
   -moz-border-top-colors: #FFF;
   -moz-border-left-colors: #FFF;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   min-width: 16px;
   width: 16px;
   height: 16px;

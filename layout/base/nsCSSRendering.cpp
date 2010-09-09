@@ -1239,7 +1239,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
         // We only give the spread radius to corners with a radius on them, otherwise we'll
         // give a rounded shadow corner to a frame corner with 0 border radius, should
-        // the author use non-uniform border radii sizes (-moz-border-radius-topleft etc)
+        // the author use non-uniform border radii sizes (border-top-left-radius etc)
         // (bug 514670)
         if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
           borderSizes[NS_SIDE_LEFT] = spreadDistance;
