@@ -1005,17 +1005,14 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 /* identity box */
 
 #identity-box {
-  background-color: rgb(95%,95%,95%);
-  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(70%,70%,70%,.1), rgba(0,0,0,.1));
-  background-origin: border-box;
-  border: 1px solid rgba(0,0,0,.15);
+  background-color: -moz-dialog;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
+  color: -moz-dialogText;
   -moz-border-radius: 2px;
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1),
-                   0 0 1px rgba(255,255,255,.4) inset;
-  min-height: 16px;
-  font-weight: bold;
-  color: #666;
-  text-shadow: 0 1px 0 rgba(255,255,255,.25);
+}
+
+#identity-box:hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
 }
 
 #identity-box[open="true"],
@@ -1025,30 +1022,33 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 
 #identity-box.verifiedDomain,
 #identity-box.verifiedIdentity {
-  color: #444;
-  border-color: rgba(0,0,0,.3);
+  color: white;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+  -moz-box-shadow: 0 0 0 1px rgba(0,0,0,.2) inset;
 }
 
 #identity-box.verifiedDomain {
-  background-color: hsl(219,75%,80%);
+  background-color: hsl(219,45%,60%);
 }
 
 #identity-box.verifiedIdentity {
-  background-color: hsl(92,55%,72%);
+  background-color: hsl(92,45%,52%);
 }
 
 #identity-box:-moz-focusring {
-  outline: 1px dotted #444;
+  outline: 1px dotted -moz-DialogText;
   outline-offset: -3px;
+}
+
+#identity-box.verifiedDomain:-moz-focusring,
+#identity-box.verifiedIdentity:-moz-focusring {
+  outline-color: white;
 }
 
 #identity-icon-labels {
   -moz-margin-start: 1px;
   -moz-margin-end: 3px;
   -moz-transform: translate(0, -1px);
-  /* compensate #identity-box border: */
-  margin-top: -1px;
-  margin-bottom: -1px;
 }
 
 /* Location bar dropmarker */
