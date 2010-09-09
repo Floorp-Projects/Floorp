@@ -148,7 +148,17 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
     if (mGLContext)
       CleanupResources();
 
-    mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
+    mGLContext = nsnull;
+
+#ifdef XP_WIN
+    if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
+      printf_stderr("Trying GL layers...\n");
+      mGLContext = gl::GLContextProviderEGL::CreateForWindow(mWidget);
+    }
+#endif
+
+    if (!mGLContext)
+      mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
 
     if (!mGLContext) {
       NS_WARNING("Failed to create LayerManagerOGL context");
