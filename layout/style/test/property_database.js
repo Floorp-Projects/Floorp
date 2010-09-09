@@ -168,12 +168,12 @@ var gCSSProperties = {
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
-	"-moz-border-radius": {
+	"border-radius": {
 		domProp: "MozBorderRadius",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
-		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
+		subproperties: [ "border-bottom-left-radius", "border-bottom-right-radius", "border-top-left-radius", "border-top-right-radius" ],
 		initial_values: [ "0", "0px", "0%", "0px 0 0 0px", "-moz-calc(-2px)", "-moz-calc(-1%)", "-moz-calc(0px) -moz-calc(0pt) -moz-calc(0%) -moz-calc(0em)" ],
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
 						"3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt", // elliptical
@@ -191,7 +191,7 @@ var gCSSProperties = {
 					  ],
 		invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px" ]
 	},
-	"-moz-border-radius-bottomleft": {
+	"border-bottom-left-radius": {
 		domProp: "MozBorderRadiusBottomleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
@@ -211,7 +211,7 @@ var gCSSProperties = {
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
-	"-moz-border-radius-bottomright": {
+	"border-bottom-right-radius": {
 		domProp: "MozBorderRadiusBottomright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
@@ -231,7 +231,7 @@ var gCSSProperties = {
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
-	"-moz-border-radius-topleft": {
+	"border-top-left-radius": {
 		domProp: "MozBorderRadiusTopleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
@@ -251,7 +251,7 @@ var gCSSProperties = {
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
-	"-moz-border-radius-topright": {
+	"border-top-right-radius": {
 		domProp: "MozBorderRadiusTopright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,

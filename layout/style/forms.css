@@ -436,14 +436,14 @@ input[type="file"] > input[type="button"] {
 input[type="radio"] {
   -moz-appearance: radio;
   margin: 3px 3px 0px 5px;
-  -moz-border-radius: 100% !important;
+  border-radius: 100% !important;
 }
 
 /* check boxes */
 input[type="checkbox"] {
   -moz-appearance: checkbox;
   margin: 3px 3px 3px 4px;
-  -moz-border-radius: 0 !important;
+  border-radius: 0 !important;
 }
 
 /* common features of radio buttons and check boxes */

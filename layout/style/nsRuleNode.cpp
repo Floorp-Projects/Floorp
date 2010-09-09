@@ -5185,7 +5185,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     }
   }
 
-  // -moz-border-radius: length, percent, inherit
+  // border-radius: length, percent, inherit
   {
     const nsCSSCornerSizes& borderRadius = marginData.mBorderRadius;
     NS_FOR_CSS_FULL_CORNERS(corner) {

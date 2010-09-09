@@ -5182,10 +5182,10 @@ static const nsCSSProperty kBorderColorIDs[] = {
   eCSSProperty_border_left_color_value
 };
 static const nsCSSProperty kBorderRadiusIDs[] = {
-  eCSSProperty__moz_border_radius_topLeft,
-  eCSSProperty__moz_border_radius_topRight,
-  eCSSProperty__moz_border_radius_bottomRight,
-  eCSSProperty__moz_border_radius_bottomLeft
+  eCSSProperty_border_top_left_radius,
+  eCSSProperty_border_top_right_radius,
+  eCSSProperty_border_bottom_right_radius,
+  eCSSProperty_border_bottom_left_radius
 };
 static const nsCSSProperty kOutlineRadiusIDs[] = {
   eCSSProperty__moz_outline_radius_topLeft,
@@ -5281,15 +5281,15 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty_border_start_style:
     return ParseDirectionalBoxProperty(eCSSProperty_border_start_style,
                                        NS_BOXPROP_SOURCE_LOGICAL);
-  case eCSSProperty__moz_border_radius:
+  case eCSSProperty_border_radius:
     return ParseBoxCornerRadii(kBorderRadiusIDs);
   case eCSSProperty__moz_outline_radius:
     return ParseBoxCornerRadii(kOutlineRadiusIDs);
 
-  case eCSSProperty__moz_border_radius_topLeft:
-  case eCSSProperty__moz_border_radius_topRight:
-  case eCSSProperty__moz_border_radius_bottomRight:
-  case eCSSProperty__moz_border_radius_bottomLeft:
+  case eCSSProperty_border_top_left_radius:
+  case eCSSProperty_border_top_right_radius:
+  case eCSSProperty_border_bottom_right_radius:
+  case eCSSProperty_border_bottom_left_radius:
   case eCSSProperty__moz_outline_radius_topLeft:
   case eCSSProperty__moz_outline_radius_topRight:
   case eCSSProperty__moz_outline_radius_bottomRight:
@@ -5488,11 +5488,11 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
   case eCSSProperty_background_size:
-  case eCSSProperty__moz_border_radius:
-  case eCSSProperty__moz_border_radius_topLeft:
-  case eCSSProperty__moz_border_radius_topRight:
-  case eCSSProperty__moz_border_radius_bottomRight:
-  case eCSSProperty__moz_border_radius_bottomLeft:
+  case eCSSProperty_border_radius:
+  case eCSSProperty_border_top_left_radius:
+  case eCSSProperty_border_top_right_radius:
+  case eCSSProperty_border_bottom_right_radius:
+  case eCSSProperty_border_bottom_left_radius:
   case eCSSProperty_box_shadow:
   case eCSSProperty_clip:
   case eCSSProperty__moz_column_rule:

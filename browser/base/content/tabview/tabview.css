@@ -82,7 +82,7 @@ body {
 
 .front {
   z-index: 999999 !important;
-  -moz-border-radius: 0 !important;
+  border-radius: 0 !important;
   -moz-box-shadow: none !important;
   -moz-transform: none !important;
   image-rendering: -moz-crisp-edges;

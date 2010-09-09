@@ -1570,10 +1570,10 @@ const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 static const nsCSSProperty gMozBorderRadiusSubpropTable[] = {
   // Code relies on these being in topleft-topright-bottomright-bottomleft
   // order.
-  eCSSProperty__moz_border_radius_topLeft,
-  eCSSProperty__moz_border_radius_topRight,
-  eCSSProperty__moz_border_radius_bottomRight,
-  eCSSProperty__moz_border_radius_bottomLeft,
+  eCSSProperty_border_top_left_radius,
+  eCSSProperty_border_top_right_radius,
+  eCSSProperty_border_bottom_right_radius,
+  eCSSProperty_border_bottom_left_radius,
   eCSSProperty_UNKNOWN
 };
 
