@@ -133,7 +133,7 @@ class nsJAR : public nsIZipReader
     //-- Private data members
     nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk
     nsCString                mOuterZipEntry;  // The entry in the zip this zip is reading from
-    nsZipArchive             mZip;            // The underlying zip archive
+    nsAutoPtr<nsZipArchive>  mZip;            // The underlying zip archive
     nsObjectHashtable        mManifestData;   // Stores metadata for each entry
     PRBool                   mParsedManifest; // True if manifest has been parsed
     nsCOMPtr<nsIPrincipal>   mPrincipal;      // The entity which signed this file
