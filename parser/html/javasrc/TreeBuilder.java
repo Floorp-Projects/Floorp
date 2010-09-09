@@ -3132,7 +3132,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         while (currentPtr >= eltPos) {
                             pop();
                         }
-                        return;
+                        break endtagloop;
                     }
                     if (stack[--eltPos].ns == "http://www.w3.org/1999/xhtml") {
                         break;
