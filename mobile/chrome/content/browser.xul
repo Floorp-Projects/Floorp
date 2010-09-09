@@ -354,10 +354,6 @@
       </hbox>
     </vbox>
 
-    <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">
-      <label/>
-    </vbox>
-
     <vbox id="bookmark-popup" hidden="true" class="dialog-dark" align="center">
       <label value="&bookmarkPopup.label;"/>
       <separator class="thin"/>
@@ -518,6 +514,10 @@
       <placelist id="bookmarks-items" type="bookmarks" onopen="BookmarkList.openLink(event);" onhide="BrowserUI.updateStar();" flex="1" hidden="true"/>
       <historylist id="history-items" onopen="HistoryList.openLink(event);" flex="1" hidden="true"/>
       <remotetabslist id="remotetabs-items" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
+    </vbox>
+
+    <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">
+      <label/>
     </vbox>
 
     <!-- options dialog for select form field -->
