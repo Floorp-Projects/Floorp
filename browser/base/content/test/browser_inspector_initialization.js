@@ -50,6 +50,8 @@ function runInspectorTests()
 {
   Services.obs.removeObserver(runInspectorTests, "inspector-opened", false);
   Services.obs.addObserver(finishInspectorTests, "inspector-closed", false);
+  let iframe = document.getElementById("inspector-tree-iframe");
+  is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
   ok(InspectorUI.inspecting, "Inspector is highlighting");
   ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   ok(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
