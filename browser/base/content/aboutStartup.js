@@ -47,21 +47,25 @@ file.append("startup.sqlite");
 var svc = Components.classes["@mozilla.org/storage/service;1"]
                     .getService(Components.interfaces.mozIStorageService);
 var db = svc.openDatabase(file);
-var query = db.createStatement("SELECT timestamp, launch, startup FROM duration");
+var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
 query.executeAsync({
   handleResult: function(results)
   {
     for (let row = results.getNextRow(); row; row = results.getNextRow())
     {
-        table.appendChild(tr(td(formatstamp(row.getResultByName("timestamp"))),
-                             td(formatµs(l = row.getResultByName("launch"))),
-                             td(formatµs(s = row.getResultByName("startup"))),
-                             td(formatµs(l + s))));
+      table.appendChild(tr(td(formatstamp(row.getResultByName("timestamp"))),
+                           td(formatµs(l = row.getResultByName("launch"))),
+                           td(formatµs(s = row.getResultByName("startup"))),
+                           td(formatµs(l + s)),
+                           td(row.getResultByName("appVersion")),
+                           td(row.getResultByName("appBuild")),
+                           td(row.getResultByName("platformVersion")),
+                           td(row.getResultByName("platformBuild"))));
     }
   },
   handleError: function(error)
   {
-      table.appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
+    table.appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
   },
   handleCompletion: function() { },
 });

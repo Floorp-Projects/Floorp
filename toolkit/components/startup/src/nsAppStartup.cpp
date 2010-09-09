@@ -73,6 +73,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIXULRuntime.h"
+#include "nsIXULAppInfo.h"
 #include "nsXPCOMCIDInternal.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -530,34 +531,52 @@ nsAppStartup::Observe(nsISupports *aSubject,
 nsresult RecordStartupDuration()
 {
   nsresult rv;
-  nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
-
   PRTime launched, started, finished;
-  runtime->GetLaunchTimestamp((PRUint64*)&launched);
-  runtime->GetStartupTimestamp((PRUint64*)&started);
+  finished = PR_Now();
 
   nsCOMPtr<mozIStorageConnection> db;
   rv = OpenStartupDatabase(getter_AddRefs(db));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = EnsureTable(db, NS_LITERAL_CSTRING("duration"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER, launch INTEGER, startup INTEGER"));
+  rv = EnsureTable(db,
+                   NS_LITERAL_CSTRING("duration"),
+                   NS_LITERAL_CSTRING("timestamp INTEGER, launch INTEGER, startup INTEGER, appVersion TEXT, appBuild TEXT, platformVersion TEXT, platformBuild TEXT"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = EnsureTable(db, NS_LITERAL_CSTRING("events"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER, description TEXT"));
+  rv = EnsureTable(db,
+                   NS_LITERAL_CSTRING("events"),
+                   NS_LITERAL_CSTRING("timestamp INTEGER, extensionID TEXT, extensionVersion TEXT"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  rv = db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO duration VALUES (?1, ?2, ?3)"),
+  rv = db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO duration VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"),
                            getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  nsCOMPtr<nsIXULAppInfo> appinfo = do_QueryInterface(runtime);
+
+  runtime->GetLaunchTimestamp((PRUint64*)&launched);
+  runtime->GetStartupTimestamp((PRUint64*)&started);
+
+  nsCAutoString appVersion, appBuild, platformVersion, platformBuild;
+  appinfo->GetVersion(appVersion);
+  appinfo->GetAppBuildID(appBuild);
+  appinfo->GetPlatformVersion(platformVersion);
+  appinfo->GetPlatformBuildID(platformBuild);
 
   rv = statement->BindInt64Parameter(0, launched);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindInt64Parameter(1, started - launched);
   NS_ENSURE_SUCCESS(rv, rv);
-  finished = PR_Now();
   rv = statement->BindInt64Parameter(2, finished - started);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(3, NS_ConvertUTF8toUTF16(appVersion));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  rv = statement->BindStringParameter(4, NS_ConvertUTF8toUTF16(appBuild));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  rv = statement->BindStringParameter(5, NS_ConvertUTF8toUTF16(platformVersion));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(6, NS_ConvertUTF8toUTF16(platformBuild));
   NS_ENSURE_SUCCESS(rv, rv);
 
   statement->Execute();
