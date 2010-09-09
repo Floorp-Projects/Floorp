@@ -749,19 +749,15 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
     nscoord axis =
       NS_HALF_CORNER_IS_X(i) ? aFrameSize.width : aFrameSize.height;
 
-    switch (c.GetUnit()) {
-      case eStyleUnit_Percent:
-        aRadii[i] = (nscoord)(c.GetPercentValue() * axis);
-        break;
-
-      case eStyleUnit_Coord:
-        aRadii[i] = c.GetCoordValue();
-        break;
-
-      default:
-        NS_NOTREACHED("ComputeBorderRadii: bad unit");
+    if (c.IsCoordPercentCalcUnit()) {
+      aRadii[i] = nsRuleNode::ComputeCoordPercentCalc(c, axis);
+      if (aRadii[i] < 0) {
+        // clamp calc()
         aRadii[i] = 0;
-        break;
+      }
+    } else {
+      NS_NOTREACHED("ComputeBorderRadii: bad unit");
+      aRadii[i] = 0;
     }
   }
 

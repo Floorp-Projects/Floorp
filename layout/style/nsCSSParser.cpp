@@ -5068,13 +5068,13 @@ CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 {
   nsCSSValue dimenX, dimenY;
   // required first value
-  if (! ParseNonNegativeVariant(dimenX, VARIANT_HLP, nsnull))
+  if (! ParseNonNegativeVariant(dimenX, VARIANT_HLP | VARIANT_CALC, nsnull))
     return PR_FALSE;
 
   // optional second value (forbidden if first value is inherit/initial)
   if (dimenX.GetUnit() != eCSSUnit_Inherit &&
       dimenX.GetUnit() != eCSSUnit_Initial) {
-    ParseNonNegativeVariant(dimenY, VARIANT_LP, nsnull);
+    ParseNonNegativeVariant(dimenY, VARIANT_LP | VARIANT_CALC, nsnull);
   }
 
   if (dimenX == dimenY || dimenY.GetUnit() == eCSSUnit_Null) {
@@ -5098,7 +5098,9 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
 
   NS_FOR_CSS_SIDES (side) {
     if (! ParseNonNegativeVariant(dimenX.*nsCSSRect::sides[side],
-                                  side > 0 ? VARIANT_LP : VARIANT_HLP, nsnull))
+                                  (side > 0 ? 0 : VARIANT_INHERIT) |
+                                    VARIANT_LP | VARIANT_CALC,
+                                  nsnull))
       break;
     countX++;
   }
@@ -5108,7 +5110,7 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
   if (ExpectSymbol('/', PR_TRUE)) {
     NS_FOR_CSS_SIDES (side) {
       if (! ParseNonNegativeVariant(dimenY.*nsCSSRect::sides[side],
-                                    VARIANT_LP, nsnull))
+                                    VARIANT_LP | VARIANT_CALC, nsnull))
         break;
       countY++;
     }
