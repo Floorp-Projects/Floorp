@@ -3523,15 +3523,16 @@ nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::MozRequestAnimationFrame()
+nsGlobalWindow::MozRequestAnimationFrame(nsIAnimationFrameListener* aListener)
 {
-  FORWARD_TO_INNER(MozRequestAnimationFrame, (), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(MozRequestAnimationFrame, (aListener),
+                   NS_ERROR_NOT_INITIALIZED);
 
   if (!mDoc) {
     return NS_OK;
   }
 
-  mDoc->ScheduleBeforePaintEvent();
+  mDoc->ScheduleBeforePaintEvent(aListener);
   return NS_OK;
 }
 

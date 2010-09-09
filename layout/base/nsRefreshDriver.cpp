@@ -182,6 +182,7 @@ nsRefreshDriver::ObserverCount() const
   sum += mStyleFlushObservers.Length();
   sum += mLayoutFlushObservers.Length();
   sum += mBeforePaintTargets.Length();
+  sum += mAnimationFrameListenerDocs.Length();
   return sum;
 }
 
@@ -263,14 +264,29 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
       // target as needed.
       nsTArray<nsIDocument*> targets;
       targets.SwapElements(mBeforePaintTargets);
-      PRInt64 eventTime = mMostRecentRefreshEpochTime / PR_USEC_PER_MSEC;
       for (PRUint32 i = 0; i < targets.Length(); ++i) {
         targets[i]->BeforePaintEventFiring();
       }
+
+      // Also grab all of our animation frame listeners up front.
+      nsIDocument::AnimationListenerList animationListeners;
+      for (PRUint32 i = 0; i < mAnimationFrameListenerDocs.Length(); ++i) {
+        mAnimationFrameListenerDocs[i]->
+          TakeAnimationFrameListeners(animationListeners);
+      }
+      // OK, now reset mAnimationFrameListenerDocs so they can be
+      // readded as needed.
+      mAnimationFrameListenerDocs.Clear();
+
+      PRInt64 eventTime = mMostRecentRefreshEpochTime / PR_USEC_PER_MSEC;
       for (PRUint32 i = 0; i < targets.Length(); ++i) {
         nsEvent ev(PR_TRUE, NS_BEFOREPAINT);
         ev.time = eventTime;
         nsEventDispatcher::Dispatch(targets[i], nsnull, &ev);
+      }
+
+      for (PRUint32 i = 0; i < animationListeners.Length(); ++i) {
+        animationListeners[i]->OnBeforePaint(eventTime);
       }
 
       // This is the Flush_Style case.
@@ -363,7 +379,23 @@ nsRefreshDriver::ScheduleBeforePaintEvent(nsIDocument* aDocument)
 }
 
 void
+nsRefreshDriver::ScheduleAnimationFrameListeners(nsIDocument* aDocument)
+{
+  NS_ASSERTION(mAnimationFrameListenerDocs.IndexOf(aDocument) ==
+               mAnimationFrameListenerDocs.NoIndex,
+               "Don't schedule the same document multiple times");
+  mAnimationFrameListenerDocs.AppendElement(aDocument);
+  EnsureTimerStarted();
+}
+
+void
 nsRefreshDriver::RevokeBeforePaintEvent(nsIDocument* aDocument)
 {
   mBeforePaintTargets.RemoveElement(aDocument);
+}
+
+void
+nsRefreshDriver::RevokeAnimationFrameListeners(nsIDocument* aDocument)
+{
+  mAnimationFrameListenerDocs.RemoveElement(aDocument);
 }
