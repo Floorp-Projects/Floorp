@@ -701,6 +701,7 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
         NanoAssert(stkd == 0);
 
         if (ARM_VFP) {
+            Register dm = findRegFor(arg, FpRegs);
             // TODO: We could optimize the this to store directly from
             // the VFP register to memory using "FMRRD ra, fp_reg[31:0]" and
             // "STR fp_reg[63:32], [SP, #stkd]".
@@ -708,16 +709,15 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
             // Load from the floating-point register as usual, but use IP
             // as a swap register.
             STR(IP, SP, 0);
-            stkd += 4;
-            FMRRD(ra, IP, fp_reg);
+            FMRRD(ra, IP, dm);
         } else {
             // Without VFP, we can simply use asm_regarg and asm_stkarg to
             // encode the two 32-bit words as we don't need to load from a VFP
             // register.
             asm_regarg(ARGTYPE_I, arg->oprnd1(), ra);
             asm_stkarg(arg->oprnd2(), 0);
-            stkd += 4;
         }
+        stkd += 4;
 #endif
     } else {
         // The argument won't fit in registers, so pass on to asm_stkarg.
