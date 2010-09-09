@@ -1034,6 +1034,11 @@ toolbar[iconsize="small"] #fullscreen-button {
   height: 32px;
 }
 
+.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
+.popup-notification-icon[popupid="indexedDB-quota-prompt"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
 /* Notification icon box */
 #notification-popup-box {
   margin: 0 3px;
@@ -1059,6 +1064,10 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
+}
+
+#indexedDB-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/question-16.png);
 }
 
 /* Feed icon */

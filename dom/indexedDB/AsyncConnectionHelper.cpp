@@ -47,6 +47,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
+#include "IDBFactory.h"
 #include "IDBTransaction.h"
 #include "TransactionThreadPool.h"
 
@@ -192,7 +193,13 @@ AsyncConnectionHelper::Run()
   }
 
   if (NS_SUCCEEDED(rv)) {
+    if (mDatabase) {
+      IDBFactory::SetCurrentDatabase(mDatabase);
+    }
     mErrorCode = DoDatabaseWork(connection);
+    if (mDatabase) {
+      IDBFactory::SetCurrentDatabase(nsnull);
+    }
   }
   else {
     mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;

@@ -41,12 +41,14 @@
 
 #include "nsIIDBDatabaseException.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
+#include "CheckQuotaHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
 #include "IDBObjectStore.h"
@@ -59,6 +61,12 @@ USING_INDEXEDDB_NAMESPACE
 namespace {
 
 const PRUint32 kDefaultDatabaseTimeoutSeconds = 30;
+
+PRUint32 gDatabaseInstanceCount = 0;
+mozilla::Mutex* gPromptHelpersMutex = nsnull;
+
+// Protected by gPromptHelpersMutex.
+nsTArray<nsRefPtr<CheckQuotaHelper> >* gPromptHelpers = nsnull;
 
 class SetVersionHelper : public AsyncConnectionHelper
 {
@@ -246,7 +254,10 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
 IDBDatabase::IDBDatabase()
 : mDatabaseId(0)
 {
-
+  if (!gDatabaseInstanceCount++) {
+    NS_ASSERTION(!gPromptHelpersMutex, "Should be null!");
+    gPromptHelpersMutex = new mozilla::Mutex("IDBDatabase gPromptHelpersMutex");
+  }
 }
 
 IDBDatabase::~IDBDatabase()
@@ -271,6 +282,16 @@ IDBDatabase::~IDBDatabase()
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
+  }
+
+  if (!--gDatabaseInstanceCount) {
+    NS_ASSERTION(gPromptHelpersMutex, "Should not be null!");
+
+    delete gPromptHelpers;
+    gPromptHelpers = nsnull;
+
+    delete gPromptHelpersMutex;
+    gPromptHelpersMutex = nsnull;
   }
 }
 
@@ -302,6 +323,50 @@ IDBDatabase::CloseConnection()
       mConnection.forget(&leak);
     }
   }
+}
+
+bool
+IDBDatabase::IsQuotaDisabled()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
+
+  MutexAutoLock lock(*gPromptHelpersMutex);
+
+  if (!gPromptHelpers) {
+    gPromptHelpers = new nsAutoTArray<nsRefPtr<CheckQuotaHelper>, 10>();
+  }
+
+  CheckQuotaHelper* foundHelper = nsnull;
+
+  PRUint32 count = gPromptHelpers->Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
+    if (helper->WindowSerial() == Owner()->GetSerial()) {
+      foundHelper = helper;
+      break;
+    }
+  }
+
+  if (!foundHelper) {
+    nsRefPtr<CheckQuotaHelper>* newHelper = gPromptHelpers->AppendElement();
+    if (!newHelper) {
+      NS_WARNING("Out of memory!");
+      return false;
+    }
+    *newHelper = new CheckQuotaHelper(this, *gPromptHelpersMutex);
+    foundHelper = *newHelper;
+
+    {
+      // Unlock before calling out to XPCOM.
+      MutexAutoUnlock unlock(*gPromptHelpersMutex);
+
+      nsresult rv = NS_DispatchToMainThread(foundHelper, NS_DISPATCH_NORMAL);
+      NS_ENSURE_SUCCESS(rv, false);
+    }
+  }
+
+  return foundHelper->PromptAndReturnQuotaIsDisabled();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)

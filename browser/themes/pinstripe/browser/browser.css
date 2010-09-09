@@ -1962,6 +1962,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   height: 32px;
 }
 
+#indexedDB-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/question-16.png);
+}
+
+.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
+.popup-notification-icon[popupid="indexedDB-quota-prompt"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
 #identity-popup-container,
 #identity-popup-notification-container {
   margin: 4px 3px 2px -30px;
