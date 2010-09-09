@@ -480,17 +480,6 @@ LayerManagerOGL::RememberImageContainer(ImageContainer *aContainer)
   mImageContainers.AppendElement(aContainer);
 }
 
-void
-LayerManagerOGL::MakeCurrent()
-{
-  if (mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return;
-  }
-
-  mGLContext->MakeCurrent();
-}
-
 LayerOGL*
 LayerManagerOGL::RootLayer() const
 {
@@ -513,15 +502,25 @@ LayerManagerOGL::Render()
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  // We can't draw anything to something with no area
-  // so just return
-  if (rect.width == 0 || rect.height == 0)
-    return;
-
   GLint width = rect.width;
   GLint height = rect.height;
 
-  MakeCurrent();
+  // We can't draw anything to something with no area
+  // so just return
+  if (width == 0 || height == 0)
+    return;
+
+  // If the widget size changed, we have to force a MakeCurrent
+  // to make sure that GL sees the updated widget size.
+  if (mWidgetSize.width != width ||
+      mWidgetSize.height != height)
+  {
+    MakeCurrent(PR_TRUE);
+    mWidgetSize.width = width;
+    mWidgetSize.height = height;
+  } else {
+    MakeCurrent();
+  }
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 

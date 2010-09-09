@@ -374,7 +374,7 @@ public:
     };
 
     virtual GLContextType GetContextType() { return ContextTypeUnknown; }
-    virtual PRBool MakeCurrent() = 0;
+    virtual PRBool MakeCurrent(PRBool aForce = PR_FALSE) = 0;
     virtual PRBool SetupLookupFunction() = 0;
 
     virtual void WindowDestroyed() {}
