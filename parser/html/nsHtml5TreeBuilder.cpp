@@ -2031,7 +2031,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           while (currentPtr >= eltPos) {
             pop();
           }
-          return;
+          NS_HTML5_BREAK(endtagloop);
         }
         if (stack[--eltPos]->ns == kNameSpaceID_XHTML) {
           break;
