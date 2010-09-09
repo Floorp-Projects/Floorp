@@ -4310,10 +4310,15 @@ JSTermFirefoxMixin.prototype = {
    */
   generateUI: function JSTF_generateUI()
   {
+    let inputContainer = this.xulElementFactory("hbox");
+    inputContainer.setAttribute("class", "jsterm-input-container");
+
     let inputNode = this.xulElementFactory("textbox");
     inputNode.setAttribute("class", "jsterm-input-node");
+    inputNode.setAttribute("flex", "1");
     inputNode.setAttribute("multiline", "true");
     inputNode.setAttribute("rows", "1");
+    inputContainer.appendChild(inputNode);
 
     if (this.existingConsoleNode == undefined) {
       // create elements
@@ -4334,7 +4339,7 @@ JSTermFirefoxMixin.prototype = {
     }
     else {
       this.inputNode = inputNode;
-      this.term = inputNode;
+      this.term = inputContainer;
       this.outputNode = this.existingConsoleNode;
     }
   },
