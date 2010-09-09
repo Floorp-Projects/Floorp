@@ -2867,7 +2867,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "5px,3px,2px", "5px 3px 2px", "  5px ,3px	, 2px ", "1px", "5%", "3em" ],
-		invalid_values: []
+		invalid_values: [ "-5px,3px,2px", "5px,3px,-2px" ]
 	},
 	"stroke-dashoffset": {
 		domProp: "strokeDashoffset",
