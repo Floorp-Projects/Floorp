@@ -639,6 +639,7 @@ var BrowserUI = {
   },
 
   selectTab: function selectTab(aTab) {
+    BrowserUI.activePanel = null;
     Browser.selectedTab = aTab;
   },
 

@@ -53,6 +53,27 @@
   </binding>
 
   <binding id="popup_autocomplete_result">
+    <handlers>
+      <handler event="contextmenu" phase="capturing">
+        <![CDATA[
+          let url = this.getAttribute("url");
+          if (!url)
+            return;
+
+          let value = this.getAttribute("value");
+          let data = {
+            target: this,
+            json: {
+              types: ["link-saveable", "link-shareable"],
+              label: value,
+              linkTitle: value,
+              linkURL: url
+            }
+          };
+          ContextHelper.showPopup(data);
+        ]]>
+      </handler>
+    </handlers>
     <content orient="vertical">
       <xul:hbox class="autocomplete-item-label" align="top" xbl:inherits="tags, favorite" mousethrough="always">
         <xul:image xbl:inherits="src"/>
@@ -364,13 +385,15 @@
           let data = {
             target: this,
             json: {
-              types: ["edit-bookmark"],
-              label: this.uri.spec
-          }};
-          ContextHelper.showPopup(data);
-        ]]>
-      </handler>
-    </handlers>
+              types: ["edit-bookmark", "link-saveable", "link-shareable"],
+              label: this.name,
+              linkTitle: this.name,
+              linkURL: this.spec
+           }};
+           ContextHelper.showPopup(data);
+         ]]>
+       </handler>
+     </handlers>
 
     <implementation>
       <field name="_uri">null</field>
