@@ -326,10 +326,10 @@ private:
 nsJSVersionSetter::nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion)
   : mContext(aContext)
 {
-  // JSVERSION_HAS_XML may be set in our version mask - however, we can't
+  // HAS_XML may be set in our version mask - however, we can't
   // simply pass this directly to JS_SetOptions as it masks out that bit -
   // the only way to make this happen is via JS_SetOptions.
-  JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
+  JSBool hasxml = (aVersion & js::VersionFlags::HAS_XML) != 0;
   mOldOptions = ::JS_GetOptions(mContext);
   mOptionsChanged = ((hasxml) ^ !!(mOldOptions & JSOPTION_XML));
 
@@ -342,7 +342,7 @@ nsJSVersionSetter::nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion)
 
   // Change the version - this is cheap when the versions match, so no need
   // to optimize here...
-  JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
+  JSVersion newVer = (JSVersion)(aVersion & js::VersionFlags::MASK);
   mOldVersion = ::JS_SetVersion(mContext, newVer);
 }
 
