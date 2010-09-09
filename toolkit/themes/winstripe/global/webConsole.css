@@ -167,3 +167,24 @@
     padding: 1px 0px;
     -moz-box-align: center;
 }
+
+.jsterm-close-button {
+    background: none !important;
+    border: none !important;
+    list-style-image: url("chrome://global/skin/icons/close.png");
+    margin: 0px !important;
+    min-width: 0px !important;
+    padding: 1px 3px 1px 7px !important;
+    -moz-appearance: none !important;
+    -moz-image-region: rect(0, 16px, 16px, 0);
+    -moz-user-focus: ignore;
+}
+
+.jsterm-close-button:hover {
+    -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.jsterm-close-button:hover:active {
+    -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
