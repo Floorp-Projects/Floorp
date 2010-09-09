@@ -4320,6 +4320,12 @@ JSTermFirefoxMixin.prototype = {
     inputNode.setAttribute("rows", "1");
     inputContainer.appendChild(inputNode);
 
+    let closeButton = this.xulElementFactory("button");
+    closeButton.setAttribute("class", "jsterm-close-button");
+    inputContainer.appendChild(closeButton);
+    closeButton.addEventListener("command", HeadsUpDisplayUICommands.toggleHUD,
+                                 false);
+
     if (this.existingConsoleNode == undefined) {
       // create elements
       let term = this.xulElementFactory("vbox");
