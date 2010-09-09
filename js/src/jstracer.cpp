@@ -11157,7 +11157,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                  * In either case, we replace the call to RegExp.exec() on the
                  * stack with a call to RegExp.test() because "r.exec(s) !=
                  * null" is equivalent to "r.test(s)".  This avoids building
-                 * the result array, which can be expensive.
+                 * the result array, which can be expensive.  This requires
+                 * that RegExp.prototype.test() hasn't been changed;  we check this.
                  */
                 if (pc[0] == JSOP_CALL) {
                     if ((pc[JSOP_CALL_LENGTH] == JSOP_POP) ||
@@ -11172,21 +11173,23 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                          pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH] == JSOP_NOT &&
                          pc[JSOP_CALL_LENGTH + JSOP_TRACE_LENGTH + JSOP_NOT_LENGTH] == JSOP_IFEQ))
                     {
-                        /*
-                         * FIXME: Bug 594205 -- RegExp.prototype.test() may
-                         * have been overwritten.
-                         */
                         JSObject* proto;
                         Value test;
                         jsid testId = ATOM_TO_JSID(cx->runtime->atomState.testAtom);
+                        /* Get RegExp.prototype.test() and check it hasn't been changed. */
                         if (js_GetClassPrototype(cx, funobj->getParent(), JSProto_RegExp, &proto) &&
-                            js_GetProperty(cx, proto, testId, &test))
+                            js_GetProperty(cx, proto, testId, &test) &&
+                            IsFunctionObject(test))
                         {
-                            vp[0] = test;
-                            /* Recompute these values from the new vp[0] value. */
-                            funobj = &vp[0].toObject();
-                            fun = GET_FUNCTION_PRIVATE(cx, funobj);
-                            native = fun->u.n.native;
+                            JSObject* tmpfunobj = &test.toObject();
+                            JSFunction* tmpfun = GET_FUNCTION_PRIVATE(cx, tmpfunobj);
+                            Native tmpnative = tmpfun->maybeNative();
+                            if (tmpnative == js_regexp_test) {
+                                vp[0] = test;
+                                funobj = tmpfunobj;
+                                fun = tmpfun;
+                                native = tmpnative;
+                            }
                         }
                     }
                 }
