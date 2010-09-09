@@ -53,7 +53,7 @@ wizardpage {
 .confirm {
   border: 1px solid black;
   padding: 1em;
-  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
 
 /* Override the text-link style from global.css */
@@ -68,7 +68,7 @@ wizardpage {
 .success,
 .error {
   padding: 2px;
-  -moz-border-radius: 2px;
+  border-radius: 2px;
 }
 
 .error {

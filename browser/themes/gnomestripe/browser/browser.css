@@ -1155,8 +1155,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-origin: border-box;
   border: none;
   border-left: 1px solid rgba(0,0,0,.35);
-  -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomright: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 #urlbar > toolbarbutton:active:hover {
@@ -1320,7 +1320,7 @@ statusbarpanel#statusbar-display {
   margin: 0;
   padding: 0;
   -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px;
-  -moz-border-radius: 10px 8px 0 0;
+  border-radius: 10px 8px 0 0;
   min-height: 25px; /* reserve space for the sometimes hidden close button */
 }
 
@@ -1515,7 +1515,7 @@ statusbarpanel#statusbar-display {
   -moz-appearance: tab-scroll-arrow-forward;
   margin: 0;
   -moz-transition: 1s -moz-box-shadow ease-out;
-  -moz-border-radius: 4px;
+  border-radius: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {

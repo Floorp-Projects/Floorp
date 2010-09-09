@@ -298,13 +298,13 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
-    -moz-border-radius,
-    _moz_border_radius,
+    border-radius,
+    border_radius,
     MozBorderRadius,
     0)
 CSS_PROP_BORDER(
-    -moz-border-radius-topleft,
-    _moz_border_radius_topLeft,
+    border-top-left-radius,
+    border_top_left_radius,
     MozBorderRadiusTopleft,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
@@ -313,8 +313,8 @@ CSS_PROP_BORDER(
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_TopLeft)
 CSS_PROP_BORDER(
-    -moz-border-radius-topright,
-    _moz_border_radius_topRight,
+    border-top-right-radius,
+    border_top_right_radius,
     MozBorderRadiusTopright,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
@@ -323,8 +323,8 @@ CSS_PROP_BORDER(
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_TopRight)
 CSS_PROP_BORDER(
-    -moz-border-radius-bottomright,
-    _moz_border_radius_bottomRight,
+    border-bottom-right-radius,
+    border_bottom_right_radius,
     MozBorderRadiusBottomright,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,
@@ -333,8 +333,8 @@ CSS_PROP_BORDER(
     offsetof(nsStyleBorder, mBorderRadius),
     eStyleAnimType_Corner_BottomRight)
 CSS_PROP_BORDER(
-    -moz-border-radius-bottomleft,
-    _moz_border_radius_bottomLeft,
+    border-bottom-left-radius,
+    border_bottom_left_radius,
     MozBorderRadiusBottomleft,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     Margin,

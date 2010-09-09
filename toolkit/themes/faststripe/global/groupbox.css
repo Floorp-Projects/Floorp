@@ -46,7 +46,7 @@
 groupbox {
   -moz-appearance: groupbox;
   border: 1px solid gray;
-  -moz-border-radius: 3px;
+  border-radius: 3px;
   margin: 3px;
   padding: 3px 3px 6px 3px;
 }

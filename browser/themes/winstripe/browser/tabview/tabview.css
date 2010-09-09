@@ -19,7 +19,7 @@ body {
 .tab {
   padding: 4px 6px 6px 4px;
   background-color: #E0EAF5;
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   -moz-box-shadow:
     0 1px 0 #FFFFFF inset,
     0 -1px 1px rgba(255, 255, 255, 0.8) inset,
@@ -41,7 +41,7 @@ body {
 
 .favicon {
   background-color: #E0EAF5;
-  -moz-border-radius-bottomright: 0.4em;
+  border-bottom-right-radius: 0.4em;
   padding: 4px 6px 6px 4px;
   top: 4px;
   left: 4px;
@@ -166,7 +166,7 @@ body {
 .groupItem {
   cursor: move;
   background-color: #E0EAF5;
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   -moz-box-shadow:
     0 1px 0 #FFFFFF inset,
     0 -1px 1px rgba(255, 255, 255, 0.8) inset,
@@ -186,7 +186,7 @@ body {
 .overlay {
   background-color: rgba(0,0,0,.7) !important;
   -moz-box-shadow: 3px 3px 8px rgba(0,0,0,.5);
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   /*
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
@@ -202,7 +202,7 @@ body {
   cursor: move;
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   -moz-box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
     rgba(0,0,0, .2) 1px 1px 4px;
@@ -377,7 +377,7 @@ input.defaultName {
   color: white;
   border: none;
   background-color: #272727;
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   padding-left:5px; padding-right: 5px;
   font-size: 14px;  
 }
@@ -387,8 +387,8 @@ input.defaultName {
   height: 30px;
   background-color: #CFDBE8;
   border: none;
-  -moz-border-radius-bottomleft: 0.4em;
-  -moz-border-radius-topleft: 0.4em;    
+  border-bottom-left-radius: 0.4em;
+  border-top-left-radius: 0.4em;    
   -moz-box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.8), inset 6px 6px 13px rgba(0,0,0,.56);
   opacity: .64;
   text-align: center;
