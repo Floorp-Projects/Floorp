@@ -50,6 +50,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_585237_line_limit.js \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_netlogging.js \
+	browser_warn_user_about_replaced_api.js \
 	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_581231_close_button.js \
 	$(NULL)
@@ -68,6 +69,7 @@ _BROWSER_TEST_PAGES = \
 	test-duplicate-error.html \
 	test-image.png \
 	test-encoding-ISO-8859-1.html \
+	test-console-replaced-api.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
