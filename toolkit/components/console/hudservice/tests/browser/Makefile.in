@@ -45,6 +45,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 	browser_HUDServiceTestsAll.js \
+	browser_webconsole_bug_585237_line_limit.js \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_netlogging.js \
 	browser_webconsole_bug_581231_close_button.js \
