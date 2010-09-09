@@ -37,40 +37,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbfactory_h__
-#define mozilla_dom_indexeddb_idbfactory_h__
+#ifndef mozilla_dom_indexeddb_checkquotahelper_h__
+#define mozilla_dom_indexeddb_checkquotahelper_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+// Only meant to be included in IndexedDB source files, not exported.
+#include "IndexedDatabase.h"
+#include "IDBDatabase.h"
 
-#include "mozIStorageConnection.h"
-#include "nsIIDBFactory.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIObserver.h"
+#include "nsIRunnable.h"
+
+#include "mozilla/Mutex.h"
+#include "mozilla/CondVar.h"
+
+class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBDatabase;
-
-class IDBFactory : public nsIIDBFactory
+class CheckQuotaHelper : public nsIRunnable,
+                         public nsIInterfaceRequestor,
+                         public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDBFACTORY
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<nsIIDBFactory> Create();
+  CheckQuotaHelper(IDBDatabase* aDatabase,
+                   mozilla::Mutex& aMutex);
 
-  static already_AddRefed<mozIStorageConnection>
-  GetConnection(const nsAString& aDatabaseFilePath);
+  bool PromptAndReturnQuotaIsDisabled();
 
-  static bool
-  SetCurrentDatabase(IDBDatabase* aDatabase);
-
-  static PRUint32
-  GetIndexedDBQuota();
+  PRUint32 WindowSerial()
+  {
+    return mWindowSerial;
+  }
 
 private:
-  IDBFactory() { }
-  ~IDBFactory() { }
+  nsPIDOMWindow* mWindow;
+  PRUint32 mWindowSerial;
+  nsCString mOrigin;
+
+  mozilla::Mutex& mMutex;
+  mozilla::CondVar mCondVar;
+  PRUint32 mPromptResult;
+  bool mWaiting;
+  bool mHasPrompted;
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbfactory_h__
+#endif // mozilla_dom_indexeddb_checkquotahelper_h__

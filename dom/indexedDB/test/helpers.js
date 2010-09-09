@@ -6,6 +6,14 @@
 var testGenerator = testSteps();
 function runTest()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  let uri = window.document.documentURIObject;
+  Components.classes["@mozilla.org/permissionmanager;1"]
+            .getService(Components.interfaces.nsIPermissionManager)
+            .add(uri, "indexedDB",
+                 Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+
   SimpleTest.waitForExplicitFinish();
   testGenerator.next();
 }

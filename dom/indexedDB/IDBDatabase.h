@@ -111,6 +111,14 @@ public:
     return mOwner;
   }
 
+  bool
+  IsQuotaDisabled();
+
+  nsCString& Origin()
+  {
+    return mASCIIOrigin;
+  }
+
 private:
   IDBDatabase();
   ~IDBDatabase();

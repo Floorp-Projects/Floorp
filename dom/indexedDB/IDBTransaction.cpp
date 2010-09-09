@@ -47,11 +47,11 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
-#include "IDBEvents.h"
-#include "IDBCursor.h"
-#include "IDBObjectStore.h"
-#include "IDBFactory.h"
 #include "DatabaseInfo.h"
+#include "IDBCursor.h"
+#include "IDBEvents.h"
+#include "IDBFactory.h"
+#include "IDBObjectStore.h"
 #include "TransactionThreadPool.h"
 
 #define SAVEPOINT_INITIAL "initial"
@@ -765,6 +765,8 @@ CommitHelper::Run()
     return NS_OK;
   }
 
+  IDBFactory::SetCurrentDatabase(mTransaction->Database());
+
   if (mAborted) {
     NS_ASSERTION(mConnection, "This had better not be null!");
 
@@ -778,7 +780,7 @@ CommitHelper::Run()
 
     NS_NAMED_LITERAL_CSTRING(release, "RELEASE " SAVEPOINT_INITIAL);
     if (NS_FAILED(mConnection->ExecuteSimpleSQL(release))) {
-      NS_WARNING("Failed to release transaction!");
+      mAborted = PR_TRUE;
     }
   }
 
@@ -786,6 +788,8 @@ CommitHelper::Run()
 
   mConnection->Close();
   mConnection = nsnull;
+
+  IDBFactory::SetCurrentDatabase(nsnull);
 
   return NS_OK;
 }

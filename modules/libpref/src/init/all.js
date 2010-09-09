@@ -96,6 +96,11 @@ pref("offline-apps.quota.max",          7000);
 pref("offline-apps.quota.warn",         4000);
 #endif
 
+// Whether or not indexedDB is enabled.
+pref("dom.indexedDB.enabled", true);
+// Space to allow indexedDB databases before prompting (in MB).
+pref("dom.indexedDB.warningQuota", 50);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);

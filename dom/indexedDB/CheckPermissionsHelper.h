@@ -37,40 +37,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbfactory_h__
-#define mozilla_dom_indexeddb_idbfactory_h__
+#ifndef mozilla_dom_indexeddb_checkpermissionshelper_h__
+#define mozilla_dom_indexeddb_checkpermissionshelper_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+// Only meant to be included in IndexedDB source files, not exported.
+#include "AsyncConnectionHelper.h"
 
-#include "mozIStorageConnection.h"
-#include "nsIIDBFactory.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIObserver.h"
+#include "nsIRunnable.h"
+
+class nsIDOMWindow;
+class nsIThread;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBDatabase;
-
-class IDBFactory : public nsIIDBFactory
+class CheckPermissionsHelper : public nsIRunnable,
+                               public nsIInterfaceRequestor,
+                               public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDBFACTORY
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<nsIIDBFactory> Create();
-
-  static already_AddRefed<mozIStorageConnection>
-  GetConnection(const nsAString& aDatabaseFilePath);
-
-  static bool
-  SetCurrentDatabase(IDBDatabase* aDatabase);
-
-  static PRUint32
-  GetIndexedDBQuota();
+  CheckPermissionsHelper(AsyncConnectionHelper* aHelper,
+                         nsIThread* aThread,
+                         nsIDOMWindow* aWindow,
+                         const nsACString& aASCIIOrigin)
+  : mHelper(aHelper),
+    mThread(aThread),
+    mWindow(aWindow),
+    mASCIIOrigin(aASCIIOrigin),
+    mHasPrompted(PR_FALSE),
+    mPromptResult(0)
+  {
+    NS_ASSERTION(aHelper, "Null pointer!");
+    NS_ASSERTION(aThread, "Null pointer!");
+    NS_ASSERTION(aWindow, "Null pointer!");
+    NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty host!");
+  }
 
 private:
-  IDBFactory() { }
-  ~IDBFactory() { }
+  nsRefPtr<AsyncConnectionHelper> mHelper;
+  nsCOMPtr<nsIThread> mThread;
+  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCString mASCIIOrigin;
+  PRBool mHasPrompted;
+  PRUint32 mPromptResult;
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbfactory_h__
+#endif // mozilla_dom_indexeddb_checkpermissionshelper_h__
