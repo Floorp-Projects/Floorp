@@ -399,7 +399,7 @@ JS_STATIC_ASSERT(offsetof(VMFrame, entryFp) ==          (4*10));
 JS_STATIC_ASSERT(offsetof(VMFrame, stackLimit) ==       (4*9));
 JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) ==          (4*7));
-JS_STATIC_ASSERT(offsetof(VMFrame, oldRegs) ==          (4*4));
+JS_STATIC_ASSERT(offsetof(VMFrame, unused) ==           (4*4));
 JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
 JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 60);
 
@@ -464,7 +464,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ regs.fp   ]
      *  [ regs.pc   ]
      *  [ regs.sp   ]
-     *  [ oldRegs   ]
+     *  [ unused    ]
      *  [ previous  ]
      *  [ args.ptr3 ]
      *  [ args.ptr2 ]
