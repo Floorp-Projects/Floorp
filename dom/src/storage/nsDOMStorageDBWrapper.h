@@ -217,7 +217,6 @@ public:
                                          nsACString& aDomain);
 
 protected:
-  nsDOMStoragePersistentDB mChromePersistentDB;
   nsDOMStoragePersistentDB mPersistentDB;
   nsDOMStorageMemoryDB mSessionOnlyDB;
   nsDOMStorageMemoryDB mPrivateBrowsingDB;
