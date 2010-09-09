@@ -88,7 +88,7 @@
     "browser.cache.disk.smart_size.first_run"
 #define DISK_CACHE_SMART_SIZE_ENABLED_PREF \
     "browser.cache.disk.smart_size.enabled"
-#define DISK_CACHE_SMART_SIZE_PREF "browser.cache.disk.smart_size"
+#define DISK_CACHE_SMART_SIZE_PREF "browser.cache.disk.smart_size_cached_value"
 #define DISK_CACHE_CAPACITY_PREF    "browser.cache.disk.capacity"
 #define DISK_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.disk.max_entry_size"
 #define DISK_CACHE_CAPACITY         256000
@@ -126,6 +126,8 @@ static const char * prefList[] = {
 
 // Let our base line be 250MB. 
 const PRInt32 BASE_LINE = 250 * 1024 * 1024;
+const PRInt32 MIN_SIZE = 50 * 1024 * 1024;
+const PRInt32 MAX_SIZE = 1024 * 1024 * 1024;
 
 
 class nsCacheProfilePrefObserver : public nsIObserver
@@ -207,11 +209,6 @@ public:
         nsresult rv;
         NS_ASSERTION(NS_IsMainThread(), 
                      "Setting smart size data off the main thread");
-        if (mFirstRun) { 
-            rv = mBranch->SetIntPref(DISK_CACHE_CAPACITY_PREF, mSmartSize);
-            if (NS_FAILED(rv)) 
-                NS_WARNING("Failed setting disk size in smart size event");
-        }
         PRBool smartSizeEnabled;
         rv = mBranch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
                                   &smartSizeEnabled);
@@ -541,8 +538,6 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
   */
 PRUint32
 nsCacheProfilePrefObserver::GetSmartCacheSize(void) {
-  const PRInt32 MIN_SIZE = 50 * 1024 * 1024;
-  const PRInt32 MAX_SIZE = 1024 * 1024 * 1024;
   // Get a handle to disk where cache lives, so we can check for free space
   nsresult rv;
   nsCOMPtr<nsIFile> profileDirectory;
@@ -605,15 +600,22 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, PRBool
                                                  firstRun)
 {
     nsresult rv;
-    // If user has explicitly set cache size, don't use smart-sizing by default.
+    // If user has explicitly set cache size to be smaller than previous default
+    // of 250MB, then smart sizing is off by default. Otherwise, smart sizing is
+    // on by default.
     if (firstRun) {
         // check if user has set cache size in the past
         PRBool userSet;
         rv = branch->PrefHasUserValue(DISK_CACHE_CAPACITY_PREF, &userSet);
         if (NS_FAILED(rv)) userSet = PR_TRUE;
         if (userSet) {
-            branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF, PR_FALSE);
-            return false;
+            PRInt32 oldCapacity;
+            rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
+            if (oldCapacity < BASE_LINE / 1024) {
+                branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF, 
+                                    PR_FALSE);
+                return false;
+            }
         }
     }
     PRBool smartSizeEnabled; 
@@ -693,6 +695,10 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                 rv = branch->GetIntPref(DISK_CACHE_SMART_SIZE_PREF,
                                         &oldSmartSize);
                 mDiskCacheCapacity = oldSmartSize;
+            } else {
+                rv = branch->SetIntPref(DISK_CACHE_CAPACITY_PREF, 
+                                        MAX_SIZE / 1024);
+                if (NS_FAILED(rv)) NS_WARNING("Failed setting capacity pref");
             }
             nsCOMPtr<nsIRunnable> event = 
                 new nsGetSmartSizeEvent(!!firstSmartSizeRun, branch, this);
@@ -706,7 +712,6 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                                      PR_FALSE);
             if (NS_FAILED(rv)) 
                 NS_WARNING("Failed setting first_run pref in ReadPrefs.");
-        
         }
     }
 #endif // !NECKO_DISK_CACHE
