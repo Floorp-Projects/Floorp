@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_TEST_FILES = \
 	browser_HUDServiceTestsAll.js \
 	browser_webconsole_netlogging.js \
+	browser_webconsole_bug_581231_close_button.js \
 	$(NULL)
 
 _BROWSER_TEST_PAGES = \
