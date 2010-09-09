@@ -88,7 +88,7 @@ nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item)
    
     // Must keep handle to filepointer and mmap structure as long as we need access to the mmapped data
     mFd = aJar->mZip.GetFD();
-    mZs.next_in = aJar->mZip.GetData(item);
+    mZs.next_in = (Bytef *)aJar->mZip.GetData(item);
     if (!mZs.next_in)
         return NS_ERROR_FILE_CORRUPTED;
     mZs.avail_in = item->Size();
