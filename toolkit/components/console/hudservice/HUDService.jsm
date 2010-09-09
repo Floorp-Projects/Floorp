@@ -111,6 +111,11 @@ const NEW_GROUP_DELAY = 5000;
 // search.
 const SEARCH_DELAY = 200;
 
+// The number of lines that are displayed in the console output by default.
+// The user can change this number by adjusting the hidden
+// "devtools.hud.loglimit" preference.
+const DEFAULT_LOG_LIMIT = 200;
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -1094,6 +1099,48 @@ NetworkPanel.prototype =
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//// Private utility functions for the HUD service
+
+/**
+ * Destroys lines of output if more lines than the allowed log limit are
+ * present.
+ *
+ * @param nsIDOMNode aConsoleNode
+ *        The DOM node that holds the output of the console.
+ * @returns void
+ */
+function pruneConsoleOutputIfNecessary(aConsoleNode)
+{
+  let logLimit;
+  try {
+    let prefBranch = Services.prefs.getBranch("devtools.hud.");
+    logLimit = prefBranch.getIntPref("loglimit");
+  } catch (e) {
+    logLimit = DEFAULT_LOG_LIMIT;
+  }
+
+  let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
+  for (let i = 0; i < messageNodes.length - logLimit; i++) {
+    let messageNode = messageNodes[i];
+    let groupNode = messageNode.parentNode;
+    if (!groupNode.classList.contains("hud-group")) {
+      throw new Error("pruneConsoleOutputIfNecessary: message node not in a " +
+                      "HUD group");
+    }
+
+    groupNode.removeChild(messageNode);
+
+    // If there are no more children, then remove the group itself.
+    if (!groupNode.querySelector(".hud-msg-node")) {
+      groupNode.parentNode.removeChild(groupNode);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+//// The HUD service
+
 function HUD_SERVICE()
 {
   // TODO: provide mixins for FENNEC: bug 568621
@@ -1861,6 +1908,8 @@ HUD_SERVICE.prototype =
 
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
+
+    pruneConsoleOutputIfNecessary(aConsoleNode);
   },
 
   /**
@@ -3915,6 +3964,7 @@ JSTerm.prototype = {
 
     lastGroupNode.appendChild(node);
     ConsoleUtils.scrollToVisible(node);
+    pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
   /**
@@ -3954,6 +4004,7 @@ JSTerm.prototype = {
 
     lastGroupNode.appendChild(node);
     ConsoleUtils.scrollToVisible(node);
+    pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
   clearOutput: function JST_clearOutput()
