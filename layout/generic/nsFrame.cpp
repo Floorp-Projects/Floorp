@@ -1278,8 +1278,8 @@ protected:
 class nsAbsPosClipWrapper : public nsDisplayWrapper
 {
 public:
-  nsAbsPosClipWrapper(nsIFrame* aContainer, const nsRect& aRect)
-    : mContainer(aContainer), mRect(aRect) {}
+  nsAbsPosClipWrapper(const nsRect& aRect)
+    : mRect(aRect) {}
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We are not a stacking context root. There is no valid underlying
@@ -1292,7 +1292,6 @@ public:
                                         aItem, mRect);
   }
 protected:
-  nsIFrame* mContainer;
   nsRect    mRect;
 };
 
@@ -1481,7 +1480,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   resultList.AppendToTop(set.PositionedDescendants());
 
   if (applyAbsPosClipping) {
-    nsAbsPosClipWrapper wrapper(this, absPosClip);
+    nsAbsPosClipWrapper wrapper(absPosClip);
     nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
     if (!item)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1705,7 +1704,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     
     if (NS_SUCCEEDED(rv)) {
       if (isPositioned && applyAbsPosClipping) {
-        nsAbsPosClipWrapper wrapper(aChild, clipRect);
+        nsAbsPosClipWrapper wrapper(clipRect);
         rv = wrapper.WrapListsInPlace(aBuilder, aChild, pseudoStack);
       }
     }
