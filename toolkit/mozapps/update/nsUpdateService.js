@@ -97,7 +97,11 @@ const KEY_UPDROOT         = "UpdRootD";
 const DIR_UPDATES         = "updates";
 const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_VERSION = "update.version";
+#ifdef ANDROID
+const FILE_UPDATE_ARCHIVE = "update.apk";
+#else
 const FILE_UPDATE_ARCHIVE = "update.mar";
+#endif
 const FILE_UPDATE_LOG     = "update.log"
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
