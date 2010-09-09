@@ -2167,6 +2167,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
         fp = cx->fp();                                                        \
         script = fp->getScript();                                             \
         atoms = FrameAtomBase(cx, fp);                                        \
+        currentVersion = (JSVersion) script->version;                         \
         JS_ASSERT(cx->regs == &regs);                                         \
         if (cx->throwing)                                                     \
             goto error;                                                       \
@@ -2254,6 +2255,19 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
 
     ++cx->interpLevel;
 
+    /*
+     * Optimized Get and SetVersion for proper script language versioning.
+     *
+     * If any native method or a Class or ObjectOps hook calls js_SetVersion
+     * and changes cx->version, the effect will "stick" and we will stop
+     * maintaining currentVersion.  This is relied upon by testsuites, for
+     * the most part -- web browsers select version before compiling and not
+     * at run-time.
+     */
+    JSVersion currentVersion = (JSVersion) script->version;
+    JSVersion originalVersion = (JSVersion) cx->version;
+    if (currentVersion != originalVersion)
+        js_SetVersion(cx, currentVersion);
 #define CHECK_INTERRUPT_HANDLER()                                             \
     JS_BEGIN_MACRO                                                            \
         if (cx->debugHooks->interruptHook)                                    \
@@ -2589,6 +2603,13 @@ BEGIN_CASE(JSOP_STOP)
         fp->putActivationObjects(cx);
 
         Probes::exitJSFun(cx, fp->maybeFunction());
+
+        /* Restore context version only if callee hasn't set version. */
+        if (JS_LIKELY(cx->version == currentVersion)) {
+            currentVersion = fp->getCallerVersion();
+            if (currentVersion != cx->version)
+                js_SetVersion(cx, currentVersion);
+        }
 
         /*
          * If inline-constructing, replace primitive rval with the new object
@@ -4524,6 +4545,14 @@ BEGIN_CASE(JSOP_APPLY)
             /* Push void to initialize local variables. */
             Value *newsp = newfp->base();
             SetValueRangeToUndefined(newfp->slots(), newsp);
+
+            /* Switch version if currentVersion wasn't overridden. */
+            newfp->setCallerVersion((JSVersion) cx->version);
+            if (JS_LIKELY(cx->version == currentVersion)) {
+                currentVersion = (JSVersion) newscript->version;
+                if (JS_UNLIKELY(currentVersion != cx->version))
+                    js_SetVersion(cx, currentVersion);
+            }
 
             /* Push the frame. */
             stack.pushInlineFrame(cx, fp, regs.pc, newfp);
@@ -6850,6 +6879,8 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT_IF(!fp->isGenerator(), !js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
 
     /* Undo the remaining effects committed on entry to Interpret. */
+    if (cx->version == currentVersion && currentVersion != originalVersion)
+        js_SetVersion(cx, originalVersion);
     --cx->interpLevel;
 
     return interpReturnOK;

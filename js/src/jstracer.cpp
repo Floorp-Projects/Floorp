@@ -5706,6 +5706,12 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newfp->setThisValue(NullValue()); // will be updated in FlushNativeStackFrame
     JS_ASSERT(!newfp->hasIMacroPC());
 
+    /*
+     * Note that fp->script is still the caller's script; set the callee
+     * inline frame's idea of caller version from its version.
+     */
+    newfp->setCallerVersion((JSVersion) fp->getScript()->version);
+
     /* Push inline frame. (Copied from js_Interpret.) */
     stack.pushInlineFrame(cx, fp, fi.pc, newfp);
 
