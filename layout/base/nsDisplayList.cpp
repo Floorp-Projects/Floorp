@@ -1287,18 +1287,18 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
-                             nsIFrame* aFrame, nsIFrame* aClippingFrame,
-                             nsDisplayItem* aItem, const nsRect& aRect)
+                             nsIFrame* aFrame, nsDisplayItem* aItem,
+                             const nsRect& aRect)
    : nsDisplayWrapList(aBuilder, aFrame, aItem),
-     mClippingFrame(aClippingFrame), mClip(aRect) {
+     mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
-                             nsIFrame* aFrame, nsIFrame* aClippingFrame,
-                             nsDisplayList* aList, const nsRect& aRect)
+                             nsIFrame* aFrame, nsDisplayList* aList,
+                             const nsRect& aRect)
    : nsDisplayWrapList(aBuilder, aFrame, aList),
-     mClippingFrame(aClippingFrame), mClip(aRect) {
+     mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
@@ -1340,7 +1340,7 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
   if (aItem->GetType() != TYPE_CLIP)
     return PR_FALSE;
   nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
-  if (other->mClip != mClip || other->mClippingFrame != mClippingFrame)
+  if (other->mClip != mClip)
     return PR_FALSE;
   mList.AppendToBottom(&other->mList);
   return PR_TRUE;
@@ -1349,7 +1349,7 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
 nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
                                                 nsDisplayItem* aItem) {
   return new (aBuilder)
-    nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
+    nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(), aItem, mClip);
 }
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,

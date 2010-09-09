@@ -1259,13 +1259,13 @@ public:
     // We are not a stacking context root. There is no valid underlying
     // frame for the whole list. These items are all in-flow descendants so
     // we can safely just clip them.
-    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, mContainer, aList, mRect);
+    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
     nsIFrame* f = aItem->GetUnderlyingFrame();
     if (mClipAll || nsLayoutUtils::IsProperAncestorFrame(mContainer, f, nsnull))
-      return new (aBuilder) nsDisplayClip(aBuilder, f, mContainer, aItem, mRect);
+      return new (aBuilder) nsDisplayClip(aBuilder, f, aItem, mRect);
     return aItem;
   }
 protected:
@@ -1284,12 +1284,12 @@ public:
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We are not a stacking context root. There is no valid underlying
     // frame for the whole list.
-    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, mContainer, aList, mRect);
+    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
     return new (aBuilder) nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(),
-            mContainer, aItem, mRect);
+                                        aItem, mRect);
   }
 protected:
   nsIFrame* mContainer;
