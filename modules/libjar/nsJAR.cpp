@@ -47,6 +47,7 @@
 #include "nsIConsoleService.h"
 #include "nsICryptoHash.h"
 #include "prprf.h"
+#include "mozilla/Omnijar.h"
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
@@ -116,7 +117,8 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 }
 
 // The following initialization makes a guess of 10 entries per jarfile.
-nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
+nsJAR::nsJAR(): mZip(new nsZipArchive()),
+                mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mParsedManifest(PR_FALSE),
                 mGlobalStatus(JAR_MANIFEST_NOT_PARSED),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT), 
@@ -169,8 +171,18 @@ nsJAR::Open(nsIFile* zipFile)
 
   mLock = PR_NewLock();
   NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
-
-  return mZip.OpenArchive(zipFile);
+  
+#ifdef MOZ_OMNIJAR
+  // The omnijar is special, it is opened early on and closed late
+  // this avoids reopening it
+  PRBool equals;
+  nsresult rv = zipFile->Equals(mozilla::OmnijarPath(), &equals);
+  if (NS_SUCCEEDED(rv) && equals) {
+    mZip = mozilla::OmnijarReader();
+    return NS_OK;
+  }
+#endif
+  return mZip->OpenArchive(zipFile);
 }
 
 NS_IMETHODIMP
@@ -189,12 +201,12 @@ nsJAR::OpenInner(nsIZipReader *aZipReader, const char *aZipEntry)
   mOuterZipEntry.Assign(aZipEntry);
 
   nsRefPtr<nsZipHandle> handle;
-  rv = nsZipHandle::Init(&static_cast<nsJAR*>(aZipReader)->mZip, aZipEntry,
+  rv = nsZipHandle::Init(static_cast<nsJAR*>(aZipReader)->mZip.get(), aZipEntry,
                          getter_AddRefs(handle));
   if (NS_FAILED(rv))
     return rv;
 
-  return mZip.OpenArchive(handle);
+  return mZip->OpenArchive(handle);
 }
 
 NS_IMETHODIMP
@@ -219,13 +231,20 @@ nsJAR::Close()
   mTotalItemsInManifest = 0;
   mOuterZipEntry.Truncate(0);
 
-  return mZip.CloseArchive();
+#ifdef MOZ_OMNIJAR
+  if (mZip == mozilla::OmnijarReader()) {
+    mZip.forget();
+    mZip = new nsZipArchive();
+    return NS_OK;
+  }
+#endif
+  return mZip->CloseArchive();
 }
 
 NS_IMETHODIMP
 nsJAR::Test(const char *aEntryName)
 {
-  return mZip.Test(aEntryName);
+  return mZip->Test(aEntryName);
 }
 
 NS_IMETHODIMP
@@ -239,7 +258,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsZipItem *item = mZip.GetItem(zipEntry);
+  nsZipItem *item = mZip->GetItem(zipEntry);
   NS_ENSURE_TRUE(item, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
   // Remove existing file or directory so we set permissions correctly.
@@ -274,7 +293,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
     rv = outFile->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mZip.ExtractFile(item, path.get(), fd);
+    rv = mZip->ExtractFile(item, path.get(), fd);
   }
   if (NS_FAILED(rv)) return rv;
 
@@ -288,7 +307,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 NS_IMETHODIMP    
 nsJAR::GetEntry(const char *aEntryName, nsIZipEntry* *result)
 {
-  nsZipItem* zipItem = mZip.GetItem(aEntryName);
+  nsZipItem* zipItem = mZip->GetItem(aEntryName);
   NS_ENSURE_TRUE(zipItem, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
   nsJARItem* jarItem = new nsJARItem(zipItem);
@@ -301,7 +320,7 @@ nsJAR::GetEntry(const char *aEntryName, nsIZipEntry* *result)
 NS_IMETHODIMP
 nsJAR::HasEntry(const nsACString &aEntryName, PRBool *result)
 {
-  *result = mZip.GetItem(PromiseFlatCString(aEntryName).get()) != nsnull;
+  *result = mZip->GetItem(PromiseFlatCString(aEntryName).get()) != nsnull;
   return NS_OK;
 }
 
@@ -311,7 +330,7 @@ nsJAR::FindEntries(const char *aPattern, nsIUTF8StringEnumerator **result)
   NS_ENSURE_ARG_POINTER(result);
 
   nsZipFind *find;
-  nsresult rv = mZip.FindInit(aPattern, &find);
+  nsresult rv = mZip->FindInit(aPattern, &find);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIUTF8StringEnumerator *zipEnum = new nsJAREnumerator(find);
@@ -341,7 +360,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   nsZipItem *item = nsnull;
   if (*aEntryName) {
     // First check if item exists in jar
-    item = mZip.GetItem(aEntryName);
+    item = mZip->GetItem(aEntryName);
     if (!item) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   }
   nsJARInputStream* jis = new nsJARInputStream();
