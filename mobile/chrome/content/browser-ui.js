@@ -2433,7 +2433,6 @@ var ContextCommands = {
   }
 }
 
-
 var SharingUI = {
   _dialog: null,
 
