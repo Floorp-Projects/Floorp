@@ -37,6 +37,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 
@@ -59,7 +60,7 @@ HelperAppLauncherDialog.prototype = {
       aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       aLauncher.launchWithApplication(null, false);
     } else {
-      aLauncher.saveToDisk(null, false);
+      aLauncher.cancel(Cr.NS_BINDING_ABORTED);
     }
   },
 
@@ -94,7 +95,7 @@ HelperAppLauncherDialog.prototype = {
     }
 
     // Use file picker to show dialog.
-    let picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let windowTitle = "";
     let parent = aContext.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal);
     picker.init(parent, windowTitle, Ci.nsIFilePicker.modeSave);
@@ -197,18 +198,18 @@ HelperAppLauncherDialog.prototype = {
           aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
         }
       }
-      aLocalFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
+      aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
     }
     catch (e) {
       dump("*** exception in validateLeafName: " + e + "\n");
 
-      if (e.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED)
+      if (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED)
         throw e;
 
       if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
         aLocalFile.append("unnamed");
         if (aLocalFile.exists())
-          aLocalFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
+          aLocalFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
       }
     }
   },
