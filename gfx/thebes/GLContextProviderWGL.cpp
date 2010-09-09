@@ -219,7 +219,8 @@ public:
           mContext(aContext),
           mWnd(aWindow),
           mPBuffer(NULL),
-          mPixelFormat(0)
+          mPixelFormat(0),
+          mIsDoubleBuffered(PR_FALSE)
     {
     }
 
@@ -234,7 +235,8 @@ public:
           mContext(aContext),
           mWnd(NULL),
           mPBuffer(aPbuffer),
-          mPixelFormat(aPixelFormat)
+          mPixelFormat(aPixelFormat),
+          mIsDoubleBuffered(PR_FALSE)
     {
     }
 
@@ -267,7 +269,7 @@ public:
         return InitWithPrefix("gl", PR_TRUE);
     }
 
-    PRBool MakeCurrent()
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
     {
         BOOL succeeded = PR_TRUE;
 
@@ -275,12 +277,26 @@ public:
         // of its TLS slot, so no need to do our own tls slot.
         // You would think that wglMakeCurrent would avoid doing
         // work if mContext was already current, but not so much..
-        if (sWGLLibrary.fGetCurrentContext() != mContext) {
+        if (aForce || sWGLLibrary.fGetCurrentContext() != mContext) {
             succeeded = sWGLLibrary.fMakeCurrent(mDC, mContext);
             NS_ASSERTION(succeeded, "Failed to make GL context current!");
         }
 
         return succeeded;
+    }
+
+    void SetIsDoubleBuffered(PRBool aIsDB) {
+        mIsDoubleBuffered = aIsDB;
+    }
+
+    virtual PRBool IsDoubleBuffered() {
+        return mIsDoubleBuffered;
+    }
+
+    virtual PRBool SwapBuffers() {
+        if (!mIsDoubleBuffered)
+            return PR_FALSE;
+        return ::SwapBuffers(mDC);
     }
 
     PRBool SetupLookupFunction()
@@ -320,6 +336,8 @@ protected:
     HWND mWnd;
     HANDLE mPBuffer;
     int mPixelFormat;
+
+    PRPackedBool mIsDoubleBuffered;
 };
 
 PRBool
