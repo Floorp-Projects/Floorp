@@ -194,7 +194,7 @@ nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // normally don't have any size, but in Editor we use CSS to display
   // an image to represent this "hidden" element.
   if (!mFrames.FirstChild()) {
-    rv = DisplaySelectionOverlay(aBuilder, aLists);
+    rv = DisplaySelectionOverlay(aBuilder, aLists.Content());
   }
   return rv;
 }

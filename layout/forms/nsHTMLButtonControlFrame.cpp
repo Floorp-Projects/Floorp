@@ -193,7 +193,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // to draw border when selected in editor
-  return DisplaySelectionOverlay(aBuilder, aLists);
+  return DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
 nscoord

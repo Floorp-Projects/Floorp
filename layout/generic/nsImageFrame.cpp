@@ -1357,7 +1357,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
   
-  return DisplaySelectionOverlay(aBuilder, aLists,
+  return DisplaySelectionOverlay(aBuilder, aLists.Content(),
                                  nsISelectionDisplay::DISPLAY_IMAGES);
 }
 
