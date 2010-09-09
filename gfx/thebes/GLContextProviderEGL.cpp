@@ -608,7 +608,7 @@ public:
         return PR_TRUE;
     }
 
-    PRBool MakeCurrent(PRBool aForce) {
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE) {
         PRBool succeeded = PR_TRUE;
 
         // Assume that EGL has the same problem as WGL does,
@@ -630,11 +630,6 @@ public:
         }
 
         return succeeded;
-    }
-
-    PRBool MakeCurrent()
-    {
-        return MakeCurrent(PR_FALSE);
     }
 
     PRBool SetupLookupFunction()
