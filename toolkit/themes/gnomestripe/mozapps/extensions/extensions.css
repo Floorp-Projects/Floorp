@@ -42,7 +42,7 @@
 #view-port {
   background-color: -moz-field;
   color: -moz-fieldtext;
-  border: 1px solid black;
+  border: 1px solid threedshadow;
   border-radius: 5px;
 }
 
@@ -171,7 +171,7 @@
 .category[selected] {
   background-color: -moz-field;
   color: -moz-fieldtext;
-  border-color: black;
+  border-color: threedshadow;
 }
 
 .category-name {
