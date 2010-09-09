@@ -78,7 +78,7 @@ namespace {
 
 PRUintn gCurrentDatabaseIndex = BAD_TLS_INDEX;
 
-PRUint32 gIndexedDBQuota = DEFAULT_QUOTA;
+PRInt32 gIndexedDBQuota = DEFAULT_QUOTA;
 
 class QuotaCallback : public mozIStorageQuotaCallback
 {
@@ -419,8 +419,8 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
   rv = dbDirectory->GetNativePath(pattern);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (gIndexedDBQuota) {
-    PRUint64 quota = gIndexedDBQuota * 1024 * 1024;
+  if (gIndexedDBQuota > 0) {
+    PRUint64 quota = PRUint64(gIndexedDBQuota) * 1024 * 1024;
     nsRefPtr<QuotaCallback> callback(new QuotaCallback());
     rv = ss->SetQuotaForFilenamePattern(pattern, quota, callback, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -620,7 +620,7 @@ IDBFactory::SetCurrentDatabase(IDBDatabase* aDatabase)
 PRUint32
 IDBFactory::GetIndexedDBQuota()
 {
-  return gIndexedDBQuota;
+  return PRUint32(PR_MAX(gIndexedDBQuota, 0));
 }
 
 NS_IMPL_ADDREF(IDBFactory)
@@ -652,9 +652,8 @@ IDBFactory::Open(const nsAString& aName,
       return NS_ERROR_FAILURE;
     }
 
-    PRInt32 quota = nsContentUtils::GetIntPref(PREF_INDEXEDDB_QUOTA,
-                                               DEFAULT_QUOTA);
-    gIndexedDBQuota = PRUint32(PR_MAX(quota, 0));
+    nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
+                                       DEFAULT_QUOTA);
   }
 
   if (aName.IsEmpty()) {
