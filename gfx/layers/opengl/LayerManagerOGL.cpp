@@ -535,14 +535,6 @@ LayerManagerOGL::Render()
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
-#if 0
-  // XXX for whatever reason, scissor is not working -- even with no
-  // cliprect set, so we go through the 0,0,w,h path, any updates
-  // after the initial render end up failing the scissor rectangle.  I
-  // have no idea why.  We disable it for now, because it's not actually
-  // helping us with anything -- we draw to a specific location in the
-  // front buffer as it is.
-
   const nsIntRect *clipRect = mRoot->GetClipRect();
 
   if (clipRect) {
@@ -553,9 +545,6 @@ LayerManagerOGL::Render()
   }
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
-#else
-  mGLContext->fDisable(LOCAL_GL_SCISSOR_TEST);
-#endif
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
