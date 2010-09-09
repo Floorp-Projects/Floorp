@@ -588,6 +588,17 @@ function getString(aName) {
 }
 
 /**
+ * Gets the file extension for an nsIFile
+ * @param   aFile
+ *          The file to get the file extension for
+ * @returns The file extension
+ */
+function getFileExtension(aFile) {
+  return Services.io.newFileURI(aFile).QueryInterface(AUS_Ci.nsIURL).
+         fileExtension;
+}
+
+/**
  * Removes the updates.xml file, active-update.xml file, and all files and
  * sub-directories in the updates directory except for the "0" sub-directory.
  * This prevents some tests from failing due to files being left behind when the
