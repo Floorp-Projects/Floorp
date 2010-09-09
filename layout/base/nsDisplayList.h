@@ -479,7 +479,7 @@ public:
    * This will only return a zero value for items which wrap display lists
    * and do not create a CSS stacking context, therefore requiring
    * display items to be individually wrapped --- currently nsDisplayClip
-   * only.
+   * and nsDisplayClipRoundedRect only.
    */
   virtual PRUint32 GetPerFrameKey() { return PRUint32(GetType()); }
   /**
@@ -1307,6 +1307,7 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
   {
+    // FIXME: Consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -1414,6 +1415,7 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
   {
+    // FIXME: Consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
   NS_DISPLAY_DECL_NAME("EventReceiver", TYPE_EVENT_RECEIVER)
@@ -1602,8 +1604,48 @@ public:
   virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
                                            nsDisplayItem* aItem);
 
-private:
+protected:
   nsRect    mClip;
+};
+
+/**
+ * A display item to clip a list of items to the border-radius of a
+ * frame.
+ */
+class nsDisplayClipRoundedRect : public nsDisplayClip {
+public:
+  /**
+   * @param aFrame the frame that should be considered the underlying
+   * frame for this content, e.g. the frame whose z-index we have.  This
+   * is *not* the frame that is inducing the clipping.
+   */
+  nsDisplayClipRoundedRect(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                           nsDisplayItem* aItem,
+                           const nsRect& aRect, nscoord aRadii[8]);
+  nsDisplayClipRoundedRect(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                           nsDisplayList* aList,
+                           const nsRect& aRect, nscoord aRadii[8]);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayClipRoundedRect();
+#endif
+
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion);
+  virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
+  NS_DISPLAY_DECL_NAME("ClipRoundedRect", TYPE_CLIP_ROUNDED_RECT)
+
+  virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
+                                           nsDisplayItem* aItem);
+
+  void GetRadii(nscoord aRadii[8]) {
+    memcpy(aRadii, mRadii, sizeof(mRadii));
+  }
+
+private:
+  nscoord mRadii[8];
 };
 
 /**

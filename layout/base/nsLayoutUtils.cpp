@@ -1144,7 +1144,9 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
     nsDisplayList* subList = i->GetList();
     if (subList) {
       PruneDisplayListForExtraPage(aBuilder, aExtraPage, aY, subList);
-      if (i->GetType() == nsDisplayItem::TYPE_CLIP) {
+      nsDisplayItem::Type type = i->GetType();
+      if (type == nsDisplayItem::TYPE_CLIP ||
+          type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
         // This might clip an element which should appear on the first
         // page, and that element might be visible if this uses a 'clip'
         // property with a negative top.
