@@ -50,6 +50,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_585237_line_limit.js \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_netlogging.js \
+	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_581231_close_button.js \
 	$(NULL)
 
