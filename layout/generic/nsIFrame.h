@@ -1097,11 +1097,14 @@ public:
    * border/background/outline items for this frame are not clipped,
    * unless aClipBorderBackground is set to PR_TRUE. (We need this because
    * a scrollframe must overflow-clip its scrolled child's background/borders.)
+   *
+   * Indices into aClipRadii are the NS_CORNER_* constants in nsStyleConsts.h
    */
   nsresult OverflowClip(nsDisplayListBuilder*   aBuilder,
                         const nsDisplayListSet& aFromSet,
                         const nsDisplayListSet& aToSet,
                         const nsRect&           aClipRect,
+                        const nscoord           aClipRadii[8],
                         PRBool                  aClipBorderBackground = PR_FALSE,
                         PRBool                  aClipAll = PR_FALSE);
 
