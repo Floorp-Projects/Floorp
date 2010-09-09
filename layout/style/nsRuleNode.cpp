@@ -5026,10 +5026,12 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                                (mPresContext->GetBorderWidthTable())[value.GetIntValue()]);
       }
       // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-      else if (SetCoord(value, coord, nsStyleCoord(), SETCOORD_LENGTH,
+      else if (SetCoord(value, coord, nsStyleCoord(),
+                        SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
                         aContext, mPresContext, canStoreInRuleTree)) {
         NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-        border->SetBorderWidth(side, coord.GetCoordValue());
+        // clamp negative calc() to 0.
+        border->SetBorderWidth(side, NS_MAX(coord.GetCoordValue(), 0));
       }
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         canStoreInRuleTree = PR_FALSE;
