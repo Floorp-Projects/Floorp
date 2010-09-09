@@ -906,8 +906,9 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 /* Identity indicator */
 #identity-box {
-  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
-  color: -moz-dialogtext;
+  background-color: rgb(95%,95%,95%);
+  background-image: -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
+  color: #444;
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
@@ -919,27 +920,26 @@ toolbar[iconsize="small"] #fullscreen-button {
   outline: 1px dotted -moz-DialogText;
 }
 
-#identity-box:hover {
-  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
-}
-
 #identity-box:hover:active,
 #identity-box[open="true"] {
   background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
 }
 
 #identity-icon-labels {
-  padding: 0 2px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 3px;
 }
 
 #identity-box.verifiedDomain {
   background-color: rgba(30, 80, 170, 0.7);
   color: white;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
 #identity-box.verifiedIdentity {
   background-color: rgba(50, 150, 50, 0.8);
   color: white;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
 /* Identity popup icons */
