@@ -287,7 +287,7 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       new (aBuilder) nsDisplayCanvas(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DisplaySelectionOverlay(aBuilder, aLists,
+  return DisplaySelectionOverlay(aBuilder, aLists.Content(),
                                  nsISelectionDisplay::DISPLAY_IMAGES);
 }
 

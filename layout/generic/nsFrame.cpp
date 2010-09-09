@@ -1011,7 +1011,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 
 nsresult
 nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
-                                 const nsDisplayListSet& aLists,
+                                 nsDisplayList*          aList,
                                  PRUint16                aContentType)
 {
 //check frame selection state
@@ -1058,7 +1058,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
     details = next;
   }
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
+  return aList->AppendNewToTop(new (aBuilder)
       nsDisplaySelectionOverlay(aBuilder, this, selectionValue));
 }
 
