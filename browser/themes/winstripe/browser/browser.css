@@ -114,7 +114,7 @@ statusbarpanel#statusbar-display {
 
 #appmenu-button {
   -moz-appearance: none;
-  background-image: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
+  background: -moz-linear-gradient(rgb(247,182,82), rgb(215,98,10) 95%);
   background-clip: padding-box;
   -moz-border-radius: 0 0 4px 4px;
   border: 1px solid rgba(83,42,6,.9);
@@ -130,7 +130,7 @@ statusbarpanel#statusbar-display {
 }
 
 #appmenu-button:-moz-window-inactive {
-  background: transparent;
+  background-image: none;
   border-color: rgba(0,0,0,.4);
 }
 
