@@ -124,7 +124,7 @@ nsIsOfflineSQLFunction::OnFunctionCall(
 }
 
 nsresult
-nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
+nsDOMStoragePersistentDB::Init()
 {
   nsresult rv;
 
@@ -132,7 +132,7 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                               getter_AddRefs(storageFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = storageFile->Append(aDatabaseName);
+  rv = storageFile->Append(NS_LITERAL_STRING("webappsstore.sqlite"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageService> service;
