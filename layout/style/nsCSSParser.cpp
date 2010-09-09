@@ -154,6 +154,7 @@ namespace css = mozilla::css;
 #define VARIANT_HN   (VARIANT_INHERIT | VARIANT_NUMBER)
 #define VARIANT_HON  (VARIANT_HN | VARIANT_NONE)
 #define VARIANT_HOS  (VARIANT_INHERIT | VARIANT_NONE | VARIANT_STRING)
+#define VARIANT_LPN  (VARIANT_LP | VARIANT_NUMBER)
 #define VARIANT_TIMING_FUNCTION (VARIANT_KEYWORD | VARIANT_CUBIC_BEZIER)
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_UO   (VARIANT_URL | VARIANT_NONE)
@@ -9034,9 +9035,7 @@ CSSParserImpl::ParseDasharray()
   } else {
     nsCSSValueList *cur = value.SetListValue();
     for (;;) {
-      if (!ParseVariant(cur->mValue,
-                        VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,
-                        nsnull)) {
+      if (!ParseNonNegativeVariant(cur->mValue, VARIANT_LPN, nsnull)) {
         return PR_FALSE;
       }
       if (CheckEndProperty()) {
