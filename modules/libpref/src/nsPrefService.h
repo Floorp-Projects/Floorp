@@ -50,6 +50,7 @@
 class nsIFile;
 
 class nsPrefService : public nsIPrefService,
+                      public nsIPrefServiceInternal,
                       public nsIObserver,
                       public nsIPrefBranchInternal,
                       public nsSupportsWeakReference
@@ -57,6 +58,7 @@ class nsPrefService : public nsIPrefService,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
+  NS_DECL_NSIPREFSERVICEINTERNAL
   NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
   NS_FORWARD_NSIPREFBRANCH2(mRootBranch->)
   NS_DECL_NSIOBSERVER
