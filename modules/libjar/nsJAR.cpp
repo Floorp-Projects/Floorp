@@ -1050,6 +1050,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
   {
     os->AddObserver(this, "memory-pressure", PR_TRUE);
     os->AddObserver(this, "chrome-flush-caches", PR_TRUE);
+    os->AddObserver(this, "flush-cache-entry", PR_TRUE);
   }
 // ignore failure of the observer registration.
 
@@ -1316,6 +1317,32 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
   else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
     mZips.Enumerate(DropZipReaderCache, nsnull);
     mZips.Reset();
+  }
+  else if (strcmp(aTopic, "flush-cache-entry") == 0) {
+    nsCOMPtr<nsIFile> file = do_QueryInterface(aSubject);
+    if (!file)
+      return NS_OK;
+
+    nsCAutoString uri;
+    if (NS_FAILED(file->GetNativePath(uri)))
+      return NS_OK;
+
+    uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+    nsCStringKey key(uri);
+
+    nsAutoLock lock(mLock);    
+    nsJAR* zip = static_cast<nsJAR*>(static_cast<nsIZipReader*>(mZips.Get(&key)));
+    if (!zip)
+      return NS_OK;
+
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheFlushes++;
+#endif
+
+    zip->SetZipReaderCache(nsnull);
+
+    mZips.Remove(&key);
+    NS_RELEASE(zip);
   }
   return NS_OK;
 }
