@@ -545,6 +545,7 @@
                         oncommand="HUDConsoleUI.toggleHUD();"
                         key="key_webConsole"/>
               <menuitem id="appmenu_pageInspect"
+                        hidden="true"
                         label="&inspectMenu.label;"
                         type="checkbox"
                         command="Tools:Inspect"

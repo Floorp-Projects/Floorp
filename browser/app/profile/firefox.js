@@ -1030,3 +1030,6 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
+
+// disable the Inspector
+pref("devtools.inspector.enabled", false);
