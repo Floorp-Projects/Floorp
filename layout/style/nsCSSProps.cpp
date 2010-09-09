@@ -1567,7 +1567,7 @@ const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #undef CSS_PROP_SHORTHAND
 };
 
-static const nsCSSProperty gMozBorderRadiusSubpropTable[] = {
+static const nsCSSProperty gBorderRadiusSubpropTable[] = {
   // Code relies on these being in topleft-topright-bottomright-bottomleft
   // order.
   eCSSProperty_border_top_left_radius,

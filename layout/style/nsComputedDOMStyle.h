@@ -252,10 +252,10 @@ private:
   nsresult DoGetBorderLeftColors(nsIDOMCSSValue** aValue);
   nsresult DoGetBorderRightColors(nsIDOMCSSValue** aValue);
   nsresult DoGetBorderTopColors(nsIDOMCSSValue** aValue);
-  nsresult DoGetBorderRadiusBottomLeft(nsIDOMCSSValue** aValue);
-  nsresult DoGetBorderRadiusBottomRight(nsIDOMCSSValue** aValue);
-  nsresult DoGetBorderRadiusTopLeft(nsIDOMCSSValue** aValue);
-  nsresult DoGetBorderRadiusTopRight(nsIDOMCSSValue** aValue);
+  nsresult DoGetBorderBottomLeftRadius(nsIDOMCSSValue** aValue);
+  nsresult DoGetBorderBottomRightRadius(nsIDOMCSSValue** aValue);
+  nsresult DoGetBorderTopLeftRadius(nsIDOMCSSValue** aValue);
+  nsresult DoGetBorderTopRightRadius(nsIDOMCSSValue** aValue);
   nsresult DoGetFloatEdge(nsIDOMCSSValue** aValue);
   nsresult DoGetBorderImage(nsIDOMCSSValue** aValue);
 
