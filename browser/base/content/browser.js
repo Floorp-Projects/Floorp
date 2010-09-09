@@ -1513,6 +1513,16 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   TabView.init();
 
+  // Enable Inspector?
+  let enabled = gPrefService.getBoolPref(InspectorUI.prefEnabledName);
+  if (enabled) {
+    document.getElementById("menu_pageinspect").setAttribute("hidden", false);
+    document.getElementById("Tools:Inspect").removeAttribute("disabled");
+    let appMenuInspect = document.getElementById("appmenu_pageInspect");
+    if (appMenuInspect)
+      appMenuInspect.setAttribute("hidden", false);
+  }
+
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
 
