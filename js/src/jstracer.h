@@ -1177,6 +1177,8 @@ class TraceRecorder
     nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns* obj_ins,
                                                unsigned slot = JSSLOT_PRIVATE);
     nanojit::LIns* stobj_get_fslot_uint32(nanojit::LIns* obj_ins, unsigned slot);
+    nanojit::LIns* stobj_set_fslot_uint32(nanojit::LIns* value_ins, nanojit::LIns* obj_ins,
+                                          unsigned slot);
     nanojit::LIns* stobj_get_fslot_ptr(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* unbox_slot(JSObject *obj, nanojit::LIns *obj_ins, uint32 slot,
                               VMSideExit *exit);
@@ -1311,8 +1313,8 @@ class TraceRecorder
                                              JSObject** pobj, nanojit::LIns** pobj_ins,
                                              VMSideExit* exit);
     JS_REQUIRES_STACK RecordingStatus guardPrototypeHasNoIndexedProperties(JSObject* obj,
-                                                                             nanojit::LIns* obj_ins,
-                                                                             ExitType exitType);
+                                                                           nanojit::LIns* obj_ins,
+                                                                           VMSideExit *exit);
     JS_REQUIRES_STACK RecordingStatus guardNativeConversion(Value& v);
     JS_REQUIRES_STACK JSStackFrame* entryFrame() const;
     JS_REQUIRES_STACK void clearEntryFrameSlotsFromTracker(Tracker& which);

@@ -517,6 +517,23 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
     return obj->setProperty(cx, idr.id(), &tmp);
 }
 
+#ifdef JS_TRACER
+JSBool JS_FASTCALL
+js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
+{
+    jsuint u = jsuint(i);
+    jsuint capacity = obj->getDenseArrayCapacity();
+    if (u < capacity)
+        return true;
+    if (INDEX_TOO_SPARSE(obj, u))
+        return false;
+    return obj->ensureDenseArrayElements(cx, u + 1);    
+
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32, 0,
+                     nanojit::ACCSET_STORE_ANY)
+#endif
+
 static JSBool
 DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
 {
@@ -851,66 +868,18 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 
 #ifdef JS_TRACER
 
-static JS_ALWAYS_INLINE JSBool FASTCALL
-dense_grow(JSContext* cx, JSObject* obj, jsint i, const Value &v)
+JSBool FASTCALL
+js_Array_dense_setelem_hole(JSContext* cx, JSObject* obj, jsint i)
 {
-    JS_ASSERT(obj->isDenseArray());
+    if (js_PrototypeHasIndexedProperties(cx, obj))
+        return false;
 
-    /*
-     * Let the interpreter worry about negative array indexes.
-     */
-    JS_ASSERT((MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32) == (sizeof(intptr_t) != sizeof(uint32)));
-    if (MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32) {
-        /*
-         * Have to check for negative values bleeding through on 64-bit machines only,
-         * since we can't allocate large enough arrays for this on 32-bit machines.
-         */
-        if (i < 0)
-            return JS_FALSE;
-    }
-
-    /*
-     * If needed, grow the array as long it remains dense, otherwise fall off trace.
-     */
     jsuint u = jsuint(i);
-    jsuint capacity = obj->getDenseArrayCapacity();
-    if ((u >= capacity) && (INDEX_TOO_SPARSE(obj, u) || !obj->ensureDenseArrayElements(cx, u + 1)))
-        return JS_FALSE;
-
-    if (obj->getDenseArrayElement(u).isMagic()) {
-        if (js_PrototypeHasIndexedProperties(cx, obj))
-            return JS_FALSE;
-
-        if (u >= obj->getArrayLength())
-            obj->setArrayLength(u + 1);
-    }
-
-    obj->setDenseArrayElement(u, v);
-    return JS_TRUE;
+    if (u >= obj->getArrayLength())
+        obj->setArrayLength(u + 1);
+    return true;
 }
-
-JSBool FASTCALL
-js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, ValueArgType v)
-{
-    return dense_grow(cx, obj, i, ValueArgToConstRef(v));
-}
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem, CONTEXT, OBJECT, INT32, VALUE,
-                     0, nanojit::ACCSET_STORE_ANY)
-
-JSBool FASTCALL
-js_Array_dense_setelem_int(JSContext* cx, JSObject* obj, jsint i, int32 j)
-{
-    return dense_grow(cx, obj, i, Int32Value(j));
-}
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_int, CONTEXT, OBJECT, INT32, INT32,
-                     0, nanojit::ACCSET_STORE_ANY)
-
-JSBool FASTCALL
-js_Array_dense_setelem_double(JSContext* cx, JSObject* obj, jsint i, jsdouble d)
-{
-    return dense_grow(cx, obj, i, NumberValue(d));
-}
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_double, CONTEXT, OBJECT, INT32, DOUBLE,
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_Array_dense_setelem_hole, CONTEXT, OBJECT, INT32,
                      0, nanojit::ACCSET_STORE_ANY)
 #endif
 
