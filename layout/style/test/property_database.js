@@ -165,7 +165,18 @@ var gCSSProperties = {
 		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
 		initial_values: [ "0", "0px", "0px 0 0 0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
-						"3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt" // elliptical
+						"3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+			"2px 2px -moz-calc(2px + 1%) 2px",
+			"1px 2px 2px 2px / 2px 2px -moz-calc(2px + 1%) 2px",
 					  ],
 		invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px" ]
 	},
@@ -175,7 +186,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -185,7 +205,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -195,7 +224,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -205,7 +243,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -607,7 +654,18 @@ var gCSSProperties = {
 		subproperties: [ "-moz-outline-radius-bottomleft", "-moz-outline-radius-bottomright", "-moz-outline-radius-topleft", "-moz-outline-radius-topright" ],
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
-						"3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt" // elliptical
+						"3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
+			"2px 2px -moz-calc(2px + 1%) 2px",
+			"1px 2px 2px 2px / 2px 2px -moz-calc(2px + 1%) 2px",
 					  ],
 		invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px" ]
 	},
@@ -617,7 +675,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -627,7 +694,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -637,7 +713,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -647,7 +732,16 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "3%", "1px", "2em", // circular
-						"3% 2%", "1px 4px", "2em 2pt" // elliptical
+						"3% 2%", "1px 4px", "2em 2pt", // elliptical
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3*25px) 5px",
+			"5px -moz-calc(3*25px)",
+			"-moz-calc(20%) -moz-calc(3*25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},

@@ -5195,7 +5195,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       nsStyleCoord coordX, coordY;
 
       if (SetPairCoords(radius, coordX, coordY, parentX, parentY,
-                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO |
+                          SETCOORD_STORE_CALC,
                         aContext, mPresContext, canStoreInRuleTree)) {
         border->mBorderRadius.Set(cx, coordX);
         border->mBorderRadius.Set(cy, coordY);
@@ -5406,7 +5407,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
       nsStyleCoord coordX, coordY;
 
       if (SetPairCoords(radius, coordX, coordY, parentX, parentY,
-                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                        SETCOORD_LPH | SETCOORD_INITIAL_ZERO |
+                          SETCOORD_STORE_CALC,
                         aContext, mPresContext, canStoreInRuleTree)) {
         outline->mOutlineRadius.Set(cx, coordX);
         outline->mOutlineRadius.Set(cy, coordY);
