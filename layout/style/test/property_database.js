@@ -169,7 +169,7 @@ var gCSSProperties = {
 		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
 	},
 	"border-radius": {
-		domProp: "MozBorderRadius",
+		domProp: "borderRadius",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
@@ -192,7 +192,7 @@ var gCSSProperties = {
 		invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px" ]
 	},
 	"border-bottom-left-radius": {
-		domProp: "MozBorderRadiusBottomleft",
+		domProp: "borderBottomLeftRadius",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
@@ -212,7 +212,7 @@ var gCSSProperties = {
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"border-bottom-right-radius": {
-		domProp: "MozBorderRadiusBottomright",
+		domProp: "borderBottomRightRadius",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
@@ -232,7 +232,7 @@ var gCSSProperties = {
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"border-top-left-radius": {
-		domProp: "MozBorderRadiusTopleft",
+		domProp: "borderTopLeftRadius",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
@@ -252,7 +252,7 @@ var gCSSProperties = {
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"border-top-right-radius": {
-		domProp: "MozBorderRadiusTopright",
+		domProp: "borderTopRightRadius",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "width": "200px", "height": "100px", "display": "inline-block"},
