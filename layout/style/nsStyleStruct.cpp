@@ -344,7 +344,9 @@ void nsStylePadding::RecalcData()
 {
   if (IsFixedData(mPadding, PR_FALSE)) {
     NS_FOR_CSS_SIDES(side) {
-      mCachedPadding.side(side) = CalcCoord(mPadding.Get(side), nsnull, 0);
+      // Clamp negative calc() to 0.
+      mCachedPadding.side(side) =
+        NS_MAX(CalcCoord(mPadding.Get(side), nsnull, 0), 0);
     }
     mHasCachedPadding = PR_TRUE;
   }
