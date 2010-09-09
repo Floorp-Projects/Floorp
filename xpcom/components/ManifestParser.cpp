@@ -650,14 +650,12 @@ ParseManifest(NSLocationType type, nsILocalFile* file,
   ParseManifestCommon(type, file, mgrcx, chromecx, NULL, buf, aChromeOnly);
 }
 
-#ifdef MOZ_OMNIJAR
 void
-ParseManifest(NSLocationType type, const char* jarPath,
+ParseManifest(NSLocationType type, nsIZipReader* reader, const char* jarPath,
               char* buf, bool aChromeOnly)
 {
-  nsComponentManagerImpl::ManifestProcessingContext mgrcx(type, jarPath, aChromeOnly);
-  nsChromeRegistry::ManifestProcessingContext chromecx(type, jarPath);
-  ParseManifestCommon(type, mozilla::OmnijarPath(), mgrcx, chromecx, jarPath,
+  nsComponentManagerImpl::ManifestProcessingContext mgrcx(type, reader, jarPath, aChromeOnly);
+  nsChromeRegistry::ManifestProcessingContext chromecx(type, mgrcx.mFile, jarPath);
+  ParseManifestCommon(type, mgrcx.mFile, mgrcx, chromecx, jarPath,
                       buf, aChromeOnly);
 }
-#endif

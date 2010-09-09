@@ -68,10 +68,6 @@ CPPSRCS		= \
 		nsNativeComponentLoader.cpp \
 		$(NULL)
 
-ifdef MOZ_OMNIJAR
-CPPSRCS += nsManifestZIPLoader.cpp
-endif
-
 SDK_XPIDLSRCS	= \
 		nsIClassInfo.idl	      \
 		nsIComponentRegistrar.idl     \

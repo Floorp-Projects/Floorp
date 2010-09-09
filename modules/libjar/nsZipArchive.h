@@ -46,7 +46,9 @@
 #define ZIP_TABSIZE   256
 #define ZIP_BUFLEN    (4*1024)      /* Used as output buffer when deflating items to a file */
 
+#ifndef PL_ARENA_CONST_ALIGN_MASK
 #define PL_ARENA_CONST_ALIGN_MASK  (sizeof(void*)-1)
+#endif
 #include "plarena.h"
 
 #include "zlib.h"
