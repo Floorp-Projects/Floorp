@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -264,8 +264,10 @@ void vp8_entropy_mode_init()
     vp8_tokens_from_tree(vp8_uv_mode_encodings,  vp8_uv_mode_tree);
     vp8_tokens_from_tree(vp8_mbsplit_encodings, vp8_mbsplit_tree);
 
-    vp8_tokens_from_tree(VP8_MVREFENCODINGS,   vp8_mv_ref_tree);
-    vp8_tokens_from_tree(VP8_SUBMVREFENCODINGS, vp8_sub_mv_ref_tree);
+    vp8_tokens_from_tree_offset(vp8_mv_ref_encoding_array,
+                                vp8_mv_ref_tree, NEARESTMV);
+    vp8_tokens_from_tree_offset(vp8_sub_mv_ref_encoding_array,
+                                vp8_sub_mv_ref_tree, LEFT4X4);
 
     vp8_tokens_from_tree(vp8_small_mvencodings, vp8_small_mvtree);
 }
