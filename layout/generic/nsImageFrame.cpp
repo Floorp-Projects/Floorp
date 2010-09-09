@@ -577,7 +577,7 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
 
   // XXX We really need to round this out, now that we're doing better
   // image scaling!
-  nsRect r = (*aRect == mozilla::imagelib::kFullImageSpaceRect) ?
+  nsRect r = (*aRect == nsIntRect::GetMaxSizedIntRect()) ?
     GetInnerArea() :
     SourceRectToDest(*aRect);
 
@@ -660,7 +660,7 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
 
-  nsRect r = (*aDirtyRect == mozilla::imagelib::kFullImageSpaceRect) ?
+  nsRect r = (*aDirtyRect == nsIntRect::GetMaxSizedIntRect()) ?
     GetInnerArea() :
     SourceRectToDest(*aDirtyRect);
 
