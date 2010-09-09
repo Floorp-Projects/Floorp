@@ -2737,17 +2737,10 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
   UpdateNonClientMargins();
 
-  // Prevent window updates during the transition.
-  DWORD style = GetWindowLong(mWnd, GWL_STYLE);
-  SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
-
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
   nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
-
-  style = GetWindowLong(mWnd, GWL_STYLE);
-  SetWindowLong(mWnd, GWL_STYLE, style | WS_VISIBLE);
 
   // Let the dom know via web shell window
   nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
