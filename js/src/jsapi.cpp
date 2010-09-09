@@ -982,27 +982,25 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
-    return JSVERSION_NUMBER(cx);
+    return VersionNumber(cx->findVersion());
 }
 
 JS_PUBLIC_API(JSVersion)
-JS_SetVersion(JSContext *cx, JSVersion version)
+JS_SetVersion(JSContext *cx, JSVersion newVersion)
 {
-    JSVersion oldVersion;
+    JS_ASSERT(VersionIsKnown(newVersion));
+    JS_ASSERT(!VersionHasFlags(newVersion));
 
-    JS_ASSERT(version != JSVERSION_UNKNOWN);
-    JS_ASSERT((version & ~JSVERSION_MASK) == 0);
-
-    oldVersion = JSVERSION_NUMBER(cx);
-    if (version == oldVersion)
-        return oldVersion;
+    JSVersion oldVersion = VersionNumber(cx->findVersion());
+    if (oldVersion == newVersion)
+        return oldVersion; /* No override actually occurs! */
 
     /* We no longer support 1.4 or below. */
-    if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4)
+    if (newVersion != JSVERSION_DEFAULT && newVersion <= JSVERSION_1_4)
         return oldVersion;
 
-    cx->version = (cx->version & ~JSVERSION_MASK) | version;
-    js_OnVersionChange(cx);
+    VersionCloneFlags(oldVersion, &newVersion);
+    cx->maybeOverrideVersion(newVersion);
     return oldVersion;
 }
 
@@ -1059,7 +1057,8 @@ JS_SetOptions(JSContext *cx, uint32 options)
     AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
-    js_SyncOptionsToVersion(cx);
+    SyncOptionsToVersion(cx);
+    JS_ASSERT_IF(options & JSOPTION_XML, VersionHasXML(cx->findVersion()));
     cx->updateJITEnabled();
     return oldopts;
 }
@@ -1070,7 +1069,7 @@ JS_ToggleOptions(JSContext *cx, uint32 options)
     AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options ^= options;
-    js_SyncOptionsToVersion(cx);
+    SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
     return oldopts;
 }
