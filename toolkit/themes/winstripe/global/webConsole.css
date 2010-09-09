@@ -146,7 +146,6 @@
 }
 
 .jsterm-input-node {
-    width: 98%;
     font-family: monospace;
     font-size: 9pt;
     background: url("chrome://global/skin/icons/commandline.png") 4px 3px
