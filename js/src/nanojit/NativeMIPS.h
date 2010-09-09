@@ -401,17 +401,17 @@ namespace nanojit
 
 #define JINDEX(dest) ((uint32_t(dest)>>2)&0x03ffffff)
 
-#define J(dest)                                            \
-    do { count_jmp(); EMIT(J_FORMAT(OP_J, JINDEX(dest)),   \
+#define J(dest)                                             \
+    do { count_jmp(); EMIT(J_FORMAT(OP_J, JINDEX(dest)),    \
                            "j %p", dest); } while (0)
 
-#define trampJ(dest)                                                    \
-    do { count_jmp(); TRAMP(J_FORMAT(OP_J, (uint32_t(dest)>>2)&0x3fffffff), \
+#define trampJ(dest)                                        \
+    do { count_jmp(); TRAMP(J_FORMAT(OP_J, JINDEX(dest)),   \
                             "j %p", dest); } while (0)
 
-#define JAL(dest)                                                    \
-    do { count_jmp(); EMIT(J_FORMAT(OP_JAL, ((dest)>>2)&0x3fffffff), \
-                           "jal 0x%x", uint32_t(dest)); } while (0)
+#define JAL(dest)                                           \
+    do { count_jmp(); EMIT(J_FORMAT(OP_JAL, JINDEX(dest)),  \
+                           "jal %p", dest); } while (0)
 
 #define JALR(rs)                                                        \
     do { count_jmp(); EMIT(R_FORMAT(OP_SPECIAL, rs, 0, RA, 0, SPECIAL_JALR), \
