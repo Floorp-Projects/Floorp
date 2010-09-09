@@ -509,7 +509,7 @@ NS_IMPL_ADDREF(IDBFactory)
 NS_IMPL_RELEASE(IDBFactory)
 
 NS_INTERFACE_MAP_BEGIN(IDBFactory)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIIDBFactory)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBFactory)
 NS_INTERFACE_MAP_END
@@ -554,7 +554,7 @@ IDBFactory::Open(const nsAString& aName,
   }
   NS_ENSURE_STATE(innerWindow);
 
-  nsRefPtr<IDBRequest> request = GenerateRequest(context, innerWindow);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<LazyIdleThread> thread(new LazyIdleThread(kDefaultThreadTimeoutMS,
@@ -895,11 +895,13 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     }
   }
 
-  nsRefPtr<IDBDatabase> db = IDBDatabase::Create(dbInfo, mThread, mConnection);
+  nsRefPtr<IDBDatabase> db =
+    IDBDatabase::Create(mRequest->ScriptContext(), mRequest->Owner(), dbInfo,
+                        mThread, mConnection, mASCIIOrigin);
   NS_ASSERTION(db, "This can't fail!");
 
   NS_ASSERTION(!mConnection, "Should have swapped out!");
 
-  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(db));
+  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(db));
   return OK;
 }

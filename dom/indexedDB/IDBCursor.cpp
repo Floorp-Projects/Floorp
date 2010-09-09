@@ -115,6 +115,16 @@ private:
   const bool mAutoIncrement;
 };
 
+inline
+already_AddRefed<IDBRequest>
+GenerateRequest(IDBCursor* aCursor)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  IDBDatabase* database = aCursor->Transaction()->Database();
+  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aCursor),
+                            database->ScriptContext(), database->Owner());
+}
+
 } // anonymous namespace
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -230,6 +240,10 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
   NS_ASSERTION(aTransaction, "Null pointer!");
 
   nsRefPtr<IDBCursor> cursor(new IDBCursor());
+
+  cursor->mScriptContext = aTransaction->Database()->ScriptContext();
+  cursor->mOwner = aTransaction->Database()->Owner();
+
   cursor->mRequest = aRequest;
   cursor->mTransaction = aTransaction;
   cursor->mDirection = aDirection;
@@ -256,16 +270,38 @@ IDBCursor::~IDBCursor()
   if (mJSRuntime) {
     js_RemoveRoot(mJSRuntime, &mCachedValue);
   }
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
-NS_IMPL_ADDREF(IDBCursor)
-NS_IMPL_RELEASE(IDBCursor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
 
-NS_INTERFACE_MAP_BEGIN(IDBCursor)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBCursor,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mObjectStore,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mIndex,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBCursor,
+                                                nsDOMEventTargetHelper)
+  // Don't unlink mObjectStore, mIndex, or mTransaction!
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBCursor)
   NS_INTERFACE_MAP_ENTRY(nsIIDBCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBCursor)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(IDBCursor, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBCursor, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBCursor, IDBCursor)
 
@@ -481,8 +517,7 @@ IDBCursor::Update(const jsval &aValue,
   rv = json->EncodeFromJSVal(clone.jsval_addr(), aCx, jsonValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<UpdateHelper> helper =
@@ -516,8 +551,7 @@ IDBCursor::Remove(nsIIDBRequest** _retval)
   const Key& key = mData[mDataIndex].key;
   NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveHelper> helper =
@@ -750,7 +784,7 @@ ContinueRunnable::Run()
       }
     }
 
-    rv = variant->SetAsISupports(static_cast<IDBRequest::Generator*>(mCursor));
+    rv = variant->SetAsISupports(static_cast<nsPIDOMEventTarget*>(mCursor));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -223,6 +223,16 @@ private:
   nsTArray<KeyValuePair> mData;
 };
 
+inline
+already_AddRefed<IDBRequest>
+GenerateRequest(IDBIndex* aIndex)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  IDBDatabase* database = aIndex->ObjectStore()->Transaction()->Database();
+  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aIndex),
+                            database->ScriptContext(), database->Owner());
+}
+
 } // anonymous namespace
 
 // static
@@ -234,7 +244,12 @@ IDBIndex::Create(IDBObjectStore* aObjectStore,
   NS_ASSERTION(aObjectStore, "Null pointer!");
   NS_ASSERTION(aIndexInfo, "Null pointer!");
 
+  IDBDatabase* database = aObjectStore->Transaction()->Database();
+
   nsRefPtr<IDBIndex> index = new IDBIndex();
+
+  index->mScriptContext = database->ScriptContext();
+  index->mOwner = database->Owner();
 
   index->mObjectStore = aObjectStore;
   index->mId = aIndexInfo->id;
@@ -257,16 +272,34 @@ IDBIndex::IDBIndex()
 IDBIndex::~IDBIndex()
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
-NS_IMPL_ADDREF(IDBIndex)
-NS_IMPL_RELEASE(IDBIndex)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBIndex)
 
-NS_INTERFACE_MAP_BEGIN(IDBIndex)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBIndex,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mObjectStore,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBIndex,
+                                                nsDOMEventTargetHelper)
+  // Don't unlink mObjectStore!
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBIndex)
   NS_INTERFACE_MAP_ENTRY(nsIIDBIndex)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBIndex)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(IDBIndex, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBIndex, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBIndex, IDBIndex)
 
@@ -321,8 +354,7 @@ IDBIndex::Get(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
 
-  nsRefPtr<IDBRequest> request =
-    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetHelper> helper =
@@ -350,8 +382,7 @@ IDBIndex::GetObject(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
 
-  nsRefPtr<IDBRequest> request =
-    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetObjectHelper> helper =
@@ -386,8 +417,7 @@ IDBIndex::GetAll(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
 
-  nsRefPtr<IDBRequest> request =
-    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetAllHelper> helper =
@@ -422,8 +452,7 @@ IDBIndex::GetAllObjects(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
 
-  nsRefPtr<IDBRequest> request =
-    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetAllObjectsHelper> helper =
@@ -490,8 +519,7 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
 
-  nsRefPtr<IDBRequest> request =
-    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<OpenCursorHelper> helper =
@@ -560,8 +588,7 @@ IDBIndex::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
 
-  nsRefPtr<IDBRequest> request =
-    GenerateRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<OpenObjectCursorHelper> helper =
@@ -1156,7 +1183,7 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mData);
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
+  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
 
   mIndex = nsnull;
 
@@ -1361,7 +1388,7 @@ OpenObjectCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mData);
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
+  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
 
   mIndex = nsnull;
 
