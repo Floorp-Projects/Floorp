@@ -1167,11 +1167,10 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         JSScript **scriptp = bucket;
 
         EVAL_CACHE_METER(probe);
-        JSVersion version = cx->findVersion();
         while ((script = *scriptp) != NULL) {
             if (script->savedCallerFun &&
                 script->staticLevel == staticLevel &&
-                script->getVersion() == version &&
+                script->version == cx->version &&
                 (script->principals == principals ||
                  (principals->subsume(principals, script->principals) &&
                   script->principals->subsume(script->principals, principals)))) {
