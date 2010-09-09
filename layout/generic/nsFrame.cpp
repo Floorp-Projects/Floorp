@@ -3249,7 +3249,8 @@ static void
 AddCoord(const nsStyleCoord& aStyle,
          nsIRenderingContext* aRenderingContext,
          nsIFrame* aFrame,
-         nscoord* aCoord, float* aPercent)
+         nscoord* aCoord, float* aPercent,
+         PRBool aClampNegativeToZero)
 {
   if (!aStyle.IsCoordPercentCalcUnit()) {
     return;
@@ -3258,6 +3259,11 @@ AddCoord(const nsStyleCoord& aStyle,
   LengthPercentPairWithMinMaxCalcOps ops;
   LengthPercentPairWithMinMaxCalcOps::result_type pair =
     css::ComputeCalc(aStyle, ops);
+  if (aClampNegativeToZero) {
+    // This is far from ideal when one is negative and one is positive.
+    pair.mLength = NS_MAX(pair.mLength, 0);
+    pair.mPercent = NS_MAX(pair.mPercent, 0.0f);
+  }
   *aCoord += pair.mLength;
   *aPercent += pair.mPercent;
 }
@@ -3273,15 +3279,15 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   // comment above LengthPercentPairWithMinMaxCalcOps.
   const nsStyleMargin *styleMargin = GetStyleMargin();
   AddCoord(styleMargin->mMargin.GetLeft(), aRenderingContext, this,
-           &result.hMargin, &result.hPctMargin);
+           &result.hMargin, &result.hPctMargin, PR_FALSE);
   AddCoord(styleMargin->mMargin.GetRight(), aRenderingContext, this,
-           &result.hMargin, &result.hPctMargin);
+           &result.hMargin, &result.hPctMargin, PR_FALSE);
 
   const nsStylePadding *stylePadding = GetStylePadding();
   AddCoord(stylePadding->mPadding.GetLeft(), aRenderingContext, this,
-           &result.hPadding, &result.hPctPadding);
+           &result.hPadding, &result.hPctPadding, PR_TRUE);
   AddCoord(stylePadding->mPadding.GetRight(), aRenderingContext, this,
-           &result.hPadding, &result.hPctPadding);
+           &result.hPadding, &result.hPctPadding, PR_TRUE);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();
   result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_LEFT);

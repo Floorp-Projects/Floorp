@@ -97,7 +97,7 @@ static inline PRBool
 IsMarginZero(const nsStyleCoord &aCoord)
 {
   return aCoord.GetUnit() == eStyleUnit_Auto ||
-         nsLayoutUtils::IsPaddingZero(aCoord);
+         nsLayoutUtils::IsMarginZero(aCoord);
 }
 
 /* virtual */ PRBool
