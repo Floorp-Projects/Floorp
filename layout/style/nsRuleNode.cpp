@@ -5345,7 +5345,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   }
   else {
     SetCoord(marginData.mOutlineWidth, outline->mOutlineWidth,
-             parentOutline->mOutlineWidth, SETCOORD_LEH, aContext,
+             parentOutline->mOutlineWidth,
+             SETCOORD_LEH | SETCOORD_CALC_LENGTH_ONLY, aContext,
              mPresContext, canStoreInRuleTree);
   }
 
@@ -6024,11 +6025,17 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
            SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
            aContext, mPresContext, canStoreInRuleTree);
 
-  // column-gap: length, percentage, inherit, normal
+  // column-gap: length, inherit, normal
   SetCoord(columnData.mColumnGap,
            column->mColumnGap, parent->mColumnGap,
-           SETCOORD_LPH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL |
+           SETCOORD_CALC_LENGTH_ONLY,
            aContext, mPresContext, canStoreInRuleTree);
+  // clamp negative calc() to 0
+  if (column->mColumnGap.GetUnit() == eStyleUnit_Coord) {
+    column->mColumnGap.SetCoordValue(
+      NS_MAX(column->mColumnGap.GetCoordValue(), 0));
+  }
 
   // column-count: auto, integer, inherit
   if (eCSSUnit_Auto == columnData.mColumnCount.GetUnit() ||

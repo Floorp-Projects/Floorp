@@ -5640,7 +5640,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty__moz_column_width:
     return ParseNonNegativeVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty__moz_column_gap:
-    return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL |
+                                   VARIANT_CALC, nsnull);
   case eCSSProperty_bottom:
   case eCSSProperty_top:
   case eCSSProperty_left:
@@ -5860,7 +5861,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kOutlineStyleKTable);
   case eCSSProperty_outline_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKL,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKL | VARIANT_CALC,
                                    nsCSSProps::kBorderWidthKTable);
   case eCSSProperty_outline_offset:
     return ParseVariant(aValue, VARIANT_HL | VARIANT_CALC, nsnull);
