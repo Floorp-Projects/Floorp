@@ -209,9 +209,13 @@ nsHttpChannel::Connect(PRBool firstTime)
 
         PRBool isStsHost = PR_FALSE;
         rv = stss->IsStsURI(mURI, &isStsHost);
-        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (isStsHost) {
+        // if STS fails, there's no reason to cancel the load, but it's
+        // worrisome.
+        NS_ASSERTION(NS_SUCCEEDED(rv),
+                     "Something is wrong with STS: IsStsURI failed.");
+
+        if (NS_SUCCEEDED(rv) && isStsHost) {
             LOG(("nsHttpChannel::Connect() STS permissions found\n"));
             return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
         }
@@ -944,7 +948,7 @@ nsHttpChannel::ProcessSTSHeader()
 
     nsCAutoString asciiHost;
     rv = mURI->GetAsciiHost(asciiHost);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // If the channel is not a hostname, but rather an IP, STS doesn't do
     // anything.
@@ -955,13 +959,17 @@ nsHttpChannel::ProcessSTSHeader()
     nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
     NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
 
+    // mSecurityInfo may not always be present, and if it's not then it is okay
+    // to just disregard any STS headers since we know nothing about the
+    // security of the connection.
+    NS_ENSURE_TRUE(mSecurityInfo, NS_OK);
+
     // Check the trustworthiness of the channel (are there any cert errors?)
     // If there are certificate errors, we still load the data, we just ignore
     // any STS headers that are present.
-    NS_ENSURE_TRUE(mSecurityInfo, NS_ERROR_FAILURE);
     PRBool tlsIsBroken = PR_FALSE;
     rv = stss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // If this was already an STS host, the connection should have been aborted
     // by the bad cert handler in the case of cert errors.  If it didn't abort the connection,
@@ -970,7 +978,9 @@ nsHttpChannel::ProcessSTSHeader()
     // will happen during the session.
     PRBool wasAlreadySTSHost;
     rv = stss->IsStsURI(mURI, &wasAlreadySTSHost);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Failure here means STS is broken.  Don't prevent the load, but this
+    // shouldn't fail.
+    NS_ENSURE_SUCCESS(rv, NS_OK);
     NS_ASSERTION(!(wasAlreadySTSHost && tlsIsBroken),
                  "connection should have been aborted by nss-bad-cert-handler");
 
@@ -992,6 +1002,7 @@ nsHttpChannel::ProcessSTSHeader()
         LOG(("STS: No STS header, continuing load.\n"));
         return NS_OK;
     }
+    // All other failures are fatal.
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stss->ProcessStsHeader(mURI, stsHeader.get());
@@ -1012,13 +1023,16 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
         this, httpStatus));
 
-    if (mTransaction->SSLConnectFailed() &&
-        !ShouldSSLProxyResponseContinue(httpStatus))
-        return ProcessFailedSSLConnect(httpStatus);
-
-    // If STS data is present, process it here.
-    rv = ProcessSTSHeader();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mTransaction->SSLConnectFailed()) {
+        if (!ShouldSSLProxyResponseContinue(httpStatus))
+            return ProcessFailedSSLConnect(httpStatus);
+        // If SSL proxy response needs to complete, wait to process connection
+        // for Strict-Transport-Security.
+    } else {
+        // Given a successful connection, process any STS data that's relevant.
+        rv = ProcessSTSHeader();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
+    }
 
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
