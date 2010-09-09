@@ -42,11 +42,6 @@ function run_test() {
   var prefs = Cc['@mozilla.org/preferences-service;1'].
               getService(Ci.nsIPrefBranch);
 
-  var sysInfo = Cc["@mozilla.org/system-info;1"].
-                getService(Ci.nsIPropertyBag2);
-  var OSVersion = encodeURIComponent(sysInfo.getProperty("name") + " " +
-                                     sysInfo.getProperty("version"));
-
   var upperUrlRaw = "http://%LOCALE%.%VENDOR%.foo/?name=%NAME%&id=%ID%&version=%VERSION%&platversion=%PLATFORMVERSION%&abid=%APPBUILDID%&pbid=%PLATFORMBUILDID%&app=%APP%&os=%OS%&abi=%XPCOMABI%";
   var lowerUrlRaw = "http://%locale%.%vendor%.foo/?name=%name%&id=%id%&version=%version%&platversion=%platformversion%&abid=%appbuildid%&pbid=%platformbuildid%&app=%app%&os=%os%&abi=%xpcomabi%";
   //XXX %APP%'s RegExp is not global, so it only replaces the first space
@@ -55,8 +50,6 @@ function run_test() {
   var multiUrlRef = "http://Mozilla.Mozilla.Url Formatter Test.Mozilla.Url Formatter Test";
   var encodedUrl = "https://%LOCALE%.%VENDOR%.foo/?q=%E3%82%BF%E3%83%96&app=%NAME%&ver=%PLATFORMVERSION%";
   var encodedUrlRef = "https://" + locale + ".Mozilla.foo/?q=%E3%82%BF%E3%83%96&app=Url Formatter Test&ver=2.0";
-  var advancedUrl = "http://test.mozilla.com/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/";
-  var advancedUrlRef = "http://test.mozilla.com/Url Formatter Test/1/2007122405/XPCShell_noarch-spidermonkey/" + locale + "/default/" + OSVersion + "/default/default/";
 
   var pref = "xpcshell.urlformatter.test";
   var str = Cc["@mozilla.org/supports-string;1"].
@@ -71,6 +64,4 @@ function run_test() {
   do_check_eq(formatter.formatURL(multiUrl), multiUrlRef);
   // Encoded strings must be kept as is (Bug 427304)
   do_check_eq(formatter.formatURL(encodedUrl), encodedUrlRef);
-
-  do_check_eq(formatter.formatURL(advancedUrl), advancedUrlRef);
 }
