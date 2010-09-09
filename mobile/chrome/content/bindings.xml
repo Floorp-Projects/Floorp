@@ -45,7 +45,7 @@
       </handler>
       <handler event="blur" phase="capturing">
         <![CDATA[
-          // suppress disconnect of autocomplete controller
+          // Bug 583341 - suppress disconnect of autocomplete controller
           this._dontBlur = true;
         ]]>
       </handler>

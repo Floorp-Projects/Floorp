@@ -566,6 +566,11 @@ var BrowserUI = {
       this._edit.popup.close();
     else
       this._edit.popup.closePopup();
+
+    // Because the controller is not detached during a blur event for Meego
+    // compatibility with the VKB, we need to detach it manually
+    this._edit.detachController();
+    this.activePanel = null;
   },
 
   isAutoCompleteOpen: function isAutoCompleteOpen() {
@@ -578,7 +583,6 @@ var BrowserUI = {
 
     // Give the new page lots of room
     Browser.hideSidebars();
-    this.activePanel = null;
     this.closeAutoComplete(false);
 
     // Make sure we're online before attempting to load
@@ -927,7 +931,6 @@ var BrowserUI = {
         break;
       case "cmd_go":
         this.goToURI();
-        this.activePanel = null;
         break;
       case "cmd_openLocation":
         this.showToolbar(true);
@@ -1376,10 +1379,8 @@ var AwesomePanel = function(aElementId, aCommandId) {
   this.openLink = function aw_openLink(aEvent) {
     let item = aEvent.originalTarget;
     let uri = item.getAttribute("url") || item.getAttribute("uri");
-    if (uri != "") {
-      BrowserUI.activePanel = null;
+    if (uri != "")
       BrowserUI.goToURI(uri);
-    }
   }
 };
 
