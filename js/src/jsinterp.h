@@ -146,6 +146,7 @@ struct JSStackFrame
   private:
     /* Members only needed for inline calls. */
     void            *hookData;      /* debugger call hook data */
+    JSVersion       callerVersion;  /* dynamic version of calling script */
 
   public:
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
@@ -372,6 +373,20 @@ struct JSStackFrame
 
     static size_t offsetHookData() {
         return offsetof(JSStackFrame, hookData);
+    }
+
+    /* Version accessors */
+
+    JSVersion getCallerVersion() const {
+        return callerVersion;
+    }
+
+    void setCallerVersion(JSVersion version) {
+        callerVersion = version;
+    }
+
+    static size_t offsetCallerVersion() {
+        return offsetof(JSStackFrame, callerVersion);
     }
 
     /* Script accessors */

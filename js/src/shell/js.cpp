@@ -875,14 +875,6 @@ Version(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-RevertVersion(JSContext *cx, uintN argc, jsval *vp)
-{
-    js_RevertVersion(cx);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
-static JSBool
 Options(JSContext *cx, uintN argc, jsval *vp)
 {
     uint32 optset, flag;
@@ -4089,7 +4081,6 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
-    JS_FN("revertVersion",  RevertVersion,  0,0),
     JS_FN("options",        Options,        0,0),
     JS_FN("load",           Load,           1,0),
     JS_FN("readline",       ReadLine,       0,0),
@@ -4189,8 +4180,7 @@ static const char shell_help_header[] =
 "=======                  ===========\n";
 
 static const char *const shell_help_messages[] = {
-"version([number])        Get or force a script compilation version number",
-"revertVersion()          Revert previously set version number",
+"version([number])        Get or set JavaScript version number",
 "options([option ...])    Get or toggle JavaScript options",
 "load(['foo.js' ...])     Load files named by string arguments",
 "readline()               Read a single line from stdin",
