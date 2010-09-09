@@ -63,6 +63,9 @@ struct Registers {
 # if defined(JS_CPU_X86) || defined(_MSC_VER)
     static const RegisterID ArgReg0 = JSC::X86Registers::ecx;
     static const RegisterID ArgReg1 = JSC::X86Registers::edx;
+#  if defined(JS_CPU_X64)
+    static const RegisterID ArgReg2 = JSC::X86Registers::r8;
+#  endif
 # else
     static const RegisterID ArgReg0 = JSC::X86Registers::edi;
     static const RegisterID ArgReg1 = JSC::X86Registers::esi;
