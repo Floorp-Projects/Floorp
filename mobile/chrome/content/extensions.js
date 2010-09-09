@@ -808,8 +808,10 @@ AddonInstallListener.prototype = {
       error += aInstall.error;
     else if (aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
       error += "Blocklisted";
-    else
+    else if (!aInstall.addon.isCompatible)
       error += "Incompatible";
+    else
+      return; // no need to show anything in this case
 
     let messageString = strings.getString(error);
     messageString = messageString.replace("#1", aInstall.name);
