@@ -395,6 +395,8 @@ var BrowserUI = {
     this._edit.addEventListener("click", this, false);
     this._edit.addEventListener("mousedown", this, false);
 
+    BadgeHandlers.register(this._edit.popup);
+
     let awesomePopup = document.getElementById("popup_autocomplete");
     awesomePopup.addEventListener("popupshown", this, false);
     awesomePopup.addEventListener("popuphidden", this, false);
@@ -2499,3 +2501,57 @@ var SharingUI = {
   ]
 };
 
+
+var BadgeHandlers = {
+  _handlers: [
+    {
+      _lastUpdate: 0,
+      _lastCount: null,
+      url: "http://mail.google.com",
+      updateBadge: function(aItem) {
+        // Use the cache if possible
+        let now = Date.now();
+        if (this._lastCount && this._lastUpdate > now - 1000) {
+          aItem.setAttribute("badge", this._lastCount);
+          return;
+        }
+
+        this._lastUpdate = now;
+
+        // Use any saved username and password. If we don't have any login and we are not
+        // currently logged into Gmail, we won't get any count.
+        let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+        let logins = lm.findLogins({}, "https://www.google.com", "https://www.google.com", null);
+        let username = logins.length > 0 ? logins[0].username : "";
+        let password = logins.length > 0 ? logins[0].password : "";
+
+        // Get the feed and read the count, passing any saved username and password
+        // but do not show any security dialogs if we fail
+        let req = new XMLHttpRequest();
+        req.mozBackgroundRequest = true;
+        req.open("GET", "https://mail.google.com/mail/feed/atom", true, username, password);
+        req.onreadystatechange = function(aEvent) {
+          if (req.readyState == 4) {
+            if (req.status == 200) {
+              let count = req.responseXML.getElementsByTagName("fullcount")[0].childNodes[0].nodeValue;
+              if (count > 100)
+                count = "99+";
+
+              this._lastCount = count;
+              aItem.setAttribute("badge", count);
+            } else {
+              aItem.removeAttribute("badge");
+            }
+          }
+        };
+        req.send(null);
+      }
+    }
+  ],
+
+  register: function(aPopup) {
+    let handlers = this._handlers;
+    for (let i = 0; i < handlers.length; i++)
+      aPopup.registerBadgeHandler(handlers[i].url, handlers[i]);
+  }
+};
