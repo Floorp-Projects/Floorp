@@ -101,6 +101,11 @@ ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
   gfxPoint quadrantTranslation(quadrantRect.x, quadrantRect.y);
   nsRefPtr<gfxPattern> pattern = new gfxPattern(mBuffer);
 
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  gfxPattern::GraphicsFilter filter = gfxPattern::FILTER_NEAREST;
+  pattern->SetFilter(filter);
+#endif
+
   // Transform from user -> buffer space.
   gfxMatrix transform;
   transform.Scale(aXRes, aYRes);
