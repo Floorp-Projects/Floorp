@@ -1577,14 +1577,12 @@ class nsDisplayClip : public nsDisplayWrapList {
 public:
   /**
    * @param aFrame the frame that should be considered the underlying
-   * frame for this content, e.g. the frame whose z-index we have.
-   * @param aClippingFrame the frame that is inducing the clipping.
+   * frame for this content, e.g. the frame whose z-index we have.  This
+   * is *not* the frame that is inducing the clipping.
    */
   nsDisplayClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsIFrame* aClippingFrame, 
                 nsDisplayItem* aItem, const nsRect& aRect);
   nsDisplayClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsIFrame* aClippingFrame,
                 nsDisplayList* aList, const nsRect& aRect);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayClip();
@@ -1600,17 +1598,11 @@ public:
   
   const nsRect& GetClipRect() { return mClip; }
   void SetClipRect(const nsRect& aRect) { mClip = aRect; }
-  nsIFrame* GetClippingFrame() { return mClippingFrame; }
 
   virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
                                            nsDisplayItem* aItem);
 
 private:
-  // The frame that is responsible for the clipping. This may be different
-  // from mFrame because mFrame represents the content that is being
-  // clipped, and for example may be used to obtain the z-index of the
-  // content.
-  nsIFrame* mClippingFrame;
   nsRect    mClip;
 };
 
