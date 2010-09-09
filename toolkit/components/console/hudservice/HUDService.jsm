@@ -4520,8 +4520,13 @@ LogMessage.prototype = {
 
     this.messageNode.appendChild(messageTxtNode);
 
-    var klass = "hud-msg-node hud-" + this.level;
-    this.messageNode.setAttribute("class", klass);
+    var classes = ["hud-msg-node", "hud-" + this.level];
+
+    if (this.activityObject.category == "CSS Parser") {
+      classes.push("hud-cssparser");
+    }
+
+    this.messageNode.setAttribute("class", classes.join(" "));
 
     var self = this;
 
