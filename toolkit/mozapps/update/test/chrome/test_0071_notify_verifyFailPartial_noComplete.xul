@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: error patching, download, and finished (partial failed and download complete)"
+<window title="Update Wizard pages: errors (partial patch with an invalid hash)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -22,35 +22,23 @@
 <![CDATA[
 
 const TESTS = [ {
-  pageid: PAGEID_ERROR_PATCHING,
-  buttonClick: "next"
-}, {
-  pageid: PAGEID_DOWNLOADING
-}, {
-  pageid: PAGEID_FINISHED,
-  buttonClick: "extra1"
+  pageid: PAGEID_ERRORS,
+  buttonClick: "finish"
 } ];
 
 function runTest() {
   debugDump("Entering runTest");
 
-  // Specify the url to update.sjs with a slowDownloadMar param so the ui can
-  // load before the download completes.
-  let slowDownloadURL = URL_UPDATE + "?slowDownloadMar=1";
-  let patches = getLocalPatchString("partial", null, null, null, null, null,
-                                    STATE_PENDING) +
-                getLocalPatchString("complete", slowDownloadURL, null, null,
-                                    null, "false");
+  let patches = getLocalPatchString("partial", null, null, "1234", null, null,
+                                    STATE_DOWNLOADING);
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
-                                     Services.appinfo.platformVersion, null,
-                                     null, null, null, null, null, null,
-                                     "false");
+                                     Services.appinfo.platformVersion);
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  writeStatusFile(STATE_FAILED + ": " + CRC_ERROR);
+  writeStatusFile(STATE_DOWNLOADING);
   reloadUpdateManagerData();
 
   initUpdateServiceStub();
