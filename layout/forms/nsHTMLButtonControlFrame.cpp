@@ -182,8 +182,10 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsMargin border = GetStyleBorder()->GetActualBorder();
     nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
     rect.Deflate(border);
-  
-    nsresult rv = OverflowClip(aBuilder, set, aLists, rect);
+    nscoord radii[8];
+    GetPaddingBoxBorderRadii(radii);
+
+    nsresult rv = OverflowClip(aBuilder, set, aLists, rect, radii);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     set.MoveTo(aLists);

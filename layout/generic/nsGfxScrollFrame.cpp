@@ -1788,12 +1788,17 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+  nscoord radii[8];
+  // Our override of GetBorderRadii ensures we never have a radius at
+  // the corners where we have a scrollbar.
+  mOuter->GetPaddingBoxBorderRadii(radii);
   // mScrolledFrame may have given us a background, e.g., the scrolled canvas
   // frame below the viewport. If so, we want it to be clipped. We also want
   // to end up on our BorderBackground list.
   // If we are the viewport scrollframe, then clip all our descendants (to ensure
   // that fixed-pos elements get clipped by us).
-  rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, PR_TRUE, mIsRoot);
+  rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, radii,
+                            PR_TRUE, mIsRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Place the resizer in the display list in our Content() list above
