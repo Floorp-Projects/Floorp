@@ -1776,6 +1776,27 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   return NS_OK;
 }
 
+void
+nsIFrame::WrapReplacedContentForBorderRadius(nsDisplayListBuilder* aBuilder,
+                                             nsDisplayList* aFromList,
+                                             const nsDisplayListSet& aToLists)
+{
+  nscoord radii[8];
+  if (GetContentBoxBorderRadii(radii)) {
+    // If we have a border-radius, we have to clip our content to that
+    // radius.
+    nsDisplayListCollection set;
+    set.Content()->AppendToTop(aFromList);
+    nsRect clipRect = GetContentRect() - GetPosition() +
+                      aBuilder->ToReferenceFrame(this);
+    OverflowClip(aBuilder, set, aToLists, clipRect, radii, PR_FALSE, PR_TRUE);
+
+    return;
+  }
+
+  aToLists.Content()->AppendToTop(aFromList);
+}
+
 NS_IMETHODIMP  
 nsFrame::GetContentForEvent(nsPresContext* aPresContext,
                             nsEvent* aEvent,

@@ -1129,6 +1129,15 @@ public:
                                     PRUint32                aFlags = 0);
 
   /**
+   * A helper for replaced elements that want to clip their content to a
+   * border radius, but only need clipping at all when they have a
+   * border radius.
+   */
+  void WrapReplacedContentForBorderRadius(nsDisplayListBuilder* aBuilder,
+                                          nsDisplayList* aFromList,
+                                          const nsDisplayListSet& aToLists);
+
+  /**
    * Does this frame need a view?
    */
   virtual PRBool NeedsView() { return PR_FALSE; }
