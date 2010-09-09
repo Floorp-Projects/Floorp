@@ -60,14 +60,6 @@ namespace {
 
 const PRUint32 kDefaultDatabaseTimeoutSeconds = 30;
 
-inline
-nsISupports*
-isupports_cast(IDBDatabase* aClassPtr)
-{
-  return static_cast<nsISupports*>(
-    static_cast<IDBRequest::Generator*>(aClassPtr));
-}
-
 class SetVersionHelper : public AsyncConnectionHelper
 {
 public:
@@ -206,25 +198,42 @@ ConvertVariantToStringArray(nsIVariant* aVariant,
   return NS_OK;
 }
 
+inline
+already_AddRefed<IDBRequest>
+GenerateRequest(IDBDatabase* aDatabase)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aDatabase),
+                            aDatabase->ScriptContext(), aDatabase->Owner());
+}
+
 } // anonymous namespace
 
 // static
 already_AddRefed<IDBDatabase>
-IDBDatabase::Create(DatabaseInfo* aDatabaseInfo,
+IDBDatabase::Create(nsIScriptContext* aScriptContext,
+                    nsPIDOMWindow* aOwner,
+                    DatabaseInfo* aDatabaseInfo,
                     LazyIdleThread* aThread,
-                    nsCOMPtr<mozIStorageConnection>& aConnection)
+                    nsCOMPtr<mozIStorageConnection>& aConnection,
+                    const nsACString& aASCIIOrigin)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabaseInfo, "Null pointer!");
   NS_ASSERTION(aThread, "Null pointer!");
   NS_ASSERTION(aConnection, "Null pointer!");
+  NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
 
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
+
+  db->mScriptContext = aScriptContext;
+  db->mOwner = aOwner;
 
   db->mDatabaseId = aDatabaseInfo->id;
   db->mName = aDatabaseInfo->name;
   db->mDescription = aDatabaseInfo->description;
   db->mFilePath = aDatabaseInfo->filePath;
+  db->mASCIIOrigin = aASCIIOrigin;
 
   aThread->SetWeakIdleObserver(db);
   db->mConnectionThread = aThread;
@@ -259,6 +268,10 @@ IDBDatabase::~IDBDatabase()
       DatabaseInfo::Remove(mDatabaseId);
     }
   }
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
 nsresult
@@ -291,15 +304,26 @@ IDBDatabase::CloseConnection()
   }
 }
 
-NS_IMPL_ADDREF(IDBDatabase)
-NS_IMPL_RELEASE(IDBDatabase)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
 
-NS_INTERFACE_MAP_BEGIN(IDBDatabase)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase,
+                                                nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(IDBDatabase, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBDatabase, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBDatabase, IDBDatabase)
 
@@ -397,12 +421,10 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, objectStores,
-                           nsIIDBTransaction::READ_WRITE,
+    IDBTransaction::Create(this, objectStores, nsIIDBTransaction::READ_WRITE,
                            kDefaultDatabaseTimeoutSeconds);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
@@ -443,13 +465,11 @@ IDBDatabase::RemoveObjectStore(const nsAString& aName,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen,
-                           nsIIDBTransaction::READ_WRITE,
+    IDBTransaction::Create(this, storesToOpen, nsIIDBTransaction::READ_WRITE,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveObjectStoreHelper> helper =
@@ -477,12 +497,11 @@ IDBDatabase::SetVersion(const nsAString& aVersion,
   // Lock the whole database
   nsTArray<nsString> storesToOpen;
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen, IDBTransaction::FULL_LOCK,
+    IDBTransaction::Create(this, storesToOpen, IDBTransaction::FULL_LOCK,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<SetVersionHelper> helper =
@@ -623,7 +642,7 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen, aMode,
+    IDBTransaction::Create(this, storesToOpen, aMode,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
@@ -672,7 +691,7 @@ IDBDatabase::ObjectStore(const nsAString& aName,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen, aMode,
+    IDBTransaction::Create(this, storesToOpen, aMode,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
