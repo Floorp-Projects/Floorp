@@ -50,7 +50,7 @@ const kDoubleClickInterval = 400;
 const kDoubleClickThreshold = 200;
 
 // threshold in pixels for sensing a tap as opposed to a pan
-const kTapRadius = 25;
+const kTapRadius = Services.prefs.getIntPref("ui.dragThresholdX");
 
 // maximum drag distance in pixels while axis locking can still be reverted
 const kAxisLockRevertThreshold = 200;
