@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: errors (partial only patch apply failure)"
+<window title="Update Wizard pages: update check, basic, download, and errors (partial patch with an invalid hash)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript" 
@@ -22,6 +22,13 @@
 <![CDATA[
 
 const TESTS = [ {
+  pageid: PAGEID_CHECKING
+}, {
+  pageid: PAGEID_FOUND_BASIC,
+  buttonClick: "next"
+}, {
+  pageid: PAGEID_DOWNLOADING
+}, {
   pageid: PAGEID_ERRORS,
   buttonClick: "finish"
 } ];
@@ -29,21 +36,12 @@ const TESTS = [ {
 function runTest() {
   debugDump("Entering runTest");
 
-  let patches = getLocalPatchString("partial", null, null, null, null, null,
-                                    STATE_PENDING);
-  let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version,
-                                     Services.appinfo.platformVersion, null,
-                                     null, null, null, null, null, null,
-                                     "false");
+  let url = URL_UPDATE + "?showDetails=1&partialPatchOnly=1&invalidPartialHash=1" +
+            getVersionParams();
+  setUpdateURLOverride(url);
+  debugDump("Update URL: " + url);
 
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  writeStatusFile(STATE_FAILED + ": " + CRC_ERROR);
-  reloadUpdateManagerData();
-
-  initUpdateServiceStub();
+  gUP.checkForUpdates();
 }
 
 ]]>
