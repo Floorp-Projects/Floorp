@@ -1,7 +1,3 @@
-
-# bugs/
-include bugs/reftest.list
-
 # svg-as-an-image tests
 include image/reftest.list
 
