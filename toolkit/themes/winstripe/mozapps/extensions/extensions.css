@@ -53,6 +53,10 @@
   -moz-margin-end: 0;
 }
 
+.nav-button[disabled="true"] .button-icon {
+  opacity: 0.4;
+}
+
 #back-btn:-moz-locale-dir(ltr),
 #forward-btn:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 18px, 18px, 0);
