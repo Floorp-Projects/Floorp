@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Geolocation.
+ * The Original Code is Mozilla DOM.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Doug Turner <dougt@meer.net>  (Original Author)
+ *  Doug Turner <dougt@dougt.org>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,28 +34,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-
 #include "nsISupports.idl"
 
 interface nsIURI;
 interface nsIDOMWindow;
 interface nsIDOMElement;
-interface nsIDOMGeoPosition;
-interface nsIGeolocationPrompt;
 
 /**
- * Interface allows access to a geolocation and is passed to
- * the nsIGeolocationPrompt so that the application can approve
- * or deny the request.
+ * Interface allows access to a content to request
+ * permission to perform a privileged operation such as
+ * geolocation.
  */
-[scriptable, function, uuid(F2AEFDE1-8E38-48B3-BBB8-BD6C4AE1AC8A)]
-interface nsIGeolocationRequest : nsISupports {
+[scriptable, function, uuid(E79C7063-DBAB-45E3-8A98-D0142E1ABC9A)]
+interface nsIContentPermissionRequest : nsISupports {
 
-  readonly attribute nsIURI requestingURI;
-  readonly attribute nsIDOMWindow requestingWindow;
+  /**
+   *  The type of the permission request, such as
+   *  "geolocation".
+   */
+  readonly attribute ACString type;
 
-  readonly attribute nsIDOMElement requestingElement;
+  /**
+   *  The uri of the permission request.
+   */
+  readonly attribute nsIURI uri;
+
+  /**
+   *  The window or element that the permission request was
+   *  originated in.  Typically the element will be non-null
+   *  in when using out of process content.  window or
+   *  element can be null but not both.
+   */
+  readonly attribute nsIDOMWindow window;
+  readonly attribute nsIDOMElement element;
+
+  /**
+   * allow or cancel the request
+   */
 
   void cancel();
   void allow();
@@ -65,18 +80,15 @@ interface nsIGeolocationRequest : nsISupports {
  * Interface provides a way for the application to handle
  * the UI prompts associated with geo position.
  */
-[scriptable, function, uuid(2300C895-1BEE-4297-912C-A57082F3E936)]
-interface nsIGeolocationPrompt : nsISupports {
+[scriptable, function, uuid(F72DE90D-E954-4E69-9A61-917303029301)]
+interface nsIContentPermissionPrompt : nsISupports {
   /**
-   * Called when a request has been made to access geolocation data
+   * Called when a request has been made to access
+   * privileged content apis
    */
-  void prompt(in nsIGeolocationRequest request);
+  void prompt(in nsIContentPermissionRequest request);
 };
 
 %{C++
-/*  
-    This must be implemented by embedders.  It must support
-    nsIGeolocationPrompt.
-*/
-#define NS_GEOLOCATION_PROMPT_CONTRACTID   "@mozilla.org/geolocation/prompt;1"
+#define NS_CONTENT_PERMISSION_PROMPT_CONTRACTID   "@mozilla.org/content-permission/prompt;1"
 %}
