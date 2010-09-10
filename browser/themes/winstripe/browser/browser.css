@@ -1890,6 +1890,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
 
+.popup-notification-icon[popupid="password-save"] {
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
+}
+
 /* Notification icon box */
 #notification-popup-box {
   margin: 0 3px;
@@ -1915,6 +1919,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #indexedDB-notification-icon {
   list-style-image: url(chrome://global/skin/icons/question-16.png);
+}
+
+#password-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
 
 #identity-popup-container {
