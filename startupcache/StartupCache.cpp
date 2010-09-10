@@ -207,7 +207,6 @@ StartupCache::LoadArchive()
 nsresult
 StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length) 
 {
-  PRBool exists;
   char* data = NULL;
   PRUint32 len;
 
