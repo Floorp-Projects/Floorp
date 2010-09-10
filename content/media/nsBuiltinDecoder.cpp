@@ -556,6 +556,7 @@ void nsBuiltinDecoder::NotifySuspendedStatusChanged()
     // now so we consume data and hopefully free up cache space
     mElement->NotifyAutoplayDataReady();
   }
+  UpdateReadyStateForData();
 }
 
 void nsBuiltinDecoder::NotifyBytesDownloaded()

@@ -49,6 +49,7 @@ SimpleTest.waitForExplicitFinish();
 <video id='v'
        src='seek.ogv'
        onloadedmetadata='return startTest();'
+       onerror='event.stopPropagation();'
        onseeking='return startSeek();'
        ontimeupdate='return timeUpdated();'></video>
 </body>
