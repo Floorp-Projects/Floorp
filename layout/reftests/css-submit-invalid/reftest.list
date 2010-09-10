@@ -1,0 +1,3 @@
+include button-submit/reftest.list
+include input-image/reftest.list
+include input-submit/reftest.list
