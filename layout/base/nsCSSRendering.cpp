@@ -2613,8 +2613,14 @@ DrawBorderImage(nsPresContext*       aPresContext,
   req->GetImage(getter_AddRefs(imgContainer));
 
   nsIntSize imageSize;
-  imgContainer->GetWidth(&imageSize.width);
-  imgContainer->GetHeight(&imageSize.height);
+  if (NS_FAILED(imgContainer->GetWidth(&imageSize.width))) {
+    imageSize.width =
+      nsPresContext::AppUnitsToIntCSSPixels(aBorderArea.width);
+  }
+  if (NS_FAILED(imgContainer->GetHeight(&imageSize.height))) {
+    imageSize.height =
+      nsPresContext::AppUnitsToIntCSSPixels(aBorderArea.height);
+  }
 
   // Convert percentages and clamp values to the image size.
   nsIntMargin split;
