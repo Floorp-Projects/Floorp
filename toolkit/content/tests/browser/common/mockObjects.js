@@ -50,6 +50,29 @@
  *        the specified ContractID (for example
  *        Components.interfaces.nsIFilePicker).
  */
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+if (Cc === undefined) { 
+  var Cc = Components.classes;
+}
+
+if (Ci === undefined) {
+  var Ci = Components.interfaces;
+}
+
+if (Cu === undefined) {
+  var Cu = Components.utils;
+}
+
+if (Cr === undefined) {
+  var Cr = Components.results;
+}
+
+if (Cm === undefined) {
+  var Cm = Components.manager;
+}
+
 function MockObjectRegisterer(aContractID, aReplacementCtor)
 {
   this._contractID = aContractID;
@@ -65,6 +88,7 @@ MockObjectRegisterer.prototype = {
    * to ensure that unregister() is called.
    */
   register: function MOR_register() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (this._originalCID)
       throw new Exception("Invalid object state when calling register()");
 
@@ -96,6 +120,7 @@ MockObjectRegisterer.prototype = {
    * Restores the original factory.
    */
   unregister: function MOR_unregister() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (!this._originalCID)
       throw new Exception("Invalid object state when calling unregister()");
 
