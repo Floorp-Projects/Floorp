@@ -457,9 +457,9 @@ protected:
       * @param aChannel The channel to test
       *
       * @return Whether the channel has a safe HTTP method.
-      * @note Will return false if the channel isn't an HTTP channel.
+      * @note Will return true if the channel isn't an HTTP channel.
       */
-     static bool ChannelIsSafeMethod(nsIChannel* aChannel);
+     static bool ChannelIsSafeHTTPMethod(nsIChannel* aChannel);
 
     /**
      * Helper function that finds the last URI and its transition flags for a
