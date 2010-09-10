@@ -428,6 +428,16 @@ public:
                          nsIDOMEvent* aTriggerEvent);
 
   /**
+   * Open a tooltip at a specific screen position specified by aXPos and aYPos,
+   * measured in CSS pixels.
+   *
+   * This fires the popupshowing event synchronously.
+   */
+  void ShowTooltipAtScreen(nsIContent* aPopup,
+                           nsIContent* aTriggerContent,
+                           PRInt32 aXPos, PRInt32 aYPos);
+
+  /**
    * This method is provided only for compatibility with an older popup API.
    * New code should not call this function and should call ShowPopup instead.
    *
