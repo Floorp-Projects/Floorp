@@ -54,6 +54,16 @@ XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
   }
 });
 
+XPCOMUtils.defineLazyGetter(this, "ConsoleUtils", function () {
+  Cu.import("resource://gre/modules/HUDService.jsm");
+  try {
+    return ConsoleUtils;
+  }
+  catch (ex) {
+    dump(ex + "\n");
+  }
+});
+
 let log = function _log(msg) {
   dump("*** HUD Browser Test Log: " + msg + "\n");
 };
