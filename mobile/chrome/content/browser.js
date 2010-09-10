@@ -56,7 +56,7 @@ function getBrowser() {
   return Browser.selectedBrowser;
 }
 
-const kDefaultBrowserWidth = 800;
+const kDefaultBrowserWidth = 980;
 
 // Override sizeToContent in the main window. It breaks things (bug 565887)
 window.sizeToContent = function() {
