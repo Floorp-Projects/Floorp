@@ -37,8 +37,8 @@ category app-startup BrowserStartup service,@mozilla.org/browser/browser-startup
 category agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
 category agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
 
-# GeolocationPrompt.js
-component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} GeolocationPrompt.js
+# ContentPermissionPrompt.js
+component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
 
 # AlertsService.js
