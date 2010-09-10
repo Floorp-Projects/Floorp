@@ -442,6 +442,15 @@ const nsHTMLElement gHTMLElements[] = {
     /*special parents,kids*/            &gInTable,&gColgroupKids,
   },
   {
+    /*tag*/                             eHTMLTag_datalist,
+    /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
+    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
+    /*autoclose starttags and endtags*/ 0,0,0,0,
+    /*parent,incl,exclgroups*/          kSpecial, (kInlineEntity|kSelf|kFlowEntity), kNone,
+    /*special props, prop-range*/       0,kDefaultPropRange,
+    /*special parents,kids*/            0,0,
+  },
+  {
     /*tag*/                             eHTMLTag_dd,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,

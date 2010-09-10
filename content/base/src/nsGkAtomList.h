@@ -262,6 +262,7 @@ GK_ATOM(currentloop, "currentloop")
 #endif
 GK_ATOM(cycler, "cycler")
 GK_ATOM(data, "data")
+GK_ATOM(datalist, "datalist")
 GK_ATOM(dataType, "data-type")
 GK_ATOM(datasources, "datasources")
 GK_ATOM(datetime, "datetime")
