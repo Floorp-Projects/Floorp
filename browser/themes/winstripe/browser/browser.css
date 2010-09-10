@@ -1390,7 +1390,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-size: 200%;
   margin: 0;
   padding: 0;
-  -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px;
+  -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px repeat stretch;
   border-radius: 10px 8px 0 0;
 }
 
