@@ -202,6 +202,11 @@ ContentChild::Init(MessageLoop* aIOLoop,
     gtk_init(NULL, NULL);
 #endif
 
+#ifdef MOZ_X11
+    // Do this after initializing GDK, or GDK will install its own handler.
+    XRE_InstallX11ErrorHandler();
+#endif
+
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
   
     Open(aChannel, aParentHandle, aIOLoop);
