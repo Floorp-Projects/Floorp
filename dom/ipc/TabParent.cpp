@@ -524,14 +524,18 @@ TabParent::DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* act
     return true;
 }
 
-PGeolocationRequestParent*
-TabParent::AllocPGeolocationRequest(const IPC::URI& uri)
+PContentPermissionRequestParent*
+TabParent::AllocPContentPermissionRequest(const nsCString& type, const IPC::URI& uri)
 {
-  return new GeolocationRequestParent(mFrameElement, uri);
+  if (type.Equals(NS_LITERAL_CSTRING("geolocation"))) {
+    return new GeolocationRequestParent(mFrameElement, uri);
+  }
+
+  return nsnull;
 }
   
 bool
-TabParent::DeallocPGeolocationRequest(PGeolocationRequestParent* actor)
+TabParent::DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor)
 {
   delete actor;
   return true;

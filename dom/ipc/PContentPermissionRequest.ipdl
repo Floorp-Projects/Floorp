@@ -35,54 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGeolocationOOP_h
-#define nsGeolocationOOP_h
+include protocol PBrowser;
+include "mozilla/net/NeckoMessageUtils.h";
 
-#include "base/basictypes.h"
-
-#include "nsIGeolocationProvider.h"
-#include "nsIContentPermissionPrompt.h"
-#include "nsString.h"
-#include "nsIDOMElement.h"
-
-#include "mozilla/dom/PContentPermissionRequestParent.h"
-
-class nsGeolocationRequestProxy;
+using IPC::URI;
 
 namespace mozilla {
 namespace dom {
 
-class GeolocationRequestParent : public PContentPermissionRequestParent
+protocol PContentPermissionRequest
 {
- public:
-  GeolocationRequestParent(nsIDOMElement *element, const IPC::URI& principal);
-  virtual ~GeolocationRequestParent();
-  
-  nsCOMPtr<nsIURI>           mURI;
-  nsCOMPtr<nsIDOMElement>    mElement;
-  nsCOMPtr<nsGeolocationRequestProxy> mProxy;
+  manager PBrowser;
 
- private:  
-  virtual bool Recvprompt();
+parent:
+  prompt();
+
+child:
+  __delete__(bool allow);
 };
-  
+
+
 } // namespace dom
 } // namespace mozilla
-
-class nsGeolocationRequestProxy : public nsIContentPermissionRequest
-{
- public:
-  nsGeolocationRequestProxy();
-  virtual ~nsGeolocationRequestProxy();
-  
-  nsresult Init(mozilla::dom::GeolocationRequestParent* parent);
-  
-  NS_DECL_ISUPPORTS;
-  NS_DECL_NSICONTENTPERMISSIONREQUEST;
-
- private:
-  // Non-owning pointer to the GeolocationRequestParent object which owns this proxy.
-  mozilla::dom::GeolocationRequestParent* mParent;
-};
-#endif // nsGeolocationOOP_h
-

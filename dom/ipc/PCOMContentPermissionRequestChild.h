@@ -35,25 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PBrowser;
-include "mozilla/net/NeckoMessageUtils.h";
+#include "mozilla/dom/PContentPermissionRequestChild.h"
+// Microsoft's API Name hackery sucks
+#undef CreateEvent
 
-using IPC::URI;
-
-namespace mozilla {
-namespace dom {
-
-protocol PGeolocationRequest
-{
-  manager PBrowser;
-
-parent:
-  prompt();
-
-child:
-  __delete__(bool allow);
+/*
+  PContentPermissionRequestChild implementations also are
+  XPCOM objects.  Addref() is called on their implementation
+  before SendPCOntentPermissionRequestConstructor is called.
+  When Dealloc is called, IPDLRelease() is called.
+  Implementations of this method are expected to call
+  Release() on themselves.  See Bug 594261 for more
+  information.
+ */
+class PCOMContentPermissionRequestChild : public mozilla::dom::PContentPermissionRequestChild {
+public:
+  virtual void IPDLRelease() = 0;
 };
-
-
-} // namespace dom
-} // namespace mozilla

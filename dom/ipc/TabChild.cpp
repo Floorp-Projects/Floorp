@@ -87,7 +87,7 @@
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIEventListenerManager.h"
-#include "nsGeolocation.h"
+#include "PCOMContentPermissionRequestChild.h"
 
 #ifdef MOZ_WIDGET_QT
 #include <QGraphicsView>
@@ -968,21 +968,18 @@ TabChild::DeallocPContentDialog(PContentDialogChild* aDialog)
   return true;
 }
 
-/* The PGeolocationRequestChild actor is implemented by a refcounted
-   nsGeolocationRequest, and has an identical lifetime. */
-
-PGeolocationRequestChild*
-TabChild::AllocPGeolocationRequest(const IPC::URI&)
+PContentPermissionRequestChild*
+TabChild::AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI&)
 {
   NS_RUNTIMEABORT("unused");
   return nsnull;
 }
 
 bool
-TabChild::DeallocPGeolocationRequest(PGeolocationRequestChild* actor)
+TabChild::DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor)
 {
-  static_cast<nsGeolocationRequest*>(actor)->Release();
-  return true;
+    static_cast<PCOMContentPermissionRequestChild*>(actor)->IPDLRelease();
+    return true;
 }
 
 bool

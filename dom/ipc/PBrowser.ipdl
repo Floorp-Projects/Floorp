@@ -42,7 +42,7 @@ include protocol PContentDialog;
 include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
-include protocol PGeolocationRequest;
+include protocol PContentPermissionRequest;
 include protocol PExternalHelperApp;
 
 include "mozilla/TabTypes.h";
@@ -71,7 +71,7 @@ rpc protocol PBrowser
     manages PDocumentRenderer;
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
-    manages PGeolocationRequest;
+    manages PContentPermissionRequest;
     manages PExternalHelperApp;
 
 both:
@@ -114,7 +114,7 @@ parent:
 
     QueryContentResult(nsQueryContentEvent event);
 
-    PGeolocationRequest(URI uri);
+    PContentPermissionRequest(nsCString aType, URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
                    PRInt32[] aIntParams, nsString[] aStringParams);
