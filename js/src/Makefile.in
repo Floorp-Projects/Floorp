@@ -85,12 +85,9 @@ ifdef MOZ_PROFILE_GENERATE
 MODULE_OPTIMIZE_FLAGS = -O0
 else
 MODULE_OPTIMIZE_FLAGS = -O2 -ip
-#XXX: do we want different INTERP_OPTIMIZER flags here?
 endif
 else # not INTEL_CXX
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fomit-frame-pointer $(MOZ_OPTIMIZE_SIZE_TWEAK)
-# Special optimization flags for jsinterp.c
-INTERP_OPTIMIZER = -O3 -fstrict-aliasing
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fomit-frame-pointer
 endif
 else # not GNU_CXX
 ifeq ($(OS_ARCH),SunOS)
@@ -699,11 +696,6 @@ else
 	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv8plus.il $<
 endif # sparcv9
 endif # SOLARIS_SUNPRO_CXX
-
-# Allow building jsinterp.c with special optimization flags
-ifdef INTERP_OPTIMIZER
-jsinterp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(INTERP_OPTIMIZER)
-endif
 
 ifeq ($(OS_ARCH),IRIX)
 ifndef GNU_CC
