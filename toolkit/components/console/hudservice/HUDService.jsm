@@ -2649,8 +2649,8 @@ HUD_SERVICE.prototype =
       HUDWindowObserver.initialConsoleCreated = true;
     }
 
-    let _browser =
-      gBrowser.getBrowserForDocument(aContentWindow.document.wrappedJSObject);
+    let _browser = gBrowser.
+      getBrowserForDocument(aContentWindow.top.document.wrappedJSObject);
     let nBox = gBrowser.getNotificationBox(_browser);
     let nBoxId = nBox.getAttribute("id");
     let hudId = "hud_" + nBoxId;
