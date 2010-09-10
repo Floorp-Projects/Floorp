@@ -31,17 +31,30 @@ BEGIN_TEST(testConservativeGC)
 
     EVAL("var a = [];\n"
          "for (var i = 0; i != 10000; ++i) {\n"
-         "a.push(i + 0.1, [1, 2], String(Math.sqrt(i)));\n"
+         "a.push(i + 0.1, [1, 2], String(Math.sqrt(i)), {a: i});\n"
          "}", &tmp);
 
     JS_GC(cx);
 
-    CHECK(!memcmp(&objCopy,  JSVAL_TO_OBJECT(v2), sizeof(objCopy)));
-    CHECK(!memcmp(&strCopy,  JSVAL_TO_STRING(v3), sizeof(strCopy)));
+    checkObjectFields(&objCopy, JSVAL_TO_OBJECT(v2));
+    CHECK(!memcmp(&strCopy, JSVAL_TO_STRING(v3), sizeof(strCopy)));
 
-    CHECK(!memcmp(&obj2Copy,  obj2, sizeof(obj2Copy)));
-    CHECK(!memcmp(&str2Copy,  str2, sizeof(str2Copy)));
+    checkObjectFields(&obj2Copy, obj2);
+    CHECK(!memcmp(&str2Copy, str2, sizeof(str2Copy)));
 
     return true;
 }
+
+bool checkObjectFields(JSObject *savedCopy, JSObject *obj)
+{
+    /*
+     * The GC can change the shape and shrink dslots so we update them before
+     * doing memcmp.
+     */
+    savedCopy->objShape = obj->objShape;
+    savedCopy->dslots = obj->dslots;
+    CHECK(!memcmp(savedCopy, obj, sizeof(*obj)));
+    return true;
+}
+
 END_TEST(testConservativeGC)
