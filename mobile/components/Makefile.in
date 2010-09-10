@@ -54,6 +54,7 @@ EXTRA_PP_COMPONENTS = \
         AboutRedirector.js \
         BrowserCLH.js \
         DirectoryProvider.js\
+        HelperAppDialog.js \
         Sidebar.js \
         SessionStore.js \
         $(NULL)
@@ -64,7 +65,6 @@ EXTRA_COMPONENTS = \
         ContentPermissionPrompt.js \
         XPIDialogService.js \
         DownloadManagerUI.js \
-        HelperAppDialog.js \
         PromptService.js \
         ContentDispatchChooser.js \
         AutoCompleteCache.js \
