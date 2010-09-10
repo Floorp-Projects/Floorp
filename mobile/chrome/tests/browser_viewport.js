@@ -55,7 +55,7 @@ function pageLoaded(url) {
 }
 
 let testData = [
-  { width: 800,     scale: 1 },
+  { width: 980,     scale: 800/980 },
   { width: 533.33,  scale: 1.5 },
   { width: 533.33,  scale: 1.5 },
   { width: 533.33,  scale: 1.5,    disableZoom: true },
@@ -92,7 +92,7 @@ function verifyBlank(n) {
 
     // Check viewport settings
     let style = window.getComputedStyle(working_tab.browser, null);
-    is(style.width, "800px", "Normal 'browser' width is 800 pixels");
+    is(style.width, "980px", "Normal 'browser' width is 980 pixels");
 
     loadTest(n);
   }
