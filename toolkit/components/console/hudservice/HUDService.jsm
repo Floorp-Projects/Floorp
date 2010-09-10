@@ -49,7 +49,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["HUDService"];
+var EXPORTED_SYMBOLS = ["HUDService", "ConsoleUtils"];
 
 XPCOMUtils.defineLazyServiceGetter(this, "scriptError",
                                    "@mozilla.org/scripterror;1",
@@ -4625,23 +4625,11 @@ ConsoleUtils = {
    */
   timestampString: function ConsoleUtils_timestampString(ms)
   {
-    // TODO: L10N see bug 568656
     var d = new Date(ms ? ms : null);
-
-    function pad(n, mil)
-    {
-      if (mil) {
-        return n < 100 ? "0" + n : n;
-      }
-      else {
-        return n < 10 ? "0" + n : n;
-      }
-    }
-
-    return pad(d.getHours()) + ":"
-      + pad(d.getMinutes()) + ":"
-      + pad(d.getSeconds()) + ":"
-      + pad(d.getMilliseconds(), true);
+    let hours = d.getHours(), minutes = d.getMinutes();
+    let seconds = d.getSeconds(), milliseconds = d.getMilliseconds();
+    let parameters = [ hours, minutes, seconds, milliseconds ];
+    return HUDService.getFormatStr("timestampFormat", parameters);
   },
 
   /**
