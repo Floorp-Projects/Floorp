@@ -40,6 +40,11 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
+#ifdef ANDROID
+const URI_GENERIC_ICON_DOWNLOAD = "drawable://alertdownloads";
+#else
+const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
+#endif
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -60,13 +65,28 @@ HelperAppLauncherDialog.prototype = {
       aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
       aLauncher.launchWithApplication(null, false);
     } else {
-      aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+      let wasClicked = false;
+      let listener = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic == "alertclickcallback") {
+            wasClicked = true;
+            let win = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+            if (win)
+              win.BrowserUI.showPanel("downloads-container");
+  
+            aLauncher.saveToDisk(null, false);
+          } else {
+            if (!wasClicked)
+              aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+          }
+        }
+      };
+      this._notify(aLauncher, listener);
     }
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
     let file = null;
-
     let prefs = Services.prefs;
 
     if (!aForcePrompt) {
@@ -216,6 +236,16 @@ HelperAppLauncherDialog.prototype = {
 
   isUsableDirectory: function hald_isUsableDirectory(aDirectory) {
     return aDirectory.exists() && aDirectory.isDirectory() && aDirectory.isWritable();
+  },
+
+  _notify: function hald_notify(aLauncher, aCallback) {
+    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
+    let notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD,
+                                   bundle.GetStringFromName("alertDownloads"),
+                                   bundle.GetStringFromName("alertCantOpenDownload"),
+                                   true, "", aCallback, "downloadopen-fail");
   }
 };
 
