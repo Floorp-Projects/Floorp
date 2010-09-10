@@ -32,12 +32,8 @@ var addon2 = {
   }]
 };
 
-const addon1Dir = gProfD.clone();
-addon1Dir.append("addon1");
-writeInstallRDFToDir(addon1, addon1Dir);
-const addon2Dir = gProfD.clone();
-addon2Dir.append("addon2");
-writeInstallRDFToDir(addon2, addon2Dir);
+const addon1Dir = writeInstallRDFForExtension(addon1, gProfD, "addon1");
+const addon2Dir = writeInstallRDFForExtension(addon2, gProfD, "addon2");
 
 function run_test() {
   // This test only works where there is a registry.
@@ -141,7 +137,7 @@ function run_test_4() {
   MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                         "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                         "addon2@tests.mozilla.org", addon1Dir.path);
-  writeInstallRDFToDir(addon2, addon1Dir);
+  writeInstallRDFForExtension(addon2, gProfD, "addon1");
 
   restartManager();
 
