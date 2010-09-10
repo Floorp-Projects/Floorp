@@ -264,6 +264,7 @@
 <!ENTITY showAllHistoryCmd2.label "Show All History">
 <!ENTITY showAllHistoryCmd.commandkey "H">
 
+<!ENTITY appMenuEdit.label "Edit">
 <!ENTITY appMenuCustomize.label "Customize">
 <!ENTITY appMenuToolbarLayout.label "Toolbar Layout…">
 <!ENTITY appMenuSidebars.label "Sidebars">

@@ -262,7 +262,7 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0 80px 16px 64px);
 }
 
-#appmenu-edit-menuitem {
+#appmenu-edit-label {
   -moz-appearance: none;
   background: transparent;
   font-style: italic;
