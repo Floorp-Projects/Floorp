@@ -1141,7 +1141,8 @@
                      label="&tabViewButton2.label;"
                      command="Browser:ToggleTabView"
                      tooltiptext="&tabViewButton2.tooltip;"
-                     removable="true"/>
+                     removable="true"
+                     observes="tabviewGroupsNumber"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"

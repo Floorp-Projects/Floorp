@@ -144,6 +144,10 @@ body {
   z-index: 99999;
 }
 
+.titlebar {
+  position: absolute;
+}
+
 .title-shield {
   position: absolute;
   left: 0;
