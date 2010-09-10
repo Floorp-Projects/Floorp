@@ -49,7 +49,6 @@
 // Parameters:
 //   tab - a xul:tab
 function TabItem(tab) {
-
   Utils.assert(tab, "tab");
 
   this.tab = tab;
@@ -506,6 +505,10 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //   isNewBlankTab - boolean indicates whether it is a newly opened blank tab.
   zoomIn: function TabItem_zoomIn(isNewBlankTab) {
+    // don't allow zoom in if its group is hidden
+    if (this.parent && this.parent.hidden)
+      return;
+
     var self = this;
     var $tabEl = iQ(this.container);
     var childHitResult = { shouldZoom: true };
