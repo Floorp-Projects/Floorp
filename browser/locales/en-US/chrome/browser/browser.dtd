@@ -133,6 +133,7 @@ can reach it easily. -->
 <!ENTITY bookmarksItem.title          "Bookmarks">
 
 <!-- Toolbar items --> 
+<!ENTITY appMenuButton.label          "Menu">
 <!ENTITY  homeButton.label            "Home">
 <!ENTITY tabViewButton2.label         "Tab Groups">
 <!ENTITY tabViewButton2.tooltip       "Group Your Tabs">
