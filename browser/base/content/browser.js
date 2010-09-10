@@ -1803,16 +1803,15 @@ function initializeSanitizer()
   }
 }
 
-function gotoHistoryIndex(aEvent)
-{
-  var index = aEvent.target.getAttribute("index");
+function gotoHistoryIndex(aEvent) {
+  let index = aEvent.target.getAttribute("index");
   if (!index)
     return false;
 
-  var where = whereToOpenLink(aEvent);
+  let where = whereToOpenLink(aEvent);
 
   if (where == "current") {
-    // Normal click.  Go there in the current tab and update session history.
+    // Normal click. Go there in the current tab and update session history.
 
     try {
       gBrowser.gotoIndex(index);
@@ -1822,20 +1821,14 @@ function gotoHistoryIndex(aEvent)
     }
     return true;
   }
-  else {
-    // Modified click.  Go there in a new tab/window.
-    // This code doesn't copy history or work well with framed pages.
+  // Modified click. Go there in a new tab/window.
 
-    var sessionHistory = getWebNavigation().sessionHistory;
-    var entry = sessionHistory.getEntryAtIndex(index, false);
-    var url = entry.URI.spec;
-    openUILinkIn(url, where, {relatedToCurrent: true});
-    return true;
-  }
+  duplicateTabIn(gBrowser.selectedTab, where, index);
+  return true;
 }
 
 function BrowserForward(aEvent) {
-  var where = whereToOpenLink(aEvent, false, true);
+  let where = whereToOpenLink(aEvent, false, true);
 
   if (where == "current") {
     try {
@@ -1845,16 +1838,13 @@ function BrowserForward(aEvent) {
     }
   }
   else {
-    var sessionHistory = getWebNavigation().sessionHistory;
-    var currentIndex = sessionHistory.index;
-    var entry = sessionHistory.getEntryAtIndex(currentIndex + 1, false);
-    var url = entry.URI.spec;
-    openUILinkIn(url, where, {relatedToCurrent: true});
+    let currentIndex = getWebNavigation().sessionHistory.index;
+    duplicateTabIn(gBrowser.selectedTab, where, currentIndex + 1);
   }
 }
 
 function BrowserBack(aEvent) {
-  var where = whereToOpenLink(aEvent, false, true);
+  let where = whereToOpenLink(aEvent, false, true);
 
   if (where == "current") {
     try {
@@ -1864,11 +1854,8 @@ function BrowserBack(aEvent) {
     }
   }
   else {
-    var sessionHistory = getWebNavigation().sessionHistory;
-    var currentIndex = sessionHistory.index;
-    var entry = sessionHistory.getEntryAtIndex(currentIndex - 1, false);
-    var url = entry.URI.spec;
-    openUILinkIn(url, where, {relatedToCurrent: true});
+    let currentIndex = getWebNavigation().sessionHistory.index;
+    duplicateTabIn(gBrowser.selectedTab, where, currentIndex - 1);
   }
 }
 
@@ -1918,12 +1905,11 @@ function BrowserReloadOrDuplicate(aEvent) {
     return;
   }
 
-  var where = whereToOpenLink(aEvent, false, true);
+  let where = whereToOpenLink(aEvent, false, true);
   if (where == "current")
     BrowserReload();
   else
-    openUILinkIn(getWebNavigation().currentURI.spec, where,
-                 {relatedToCurrent: true});
+    duplicateTabIn(gBrowser.selectedTab, where);
 }
 
 function BrowserReload() {
@@ -8112,3 +8098,48 @@ XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
   }
 });
 
+/* duplicateTabIn duplicates tab in a place specified by the parameter |where|.
+ *
+ * |where| can be:
+ *  "tab"         new tab
+ *  "tabshifted"  same as "tab" but in background if default is to select new
+ *                tabs, and vice versa
+ *  "window"      new window
+ *
+ * historyIndex is an index the page can navigate to after the new tab is
+ * created and loaded, it can for example be used to go back one page after the
+ * tab is duplicated.
+ */
+function duplicateTabIn(aTab, where, historyIndex) {
+  let newTab = gBrowser.duplicateTab(aTab);
+
+  // Go to index if it's provided, fallback to loadURI if there's no history.
+  if (historyIndex != null) {
+    try {
+      gBrowser.getBrowserForTab(newTab).gotoIndex(historyIndex);
+    }
+    catch (ex) {
+      let sessionHistory = aTab.linkedBrowser.sessionHistory;
+      let entry = sessionHistory.getEntryAtIndex(historyIndex, false);
+      let fallbackUrl = entry.URI.spec;
+      gBrowser.getBrowserForTab(newTab).loadURI(fallbackUrl);
+    }
+  }
+
+  var loadInBackground =
+    getBoolPref("browser.tabs.loadBookmarksInBackground", false);
+
+  switch (where) {
+    case "window":
+      gBrowser.hideTab(newTab);
+      gBrowser.replaceTabWithWindow(newTab);
+      break;
+    case "tabshifted":
+      loadInBackground = !loadInBackground;
+      // fall through
+    case "tab":
+      if (!loadInBackground)
+        gBrowser.selectedTab = newTab;
+      break;
+  }
+}

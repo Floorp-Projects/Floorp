@@ -993,14 +993,16 @@ SessionStoreService.prototype = {
     if (!aTab.ownerDocument || !aTab.ownerDocument.defaultView.__SSi ||
         !aWindow.getBrowser)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    
+
     var tabState = this._collectTabData(aTab, true);
     var sourceWindow = aTab.ownerDocument.defaultView;
     this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
-    
-    var newTab = aWindow.gBrowser.addTab();
+
+    let newTab = aTab == aWindow.gBrowser.selectedTab ?
+      aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab}) :
+      aWindow.gBrowser.addTab();
     this.restoreHistoryPrecursor(aWindow, [newTab], [tabState], 0, 0, 0);
-    
+
     return newTab;
   },
 
