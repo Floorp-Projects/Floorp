@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html dir="ltr">
+<title>Test of reduction of border-radius for scrollbars (background drawing)</title>
+<style>
+
+.contain { height: 130px; position: relative }
+
+.test {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* border-width: 2px 4px 8px 10px; */
+  height: 110px;
+  width: 214px;
+  /* border-radius: 12px / 15px; */
+  background: blue;
+}
+
+</style>
+
+<div class="contain">
+  <!-- scrollbar along bottom -->
+  <div class="test" id="x" style="border-radius: 12px 12px 6.4px 10px / 15px 15px 8px 12.5px"></div>
+</div>
+
+<div class="contain">
+  <!-- scrollbar along right -->
+  <div class="test" id="y" style="border-radius: 12px 4px 6.4px 12px / 15px 5px 8px 15px"></div>
+</div>
+
+<div class="contain">
+  <!-- scrollbar along bottom and right -->
+  <div class="test" id="xy" style="border-radius: 12px 4px 6.4px 10px / 15px 5px 8px 12.5px"></div>
+</div>

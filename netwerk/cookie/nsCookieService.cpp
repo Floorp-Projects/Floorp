@@ -116,7 +116,7 @@ static const char kOldCookieFileName[] = "cookies.txt";
 // default limits for the cookie list. these can be tuned by the
 // network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
 static const PRUint32 kMaxNumberOfCookies = 3000;
-static const PRUint32 kMaxCookiesPerHost  = 50;
+static const PRUint32 kMaxCookiesPerHost  = 150;
 static const PRUint32 kMaxBytesPerCookie  = 4096;
 static const PRUint32 kMaxBytesPerPath    = 1024;
 

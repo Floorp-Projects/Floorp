@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = head.js \
                  browser_unsigned_url.js \
                  browser_unsigned_trigger.js \
+                 browser_unsigned_trigger_iframe.js \
                  browser_whitelist.js \
                  browser_whitelist2.js \
                  browser_whitelist3.js \
@@ -85,6 +86,11 @@ _BROWSER_FILES = head.js \
                  browser_cancel.js \
                  browser_multipackage.js \
                  browser_trigger_redirect.js \
+                 browser_httphash.js \
+                 browser_httphash2.js \
+                 browser_httphash3.js \
+                 browser_httphash4.js \
+                 browser_httphash5.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
@@ -100,11 +106,13 @@ _BROWSER_FILES = head.js \
                  multipackage.xpi \
                  enabled.html \
                  installtrigger.html \
+                 installtrigger_frame.html \
                  startsoftwareupdate.html \
                  installchrome.html \
                  triggerredirect.html \
                  authRedirect.sjs \
                  cookieRedirect.sjs \
+                 hashRedirect.sjs \
                  bug540558.html \
                  $(NULL)
 

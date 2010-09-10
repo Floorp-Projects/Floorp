@@ -3,7 +3,6 @@
 */
 
 body {
-  background-color: transparent;  
   font-family: Tahoma, sans-serif !important;
   color: rgba(0,0,0,0.4);
   font-size: 12px;
@@ -19,11 +18,15 @@ body {
 
 .tab {
   padding: 4px 6px 6px 4px;
-  border: 1px solid rgba(230,230,230,1);
-  background-color: rgba(245,245,245,1);
-  -moz-border-radius: 0.4em;
-  -moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px;
+  background-color: #D7D7D7;
+  border-radius: 0.4em;
+  -moz-box-shadow: 0 1px 0 #FFFFFF inset,
+                   0 -1px 1px rgba(255, 255, 255, 0.4) inset,
+                   1px 0 1px rgba(255, 255, 255, 0.4) inset,
+                   -1px 0 1px rgba(255, 255, 255, 0.4) inset,
+                   0 1px 2px rgba(0, 0, 0, 0.4);
   cursor: pointer;
+  margin: 4px;
 }
 
 .tab canvas,
@@ -31,26 +34,23 @@ body {
   border: 1px solid rgba(0,0,0,0.2);
 }
 
-.thumb-shadow {
-  border-bottom: 5px solid rgba(0,0,0,0.05);
-  margin-right: -12px;
-  bottom: 2px;
-  width: 94.5%;
+.thumb {
+  -moz-box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .favicon {
-  background-color: rgba(245,245,245,1);
-  -moz-border-radius-bottomright: 0.4em;
+  background-color: #D7D7D7;
+  border-bottom-right-radius: 0.4em;
   -moz-box-shadow:
-    inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
-    inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
+    0 -1px 0 rgba(225, 225, 225, 0.8) inset,
+    -1px 0 0 rgba(225, 225, 225, 0.8) inset;
   padding: 4px 6px 6px 4px;
   top: 4px;
   left: 4px;
-  border-right: 1px solid rgba(0,0,0,0.2);
-  border-bottom: 1px solid rgba(0,0,0,0.2);
-  height: 17px;
-  width: 17px;
+  border-right: 1px solid rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  height: 16px;
+  width: 16px;
 }
 
 .favicon img {
@@ -73,7 +73,7 @@ body {
 }
 
 .expander {
-  bottom: 6px;
+  bottom: 8px;
   right: 6px;
   width: 16px;
   height: 16px;
@@ -83,6 +83,13 @@ body {
 
 .expander:hover {
   opacity: 1.0;
+}
+
+.close:hover,
+.expander:hover {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 0.5s;
+  -moz-transition-timing-function: ease-out;
 }
 
 .favicon img:hover, 
@@ -149,7 +156,7 @@ body {
   cursor: move;
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   -moz-box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
     rgba(0,0,0,0.2) 1px 1px 4px;
@@ -167,7 +174,7 @@ body {
 .overlay {
   background-color: rgba(0,0,0,.7) !important;
   -moz-box-shadow: 3px 3px 8px rgba(0,0,0,.5);
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   /*
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
@@ -183,7 +190,7 @@ body {
   cursor: move;
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
-  -moz-border-radius: 0.4em;
+  border-radius: 0.4em;
   -moz-box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
     rgba(0,0,0, .2) 1px 1px 4px;
@@ -340,4 +347,54 @@ input.defaultName {
   height: 12px;
   right: 1px;
   bottom: 1px;
+}
+
+/* Search
+----------------------------------*/
+
+#search{
+  background-color: rgba(0,0,0,.42);
+  width: 100%;
+  height: 100%;  
+}
+
+#searchbox{
+  width: 270px;
+  height: 30px;
+  -moz-box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,1), 0px 0px 13px rgba(0,0,0,.8);
+  color: white;
+  border: none;
+  background-color: #272727;
+  border-radius: 0.4em;
+  padding-left:5px; padding-right: 5px;
+  font-size: 14px;  
+}
+
+#actions{
+  width: 30px;
+  height: 30px;
+  background-color: #666;
+  border: none;
+  border-bottom-left-radius: 0.4em;
+  border-top-left-radius: 0.4em;    
+  -moz-box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.8), inset 6px 6px 13px rgba(0,0,0,.56);
+  opacity: .64;
+  text-align: center;
+}
+
+#actions #searchbutton{
+  background: transparent url(chrome://browser/skin/tabview/search.png) no-repeat;
+  border: none;
+  width: 20px;
+  height: 20px;
+  margin-top:5px;
+  opacity: .8;  
+}
+
+#actions #searchbutton:hover{
+  opacity: 1.0;
+}
+
+.notMainMatch{
+  opacity: .70;
 }

@@ -104,7 +104,11 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
 function get_addon_element(aManager, aId) {
   var doc = aManager.document;
   var view = doc.getElementById("view-port").selectedPanel;
-  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var listid = "addon-list";
+  if (view.id == "search-view")
+    listid = "search-list";
+  else if (view.id == "updates-view")
+    listid = "updates-list";
   var list = doc.getElementById(listid);
 
   var node = list.firstChild;

@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -210,7 +210,8 @@ void vp8_build_inter_predictors_mbuv(MACROBLOCKD *x)
 {
     int i;
 
-    if (x->mbmi.ref_frame != INTRA_FRAME && x->mbmi.mode != SPLITMV)
+    if (x->mode_info_context->mbmi.ref_frame != INTRA_FRAME &&
+        x->mode_info_context->mbmi.mode != SPLITMV)
     {
         unsigned char *uptr, *vptr;
         unsigned char *upred_ptr = &x->predictor[256];
@@ -254,16 +255,18 @@ void vp8_build_inter_predictors_mbuv(MACROBLOCKD *x)
     }
 }
 
-
+//encoder only
 void vp8_build_inter_predictors_mby(MACROBLOCKD *x)
 {
-    if (x->mbmi.ref_frame != INTRA_FRAME && x->mbmi.mode != SPLITMV)
+
+  if (x->mode_info_context->mbmi.ref_frame != INTRA_FRAME &&
+      x->mode_info_context->mbmi.mode != SPLITMV)
     {
         unsigned char *ptr_base;
         unsigned char *ptr;
         unsigned char *pred_ptr = x->predictor;
-        int mv_row = x->mbmi.mv.as_mv.row;
-        int mv_col = x->mbmi.mv.as_mv.col;
+        int mv_row = x->mode_info_context->mbmi.mv.as_mv.row;
+        int mv_col = x->mode_info_context->mbmi.mv.as_mv.col;
         int pre_stride = x->block[0].pre_stride;
 
         ptr_base = x->pre.y_buffer;
@@ -282,7 +285,7 @@ void vp8_build_inter_predictors_mby(MACROBLOCKD *x)
     {
         int i;
 
-        if (x->mbmi.partitioning < 3)
+        if (x->mode_info_context->mbmi.partitioning < 3)
         {
             for (i = 0; i < 4; i++)
             {
@@ -313,7 +316,9 @@ void vp8_build_inter_predictors_mby(MACROBLOCKD *x)
 
 void vp8_build_inter_predictors_mb(MACROBLOCKD *x)
 {
-    if (x->mbmi.ref_frame != INTRA_FRAME && x->mbmi.mode != SPLITMV)
+
+    if (x->mode_info_context->mbmi.ref_frame != INTRA_FRAME &&
+        x->mode_info_context->mbmi.mode != SPLITMV)
     {
         int offset;
         unsigned char *ptr_base;
@@ -323,8 +328,8 @@ void vp8_build_inter_predictors_mb(MACROBLOCKD *x)
         unsigned char *upred_ptr = &x->predictor[256];
         unsigned char *vpred_ptr = &x->predictor[320];
 
-        int mv_row = x->mbmi.mv.as_mv.row;
-        int mv_col = x->mbmi.mv.as_mv.col;
+        int mv_row = x->mode_info_context->mbmi.mv.as_mv.row;
+        int mv_col = x->mode_info_context->mbmi.mv.as_mv.col;
         int pre_stride = x->block[0].pre_stride;
 
         ptr_base = x->pre.y_buffer;
@@ -361,7 +366,7 @@ void vp8_build_inter_predictors_mb(MACROBLOCKD *x)
     {
         int i;
 
-        if (x->mbmi.partitioning < 3)
+        if (x->mode_info_context->mbmi.partitioning < 3)
         {
             for (i = 0; i < 4; i++)
             {
@@ -410,7 +415,7 @@ void vp8_build_uvmvs(MACROBLOCKD *x, int fullpixel)
 {
     int i, j;
 
-    if (x->mbmi.mode == SPLITMV)
+    if (x->mode_info_context->mbmi.mode == SPLITMV)
     {
         for (i = 0; i < 2; i++)
         {
@@ -455,8 +460,8 @@ void vp8_build_uvmvs(MACROBLOCKD *x, int fullpixel)
     }
     else
     {
-        int mvrow = x->mbmi.mv.as_mv.row;
-        int mvcol = x->mbmi.mv.as_mv.col;
+        int mvrow = x->mode_info_context->mbmi.mv.as_mv.row;
+        int mvcol = x->mode_info_context->mbmi.mv.as_mv.col;
 
         if (mvrow < 0)
             mvrow -= 1;
@@ -535,7 +540,7 @@ void vp8_build_inter_predictors_mb_s(MACROBLOCKD *x)
     unsigned char *pred_ptr = x->predictor;
     unsigned char *dst_ptr = x->dst.y_buffer;
 
-    if (x->mbmi.mode != SPLITMV)
+    if (x->mode_info_context->mbmi.mode != SPLITMV)
     {
         int offset;
         unsigned char *ptr_base;
@@ -547,8 +552,8 @@ void vp8_build_inter_predictors_mb_s(MACROBLOCKD *x)
         unsigned char *udst_ptr = x->dst.u_buffer;
         unsigned char *vdst_ptr = x->dst.v_buffer;
 
-        int mv_row = x->mbmi.mv.as_mv.row;
-        int mv_col = x->mbmi.mv.as_mv.col;
+        int mv_row = x->mode_info_context->mbmi.mv.as_mv.row;
+        int mv_col = x->mode_info_context->mbmi.mv.as_mv.col;
         int pre_stride = x->dst.y_stride; //x->block[0].pre_stride;
 
         ptr_base = x->pre.y_buffer;
@@ -587,7 +592,7 @@ void vp8_build_inter_predictors_mb_s(MACROBLOCKD *x)
         //if sth is wrong, go back to what it is in build_inter_predictors_mb.
         int i;
 
-        if (x->mbmi.partitioning < 3)
+        if (x->mode_info_context->mbmi.partitioning < 3)
         {
             for (i = 0; i < 4; i++)
             {

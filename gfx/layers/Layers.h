@@ -320,6 +320,14 @@ public:
    * Layers backend specific functionality is necessary.
    */
   virtual LayersBackend GetBackendType() = 0;
+ 
+  /**
+   * Creates a layer which is optimized for inter-operating with this layer
+   * manager.
+   */
+  virtual already_AddRefed<gfxASurface>
+    CreateOptimalSurface(const gfxIntSize &aSize,
+                         gfxASurface::gfxImageFormat imageFormat);
 
   /**
    * Return the name of the layer manager's backend.

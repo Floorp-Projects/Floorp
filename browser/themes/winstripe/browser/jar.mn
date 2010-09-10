@@ -101,18 +101,16 @@ browser.jar:
         skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
         skin/classic/browser/tabview/stack-expander.png             (tabview/stack-expander.png)
         skin/classic/browser/tabview/tabview.png                    (tabview/tabview.png)
+        skin/classic/browser/tabview/search.png                     (tabview/search.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-16-throbber.png
         skin/classic/browser/sync-16.png
         skin/classic/browser/sync-32.png
         skin/classic/browser/sync-bg.png
         skin/classic/browser/sync-desktopIcon.png
-        skin/classic/browser/sync-merge.png
         skin/classic/browser/sync-mobileIcon.png
         skin/classic/browser/sync-usedBefore.png
         skin/classic/browser/sync-usedNever.png
-        skin/classic/browser/sync-wipeClient.png
-        skin/classic/browser/sync-wipeServer.png
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
 #endif
@@ -225,12 +223,9 @@ browser.jar:
         skin/classic/aero/browser/sync-32.png
         skin/classic/aero/browser/sync-bg.png
         skin/classic/aero/browser/sync-desktopIcon.png
-        skin/classic/aero/browser/sync-merge.png
         skin/classic/aero/browser/sync-mobileIcon.png
         skin/classic/aero/browser/sync-usedBefore.png
         skin/classic/aero/browser/sync-usedNever.png
-        skin/classic/aero/browser/sync-wipeClient.png
-        skin/classic/aero/browser/sync-wipeServer.png
         skin/classic/aero/browser/syncSetup.css
         skin/classic/aero/browser/syncCommon.css
 #endif

@@ -224,7 +224,7 @@ function populateGraphicsSection() {
   if (acceleratedWindows)
     msg += " " + mgrType;
 
-  let header = createHeader(bundle.GetStringFromName("acceleratedLayersEnabled"));
+  let header = createHeader(bundle.GetStringFromName("acceleratedWindows"));
 
   appendChildren(graphics_tbody, [ header, createElement("td", msg) ]);
 }

@@ -64,6 +64,7 @@
 #endif // MOZ_SMIL
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIAnimationFrameListener.h"
 
 class nsIContent;
 class nsPresContext;
@@ -119,8 +120,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xbd862a79, 0xc31b, 0x419b, \
-  { 0x92, 0x90, 0xa0, 0x77, 0x08, 0x62, 0xd4, 0xc4 } }
+{ 0x73d79167, 0xacba, 0x46eb, \
+  { 0xad, 0x45, 0xa3, 0x4b, 0x92, 0xf6, 0x01, 0x5b } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -159,6 +160,7 @@ public:
       // unless we get a window, and in that case the docshell value will get
       // &&-ed in, this is safe.
       mAllowDNSPrefetch(PR_TRUE),
+      mIsBeingUsedAsImage(PR_FALSE),
       mPartID(0)
   {
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
@@ -1147,6 +1149,19 @@ public:
     return !mParentDocument && !mDisplayDocument;
   }
 
+  PRBool IsBeingUsedAsImage() const {
+    return mIsBeingUsedAsImage;
+  }
+
+  void SetIsBeingUsedAsImage() {
+    mIsBeingUsedAsImage = PR_TRUE;
+  }
+
+  PRBool IsResourceDoc() const {
+    return IsBeingUsedAsImage() || // Are we a helper-doc for an SVG image?
+      !!mDisplayDocument;          // Are we an external resource doc?
+  }
+
   /**
    * Get the document for which this document is an external resource.  This
    * will be null if this document is not an external resource.  Otherwise,
@@ -1434,11 +1449,18 @@ public:
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
-  void ScheduleBeforePaintEvent();
+  void ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener);
   void BeforePaintEventFiring()
   {
     mHavePendingPaint = PR_FALSE;
   }
+
+  typedef nsTArray< nsCOMPtr<nsIAnimationFrameListener> > AnimationListenerList;
+  /**
+   * Put this documents animation frame listeners into the provided
+   * list, and forget about them.
+   */
+  void TakeAnimationFrameListeners(AnimationListenerList& aListeners);
 
   // This returns true when the document tree is being teared down.
   PRBool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
@@ -1618,6 +1640,9 @@ protected:
   // True if we're waiting for a before-paint event.
   PRPackedBool mHavePendingPaint;
 
+  // True if we're an SVG document being used as an image.
+  PRPackedBool mIsBeingUsedAsImage;
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
@@ -1672,6 +1697,8 @@ protected:
   nsPIDOMWindow *mWindow;
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
+
+  AnimationListenerList mAnimationFrameListeners;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

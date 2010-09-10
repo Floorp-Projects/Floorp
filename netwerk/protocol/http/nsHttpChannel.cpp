@@ -209,9 +209,13 @@ nsHttpChannel::Connect(PRBool firstTime)
 
         PRBool isStsHost = PR_FALSE;
         rv = stss->IsStsURI(mURI, &isStsHost);
-        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (isStsHost) {
+        // if STS fails, there's no reason to cancel the load, but it's
+        // worrisome.
+        NS_ASSERTION(NS_SUCCEEDED(rv),
+                     "Something is wrong with STS: IsStsURI failed.");
+
+        if (NS_SUCCEEDED(rv) && isStsHost) {
             LOG(("nsHttpChannel::Connect() STS permissions found\n"));
             return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
         }
@@ -755,10 +759,20 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
-    if (mResponseHead)
+    if (mResponseHead) {
         SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
                            mResponseHead->ContentLength());
-
+        // If we have a cache entry, set its predicted size to ContentLength to
+        // avoid caching an entry that will exceed the max size limit.
+        if (mCacheEntry) {
+            nsresult rv;
+            PRInt64 predictedDataSize = -1; // -1 in case GetAsInt64 fails.
+            GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, 
+                               &predictedDataSize);
+            rv = mCacheEntry->SetPredictedDataSize(predictedDataSize);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
         gIOService->GetContentSniffers().Count() != 0) {
@@ -787,6 +801,12 @@ nsHttpChannel::CallOnStartRequest()
     // install stream converter if required
     rv = ApplyContentConversions();
     if (NS_FAILED(rv)) return rv;
+
+    // if this channel is for a download, close off access to the cache.
+    if (mCacheEntry && mChannelIsForDownload) {
+        mCacheEntry->Doom();
+        CloseCacheEntry(PR_FALSE);
+    }
 
     if (!mCanceled) {
         // create offline cache entry if offline caching was requested
@@ -934,7 +954,7 @@ nsHttpChannel::ProcessSTSHeader()
 
     nsCAutoString asciiHost;
     rv = mURI->GetAsciiHost(asciiHost);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // If the channel is not a hostname, but rather an IP, STS doesn't do
     // anything.
@@ -945,13 +965,17 @@ nsHttpChannel::ProcessSTSHeader()
     nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
     NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
 
+    // mSecurityInfo may not always be present, and if it's not then it is okay
+    // to just disregard any STS headers since we know nothing about the
+    // security of the connection.
+    NS_ENSURE_TRUE(mSecurityInfo, NS_OK);
+
     // Check the trustworthiness of the channel (are there any cert errors?)
     // If there are certificate errors, we still load the data, we just ignore
     // any STS headers that are present.
-    NS_ENSURE_TRUE(mSecurityInfo, NS_ERROR_FAILURE);
     PRBool tlsIsBroken = PR_FALSE;
     rv = stss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // If this was already an STS host, the connection should have been aborted
     // by the bad cert handler in the case of cert errors.  If it didn't abort the connection,
@@ -960,7 +984,9 @@ nsHttpChannel::ProcessSTSHeader()
     // will happen during the session.
     PRBool wasAlreadySTSHost;
     rv = stss->IsStsURI(mURI, &wasAlreadySTSHost);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Failure here means STS is broken.  Don't prevent the load, but this
+    // shouldn't fail.
+    NS_ENSURE_SUCCESS(rv, NS_OK);
     NS_ASSERTION(!(wasAlreadySTSHost && tlsIsBroken),
                  "connection should have been aborted by nss-bad-cert-handler");
 
@@ -982,6 +1008,7 @@ nsHttpChannel::ProcessSTSHeader()
         LOG(("STS: No STS header, continuing load.\n"));
         return NS_OK;
     }
+    // All other failures are fatal.
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stss->ProcessStsHeader(mURI, stsHeader.get());
@@ -1002,13 +1029,16 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
         this, httpStatus));
 
-    if (mTransaction->SSLConnectFailed() &&
-        !ShouldSSLProxyResponseContinue(httpStatus))
-        return ProcessFailedSSLConnect(httpStatus);
-
-    // If STS data is present, process it here.
-    rv = ProcessSTSHeader();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mTransaction->SSLConnectFailed()) {
+        if (!ShouldSSLProxyResponseContinue(httpStatus))
+            return ProcessFailedSSLConnect(httpStatus);
+        // If SSL proxy response needs to complete, wait to process connection
+        // for Strict-Transport-Security.
+    } else {
+        // Given a successful connection, process any STS data that's relevant.
+        rv = ProcessSTSHeader();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
+    }
 
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
@@ -1956,7 +1986,8 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
             mPostID = gHttpHandler->GenerateUniqueID();
     }
     else if ((mRequestHead.Method() != nsHttp::Get) &&
-             (mRequestHead.Method() != nsHttp::Head)) {
+             (mRequestHead.Method() != nsHttp::Head) &&
+             (!(mLoadFlags & FORCE_OPEN_CACHE_ENTRY))) {
         // don't use the cache for other types of requests
         return NS_OK;
     }
@@ -3062,10 +3093,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (!httpChannel)
         return NS_OK; // no other options to set
 
-    // transfer the remote flag
-    nsHttpChannel *httpChannelImpl = static_cast<nsHttpChannel*>(httpChannel.get());
-    httpChannelImpl->SetRemoteChannel(mRemoteChannel);
-
     // convey the mApplyConversion flag (bug 91862)
     nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(httpChannel);
     if (encodedChannel)
@@ -3080,6 +3107,12 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
+
+    // transfer the remote flag
+    nsCOMPtr<nsIHttpChannelParentInternal> httpInternal = 
+        do_QueryInterface(newChannel);
+    if (httpInternal)
+        httpInternal->SetServicingRemoteChannel(mRemoteChannel);
 
     return NS_OK;
 }
@@ -3529,6 +3562,23 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     mFallbackChannel = PR_TRUE;
     mFallbackKey = aFallbackKey;
 
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIHttpChannelParentInternal
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::GetServicingRemoteChannel(PRBool *value)
+{
+    *value = mRemoteChannel;
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsHttpChannel::SetServicingRemoteChannel(PRBool value)
+{
+    mRemoteChannel = value;
     return NS_OK;
 }
 //-----------------------------------------------------------------------------

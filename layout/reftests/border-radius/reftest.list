@@ -39,6 +39,23 @@ fails == clipping-1.html clipping-1-ref.html # background color should completel
 # great tests for this due to antialiasing problems described in bug 466572
 == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
+# Tests for clipping the contents of replaced elements and overflow!=visible
+!= clipping-4-ref.html clipping-4-notref.html
+fails-if(cocoaWidget) == clipping-4-canvas.html clipping-4-ref.html
+== clipping-4-image.html clipping-4-ref.html
+== clipping-4-overflow-hidden.html clipping-4-ref.html
+== clipping-5-canvas.html clipping-5-refc.html
+== clipping-5-image.html clipping-5-refi.html
+== clipping-5-overflow-hidden.html clipping-5-ref.html
+== clipping-5-refi.html clipping-5-ref.html
+fails-if(cocoaWidget) == clipping-5-refc.html clipping-5-ref.html
+== clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
+== intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
+== intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
+== intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
+== intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
+fails-if(cocoaWidget) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html
+
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit
 
@@ -48,3 +65,7 @@ fails == clipping-1.html clipping-1-ref.html # background color should completel
 
 == invalidate-1a.html invalidate-1-ref.html
 == invalidate-1b.html invalidate-1-ref.html
+
+# test that border-radius is reduced for scrollbars
+== scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+== scrollbar-clamping-2.html scrollbar-clamping-2-ref.html

@@ -736,6 +736,145 @@ nsIFrame::GetContentRect() const
   return r;
 }
 
+PRBool
+nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
+                             const nsSize& aFrameSize,
+                             const nsSize& aBorderArea,
+                             PRIntn aSkipSides,
+                             nscoord aRadii[8])
+{
+  // Percentages are relative to whichever side they're on.
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    const nsStyleCoord c = aBorderRadius.Get(i);
+    nscoord axis =
+      NS_HALF_CORNER_IS_X(i) ? aFrameSize.width : aFrameSize.height;
+
+    if (c.IsCoordPercentCalcUnit()) {
+      aRadii[i] = nsRuleNode::ComputeCoordPercentCalc(c, axis);
+      if (aRadii[i] < 0) {
+        // clamp calc()
+        aRadii[i] = 0;
+      }
+    } else {
+      NS_NOTREACHED("ComputeBorderRadii: bad unit");
+      aRadii[i] = 0;
+    }
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_TOP)) {
+    aRadii[NS_CORNER_TOP_LEFT_X] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_RIGHT)) {
+    aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
+    aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_BOTTOM)) {
+    aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
+  }
+
+  if (aSkipSides & (1 << NS_SIDE_LEFT)) {
+    aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
+    aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_X] = 0;
+    aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
+  }
+
+  // css3-background specifies this algorithm for reducing
+  // corner radii when they are too big.
+  PRBool haveRadius = PR_FALSE;
+  double ratio = 1.0f;
+  NS_FOR_CSS_SIDES(side) {
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_TRUE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_TRUE);
+    nscoord length =
+      NS_SIDE_IS_VERTICAL(side) ? aBorderArea.height : aBorderArea.width;
+    nscoord sum = aRadii[hc1] + aRadii[hc2];
+    if (sum)
+      haveRadius = PR_TRUE;
+
+    // avoid floating point division in the normal case
+    if (length < sum)
+      ratio = NS_MIN(ratio, double(length)/sum);
+  }
+  if (ratio < 1.0) {
+    NS_FOR_CSS_HALF_CORNERS(corner) {
+      aRadii[corner] *= ratio;
+    }
+  }
+
+  return haveRadius;
+}
+
+/* static */ void
+nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
+{
+  NS_FOR_CSS_SIDES(side) {
+    nscoord offset = aOffsets.side(side);
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_FALSE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_FALSE);
+    aRadii[hc1] = NS_MAX(0, aRadii[hc1] - offset);
+    aRadii[hc2] = NS_MAX(0, aRadii[hc2] - offset);
+  }
+}
+
+/* static */ void
+nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
+{
+  NS_FOR_CSS_SIDES(side) {
+    nscoord offset = aOffsets.side(side);
+    PRUint32 hc1 = NS_SIDE_TO_HALF_CORNER(side, PR_FALSE, PR_FALSE);
+    PRUint32 hc2 = NS_SIDE_TO_HALF_CORNER(side, PR_TRUE, PR_FALSE);
+    if (aRadii[hc1] > 0)
+      aRadii[hc1] += offset;
+    if (aRadii[hc2] > 0)
+      aRadii[hc2] += offset;
+  }
+}
+
+/* virtual */ PRBool
+nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
+{
+  nsSize size = GetSize();
+  return ComputeBorderRadii(GetStyleBorder()->mBorderRadius, size, size,
+                            GetSkipSides(), aRadii);
+}
+
+PRBool
+nsIFrame::GetPaddingBoxBorderRadii(nscoord aRadii[8]) const
+{
+  if (!GetBorderRadii(aRadii))
+    return PR_FALSE;
+  InsetBorderRadii(aRadii, GetUsedBorder());
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (aRadii[corner])
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
+nsIFrame::GetContentBoxBorderRadii(nscoord aRadii[8]) const
+{
+  if (!GetBorderRadii(aRadii))
+    return PR_FALSE;
+  InsetBorderRadii(aRadii, GetUsedBorderAndPadding());
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (aRadii[corner])
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsStyleContext*
 nsFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
@@ -872,7 +1011,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 
 nsresult
 nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
-                                 const nsDisplayListSet& aLists,
+                                 nsDisplayList*          aList,
                                  PRUint16                aContentType)
 {
 //check frame selection state
@@ -919,7 +1058,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
     details = next;
   }
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
+  return aList->AppendNewToTop(new (aBuilder)
       nsDisplaySelectionOverlay(aBuilder, this, selectionValue));
 }
 
@@ -1111,49 +1250,71 @@ public:
    * which we aren't the containing block
    */
   nsOverflowClipWrapper(nsIFrame* aContainer, const nsRect& aRect,
+                        const nscoord aRadii[8],
                         PRBool aClipBorderBackground, PRBool aClipAll)
     : mContainer(aContainer), mRect(aRect),
-      mClipBorderBackground(aClipBorderBackground), mClipAll(aClipAll) {}
+      mClipBorderBackground(aClipBorderBackground), mClipAll(aClipAll),
+      mHaveRadius(PR_FALSE)
+  {
+    memcpy(mRadii, aRadii, sizeof(mRadii));
+    NS_FOR_CSS_HALF_CORNERS(corner) {
+      if (aRadii[corner] > 0) {
+        mHaveRadius = PR_TRUE;
+        break;
+      }
+    }
+  }
   virtual PRBool WrapBorderBackground() { return mClipBorderBackground; }
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We are not a stacking context root. There is no valid underlying
     // frame for the whole list. These items are all in-flow descendants so
     // we can safely just clip them.
-    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, mContainer, aList, mRect);
+    if (mHaveRadius) {
+      return new (aBuilder) nsDisplayClipRoundedRect(aBuilder, nsnull, aList,
+                                                     mRect, mRadii);
+    }
+    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
     nsIFrame* f = aItem->GetUnderlyingFrame();
-    if (mClipAll || nsLayoutUtils::IsProperAncestorFrame(mContainer, f, nsnull))
-      return new (aBuilder) nsDisplayClip(aBuilder, f, mContainer, aItem, mRect);
+    if (mClipAll ||
+        nsLayoutUtils::IsProperAncestorFrame(mContainer, f, nsnull)) {
+      if (mHaveRadius) {
+        return new (aBuilder) nsDisplayClipRoundedRect(aBuilder, f, aItem,
+                                                       mRect, mRadii);
+      }
+      return new (aBuilder) nsDisplayClip(aBuilder, f, aItem, mRect);
+    }
     return aItem;
   }
 protected:
   nsIFrame*    mContainer;
   nsRect       mRect;
+  nscoord      mRadii[8];
   PRPackedBool mClipBorderBackground;
   PRPackedBool mClipAll;
+  PRPackedBool mHaveRadius;
 };
 
 class nsAbsPosClipWrapper : public nsDisplayWrapper
 {
 public:
-  nsAbsPosClipWrapper(nsIFrame* aContainer, const nsRect& aRect)
-    : mContainer(aContainer), mRect(aRect) {}
+  nsAbsPosClipWrapper(const nsRect& aRect)
+    : mRect(aRect) {}
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We are not a stacking context root. There is no valid underlying
     // frame for the whole list.
-    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, mContainer, aList, mRect);
+    return new (aBuilder) nsDisplayClip(aBuilder, nsnull, aList, mRect);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
     return new (aBuilder) nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(),
-            mContainer, aItem, mRect);
+                                        aItem, mRect);
   }
 protected:
-  nsIFrame* mContainer;
   nsRect    mRect;
 };
 
@@ -1162,25 +1323,27 @@ nsIFrame::OverflowClip(nsDisplayListBuilder*   aBuilder,
                        const nsDisplayListSet& aFromSet,
                        const nsDisplayListSet& aToSet,
                        const nsRect&           aClipRect,
+                       const nscoord           aClipRadii[8],
                        PRBool                  aClipBorderBackground,
                        PRBool                  aClipAll)
 {
-  nsOverflowClipWrapper wrapper(this, aClipRect, aClipBorderBackground, aClipAll);
+  nsOverflowClipWrapper wrapper(this, aClipRect, aClipRadii,
+                                aClipBorderBackground, aClipAll);
   return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
 }
 
 static nsresult
 BuildDisplayListWithOverflowClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsRect& aDirtyRect, const nsDisplayListSet& aSet,
-    const nsRect& aClipRect)
+    const nsRect& aClipRect, const nscoord aClipRadii[8])
 {
   nsDisplayListCollection set;
   nsresult rv = aFrame->BuildDisplayList(aBuilder, aDirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aBuilder->DisplayCaret(aFrame, aDirtyRect, aSet.Content());
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect);
+
+  return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect, aClipRadii);
 }
 
 #ifdef NS_DEBUG
@@ -1296,7 +1459,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   
   nsRect overflowClip;
   if (ApplyOverflowClipping(aBuilder, this, disp, &overflowClip)) {
-    nsOverflowClipWrapper wrapper(this, overflowClip, PR_FALSE, PR_FALSE);
+    nscoord radii[8];
+    this->GetPaddingBoxBorderRadii(radii);
+    nsOverflowClipWrapper wrapper(this, overflowClip, radii,
+                                  PR_FALSE, PR_FALSE);
     rv = wrapper.WrapListsInPlace(aBuilder, this, set);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1342,7 +1508,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   resultList.AppendToTop(set.PositionedDescendants());
 
   if (applyAbsPosClipping) {
-    nsAbsPosClipWrapper wrapper(this, absPosClip);
+    nsAbsPosClipWrapper wrapper(absPosClip);
     nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
     if (!item)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1497,8 +1663,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   }
   
   nsRect overflowClip;
+  nscoord overflowClipRadii[8];
   PRBool applyOverflowClip =
     ApplyOverflowClipping(aBuilder, aChild, disp, &overflowClip);
+  if (applyOverflowClip) {
+    aChild->GetPaddingBoxBorderRadii(overflowClipRadii);
+  }
   // Don't use overflowClip to restrict the dirty rect, since some of the
   // descendants may not be clipped by it. Even if we end up with unnecessary
   // display items, they'll be pruned during ComputeVisibility. Note that
@@ -1514,7 +1684,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // return early.
     if (applyOverflowClip) {
       rv = BuildDisplayListWithOverflowClip(aBuilder, aChild, dirty, aLists,
-                                            overflowClip);
+                                            overflowClip, overflowClipRadii);
     } else {
       rv = aChild->BuildDisplayList(aBuilder, dirty, aLists);
       if (NS_SUCCEEDED(rv)) {
@@ -1556,7 +1726,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     
     if (applyOverflowClip) {
       rv = BuildDisplayListWithOverflowClip(aBuilder, aChild, clippedDirtyRect,
-                                            pseudoStack, overflowClip);
+                                            pseudoStack, overflowClip,
+                                            overflowClipRadii);
     } else {
       rv = aChild->BuildDisplayList(aBuilder, clippedDirtyRect, pseudoStack);
       if (NS_SUCCEEDED(rv)) {
@@ -1566,7 +1737,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     
     if (NS_SUCCEEDED(rv)) {
       if (isPositioned && applyAbsPosClipping) {
-        nsAbsPosClipWrapper wrapper(aChild, clipRect);
+        nsAbsPosClipWrapper wrapper(clipRect);
         rv = wrapper.WrapListsInPlace(aBuilder, aChild, pseudoStack);
       }
     }
@@ -1603,6 +1774,27 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // but it means that sort routine needs to do less work.
   aLists.PositionedDescendants()->AppendToTop(&extraPositionedDescendants);
   return NS_OK;
+}
+
+void
+nsIFrame::WrapReplacedContentForBorderRadius(nsDisplayListBuilder* aBuilder,
+                                             nsDisplayList* aFromList,
+                                             const nsDisplayListSet& aToLists)
+{
+  nscoord radii[8];
+  if (GetContentBoxBorderRadii(radii)) {
+    // If we have a border-radius, we have to clip our content to that
+    // radius.
+    nsDisplayListCollection set;
+    set.Content()->AppendToTop(aFromList);
+    nsRect clipRect = GetContentRect() - GetPosition() +
+                      aBuilder->ToReferenceFrame(this);
+    OverflowClip(aBuilder, set, aToLists, clipRect, radii, PR_FALSE, PR_TRUE);
+
+    return;
+  }
+
+  aToLists.Content()->AppendToTop(aFromList);
 }
 
 NS_IMETHODIMP  
@@ -3110,7 +3302,8 @@ static void
 AddCoord(const nsStyleCoord& aStyle,
          nsIRenderingContext* aRenderingContext,
          nsIFrame* aFrame,
-         nscoord* aCoord, float* aPercent)
+         nscoord* aCoord, float* aPercent,
+         PRBool aClampNegativeToZero)
 {
   if (!aStyle.IsCoordPercentCalcUnit()) {
     return;
@@ -3119,6 +3312,11 @@ AddCoord(const nsStyleCoord& aStyle,
   LengthPercentPairWithMinMaxCalcOps ops;
   LengthPercentPairWithMinMaxCalcOps::result_type pair =
     css::ComputeCalc(aStyle, ops);
+  if (aClampNegativeToZero) {
+    // This is far from ideal when one is negative and one is positive.
+    pair.mLength = NS_MAX(pair.mLength, 0);
+    pair.mPercent = NS_MAX(pair.mPercent, 0.0f);
+  }
   *aCoord += pair.mLength;
   *aPercent += pair.mPercent;
 }
@@ -3134,15 +3332,15 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   // comment above LengthPercentPairWithMinMaxCalcOps.
   const nsStyleMargin *styleMargin = GetStyleMargin();
   AddCoord(styleMargin->mMargin.GetLeft(), aRenderingContext, this,
-           &result.hMargin, &result.hPctMargin);
+           &result.hMargin, &result.hPctMargin, PR_FALSE);
   AddCoord(styleMargin->mMargin.GetRight(), aRenderingContext, this,
-           &result.hMargin, &result.hPctMargin);
+           &result.hMargin, &result.hPctMargin, PR_FALSE);
 
   const nsStylePadding *stylePadding = GetStylePadding();
   AddCoord(stylePadding->mPadding.GetLeft(), aRenderingContext, this,
-           &result.hPadding, &result.hPctPadding);
+           &result.hPadding, &result.hPctPadding, PR_TRUE);
   AddCoord(stylePadding->mPadding.GetRight(), aRenderingContext, this,
-           &result.hPadding, &result.hPctPadding);
+           &result.hPadding, &result.hPctPadding, PR_TRUE);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();
   result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_LEFT);
