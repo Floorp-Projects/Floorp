@@ -16,6 +16,8 @@ toolkit.jar:
 *  content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
 *  content/global/aboutSupport.js
 *  content/global/aboutSupport.xhtml
+   content/global/aboutStartup.xhtml          (aboutStartup.xhtml)
+   content/global/aboutStartup.js             (aboutStartup.js)
    content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css
