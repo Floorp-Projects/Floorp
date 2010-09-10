@@ -1791,6 +1791,9 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
           expr->mValue.GetIntValue() > 1)
         rv = PR_FALSE;
       break;
+    case nsMediaFeature::eFloat:
+      rv = ParseNonNegativeVariant(expr->mValue, VARIANT_NUMBER, nsnull);
+      break;
     case nsMediaFeature::eIntRatio:
       {
         // Two integers separated by '/', with optional whitespace on
