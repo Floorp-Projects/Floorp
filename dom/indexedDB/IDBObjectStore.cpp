@@ -184,6 +184,12 @@ public:
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
+  void ReleaseMainThreadObjects()
+  {
+    mObjectStore = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
 private:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
@@ -215,6 +221,12 @@ public:
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
+  void ReleaseMainThreadObjects()
+  {
+    mObjectStore = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
 private:
   PRUint16 InsertDataFromObjectStore(mozIStorageConnection* aConnection);
 
@@ -242,6 +254,12 @@ public:
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+  void ReleaseMainThreadObjects()
+  {
+    mObjectStore = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
 
 private:
   // In-params
@@ -1878,8 +1896,6 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBCursor::Create(mRequest, mTransaction, mObjectStore, mDirection, mData);
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  mObjectStore = nsnull;
-
   aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
   return OK;
 }
@@ -2061,8 +2077,6 @@ CreateIndexHelper::GetSuccessResult(nsIWritableVariant* aResult)
   nsresult rv = mObjectStore->Index(mName, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  mObjectStore = nsnull;
-
   aResult->SetAsISupports(result);
   return OK;
 }
@@ -2124,7 +2138,6 @@ RemoveIndexHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
     }
   }
 
-  mObjectStore = nsnull;
   return OK;
 }
 

@@ -106,10 +106,6 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBTransaction* aTransaction,
 AsyncConnectionHelper::~AsyncConnectionHelper()
 {
   if (!NS_IsMainThread()) {
-    NS_ASSERTION(mErrorCode == NOREPLY || !mRequest,
-                 "This should only happen if NOREPLY was returned or if the "
-                 "runnable already ran on the main thread!");
-
     IDBDatabase* database;
     mDatabase.forget(&database);
 
@@ -159,9 +155,11 @@ AsyncConnectionHelper::Run()
       mTransaction->OnRequestFinished();
     }
 
-    mDatabase = nsnull;
-    mTransaction = nsnull;
-    mRequest = nsnull;
+    ReleaseMainThreadObjects();
+
+    NS_ASSERTION(!(mDatabase || mTransaction || mRequest), "Subclass didn't "
+                 "call AsyncConnectionHelper::ReleaseMainThreadObjects!");
+
     return NS_OK;
   }
 
@@ -220,13 +218,8 @@ AsyncConnectionHelper::Run()
     mStartTime = TimeStamp();
   }
 
-  if (mErrorCode != NOREPLY) {
-    mError = mErrorCode != OK;
-
-    return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
-  }
-
-  return NS_OK;
+  mError = mErrorCode != OK;
+  return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
@@ -359,6 +352,16 @@ AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
   // Leave the variant remain set to empty.
 
   return OK;
+}
+
+void
+AsyncConnectionHelper::ReleaseMainThreadObjects()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mDatabase = nsnull;
+  mTransaction = nsnull;
+  mRequest = nsnull;
 }
 
 NS_IMETHODIMP_(nsrefcnt)

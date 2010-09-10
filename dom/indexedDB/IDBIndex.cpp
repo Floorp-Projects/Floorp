@@ -168,6 +168,12 @@ public:
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
+  void ReleaseMainThreadObjects()
+  {
+    mIndex = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
 private:
   // In-params.
   nsRefPtr<IDBIndex> mIndex;
@@ -206,6 +212,12 @@ public:
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+
+  void ReleaseMainThreadObjects()
+  {
+    mIndex = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
 
 private:
   // In-params.
@@ -1184,9 +1196,6 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
-
-  mIndex = nsnull;
-
   return OK;
 }
 
@@ -1389,8 +1398,5 @@ OpenObjectCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
-
-  mIndex = nsnull;
-
   return OK;
 }

@@ -700,20 +700,24 @@ ContinueRunnable::Run()
     return NS_OK;
   }
 
-  // Remove cached stuff from last time.
-  mCursor->mCachedKey = nsnull;
-  mCursor->mCachedValue = JSVAL_VOID;
-  mCursor->mHaveCachedValue = false;
-  mCursor->mContinueCalled = false;
+  // mCursor must be null after this method finishes. Swap out now.
+  nsRefPtr<IDBCursor> cursor;
+  cursor.swap(mCursor);
 
-  if (mCursor->mType == IDBCursor::INDEX) {
-    mCursor->mKeyData.RemoveElementAt(mCursor->mDataIndex);
+  // Remove cached stuff from last time.
+  cursor->mCachedKey = nsnull;
+  cursor->mCachedValue = JSVAL_VOID;
+  cursor->mHaveCachedValue = false;
+  cursor->mContinueCalled = false;
+
+  if (cursor->mType == IDBCursor::INDEX) {
+    cursor->mKeyData.RemoveElementAt(cursor->mDataIndex);
   }
   else {
-    mCursor->mData.RemoveElementAt(mCursor->mDataIndex);
+    cursor->mData.RemoveElementAt(cursor->mDataIndex);
   }
-  if (mCursor->mDataIndex) {
-    mCursor->mDataIndex--;
+  if (cursor->mDataIndex) {
+    cursor->mDataIndex--;
   }
 
   nsCOMPtr<nsIWritableVariant> variant =
@@ -723,9 +727,9 @@ ContinueRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  PRBool empty = mCursor->mType == IDBCursor::INDEX ?
-                 mCursor->mKeyData.IsEmpty() :
-                 mCursor->mData.IsEmpty();
+  PRBool empty = cursor->mType == IDBCursor::INDEX ?
+                 cursor->mKeyData.IsEmpty() :
+                 cursor->mData.IsEmpty();
 
   if (empty) {
     rv = variant->SetAsEmpty();
@@ -739,11 +743,11 @@ ContinueRunnable::Run()
                  "smarter!");
 
       // Skip ahead to our next key match.
-      PRInt32 index = PRInt32(mCursor->mDataIndex);
+      PRInt32 index = PRInt32(cursor->mDataIndex);
 
-      if (mCursor->mType == IDBCursor::INDEX) {
+      if (cursor->mType == IDBCursor::INDEX) {
         while (index >= 0) {
-          const Key& key = mCursor->mKeyData[index].key;
+          const Key& key = cursor->mKeyData[index].key;
           if (mKey == key) {
             break;
           }
@@ -756,15 +760,15 @@ ContinueRunnable::Run()
         }
 
         if (index >= 0) {
-          mCursor->mDataIndex = PRUint32(index);
-          mCursor->mKeyData.RemoveElementsAt(index + 1,
-                                             mCursor->mKeyData.Length() - index
-                                             - 1);
+          cursor->mDataIndex = PRUint32(index);
+          cursor->mKeyData.RemoveElementsAt(index + 1,
+                                            cursor->mKeyData.Length() - index
+                                            - 1);
         }
       }
       else {
         while (index >= 0) {
-          const Key& key = mCursor->mData[index].key;
+          const Key& key = cursor->mData[index].key;
           if (mKey == key) {
             break;
           }
@@ -777,14 +781,14 @@ ContinueRunnable::Run()
         }
 
         if (index >= 0) {
-          mCursor->mDataIndex = PRUint32(index);
-          mCursor->mData.RemoveElementsAt(index + 1,
-                                          mCursor->mData.Length() - index - 1);
+          cursor->mDataIndex = PRUint32(index);
+          cursor->mData.RemoveElementsAt(index + 1,
+                                         cursor->mData.Length() - index - 1);
         }
       }
     }
 
-    rv = variant->SetAsISupports(static_cast<nsPIDOMEventTarget*>(mCursor));
+    rv = variant->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -792,18 +796,15 @@ ContinueRunnable::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMEvent> event =
-    IDBSuccessEvent::Create(mCursor->mRequest, variant, mCursor->mTransaction);
+    IDBSuccessEvent::Create(cursor->mRequest, variant, cursor->mTransaction);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return NS_ERROR_FAILURE;
   }
 
   PRBool dummy;
-  mCursor->mRequest->DispatchEvent(event, &dummy);
+  cursor->mRequest->DispatchEvent(event, &dummy);
 
-  mCursor->mTransaction->OnRequestFinished();
-
-  mCursor = nsnull;
-
+  cursor->mTransaction->OnRequestFinished();
   return NS_OK;
 }
