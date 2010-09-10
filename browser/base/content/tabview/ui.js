@@ -885,6 +885,17 @@ let UI = {
   },
 
   // ----------
+  // Function: onExitButtonPressed
+  // Exits TabView UI.
+  onExitButtonPressed: function() {
+    let activeTab = this.getActiveTab();
+    if (!activeTab)
+      activeTab = gBrowser.selectedTab.tabItem;
+    if (activeTab)
+      activeTab.zoomIn();
+  },
+
+  // ----------
   // Function: _addDevMenu
   // Fills out the "dev menu" in the TabView UI.
   _addDevMenu: function UI__addDevMenu() {
