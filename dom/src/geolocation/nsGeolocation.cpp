@@ -1115,13 +1115,14 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     // the one and only TabChild.
     TabChild* child = GetTabChildFrom(window->GetDocShell());
     
-    child->SendPGeolocationRequestConstructor(request, IPC::URI(mURI));
-    
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPGeolocationRequest.
+    // Corresponding release occurs in DeallocPContentPermissionRequest.
     request->AddRef();
 
-    unused << request->Sendprompt();
+    nsCString type = NS_LITERAL_CSTRING("geolocation");
+    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
+    
+    request->Sendprompt();
     return;
   }
 #endif
