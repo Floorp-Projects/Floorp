@@ -186,7 +186,7 @@ function GroupItem(listOfEls, options) {
     }
   };
 
-  var handleKeyPress = function(e) {
+  var handleKeyDown = function(e) {
     if (e.which == 13 || e.which == 27) { // return & escape
       (self.$title)[0].blur();
       self.$title
@@ -194,9 +194,16 @@ function GroupItem(listOfEls, options) {
         .one("mouseout", function() {
           self.$title.removeClass("transparentBorder");
         });
-    } else
-      self.adjustTitleSize();
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  };
 
+  var handleKeyUp = function(e) {
+    // NOTE: When user commits or cancels IME composition, the last key
+    //       event fires only a keyup event.  Then, we shouldn't take any
+    //       reactions but we should update our status.
+    self.adjustTitleSize();
     self.save();
   };
 
@@ -215,7 +222,8 @@ function GroupItem(listOfEls, options) {
           .val('');
       }
     })
-    .keyup(handleKeyPress);
+    .keydown(handleKeyDown)
+    .keyup(handleKeyUp);
 
   titleUnfocus();
 
