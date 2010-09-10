@@ -440,7 +440,7 @@
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
 
-                  if (this.mTabBrowser.mCurrentTab == this.mTab)
+                  if (this.mTab.selected)
                     this.mTabBrowser.mIsBusy = true;
                 }
               }
@@ -476,7 +476,7 @@
                 if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.loading"))
                   this.mTabBrowser.setTabTitle(this.mTab);
 
-                if (this.mTabBrowser.mCurrentTab == this.mTab)
+                if (this.mTab.selected)
                   this.mTabBrowser.mIsBusy = false;
               }
 
@@ -945,6 +945,10 @@
             aTab.label = title;
             aTab.crop = crop;
             this._tabAttrModified(aTab);
+
+            if (aTab.selected)
+              this.updateTitlebar();
+
             return true;
           ]]>
         </body>
@@ -2478,12 +2482,7 @@
 
           var tab = this._getTabForContentWindow(contentWin);
           var titleChanged = this.setTabTitle(tab);
-          if (!titleChanged)
-            return;
-
-          if (tab == this.mCurrentTab)
-            this.updateTitlebar();
-          else if (!tab.hasAttribute("busy"))
+          if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
             tab.setAttribute("titlechanged", "true");
         ]]>
       </handler>
