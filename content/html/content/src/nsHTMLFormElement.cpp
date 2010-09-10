@@ -80,6 +80,7 @@
 #include "nsIHTMLCollection.h"
 
 #include "nsIConstraintValidation.h"
+#include "nsIEventStateManager.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -250,7 +251,8 @@ nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mSubmittingRequest(nsnull),
     mDefaultSubmitElement(nsnull),
     mFirstSubmitInElements(nsnull),
-    mFirstSubmitNotInElements(nsnull)
+    mFirstSubmitNotInElements(nsnull),
+    mInvalidElementsCount(0)
 {
 }
 
@@ -484,6 +486,16 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
       node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
         node->ClearForm(PR_TRUE, PR_TRUE);
+
+        // When submit controls have no more form, they need to be updated.
+        if (node->IsSubmitControl()) {
+          nsIDocument* doc = node->GetCurrentDoc();
+          if (doc) {
+            MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+            doc->ContentStatesChanged(node, nsnull,
+                                      NS_EVENT_STATE_MOZ_SUBMITINVALID);
+          }
+        }
 #ifdef DEBUG
         removed = PR_TRUE;
 #endif
@@ -1200,6 +1212,15 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
     }
   }
 
+  // If the element is subject to constraint validaton and is invalid, we need
+  // to update our internal counter.
+  nsCOMPtr<nsIConstraintValidation> cvElmt =
+    do_QueryInterface(static_cast<nsGenericHTMLElement*>(aChild));
+  if (cvElmt &&
+      cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
+    UpdateValidity(PR_FALSE);
+  }
+
   return NS_OK;
 }
 
@@ -1265,6 +1286,15 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
     // being removed) because it's either being removed from the DOM or
     // changing attributes in a way that makes it responsible for sending its
     // own notifications.
+  }
+
+  // If the element was subject to constraint validaton and is invalid, we need
+  // to update our internal counter.
+  nsCOMPtr<nsIConstraintValidation> cvElmt =
+    do_QueryInterface(static_cast<nsGenericHTMLElement*>(aChild));
+  if (cvElmt &&
+      cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
+    UpdateValidity(PR_TRUE);
   }
 
   return rv;
@@ -1614,6 +1644,60 @@ nsHTMLFormElement::CheckFormValidity() const
   }
 
   return ret;
+}
+
+void
+nsHTMLFormElement::UpdateValidity(PRBool aElementValidity)
+{
+  if (aElementValidity) {
+    --mInvalidElementsCount;
+  } else {
+    ++mInvalidElementsCount;
+  }
+
+  NS_ASSERTION(mInvalidElementsCount >= 0, "Something went seriously wrong!");
+
+  // The form validity has just changed if:
+  // - there are no more invalid elements ;
+  // - or there is one invalid elmement and an element just became invalid.
+  // If we have invalid elements and we used to before as well, do nothing.
+  if (mInvalidElementsCount &&
+      (mInvalidElementsCount != 1 || aElementValidity)) {
+    return;
+  }
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    return;
+  }
+
+  /*
+   * We are going to call ContentStatesChanged assuming submit controls want to
+   * be notified because we can't know.
+   * UpdateValidity shouldn't be called so much during parsing so it _should_
+   * be safe.
+   */
+
+  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+
+  // Inform submit controls that the form validity has changed.
+  for (PRUint32 i = 0, length = mControls->mElements.Length();
+       i < length; ++i) {
+    if (mControls->mElements[i]->IsSubmitControl()) {
+      doc->ContentStatesChanged(mControls->mElements[i], nsnull,
+                                NS_EVENT_STATE_MOZ_SUBMITINVALID);
+    }
+  }
+
+  // Because of backward compatibility, <input type='image'> is not in elements
+  // so we have to check for controls not in elements too.
+  PRUint32 length = mControls->mNotInElements.Length();
+  for (PRUint32 i = 0; i < length; ++i) {
+    if (mControls->mNotInElements[i]->IsSubmitControl()) {
+      doc->ContentStatesChanged(mControls->mNotInElements[i], nsnull,
+                                NS_EVENT_STATE_MOZ_SUBMITINVALID);
+    }
+  }
 }
 
 // nsIWebProgressListener

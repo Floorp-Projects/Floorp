@@ -34,6 +34,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifndef nsHTMLFormElement_h__
+#define nsHTMLFormElement_h__
+
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -244,6 +248,29 @@ public:
   void OnSubmitClickBegin(nsIContent* aOriginatingElement);
   void OnSubmitClickEnd();
 
+  /**
+   * This method will update the form validity so the submit controls states
+   * will be updated (for -moz-submit-invalid pseudo-class).
+   * This method has to be called by form elements whenever their validity state
+   * or status regarding constraint validation changes.
+   *
+   * @note This method isn't used for CheckValidity().
+   * @note If an element becomes barred from constraint validation, it has to be
+   * considered as valid.
+   *
+   * @param aElementValidityState the new validity state of the element
+   */
+  void UpdateValidity(PRBool aElementValidityState);
+
+  /**
+   * Returns the form validity based on the last UpdateValidity() call.
+   *
+   * @return Whether the form was valid the last time UpdateValidity() was called.
+   *
+   * @note This method may not return the *current* validity state!
+   */
+  PRBool GetValidity() const { return !mInvalidElementsCount; }
+
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   class RemoveElementRunnable;
@@ -391,9 +418,18 @@ protected:
   /** The first submit element in mNotInElements -- WEAK */
   nsGenericHTMLFormElement* mFirstSubmitNotInElements;
 
+  /**
+   * Number of invalid and candidate for constraint validation elements in the
+   * form the last time UpdateValidity has been called.
+   * @note Should only be used by UpdateValidity() and GetValidity()!
+   */
+  PRInt32 mInvalidElementsCount;
+
 protected:
   /** Detection of first form to notify observers */
   static PRBool gFirstFormSubmitted;
   /** Detection of first password input to initialize the password manager */
   static PRBool gPasswordManagerInitialized;
 };
+
+#endif // nsHTMLFormElement_h__
