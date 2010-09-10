@@ -1105,6 +1105,28 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
+{
+  nsAutoString dataListId;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::list, dataListId);
+  if (!dataListId.IsEmpty()) {
+    nsIDocument* doc = GetCurrentDoc();
+
+    if (doc) {
+      Element* elem = doc->GetElementById(dataListId);
+
+      if (elem) {
+        CallQueryInterface(elem, aValue);
+        return NS_OK;
+      }
+    }
+  }
+
+  *aValue = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNames)
 {
