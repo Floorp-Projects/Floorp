@@ -205,29 +205,31 @@ var BrowserUI = {
 
   _editURI: function _editURI(aEdit) {
     if (aEdit) {
+      // If the urlbar is not opened yet, inform the broadcaster and then
+      // save the current value as a default value to display once the awesome
+      // panel will be dismissed
       let isOpened = this._edit.hasAttribute("open");
       if (!isOpened) {
         Elements.urlbarState.setAttribute("mode", "edit");
         this._edit.defaultValue = this._edit.value;
+
+        // Now, replace the web page title by the url of the page
+        let urlString = this.getDisplayURI(Browser.selectedBrowser);
+        if (Util.isURLEmpty(urlString))
+          urlString = "";
+        this._edit.value = urlString;
       }
 
-      // Replace the web page title by the url of the page
-      let urlString = this.getDisplayURI(Browser.selectedBrowser);
-      if (Util.isURLEmpty(urlString))
-        urlString = "";
-      this._edit.value = urlString;
-
+      // If the urlbar readOnly state is set to false or if the window is in
+      // portrait then we refresh the IME state to display the VKB if any
       if (!this._edit.readOnly || Util.isPortrait()) {
-        this._edit.readOnly = false;
-
         // This is a workaround needed to cycle focus for the IME state
         // to be set properly (bug 488420)
         this._edit.blur();
         gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
       }
-      else {
-        this._edit.readOnly = !isOpened;
-      }
+
+      this._edit.readOnly = false;
     }
     else if (!aEdit) {
       this._updateToolbar();
