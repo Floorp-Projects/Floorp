@@ -120,11 +120,11 @@
                 accesskey="&openTabInNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
-      <menuitem id="context_pinTab" label="&pinTab.label;"
-                accesskey="&pinTab.accesskey;"
+      <menuitem id="context_pinTab" label="&pinAppTab.label;"
+                accesskey="&pinAppTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
-                accesskey="&unpinTab.accesskey;"
+      <menuitem id="context_unpinTab" label="&unpinAppTab.label;" hidden="true"
+                accesskey="&unpinAppTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
