@@ -185,10 +185,8 @@ public:
   gfxASurface* GetPrintSurface() { return mPrintSurface; }
 
   // Dispatch events
-  nsresult DispatchSimpleEvent(const nsAString& aName);
-  nsresult DispatchProgressEvent(const nsAString& aName);
-  nsresult DispatchAsyncSimpleEvent(const nsAString& aName);
-  nsresult DispatchAsyncProgressEvent(const nsAString& aName);
+  nsresult DispatchEvent(const nsAString& aName);
+  nsresult DispatchAsyncEvent(const nsAString& aName);
   nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,
                                        PRUint32 aFrameBufferLength,
                                        PRUint64 aTime);

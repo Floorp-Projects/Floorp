@@ -1678,7 +1678,7 @@ nsWaveDecoder::PlaybackPositionChanged()
 
   if (mElement && lastTime != mCurrentTime) {
     UpdateReadyStateForData();
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    mElement->DispatchEvent(NS_LITERAL_STRING("timeupdate"));
   }
 }
 
