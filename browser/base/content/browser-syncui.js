@@ -67,7 +67,7 @@ let gSyncUI = {
 
     // If this is a browser window?
     if (gBrowser) {
-      obs.push("weave:notification:added", "weave:notification:removed");
+      obs.push("weave:notification:added");
     }
 
     let self = this;
@@ -82,8 +82,28 @@ let gSyncUI = {
       popup.addEventListener("popupshowing", function() {
         self.alltabsPopupShowing();
       }, true);
+
+      if (Weave.Notifications.notifications.length)
+        this.initNotifications();
     }
     this.updateUI();
+  },
+  
+  initNotifications: function SUI_initNotifications() {
+    const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    let notificationbox = document.createElementNS(XULNS, "notificationbox");
+    notificationbox.id = "sync-notifications";
+    notificationbox.setAttribute("flex", "1");
+
+    let bottombox = document.getElementById("browser-bottombox");
+    let statusbar = document.getElementById("status-bar");
+    bottombox.insertBefore(notificationbox, statusbar);
+
+    // Force a style flush to ensure that our binding is attached.
+    notificationbox.clientTop;
+
+    // notificationbox will listen to observers from now on.
+    Services.obs.removeObserver(this, "weave:notification:added");
   },
 
   _wasDelayed: false,
@@ -235,36 +255,6 @@ let gSyncUI = {
     let notification = new Weave.Notification(
       title, description, null, Weave.Notifications.PRIORITY_WARNING, buttons);
     Weave.Notifications.replaceTitle(notification);
-  },
-
-  onNotificationAdded: function SUI_onNotificationAdded() {
-    if (!gBrowser)
-      return;
-
-    let notificationsButton = document.getElementById("sync-notifications-button");
-    notificationsButton.hidden = false;
-    let notification = Weave.Notifications.notifications.reduce(function(prev, cur) {
-      return prev.priority > cur.priority ? prev : cur;
-    });
-
-    let image = notification.priority >= Weave.Notifications.PRIORITY_WARNING ?
-                "chrome://global/skin/icons/warning-16.png" :
-                "chrome://global/skin/icons/information-16.png";
-    notificationsButton.image = image;
-    notificationsButton.label = notification.title;
-  },
-
-  onNotificationRemoved: function SUI_onNotificationRemoved() {
-    if (!gBrowser)
-      return;
-
-    if (Weave.Notifications.notifications.length == 0) {
-      document.getElementById("sync-notifications-button").hidden = true;
-    }
-    else {
-      // Display remaining notifications
-      this.onNotificationAdded();
-    }
   },
 
   // Commands
@@ -434,10 +424,7 @@ let gSyncUI = {
         this.initUI();
         break;
       case "weave:notification:added":
-        this.onNotificationAdded();
-        break;
-      case "weave:notification:removed":
-        this.onNotificationRemoved();
+        this.initNotifications();
         break;
     }
   },

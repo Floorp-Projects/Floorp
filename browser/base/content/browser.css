@@ -318,13 +318,14 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   min-width: 1px;
 }
 
-/* Sync statusbar UI */
 %ifdef MOZ_SERVICES_SYNC
-#sync-notifications-box {
+/* Sync notification UI */
+#sync-notifications {
   -moz-binding: url("chrome://browser/content/syncNotification.xml#notificationbox");
+  overflow-y: visible !important;
 }
 
-#sync-notifications-box notification {
+#sync-notifications notification {
   -moz-binding: url("chrome://browser/content/syncNotification.xml#notification");
 }
 %endif
