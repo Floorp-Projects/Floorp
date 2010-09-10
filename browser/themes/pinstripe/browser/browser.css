@@ -684,6 +684,7 @@ toolbar[mode="icons"] #zoom-out-button {
 toolbar[mode="icons"] #zoom-in-button {
   -moz-border-start: none;
   -moz-margin-start: 0;
+  height: 16px;
 }
 
 #zoom-out-button:-moz-locale-dir(ltr),
@@ -696,6 +697,22 @@ toolbar[mode="icons"] #zoom-in-button {
 #zoom-in-button:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+/* sync button */
+
+#sync-button {
+  list-style-image: url("chrome://browser/skin/sync-16.png");
+}
+
+#sync-button[status="active"] {
+  list-style-image: url("chrome://browser/skin/sync-16-throbber.png");
+}
+
+toolbar:not([iconsize="small"]) #sync-button > .toolbarbutton-icon {
+  margin: 1px;
+  width: 16px;
+  height: 16px;
 }
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
@@ -2255,10 +2272,4 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
-}
-
-/* Sync */
-
-#sync-status-button.statusbarpanel-iconic {
-  padding: 0 5px;
 }
