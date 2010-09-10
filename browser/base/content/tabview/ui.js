@@ -88,6 +88,12 @@ let UI = {
   // An array of functions to be called at uninit time
   _cleanupFunctions: [],
   
+  // Constant: _maxInteractiveWait
+  // If the UI is in the middle of an operation, this is the max amount of
+  // milliseconds to wait between input events before we no longer consider
+  // the operation interactive.
+  _maxInteractiveWait: 250,
+
   // Variable: _privateBrowsing
   // Keeps track of info related to private browsing, including: 
   //   transitionStage - what step we're on in entering/exiting PB
@@ -321,6 +327,18 @@ let UI = {
     iQ(":focus").each(function(element) {
       element.blur();
     });
+  },
+
+  // ----------
+  // Function: isIdle
+  // Returns true if the last interaction was long enough ago to consider the
+  // UI idle. Used to determine whether interactivity would be sacrificed if 
+  // the CPU was to become busy.
+  //
+  isIdle: function UI_isIdle() {
+    let time = Date.now();
+    let maxEvent = Math.max(drag.lastMoveTime, resize.lastMoveTime);
+    return (time - maxEvent) > this._maxInteractiveWait;
   },
 
   // ----------
