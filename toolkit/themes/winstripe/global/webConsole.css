@@ -175,7 +175,11 @@
 .hud-console-filter-toolbar {
     padding: 1px 0px;
     -moz-box-align: center;
+    -moz-appearance: none !important;
+    background-color: -moz-dialog;
+    border-top: none;
 }
+
 
 .jsterm-close-button {
     background: none !important;
