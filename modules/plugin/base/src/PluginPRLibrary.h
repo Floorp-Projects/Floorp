@@ -133,6 +133,10 @@ public:
                              char* argv[], NPSavedData* saved,
                              NPError* error);
 
+    virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
+    virtual nsresult NotifyPainted(NPP instance);
+    virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
+
 private:
     NP_InitializeFunc mNP_Initialize;
     NP_ShutdownFunc mNP_Shutdown;
