@@ -60,6 +60,11 @@ pref("general.warnOnAboutConfig", true);
 pref("browser.bookmarks.max_backups",       5);
 
 pref("browser.cache.disk.enable",           true);
+// Is this the first-time smartsizing has been introduced?
+pref("browser.cache.disk.smart_size.first_run", true);
+// Does the user want smart-sizing?
+pref("browser.cache.disk.smart_size.enabled", true);
+// Size explicitly set by the user. Used when smart_size.enabled == false
 #ifndef WINCE
 pref("browser.cache.disk.capacity",         256000);
 #else
@@ -90,6 +95,11 @@ pref("browser.cache.offline.capacity", 15000);
 pref("offline-apps.quota.max",          7000);
 pref("offline-apps.quota.warn",         4000);
 #endif
+
+// Whether or not indexedDB is enabled.
+pref("dom.indexedDB.enabled", true);
+// Space to allow indexedDB databases before prompting (in MB).
+pref("dom.indexedDB.warningQuota", 50);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.

@@ -664,16 +664,24 @@ function run_test_11() {
         "addon7@tests.mozilla.org": [
           "onInstalling"
         ]
-      }, [
-        "onInstallStarted",
-        "onInstallEnded",
-        "onInstallStarted",
-        "onInstallEnded",
-        "onInstallStarted",
-        "onInstallEnded",
-        "onInstallStarted",
-        "onInstallEnded"
-      ], check_test_11);
+      }, {
+        "addon4@tests.mozilla.org": [
+          "onInstallStarted",
+          "onInstallEnded"
+        ],
+        "addon5@tests.mozilla.org": [
+          "onInstallStarted",
+          "onInstallEnded"
+        ],
+        "addon6@tests.mozilla.org": [
+          "onInstallStarted",
+          "onInstallEnded"
+        ],
+        "addon7@tests.mozilla.org": [
+          "onInstallStarted",
+          "onInstallEnded"
+        ]
+      }, check_test_11);
 
       installs[0].install();
       installs[1].install();
@@ -741,21 +749,31 @@ function run_test_12() {
       "addon7@tests.mozilla.org": [
         "onInstalling"
       ]
-    }, [
-      "onDownloadStarted",
-      "onNewInstall",
-      "onNewInstall",
-      "onNewInstall",
-      "onDownloadEnded",
-      "onInstallStarted",
-      "onInstallEnded",
-      "onInstallStarted",
-      "onInstallEnded",
-      "onInstallStarted",
-      "onInstallEnded",
-      "onInstallStarted",
-      "onInstallEnded"
-    ], check_test_12);
+    }, {
+      "NO_ID": [
+        "onDownloadStarted",
+        "onNewInstall",
+        "onNewInstall",
+        "onNewInstall",
+        "onDownloadEnded"
+      ],
+      "addon4@tests.mozilla.org": [
+        "onInstallStarted",
+        "onInstallEnded"
+      ],
+      "addon5@tests.mozilla.org": [
+        "onInstallStarted",
+        "onInstallEnded"
+      ],
+      "addon6@tests.mozilla.org": [
+        "onInstallStarted",
+        "onInstallEnded"
+      ],
+      "addon7@tests.mozilla.org": [
+        "onInstallStarted",
+        "onInstallEnded"
+      ]
+    }, check_test_12);
     install.install();
   }, "application/x-xpinstall", null, "Multi Test 4");
 }

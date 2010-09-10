@@ -166,8 +166,13 @@ DiscardingEnabled()
 namespace mozilla {
 namespace imagelib {
 
+#ifndef DEBUG
 NS_IMPL_ISUPPORTS4(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
                    nsISupportsWeakReference)
+#else
+NS_IMPL_ISUPPORTS5(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
+                   imgIContainerDebug, nsISupportsWeakReference)
+#endif
 
 //******************************************************************************
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
@@ -181,6 +186,9 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
+#ifdef DEBUG
+  mFramesNotified(0),
+#endif
   mHasSize(PR_FALSE),
   mDecodeOnDraw(PR_FALSE),
   mMultipart(PR_FALSE),
@@ -190,7 +198,8 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mHasBeenDecoded(PR_FALSE),
   mWorkerPending(PR_FALSE),
   mInDecoder(PR_FALSE),
-  mError(PR_FALSE)
+  mError(PR_FALSE),
+  mAnimationFinished(PR_FALSE)
 {
   // Set up the discard tracker node.
   mDiscardTrackerNode.curr = this;
@@ -802,11 +811,8 @@ RasterImage::InternalAddFrame(PRUint32 framenum,
   rv = InternalAddFrameHelper(framenum, frame.forget(), imageData, imageLength,
                               paletteData, paletteLength);
   
-  // If this is our second frame (We've just added our second frame above),
-  // count should now be 2.  This must be called after we AppendObject 
-  // because StartAnimation checks for > 1 frames
-  if (mFrames.Length() == 2)
-    StartAnimation();
+  // We may be able to start animating, if we now have enough frames
+  EvaluateAnimation();
   
   return rv;
 }
@@ -1099,76 +1105,59 @@ RasterImage::SetAnimationMode(PRUint16 aAnimationMode)
                aAnimationMode == kLoopOnceAnimMode,
                "Wrong Animation Mode is being set!");
   
-  switch (mAnimationMode = aAnimationMode) {
-    case kDontAnimMode:
-      StopAnimation();
-      break;
-    case kNormalAnimMode:
-      if (mLoopCount != 0 || 
-          (mAnim && (mAnim->currentAnimationFrameIndex + 1 < mFrames.Length())))
-        StartAnimation();
-      break;
-    case kLoopOnceAnimMode:
-      if (mAnim && (mAnim->currentAnimationFrameIndex + 1 < mFrames.Length()))
-        StartAnimation();
-      break;
-  }
-  
+  mAnimationMode = aAnimationMode;
+
+  EvaluateAnimation();
+
   return NS_OK;
 }
 
 //******************************************************************************
-/* void startAnimation () */
-NS_IMETHODIMP
+/* void StartAnimation () */
+nsresult
 RasterImage::StartAnimation()
 {
   if (mError)
     return NS_ERROR_FAILURE;
 
-  if (mAnimationMode == kDontAnimMode || 
-      (mAnim && (mAnim->timer || mAnim->animating)))
-    return NS_OK;
+  NS_ABORT_IF_FALSE(ShouldAnimate(), "Should not animate!");
+
+  if (!ensureAnimExists())
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ABORT_IF_FALSE(mAnim && !mAnim->timer, "Anim must exist and not have a timer yet");
   
-  if (mFrames.Length() > 1) {
-    if (!ensureAnimExists())
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    // Default timeout to 100: the timer notify code will do the right
-    // thing, so just get that started.
-    PRInt32 timeout = 100;
-    imgFrame *currentFrame = GetCurrentImgFrame();
-    if (currentFrame) {
-      timeout = currentFrame->GetTimeout();
-      if (timeout <= 0) // -1 means display this frame forever
-        return NS_OK;
+  // Default timeout to 100: the timer notify code will do the right
+  // thing, so just get that started.
+  PRInt32 timeout = 100;
+  imgFrame *currentFrame = GetCurrentImgFrame();
+  if (currentFrame) {
+    timeout = currentFrame->GetTimeout();
+    if (timeout < 0) { // -1 means display this frame forever
+      mAnimationFinished = PR_TRUE;
+      return NS_ERROR_ABORT;
     }
-    
-    mAnim->timer = do_CreateInstance("@mozilla.org/timer;1");
-    NS_ENSURE_TRUE(mAnim->timer, NS_ERROR_OUT_OF_MEMORY);
-    
-    // The only way animating becomes true is if the timer is created
-    mAnim->animating = PR_TRUE;
-    mAnim->timer->InitWithCallback(static_cast<nsITimerCallback*>(this),
-                                   timeout, nsITimer::TYPE_REPEATING_SLACK);
   }
+  
+  mAnim->timer = do_CreateInstance("@mozilla.org/timer;1");
+  NS_ENSURE_TRUE(mAnim->timer, NS_ERROR_OUT_OF_MEMORY);
+  mAnim->timer->InitWithCallback(static_cast<nsITimerCallback*>(this),
+                                 timeout, nsITimer::TYPE_REPEATING_SLACK);
   
   return NS_OK;
 }
 
 //******************************************************************************
 /* void stopAnimation (); */
-NS_IMETHODIMP
+nsresult
 RasterImage::StopAnimation()
 {
+  NS_ABORT_IF_FALSE(mAnimating, "Should be animating!");
+
   if (mError)
     return NS_ERROR_FAILURE;
 
-  if (mAnim) {
-    mAnim->animating = PR_FALSE;
-
-    if (!mAnim->timer)
-      return NS_OK;
-
+  if (mAnim->timer) {
     mAnim->timer->Cancel();
     mAnim->timer = nsnull;
   }
@@ -1188,12 +1177,8 @@ RasterImage::ResetAnimation()
       !mAnim || mAnim->currentAnimationFrameIndex == 0)
     return NS_OK;
 
-  PRBool oldAnimating = mAnim->animating;
-
-  if (mAnim->animating) {
-    nsresult rv = StopAnimation();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  if (mAnimating)
+    StopAnimation();
 
   mAnim->lastCompositedFrameIndex = -1;
   mAnim->currentAnimationFrameIndex = 0;
@@ -1203,11 +1188,12 @@ RasterImage::ResetAnimation()
 
   // Update display if we were animating before
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
-  if (oldAnimating && observer)
+  if (mAnimating && observer)
     observer->FrameChanged(this, &(mAnim->firstFrameRefreshArea));
 
-  if (oldAnimating)
-    return StartAnimation();
+  if (ShouldAnimate())
+    StartAnimation();
+
   return NS_OK;
 }
 
@@ -1428,19 +1414,27 @@ RasterImage::SetSourceSizeHint(PRUint32 sizeHint)
 NS_IMETHODIMP
 RasterImage::Notify(nsITimer *timer)
 {
+#ifdef DEBUG
+  mFramesNotified++;
+#endif
+
   // This should never happen since the timer is only set up in StartAnimation()
   // after mAnim is checked to exist.
-  NS_ENSURE_TRUE(mAnim, NS_ERROR_UNEXPECTED);
-  NS_ASSERTION(mAnim->timer == timer,
-               "RasterImage::Notify() called with incorrect timer");
+  NS_ABORT_IF_FALSE(mAnim, "Need anim for Notify()");
+  NS_ABORT_IF_FALSE(timer, "Need timer for Notify()");
+  NS_ABORT_IF_FALSE(mAnim->timer == timer,
+                    "RasterImage::Notify() called with incorrect timer");
 
-  if (!mAnim->animating || !mAnim->timer)
+  if (!mAnimating || !ShouldAnimate())
     return NS_OK;
 
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
   if (!observer) {
     // the imgRequest that owns us is dead, we should die now too.
-    StopAnimation();
+    NS_ABORT_IF_FALSE(mAnimationConsumers == 0,
+                      "If no observer, should have no consumers");
+    if (mAnimating)
+      StopAnimation();
     return NS_OK;
   }
 
@@ -1463,7 +1457,8 @@ RasterImage::Notify(nsITimer *timer)
 
       // If animation mode is "loop once", it's time to stop animating
       if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
-        StopAnimation();
+        mAnimationFinished = PR_TRUE;
+        EvaluateAnimation();
         return NS_OK;
       } else {
         // We may have used compositingFrame to build a frame, and then copied
@@ -1506,8 +1501,10 @@ RasterImage::Notify(nsITimer *timer)
 
   if (timeout > 0)
     mAnim->timer->SetDelay(timeout);
-  else
-    StopAnimation();
+  else {
+    mAnimationFinished = PR_TRUE;
+    EvaluateAnimation();
+  }
 
   nsIntRect dirtyRect;
   imgFrame *frameToUse = nsnull;
@@ -1655,13 +1652,20 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     needToBlankComposite = PR_TRUE;
   } else if (aNextFrameIndex != mAnim->lastCompositedFrameIndex+1) {
 
-    // When we are looping the compositing frame needs to be cleared.
+    // If we are not drawing on top of last composited frame, 
+    // then we are building a new composite frame, so let's clear it first.
     needToBlankComposite = PR_TRUE;
   }
 
   // More optimizations possible when next frame is not transparent
+  // But if the next frame has kDisposeRestorePrevious,
+  // this "no disposal" optimization is not possible, 
+  // because the frame in "after disposal operation" state 
+  // needs to be stored in compositingFrame, so it can be 
+  // copied into compositingPrevFrame later.
   PRBool doDisposal = PR_TRUE;
-  if (!aNextFrame->GetHasAlpha()) {
+  if (!aNextFrame->GetHasAlpha() &&
+      nextFrameDisposalMethod != kDisposeRestorePrevious) {
     if (isFullNextFrame) {
       // Optimization: No need to dispose prev.frame when 
       // next frame is full frame and not transparent.
@@ -1751,7 +1755,7 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     if (!mAnim->compositingPrevFrame) {
       mAnim->compositingPrevFrame = new imgFrame();
       if (!mAnim->compositingPrevFrame) {
-        NS_WARNING("Failed to init compositingFrame!\n");
+        NS_WARNING("Failed to init compositingPrevFrame!\n");
         return NS_ERROR_OUT_OF_MEMORY;
       }
       nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
@@ -1779,8 +1783,13 @@ RasterImage::DoComposite(imgFrame** aFrameToUse,
     return rv;
   }
 
-  // We don't want to keep composite images for 8bit frames...
+  // We don't want to keep composite images for 8bit frames.
+  // Also this optimization won't work if the next frame has 
+  // kDisposeRestorePrevious, because it would need to be restored 
+  // into "after prev disposal but before next blend" state, 
+  // not into empty frame.
   if (isFullNextFrame && mAnimationMode == kNormalAnimMode && mLoopCount != 0 &&
+      nextFrameDisposalMethod != kDisposeRestorePrevious &&
       !aNextFrame->GetIsPaletted()) {
     // We have a composited full frame
     // Store the composited frame into the mFrames[..] so we don't have to
@@ -2416,6 +2425,7 @@ RasterImage::SyncDecode()
  *                      [const] in gfxMatrix aUserSpaceToImageSpace,
  *                      [const] in gfxRect aFill,
  *                      [const] in nsIntRect aSubimage,
+ *                      [const] in nsIntSize aViewportSize,
  *                      in PRUint32 aFlags); */
 NS_IMETHODIMP
 RasterImage::Draw(gfxContext *aContext,
@@ -2423,6 +2433,7 @@ RasterImage::Draw(gfxContext *aContext,
                   const gfxMatrix &aUserSpaceToImageSpace,
                   const gfxRect &aFill,
                   const nsIntRect &aSubimage,
+                  const nsIntSize& /*aViewportSize - ignored*/,
                   PRUint32 aFlags)
 {
   if (mError)
@@ -2453,6 +2464,14 @@ RasterImage::Draw(gfxContext *aContext,
   frame->Draw(aContext, aFilter, aUserSpaceToImageSpace, aFill, padding, aSubimage);
 
   return NS_OK;
+}
+
+//******************************************************************************
+/* [notxpcom] nsIFrame GetRootLayoutFrame() */
+nsIFrame*
+RasterImage::GetRootLayoutFrame()
+{
+  return nsnull;
 }
 
 //******************************************************************************
@@ -2727,6 +2746,27 @@ RasterImage::WriteToRasterImage(nsIInputStream* /* unused */,
 
   return NS_OK;
 }
+
+PRBool
+RasterImage::ShouldAnimate()
+{
+  return Image::ShouldAnimate() && mFrames.Length() >= 2 &&
+         mAnimationMode != kDontAnimMode && !mAnimationFinished;
+}
+
+//******************************************************************************
+/* readonly attribute PRUint32 framesNotified; */
+#ifdef DEBUG
+NS_IMETHODIMP
+RasterImage::GetFramesNotified(PRUint32 *aFramesNotified)
+{
+  NS_ENSURE_ARG_POINTER(aFramesNotified);
+
+  *aFramesNotified = mFramesNotified;
+
+  return NS_OK;
+}
+#endif
 
 } // namespace imagelib
 } // namespace mozilla

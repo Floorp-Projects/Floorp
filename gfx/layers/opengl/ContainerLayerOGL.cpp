@@ -159,13 +159,15 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
   float opacity = GetOpacity();
-  if (opacity != 1.0) {
+  if (opacity != 1.0 || !mTransform.IsIdentity()) {
     mOGLManager->CreateFBOWithTexture(visibleRect.width,
                                       visibleRect.height,
                                       &frameBuffer,
                                       &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
+    mOGLManager->gl()->fClearColor(0, 0, 0, 0);
+    mOGLManager->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
     frameBuffer = aPreviousFrameBuffer;
   }
@@ -193,7 +195,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                 : nsnull;
   }
 
-  if (opacity != 1.0) {
+  if (opacity != 1.0 || !mTransform.IsIdentity()) {
     // Unbind the current framebuffer and rebind the previous one.
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);

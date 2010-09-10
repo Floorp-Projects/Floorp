@@ -207,7 +207,6 @@ StartupCache::LoadArchive()
 nsresult
 StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length) 
 {
-  PRBool exists;
   char* data = NULL;
   PRUint32 len;
 
@@ -224,7 +223,7 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
   if (!data && mArchive) {
     nsZipItem* zipItem = mArchive->GetItem(id);
     if (zipItem) {
-      PRUint8* itemData = mArchive->GetData(zipItem);
+      const PRUint8* itemData = mArchive->GetData(zipItem);
       if (!itemData || !mArchive->CheckCRC(zipItem, itemData)) {
         NS_WARNING("StartupCache file corrupted!");
         InvalidateCache();

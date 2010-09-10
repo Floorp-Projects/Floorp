@@ -82,10 +82,11 @@ public:
       return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
     }
 
-    const gfxIntSize& GetSize() { return mSize; }
+    virtual const gfxIntSize GetSize() const { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }
+    XRenderPictFormat* XRenderFormat();
 
     static int DepthOfVisual(const Screen* screen, const Visual* visual);
     static Visual* FindVisual(Screen* screen, gfxImageFormat format);

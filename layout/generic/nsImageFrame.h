@@ -48,7 +48,6 @@
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
-#include "nsTransform2D.h"
 #include "imgIRequest.h"
 #include "nsStubImageDecoderObserver.h"
 #include "imgIDecoderObserver.h"
@@ -62,8 +61,8 @@ struct nsHTMLReflowMetrics;
 struct nsSize;
 class nsDisplayImage;
 class nsPresContext;
-
 class nsImageFrame;
+class nsTransform2D;
 
 class nsImageListener : public nsStubImageDecoderObserver
 {
@@ -181,7 +180,7 @@ public:
 protected:
   virtual ~nsImageFrame();
 
-  void EnsureIntrinsicSize(nsPresContext* aPresContext);
+  void EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext);
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
@@ -244,14 +243,28 @@ private:
    * Recalculate mIntrinsicSize from the image.
    *
    * @return whether aImage's size did _not_
-   *         match our previous intrinsic size
+   *         match our previous intrinsic size.
    */
   PRBool UpdateIntrinsicSize(imgIContainer* aImage);
 
   /**
-   * This function will recalculate mTransform.
+   * Recalculate mIntrinsicRatio from the image.
+   *
+   * @return whether aImage's ratio did _not_
+   *         match our previous intrinsic ratio.
    */
-  void RecalculateTransform(PRBool aInnerAreaChanged);
+  PRBool UpdateIntrinsicRatio(imgIContainer* aImage);
+
+  /**
+   * This function calculates the transform for converting between
+   * source space & destination space. May fail if our image has a
+   * percent-valued or zero-valued height or width.
+   *
+   * @param aTransform The transform object to populate.
+   *
+   * @return whether we succeeded in creating the transform.
+   */
+  PRBool GetSourceToDestTransform(nsTransform2D& aTransform);
 
   /**
    * Helper functions to check whether the request or image container
@@ -272,8 +285,9 @@ private:
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsSize mComputedSize;
-  nsSize mIntrinsicSize;
-  nsTransform2D mTransform;
+  nsIFrame::IntrinsicSize mIntrinsicSize;
+  nsSize mIntrinsicRatio;
+
   PRBool mDisplayingIcon;
 
   static nsIIOService* sIOService;

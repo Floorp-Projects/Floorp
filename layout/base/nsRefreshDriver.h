@@ -152,9 +152,19 @@ public:
   PRBool ScheduleBeforePaintEvent(nsIDocument* aDocument);
 
   /**
+   * Add a document for which we have nsIAnimationFrameListeners
+   */
+  void ScheduleAnimationFrameListeners(nsIDocument* aDocument);
+
+  /**
    * Remove a document for which we should fire a MozBeforePaint event.
    */
   void RevokeBeforePaintEvent(nsIDocument* aDocument);
+
+  /**
+   * Remove a document for which we have nsIAnimationFrameListeners
+   */
+  void RevokeAnimationFrameListeners(nsIDocument* aDocument);
 
   /**
    * Tell the refresh driver that it is done driving refreshes and
@@ -225,6 +235,8 @@ private:
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mBeforePaintTargets;
+  // nsTArray on purpose, because we want to be able to swap.
+  nsTArray<nsIDocument*> mAnimationFrameListenerDocs;
 };
 
 #endif /* !defined(nsRefreshDriver_h_) */

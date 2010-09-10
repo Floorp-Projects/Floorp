@@ -149,6 +149,7 @@ _BROWSER_FILES = \
                  browser_bug581242.js \
                  browser_bug581947.js \
                  browser_bug585830.js \
+                 browser_bug592338.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
@@ -188,6 +189,7 @@ _BROWSER_FILES = \
                  browser_visibleTabs_bookmarkAllPages.js \
                  browser_visibleTabs_bookmarkAllTabs.js \
                  browser_visibleTabs_tabPreview.js \
+                 bug592338.html \
                  discovery.html \
                  domplate_test.js \
                  moz.png \

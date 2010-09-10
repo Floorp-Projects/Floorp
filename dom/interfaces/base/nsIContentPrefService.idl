@@ -82,6 +82,9 @@ interface nsIContentPrefService : nsISupports
    * to NULL in the database, as well as undefined (nsIDataType::VTYPE_VOID),
    * which means there is no record for this pref in the database.
    *
+   * This method can be called from content processes in electrolysis builds.
+   * We have a whitelist of values that can be read in such a way.
+   *
    * @param    aGroup      the group for which to get the pref, as an nsIURI
    *                       from which the hostname will be used, a string
    *                       (typically in the format of a hostname), or null 
@@ -100,6 +103,9 @@ interface nsIContentPrefService : nsISupports
 
   /**
    * Set a pref.
+   *
+   * This method can be called from content processes in electrolysis builds.
+   * We have a whitelist of values that can be set in such a way.
    *
    * @param    aGroup      the group for which to set the pref, as an nsIURI
    *                       from which the hostname will be used, a string

@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<title>Test for clipping of border-radius</title>
+<style>
+canvas {
+  border-radius: 25px;
+}
+</style>
+<canvas id="canvas" height="100" width="200"></canvas>
+<script>
+var canvas = document.getElementById("canvas");
+var cx = canvas.getContext("2d");
+cx.fillStyle="green";
+cx.fillRect(0, 0, 200, 100);
+</script>

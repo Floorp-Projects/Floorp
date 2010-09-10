@@ -52,7 +52,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(ebde51c9-cc11-4b6a-99c3-d7f568c7481b)]
+[scriptable, uuid(62f58f12-3076-44fc-a742-5b648dac21bc)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -179,5 +179,19 @@ interface imgIRequest : nsIRequest
    * Otherwise returns the same request.
    */
   imgIRequest getStaticRequest();
+
+  /**
+   * Requests that the image animate (if it has an animation).
+   *
+   * @see Image::IncrementAnimationConsumers for documentation of the underlying call.
+   */
+  void incrementAnimationConsumers();
+
+  /**
+   * Tell the image it can forget about a request that the image animate.
+   *
+   * @see Image::DecrementAnimationConsumers for documentation of the underlying call.
+   */
+  void decrementAnimationConsumers();
 };
 

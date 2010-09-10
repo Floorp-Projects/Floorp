@@ -21,6 +21,12 @@
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
     <install size="1">http://example.com/addon1.xpi</install>
@@ -43,6 +49,12 @@
       <application>
         <name>Firefox</name>
         <appID>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>
@@ -71,6 +83,12 @@
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
     <install size="2">http://example.com/browser/toolkit/mozapps/extensions/test/browser/addons/browser_searching.xpi</install>
@@ -93,6 +111,12 @@
       <application>
         <name>Firefox</name>
         <appID>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>
@@ -121,6 +145,12 @@
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
     <install size="1">http://example.com/remote3.xpi</install>
@@ -143,6 +173,12 @@
       <application>
         <name>Firefox</name>
         <appID>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</appID>
+        <min_version>0</min_version>
+        <max_version>*</max_version>
+      </application>
+      <application>
+        <name>SeaMonkey</name>
+        <appID>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</appID>
         <min_version>0</min_version>
         <max_version>*</max_version>
       </application>

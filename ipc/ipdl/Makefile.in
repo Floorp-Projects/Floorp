@@ -55,7 +55,6 @@ EXPORT_LIBRARY = 1
 ##
 IPDLDIRS =  \
   uriloader/exthandler \
-  dom/src/geolocation \
   dom/plugins  \
   dom/ipc  \
   gfx/layers/ipc \

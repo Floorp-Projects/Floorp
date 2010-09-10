@@ -74,6 +74,9 @@ public:
 protected:
   typedef mozilla::gl::GLContext GLContext;
 
+  // Indicates whether our texture was obtained through D2D interop.
+  bool mIsInteropTexture;
+
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;
 

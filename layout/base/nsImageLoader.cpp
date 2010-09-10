@@ -147,8 +147,6 @@ NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
    *   one loop = 2
    */
   aImage->SetAnimationMode(mFrame->PresContext()->ImageAnimationMode());
-  // Ensure the animation (if any) is started.
-  aImage->StartAnimation();
 
   return NS_OK;
 }
@@ -205,8 +203,10 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
     // We're in the middle of a paint anyway
     return NS_OK;
   }
-  
-  nsRect r = aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
+
+  nsRect r = (*aDirtyRect == nsIntRect::GetMaxSizedIntRect()) ?
+    nsRect(nsPoint(0, 0), mFrame->GetSize()) :
+    aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 
   DoRedraw(&r);
 
