@@ -478,9 +478,9 @@
                     command="Tools:PrivateBrowsing"
                     key="key_privatebrowsing"/>
           <menuseparator class="appmenu-menuseparator"/>
-          <hbox class="split-menuitem">
-            <menuitem id="appmenu-edit-menuitem"
-                      label="&editMenu.label;"
+          <hbox>
+            <menuitem id="appmenu-edit-label"
+                      label="&appMenuEdit.label;"
                       disabled="true"/>
             <toolbarbutton id="appmenu-cut"
                            class="appmenu-edit-button"
