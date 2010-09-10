@@ -525,11 +525,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           .css(orig.css())
           .removeClass("front");
 
-        // If it's not focused, the onFocus lsitener would handle it.
-        if (gBrowser.selectedTab == tab)
-          UI.onTabSelect(tab);
-        else
-          gBrowser.selectedTab = tab;
+        UI.goToTab(tab);
 
         if (isNewBlankTab)
           gWindow.gURLBar.focus();
@@ -663,7 +659,7 @@ let TabItems = {
 
     // When a tab is opened, create the TabItem
     this._eventListeners["open"] = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
+      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
         return;
 
       self.link(tab);
@@ -671,14 +667,14 @@ let TabItems = {
     // When a tab's content is loaded, show the canvas and hide the cached data
     // if necessary.
     this._eventListeners["attrModified"] = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
+      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
         return;
 
       self.update(tab);
     }
     // When a tab is closed, unlink.
     this._eventListeners["close"] = function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
+      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
         return;
 
       self.unlink(tab);
@@ -689,7 +685,7 @@ let TabItems = {
 
     // For each tab, create the link.
     AllTabs.tabs.forEach(function(tab) {
-      if (tab.ownerDocument.defaultView != gWindow)
+      if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
         return;
 
       self.link(tab);
@@ -722,6 +718,8 @@ let TabItems = {
   update: function TabItems_update(tab) {
     try {
       Utils.assertThrow(tab, "tab");
+      Utils.assertThrow(!tab.pinned, "shouldn't be an app tab");
+      Utils.assertThrow(tab.tabItem, "should already be linked");
 
       let shouldDefer = (
         this.isPaintingPaused() ||
@@ -763,7 +761,7 @@ let TabItems = {
       // ___ icon
       let iconUrl = tab.image;
       if (iconUrl == null)
-        iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
+        iconUrl = Utils.defaultFaviconURL;
 
       if (iconUrl != tabItem.favEl.src)
         tabItem.favEl.src = iconUrl;
@@ -812,10 +810,11 @@ let TabItems = {
 
   // ----------
   // Function: link
-  // Takes in a xul:tab.
+  // Takes in a xul:tab, creates a TabItem for it and adds it to the scene. 
   link: function TabItems_link(tab){
     try {
       Utils.assertThrow(tab, "tab");
+      Utils.assertThrow(!tab.pinned, "shouldn't be an app tab");
       Utils.assertThrow(!tab.tabItem, "shouldn't already be linked");
       new TabItem(tab); // sets tab.tabItem to itself
     } catch(e) {
@@ -825,10 +824,11 @@ let TabItems = {
 
   // ----------
   // Function: unlink
-  // Takes in a xul:tab.
+  // Takes in a xul:tab and destroys the TabItem associated with it. 
   unlink: function TabItems_unlink(tab) {
     try {
       Utils.assertThrow(tab, "tab");
+      Utils.assertThrow(!tab.pinned, "shouldn't be an app tab");
       Utils.assertThrow(tab.tabItem, "should already be linked");
 
       this.unregister(tab.tabItem);
