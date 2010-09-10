@@ -817,10 +817,12 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     // If @value is changed and BF_VALUE_CHANGED is false, @value is the value
-    // of the element so we call |Reset| which is getting the default value and
-    // sets it to the current value.
+    // of the element so, if the value of the element is different than @value,
+    // we have to re-set it. This is only the case when GetValueMode() returns
+    // VALUE_MODE_VALUE.
     if (aName == nsGkAtoms::value &&
-        !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+        !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
+        GetValueMode() == VALUE_MODE_VALUE) {
       SetDefaultValueAsValue();
     }
 
@@ -848,7 +850,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // null) doesn't call ParseAttribute.
         HandleTypeChange(kInputDefaultType->value);
       }
-    
+
+      UpdateBarredFromConstraintValidation();
+
       // If we are changing type from File/Text/Tel/Passwd to other input types
       // we need save the mValue into value attribute
       if (mInputData.mValue &&
@@ -897,12 +901,19 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                 NS_EVENT_STATE_VALID |
                 NS_EVENT_STATE_INVALID |
                 NS_EVENT_STATE_INDETERMINATE |
-                NS_EVENT_STATE_MOZ_PLACEHOLDER;
+                NS_EVENT_STATE_MOZ_PLACEHOLDER |
+                NS_EVENT_STATE_MOZ_SUBMITINVALID;
     }
 
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
         aName == nsGkAtoms::readonly) {
       UpdateValueMissingValidityState();
+
+      // This *has* to be called *after* validity has changed.
+      if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
+        UpdateBarredFromConstraintValidation();
+      }
+
       states |= NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL |
                 NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
     } else if (aName == nsGkAtoms::maxlength) {
@@ -915,7 +926,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     if (aNotify) {
       nsIDocument* doc = GetCurrentDoc();
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
 
       if (aName == nsGkAtoms::type) {
         UpdateEditableState();
@@ -925,6 +935,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
 
       if (doc && states) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, states);
       }
     }
@@ -1091,6 +1102,28 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
     SetValueInternal(aValue, PR_FALSE, PR_TRUE);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
+{
+  nsAutoString dataListId;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::list, dataListId);
+  if (!dataListId.IsEmpty()) {
+    nsIDocument* doc = GetCurrentDoc();
+
+    if (doc) {
+      Element* elem = doc->GetElementById(dataListId);
+
+      if (elem) {
+        CallQueryInterface(elem, aValue);
+        return NS_OK;
+      }
+    }
+  }
+
+  *aValue = nsnull;
   return NS_OK;
 }
 
@@ -2873,65 +2906,39 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 nsresult
 nsHTMLInputElement::SetDefaultValueAsValue()
 {
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-    {
-      PRBool resetVal;
-      GetDefaultChecked(&resetVal);
-      return DoSetChecked(resetVal, PR_TRUE, PR_FALSE);
-    }
-    case NS_FORM_INPUT_SEARCH:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_EMAIL:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_TEL:
-    case NS_FORM_INPUT_URL:
-    {
-      nsAutoString resetVal;
-      GetDefaultValue(resetVal);
-      // SetValueInternal is going to sanitize the value.
-      return SetValueInternal(resetVal, PR_FALSE, PR_FALSE);
-    }
-    case NS_FORM_INPUT_FILE:
-    {
-      // Resetting it to blank should not perform security check
-      ClearFiles();
-      break;
-    }
-    // Value is the same as defaultValue for hidden inputs
-    case NS_FORM_INPUT_HIDDEN:
-    default:
-      break;
-  }
+  NS_ASSERTION(GetValueMode() == VALUE_MODE_VALUE,
+               "GetValueMode() should return VALUE_MODE_VALUE!");
 
-  return NS_OK;
+  // The element has a content attribute value different from it's value when
+  // it's in the value mode value.
+  nsAutoString resetVal;
+  GetDefaultValue(resetVal);
+
+  // SetValueInternal is going to sanitize the value.
+  return SetValueInternal(resetVal, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::Reset()
 {
-  nsresult rv = SetDefaultValueAsValue();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // We should be able to reset all dirty flags regardless of the type.
+  SetCheckedChanged(PR_FALSE);
+  SetValueChanged(PR_FALSE);
 
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-      SetCheckedChanged(PR_FALSE);
-      break;
-    case NS_FORM_INPUT_SEARCH:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_EMAIL:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_TEL:
-    case NS_FORM_INPUT_URL:
-      SetValueChanged(PR_FALSE);
-      break;
+  switch (GetValueMode()) {
+    case VALUE_MODE_VALUE:
+      return SetDefaultValueAsValue();
+    case VALUE_MODE_DEFAULT_ON:
+      PRBool resetVal;
+      GetDefaultChecked(&resetVal);
+      return DoSetChecked(resetVal, PR_TRUE, PR_FALSE);
+    case VALUE_MODE_FILENAME:
+      ClearFiles();
+      return NS_OK;
+    case VALUE_MODE_DEFAULT:
     default:
-      break;
+      return NS_OK;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3229,6 +3236,10 @@ nsHTMLInputElement::IntrinsicState() const
     if (value.IsEmpty()) {
       state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
     }
+  }
+
+  if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
+    state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
   }
 
   return state;
@@ -3623,6 +3634,7 @@ nsHTMLInputElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID);
   }
@@ -3782,19 +3794,21 @@ nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
   if (aNotify) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
       doc->ContentStatesChanged(this, nsnull,
                                 NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
     }
   }
 }
 
-PRBool
-nsHTMLInputElement::IsBarredFromConstraintValidation() const
+void
+nsHTMLInputElement::UpdateBarredFromConstraintValidation()
 {
-  return mType == NS_FORM_INPUT_HIDDEN ||
-         mType == NS_FORM_INPUT_BUTTON ||
-         mType == NS_FORM_INPUT_RESET ||
-         HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+  SetBarredFromConstraintValidation(mType == NS_FORM_INPUT_HIDDEN ||
+                                    mType == NS_FORM_INPUT_BUTTON ||
+                                    mType == NS_FORM_INPUT_RESET ||
+                                    HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) ||
+                                    HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
 }
 
 nsresult

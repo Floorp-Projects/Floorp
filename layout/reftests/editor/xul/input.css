@@ -25,8 +25,8 @@
 textbox[multiline="true"], html|textarea {
   border: none !important;
   -moz-appearance: none !important;
-  -moz-border-radius-topright: 0;
-  -moz-border-radius-bottomleft: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 html|input, html|textarea {

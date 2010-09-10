@@ -50,6 +50,7 @@ EXPORTS		= ImageErrors.h ImageLogging.h
 XPIDLSRCS	= \
 		imgICache.idl             \
 		imgIContainer.idl         \
+		imgIContainerDebug.idl    \
 		imgIContainerObserver.idl \
 		imgIDecoderObserver.idl   \
 		imgIEncoder.idl           \

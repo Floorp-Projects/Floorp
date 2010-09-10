@@ -184,7 +184,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Return the all-powerful system principal.
      */
-    [noscript] nsIPrincipal getSystemPrincipal();
+    nsIPrincipal getSystemPrincipal();
 
     /**
      * Return a principal with the specified certificate fingerprint, subject

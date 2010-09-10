@@ -282,24 +282,21 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
 {
 __try {
   *ppdispChild = NULL;
-  if (!mWeakShell || varChild.vt != VT_I4)
+  if (IsDefunct())
     return E_FAIL;
 
-  if (varChild.lVal == CHILDID_SELF) {
-    *ppdispChild = static_cast<IDispatch*>(this);
-    AddRef();
-    return S_OK;
-  }
+  // IAccessible::accChild is used to return this accessible or child accessible
+  // at the given index or to get an accessible by child ID in the case of
+  // document accessible (it's handled by overriden GetXPAccessibleFor method
+  // on the document accessible). The getting an accessible by child ID is used
+  // by AccessibleObjectFromEvent() called by AT when AT handles our MSAA event.
+  nsAccessible* child = GetXPAccessibleFor(varChild);
+  if (child)
+    *ppdispChild = NativeAccessible(child);
 
-  if (!nsAccUtils::MustPrune(this)) {
-    nsAccessible* child = GetChildAt(varChild.lVal - 1);
-    if (child) {
-      *ppdispChild = NativeAccessible(child);
-    }
-  }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return (*ppdispChild)? S_OK: E_FAIL;
+  return (*ppdispChild)? S_OK: E_INVALIDARG;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accName(
@@ -1804,7 +1801,7 @@ nsAccessibleWrap::UnattachIEnumVariant()
 nsAccessible*
 nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 {
-  if (IsDefunct())
+  if (aVarChild.vt != VT_I4)
     return nsnull;
 
   // if its us real easy - this seems to always be the case

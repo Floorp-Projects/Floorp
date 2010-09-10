@@ -154,6 +154,7 @@ namespace css = mozilla::css;
 #define VARIANT_HN   (VARIANT_INHERIT | VARIANT_NUMBER)
 #define VARIANT_HON  (VARIANT_HN | VARIANT_NONE)
 #define VARIANT_HOS  (VARIANT_INHERIT | VARIANT_NONE | VARIANT_STRING)
+#define VARIANT_LPN  (VARIANT_LP | VARIANT_NUMBER)
 #define VARIANT_TIMING_FUNCTION (VARIANT_KEYWORD | VARIANT_CUBIC_BEZIER)
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_UO   (VARIANT_URL | VARIANT_NONE)
@@ -5068,13 +5069,13 @@ CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 {
   nsCSSValue dimenX, dimenY;
   // required first value
-  if (! ParseNonNegativeVariant(dimenX, VARIANT_HLP, nsnull))
+  if (! ParseNonNegativeVariant(dimenX, VARIANT_HLP | VARIANT_CALC, nsnull))
     return PR_FALSE;
 
   // optional second value (forbidden if first value is inherit/initial)
   if (dimenX.GetUnit() != eCSSUnit_Inherit &&
       dimenX.GetUnit() != eCSSUnit_Initial) {
-    ParseNonNegativeVariant(dimenY, VARIANT_LP, nsnull);
+    ParseNonNegativeVariant(dimenY, VARIANT_LP | VARIANT_CALC, nsnull);
   }
 
   if (dimenX == dimenY || dimenY.GetUnit() == eCSSUnit_Null) {
@@ -5098,7 +5099,9 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
 
   NS_FOR_CSS_SIDES (side) {
     if (! ParseNonNegativeVariant(dimenX.*nsCSSRect::sides[side],
-                                  side > 0 ? VARIANT_LP : VARIANT_HLP, nsnull))
+                                  (side > 0 ? 0 : VARIANT_INHERIT) |
+                                    VARIANT_LP | VARIANT_CALC,
+                                  nsnull))
       break;
     countX++;
   }
@@ -5108,7 +5111,7 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
   if (ExpectSymbol('/', PR_TRUE)) {
     NS_FOR_CSS_SIDES (side) {
       if (! ParseNonNegativeVariant(dimenY.*nsCSSRect::sides[side],
-                                    VARIANT_LP, nsnull))
+                                    VARIANT_LP | VARIANT_CALC, nsnull))
         break;
       countY++;
     }
@@ -5179,10 +5182,10 @@ static const nsCSSProperty kBorderColorIDs[] = {
   eCSSProperty_border_left_color_value
 };
 static const nsCSSProperty kBorderRadiusIDs[] = {
-  eCSSProperty__moz_border_radius_topLeft,
-  eCSSProperty__moz_border_radius_topRight,
-  eCSSProperty__moz_border_radius_bottomRight,
-  eCSSProperty__moz_border_radius_bottomLeft
+  eCSSProperty_border_top_left_radius,
+  eCSSProperty_border_top_right_radius,
+  eCSSProperty_border_bottom_right_radius,
+  eCSSProperty_border_bottom_left_radius
 };
 static const nsCSSProperty kOutlineRadiusIDs[] = {
   eCSSProperty__moz_outline_radius_topLeft,
@@ -5278,15 +5281,15 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   case eCSSProperty_border_start_style:
     return ParseDirectionalBoxProperty(eCSSProperty_border_start_style,
                                        NS_BOXPROP_SOURCE_LOGICAL);
-  case eCSSProperty__moz_border_radius:
+  case eCSSProperty_border_radius:
     return ParseBoxCornerRadii(kBorderRadiusIDs);
   case eCSSProperty__moz_outline_radius:
     return ParseBoxCornerRadii(kOutlineRadiusIDs);
 
-  case eCSSProperty__moz_border_radius_topLeft:
-  case eCSSProperty__moz_border_radius_topRight:
-  case eCSSProperty__moz_border_radius_bottomRight:
-  case eCSSProperty__moz_border_radius_bottomLeft:
+  case eCSSProperty_border_top_left_radius:
+  case eCSSProperty_border_top_right_radius:
+  case eCSSProperty_border_bottom_right_radius:
+  case eCSSProperty_border_bottom_left_radius:
   case eCSSProperty__moz_outline_radius_topLeft:
   case eCSSProperty__moz_outline_radius_topRight:
   case eCSSProperty__moz_outline_radius_bottomRight:
@@ -5485,11 +5488,11 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
   case eCSSProperty_background_size:
-  case eCSSProperty__moz_border_radius:
-  case eCSSProperty__moz_border_radius_topLeft:
-  case eCSSProperty__moz_border_radius_topRight:
-  case eCSSProperty__moz_border_radius_bottomRight:
-  case eCSSProperty__moz_border_radius_bottomLeft:
+  case eCSSProperty_border_radius:
+  case eCSSProperty_border_top_left_radius:
+  case eCSSProperty_border_top_right_radius:
+  case eCSSProperty_border_bottom_right_radius:
+  case eCSSProperty_border_bottom_left_radius:
   case eCSSProperty_box_shadow:
   case eCSSProperty_clip:
   case eCSSProperty__moz_column_rule:
@@ -5637,7 +5640,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty__moz_column_width:
     return ParseNonNegativeVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty__moz_column_gap:
-    return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL |
+                                   VARIANT_CALC, nsnull);
   case eCSSProperty_bottom:
   case eCSSProperty_top:
   case eCSSProperty_left:
@@ -5857,7 +5861,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kOutlineStyleKTable);
   case eCSSProperty_outline_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKL,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKL | VARIANT_CALC,
                                    nsCSSProps::kBorderWidthKTable);
   case eCSSProperty_outline_offset:
     return ParseVariant(aValue, VARIANT_HL | VARIANT_CALC, nsnull);
@@ -9032,9 +9036,7 @@ CSSParserImpl::ParseDasharray()
   } else {
     nsCSSValueList *cur = value.SetListValue();
     for (;;) {
-      if (!ParseVariant(cur->mValue,
-                        VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,
-                        nsnull)) {
+      if (!ParseNonNegativeVariant(cur->mValue, VARIANT_LPN, nsnull)) {
         return PR_FALSE;
       }
       if (CheckEndProperty()) {

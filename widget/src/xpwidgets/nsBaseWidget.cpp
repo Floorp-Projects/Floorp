@@ -292,7 +292,10 @@ NS_IMETHODIMP
 nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
                                    nsIDeviceContext *aContext)
 {
-  NS_ASSERTION((mWindowType == eWindowType_toplevel), "Can't attach to child?");
+  NS_ASSERTION((mWindowType == eWindowType_toplevel ||
+                mWindowType == eWindowType_dialog ||
+                mWindowType == eWindowType_invisible),
+               "Can't attach to child?");
 
   mViewCallback = aViewEventFunction;
 

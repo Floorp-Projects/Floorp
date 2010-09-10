@@ -861,11 +861,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     startTime = datetime.now()
 
     if debuggerInfo and debuggerInfo["interactive"]:
-      # If an interactive debugger is attached, don't redirect output
-      # and don't use timeouts.
+      # If an interactive debugger is attached, don't redirect output,
+      # don't use timeouts, and don't capture ctrl-c.
       timeout = None
       maxTime = None
       outputPipe = None
+      signal.signal(signal.SIGINT, lambda sigid, frame: None)
     else:
       outputPipe = subprocess.PIPE
 

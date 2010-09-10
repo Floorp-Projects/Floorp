@@ -290,10 +290,6 @@ private:
   void* mData;
   size_t mSize;
   id_t mId;
-
-  // disable these
-  static void* operator new(size_t) CPP_THROW_NEW;
-  static void operator delete(void*);  
 };
 
 

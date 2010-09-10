@@ -87,6 +87,8 @@ public:
 
     virtual nsresult        EvictEntries(const char * clientID);
 
+    bool                    EntryIsTooBig(PRInt64 entrySize);
+
     /**
      * Preference accessors
      */

@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=592592
+-->
+<head>
+  <title>Test for Bug 592592</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=592592">Mozilla Bug 592592</a>
+<p id="display"></p>
+<div id="content">
+  <div id="editor" contenteditable="true" style="white-space:pre-wrap">a b</div>
+  <div id="editor2" contenteditable="true" style="white-space:pre-wrap">a   b</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 592592 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var ed = document.getElementById("editor");
+
+  // Put the selection right after "a"
+  ed.focus();
+  window.getSelection().collapse(ed.firstChild, 1);
+
+  // Press space
+  synthesizeKey(" ", {});
+
+  // Make sure we haven't added an nbsp
+  is(ed.innerHTML, "a  b", "We should not be adding an &nbsp; for preformatted text");
+
+  // Remove the preformatted style
+  ed.removeAttribute("style");
+
+  // Reset the DOM
+  ed.innerHTML = "a b";
+
+  // Reset the selection
+  ed.focus();
+  window.getSelection().collapse(ed.firstChild, 1);
+
+  // Press space
+  synthesizeKey(" ", {});
+
+  // Make sure that we have added an nbsp
+  is(ed.innerHTML, "a&nbsp; b", "We should add an &nbsp; for non-preformatted text");
+
+  ed = document.getElementById("editor2");
+
+  // Put the selection after the second space in the second editable field
+  ed.focus();
+  window.getSelection().collapse(ed.firstChild, 3);
+
+  // Press the back-space key
+  synthesizeKey("VK_BACK_SPACE", {});
+
+  // Make sure that we've only deleted a single space
+  is(ed.innerHTML, "a  b", "We should only be deleting a single space");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

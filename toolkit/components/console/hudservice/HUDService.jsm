@@ -111,6 +111,11 @@ const NEW_GROUP_DELAY = 5000;
 // search.
 const SEARCH_DELAY = 200;
 
+// The number of lines that are displayed in the console output by default.
+// The user can change this number by adjusting the hidden
+// "devtools.hud.loglimit" preference.
+const DEFAULT_LOG_LIMIT = 200;
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -1094,6 +1099,48 @@ NetworkPanel.prototype =
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//// Private utility functions for the HUD service
+
+/**
+ * Destroys lines of output if more lines than the allowed log limit are
+ * present.
+ *
+ * @param nsIDOMNode aConsoleNode
+ *        The DOM node that holds the output of the console.
+ * @returns void
+ */
+function pruneConsoleOutputIfNecessary(aConsoleNode)
+{
+  let logLimit;
+  try {
+    let prefBranch = Services.prefs.getBranch("devtools.hud.");
+    logLimit = prefBranch.getIntPref("loglimit");
+  } catch (e) {
+    logLimit = DEFAULT_LOG_LIMIT;
+  }
+
+  let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
+  for (let i = 0; i < messageNodes.length - logLimit; i++) {
+    let messageNode = messageNodes[i];
+    let groupNode = messageNode.parentNode;
+    if (!groupNode.classList.contains("hud-group")) {
+      throw new Error("pruneConsoleOutputIfNecessary: message node not in a " +
+                      "HUD group");
+    }
+
+    groupNode.removeChild(messageNode);
+
+    // If there are no more children, then remove the group itself.
+    if (!groupNode.querySelector(".hud-msg-node")) {
+      groupNode.parentNode.removeChild(groupNode);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+//// The HUD service
+
 function HUD_SERVICE()
 {
   // TODO: provide mixins for FENNEC: bug 568621
@@ -1861,6 +1908,8 @@ HUD_SERVICE.prototype =
 
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
+
+    pruneConsoleOutputIfNecessary(aConsoleNode);
   },
 
   /**
@@ -3810,7 +3859,7 @@ JSTerm.prototype = {
     this.history.push(aExecuteString);
     this.historyIndex++;
     this.historyPlaceHolder = this.history.length;
-    this.inputNode.value = "";
+    this.setInputValue("");
   },
 
   /**
@@ -3915,6 +3964,7 @@ JSTerm.prototype = {
 
     lastGroupNode.appendChild(node);
     ConsoleUtils.scrollToVisible(node);
+    pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
   /**
@@ -3954,6 +4004,7 @@ JSTerm.prototype = {
 
     lastGroupNode.appendChild(node);
     ConsoleUtils.scrollToVisible(node);
+    pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
   clearOutput: function JST_clearOutput()
@@ -3967,12 +4018,46 @@ JSTerm.prototype = {
     outputNode.lastTimestamp = 0;
   },
 
+  /**
+   * Updates the size of the input field (command line) to fit its contents.
+   *
+   * @returns void
+   */
+  resizeInput: function JST_resizeInput()
+  {
+    let inputNode = this.inputNode;
+
+    // Reset the height so that scrollHeight will reflect the natural height of
+    // the contents of the input field.
+    inputNode.style.height = "auto";
+
+    // Now resize the input field to fit its contents.
+    let scrollHeight = inputNode.inputField.scrollHeight;
+    if (scrollHeight > 0) {
+      inputNode.style.height = scrollHeight + "px";
+    }
+  },
+
+  /**
+   * Sets the value of the input field (command line), and resizes the field to
+   * fit its contents. This method is preferred over setting "inputNode.value"
+   * directly, because it correctly resizes the field.
+   *
+   * @param string aNewValue
+   *        The new value to set.
+   * @returns void
+   */
+  setInputValue: function JST_setInputValue(aNewValue)
+  {
+    this.inputNode.value = aNewValue;
+    this.resizeInput();
+  },
+
   inputEventHandler: function JSTF_inputEventHandler()
   {
     var self = this;
     function handleInputEvent(aEvent) {
-      self.inputNode.setAttribute("rows",
-        Math.min(8, self.inputNode.value.split("\n").length));
+      self.resizeInput();
     }
     return handleInputEvent;
   },
@@ -3992,17 +4077,16 @@ JSTerm.prototype = {
             // control-a
             tmp = self.codeInputString;
             setTimeout(function() {
-              self.inputNode.value = tmp;
+              self.setInputValue(tmp);
               self.inputNode.setSelectionRange(0, 0);
             }, 0);
             break;
           case 101:
             // control-e
             tmp = self.codeInputString;
-            self.inputNode.value = "";
+            self.setInputValue("");
             setTimeout(function(){
-              var endPos = tmp.length + 1;
-              self.inputNode.value = tmp;
+              self.setInputValue(tmp);
             }, 0);
             break;
           default:
@@ -4103,14 +4187,14 @@ JSTerm.prototype = {
 
       let inputVal = this.history[--this.historyPlaceHolder];
       if (inputVal){
-        this.inputNode.value = inputVal;
+        this.setInputValue(inputVal);
       }
     }
     // Down Arrow key
     else {
       if (this.historyPlaceHolder == this.history.length - 1) {
         this.historyPlaceHolder ++;
-        this.inputNode.value = "";
+        this.setInputValue("");
         return;
       }
       else if (this.historyPlaceHolder >= (this.history.length)) {
@@ -4119,7 +4203,7 @@ JSTerm.prototype = {
       else {
         let inputVal = this.history[++this.historyPlaceHolder];
         if (inputVal){
-          this.inputNode.value = inputVal;
+          this.setInputValue(inputVal);
         }
       }
     }
@@ -4250,7 +4334,7 @@ JSTerm.prototype = {
       }
 
       completionStr = matches[matchIndexToUse].substring(matchOffset);
-      this.inputNode.value = inputValue +  completionStr;
+      this.setInputValue(inputValue + completionStr);
 
       selEnd = inputValue.length + completionStr.length;
 
@@ -4310,10 +4394,21 @@ JSTermFirefoxMixin.prototype = {
    */
   generateUI: function JSTF_generateUI()
   {
+    let inputContainer = this.xulElementFactory("hbox");
+    inputContainer.setAttribute("class", "jsterm-input-container");
+
     let inputNode = this.xulElementFactory("textbox");
     inputNode.setAttribute("class", "jsterm-input-node");
+    inputNode.setAttribute("flex", "1");
     inputNode.setAttribute("multiline", "true");
     inputNode.setAttribute("rows", "1");
+    inputContainer.appendChild(inputNode);
+
+    let closeButton = this.xulElementFactory("button");
+    closeButton.setAttribute("class", "jsterm-close-button");
+    inputContainer.appendChild(closeButton);
+    closeButton.addEventListener("command", HeadsUpDisplayUICommands.toggleHUD,
+                                 false);
 
     if (this.existingConsoleNode == undefined) {
       // create elements
@@ -4334,7 +4429,7 @@ JSTermFirefoxMixin.prototype = {
     }
     else {
       this.inputNode = inputNode;
-      this.term = inputNode;
+      this.term = inputContainer;
       this.outputNode = this.existingConsoleNode;
     }
   },

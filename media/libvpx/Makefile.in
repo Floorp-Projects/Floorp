@@ -138,7 +138,6 @@ CSRCS += \
   reconinter.c \
   reconintra.c \
   reconintra4x4.c \
-  segmentation_common.c \
   setupintrarecon.c \
   swapyv12buffer.c \
   textblit.c \
@@ -149,6 +148,7 @@ CSRCS += \
   demode.c \
   dequantize.c \
   detokenize.c \
+  idct_blk.c \
   onyxd_if.c \
   threading.c \
   vp8_dx_iface.c \
@@ -169,6 +169,8 @@ ifdef VPX_X86_ASM
 # Building on an x86 platform with a supported assembler, include
 # the optimized assembly in the build.
 CSRCS += \
+  idct_blk_mmx.c \
+  idct_blk_sse2.c \
   loopfilter_x86.c \
   vp8_asm_stubs.c \
   x86_systemdependent.c \
@@ -177,6 +179,7 @@ CSRCS += \
 
 ASFILES += \
   idctllm_mmx.asm \
+  idctllm_sse2.asm \
   iwalsh_mmx.asm \
   iwalsh_sse2.asm \
   loopfilter_mmx.asm \
@@ -187,17 +190,10 @@ ASFILES += \
   recon_sse2.asm \
   subpixel_mmx.asm \
   subpixel_sse2.asm \
+  subpixel_ssse3.asm \
   dequantize_mmx.asm \
   emms.asm \
   $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-ifneq ($(OS_TEST),x86_64)
-ASFILES += \
-  safeseh.asm \
-  $(NULL)
-endif
-endif
 
 endif
  

@@ -47,6 +47,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
+#include "IDBFactory.h"
 #include "IDBTransaction.h"
 #include "TransactionThreadPool.h"
 
@@ -105,10 +106,6 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBTransaction* aTransaction,
 AsyncConnectionHelper::~AsyncConnectionHelper()
 {
   if (!NS_IsMainThread()) {
-    NS_ASSERTION(mErrorCode == NOREPLY || !mRequest,
-                 "This should only happen if NOREPLY was returned or if the "
-                 "runnable already ran on the main thread!");
-
     IDBDatabase* database;
     mDatabase.forget(&database);
 
@@ -146,17 +143,7 @@ NS_IMETHODIMP
 AsyncConnectionHelper::Run()
 {
   if (NS_IsMainThread()) {
-    if (mRequest->mAborted) {
-      NS_ASSERTION(mRequest->mReadyState == nsIIDBRequest::DONE,
-                   "Wrong state!");
-      mError = true;
-      mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;
-    }
-    else {
-      NS_ASSERTION(mRequest->mReadyState == nsIIDBRequest::LOADING,
-                   "Wrong state!");
-      mRequest->mReadyState = nsIIDBRequest::DONE;
-    }
+    mRequest->SetDone();
 
     // Call OnError if the database had an error or if the OnSuccess handler
     // has an error.
@@ -168,9 +155,11 @@ AsyncConnectionHelper::Run()
       mTransaction->OnRequestFinished();
     }
 
-    mDatabase = nsnull;
-    mTransaction = nsnull;
-    mRequest = nsnull;
+    ReleaseMainThreadObjects();
+
+    NS_ASSERTION(!(mDatabase || mTransaction || mRequest), "Subclass didn't "
+                 "call AsyncConnectionHelper::ReleaseMainThreadObjects!");
+
     return NS_OK;
   }
 
@@ -202,7 +191,13 @@ AsyncConnectionHelper::Run()
   }
 
   if (NS_SUCCEEDED(rv)) {
+    if (mDatabase) {
+      IDBFactory::SetCurrentDatabase(mDatabase);
+    }
     mErrorCode = DoDatabaseWork(connection);
+    if (mDatabase) {
+      IDBFactory::SetCurrentDatabase(nsnull);
+    }
   }
   else {
     mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;
@@ -223,13 +218,8 @@ AsyncConnectionHelper::Run()
     mStartTime = TimeStamp();
   }
 
-  if (mErrorCode != NOREPLY) {
-    mError = mErrorCode != OK;
-
-    return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
-  }
-
-  return NS_OK;
+  mError = mErrorCode != OK;
+  return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
@@ -267,10 +257,6 @@ AsyncConnectionHelper::Dispatch(nsIEventTarget* aDatabaseThread)
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  NS_ASSERTION(mRequest->mReadyState == nsIIDBRequest::INITIAL,
-               "Wrong readyState!");
-  mRequest->mReadyState = nsIIDBRequest::LOADING;
 
   rv = aDatabaseThread->Dispatch(this, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -366,6 +352,16 @@ AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
   // Leave the variant remain set to empty.
 
   return OK;
+}
+
+void
+AsyncConnectionHelper::ReleaseMainThreadObjects()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mDatabase = nsnull;
+  mTransaction = nsnull;
+  mRequest = nsnull;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
