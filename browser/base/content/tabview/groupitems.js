@@ -64,7 +64,6 @@
 //   title - the title for the groupItem; otherwise blank
 //   dontPush - true if this groupItem shouldn't push away on creation; default is false
 function GroupItem(listOfEls, options) {
-  try {
   if (typeof options == 'undefined')
     options = {};
 
@@ -253,6 +252,16 @@ function GroupItem(listOfEls, options) {
     .appendTo($container)
     .hide();
 
+  // ___ app tabs: create app tab tray and populate it
+  this.$appTabTray = iQ("<div/>")
+    .addClass("appTabTray")
+    .appendTo($container);
+
+  AllTabs.tabs.forEach(function(xulTab) {
+    if (xulTab.pinned && xulTab.ownerDocument.defaultView == gWindow)
+      self.addAppTab(xulTab);
+  });
+
   // ___ locking
   if (this.locked.bounds)
     $container.css({cursor: 'default'});
@@ -292,10 +301,6 @@ function GroupItem(listOfEls, options) {
 
   this._inited = true;
   this.save();
-  } catch(e) {
-    Utils.log("Error in GroupItem()");
-    Utils.log(e.stack);
-  }
 };
 
 // ----------
@@ -307,15 +312,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // -----------
   // Function: setActiveTab
-  // Sets the active <TabItem> for this groupItem
+  // Sets the active <TabItem> for this groupItem; can be null, but only
+  // if there are no children. 
   setActiveTab: function GroupItem_setActiveTab(tab) {
-    Utils.assert(tab && tab.isATabItem, 'tab must be a TabItem');
+    Utils.assertThrow((!tab && this._children.length == 0) || tab.isATabItem,
+        "tab must be null (if no children) or a TabItem");
+
     this._activeTab = tab;
   },
 
   // -----------
   // Function: getActiveTab
-  // Gets the active <TabItem> for this groupItem
+  // Gets the active <TabItem> for this groupItem; can be null, but only
+  // if there are no children.
   getActiveTab: function GroupItem_getActiveTab() {
     return this._activeTab;
   },
@@ -396,6 +405,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
+
+    box.width -= this.$appTabTray.width();
 
     // Make the computed bounds' "padding" and new tab button margin actually be
     // themeable --OR-- compute this from actual bounds. Bug 586546
@@ -695,6 +706,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var index = this._children.indexOf(item);
       if (index != -1)
         this._children.splice(index, 1);
+        
+      if (item == this._activeTab) {
+        if (this._children.length)
+          this._activeTab = this._children[0];
+        else
+          this._activeTab = null;
+      }
 
       item.setParent(null);
       item.removeClass("tabInGroupItem");
@@ -730,6 +748,33 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     toRemove.forEach(function(child) {
       self.remove(child, {dontArrange: true});
     });
+  },
+
+  // ----------
+  // Adds the given xul:tab as an app tab in this group's apptab tray
+  addAppTab: function GroupItem_addAppTab(xulTab) {
+    let self = this;
+
+    let icon = xulTab.image || Utils.defaultFaviconURL;
+    let $appTab = iQ("<img>")
+      .addClass("appTabIcon")
+      .attr("src", icon)
+      .data("xulTab", xulTab)
+      .appendTo(this.$appTabTray)
+      .click(function(event) {
+        if (Utils.isRightClick(event))
+          return;
+
+        GroupItems.setActiveGroupItem(self);
+        GroupItems._updateTabBar();
+        UI.goToTab(iQ(this).data("xulTab"));
+      });
+      
+    let columnWidth = $appTab.width();
+    if (parseInt(this.$appTabTray.css("width")) != columnWidth) {
+      this.$appTabTray.css({width: columnWidth});
+      this.arrange();
+    }
   },
 
   // ----------
@@ -1129,6 +1174,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
            className.indexOf('name') != -1 ||
            className.indexOf('close') != -1 ||
            className.indexOf('newTabButton') != -1 ||
+           className.indexOf('appTabTray') != -1 ||
+           className.indexOf('appTabIcon') != -1 ||
            className.indexOf('stackExpander') != -1) {
           return;
         }
@@ -1181,7 +1228,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     GroupItems.setActiveGroupItem(this);
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
-    // TabItems will have handled the new tab and added the tabItem property
+    // TabItems will have handled the new tab and added the tabItem property. 
+    // We don't have to check if it's an app tab (and therefore wouldn't have a 
+    // TabItem), since we've just created it.
     let newItem = newTab.tabItem;
 
     var self = this;
@@ -1604,16 +1653,18 @@ let GroupItems = {
 
   // ----------
   // Function: updateActiveGroupItemAndTabBar
-  // Sets active group item and updates tab bar
+  // Sets active TabItem and GroupItem, and updates tab bar appropriately.
   updateActiveGroupItemAndTabBar: function GroupItems_updateActiveGroupItemAndTabBar(tabItem) {
-    if (tabItem.parent) {
-      let groupItem = tabItem.parent;
-      this.setActiveGroupItem(groupItem);
+    Utils.assertThrow(tabItem && tabItem.isATabItem, "tabItem must be a TabItem");
+
+    let groupItem = tabItem.parent;
+    this.setActiveGroupItem(groupItem);
+
+    if (groupItem)
       groupItem.setActiveTab(tabItem);
-    } else {
-      this.setActiveGroupItem(null);
+    else
       this.setActiveOrphanTab(tabItem);
-    }
+
     this._updateTabBar();
   },
 
@@ -1693,10 +1744,17 @@ let GroupItems = {
 
   // ----------
   // Function: moveTabToGroupItem
+  // Used for the right click menu in the tab strip; moves the given tab 
+  // into the given group. Does nothing if the tab is an app tab.
   // Paramaters:
   //  tab - the <xul:tab>.
   //  groupItemId - the <groupItem>'s id.  If nothing, create a new <groupItem>.
   moveTabToGroupItem : function GroupItems_moveTabToGroupItem (tab, groupItemId) {
+    if (tab.pinned) 
+      return;
+      
+    Utils.assertThrow(tab.tabItem, "tab must be linked to a TabItem");
+      
     let shouldUpdateTabBar = false;
     let shouldShowTabView = false;
     let groupItem;
