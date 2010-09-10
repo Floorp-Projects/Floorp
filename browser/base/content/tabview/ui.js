@@ -214,8 +214,10 @@ let UI = {
       var observer = {
         observe : function(subject, topic, data) {
           if (topic == "quit-application-requested") {
-            if (self._isTabViewVisible())
+            if (self._isTabViewVisible()) {
+              GroupItems.removeHiddenGroups();
               TabItems.saveAll(true);
+            }
             self._save();
           }
         }
@@ -353,6 +355,7 @@ let UI = {
     if (!this._isTabViewVisible())
       return;
 
+    GroupItems.removeHiddenGroups();
     TabItems.pausePainting();
 
     this._reorderTabsOnHide.forEach(function(groupItem) {
@@ -572,7 +575,8 @@ let UI = {
 
       function getClosestTabBy(norm) {
         var centers =
-          [[item.bounds.center(), item] for each(item in TabItems.getItems())];
+          [[item.bounds.center(), item] 
+             for each(item in TabItems.getItems()) if (!item.parent || !item.parent.hidden)];
         var myCenter = self.getActiveTab().bounds.center();
         var matches = centers
           .filter(function(item){return norm(item[0], myCenter)})

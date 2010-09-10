@@ -51,6 +51,7 @@ _BROWSER_FILES = \
                  browser_tabview_snapping.js \
                  browser_tabview_bug591706.js \
                  browser_tabview_apptabs.js \
+                 browser_tabview_undo_group.js \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)
