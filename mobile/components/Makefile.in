@@ -61,7 +61,7 @@ EXTRA_PP_COMPONENTS = \
 EXTRA_COMPONENTS = \
         MobileComponents.manifest \
         BrowserStartup.js \
-        GeolocationPrompt.js \
+        ContentPermissionPrompt.js \
         XPIDialogService.js \
         DownloadManagerUI.js \
         HelperAppDialog.js \
