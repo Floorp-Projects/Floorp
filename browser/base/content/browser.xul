@@ -667,6 +667,11 @@
                           key="key_sanitize"
                           command="Tools:Sanitize"/>
                 <menuseparator class="hide-if-empty-places-result"/>
+                <menuitem id="appmenu_restoreLastSession"
+                          class="restoreLastSession"
+                          label="&historyRestoreLastSession.label;"
+                          oncommand="restoreLastSession();"
+                          disabled="true"/>
                 <menu id="appmenu_recentlyClosedTabsMenu"
                       class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"

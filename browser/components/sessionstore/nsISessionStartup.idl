@@ -43,7 +43,7 @@
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(c0b185e7-0d21-46ac-8eee-7b5065ee7ecd)]
+[scriptable, uuid(e7bb7828-0e32-4995-a848-4aa35df603c7)]
 interface nsISessionStartup: nsISupports
 {
   // Get session state as string
@@ -55,13 +55,18 @@ interface nsISessionStartup: nsISupports
   boolean doRestore();
 
   /**
-   * What type of session we're restoring. If we have a session, we're
-   * either restoring state from a crash or restoring state that the user
-   * requested we save on shutdown.
+   * What type of session we're restoring.
+   * NO_SESSION       There is no data available from the previous session
+   * RECOVER_SESSION  The last session crashed. It will either be restored or
+   *                  about:sessionrestore will be shown.
+   * RESUME_SESSION   The previous session should be restored at startup
+   * DEFER_SESSION    The previous session is fine, but it shouldn't be restored
+   *                  without explicit action (with the exception of pinned tabs)
    */
   const unsigned long NO_SESSION = 0;
   const unsigned long RECOVER_SESSION = 1;
   const unsigned long RESUME_SESSION = 2;
+  const unsigned long DEFER_SESSION = 3;
 
   readonly attribute unsigned long sessionType;
 };
