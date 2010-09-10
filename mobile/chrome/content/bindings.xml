@@ -1223,7 +1223,7 @@
                 return;
 
               tabs.push({
-                title: title ? pageUrl : title,
+                title: title || pageUrl,
                 uri: pageUrl,
                 icon: Weave.Utils.getIcon(icon, "chrome://browser/skin/images/tab.png")
               });
