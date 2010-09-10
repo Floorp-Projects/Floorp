@@ -597,6 +597,22 @@ nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
 }
 
 void
+nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
+                                       nsIContent* aTriggerContent,
+                                       PRInt32 aXPos, PRInt32 aYPos)
+{
+  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, PR_TRUE);
+  if (!popupFrame || !MayShowPopup(popupFrame))
+    return;
+
+  InitTriggerEvent(nsnull, nsnull, nsnull);
+
+  popupFrame->InitializePopupAtScreen(aTriggerContent, aXPos, aYPos, PR_FALSE);
+
+  FirePopupShowingEvent(aPopup, PR_FALSE, PR_FALSE);
+}
+
+void
 nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
                                             nsIContent* aAnchorContent,
                                             nsAString& aAnchor,
@@ -608,7 +624,7 @@ nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
   if (!popupFrame || !MayShowPopup(popupFrame))
     return;
 
-  InitTriggerEvent(nsnull, aPopup, nsnull);
+  InitTriggerEvent(nsnull, nsnull, nsnull);
 
   popupFrame->InitializePopupWithAnchorAlign(aAnchorContent, aAnchor,
                                              aAlign, aXPos, aYPos);
