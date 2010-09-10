@@ -2768,6 +2768,13 @@ var PrintPreviewListener = {
     this._chromeState.findOpen = gFindBarInitialized && !gFindBar.hidden;
     if (gFindBarInitialized)
       gFindBar.close();
+
+    this._chromeState.syncNotificationsOpen = false;
+    var syncNotifications = document.getElementById("sync-notifications");
+    if (syncNotifications) {
+      this._chromeState.syncNotificationsOpen = !syncNotifications.notificationsHidden;
+      syncNotifications.notificationsHidden = true;
+    }
   },
   _showChrome: function () {
     if (this._chromeState.notificationsOpen)
@@ -2778,6 +2785,9 @@ var PrintPreviewListener = {
 
     if (this._chromeState.findOpen)
       gFindBar.open();
+
+    if (this._chromeState.syncNotificationsOpen)
+      document.getElementById("sync-notifications").notificationsHidden = false;
   }
 }
 
