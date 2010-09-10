@@ -15,8 +15,10 @@
 <!ENTITY privatebrowsingpage.startPrivateBrowsing.label "Start Private Browsing">
 <!ENTITY privatebrowsingpage.startPrivateBrowsing.accesskey "P">
 
-<!ENTITY privatebrowsingpage.howToStop                 "To stop Private Browsing, select &toolsMenu.label; &gt; &privateBrowsingCmd.stop.label;, or close &brandShortName;.">
-<!ENTITY privatebrowsingpage.howToStart                "To start Private Browsing, you can also select &toolsMenu.label; &gt; &privateBrowsingCmd.start.label;.">
+<!-- LOCALIZATION NOTE (privatebrowsingpage.howToStop2): please leave &basePBMenu.label; intact in the translation -->
+<!-- LOCALIZATION NOTE (privatebrowsingpage.howToStart2): please leave &basePBMenu.label; intact in the translation -->
+<!ENTITY privatebrowsingpage.howToStop2                "To stop Private Browsing, select &basePBMenu.label; &gt; &privateBrowsingCmd.stop.label;, or close &brandShortName;.">
+<!ENTITY privatebrowsingpage.howToStart2               "To start Private Browsing, you can also select &basePBMenu.label; &gt; &privateBrowsingCmd.start.label;.">
 
 <!ENTITY privatebrowsingpage.moreInfo                  "While this computer won't have a record of your browsing history, your internet service provider or employer can still track the pages you visit.">
 <!ENTITY privatebrowsingpage.learnMore                 "Learn More">
