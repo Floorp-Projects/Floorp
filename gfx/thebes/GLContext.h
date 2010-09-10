@@ -393,6 +393,11 @@ public:
     // the GL function pointers!
     void THEBES_API MarkDestroyed();
 
+    PRBool IsDestroyed() {
+        // MarkDestroyed will mark all these as null.
+        return fUseProgram == nsnull;
+    }
+
     enum NativeDataType {
       NativeGLContext,
       NativeImageSurface,
