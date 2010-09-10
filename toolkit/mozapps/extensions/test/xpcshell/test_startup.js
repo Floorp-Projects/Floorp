@@ -116,24 +116,14 @@ function end_test() {
 
 // Try to install all the items into the profile
 function run_test_1() {
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir(addon1, dest);
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir(addon2, dest);
+  writeInstallRDFForExtension(addon1, profileDir);
+  var dest = writeInstallRDFForExtension(addon2, profileDir);
   // Attempt to make this look like it was added some time in the past so
   // the change in run_test_2 makes the last modified time change.
   dest.lastModifiedTime -= 5000;
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir(addon3, dest);
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir(addon4, dest);
-  dest = profileDir.clone();
-  dest.append("addon5@tests.mozilla.org");
-  writeInstallRDFToDir(addon5, dest);
+  writeInstallRDFForExtension(addon3, profileDir);
+  writeInstallRDFForExtension(addon4, profileDir);
+  writeInstallRDFForExtension(addon5, profileDir);
 
   restartManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -179,13 +169,13 @@ function run_test_1() {
     do_check_eq(a4, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon4@tests.mozilla.org"));
     dest = profileDir.clone();
-    dest.append("addon4@tests.mozilla.org");
+    dest.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
     do_check_false(dest.exists());
 
     do_check_eq(a5, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
     dest = profileDir.clone();
-    dest.append("addon5@tests.mozilla.org");
+    dest.append(do_get_expected_addon_name("addon5@tests.mozilla.org"));
     do_check_false(dest.exists());
 
     AddonManager.getAddonsByTypes(["extension"], function(extensionAddons) {
@@ -199,24 +189,16 @@ function run_test_1() {
 // Test that modified items are detected and items in other install locations
 // are ignored
 function run_test_2() {
-  var dest = userDir.clone();
-  dest.append("addon1@tests.mozilla.org");
   addon1.version = "1.1";
-  writeInstallRDFToDir(addon1, dest);
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  writeInstallRDFForExtension(addon1, userDir);
   addon2.version="2.1";
-  writeInstallRDFToDir(addon2, dest);
-  dest = globalDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  writeInstallRDFForExtension(addon2, profileDir);
   addon2.version="2.2";
-  writeInstallRDFToDir(addon2, dest);
-  dest = userDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  writeInstallRDFForExtension(addon2, globalDir);
   addon2.version="2.3";
-  writeInstallRDFToDir(addon2, dest);
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
+  writeInstallRDFForExtension(addon2, userDir);
+  var dest = profileDir.clone();
+  dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
   dest.remove(true);
 
   restartManager();
@@ -266,14 +248,12 @@ function run_test_2() {
 // Check that removing items from the profile reveals their hidden versions.
 function run_test_3() {
   var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
   dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir(addon3, dest);
+  writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   restartManager();
 
@@ -315,7 +295,7 @@ function run_test_3() {
     do_check_false(isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
     dest = profileDir.clone();
-    dest.append("addon4@tests.mozilla.org");
+    dest.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
     do_check_false(dest.exists());
 
     run_test_4();
@@ -432,12 +412,10 @@ function run_test_6() {
 
 // Check that items in the profile hide the others again.
 function run_test_7() {
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
   addon1.version = "1.2";
-  writeInstallRDFToDir(addon1, dest);
-  dest = userDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  writeInstallRDFForExtension(addon1, profileDir);
+  var dest = userDir.clone();
+  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
 
   restartManager();
@@ -520,15 +498,13 @@ function run_test_9() {
   Services.prefs.clearUserPref("extensions.enabledScopes", 0);
 
   var dest = userDir.clone();
-  dest.append("addon1@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
   dest = globalDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
   addon2.version = "2.4";
-  writeInstallRDFToDir(addon2, dest);
+  writeInstallRDFForExtension(addon2, profileDir);
 
   restartManager();
 
@@ -575,12 +551,10 @@ function run_test_9() {
 // for the same item is handled
 function run_test_10() {
   var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
-  dest = userDir.clone();
-  dest.append("addon1@tests.mozilla.org");
   addon1.version = "1.3";
-  writeInstallRDFToDir(addon1, dest);
+  writeInstallRDFForExtension(addon1, userDir);
 
   restartManager();
 
@@ -626,10 +600,10 @@ function run_test_10() {
 // This should remove any remaining items
 function run_test_11() {
   var dest = userDir.clone();
-  dest.append("addon1@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
   dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
+  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
 
   restartManager();
