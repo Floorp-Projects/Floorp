@@ -12,27 +12,33 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>&title;</title>
+    <title>&about.startup.title;</title>
     <link rel="stylesheet" href="chrome://global/skin/aboutSupport.css" type="text/css"/>
   </head>
 
   <body>
-    <h1>&title;</h1>
+    <h1>&about.startup.title;</h1>
     <table>
-      <tr><th></th><th>&timestamp;</th><th>&elapsed;</th></tr>
-      <tr><td>&applaunched;</td><td id="launched">—</td><td>—</td></tr>
-      <tr><td>&appstarted;</td><td id="started">—</td><td>—</td></tr>
-      <tr><td>&sessrestored;</td><td id="restored">—</td><td>—</td></tr>
+      <tr><th></th><th>&about.startup.timestamp;</th><th>&about.startup.elapsed;</th></tr>
+      <tr><td>&about.startup.app.launched;</td><td id="launched">—</td><td>—</td></tr>
+      <tr><td>&about.startup.app.started;</td><td id="started">—</td><td>—</td></tr>
+      <tr><td>&about.startup.app.ready;</td><td id="restored">—</td><td>—</td></tr>
     </table>
 
-    <h1>&chart;</h1>
+    <h1>&about.startup.table;</h1>
     <table>
-      <tr><th>&timestamp;</th><th>&launchdur;</th><th>&startupdur;</th><th>&elapsed;</th><th colspan="4">&version;</th></tr>
-      <tr><td colspan="8"><i>&noevents;</i></td></tr>
+      <tr>
+        <th>&about.startup.timestamp;</th>
+        <th>&about.startup.duration.launch;</th>
+        <th>&about.startup.duration.startup;</th>
+        <th>&about.startup.duration.ready;</th>
+        <th colspan="4">&about.startup.version;</th>
+      </tr>
+      <tr><td colspan="8"><i>&about.startup.noevents;</i></td></tr>
     </table>
     <table>
-      <tr><th>&timestamp;</th><th>&eventdesc;</th></tr>
-      <tr><td colspan="2"><i>&noevents;</i></td></tr>
+      <tr><th>&about.startup.timestamp;</th><th>&about.startup.eventdesc;</th></tr>
+      <tr><td colspan="2"><i>&about.startup.noevents;</i></td></tr>
     </table>
     <script type="application/javascript;version=1.8" src="chrome://global/content/aboutStartup.js"/>
   </body>
