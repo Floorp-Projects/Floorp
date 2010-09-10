@@ -446,8 +446,8 @@
         <vbox id="appmenuPrimaryPane">
           <hbox flex="1"
                 class="split-menuitem">
-            <menuitem id="menuitem-tooltip appmenu_newTab"
-                      class="split-menuitem-item"
+            <menuitem id="appmenu_newTab"
+                      class="menuitem-tooltip split-menuitem-item"
                       flex="1"
                       label="&tabCmd.label;"
                       command="cmd_newNavigatorTab"
@@ -525,7 +525,8 @@
                 <menuitem id="appmenu_print_popup"
                           class="menuitem-iconic"
                           label="&printCmd.label;"
-                          command="cmd_print"/>
+                          command="cmd_print"
+                          key="printKb"/>
                 <menuitem id="appmenu_printPreview"
                           label="&printPreviewCmd.label;"
                           command="cmd_printPreview"/>
