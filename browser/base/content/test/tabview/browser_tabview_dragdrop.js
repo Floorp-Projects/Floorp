@@ -114,7 +114,11 @@ function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
   
     let onTabViewHidden = function() {
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-       groupTwo.closeAll();
+      groupTwo.closeAll();
+      // close undo group
+      let closeButton = groupTwo.$undoContainer.find(".close");
+      EventUtils.sendMouseEvent(
+        { type: "click" }, closeButton[0], contentWindow);
     };
     groupTwo.addSubscriber(groupTwo, "close", function() {
       groupTwo.removeSubscriber(groupTwo, "close");
