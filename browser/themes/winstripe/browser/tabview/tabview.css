@@ -195,6 +195,17 @@ body {
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px; */
 }
 
+.appTabTray {
+  top: 34px;
+  right: 1px;
+}
+
+.appTabIcon {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 /* InfoItems
 ----------------------------------*/
 

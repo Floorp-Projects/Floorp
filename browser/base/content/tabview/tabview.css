@@ -1,4 +1,4 @@
-/* Platform-independent structural styling for 
+/* Platform-independent structural styling for
  * <strike>Tab Candy</strike> Panorama
 ----------------------------------*/
 
@@ -88,10 +88,20 @@ body {
   image-rendering: -moz-crisp-edges;
 }
 
+/* Groups
+----------------------------------*/
+
+.groupItem {
+  position: absolute;
+}
+
+.appTabTray {
+  position: absolute;
+}
+
 /* Other Items
 ----------------------------------*/
 
-.groupItem,
 .info-item {
   position: absolute;
 }
