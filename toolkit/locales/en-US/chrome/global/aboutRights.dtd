@@ -41,9 +41,6 @@
 <!ENTITY rights.intro-point4b-unbranded "Web Site Services">
 <!ENTITY rights.intro-point4c-unbranded " section.">
 
-<!-- point 3 text for unbranded builds -->
-<!ENTITY rights.intro-point3-unbranded "Any applicable privacy policies for this product should be listed here.">
-
 <!ENTITY rights2.webservices-header "&brandFullName; Web-Based Information Services">
 
 <!-- Note that this paragraph references a couple of entities from
