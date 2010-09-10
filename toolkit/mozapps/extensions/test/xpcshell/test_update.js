@@ -32,9 +32,7 @@ function run_test() {
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);
 
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -44,11 +42,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -58,11 +54,9 @@ function run_test() {
       maxVersion: "0"
     }],
     name: "Test Addon 2",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -72,7 +66,7 @@ function run_test() {
       maxVersion: "5"
     }],
     name: "Test Addon 3",
-  }, dest);
+  }, profileDir);
 
   startupManager();
 
@@ -313,9 +307,7 @@ function check_test_5() {
 
 // Test that background update checks work
 function run_test_6() {
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -325,7 +317,7 @@ function run_test_6() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
   restartManager();
 
   prepare_test({}, [
@@ -457,9 +449,7 @@ function check_test_7() {
 
 // Verify the parameter escaping in update urls.
 function run_test_8() {
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "5.0",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -469,11 +459,9 @@ function run_test_8() {
       maxVersion: "2"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "67.0.5b1",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -483,11 +471,9 @@ function run_test_8() {
       maxVersion: "3"
     }],
     name: "Test Addon 2",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.3+",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -501,11 +487,9 @@ function run_test_8() {
       maxVersion: "3"
     }],
     name: "Test Addon 3",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "0.5ab6",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -515,11 +499,9 @@ function run_test_8() {
       maxVersion: "5"
     }],
     name: "Test Addon 4",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon5@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon5@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -529,11 +511,9 @@ function run_test_8() {
       maxVersion: "1"
     }],
     name: "Test Addon 5",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon6@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon6@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -543,7 +523,7 @@ function run_test_8() {
       maxVersion: "1"
     }],
     name: "Test Addon 6",
-  }, dest);
+  }, profileDir);
 
   restartManager();
 
@@ -669,9 +649,7 @@ function run_test_8() {
 // Tests that if an install.rdf claims compatibility then the add-on will be
 // seen as compatible regardless of what the update.rdf says.
 function run_test_9() {
-  var dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "5.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -681,7 +659,7 @@ function run_test_9() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
   restartManager();
 
@@ -741,9 +719,7 @@ function run_test_12() {
 // version of the app that the caller requested an update check for.
 function run_test_13() {
   // Not initially compatible but the update check will make it compatible
-  dest = profileDir.clone();
-  dest.append("addon7@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon7@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -753,7 +729,7 @@ function run_test_13() {
       maxVersion: "0"
     }],
     name: "Test Addon 7",
-  }, dest);
+  }, profileDir);
   restartManager();
 
   AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
@@ -800,9 +776,7 @@ function check_test_13() {
 // allowed to update automatically.
 function run_test_14() {
   // Have an add-on there that will be updated so we see some events from it
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -812,11 +786,9 @@ function run_test_14() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon8@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon8@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -826,7 +798,7 @@ function run_test_14() {
       maxVersion: "1"
     }],
     name: "Test Addon 8",
-  }, dest);
+  }, profileDir);
   restartManager();
 
   AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {

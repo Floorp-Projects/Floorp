@@ -3236,6 +3236,7 @@ pref("browser.history.maxStateObjectSize", 655360);
 
 // XPInstall prefs
 pref("xpinstall.whitelist.required", true);
+pref("extensions.alwaysUnpack", false);
 
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
