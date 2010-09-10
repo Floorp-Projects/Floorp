@@ -1970,6 +1970,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     JSScript *script;
     JSBool ok;
     uint32 oldopts;
+    jsval *argv = JS_ARGV(cx, vp);
 
     if (!argc)
         return JS_TRUE;
@@ -1978,7 +1979,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     if (!thisobj)
         return JS_FALSE;
 
-    str = JS_ValueToString(cx, vp[2]);
+    str = JS_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
 
@@ -1997,7 +1998,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
 
-    *vp = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
     ok = Disassemble(cx, 1, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
