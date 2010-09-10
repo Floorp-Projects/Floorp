@@ -65,13 +65,13 @@
 #include "nsPIDOMWindow.h"
 
 #include "nsIGeolocationProvider.h"
-#include "nsIGeolocationPrompt.h"
+#include "nsIContentPermissionPrompt.h"
 
 class nsGeolocationService;
 class nsGeolocation;
 
 class nsGeolocationRequest
- : public nsIGeolocationRequest
+ : public nsIContentPermissionRequest
  , public nsITimerCallback
 #ifdef MOZ_IPC
  , public mozilla::dom::PGeolocationRequestChild
@@ -79,10 +79,10 @@ class nsGeolocationRequest
 {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIGEOLOCATIONREQUEST
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
   NS_DECL_NSITIMERCALLBACK
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGeolocationRequest, nsIGeolocationRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGeolocationRequest, nsIContentPermissionRequest)
 
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
