@@ -175,6 +175,10 @@ statusbarpanel#statusbar-display {
   color: -moz-menuhovertext;
 }
 
+.split-menuitem-menu {
+  -moz-box-pack: end;
+}
+
 .appmenu-edit-button {
   -moz-appearance: none;
   border: 1px solid transparent;
