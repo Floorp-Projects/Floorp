@@ -59,8 +59,8 @@
 #include "nsThreadUtils.h"
 #include "nsIThreadInternal.h"
 #include "nsContentUtils.h"
-#include "nsFrameManager.h"
 
+#include "nsFrameManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
@@ -2245,6 +2245,13 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
   LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching event %s", this,
                           NS_ConvertUTF16toUTF8(aName).get()));
 
+  // Save events that occur while in the bfcache. These will be dispatched
+  // if the page comes out of the bfcache.
+  if (mPausedForInactiveDocument) {
+    mPendingEvents.AppendElement(aName);
+    return NS_OK;
+  }
+
   return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
                                               static_cast<nsIContent*>(this),
                                               aName,
@@ -2259,6 +2266,20 @@ nsresult nsHTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
 
   nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+nsresult nsHTMLMediaElement::DispatchPendingMediaEvents()
+{
+  NS_ASSERTION(!mPausedForInactiveDocument,
+               "Must not be in bfcache when dispatching pending media events");
+
+  PRUint32 count = mPendingEvents.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    DispatchAsyncEvent(mPendingEvents[i]);
+  }
+  mPendingEvents.Clear();
+
   return NS_OK;
 }
 
@@ -2312,6 +2333,7 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
         mDecoder->Suspend();
       } else {
         mDecoder->Resume(PR_FALSE);
+        DispatchPendingMediaEvents();
         if (!mPaused && !mDecoder->IsEnded()) {
           mDecoder->Play();
         }
