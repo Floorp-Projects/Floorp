@@ -200,7 +200,7 @@ void nsMediaDecoder::Progress(PRBool aTimer)
        now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
       !mDataTime.IsNull() &&
       now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
-    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
+    mElement->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
     mProgressTime = now;
   }
 
