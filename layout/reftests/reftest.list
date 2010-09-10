@@ -102,6 +102,9 @@ include ../../content/test/reftest/reftest.list
 # counters/
 include counters/reftest.list
 
+# datalist
+include datalist/reftest.list
+
 # dom/
 include dom/reftest.list
 

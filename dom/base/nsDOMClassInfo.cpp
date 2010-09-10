@@ -261,6 +261,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLCanvasElement.h"
+#include "nsIDOMHTMLDataListElement.h"
 #include "nsIDOMHTMLDListElement.h"
 #include "nsIDOMHTMLDirectoryElement.h"
 #include "nsIDOMHTMLDivElement.h"
@@ -763,6 +764,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLBodyElement, nsHTMLBodyElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLButtonElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLDataListElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLDListElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -2525,6 +2528,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLButtonElement, nsIDOMHTMLButtonElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLButtonElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDataListElement, nsIDOMHTMLDataListElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDataListElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
