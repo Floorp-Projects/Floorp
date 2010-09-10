@@ -166,17 +166,14 @@ statusbarpanel#statusbar-display {
   -moz-margin-start: .5em;
 }
 
-#appmenu-button > menupopup > menuitem {
-  -moz-padding-end: 16px;
-}
-
-.split-menuitem-item[_moz-menuactive="true"],
-.split-menuitem-menu[_moz-menuactive="true"] {
+/* menupopup > menu[_moz-menuactive="true"] etc. from menu.css doesn't match these nodes */
+.split-menuitem-item[_moz-menuactive="true"]:not([disabled]),
+.split-menuitem-menu[_moz-menuactive="true"]:not([disabled]),
+:-moz-any(#appmenuPrimaryPane, #appmenuSecondaryPane) > menu[_moz-menuactive="true"]:not([disabled]),
+:-moz-any(#appmenuPrimaryPane, #appmenuSecondaryPane) > menuitem[_moz-menuactive="true"]:not([disabled]) {
   background-color: -moz-menuhover;
   color: -moz-menuhovertext;
 }
-
-/* Style Firefox App Menu popup */
 
 .appmenu-edit-button {
   -moz-appearance: none;
