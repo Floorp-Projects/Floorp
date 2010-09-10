@@ -802,6 +802,12 @@ nsHttpChannel::CallOnStartRequest()
     rv = ApplyContentConversions();
     if (NS_FAILED(rv)) return rv;
 
+    // if this channel is for a download, close off access to the cache.
+    if (mCacheEntry && mChannelIsForDownload) {
+        mCacheEntry->Doom();
+        CloseCacheEntry(PR_FALSE);
+    }
+
     if (!mCanceled) {
         // create offline cache entry if offline caching was requested
         if (mCacheForOfflineUse) {
