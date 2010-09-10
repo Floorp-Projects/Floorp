@@ -3187,8 +3187,7 @@ namespace nanojit
         int reg = 0;
 
         // Find the first register in this set.
-        while (!(set & rmask((Register)reg)))
-            reg++;
+        reg = lsReg(set);
 
         _allocator.free &= ~rmask((Register)reg);
 
