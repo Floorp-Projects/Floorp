@@ -151,10 +151,6 @@ function GroupItem(listOfEls, options) {
     .html(html)
     .appendTo($container);
 
-  this.$titlebar.css({
-      position: "absolute",
-    });
-
   var $close = iQ('<div>')
     .addClass('close')
     .click(function() {
@@ -1603,6 +1599,7 @@ let GroupItems = {
     Utils.assert(groupItem, 'groupItem');
     Utils.assert(this.groupItems.indexOf(groupItem) == -1, 'only register once per groupItem');
     this.groupItems.push(groupItem);
+    UI.updateTabButton();
   },
 
   // ----------
@@ -1615,6 +1612,8 @@ let GroupItems = {
 
     if (groupItem == this._activeGroupItem)
       this._activeGroupItem = null;
+
+    UI.updateTabButton();
   },
 
   // ----------

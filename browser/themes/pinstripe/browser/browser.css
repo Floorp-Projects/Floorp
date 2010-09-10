@@ -546,6 +546,23 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
 
 #tabview-button {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
+  -moz-image-region: rect(0, 100px, 20px, 80px);
+}
+
+#tabview-button[groups="0"] {
+  -moz-image-region: rect(0, 20px, 20px, 0);
+}
+
+#tabview-button[groups="1"] {
+  -moz-image-region: rect(0, 40px, 20px, 20px);
+}
+
+#tabview-button[groups="2"] {
+  -moz-image-region: rect(0, 60px, 20px, 40px);
+}
+
+#tabview-button[groups="3"] {
+  -moz-image-region: rect(0, 80px, 20px, 60px);
 }
 
 /* download manager button */
