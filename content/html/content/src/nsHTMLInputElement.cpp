@@ -850,7 +850,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // null) doesn't call ParseAttribute.
         HandleTypeChange(kInputDefaultType->value);
       }
-    
+
+      UpdateBarredFromConstraintValidation();
+
       // If we are changing type from File/Text/Tel/Passwd to other input types
       // we need save the mValue into value attribute
       if (mInputData.mValue &&
@@ -899,12 +901,19 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                 NS_EVENT_STATE_VALID |
                 NS_EVENT_STATE_INVALID |
                 NS_EVENT_STATE_INDETERMINATE |
-                NS_EVENT_STATE_MOZ_PLACEHOLDER;
+                NS_EVENT_STATE_MOZ_PLACEHOLDER |
+                NS_EVENT_STATE_MOZ_SUBMITINVALID;
     }
 
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
         aName == nsGkAtoms::readonly) {
       UpdateValueMissingValidityState();
+
+      // This *has* to be called *after* validity has changed.
+      if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
+        UpdateBarredFromConstraintValidation();
+      }
+
       states |= NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL |
                 NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
     } else if (aName == nsGkAtoms::maxlength) {
@@ -3207,6 +3216,10 @@ nsHTMLInputElement::IntrinsicState() const
     }
   }
 
+  if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
+    state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
+  }
+
   return state;
 }
 
@@ -3766,13 +3779,14 @@ nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
   }
 }
 
-PRBool
-nsHTMLInputElement::IsBarredFromConstraintValidation() const
+void
+nsHTMLInputElement::UpdateBarredFromConstraintValidation()
 {
-  return mType == NS_FORM_INPUT_HIDDEN ||
-         mType == NS_FORM_INPUT_BUTTON ||
-         mType == NS_FORM_INPUT_RESET ||
-         HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+  SetBarredFromConstraintValidation(mType == NS_FORM_INPUT_HIDDEN ||
+                                    mType == NS_FORM_INPUT_BUTTON ||
+                                    mType == NS_FORM_INPUT_RESET ||
+                                    HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) ||
+                                    HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
 }
 
 nsresult

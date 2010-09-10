@@ -208,7 +208,7 @@ public:
   PRBool   IsValueMissing() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
-  PRBool   IsBarredFromConstraintValidation() const;
+  void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType);
 
@@ -1076,7 +1076,14 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
         aName == nsGkAtoms::readonly) {
       UpdateValueMissingValidityState();
-      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+
+      // This *has* to be called *after* validity has changed.
+      if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
+        UpdateBarredFromConstraintValidation();
+      }
+
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_MOZ_SUBMITINVALID;
     } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
@@ -1180,10 +1187,13 @@ nsHTMLTextAreaElement::UpdateValueMissingValidityState()
   SetValidityState(VALIDITY_STATE_VALUE_MISSING, IsValueMissing());
 }
 
-PRBool
-nsHTMLTextAreaElement::IsBarredFromConstraintValidation() const
+void
+nsHTMLTextAreaElement::UpdateBarredFromConstraintValidation()
 {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+  SetBarredFromConstraintValidation(HasAttr(kNameSpaceID_None,
+                                            nsGkAtoms::readonly) ||
+                                    HasAttr(kNameSpaceID_None,
+                                            nsGkAtoms::disabled));
 }
 
 nsresult
