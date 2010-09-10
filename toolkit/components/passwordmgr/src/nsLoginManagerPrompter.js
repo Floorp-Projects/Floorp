@@ -21,6 +21,7 @@
  *  Justin Dolske <dolske@mozilla.com> (original author)
  *  Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *  Frank Yan <fyan@mozilla.com>
+ *  Margaret Leibovic <margaret.leibovic@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -663,8 +664,9 @@ LoginManagerPrompter.prototype = {
 
                 this.log("Updating password for " + username +
                          " @ " + hostname + " (" + httpRealm + ")");
-                if (notifyBox)
-                    this._showChangeLoginNotification(notifyBox,
+                var notifyObj = this._getPopupNote() || notifyBox;
+                if (notifyObj)
+                    this._showChangeLoginNotification(notifyObj,
                                                       selectedLogin, password);
                 else
                     this._updateLogin(selectedLogin, password);
@@ -1011,10 +1013,11 @@ LoginManagerPrompter.prototype = {
      *
      */
     promptToChangePassword : function (aOldLogin, aNewLogin) {
-        var notifyBox = this._getNotifyBox();
+        var notifyObj = this._getPopupNote() || this._getNotifyBox();
 
-        if (notifyBox)
-            this._showChangeLoginNotification(notifyBox, aOldLogin, aNewLogin.password);
+        if (notifyObj)
+            this._showChangeLoginNotification(notifyObj, aOldLogin,
+                                              aNewLogin.password);
         else
             this._showChangeLoginDialog(aOldLogin, aNewLogin.password);
     },
@@ -1023,10 +1026,12 @@ LoginManagerPrompter.prototype = {
     /*
      * _showChangeLoginNotification
      *
-     * Shows the Change Password notification bar.
+     * Shows the Change Password notification bar or popup notification.
      *
+     * @param aNotifyObj
+     *        A notification box or a popup notification.
      */
-    _showChangeLoginNotification : function (aNotifyBox, aOldLogin, aNewPassword) {
+    _showChangeLoginNotification : function (aNotifyObj, aOldLogin, aNewPassword) {
         var notificationText;
         if (aOldLogin.username)
             notificationText  = this._getLocalizedString(
@@ -1050,30 +1055,52 @@ LoginManagerPrompter.prototype = {
         // without a getService() call.
         var self = this;
 
-        var buttons = [
+        // Notification is a PopupNotification
+        if (aNotifyObj == this._getPopupNote()) {
             // "Yes" button
-            {
+            var mainAction = {
                 label:     changeButtonText,
                 accessKey: changeButtonAccessKey,
                 popup:     null,
-                callback:  function(aNotificationBar, aButton) {
+                callback:  function(aNotifyObj, aButton) {
                     self._updateLogin(aOldLogin, aNewPassword);
                 }
-            },
-
-            // "No" button
-            {
-                label:     dontChangeButtonText,
-                accessKey: dontChangeButtonAccessKey,
-                popup:     null,
-                callback:  function(aNotificationBar, aButton) {
-                    // do nothing
+            };
+            
+            var notifyWin = this._getNotifyWindow();
+            var chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
+            var browser = chromeWin.gBrowser.
+                                    getBrowserForDocument(this._window.top.document);
+    
+            aNotifyObj.show(browser, "password-change", notificationText,
+                            "password-notification-icon", mainAction,
+                            null, { timeout: Date.now() + 30000 });    
+        } else {
+            var buttons = [
+                // "Yes" button
+                {
+                    label:     changeButtonText,
+                    accessKey: changeButtonAccessKey,
+                    popup:     null,
+                    callback:  function(aNotifyObj, aButton) {
+                        self._updateLogin(aOldLogin, aNewPassword);
+                    }
+                },
+    
+                // "No" button
+                {
+                    label:     dontChangeButtonText,
+                    accessKey: dontChangeButtonAccessKey,
+                    popup:     null,
+                    callback:  function(aNotifyObj, aButton) {
+                        // do nothing
+                    }
                 }
-            }
-        ];
-
-        this._showLoginNotification(aNotifyBox, "password-change",
-             notificationText, buttons);
+            ];
+    
+            this._showLoginNotification(aNotifyObj, "password-change",
+                                        notificationText, buttons);
+        }
     },
 
 
