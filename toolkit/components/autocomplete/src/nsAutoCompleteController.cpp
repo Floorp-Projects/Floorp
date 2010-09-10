@@ -692,6 +692,13 @@ nsAutoCompleteController::GetSearchString(nsAString &aSearchString)
 //// nsIAutoCompleteObserver
 
 NS_IMETHODIMP
+nsAutoCompleteController::OnUpdateSearchResult(nsIAutoCompleteSearch *aSearch, nsIAutoCompleteResult* aResult)
+{
+  ClearResults();
+  return OnSearchResult(aSearch, aResult);
+}
+
+NS_IMETHODIMP
 nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch, nsIAutoCompleteResult* aResult)
 {
   // look up the index of the search which is returning
