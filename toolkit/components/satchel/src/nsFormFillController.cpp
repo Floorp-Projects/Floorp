@@ -40,6 +40,7 @@
 #include "nsFormFillController.h"
 
 #include "nsIFormAutoComplete.h"
+#include "nsIInputListAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -510,15 +511,29 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                          mFocusedInput,
                                          getter_AddRefs(result));
   } else {
-    nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
-      do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+    nsCOMPtr<nsIAutoCompleteResult> formHistoryResult;
+    if (!IsInputAutoCompleteOff()) {
+      nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
+        do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = formAutoComplete->AutoCompleteSearch(aSearchParam,
+                                                aSearchString,
+                                                mFocusedInput,
+                                                aPreviousResult,
+                                                getter_AddRefs(formHistoryResult));
+
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
+      do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = formAutoComplete->AutoCompleteSearch(aSearchParam,
-                                              aSearchString,
-                                              mFocusedInput,
-                                              aPreviousResult,
-                                              getter_AddRefs(result));
+    rv = inputListAutoComplete->AutoCompleteSearch(formHistoryResult,
+                                                   aSearchString,
+                                                   mFocusedInput,
+                                                   getter_AddRefs(result));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -601,31 +616,49 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
   if (!input)
     return NS_OK;
 
-    PRBool isReadOnly = PR_FALSE;
-    input->GetReadOnly(&isReadOnly);
-                                  
-    nsAutoString autocomplete; 
-    input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+  PRBool isReadOnly = PR_FALSE;
+  input->GetReadOnly(&isReadOnly);
 
-    PRInt32 dummy;
-    PRBool isPwmgrInput = PR_FALSE;
-    if (mPwmgrInputs.Get(input, &dummy))
-        isPwmgrInput = PR_TRUE;
+  nsAutoString autocomplete;
+  input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
 
-    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(input);
-    if (formControl && formControl->IsSingleLineTextControl(PR_TRUE) &&
-        !isReadOnly &&
-        (!autocomplete.LowerCaseEqualsLiteral("off") || isPwmgrInput)) {
-      nsCOMPtr<nsIDOMHTMLFormElement> form;
-      input->GetForm(getter_AddRefs(form));
-      if (form)
-        form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+  PRInt32 dummy;
+  PRBool isPwmgrInput = PR_FALSE;
+  if (mPwmgrInputs.Get(input, &dummy))
+      isPwmgrInput = PR_TRUE;
 
-      if (!form || !autocomplete.LowerCaseEqualsLiteral("off") || isPwmgrInput)
-        StartControllingInput(input);
-    }
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(input);
+  if (formControl && formControl->IsSingleLineTextControl(PR_TRUE) &&
+      !isReadOnly || isPwmgrInput) {
+    StartControllingInput(input);
+  }
     
   return NS_OK;
+}
+
+PRBool 
+nsFormFillController::IsInputAutoCompleteOff()
+{
+  PRBool autoCompleteOff = PR_FALSE;
+
+  if (mFocusedInput) {
+    nsAutoString autocomplete; 
+    mFocusedInput->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+    
+    // Check the input for autocomplete="off", then the form
+    if (autocomplete.LowerCaseEqualsLiteral("off")) {
+      autoCompleteOff = PR_TRUE;
+    } else {
+
+      nsCOMPtr<nsIDOMHTMLFormElement> form;
+      mFocusedInput->GetForm(getter_AddRefs(form));
+      if (form)
+        form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+      autoCompleteOff = autocomplete.LowerCaseEqualsLiteral("off");
+    }
+  }
+
+  return autoCompleteOff;
 }
 
 NS_IMETHODIMP
