@@ -330,6 +330,15 @@ template <class T> class MediaQueue : private nsDeque {
     return GetSize() == 0 && mEndOfStream;    
   }
 
+  // Returns PR_TRUE if the media queue has had its last sample added to it.
+  // This happens when the media stream has been completely decoded. Note this
+  // does not mean that the corresponding stream has finished playback.
+  PRBool IsFinished() {
+    MonitorAutoEnter mon(mMonitor);
+    return mEndOfStream;    
+  }
+
+  // Informs the media queue that it won't be receiving any more samples.
   void Finish() {
     MonitorAutoEnter mon(mMonitor);
     mEndOfStream = PR_TRUE;    
