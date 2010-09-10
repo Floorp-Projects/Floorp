@@ -37,44 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbfactory_h__
-#define mozilla_dom_indexeddb_idbfactory_h__
+#include "nsISupports.idl"
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+interface nsIURI;
 
-#include "mozIStorageConnection.h"
-#include "nsIIDBFactory.h"
-
-BEGIN_INDEXEDDB_NAMESPACE
-
-class IDBDatabase;
-
-class IDBFactory : public nsIIDBFactory
+[scriptable, uuid(dba13d2e-ea4f-4011-9b66-a8b0e61a7f84)]
+interface nsIIndexedDatabaseManager : nsISupports
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDBFACTORY
+  unsigned long long getUsageForURI(in nsIURI aURI);
 
-  static already_AddRefed<nsIIDBFactory> Create();
-
-  static already_AddRefed<mozIStorageConnection>
-  GetConnection(const nsAString& aDatabaseFilePath);
-
-  static bool
-  SetCurrentDatabase(IDBDatabase* aDatabase);
-
-  static PRUint32
-  GetIndexedDBQuota();
-
-  static nsresult
-  GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
-                        nsIFile** aDirectory);
-
-private:
-  IDBFactory() { }
-  ~IDBFactory() { }
+  void clearDatabasesForURI(in nsIURI aURI);
 };
-
-END_INDEXEDDB_NAMESPACE
-
-#endif // mozilla_dom_indexeddb_idbfactory_h__

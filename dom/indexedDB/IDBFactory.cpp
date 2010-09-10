@@ -61,6 +61,7 @@
 #include "DatabaseInfo.h"
 #include "IDBDatabase.h"
 #include "IDBKeyRange.h"
+#include "IndexedDatabaseManager.h"
 #include "LazyIdleThread.h"
 
 #define PREF_INDEXEDDB_QUOTA "dom.indexedDB.warningQuota"
@@ -623,6 +624,29 @@ IDBFactory::GetIndexedDBQuota()
   return PRUint32(PR_MAX(gIndexedDBQuota, 0));
 }
 
+// static
+nsresult
+IDBFactory::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
+                                  nsIFile** aDirectory)
+{
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(directory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = directory->Append(NS_LITERAL_STRING("indexedDB"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ConvertASCIItoUTF16 originSanitized(aASCIIOrigin);
+  originSanitized.ReplaceChar(":/", '+');
+
+  rv = directory->Append(originSanitized);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  directory.forget(aDirectory);
+  return NS_OK;
+}
+
 NS_IMPL_ADDREF(IDBFactory)
 NS_IMPL_RELEASE(IDBFactory)
 
@@ -703,7 +727,12 @@ IDBFactory::Open(const nsAString& aName,
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
     new CheckPermissionsHelper(openHelper, thread, innerWindow, origin);
 
-  rv = NS_DispatchToCurrentThread(permissionHelper);
+  nsRefPtr<IndexedDatabaseManager> mgr =
+    already_AddRefed<IndexedDatabaseManager>(
+      IndexedDatabaseManager::GetOrCreateInstance());
+  NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
+
+  rv = mgr->WaitForClearAndDispatch(origin, permissionHelper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
