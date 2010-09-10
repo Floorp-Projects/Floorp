@@ -38,13 +38,81 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_ipc_SharedMemoryBasic_h
-#define mozilla_ipc_SharedMemoryBasic_h
+#ifndef mozilla_ipc_SharedMemoryBasic_android_h
+#define mozilla_ipc_SharedMemoryBasic_android_h
 
-#ifdef ANDROID
-#  include "mozilla/ipc/SharedMemoryBasic_android.h"
-#else
-#  include "mozilla/ipc/SharedMemoryBasic_chromium.h"
-#endif
+#include "base/file_descriptor_posix.h"
 
-#endif // ifndef mozilla_ipc_SharedMemoryBasic_h
+#include "SharedMemory.h"
+
+//
+// This is a low-level wrapper around platform shared memory.  Don't
+// use it directly; use Shmem allocated through IPDL interfaces.
+//
+
+namespace mozilla {
+namespace ipc {
+
+class SharedMemoryBasic : public SharedMemory
+{
+public:
+  typedef base::FileDescriptor Handle;
+
+  SharedMemoryBasic();
+
+  SharedMemoryBasic(const Handle& aHandle);
+
+  virtual ~SharedMemoryBasic();
+
+  NS_OVERRIDE
+  virtual bool Create(size_t aNbytes);
+
+  NS_OVERRIDE
+  virtual bool Map(size_t nBytes);
+
+  NS_OVERRIDE
+  virtual size_t Size() const
+  {
+    return mSize;
+  }
+
+  NS_OVERRIDE
+  virtual void* memory() const
+  {
+    return mMemory;
+  }
+
+  NS_OVERRIDE
+  virtual SharedMemoryType Type() const
+  {
+    return TYPE_BASIC;
+  }
+
+  static Handle NULLHandle()
+  {
+    return Handle();
+  }
+
+  static bool IsHandleValid(const Handle &aHandle)
+  {
+    return aHandle.fd >= 0;
+  }
+
+  bool ShareToProcess(base::ProcessHandle aProcess,
+                      Handle* aNewHandle);
+
+private:
+  void Unmap();
+
+  // The /dev/ashmem fd we allocate.
+  int mShmFd;
+  // Mapped size, 0 if unmapped.
+  size_t mSize;
+  // Pointer to mapped region, null if unmapped.
+  void *mMemory;
+};
+
+} // namespace ipc
+} // namespace mozilla
+
+#endif // ifndef mozilla_ipc_SharedMemoryBasic_android_h
