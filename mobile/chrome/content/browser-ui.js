@@ -1385,8 +1385,10 @@ var AwesomePanel = function(aElementId, aCommandId) {
   this.openLink = function aw_openLink(aEvent) {
     let item = aEvent.originalTarget;
     let uri = item.getAttribute("url") || item.getAttribute("uri");
-    if (uri != "")
+    if (uri != "") {
       BrowserUI.goToURI(uri);
+      BrowserUI.activePanel = null;
+    }
   }
 };
 
