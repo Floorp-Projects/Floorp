@@ -94,7 +94,7 @@ function onDebugKeyPress(ev) {
   const m = 77;
   const n = 78;
   const o = 79;
-  const p = 80;
+  const p = 80;  // fake pinch zoom
   const q = 81;  // toggle orientation
   const r = 82;
   const s = 83;
@@ -112,6 +112,25 @@ function onDebugKeyPress(ev) {
     dump("Forced a GC\n");
     break;
 #ifndef MOZ_PLATFORM_MAEMO
+  case p:
+    function dispatchMagnifyEvent(aName, aDelta) {
+      let e = document.createEvent("SimpleGestureEvent");
+      e.initSimpleGestureEvent("MozMagnifyGesture"+aName, true, true, window, null,
+                               0, 0, 0, 0, false, false, false, false, 0, null, 0, aDelta);
+      document.getElementById("inputhandler-overlay").dispatchEvent(e);
+    }
+    dispatchMagnifyEvent("Start", 0);
+
+    let frame = 0;
+    let timer = new Util.Timeout();
+    timer.interval(100, function() {
+      dispatchMagnifyEvent("Update", 20);
+      if (++frame > 10) {
+        timer.clear();
+        dispatchMagnifyEvent("", frame*20);
+      }
+    });
+    break;
   case q:
     if (Util.isPortrait())
       window.top.resizeTo(800,480);
