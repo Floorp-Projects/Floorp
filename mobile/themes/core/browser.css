@@ -669,7 +669,7 @@ placelist[ui="manage"] placeitem[type="folder"] {
   background-image: none;
 }
 
-placeitem[type="folder"] > .bookmark-item-label > image,
+placeitem[type="folder"] > .bookmark-item-container > image,
 placeitem[type="folder"] > .bookmark-manage > image {
   list-style-image: url(images/folder-32.png);
   margin-top: 0;
@@ -757,17 +757,21 @@ historylist placeitem:active:not([selected="true"]):not([class="remotetabs-item-
   background-color: #8db8d8;
 }
 
-.autocomplete-item-label,
-.bookmark-item-label {
+.autocomplete-item-container,
+.bookmark-item-container {
   margin: 0;
   padding: 0;
+}
+
+.autocomplete-item-label,
+.bookmark-item-label {
   font-size: 24px !important;
   font-weight: normal;
   -moz-margin-end: 8px;
 }
 
-.autocomplete-item-label > image,
-.bookmark-item-label > image,
+.autocomplete-item-container > image,
+.bookmark-item-container > image,
 placeitem > .bookmark-manage > image {
   width: 32px;
   height: 32px;
@@ -779,33 +783,22 @@ placeitem > .bookmark-manage > image {
   -moz-margin-start: 8px;
 }
 
-.autocomplete-item-label > image[src=""],
-placeitem[src=""] .bookmark-item-label > image {
+.autocomplete-item-container > image[src=""],
+placeitem[src=""] .bookmark-item-container > image {
   list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.png);
 }
 
-.autocomplete-item-label > vbox > label,
-.bookmark-item-label > vbox > label {
+.autocomplete-item-container > vbox > label,
+.bookmark-item-container > vbox > label {
   -moz-margin-start: 1px;
 }
 
-.autocomplete-item-label[favorite="true"] {
-  -moz-padding-end: 30px;
+.autocomplete-item-container[favorite="true"] {
   background: url(images/star-24.png) no-repeat 100% 2px;
 }
 
-.autocomplete-item-label[favorite="true"]:-moz-locale-dir(rtl) {
+.autocomplete-item-container[favorite="true"]:-moz-locale-dir(rtl) {
   background: url(images/star-24.png) no-repeat left 2px;
-}
-
-.autocomplete-item-label:not([tags=""]):after,
-.bookmark-item-label:not([tags=""]):after {
-  float: right;
-  content: attr(tags);
-  font-size: 18px !important;
-  font-weight: lighter;
-  padding-top: 4px;
-  -moz-margin-start: 8px;
 }
 
 .autocomplete-item-url,
@@ -813,6 +806,44 @@ placeitem[src=""] .bookmark-item-label > image {
   color: blue;
   font-size: 18px !important;
   -moz-margin-end: 24px;
+}
+
+.autocomplete-item-container[favorite="true"] .autocomplete-item-label {
+  -moz-padding-end: 30px;
+}
+
+.autocomplete-item-tags,
+.bookmark-item-tags {
+  content: attr(tags);
+  font-size: 18px !important;
+  font-weight: lighter;
+  margin: 2px 0 4px 0px;
+  -moz-margin-start: 8px;
+  -moz-padding-end: 32px;
+}
+
+.autocomplete-item-tags[value=""] {
+  visibility: hidden;
+}
+
+.autocomplete-item-badge {
+  opacity: 1;
+  -moz-transition: opacity 1s ease;
+  background-color: #c90707;
+  border: 1px solid #951919;
+  -moz-border-radius: 2px;
+  content: attr(badge);
+  font-size: 12px !important;
+  font-weight: bolder;
+  margin: 4px 0 0 0;
+  padding: 4px 6px;
+  color: white;
+}
+
+autocompleteresult:not([badge]) .autocomplete-item-badge,
+.autocomplete-item-badge[value=""] {
+  opacity: 0;
+  -moz-transition: none;
 }
 
 /* special "no results", "awesome header row" and "title rows" items */
@@ -828,8 +859,8 @@ autocompleteresult[class="remotetabs-item-title"] .bookmark-item-url {
   display: none;
 }
 
-autocompleteresult[class="history-item-title"] .bookmark-item-label,
-autocompleteresult[class="remotetabs-item-title"] .bookmark-item-label {
+autocompleteresult[class="history-item-title"] .bookmark-item-container,
+autocompleteresult[class="remotetabs-item-title"] .bookmark-item-container {
   font-size: 24px !important;
 }
 
@@ -847,7 +878,7 @@ autocompleteresult.noresults:active {
   background-color: white;
 }
 
-autocompleteresult.noresults > .autocomplete-item-label {
+autocompleteresult.noresults > .autocomplete-item-container {
   text-align: center;
   color: grey;
 }

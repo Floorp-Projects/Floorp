@@ -13,6 +13,7 @@
 
   <binding id="autocomplete-aligned" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation>
+      <property name="mIgnoreFocus" onget="return true;"/>
       <method name="openPopup">
         <body><![CDATA[
           this.popup.openAutocompletePopup(this, null);
@@ -45,7 +46,7 @@
       </handler>
       <handler event="blur" phase="capturing">
         <![CDATA[
-          // suppress disconnect of autocomplete controller
+          // Bug 583341 - suppress disconnect of autocomplete controller
           this._dontBlur = true;
         ]]>
       </handler>
@@ -53,12 +54,37 @@
   </binding>
 
   <binding id="popup_autocomplete_result">
+    <handlers>
+      <handler event="contextmenu" phase="capturing">
+        <![CDATA[
+          let url = this.getAttribute("url");
+          if (!url)
+            return;
+
+          let value = this.getAttribute("value");
+          let data = {
+            target: this,
+            json: {
+              types: ["link-saveable", "link-shareable"],
+              label: value,
+              linkTitle: value,
+              linkURL: url
+            }
+          };
+          ContextHelper.showPopup(data);
+        ]]>
+      </handler>
+    </handlers>
     <content orient="vertical">
-      <xul:hbox class="autocomplete-item-label" align="top" xbl:inherits="tags, favorite" mousethrough="always">
+      <xul:hbox class="autocomplete-item-container" align="top" xbl:inherits="favorite" mousethrough="always">
         <xul:image xbl:inherits="src"/>
         <xul:vbox flex="1">
-          <xul:label crop="center" xbl:inherits="value"/>
-          <xul:label class="autocomplete-item-url" xbl:inherits="value=url" crop="center" mousethrough="always"/>
+          <xul:label class="autocomplete-item-label" crop="center" xbl:inherits="value"/>
+          <xul:label class="autocomplete-item-url" xbl:inherits="value=url" crop="center"/>
+        </xul:vbox>
+        <xul:vbox align="end">
+          <xul:label class="autocomplete-item-tags" value="" xbl:inherits="value=tags"/>
+          <xul:label class="autocomplete-item-badge" value="" xbl:inherits="value=badge"/>
         </xul:vbox>
       </xul:hbox>
     </content>
@@ -108,6 +134,11 @@
       <field name="_scrollBoxObject">
         this.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
       </field>
+
+      <!-- Used by the badges implementation -->
+      <field name="_badges">[]</field>
+      <field name="_badgesTimeout">-1</field>
+      <field name="_eTLDService">Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);</field>
 
       <!-- nsIAutocompleteInput -->
       <property name="overrideValue"
@@ -237,7 +268,6 @@
 
               continue;
             }
-            item._empty = false;
 
             // Assign the values
             let type = controller.getStyleAt(i);
@@ -253,11 +283,18 @@
 
             let url = controller.getValueAt(i);
             item.setAttribute("value", title || url);
-            item.setAttribute("url", url);
+
+            // remove the badge only if the url has changed
+            if (item._empty || item.getAttribute("url") != url) {
+              item.setAttribute("url", url);
+              item.removeAttribute("badge");
+            }
 
             let isBookmark = ((type == "bookmark") || (type == "tag"));
             item.setAttribute("favorite", isBookmark);
             item.setAttribute("src", controller.getImageAt(i));
+
+            item._empty = false;
           }
 
           // Show the "no results" or "all bookmarks" entries as needed
@@ -265,6 +302,7 @@
 
           // Make sure the list is scrolled to the top
           this.scrollToTop();
+          this._invalidateBadges();
         ]]></body>
       </method>
 
@@ -281,6 +319,7 @@
             noResultsItem.removeAttribute("url");
             noResultsItem.removeAttribute("src");
             noResultsItem.removeAttribute("tags");
+            noResultsItem.removeAttribute("badge");
           }
         ]]></body>
       </method>
@@ -304,6 +343,64 @@
             newIndex = lastIndex;
 
           this.selectedIndex = newIndex;
+        ]]></body>
+      </method>
+
+      <method name="_getEffectiveHost">
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          let host = null;
+          try {
+            host = aURI.host;
+            return this._eTLDService.getBaseDomainFromHost(host);
+          } catch (e) {}
+
+          return host ? host : aURI.spec;
+        ]]></body>
+      </method>
+
+      <method name="registerBadgeHandler">
+        <parameter name="aURL"/>
+        <parameter name="aHandler"/>
+        <body><![CDATA[
+          if (!aHandler)
+            return false;
+
+          let effectiveHost = this._getEffectiveHost(Services.io.newURI(aURL, null, null));
+          this._badges[effectiveHost] = aHandler;
+          return true;
+        ]]></body>
+      </method>
+
+      <method name="unregisterBagdeHandler">
+        <parameter name="aURL"/>
+        <body><![CDATA[
+          let effectiveHost = this._getEffectiveHost(Services.io.newURI(aURL, null, null));
+          if (this._badges[effectiveHost])
+            delete this._badges[effectiveHost];
+        ]]></body>
+      </method>
+
+      <method name="_invalidateBadges">
+        <body><![CDATA[
+          window.clearTimeout(this._badgesTimeout);
+
+          this._badgesTimeout = window.setTimeout(function(self) {
+            for (let i = 0; i < self._items.childNodes.length; i++) {
+              let item = self._items.childNodes[i];
+              if (!item.hasAttribute("url"))
+                continue;
+
+              let itemHost = self._getEffectiveHost(Services.io.newURI(item.getAttribute("url"), null, null));
+              for (let badgeHost in self._badges) {
+                if (itemHost == badgeHost) {
+                  let handler = self._badges[badgeHost];
+                  handler.updateBadge ? handler.updateBadge(item) : handler(item);
+                  break;
+                }
+              }
+            }
+          }, 300, this);
         ]]></body>
       </method>
 
@@ -364,13 +461,15 @@
           let data = {
             target: this,
             json: {
-              types: ["edit-bookmark"],
-              label: this.uri.spec
-          }};
-          ContextHelper.showPopup(data);
-        ]]>
-      </handler>
-    </handlers>
+              types: ["edit-bookmark", "link-saveable", "link-shareable"],
+              label: this.name,
+              linkTitle: this.name,
+              linkURL: this.spec
+           }};
+           ContextHelper.showPopup(data);
+         ]]>
+       </handler>
+     </handlers>
 
     <implementation>
       <field name="_uri">null</field>
@@ -597,11 +696,14 @@
 
   <binding id="place-item" extends="chrome://browser/content/bindings.xml#place-base">
     <content orient="vertical">
-      <xul:hbox anonid="bookmark-item" class="bookmark-item-label" align="top" flex="1" xbl:inherits="tags" mousethrough="always">
+      <xul:hbox anonid="bookmark-item" class="bookmark-item-container" align="top" flex="1" mousethrough="always">
         <xul:image xbl:inherits="src"/>
         <xul:vbox flex="1">
-          <xul:label crop="center" xbl:inherits="value=title"/>
+          <xul:label class="bookmark-item-label" crop="center" xbl:inherits="value=title"/>
           <xul:label anonid="bookmark-url" class="bookmark-item-url" xbl:inherits="value=uri" crop="center" mousethrough="always"/>
+        </xul:vbox>
+        <xul:vbox>
+          <xul:label class="bookmark-item-tags" xbl:inherits="value=tags"/>
         </xul:vbox>
       </xul:hbox>
 
@@ -1121,7 +1223,7 @@
                 return;
 
               tabs.push({
-                title: title ? pageUrl : title,
+                title: title || pageUrl,
                 uri: pageUrl,
                 icon: Weave.Utils.getIcon(icon, "chrome://browser/skin/images/tab.png")
               });

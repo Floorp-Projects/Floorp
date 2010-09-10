@@ -17,7 +17,7 @@
    -
    - The Initial Developer of the Original Code is
    - Mozilla Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2008
+   - Portions created by the Initial Developer are Copyright (C) 2010
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
@@ -69,9 +69,9 @@
               <label value="&newpref.label;" flex="1"/>
               <spacer flex="1" />
               <hbox id="editor-buttons-add">
-                <button label="&integer.label;" oncommand="ViewConfig.open(Components.interfaces.nsIPrefBranch.PREF_INT)"/>
-                <button label="&boolean.label;" oncommand="ViewConfig.open(Components.interfaces.nsIPrefBranch.PREF_BOOL)"/>
-                <button label="&string.label;" oncommand="ViewConfig.open(Components.interfaces.nsIPrefBranch.PREF_STRING)"/>
+                <button label="&integer.label;" oncommand="ViewConfig.open(Ci.nsIPrefBranch.PREF_INT)"/>
+                <button label="&boolean.label;" oncommand="ViewConfig.open(Ci.nsIPrefBranch.PREF_BOOL)"/>
+                <button label="&string.label;" oncommand="ViewConfig.open(Ci.nsIPrefBranch.PREF_STRING)"/>
               </hbox>
             </hbox>
 

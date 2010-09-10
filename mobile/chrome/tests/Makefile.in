@@ -79,6 +79,8 @@ _BROWSER_FILES = \
   browser_viewport_08.html \
   browser_viewport_09.html \
   browser_viewport.js \
+  browser_no_title.html \
+  browser_english_title.html \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
