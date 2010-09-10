@@ -1,4 +1,4 @@
-# vim:set ts=8 sw=8 sts=8 noet:
+# vim: noexpandtab ts=8 sw=8
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -13,11 +13,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is httpd.js code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Jeff Walden <jwalden+code@mit.edu>.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,27 +36,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = layout/tools/layout-debug/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout_debug
-DIRS		= src ui tests
-
-# If we have a XULRunner-enabled tree, then build as a standalone XUL app.
-ifdef MOZ_XULRUNNER
-
-export XPI_NAME		= layoutdebug
-PREF_JS_EXPORTS		= $(srcdir)/layoutdebug-prefs.js
-DIST_FILES		= application.ini
-DIST_CHROME_FILES	= chrome.manifest
-
-BUILD_ID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
-DEFINES += -DBUILD_ID=$(BUILD_ID)
-
-endif # MOZ_XULRUNNER
+XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
