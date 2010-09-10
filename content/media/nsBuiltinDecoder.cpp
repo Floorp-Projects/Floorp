@@ -359,7 +359,7 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
   else if (mElement) {
     // Resource was loaded during metadata loading, when progress
     // events are being ignored. Fire the final progress event.
-    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
+    mElement->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   }
 
   // Only inform the element of FirstFrameLoaded if not doing a load() in order
@@ -773,7 +773,7 @@ void nsBuiltinDecoder::PlaybackPositionChanged()
   Invalidate();
 
   if (mElement && lastTime != mCurrentTime) {
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    mElement->DispatchEvent(NS_LITERAL_STRING("timeupdate"));
   }
 }
 
@@ -788,7 +788,7 @@ void nsBuiltinDecoder::DurationChanged()
 
   if (mElement && oldDuration != mDuration) {
     LOG(PR_LOG_DEBUG, ("%p duration changed to %lldms", this, mDuration));
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("durationchange"));
+    mElement->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
 
