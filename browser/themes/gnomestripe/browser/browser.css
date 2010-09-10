@@ -1039,7 +1039,8 @@ toolbar[iconsize="small"] #fullscreen-button {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
 
-.popup-notification-icon[popupid="password-save"] {
+.popup-notification-icon[popupid="password-save"],
+.popup-notification-icon[popupid="password-change"] {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
 }
 
