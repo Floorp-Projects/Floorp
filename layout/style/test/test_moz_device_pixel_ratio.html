@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=474356
+-->
+<head>
+  <title>Test for Bug 474356</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>.zoom-test { visibility: hidden; }</style>
+  <style><!-- placeholder for dynamic additions --></style>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=474356">Mozilla Bug 474356</a>
+<div id="content" style="display: none">
+  
+</div>
+<script type="text/javascript">
+</script>
+<pre id="test">
+<div id="zoom1" class="zoom-test"></div>
+<div id="zoom2" class="zoom-test"></div>
+<div id="zoom3" class="zoom-test"></div>
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 474356 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  viewer = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                 .getInterface(Components.interfaces.nsIWebNavigation)
+                 .QueryInterface(Components.interfaces.nsIDocShell)
+                 .contentViewer
+                 .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+
+
+  function zoom(factor) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var previous = viewer.fullZoom;
+    viewer.fullZoom = factor;
+    return previous;
+  }
+
+  function isVisible(divName) {
+    return window.getComputedStyle(document.getElementById(divName), null).visibility == "visible";
+  }
+
+  function getZoomRatio() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    return utils.screenPixelsPerCSSPixel;
+  }
+
+  var screenPixelsPerCSSPixel = getZoomRatio();
+  var baseRatio = 1.0 * screenPixelsPerCSSPixel;
+  var doubleRatio = 2.0 * screenPixelsPerCSSPixel;
+  var halfRatio = 0.5 * screenPixelsPerCSSPixel;
+  var styleElem = document.getElementsByTagName("style")[1];
+  styleElem.textContent = 
+      ["@media all and (-moz-device-pixel-ratio: " + baseRatio + ") {",
+         "#zoom1 { visibility: visible; }",
+       "}",
+       "@media all and (-moz-device-pixel-ratio: " + doubleRatio + ") {",
+         "#zoom2 { visibility: visible; }",
+       "}",
+       "@media all and (-moz-device-pixel-ratio: " + halfRatio + ") {",
+         "#zoom3 { visibility: visible; }",
+       "}"
+      ].join("\n");
+
+  ok(isVisible("zoom1"), "Base ratio rule should apply at base zoom level");
+  ok(!isVisible("zoom2") && !isVisible("zoom3"), "no other rules should apply");
+  var origZoom = zoom(2 * screenPixelsPerCSSPixel);
+  ok(isVisible("zoom2"), "Double ratio rule should apply at double zoom level");
+  ok(!isVisible("zoom1") && !isVisible("zoom3"), "no other rules should apply");
+  zoom(0.5 * screenPixelsPerCSSPixel);
+  ok(isVisible("zoom3"), "Half ratio rule should apply at half zoom level");
+  ok(!isVisible("zoom1") && !isVisible("zoom2"), "no other rules should apply");
+  zoom(origZoom);
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
