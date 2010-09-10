@@ -1528,7 +1528,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   let consoleEnabled = gPrefService.getBoolPref("devtools.errorconsole.enabled");
   if (consoleEnabled) {
     document.getElementById("javascriptConsole").hidden = false;
-    document.getElementById("key_errorConsole").disabled = false;
+    document.getElementById("key_errorConsole").removeAttribute("disabled");
   }
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
