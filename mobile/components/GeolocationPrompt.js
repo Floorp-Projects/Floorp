@@ -7,16 +7,19 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const kCountBeforeWeRemember = 5;
 
-function GeolocationPrompt() {}
+function ContentPermissionPrompt() {}
 
-GeolocationPrompt.prototype = {
+ContentPermissionPrompt.prototype = {
   classID: Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
   prompt: function(aRequest) {
+    if (aRequest.type != "geolocation")
+      return;
+
     let pm = Services.perms;
-    let result = pm.testExactPermission(aRequest.requestingURI, "geo");
+    let result = pm.testExactPermission(aRequest.uri, "geo");
 
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       aRequest.allow();
@@ -29,17 +32,17 @@ GeolocationPrompt.prototype = {
     function setPagePermission(aUri, aAllow) {
       let contentPrefs = Services.contentPrefs;
 
-      if (!contentPrefs.hasPref(aRequest.requestingURI, "geo.request.remember"))
-        contentPrefs.setPref(aRequest.requestingURI, "geo.request.remember", 0);
+      if (!contentPrefs.hasPref(aRequest.uri, "geo.request.remember"))
+        contentPrefs.setPref(aRequest.uri, "geo.request.remember", 0);
 
-      let count = contentPrefs.getPref(aRequest.requestingURI, "geo.request.remember");
+      let count = contentPrefs.getPref(aRequest.uri, "geo.request.remember");
 
       if (aAllow == false)
         count--;
       else
         count++;
 
-      contentPrefs.setPref(aRequest.requestingURI, "geo.request.remember", count);
+      contentPrefs.setPref(aRequest.uri, "geo.request.remember", count);
 
       if (count == kCountBeforeWeRemember)
         pm.add(aUri, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -60,12 +63,12 @@ GeolocationPrompt.prototype = {
     }
 
     let notificationBox = null;
-    if (aRequest.requestingWindow) {
-      let requestingWindow = aRequest.requestingWindow.top;
+    if (aRequest.window) {
+      let requestingWindow = aRequest.window.top;
       let chromeWin = getChromeWindow(requestingWindow).wrappedJSObject;
       notificationBox = chromeWin.getNotificationBox(requestingWindow);
     } else {
-      let chromeWin = aRequest.requestingElement.ownerDocument.defaultView;
+      let chromeWin = aRequest.element.ownerDocument.defaultView;
       notificationBox = chromeWin.Browser.getNotificationBox();
     }
 
@@ -77,7 +80,7 @@ GeolocationPrompt.prototype = {
         label: browserBundle.GetStringFromName("geolocation.share"),
         accessKey: null,
         callback: function(notification) {
-          setPagePermission(aRequest.requestingURI, true);
+          setPagePermission(aRequest.uri, true);
           aRequest.allow();
         },
       },
@@ -85,13 +88,13 @@ GeolocationPrompt.prototype = {
         label: browserBundle.GetStringFromName("geolocation.dontShare"),
         accessKey: null,
         callback: function(notification) {
-          setPagePermission(aRequest.requestingURI, false);
+          setPagePermission(aRequest.uri, false);
           aRequest.cancel();
         },
       }];
 
       let message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
-                                                       [aRequest.requestingURI.host], 1);
+                                                       [aRequest.uri.host], 1);
 
       let newBar = notificationBox.appendNotification(message,
                                                       "geolocation",
@@ -106,4 +109,4 @@ GeolocationPrompt.prototype = {
 
 
 //module initialization
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([GeolocationPrompt]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPermissionPrompt]);
