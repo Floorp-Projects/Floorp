@@ -2510,7 +2510,7 @@ var BadgeHandlers = {
   _handlers: [
     {
       _lastUpdate: 0,
-      _lastCount: null,
+      _lastCount: 0,
       url: "http://mail.google.com",
       updateBadge: function(aItem) {
         // Use the cache if possible
@@ -2524,28 +2524,21 @@ var BadgeHandlers = {
 
         // Use any saved username and password. If we don't have any login and we are not
         // currently logged into Gmail, we won't get any count.
-        let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-        let logins = lm.findLogins({}, "https://www.google.com", "https://www.google.com", null);
-        let username = logins.length > 0 ? logins[0].username : "";
-        let password = logins.length > 0 ? logins[0].password : "";
+        let login = BadgeHandlers.getLogin("https://www.google.com");
 
         // Get the feed and read the count, passing any saved username and password
         // but do not show any security dialogs if we fail
         let req = new XMLHttpRequest();
         req.mozBackgroundRequest = true;
-        req.open("GET", "https://mail.google.com/mail/feed/atom", true, username, password);
+        req.open("GET", "https://mail.google.com/mail/feed/atom", true, login.username, login.password);
         req.onreadystatechange = function(aEvent) {
           if (req.readyState == 4) {
             if (req.status == 200) {
-              let count = req.responseXML.getElementsByTagName("fullcount")[0].childNodes[0].nodeValue;
-              if (count > 100)
-                count = "99+";
-
-              this._lastCount = count;
-              aItem.setAttribute("badge", count);
+              this._lastCount = req.responseXML.getElementsByTagName("fullcount")[0].childNodes[0].nodeValue;
             } else {
-              aItem.removeAttribute("badge");
+              this._lastCount = 0;
             }
+            this._lastCount = BadgeHandlers.setNumberBadge(aItem, this._lastCount);
           }
         };
         req.send(null);
@@ -2557,5 +2550,29 @@ var BadgeHandlers = {
     let handlers = this._handlers;
     for (let i = 0; i < handlers.length; i++)
       aPopup.registerBadgeHandler(handlers[i].url, handlers[i]);
+  },
+
+  getLogin: function(aURL) {
+    let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, aURL, aURL, null);
+    let username = logins.length > 0 ? logins[0].username : "";
+    let password = logins.length > 0 ? logins[0].password : "";
+    return { username: username, password: password };
+  },
+
+  clampBadge: function(aValue) {
+    if (aValue > 100)
+      aValue = "99+";
+    return aValue;
+  },
+
+  setNumberBadge: function(aItem, aValue) {
+    if (parseInt(aValue) != 0) {
+      aValue = this.clampBadge(aValue);
+      aItem.setAttribute("badge", aValue);
+    } else {
+      aItem.removeAttribute("badge");
+    }
+    return aValue;
   }
 };
