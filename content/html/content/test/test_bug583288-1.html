@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=583288
+-->
+<head>
+  <title>Test for Bug 583288</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload='runTests();'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=583288">Mozilla Bug 583288</a>
+<p id="display"></p>
+<style>
+  iframe { width: 70px; height: 40px;}
+</style>
+<!--<div id="content" style="display: none">-->
+<div id="content">
+  <iframe name='get' id='get'></iframe>
+  <iframe name='post' id='post'></iframe>
+  <iframe name='put' id='put'></iframe>
+  <iframe name='del' id='del'></iframe>
+  <iframe name='get2' id='get2'></iframe>
+  <iframe name='post2' id='post2'></iframe>
+  <iframe name='put2' id='put2'></iframe>
+  <iframe name='del2' id='del2'></iframe>
+
+  <form action="583288_submit_server.sjs" target='get' method='get'>
+  </form>
+  <form action="583288_submit_server.sjs" target='post' method='post'>
+  </form>
+  <form action="583288_submit_server.sjs" target='put' method='put'>
+  </form>
+  <form action="583288_submit_server.sjs" target='del' method='delete'>
+  </form>
+
+  <form action="583288_submit_server.sjs">
+    <input type='submit' id='iget' value='get' formtarget='get2' formmethod='get'>
+  </form>
+  <form action="583288_submit_server.sjs">
+    <input type='submit' id='ipost' value='post' formtarget='post2' formmethod='post'>
+  </form>
+  <form action="583288_submit_server.sjs">
+    <input type='submit' id='iput' value='put' formtarget='put2' formmethod='put'>
+  </form>
+  <form action="583288_submit_server.sjs">
+    <input type='submit' id='idel' value='delete' formtarget='del2' formmethod='delete'>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 583288 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var gTestResults = {
+  get:   "GET",
+  get2:  "GET",
+  post:  "POST",
+  post2: "POST",
+  put:   "PUT",
+  put2:  "PUT",
+  del:   "DELETE",
+  del2:  "DELETE",
+};
+
+var gPendingLoad = 0; // Has to be set after depending on the frames number.
+
+function runTests()
+{
+  // We add a load event for the frames which will be called when the forms
+  // will be submitted.
+  var frames = [ document.getElementById('get'),
+                 document.getElementById('get2'),
+                 document.getElementById('post'),
+                 document.getElementById('post2'),
+                 document.getElementById('put'),
+                 document.getElementById('put2'),
+                 document.getElementById('del'),
+                 document.getElementById('del2'),
+               ];
+  gPendingLoad = frames.length;
+
+  for (var i=0; i<frames.length; ++i) {
+    frames[i].setAttribute('onload', "frameLoaded(this);");
+  }
+
+  // The four first forms can be submitted with .submit().
+  for (var i=0; i<4; ++i) {
+    document.forms[i].submit();
+  }
+
+  /**
+   * We are going to focus each element before interacting with them so we are
+   * sure they will be visible in the iframe.
+   * Considering we are using synthesizeKey that may be not required.
+   *
+   * Focusing the first element (id='iget') is launching the tests.
+   */
+  document.getElementById('iget').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+    document.getElementById('ipost').focus();
+  }, false);
+
+  document.getElementById('ipost').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+    document.getElementById('iput').focus();
+  }, false);
+
+  document.getElementById('iput').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+    document.getElementById('idel').focus();
+  }, false);
+
+  document.getElementById('idel').addEventListener('focus', function(aEvent) {
+    aEvent.target.removeEventListener('focus', arguments.callee, false);
+    synthesizeKey("VK_RETURN", {});
+  }, false);
+
+  document.getElementById('iget').focus();
+}
+
+function frameLoaded(aFrame) {
+  // Check if formaction/action has the correct behavior.
+  is(aFrame.contentDocument.documentElement.textContent, gTestResults[aFrame.name],
+     "the method used during the form submission should be " +
+     gTestResults[aFrame.name]);
+
+  if (--gPendingLoad == 0) {
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
