@@ -2235,8 +2235,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
                 if (TRACE_RECORDER(cx)) {                                     \
                     MONITOR_BRANCH();                                         \
                     op = (JSOp) *regs.pc;                                     \
-                } else {                                                      \
-                    op = (JSOp) *++regs.pc;                                   \
                 }                                                             \
             } else if (op == JSOP_TRACE) {                                    \
                 MONITOR_BRANCH();                                             \
