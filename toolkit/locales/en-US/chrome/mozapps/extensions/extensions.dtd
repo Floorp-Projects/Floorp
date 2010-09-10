@@ -48,6 +48,8 @@
 <!ENTITY updates.restart.label                "Restart now to complete installation">
 <!ENTITY updates.noneFound.label              "No updates found">
 <!ENTITY updates.manualUpdatesFound.label     "View Available Updates">
+<!ENTITY updates.updateSelected.label         "Install Updates">
+<!ENTITY updates.updateSelected.tooltip       "Install available updates in this list">
 
 <!-- addon actions -->
 <!ENTITY cmd.showDetails.label                "Show More Information">
@@ -159,6 +161,8 @@
 <!ENTITY addon.install.tooltip                "Install this add-on">
 <!ENTITY addon.updateNow.label                "Update Now">
 <!ENTITY addon.updateNow.tooltip              "Install the update for this add-on">
+<!ENTITY addon.includeUpdate.label            "Include in Update">
+<!ENTITY addon.updateAvailable.label          "An update is available">
 <!ENTITY addon.checkingForUpdates.label       "Checking for updates…">
 <!ENTITY addon.releaseNotes.label             "Release Notes:">
 <!ENTITY addon.loadingReleaseNotes.label      "Loading…">

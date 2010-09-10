@@ -362,8 +362,10 @@
                     command="cmd_findAllUpdates"/>
             <spacer flex="3"/>
           </vbox>
-          <hbox id="update-all-container" hidden="true">
-            <button label="Update these add-ons" class="addon-control"/>
+          <hbox id="update-actions" pack="center">
+            <button id="update-selected" hidden="true"
+                    label="&updates.updateSelected.label;"
+                    tooltiptext="&updates.updateSelected.tooltip;"/>
           </hbox>
           <richlistbox id="updates-list" class="list" flex="1"/>
         </vbox>

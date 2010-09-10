@@ -131,7 +131,10 @@ xhtml|link {
   display: none;
 }
 
-.view-pane:not(#updates-view) .addon .relnotes-toggle {
+.view-pane:not(#updates-view) .addon .relnotes-toggle,
+.view-pane:not(#updates-view) .addon .include-update,
+#updates-view:not([updatetype="available"]) .addon .include-update,
+#updates-view[updatetype="available"] .addon .update-available-notice {
   display: none;
 }
 

@@ -493,6 +493,7 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
+
 /*** item - uninstalled ***/
 
 .addon[status="uninstalled"] {
@@ -792,6 +793,10 @@
 #updates-installed, #updates-downloaded {
   color: #00BB00;
   font-weight: bold;
+}
+
+#update-selected {
+  margin: 12px;
 }
 
 
