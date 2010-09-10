@@ -37,44 +37,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbfactory_h__
-#define mozilla_dom_indexeddb_idbfactory_h__
+#ifndef mozilla_dom_indexeddb_indexeddatabasemanager_h__
+#define mozilla_dom_indexeddb_indexeddatabasemanager_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "mozIStorageConnection.h"
-#include "nsIIDBFactory.h"
+#include "nsIIndexedDatabaseManager.h"
+#include "nsIObserver.h"
+
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
+
+#define INDEXEDDB_MANAGER_CONTRACTID \
+  "@mozilla.org/dom/indexeddb/manager;1"
+
+class nsIRunnable;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBDatabase;
 
-class IDBFactory : public nsIIDBFactory
+class IndexedDatabaseManager : public nsIIndexedDatabaseManager,
+                               public nsIObserver
 {
+  friend class IDBDatabase;
+
 public:
+  // Returns an owning reference!
+  static IndexedDatabaseManager* GetOrCreateInstance();
+
+  // Returns a non-owning reference.
+  static IndexedDatabaseManager* GetInstance();
+
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDBFACTORY
+  NS_DECL_NSIINDEXEDDATABASEMANAGER
+  NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<nsIIDBFactory> Create();
-
-  static already_AddRefed<mozIStorageConnection>
-  GetConnection(const nsAString& aDatabaseFilePath);
-
-  static bool
-  SetCurrentDatabase(IDBDatabase* aDatabase);
-
-  static PRUint32
-  GetIndexedDBQuota();
-
-  static nsresult
-  GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
-                        nsIFile** aDirectory);
+  nsresult WaitForClearAndDispatch(const nsACString& aOrigin,
+                                   nsIRunnable* aRunnable);
 
 private:
-  IDBFactory() { }
-  ~IDBFactory() { }
+  IndexedDatabaseManager();
+  ~IndexedDatabaseManager();
+
+  bool RegisterDatabase(IDBDatabase* aDatabase);
+  void UnregisterDatabase(IDBDatabase* aDatabase);
+
+  struct OriginClearData
+  {
+    nsCString origin;
+    nsTArray<nsCOMPtr<nsIRunnable> > delayedRunnables;
+  };
+
+  // Maintains a list of live databases per origin.
+  nsClassHashtable<nsCStringHashKey, nsTArray<IDBDatabase*> > mLiveDatabases;
+
+  // Maintains a list of origins that are currently being cleared.
+  nsAutoTArray<OriginClearData, 1> mOriginClearData;
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbfactory_h__
+#endif /* mozilla_dom_indexeddb_indexeddatabasemanager_h__ */
