@@ -7374,8 +7374,6 @@ PresShell::Thaw()
   if (mDocument)
     mDocument->EnumerateSubDocuments(ThawSubDocument, nsnull);
 
-  UnsuppressPainting();
-
   // Get the activeness of our presshell, as this might have changed
   // while we were in the bfcache
   QueryIsActive();
@@ -7383,6 +7381,8 @@ PresShell::Thaw()
   // We're now unfrozen
   mFrozen = PR_FALSE;
   UpdateImageLockingState();
+
+  UnsuppressPainting();
 }
 
 //--------------------------------------------------------
