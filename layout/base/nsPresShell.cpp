@@ -834,7 +834,6 @@ public:
                                                         nsIDOMEvent* aEvent,
                                                         nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(PRBool) ShouldIgnoreInvalidation();
   NS_IMETHOD_(void) WillPaint(PRBool aWillSendDidPaint);
   NS_IMETHOD_(void) DidPaint();
@@ -7179,18 +7178,6 @@ NS_IMETHODIMP
 PresShell::ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
 {
   return ResizeReflow(aWidth, aHeight);
-}
-
-NS_IMETHODIMP_(PRBool)
-PresShell::IsVisible()
-{
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  nsCOMPtr<nsIBaseWindow> bw = do_QueryInterface(container);
-  if (!bw)
-    return PR_FALSE;
-  PRBool res = PR_TRUE;
-  bw->GetVisibility(&res);
-  return res;
 }
 
 NS_IMETHODIMP_(PRBool)
