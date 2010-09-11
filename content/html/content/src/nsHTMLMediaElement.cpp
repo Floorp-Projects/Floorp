@@ -2087,18 +2087,6 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     return;
   }
 
-  if (mDecoder->GetCurrentStream()->IsSuspendedByCache() &&
-      !mDecoder->IsEnded())
-  {
-    // The download has been suspended by the media cache, and we've not
-    // completed playback of the resource, so go into HAVE_ENOUGH_DATA state.
-    // This ensures we always fire canplaythrough and other play events,
-    // particularly when we suspend the download before the download rate
-    // has been reliably established.
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-    return;
-  }
-
   // Now see if we should set HAVE_ENOUGH_DATA.
   // If it's something we don't know the size of, then we can't
   // make a real estimate, so we go straight to HAVE_ENOUGH_DATA once
