@@ -3492,7 +3492,7 @@ mjit::Compiler::iter(uintN flags)
 
     /* Get NativeIterator from iter obj. :FIXME: X64, also most of this function */
     Address privSlot(ioreg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-    masm.loadPayload(privSlot, nireg);
+    masm.loadPtr(privSlot, nireg);
 
     /* Test for active iterator. */
     Address flagsAddr(nireg, offsetof(NativeIterator, flags));
@@ -3679,7 +3679,7 @@ mjit::Compiler::iterEnd()
 
     /* Get private from iter obj. :FIXME: X64 */
     Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-    masm.loadPayload(privSlot, T1);
+    masm.loadPtr(privSlot, T1);
 
     RegisterID T2 = frame.allocReg();
 

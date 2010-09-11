@@ -9498,9 +9498,9 @@ TraceRecorder::unbox_slot(JSObject *obj, LIns *obj_ins, uint32 slot, VMSideExit 
 #if JS_BITS_PER_WORD == 32
 
 LIns*
-TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins, unsigned slot)
+TraceRecorder::stobj_get_fslot_private_ptr(LIns *obj_ins, unsigned slot)
 {
-    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
+    JS_ASSERT(slot < JS_INITIAL_NSLOTS && slot != JSSLOT_PRIVATE);
     return lir->insLoad(LIR_ldi, obj_ins,
                         offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
                         ACCSET_OTHER, LOAD_CONST);
@@ -9669,10 +9669,10 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
 #elif JS_BITS_PER_WORD == 64
 
 LIns*
-TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins, unsigned slot)
+TraceRecorder::stobj_get_fslot_private_ptr(LIns *obj_ins, unsigned slot)
 {
     /* N.B. On 64-bit, privates are encoded differently from other pointers. */
-    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
+    JS_ASSERT(slot < JS_INITIAL_NSLOTS && slot != JSSLOT_PRIVATE);
     LIns *v_ins = lir->insLoad(LIR_ldq, obj_ins,
                                offsetof(JSObject, fslots) + slot * sizeof(Value),
                                ACCSET_OTHER, LOAD_CONST);
@@ -9856,7 +9856,8 @@ TraceRecorder::stobj_get_parent(nanojit::LIns* obj_ins)
 LIns*
 TraceRecorder::stobj_get_private(nanojit::LIns* obj_ins)
 {
-    return stobj_get_fslot_ptr(obj_ins, JSSLOT_PRIVATE);
+    JS_STATIC_ASSERT(JSSLOT_PRIVATE == 0);
+    return lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, fslots), ACCSET_OTHER);
 }
 
 LIns*
@@ -10389,7 +10390,7 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
     if (strict) {
         JSStackFrame* fp = cx->fp();
         uintN argc = fp->numActualArgs();
-        LIns* argsData_ins = stobj_get_const_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+        LIns* argsData_ins = stobj_get_fslot_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
 
         for (uintN i = 0; i < argc; i++) {
             box_value_into(fp->argv[i], get(&fp->argv[i]), argsData_ins,
@@ -12700,7 +12701,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
 
-        LIns* priv_ins = stobj_get_const_private_ptr(obj_ins);
+        LIns* priv_ins = stobj_get_private(obj_ins);
 
         // The index was on the stack and is therefore a LIR float; force it to
         // be an integer.                              
@@ -13052,7 +13053,7 @@ TraceRecorder::record_JSOP_GETFCSLOT()
     JSObject* callee = cx->fp()->callee();
     LIns* callee_ins = get(&cx->fp()->argv[-2]);
 
-    LIns* upvars_ins = stobj_get_const_private_ptr(callee_ins,
+    LIns* upvars_ins = stobj_get_fslot_private_ptr(callee_ins,
                                                    JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
     unsigned index = GET_UINT16(cx->regs->pc);
@@ -13088,9 +13089,7 @@ TraceRecorder::guardCallee(Value& callee)
     tree->gcthings.addUnique(callee);
 
     guard(true,
-          lir->ins2(LIR_eqp,
-                    stobj_get_const_private_ptr(callee_ins),
-                    INS_CONSTPTR(callee_fun)),
+          lir->ins2(LIR_eqp, stobj_get_private(callee_ins), INS_CONSTPTR(callee_fun)),
           branchExit);
 
     /*
@@ -13752,7 +13751,7 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     JS_ASSERT(tarray);
 
     /* priv_ins will load the TypedArray* */
-    LIns* priv_ins = stobj_get_const_private_ptr(obj_ins);
+    LIns* priv_ins = stobj_get_private(obj_ins);
 
     /* for out-of-range, do the same thing that the interpreter does, which is return undefined */
     if ((jsuint) idx >= tarray->length) {
@@ -14214,7 +14213,7 @@ TraceRecorder::record_JSOP_MOREITER()
         void *cursor = ni->props_cursor;
         void *end = ni->props_end;
 
-        LIns *ni_ins = stobj_get_const_private_ptr(iterobj_ins);
+        LIns *ni_ins = stobj_get_private(iterobj_ins);
         LIns *cursor_ins =
             addName(lir->insLoad(LIR_ldp, ni_ins,
                                  offsetof(NativeIterator, props_cursor), ACCSET_OTHER), "cursor");
@@ -14329,7 +14328,7 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
         guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
 
-        LIns *ni_ins = stobj_get_const_private_ptr(iterobj_ins);
+        LIns *ni_ins = stobj_get_private(iterobj_ins);
         LIns *cursor_ins = addName(lir->insLoad(LIR_ldp, ni_ins, offsetof(NativeIterator, props_cursor), ACCSET_OTHER), "cursor");
 
         /* Emit code to stringify the id if necessary. */
@@ -14985,7 +14984,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 
     if (fun->u.i.nupvars) {
         JSUpvarArray *uva = fun->u.i.script->upvars();
-        LIns* upvars_ins = stobj_get_const_private_ptr(closure_ins,
+        LIns* upvars_ins = stobj_get_fslot_private_ptr(closure_ins,
                                                        JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
         for (uint32 i = 0, n = uva->length; i < n; i++) {
@@ -15782,7 +15781,7 @@ TraceRecorder::record_JSOP_LENGTH()
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), LOAD_NORMAL);
         v_ins = lir->ins1(LIR_i2d, lir->insLoad(LIR_ldi,
-                                                stobj_get_const_private_ptr(obj_ins),
+                                                stobj_get_private(obj_ins),
                                                 js::TypedArray::lengthOffset(),
                                                 ACCSET_OTHER, LOAD_CONST));
     } else {

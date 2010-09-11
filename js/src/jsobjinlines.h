@@ -569,8 +569,8 @@ JSObject::setWithThis(JSObject *thisp)
 }
 
 inline void
-JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
-               const js::Value &privateSlotValue, JSContext *cx)
+JSObject::initCommon(js::Class *aclasp, JSObject *proto, JSObject *parent,
+                     JSContext *cx)
 {
     JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
 
@@ -591,7 +591,6 @@ JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
 
     setProto(proto);
     setParent(parent);
-    fslots[JSSLOT_PRIVATE] = privateSlotValue;
     fslots[JSSLOT_PRIVATE + 1].setUndefined();
     fslots[JSSLOT_PRIVATE + 2].setUndefined();
 
@@ -602,6 +601,33 @@ JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
 #endif
 
     emptyShape = NULL;
+}
+
+inline void
+JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+               const js::Value &privateSlotValue, JSContext *cx)
+{
+    initCommon(aclasp, proto, parent, cx);
+    fslots[JSSLOT_PRIVATE] = privateSlotValue;
+}
+
+inline void
+JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+               void *priv, JSContext *cx)
+{
+    initCommon(aclasp, proto, parent, cx);
+    *(void **)&fslots[JSSLOT_PRIVATE] = priv;
+}
+
+inline void
+JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+               JSContext *cx)
+{
+    initCommon(aclasp, proto, parent, cx);
+    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+        *(void **)&fslots[JSSLOT_PRIVATE] = NULL;
+    else
+        fslots[JSSLOT_PRIVATE].setUndefined();
 }
 
 inline void
@@ -626,6 +652,20 @@ JSObject::initSharingEmptyShape(js::Class *aclasp,
                                 JSContext *cx)
 {
     init(aclasp, proto, parent, privateSlotValue, cx);
+
+    js::EmptyShape *empty = proto->emptyShape;
+    JS_ASSERT(empty->getClass() == aclasp);
+    setMap(empty);
+}
+
+inline void
+JSObject::initSharingEmptyShape(js::Class *aclasp,
+                                JSObject *proto,
+                                JSObject *parent,
+                                void *priv,
+                                JSContext *cx)
+{
+    init(aclasp, proto, parent, priv, cx);
 
     js::EmptyShape *empty = proto->emptyShape;
     JS_ASSERT(empty->getClass() == aclasp);
@@ -815,7 +855,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
          * Default parent to the parent of the prototype, which was set from
          * the parent of the prototype's constructor.
          */
-        obj->init(clasp, proto, parent, JSObject::defaultPrivate(clasp), cx);
+        obj->init(clasp, proto, parent, cx);
 
         JS_LOCK_OBJ(cx, proto);
         JS_ASSERT(proto->canProvideEmptyShape(clasp));
@@ -949,10 +989,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->init(clasp, proto,
-              (!parent && proto) ? proto->getParent() : parent,
-              JSObject::defaultPrivate(clasp),
-              cx);
+    obj->init(clasp, proto, (!parent && proto) ? proto->getParent() : parent, cx);
 
     if (clasp->isNative()) {
         if (!InitScopeForObject(cx, obj, clasp, proto)) {

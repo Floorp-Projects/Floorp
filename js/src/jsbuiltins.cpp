@@ -308,7 +308,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    closure->initSharingEmptyShape(&js_FunctionClass, proto, parent, PrivateValue(fun), cx);
+    closure->initSharingEmptyShape(&js_FunctionClass, proto, parent, fun, cx);
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT,
