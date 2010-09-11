@@ -375,7 +375,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                      subdocAPD, parentAPD);
       childItems.AppendToTop(zoomItem);
-    } else if (!nsContentUtils::IsChildOfSameType(presShell->GetDocument())) {
+    } else if (presContext->IsRootContentDocument()) {
       // We always want top level content documents to be in their own layer.
       // If we need a zoom item then we are good because it creates a layer. If
       // not then create our own layer.
