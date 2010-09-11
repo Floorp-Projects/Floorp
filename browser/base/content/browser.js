@@ -789,6 +789,72 @@ const gXPInstallObserver = {
   }
 };
 
+const gFormSubmitObserver = {
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
+
+  panel: null,
+
+  init: function()
+  {
+    this.panel = document.getElementById('invalid-form-popup');
+    this.panel.appendChild(document.createTextNode(""));
+  },
+
+  panelIsOpen: function()
+  {
+    return this.panel && this.panel.state != "hiding" &&
+           this.panel.state != "closed";
+  },
+
+  notifyInvalidSubmit : function (aFormElement, aInvalidElements)
+  {
+    // We are going to handle invalid form submission attempt by focusing the
+    // first invalid element and show the corresponding validation message in a
+    // panel attached to the element.
+    if (!aInvalidElements.length) {
+      return;
+    }
+
+    // Don't show the popup if the current tab doesn't contain the invalid form.
+    if (gBrowser.selectedTab.linkedBrowser.contentDocument !=
+        aFormElement.ownerDocument) {
+      return;
+    }
+
+    let element = aInvalidElements.queryElementAt(0, Ci.nsISupports);
+
+    if (!(element instanceof HTMLInputElement ||
+          element instanceof HTMLTextAreaElement ||
+          element instanceof HTMLSelectElement ||
+          element instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    // Limit the message to 256 characters.
+    this.panel.firstChild.nodeValue = element.validationMessage.substring(0, 256);
+
+    element.focus();
+
+    // If the user type something or blur the element, we want to remove the popup.
+    // We could check for clicks but a click is already removing the popup.
+    let eventHandler = function(e) {
+      gFormSubmitObserver.panel.hidePopup();
+    };
+    element.addEventListener("input", eventHandler, false);
+    element.addEventListener("blur", eventHandler, false);
+
+    // One event to bring them all and in the darkness bind them all.
+    this.panel.addEventListener("popuphiding", function(aEvent) {
+      aEvent.target.removeEventListener("popuphiding", arguments.callee, false);
+      element.removeEventListener("input", eventHandler, false);
+      element.removeEventListener("blur", eventHandler, false);
+    }, false);
+
+    this.panel.hidden = false;
+    this.panel.openPopup(element, "after_start", 0, 0);
+  }
+};
+
 // Simple gestures support
 //
 // As per bug #412486, web content must not be allowed to receive any
@@ -1318,10 +1384,12 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
+  Services.obs.addObserver(gFormSubmitObserver, "invalidformsubmit", false);
 
   BrowserOffline.init();
   OfflineApps.init();
   IndexedDBPromptHelper.init();
+  gFormSubmitObserver.init();
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -1562,6 +1630,7 @@ function BrowserShutdown()
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
   Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
+  Services.obs.removeObserver(gFormSubmitObserver, "invalidformsubmit");
 
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -4190,6 +4259,11 @@ var XULBrowserWindow = {
   onLocationChange: function (aWebProgress, aRequest, aLocationURI) {
     var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
+
+    // Hide the form invalid popup.
+    if (gFormSubmitObserver.panelIsOpen()) {
+      gFormSubmitObserver.panel.hidePopup();
+    }
 
     if (document.tooltipNode) {
       // Optimise for the common case

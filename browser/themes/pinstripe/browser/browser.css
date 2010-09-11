@@ -1910,6 +1910,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat;
 }
 
+/* Invalid form popup */
+#invalid-form-popup {
+  -moz-appearance: none;
+  background-color: #fffcd6;
+  border: 1px solid #dad8b6;
+  padding: 5px 5px 5px 5px;
+  font-weight: bold;
+}
+
 #notification-popup {
   color: #fff;
   margin-top: -1px;

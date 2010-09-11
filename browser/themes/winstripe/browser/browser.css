@@ -1857,6 +1857,15 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   color: MenuText;
 }
 
+/* Invalid form popup */
+#invalid-form-popup {
+  -moz-appearance: none;
+  background-color: #fffcd6;
+  border: 1px solid #dad8b6;
+  padding: 5px 5px 5px 5px;
+  font-weight: bold;
+}
+
 /* Notification popup */
 #notification-popup {
   padding: 10px;
