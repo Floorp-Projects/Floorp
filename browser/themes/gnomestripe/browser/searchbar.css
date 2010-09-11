@@ -50,7 +50,7 @@
 }
 
 .searchbar-engine-button[addengines="true"] {
-  -moz-box-shadow: 0 -5px 14px Highlight inset;
+  box-shadow: 0 -5px 14px Highlight inset;
 }
 
 .searchbar-dropmarker-image {

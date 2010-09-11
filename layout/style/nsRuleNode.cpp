@@ -4962,7 +4962,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   COMPUTE_START_RESET(Border, (mPresContext), border, parentBorder,
                       Margin, marginData)
 
-  // -moz-box-shadow: none, list, inherit, initial
+  // box-shadow: none, list, inherit, initial
   switch (marginData.mBoxShadow.GetUnit()) {
   case eCSSUnit_Null:
     break;

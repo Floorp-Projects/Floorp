@@ -660,7 +660,7 @@
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
   border-radius: 10000px;
   border: 1px solid #555;
-  -moz-box-shadow: #777 1px 1px 1.5px;
+  box-shadow: #777 1px 1px 1.5px;
   width: 200px;
   height: 24px;
   margin: 0px 8px;
@@ -711,7 +711,7 @@
   width: 16px;
   height: 16px;
   margin: 3px;
-  -moz-box-shadow: #777 1px 1px 1px;
+  box-shadow: #777 1px 1px 1px;
 }
 
 .download-progress .pause {

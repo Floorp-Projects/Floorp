@@ -9,7 +9,7 @@
   background-origin: padding-box;
   border-radius: 12px;
   border: 1px solid rgba(0,0,0,.65);
-  -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,.2),
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2),
                    inset 0 0 1px rgba(255,255,255,.1),
                    0 1px 0 rgba(255,255,255,.1);
   color: #fff;
@@ -18,7 +18,7 @@
 
 #pilot-notification-submit:hover:active {
   background: -moz-linear-gradient(rgba(40,40,40,.9), rgba(70,70,70,.9));
-  -moz-box-shadow: inset 0 0 2px rgba(0,0,0,.2),
+  box-shadow: inset 0 0 2px rgba(0,0,0,.2),
                    inset 0 1px 5px rgba(0,0,0,.4),
                    0 1px 0 rgba(255,255,255,.1);
 }

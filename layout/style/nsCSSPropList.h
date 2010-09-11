@@ -280,7 +280,7 @@
 // appropriate), 'line-height', 'float', 'vertical-align' (only if
 // 'float' is 'none'), margin properties, padding properties, border
 // properties, 'color', and background properties.  We also allow
-// 'text-shadow' (see above) and '-moz-box-shadow' (which is like the
+// 'text-shadow' (see above) and 'box-shadow' (which is like the
 // border properties).
 
 // We include '-moz-background-inline-policy' (css3-background's
@@ -1079,9 +1079,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Bottom)
 CSS_PROP_BORDER(
-    -moz-box-shadow,
+    box-shadow,
     box_shadow,
-    MozBoxShadow,
+    boxShadow,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,

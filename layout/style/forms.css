@@ -630,7 +630,7 @@ input[type="file"] > input[type="text"] {
  */
 :invalid,
 :-moz-submit-invalid {
-  -moz-box-shadow: 0 0 1.5px 1px red;
+  box-shadow: 0 0 1.5px 1px red;
 }
 
 @media print {

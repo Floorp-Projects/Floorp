@@ -1,6 +1,6 @@
 /* Override default style */
 input:invalid {
-  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
 input.notinvalid {

@@ -56,7 +56,7 @@ var supported_properties = {
     "border-top-right-radius": [ test_radius_transition ],
     "-moz-box-flex": [ test_float_zeroToOne_transition,
                        test_float_aboveOne_transition ],
-    "-moz-box-shadow": [ test_shadow_transition ],
+    "box-shadow": [ test_shadow_transition ],
     "-moz-column-count": [ test_pos_integer_or_auto_transition ],
     "-moz-column-gap": [ test_length_transition ],
     "-moz-column-rule-color": [ test_color_transition,
@@ -339,7 +339,7 @@ function test_border_color_transition(prop) {
 }
 
 function test_shadow_transition(prop) {
-  var spreadStr = (prop == "-moz-box-shadow") ? " 0px" : "";
+  var spreadStr = (prop == "box-shadow") ? " 0px" : "";
 
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "none", "");
@@ -359,7 +359,7 @@ function test_shadow_transition(prop) {
   is(cs.getPropertyValue(prop), "rgb(66, 96, 0) 5px 5px 2px" + spreadStr + ", rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation of shadows");
 
-  if (prop == "-moz-box-shadow") {
+  if (prop == "box-shadow") {
     div.style.setProperty(prop, "8px 8px 8px red inset", "");
     is(cs.getPropertyValue(prop), "rgb(255, 0, 0) 8px 8px 8px 0px inset",
        "shadow-valued property " + prop + ": non-interpolable cases");
