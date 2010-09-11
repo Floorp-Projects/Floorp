@@ -1174,8 +1174,8 @@ class TraceRecorder
                         nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
     void set_array_fslot(nanojit::LIns *obj_ins, unsigned slot, uint32 val);
 
-    nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns* obj_ins,
-                                               unsigned slot = JSSLOT_PRIVATE);
+    nanojit::LIns* stobj_get_fslot_private_ptr(nanojit::LIns* obj_ins,
+                                               unsigned slot);
     nanojit::LIns* stobj_get_fslot_uint32(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* stobj_set_fslot_uint32(nanojit::LIns* value_ins, nanojit::LIns* obj_ins,
                                           unsigned slot);

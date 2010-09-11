@@ -286,6 +286,7 @@ typedef union jsval_layout
         JSValueTag tag;
     } s;
     double asDouble;
+    void *asPtr;
 } jsval_layout;
 # elif JS_BITS_PER_WORD == 64
 typedef union jsval_layout
@@ -306,6 +307,7 @@ typedef union jsval_layout
         } payload;
     } s;
     double asDouble;
+    void *asPtr;
 } jsval_layout;
 # endif  /* JS_BITS_PER_WORD */
 #else   /* defined(IS_LITTLE_ENDIAN) */
