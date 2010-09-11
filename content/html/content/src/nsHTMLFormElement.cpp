@@ -369,6 +369,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
                                 kFormDefaultMethod->tag)
+NS_IMPL_BOOL_ATTR(nsHTMLFormElement, NoValidate, novalidate)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 
@@ -1661,6 +1662,9 @@ nsHTMLFormElement::CheckValidFormSubmission()
    * be spread enough and authors will assume forms can't be submitted when
    * invalid. See bug 587671.
    */
+
+  NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate),
+               "We shouldn't be there if novalidate is set!");
 
   // When .submit() is called aEvent = nsnull so we can rely on that to know if
   // we have to check the validity of the form.

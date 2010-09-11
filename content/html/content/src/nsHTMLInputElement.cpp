@@ -1640,7 +1640,9 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     nsMouseEvent event(PR_TRUE, NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
-  } else if (mForm->HasSingleTextControl() && mForm->CheckValidFormSubmission()) {
+  } else if (mForm->HasSingleTextControl() &&
+             (mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+              mForm->CheckValidFormSubmission())) {
     // TODO: removing this code and have the submit event sent by the form,
     // bug 592124.
     // If there's only one text control, just submit the form
@@ -2433,6 +2435,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // TODO: removing this code and have the submit event sent by the
             // form, see bug 592124.
             if (presShell && (event.message != NS_FORM_SUBMIT ||
+                              mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
                               mForm->CheckValidFormSubmission())) {
               // Hold a strong ref while dispatching
               nsRefPtr<nsHTMLFormElement> form(mForm);
