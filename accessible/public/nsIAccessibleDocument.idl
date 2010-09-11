@@ -56,7 +56,7 @@ interface nsIDOMWindow;
  * nsIAccessNode::GetAccessibleDocument() or 
  * nsIAccessibleEvent::GetAccessibleDocument()
  */
-[scriptable, uuid(03c6ce8a-aa40-4484-9282-e6579c56e054)]
+[scriptable, uuid(451242bd-8a0c-4198-ae88-c053609a4e5d)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -99,4 +99,19 @@ interface nsIAccessibleDocument : nsISupports
    * For example, in Windows you can static cast it to an HWND.
    */
   [noscript] readonly attribute voidPtr windowHandle;
+
+  /**
+   * Return the parent document accessible.
+   */
+  readonly attribute nsIAccessibleDocument parentDocument;
+
+  /**
+   * Return the count of child document accessibles.
+   */
+  readonly attribute unsigned long childDocumentCount;
+
+  /**
+   * Return the child document accessible at the given index.
+   */
+  nsIAccessibleDocument getChildDocumentAt(in unsigned long index);
 };

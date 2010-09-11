@@ -479,7 +479,8 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // b, big, i, s, small, strike, tt, u
 #define GROUP_FONTSTYLE        (1 << 3)
 
-// abbr, acronym, cite, code, del, dfn, em, ins, kbd, mark, samp, strong, var
+// abbr, acronym, cite, code, datalist, del, dfn, em, ins, kbd, mark, samp,
+// strong, var
 #define GROUP_PHRASE           (1 << 4)
 
 // a, applet, basefont, bdo, br, font, iframe, img, map, object, output, q,
@@ -523,7 +524,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 #define GROUP_SELECT_CONTENT   (1 << 16)
 
 // option
-#define GROUP_OPTGROUP_CONTENT (1 << 17)
+#define GROUP_OPTIONS          (1 << 17)
 
 // dd, dt
 #define GROUP_DL_CONTENT       (1 << 18)
@@ -603,6 +604,8 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(col, PR_FALSE, PR_FALSE, GROUP_TABLE_CONTENT | GROUP_COLGROUP_CONTENT,
        GROUP_NONE),
   ELEM(colgroup, PR_TRUE, PR_FALSE, GROUP_NONE, GROUP_COLGROUP_CONTENT),
+  ELEM(datalist, PR_TRUE, PR_FALSE, GROUP_PHRASE,
+       GROUP_OPTIONS | GROUP_INLINE_ELEMENT),
   ELEM(dd, PR_TRUE, PR_FALSE, GROUP_DL_CONTENT, GROUP_FLOW_ELEMENT),
   ELEM(del, PR_TRUE, PR_TRUE, GROUP_PHRASE | GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(dfn, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
@@ -671,9 +674,9 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(ol, PR_TRUE, PR_TRUE, GROUP_BLOCK | GROUP_OL_UL,
        GROUP_LI | GROUP_OL_UL),
   ELEM(optgroup, PR_TRUE, PR_FALSE, GROUP_SELECT_CONTENT,
-       GROUP_OPTGROUP_CONTENT),
+       GROUP_OPTIONS),
   ELEM(option, PR_TRUE, PR_FALSE,
-       GROUP_SELECT_CONTENT | GROUP_OPTGROUP_CONTENT, GROUP_LEAF),
+       GROUP_SELECT_CONTENT | GROUP_OPTIONS, GROUP_LEAF),
   ELEM(output, PR_TRUE, PR_TRUE, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(p, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_P, GROUP_INLINE_ELEMENT),
   ELEM(param, PR_FALSE, PR_FALSE, GROUP_OBJECT_CONTENT, GROUP_NONE),

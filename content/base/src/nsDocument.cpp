@@ -1835,6 +1835,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPreloadingImages)
 
+  for (PRUint32 i = 0; i < tmp->mAnimationFrameListeners.Length(); ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mAnimationFrameListeners[i]");
+    cb.NoteXPCOMChild(tmp->mAnimationFrameListeners[i]);
+  }
+
 #ifdef MOZ_SMIL
   // Traverse animation components
   if (tmp->mAnimationController) {
@@ -3214,9 +3219,12 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   mExternalResourceMap.ShowViewers();
 
+  nsRefreshDriver* rd = mPresShell->GetPresContext()->RefreshDriver();
   if (mHavePendingPaint) {
-    mPresShell->GetPresContext()->RefreshDriver()->
-      ScheduleBeforePaintEvent(this);
+    rd->ScheduleBeforePaintEvent(this);
+  }
+  if (!mAnimationFrameListeners.IsEmpty()) {
+    rd->ScheduleAnimationFrameListeners(this);
   }
 
   shell.swap(*aInstancePtrResult);
@@ -3225,11 +3233,22 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 }
 
 void
+nsIDocument::TakeAnimationFrameListeners(AnimationListenerList& aListeners)
+{
+  aListeners.AppendElements(mAnimationFrameListeners);
+  mAnimationFrameListeners.Clear();
+}
+
+void
 nsDocument::DeleteShell()
 {
   mExternalResourceMap.HideViewers();
   if (mHavePendingPaint) {
     mPresShell->GetPresContext()->RefreshDriver()->RevokeBeforePaintEvent(this);
+  }
+  if (!mAnimationFrameListeners.IsEmpty()) {
+    mPresShell->GetPresContext()->RefreshDriver()->
+      RevokeAnimationFrameListeners(this);
   }
   mPresShell = nsnull;
 }
@@ -8071,8 +8090,19 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
 }
 
 void
-nsIDocument::ScheduleBeforePaintEvent()
+nsIDocument::ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener)
 {
+  if (aListener) {
+    PRBool alreadyRegistered = !mAnimationFrameListeners.IsEmpty();
+    if (mAnimationFrameListeners.AppendElement(aListener) &&
+        !alreadyRegistered && mPresShell) {
+      mPresShell->GetPresContext()->RefreshDriver()->
+        ScheduleAnimationFrameListeners(this);
+    }
+
+    return;
+  }
+
   if (!mHavePendingPaint) {
     // We don't want to use GetShell() here, because we want to schedule the
     // paint even if we're frozen.  Either we'll get unfrozen and then the
@@ -8082,6 +8112,7 @@ nsIDocument::ScheduleBeforePaintEvent()
       mPresShell->GetPresContext()->RefreshDriver()->
         ScheduleBeforePaintEvent(this);
   }
+
 }
 
 nsresult

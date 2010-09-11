@@ -48,6 +48,8 @@
 <!ENTITY updates.restart.label                "Restart now to complete installation">
 <!ENTITY updates.noneFound.label              "No updates found">
 <!ENTITY updates.manualUpdatesFound.label     "View Available Updates">
+<!ENTITY updates.updateSelected.label         "Install Updates">
+<!ENTITY updates.updateSelected.tooltip       "Install available updates in this list">
 
 <!-- addon actions -->
 <!ENTITY cmd.showDetails.label                "Show More Information">
@@ -104,19 +106,19 @@
 <!ENTITY detail.repository                    "Add-on Profile">
 <!ENTITY detail.size                          "Size">
 
-<!ENTITY detail.checkForUpdates.label         "Check for updates">
+<!ENTITY detail.checkForUpdates.label         "Check for Updates">
 <!ENTITY detail.checkForUpdates.accesskey     "F">
 <!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
 <!ENTITY detail.showPreferencesWin.label      "Options">
 <!ENTITY detail.showPreferencesWin.accesskey  "O">
-<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on's Options">
+<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on's options">
 <!ENTITY detail.showPreferencesUnix.label     "Preferences">
 <!ENTITY detail.showPreferencesUnix.accesskey "P">
 <!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on's preferences">
 
 
 <!-- ratings -->
-<!ENTITY rating.label                         "Rating:">
+<!ENTITY rating2.label                        "Rating">
 
 <!-- download/install progress -->
 <!ENTITY progress.pause.tooltip               "Pause">
@@ -141,8 +143,14 @@
 <!ENTITY addon.details.label                  "More">
 <!ENTITY addon.details.tooltip                "Show more details about this add-on">
 <!ENTITY addon.unknownDate                    "Unknown">
+<!-- LOCALIZATION NOTE (addon.disabled.postfix): This is used in a normal list
+     to signify that an add-on is disabled, in the form
+     "<Addon name> <1.0> (disabled)" -->
 <!ENTITY addon.disabled.postfix               "(disabled)">
-<!-- LOCALIZATION NOTE (addon.update.postfix): This is used to signify that an item is an update, in the form "Addon v1.0 Update" -->
+<!-- LOCALIZATION NOTE (addon.update.postfix): This is used in the available
+     updates list to signify that an item is an update, in the form
+     "<Addon name> <1.1> Update". It is fine to use constructs like brackets if
+     necessary -->
 <!ENTITY addon.update.postfix                 "Update">
 <!ENTITY addon.undoAction.label               "Undo">
 <!ENTITY addon.undoAction.tooltip             "Undo this action">
@@ -153,6 +161,8 @@
 <!ENTITY addon.install.tooltip                "Install this add-on">
 <!ENTITY addon.updateNow.label                "Update Now">
 <!ENTITY addon.updateNow.tooltip              "Install the update for this add-on">
+<!ENTITY addon.includeUpdate.label            "Include in Update">
+<!ENTITY addon.updateAvailable.label          "An update is available">
 <!ENTITY addon.checkingForUpdates.label       "Checking for updates…">
 <!ENTITY addon.releaseNotes.label             "Release Notes:">
 <!ENTITY addon.loadingReleaseNotes.label      "Loading…">

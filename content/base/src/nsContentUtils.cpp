@@ -1522,6 +1522,21 @@ nsContentUtils::GetDocShellFromCaller()
   return nsnull;
 }
 
+nsPIDOMWindow *
+nsContentUtils::GetWindowFromCaller()
+{
+  JSContext *cx = nsnull;
+  sThreadJSContextStack->Peek(&cx);
+
+  if (cx) {
+    nsCOMPtr<nsPIDOMWindow> win =
+      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+    return win;
+  }
+
+  return nsnull;
+}
+
 nsIDOMDocument *
 nsContentUtils::GetDocumentFromCaller()
 {

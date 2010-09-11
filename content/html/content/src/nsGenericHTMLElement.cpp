@@ -2548,8 +2548,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     if (mForm && aName == nsGkAtoms::type) {
       nsIDocument* doc = GetCurrentDoc();
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
-      
+
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
@@ -2569,6 +2568,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // end up readding and becoming the default control again in
       // AfterSetAttr.
       if (doc && aNotify) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
       }
     }
@@ -2605,8 +2605,6 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     if (mForm && aName == nsGkAtoms::type) {
       nsIDocument* doc = GetDocument();
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
-      
       nsAutoString tmp;
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
@@ -2628,6 +2626,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // Note: no need to notify on CanBeDisabled(), since type attr
       // changes can't affect that.
       if (doc && aNotify) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DEFAULT);
       }
     }
@@ -3480,5 +3479,9 @@ nsGenericHTMLElement::ChangeEditableState(PRInt32 aChange)
     document = nsnull;
   }
 
+  // MakeContentDescendantsEditable is going to call ContentStatesChanged for
+  // this element and all descendants if editable state has changed.
+  // We have to create a document update batch now so it's created once.
+  MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
   MakeContentDescendantsEditable(this, document);
 }

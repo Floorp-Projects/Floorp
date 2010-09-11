@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(46a86173-0ab5-44b2-ab51-722cb3db1b60)]
+[scriptable, uuid(dd2c4489-e4bd-4702-86bc-e1691744e556)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -134,6 +134,11 @@ interface nsIAutoCompleteController : nsISupports
    * Get the value of the result at a given index in the last completed search
    */
   AString getValueAt(in long index);
+
+  /*
+   * Get the label of the result at a given index in the last completed search
+   */
+  AString getLabelAt(in long index);
 
   /*
    * Get the comment of the result at a given index in the last completed search

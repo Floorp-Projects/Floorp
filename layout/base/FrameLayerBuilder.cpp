@@ -43,6 +43,7 @@
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "nsSubDocumentFrame.h"
+#include "nsCSSRendering.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -136,7 +137,7 @@ public:
    * if no clipping is required
    */
   void ProcessDisplayItems(const nsDisplayList& aList,
-                           const nsRect* aClipRect);
+                           const FrameLayerBuilder::Clip& aClip);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -879,7 +880,9 @@ IsText(nsDisplayItem* aItem) {
   case nsDisplayItem::TYPE_TEXT:
   case nsDisplayItem::TYPE_BULLET:
   case nsDisplayItem::TYPE_HEADER_FOOTER:
+#ifdef MOZ_MATHML
   case nsDisplayItem::TYPE_MATHML_CHAR_FOREGROUND:
+#endif
 #ifdef MOZ_XUL
   case nsDisplayItem::TYPE_XUL_TEXT_BOX:
 #endif
@@ -1034,25 +1037,25 @@ BuildTempManagerForInactiveLayer(nsDisplayListBuilder* aBuilder,
  * We set the clip rect for items that generated their own layer.
  * (ThebesLayers don't need a clip rect on the layer, we clip the items
  * individually when we draw them.)
+ * If we have to clip to a rounded rect, we treat any active layer as
+ * though it's inactive so that we draw it ourselves into the thebes layer.
  * We set the visible rect for all layers, although the actual setting
  * of visible rects for some ThebesLayers is deferred until the calling
  * of ContainerState::Finish.
  */
 void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
-                                    const nsRect* aClipRect)
+                                    const FrameLayerBuilder::Clip& aClip)
 {
   PRInt32 appUnitsPerDevPixel =
     mContainerFrame->PresContext()->AppUnitsPerDevPixel();
 
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
-    if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
-      nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
-      nsRect clip = clipItem->GetClipRect();
-      if (aClipRect) {
-        clip.IntersectRect(clip, *aClipRect);
-      }
-      ProcessDisplayItems(*clipItem->GetList(), &clip);
+    nsDisplayItem::Type type = item->GetType();
+    if (type == nsDisplayItem::TYPE_CLIP ||
+        type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
+      FrameLayerBuilder::Clip childClip(aClip, item);
+      ProcessDisplayItems(*item->GetList(), childClip);
       continue;
     }
 
@@ -1062,15 +1065,15 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     nsIntRect itemVisibleRect =
       item->GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
     nsRect itemContent = item->GetBounds(mBuilder);
-    if (aClipRect) {
-      itemContent.IntersectRect(*aClipRect, itemContent);
+    if (aClip.mHaveClipRect) {
+      itemContent.IntersectRect(aClip.mClipRect, itemContent);
     }
     nsIntRect itemDrawRect = itemContent.ToNearestPixels(appUnitsPerDevPixel);
     nsDisplayItem::LayerState layerState =
       item->GetLayerState(mBuilder, mManager);
 
     // Assign the item to a layer
-    if (layerState == LAYER_ACTIVE) {
+    if (layerState == LAYER_ACTIVE && aClip.mRoundedClipRects.IsEmpty()) {
       // If the item would have its own layer but is invisible, just hide it.
       // Note that items without their own layers can't be skipped this
       // way, since their ThebesLayer may decide it wants to draw them
@@ -1092,9 +1095,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       NS_ASSERTION(!ownLayer->HasUserData(&gLayerManagerUserData),
                    "We shouldn't have a FrameLayerBuilder-managed layer here!");
       // It has its own layer. Update that layer's clip and visible rects.
-      if (aClipRect) {
+      if (aClip.mHaveClipRect) {
         ownLayer->IntersectClipRect(
-            aClipRect->ToNearestPixels(appUnitsPerDevPixel));
+            aClip.mClipRect.ToNearestPixels(appUnitsPerDevPixel));
       }
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
@@ -1119,7 +1122,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       mBuilder->LayerBuilder()->AddLayerDisplayItem(ownLayer, item);
     } else {
       nsRefPtr<BasicLayerManager> tempLayerManager;
-      if (layerState == LAYER_INACTIVE) {
+      if (layerState != LAYER_NONE) {
         tempLayerManager = BuildTempManagerForInactiveLayer(mBuilder, item);
         if (!tempLayerManager)
           continue;
@@ -1147,7 +1150,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       InvalidateForLayerChange(item, thebesLayer);
 
       mBuilder->LayerBuilder()->
-        AddThebesDisplayItem(thebesLayer, item, aClipRect, mContainerFrame,
+        AddThebesDisplayItem(thebesLayer, item, aClip, mContainerFrame,
                              layerState, tempLayerManager);
     }
   }
@@ -1199,7 +1202,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
 void
 FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                         nsDisplayItem* aItem,
-                                        const nsRect* aClipRect,
+                                        const Clip& aClip,
                                         nsIFrame* aContainerLayerFrame,
                                         LayerState aLayerState,
                                         LayerManager* aTempManager)
@@ -1211,7 +1214,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     entry->mContainerLayerFrame = aContainerLayerFrame;
     NS_ASSERTION(aItem->GetUnderlyingFrame(), "Must have frame");
     ClippedDisplayItem* cdi =
-      entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClipRect));
+      entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip));
     cdi->mTempLayerManager = aTempManager;
   }
 }
@@ -1393,7 +1396,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     SetHasContainerLayer(aContainerFrame);
   }
 
-  state.ProcessDisplayItems(aChildren, nsnull);
+  Clip clip;
+  state.ProcessDisplayItems(aChildren, clip);
   state.Finish();
 
   PRUint32 flags = aChildren.IsOpaque() ? Layer::CONTENT_OPAQUE : 0;
@@ -1595,7 +1599,13 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == appUnitsPerDevPixel,
                  "a thebes layer should contain items only at the same zoom");
 
-    if (!cdi->mHasClipRect || cdi->mClipRect.Contains(visible.GetBounds())) {
+    NS_ABORT_IF_FALSE(cdi->mClip.mHaveClipRect ||
+                      cdi->mClip.mRoundedClipRects.IsEmpty(),
+                      "If we have rounded rects, we must have a clip rect");
+
+    if (!cdi->mClip.mHaveClipRect ||
+        (cdi->mClip.mRoundedClipRects.IsEmpty() &&
+         cdi->mClip.mClipRect.Contains(visible.GetBounds()))) {
       cdi->mItem->RecomputeVisibility(builder, &visible);
       continue;
     }
@@ -1603,16 +1613,20 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     // Do a little dance to account for the fact that we're clipping
     // to cdi->mClipRect
     nsRegion clipped;
-    clipped.And(visible, cdi->mClipRect);
+    clipped.And(visible, cdi->mClip.mClipRect);
     nsRegion finalClipped = clipped;
     cdi->mItem->RecomputeVisibility(builder, &finalClipped);
-    nsRegion removed;
-    removed.Sub(clipped, finalClipped);
-    nsRegion newVisible;
-    newVisible.Sub(visible, removed);
-    // Don't let the visible region get too complex.
-    if (newVisible.GetNumRects() <= 15) {
-      visible = newVisible;
+    // If we have rounded clip rects, don't subtract from the visible
+    // region since we aren't displaying everything inside the rect.
+    if (cdi->mClip.mRoundedClipRects.IsEmpty()) {
+      nsRegion removed;
+      removed.Sub(clipped, finalClipped);
+      nsRegion newVisible;
+      newVisible.Sub(visible, removed);
+      // Don't let the visible region get too complex.
+      if (newVisible.GetNumRects() <= 15) {
+        visible = newVisible;
+      }
     }
   }
 
@@ -1623,7 +1637,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     return;
   rc->Init(presContext->DeviceContext(), aContext);
 
-  nsRect currentClip;
+  Clip currentClip;
   PRBool setClipRect = PR_FALSE;
 
   for (i = 0; i < items.Length(); ++i) {
@@ -1634,20 +1648,16 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 
     // If the new desired clip state is different from the current state,
     // update the clip.
-    if (setClipRect != cdi->mHasClipRect ||
-        (cdi->mHasClipRect && cdi->mClipRect != currentClip)) {
+    if (setClipRect != cdi->mClip.mHaveClipRect ||
+        (cdi->mClip.mHaveClipRect && cdi->mClip != currentClip)) {
       if (setClipRect) {
         aContext->Restore();
       }
-      setClipRect = cdi->mHasClipRect;
+      setClipRect = cdi->mClip.mHaveClipRect;
       if (setClipRect) {
-        currentClip = cdi->mClipRect;
+        currentClip = cdi->mClip;
         aContext->Save();
-        aContext->NewPath();
-        gfxRect clip(currentClip.x, currentClip.y, currentClip.width, currentClip.height);
-        clip.ScaleInverse(presContext->AppUnitsPerDevPixel());
-        aContext->Rectangle(clip, PR_TRUE);
-        aContext->Clip();
+        currentClip.ApplyTo(aContext, presContext);
       }
     }
 
@@ -1675,5 +1685,61 @@ FrameLayerBuilder::DumpRetainedLayerTree()
   }
 }
 #endif
+
+FrameLayerBuilder::Clip::Clip(const Clip& aOther, nsDisplayItem* aClipItem)
+  : mRoundedClipRects(aOther.mRoundedClipRects),
+    mHaveClipRect(PR_TRUE)
+{
+  nsDisplayItem::Type type = aClipItem->GetType();
+  NS_ABORT_IF_FALSE(type == nsDisplayItem::TYPE_CLIP ||
+                    type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT,
+                    "unexpected display item type");
+  nsDisplayClip* item = static_cast<nsDisplayClip*>(aClipItem);
+  // Always intersect with mClipRect, even if we're going to add a
+  // rounded rect.
+  if (aOther.mHaveClipRect) {
+    mClipRect.IntersectRect(aOther.mClipRect, item->GetClipRect());
+  } else {
+    mClipRect = item->GetClipRect();
+  }
+
+  if (type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
+    RoundedRect *rr = mRoundedClipRects.AppendElement();
+    if (rr) {
+      rr->mRect = item->GetClipRect();
+      static_cast<nsDisplayClipRoundedRect*>(item)->GetRadii(rr->mRadii);
+    }
+  }
+
+  // FIXME: Optimize away excess rounded rectangles due to the new addition.
+}
+
+void
+FrameLayerBuilder::Clip::ApplyTo(gfxContext* aContext,
+                                 nsPresContext* aPresContext)
+{
+  aContext->NewPath();
+  PRInt32 A2D = aPresContext->AppUnitsPerDevPixel();
+  gfxRect clip = nsLayoutUtils::RectToGfxRect(mClipRect, A2D);
+  aContext->Rectangle(clip, PR_TRUE);
+  aContext->Clip();
+
+  for (PRUint32 i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    const Clip::RoundedRect &rr = mRoundedClipRects[i];
+
+    gfxCornerSizes pixelRadii;
+    nsCSSRendering::ComputePixelRadii(rr.mRadii, A2D, &pixelRadii);
+
+    clip = nsLayoutUtils::RectToGfxRect(rr.mRect, A2D);
+    clip.Round();
+    clip.Condition();
+    // REVIEW: This might make clip empty.  Is that OK?
+
+    aContext->NewPath();
+    aContext->RoundedRectangle(clip, pixelRadii);
+    aContext->Clip();
+  }
+}
 
 } // namespace mozilla

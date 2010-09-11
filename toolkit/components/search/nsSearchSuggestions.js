@@ -55,174 +55,7 @@ const HTTP_BAD_GATEWAY           = 502;
 const HTTP_SERVICE_UNAVAILABLE   = 503;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-/**
- * SuggestAutoCompleteResult contains the results returned by the Suggest
- * service - it implements nsIAutoCompleteResult and is used by the auto-
- * complete controller to populate the front end.
- * @constructor
- */
-function SuggestAutoCompleteResult(searchString,
-                                   searchResult,
-                                   defaultIndex,
-                                   errorDescription,
-                                   results,
-                                   comments,
-                                   formHistoryResult) {
-  this._searchString = searchString;
-  this._searchResult = searchResult;
-  this._defaultIndex = defaultIndex;
-  this._errorDescription = errorDescription;
-  this._results = results;
-  this._comments = comments;
-  this._formHistResult = formHistoryResult;
-}
-SuggestAutoCompleteResult.prototype = {
-  /**
-   * The user's query string
-   * @private
-   */
-  _searchString: "",
-
-  /**
-   * The result code of this result object, see |get searchResult| for possible
-   * values.
-   * @private
-   */
-  _searchResult: 0,
-
-  /**
-   * The default item that should be entered if none is selected
-   * @private
-   */
-  _defaultIndex: 0,
-
-  /**
-   * The reason the search failed
-   * @private
-   */
-  _errorDescription: "",
-
-  /**
-   * The list of words returned by the Suggest Service
-   * @private
-   */
-  _results: [],
-
-  /**
-   * The list of Comments (number of results - or page titles) returned by the
-   * Suggest Service.
-   * @private
-   */
-  _comments: [],
-
-  /**
-   * A reference to the form history nsIAutocompleteResult that we're wrapping.
-   * We use this to forward removeEntryAt calls as needed.
-   */
-  _formHistResult: null,
-
-  /**
-   * @return the user's query string
-   */
-  get searchString() {
-    return this._searchString;
-  },
-
-  /**
-   * @return the result code of this result object, either:
-   *         RESULT_IGNORED   (invalid searchString)
-   *         RESULT_FAILURE   (failure)
-   *         RESULT_NOMATCH   (no matches found)
-   *         RESULT_SUCCESS   (matches found)
-   */
-  get searchResult() {
-    return this._searchResult;
-  },
-
-  /**
-   * @return the default item that should be entered if none is selected
-   */
-  get defaultIndex() {
-    return this._defaultIndex;
-  },
-
-  /**
-   * @return the reason the search failed
-   */
-  get errorDescription() {
-    return this._errorDescription;
-  },
-
-  /**
-   * @return the number of results
-   */
-  get matchCount() {
-    return this._results.length;
-  },
-
-  /**
-   * Retrieves a result
-   * @param  index    the index of the result requested
-   * @return          the result at the specified index
-   */
-  getValueAt: function(index) {
-    return this._results[index];
-  },
-
-  /**
-   * Retrieves a comment (metadata instance)
-   * @param  index    the index of the comment requested
-   * @return          the comment at the specified index
-   */
-  getCommentAt: function(index) {
-    return this._comments[index];
-  },
-
-  /**
-   * Retrieves a style hint specific to a particular index.
-   * @param  index    the index of the style hint requested
-   * @return          the style hint at the specified index
-   */
-  getStyleAt: function(index) {
-    if (!this._comments[index])
-      return null;  // not a category label, so no special styling
-
-    if (index == 0)
-      return "suggestfirst";  // category label on first line of results
-
-    return "suggesthint";   // category label on any other line of results
-  },
-
-  /**
-   * Retrieves an image url.
-   * @param  index    the index of the image url requested
-   * @return          the image url at the specified index
-   */
-  getImageAt: function(index) {
-    return "";
-  },
-
-  /**
-   * Removes a result from the resultset
-   * @param  index    the index of the result to remove
-   */
-  removeValueAt: function(index, removeFromDatabase) {
-    // Forward the removeValueAt call to the underlying result if we have one
-    // Note: this assumes that the form history results were added to the top
-    // of our arrays.
-    if (removeFromDatabase && this._formHistResult &&
-        index < this._formHistResult.matchCount) {
-      // Delete the history result from the DB
-      this._formHistResult.removeValueAt(index, true);
-    }
-    this._results.splice(index, 1);
-    this._comments.splice(index, 1);
-  },
-
-  // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
-};
+Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
 
 /**
  * SuggestAutoComplete is a base class that implements nsIAutoCompleteSearch
@@ -577,11 +410,12 @@ SuggestAutoComplete.prototype = {
   onResultsReady: function(searchString, results, comments,
                            formHistoryResult) {
     if (this._listener) {
-      var result = new SuggestAutoCompleteResult(
+      var result = new FormAutoCompleteResult(
           searchString,
           Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
           0,
           "",
+          results,
           results,
           comments,
           formHistoryResult);

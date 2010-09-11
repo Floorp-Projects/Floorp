@@ -75,7 +75,6 @@ commonFiles=(
   vp8/common/reconinter.c
   vp8/common/reconintra4x4.c
   vp8/common/reconintra.c
-  vp8/common/segmentation_common.c
   vp8/common/setupintrarecon.c
   vp8/common/swapyv12buffer.c
   vp8/common/textblit.c
@@ -90,8 +89,11 @@ commonFiles=(
   vp8/decoder/dequantize.c
   vp8/decoder/detokenize.c
   vp8/decoder/generic/dsystemdependent.c
+  vp8/decoder/idct_blk.c
   vp8/decoder/onyxd_if.c
   vp8/decoder/threading.c
+  vp8/decoder/x86/idct_blk_mmx.c
+  vp8/decoder/x86/idct_blk_sse2.c
   vp8/decoder/x86/x86_dsystemdependent.c
   vp8/vp8_dx_iface.c
   vpx/src/vpx_codec.c
@@ -183,6 +185,7 @@ commonFiles=(
   vpx_scale/yv12config.h
   vpx_scale/yv12extend.h
   vp8/common/x86/idctllm_mmx.asm
+  vp8/common/x86/idctllm_sse2.asm
   vp8/common/x86/iwalsh_mmx.asm
   vp8/common/x86/iwalsh_sse2.asm
   vp8/common/x86/loopfilter_mmx.asm
@@ -193,6 +196,7 @@ commonFiles=(
   vp8/common/x86/recon_sse2.asm
   vp8/common/x86/subpixel_mmx.asm
   vp8/common/x86/subpixel_sse2.asm
+  vp8/common/x86/subpixel_ssse3.asm
   vp8/decoder/x86/dequantize_mmx.asm
   vpx_ports/emms.asm
   vpx_ports/x86_abi_support.asm
@@ -241,10 +245,6 @@ done
 
 # Patch to reduce compiler warnings, so we can compile with -Werror in mozilla.
 patch -p3 < reduce-warnings-1.patch
-patch -p3 < splitmv-bounds.patch
 patch -p3 < subpixel-qword.patch
-# Patch to make asm globals symbol hidden so linking succeeds on x86-64.
-patch -p3 < subpixel-hidden.patch
-patch -p3 < emptyif_warning.patch
 # Patch to compile with Sun Studio on Solaris
 patch -p3 < solaris.patch

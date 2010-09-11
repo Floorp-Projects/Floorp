@@ -170,7 +170,7 @@ function run_test() {
   }
 
   // Use a directory outside of dist/bin to lessen the garbage in dist/bin
-  var updatesDir = do_get_file("0111_complete_mar", true);
+  var updatesDir = do_get_file("0111_mar", true);
   try {
     // Mac OS X intermittently fails when removing the dir where the updater
     // binary was launched.
@@ -238,6 +238,13 @@ function run_test() {
   dump("Testing: directory still exists after removal of the last file in " +
        "the directory (bug 386760)\n");
   do_check_true(do_get_file("mar_test/2/2_1/", true).exists());
+
+  dump("Testing: patch files should not be left behind\n");
+  var entries = updatesDir.QueryInterface(AUS_Ci.nsIFile).directoryEntries;
+  while (entries.hasMoreElements()) {
+    var entry = entries.getNext().QueryInterface(AUS_Ci.nsIFile);
+    do_check_neq(getFileExtension(entry), "patch");
+  }
 
   cleanUp();
 }

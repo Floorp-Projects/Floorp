@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -117,5 +117,14 @@ typedef struct
 #define LF_INVOKE(ctx,fn) vp8_lf_##fn
 #endif
 
+typedef void loop_filter_uvfunction
+(
+    unsigned char *u,   // source pointer
+    int p,              // pitch
+    const signed char *flimit,
+    const signed char *limit,
+    const signed char *thresh,
+    unsigned char *v
+);
 
 #endif

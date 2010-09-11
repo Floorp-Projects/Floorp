@@ -52,7 +52,7 @@ body {
 	.dataBox {
 		font-size: 16px;
 		padding: 6px 20px 20px 20px;
-		-moz-border-radius: 0.5em;
+		border-radius: 0.5em;
 		-webkit-border-radius: 0.5em;
 		background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 		//display: inline;
@@ -113,7 +113,7 @@ body {
 	font-size: 16px;
 	padding: 8px 12px;
 	color: rgba(0, 0, 0, 0.8);
-	-moz-border-radius: 0.5em;
+	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	-moz-box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
@@ -132,7 +132,7 @@ body {
 	padding: 8px 12px;
 	width: 240px;
 	color: rgba(0, 0, 0, 0.8);
-	-moz-border-radius: 0.5em;
+	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	-moz-box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
@@ -151,7 +151,7 @@ body {
 	padding: 8px 24px;
 	margin: 24px auto;
 	color: rgba(0, 0, 0, 0.8);
-	-moz-border-radius: 0.5em;
+	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 	-moz-box-shadow: 
@@ -173,7 +173,7 @@ body {
 	padding: 8px 24px;
 	margin: 8px auto;
 	color: rgba(0, 0, 0, 0.8);
-	-moz-border-radius: 0.5em;
+	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 	-moz-box-shadow: 
@@ -190,7 +190,7 @@ body {
 	padding: 8px 24px;
 	margin: 8px auto;
 	color: rgba(0, 0, 0, 0.8);
-	-moz-border-radius: 0.5em;
+	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout_continue.png') no-repeat top center;
 	-moz-box-shadow: 
@@ -237,7 +237,7 @@ body {
 	padding: 4px 40px;
 	width: 800px;
 	text-align: left;
-	-moz-border-radius: 0.25em;
+	border-radius: 0.25em;
 	-webkit-border-radius: 0.25em;
 	border-top: 1px solid #adb6ba;
 	border-left: 1px solid #adb6ba;

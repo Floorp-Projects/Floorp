@@ -39,10 +39,13 @@ function runTest() {
   let slowDownloadURL = URL_UPDATE + "?slowDownloadMar=1";
   let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING) +
-                getLocalPatchString("complete", slowDownloadURL);
+                getLocalPatchString("complete", slowDownloadURL, null, null,
+                                    null, "false");
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
-                                     Services.appinfo.platformVersion);
+                                     Services.appinfo.platformVersion, null,
+                                     null, null, null, null, null, null,
+                                     "false");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 

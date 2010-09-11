@@ -1,10 +1,10 @@
 ;
 ;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
 ;
-;  Use of this source code is governed by a BSD-style license 
+;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
 ;  tree. An additional intellectual property rights grant can be found
-;  in the file PATENTS.  All contributing project authors may 
+;  in the file PATENTS.  All contributing project authors may
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
@@ -26,6 +26,7 @@ sym(vp8_post_proc_down_and_across_xmm):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 7
+    SAVE_XMM
     GET_GOT     rbx
     push        rsi
     push        rdi
@@ -240,6 +241,7 @@ acrossnextcol:
     pop rdi
     pop rsi
     RESTORE_GOT
+    RESTORE_XMM
     UNSHADOW_ARGS
     pop         rbp
     ret
@@ -254,6 +256,7 @@ sym(vp8_mbpost_proc_down_xmm):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 5
+    SAVE_XMM
     GET_GOT     rbx
     push        rsi
     push        rdi
@@ -439,6 +442,7 @@ loop_row:
     pop rdi
     pop rsi
     RESTORE_GOT
+    RESTORE_XMM
     UNSHADOW_ARGS
     pop         rbp
     ret
@@ -452,6 +456,7 @@ sym(vp8_mbpost_proc_across_ip_xmm):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 5
+    SAVE_XMM
     GET_GOT     rbx
     push        rsi
     push        rdi
@@ -612,6 +617,7 @@ nextcol4:
     pop rdi
     pop rsi
     RESTORE_GOT
+    RESTORE_XMM
     UNSHADOW_ARGS
     pop         rbp
     ret

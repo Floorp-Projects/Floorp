@@ -51,21 +51,24 @@ class nsSVGFilterFrame;
 class nsSVGMaskFrame;
 
 /*
- * SVG elements reference supporting resources by element ID. We need to
- * track when those resources change and when the DOM changes in ways
- * that affect which element is referenced by a given ID (e.g., when
- * element IDs change). The code here is responsible for that.
- * 
- * When a frame references a supporting resource, we create a property
- * object derived from nsSVGRenderingObserver to manage the relationship. The
- * property object is attached to the referencing frame.
+ * This interface allows us to be notified when a piece of SVG content is
+ * re-rendered.
+ *
+ * Concrete implementations of this interface need to implement
+ * "GetTarget()" to specify the piece of SVG content that they'd like to
+ * monitor, and they need to implement "DoUpdate" to specify how we'll react
+ * when that content gets re-rendered. They also need to implement a
+ * constructor and destructor, which should call StartListening and
+ * StopListening, respectively.
  */
 class nsSVGRenderingObserver : public nsStubMutationObserver {
 public:
   typedef mozilla::dom::Element Element;
-  nsSVGRenderingObserver(nsIURI* aURI, nsIFrame *aFrame,
-                         PRBool aReferenceImage);
-  virtual ~nsSVGRenderingObserver();
+  nsSVGRenderingObserver()
+    : mInObserverList(PR_FALSE)
+    {}
+  virtual ~nsSVGRenderingObserver()
+    {}
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -77,24 +80,59 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   void InvalidateViaReferencedElement();
-
-  Element* GetReferencedElement();
   nsIFrame* GetReferencedFrame();
+
   /**
    * @param aOK this is only for the convenience of callers. We set *aOK to false
    * if this function returns null.
    */
   nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK);
 
+  Element* GetReferencedElement();
+
 protected:
-  // This is called when the referenced resource changes.
-  virtual void DoUpdate();
+  // Non-virtual protected methods
   void StartListening();
   void StopListening();
 
+  // Virtual protected methods
+  virtual void DoUpdate() = 0; // called when the referenced resource changes.
+
+  // This is an internally-used version of GetReferencedElement that doesn't
+  // forcibly add us as an observer. (whereas GetReferencedElement does)
+  virtual Element* GetTarget() = 0;
+
+  // Whether we're in our referenced element's observer list at this time.
+  PRPackedBool mInObserverList;
+};
+
+
+/*
+ * SVG elements reference supporting resources by element ID. We need to
+ * track when those resources change and when the DOM changes in ways
+ * that affect which element is referenced by a given ID (e.g., when
+ * element IDs change). The code here is responsible for that.
+ * 
+ * When a frame references a supporting resource, we create a property
+ * object derived from nsSVGIDRenderingObserver to manage the relationship. The
+ * property object is attached to the referencing frame.
+ */
+class nsSVGIDRenderingObserver : public nsSVGRenderingObserver {
+public:
+  typedef mozilla::dom::Element Element;
+  nsSVGIDRenderingObserver(nsIURI* aURI, nsIFrame *aFrame,
+                         PRBool aReferenceImage);
+  virtual ~nsSVGIDRenderingObserver();
+
+protected:
+  Element* GetTarget() { return mElement.get(); }
+
+  // This is called when the referenced resource changes.
+  virtual void DoUpdate();
+
   class SourceReference : public nsReferencedElement {
   public:
-    SourceReference(nsSVGRenderingObserver* aContainer) : mContainer(aContainer) {}
+    SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) {
       mContainer->StopListening();
@@ -108,7 +146,7 @@ protected:
      */
     virtual PRBool IsPersistent() { return PR_TRUE; }
   private:
-    nsSVGRenderingObserver* mContainer;
+    nsSVGIDRenderingObserver* mContainer;
   };
   
   SourceReference mElement;
@@ -120,16 +158,14 @@ protected:
   // we test the presshell to see if it's destroying itself. If it is,
   // then the frame pointer is not valid and we know the frame has gone away.
   nsIPresShell *mFramePresShell;
-  // Whether we're in our referenced element's observer list at this time.
-  PRPackedBool mInObserverList;
 };
 
 class nsSVGFilterProperty :
-  public nsSVGRenderingObserver, public nsISVGFilterProperty {
+  public nsSVGIDRenderingObserver, public nsISVGFilterProperty {
 public:
   nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame,
                       PRBool aReferenceImage)
-    : nsSVGRenderingObserver(aURI, aFilteredFrame, aReferenceImage) {}
+    : nsSVGIDRenderingObserver(aURI, aFilteredFrame, aReferenceImage) {}
 
   /**
    * @return the filter frame, or null if there is no filter frame
@@ -147,28 +183,28 @@ private:
   virtual void DoUpdate();
 };
 
-class nsSVGMarkerProperty : public nsSVGRenderingObserver {
+class nsSVGMarkerProperty : public nsSVGIDRenderingObserver {
 public:
   nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
-    : nsSVGRenderingObserver(aURI, aFrame, aReferenceImage) {}
+    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate();
 };
 
-class nsSVGTextPathProperty : public nsSVGRenderingObserver {
+class nsSVGTextPathProperty : public nsSVGIDRenderingObserver {
 public:
   nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
-    : nsSVGRenderingObserver(aURI, aFrame, aReferenceImage) {}
+    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate();
 };
  
-class nsSVGPaintingProperty : public nsSVGRenderingObserver {
+class nsSVGPaintingProperty : public nsSVGIDRenderingObserver {
 public:
   nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, PRBool aReferenceImage)
-    : nsSVGRenderingObserver(aURI, aFrame, aReferenceImage) {}
+    : nsSVGIDRenderingObserver(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate();

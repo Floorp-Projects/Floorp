@@ -47,13 +47,9 @@ interface nsIDOMEventListener;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
  * information.
  */
-[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
+[scriptable, uuid(162f308f-a3eb-447c-95ee-d96bf3f78c64)]
 interface nsIIDBRequest : nsISupports
 {
-  void
-  abort();
-
-  const unsigned short INITIAL = 0;
   const unsigned short LOADING = 1;
   const unsigned short DONE = 2;
   readonly attribute unsigned short readyState;

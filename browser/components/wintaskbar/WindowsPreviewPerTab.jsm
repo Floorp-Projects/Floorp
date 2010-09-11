@@ -154,9 +154,7 @@ function PreviewController(win, tab) {
   this.linkedBrowser = tab.linkedBrowser;
 
   this.linkedBrowser.addEventListener("MozAfterPaint", this, false);
-  this.linkedBrowser.addEventListener("DOMTitleChanged", this, false);
-  // pageshow is needed for when a tab is dragged across windows.
-  this.linkedBrowser.addEventListener("pageshow", this, false);
+  this.tab.addEventListener("TabAttrModified", this, false);
 
   // Cannot perform the lookup during construction. See TabWindow.newTab 
   XPCOMUtils.defineLazyGetter(this, "preview", function () this.win.previewFromTab(this.tab));
@@ -180,8 +178,7 @@ PreviewController.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITaskbarPreviewController,
                                          Ci.nsIDOMEventListener]),
   destroy: function () {
-    this.linkedBrowser.removeEventListener("pageshow", this, false);
-    this.linkedBrowser.removeEventListener("DOMTitleChanged", this, false);
+    this.tab.removeEventListener("TabAttrModified", this, false);
     this.linkedBrowser.removeEventListener("MozAfterPaint", this, false);
 
     // Break cycles, otherwise we end up leaking the window with everything
@@ -355,11 +352,7 @@ PreviewController.prototype = {
         if (preview.visible)
           preview.invalidate();
         break;
-      case "pageshow":
-      case "DOMTitleChanged":
-        // The tab's label is sometimes empty when dragging tabs between windows
-        // so we force the tab title to be updated (see bug 520579)
-        this.win.tabbrowser.setTabTitle(this.tab);
+      case "TabAttrModified":
         this.updateTitleAndTooltip();
         break;
     }

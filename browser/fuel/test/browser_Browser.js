@@ -9,6 +9,9 @@ var gTabCloseCount = 0;
 var gTabMoveCount = 0;
 var gPageLoadCount = 0;
 
+var rootDir = getRootDirectory(gTestPath);
+const CHROMEROOT = rootDir;
+
 function test() {
   waitForExplicitFinish();
 
@@ -21,7 +24,7 @@ function test() {
   activeWin.events.addListener("TabClose", onTabClose);
   activeWin.events.addListener("TabMove", onTabMove);
 
-  gPageA = activeWin.open(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentA.html"));
+  gPageA = activeWin.open(makeURI(CHROMEROOT + "ContentA.html"));
   gPageA.events.addListener("load", onPageAFirstLoad);
 
   is(activeWin.tabs.length, 2, "Checking length of 'Browser.tabs' after opening 1 additional tab");
@@ -30,7 +33,7 @@ function test() {
     gPageA.events.removeListener("load", onPageAFirstLoad);
     is(gPageA.uri.spec, event.data.uri.spec, "Checking event browser tab is equal to page A");
 
-    gPageB = activeWin.open(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
+    gPageB = activeWin.open(makeURI(CHROMEROOT + "ContentB.html"));
     gPageB.events.addListener("load", delayAfterOpen);
     gPageB.focus();
 
@@ -46,8 +49,8 @@ function test() {
   function afterOpen(event) {
     gPageB.events.removeListener("load", delayAfterOpen);
     // check actuals
-    is(gPageA.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentA.html", "Checking 'BrowserTab.uri' after opening");
-    is(gPageB.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentB.html", "Checking 'BrowserTab.uri' after opening");
+    is(gPageA.uri.spec, CHROMEROOT + "ContentA.html", "Checking 'BrowserTab.uri' after opening");
+    is(gPageB.uri.spec, CHROMEROOT + "ContentB.html", "Checking 'BrowserTab.uri' after opening");
 
     // check event
     is(gTabOpenCount, 2, "Checking event handler for tab open");
@@ -91,7 +94,7 @@ function test() {
     // test loading new content with a frame into a tab
     // the event will be checked in onPageBLoadComplete
     gPageB.events.addListener("load", onPageBLoadWithFrames);
-    gPageB.load(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentWithFrames.html"));
+    gPageB.load(makeURI(CHROMEROOT + "ContentWithFrames.html"));
   }
 
   function onPageBLoadWithFrames(event) {
@@ -107,12 +110,12 @@ function test() {
     // test loading new content into a tab
     // the event will be checked in onPageASecondLoad
     gPageA.events.addListener("load", onPageASecondLoad);
-    gPageA.load(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
+    gPageA.load(makeURI(CHROMEROOT + "ContentB.html"));
   }
 
   function onPageASecondLoad(event) {
     gPageA.events.removeListener("load", onPageASecondLoad);
-    is(gPageA.uri.spec, "chrome://mochikit/content/browser/browser/fuel/test/ContentB.html", "Checking 'BrowserTab.uri' after loading new content");
+    is(gPageA.uri.spec, CHROMEROOT + "ContentB.html", "Checking 'BrowserTab.uri' after loading new content");
 
     // start testing closing tabs
     // the event will be checked in afterClose

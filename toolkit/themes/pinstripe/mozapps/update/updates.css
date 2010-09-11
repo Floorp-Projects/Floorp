@@ -45,7 +45,7 @@ wizardpage {
   padding: 0 2px;
   text-shadow: @loweredShadow@;
   border: 1px solid @toolbarbuttonBorderColor@;
-  -moz-border-radius: @toolbarbuttonCornerRadius@;
+  border-radius: @toolbarbuttonCornerRadius@;
   -moz-box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;

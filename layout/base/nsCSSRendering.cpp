@@ -1239,7 +1239,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
         // We only give the spread radius to corners with a radius on them, otherwise we'll
         // give a rounded shadow corner to a frame corner with 0 border radius, should
-        // the author use non-uniform border radii sizes (-moz-border-radius-topleft etc)
+        // the author use non-uniform border radii sizes (border-top-left-radius etc)
         // (bug 514670)
         if (borderRadii[C_TL].width > 0 || borderRadii[C_BL].width > 0) {
           borderSizes[NS_SIDE_LEFT] = spreadDistance;
@@ -2613,8 +2613,14 @@ DrawBorderImage(nsPresContext*       aPresContext,
   req->GetImage(getter_AddRefs(imgContainer));
 
   nsIntSize imageSize;
-  imgContainer->GetWidth(&imageSize.width);
-  imgContainer->GetHeight(&imageSize.height);
+  if (NS_FAILED(imgContainer->GetWidth(&imageSize.width))) {
+    imageSize.width =
+      nsPresContext::AppUnitsToIntCSSPixels(aBorderArea.width);
+  }
+  if (NS_FAILED(imgContainer->GetHeight(&imageSize.height))) {
+    imageSize.height =
+      nsPresContext::AppUnitsToIntCSSPixels(aBorderArea.height);
+  }
 
   // Convert percentages and clamp values to the image size.
   nsIntMargin split;
@@ -3714,11 +3720,18 @@ ImageRenderer::ComputeSize(const nsSize& aDefault)
     case eStyleImageType_Image:
     {
       nsIntSize imageIntSize;
-      mImageContainer->GetWidth(&imageIntSize.width);
-      mImageContainer->GetHeight(&imageIntSize.height);
+      PRBool gotHeight, gotWidth;
+      nsLayoutUtils::ComputeSizeForDrawing(mImageContainer, imageIntSize,
+                                           gotWidth, gotHeight);
 
-      mSize.width = nsPresContext::CSSPixelsToAppUnits(imageIntSize.width);
-      mSize.height = nsPresContext::CSSPixelsToAppUnits(imageIntSize.height);
+      mSize.width = gotWidth ?
+        nsPresContext::CSSPixelsToAppUnits(imageIntSize.width) :
+        aDefault.width;
+
+      mSize.height = gotHeight ?
+        nsPresContext::CSSPixelsToAppUnits(imageIntSize.height) :
+        aDefault.height;
+
       break;
     }
     case eStyleImageType_Gradient:

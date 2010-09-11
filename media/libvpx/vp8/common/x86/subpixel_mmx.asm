@@ -1,10 +1,10 @@
 ;
 ;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
 ;
-;  Use of this source code is governed by a BSD-style license 
+;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
 ;  tree. An additional intellectual property rights grant can be found
-;  in the file PATENTS.  All contributing project authors may 
+;  in the file PATENTS.  All contributing project authors may
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
@@ -731,7 +731,7 @@ rd:
     times 4 dw 0x40
 
 align 16
-global sym(vp8_six_tap_mmx) HIDDEN_DATA
+global HIDDEN_DATA(sym(vp8_six_tap_mmx))
 sym(vp8_six_tap_mmx):
     times 8 dw 0
     times 8 dw 0
@@ -791,7 +791,7 @@ sym(vp8_six_tap_mmx):
 
 
 align 16
-global sym(vp8_bilinear_filters_mmx) HIDDEN_DATA
+global HIDDEN_DATA(sym(vp8_bilinear_filters_mmx))
 sym(vp8_bilinear_filters_mmx):
     times 8 dw 128
     times 8 dw 0
