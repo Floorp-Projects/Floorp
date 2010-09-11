@@ -1224,8 +1224,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton:active:hover {
   padding-left: 4px;
   border-left: none;
-  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
-                   0 0 3px rgba(0,0,0,.4) inset;
+  -moz-box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
+                   0 0 2px rgba(0,0,0,.4) inset;
 }
 
 #urlbar-go-button {
@@ -1581,7 +1581,7 @@ statusbarpanel#statusbar-display {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
-  -moz-box-shadow: 0 0 7px 5px Highlight inset;
+  -moz-box-shadow: 0 0 5px 5px Highlight inset;
   -moz-transition: none;
 }
 

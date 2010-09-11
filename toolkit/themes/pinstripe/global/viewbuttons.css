@@ -79,13 +79,13 @@
   color: #FFF !important;
   text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
   background: #606060;
-  -moz-box-shadow: inset #2A2A2A 0 3px 5px;
+  -moz-box-shadow: inset #2A2A2A 0 3px 3.5px;
 }
 
 #viewGroup > radio[selected=true]:active:hover,
 #viewGroup > toolbarbutton[checked=true]:active:hover {
   background-color: #4E4E4E;
-  -moz-box-shadow: inset #1c1c1c 0 3px 5px;
+  -moz-box-shadow: inset #1c1c1c 0 3px 3.5px;
 }
 
 #viewGroup:-moz-window-inactive {
@@ -101,7 +101,7 @@
 #viewGroup > radio[selected=true]:-moz-window-inactive,
 #viewGroup > toolbarbutton[checked=true]:-moz-window-inactive {
   background: #8E8E8E;
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 5px;
+  -moz-box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 3.5px;
 }
 
 #viewGroup > radio:-moz-locale-dir(ltr):first-child,
