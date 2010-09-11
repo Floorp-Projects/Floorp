@@ -191,9 +191,6 @@ public:
                                        PRUint32 aFrameBufferLength,
                                        PRUint64 aTime);
 
-  // Dispatch events that were raised while in the bfcache
-  nsresult DispatchPendingMediaEvents();
-
   // Called by the decoder when some data has been downloaded or
   // buffering/seeking has ended. aNextFrameAvailable is true when
   // the data for the next frame is available. This method will
@@ -534,10 +531,6 @@ protected:
   // Points to the document whose load we're blocking. This is the document
   // we're bound to when loading starts.
   nsCOMPtr<nsIDocument> mLoadBlockedDoc;
-
-  // Contains names of events that have been raised while in the bfcache.
-  // These events get re-dispatched when the bfcache is exited.
-  nsTArray<nsString> mPendingEvents;
 
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
