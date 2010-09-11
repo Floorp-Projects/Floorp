@@ -1696,7 +1696,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   // We pass in the amount to move visually
   ScrollVisual(curPosDevPx - ptDevPx);
 
-  presContext->PresShell()->GetViewManager()->SynthesizeMouseMove(PR_TRUE);
+  presContext->PresShell()->SynthesizeMouseMove(PR_TRUE);
   UpdateScrollbarPosition();
   PostScrollEvent();
 
