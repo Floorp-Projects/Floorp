@@ -3286,19 +3286,6 @@ js_String(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-#ifdef JS_TRACER
-
-JSObject* FASTCALL
-js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewObjectWithClassProto(cx, &js_StringClass, proto, StringValue(str));
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-#endif /* !JS_TRACER */
-
 static JSBool
 str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
 {

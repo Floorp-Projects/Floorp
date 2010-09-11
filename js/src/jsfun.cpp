@@ -193,7 +193,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
     argsobj->init(callee->getFunctionPrivate()->inStrictMode()
                   ? &StrictArgumentsClass
                   : &js_ArgumentsClass,
-                  proto, parent, PrivateValue(NULL), cx);
+                  proto, parent, NULL, cx);
 
     argsobj->setMap(cx->runtime->emptyArgumentsShape);
 
@@ -957,7 +957,7 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     if (!callobj)
         return NULL;
 
-    callobj->init(&js_CallClass, NULL, scopeChain, PrivateValue(NULL), cx);
+    callobj->init(&js_CallClass, NULL, scopeChain, NULL, cx);
     callobj->setMap(fun->u.i.names);
 
     /* This must come after callobj->lastProp has been set. */
@@ -983,7 +983,7 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     if (!envobj)
         return NULL;
 
-    envobj->init(&js_DeclEnvClass, NULL, fp->maybeScopeChain(), PrivateValue(fp), cx);
+    envobj->init(&js_DeclEnvClass, NULL, fp->maybeScopeChain(), fp, cx);
     envobj->setMap(cx->runtime->emptyDeclEnvShape);
     return envobj;
 }
