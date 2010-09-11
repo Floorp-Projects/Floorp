@@ -70,9 +70,7 @@ enum nsStyleUnit {
   eStyleUnit_Calc_Minus   = 41,     // (Array*) - within calc
   eStyleUnit_Calc_Times_L = 42,     // (Array*) num * val within calc
   eStyleUnit_Calc_Times_R = 43,     // (Array*) val * num within calc
-  eStyleUnit_Calc_Divided = 44,     // (Array*) / within calc
-  eStyleUnit_Calc_Minimum = 45,     // (Array*) min() within calc
-  eStyleUnit_Calc_Maximum = 46      // (Array*) max() within calc
+  eStyleUnit_Calc_Divided = 44      // (Array*) / within calc
 };
 
 typedef union {
@@ -121,7 +119,7 @@ public:
   }
 
   PRBool IsCalcUnit() const {
-    return eStyleUnit_Calc <= mUnit && mUnit <= eStyleUnit_Calc_Maximum;
+    return eStyleUnit_Calc <= mUnit && mUnit <= eStyleUnit_Calc_Divided;
   }
 
   PRBool IsCoordPercentCalcUnit() const {

@@ -127,8 +127,6 @@ PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
     case eStyleUnit_Calc_Times_L:
     case eStyleUnit_Calc_Times_R:
     case eStyleUnit_Calc_Divided:
-    case eStyleUnit_Calc_Minimum:
-    case eStyleUnit_Calc_Maximum:
       return *this->GetArrayValue() == *aOther.GetArrayValue();
   }
   NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
