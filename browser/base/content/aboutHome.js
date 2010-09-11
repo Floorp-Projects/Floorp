@@ -166,6 +166,14 @@ function showSnippets()
   if (snippets) {
     let snippetsElt = document.getElementById("snippets");
     snippetsElt.innerHTML = snippets;
+    // Scripts injected by innerHTML are inactive, so we have to relocate them
+    // through DOM manipulation to activate their contents.
+    Array.forEach(snippetsElt.getElementsByTagName("script"), function(elt) {
+      let relocatedScript = document.createElement("script");
+      relocatedScript.type = "text/javascript;version=1.8";
+      relocatedScript.text = elt.text;
+      snippetsElt.replaceChild(relocatedScript, elt);
+    });
     snippetsElt.hidden = false;
   } else {
     // If there are no saved snippets, show one of the default ones.
