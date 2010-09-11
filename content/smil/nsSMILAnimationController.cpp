@@ -67,13 +67,15 @@ GetRefreshDriverForDoc(nsIDocument* aDoc)
   return context ? context->RefreshDriver() : nsnull;
 }
 
-
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
 
 nsSMILAnimationController::nsSMILAnimationController()
   : mResampleNeeded(PR_FALSE),
     mDeferredStartSampling(PR_FALSE),
+#ifdef DEBUG
+    mRunningSample(PR_FALSE),
+#endif
     mDocument(nsnull)
 {
   mAnimationElementTable.Init();
@@ -175,6 +177,7 @@ void
 nsSMILAnimationController::RegisterAnimationElement(
                                   nsISMILAnimationElement* aAnimationElement)
 {
+  NS_ASSERTION(!mRunningSample, "Registering content during sample.");
   mAnimationElementTable.PutEntry(aAnimationElement);
   if (mDeferredStartSampling) {
     // mAnimationElementTable was empty until we just inserted its first element
@@ -190,6 +193,7 @@ void
 nsSMILAnimationController::UnregisterAnimationElement(
                                   nsISMILAnimationElement* aAnimationElement)
 {
+  NS_ASSERTION(!mRunningSample, "Unregistering content during sample.");
   mAnimationElementTable.RemoveEntry(aAnimationElement);
 }
 
@@ -321,7 +325,15 @@ nsSMILAnimationController::DoSample()
 void
 nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 {
-  // Reset resample flag
+  // Reset resample flag -- do this before flushing styles since flushing styles
+  // will also flush animation resample requests
+  mResampleNeeded = PR_FALSE;
+  mDocument->FlushPendingNotifications(Flush_Style);
+#ifdef DEBUG
+  mRunningSample = PR_TRUE;
+#endif
+  // Reset resample flag again -- flushing styles may have set this flag but
+  // since we're about to do a sample now, reset it
   mResampleNeeded = PR_FALSE;
 
   // STEP 1: Bring model up to date
@@ -363,8 +375,6 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   // Create the compositor table
   nsAutoPtr<nsSMILCompositorTable>
     currentCompositorTable(new nsSMILCompositorTable());
-  if (!currentCompositorTable)
-    return;
   currentCompositorTable->Init(0);
 
   SampleAnimationParams saParams = { &activeContainers,
@@ -398,6 +408,9 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   // when the inherited value is *also* being animated, we really should be
   // traversing our animated nodes in an ancestors-first order (bug 501183)
   currentCompositorTable->EnumerateEntries(DoComposeAttribute, nsnull);
+#ifdef DEBUG
+  mRunningSample = PR_FALSE;
+#endif
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();
