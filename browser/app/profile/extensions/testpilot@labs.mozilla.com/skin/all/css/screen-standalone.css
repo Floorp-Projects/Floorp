@@ -42,7 +42,7 @@ body {
         border-bottom: 4px solid rgba(133, 153, 166, 0.2);
 		-moz-border-bottom-colors:rgba(133, 153, 166, 0.3) rgba(133, 153, 166, 0.2) rgba(133, 153, 166, 0.2) rgba(133, 153, 166, 0.2);
         padding: 6px;
-        -moz-box-shadow:
+        box-shadow:
 			rgba(133, 153, 166, 0.4) 0px 1px 17px;
 		-webkit-box-shadow:
 			rgba(133, 153, 166, 0.4) 0px 1px 24px;
@@ -115,7 +115,7 @@ body {
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
-	-moz-box-shadow: 
+	box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
 		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
@@ -134,7 +134,7 @@ body {
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
-	-moz-box-shadow: 
+	box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
 		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
@@ -154,7 +154,7 @@ body {
 	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
-	-moz-box-shadow: 
+	box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
@@ -176,7 +176,7 @@ body {
 	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
-	-moz-box-shadow: 
+	box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
@@ -193,7 +193,7 @@ body {
 	border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout_continue.png') no-repeat top center;
-	-moz-box-shadow: 
+	box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
@@ -263,7 +263,7 @@ body {
 	font-size: 14px;
 	text-shadow: 1px 1px 1px rgba(173, 182, 186, 1);
 	background-color: rgba(173, 182, 186, 0.3);
-	-moz-box-shadow: 
+	box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 -10px 8.5px;
 	padding: 9px 8px 8px 8px;
 }

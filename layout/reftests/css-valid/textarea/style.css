@@ -1,6 +1,6 @@
 /* Override default style */
 textarea:invalid {
-  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
 textarea.notvalid {

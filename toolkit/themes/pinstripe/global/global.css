@@ -299,20 +299,20 @@ notification > button {
   border: @roundButtonBorder@;
   text-shadow: @loweredShadow@;
   background: @roundButtonBackground@;
-  -moz-box-shadow: @roundButtonShadow@;
+  box-shadow: @roundButtonShadow@;
 }
 
 notification > button:active:hover {
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @roundButtonPressedShadow@;
+  box-shadow: @roundButtonPressedShadow@;
 }
 
 notification > button:-moz-focusring {
-  -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
 notification > button:active:hover:-moz-focusring {
-  -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
 notification > button > .button-box > .button-text {
