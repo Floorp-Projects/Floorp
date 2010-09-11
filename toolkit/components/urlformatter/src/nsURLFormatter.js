@@ -123,10 +123,10 @@ function nsURLFormatterService() {
 
     let defaults = Services.prefs.getDefaultBranch(null);
     try {
-      distibution.id = defaults.getCharPref(PREF_APP_DISTRIBUTION);
+      distribution.id = defaults.getCharPref(PREF_APP_DISTRIBUTION);
     } catch (e) {}
     try {
-      distibution.version = defaults.getCharPref(PREF_APP_DISTRIBUTION_VERSION);
+      distribution.version = defaults.getCharPref(PREF_APP_DISTRIBUTION_VERSION);
     } catch (e) {}
 
     return distribution;

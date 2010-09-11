@@ -64,6 +64,9 @@ function run_test() {
   try {
     channel = defaults.getCharPref("app.update.channel");
   } catch (e) {}
+  // Set distribution values.
+  defaults.setCharPref("distribution.id", "bacon");
+  defaults.setCharPref("distribution.version", "1.0");
 
   var upperUrlRaw = "http://%LOCALE%.%VENDOR%.foo/?name=%NAME%&id=%ID%&version=%VERSION%&platversion=%PLATFORMVERSION%&abid=%APPBUILDID%&pbid=%PLATFORMBUILDID%&app=%APP%&os=%OS%&abi=%XPCOMABI%";
   var lowerUrlRaw = "http://%locale%.%vendor%.foo/?name=%name%&id=%id%&version=%version%&platversion=%platformversion%&abid=%appbuildid%&pbid=%platformbuildid%&app=%app%&os=%os%&abi=%xpcomabi%";
@@ -74,7 +77,7 @@ function run_test() {
   var encodedUrl = "https://%LOCALE%.%VENDOR%.foo/?q=%E3%82%BF%E3%83%96&app=%NAME%&ver=%PLATFORMVERSION%";
   var encodedUrlRef = "https://" + locale + ".Mozilla.foo/?q=%E3%82%BF%E3%83%96&app=Url Formatter Test&ver=2.0";
   var advancedUrl = "http://test.mozilla.com/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/";
-  var advancedUrlRef = "http://test.mozilla.com/Url Formatter Test/1/2007122405/XPCShell_" + abi + "/" + locale + "/" + channel + "/" + OSVersion + "/default/default/";
+  var advancedUrlRef = "http://test.mozilla.com/Url Formatter Test/1/2007122405/XPCShell_" + abi + "/" + locale + "/" + channel + "/" + OSVersion + "/bacon/1.0/";
 
   var pref = "xpcshell.urlformatter.test";
   var str = Cc["@mozilla.org/supports-string;1"].
