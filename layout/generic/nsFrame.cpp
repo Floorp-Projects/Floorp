@@ -4325,6 +4325,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
   nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
   if (boxShadows) {
     nsRect shadows;
+    PRInt32 A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
     for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
       nsRect tmpRect(nsPoint(0, 0), aNewSize);
       nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
@@ -4332,10 +4333,11 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
       // inset shadows are never painted outside the frame
       if (shadow->mInset)
         continue;
-      nscoord outsetRadius = shadow->mRadius + shadow->mSpread;
 
       tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
-      tmpRect.Inflate(outsetRadius, outsetRadius);
+      tmpRect.Inflate(shadow->mSpread, shadow->mSpread);
+      tmpRect.Inflate(
+        nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
 
       shadows.UnionRect(shadows, tmpRect);
     }
