@@ -139,8 +139,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe63a350c, 0x4e04, 0x4056, \
-    { 0x8d, 0xa0, 0x51, 0xcc, 0x55, 0x68, 0x68, 0x42 } }
+  { 0x28d10cd2, 0x90a9, 0x4416, \
+    { 0x8e, 0x88, 0x2a, 0xe3, 0x3d, 0xb1, 0x73, 0xd4 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -1052,6 +1052,13 @@ public:
    * one.
    */
   virtual LayerManager* GetLayerManager() = 0;
+
+  /**
+   * Dispatch a mouse move event based on the most recent mouse position if
+   * this PresShell is visible. This is used when the contents of the page
+   * moved (aFromScroll is false) or scrolled (aFromScroll is true).
+   */
+  virtual void SynthesizeMouseMove(PRBool aFromScroll) = 0;
 
   /**
    * Refresh observer management.

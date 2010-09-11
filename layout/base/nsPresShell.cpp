@@ -815,6 +815,8 @@ public:
 
   virtual LayerManager* GetLayerManager();
 
+  virtual void SynthesizeMouseMove(PRBool aFromScroll);
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView* aDisplayRoot,
@@ -4557,8 +4559,8 @@ PresShell::UnsuppressAndInvalidate()
   if (win)
     win->SetReadyForFocus();
 
-  if (!mHaveShutDown && mViewManager)
-    mViewManager->SynthesizeMouseMove(PR_FALSE);
+  if (!mHaveShutDown)
+    SynthesizeMouseMove(PR_FALSE);
 }
 
 void
@@ -5859,6 +5861,13 @@ LayerManager* PresShell::GetLayerManager()
     }
   }
   return nsnull;
+}
+
+void PresShell::SynthesizeMouseMove(PRBool aFromScroll)
+{
+  if (mViewManager && !mPaintingSuppressed && mIsActive) {
+    mViewManager->SynthesizeMouseMove(aFromScroll);
+  }
 }
 
 static void DrawThebesLayer(ThebesLayer* aLayer,
@@ -7434,10 +7443,7 @@ PresShell::DidDoReflow(PRBool aInterruptible)
   mFrameConstructor->EndUpdate();
   
   HandlePostedReflowCallbacks(aInterruptible);
-  // Null-check mViewManager in case this happens during Destroy.  See
-  // bugs 244435 and 238546.
-  if (!mPaintingSuppressed && mViewManager)
-    mViewManager->SynthesizeMouseMove(PR_FALSE);
+  SynthesizeMouseMove(PR_FALSE);
   if (mCaret) {
     // Update the caret's position now to account for any changes created by
     // the reflow.
