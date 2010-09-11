@@ -117,10 +117,9 @@ enum nsCSSUnit {
                                   //  parameters.  First elem of array is name,
                                   //  the rest of the values are arguments.
 
-  // The top level of a calc() expression is either -moz-calc()
-  // (eCSSUnit_Calc), -moz-min() (eCSSUnit_Calc_Minimum), or -moz-max()
-  // (eCSSUnit_Calc_Maximum).  All remaining eCSSUnit_Calc_* units only
-  // occur inside these toplevel calc values.
+  // The top level of a calc() expression is eCSSUnit_Calc.  All
+  // remaining eCSSUnit_Calc_* units only occur inside these toplevel
+  // calc values.
 
   // eCSSUnit_Calc has an array with exactly 1 element.  eCSSUnit_Calc
   // exists so we can distinguish calc(2em) from 2em as specified values
@@ -134,9 +133,6 @@ enum nsCSSUnit {
   eCSSUnit_Calc_Times_L = 28,     // (nsCSSValue::Array*) num * val within calc
   eCSSUnit_Calc_Times_R = 29,     // (nsCSSValue::Array*) val * num within calc
   eCSSUnit_Calc_Divided = 30,     // (nsCSSValue::Array*) / within calc
-  // Minimum and Maximum have arrays with 1 or more elements
-  eCSSUnit_Calc_Minimum = 31,     // (nsCSSValue::Array*) min() within calc
-  eCSSUnit_Calc_Maximum = 32,     // (nsCSSValue::Array*) max() within calc
 
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
@@ -277,12 +273,12 @@ public:
   PRBool    IsTimeUnit() const  
     { return eCSSUnit_Seconds <= mUnit && mUnit <= eCSSUnit_Milliseconds; }
   PRBool    IsCalcUnit() const
-    { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
+    { return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
 
   PRBool    UnitHasStringValue() const
     { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
   PRBool    UnitHasArrayValue() const
-    { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Maximum; }
+    { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
 
   PRInt32 GetIntValue() const
   {
