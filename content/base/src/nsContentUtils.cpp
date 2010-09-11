@@ -1541,25 +1541,17 @@ nsIDOMDocument *
 nsContentUtils::GetDocumentFromCaller()
 {
   JSContext *cx = nsnull;
-  sThreadJSContextStack->Peek(&cx);
+  JSObject *obj = nsnull;
+  sXPConnect->GetCaller(&cx, &obj);
+  NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
-  nsIDOMDocument *doc = nsnull;
-
-  if (cx) {
-    JSObject *callee = nsnull;
-    JSStackFrame *fp = nsnull;
-    while (!callee && (fp = ::JS_FrameIterator(cx, &fp))) {
-      callee = ::JS_GetFrameCalleeObject(cx, fp);
-    }
-
-    nsCOMPtr<nsPIDOMWindow> win =
-      do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, callee));
-    if (win) {
-      doc = win->GetExtantDocument();
-    }
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+  if (!win) {
+    return nsnull;
   }
 
-  return doc;
+  return win->GetExtantDocument();
 }
 
 nsIDOMDocument *

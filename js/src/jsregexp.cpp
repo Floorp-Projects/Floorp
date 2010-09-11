@@ -218,15 +218,13 @@ RegExp::execute(JSContext *cx, JSString *input, size_t *lastIndex, bool test, Va
         inputOffset = *lastIndex;
     }
 #if ENABLE_YARR_JIT
-    bool found = JSC::Yarr::executeRegex(cx, compiled, chars, *lastIndex - inputOffset, len, buf,
-                                         bufCount) != -1;
+    int result = JSC::Yarr::executeRegex(cx, compiled, chars, *lastIndex - inputOffset, len, buf,
+                                         bufCount);
 #else
-    bool found;
-    if (jsRegExpExecute(cx, compiled, chars, len, *lastIndex - inputOffset, buf, bufCount) < 0)
-        return false; /* FIXME: error code reporting for PPC. */
-    found = buf[0] > 0;
+    int result = jsRegExpExecute(cx, compiled, chars, len, *lastIndex - inputOffset, buf, 
+                                 bufCount) < 0 ? -1 : buf[0];
 #endif
-    if (!found) {
+    if (result == -1) {
         *rval = NullValue();
         return true;
     }
@@ -578,9 +576,9 @@ static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval);
 
 static JSBool
-regexp_call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+regexp_call(JSContext *cx, uintN argc, Value *vp)
 {
-    return regexp_exec_sub(cx, argv[-2].toObjectOrNull(), argc, argv, JS_FALSE, rval);
+    return regexp_exec_sub(cx, &JS_CALLEE(cx, vp).toObject(), argc, JS_ARGV(cx, vp), false, vp);
 }
 
 #if JS_HAS_XDR
@@ -655,7 +653,7 @@ regexp_enumerate(JSContext *cx, JSObject *obj)
 js::Class js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -934,14 +932,14 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     return ok;
 }
 
-static JSBool
-regexp_exec(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
     return regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_FALSE, vp);
 }
 
-static JSBool
-regexp_test(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
     if (!regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_TRUE, vp))
         return false;
@@ -956,38 +954,35 @@ static JSFunctionSpec regexp_methods[] = {
 #endif
     JS_FN(js_toString_str,  regexp_toString,    0,0),
     JS_FN("compile",        regexp_compile,     2,0),
-    JS_FN("exec",           regexp_exec,        1,0),
-    JS_FN("test",           regexp_test,        1,0),
+    JS_FN("exec",           js_regexp_exec,     1,0),
+    JS_FN("test",           js_regexp_test,     1,0),
     JS_FS_END
 };
 
 static JSBool
-regexp_construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+regexp_construct(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!JS_IsConstructing(cx)) {
+    Value *argv = JS_ARGV(cx, vp);
+    if (!IsConstructing(vp)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
          * (regexp_compile_sub detects the regexp + flags case and throws a
-         * TypeError.)  See 10.15.3.1.
+         * TypeError.)  See 15.10.3.1.
          */
-        if ((argc < 2 || argv[1].isUndefined()) && !argv[0].isPrimitive() &&
-            argv[0].toObject().getClass() == &js_RegExpClass) {
-            *rval = argv[0];
+        if (argc >= 1 && argv[0].isObject() && argv[0].toObject().isRegExp() &&
+            (argc == 1 || argv[1].isUndefined()))
+        {
+            *vp = argv[0];
             return true;
         }
-
-        /* Otherwise, replace obj with a new RegExp object. */
-        obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
-        if (!obj)
-            return false;
-
-        /*
-         * regexp_compile_sub does not use rval to root its temporaries so we
-         * can use it to root obj.
-         */
-        *rval = ObjectValue(*obj);
     }
-    return regexp_compile_sub(cx, obj, argc, argv, rval);
+
+    /* Otherwise, replace obj with a new RegExp object. */
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
+    if (!obj)
+        return false;
+
+    return regexp_compile_sub(cx, obj, argc, argv, vp);
 }
 
 JSObject *

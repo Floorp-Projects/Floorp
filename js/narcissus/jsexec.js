@@ -85,7 +85,7 @@ Narcissus.interpreter = (function() {
             x2.callee = x.callee;
             x2.scope = x.scope;
             try {
-                x2.execute(parser.parse(new parser.DefaultBuilder, s));
+                x2.execute(parser.parse(new definitions.Builder, s));
                 return x2.result;
             } catch (e if e instanceof SyntaxError || isStackOverflow(e)) {
                 /*
@@ -119,7 +119,7 @@ Narcissus.interpreter = (function() {
 
             // NB: Use the STATEMENT_FORM constant since we don't want to push this
             // function onto the fake compilation context.
-            var x = { builder: new parser.DefaultBuilder };
+            var x = { builder: new definitions.Builder };
             var f = parser.FunctionDefinition(t, x, false, parser.STATEMENT_FORM);
             var s = {object: global, parent: null};
             return newFunction(f,{scope:s});
@@ -347,7 +347,8 @@ Narcissus.interpreter = (function() {
                                         u.filename, u.lineno);
                 }
                 if (u.readOnly || !hasDirectProperty(t, s)) {
-                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, u.readOnly);
+                    // Does not correctly handle 'const x;' -- see bug 592335.
+                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, false);
                 }
             }
             // FALL THROUGH
@@ -498,7 +499,8 @@ Narcissus.interpreter = (function() {
             throw THROW;
 
           case RETURN:
-            x.result = getValue(execute(n.value, x));
+            // Check for returns with no return value
+            x.result = n.value ? getValue(execute(n.value, x)) : undefined;
             throw RETURN;
 
           case WITH:
@@ -1023,7 +1025,7 @@ Narcissus.interpreter = (function() {
             return s;
 
         var x = new ExecutionContext(GLOBAL_CODE);
-        x.execute(parser.parse(new parser.DefaultBuilder, s, f, l));
+        x.execute(parser.parse(new definitions.Builder, s, f, l));
         return x.result;
     }
 
@@ -1059,7 +1061,7 @@ Narcissus.interpreter = (function() {
             }
         }
 
-        var b = new parser.DefaultBuilder;
+        var b = new definitions.Builder;
         var x = new ExecutionContext(GLOBAL_CODE);
 
         ExecutionContext.current = x;

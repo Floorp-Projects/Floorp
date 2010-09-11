@@ -23,14 +23,14 @@ static JSClass myClass = {
 };
 
 static JSBool
-createMyObject(JSContext* context, JSObject* obj, uintN argc, jsval *argv, jsval* rval)
+createMyObject(JSContext* context, uintN argc, jsval *vp)
 {
     JS_BeginRequest(context);
 
     //JS_GC(context); //<- if we make GC here, all is ok
 
     JSObject* myObject = JS_NewObject(context, &myClass, NULL, NULL);
-    *rval = OBJECT_TO_JSVAL(myObject);
+    *vp = OBJECT_TO_JSVAL(myObject);
 
     JS_EndRequest(context);
 
@@ -40,7 +40,7 @@ createMyObject(JSContext* context, JSObject* obj, uintN argc, jsval *argv, jsval
 static JSFunctionSpec s_functions[] =
 {
     { "createMyObject", createMyObject, 0 },
-    { 0,0,0,0,0 }
+    { 0,0,0,0 }
 };
 
 BEGIN_TEST(testOps_bug559006)

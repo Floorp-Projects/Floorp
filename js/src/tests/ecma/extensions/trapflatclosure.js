@@ -14,8 +14,10 @@ function a(x, y) {
 }
 
 var f = a("abc", 123);
-if (this.trap)
+if (this.trap && this.setDebug) {
+    setDebug(true);
     trap(f, "try {actual = x} catch (e) {actual = e}");
+}
 f();
 
 reportCompare(expect, actual, summary);

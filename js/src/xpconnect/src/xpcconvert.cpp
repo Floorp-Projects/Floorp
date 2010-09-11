@@ -636,7 +636,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     return JS_FALSE;
                 *((jsval**)d) = buf;
             } else {
-                **((jsval**)d) = s;
+                *((jsval*)d) = s;
             }
             break;
         }

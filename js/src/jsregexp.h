@@ -123,4 +123,9 @@ js_RestoreRegExpStatics(JSContext *cx, js::RegExpStatics *res);
 extern JSBool
 js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
 
+extern JSBool
+js_regexp_exec(JSContext *cx, uintN argc, js::Value *vp);
+extern JSBool
+js_regexp_test(JSContext *cx, uintN argc, js::Value *vp);
+
 #endif /* jsregexp_h___ */

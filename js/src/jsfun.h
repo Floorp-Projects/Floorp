@@ -48,21 +48,6 @@
 #include "jsatom.h"
 #include "jsstr.h"
 
-typedef struct JSLocalNameMap JSLocalNameMap;
-
-/*
- * Depending on the number of arguments and variables in the function their
- * names and attributes are stored either as a single atom or as an array of
- * tagged atoms (when there are few locals) or as a hash-based map (when there
- * are many locals). In the first 2 cases the lowest bit of the atom is used
- * as a tag to distinguish const from var. See jsfun.c for details.
- */
-typedef union JSLocalNames {
-    jsuword         taggedAtom;
-    jsuword         *array;
-    JSLocalNameMap  *map;
-} JSLocalNames;
-
 /*
  * The high two bits of JSFunction.flags encode whether the function is native
  * or interpreted, and if interpreted, what kind of optimized closure form (if
@@ -101,17 +86,6 @@ typedef union JSLocalNames {
                                        appear to call itself via its own name
                                        or arguments.callee */
 
-#define JSFUN_FAST_NATIVE_CTOR 0x0002 /* JSFastNative directly invokable
-                                       * during construction. */
-
-/*
- * Extra JSCLASS flag indicating the native passed to JS_InitClass is
- * a fast native constructor.  This is internal for now as the 'this' value passed
- * to such a constructor is a magic value, and there is no way to query this
- * in the API.  See bug 581263.
- */
-#define JSCLASS_FAST_CONSTRUCTOR (1<<4)
-
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
                                        JSFunctionSpec::call points to a
@@ -128,36 +102,49 @@ typedef union JSLocalNames {
 #define FUN_INTERPRETED(fun) (FUN_KIND(fun) >= JSFUN_INTERPRETED)
 #define FUN_FLAT_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_FLAT_CLOSURE)
 #define FUN_NULL_CLOSURE(fun)(FUN_KIND(fun) == JSFUN_NULL_CLOSURE)
-#define FUN_SLOW_NATIVE(fun) (!FUN_INTERPRETED(fun) && !((fun)->flags & JSFUN_FAST_NATIVE))
 #define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
-#define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
-#define FUN_FAST_NATIVE(fun) (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? (js::FastNative) (fun)->u.n.native            \
-                              : NULL)
-#define FUN_MINARGS(fun)     (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? 0                                             \
-                              : (fun)->nargs)
 #define FUN_CLASP(fun)       (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               fun->u.n.clasp)
 #define FUN_TRCINFO(fun)     (JS_ASSERT(!FUN_INTERPRETED(fun)),               \
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
+/*
+ * Formal parameters, local variables, and upvars are stored in a shape tree
+ * path with its latest node at fun->u.i.names. The addLocal, lookupLocal, and
+ * getLocalNameArray methods abstract away this detail.
+ *
+ * The lastArg, lastVar, and lastUpvar JSFunction methods provide more direct
+ * access to the shape path. These methods may be used to make a Shape::Range
+ * for iterating over the relevant shapes from youngest to oldest (i.e., last
+ * or right-most to first or left-most in source order).
+ *
+ * Sometimes iteration order must be from oldest to youngest, however. For such
+ * cases, use getLocalNameArray. The RAII helper class js::AutoLocalNameArray,
+ * defined in jscntxt.h, should be used where possible instead of direct calls
+ * to getLocalNameArray.
+ */
+enum JSLocalKind {
+    JSLOCAL_NONE,
+    JSLOCAL_ARG,
+    JSLOCAL_VAR,
+    JSLOCAL_CONST,
+    JSLOCAL_UPVAR
+};
+
 struct JSFunction : public JSObject
 {
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
-    union {
+    union U {
         struct {
-            uint16      extra;    /* number of arg slots for local GC roots */
-            uint16      spare;    /* reserved for future use */
             js::Native  native;   /* native method pointer or null */
             js::Class   *clasp;   /* class of objects constructed
                                      by this function */
             JSNativeTraceInfo *trcinfo;
         } n;
-        struct {
+        struct Scripted {
             uint16      nvars;    /* number of local variables */
             uint16      nupvars;  /* number of upvars (computable from script
                                      but here for faster access) */
@@ -171,7 +158,7 @@ struct JSFunction : public JSObject
                                      indirect eval; if true, then this function
                                      object's proto is the wrapped object */
             JSScript    *script;  /* interpreted bytecode descriptor or null */
-            JSLocalNames names;   /* argument and variable names */
+            js::Shape   *names;   /* argument and variable names */
         } i;
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
@@ -179,14 +166,14 @@ struct JSFunction : public JSObject
     bool optimizedClosure()  const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()      const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
     bool isInterpreted()     const { return FUN_INTERPRETED(this); }
-    bool isFastNative()      const { return !!(flags & JSFUN_FAST_NATIVE); }
-    bool isFastConstructor() const { return !!(flags & JSFUN_FAST_NATIVE_CTOR); }
+    bool isNative()          const { return !FUN_INTERPRETED(this); }
+    bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
-    unsigned minArgs()       const { return FUN_MINARGS(this); }
+    unsigned minArgs()       const { return isInterpreted() ? nargs : 0; }
 
     inline bool inStrictMode() const;
 
-    inline bool isBound() const;
+    bool isBound() const;
 
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -213,13 +200,51 @@ struct JSFunction : public JSObject
 
     int sharpSlotBase(JSContext *cx);
 
+    uint32 countUpvarSlots() const;
+
+    const js::Shape *lastArg() const;
+    const js::Shape *lastVar() const;
+    const js::Shape *lastUpvar() const { return u.i.names; }
+
+    bool addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind);
+
+    /*
+     * Look up an argument or variable name returning its kind when found or
+     * JSLOCAL_NONE when no such name exists. When indexp is not null and the
+     * name exists, *indexp will receive the index of the corresponding
+     * argument or variable.
+     */
+    JSLocalKind lookupLocal(JSContext *cx, JSAtom *atom, uintN *indexp);
+
+    /*
+     * Function and macros to work with local names as an array of words.
+     * getLocalNameArray returns the array, or null if we are out of memory.
+     * This function must be called only when fun->hasLocalNames().
+     *
+     * The supplied pool is used to allocate the returned array, so the caller
+     * is obligated to mark and release to free it.
+     *
+     * The elements of the array with index less than fun->nargs correspond to
+     * the names of function formal parameters. An index >= fun->nargs
+     * addresses a var binding. Use JS_LOCAL_NAME_TO_ATOM to convert array's
+     * element to an atom pointer. This pointer can be null when the element is
+     * for a formal parameter corresponding to a destructuring pattern.
+     *
+     * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST
+     * to check if nameWord corresponds to the const declaration.
+     */
+    jsuword *getLocalNameArray(JSContext *cx, struct JSArenaPool *pool);
+
+    void freezeLocalNames(JSContext *cx);
+
     /*
      * If fun's formal parameters include any duplicate names, return one
      * of them (chosen arbitrarily). If they are all unique, return NULL.
      */
     JSAtom *findDuplicateFormal() const;
 
-    uint32 countInterpretedReservedSlots() const;
+#define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~(jsuword) 1))
+#define JS_LOCAL_NAME_IS_CONST(nameWord) ((((nameWord) & (jsuword) 1)) != 0)
 
     bool mightEscape() const {
         return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
@@ -262,6 +287,14 @@ struct JSFunction : public JSObject
         JS_ASSERT(joinable());
         fslots[METHOD_ATOM_SLOT].setString(ATOM_TO_STRING(atom));
     }
+
+    js::Native maybeNative() const {
+        return isInterpreted() ? NULL : u.n.native;
+    }
+
+    /* Number of extra fixed function object slots besides JSSLOT_PRIVATE. */
+    static const uint32 CLASS_RESERVED_SLOTS = JSObject::FUN_CLASS_RESERVED_SLOTS;
+    static const uint32 FIRST_FREE_SLOT = JSSLOT_PRIVATE + CLASS_RESERVED_SLOTS + 1;
 };
 
 JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
@@ -274,8 +307,8 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
 #ifdef JS_TRACER
 /* MSVC demands the intermediate (void *) cast here. */
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
-    JS_FN(name, JS_DATA_TO_FUNC_PTR(JSNative, trcinfo), nargs,                \
-          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS | JSFUN_TRCINFO)
+    JS_FN(name, JS_DATA_TO_FUNC_PTR(Native, trcinfo), nargs,                  \
+          (flags) | JSFUN_STUB_GSOPS | JSFUN_TRCINFO)
 #else
 # define JS_TN(name,fastcall,nargs,flags,trcinfo)                             \
     JS_FN(name, fastcall, nargs, flags)
@@ -296,8 +329,16 @@ JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
  * single-threaded objects and GC heaps.
  */
 extern js::Class js_ArgumentsClass;
+
 namespace js {
+
 extern Class StrictArgumentsClass;
+
+struct ArgumentsData {
+    js::Value   callee;
+    js::Value   slots[1];
+};
+
 }
 
 inline bool
@@ -318,12 +359,18 @@ JSObject::isArguments() const
     return isNormalArguments() || isStrictArguments();
 }
 
-#define JS_ARGUMENT_OBJECT_ON_TRACE ((void *)0xa126)
+#define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
 
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
 extern js::Class js_DeclEnvClass;
-extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
+extern const uint32 CALL_CLASS_RESERVED_SLOTS;
+
+inline bool
+JSObject::isCall() const
+{
+    return getClass() == &js_CallClass;
+}
 
 inline bool
 JSObject::isFunction() const
@@ -331,17 +378,14 @@ JSObject::isFunction() const
     return getClass() == &js_FunctionClass;
 }
 
-inline bool
-JSObject::isCallable()
+inline JSFunction *
+JSObject::getFunctionPrivate() const
 {
-    return isFunction() || getClass()->call;
+    JS_ASSERT(isFunction());
+    return reinterpret_cast<JSFunction *>(getPrivate());
 }
 
-static inline bool
-js_IsCallable(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isCallable();
-}
+namespace js {
 
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
@@ -361,6 +405,16 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
     return v.isObject() && (*funobj = &v.toObject())->isFunction();
 }
 
+static JS_ALWAYS_INLINE bool
+IsFunctionObject(const js::Value &v, JSFunction **fun)
+{
+    JSObject *funobj;
+    bool b = IsFunctionObject(v, &funobj);
+    if (b)
+        *fun = funobj->getFunctionPrivate();
+    return b;
+}
+
 /*
  * Macro to access the private slot of the function object after the slot is
  * initialized.
@@ -368,12 +422,6 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
     (JS_ASSERT((funobj)->isFunction()),                                       \
      (JSFunction *) (funobj)->getPrivate())
-
-extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom);
-
-namespace js {
 
 /*
  * Return true if this is a compiler-created internal function accessed by
@@ -388,10 +436,48 @@ IsInternalFunctionObject(JSObject *funobj)
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }
     
+/* Valueified JS_IsConstructing. */
+static JS_ALWAYS_INLINE bool
+IsConstructing(const Value *vp)
+{
+#ifdef DEBUG
+    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+    if (callee->isFunction()) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(callee->getClass()->construct != NULL);
+    }
+#endif
+    return vp[1].isMagic();
+}
+
+static JS_ALWAYS_INLINE bool
+IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
+{
+#ifdef DEBUG
+    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+    if (callee->isFunction()) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(callee->getClass()->construct != NULL);
+    }
+#endif
+    bool isCtor = vp[1].isMagic();
+    if (isCtor)
+        *ctorThis = vp[1].getMagicObjectOrNullPayload();
+    return isCtor;
+}
+
+} /* namespace js */
+
 extern JSString *
 fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
 
-} /* namespace js */
+extern JSFunction *
+js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
+               uintN flags, JSObject *parent, JSAtom *atom);
 
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
@@ -418,6 +504,9 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
         return NULL;
     return js_CloneFunctionObject(cx, fun, parent, proto);
 }
+
+extern JSObject * JS_FASTCALL
+js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
@@ -530,56 +619,6 @@ JS_STATIC_ASSERT(((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
 
 extern JSBool
 js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
-
-typedef enum JSLocalKind {
-    JSLOCAL_NONE,
-    JSLOCAL_ARG,
-    JSLOCAL_VAR,
-    JSLOCAL_CONST,
-    JSLOCAL_UPVAR
-} JSLocalKind;
-
-extern JSBool
-js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
-
-/*
- * Look up an argument or variable name returning its kind when found or
- * JSLOCAL_NONE when no such name exists. When indexp is not null and the name
- * exists, *indexp will receive the index of the corresponding argument or
- * variable.
- */
-extern JSLocalKind
-js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
-
-/*
- * Functions to work with local names as an array of words.
- *
- * js_GetLocalNameArray returns the array, or null if we are out of memory.
- * This function must be called only when fun->hasLocalNames().
- *
- * The supplied pool is used to allocate the returned array, so the caller is
- * obligated to mark and release to free it.
- *
- * The elements of the array with index less than fun->nargs correspond to the
- * names of function formal parameters. An index >= fun->nargs addresses a var
- * binding. Use JS_LOCAL_NAME_TO_ATOM to convert array's element to an atom
- * pointer. This pointer can be null when the element is for a formal parameter
- * corresponding to a destructuring pattern.
- *
- * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST to
- * check if nameWord corresponds to the const declaration.
- */
-extern jsuword *
-js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);
-
-#define JS_LOCAL_NAME_TO_ATOM(nameWord)                                       \
-    ((JSAtom *) ((nameWord) & ~(jsuword) 1))
-
-#define JS_LOCAL_NAME_IS_CONST(nameWord)                                      \
-    ((((nameWord) & (jsuword) 1)) != 0)
-
-extern void
-js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
 
 extern JSBool
 js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
