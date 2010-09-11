@@ -145,8 +145,6 @@ void nsBuiltinDecoder::Shutdown()
 
   mShuttingDown = PR_TRUE;
 
-  StopTimeUpdate();
-
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
@@ -389,8 +387,6 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
   if (resourceIsLoaded) {
     ResourceLoaded();
   }
-
-  StartTimeUpdate();
 }
 
 void nsBuiltinDecoder::ResourceLoaded()
@@ -777,7 +773,7 @@ void nsBuiltinDecoder::PlaybackPositionChanged()
   Invalidate();
 
   if (mElement && lastTime != mCurrentTime) {
-    FireTimeUpdate();
+    mElement->DispatchEvent(NS_LITERAL_STRING("timeupdate"));
   }
 }
 
