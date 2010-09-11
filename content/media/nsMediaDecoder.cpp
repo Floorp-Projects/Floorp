@@ -68,14 +68,12 @@
 // Number of milliseconds of no data before a stall event is fired as defined by spec
 #define STALL_MS 3000
 
-// Number of milliseconds between timeupdate events as defined by spec
-#define TIMEUPDATE_MS 250
-
 nsMediaDecoder::nsMediaDecoder() :
   mElement(0),
   mRGBWidth(-1),
   mRGBHeight(-1),
-  mLastCurrentTime(0.0),
+  mProgressTime(),
+  mDataTime(),
   mVideoUpdateLock(nsnull),
   mPixelAspectRatio(1.0),
   mFrameBufferLength(0),
@@ -233,54 +231,6 @@ nsresult nsMediaDecoder::StopProgress()
 
   nsresult rv = mProgressTimer->Cancel();
   mProgressTimer = nsnull;
-
-  return rv;
-}
-
-static void TimeUpdateCallback(nsITimer* aTimer, void* aClosure)
-{
-  nsMediaDecoder* decoder = static_cast<nsMediaDecoder*>(aClosure);
-  decoder->FireTimeUpdate();
-}
-
-void nsMediaDecoder::FireTimeUpdate()
-{
-  if (!mElement)
-    return;
-
-  TimeStamp now = TimeStamp::Now();
-  float time = GetCurrentTime();
-
-  // If TIMEUPDATE_MS has passed since the last timeupdate event fired and the time
-  // has changed, fire a timeupdate event.
-  if ((mTimeUpdateTime.IsNull() ||
-       now - mTimeUpdateTime >= TimeDuration::FromMilliseconds(TIMEUPDATE_MS)) &&
-       mLastCurrentTime != time) {
-    mElement->DispatchEvent(NS_LITERAL_STRING("timeupdate"));
-    mTimeUpdateTime = now;
-    mLastCurrentTime = time;
-  }
-}
-
-nsresult nsMediaDecoder::StartTimeUpdate()
-{
-  if (mTimeUpdateTimer)
-    return NS_OK;
-
-  mTimeUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
-  return mTimeUpdateTimer->InitWithFuncCallback(TimeUpdateCallback,
-                                                this,
-                                                TIMEUPDATE_MS,
-                                                nsITimer::TYPE_REPEATING_SLACK);
-}
-
-nsresult nsMediaDecoder::StopTimeUpdate()
-{
-  if (!mTimeUpdateTimer)
-    return NS_OK;
-
-  nsresult rv = mTimeUpdateTimer->Cancel();
-  mTimeUpdateTimer = nsnull;
 
   return rv;
 }
