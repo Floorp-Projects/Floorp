@@ -187,7 +187,7 @@
           this.tabContainer.adjustTabstrip();
 
           let event = document.createEvent("Events");
-          event.initEvent("TabPin", true, false);
+          event.initEvent("TabPinned", true, false);
           aTab.dispatchEvent(event);
         ]]></body>
       </method>
@@ -206,7 +206,7 @@
           this.tabContainer.adjustTabstrip();
 
           let event = document.createEvent("Events");
-          event.initEvent("TabUnpin", true, false);
+          event.initEvent("TabUnpinned", true, false);
           aTab.dispatchEvent(event);
         ]]></body>
       </method>
