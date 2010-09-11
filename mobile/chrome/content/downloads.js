@@ -73,23 +73,26 @@ var DownloadsView = {
   },
 
   _createItem: function dv__createItem(aAttrs) {
-    let item = document.createElement("richlistitem");
+    // Make sure this doesn't already exist
+    let item = this.getElementForDownload(aAttrs.id);
+    if (!item) {
+      item = document.createElement("richlistitem");
 
-    // Copy the attributes from the argument into the item
-    for (let attr in aAttrs)
-      item.setAttribute(attr, aAttrs[attr]);
-
-    // Initialize other attributes
-    item.setAttribute("typeName", "download");
-    item.setAttribute("id", "dl-" + aAttrs.id);
-    item.setAttribute("downloadID", aAttrs.id);
-    item.setAttribute("iconURL", "moz-icon://" + aAttrs.file + "?size=32");
-    item.setAttribute("lastSeconds", Infinity);
-
-    // Initialize more complex attributes
-    this._updateTime(item);
-    this._updateStatus(item);
-
+      // Copy the attributes from the argument into the item
+      for (let attr in aAttrs)
+        item.setAttribute(attr, aAttrs[attr]);
+  
+      // Initialize other attributes
+      item.setAttribute("typeName", "download");
+      item.setAttribute("id", "dl-" + aAttrs.id);
+      item.setAttribute("downloadID", aAttrs.id);
+      item.setAttribute("iconURL", "moz-icon://" + aAttrs.file + "?size=32");
+      item.setAttribute("lastSeconds", Infinity);
+  
+      // Initialize more complex attributes
+      this._updateTime(item);
+      this._updateStatus(item);
+    }
     return item;
   },
 
