@@ -90,7 +90,7 @@
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-lwtheme-darktext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-lwtheme-darktext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]) {
-  -moz-box-shadow: inset 0 1px 0 rgba(50,50,50,.5);
+  box-shadow: inset 0 1px 0 rgba(50,50,50,.5);
 }
 
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button:-moz-lwtheme-brighttext,
@@ -101,7 +101,7 @@
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-lwtheme-brighttext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-lwtheme-brighttext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]) {
-  -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
 }
 
 #main-window {
@@ -201,7 +201,7 @@ toolbarbutton.bookmark-item[open="true"] {
 
 toolbarbutton.bookmark-item:active:hover,
 toolbarbutton.bookmark-item[open="true"] {
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255, 255, 0.4);
   background-color: rgba(0, 0, 0, .5);
 }
 
@@ -299,7 +299,7 @@ toolbarbutton.bookmark-item > menupopup {
   height: 22px;
   border: 1px solid @toolbarbuttonBorderColor@;
   border-radius: @toolbarbuttonCornerRadius@;
-  -moz-box-shadow: 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px rgba(255, 255, 255, 0.2);
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
 }
@@ -322,7 +322,7 @@ toolbar:not([mode="icons"]) #restore-button {
   padding: 0;
   height: auto;
   border: none;
-  -moz-box-shadow: none;
+  box-shadow: none;
   background: none;
 }
 
@@ -392,17 +392,17 @@ toolbar[mode="icons"] .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-
 toolbar[mode="icons"] #restore-button:not([disabled="true"]):active:hover {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"] {
   background: #606060;
-  -moz-box-shadow: inset #2A2A2A 0 3px 3.5px, @loweredShadow@;
+  box-shadow: inset #2A2A2A 0 3px 3.5px, @loweredShadow@;
 }
 
 toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not([disabled="true"]):active:hover {
   background: #4E4E4E;
-  -moz-box-shadow: inset #1c1c1c 0 3px 3.5px;
+  box-shadow: inset #1c1c1c 0 3px 3.5px;
 }
 
 toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):-moz-window-inactive,
@@ -415,7 +415,7 @@ toolbar[mode="icons"] #restore-button:-moz-window-inactive {
 
 toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:-moz-window-inactive {
   background: #8E8E8E;
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 3.5px, @loweredShadow@;
+  box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 3.5px, @loweredShadow@;
 }
 
 toolbar[mode="icons"] .toolbarbutton-1 > menupopup {
@@ -714,7 +714,7 @@ toolbar[mode="icons"] #zoom-in-button {
   min-width: 7em;
   -moz-appearance: none;
   border: 0;
-  -moz-box-shadow: 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px rgba(255, 255, 255, 0.2);
   margin: 0 4px;
   padding: 0;
   border: 1px solid transparent;
@@ -735,7 +735,7 @@ toolbar[mode="icons"] #zoom-in-button {
   background-color: -moz-mac-focusring;
   background-image: -moz-linear-gradient(#D6D6D6, #D6D6D6 1px, #F7F7F7 1px, #F7F7F7 2px, #FFF 2px, #FFF),
                     -moz-linear-gradient(rgba(0,0,0,.1), rgba(0,0,0,.1));
-  -moz-box-shadow: @focusRingShadow@;
+  box-shadow: @focusRingShadow@;
 }
 
 #urlbar {
@@ -751,13 +751,13 @@ toolbar[mode="icons"] #zoom-in-button {
   margin: 1px;
   border-radius: 2px;
   padding: 1px;
-  -moz-box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
   text-shadow: 0 1px rgba(255, 255, 255, 0.2);
 }
 
 
 #identity-box:-moz-focusring {
-  -moz-box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
+  box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
                    0 0 3px 2px -moz-mac-focusring;
 }
 
@@ -773,7 +773,7 @@ toolbar[mode="icons"] #zoom-in-button {
 
 #identity-box:active:hover,
 #identity-box[open="true"] {
-  -moz-box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35),
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35),
                    inset 0 0 0 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -978,7 +978,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar > toolbarbutton:active:hover {
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@;
   padding-left: 4px;
   border-left: none;
 }
@@ -986,7 +986,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar-go-button {
   -moz-image-region: rect(0px, 56px, 14px, 42px);
   background-image: -moz-linear-gradient(rgb(184,221,142), rgb(154,201,111) 49%, rgb(130,187,92) 51%, rgb(114,171,79));
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
@@ -997,14 +997,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar-reload-button:hover {
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar-stop-button {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
   background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
@@ -1598,7 +1598,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tab:focus > .tab-text {
-  -moz-box-shadow: @focusRingShadow@;
+  box-shadow: @focusRingShadow@;
 }
 
 .tabbrowser-tab[selected="true"],
@@ -1617,7 +1617,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
   padding-bottom: 1px;
-  -moz-box-shadow: 0 -6px 3.5px -5px rgba(0,0,0,.3) inset,
+  box-shadow: 0 -6px 3.5px -5px rgba(0,0,0,.3) inset,
                    0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
@@ -1749,7 +1749,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border: none;
   border-radius: 0;
   background: none;
-  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
 #TabsToolbar > toolbarbutton:not([type="menu-button"]),
@@ -1986,7 +1986,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .notification-anchor-icon:-moz-focusring {
-  -moz-box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
+  box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
                    0 0 3px 2px -moz-mac-focusring;
 }
 
@@ -2123,7 +2123,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .ctrlTab-preview-inner > .tabPreview-canvas {
-  -moz-box-shadow: 1px 1px 2px rgb(12%,12%,12%);
+  box-shadow: 1px 1px 2px rgb(12%,12%,12%);
 }
 
 .ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner > .tabPreview-canvas {
@@ -2205,7 +2205,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .allTabs-preview-inner > .tabPreview-canvas {
   background-color: rgb(60%,60%,60%);
-  -moz-box-shadow: 0 0 1.5px ThreeDShadow;
+  box-shadow: 0 0 1.5px ThreeDShadow;
 }
 
 .allTabs-preview:not(:hover):not([closebuttonhover]) > html|canvas {
@@ -2213,7 +2213,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .allTabs-preview:focus > * > .allTabs-preview-inner {
-  -moz-box-shadow: @focusRingShadow@;
+  box-shadow: @focusRingShadow@;
 }
 
 /* Inspector / Highlighter */

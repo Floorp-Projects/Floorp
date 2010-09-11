@@ -701,7 +701,7 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozStackSizing;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBoxShadow;
+           attribute DOMString        boxShadow;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBorderImage;

@@ -21,7 +21,7 @@ body {
   padding: 4px 6px 6px 4px;
   background-color: #D7D7D7;
   border-radius: 0.4em;
-  -moz-box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
   margin: 8px;
@@ -33,13 +33,13 @@ body {
 }
 
 .thumb {
-  -moz-box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .favicon {
   background-color: #D7D7D7;
   border-bottom-right-radius: 0.4em;
-  -moz-box-shadow:
+  box-shadow:
     0 -1px 0 rgba(225, 225, 225, 0.8) inset,
     -1px 0 0 rgba(225, 225, 225, 0.8) inset;
   padding: 4px 6px 6px 4px;
@@ -110,7 +110,7 @@ body {
 }
 
 .stacked .thumb {
-  -moz-box-shadow: rgba(0,0,0,.2) 1px 1px 4px;
+  box-shadow: rgba(0,0,0,.2) 1px 1px 4px;
 }
 
 .stack-trayed .tab-title {
@@ -120,11 +120,11 @@ body {
 }
 
 .stack-trayed .thumb {
-  -moz-box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .tab.focus {
-  -moz-box-shadow: 0 0 5.5px -moz-mac-menuselect/*#0060D6*/;
+  box-shadow: 0 0 5.5px -moz-mac-menuselect/*#0060D6*/;
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
@@ -140,11 +140,11 @@ body {
 }
 
 .front .thumb {
-  -moz-box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .front.focus {
-  -moz-box-shadow: none !important;
+  box-shadow: none !important;
   border: none !important;
 }
 
@@ -152,7 +152,7 @@ body {
 ----------------------------------*/
 
 .tabInGroupItem {
-  -moz-box-shadow: none;
+  box-shadow: none;
   border-color: transparent;
   background-color: transparent;
 }
@@ -165,12 +165,12 @@ body {
   cursor: move;
   background-color: #EBEBEB;
   border-radius: 0.4em;
-  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .groupItem.activeGroupItem {
-  -moz-box-shadow:
+  box-shadow:
     rgba(0,0,0,0.6) 1px 1px 5.5px;
 }
 
@@ -180,12 +180,12 @@ body {
 
 .overlay {
   background-color: rgba(0,0,0,.7) !important;
-  -moz-box-shadow: 3px 3px 5.5px rgba(0,0,0,.5);
+  box-shadow: 3px 3px 5.5px rgba(0,0,0,.5);
   border-radius: 0.4em;
   /*
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
-  -moz-box-shadow:
+  box-shadow:
     rgba(0,0,0, .3) 2px 2px 5.5px,
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px; */
 }
@@ -206,7 +206,7 @@ body {
   width: 150px;
   height: 30px;
   line-height: 30px;
-  -moz-box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.24);
+  box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.24);
   text-shadow: 0px -1px 0px rgba(255,255,255,.2);
   color: rgba( 0,0,0, .8);
   border-radius: 0.4em;
@@ -237,7 +237,7 @@ body {
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
   border-radius: 0.4em;
-  -moz-box-shadow:
+  box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
     rgba(0,0,0, .2) 1px 1px 3px;
 }
@@ -254,7 +254,7 @@ body {
   border: 1px dashed  rgba(0,0,0,.12);
   border-bottom: none;
   border-right: none;
-  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.15);
+  box-shadow: 1px 1px 0 rgba(255,255,255,.15);
 }
 
 .visibleTrench {
@@ -297,11 +297,11 @@ body {
 }
 
 .active {
-  -moz-box-shadow: 5px 5px 3px rgba(0,0,0,.5);
+  box-shadow: 5px 5px 3px rgba(0,0,0,.5);
 }
 
 .acceptsDrop {
-  -moz-box-shadow: 2px 2px 7px -1px rgba(0,0,0,.6);
+  box-shadow: 2px 2px 7px -1px rgba(0,0,0,.6);
 }
 
 .titlebar {
@@ -422,7 +422,7 @@ input.defaultName {
 #searchbox{
   width: 270px;
   height: 30px;
-  -moz-box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,1), 0px 0px 13px rgba(0,0,0,.8);
+  box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,1), 0px 0px 13px rgba(0,0,0,.8);
   color: white;
   border: none;
   background-color: #272727;
@@ -438,7 +438,7 @@ input.defaultName {
   border: none;
   border-bottom-left-radius: 0.4em;
   border-top-left-radius: 0.4em;    
-  -moz-box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.8), inset 6px 6px 13px rgba(0,0,0,.56);
+  box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.8), inset 6px 6px 13px rgba(0,0,0,.56);
   opacity: .64;
   text-align: center;
 }

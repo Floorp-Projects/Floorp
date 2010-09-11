@@ -376,8 +376,8 @@ var gCSSProperties = {
 		other_values: [ "center", "end", "justify" ],
 		invalid_values: []
 	},
-	"-moz-box-shadow": {
-		domProp: "MozBoxShadow",
+	"box-shadow": {
+		domProp: "boxShadow",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],

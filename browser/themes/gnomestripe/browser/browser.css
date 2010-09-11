@@ -1224,14 +1224,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton:active:hover {
   padding-left: 4px;
   border-left: none;
-  -moz-box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
+  box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
                    0 0 2px rgba(0,0,0,.4) inset;
 }
 
 #urlbar-go-button {
   -moz-image-region: rect(0px, 56px, 14px, 42px);
   background-image: -moz-linear-gradient(rgb(143,219,69), rgb(115,177,57));
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    -1px -1px 0 rgba(255,255,255,.2) inset;
 }
 
@@ -1246,14 +1246,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar-reload-button:hover {
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(137,183,233), rgb(79,130,195));
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    -1px -1px 0 rgba(255,255,255,.2) inset;
 }
 
 #urlbar-stop-button {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
   background-image: -moz-linear-gradient(rgb(226,99,99), rgb(199,68,68));
-  -moz-box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
+  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
                    -1px -1px 0 rgba(255,255,255,.2) inset;
 }
 
@@ -1576,12 +1576,12 @@ statusbarpanel#statusbar-display {
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: tab-scroll-arrow-forward;
   margin: 0;
-  -moz-transition: 1s -moz-box-shadow ease-out;
+  -moz-transition: 1s box-shadow ease-out;
   border-radius: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
-  -moz-box-shadow: 0 0 5px 5px Highlight inset;
+  box-shadow: 0 0 5px 5px Highlight inset;
   -moz-transition: none;
 }
 
@@ -1677,14 +1677,14 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 .tabPreview-canvas {
-  -moz-box-shadow: 0 0 5px ThreeDShadow;
+  box-shadow: 0 0 5px ThreeDShadow;
 }
 
 .ctrlTab-preview:focus .tabPreview-canvas,
 .ctrlTab-preview:hover .tabPreview-canvas,
 .allTabs-preview:focus .tabPreview-canvas,
 .allTabs-preview:hover .tabPreview-canvas {
-  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
 .ctrlTab-favicon[src],

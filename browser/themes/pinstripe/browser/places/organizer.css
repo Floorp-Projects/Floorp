@@ -89,7 +89,7 @@
   padding: 1px 3px;
   border: 1px solid @toolbarbuttonBorderColor@;
   border-radius: @toolbarbuttonCornerRadius@;
-  -moz-box-shadow: @loweredShadow@;
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
 }
@@ -98,7 +98,7 @@
 #placesToolbar > toolbarbutton[open="true"] {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 #placesToolbar > toolbarbutton:-moz-window-inactive {
@@ -302,7 +302,7 @@
 
 #organizerScopeBar > toolbarbutton:active:hover,
 #organizerScopeBar > toolbarbutton[checked="true"] {
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255,
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255,
 255, 0.4);
 }
 
@@ -340,7 +340,7 @@
   border: @roundButtonBorder@;
   text-shadow: @loweredShadow@;
   background: @roundButtonBackground@;
-  -moz-box-shadow: @roundButtonShadow@;
+  box-shadow: @roundButtonShadow@;
 }
 
 #saveSearch > .button-box > .button-text {
@@ -349,15 +349,15 @@
 
 #saveSearch:active:hover {
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @roundButtonPressedShadow@;
+  box-shadow: @roundButtonPressedShadow@;
 }
 
 #saveSearch:focus {
-  -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
 #saveSearch:active:hover:focus {
-  -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
 /**** expanders ****/
