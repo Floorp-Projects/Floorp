@@ -1972,8 +1972,10 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     uint32 oldopts;
     jsval *argv = JS_ARGV(cx, vp);
 
-    if (!argc)
+    if (!argc) {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
+    }
 
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
@@ -1991,8 +1993,10 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     if (!script)
         return JS_FALSE;
 
-    if (script->isEmpty())
+    if (script->isEmpty()) {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
+    }
 
     JSObject *obj = JS_NewScriptObject(cx, script);
     if (!obj)
@@ -2001,7 +2005,6 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
     ok = Disassemble(cx, 1, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-
     return ok;
 }
 
