@@ -869,6 +869,31 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-image-region: rect(0, 270px, 18px, 252px);
 }
 
+/* zoom controls */
+
+#zoom-out-button {
+  -moz-image-region: rect(0, 288px, 18px, 270px);
+  -moz-margin-end: 0;
+}
+
+#zoom-in-button {
+  -moz-image-region: rect(0, 306px, 18px, 288px);
+  -moz-border-start: none;
+  -moz-margin-start: 0;
+}
+
+#zoom-out-button:-moz-locale-dir(ltr),
+#zoom-in-button:-moz-locale-dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#zoom-out-button:-moz-locale-dir(rtl),
+#zoom-in-button:-moz-locale-dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 /* ::::: fullscreen window controls ::::: */
 
 #minimize-button,

@@ -660,6 +660,14 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-fullscreen?size=toolbar");
 }
 
+#zoom-out-button {
+  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar");
+}
+
+#zoom-in-button {
+  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar");
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
@@ -786,6 +794,14 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 
 toolbar[iconsize="small"] #fullscreen-button {
   list-style-image: url("moz-icon://stock/gtk-fullscreen?size=menu");
+}
+
+toolbar[iconsize="small"] #zoom-out-button {
+  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=menu");
+}
+
+toolbar[iconsize="small"] #zoom-in-button {
+  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
 }
 
 /* Fullscreen window controls */
