@@ -372,6 +372,10 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: -moz-box;
 }
 
+#invalid-form-popup {
+  max-width: 280px;
+}
+
 #geolocation-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
 }
