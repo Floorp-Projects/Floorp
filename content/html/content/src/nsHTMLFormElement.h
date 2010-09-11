@@ -278,6 +278,7 @@ public:
    *
    * @return Whether the form is valid.
    *
+   * @note Do not call this method if novalidate/formnovalidate is used.
    * @note This method might disappear with bug 592124, hopefuly.
    */
   bool CheckValidFormSubmission();
