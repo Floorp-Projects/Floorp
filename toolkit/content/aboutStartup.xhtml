@@ -14,6 +14,9 @@
   <head>
     <title>&about.startup.title;</title>
     <link rel="stylesheet" href="chrome://global/skin/aboutSupport.css" type="text/css"/>
+    <script type="application/javascript" src="chrome://jquery/content/jquery.js"/>
+    <script type="application/javascript" src="chrome://jquery/content/jquery.flot.js"/>
+    <script type="application/javascript" src="chrome://jquery/content/jquery.flot.selection.js"/>
   </head>
 
   <body>
@@ -24,6 +27,9 @@
       <tr><td>&about.startup.app.started;</td><td id="started">—</td><td>—</td></tr>
       <tr><td>&about.startup.app.ready;</td><td id="restored">—</td><td>—</td></tr>
     </table>
+
+    <div id="graph" style="width: 800px; height: 400px;"/>
+    <div id="overview" style="width: 800px; height: 100px;"/>
 
     <h1>&about.startup.table;</h1>
     <table>
