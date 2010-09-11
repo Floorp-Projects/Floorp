@@ -1640,7 +1640,9 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     nsMouseEvent event(PR_TRUE, NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
-  } else if (mForm->HasSingleTextControl()) {
+  } else if (mForm->HasSingleTextControl() && mForm->CheckValidFormSubmission()) {
+    // TODO: removing this code and have the submit event sent by the form,
+    // bug 592124.
     // If there's only one text control, just submit the form
     // Hold strong ref across the event
     nsRefPtr<nsHTMLFormElement> form(mForm);
@@ -2428,7 +2430,10 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // If |nsIPresShell::Destroy| has been called due to
             // handling the event the pres context will return a null
             // pres shell.  See bug 125624.
-            if (presShell) {
+            // TODO: removing this code and have the submit event sent by the
+            // form, see bug 592124.
+            if (presShell && (event.message != NS_FORM_SUBMIT ||
+                              mForm->CheckValidFormSubmission())) {
               // Hold a strong ref while dispatching
               nsRefPtr<nsHTMLFormElement> form(mForm);
               presShell->HandleDOMEventWithTarget(mForm, &event, &status);
