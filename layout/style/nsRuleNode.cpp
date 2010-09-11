@@ -371,134 +371,75 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
                         PR_TRUE, PR_FALSE, canStoreInRuleTree);
 }
 
-struct SpecifiedToComputedCalcOps : public css::NumbersAlreadyNormalizedOps
+struct LengthPercentPairCalcOps : public css::NumbersAlreadyNormalizedOps
 {
-  // FIXME (perf): Is there too much copying as a result of returning
-  // nsStyleCoord objects?
-  typedef nsStyleCoord result_type;
+  typedef nsRuleNode::ComputedCalc result_type;
 
-  nsStyleContext* const mStyleContext;
-  nsPresContext* const mPresContext;
-  PRBool& mCanStoreInRuleTree;
-
-  SpecifiedToComputedCalcOps(nsStyleContext* aStyleContext,
-                             nsPresContext* aPresContext,
-                             PRBool& aCanStoreInRuleTree)
-    : mStyleContext(aStyleContext),
+  LengthPercentPairCalcOps(nsStyleContext* aContext,
+                           nsPresContext* aPresContext,
+                           PRBool& aCanStoreInRuleTree)
+    : mContext(aContext),
       mPresContext(aPresContext),
-      mCanStoreInRuleTree(aCanStoreInRuleTree)
+      mCanStoreInRuleTree(aCanStoreInRuleTree),
+      mHasPercent(PR_FALSE) {}
+
+  nsStyleContext* mContext;
+  nsPresContext* mPresContext;
+  PRBool& mCanStoreInRuleTree;
+  PRBool mHasPercent;
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
+    if (aValue.GetUnit() == eCSSUnit_Percent) {
+      mHasPercent = PR_TRUE;
+      return result_type(0, aValue.GetPercentValue());
+    }
+    return result_type(CalcLength(aValue, mContext, mPresContext,
+                                  mCanStoreInRuleTree),
+                       0.0f);
   }
 
   result_type
   MergeAdditive(nsCSSUnit aCalcFunction,
                 result_type aValue1, result_type aValue2)
   {
-    nsStyleUnit unit1 = aValue1.GetUnit();
-    nsStyleUnit unit2 = aValue2.GetUnit();
-    NS_ABORT_IF_FALSE(unit1 == eStyleUnit_Coord ||
-                      unit1 == eStyleUnit_Percent ||
-                      aValue1.IsCalcUnit(),
-                      "unexpected unit");
-    NS_ABORT_IF_FALSE(unit2 == eStyleUnit_Coord ||
-                      unit2 == eStyleUnit_Percent ||
-                      aValue2.IsCalcUnit(),
-                      "unexpected unit");
-    nsStyleCoord result;
-    if (unit1 == unit2 && !aValue1.IsCalcUnit()) {
-      // Merge nodes that we don't need to keep separate.
-      if (unit1 == eStyleUnit_Percent) {
-        css::BasicFloatCalcOps ops;
-        result.SetPercentValue(ops.MergeAdditive(aCalcFunction,
-                                                 aValue1.GetPercentValue(),
-                                                 aValue2.GetPercentValue()));
-      } else {
-        css::BasicCoordCalcOps ops;
-        result.SetCoordValue(ops.MergeAdditive(aCalcFunction,
-                                               aValue1.GetCoordValue(),
-                                               aValue2.GetCoordValue()));
-      }
-    } else {
-      nsStyleCoord::Array *array =
-        nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
-      array->Item(0) = aValue1;
-      array->Item(1) = aValue2;
-      result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+    if (aCalcFunction == eCSSUnit_Calc_Plus) {
+      return result_type(NSCoordSaturatingAdd(aValue1.mLength,
+                                              aValue2.mLength),
+                         aValue1.mPercent + aValue2.mPercent);
     }
-    return result;
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Minus,
+                      "min() and max() are not allowed in calc() on "
+                      "transform");
+    return result_type(NSCoordSaturatingSubtract(aValue1.mLength,
+                                                 aValue2.mLength, 0),
+                       aValue1.mPercent - aValue2.mPercent);
   }
 
   result_type
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
                        float aValue1, result_type aValue2)
   {
-    nsStyleCoord result;
-    switch (aValue2.GetUnit()) {
-      case eStyleUnit_Percent: {
-        css::BasicFloatCalcOps ops;
-        result.SetPercentValue(ops.MergeMultiplicativeL(
-          aCalcFunction, aValue1, aValue2.GetPercentValue()));
-        break;
-      }
-      case eStyleUnit_Coord: {
-        css::BasicCoordCalcOps ops;
-        result.SetCoordValue(ops.MergeMultiplicativeL(
-          aCalcFunction, aValue1, aValue2.GetCoordValue()));
-        break;
-      }
-      default:
-        NS_ABORT_IF_FALSE(aValue2.IsCalcUnit(), "unexpected unit");
-        nsStyleCoord::Array *array =
-          nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
-        array->Item(0).SetFactorValue(aValue1);
-        array->Item(1) = aValue2;
-        result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
-        break;
-    }
-    return result;
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_L,
+                      "unexpected unit");
+    return result_type(NSCoordSaturatingMultiply(aValue2.mLength, aValue1),
+                       aValue1 * aValue2.mPercent);
   }
 
   result_type
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
                        result_type aValue1, float aValue2)
   {
-    nsStyleCoord result;
-    switch (aValue1.GetUnit()) {
-      case eStyleUnit_Percent: {
-        css::BasicFloatCalcOps ops;
-        result.SetPercentValue(ops.MergeMultiplicativeR(
-          aCalcFunction, aValue1.GetPercentValue(), aValue2));
-        break;
-      }
-      case eStyleUnit_Coord: {
-        css::BasicCoordCalcOps ops;
-        result.SetCoordValue(ops.MergeMultiplicativeR(
-          aCalcFunction, aValue1.GetCoordValue(), aValue2));
-        break;
-      }
-      default:
-        NS_ABORT_IF_FALSE(aValue1.IsCalcUnit(), "unexpected unit");
-        nsStyleCoord::Array *array =
-          nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
-        array->Item(0) = aValue1;
-        array->Item(1).SetFactorValue(aValue2);
-        result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
-        break;
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_R ||
+                      aCalcFunction == eCSSUnit_Calc_Divided,
+                      "unexpected unit");
+    if (aCalcFunction == eCSSUnit_Calc_Divided) {
+      aValue2 = 1.0f / aValue2;
     }
-    return result;
+    return result_type(NSCoordSaturatingMultiply(aValue1.mLength, aValue2),
+                       aValue1.mPercent * aValue2);
   }
 
-  result_type ComputeLeafValue(const nsCSSValue& aValue)
-  {
-    nsStyleCoord result;
-    if (aValue.GetUnit() == eCSSUnit_Percent) {
-      result.SetPercentValue(aValue.GetPercentValue());
-    } else {
-      result.SetCoordValue(CalcLength(aValue, mStyleContext, mPresContext,
-                                      mCanStoreInRuleTree));
-    }
-    return result;
-  }
 };
 
 static void
@@ -506,41 +447,33 @@ SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                             nsStyleContext* aStyleContext,
                             PRBool& aCanStoreInRuleTree)
 {
-  SpecifiedToComputedCalcOps ops(aStyleContext, aStyleContext->PresContext(),
-                                 aCanStoreInRuleTree);
-  aCoord = ComputeCalc(aValue, ops);
-  if (!aCoord.IsCalcUnit()) {
-    // Some callers distinguish between calc(50%) and 50%, or calc(50px)
-    // and 50px.
-    nsStyleCoord::Array *array =
-      nsStyleCoord::Array::Create(aStyleContext, aCanStoreInRuleTree, 1);
-    array->Item(0) = aCoord;
-    aCoord.SetArrayValue(array, eStyleUnit_Calc);
-  }
+  LengthPercentPairCalcOps ops(aStyleContext, aStyleContext->PresContext(),
+                               aCanStoreInRuleTree);
+  nsRuleNode::ComputedCalc vals = ComputeCalc(aValue, ops);
+
+  nsStyleCoord::Calc *calcObj =
+    new (aStyleContext->Alloc(sizeof(nsStyleCoord::Calc))) nsStyleCoord::Calc;
+  // Because we use aStyleContext->Alloc(), we have to store the result
+  // on the style context and not in the rule tree.
+  aCanStoreInRuleTree = PR_FALSE;
+
+  calcObj->mLength = vals.mLength;
+  calcObj->mPercent = vals.mPercent;
+  calcObj->mHasPercent = ops.mHasPercent;
+
+  aCoord.SetCalcValue(calcObj);
 }
 
-struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,
-                                    public css::BasicCoordCalcOps
+/* static */ nsRuleNode::ComputedCalc
+nsRuleNode::SpecifiedCalcToComputedCalc(const nsCSSValue& aValue,
+                                        nsStyleContext* aStyleContext,
+                                        nsPresContext* aPresContext,
+                                        PRBool& aCanStoreInRuleTree)
 {
-  const nscoord mPercentageBasis;
-
-  ComputeComputedCalcCalcOps(nscoord aPercentageBasis)
-    : mPercentageBasis(aPercentageBasis)
-  {
-  }
-
-  result_type ComputeLeafValue(const nsStyleCoord& aValue)
-  {
-    nscoord result;
-    if (aValue.GetUnit() == eStyleUnit_Percent) {
-      result =
-        NSToCoordFloorClamped(mPercentageBasis * aValue.GetPercentValue());
-    } else {
-      result = aValue.GetCoordValue();
-    }
-    return result;
-  }
-};
+  LengthPercentPairCalcOps ops(aStyleContext, aPresContext,
+                               aCanStoreInRuleTree);
+  return ComputeCalc(aValue, ops);
+}
 
 // This is our public API for handling calc() expressions that involve
 // percentages.
@@ -548,8 +481,26 @@ struct ComputeComputedCalcCalcOps : public css::StyleCoordInputCalcOps,
 nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
                                 nscoord aPercentageBasis)
 {
-  ComputeComputedCalcCalcOps ops(aPercentageBasis);
-  return css::ComputeCalc(aValue, ops);
+  nsStyleCoord::Calc *calc = aValue.GetCalcValue();
+  return calc->mLength +
+         NSToCoordFloorClamped(aPercentageBasis * calc->mPercent);
+}
+
+/* static */ nscoord
+nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
+                                    nscoord aPercentageBasis)
+{
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Coord:
+      return aCoord.GetCoordValue();
+    case eStyleUnit_Percent:
+      return NSToCoordFloorClamped(aPercentageBasis * aCoord.GetPercentValue());
+    case eStyleUnit_Calc:
+      return ComputeComputedCalc(aCoord, aPercentageBasis);
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
+      return 0;
+  }
 }
 
 /* Given an enumerated value that represents a box position, converts it to
