@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -54,6 +54,8 @@ typedef const struct vp8_token_struct
 /* Construct encoding array from tree. */
 
 void vp8_tokens_from_tree(struct vp8_token_struct *, vp8_tree);
+void vp8_tokens_from_tree_offset(struct vp8_token_struct *, vp8_tree,
+                                 int offset);
 
 
 /* Convert array of token occurrence counts into a table of probabilities

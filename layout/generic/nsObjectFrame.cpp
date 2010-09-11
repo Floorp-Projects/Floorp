@@ -1353,7 +1353,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsPresContext::nsPresContextType type = PresContext()->Type();
 
   // If we are painting in Print Preview do nothing....
@@ -1369,14 +1369,22 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
+  nsDisplayList replacedContent;
+
   // determine if we are printing
-  if (type == nsPresContext::eContext_Print)
-    return aLists.Content()->AppendNewToTop(new (aBuilder)
+  if (type == nsPresContext::eContext_Print) {
+    rv = replacedContent.AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                          nsDisplayItem::TYPE_PRINT_PLUGIN));
+  } else {
+    rv = replacedContent.AppendNewToTop(new (aBuilder)
+        nsDisplayPlugin(aBuilder, this));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayPlugin(aBuilder, this));
+  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
 }
 
 void

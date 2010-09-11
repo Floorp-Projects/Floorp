@@ -1321,6 +1321,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   BrowserOffline.init();
   OfflineApps.init();
+  IndexedDBPromptHelper.init();
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -1513,6 +1514,23 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   TabView.init();
 
+  // Enable Inspector?
+  let enabled = gPrefService.getBoolPref(InspectorUI.prefEnabledName);
+  if (enabled) {
+    document.getElementById("menu_pageinspect").setAttribute("hidden", false);
+    document.getElementById("Tools:Inspect").removeAttribute("disabled");
+    let appMenuInspect = document.getElementById("appmenu_pageInspect");
+    if (appMenuInspect)
+      appMenuInspect.setAttribute("hidden", false);
+  }
+
+  // Enable Error Console?
+  let consoleEnabled = gPrefService.getBoolPref("devtools.errorconsole.enabled");
+  if (consoleEnabled) {
+    document.getElementById("javascriptConsole").hidden = false;
+    document.getElementById("key_errorConsole").removeAttribute("disabled");
+  }
+
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
 
@@ -1563,6 +1581,7 @@ function BrowserShutdown()
   OfflineApps.uninit();
   DownloadMonitorPanel.uninit();
   gPrivateBrowsingUI.uninit();
+  IndexedDBPromptHelper.uninit();
 
   var enumerator = Services.wm.getEnumerator(null);
   enumerator.getNext();
@@ -2870,25 +2889,7 @@ var browserDragAndDrop = {
   },
 
   drop: function (aEvent, aName) Services.droppedLinkHandler.dropLink(aEvent, aName)
-}
-
-var proxyIconDNDObserver = {
-  onDragStart: function (aEvent, aXferData, aDragAction)
-    {
-      if (gProxyFavIcon.getAttribute("pageproxystate") != "valid")
-        return;
-
-      var value = content.location.href;
-      var urlString = value + "\n" + content.document.title;
-      var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
-
-      var dt = aEvent.dataTransfer;
-      dt.setData("text/x-moz-url", urlString);
-      dt.setData("text/uri-list", value);
-      dt.setData("text/plain", value);
-      dt.setData("text/html", htmlString);
-    }
-}
+};
 
 var homeButtonObserver = {
   onDrop: function (aEvent)
@@ -5853,6 +5854,92 @@ var OfflineApps = {
   }
 };
 
+var IndexedDBPromptHelper = {
+  _permissionsPrompt: "indexedDB-permissions-prompt",
+  _permissionsResponse: "indexedDB-permissions-response",
+
+  _quotaPrompt: "indexedDB-quota-prompt",
+  _quotaResponse: "indexedDB-quota-response",
+
+  _notificationIcon: "indexedDB-notification-icon",
+
+  init:
+  function IndexedDBPromptHelper_init() {
+    Services.obs.addObserver(this, this._permissionsPrompt, false);
+    Services.obs.addObserver(this, this._quotaPrompt, false);
+  },
+
+  uninit:
+  function IndexedDBPromptHelper_uninit() {
+    Services.obs.removeObserver(this, this._permissionsPrompt, false);
+    Services.obs.removeObserver(this, this._quotaPrompt, false);
+  },
+
+  observe:
+  function IndexedDBPromptHelper_observe(subject, topic, data) {
+    if (topic != this._permissionsPrompt &&
+        topic != this._quotaPrompt) {
+      throw new Error("Unexpected topic!");
+    }
+
+    var requestor = subject.QueryInterface(Ci.nsIInterfaceRequestor);
+
+    var contentWindow = requestor.getInterface(Ci.nsIDOMWindow);
+    var contentDocument = contentWindow.document;
+    var browserWindow =
+      OfflineApps._getBrowserWindowForContentWindow(contentWindow);
+    var browser =
+      OfflineApps._getBrowserForContentWindow(browserWindow, contentWindow);
+
+    if (!browser) {
+      // Must belong to some other window.
+      return;
+    }
+
+    var host = contentDocument.documentURIObject.asciiHost;
+
+    var message;
+    var responseTopic;
+    if (topic == this._permissionsPrompt) {
+      message = gNavigatorBundle.getFormattedString("offlineApps.available",
+                                                    [ host ]);
+      responseTopic = this._permissionsResponse;
+    }
+    else if (topic == this._quotaPrompt) {
+      message = gNavigatorBundle.getFormattedString("indexedDB.usage",
+                                                    [ host, data ]);
+      responseTopic = this._quotaResponse;
+    }
+
+    var self = this;
+    var observer = requestor.getInterface(Ci.nsIObserver);
+
+    var mainAction = {
+      label: gNavigatorBundle.getString("offlineApps.allow"),
+      accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
+      callback: function() {
+        observer.observe(null, responseTopic,
+                         Ci.nsIPermissionManager.ALLOW_ACTION);
+      }
+    };
+
+    var secondaryActions = [
+      {
+        label: gNavigatorBundle.getString("offlineApps.never"),
+        accessKey: gNavigatorBundle.getString("offlineApps.neverAccessKey"),
+        callback: function() {
+          observer.observe(null, responseTopic,
+                           Ci.nsIPermissionManager.DENY_ACTION);
+        }
+      }
+    ];
+
+    PopupNotifications.show(browser, topic, message, this._notificationIcon,
+                            mainAction, secondaryActions);
+
+  }
+};
+
 function WindowIsClosing()
 {
   var reallyClose = closeWindow(false, warnAboutClosingWindow);
@@ -7225,6 +7312,22 @@ var gIdentityHandler = {
 
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, position);
+  },
+
+  onDragStart: function (event) {
+    if (gURLBar.getAttribute("pageproxystate") != "valid")
+      return;
+
+    var value = content.location.href;
+    var urlString = value + "\n" + content.document.title;
+    var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
+
+    var dt = event.dataTransfer;
+    dt.setData("text/x-moz-url", urlString);
+    dt.setData("text/uri-list", value);
+    dt.setData("text/plain", value);
+    dt.setData("text/html", htmlString);
+    dt.setDragImage(event.currentTarget, 0, 0);
   }
 };
 
@@ -7884,6 +7987,12 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
   }
 
   return false;
+}
+
+function restoreLastSession() {
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  ss.restoreLastSession();
 }
 
 var TabContextMenu = {

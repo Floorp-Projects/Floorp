@@ -42,6 +42,6 @@ relativesrcdir = other-licenses/branding/firefox/locales
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DAB_CD=$(AB_CD) -DMOZ_DISTRIBUTION_ID_UNQUOTED=$(MOZ_DISTRIBUTION_ID)
+DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+    <title>Console test replaced API</title>
+    <script type="text/javascript">
+      function replaceAPI() {
+        var console = {log: function (msg){}, info: function (msg){}, warn: function (msg){}, error: function (msg){}};
+        window.console = console;
+      }
+    </script>
+  </head>
+  <body>
+    <h1 id="header">Web Console Replace API Test</h1>
+    <button onclick="replaceAPI();">ReplaceAPI</button>
+  </body>
+</html>

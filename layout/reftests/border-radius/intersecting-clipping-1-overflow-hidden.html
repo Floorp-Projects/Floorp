@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<title>Test for clipping of border-radius</title>
+<style>
+body > div {
+  overflow: hidden;
+  width: 200px;
+  height: 100px;
+  border-radius: 50px / 20px;
+}
+body > div > div {
+  border-radius: 20px / 40px;
+  overflow: hidden;
+  width: 200px;
+  height: 100px;
+  background: green;
+}
+</style>
+<div><div></div></div>

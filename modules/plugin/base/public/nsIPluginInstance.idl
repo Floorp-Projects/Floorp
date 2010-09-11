@@ -44,14 +44,17 @@ interface nsIOutputStream;
 %{C++
 #include "npapi.h"
 #include "nsStringGlue.h"
+#include "gfxASurface.h"
 struct JSContext;
 struct JSObject;
+struct gfxASurface;
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 %}
 
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
+[ptr] native gfxASurfacePtr(gfxASurface);
 
 [uuid(84994340-E120-4051-824F-D4EE8AEF1A3E)]
 interface nsIPluginInstance : nsISupports
@@ -221,4 +224,21 @@ interface nsIPluginInstance : nsISupports
     void getValueFromPlugin(in NPPVariable variable, in voidPtr aValue);
 
     PRInt32 getDrawingModel();
+
+    /**
+     * async version of SetWindow call
+     *
+     * @param aWindow  - the plugin window structure
+     */
+    void asyncSetWindow(in NPWindowPtr aWindow);
+
+    /**
+     * Call this each time after the plugin has been painted to the screen
+     */
+    void notifyPainted();
+
+    /**
+     * This should return a valid gfxASurface pointer, or null if there is nothing to render yet.
+     */
+    void getSurface(out gfxASurfacePtr aSurface);
 };
