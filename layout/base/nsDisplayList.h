@@ -214,6 +214,10 @@ public:
    */
   void IgnorePaintSuppression() { mIgnoreSuppression = PR_TRUE; }
   /**
+   * @return Returns if this builder will ignore paint suppression.
+   */
+  PRBool IsIgnoringPaintSuppression() { return mIgnoreSuppression; }
+  /**
    * @return Returns if this builder had to ignore painting suppression on some
    * document when building the display list.
    */
