@@ -44,13 +44,17 @@
 #view-port {
   background-color: #d2d7df;
   border: 1px solid black;
-  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
 
 .nav-button {
   list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
   min-width: 0;
   -moz-margin-end: 0;
+}
+
+.nav-button[disabled="true"] .button-icon {
+  opacity: 0.4;
 }
 
 #back-btn:-moz-locale-dir(ltr),
@@ -135,13 +139,13 @@
 }
 
 .category:-moz-locale-dir(ltr) {
-  -moz-border-radius-topleft: 5px;
-  -moz-border-radius-bottomleft: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
 .category:-moz-locale-dir(rtl) {
-  -moz-border-radius-topright: 5px;
-  -moz-border-radius-bottomright: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
 .category[disabled] {
@@ -171,7 +175,7 @@
   background-color: #55D4FF;
   padding: 2px 8px;
   margin: 6px 0px;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   color: #FFF;
   font-weight: bold;
   text-align: center;
@@ -256,7 +260,7 @@
   -moz-border-bottom-colors: #999;
   -moz-border-left-colors: #999;
   -moz-border-right-colors: #999;
-  -moz-border-radius: 8px;
+  border-radius: 8px;
   background-image: -moz-linear-gradient(#FFF, #BBB);
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
 }
@@ -294,7 +298,7 @@
   -moz-appearance: none;
   border: none;
   background-color: transparent;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   padding: 0px 6px;
   margin: 0px 6px;
   min-width: 12px !important;
@@ -469,6 +473,7 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
+
 /*** item - uninstalled ***/
 
 .addon[status="uninstalled"] {
@@ -479,7 +484,7 @@
   -moz-box-align: center;
   padding: 4px 20px;
   background-color: #FDFFA8;
-  -moz-border-radius: 8px;
+  border-radius: 8px;
   font-size: 120%;
 }
 
@@ -505,7 +510,7 @@
   -moz-appearance: none;
   padding: 0px 6px;
   margin: 0px 3px;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
 }
 
 .search-filter-radio[selected] {
@@ -597,7 +602,7 @@
 }
 
 #detail-contributions {
-  -moz-border-radius: 5px;
+  border-radius: 5px;
   border: 1px solid #B0C8D1;
   margin-bottom: 2em;
   padding: 1em;
@@ -618,7 +623,7 @@
   color: #FFF;
   text-shadow: #4C9EF8 -1px -1px 1px;
   border: 1px solid #4C9EF8;
-  -moz-border-radius: 2px;
+  border-radius: 2px;
   background-image: -moz-linear-gradient(#93C5FA, #4C9EF8);
   list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
 }
@@ -689,7 +694,7 @@
 
 .download-progress {
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: 1px solid #555;
   -moz-box-shadow: #777 1px 1px 2px;
   width: 200px;
@@ -714,12 +719,12 @@
 
 .download-progress .start-cap:-moz-locale-dir(ltr),
 .download-progress .end-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 10000px 0 0 10000px;
+  border-radius: 10000px 0 0 10000px;
 }
 
 .download-progress .end-cap:-moz-locale-dir(ltr),
 .download-progress .start-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 0 10000px 10000px 0;
+  border-radius: 0 10000px 10000px 0;
 }
 
 .download-progress .progress {
@@ -737,7 +742,7 @@
   border-style: solid;
   -moz-border-top-colors: #FFF;
   -moz-border-left-colors: #FFF;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   min-width: 16px;
   width: 16px;
   height: 16px;
@@ -774,6 +779,10 @@
 #updates-installed, #updates-downloaded {
   color: #00BB00;
   font-weight: bold;
+}
+
+#update-selected {
+  margin: 12px;
 }
 
 

@@ -39,6 +39,7 @@
 
 // Load DownloadUtils module for convertByteUnits
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -170,6 +171,17 @@ var gAdvancedPane = {
     } catch (e) { }
   },
 
+  /**
+   * When the user toggles the layers.accelerate-none pref,
+   * sync its new value to the gfx.direct2d.disabled pref too.
+   */
+  updateHardwareAcceleration: function()
+  {
+#ifdef XP_WIN
+    var pref = document.getElementById("layers.accelerate-none");
+    Services.prefs.setBoolPref("gfx.direct2d.disabled", !pref.value);
+#endif
+  },
 
   // NETWORK TAB
 

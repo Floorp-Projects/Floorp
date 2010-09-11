@@ -66,6 +66,7 @@
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNavigatorGeolocation.h"
+#include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
@@ -486,6 +487,10 @@ public:
                                     const nsAString &aPopupWindowName,
                                     const nsAString &aPopupWindowFeatures);
 
+  virtual PRUint32 GetSerial() {
+    return mSerial;
+  }
+
 protected:
   // Object Management
   virtual ~nsGlobalWindow();
@@ -837,9 +842,10 @@ protected:
   // the method that was used to focus mFocusedNode
   PRUint32 mFocusMethod;
 
+  PRUint32 mSerial;
+
 #ifdef DEBUG
   PRBool mSetOpenerWindowCalled;
-  PRUint32 mSerial;
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
@@ -924,7 +930,8 @@ protected:
 
 class nsNavigator : public nsIDOMNavigator,
                     public nsIDOMClientInformation,
-                    public nsIDOMNavigatorGeolocation
+                    public nsIDOMNavigatorGeolocation,
+                    public nsIDOMNavigatorDesktopNotification
 {
 public:
   nsNavigator(nsIDocShell *aDocShell);
@@ -934,6 +941,7 @@ public:
   NS_DECL_NSIDOMNAVIGATOR
   NS_DECL_NSIDOMCLIENTINFORMATION
   NS_DECL_NSIDOMNAVIGATORGEOLOCATION
+  NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
   
   void SetDocShell(nsIDocShell *aDocShell);
   nsIDocShell *GetDocShell()

@@ -12,11 +12,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/common.js" />
+          src="../common.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/role.js" />
+          src="../role.js" />
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/states.js" />
+          src="../states.js" />
 
   <script type="application/javascript">
   <![CDATA[

@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -117,11 +117,11 @@ extern "C" {
 #define VPX_PLANE_V      2   /**< V (Chroma) plane */
 #define VPX_PLANE_ALPHA  3   /**< A (Transparancy) plane */
 #if !defined(VPX_CODEC_DISABLE_COMPAT) || !VPX_CODEC_DISABLE_COMPAT
-#define PLANE_PACKED     VPX_PLANE_PACKED 
+#define PLANE_PACKED     VPX_PLANE_PACKED
 #define PLANE_Y          VPX_PLANE_Y
 #define PLANE_U          VPX_PLANE_U
 #define PLANE_V          VPX_PLANE_V
-#define PLANE_ALPHA      VPX_PLANE_ALPHA 
+#define PLANE_ALPHA      VPX_PLANE_ALPHA
 #endif
         unsigned char *planes[4];  /**< pointer to the top left pixel for each plane */
         int      stride[4];  /**< stride between rows for each plane */

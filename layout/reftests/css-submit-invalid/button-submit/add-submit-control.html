@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <head>
+    <style>
+      :-moz-submit-invalid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.forms[0].appendChild(document.getElementById('b'));
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <button id='b' type='submit'></button>
+    <form>
+      <input required>
+    </form>
+  </body>
+</html>

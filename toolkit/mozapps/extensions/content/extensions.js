@@ -884,10 +884,10 @@ var gViewController = {
       isEnabled: function(aAddon) {
         if (!aAddon)
           return false;
-        return ("contributeURL" in aAddon && aAddon.contributeURL);
+        return ("contributionURL" in aAddon && aAddon.contributionURL);
       },
       doCommand: function(aAddon) {
-        openURL(aAddon.contributeURL);
+        openURL(aAddon.contributionURL);
       }
     }
   },
@@ -1741,7 +1741,7 @@ var gDetailView = {
                                               : aAddon.description;
 
     var contributions = document.getElementById("detail-contributions");
-    if ("contributeURL" in aAddon && aAddon.contributeURL) {
+    if ("contributionURL" in aAddon && aAddon.contributionURL) {
       contributions.hidden = false;
       var amount = document.getElementById("detail-contrib-suggested");
       amount.value = gStrings.ext.formatStringFromName("contributionAmount",
@@ -2008,6 +2008,7 @@ var gUpdatesView = {
   _listBox: null,
   _emptyNotice: null,
   _sorters: null,
+  _updateSelected: null,
   _updatePrefs: null,
   _backgroundUpdateCheck: null,
   _categoryItem: null,
@@ -2022,6 +2023,11 @@ var gUpdatesView = {
 
     this._backgroundUpdateCheck = document.getElementById("utils-backgroudUpdateCheck");
     this._categoryItem = gCategories.get("addons://updates/available");
+
+    this._updateSelected = document.getElementById("update-selected");
+    this._updateSelected.addEventListener("command", function() {
+      gUpdatesView.installSelected();
+    }, false);
 
     this._updatePrefs = Services.prefs.getBranch("extensions.update.");
     this._updatePrefs.QueryInterface(Ci.nsIPrefBranch2);
@@ -2049,6 +2055,7 @@ var gUpdatesView = {
     while (this._listBox.itemCount > 0)
       this._listBox.removeItemAt(0);
 
+    this.node.setAttribute("updatetype", aType);
     if (aType == "recent")
       this._showRecentUpdates(aRequest);
     else
@@ -2056,7 +2063,7 @@ var gUpdatesView = {
   },
 
   hide: function() {
-    // do nothing
+    this._updateSelected.hidden = true;
   },
 
   _showRecentUpdates: function(aRequest) {
@@ -2084,12 +2091,20 @@ var gUpdatesView = {
   },
 
   _showAvailableUpdates: function(aIsRefresh, aRequest) {
+    /* Disable the Update Selected button so it can't get clicked
+       before everything is initialized asynchronously.
+       It will get re-enabled by maybeDisableUpdateSelected(). */
+    this._updateSelected.disabled = true;
+
     var self = this;
     AddonManager.getAllInstalls(function(aInstallsList) {
       if (!aIsRefresh && gViewController && aRequest != gViewController.currentViewRequest)
         return;
 
       if (aIsRefresh) {
+        self.showEmptyNotice(false);
+        self._updateSelected.hidden = true;
+
         while (self._listBox.itemCount > 0)
           self._listBox.removeItemAt(0);
       }
@@ -2100,19 +2115,23 @@ var gUpdatesView = {
 
         let item = createItem(aInstall.existingAddon);
         item.setAttribute("upgrade", true);
+        item.addEventListener("IncludeUpdateChanged", function() {
+          self.maybeDisableUpdateSelected();
+        }, false);
         self._listBox.appendChild(item);
       });
 
-      if (self._listBox.itemCount > 0)
+      if (self._listBox.itemCount > 0) {
+        self._updateSelected.hidden = false;
         self.onSortChanged(self._sorters.sortBy, self._sorters.ascending);
-      else
+      } else {
         self.showEmptyNotice(true);
+      }
 
       // ensure badge count is in sync
       self._categoryItem.badgeCount = self._listBox.itemCount;
 
-      if (!aIsRefresh)
-        gViewController.notifyViewChanged();
+      gViewController.notifyViewChanged();
     });
   },
 
@@ -2184,6 +2203,30 @@ var gUpdatesView = {
       if (aInitializing)
         notifyInitialized();
     });
+  },
+  
+  maybeDisableUpdateSelected: function() {
+    for (let i = 0; i < this._listBox.childNodes.length; i++) {
+      let item = this._listBox.childNodes[i];
+      if (item.includeUpdate) {
+        this._updateSelected.disabled = false;
+        return;
+      }
+    }
+    this._updateSelected.disabled = true;
+  },
+
+  installSelected: function() {
+    /* Starting the update of one item will refresh the list,
+       which can cause problems while we're iterating over it.
+       So we update only after we've finished iterating over the list. */
+    var toUpgrade = [];
+    for (let i = 0; i < this._listBox.childNodes.length; i++) {
+      let item = this._listBox.childNodes[i];
+      if (item.includeUpdate)
+        toUpgrade.push(item);
+    }
+    toUpgrade.forEach(function(aItem) aItem.upgrade());
   },
 
   getSelectedAddon: function() {

@@ -376,7 +376,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     // Clip children to the child root frame's rectangle
     rv = aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(aBuilder, this, this, &childItems,
+        new (aBuilder) nsDisplayClip(aBuilder, this, &childItems,
                                      subdocBoundsInParentUnits));
   }
   // delete childItems in case of OOM

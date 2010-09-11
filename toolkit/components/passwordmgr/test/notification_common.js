@@ -1,53 +1,54 @@
 /*
- *  getNotificationBox
+ * getPopupNotifications
  *
- * Fetches the notification box for the specified window.
+ * Fetches the popup notification for the specified window.
  */
-function getNotificationBox(aWindow) {
-    var chromeWin = aWindow
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShellTreeItem)
-                        .rootTreeItem
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindow)
-                        .QueryInterface(Ci.nsIDOMChromeWindow);
+function getPopupNotifications(aWindow) {
+    var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShell)
+                           .chromeEventHandler.ownerDocument.defaultView;
 
-    // Don't need .wrappedJSObject here, unlike when chrome does this.
-    var notifyBox = chromeWin.getNotificationBox(aWindow);
-    return notifyBox;
+    var popupNotifications = chromeWin.PopupNotifications;
+    return popupNotifications;
 }
 
 
 /*
- * getNotificationBar
+ * getPopup
  *
  */
-function getNotificationBar(aBox, aKind) {
-    ok(true, "Looking for " + aKind + " notification bar");
-    // Sometimes callers wants a bar, sometimes not. Allow 0 or 1, but not 2+.
-    ok(aBox.allNotifications.length <= 1, "Checking for multiple notifications");
-    return aBox.getNotificationWithValue(aKind);
+function getPopup(aPopupNote, aKind) {
+    ok(true, "Looking for " + aKind + " popup notification");
+    return aPopupNote.getNotification(aKind);
 }
 
 
 /*
- * clickNotificationButton
+ * clickPopupButton
  *
- * Clicks the specified notification button.
+ * Clicks the specified popup notification button.
  */
-function clickNotificationButton(aBar, aButtonIndex) {
-    // This is a bit of a hack. The notification doesn't have an API to
-    // trigger buttons, so we dive down into the implementation and twiddle
-    // the buttons directly.
-    var button = aBar.getElementsByTagName("button").item(aButtonIndex);
-    ok(button, "Got button " + aButtonIndex);
-    button.doCommand();
+function clickPopupButton(aPopup, aButtonIndex) {
+    ok(true, "Looking for action at index " + aButtonIndex);
+
+    var notifications = aPopup.owner.panel.childNodes;
+    ok(notifications.length > 0, "at least one notification displayed");
+    ok(true, notifications.length + " notifications");
+    var notification = notifications[0];
+
+    if (aButtonIndex == 0) {
+        ok(true, "Triggering main action");
+        notification.button.doCommand();
+    } else if (aButtonIndex <= aPopup.secondaryActions.length) {
+        var index = aButtonIndex - 1;
+        ok(true, "Triggering secondary action " + index);
+        notification.childNodes[index].doCommand();
+    }
 }
 
 const kRememberButton = 0;
 const kNeverButton = 1;
-const kNotNowButton = 2;
 
 const kChangeButton = 0;
 const kDontChangeButton = 1;

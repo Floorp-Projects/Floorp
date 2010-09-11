@@ -221,6 +221,9 @@ private:
                                 void *value);
 
     virtual bool HasRequiredFunctions();
+    virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
+    virtual nsresult NotifyPainted(NPP instance);
+    virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error);

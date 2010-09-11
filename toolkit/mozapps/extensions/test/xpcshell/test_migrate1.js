@@ -92,27 +92,13 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir(addon1, dest);
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir(addon2, dest);
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir(addon3, dest);
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir(addon4, dest);
-  dest = profileDir.clone();
-  dest.append("addon5@tests.mozilla.org");
-  writeInstallRDFToDir(addon5, dest);
-  dest = profileDir.clone();
-  dest.append("theme1@tests.mozilla.org");
-  writeInstallRDFToDir(theme1, dest);
-  dest = profileDir.clone();
-  dest.append("theme2@tests.mozilla.org");
-  writeInstallRDFToDir(theme2, dest);
+  writeInstallRDFForExtension(addon1, profileDir);
+  writeInstallRDFForExtension(addon2, profileDir);
+  writeInstallRDFForExtension(addon3, profileDir);
+  writeInstallRDFForExtension(addon4, profileDir);
+  writeInstallRDFForExtension(addon5, profileDir);
+  writeInstallRDFForExtension(theme1, profileDir);
+  writeInstallRDFForExtension(theme2, profileDir);
 
   let old = do_get_file("data/test_migrate.rdf");
   old.copyTo(gProfD, "extensions.rdf");

@@ -71,12 +71,15 @@ public:
 
   // returns a non-owning ref!
   static TransactionThreadPool* GetOrCreate();
+  static TransactionThreadPool* Get();
   static void Shutdown();
 
   nsresult Dispatch(IDBTransaction* aTransaction,
                     nsIRunnable* aRunnable,
                     bool aFinish,
                     nsIRunnable* aFinishRunnable);
+
+  void WaitForAllTransactionsToComplete(IDBDatabase* aDatabase);
 
 protected:
   class TransactionQueue : public nsIRunnable

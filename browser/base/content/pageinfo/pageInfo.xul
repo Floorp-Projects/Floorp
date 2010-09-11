@@ -89,11 +89,13 @@
     <command id="cmd_cookieDef"     oncommand="onCheckboxClick('cookie');"/>
     <command id="cmd_installDef"    oncommand="onCheckboxClick('install');"/>
     <command id="cmd_geoDef"        oncommand="onCheckboxClick('geo');"/>
+    <command id="cmd_indexedDBDef"  oncommand="onCheckboxClick('indexedDB');"/>
     <command id="cmd_imageToggle"   oncommand="onRadioClick('image');"/>
     <command id="cmd_popupToggle"   oncommand="onRadioClick('popup');"/>
     <command id="cmd_cookieToggle"  oncommand="onRadioClick('cookie');"/>
     <command id="cmd_installToggle" oncommand="onRadioClick('install');"/>
     <command id="cmd_geoToggle"     oncommand="onRadioClick('geo');"/>
+    <command id="cmd_indexedDBToggle" oncommand="onRadioClick('indexedDB');"/>
   </commandset>
 
   <keyset>
@@ -372,6 +374,23 @@
             <radiogroup id="geoRadioGroup" orient="horizontal">
               <radio id="geo#1" command="cmd_geoToggle" label="&permAllow;"/>
               <radio id="geo#2" command="cmd_geoToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox class="permission">
+          <label class="permissionLabel" id="permIndexedDBLabel"
+                 value="&permIndexedDB;" control="indexedDBRadioGroup"/>
+          <hbox role="group" aria-labelledby="permIndexedDBLabel">
+            <checkbox id="indexedDBDef" command="cmd_indexedDBDef" label="&permAskAlways;"/>
+            <spacer flex="1"/>
+            <vbox pack="center">
+              <label id="indexedDBStatus" control="indexedDBClear"/>
+            </vbox>
+            <button id="indexedDBClear" label="&permClearStorage;"
+                    accesskey="&permClearStorage.accesskey;" onclick="onIndexedDBClear();"/>
+            <radiogroup id="indexedDBRadioGroup" orient="horizontal">
+              <radio id="indexedDB#1" command="cmd_indexedDBToggle" label="&permAllow;"/>
+              <radio id="indexedDB#2" command="cmd_indexedDBToggle" label="&permBlock;"/>
             </radiogroup>
           </hbox>
         </vbox>

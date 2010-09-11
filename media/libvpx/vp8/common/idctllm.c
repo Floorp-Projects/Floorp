@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -104,23 +104,30 @@ void vp8_short_idct4x4llm_1_c(short *input, short *output, int pitch)
     }
 }
 
-
-void vp8_dc_only_idct_c(short input_dc, short *output, int pitch)
+void vp8_dc_only_idct_add_c(short input_dc, unsigned char *pred_ptr, unsigned char *dst_ptr, int pitch, int stride)
 {
-    int i;
-    int a1;
-    short *op = output;
-    int shortpitch = pitch >> 1;
-    a1 = ((input_dc + 4) >> 3);
+    int a1 = ((input_dc + 4) >> 3);
+    int r, c;
 
-    for (i = 0; i < 4; i++)
+    for (r = 0; r < 4; r++)
     {
-        op[0] = a1;
-        op[1] = a1;
-        op[2] = a1;
-        op[3] = a1;
-        op += shortpitch;
+        for (c = 0; c < 4; c++)
+        {
+            int a = a1 + pred_ptr[c] ;
+
+            if (a < 0)
+                a = 0;
+
+            if (a > 255)
+                a = 255;
+
+            dst_ptr[c] = (unsigned char) a ;
+        }
+
+        dst_ptr += stride;
+        pred_ptr += pitch;
     }
+
 }
 
 void vp8_short_inv_walsh4x4_c(short *input, short *output)

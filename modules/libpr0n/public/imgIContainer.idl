@@ -56,17 +56,6 @@ interface imgIDecoderObserver;
 #include "limits.h"
 
 class nsIFrame;
-
-namespace mozilla  {
-namespace imagelib {
-  /**
-   * A sentinel value that can be passed to various imagelib methods
-   * to represent "the full image space".
-   */
-  static const nsIntRect kFullImageSpaceRect(0, 0, INT_MAX, INT_MAX);
-}
-}
-
 %}
 
 [ptr] native gfxImageSurface(gfxImageSurface);

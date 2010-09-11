@@ -344,7 +344,9 @@ void nsStylePadding::RecalcData()
 {
   if (IsFixedData(mPadding, PR_FALSE)) {
     NS_FOR_CSS_SIDES(side) {
-      mCachedPadding.side(side) = CalcCoord(mPadding.Get(side), nsnull, 0);
+      // Clamp negative calc() to 0.
+      mCachedPadding.side(side) =
+        NS_MAX(CalcCoord(mPadding.Get(side), nsnull, 0), 0);
     }
     mHasCachedPadding = PR_TRUE;
   }
@@ -628,8 +630,9 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
     mCachedOutlineWidth = 0;
     mHasCachedOutline = PR_TRUE;
   } else if (IsFixedUnit(mOutlineWidth, PR_TRUE)) {
+    // Clamp negative calc() to 0.
     mCachedOutlineWidth =
-      CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3);
+      NS_MAX(CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3), 0);
     mCachedOutlineWidth =
       NS_ROUND_BORDER_TO_PIXELS(mCachedOutlineWidth, mTwipsPerPixel);
     mHasCachedOutline = PR_TRUE;
