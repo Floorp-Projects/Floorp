@@ -123,7 +123,7 @@ statusbarpanel#statusbar-display {
                    0 0 0 1px rgba(255,255,255,.25) inset;
   color: white;
   text-shadow: 0 0 1px rgba(0,0,0,.7),
-               0 1px 2px rgba(0,0,0,.5);
+               0 1px 1.5px rgba(0,0,0,.5);
   font-weight: bold;
   padding: .1em 1.5em .15em;
   margin: 0;
@@ -140,7 +140,7 @@ statusbarpanel#statusbar-display {
                     -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   border-color: rgba(83,42,6,.9);
   -moz-box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
-                   0 0 2px 1px rgba(250,234,169,.7) inset,
+                   0 0 1.5px 1px rgba(250,234,169,.7) inset,
                    0 -1px 0 rgba(250,234,169,.5) inset;
 }
 
@@ -148,7 +148,7 @@ statusbarpanel#statusbar-display {
 #appmenu-button[open] {
   background-image: -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   border-radius: 0;
-  -moz-box-shadow: 0 2px 4px rgba(0,0,0,.4) inset,
+  -moz-box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
                    0 1px 1px rgba(0,0,0,.2) inset;
 }
 
@@ -206,7 +206,7 @@ statusbarpanel#statusbar-display {
   #appmenuSecondaryPane {
     -moz-appearance: none;
     background-color: #f1f5fb;
-    -moz-box-shadow: 1px 0 3px rgb(204,214,234) inset;
+    -moz-box-shadow: 1px 0 2px rgb(204,214,234) inset;
     border: 0;
     padding-top: 5px;
     font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
@@ -486,7 +486,7 @@ menuitem.bookmark-item {
                    0 0 0 2px rgba(255,255,255,.1) inset,
                    0 1px 0 rgba(0,0,0,.15);
   color: black;
-  text-shadow: 0 0 3px white;
+  text-shadow: 0 0 2px white;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
@@ -549,9 +549,9 @@ toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-                   0 0 0 2px rgba(255,255,255,.1) inset,
+                   0 0 0 1.5px rgba(255,255,255,.1) inset,
                    0 1px 0 rgba(0,0,0,.1),
-                   0 0 5px hsl(190,90%,80%);
+                   0 0 3.5px hsl(190,90%,80%);
   -moz-transition: background-color .4s ease-in,
                    border-color .3s ease-in,
                    -moz-box-shadow .3s ease-in;
@@ -565,8 +565,8 @@ toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
 .toolbarbutton-1[open="true"] {
   background-color: transparent;
   border-color: rgba(0,0,0,.65) rgba(0,0,0,.55) rgba(0,0,0,.5);
-  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
-                   0 0 3px rgba(0,0,0,.4) inset,
+  -moz-box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
+                   0 0 2px rgba(0,0,0,.4) inset,
                    0 1px 0 rgba(255,255,255,.4);
   text-shadow: none;
 }
@@ -703,8 +703,8 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]
 }
 
 toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):hover:active {
-  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
-                   0 0 3px rgba(0,0,0,.4) inset,
+  -moz-box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
+                   0 0 2px rgba(0,0,0,.4) inset,
                    0 0 0 1px rgba(0,0,0,.65),
                    0 2px 0 rgba(255,255,255,.4);
 }
@@ -1255,8 +1255,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton:active:hover {
   padding-left: 4px;
   border-left: none;
-  -moz-box-shadow: 0 0 9px rgba(0,0,0,.4) inset,
-                   0 0 3px rgba(0,0,0,.4) inset;
+  -moz-box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
+                   0 0 2px rgba(0,0,0,.4) inset;
 }
 
 #urlbar-go-button {
@@ -2038,7 +2038,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #ctrlTab-panel {
   padding: 20px 10px 10px;
   font-weight: bold;
-  text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 3px rgb(27%,27%,27%);
+  text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 2px rgb(27%,27%,27%);
 }
 
 .ctrlTab-favicon[src] {
@@ -2049,7 +2049,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 .ctrlTab-preview-inner > .tabPreview-canvas {
-  -moz-box-shadow: 1px 1px 3px rgb(12%,12%,12%);
+  -moz-box-shadow: 1px 1px 2px rgb(12%,12%,12%);
 }
 
 .ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner > .tabPreview-canvas {
@@ -2126,7 +2126,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .allTabs-preview-inner > .tabPreview-canvas {
   background-color: rgb(60%,60%,60%);
-  -moz-box-shadow: 0 0 2px ThreeDShadow;
+  -moz-box-shadow: 0 0 1.5px ThreeDShadow;
 }
 
 .allTabs-preview:not(:hover):not([closebuttonhover]) > html|canvas {
