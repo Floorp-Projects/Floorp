@@ -119,7 +119,10 @@ pref("app.update.cert.maxErrors", 5);
 // no update available. This validation will not be performed when using the
 // |app.update.url.override| preference for update checking.
 pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
-pref("app.update.certs.1.commonName", "*.mozilla.org");
+pref("app.update.certs.1.commonName", "aus3.mozilla.org");
+
+pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
+pref("app.update.certs.2.commonName", "aus3.mozilla.org");
 
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
@@ -144,7 +147,7 @@ pref("app.update.mode", 1);
 pref("app.update.silent", false);
 
 // Update service URL:
-pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
 // app.update.url.manual is in branding section
 // app.update.url.details is in branding section
 
