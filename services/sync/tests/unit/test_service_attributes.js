@@ -18,6 +18,7 @@ function test_urlsAndIdentities() {
 
     do_check_true(!!Service.serverURL); // actual value may change
     do_check_eq(Service.clusterURL, "");
+    do_check_eq(Service.userBaseURL, undefined);
     do_check_eq(Service.infoURL, undefined);
     do_check_eq(Service.storageURL, undefined);
     do_check_eq(Service.metaURL, undefined);
@@ -31,6 +32,7 @@ function test_urlsAndIdentities() {
 
     // Since we don't have a cluster URL yet, these will still not be defined.
     do_check_eq(Service.infoURL, undefined);
+    do_check_eq(Service.userBaseURL, undefined);
     do_check_eq(Service.storageURL, undefined);
     do_check_eq(Service.metaURL, undefined);
     do_check_eq(PubKeys.defaultKeyUri, undefined);
@@ -49,6 +51,7 @@ function test_urlsAndIdentities() {
     Service.clusterURL = "http://weave.cluster/";
     do_check_eq(Svc.Prefs.get("clusterURL"), "http://weave.cluster/");
 
+    do_check_eq(Service.userBaseURL, "http://weave.cluster/1.0/johndoe/");
     do_check_eq(Service.infoURL,
                 "http://weave.cluster/1.0/johndoe/info/collections");
     do_check_eq(Service.storageURL,

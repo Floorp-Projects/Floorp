@@ -207,12 +207,12 @@ WeaveSvc.prototype = {
       return;
 
     let storageAPI = this.clusterURL + Svc.Prefs.get("storageAPI") + "/";
-    let userBase = storageAPI + this.username + "/";
-    this._log.debug("Caching URLs under storage user base: " + userBase);
+    this.userBaseURL = storageAPI + this.username + "/";
+    this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
 
     // Generate and cache various URLs under the storage API for this user
-    this.infoURL = userBase + "info/collections";
-    this.storageURL = userBase + "storage/";
+    this.infoURL = this.userBaseURL + "info/collections";
+    this.storageURL = this.userBaseURL + "storage/";
     this.metaURL = this.storageURL + "meta/global";
     PubKeys.defaultKeyUri = this.storageURL + "keys/pubkey";
     PrivKeys.defaultKeyUri = this.storageURL + "keys/privkey";
@@ -1379,7 +1379,7 @@ WeaveSvc.prototype = {
 
     // Make sure we have an up-to-date list of clients before sending commands
     this._log.trace("Refreshing client list");
-    Clients.sync();
+    this._syncEngine(Clients);
 
     // Wipe data in the desired direction if necessary
     switch (Svc.Prefs.get("firstSync")) {
@@ -1408,7 +1408,7 @@ WeaveSvc.prototype = {
       }
       finally {
         // Always immediately push back the local client (now without commands)
-        Clients.sync();
+        this._syncEngine(Clients);
       }
     }
 
@@ -1571,8 +1571,11 @@ WeaveSvc.prototype = {
     if (Utils.checkStatus(resp.status, null, [500, [502, 504]])) {
       Status.enforceBackoff = true;
       if (resp.status == 503 && resp.headers["retry-after"])
-        Svc.Obs.notify("weave:service:backoff:interval", parseInt(resp.headers["retry-after"], 10));
+        Svc.Obs.notify("weave:service:backoff:interval",
+                       parseInt(resp.headers["retry-after"], 10));
     }
+    if (resp.status == 400 && resp == RESPONSE_OVER_QUOTA)
+      Status.sync = OVER_QUOTA;
   },
   /**
    * Return a value for a backoff interval.  Maximum is eight hours, unless
@@ -1801,6 +1804,21 @@ WeaveSvc.prototype = {
     this._log.debug("Sending clients: " + [command, args, commandData.desc]);
     Clients.sendCommand(command, args);
   },
+
+  _getInfo: function _getInfo(what)
+    this._catch(this._notify(what, "", function() {
+      let url = this.userBaseURL + "info/" + what;
+      let response = new Resource(url).get();
+      if (response.status != 200)
+        return null;
+      return response.obj;
+    }))(),
+
+  getCollectionUsage: function getCollectionUsage()
+    this._getInfo("collection_usage"),
+
+  getQuota: function getQuota() this._getInfo("quota")
+
 };
 
 // Load Weave on the first time this file is loaded
