@@ -115,6 +115,16 @@ private:
   const bool mAutoIncrement;
 };
 
+inline
+already_AddRefed<IDBRequest>
+GenerateRequest(IDBCursor* aCursor)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  IDBDatabase* database = aCursor->Transaction()->Database();
+  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aCursor),
+                            database->ScriptContext(), database->Owner());
+}
+
 } // anonymous namespace
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -230,6 +240,10 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
   NS_ASSERTION(aTransaction, "Null pointer!");
 
   nsRefPtr<IDBCursor> cursor(new IDBCursor());
+
+  cursor->mScriptContext = aTransaction->Database()->ScriptContext();
+  cursor->mOwner = aTransaction->Database()->Owner();
+
   cursor->mRequest = aRequest;
   cursor->mTransaction = aTransaction;
   cursor->mDirection = aDirection;
@@ -256,16 +270,38 @@ IDBCursor::~IDBCursor()
   if (mJSRuntime) {
     js_RemoveRoot(mJSRuntime, &mCachedValue);
   }
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
-NS_IMPL_ADDREF(IDBCursor)
-NS_IMPL_RELEASE(IDBCursor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
 
-NS_INTERFACE_MAP_BEGIN(IDBCursor)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBCursor,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mObjectStore,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mIndex,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
+                                                       nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBCursor,
+                                                nsDOMEventTargetHelper)
+  // Don't unlink mObjectStore, mIndex, or mTransaction!
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBCursor)
   NS_INTERFACE_MAP_ENTRY(nsIIDBCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBCursor)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(IDBCursor, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBCursor, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBCursor, IDBCursor)
 
@@ -481,8 +517,7 @@ IDBCursor::Update(const jsval &aValue,
   rv = json->EncodeFromJSVal(clone.jsval_addr(), aCx, jsonValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<UpdateHelper> helper =
@@ -516,8 +551,7 @@ IDBCursor::Remove(nsIIDBRequest** _retval)
   const Key& key = mData[mDataIndex].key;
   NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(mTransaction->ScriptContext(), mTransaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveHelper> helper =
@@ -666,20 +700,24 @@ ContinueRunnable::Run()
     return NS_OK;
   }
 
-  // Remove cached stuff from last time.
-  mCursor->mCachedKey = nsnull;
-  mCursor->mCachedValue = JSVAL_VOID;
-  mCursor->mHaveCachedValue = false;
-  mCursor->mContinueCalled = false;
+  // mCursor must be null after this method finishes. Swap out now.
+  nsRefPtr<IDBCursor> cursor;
+  cursor.swap(mCursor);
 
-  if (mCursor->mType == IDBCursor::INDEX) {
-    mCursor->mKeyData.RemoveElementAt(mCursor->mDataIndex);
+  // Remove cached stuff from last time.
+  cursor->mCachedKey = nsnull;
+  cursor->mCachedValue = JSVAL_VOID;
+  cursor->mHaveCachedValue = false;
+  cursor->mContinueCalled = false;
+
+  if (cursor->mType == IDBCursor::INDEX) {
+    cursor->mKeyData.RemoveElementAt(cursor->mDataIndex);
   }
   else {
-    mCursor->mData.RemoveElementAt(mCursor->mDataIndex);
+    cursor->mData.RemoveElementAt(cursor->mDataIndex);
   }
-  if (mCursor->mDataIndex) {
-    mCursor->mDataIndex--;
+  if (cursor->mDataIndex) {
+    cursor->mDataIndex--;
   }
 
   nsCOMPtr<nsIWritableVariant> variant =
@@ -689,9 +727,9 @@ ContinueRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  PRBool empty = mCursor->mType == IDBCursor::INDEX ?
-                 mCursor->mKeyData.IsEmpty() :
-                 mCursor->mData.IsEmpty();
+  PRBool empty = cursor->mType == IDBCursor::INDEX ?
+                 cursor->mKeyData.IsEmpty() :
+                 cursor->mData.IsEmpty();
 
   if (empty) {
     rv = variant->SetAsEmpty();
@@ -705,11 +743,11 @@ ContinueRunnable::Run()
                  "smarter!");
 
       // Skip ahead to our next key match.
-      PRInt32 index = PRInt32(mCursor->mDataIndex);
+      PRInt32 index = PRInt32(cursor->mDataIndex);
 
-      if (mCursor->mType == IDBCursor::INDEX) {
+      if (cursor->mType == IDBCursor::INDEX) {
         while (index >= 0) {
-          const Key& key = mCursor->mKeyData[index].key;
+          const Key& key = cursor->mKeyData[index].key;
           if (mKey == key) {
             break;
           }
@@ -722,15 +760,15 @@ ContinueRunnable::Run()
         }
 
         if (index >= 0) {
-          mCursor->mDataIndex = PRUint32(index);
-          mCursor->mKeyData.RemoveElementsAt(index + 1,
-                                             mCursor->mKeyData.Length() - index
-                                             - 1);
+          cursor->mDataIndex = PRUint32(index);
+          cursor->mKeyData.RemoveElementsAt(index + 1,
+                                            cursor->mKeyData.Length() - index
+                                            - 1);
         }
       }
       else {
         while (index >= 0) {
-          const Key& key = mCursor->mData[index].key;
+          const Key& key = cursor->mData[index].key;
           if (mKey == key) {
             break;
           }
@@ -743,14 +781,14 @@ ContinueRunnable::Run()
         }
 
         if (index >= 0) {
-          mCursor->mDataIndex = PRUint32(index);
-          mCursor->mData.RemoveElementsAt(index + 1,
-                                          mCursor->mData.Length() - index - 1);
+          cursor->mDataIndex = PRUint32(index);
+          cursor->mData.RemoveElementsAt(index + 1,
+                                         cursor->mData.Length() - index - 1);
         }
       }
     }
 
-    rv = variant->SetAsISupports(static_cast<IDBRequest::Generator*>(mCursor));
+    rv = variant->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -758,18 +796,15 @@ ContinueRunnable::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMEvent> event =
-    IDBSuccessEvent::Create(mCursor->mRequest, variant, mCursor->mTransaction);
+    IDBSuccessEvent::Create(cursor->mRequest, variant, cursor->mTransaction);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return NS_ERROR_FAILURE;
   }
 
   PRBool dummy;
-  mCursor->mRequest->DispatchEvent(event, &dummy);
+  cursor->mRequest->DispatchEvent(event, &dummy);
 
-  mCursor->mTransaction->OnRequestFinished();
-
-  mCursor = nsnull;
-
+  cursor->mTransaction->OnRequestFinished();
   return NS_OK;
 }

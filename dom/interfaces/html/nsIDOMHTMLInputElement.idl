@@ -50,8 +50,8 @@ interface nsIDOMValidityState;
   * For more information on this interface please see
   * http://www.w3.org/TR/DOM-Level-2-HTML/
   */
- 
-[scriptable, uuid(e5079711-e6a9-4d3a-9b62-b4a8ef08fa7d)]
+
+[scriptable, uuid(613c8e19-53b6-4719-8f6b-3c3e33012536)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -71,6 +71,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 
            attribute boolean               indeterminate;
 
+  readonly attribute nsIDOMHTMLElement     list;
            attribute long                  maxLength;
 
            attribute boolean               multiple;

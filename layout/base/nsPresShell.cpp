@@ -5377,7 +5377,7 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             // the selection. If the allocation fails, fall through and delete
             // the item below.
             itemToInsert = new (aBuilder)
-                nsDisplayClip(aBuilder, frame, frame, i, textRect);
+                nsDisplayClip(aBuilder, frame, i, textRect);
           }
         }
         // Don't try to descend into subdocuments.

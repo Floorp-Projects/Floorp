@@ -146,8 +146,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
   <div id="minmaxheight11-2" class="auto"
        style="min-height: 75%; max-height: 40%"></div>
 
-  <div id="radius1" style="-moz-border-radius: 80px"></div>
-  <div id="radius2" style="-moz-border-radius: 10%"></div>
+  <div id="radius1" style="border-radius: 80px"></div>
+  <div id="radius2" style="border-radius: 10%"></div>
   <div id="outlineradius1" style="-moz-outline-radius: 160px"></div>
   <div id="outlineradius2" style="-moz-outline-radius: 20%"></div>
 </div>
@@ -193,8 +193,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
   <div id="minmaxheight4-3" style="min-height: 75%; max-height: 320px"></div>
   <div id="minmaxheight4-4" style="min-height: 75%; max-height: 40%"></div>
 
-  <div id="radius3" style="-moz-border-radius: 80px"></div>
-  <div id="radius4" style="-moz-border-radius: 10%"></div>
+  <div id="radius3" style="border-radius: 80px"></div>
+  <div id="radius4" style="border-radius: 10%"></div>
   <div id="outlineradius3" style="-moz-outline-radius: 160px"></div>
   <div id="outlineradius4" style="-moz-outline-radius: 20%"></div>
 </div>
@@ -206,7 +206,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365932
 document.body.offsetWidth;
 
 doATest("text-indent", "indent", 400, 50);
-doATest("-moz-border-radius-topleft", "radius", 80, 10);
+doATest("border-top-left-radius", "radius", 80, 10);
 doATest("-moz-outline-radius-topleft", "outlineradius", 160, 20);
 
 doATest("width", "widthheight-", 440, 0);

@@ -52,7 +52,7 @@ button {
   border-color: #555555;
   background-color: #eeeeee;
   color: black;
-  -moz-border-radius: 3px 3px;
+  border-radius: 3px 3px;
 }
 
 .button-box {
@@ -82,7 +82,7 @@ button:focus > .button-box {
 button[default="true"] {
   margin: 1px 5px 1px 5px;
   border-width: 2px;
-  -moz-border-radius: 3px 3px;
+  border-radius: 3px 3px;
   border-color: black;
 }
 

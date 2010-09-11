@@ -48,6 +48,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const CATEGORY_UPDATE_TIMER = "update-timer";
 
 const PREF_APP_UPDATE_TIMER = "app.update.timer";
+const PREF_APP_UPDATE_TIMERFIRSTINTERVAL = "app.update.timerFirstInterval";
 const PREF_APP_UPDATE_LOG_ALL = "app.update.log.all";
 const PREF_BRANCH_LAST_UPDATE_TIME = "app.update.lastUpdateTime.";
 
@@ -138,6 +139,7 @@ function run_test() {
 
   // Set the timer to fire every second
   gPref.setIntPref(PREF_APP_UPDATE_TIMER, MAIN_TIMER_INTERVAL);
+  gPref.setIntPref(PREF_APP_UPDATE_TIMERFIRSTINTERVAL, MAIN_TIMER_INTERVAL);
   gPref.setBoolPref(PREF_APP_UPDATE_LOG_ALL, true);
 
   // Remove existing update timers to prevent them from being notified

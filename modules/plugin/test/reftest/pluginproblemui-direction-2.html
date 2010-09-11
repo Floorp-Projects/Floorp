@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Plugin Problem UI directionality test</title>
+  </head>
+  <body dir="rtl" style="text-align: left;">
+    <!-- a variant of pluginproblemui-direction-1.html that covers up
+         the spot where we get random variation with d2d, so that we
+         can still test it with d2d -->
+    <div style="position: absolute; width: 1px; height: 1px; background: red; z-index: 1; left: 401px; top: 19px;"></div>
+    <embed type="application/x-test" width="400" height="400" id="crashme"></embed>
+    <script type="text/javascript">
+      var plugin = document.getElementById("crashme");
+      function checkForCrashUI() {
+        if (getComputedStyle(plugin, null).MozBinding != "none") {
+          document.documentElement.removeAttribute("class");
+          clearInterval(interval);
+        }
+      }
+
+      var interval = setInterval(checkForCrashUI, 100);
+      setTimeout(function() { plugin.crash(); }, 0);
+    </script>
+  </body>
+</html>

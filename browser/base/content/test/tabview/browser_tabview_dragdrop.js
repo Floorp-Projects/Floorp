@@ -52,10 +52,6 @@ function onTabViewWindowLoaded() {
   let [originalTab] = gBrowser.visibleTabs;
 
   // create group one and two
-  let padding = 10;
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
   let boxOne = new contentWindow.Rect(20, 20, 300, 300);
   let groupOne = new contentWindow.GroupItem([], { bounds: boxOne });
   ok(groupOne.isEmpty(), "This group is empty");
@@ -118,7 +114,11 @@ function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
   
     let onTabViewHidden = function() {
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-       groupTwo.closeAll();
+      groupTwo.closeAll();
+      // close undo group
+      let closeButton = groupTwo.$undoContainer.find(".close");
+      EventUtils.sendMouseEvent(
+        { type: "click" }, closeButton[0], contentWindow);
     };
     groupTwo.addSubscriber(groupTwo, "close", function() {
       groupTwo.removeSubscriber(groupTwo, "close");

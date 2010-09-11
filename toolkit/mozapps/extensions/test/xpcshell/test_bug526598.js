@@ -40,8 +40,6 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  const dataDir = do_get_file("data");
-
   startupManager();
 
   installAllFiles([do_get_file("data/test_bug526598_1.xpi"),

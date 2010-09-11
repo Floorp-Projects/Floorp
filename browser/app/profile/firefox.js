@@ -395,11 +395,9 @@ pref("browser.bookmarks.max_backups",             10);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
-#ifdef DEBUG
 pref("javascript.options.showInConsole",          true);
+#ifdef DEBUG
 pref("general.warnOnAboutConfig",                 false);
-#else
-pref("javascript.options.showInConsole",          false);
 #endif
 
 #ifdef WINCE
@@ -782,6 +780,8 @@ pref("browser.sessionstore.postdata", 0);
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
 pref("browser.sessionstore.privacy_level", 1);
+// the same as browser.sessionstore.privacy_level, but for saving deferred session data
+pref("browser.sessionstore.privacy_level_deferred", 2);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
 // how many windows can be reopened (per session) - on non-OS X platforms this
@@ -1030,3 +1030,9 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
+
+// Disable the Error Console
+pref("devtools.errorconsole.enabled", false);
+
+// disable the Inspector
+pref("devtools.inspector.enabled", false);

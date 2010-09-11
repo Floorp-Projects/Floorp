@@ -1144,7 +1144,9 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
     nsDisplayList* subList = i->GetList();
     if (subList) {
       PruneDisplayListForExtraPage(aBuilder, aExtraPage, aY, subList);
-      if (i->GetType() == nsDisplayItem::TYPE_CLIP) {
+      nsDisplayItem::Type type = i->GetType();
+      if (type == nsDisplayItem::TYPE_CLIP ||
+          type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
         // This might clip an element which should appear on the first
         // page, and that element might be visible if this uses a 'clip'
         // property with a negative top.
@@ -3262,14 +3264,13 @@ nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
 
 static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
 {
-  switch (aCoord.GetUnit()) {
-  case eStyleUnit_Percent:
-    return aCoord.GetPercentValue() > 0;
-  case eStyleUnit_Coord:
-    return aCoord.GetCoordValue() > 0;
-  default:
-    return PR_TRUE;
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    // Since negative results are clamped to 0, check > 0.
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) > 0 ||
+           nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) > 0;
   }
+
+  return PR_TRUE;
 }
 
 /* static */ PRBool

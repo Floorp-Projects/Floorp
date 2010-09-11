@@ -235,8 +235,8 @@ public:
     return nsnull;
   }
 
-  nsIContent* GetTriggerContent() { return mTriggerContent; }
-  void SetTriggerContent(nsIContent* aTriggerContent) { mTriggerContent = aTriggerContent; }
+  static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
+  void ClearTriggerContent() { mTriggerContent = nsnull; }
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell

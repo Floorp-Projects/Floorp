@@ -375,6 +375,27 @@ XRE_API(nsresult,
                                   nsILocalFile* aLocation))
 
 /**
+ * Register XPCOM components found in a JAR.
+ * This is similar to XRE_AddManifestLocation except the file specified
+ * must be a zip archive with a manifest named chrome.manifest
+ * This method may be called at any time before or after XRE_main or
+ * XRE_InitEmbedding.
+ *
+ * @param aFiles An array of files or directories.
+ * @param aFileCount the number of items in the aFiles array.
+ * @note appdir/components is registered automatically.
+ *
+ * NS_COMPONENT_LOCATION specifies a location to search for binary XPCOM
+ * components as well as component/chrome manifest files.
+ *
+ * NS_SKIN_LOCATION specifies a location to search for chrome manifest files
+ * which are only allowed to register only skin packages and style overlays.
+ */
+XRE_API(nsresult,
+        XRE_AddJarManifestLocation, (NSLocationType aType,
+                                     nsILocalFile* aLocation))
+
+/**
  * Fire notifications to inform the toolkit about a new profile. This
  * method should be called after XRE_InitEmbedding if the embedder
  * wishes to run with a profile. Normally the embedder should call

@@ -170,7 +170,7 @@ code {
 .nodeCloseLabel {
   margin: -2px 2px 0 2px;
   border: 2px solid transparent;
-  -moz-border-radius: 3px;
+  border-radius: 3px;
   padding: 0 2px;
   color: #000088;
 }

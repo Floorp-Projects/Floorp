@@ -163,9 +163,13 @@ SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 PRBool
 SVGDocumentWrapper::IsAnimated()
 {
+#ifdef MOZ_SMIL
   nsIDocument* doc = mViewer->GetDocument();
   return doc && doc->HasAnimationController() &&
     doc->GetAnimationController()->HasRegisteredAnimations();
+#else
+  return PR_FALSE;
+#endif // MOZ_SMIL
 }
 
 void

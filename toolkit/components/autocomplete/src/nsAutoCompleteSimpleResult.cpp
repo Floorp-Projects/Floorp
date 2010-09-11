@@ -153,6 +153,12 @@ nsAutoCompleteSimpleResult::GetValueAt(PRInt32 aIndex, nsAString& _retval)
 }
 
 NS_IMETHODIMP
+nsAutoCompleteSimpleResult::GetLabelAt(PRInt32 aIndex, nsAString& _retval)
+{
+  return GetValueAt(aIndex, _retval);
+}
+
+NS_IMETHODIMP
 nsAutoCompleteSimpleResult::GetCommentAt(PRInt32 aIndex, nsAString& _retval)
 {
   NS_ENSURE_TRUE(aIndex >= 0 && aIndex < PRInt32(mComments.Length()),

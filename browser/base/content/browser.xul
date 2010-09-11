@@ -120,11 +120,11 @@
                 accesskey="&openTabInNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
-      <menuitem id="context_pinTab" label="&pinTab.label;"
-                accesskey="&pinTab.accesskey;"
+      <menuitem id="context_pinTab" label="&pinAppTab.label;"
+                accesskey="&pinAppTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
-                accesskey="&unpinTab.accesskey;"
+      <menuitem id="context_unpinTab" label="&unpinAppTab.label;" hidden="true"
+                accesskey="&unpinAppTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
@@ -268,12 +268,7 @@
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
-      <iframe id="inspector-tree-iframe"
-               flex="1"
-               type="content"
-               src="chrome://browser/content/inspector.html"
-               onclick="InspectorUI.onTreeClick(event);" />
-      <hbox align="end">
+      <hbox id="tree-panel-resizer-box" align="end">
         <spacer flex="1" />
         <resizer dir="bottomend" />
       </hbox>
@@ -451,8 +446,8 @@
         <vbox id="appmenuPrimaryPane">
           <hbox flex="1"
                 class="split-menuitem">
-            <menuitem id="menuitem-tooltip appmenu_newTab"
-                      class="split-menuitem-item"
+            <menuitem id="appmenu_newTab"
+                      class="menuitem-tooltip split-menuitem-item"
                       flex="1"
                       label="&tabCmd.label;"
                       command="cmd_newNavigatorTab"
@@ -483,9 +478,9 @@
                     command="Tools:PrivateBrowsing"
                     key="key_privatebrowsing"/>
           <menuseparator class="appmenu-menuseparator"/>
-          <hbox class="split-menuitem">
-            <menuitem id="appmenu-edit-menuitem"
-                      label="&editMenu.label;"
+          <hbox>
+            <menuitem id="appmenu-edit-label"
+                      label="&appMenuEdit.label;"
                       disabled="true"/>
             <toolbarbutton id="appmenu-cut"
                            class="appmenu-edit-button"
@@ -530,7 +525,8 @@
                 <menuitem id="appmenu_print_popup"
                           class="menuitem-iconic"
                           label="&printCmd.label;"
-                          command="cmd_print"/>
+                          command="cmd_print"
+                          key="printKb"/>
                 <menuitem id="appmenu_printPreview"
                           label="&printPreviewCmd.label;"
                           command="cmd_printPreview"/>
@@ -550,6 +546,7 @@
                         oncommand="HUDConsoleUI.toggleHUD();"
                         key="key_webConsole"/>
               <menuitem id="appmenu_pageInspect"
+                        hidden="true"
                         label="&inspectMenu.label;"
                         type="checkbox"
                         command="Tools:Inspect"
@@ -670,6 +667,11 @@
                           key="key_sanitize"
                           command="Tools:Sanitize"/>
                 <menuseparator class="hide-if-empty-places-result"/>
+                <menuitem id="appmenu_restoreLastSession"
+                          class="restoreLastSession"
+                          label="&historyRestoreLastSession.label;"
+                          oncommand="restoreLastSession();"
+                          disabled="true"/>
                 <menu id="appmenu_recentlyClosedTabsMenu"
                       class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"
@@ -879,6 +881,8 @@
           <box id="notification-popup-box" hidden="true" align="center">
             <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
@@ -886,14 +890,14 @@
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
                onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
-               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
+               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
+               ondragstart="gIdentityHandler.onDragStart(event);">
             <hbox id="identity-box-inner" align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        pageproxystate="invalid"
-                       ondragstart="proxyIconDNDObserver.onDragStart(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
               <hbox id="identity-icon-labels">

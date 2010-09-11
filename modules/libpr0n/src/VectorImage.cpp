@@ -242,7 +242,7 @@ VectorImage::Init(imgIDecoderObserver* aObserver,
 void
 VectorImage::GetCurrentFrameRect(nsIntRect& aRect)
 {
-  aRect = kFullImageSpaceRect;
+  aRect = nsIntRect::GetMaxSizedIntRect();
 }
 
 PRUint32
@@ -646,7 +646,7 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
     // NOTE: This signals that width/height are available.
     observer->OnStartContainer(nsnull, this);
 
-    observer->FrameChanged(this, &kFullImageSpaceRect);
+    observer->FrameChanged(this, &nsIntRect::GetMaxSizedIntRect());
     observer->OnStopFrame(nsnull, 0);
     observer->OnStopDecode(nsnull, NS_OK, nsnull);
   }
@@ -678,7 +678,7 @@ VectorImage::InvalidateObserver()
 {
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
   if (observer) {
-    observer->FrameChanged(this, &kFullImageSpaceRect);
+    observer->FrameChanged(this, &nsIntRect::GetMaxSizedIntRect());
   }
 }
 
