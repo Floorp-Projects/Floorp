@@ -70,6 +70,7 @@
 
 #include "nsEventDispatcher.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsMediaError.h"
 #include "nsICategoryManager.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -191,10 +192,11 @@ class nsAsyncEventRunner : public nsMediaEvent
 {
 private:
   nsString mName;
+  PRPackedBool mProgress;
 
 public:
-  nsAsyncEventRunner(const nsAString& aName, nsHTMLMediaElement* aElement) :
-    nsMediaEvent(aElement), mName(aName)
+  nsAsyncEventRunner(const nsAString& aName, nsHTMLMediaElement* aElement, PRBool aProgress) :
+    nsMediaEvent(aElement), mName(aName), mProgress(aProgress)
   {
   }
 
@@ -204,7 +206,9 @@ public:
     if (IsCancelled())
       return NS_OK;
 
-    return mElement->DispatchEvent(mName);
+    return mProgress ?
+      mElement->DispatchProgressEvent(mName) :
+      mElement->DispatchSimpleEvent(mName);
   }
 };
 
@@ -486,7 +490,7 @@ void nsHTMLMediaElement::AbortExistingLoads()
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING ||
       mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE)
   {
-    DispatchEvent(NS_LITERAL_STRING("abort"));
+    DispatchProgressEvent(NS_LITERAL_STRING("abort"));
   }
 
   mError = nsnull;
@@ -509,9 +513,9 @@ void nsHTMLMediaElement::AbortExistingLoads()
       // will now be reported as 0. The playback position was non-zero when
       // we destroyed the decoder, so fire a timeupdate event so that the
       // change will be reflected in the controls.
-      DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
     }
-    DispatchEvent(NS_LITERAL_STRING("emptied"));
+    DispatchSimpleEvent(NS_LITERAL_STRING("emptied"));
   }
 
   // We may have changed mPaused, mAutoplaying, mNetworkState and other
@@ -527,7 +531,7 @@ void nsHTMLMediaElement::NoSupportedMediaSourceError()
 
   mError = new nsMediaError(nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
-  DispatchAsyncEvent(NS_LITERAL_STRING("error"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
   // This clears mDelayingLoadEvent, so AddRemoveSelfReference will be called
   ChangeDelayLoadStatus(PR_FALSE);
 }
@@ -645,7 +649,7 @@ void nsHTMLMediaElement::SelectResource()
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
   // Load event was delayed, and still is, so no need to call
   // AddRemoveSelfReference, since it must still be held
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
 
   nsAutoString src;
   nsCOMPtr<nsIURI> uri;
@@ -797,7 +801,7 @@ void nsHTMLMediaElement::SuspendLoad(nsIURI* aURI)
 {
   mLoadIsSuspended = PR_TRUE;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
-  DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("suspend"));
   ChangeDelayLoadStatus(PR_FALSE);
 }
 
@@ -1033,7 +1037,7 @@ nsresult nsHTMLMediaElement::LoadWithChannel(nsIChannel *aChannel,
     return rv;
   }
 
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
 }
@@ -1057,7 +1061,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MozLoadFrom(nsIDOMHTMLMediaElement* aOther)
     return rv;
   }
 
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadstart"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("loadstart"));
 
   return NS_OK;
 }
@@ -1157,8 +1161,8 @@ NS_IMETHODIMP nsHTMLMediaElement::Pause()
   AddRemoveSelfReference();
 
   if (!oldPaused) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
-    DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("pause"));
   }
 
   return NS_OK;
@@ -1188,7 +1192,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetVolume(float aVolume)
     mAudioStream->SetVolume(mVolume);
   }
 
-  DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("volumechange"));
 
   return NS_OK;
 }
@@ -1258,7 +1262,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
     mAudioStream->SetVolume(mMuted ? 0.0 : mVolume);
   }
 
-  DispatchAsyncEvent(NS_LITERAL_STRING("volumechange"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("volumechange"));
 
   return NS_OK;
 }
@@ -1381,15 +1385,15 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
   // seek to the effective start.
   // TODO: The playback rate must be set to the default playback rate.
   if (mPaused) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("play"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
     switch (mReadyState) {
     case nsIDOMHTMLMediaElement::HAVE_METADATA:
     case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
-      DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
       break;
     case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
     case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
-      DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
       break;
     }
   }
@@ -1945,8 +1949,8 @@ void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
   mChannels = aChannels;
   mRate = aRate;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
-  DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("durationchange"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
 }
 
 void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
@@ -1972,9 +1976,9 @@ void nsHTMLMediaElement::ResourceLoaded()
   AddRemoveSelfReference();
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
   // Ensure a progress event is dispatched at the end of download.
-  DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
   // The download has stopped.
-  DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("suspend"));
 }
 
 void nsHTMLMediaElement::NetworkError()
@@ -2000,10 +2004,10 @@ void nsHTMLMediaElement::Error(PRUint16 aErrorCode)
                "Only use nsIDOMMediaError codes!");
   mError = new nsMediaError(aErrorCode);
   mBegun = PR_FALSE;
-  DispatchAsyncEvent(NS_LITERAL_STRING("error"));
+  DispatchAsyncProgressEvent(NS_LITERAL_STRING("error"));
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
-    DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("emptied"));
   } else {
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   }
@@ -2017,20 +2021,20 @@ void nsHTMLMediaElement::PlaybackEnded()
   // We changed the state of IsPlaybackEnded which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
 
-  DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("ended"));
 }
 
 void nsHTMLMediaElement::SeekStarted()
 {
-  DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
-  DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeking"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
 }
 
 void nsHTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = PR_FALSE;
   SetPlayedOrSeeked(PR_TRUE);
-  DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeked"));
   // We changed whether we're seeking so we need to AddRemoveSelfReference
   AddRemoveSelfReference();
 }
@@ -2040,7 +2044,7 @@ void nsHTMLMediaElement::DownloadSuspended()
   if (mBegun) {
     mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
     AddRemoveSelfReference();
-    DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("suspend"));
   }
 }
 
@@ -2055,7 +2059,7 @@ void nsHTMLMediaElement::DownloadResumed()
 void nsHTMLMediaElement::DownloadStalled()
 {
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("stalled"));
+    DispatchAsyncProgressEvent(NS_LITERAL_STRING("stalled"));
   }
 }
 
@@ -2078,7 +2082,7 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
   if (aNextFrame != NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     if (!mWaitingFired && aNextFrame == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
-      DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
       mWaitingFired = PR_TRUE;
     }
     return;
@@ -2128,14 +2132,14 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
   if (mPlayingBeforeSeek &&
       oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("waiting"));
   }
 
   if (oldState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
       !mLoadedFirstFrame)
   {
-    DispatchAsyncEvent(NS_LITERAL_STRING("loadeddata"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadeddata"));
     mLoadedFirstFrame = PR_TRUE;
   }
 
@@ -2145,7 +2149,7 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 
   if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplay"));
   }
 
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
@@ -2155,12 +2159,12 @@ void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       IsPotentiallyPlaying()) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("playing"));
   }
 
   if (oldState < nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("canplaythrough"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("canplaythrough"));
   }
 }
 
@@ -2183,7 +2187,7 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
       SetPlayedOrSeeked(PR_TRUE);
       mDecoder->Play();
     }
-    DispatchAsyncEvent(NS_LITERAL_STRING("play"));
+    DispatchAsyncSimpleEvent(NS_LITERAL_STRING("play"));
   }
 }
 
@@ -2240,9 +2244,9 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   return target->DispatchEvent(event, &dummy);
 }
 
-nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
+nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)
 {
-  LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching event %s", this,
+  LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching simple event %s", this,
                           NS_ConvertUTF16toUTF8(aName).get()));
 
   return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
@@ -2252,14 +2256,53 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
                                               PR_TRUE);
 }
 
-nsresult nsHTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
+nsresult nsHTMLMediaElement::DispatchAsyncSimpleEvent(const nsAString& aName)
 {
-  LOG_EVENT(PR_LOG_DEBUG, ("%p Queuing event %s", this,
-            NS_ConvertUTF16toUTF8(aName).get()));
+  LOG_EVENT(PR_LOG_DEBUG, ("%p Queuing simple event %s", this, NS_ConvertUTF16toUTF8(aName).get()));
 
-  nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this);
+  nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this, PR_FALSE);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   return NS_OK;
+}
+
+nsresult nsHTMLMediaElement::DispatchAsyncProgressEvent(const nsAString& aName)
+{
+  LOG_EVENT(PR_LOG_DEBUG, ("%p Queuing progress event %s", this, NS_ConvertUTF16toUTF8(aName).get()));
+
+  nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this, PR_TRUE);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+nsresult nsHTMLMediaElement::DispatchProgressEvent(const nsAString& aName)
+{
+  nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(GetOwnerDoc()));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(static_cast<nsIContent*>(this)));
+  NS_ENSURE_TRUE(docEvent && target, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = docEvent->CreateEvent(NS_LITERAL_STRING("ProgressEvent"), getter_AddRefs(event));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(event));
+  NS_ENSURE_TRUE(progressEvent, NS_ERROR_FAILURE);
+
+  PRInt64 totalBytes = 0;
+  PRUint64 downloadPosition = 0;
+  if (mDecoder) {
+    nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+    totalBytes = stats.mTotalBytes;
+    downloadPosition = stats.mDownloadPosition;
+  }
+  rv = progressEvent->InitProgressEvent(aName, PR_TRUE, PR_TRUE,
+    totalBytes >= 0, downloadPosition, totalBytes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG_EVENT(PR_LOG_DEBUG, ("%p Dispatching progress event %s", this,
+                          NS_ConvertUTF16toUTF8(aName).get()));
+
+  PRBool dummy;
+  return target->DispatchEvent(event, &dummy);
 }
 
 PRBool nsHTMLMediaElement::IsPotentiallyPlaying() const
@@ -2531,9 +2574,7 @@ nsresult nsHTMLMediaElement::GetBuffered(nsIDOMTimeRanges** aBuffered)
   nsTimeRanges* ranges = new nsTimeRanges();
   NS_ADDREF(*aBuffered = ranges);
   if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA && mDecoder) {
-    // If GetBuffered fails we ignore the error result and just return the
-    // time ranges we found up till the error.
-    mDecoder->GetBuffered(ranges);
+    return mDecoder->GetBuffered(ranges);
   }
   return NS_OK;
 }
