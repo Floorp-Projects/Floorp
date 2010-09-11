@@ -441,7 +441,9 @@ pref("browser.search.param.yahoo-fr-ja", "mozff");
 pref("app.update.timer", 60000); // milliseconds (1 min)
 
 #ifdef MOZ_UPDATER
-pref("app.update.auto", true);
+pref("app.update.enabled", true);
+pref("app.update.timerFirstInterval", 20000); // milliseconds
+pref("app.update.auto", false);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 pref("app.update.mode", 1);
 pref("app.update.silent", false);
@@ -451,10 +453,10 @@ pref("app.update.promptWaitTime", 43200);
 pref("app.update.idletime", 60);
 pref("app.update.showInstalledUI", false);
 pref("app.update.incompatible.mode", 0);
+pref("app.update.download.backgroundInterval", 0);
 
 #ifdef MOZ_OFFICIAL_BRANDING
 pref("app.update.interval", 86400);
-pref("app.update.download.backgroundInterval", 600);
 pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
 pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
 #else
