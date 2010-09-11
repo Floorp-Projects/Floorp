@@ -274,7 +274,7 @@
 }
 
 #header-utils-btn[open="true"] {
-  -moz-box-shadow: inset 3px 3px 8px #555;
+  -moz-box-shadow: inset 3px 3px 5.5px #555;
 }
 
 #header-utils-btn:-moz-focusring > .button-box {
@@ -696,7 +696,7 @@
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
   border-radius: 10000px;
   border: 1px solid #555;
-  -moz-box-shadow: #777 1px 1px 2px;
+  -moz-box-shadow: #777 1px 1px 1.5px;
   width: 200px;
   height: 24px;
   margin: 0px 8px;

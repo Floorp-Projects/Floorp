@@ -111,7 +111,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
 		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
 		rgba(255, 255, 255, 1) 0 1px,
-		rgba(133, 153, 166, 0.3) 0px 1px 12px;
+		rgba(133, 153, 166, 0.3) 0px 1px 8.5px;
 	background-color: #e7eaec;
 	//display: inline;
 }
@@ -131,7 +131,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
 		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
 		rgba(255, 255, 255, 1) 0 1px,
-		rgba(133, 153, 166, 0.3) 0px 1px 12px;
+		rgba(133, 153, 166, 0.3) 0px 1px 8.5px;
 	background-color: #e7eaec;
 	//display: inline;
 }
@@ -147,9 +147,9 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/callout.png') no-repeat top center;
 	-moz-box-shadow: 
-		inset rgba(185, 221, 234, 0.2) 0 -10px 12px,
+		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
-		inset rgba(255, 255, 255, 0.2) 0 10px 12px;
+		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
 	//display: inline;
 }
 
@@ -165,9 +165,9 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/callout.png') no-repeat top center;
 	-moz-box-shadow: 
-		inset rgba(185, 221, 234, 0.2) 0 -10px 12px,
+		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
-		inset rgba(255, 255, 255, 0.2) 0 10px 12px;
+		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
 	//display: inline;
 }
 
@@ -224,7 +224,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	text-shadow: 1px 1px 1px rgba(173, 182, 186, 1);
 	background-color: rgba(173, 182, 186, 0.3);
 	-moz-box-shadow: 
-		inset rgba(0, 0, 0, 0.2) 0 -10px 12px;
+		inset rgba(0, 0, 0, 0.2) 0 -10px 8.5px;
 	padding: 9px 8px 8px 8px;
 }
 

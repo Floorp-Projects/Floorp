@@ -82,6 +82,6 @@ notification[type="critical"] .messageImage {
 
 .messageCloseButton:-moz-focusring > .toolbarbutton-icon {
   border-radius: 10000px;
-  -moz-box-shadow: 0 0 3px 1px -moz-mac-focusring,
+  -moz-box-shadow: 0 0 2px 1px -moz-mac-focusring,
                    0 0 0 2px -moz-mac-focusring inset;
 }
