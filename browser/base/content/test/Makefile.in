@@ -94,6 +94,7 @@ endif
 
 _BROWSER_FILES = \
                  browser_typeAheadFind.js \
+                 browser_keywordSearch.js \
                  browser_NetworkPrioritizer.js \
                  browser_allTabsPanel.js \
                  browser_alltabslistener.js \
