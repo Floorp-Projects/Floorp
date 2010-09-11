@@ -1962,45 +1962,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Get OutputNode by Id
-   *
-   * @param string aId
-   * @returns nsIDOMNode
-   */
-  getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
-  {
-    let displayNode = this.getHeadsUpDisplay(aHUDId);
-    return displayNode.querySelectorAll(".hud-output-node")[0];
-  },
-
-  /**
-   * Inform user that the Web Console API has been replaced by a script
-   * in a content page.
-   *
-   * @param string aHUDId
-   * @returns void
-   */
-  logWarningAboutReplacedAPI:
-  function HS_logWarningAboutReplacedAPI(aHUDId)
-  {
-    let domId = "hud-log-node-" + this.sequenceId();
-    let outputNode = this.getConsoleOutputNode(aHUDId);
-
-    let msgFormat = {
-      logLevel: "error",
-      activityObject: {},
-      hudId: aHUDId,
-      origin: "console-listener",
-      domId: domId,
-      message: this.getStr("ConsoleAPIDisabled"),
-    };
-
-    let messageObject =
-    this.messageFactory(msgFormat, "error", outputNode, msgFormat.activityObject);
-    this.logMessage(messageObject.messageObject, outputNode, messageObject.messageNode);
-  },
-
-  /**
    * report consoleMessages recieved via the HUDConsoleObserver service
    * @param nsIConsoleMessage aConsoleMessage
    * @returns void
