@@ -764,10 +764,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.AppendLiteral(")");
   }
   else if (IsCalcUnit()) {
-    NS_ABORT_IF_FALSE(GetUnit() == eCSSUnit_Calc ||
-                      GetUnit() == eCSSUnit_Calc_Maximum ||
-                      GetUnit() == eCSSUnit_Calc_Minimum,
-                      "unexpected unit");
+    NS_ABORT_IF_FALSE(GetUnit() == eCSSUnit_Calc, "unexpected unit");
     CSSValueSerializeCalcOps ops(aProperty, aResult);
     css::SerializeCalc(*this, ops);
   }
@@ -1002,8 +999,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Calc_Times_L: break;
     case eCSSUnit_Calc_Times_R: break;
     case eCSSUnit_Calc_Divided: break;
-    case eCSSUnit_Calc_Minimum: break;
-    case eCSSUnit_Calc_Maximum: break;
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
     case eCSSUnit_EnumColor:    break;

@@ -326,9 +326,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     case eCSSUnit_Calc_Minus:
     case eCSSUnit_Calc_Times_L:
     case eCSSUnit_Calc_Times_R:
-    case eCSSUnit_Calc_Divided:
-    case eCSSUnit_Calc_Minimum:
-    case eCSSUnit_Calc_Maximum: {
+    case eCSSUnit_Calc_Divided: {
       CalcLengthCalcOps ops(aFontSize, aStyleFont, aStyleContext, aPresContext,
                             aUseProvidedRootEmSize, aUseUserFontSet,
                             aCanStoreInRuleTree);

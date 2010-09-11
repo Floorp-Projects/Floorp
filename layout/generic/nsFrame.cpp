@@ -3217,10 +3217,9 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
 }
 
 /**
- * This class does calc() computation of lengths and percents separately,
- * with support for min() and max().  However, its support for min() and
- * max() is fundamentally broken in cases where percentages and lengths
- * are mixed.
+ * This class does calc() computation of lengths and percents separately.
+ *
+ * FIXME: remove this in the next patch
  *
  * It is used only for intrinsic width computation, where being an
  * approximation is sometimes ok (although it would be good to fix at
@@ -3253,23 +3252,11 @@ struct LengthPercentPairWithMinMaxCalcOps : public css::StyleCoordInputCalcOps
                                               aValue2.mLength),
                          aValue1.mPercent + aValue2.mPercent);
     }
-    if (aCalcFunction == eCSSUnit_Calc_Minus) {
-      return result_type(NSCoordSaturatingSubtract(aValue1.mLength,
-                                                   aValue2.mLength, 0),
-                         aValue1.mPercent - aValue2.mPercent);
-    }
-    if (aCalcFunction == eCSSUnit_Calc_Minimum) {
-      // This is fundamentally incorrect; see the comment above the
-      // start of the class definition.
-      return result_type(NS_MIN(aValue1.mLength, aValue2.mLength),
-                         NS_MIN(aValue1.mPercent, aValue2.mPercent));
-    }
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Maximum,
+    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Minus,
                       "unexpected unit");
-    // This is fundamentally incorrect; see the comment above the
-    // start of the class definition.
-    return result_type(NS_MAX(aValue1.mLength, aValue2.mLength),
-                       NS_MAX(aValue1.mPercent, aValue2.mPercent));
+    return result_type(NSCoordSaturatingSubtract(aValue1.mLength,
+                                                 aValue2.mLength, 0),
+                       aValue1.mPercent - aValue2.mPercent);
   }
 
   result_type
