@@ -347,8 +347,7 @@ Handle<BaseType>::sHandle_Properties[] = {
 
 #undef HANDLE_PROP_FLAGS
 
-#define HANDLE_FUN_FLAGS (JSFUN_FAST_NATIVE |   \
-                          JSPROP_READONLY |     \
+#define HANDLE_FUN_FLAGS (JSPROP_READONLY |     \
                           JSPROP_PERMANENT)
 
 template <class BaseType>

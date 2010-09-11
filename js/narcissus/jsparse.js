@@ -105,6 +105,17 @@ Narcissus.parser = (function() {
         bindSubBuilders(this, DefaultBuilder.prototype);
     }
 
+    function pushDestructuringVarDecls(n, x) {
+        for (var i in n) {
+            var sub = n[i];
+            if (sub.type === IDENTIFIER) {
+                x.varDecls.push(sub);
+            } else {
+                pushDestructuringVarDecls(sub, x);
+            }
+        }
+    }
+
     function mkBinopBuilder(type) {
         return {
             build: !type ? function(t) { return new Node(t); }
@@ -381,7 +392,9 @@ Narcissus.parser = (function() {
 
         RETURN: {
             build: function(t) {
-                return new Node(t, RETURN);
+                var n = new Node(t, RETURN);
+                n.value = undefined;
+                return n;
             },
 
             setValue: function(n, e) {
@@ -508,8 +521,14 @@ Narcissus.parser = (function() {
                 return new Node(t, VAR);
             },
 
+            addDestructuringDecl: function(n, n2, x) {
+                n.push(n2);
+                pushDestructuringVarDecls(n2.name.destructuredNames, x);
+            },
+
             addDecl: function(n, n2, x) {
                 n.push(n2);
+                x.varDecls.push(n2);
             },
 
             finish: function(n) {
@@ -518,11 +537,17 @@ Narcissus.parser = (function() {
 
         CONST: {
             build: function(t) {
-                return new Node(t, VAR);
+                return new Node(t, CONST);
+            },
+
+            addDestructuringDecl: function(n, n2, x) {
+                n.push(n2);
+                pushDestructuringVarDecls(n2.name.destructuredNames, x);
             },
 
             addDecl: function(n, n2, x) {
                 n.push(n2);
+                x.varDecls.push(n2);
             },
 
             finish: function(n) {
@@ -534,8 +559,14 @@ Narcissus.parser = (function() {
                 return new Node(t, LET);
             },
 
+            addDestructuringDecl: function(n, n2, x) {
+                n.push(n2);
+                pushDestructuringVarDecls(n2.name.destructuredNames, x);
+            },
+
             addDecl: function(n, n2, x) {
                 n.push(n2);
+                x.varDecls.push(n2);
             },
 
             finish: function(n) {
@@ -565,7 +596,7 @@ Narcissus.parser = (function() {
 
         LET_BLOCK: {
             build: function(t) {
-                var n = Node(t, LET_BLOCK);
+                var n = new Node(t, LET_BLOCK);
                 n.varDecls = [];
                 return n;
             },
@@ -598,19 +629,6 @@ Narcissus.parser = (function() {
             },
 
             addStatement: function(n, n2) {
-                n.push(n2);
-            },
-
-            finish: function(n) {
-            }
-        },
-
-        EXPRESSION: {
-            build: function(t, tt) {
-                return new Node(t, tt);
-            },
-
-            addOperand: function(n, n2) {
                 n.push(n2);
             },
 
@@ -710,8 +728,8 @@ Narcissus.parser = (function() {
 
         PRIMARY: {
             build: function(t, tt) {
-                // NB t.token.type must be NULL, THIS, TRUIE, FALSE, IDENTIFIER,
-                // NUMBER, STRING, or REGEXP.
+                // NULL | THIS | TRUE | FALSE | IDENTIFIER | NUMBER
+                // STRING | REGEXP.
                 return new Node(t, tt);
             },
 
@@ -773,6 +791,15 @@ Narcissus.parser = (function() {
 
             addProperty: function(n, n2) {
                 n.push(n2);
+            },
+
+            finish: function(n) {
+            }
+        },
+
+        PROPERTY_NAME: {
+            build: function(t) {
+                return new Node(t, IDENTIFIER);
             },
 
             finish: function(n) {
@@ -1106,15 +1133,32 @@ Narcissus.parser = (function() {
                 x.inForLoopInit = false;
             }
             if (n2 && t.match(IN)) {
+                // for-ins always get a for block to help desugaring.
+                if (!forBlock) {
+                    var forBlock = builder.BLOCK.build(t, x.blockId++);
+                    forBlock.isInternalForInBlock = true;
+                    x.stmtStack.push(forBlock);
+                }
+
                 b.rebuildForIn(n);
-                b.setObject(n, Expression(t, x), forBlock);
+                b.setObject(n, Expression(t, x));
                 if (n2.type === VAR || n2.type === LET) {
-                    if (n2.length !== 1) {
+                    // Destructuring turns one decl into multiples, so either
+                    // there must be only one destructuring or only one
+                    // decl.
+                    if (n2.length !== 1 && n2.destructurings.length !== 1) {
                         throw new SyntaxError("Invalid for..in left-hand side",
                                               t.filename, n2.lineno);
                     }
-                    b.setIterator(n, n2[0], n2, forBlock);
+                    if (n2.destructurings.length > 0) {
+                        b.setIterator(n, n2.destructurings[0], n2, forBlock);
+                    } else {
+                        b.setIterator(n, n2[0], n2, forBlock);
+                    }
                 } else {
+                    if (n2.type === ARRAY_INIT || n2.type === OBJECT_INIT) {
+                        n2.destructuredNames = checkDestructuring(t, x, n2);
+                    }
                     b.setIterator(n, n2, null, forBlock);
                 }
             } else {
@@ -1127,16 +1171,22 @@ Narcissus.parser = (function() {
                                   : Expression(t, x));
                 t.mustMatch(SEMICOLON);
                 b.setUpdate(n, (t.peek() === RIGHT_PAREN)
-                                   ? null
-                                   : Expression(t, x));
+                               ? null
+                               : Expression(t, x));
             }
             t.mustMatch(RIGHT_PAREN);
             b.setBody(n, nest(t, x, n, Statement));
+            b.finish(n);
+
+            // In case desugaring statements were added to the imaginary
+            // block.
             if (forBlock) {
                 builder.BLOCK.finish(forBlock);
                 x.stmtStack.pop();
+                for (var i = 0, j = forBlock.length; i < j; i++) {
+                    n.body.unshift(forBlock[i]);
+                }
             }
-            b.finish(n);
             return n;
 
           case WHILE:
@@ -1197,6 +1247,9 @@ Narcissus.parser = (function() {
                     i++;
                 if (i < ss.length - 1 && ss[i+1].isLoop)
                     i++;
+                else if (i < ss.length - 1 && ss[i+1].isInternalForInBlock
+                                           && ss[i+2].isLoop)
+                    i++;
                 else if (tt === CONTINUE)
                     throw t.newSyntaxError("Invalid continue");
             } else {
@@ -1225,7 +1278,8 @@ Narcissus.parser = (function() {
                   case LEFT_CURLY:
                     // Destructured catch identifiers.
                     t.unget();
-                    b2.setVarName(n2, DestructuringExpression(t, x, true));
+                    b2.setVarName(n2, DestructuringExpressionNoHoist(t, x, true));
+                    break;
                   case IDENTIFIER:
                     b2.setVarName(n2, t.token.value);
                     break;
@@ -1355,7 +1409,7 @@ Narcissus.parser = (function() {
             if (!x.inFunction)
                 throw t.newSyntaxError("Return not in function");
             b = x.builder.RETURN;
-        } else /* (tt === YIELD) */ {
+        } else /* if (tt === YIELD) */ {
             if (!x.inFunction)
                 throw t.newSyntaxError("Yield not in function");
             x.isGenerator = true;
@@ -1364,7 +1418,8 @@ Narcissus.parser = (function() {
         n = b.build(t);
 
         tt2 = t.peek(true);
-        if (tt2 !== END && tt2 !== NEWLINE && tt2 !== SEMICOLON && tt2 !== RIGHT_CURLY
+        if (tt2 !== END && tt2 !== NEWLINE &&
+            tt2 !== SEMICOLON && tt2 !== RIGHT_CURLY
             && (tt !== YIELD ||
                 (tt2 !== tt && tt2 !== RIGHT_BRACKET && tt2 !== RIGHT_PAREN &&
                  tt2 !== COLON && tt2 !== COMMA))) {
@@ -1496,10 +1551,8 @@ Narcissus.parser = (function() {
          * Statements.
          */
         if (x2.needsHoisting) {
-            /*
-             * Order is important here! Builders expect funDecls to come after
-             * varDecls!
-             */
+            // Order is important here! Builders expect funDecls to come
+            // after varDecls!
             builder.setHoists(f.body.id, x2.varDecls.concat(x2.funDecls));
 
             if (x.inFunction) {
@@ -1541,10 +1594,9 @@ Narcissus.parser = (function() {
      * initializations).
      */
     function Variables(t, x, letBlock) {
-        var b, bDecl, bAssign, n, n2, n3, ss, i, s, tt, id, data;
+        var b, n, n2, ss, i, s, tt;
         var builder = x.builder;
         var bDecl = builder.DECL;
-        var bAssign = builder.ASSIGN;
 
         switch (t.token.type) {
           case VAR:
@@ -1579,25 +1631,24 @@ Narcissus.parser = (function() {
         }
 
         n = b.build(t);
-        initializers = [];
+        n.destructurings = [];
 
         do {
             tt = t.get();
-            /*
-             * FIXME Should have a special DECLARATION node instead of overloading
-             * IDENTIFIER to mean both identifier declarations and destructured
-             * declarations.
-             */
-            n2 = bDecl.build(t);
             if (tt === LEFT_BRACKET || tt === LEFT_CURLY) {
-                // Pass in s if we need to add each pattern matched into
-                // its varDecls, else pass in x.
-                data = null;
                 // Need to unget to parse the full destructured expression.
                 t.unget();
-                bDecl.setName(n2, DestructuringExpression(t, x, true, s));
+
+                var dexp = DestructuringExpressionNoHoist(t, x, true, s);
+
+                n2 = bDecl.build(t);
+                bDecl.setName(n2, dexp);
+                bDecl.setReadOnly(n2, n.type === CONST);
+                b.addDestructuringDecl(n, n2, s);
+
+                n.destructurings.push({ exp: dexp, decl: n2 });
+
                 if (x.inForLoopInit && t.peek() === IN) {
-                    b.addDecl(n, n2, s);
                     continue;
                 }
 
@@ -1605,22 +1656,16 @@ Narcissus.parser = (function() {
                 if (t.token.assignOp)
                     throw t.newSyntaxError("Invalid variable initialization");
 
-                // Parse the init as a normal assignment.
-                n3 = bAssign.build(t);
-                bAssign.addOperand(n3, n2.name);
-                bAssign.addOperand(n3, AssignExpression(t, x));
-                bAssign.finish(n3);
-
-                // But only add the rhs as the initializer.
-                bDecl.setInitializer(n2, n3[1]);
+                bDecl.setInitializer(n2, AssignExpression(t, x));
                 bDecl.finish(n2);
-                b.addDecl(n, n2, s);
+
                 continue;
             }
 
             if (tt !== IDENTIFIER)
                 throw t.newSyntaxError("missing variable name");
 
+            n2 = bDecl.build(t);
             bDecl.setName(n2, t.token.value);
             bDecl.setReadOnly(n2, n.type === CONST);
             b.addDecl(n, n2, s);
@@ -1629,21 +1674,10 @@ Narcissus.parser = (function() {
                 if (t.token.assignOp)
                     throw t.newSyntaxError("Invalid variable initialization");
 
-                // Parse the init as a normal assignment.
-                id = new Node(n2.tokenizer, IDENTIFIER);
-                n3 = bAssign.build(t);
-                id.name = id.value = n2.name;
-                bAssign.addOperand(n3, id);
-                bAssign.addOperand(n3, AssignExpression(t, x));
-                bAssign.finish(n3);
-                initializers.push(n3);
-
-                // But only add the rhs as the initializer.
-                bDecl.setInitializer(n2, n3[1]);
+                bDecl.setInitializer(n2, AssignExpression(t, x));
             }
 
             bDecl.finish(n2);
-            s.varDecls.push(n2);
         } while (t.match(COMMA));
         b.finish(n);
         return n;
@@ -1697,38 +1731,57 @@ Narcissus.parser = (function() {
         if (n.type !== ARRAY_INIT && n.type !== OBJECT_INIT)
             return;
 
-        var nn, n2, lhs, rhs, b = x.builder.DECL;
+        var lhss = {};
+        var nn, n2, idx, sub;
         for (var i = 0, j = n.length; i < j; i++) {
-            nn = n[i];
-            if (!nn)
+            if (!(nn = n[i]))
                 continue;
-            if (nn.type === PROPERTY_INIT)
-                lhs = nn[0], rhs = nn[1];
-            else
-                lhs = null, rhs = null;
-            if (rhs && (rhs.type === ARRAY_INIT || rhs.type === OBJECT_INIT))
-                checkDestructuring(t, x, rhs, simpleNamesOnly, data);
-            if (lhs && simpleNamesOnly) {
-                // In declarations, lhs must be simple names
-                if (lhs.type !== IDENTIFIER) {
+            if (nn.type === PROPERTY_INIT) {
+                sub = nn[1];
+                idx = nn[0].value;
+            } else if (n.type === OBJECT_INIT) {
+                // Do we have destructuring shorthand {foo, bar}?
+                sub = nn;
+                idx = nn.value;
+            } else {
+                sub = nn;
+                idx = i;
+            }
+
+            if (sub.type === ARRAY_INIT || sub.type === OBJECT_INIT) {
+                lhss[idx] = checkDestructuring(t, x, sub,
+                                               simpleNamesOnly, data);
+            } else {
+                if (simpleNamesOnly && sub.type !== IDENTIFIER) {
+                    // In declarations, lhs must be simple names
                     throw t.newSyntaxError("missing name in pattern");
-                } else if (data) {
-                    n2 = b.build(t);
-                    b.setName(n2, lhs.value);
-                    // Don't need to set initializer because it's just for
-                    // hoisting anyways.
-                    b.finish(n2);
-                    // Each pattern needs to be added to varDecls.
-                    data.varDecls.push(n2);
                 }
+
+                lhss[idx] = sub;
             }
         }
+
+        return lhss;
     }
 
     function DestructuringExpression(t, x, simpleNamesOnly, data) {
         var n = PrimaryExpression(t, x);
-        checkDestructuring(t, x, n, simpleNamesOnly, data);
+        // Keep the list of lefthand sides in case the builder wants to
+        // desugar.
+        n.destructuredNames = checkDestructuring(t, x, n,
+                                                 simpleNamesOnly, data);
         return n;
+    }
+
+    function DestructuringExpressionNoHoist(t, x, simpleNamesOnly, data) {
+        // Sometimes we don't want to flag the pattern as possible hoists, so
+        // pretend it's the second pass.
+        var builder = x.builder;
+        var oldSP = builder.secondPass;
+        builder.secondPass = true;
+        var dexp = DestructuringExpression(t, x, simpleNamesOnly, data);
+        builder.secondPass = oldSP;
+        return dexp;
     }
 
     function GeneratorExpression(t, x, e) {
@@ -1770,7 +1823,7 @@ Narcissus.parser = (function() {
               case LEFT_CURLY:
                 t.unget();
                 // Destructured left side of for in comprehension tails.
-                b2.setIterator(n, DestructuringExpression(t, x), null);
+                b2.setIterator(n, DestructuringExpressionNoHoist(t, x), null);
                 break;
 
               case IDENTIFIER:
@@ -1778,14 +1831,12 @@ Narcissus.parser = (function() {
                 bDecl.setName(n3, n3.value);
                 bDecl.finish(n3);
                 var n2 = bVar.build(t);
-                bVar.addDecl(n2, n3);
+                bVar.addDecl(n2, n3, x);
                 bVar.finish(n2);
                 bFor.setIterator(n, n3, n2);
-                /*
-                 * Don't add to varDecls since the semantics of comprehensions is
-                 * such that the variables are in their own function when
-                 * desugared.
-                 */
+                // Don't add to varDecls since the semantics of comprehensions is
+                // such that the variables are in their own function when
+                // desugared.
                 break;
 
               default:
@@ -1876,7 +1927,7 @@ Narcissus.parser = (function() {
         switch (lhs.type) {
           case OBJECT_INIT:
           case ARRAY_INIT:
-            checkDestructuring(t, x, lhs);
+            lhs.destructuredNames = checkDestructuring(t, x, lhs);
             // FALL THROUGH
           case IDENTIFIER: case DOT: case INDEX: case CALL:
             break;
@@ -2119,7 +2170,10 @@ Narcissus.parser = (function() {
     }
 
     function MemberExpression(t, x, allowCallSyntax) {
-        var n, n2, tt, b = x.builder.MEMBER;
+        var n, n2, name, tt;
+        var builder = x.builder;
+        var b = builder.MEMBER
+        var b2 = builder.PROPERTY_NAME;
 
         if (t.match(NEW)) {
             n = b.build(t);
@@ -2139,7 +2193,9 @@ Narcissus.parser = (function() {
                 n2 = b.build(t);
                 b.addOperand(n2, n);
                 t.mustMatch(IDENTIFIER);
-                b.addOperand(n2, b.build(t));
+                name = b2.build(t);
+                b2.finish(name);
+                b.addOperand(n2, name);
                 break;
 
               case LEFT_BRACKET:
@@ -2200,6 +2256,7 @@ Narcissus.parser = (function() {
         var bArrayInit = builder.ARRAY_INIT;
         var bArrayComp = builder.ARRAY_COMP;
         var bPrimary = builder.PRIMARY;
+        var bPropName = builder.PROPERTY_NAME;
         var bObjInit = builder.OBJECT_INIT;
         var bPropInit = builder.PROPERTY_INIT;
 
@@ -2230,7 +2287,7 @@ Narcissus.parser = (function() {
                 n = n2;
             }
             t.mustMatch(RIGHT_BRACKET);
-            bPrimary.finish(n);
+            bArrayInit.finish(n);
             break;
 
           case LEFT_CURLY:
@@ -2250,8 +2307,8 @@ Narcissus.parser = (function() {
                     } else {
                         switch (tt) {
                           case IDENTIFIER: case NUMBER: case STRING:
-                            id = bPrimary.build(t, IDENTIFIER);
-                            bPrimary.finish(id);
+                            id = bPropName.build(t);
+                            bPropName.finish(id);
                             break;
                           case RIGHT_CURLY:
                             if (x.ecma3OnlyMode)
@@ -2259,8 +2316,8 @@ Narcissus.parser = (function() {
                             break object_init;
                           default:
                             if (t.token.value in definitions.keywords) {
-                                id = bPrimary.build(t, IDENTIFIER);
-                                bPrimary.finish(id);
+                                id = bPropName.build(t);
+                                bPropName.finish(id);
                                 break;
                             }
                             throw t.newSyntaxError("Invalid property name");
@@ -2328,6 +2385,9 @@ Narcissus.parser = (function() {
         parse: parse,
         Node: Node,
         DefaultBuilder: DefaultBuilder,
+        get SSABuilder() {
+            throw new Error("SSA builder not yet supported");
+        },
         bindSubBuilders: bindSubBuilders,
         DECLARED_FORM: DECLARED_FORM,
         EXPRESSED_FORM: EXPRESSED_FORM,

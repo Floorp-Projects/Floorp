@@ -45,6 +45,9 @@ BEGIN_TEST(testTrap_gc)
     // Disable JIT for debugging
     JS_SetOptions(cx, JS_GetOptions(cx) & ~JSOPTION_JIT);
 
+    // Enable debug mode
+    CHECK(JS_SetDebugMode(cx, JS_TRUE));
+
     jsbytecode *line2 = JS_LineNumberToPC(cx, script, 1);
     CHECK(line2);
 

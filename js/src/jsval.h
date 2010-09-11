@@ -222,7 +222,7 @@ typedef uint64 JSValueShiftedTag;
 #define JSVAL_LOWER_INCL_TYPE_OF_OBJ_OR_NULL_SET        JSVAL_TYPE_NULL
 #define JSVAL_UPPER_EXCL_TYPE_OF_PRIMITIVE_SET          JSVAL_TYPE_OBJECT
 #define JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET             JSVAL_TYPE_INT32
-#define JSVAL_LOWER_INCL_TYPE_OF_GCTHING_SET            JSVAL_TYPE_STRING
+#define JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET        JSVAL_TYPE_MAGIC
 #define JSVAL_UPPER_INCL_TYPE_OF_VALUE_SET              JSVAL_TYPE_OBJECT
 #define JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET            JSVAL_TYPE_FUNOBJ
 
@@ -245,6 +245,7 @@ typedef uint64 JSValueShiftedTag;
 #define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET  JSVAL_SHIFTED_TAG_NULL
 #define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET    JSVAL_SHIFTED_TAG_OBJECT
 #define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET       JSVAL_SHIFTED_TAG_UNDEFINED
+#define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_PTR_PAYLOAD_SET  JSVAL_SHIFTED_TAG_MAGIC
 #define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET      JSVAL_SHIFTED_TAG_STRING
 
 #endif /* JS_BITS_PER_WORD */
@@ -258,7 +259,6 @@ typedef enum JSWhyMagic
                                   * enumerated like a native object. */
     JS_NO_ITER_VALUE,            /* there is not a pending iterator value */
     JS_GENERATOR_CLOSING,        /* exception value thrown when closing a generator */
-    JS_FAST_CONSTRUCTOR,         /* 'this' value for fast natives invoked with 'new' */
     JS_NO_CONSTANT,              /* compiler sentinel value */
     JS_THIS_POISON,              /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
@@ -286,6 +286,7 @@ typedef union jsval_layout
         JSValueTag tag;
     } s;
     double asDouble;
+    void *asPtr;
 } jsval_layout;
 # elif JS_BITS_PER_WORD == 64
 typedef union jsval_layout
@@ -306,6 +307,7 @@ typedef union jsval_layout
         } payload;
     } s;
     double asDouble;
+    void *asPtr;
 } jsval_layout;
 # endif  /* JS_BITS_PER_WORD */
 #else   /* defined(IS_LITTLE_ENDIAN) */
@@ -326,6 +328,7 @@ typedef union jsval_layout
         } payload;
     } s;
     double asDouble;
+    void *asPtr;
 } jsval_layout;
 # endif /* JS_BITS_PER_WORD */
 #endif  /* defined(IS_LITTLE_ENDIAN) */
@@ -434,6 +437,19 @@ BOOLEAN_TO_JSVAL_IMPL(JSBool b)
 }
 
 static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_MAGIC_IMPL(jsval_layout l)
+{
+    return l.s.tag == JSVAL_TAG_MAGIC;
+}
+
+static JS_ALWAYS_INLINE JSObject *
+MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
+{
+    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
+    return l.s.payload.obj;
+}
+
+static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT_IMPL(jsval_layout l)
 {
     return l.s.tag == JSVAL_TAG_OBJECT;
@@ -462,6 +478,7 @@ static JS_ALWAYS_INLINE jsval_layout
 OBJECT_TO_JSVAL_IMPL(JSObject *obj)
 {
     jsval_layout l;
+    JS_ASSERT(obj);
     l.s.tag = JSVAL_TAG_OBJECT;
     l.s.payload.obj = obj;
     return l;
@@ -610,6 +627,21 @@ BOOLEAN_TO_JSVAL_IMPL(JSBool b)
 }
 
 static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_MAGIC_IMPL(jsval_layout l)
+{
+    return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_MAGIC;
+}
+
+static JS_ALWAYS_INLINE JSObject *
+MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
+{
+    uint64 ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
+    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
+    JS_ASSERT((ptrBits >> JSVAL_TAG_SHIFT) == 0);
+    return (JSObject *)ptrBits;
+}
+
+static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_PRIMITIVE_IMPL(jsval_layout l)
 {
     return l.asBits < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET;
@@ -642,6 +674,7 @@ OBJECT_TO_JSVAL_IMPL(JSObject *obj)
 {
     jsval_layout l;
     uint64 objBits = (uint64)obj;
+    JS_ASSERT(obj);
     JS_ASSERT((objBits >> JSVAL_TAG_SHIFT) == 0);
     l.asBits = objBits | JSVAL_SHIFTED_TAG_OBJECT;
     return l;
@@ -751,6 +784,7 @@ extern "C++"
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v.asBits)
+#define JSVAL_FROM_LAYOUT(l) (l)
 #define IMPL_TO_JSVAL(v) (v)
 #define JSID_BITS(id)    (id.asBits)
 
@@ -762,6 +796,7 @@ typedef ptrdiff_t              jsid;
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v)
+#define JSVAL_FROM_LAYOUT(l) ((l).asBits)
 #define IMPL_TO_JSVAL(v) ((v).asBits)
 #define JSID_BITS(id)    (id)
 

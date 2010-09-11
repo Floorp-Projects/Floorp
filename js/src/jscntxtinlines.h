@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -105,6 +106,55 @@ StackSpace::isCurrentAndActive(JSContext *cx) const
     return currentSegment &&
            currentSegment->isActive() &&
            currentSegment == cx->getCurrentSegment();
+}
+
+/*
+ * SunSpider and v8bench have roughly an average of 9 slots per script.
+ * Our heuristic for a quick over-recursion check uses a generous slot
+ * count based on this estimate. We take this frame size and multiply it
+ * by the old recursion limit from the interpreter.
+ *
+ * Worst case, if an average size script (<=9 slots) over recurses, it'll
+ * effectively be the same as having increased the old inline call count
+ * to <= 5,000.
+ */
+static const uint32 MAX_STACK_USAGE = (VALUES_PER_STACK_FRAME + 18) * JS_MAX_INLINE_CALL_COUNT;
+
+JS_ALWAYS_INLINE Value *
+StackSpace::makeStackLimit(Value *start) const
+{
+    Value *limit = JS_MIN(start + MAX_STACK_USAGE, end);
+#ifdef XP_WIN
+    limit = JS_MIN(limit, commitEnd);
+#endif
+    return limit;
+}
+
+JS_ALWAYS_INLINE bool
+StackSpace::ensureSpace(JSContext *maybecx, Value *start, Value *from,
+                        Value *& limit, uint32 nslots) const
+{
+    JS_ASSERT(from == firstUnused());
+#ifdef XP_WIN
+    /*
+     * If commitEnd < limit, we're guaranteed that we reached the end of the
+     * commit depth, because stackLimit is MIN(commitEnd, limit). If we did
+     * reach this soft limit, check if we can bump the commit end without
+     * over-recursing.
+     */
+    ptrdiff_t nvals = VALUES_PER_STACK_FRAME + nslots;
+    if (commitEnd <= limit && from + nvals < (start + MAX_STACK_USAGE)) {
+        if (!ensureSpace(maybecx, from, nvals))
+            return false;
+
+        /* Compute a new limit. */
+        limit = makeStackLimit(start);
+
+        return true;
+    }
+#endif
+    js_ReportOverRecursed(maybecx);
+    return false;
 }
 
 JS_ALWAYS_INLINE bool
@@ -274,19 +324,26 @@ InvokeFrameGuard::~InvokeFrameGuard()
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, Value *sp,
-                           uintN nmissing, uintN nfixed) const
+StackSpace::getInlineFrameUnchecked(JSContext *cx, Value *sp,
+                                    uintN nmissing) const
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->regs->sp == sp);
 
+    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
+    return fp;
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+StackSpace::getInlineFrame(JSContext *cx, Value *sp,
+                           uintN nmissing, uintN nfixed) const
+{
     ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, sp, nvals))
         return NULL;
 
-    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
-    return fp;
+    return getInlineFrameUnchecked(cx, sp, nmissing);
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
@@ -547,28 +604,50 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
-inline JSBool
-callJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
+JS_ALWAYS_INLINE bool
+CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
-    assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
-    JSBool ok = native(cx, thisobj, argc, argv, rval);
-    if (ok)
-        assertSameCompartment(cx, *rval);
-    return ok;
-}
-
-inline JSBool
-callJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
-{
+#ifdef DEBUG
+    JSBool alreadyThrowing = cx->throwing;
+#endif
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
-    if (ok)
+    if (ok) {
         assertSameCompartment(cx, vp[0]);
+        JS_ASSERT_IF(!alreadyThrowing, !cx->throwing);
+    }
     return ok;
 }
 
-inline JSBool
-callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+JS_ALWAYS_INLINE bool
+CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
+{
+#ifdef DEBUG
+    JSObject *callee = &vp[0].toObject();
+#endif
+
+    JS_ASSERT(vp[1].isMagic());
+    if (!CallJSNative(cx, native, argc, vp))
+        return false;
+
+    /*
+     * Native constructors must return non-primitive values on success.
+     * Although it is legal, if a constructor returns the callee, there is a
+     * 99.9999% chance it is a bug. If any valid code actually wants the
+     * constructor to return the callee, this can be removed.
+     *
+     * Proxies are exceptions to both rules: they can return primitives and
+     * they allow content to return the callee.
+     */
+    extern JSBool proxy_Construct(JSContext *, uintN, Value *);
+    JS_ASSERT_IF(native != proxy_Construct,
+                 !vp->isPrimitive() && callee != &vp[0].toObject());
+
+    return true;
+}
+
+JS_ALWAYS_INLINE bool
+CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     JSBool ok = op(cx, obj, id, vp);
@@ -577,8 +656,8 @@ callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::V
     return ok;
 }
 
-inline JSBool
-callJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+JS_ALWAYS_INLINE bool
+CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     return op(cx, obj, id, vp);

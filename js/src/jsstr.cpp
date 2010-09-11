@@ -832,8 +832,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 Class js_StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String) |
-    JSCLASS_FAST_CONSTRUCTOR,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     str_getProperty,
@@ -2078,7 +2077,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         /* Push lambda and its 'this' parameter. */
         CallArgs &args = rdata.args;
         args.callee().setObject(*lambda);
-        args.thisv().setObjectOrNull(lambda->getParent());
+        args.thisv().setNull();
 
         Value *sp = args.argv();
 
@@ -2388,7 +2387,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     CallArgs &args = rdata.args;
     args.callee().setObject(*rdata.lambda);
-    args.thisv().setObjectOrNull(rdata.lambda->getParent());
+    args.thisv().setNull();
 
     Value *sp = args.argv();
     sp[0].setString(matchStr);
@@ -3264,41 +3263,28 @@ const char JSString::deflatedUnitStringTable[] = {
 JSBool
 js_String(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
+    Value *argv = vp + 2;
 
+    JSString *str;
     if (argc > 0) {
-        str = js_ValueToString(cx, vp[2]);
+        str = js_ValueToString(cx, argv[0]);
         if (!str)
-            return JS_FALSE;
-        vp[2].setString(str);
+            return false;
     } else {
         str = cx->runtime->emptyString;
     }
 
-    if (vp[1].isMagic(JS_FAST_CONSTRUCTOR)) {
+    if (IsConstructing(vp)) {
         JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
         if (!obj)
-            return JS_FALSE;
+            return false;
         obj->setPrimitiveThis(StringValue(str));
         vp->setObject(*obj);
     } else {
         vp->setString(str);
     }
-    return JS_TRUE;
+    return true;
 }
-
-#ifdef JS_TRACER
-
-JSObject* FASTCALL
-js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewObjectWithClassProto(cx, &js_StringClass, proto, StringValue(str));
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-#endif /* !JS_TRACER */
 
 static JSBool
 str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
@@ -3373,7 +3359,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, obj, string_functions))
         return NULL;
 
-    proto = js_InitClass(cx, obj, NULL, &js_StringClass, (Native) js_String, 1,
+    proto = js_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
                          NULL, string_methods,
                          NULL, string_static_methods);
     if (!proto)

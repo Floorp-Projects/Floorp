@@ -150,6 +150,7 @@ CPPSRCS		= \
 		jsparse.cpp \
 		jsproxy.cpp \
 		jsprf.cpp \
+		jsprobes.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
@@ -158,7 +159,6 @@ CPPSRCS		= \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
-		jstask.cpp \
 		jstypedarray.cpp \
 		jsutil.cpp \
 		jswrapper.cpp \
@@ -166,11 +166,6 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		$(NULL)
-
-ifdef HAVE_DTRACE
-CPPSRCS 	+= \
-		jsdtracef.cpp
-endif
 
 INSTALLED_HEADERS = \
 		js-config.h \
@@ -211,6 +206,7 @@ INSTALLED_HEADERS = \
 		jsparse.h \
 		jsproxy.h \
 		jsprf.h \
+		jsprobes.h \
 		jspropertycache.h \
 		jspropertycacheinlines.h \
 		jspropertytree.h \
@@ -226,7 +222,6 @@ INSTALLED_HEADERS = \
 		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
-		jstask.h \
 		jstracer.h \
 		jstypedarray.h \
 		jstypes.h \
@@ -287,8 +282,56 @@ ASFILES += jswince.asm
 endif
 
 endif # ENABLE_TRACEJIT
+ifdef ENABLE_METHODJIT
 
-ifeq ($(TARGET_CPU), powerpc)
+###############################################
+# BEGIN include sources for the method JIT
+#
+VPATH += 	$(srcdir)/methodjit
+
+CPPSRCS += 	MethodJIT.cpp \
+		BytecodeAnalyzer.cpp \
+		StubCalls.cpp \
+		Compiler.cpp \
+		FrameState.cpp \
+		FastArithmetic.cpp \
+		FastOps.cpp \
+		StubCompiler.cpp \
+		MonoIC.cpp \
+		PolyIC.cpp \
+		ImmutableSync.cpp \
+		InvokeHelpers.cpp \
+		Retcon.cpp \
+		TrampolineCompiler.cpp \
+		$(NULL)
+#		PICStubCompiler.cpp \
+
+ifeq (86, $(findstring 86,$(TARGET_CPU)))
+ifeq (x86_64, $(TARGET_CPU))
+ifdef _MSC_VER
+ASFILES +=	TrampolineMasmX64.asm
+endif
+ifdef SOLARIS_SUNPRO_CXX
+ASFILES +=	TrampolineSUNWX64.s
+endif
+#CPPSRCS		+= only_on_x86_64.cpp
+else
+#CPPSRCS		+= only_on_x86.cpp
+ifdef SOLARIS_SUNPRO_CXX
+ASFILES +=	TrampolineSUNWX86.s
+endif
+endif
+endif
+ifeq (arm, $(TARGET_CPU))
+#CPPSRCS		+= only_on_arm.cpp
+endif
+#
+# END enclude sources for the method JIT
+#############################################
+
+endif
+
+ifeq (,$(filter-out powerpc sparc,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
@@ -377,7 +420,6 @@ endif # JS_HAS_CTYPES
 
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
-		jsdtracef.h \
 		$(CURDIR)/javascript-trace.h \
 		$(NULL)
 endif
@@ -781,7 +823,7 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 
 # We can't automatically generate dependencies on auto-generated headers;
 # we have to list them explicitly.
-$(addsuffix .$(OBJ_SUFFIX),jsdtracef jsinterp jsobj): $(CURDIR)/javascript-trace.h
+$(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
 ifdef ENABLE_TRACEJIT
@@ -830,6 +872,24 @@ CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 
+ifdef ENABLE_METHODJIT
+# Build a standalone test program that exercises the assembler
+# sources a bit.
+TESTMAIN_OBJS = \
+		Assertions.$(OBJ_SUFFIX) \
+		ExecutableAllocatorPosix.$(OBJ_SUFFIX) \
+		ExecutableAllocatorWin.$(OBJ_SUFFIX) \
+		ExecutableAllocator.$(OBJ_SUFFIX) \
+		ARMAssembler.$(OBJ_SUFFIX) \
+		MacroAssemblerARM.$(OBJ_SUFFIX) \
+		TestMain.$(OBJ_SUFFIX) \
+		jsutil.$(OBJ_SUFFIX) \
+		jslog2.$(OBJ_SUFFIX)
+TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
+	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
+endif
+
 #
 # END kludges for the Nitro assembler
 ###############################################
+

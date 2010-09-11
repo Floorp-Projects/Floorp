@@ -52,8 +52,9 @@ function test()
   printStatus (summary);
  
   function f() { for(; 1; ) { } }
-  if (typeof trap == 'function')
+  if (typeof trap == 'function' && typeof setDebug == 'function')
   {
+    setDebug(true);
     trap(f, 0, "");
   }
   f + '';
