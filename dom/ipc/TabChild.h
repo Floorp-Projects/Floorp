@@ -286,8 +286,8 @@ public:
             const gfxMatrix& aMatrix,
             const PRUint32& aNativeID);
 
-    virtual PGeolocationRequestChild* AllocPGeolocationRequest(const IPC::URI& uri);
-    virtual bool DeallocPGeolocationRequest(PGeolocationRequestChild* actor);
+    virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
+    virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 

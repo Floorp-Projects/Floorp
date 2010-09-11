@@ -426,12 +426,33 @@ public:
    * Convert a surface size to an integer for use by thebes
    * possibly making it smaller in the process so the surface does not
    * use excessive memory.
+   *
+   * XXXdholbert Putting impl in header file so that imagelib can call this
+   * method.  Once we switch to a libxul-only world, this can go back into
+   * the .cpp file.
+   *
    * @param aSize the desired surface size
    * @param aResultOverflows true if the desired surface size is too big
    * @return the surface size to use
    */
-  static gfxIntSize
-  ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows);
+  static gfxIntSize ConvertToSurfaceSize(const gfxSize& aSize,
+                                  PRBool *aResultOverflows)
+  {
+    gfxIntSize surfaceSize(ClampToInt(aSize.width), ClampToInt(aSize.height));
+
+    *aResultOverflows = surfaceSize.width != NS_round(aSize.width) ||
+      surfaceSize.height != NS_round(aSize.height);
+
+    if (!gfxASurface::CheckSurfaceSize(surfaceSize)) {
+      surfaceSize.width = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
+                                 surfaceSize.width);
+      surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
+                                  surfaceSize.height);
+      *aResultOverflows = PR_TRUE;
+    }
+
+    return surfaceSize;
+  }
 
   /*
    * Convert a nsIDOMSVGMatrix to a gfxMatrix.
@@ -562,6 +583,16 @@ public:
    */
   static PRBool NumberFromString(const nsAString& aString, float* aValue,
                                  PRBool aAllowPercentages = PR_FALSE);
+
+  /**
+   * Convert a floating-point value to a 32-bit integer value, clamping to
+   * the range of valid integers.
+   */
+  static PRInt32 ClampToInt(double aVal)
+  {
+    return NS_lround(NS_MAX(double(PR_INT32_MIN),
+                            NS_MIN(double(PR_INT32_MAX), aVal)));
+  }
 
 private:
   /* Computational (nil) surfaces */

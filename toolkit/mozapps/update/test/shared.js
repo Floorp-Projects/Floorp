@@ -54,6 +54,7 @@ const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
+const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
@@ -585,6 +586,17 @@ function getString(aName) {
   catch (e) {
   }
   return null;
+}
+
+/**
+ * Gets the file extension for an nsIFile
+ * @param   aFile
+ *          The file to get the file extension for
+ * @returns The file extension
+ */
+function getFileExtension(aFile) {
+  return Services.io.newFileURI(aFile).QueryInterface(AUS_Ci.nsIURL).
+         fileExtension;
 }
 
 /**

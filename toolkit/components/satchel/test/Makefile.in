@@ -53,6 +53,7 @@ XPCSHELL_TESTS = \
 MOCHI_TESTS = \
 		test_bug_511615.html \
 		test_form_autocomplete.html \
+		test_form_autocomplete_with_list.html \
 		test_form_submission.html \
 		test_form_submission_cap.html \
 		test_form_submission_cap2.html \

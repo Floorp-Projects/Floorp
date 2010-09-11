@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -49,19 +49,19 @@ typedef struct
 } POS;
 
 
-typedef int ENTROPY_CONTEXT;
-
+typedef char ENTROPY_CONTEXT;
 typedef struct
 {
-    ENTROPY_CONTEXT l[4];
-    ENTROPY_CONTEXT a[4];
-} TEMP_CONTEXT;
+    ENTROPY_CONTEXT y1[4];
+    ENTROPY_CONTEXT u[2];
+    ENTROPY_CONTEXT v[2];
+    ENTROPY_CONTEXT y2;
+} ENTROPY_CONTEXT_PLANES;
 
-extern void vp8_setup_temp_context(TEMP_CONTEXT *t, ENTROPY_CONTEXT *a, ENTROPY_CONTEXT *l, int count);
-extern const int vp8_block2left[25];
-extern const int vp8_block2above[25];
 extern const int vp8_block2type[25];
-extern const int vp8_block2context[25];
+
+extern const unsigned char vp8_block2left[25];
+extern const unsigned char vp8_block2above[25];
 
 #define VP8_COMBINEENTROPYCONTEXTS( Dest, A, B) \
     Dest = ((A)!=0) + ((B)!=0);
@@ -174,9 +174,8 @@ typedef struct
     int dc_diff;
     unsigned char   segment_id;                  // Which set of segmentation parameters should be used for this MB
     int force_no_skip;
-
+    int need_to_clamp_mvs;
     B_MODE_INFO partition_bmi[16];
-
 } MB_MODE_INFO;
 
 
@@ -216,9 +215,10 @@ typedef struct
 {
     DECLARE_ALIGNED(16, short, diff[400]);      // from idct diff
     DECLARE_ALIGNED(16, unsigned char,  predictor[384]);
-    DECLARE_ALIGNED(16, short, reference[384]);
+//not used    DECLARE_ALIGNED(16, short, reference[384]);
     DECLARE_ALIGNED(16, short, qcoeff[400]);
     DECLARE_ALIGNED(16, short, dqcoeff[400]);
+    DECLARE_ALIGNED(16, char,  eobs[25]);
 
     // 16 Y blocks, 4 U, 4 V, 1 DC 2nd order block, each with 16 entries.
     BLOCKD block[25];
@@ -233,14 +233,12 @@ typedef struct
 
     FRAME_TYPE frame_type;
 
-    MB_MODE_INFO mbmi;
-
     int up_available;
     int left_available;
 
     // Y,U,V,Y2
-    ENTROPY_CONTEXT *above_context[4];   // row of context for each plane
-    ENTROPY_CONTEXT(*left_context)[4];   // (up to) 4 contexts ""
+    ENTROPY_CONTEXT_PLANES *above_context;
+    ENTROPY_CONTEXT_PLANES *left_context;
 
     // 0 indicates segmentation at MB level is not enabled. Otherwise the individual bits indicate which features are active.
     unsigned char segmentation_enabled;
@@ -275,9 +273,6 @@ typedef struct
     int mb_to_right_edge;
     int mb_to_top_edge;
     int mb_to_bottom_edge;
-
-    //char * gf_active_ptr;
-    signed char *gf_active_ptr;
 
     unsigned int frames_since_golden;
     unsigned int frames_till_alt_ref_frame;

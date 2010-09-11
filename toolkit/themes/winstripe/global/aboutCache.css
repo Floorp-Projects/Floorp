@@ -43,7 +43,7 @@ table {
   width: 100%;
   margin-bottom: 1em;
   padding: 0.5em 0;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
 }
 
 #disk,

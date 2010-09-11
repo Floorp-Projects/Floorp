@@ -7,5 +7,5 @@ Name: libxul
 Description: The Mozilla Runtime and Embedding Engine
 Version: %MOZILLA_VERSION%
 Requires: %NSPR_NAME% >= %NSPR_VERSION%
-Libs: -L${sdkdir}/lib -lxpcomglue_s -lxul -lxpcom
+Libs: -L${sdkdir}/lib %MOZ_XUL_LINK%
 Cflags: -I${includedir} %WCHAR_CFLAGS%

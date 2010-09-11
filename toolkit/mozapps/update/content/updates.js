@@ -1540,7 +1540,7 @@ var gDownloadingPage = {
     switch (status) {
     case CoR.NS_ERROR_UNEXPECTED:
       if (u.selectedPatch.state == STATE_DOWNLOAD_FAILED &&
-          u.isCompleteUpdate) {
+          (u.isCompleteUpdate || u.patchCount != 2)) {
         // Verification error of complete patch, informational text is held in
         // the update object.
         this.removeDownloadListener();

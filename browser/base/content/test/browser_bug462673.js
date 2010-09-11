@@ -47,7 +47,7 @@ function runOneTest() {
       });
     }, true);
 
-    browser.contentWindow.location =
-      "chrome://mochikit/content/browser/browser/base/content/test/test_bug462673.html";
+    var rootDir = getRootDirectory(gTestPath);
+    browser.contentWindow.location = rootDir + "test_bug462673.html"
   }, false);
 }

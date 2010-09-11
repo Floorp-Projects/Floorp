@@ -59,8 +59,8 @@ html|*.numberbox-input {
   -moz-border-right-colors: transparent #FFFFFF #000000;
   -moz-border-bottom-colors: transparent #FFFFFF #000000;
   -moz-border-left-colors: transparent #888888 #000000;
-  -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomleft: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-left-radius: 2px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }

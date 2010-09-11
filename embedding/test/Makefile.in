@@ -51,6 +51,7 @@ _TEST_FILES = \
 	bug449141_page.html \
 	test_bug499115.html \
 	test_nsFind.html \
+	test_window_open_units.html \
 	$(NULL)
 
 libs:: $(_TEST_FILES)

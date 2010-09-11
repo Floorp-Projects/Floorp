@@ -39,6 +39,7 @@ DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
+relativesrcdir = services/sync/tests
 
 include $(DEPTH)/config/autoconf.mk
 

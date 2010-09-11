@@ -1323,15 +1323,20 @@ BrowserGlue.prototype = {
   _xpcom_factory: BrowserGlueServiceFactory,
 }
 
-function GeolocationPrompt() {}
+function ContentPermissionPrompt() {}
 
-GeolocationPrompt.prototype = {
-  classID:          Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
+ContentPermissionPrompt.prototype = {
+  classID:          Components.ID("{d8903bf6-68d5-4e97-bcd1-e4d3012f721a}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
-  prompt: function GP_prompt(request) {
-    var requestingURI = request.requestingURI;
+  prompt: function CPP_prompt(request) {
+
+    if (request.type != "geolocation") {
+        return;
+    }
+
+    var requestingURI = request.uri;
 
     // Ignore requests from non-nsIStandardURLs
     if (!(requestingURI instanceof Ci.nsIStandardURL))
@@ -1382,7 +1387,7 @@ GeolocationPrompt.prototype = {
     // Different message/options if it is a local file
     if (requestingURI.schemeIs("file")) {
       message = browserBundle.formatStringFromName("geolocation.fileWantsToKnow",
-                                                   [request.requestingURI.path], 1);
+                                                   [requestingURI.path], 1);
     } else {
       message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
                                                    [requestingURI.host], 1);
@@ -1412,7 +1417,7 @@ GeolocationPrompt.prototype = {
       }
     }
 
-    var requestingWindow = request.requestingWindow.top;
+    var requestingWindow = request.window.top;
     var chromeWin = getChromeWindow(requestingWindow).wrappedJSObject;
     var browser = chromeWin.gBrowser.getBrowserForDocument(requestingWindow.document);
 
@@ -1421,5 +1426,5 @@ GeolocationPrompt.prototype = {
   }
 };
 
-var components = [BrowserGlue, GeolocationPrompt];
+var components = [BrowserGlue, ContentPermissionPrompt];
 var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

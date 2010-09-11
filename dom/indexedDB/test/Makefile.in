@@ -44,7 +44,7 @@ relativesrcdir = dom/indexedDB/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+TEST_FILES = \
   helpers.js \
   test_add_twice_failure.html \
   test_bad_keypath.html \
@@ -79,5 +79,19 @@ _TEST_FILES = \
   test_writer_starvation.html \
   $(NULL)
 
-libs:: $(_TEST_FILES)
+BROWSER_TEST_FILES = \
+  browserHelpers.js \
+  browser_permissionsPrompt.html \
+  browser_permissionsPromptAllow.js \
+  browser_permissionsPromptDeny.js \
+  browser_quotaPrompt.html \
+  browser_quotaPromptAllow.js \
+  browser_quotaPromptDeny.js \
+  head.js \
+  $(NULL)
+
+libs:: $(TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

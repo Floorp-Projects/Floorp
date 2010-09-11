@@ -49,9 +49,10 @@ function test() {
 
   // Import the toolkit test support library in the scope of the current test.
   // This operation also defines the common constants Cc, Ci, Cu, Cr and Cm.
+  var rootDir = getRootDirectory(gTestPath);
   Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
    getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript(
-   "chrome://mochikit/content/browser/toolkit/content/tests/browser/common/_loadAll.js",
+   rootDir + "common/_loadAll.js",
    this);
 
   // --- Test implementation ---

@@ -22,8 +22,7 @@
       var documentInjected = false;
       document.getElementsByTagName("iframe")[0].onload =
         function() { documentInjected = true; };
-      frames[0].location = "chrome://mochikit/content/browser/" +
-        "browser/components/sessionstore/test/browser/browser_459906_empty.html";
+      frames[0].location = "browser_459906_empty.html";
       
       // ... and ensure that it has time to load
       for (var c = 0; !documentInjected && c < 20; c++) {

@@ -169,7 +169,7 @@
   margin: 0 4px;
   padding: 1px 10px;
   -moz-appearance: none;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: @roundButtonBorder@;
   background: @roundButtonBackground@;
   -moz-box-shadow: @roundButtonShadow@;
@@ -208,7 +208,7 @@ toolbarseparator {
   margin: 4px 0 9px;
   padding: 0 4px;
   border: 1px solid @toolbarbuttonBorderColor@;
-  -moz-border-radius: @toolbarbuttonCornerRadius@;
+  border-radius: @toolbarbuttonCornerRadius@;
   -moz-box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;

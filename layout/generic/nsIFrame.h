@@ -1097,11 +1097,14 @@ public:
    * border/background/outline items for this frame are not clipped,
    * unless aClipBorderBackground is set to PR_TRUE. (We need this because
    * a scrollframe must overflow-clip its scrolled child's background/borders.)
+   *
+   * Indices into aClipRadii are the NS_CORNER_* constants in nsStyleConsts.h
    */
   nsresult OverflowClip(nsDisplayListBuilder*   aBuilder,
                         const nsDisplayListSet& aFromSet,
                         const nsDisplayListSet& aToSet,
                         const nsRect&           aClipRect,
+                        const nscoord           aClipRadii[8],
                         PRBool                  aClipBorderBackground = PR_FALSE,
                         PRBool                  aClipAll = PR_FALSE);
 
@@ -1124,6 +1127,15 @@ public:
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists,
                                     PRUint32                aFlags = 0);
+
+  /**
+   * A helper for replaced elements that want to clip their content to a
+   * border radius, but only need clipping at all when they have a
+   * border radius.
+   */
+  void WrapReplacedContentForBorderRadius(nsDisplayListBuilder* aBuilder,
+                                          nsDisplayList* aFromList,
+                                          const nsDisplayListSet& aToLists);
 
   /**
    * Does this frame need a view?
@@ -1504,6 +1516,12 @@ public:
     {}
     IntrinsicSize& operator=(const IntrinsicSize& rhs) {
       width = rhs.width; height = rhs.height; return *this;
+    }
+    PRBool operator==(const IntrinsicSize& rhs) {
+      return width == rhs.width && height == rhs.height;
+    }
+    PRBool operator!=(const IntrinsicSize& rhs) {
+      return !(*this == rhs);
     }
   };
   virtual IntrinsicSize GetIntrinsicSize() = 0;

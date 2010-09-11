@@ -341,6 +341,11 @@ nsWindow::Destroy(void)
         NS_IF_RELEASE(gMenuRollup);
     }
 
+    if (mLayerManager) {
+        mLayerManager->Destroy();
+    }
+    mLayerManager = nsnull;
+
     Show(PR_FALSE);
 
     // walk the list of children and call destroy on them.  Have to be

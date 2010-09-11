@@ -906,8 +906,9 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 /* Identity indicator */
 #identity-box {
-  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
-  color: -moz-dialogtext;
+  background-color: rgb(95%,95%,95%);
+  background-image: -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
+  color: #444;
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
@@ -919,27 +920,26 @@ toolbar[iconsize="small"] #fullscreen-button {
   outline: 1px dotted -moz-DialogText;
 }
 
-#identity-box:hover {
-  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
-}
-
 #identity-box:hover:active,
 #identity-box[open="true"] {
   background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
 }
 
 #identity-icon-labels {
-  padding: 0 2px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 3px;
 }
 
 #identity-box.verifiedDomain {
   background-color: rgba(30, 80, 170, 0.7);
   color: white;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
 #identity-box.verifiedIdentity {
   background-color: rgba(50, 150, 50, 0.8);
   color: white;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
 }
 
 /* Identity popup icons */
@@ -1008,6 +1008,15 @@ toolbar[iconsize="small"] #fullscreen-button {
   padding: 10px;
 }
 
+/* Invalid form popup */
+#invalid-form-popup {
+  -moz-appearance: none;
+  background-color: #fffcd6;
+  border: 1px solid #dad8b6;
+  padding: 5px 5px 5px 5px;
+  font-weight: bold;
+}
+
 /* Notification popup */
 #notification-popup {
   margin: 4px 0;
@@ -1032,6 +1041,16 @@ toolbar[iconsize="small"] #fullscreen-button {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
   width: 32px;
   height: 32px;
+}
+
+.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
+.popup-notification-icon[popupid="indexedDB-quota-prompt"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
+.popup-notification-icon[popupid="password-save"],
+.popup-notification-icon[popupid="password-change"] {
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
 }
 
 /* Notification icon box */
@@ -1059,6 +1078,14 @@ toolbar[iconsize="small"] #fullscreen-button {
 
 #addons-notification-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
+}
+
+#indexedDB-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/question-16.png);
+}
+
+#password-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
 
 /* Feed icon */
@@ -1155,8 +1182,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-origin: border-box;
   border: none;
   border-left: 1px solid rgba(0,0,0,.35);
-  -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomright: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 #urlbar > toolbarbutton:active:hover {
@@ -1319,8 +1346,8 @@ statusbarpanel#statusbar-display {
   background-size: 200%;
   margin: 0;
   padding: 0;
-  -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px;
-  -moz-border-radius: 10px 8px 0 0;
+  -moz-border-image: url(tabbrowser/tab.png) 4 5 3 6 / 4px 5px 3px 6px repeat stretch;
+  border-radius: 10px 8px 0 0;
   min-height: 25px; /* reserve space for the sometimes hidden close button */
 }
 
@@ -1515,7 +1542,7 @@ statusbarpanel#statusbar-display {
   -moz-appearance: tab-scroll-arrow-forward;
   margin: 0;
   -moz-transition: 1s -moz-box-shadow ease-out;
-  -moz-border-radius: 4px;
+  border-radius: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {

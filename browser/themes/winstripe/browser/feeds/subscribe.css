@@ -13,7 +13,7 @@ html {
 
 #feedHeaderContainer {
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
   margin: -4em auto 0 auto;
   background-color: InfoBackground;
 }

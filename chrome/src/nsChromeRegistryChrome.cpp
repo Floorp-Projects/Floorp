@@ -78,8 +78,6 @@
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 
-#include "mozilla/Omnijar.h"
-
 #define UILOCALE_CMD_LINE_ARG "UILocale"
 
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
@@ -788,7 +786,6 @@ nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
       return NULL;
     }
 
-#ifdef MOZ_OMNIJAR
     if (mPath) {
       nsCOMPtr<nsIURI> fileURI;
       io->NewFileURI(mFile, getter_AddRefs(fileURI));
@@ -801,9 +798,7 @@ nsChromeRegistry::ManifestProcessingContext::GetManifestURI()
 
       NS_NewURI(getter_AddRefs(mManifestURI), spec, NULL, NULL, io);
     }
-    else
-#endif
-    {
+    else {
       io->NewFileURI(mFile, getter_AddRefs(mManifestURI));
     }
   }

@@ -183,16 +183,20 @@ IsOfflineAllowed(const nsACString &aDomain)
 // Returns two quotas - A hard limit for which adding data will be an error,
 // and a limit after which a warning event will be sent to the observer
 // service.  The warn limit may be -1, in which case there will be no warning.
+// If aOverrideQuota is set, the larger offline apps quota is used and no
+// warning is sent.
 static PRUint32
-GetQuota(const nsACString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
+GetQuota(const nsACString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota,
+         bool aOverrideQuota)
 {
   PRUint32 perm = GetOfflinePermission(aDomain);
-  if (IS_PERMISSION_ALLOWED(perm)) {
+  if (IS_PERMISSION_ALLOWED(perm) || aOverrideQuota) {
     // This is an offline app, give more space by default.
     *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppQuota,
                                                    DEFAULT_OFFLINE_APP_QUOTA) * 1024);
 
-    if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
+    if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN ||
+        aOverrideQuota) {
       *aWarnQuota = -1;
     } else {
       *aWarnQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppWarnQuota,
@@ -558,6 +562,7 @@ nsDOMStorage::nsDOMStorage()
   , mStorageType(nsPIDOMStorage::Unknown)
   , mItemsCached(PR_FALSE)
   , mEventBroadcaster(nsnull)
+  , mCanUseChromePersist(false)
 {
   mSecurityChecker = this;
   mItems.Init(8);
@@ -575,6 +580,7 @@ nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
   , mScopeDBKey(aThat.mScopeDBKey)
 #endif
   , mEventBroadcaster(nsnull)
+  , mCanUseChromePersist(aThat.mCanUseChromePersist)
 {
   mSecurityChecker = this;
   mItems.Init(8);
@@ -677,6 +683,15 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
 #endif
 
   mStorageType = LocalStorage;
+
+  nsCOMPtr<nsIURI> URI;
+  if (NS_SUCCEEDED(aPrincipal->GetURI(getter_AddRefs(URI))) && URI) {
+    PRBool isAbout;
+    mCanUseChromePersist =
+      (NS_SUCCEEDED(URI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
+      (NS_SUCCEEDED(URI->SchemeIs("about", &isAbout)) && isAbout);
+  }
+
   return NS_OK;
 }
 
@@ -810,6 +825,11 @@ nsDOMStorage::CacheStoragePermissions()
   return mSecurityChecker->CanAccess(subjectPrincipal);
 }
 
+bool
+nsDOMStorage::CanUseChromePersist()
+{
+  return mCanUseChromePersist;
+}
 
 class ItemCounterState
 {
@@ -1252,7 +1272,8 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
   PRInt32 offlineAppPermission;
   PRInt32 quota;
   PRInt32 warnQuota;
-  offlineAppPermission = GetQuota(mDomain, &quota, &warnQuota);
+  offlineAppPermission = GetQuota(mDomain, &quota, &warnQuota,
+                                  CanUseChromePersist());
 
   PRInt32 usage;
   rv = gStorageDB->SetKey(this, aKey, aValue, aSecure, quota,
