@@ -7189,9 +7189,9 @@ PresShell::ShouldIgnoreInvalidation()
 NS_IMETHODIMP_(void)
 PresShell::WillPaint(PRBool aWillSendDidPaint)
 {
-  // Don't bother doing anything if some viewmanager in our tree is
-  // painting while we still have painting suppressed.
-  if (mPaintingSuppressed) {
+  // Don't bother doing anything if some viewmanager in our tree is painting
+  // while we still have painting suppressed or we are not active.
+  if (mPaintingSuppressed || !mIsActive) {
     return;
   }
 
