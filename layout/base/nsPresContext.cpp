@@ -2392,6 +2392,33 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
   return mHasPendingInterrupt;
 }
 
+PRBool
+nsPresContext::IsRootContentDocument()
+{
+  // We are a root content document if: we are not chrome, we are a
+  // subdocument, and our parent is chrome.
+  if (IsChrome()) {
+    return PR_FALSE;
+  }
+  // We may not have a root frame, so use views.
+  nsIViewManager* vm = PresShell()->GetViewManager();
+  nsIView* view = nsnull;
+  if (NS_FAILED(vm->GetRootView(view)) || !view) {
+    return PR_FALSE;
+  }
+  view = view->GetParent(); // anonymous inner view
+  if (!view) {
+    return PR_FALSE;
+  }
+  view = view->GetParent(); // subdocumentframe's view
+  if (!view) {
+    return PR_FALSE;
+  }
+
+  nsIFrame* f = static_cast<nsIFrame*>(view->GetClientData());
+  return (f && f->PresContext()->IsChrome());
+}
+
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),

@@ -263,25 +263,35 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!subdocView)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> presShell;
+  nsCOMPtr<nsIPresShell> presShell = nsnull;
 
   nsIFrame* subdocRootFrame =
     static_cast<nsIFrame*>(subdocView->GetClientData());
 
   if (subdocRootFrame) {
     presShell = subdocRootFrame->PresContext()->PresShell();
-  } else {
+  }
+  // If painting is suppressed in the presshell, we try to look for a better
+  // presshell to use.
+  if (!presShell || (presShell->IsPaintingSuppressed() &&
+                     !aBuilder->IsIgnoringPaintSuppression())) {
     // During page transition mInnerView will sometimes have two children, the
     // first being the new page that may not have any frame, and the second
     // being the old page that will probably have a frame.
     nsIView* nextView = subdocView->GetNextSibling();
+    nsIFrame* frame = nsnull;
     if (nextView) {
-      subdocRootFrame = static_cast<nsIFrame*>(nextView->GetClientData());
+      frame = static_cast<nsIFrame*>(nextView->GetClientData());
     }
-    if (subdocRootFrame) {
-      subdocView = nextView;
-      presShell = subdocRootFrame->PresContext()->PresShell();
-    } else {
+    if (frame) {
+      nsIPresShell* ps = frame->PresContext()->PresShell();
+      if (!presShell || (ps && !ps->IsPaintingSuppressed())) {
+        subdocView = nextView;
+        subdocRootFrame = frame;
+        presShell = ps;
+      }
+    }
+    if (!presShell) {
       // If we don't have a frame we use this roundabout way to get the pres shell.
       if (!mFrameLoader)
         return NS_OK;
@@ -365,7 +375,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                      subdocAPD, parentAPD);
       childItems.AppendToTop(zoomItem);
-    } else if (!nsContentUtils::IsChildOfSameType(presShell->GetDocument())) {
+    } else if (presContext->IsRootContentDocument()) {
       // We always want top level content documents to be in their own layer.
       // If we need a zoom item then we are good because it creates a layer. If
       // not then create our own layer.
