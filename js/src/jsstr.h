@@ -1029,9 +1029,9 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
 }
 
 /*
- * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
- * and return null on error, otherwise return the jschar or byte vector that
- * was JS_malloc'ed. length is updated with the length of the new string in jschars.
+ * Inflate bytes to JS chars and vice versa.  Report out of memory via cx and
+ * return null on error, otherwise return the jschar or byte vector that was
+ * JS_malloc'ed. length is updated to the length of the new string in jschars.
  */
 extern jschar *
 js_InflateString(JSContext *cx, const char *bytes, size_t *length);

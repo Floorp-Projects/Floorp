@@ -1,4 +1,7 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=79:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,7 +24,8 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ * 
+ * ***** END LICENSE BLOCK ***** */
 
 #ifndef AbstractMacroAssembler_h
 #define AbstractMacroAssembler_h
@@ -278,8 +282,8 @@ public:
 
     // DataLabel32:
     //
-    // A DataLabelPtr is used to refer to a location in the code containing a pointer to be
-    // patched after the code has been generated.
+    // A DataLabel32 is used to refer to a location in the code containing a
+    // 32-bit constant to be patched after the code has been generated.
     class DataLabel32 {
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
@@ -479,6 +483,11 @@ public:
     }
 
     ptrdiff_t differenceBetween(Label from, DataLabel32 to)
+    {
+        return AssemblerType::getDifferenceBetweenLabels(from.m_label, to.m_label);
+    }
+
+    ptrdiff_t differenceBetween(DataLabel32 from, Label to)
     {
         return AssemblerType::getDifferenceBetweenLabels(from.m_label, to.m_label);
     }

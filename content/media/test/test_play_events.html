@@ -25,7 +25,11 @@ var tokens = {
 function gotPlayEvent(event) {
   var v = event.target;
   ok(tokens[v._state].indexOf(event.type) >= 0,
-     "Check expected event got " + event.type + " at " + v._state + " for " + v.src);
+     "Check expected event got " + event.type + " at " + v._state + " for " + v.src +
+     " uneval(event.type)=" + uneval(event.type) + " typeof(event.type)=" + typeof(event.type) +
+     " uneval(v._state)=" + uneval(v._state) + " typeof(v._state)=" + typeof(v._state) + 
+     " tokens["+v._state+"]=" + tokens[v._state] +
+     " tokens["+v._state+"].indexOf(event.type)=" + tokens[v._state].indexOf(event.type));
   v._state = event.type;
 }
 

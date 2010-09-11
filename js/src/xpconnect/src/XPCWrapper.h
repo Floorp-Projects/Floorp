@@ -210,7 +210,7 @@ extern const PRUint32 sNumSlots;
  * Cross origin wrappers and safe JSObject wrappers both need to know
  * which native is 'eval' for various purposes.
  */
-extern JSFastNative sEvalNative;
+extern JSNative sEvalNative;
 
 enum FunctionObjectSlot {
   eWrappedFunctionSlot = 0,
@@ -277,7 +277,7 @@ FindEval(XPCCallContext &ccx, JSObject *obj)
   }
 
   sEvalNative =
-    ::JS_GetFunctionFastNative(ccx, ::JS_ValueToFunction(ccx, eval_val));
+    ::JS_GetFunctionNative(ccx, ::JS_ValueToFunction(ccx, eval_val));
 
   if (!sEvalNative) {
     return DoThrowException(NS_ERROR_UNEXPECTED, ccx);

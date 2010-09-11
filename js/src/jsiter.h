@@ -58,6 +58,12 @@
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
+/*
+ * For cacheable native iterators, whether the iterator is currently active.
+ * Not serialized by XDR.
+ */
+#define JSITER_ACTIVE     0x1000
+
 struct NativeIterator {
     JSObject  *obj;
     void      *props_array;
@@ -66,8 +72,8 @@ struct NativeIterator {
     uint32    *shapes_array;
     uint32    shapes_length;
     uint32    shapes_key;
-    uintN     flags;
-    JSObject  *next;
+    uint32    flags;
+    JSObject  *next;  /* Forms cx->enumerators list, garbage otherwise. */
 
     bool isKeyIter() const { return (flags & JSITER_FOREACH) == 0; }
 
@@ -121,9 +127,9 @@ struct NativeIterator {
 
     static NativeIterator *allocateKeyIterator(JSContext *cx, uint32 slength,
                                                const js::AutoIdVector &props);
-    static NativeIterator *allocateValueIterator(JSContext *cx, uint32 slength,
+    static NativeIterator *allocateValueIterator(JSContext *cx,
                                                  const js::AutoValueVector &props);
-    void init(JSObject *obj, uintN flags, const uint32 *sarray, uint32 slength, uint32 key);
+    void init(JSObject *obj, uintN flags, uint32 slength, uint32 key);
 
     void mark(JSTracer *trc);
 };
