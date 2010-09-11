@@ -609,7 +609,10 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
       NS_ASSERTION(view != aWidgetView, "will recur infinitely");
       PRBool visible;
       childWidget->IsVisible(visible);
-      if (view && visible && !IsWidgetDrawnByPlugin(childWidget, view)) {
+      nsWindowType type;
+      childWidget->GetWindowType(type);
+      if (view && visible && !IsWidgetDrawnByPlugin(childWidget, view) &&
+          type != eWindowType_popup) {
         // Don't mess with views that are in completely different view
         // manager trees
         nsViewManager* viewManager = view->GetViewManager();
