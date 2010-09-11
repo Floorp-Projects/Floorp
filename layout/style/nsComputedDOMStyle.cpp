@@ -3802,54 +3802,6 @@ nsComputedDOMStyle::GetBorderStyleFor(mozilla::css::Side aSide, nsIDOMCSSValue**
   return NS_OK;
 }
 
-struct StyleCoordSerializeCalcOps {
-  StyleCoordSerializeCalcOps(nsAString& aResult)
-    : mResult(aResult)
-  {
-  }
-
-  typedef nsStyleCoord input_type;
-  typedef nsStyleCoord::Array input_array_type;
-
-  static nsCSSUnit GetUnit(const input_type& aValue) {
-    if (aValue.IsCalcUnit()) {
-      return css::ConvertCalcUnit(aValue.GetUnit());
-    }
-    return eCSSUnit_Null;
-  }
-
-  void Append(const char* aString)
-  {
-    mResult.AppendASCII(aString);
-  }
-
-  void AppendLeafValue(const input_type& aValue)
-  {
-    nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
-    if (aValue.GetUnit() == eStyleUnit_Percent) {
-      val->SetPercent(aValue.GetPercentValue());
-    } else {
-      NS_ABORT_IF_FALSE(aValue.GetUnit() == eStyleUnit_Coord,
-                        "unexpected unit");
-      val->SetAppUnits(aValue.GetCoordValue());
-    }
-
-    nsAutoString tmp;
-    val->GetCssText(tmp);
-    mResult.Append(tmp);
-  }
-
-  void AppendNumber(const input_type& aValue)
-  {
-    NS_ABORT_IF_FALSE(PR_FALSE,
-                      "should not have numbers in nsStyleCoord calc()");
-  }
-
-private:
-  nsAString &mResult;
-};
-
-
 void
 nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                     const nsStyleCoord& aCoord,
@@ -3909,36 +3861,50 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       aValue->SetIdent(eCSSKeyword_none);
       break;
 
-    default:
-      if (aCoord.IsCalcUnit()) {
-        nscoord percentageBase;
-        if (!aCoord.CalcHasPercent()) {
-          nscoord val = nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
-          if (aClampNegativeCalc && val < 0) {
-            NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
-                              "parser should have rejected value");
-            val = 0;
-          }
-          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
-        } else if (aPercentageBaseGetter &&
-                   (this->*aPercentageBaseGetter)(percentageBase)) {
-          nscoord val =
-            nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
-          if (aClampNegativeCalc && val < 0) {
-            NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
-                              "parser should have rejected value");
-            val = 0;
-          }
-          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
-        } else {
-          nsAutoString tmp;
-          StyleCoordSerializeCalcOps ops(tmp);
-          css::SerializeCalc(aCoord, ops);
-          aValue->SetString(tmp); // not really SetString
+    case eStyleUnit_Calc:
+      nscoord percentageBase;
+      if (!aCoord.CalcHasPercent()) {
+        nscoord val = nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
+        if (aClampNegativeCalc && val < 0) {
+          NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
+                            "parser should have rejected value");
+          val = 0;
         }
+        aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
+      } else if (aPercentageBaseGetter &&
+                 (this->*aPercentageBaseGetter)(percentageBase)) {
+        nscoord val =
+          nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+        if (aClampNegativeCalc && val < 0) {
+          NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
+                            "parser should have rejected value");
+          val = 0;
+        }
+        aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
       } else {
-        NS_ERROR("Can't handle this unit");
+        nsStyleCoord::Calc *calc = aCoord.GetCalcValue();
+        nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
+        nsAutoString tmp, result;
+
+        result.AppendLiteral("-moz-calc(");
+
+        val->SetAppUnits(calc->mLength);
+        val->GetCssText(tmp);
+        result.Append(tmp);
+
+        result.AppendLiteral(" + ");
+
+        val->SetPercent(calc->mPercent);
+        val->GetCssText(tmp);
+        result.Append(tmp);
+
+        result.AppendLiteral(")");
+
+        aValue->SetString(result); // not really SetString
       }
+      break;
+    default:
+      NS_ERROR("Can't handle this unit");
       break;
   }
 }
