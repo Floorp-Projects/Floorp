@@ -91,7 +91,7 @@ nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
   if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
     mValue.mFloat = aCopy.mValue.mFloat;
   }
-  else if (IsArrayValue()) {
+  else if (IsPointerValue()) {
     mValue.mPointer = aCopy.mValue.mPointer;
   }
   else {
@@ -122,12 +122,7 @@ PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
     case eStyleUnit_Enumerated:
       return mValue.mInt == aOther.mValue.mInt;
     case eStyleUnit_Calc:
-    case eStyleUnit_Calc_Plus:
-    case eStyleUnit_Calc_Minus:
-    case eStyleUnit_Calc_Times_L:
-    case eStyleUnit_Calc_Times_R:
-    case eStyleUnit_Calc_Divided:
-      return *this->GetArrayValue() == *aOther.GetArrayValue();
+      return *this->GetCalcValue() == *aOther.GetCalcValue();
   }
   NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
   return PR_FALSE;
@@ -184,15 +179,10 @@ void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
   }
 }
 
-void nsStyleCoord::SetArrayValue(Array* aValue, nsStyleUnit aUnit)
+void nsStyleCoord::SetCalcValue(Calc* aValue)
 {
-  mUnit = aUnit;
-  if (IsArrayValue()) {
-    mValue.mPointer = aValue;
-  } else {
-    NS_NOTREACHED("not a pointer value");
-    Reset();
-  }
+  mUnit = eStyleUnit_Calc;
+  mValue.mPointer = aValue;
 }
 
 void nsStyleCoord::SetNormalValue()
@@ -229,63 +219,6 @@ nsStyleCoord::GetAngleValueInRadians() const
     NS_NOTREACHED("unrecognized angular unit");
     return 0.0;
   }
-}
-
-PRBool
-nsStyleCoord::CalcHasPercent() const
-{
-  NS_ABORT_IF_FALSE(IsCalcUnit(), "caller should check IsCalcUnit()");
-  nsStyleCoord::Array *a = GetArrayValue();
-  for (size_t i = 0, i_end = a->Count(); i < i_end; ++i) {
-    const nsStyleCoord &v = a->Item(i);
-    if (v.GetUnit() == eStyleUnit_Percent) {
-      return PR_TRUE;
-    }
-    if (v.IsCalcUnit() && v.CalcHasPercent()) {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-
-inline void*
-nsStyleCoord::Array::operator new(size_t aSelfSize,
-                                  nsStyleContext *aAllocationContext,
-                                  size_t aItemCount) CPP_THROW_NEW
-{
-  NS_ABORT_IF_FALSE(aItemCount > 0, "cannot have 0 item count");
-  return aAllocationContext->Alloc(
-           aSelfSize + sizeof(nsStyleCoord) * (aItemCount - 1));
-}
-
-/* static */ nsStyleCoord::Array*
-nsStyleCoord::Array::Create(nsStyleContext *aAllocationContext,
-                            PRBool& aCanStoreInRuleTree,
-                            size_t aCount)
-{
-  // While it's not ideal that every time we use an array, we force it
-  // not to be stored in the rule tree, it's the easiest option for now.
-  // (This is done only because of the style-context-scoped allocation.)
-  aCanStoreInRuleTree = PR_FALSE;
-
-  return new(aAllocationContext, aCount) Array(aCount);
-}
-
-bool
-nsStyleCoord::Array::operator==(const Array& aOther) const
-{
-  if (Count() != aOther.Count()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < mCount; ++i) {
-    if ((*this)[i] != aOther[i]) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 // used by nsStyleSides and nsStyleCorners
