@@ -117,6 +117,9 @@ SETUP_FAILED_NO_PASSPHRASE:            "error.sync.reason.setup_failed_no_passph
 CREDENTIALS_CHANGED:                   "error.sync.reason.credentials_changed",
 ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
+OVER_QUOTA:                            "error.sync.reason.over_quota",
+
+RESPONSE_OVER_QUOTA:                   "14",
 
 // engine failure status codes
 ENGINE_UPLOAD_FAIL:                    "error.engine.reason.record_upload_fail",
