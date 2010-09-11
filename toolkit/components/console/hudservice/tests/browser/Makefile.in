@@ -54,6 +54,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_netlogging.js \
 	browser_webconsole_bug_593003_iframe_wrong_hud.js \
 	browser_webconsole_bug_581231_close_button.js \
+	browser_warn_user_about_replaced_api.js \
 	$(NULL)
 
 _BROWSER_TEST_PAGES = \
@@ -72,6 +73,7 @@ _BROWSER_TEST_PAGES = \
 	test-encoding-ISO-8859-1.html \
 	test-bug-593003-iframe-wrong-hud.html \
 	test-bug-593003-iframe-wrong-hud-iframe.html \
+	test-console-replaced-api.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
