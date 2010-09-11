@@ -2,6 +2,7 @@ toolkit.jar:
 %  content global %content/global/ contentaccessible=yes
 %  content global-platform %content/global-platform/ platform
 %  content global-region %content/global-region/
+%  content jquery %content/jquery/
 # provide the nsTransferable in nsDragAndDrop.js to extensions that have to
 # work with Geckos from before 1.9, when there was a separate file
 %  override chrome://global/content/nsTransferable.js chrome://global/content/nsDragAndDrop.js
@@ -85,3 +86,12 @@ toolkit.jar:
 #ifdef MOZ_SVG
    content/global/svg/svgBindings.xml          (/layout/svg/base/src/resources/content/svgBindings.xml)
 #endif
+   content\jquery\jquery.js                 (jquery/jquery.js)
+   content\jquery\jquery.colorhelpers.js    (jquery/jquery.colorhelpers.js)
+   content\jquery\jquery.flot.crosshair.js  (jquery/jquery.flot.crosshair.js)
+   content\jquery\jquery.flot.image.js      (jquery/jquery.flot.image.js)
+   content\jquery\jquery.flot.js            (jquery/jquery.flot.js)
+   content\jquery\jquery.flot.navigate.js   (jquery/jquery.flot.navigate.js)
+   content\jquery\jquery.flot.selection.js  (jquery/jquery.flot.selection.js)
+   content\jquery\jquery.flot.stack.js      (jquery/jquery.flot.stack.js)
+   content\jquery\jquery.flot.threshold.js  (jquery/jquery.flot.threshold.js)
