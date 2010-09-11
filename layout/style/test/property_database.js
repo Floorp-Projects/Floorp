@@ -376,28 +376,6 @@ var gCSSProperties = {
 		other_values: [ "center", "end", "justify" ],
 		invalid_values: []
 	},
-	"box-shadow": {
-		domProp: "boxShadow",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
-		prerequisites: { "color": "blue" },
-		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0", "inset 2px 2px 3px 4px black", "2px -2px green inset, 4px 4px 3px blue, inset 2px 2px",
-			/* calc() values */
-			"2px 2px -moz-calc(-5px)", /* clamped */
-			"-moz-calc(3em - 2px) 2px green",
-			"green -moz-calc(3em - 2px) 2px",
-			"2px -moz-calc(2px + 0.2em)",
-			"blue 2px -moz-calc(2px + 0.2em)",
-			"2px -moz-calc(2px + 0.2em) blue",
-			"-moz-calc(-2px) -moz-calc(-2px)",
-			"-2px -2px",
-			"-moz-calc(2px) -moz-calc(2px)",
-			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
-			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
-		],
-		invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none" ]
-	},
 	"-moz-box-sizing": {
 		domProp: "MozBoxSizing",
 		inherited: false,
@@ -1523,6 +1501,28 @@ var gCSSProperties = {
 			"-moz-calc(3*25px + 50%)",
 		],
 		invalid_values: []
+	},
+	"box-shadow": {
+		domProp: "boxShadow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		prerequisites: { "color": "blue" },
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0", "inset 2px 2px 3px 4px black", "2px -2px green inset, 4px 4px 3px blue, inset 2px 2px",
+			/* calc() values */
+			"2px 2px -moz-calc(-5px)", /* clamped */
+			"-moz-calc(3em - 2px) 2px green",
+			"green -moz-calc(3em - 2px) 2px",
+			"2px -moz-calc(2px + 0.2em)",
+			"blue 2px -moz-calc(2px + 0.2em)",
+			"2px -moz-calc(2px + 0.2em) blue",
+			"-moz-calc(-2px) -moz-calc(-2px)",
+			"-2px -2px",
+			"-moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
+		],
+		invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none" ]
 	},
 	"caption-side": {
 		domProp: "captionSide",
