@@ -370,11 +370,14 @@ var DownloadsView = {
 
   removeDownload: function dv_removeDownload(aItem) {
     this._dlmgr.removeDownload(aItem.getAttribute("downloadID"));
+    let f = this._getLocalFile(aItem.getAttribute("file"));
+    if (f.exists())
+      f.remove(false);
   },
 
   cancelDownload: function dv_cancelDownload(aItem) {
     this._dlmgr.cancelDownload(aItem.getAttribute("downloadID"));
-    var f = this._getLocalFile(aItem.getAttribute("file"));
+    let f = this._getLocalFile(aItem.getAttribute("file"));
     if (f.exists())
       f.remove(false);
   },
