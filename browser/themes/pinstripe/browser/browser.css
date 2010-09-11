@@ -640,11 +640,44 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 340px, 20px, 320px);
 }
 
-/* ----- FULLSCREEN AND RESTORE BUTTON ----- */
-
 #fullscreen-button[checked="true"],
 #restore-button {
   -moz-image-region: rect(0, 360px, 20px, 340px);
+}
+
+/* zoom controls */
+
+#zoom-controls {
+  -moz-box-align: center;
+}
+
+#zoom-out-button {
+  -moz-image-region: rect(0, 400px, 20px, 380px);
+}
+
+#zoom-in-button {
+  -moz-image-region: rect(0, 420px, 20px, 400px);
+}
+
+toolbar[mode="icons"] #zoom-out-button {
+  -moz-margin-end: 0;
+}
+
+toolbar[mode="icons"] #zoom-in-button {
+  -moz-border-start: none;
+  -moz-margin-start: 0;
+}
+
+#zoom-out-button:-moz-locale-dir(ltr),
+#zoom-in-button:-moz-locale-dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#zoom-out-button:-moz-locale-dir(rtl),
+#zoom-in-button:-moz-locale-dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
