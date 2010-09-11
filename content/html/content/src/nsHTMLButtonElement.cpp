@@ -507,6 +507,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         // Using presShell to dispatch the event. It makes sure that
         // event is not handled if the window is being destroyed.
         if (presShell && (event.message != NS_FORM_SUBMIT ||
+                          mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
                           mForm->CheckValidFormSubmission())) {
           // TODO: removing this code and have the submit event sent by the form
           // see bug 592124.
