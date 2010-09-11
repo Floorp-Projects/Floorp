@@ -51,6 +51,7 @@
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 #include "RasterImage.h"
+#include "VectorImage.h"
 
 #include "imgILoader.h"
 #include "ImageLogging.h"
@@ -782,10 +783,16 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
                     "Already have an image for non-multipart request");
 
   // If we're multipart, and our image is initialized, fix things up for another round
-  if (mIsMultiPartChannel && mImage &&
-      mImage->GetType() == imgIContainer::TYPE_RASTER) {
-    // Inform the RasterImage that we have new source data
-    static_cast<RasterImage*>(mImage.get())->NewSourceData();
+  if (mIsMultiPartChannel && mImage) {
+    if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
+      // Inform the RasterImage that we have new source data
+      static_cast<RasterImage*>(mImage.get())->NewSourceData();
+    } else {  // imageType == imgIContainer::TYPE_VECTOR
+      nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
+      NS_ABORT_IF_FALSE(imageAsStream,
+                        "SVG-typed Image failed QI to nsIStreamListener");
+      imageAsStream->OnStartRequest(aRequest, ctxt);
+    }
   }
 
   /*
@@ -921,15 +928,22 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // Tell the image that it has all of the source data. Note that this can
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
-  if (mImage && mImage->GetType() == imgIContainer::TYPE_RASTER) {
+  if (mImage) {
+    nsresult rv;
+    if (mImage->GetType() == imgIContainer::TYPE_RASTER) {
+      // Notify the image
+      rv = static_cast<RasterImage*>(mImage.get())->SourceDataComplete();
+    } else { // imageType == imgIContainer::TYPE_VECTOR
+      nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
+      NS_ABORT_IF_FALSE(imageAsStream,
+                        "SVG-typed Image failed QI to nsIStreamListener");
+      rv = imageAsStream->OnStopRequest(aRequest, ctxt, status);
+    }
 
-    // Notify the image
-    nsresult rv = static_cast<RasterImage*>(mImage.get())->SourceDataComplete();
-
-    // If we got an error in the SourceDataComplete() call, we don't want to
-    // proceed as if nothing bad happened. However, we also want to give
-    // precedence to failure status codes from necko, since presumably
-    // they're more meaningful.
+    // If we got an error in the SourceDataComplete() / OnStopRequest() call,
+    // we don't want to proceed as if nothing bad happened. However, we also
+    // want to give precedence to failure status codes from necko, since
+    // presumably they're more meaningful.
     if (NS_FAILED(rv) && NS_SUCCEEDED(status))
       status = rv;
   }
@@ -1015,9 +1029,11 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     }
 
     /* now we have mimetype, so we can infer the image type that we want */
-    // XXXdholbert When VectorImage lands, this is where we'd instantiate that
-    // (if mContentType matches SVG_MIMETYPE).  For now, just assume raster.
-    mImage = new RasterImage(mStatusTracker.forget());
+    if (mContentType.EqualsLiteral(SVG_MIMETYPE)) {
+      mImage = new VectorImage(mStatusTracker.forget());
+    } else {
+      mImage = new RasterImage(mStatusTracker.forget());
+    }
     imageType = mImage->GetType();
 
     // Notify any imgRequestProxys that are observing us that we have an Image.
@@ -1121,17 +1137,32 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       }
     }
 
-    // If we were waiting on the image to do something, now's our chance.
-    if (mDecodeRequested) {
-      mImage->RequestDecode();
+    if (imageType == imgIContainer::TYPE_RASTER) {
+      // If we were waiting on the image to do something, now's our chance.
+      if (mDecodeRequested) {
+        mImage->RequestDecode();
+      }
+    } else { // imageType == imgIContainer::TYPE_VECTOR
+      nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
+      NS_ABORT_IF_FALSE(imageAsStream,
+                        "SVG-typed Image failed QI to nsIStreamListener");
+      imageAsStream->OnStartRequest(aRequest, nsnull);
     }
   }
 
-  // WriteToRasterImage always consumes everything it gets
-  PRUint32 bytesRead;
-  rv = inStr->ReadSegments(RasterImage::WriteToRasterImage,
-                           static_cast<void*>(mImage),
-                           count, &bytesRead);
+  if (imageType == imgIContainer::TYPE_RASTER) {
+    // WriteToRasterImage always consumes everything it gets
+    PRUint32 bytesRead;
+    rv = inStr->ReadSegments(RasterImage::WriteToRasterImage,
+                             static_cast<void*>(mImage),
+                             count, &bytesRead);
+    NS_ABORT_IF_FALSE(bytesRead == count,
+                      "WriteToRasterImage should consume everything!");
+  } else { // imageType == imgIContainer::TYPE_VECTOR
+    nsCOMPtr<nsIStreamListener> imageAsStream = do_QueryInterface(mImage);
+    rv = imageAsStream->OnDataAvailable(aRequest, ctxt, inStr,
+                                        sourceOffset, count);
+  }
   if (NS_FAILED(rv)) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- "
@@ -1139,7 +1170,6 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
     return NS_BINDING_ABORTED;
   }
-  NS_ABORT_IF_FALSE(bytesRead == count, "WriteToRasterImage should consume everything!");
 
   return NS_OK;
 }

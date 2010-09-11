@@ -40,21 +40,26 @@
 #ifndef mozilla_dom_indexeddb_idbindex_h__
 #define mozilla_dom_indexeddb_idbindex_h__
 
-#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIIDBIndex.h"
+
+#include "nsDOMEventTargetHelper.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBObjectStore;
 struct IndexInfo;
 
-class IDBIndex : public IDBRequest::Generator,
+class IDBIndex : public nsDOMEventTargetHelper,
                  public nsIIDBIndex
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBINDEX
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBIndex,
+                                           nsDOMEventTargetHelper)
 
   static already_AddRefed<IDBIndex>
   Create(IDBObjectStore* aObjectStore,
@@ -65,11 +70,10 @@ public:
     return mObjectStore;
   }
 
-protected:
+private:
   IDBIndex();
   ~IDBIndex();
 
-private:
   nsRefPtr<IDBObjectStore> mObjectStore;
 
   PRInt64 mId;
@@ -77,6 +81,9 @@ private:
   nsString mKeyPath;
   bool mUnique;
   bool mAutoIncrement;
+
+  // Only touched on the main thread.
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 };
 
 END_INDEXEDDB_NAMESPACE

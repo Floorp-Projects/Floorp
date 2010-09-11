@@ -133,6 +133,7 @@ class nsIObserver;
 class nsPresContext;
 class nsIChannel;
 struct nsIntMargin;
+class nsPIDOMWindow;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -443,6 +444,12 @@ public:
    * @param aDocShell The docshell or null if no JS context
    */
   static nsIDocShell *GetDocShellFromCaller();
+
+  /**
+   * Get the window through the JS context that's currently on the stack.
+   * If there's no JS context currently on the stack, returns null.
+   */
+  static nsPIDOMWindow *GetWindowFromCaller();
 
   /**
    * The two GetDocumentFrom* functions below allow a caller to get at a

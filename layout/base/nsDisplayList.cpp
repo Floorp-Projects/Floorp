@@ -1319,18 +1319,18 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
-                             nsIFrame* aFrame, nsIFrame* aClippingFrame,
-                             nsDisplayItem* aItem, const nsRect& aRect)
+                             nsIFrame* aFrame, nsDisplayItem* aItem,
+                             const nsRect& aRect)
    : nsDisplayWrapList(aBuilder, aFrame, aItem),
-     mClippingFrame(aClippingFrame), mClip(aRect) {
+     mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
-                             nsIFrame* aFrame, nsIFrame* aClippingFrame,
-                             nsDisplayList* aList, const nsRect& aRect)
+                             nsIFrame* aFrame, nsDisplayList* aList,
+                             const nsRect& aRect)
    : nsDisplayWrapList(aBuilder, aFrame, aList),
-     mClippingFrame(aClippingFrame), mClip(aRect) {
+     mClip(aRect) {
   MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
@@ -1372,7 +1372,7 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
   if (aItem->GetType() != TYPE_CLIP)
     return PR_FALSE;
   nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
-  if (other->mClip != mClip || other->mClippingFrame != mClippingFrame)
+  if (other->mClip != mClip)
     return PR_FALSE;
   mList.AppendToBottom(&other->mList);
   return PR_TRUE;
@@ -1381,7 +1381,80 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
 nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
                                                 nsDisplayItem* aItem) {
   return new (aBuilder)
-    nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
+    nsDisplayClip(aBuilder, aItem->GetUnderlyingFrame(), aItem, mClip);
+}
+
+nsDisplayClipRoundedRect::nsDisplayClipRoundedRect(
+                             nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                             nsDisplayItem* aItem,
+                             const nsRect& aRect, nscoord aRadii[8])
+    : nsDisplayClip(aBuilder, aFrame, aItem, aRect)
+{
+  MOZ_COUNT_CTOR(nsDisplayClipRoundedRect);
+  memcpy(mRadii, aRadii, sizeof(mRadii));
+}
+
+nsDisplayClipRoundedRect::nsDisplayClipRoundedRect(
+                             nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                             nsDisplayList* aList,
+                             const nsRect& aRect, nscoord aRadii[8])
+    : nsDisplayClip(aBuilder, aFrame, aList, aRect)
+{
+  MOZ_COUNT_CTOR(nsDisplayClipRoundedRect);
+  memcpy(mRadii, aRadii, sizeof(mRadii));
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayClipRoundedRect::~nsDisplayClipRoundedRect()
+{
+  MOZ_COUNT_DTOR(nsDisplayClipRoundedRect);
+}
+#endif
+
+PRBool nsDisplayClipRoundedRect::IsOpaque(nsDisplayListBuilder* aBuilder)
+{
+  return PR_FALSE;
+}
+
+void
+nsDisplayClipRoundedRect::HitTest(nsDisplayListBuilder* aBuilder,
+                                  const nsRect& aRect, HitTestState* aState,
+                                  nsTArray<nsIFrame*> *aOutFrames)
+{
+  // FIXME: Consider border-radius.
+  mList.HitTest(aBuilder, aRect, aState, aOutFrames);
+}
+
+nsDisplayWrapList*
+nsDisplayClipRoundedRect::WrapWithClone(nsDisplayListBuilder* aBuilder,
+                                        nsDisplayItem* aItem) {
+  return new (aBuilder)
+    nsDisplayClipRoundedRect(aBuilder, aItem->GetUnderlyingFrame(), aItem,
+                             mClip, mRadii);
+}
+
+PRBool nsDisplayClipRoundedRect::ComputeVisibility(
+                                    nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion)
+{
+  nsRegion clipped;
+  clipped.And(*aVisibleRegion, mClip);
+
+  return nsDisplayWrapList::ComputeVisibility(aBuilder, &clipped);
+  // FIXME: Remove a *conservative* opaque region from aVisibleRegion
+  // (like in nsDisplayClip::ComputeVisibility).
+}
+
+PRBool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
+{
+  if (aItem->GetType() != TYPE_CLIP_ROUNDED_RECT)
+    return PR_FALSE;
+  nsDisplayClipRoundedRect* other =
+    static_cast<nsDisplayClipRoundedRect*>(aItem);
+  if (mClip != other->mClip || mRadii != other->mRadii)
+    return PR_FALSE;
+  mList.AppendToBottom(&other->mList);
+  return PR_TRUE;
 }
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,

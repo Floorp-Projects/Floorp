@@ -597,6 +597,22 @@ nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
 }
 
 void
+nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
+                                       nsIContent* aTriggerContent,
+                                       PRInt32 aXPos, PRInt32 aYPos)
+{
+  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, PR_TRUE);
+  if (!popupFrame || !MayShowPopup(popupFrame))
+    return;
+
+  InitTriggerEvent(nsnull, nsnull, nsnull);
+
+  popupFrame->InitializePopupAtScreen(aTriggerContent, aXPos, aYPos, PR_FALSE);
+
+  FirePopupShowingEvent(aPopup, PR_FALSE, PR_FALSE);
+}
+
+void
 nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
                                             nsIContent* aAnchorContent,
                                             nsAString& aAnchor,
@@ -608,7 +624,7 @@ nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
   if (!popupFrame || !MayShowPopup(popupFrame))
     return;
 
-  InitTriggerEvent(nsnull, aPopup, nsnull);
+  InitTriggerEvent(nsnull, nsnull, nsnull);
 
   popupFrame->InitializePopupWithAnchorAlign(aAnchorContent, aAnchor,
                                              aAlign, aXPos, aYPos);
@@ -1163,7 +1179,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
     // to closed and clear its trigger content.
     if (status == nsEventStatus_eConsumeNoDefault) {
       popupFrame->SetPopupState(ePopupClosed);
-      popupFrame->SetTriggerContent(nsnull);
+      popupFrame->ClearTriggerContent();
     }
     else {
       ShowPopupCallback(aPopup, popupFrame, aIsContextMenu, aSelectFirstItem);
@@ -1325,9 +1341,7 @@ nsXULPopupManager::GetLastTriggerNode(nsIDocument* aDocument, PRBool aIsTooltip)
   // the list of open popups.
   if (mOpeningPopup && mOpeningPopup->GetCurrentDoc() == aDocument &&
       aIsTooltip == (mOpeningPopup->Tag() == nsGkAtoms::tooltip)) {
-    nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(mOpeningPopup, PR_FALSE);
-    if (popupFrame)
-      node = do_QueryInterface(popupFrame->GetTriggerContent());
+    node = do_QueryInterface(nsMenuPopupFrame::GetTriggerContent(GetPopupFrameForContent(mOpeningPopup, PR_FALSE)));
   }
   else {
     nsMenuChainItem* item = aIsTooltip ? mNoHidePanels : mPopups;
@@ -1335,8 +1349,9 @@ nsXULPopupManager::GetLastTriggerNode(nsIDocument* aDocument, PRBool aIsTooltip)
       // look for a popup of the same type and document.
       if ((item->PopupType() == ePopupTypeTooltip) == aIsTooltip &&
           item->Content()->GetCurrentDoc() == aDocument) {
-        node = do_QueryInterface(item->Frame()->GetTriggerContent());
-        break;
+        node = do_QueryInterface(nsMenuPopupFrame::GetTriggerContent(item->Frame()));
+        if (node)
+          break;
       }
       item = item->GetParent();
     }

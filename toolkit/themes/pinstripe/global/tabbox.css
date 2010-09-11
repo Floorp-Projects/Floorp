@@ -103,7 +103,7 @@ tabbox.tabs-bottom > tabs > tab[selected=true],
 tabs.tabs-bottom > tab[selected=true] {
   border: solid #888;
   border-width: 0 2px 2px;
-  -moz-border-radius: 2px;
+  border-radius: 2px;
   -moz-border-left-colors: rgba(0, 0, 0, 0.08) #888;
   -moz-border-right-colors: rgba(0, 0, 0, 0.08) #888;
   -moz-border-bottom-colors: rgba(0, 0, 0, 0.08) #888;

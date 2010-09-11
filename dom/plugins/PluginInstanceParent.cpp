@@ -460,6 +460,24 @@ PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
     return true;
 }
 
+nsresult
+PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+PluginInstanceParent::NotifyPainted(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+PluginInstanceParent::GetSurface(gfxASurface** aSurface)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NPError
 PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 {

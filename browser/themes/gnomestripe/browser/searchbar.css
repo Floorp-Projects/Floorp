@@ -33,7 +33,7 @@
   -moz-margin-end: 2px;
   border: 0;
   -moz-box-align: center;
-  background: -moz-dialog -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
+  background: rgb(95%,95%,95%) -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
@@ -42,10 +42,6 @@
   padding: 2px 0;
   -moz-padding-end: 2px;
   border: 0;
-}
-
-.searchbar-engine-button:hover {
-  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
 }
 
 .searchbar-engine-button:hover:active,

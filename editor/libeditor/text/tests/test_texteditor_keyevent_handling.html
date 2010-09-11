@@ -287,9 +287,7 @@ function runTests()
     synthesizeKey("VK_TAB", { });
     check(aDescription + "Tab",
           true, true, !aIsTabbable && !aIsReadonly);
-    // The tab char is converted to 4 space characters because textarea/input
-    // elements are not preformatted editor.
-    is(aElement.value, !aIsTabbable && !aIsReadonly ? "a    " : "a",
+    is(aElement.value, !aIsTabbable && !aIsReadonly ? "a\t" : "a",
        aDescription + "Tab");
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Tab)");

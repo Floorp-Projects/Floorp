@@ -821,6 +821,62 @@ nsNPAPIPluginInstance::IsWindowless(PRBool* isWindowless)
 }
 
 NS_IMETHODIMP
+nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  PluginDestructionGuard guard(this);
+
+  if (!mPlugin)
+    return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->AsyncSetWindow(&mNPP, window);
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  PluginDestructionGuard guard(this);
+
+  if (!mPlugin)
+    return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->GetSurface(&mNPP, aSurface);
+}
+
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::NotifyPainted(void)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  PluginDestructionGuard guard(this);
+
+  if (!mPlugin)
+    return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->NotifyPainted(&mNPP);
+}
+
+
+NS_IMETHODIMP
 nsNPAPIPluginInstance::IsTransparent(PRBool* isTransparent)
 {
   *isTransparent = mTransparent;
@@ -1170,4 +1226,10 @@ nsNPAPIPluginInstance::InvalidateOwner()
   mOwner = nsnull;
 
   return NS_OK;
+}
+
+nsresult
+nsNPAPIPluginInstance::AsyncSetWindow(NPWindow& window)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

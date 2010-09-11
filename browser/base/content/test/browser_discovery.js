@@ -19,7 +19,8 @@ function test() {
     event.currentTarget.removeEventListener("load", arguments.callee, true);
     iconDiscovery();
   }, true);
-  content.location = "chrome://mochikit/content/browser/browser/base/content/test/discovery.html";
+  var rootDir = getRootDirectory(gTestPath);
+  content.location = rootDir + "discovery.html";
 }
 
 var iconDiscoveryTests = [
@@ -56,8 +57,9 @@ function iconDiscovery() {
     var head = doc().getElementById("linkparent");
     var link = doc().createElement("link");
 
+    var rootDir = getRootDirectory(gTestPath);
     var rel = test.rel || "icon";
-    var href = test.href || "chrome://mochikit/content/browser/browser/base/content/test/moz.png";
+    var href = test.href || rootDir + "/moz.png";
     var type = test.type || "image/png";
     if (test.pass == undefined)
       test.pass = true;

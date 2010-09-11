@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=369306
+-->
+<head>
+  <title>Test for Bug 369306</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=369306">Mozilla Bug 369306</a>
+<p id="display"></p>
+<div id='content'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 369306 **/
+
+var originatingWindow = self;
+var gOldPrefValue = null;
+
+function focusShouldNotChange(aAction, nextTest)
+{
+  var w = window.open('', '', 'foo');
+  var fail = false;
+
+  w.addEventListener("focus", function(aEvent) {
+    aEvent.target.removeEventListener("focus", arguments.callee, false);
+
+    function failHandler() { fail = true; }
+
+    originatingWindow.addEventListener("focus", failHandler, false);
+    w.addEventListener("blur", failHandler, false);
+
+    aAction(w);
+
+    SimpleTest.executeSoon(function () {
+      originatingWindow.removeEventListener("focus", failHandler, false);
+      w.removeEventListener("blur", failHandler, false);
+
+      ok(!fail, "The focus should not have been changed!");
+
+      // Cleaning and running next test.
+      originatingWindow.addEventListener("focus", function() {
+        originatingWindow.removeEventListener("focus", arguments.callee, false);
+        SimpleTest.executeSoon(nextTest);
+      }, false);
+      w.close();
+    });
+  }, false);
+}
+
+function focusShouldNotChange2(aURL, nextTest)
+{
+  var w = window.open(aURL, '', 'foo');
+  var fail = false;
+
+  w.addEventListener("focus", function(aEvent) {
+    aEvent.target.removeEventListener("focus", arguments.callee, false);
+
+    function failHandler() { fail = true; }
+
+    originatingWindow.addEventListener("focus", failHandler, false);
+    w.addEventListener("blur", failHandler, false);
+
+    /**
+     * NOTE: This setTimeout can cause a random green.
+     * onload handler + executeSoon doesn't work too so we have to use setTimeout.
+     * The check may be call before w script being executed but that would make
+     * this check green even if it should be orange.
+     */
+    setTimeout(function () {
+      originatingWindow.removeEventListener("focus", failHandler, false);
+      w.removeEventListener("blur", failHandler, false);
+
+      ok(!fail, "The focus should not have been changed with URL=" + aURL);
+
+      // Cleaning and running next test.
+      originatingWindow.addEventListener("focus", function() {
+        originatingWindow.removeEventListener("focus", arguments.callee, false);
+        SimpleTest.executeSoon(nextTest);
+      }, false);
+      w.close();
+    }, 1000);
+  }, false);
+}
+
+function test1()
+{
+  focusShouldNotChange(function (aW) { aW.blur(); }, test2);
+}
+
+function test2()
+{
+  focusShouldNotChange(function () { originatingWindow.focus(); }, test3);
+}
+
+function test3()
+{
+  focusShouldNotChange2("data:text/html,\<script>opener.focus();\<\/script>", test4);
+}
+
+function test4()
+{
+  focusShouldNotChange2("data:text/html,\<script>blur();\<\/script>", test5);
+}
+
+function test5()
+{
+  var w = window.open('', '', 'foo');
+
+  w.addEventListener("focus", function(aEvent) {
+    aEvent.target.removeEventListener("focus", arguments.callee, false);
+
+    originatingWindow.addEventListener("focus", function(aEvent) {
+      aEvent.target.removeEventListener("focus", arguments.callee, false);
+
+      w.addEventListener("focus", function(aEvent) {
+        aEvent.target.removeEventListener("focus", arguments.callee, false);
+        ok(true, "The last opened window should be able to get focus");
+        w.close();
+        SimpleTest.executeSoon(finished);
+      }, false);
+
+      w.focus();
+    }, false);
+
+    SimpleTest.executeSoon(function() {
+      // We have to focus back the originating window but we can't do that with
+      // .focus() or .blur() anymore.
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var fm = Components.classes["@mozilla.org/focus-manager;1"].
+                          getService(Components.interfaces.nsIFocusManager);
+      fm.focusedWindow = window;
+    });
+  }, false);
+}
+
+function finished()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Components.interfaces.nsIPrefBranch)
+            .setBoolPref("dom.disable_window_flip", gOldPrefValue);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+
+// dom.disable_window_flip has to be set to true for this test.
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch);
+gOldPrefValue = prefs.getBoolPref("dom.disable_window_flip");
+prefs.setBoolPref("dom.disable_window_flip", true);
+
+// test1 is going to call the next tests.
+SimpleTest.waitForFocus(test1);
+
+</script>
+</pre>
+</body>
+</html>

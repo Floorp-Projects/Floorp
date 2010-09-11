@@ -209,6 +209,17 @@ _TEST_FILES = \
 		test_bug588683-2.html \
 		test_bug588683-3.html \
 		test_bug588683-4.html \
+		test_bug590353-1.html \
+		test_bug590353-2.html \
+		test_bug593689.html \
+		test_bug583288-1.html \
+		test_bug583288-2.html \
+		test_bug583288-3.html \
+		583288_submit_server.sjs \
+		583288_redirect_server.sjs \
+		test_bug555840.html \
+		test_bug561636.html \
+		test_bug556013.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -250,6 +250,10 @@ public:
     void Invalidate();
 #endif // definied(OS_MACOSX)
 
+    nsresult AsyncSetWindow(NPWindow* window);
+    nsresult NotifyPainted(void);
+    nsresult GetSurface(gfxASurface** aSurface);
+
 private:
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {

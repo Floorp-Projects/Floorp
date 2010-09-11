@@ -4585,7 +4585,10 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 void
 PresShell::UnsuppressAndInvalidate()
 {
-  if (!mPresContext->EnsureVisible() || mHaveShutDown) {
+  // Note: We ignore the EnsureVisible check for resource documents, because
+  // they won't have a docshell, so they'll always fail EnsureVisible.
+  if ((!mDocument->IsResourceDoc() && !mPresContext->EnsureVisible()) ||
+      mHaveShutDown) {
     // No point; we're about to be torn down anyway.
     return;
   }
@@ -4779,7 +4782,12 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   NS_ASSERTION(aType >= Flush_Frames, "Why did we get called?");
 
   PRBool isSafeToFlush = IsSafeToFlush();
-  isSafeToFlush = isSafeToFlush && nsContentUtils::IsSafeToRunScript();
+
+  // If layout could possibly trigger scripts, then it's only safe to flush if
+  // it's safe to run script.
+  if (mDocument->GetScriptGlobalObject()) {
+    isSafeToFlush = isSafeToFlush && nsContentUtils::IsSafeToRunScript();
+  }
 
   NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
   // Make sure the view manager stays alive while batching view updates.
@@ -5445,7 +5453,7 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             // the selection. If the allocation fails, fall through and delete
             // the item below.
             itemToInsert = new (aBuilder)
-                nsDisplayClip(aBuilder, frame, frame, i, textRect);
+                nsDisplayClip(aBuilder, frame, i, textRect);
           }
         }
         // Don't try to descend into subdocuments.

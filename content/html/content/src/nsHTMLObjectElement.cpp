@@ -130,9 +130,6 @@ public:
 
   void StartObjectLoad() { StartObjectLoad(PR_TRUE); }
 
-  // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; }
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLObjectElement,
                                                      nsGenericHTMLFormElement)
 
@@ -157,6 +154,9 @@ nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo
 {
   RegisterFreezableElement();
   SetIsNetworkCreated(aFromParser == NS_FROM_PARSER_NETWORK);
+
+  // <object> is always barred from constraint validation.
+  SetBarredFromConstraintValidation(PR_TRUE);
 }
 
 nsHTMLObjectElement::~nsHTMLObjectElement()

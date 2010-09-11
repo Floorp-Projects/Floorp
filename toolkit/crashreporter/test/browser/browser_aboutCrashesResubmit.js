@@ -1,7 +1,9 @@
 // load our utility script
 var scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                              .getService(Components.interfaces.mozIJSSubScriptLoader);
-scriptLoader.loadSubScript("chrome://mochikit/content/browser/toolkit/crashreporter/test/browser/aboutcrashes_utils.js", this);
+
+var rootDir = getRootDirectory(gTestPath);
+scriptLoader.loadSubScript(rootDir + "/aboutcrashes_utils.js", this);
 
 function cleanup_and_finish() {
   try {

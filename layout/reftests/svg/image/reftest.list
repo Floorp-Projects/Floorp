@@ -1,0 +1,50 @@
+# Tests related to SVG being used as an image
+
+# zoom/
+include zoom/reftest.list
+
+# Trivial background-image tests
+== background-simple-1.html  lime100x100-ref.html
+== background-simple-2.html  lime100x100-ref.html
+
+# Sightly trickier background-image test
+== background-viewBox-1.html  lime100x100-ref.html
+
+# Tests with -moz-image-rect()
+== background-image-rect-1svg.html  lime100x100-ref.html
+== background-image-rect-1png.html  lime100x100-ref.html
+== background-image-rect-2.html     lime100x100-ref.html
+
+# Test for -moz-border-image
+== border-image-simple-1.html       lime100x100-ref.html
+== border-image-simple-2.html       lime100x100-ref.html
+
+# Simple <img> tests
+== img-simple-1.html  lime100x100-ref.html
+== img-simple-2.html  lime100x100-ref.html
+== img-simple-3.html  lime100x100-ref.html
+== img-simple-4.html  lime100x100-ref.html
+== img-simple-5.html  lime100x100-ref.html
+== img-simple-6.html  lime100x100-ref.html
+== img-simple-7.html  lime100x100-ref.html
+
+== img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
+
+# XXXdholbert Some of the tests below fail on Windows 7 right now. Marking them
+# random-on-windows right now while I investigate.
+== img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
+== img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
+random-if(winWidget) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
+random-if(winWidget) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
+
+random-if(winWidget) == img-height-meet-1.html   img-height-meet-1-ref.html
+== img-height-meet-2.html   img-height-meet-2-ref.html
+random-if(winWidget) == img-height-slice-1.html  img-height-slice-1-ref.html
+== img-height-slice-2.html  img-height-slice-2-ref.html
+
+random-if(winWidget) == img-width-meet-1.html   img-width-meet-1-ref.html
+== img-width-meet-2.html   img-width-meet-2-ref.html
+random-if(winWidget) == img-width-slice-1.html  img-width-slice-1-ref.html
+== img-width-slice-2.html  img-width-slice-2-ref.html
+
+== list-simple-1.html list-simple-1-ref.html

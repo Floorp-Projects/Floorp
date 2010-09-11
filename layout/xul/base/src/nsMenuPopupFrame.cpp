@@ -504,6 +504,28 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, P
   }
 }
 
+nsIContent*
+nsMenuPopupFrame::GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame)
+{
+  while (aMenuPopupFrame) {
+    if (aMenuPopupFrame->mTriggerContent)
+      return aMenuPopupFrame->mTriggerContent;
+
+    // check up the menu hierarchy until a popup with a trigger node is found
+    nsMenuFrame* menuFrame = aMenuPopupFrame->GetParentMenu();
+    if (!menuFrame)
+      break;
+
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
+    if (!parentPopup || !parentPopup->IsMenu())
+      break;
+
+    aMenuPopupFrame = static_cast<nsMenuPopupFrame *>(parentPopup);
+  }
+
+  return nsnull;
+}
+
 void
 nsMenuPopupFrame::InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                               const nsAString& aAlign)

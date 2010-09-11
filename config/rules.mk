@@ -147,9 +147,9 @@ endif
 ifdef ENABLE_TESTS
 
 ifdef XPCSHELL_TESTS
-#ifndef MODULE
-#$(error Must define MODULE when defining XPCSHELL_TESTS.)
-#endif
+ifndef relativesrcdir
+$(error Must define relativesrcdir when defining XPCSHELL_TESTS.)
+endif
 
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
@@ -975,11 +975,11 @@ ifneq (,$(SHARED_LIBRARY)$(PROGRAM))
 export::
 ifdef PROGRAM
 	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
-	  $(PROGRAM:$(BIN_SUFFIX)=) $(DIST)/bin
+	  $(PROGRAM:$(BIN_SUFFIX)=) $(DIST)/$(MOZ_APP_NAME)
 endif
 ifdef SHARED_LIBRARY
 	$(PYTHON) $(topsrcdir)/build/win32/pgomerge.py \
-	  $(SHARED_LIBRARY_NAME) $(DIST)/bin
+	  $(SHARED_LIBRARY_NAME) $(DIST)/$(MOZ_APP_NAME)
 endif
 endif # SHARED_LIBRARY || PROGRAM
 endif # WINNT_

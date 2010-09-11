@@ -49,6 +49,7 @@
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIPrefService.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
@@ -507,6 +508,8 @@ LoadExtensionDirectories(nsINIParser &parser,
 {
   nsresult rv;
   PRInt32 i = 0;
+  nsCOMPtr<nsIPrefServiceInternal> prefs =
+    do_GetService("@mozilla.org/preferences-service;1");
   do {
     nsCAutoString buf("Extension");
     buf.AppendInt(i++);
@@ -524,11 +527,19 @@ LoadExtensionDirectories(nsINIParser &parser,
     if (NS_FAILED(rv))
       continue;
 
-    aDirectories.AppendObject(dir);
+    if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
+      XRE_AddJarManifestLocation(aType, dir);
+      if (!prefs)
+        continue;
+      prefs->ReadExtensionPrefs(dir);
+    }
+    else {
+      aDirectories.AppendObject(dir);
 
-    nsCOMPtr<nsILocalFile> manifest =
-      CloneAndAppend(dir, "chrome.manifest");
-    XRE_AddManifestLocation(aType, manifest);
+      nsCOMPtr<nsILocalFile> manifest =
+        CloneAndAppend(dir, "chrome.manifest");
+      XRE_AddManifestLocation(aType, manifest);
+    }
   }
   while (PR_TRUE);
 }

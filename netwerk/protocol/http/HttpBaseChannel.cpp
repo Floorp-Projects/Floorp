@@ -73,6 +73,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mInheritApplicationCache(PR_TRUE)
   , mChooseApplicationCache(PR_FALSE)
   , mLoadedFromApplicationCache(PR_FALSE)
+  , mChannelIsForDownload(PR_FALSE)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -932,6 +933,20 @@ NS_IMETHODIMP
 HttpBaseChannel::GetCanceled(PRBool *aCanceled)
 {
   *aCanceled = mCanceled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetChannelIsForDownload(PRBool *aChannelIsForDownload)
+{
+  *aChannelIsForDownload = mChannelIsForDownload;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetChannelIsForDownload(PRBool aChannelIsForDownload)
+{
+  mChannelIsForDownload = aChannelIsForDownload;
   return NS_OK;
 }
 

@@ -21,9 +21,7 @@ function run_test() {
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);
 
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_missing.rdf",
@@ -33,7 +31,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
   startupManager();
 

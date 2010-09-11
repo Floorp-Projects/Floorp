@@ -1181,29 +1181,6 @@ nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect)
                 aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.YMost()) - NSToIntFloor(rect.Y())));
 }
 
-static PRInt32
-ClampToInt(double aVal)
-{
-  return NS_lround(NS_MAX(double(PR_INT32_MIN), NS_MIN(double(PR_INT32_MAX), aVal)));
-}
-
-gfxIntSize
-nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
-{
-  gfxIntSize surfaceSize(ClampToInt(aSize.width), ClampToInt(aSize.height));
-
-  *aResultOverflows = surfaceSize.width != NS_round(aSize.width) ||
-      surfaceSize.height != NS_round(aSize.height);
-
-  if (!gfxASurface::CheckSurfaceSize(surfaceSize)) {
-    surfaceSize.width = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.width);
-    surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.height);
-    *aResultOverflows = PR_TRUE;
-  }
-
-  return surfaceSize;
-}
-
 gfxMatrix
 nsSVGUtils::ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix)
 {

@@ -144,6 +144,13 @@ TransactionThreadPool::GetOrCreate()
 }
 
 // static
+TransactionThreadPool*
+TransactionThreadPool::Get()
+{
+  return gInstance;
+}
+
+// static
 void
 TransactionThreadPool::Shutdown()
 {
@@ -384,6 +391,10 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
   NS_ASSERTION(aTransaction, "Null pointer!");
   NS_ASSERTION(aRunnable, "Null pointer!");
 
+  if (aTransaction->mDatabase->IsInvalidated() && !aFinish) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   bool canRun;
   TransactionQueue* existingQueue;
   nsresult rv = TransactionCanRun(aTransaction, &canRun, &existingQueue);
@@ -470,6 +481,24 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
   }
 
   return mThreadPool->Dispatch(transactionInfo->queue, NS_DISPATCH_NORMAL);
+}
+
+void
+TransactionThreadPool::WaitForAllTransactionsToComplete(IDBDatabase* aDatabase)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  const PRUint32 databaseId = aDatabase->Id();
+  nsIThread* currentThread = NS_GetCurrentThread();
+
+  // As soon as all of the transactions for this database are complete its
+  // entry in mTransactionsInProgress will be removed, so just loop while
+  // checking.
+  while (mTransactionsInProgress.Get(databaseId, nsnull)) {
+    if (NS_FAILED(NS_ProcessNextEvent(currentThread, PR_TRUE))) {
+      NS_WARNING("Failed to process next event?!");
+    }
+  }
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(TransactionThreadPool, nsIObserver)

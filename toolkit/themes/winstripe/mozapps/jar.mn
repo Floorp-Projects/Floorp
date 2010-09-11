@@ -38,6 +38,8 @@ toolkit.jar:
         skin/classic/mozapps/extensions/eula.css                   (extensions/eula.css)
         skin/classic/mozapps/handling/handling.css                 (handling/handling.css)
         skin/classic/mozapps/passwordmgr/key.png                   (passwordmgr/key.png)
+        skin/classic/mozapps/passwordmgr/key-16.png                (passwordmgr/key-16.png)
+        skin/classic/mozapps/passwordmgr/key-64.png                (passwordmgr/key-64.png)
 #ifdef MOZ_PLACES
         skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
         skin/classic/mozapps/places/tagContainerIcon.png           (places/tagContainerIcon.png)
@@ -104,6 +106,8 @@ toolkit.jar:
         skin/classic/aero/mozapps/extensions/eula.css                      (extensions/eula.css)
         skin/classic/aero/mozapps/handling/handling.css                    (handling/handling.css)
         skin/classic/aero/mozapps/passwordmgr/key.png                      (passwordmgr/key-aero.png)
+        skin/classic/aero/mozapps/passwordmgr/key-16.png                   (passwordmgr/key-aero-16.png)
+        skin/classic/aero/mozapps/passwordmgr/key-64.png                   (passwordmgr/key-aero-64.png)
 #ifdef MOZ_PLACES
         skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon-aero.png)
         skin/classic/aero/mozapps/places/tagContainerIcon.png              (places/tagContainerIcon-aero.png)

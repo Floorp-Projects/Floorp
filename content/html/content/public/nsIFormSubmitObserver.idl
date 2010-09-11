@@ -43,11 +43,15 @@
 interface nsIDOMHTMLFormElement;
 interface nsIDOMWindowInternal;
 interface nsIURI;
+interface nsIArray;
 
-[scriptable, uuid(0787d64a-44bf-4273-8438-61ff13ebec0c)]
+[scriptable, uuid(0b3cc84d-25d2-448e-ae71-746ee6e41c2d)]
 interface nsIFormSubmitObserver: nsISupports
 {
   void notify(in nsIDOMHTMLFormElement formNode, in nsIDOMWindowInternal window, in nsIURI actionURL, out boolean cancelSubmit);
+
+  void notifyInvalidSubmit(in nsIDOMHTMLFormElement formNode,
+                           in nsIArray invalidElements);
 };
 
 %{C++
@@ -55,4 +59,5 @@ interface nsIFormSubmitObserver: nsISupports
 #define NS_EARLYFORMSUBMIT_SUBJECT "earlyformsubmit"
 #define NS_FIRST_FORMSUBMIT_CATEGORY "firstformsubmit"
 #define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
+#define NS_INVALIDFORMSUBMIT_SUBJECT "invalidformsubmit"
 %}

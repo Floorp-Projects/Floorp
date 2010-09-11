@@ -278,3 +278,9 @@ ifdef MOZ_JAVAXPCOM
 dlldeps-javaxpcom.cpp: $(topsrcdir)/extensions/java/xpcom/src/dlldeps-javaxpcom.cpp
 	$(INSTALL) $^ .
 endif
+
+ifdef MOZ_DEBUG
+ifdef ENABLE_TESTS
+DEFINES += -DENABLE_LAYOUTDEBUG
+endif
+endif

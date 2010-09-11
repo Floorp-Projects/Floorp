@@ -108,10 +108,10 @@ public:
   }
 
   NS_IMETHOD Run() {
-    nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
-    NS_ASSERTION(prompt, "null geolocation prompt");
-    if (prompt) 
+    nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
+    if (prompt) {
       prompt->Prompt(mRequest);
+    }
     return NS_OK;
   }
 
@@ -147,7 +147,9 @@ public:
   // a bit funky.  if locator is passed, that means this
   // event should remove the request from it.  If we ever
   // have to do more, then we can change this around.
-  RequestSendLocationEvent(nsIDOMGeoPosition* aPosition, nsGeolocationRequest* aRequest, nsGeolocation* aLocator = nsnull)
+  RequestSendLocationEvent(nsIDOMGeoPosition* aPosition,
+                           nsGeolocationRequest* aRequest,
+                           nsGeolocation* aLocator = nsnull)
     : mPosition(aPosition),
       mRequest(aRequest),
       mLocator(aLocator)
@@ -267,8 +269,8 @@ nsGeolocationRequest::Init()
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocationRequest)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIGeolocationRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIGeolocationRequest)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPermissionRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END
 
@@ -305,7 +307,7 @@ nsGeolocationRequest::Notify(nsITimer* aTimer)
 }
  
 NS_IMETHODIMP
-nsGeolocationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
+nsGeolocationRequest::GetUri(nsIURI * *aRequestingURI)
 {
   NS_ENSURE_ARG_POINTER(aRequestingURI);
 
@@ -316,7 +318,14 @@ nsGeolocationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
 }
 
 NS_IMETHODIMP
-nsGeolocationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
+nsGeolocationRequest::GetType(nsACString & aType)
+{
+  aType = "geolocation";
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
 {
   NS_ENSURE_ARG_POINTER(aRequestingWindow);
 
@@ -327,7 +336,7 @@ nsGeolocationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
 }
 
 NS_IMETHODIMP
-nsGeolocationRequest::GetRequestingElement(nsIDOMElement * *aRequestingElement)
+nsGeolocationRequest::GetElement(nsIDOMElement * *aRequestingElement)
 {
   NS_ENSURE_ARG_POINTER(aRequestingElement);
   *aRequestingElement = nsnull;
@@ -864,10 +873,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGeolocation)
   PRUint32 i; 
   for (i = 0; i < tmp->mPendingCallbacks.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mPendingCallbacks[i], nsIGeolocationRequest)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mPendingCallbacks[i], nsIContentPermissionRequest)
 
   for (i = 0; i < tmp->mWatchingCallbacks.Length(); ++i)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWatchingCallbacks[i], nsIGeolocationRequest)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWatchingCallbacks[i], nsIContentPermissionRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsGeolocation::nsGeolocation() 
@@ -1106,13 +1115,14 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     // the one and only TabChild.
     TabChild* child = GetTabChildFrom(window->GetDocShell());
     
-    child->SendPGeolocationRequestConstructor(request, IPC::URI(mURI));
-    
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPGeolocationRequest.
+    // Corresponding release occurs in DeallocPContentPermissionRequest.
     request->AddRef();
 
-    unused << request->Sendprompt();
+    nsCString type = NS_LITERAL_CSTRING("geolocation");
+    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
+    
+    request->Sendprompt();
     return;
   }
 #endif
@@ -1150,19 +1160,26 @@ nsGeolocationRequestProxy::Init(mozilla::dom::GeolocationRequestParent* parent)
   NS_ASSERTION(parent, "null parent");
   mParent = parent;
 
-  nsCOMPtr<nsIGeolocationPrompt> prompt = do_GetService(NS_GEOLOCATION_PROMPT_CONTRACTID);
-  NS_ASSERTION(prompt, "null geolocation prompt.  geolocation will not work without one.");
-  if (!prompt)
+  nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
+  if (!prompt) {
     return NS_ERROR_FAILURE;
+  }
 
   (void) prompt->Prompt(this);
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsGeolocationRequestProxy, nsIGeolocationRequest);
+NS_IMPL_ISUPPORTS1(nsGeolocationRequestProxy, nsIContentPermissionRequest);
 
 NS_IMETHODIMP
-nsGeolocationRequestProxy::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
+nsGeolocationRequestProxy::GetType(nsACString & aType)
+{
+  aType = "geolocation";
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequestProxy::GetWindow(nsIDOMWindow * *aRequestingWindow)
 {
   NS_ENSURE_ARG_POINTER(aRequestingWindow);
   *aRequestingWindow = nsnull;
@@ -1170,7 +1187,7 @@ nsGeolocationRequestProxy::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow
 }
 
 NS_IMETHODIMP
-nsGeolocationRequestProxy::GetRequestingURI(nsIURI * *aRequestingURI)
+nsGeolocationRequestProxy::GetUri(nsIURI * *aRequestingURI)
 {
   NS_ENSURE_ARG_POINTER(aRequestingURI);
   NS_ASSERTION(mParent, "No parent for request");
@@ -1180,7 +1197,7 @@ nsGeolocationRequestProxy::GetRequestingURI(nsIURI * *aRequestingURI)
 }
 
 NS_IMETHODIMP
-nsGeolocationRequestProxy::GetRequestingElement(nsIDOMElement * *aRequestingElement)
+nsGeolocationRequestProxy::GetElement(nsIDOMElement * *aRequestingElement)
 {
   NS_ENSURE_ARG_POINTER(aRequestingElement);
   NS_ASSERTION(mParent && mParent->mElement.get(), "No parent for request");

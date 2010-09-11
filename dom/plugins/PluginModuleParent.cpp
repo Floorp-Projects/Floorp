@@ -613,6 +613,37 @@ PluginModuleParent::HasRequiredFunctions()
     return true;
 }
 
+nsresult
+PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->AsyncSetWindow(window);
+}
+
+nsresult
+PluginModuleParent::NotifyPainted(NPP instance)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->NotifyPainted();
+}
+
+nsresult
+PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->GetSurface(aSurface);
+}
+
+
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)

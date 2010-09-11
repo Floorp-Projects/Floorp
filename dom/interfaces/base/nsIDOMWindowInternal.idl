@@ -43,8 +43,9 @@ interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
+interface nsIAnimationFrameListener;
 
-[scriptable, uuid(de12997f-9f66-4241-b092-d0ed365ad72e)]
+[scriptable, uuid(9d6a1157-0719-46a7-b49f-7ffeaa0b5c86)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -224,7 +225,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   /**
    * Request a refresh of this browser window.
    */
-  void mozRequestAnimationFrame();
+  void
+    mozRequestAnimationFrame([optional] in nsIAnimationFrameListener aListener);
 
   /**
    * The current animation start time in milliseconds since the epoch.

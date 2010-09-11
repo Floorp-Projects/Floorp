@@ -224,7 +224,7 @@ IDBErrorEvent::Create(IDBRequest* aRequest,
 {
   nsRefPtr<IDBErrorEvent> event(new IDBErrorEvent());
 
-  event->mSource = aRequest->GetGenerator();
+  event->mSource = aRequest->Source();
   event->mCode = aCode;
   GetMessageForErrorCode(aCode, event->mMessage);
 
@@ -298,7 +298,7 @@ IDBSuccessEvent::Create(IDBRequest* aRequest,
 {
   nsRefPtr<IDBSuccessEvent> event(new IDBSuccessEvent());
 
-  event->mSource = aRequest->GetGenerator();
+  event->mSource = aRequest->Source();
   event->mResult = aResult;
   event->mTransaction = aTransaction;
 
@@ -376,7 +376,7 @@ nsresult
 GetSuccessEvent::Init(IDBRequest* aRequest,
                       IDBTransaction* aTransaction)
 {
-  mSource = aRequest->GetGenerator();
+  mSource = aRequest->Source();
   mTransaction = aTransaction;
 
   nsresult rv = InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,

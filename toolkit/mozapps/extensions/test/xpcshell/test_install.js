@@ -113,9 +113,25 @@ function check_test_1() {
     AddonManager.getAddonsWithOperationsByTypes(null, function(pendingAddons) {
       do_check_eq(pendingAddons.length, 1);
       do_check_eq(pendingAddons[0].id, "addon1@tests.mozilla.org");
-      let iconFile = NetUtil.newURI(pendingAddons[0].iconURL)
-                            .QueryInterface(AM_Ci.nsIFileURL).file;
-      do_check_true(iconFile.exists());
+      let uri = NetUtil.newURI(pendingAddons[0].iconURL);
+      if (uri instanceof AM_Ci.nsIJARURI) {
+        let jarURI = uri.QueryInterface(AM_Ci.nsIJARURI);
+        let archiveURI = jarURI.JARFile;
+        let archiveFile = archiveURI.QueryInterface(AM_Ci.nsIFileURL).file;
+        let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
+                        createInstance(Ci.nsIZipReader);
+        try {
+          zipReader.open(archiveFile);
+          do_check_true(zipReader.hasEntry(jarURI.JAREntry));
+        }
+        finally {
+          zipReader.close();
+        }
+      }
+      else {
+        let iconFile = uri.QueryInterface(AM_Ci.nsIFileURL).file;
+        do_check_true(iconFile.exists());
+      }
 
       restartManager();
 
@@ -146,9 +162,7 @@ function check_test_1() {
           do_check_true(a1.hasResource("install.rdf"));
           do_check_false(a1.hasResource("foo.bar"));
 
-          let dir = profileDir.clone();
-          dir.append("addon1@tests.mozilla.org");
-          let uri = Services.io.newFileURI(dir).spec;
+          let uri = do_get_addon_root_uri(profileDir, "addon1@tests.mozilla.org");
           do_check_eq(a1.getResourceURI("install.rdf").spec, uri + "install.rdf");
           do_check_eq(a1.iconURL, uri + "icon.png");
           do_check_eq(a1.icon64URL, uri + "icon64.png");
