@@ -178,7 +178,6 @@ private:
 
     ERLEState mState;   ///< Maintains the current state of the RLE decoding
     PRUint32 mStateData;///< Decoding information that is needed depending on mState
-    PRBool mError;      ///< Did we hit an error?
 
     /** Set mBFH from the raw data in mRawBuf, converting from little-endian
      * data to native data as necessary */

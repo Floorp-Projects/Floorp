@@ -92,6 +92,9 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   nsresult rv;
 
+  if (IsError())
+    return NS_IMAGELIB_ERROR_FAILURE;
+
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.
   PRUint32 bytesToRead = 0;
@@ -133,7 +136,7 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
                                  gfxASurface::ImageFormatARGB32,
                                  &mImageData, &mPixBytesTotal);
         if (NS_FAILED(rv)) {
-          mState = iconStateError;
+          PostDecoderError(rv);
           return rv;
         }
 
@@ -174,10 +177,6 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         // Consume all excess data silently
         aCount = 0;
 
-        break;
-
-      case iconStateError:
-        return NS_IMAGELIB_ERROR_FAILURE;
         break;
     }
   }

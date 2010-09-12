@@ -117,7 +117,6 @@ nsGIFDecoder2::nsGIFDecoder2()
   , mLastFlushedPass(0)
   , mGIFOpen(PR_FALSE)
   , mSawTransparency(PR_FALSE)
-  , mError(PR_FALSE)
   , mEnded(PR_FALSE)
 {
   // Clear out the structure, excluding the arrays
@@ -147,7 +146,7 @@ nsresult
 nsGIFDecoder2::FinishInternal()
 {
   // Send notifications if appropriate
-  if (!IsSizeDecode() && !mError) {
+  if (!IsSizeDecode() && !IsError()) {
     if (mCurrentFrame == mGIFStruct.images_decoded)
       EndImageFrame();
     EndGIF(/* aSuccess = */ PR_TRUE);
@@ -194,7 +193,7 @@ nsresult
 nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   // Don't forgive previously flagged errors
-  if (mError)
+  if (IsError())
     return NS_ERROR_FAILURE;
 
   // Push the data to the GIF decoder
@@ -212,7 +211,7 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
   // of an animated gif, we still want to display it (mostly for legacy reasons).
   // libpr0n code is strict, so we have to lie and tell it we were successful. So
   // if we have something to salvage, we send off final decode notifications, and
-  // pretend that we're decoded. Otherwise, we set mError.
+  // pretend that we're decoded. Otherwise, we set a data error.
   if (NS_FAILED(rv)) {
 
     // Determine if we want to salvage the situation.
@@ -223,12 +222,12 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
       EndGIF(/* aSuccess = */ PR_TRUE);
     }
 
-    // Otherwise, set mError
+    // Otherwise, set an error
     else
-      mError = PR_TRUE;
+      PostDataError();
   }
 
-  return mError ? NS_ERROR_FAILURE : NS_OK;
+  return IsError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
 //******************************************************************************
