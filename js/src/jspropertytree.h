@@ -63,8 +63,8 @@ struct ShapeHasher {
     typedef js::Shape *Key;
     typedef const js::Shape *Lookup;
 
-    static HashNumber hash(const Lookup l);
-    static bool match(Key k, Lookup l);
+    static inline HashNumber hash(const Lookup l);
+    static inline bool match(Key k, Lookup l);
 };
 
 typedef HashSet<js::Shape *, ShapeHasher, SystemAllocPolicy> KidsHash;
@@ -117,6 +117,10 @@ class KidsPointer {
         JS_ASSERT((reinterpret_cast<jsuword>(hash) & TAG) == 0);
         w = reinterpret_cast<jsuword>(hash) | HASH;
     }
+
+#ifdef DEBUG
+    void checkConsistency(const js::Shape *aKid) const;
+#endif
 };
 
 class PropertyTree
