@@ -18,14 +18,15 @@ displayTimestamp("restored", restored = ss.restoredTimestamp);
 displayDuration("restored", restored - startup);
 
 function displayTimestamp(id, µs) document.getElementById(id).textContent = formatstamp(µs);
-function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatµs(µs);
+function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatms(msFromµs(µs));
 
-function formatstamp(µs) new Date(µs/1000) +" ("+ formatµs(µs) +")";
+function msFromµs(µs) µs / 1000;
+function formatstamp(µs) new Date(msFromµs(µs)) +" ("+ formatms(msFromµs(µs)) +")";
 function formatµs(µs) µs + " µs";
 function formatms(ms) ms + " ms";
 
-function point(stamp, µs, v, b) [stamp / 1000, µs / 1000, { appVersion: v, appBuild: b }];
-function range(a, b) ({ from: a / 1000, to: (b || a) / 1000 });
+function point(stamp, µs, v, b) [msFromµs(stamp), msFromµs(µs), { appVersion: v, appBuild: b }];
+function range(a, b) ({ from: msFromµs(a), to: msFromµs(b || a) });
 function mark(x, y) { var r = {}; x && (r.xaxis = x); y && (r.yaxis = y); return r };
 function major(r) { r.color = "#444"; return r; }
 function minor(r) { r.color = "#AAA"; return r; }
@@ -95,9 +96,9 @@ query.executeAsync({
       series[1].data.push(point(stamp, l = row.getResultByName("launch"), version, build));
       series[0].data.push(point(stamp, l + (s = row.getResultByName("startup")), version, build));
       table.appendChild(tr(td(formatstamp(stamp)),
-                           td(formatµs(l)),
-                           td(formatµs(s)),
-                           td(formatµs(l + s)),
+                           td(formatms(msFromµs(l))),
+                           td(formatms(msFromµs(s))),
+                           td(formatms(msFromµs((l + s)))),
                            td(version),
                            td(build),
                            td(row.getResultByName("platformVersion")),
