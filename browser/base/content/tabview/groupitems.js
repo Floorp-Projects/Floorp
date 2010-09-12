@@ -313,7 +313,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // -----------
   // Function: setActiveTab
   // Sets the active <TabItem> for this groupItem; can be null, but only
-  // if there are no children. 
+  // if there are no children.
   setActiveTab: function GroupItem_setActiveTab(tab) {
     Utils.assertThrow((!tab && this._children.length == 0) || tab.isATabItem,
         "tab must be null (if no children) or a TabItem");
@@ -797,9 +797,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!options.dontArrange) {
         this.arrange();
       }
-      
+
       this._sendToSubscribers("childAdded",{ groupItemId: this.id, item: item });
-      
+
       UI.setReorderTabsOnHide(this);
     } catch(e) {
       Utils.log('GroupItem.add error', e);
@@ -833,7 +833,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var index = this._children.indexOf(item);
       if (index != -1)
         this._children.splice(index, 1);
-        
+
       if (item == this._activeTab) {
         if (this._children.length)
           this._activeTab = this._children[0];
@@ -896,7 +896,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         GroupItems._updateTabBar();
         UI.goToTab(iQ(this).data("xulTab"));
       });
-      
+
     let columnWidth = $appTab.width();
     if (parseInt(this.$appTabTray.css("width")) != columnWidth) {
       this.$appTabTray.css({width: columnWidth});
@@ -1355,8 +1355,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     GroupItems.setActiveGroupItem(this);
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
-    // TabItems will have handled the new tab and added the tabItem property. 
-    // We don't have to check if it's an app tab (and therefore wouldn't have a 
+    // TabItems will have handled the new tab and added the tabItem property.
+    // We don't have to check if it's an app tab (and therefore wouldn't have a
     // TabItem), since we've just created it.
     let newItem = newTab.tabItem;
 
@@ -1481,16 +1481,53 @@ let GroupItems = {
   _inited: false,
   _activeGroupItem: null,
   _activeOrphanTab: null,
+  _cleanupFunctions: [],
 
   // ----------
   // Function: init
   init: function GroupItems_init() {
+    let self = this;
+
+    // setup attr modified handler, and prepare for its uninit
+    function handleAttrModified(xulTab) {
+      self._handleAttrModified(xulTab);
+    }
+
+    AllTabs.register("attrModified", handleAttrModified);
+    this._cleanupFunctions.push(function() {
+      AllTabs.unregister("attrModified", handleAttrModified);
+    });
   },
 
   // ----------
   // Function: uninit
   uninit : function GroupItems_uninit () {
+    this._cleanupFunctions.forEach(function(func) {
+      func();
+    });
+
+    this._cleanupFunctions = [];
+
     this.groupItems = null;
+  },
+
+  // ----------
+  // watch for icon changes on app tabs
+  _handleAttrModified: function GroupItems__handleAttrModified(xulTab) {
+    if (xulTab.ownerDocument.defaultView != gWindow || !xulTab.pinned)
+      return;
+
+    let iconUrl = xulTab.image || Utils.defaultFaviconURL;
+    this.groupItems.forEach(function(groupItem) {
+      iQ(".appTabIcon", groupItem.$appTabTray).each(function(icon) {
+        let $icon = iQ(icon);
+        if ($icon.data("xulTab") != xulTab)
+          return;
+
+        if (iconUrl != $icon.attr("src"))
+          $icon.attr("src", iconUrl);
+      });
+    });
   },
 
   // ----------
@@ -1879,17 +1916,17 @@ let GroupItems = {
 
   // ----------
   // Function: moveTabToGroupItem
-  // Used for the right click menu in the tab strip; moves the given tab 
+  // Used for the right click menu in the tab strip; moves the given tab
   // into the given group. Does nothing if the tab is an app tab.
   // Paramaters:
   //  tab - the <xul:tab>.
   //  groupItemId - the <groupItem>'s id.  If nothing, create a new <groupItem>.
   moveTabToGroupItem : function GroupItems_moveTabToGroupItem (tab, groupItemId) {
-    if (tab.pinned) 
+    if (tab.pinned)
       return;
-      
+
     Utils.assertThrow(tab.tabItem, "tab must be linked to a TabItem");
-      
+
     let shouldUpdateTabBar = false;
     let shouldShowTabView = false;
     let groupItem;
