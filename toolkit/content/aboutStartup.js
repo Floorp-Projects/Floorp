@@ -36,17 +36,18 @@ function minorMark(x, l) label(minor(mark(range(x))), l);
 function extensionMark(x, l) label(mark(range(x)), l);
 
 var graph, overview;
-var options = { legend: { show: false, position: "ne", margin: 10, labelBoxBorderColor: "transparent" },
+var options = { legend: { show: true, position: "ne", margin: 10, labelBoxBorderColor: "transparent" },
                 xaxis: { mode: "time" },
                 yaxis: { min: 0, tickFormatter: formatms },
                 selection: { mode: "xy", color: "#00A" },
                 grid: { show: true, borderWidth: 0, markings: [], aboveData: true, tickColor: "white" },
                 series: { lines: { show: true, fill: true },
                           points: { show: true, fill: true },
-                        }
+                        },
               };
 var overviewOpts = $.extend(true, {}, options,
-                            { xaxis: { ticks: [], mode: "time" },
+                            { legend: { show: false },
+                              xaxis: { ticks: [], mode: "time" },
                               yaxis: { ticks: [], min: 0, autoscaleMargin: 0.1 },
                               grid: { show: false },
                               series: { lines: { show: true, fill: true, lineWidth: 1 },
