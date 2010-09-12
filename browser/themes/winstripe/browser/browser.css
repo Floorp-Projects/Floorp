@@ -120,7 +120,7 @@ statusbarpanel#statusbar-display {
   border: 1px solid rgba(83,42,6,.9);
   border-top: none;
   box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
-                   0 0 0 1px rgba(255,255,255,.25) inset;
+              0 0 0 1px rgba(255,255,255,.25) inset;
   color: white;
   text-shadow: 0 0 1px rgba(0,0,0,.7),
                0 1px 1.5px rgba(0,0,0,.5);
@@ -140,8 +140,8 @@ statusbarpanel#statusbar-display {
                     -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   border-color: rgba(83,42,6,.9);
   box-shadow: 0 1px 0 rgba(255,255,255,.1) inset,
-                   0 0 1.5px 1px rgba(250,234,169,.7) inset,
-                   0 -1px 0 rgba(250,234,169,.5) inset;
+              0 0 1.5px 1px rgba(250,234,169,.7) inset,
+              0 -1px 0 rgba(250,234,169,.5) inset;
 }
 
 #appmenu-button:hover:active,
@@ -149,7 +149,7 @@ statusbarpanel#statusbar-display {
   background-image: -moz-linear-gradient(rgb(246,170,69), rgb(209,74,0) 95%);
   border-radius: 0;
   box-shadow: 0 2px 3px rgba(0,0,0,.4) inset,
-                   0 1px 1px rgba(0,0,0,.2) inset;
+              0 1px 1px rgba(0,0,0,.2) inset;
 }
 
 #appmenu-button > .button-box {
@@ -483,8 +483,8 @@ menuitem.bookmark-item {
   border: 1px solid;
   border-color: rgba(0,0,0,.12) rgba(0,0,0,.19) rgba(0,0,0,.38);
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-                   0 0 0 2px rgba(255,255,255,.1) inset,
-                   0 1px 0 rgba(0,0,0,.15);
+              0 0 0 2px rgba(255,255,255,.1) inset,
+              0 1px 0 rgba(0,0,0,.15);
   color: black;
   text-shadow: 0 0 2px white;
 }
@@ -549,9 +549,9 @@ toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-                   0 0 0 1.5px rgba(255,255,255,.1) inset,
-                   0 1px 0 rgba(0,0,0,.1),
-                   0 0 3.5px hsl(190,90%,80%);
+              0 0 0 1.5px rgba(255,255,255,.1) inset,
+              0 1px 0 rgba(0,0,0,.1),
+              0 0 3.5px hsl(190,90%,80%);
   -moz-transition: background-color .4s ease-in,
                    border-color .3s ease-in,
                    box-shadow .3s ease-in;
@@ -566,8 +566,8 @@ toolbar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
   background-color: transparent;
   border-color: rgba(0,0,0,.65) rgba(0,0,0,.55) rgba(0,0,0,.5);
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
-                   0 0 2px rgba(0,0,0,.4) inset,
-                   0 1px 0 rgba(255,255,255,.4);
+              0 0 2px rgba(0,0,0,.4) inset,
+              0 1px 0 rgba(255,255,255,.4);
   text-shadow: none;
 }
 
@@ -684,29 +684,29 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   background-image: -moz-linear-gradient(rgba(251,252,253,.97), rgba(246,247,248,.5) 49%, 
                                          rgba(231,232,233,.45) 51%, rgba(225,226,229,.2));
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-                   0 0 0 2px rgba(255,255,255,.1) inset,
-                   0 0 0 1px rgba(0,0,0,.15),
-                   0 1px 0 rgba(0,0,0,.4),
-                   0 1px 1px rgba(0,0,0,.3),
-                   1px 2px 1px rgba(0,0,0,.2);
+              0 0 0 2px rgba(255,255,255,.1) inset,
+              0 0 0 1px rgba(0,0,0,.15),
+              0 1px 0 rgba(0,0,0,.4),
+              0 1px 1px rgba(0,0,0,.3),
+              1px 2px 1px rgba(0,0,0,.2);
   -moz-image-region: rect(18px, 20px, 38px, 0);
 }
 
 toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):not([checked="true"]):not(:active):hover {
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-                   0 0 0 2px rgba(255,255,255,.1) inset,
-                   0 0 0 1px hsla(190,50%,40%,.3),
-                   0 1px 0 rgba(0,0,0,.4),
-                   0 1px 1px rgba(0,0,0,.3),
-                   1px 2px 1px rgba(0,0,0,.2),
-                   0 0 5px 1px hsl(190,90%,80%);
+              0 0 0 2px rgba(255,255,255,.1) inset,
+              0 0 0 1px hsla(190,50%,40%,.3),
+              0 1px 0 rgba(0,0,0,.4),
+              0 1px 1px rgba(0,0,0,.3),
+              1px 2px 1px rgba(0,0,0,.2),
+              0 0 5px 1px hsl(190,90%,80%);
 }
 
 toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):hover:active {
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
-                   0 0 2px rgba(0,0,0,.4) inset,
-                   0 0 0 1px rgba(0,0,0,.65),
-                   0 2px 0 rgba(255,255,255,.4);
+              0 0 2px rgba(0,0,0,.4) inset,
+              0 0 0 1px rgba(0,0,0,.65),
+              0 2px 0 rgba(255,255,255,.4);
 }
 
 toolbar:not([iconsize="small"])[mode="icons"][currentset*="unified-back-forward-button"],
@@ -967,7 +967,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   border: 1px solid ThreeDDarkShadow;
   border-radius: 4px;
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   0 1px 0 rgba(255,255,255,.4);
+              0 1px 0 rgba(255,255,255,.4);
 }
 
 @media all and (-moz-windows-default-theme) {
@@ -1256,14 +1256,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding-left: 4px;
   border-left: none;
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
-                   0 0 2px rgba(0,0,0,.4) inset;
+              0 0 2px rgba(0,0,0,.4) inset;
 }
 
 #urlbar-go-button {
   -moz-image-region: rect(0px, 56px, 14px, 42px);
   background-image: -moz-linear-gradient(rgb(115,213,115), rgb(96,190,96) 49%, rgb(82,174,82) 51%, rgb(79,155,79));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 1px rgba(255,255,255,.25) inset;
+              -1px -1px 1px rgba(255,255,255,.25) inset;
 }
 
 #urlbar-go-button:hover {
@@ -1278,14 +1278,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 1px rgba(255,255,255,.25) inset;
+              -1px -1px 1px rgba(255,255,255,.25) inset;
 }
 
 #urlbar-stop-button {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
   background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 1px rgba(255,255,255,.25) inset;
+              -1px -1px 1px rgba(255,255,255,.25) inset;
 }
 
 #urlbar-stop-button:hover {

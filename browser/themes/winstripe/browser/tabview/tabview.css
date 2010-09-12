@@ -1,7 +1,3 @@
-/* This file is for platform-specific CSS for TabView, and is loaded after the
-  platform-independent tabview.css, to allow overwriting.
-*/
-
 body {
   font-family: Tahoma, sans-serif !important;
   color: rgba(0, 0, 0, 0.6);
@@ -10,7 +6,8 @@ body {
 }
 
 #bg {
-  background: url("chrome://browser/skin/tabview/grain.png") repeat scroll center top, -moz-linear-gradient(center top , #CCD9EA, #C7D5E7) repeat scroll 0 0 transparent;
+  background: url("chrome://browser/skin/tabview/grain.png") repeat scroll center top,
+              -moz-linear-gradient(center top , #CCD9EA, #C7D5E7) repeat scroll 0 0 transparent;
 }
 
 /* Tabs
