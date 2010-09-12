@@ -98,7 +98,6 @@ private:
   PRUint8 mColorMask;        // Apply this to the pixel to keep within colormap
   PRPackedBool mGIFOpen;
   PRPackedBool mSawTransparency;
-  PRPackedBool mEnded;
 
   gif_struct mGIFStruct;
 };
