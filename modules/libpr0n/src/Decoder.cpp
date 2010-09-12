@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Decoder.h"
+#include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
 
 namespace mozilla {
 namespace imagelib {
@@ -113,6 +115,14 @@ Decoder::Finish()
   // If PostDecodeDone() has not been called, we need to sent teardown
   // notifications.
   if (!IsSizeDecode() && !mDecodeDone) {
+
+    // Log data errors to the error console
+    nsCOMPtr<nsIConsoleService> aConsoleService = do_GetService("@mozilla.org/consoleservice;1");
+    if (aConsoleService && !IsDecoderError()) {
+      nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
+                       NS_ConvertASCIItoUTF16(mImage->GetURIString()));
+      aConsoleService->LogStringMessage(msg.get());
+    }
 
     // If we only have a data error, see if things are worth salvaging
     bool salvage = !IsDecoderError() && mImage->GetNumFrames();
@@ -252,8 +262,6 @@ void
 Decoder::PostDataError()
 {
   mDataError = true;
-
-  //XXXbholley - we should probably log to the web console here
 }
 
 void
