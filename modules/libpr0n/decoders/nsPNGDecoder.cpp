@@ -295,9 +295,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
   PRUint32 width = 0;
   PRUint32 height = 0;
 
-  // No forgiveness if we previously hit an error
-  if (IsError())
-    return;
+  NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call WriteInternal after error!");
 
   // If we only want width/height, we don't need to go through libpng
   if (IsSizeDecode()) {
