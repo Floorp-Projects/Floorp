@@ -221,6 +221,7 @@ VectorImage::~VectorImage()
 nsresult
 VectorImage::Init(imgIDecoderObserver* aObserver,
                   const char* aMimeType,
+                  const char* aURIString,
                   PRUint32 aFlags)
 {
   // We don't support re-initialization
