@@ -146,9 +146,9 @@ public:
     nsBMPDecoder();
     ~nsBMPDecoder();
 
-    virtual nsresult InitInternal();
-    virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-    virtual nsresult FinishInternal();
+    virtual void InitInternal();
+    virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+    virtual void FinishInternal();
 
 private:
 

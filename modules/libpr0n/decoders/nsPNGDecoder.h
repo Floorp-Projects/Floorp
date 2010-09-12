@@ -62,9 +62,9 @@ public:
   nsPNGDecoder();
   virtual ~nsPNGDecoder();
 
-  virtual nsresult InitInternal();
-  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual nsresult FinishInternal();
+  virtual void InitInternal();
+  virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual void FinishInternal();
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    PRInt32 width, PRInt32 height,

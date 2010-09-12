@@ -80,7 +80,7 @@ nsBMPDecoder::~nsBMPDecoder()
       free(mRow);
 }
 
-nsresult
+void
 nsBMPDecoder::InitInternal()
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", mImage.get()));
@@ -88,11 +88,9 @@ nsBMPDecoder::InitInternal()
     // Fire OnStartDecode at init time to support bug 512435
     if (!IsSizeDecode() && mObserver)
         mObserver->OnStartDecode(nsnull);
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsBMPDecoder::FinishInternal()
 {
     // We should never make multiple frames
@@ -107,7 +105,6 @@ nsBMPDecoder::FinishInternal()
             mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
         }
     }
-    return NS_OK;
 }
 
 // ----------------------------------------
@@ -150,16 +147,16 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
     return NS_OK;
 }
 
-nsresult
+void
 nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 {
     // No forgiveness
     if (IsError())
-      return NS_ERROR_FAILURE;
+      return;
 
     // aCount=0 means EOF, mCurLine=0 means we're past end of image
     if (!aCount || !mCurLine)
-        return NS_OK;
+        return;
 
     nsresult rv;
     if (mPos < BFH_LENGTH) { /* In BITMAPFILEHEADER */
@@ -175,7 +172,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         ProcessFileHeader();
         if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M') {
             PostDataError();
-            return NS_ERROR_FAILURE;
+            return;
         }
         if (mBFH.bihsize == OS2_BIH_LENGTH)
             mLOH = OS2_HEADER_LENGTH;
@@ -197,7 +194,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         if (mBIH.bpp != 1 && mBIH.bpp != 4 && mBIH.bpp != 8 &&
             mBIH.bpp != 16 && mBIH.bpp != 24 && mBIH.bpp != 32) {
           PostDataError();
-          return NS_ERROR_UNEXPECTED;
+          return;
         }
 
         // BMPs with negative width are invalid
@@ -205,7 +202,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         const PRInt32 k64KWidth = 0x0000FFFF;
         if (mBIH.width < 0 || mBIH.width > k64KWidth) {
             PostDataError();
-            return NS_ERROR_FAILURE;
+            return;
         }
 
         PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
@@ -216,7 +213,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         // We have the size. If we're doing a size decode, we got what
         // we came for.
         if (IsSizeDecode())
-            return NS_OK;
+            return;
 
         // We're doing a real decode.
         mOldLine = mCurLine = real_height;
@@ -230,7 +227,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             mColors = new colorTable[256];
             if (!mColors) {
                 PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-                return NS_ERROR_OUT_OF_MEMORY;
+                return;
             }
 
             memset(mColors, 0, 256 * sizeof(colorTable));
@@ -255,15 +252,14 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
             // Also, it compensates rounding error.
             if (!mRow) {
                 PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-                return NS_ERROR_OUT_OF_MEMORY;
+                return;
             }
             rv = mImage->AppendFrame(0, 0, mBIH.width, real_height, gfxASurface::ImageFormatRGB24,
                                      (PRUint8**)&mImageData, &imageLength);
         }
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (!mImageData) {
+        if (NS_FAILED(rv) || !mImageData) {
             PostDecoderError(NS_ERROR_FAILURE);
-            return NS_ERROR_FAILURE;
+            return;
         }
 
         // Prepare for transparancy
@@ -272,7 +268,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
              || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
                 PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
                 PostDataError();
-                return NS_ERROR_FAILURE;
+                return;
             }
             // Clear the image, as the RLE may jump over areas
             memset(mImageData, 0, imageLength);
@@ -416,7 +412,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
              || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
                 PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
                 PostDataError();
-                return NS_ERROR_FAILURE;
+                return;
             }
 
             while (aCount > 0) {
@@ -484,7 +480,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                                     mStateData -= mBIH.width & 1;
                                     if (mCurPos + mStateData > (PRUint32)mBIH.width) {
                                         PostDataError();
-                                        return NS_ERROR_FAILURE;
+                                        return;
                                     }
                                 }
 
@@ -570,7 +566,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
                     default :
                         NS_ABORT_IF_FALSE(0, "BMP RLE decompression: unknown state!");
                         PostDecoderError(NS_ERROR_UNEXPECTED);
-                        return NS_ERROR_FAILURE;
+                        return;
                 }
                 // Because of the use of the continue statement
                 // we only get here for eol, eof or y delta
@@ -592,7 +588,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         mOldLine = mCurLine;
     }
 
-    return NS_OK;
+    return;
 }
 
 void nsBMPDecoder::ProcessFileHeader()
