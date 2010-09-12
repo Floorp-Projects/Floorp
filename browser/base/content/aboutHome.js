@@ -54,16 +54,31 @@ const SEARCH_ENGINES = {
   }
 };
 
+// The process of adding a new default snippet involves:
+//   * add a new entity to aboutHome.dtd
+//   * add a <span/> for it in aboutHome.xhtml
+//   * add an entry here in the proper ordering (based on spans)
+// The <a/> part of the snippet will be linked to the corresponding url.
+const DEFAULT_SNIPPETS_URLS = [
+  "http://www.mozilla.com/firefox/4.0/features"
+, "https://addons.mozilla.org/firefox/?browse=featured"
+];
+
+const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.
+
 let gSearchEngine;
 
 function onLoad(event)
 {
   setupSearchEngine();
   document.getElementById("searchText").focus();
+
+  loadSnippets();
 }
 
 
-function onSearchSubmit(aEvent) {
+function onSearchSubmit(aEvent)
+{
   let searchTerms = document.getElementById("searchText").value;
   if (gSearchEngine && searchTerms.length > 0) {
     const SEARCH_TOKENS = {
@@ -80,7 +95,8 @@ function onSearchSubmit(aEvent) {
 }
 
 
-function setupSearchEngine() {
+function setupSearchEngine()
+{
   gSearchEngine = JSON.parse(localStorage["search-engine"]);
 
   // Look for extended information, like logo and links.
@@ -113,5 +129,66 @@ function setupSearchEngine() {
       prefsLink.setAttribute("href", gSearchEngine.links.preferences);
       prefsLink.hidden = false;
     }
+  }
+}
+
+function loadSnippets()
+{
+  // Check last snippets update.
+  let lastUpdate = localStorage["snippets-last-update"];
+  let updateURL = localStorage["snippets-update-url"];
+  if (updateURL && (!lastUpdate ||
+                    Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
+    // Try to update from network.
+    let xhr = new XMLHttpRequest();
+    xhr.mozBackgroundRequest = true;
+    xhr.open('GET', updateURL, true);
+    xhr.onerror = function (event) {
+      showSnippets();
+    };
+    xhr.onload = function (event)
+    {
+      if (xhr.status == 200) {
+        localStorage["snippets"] = xhr.responseText;
+        localStorage["snippets-last-update"] = Date.now();
+      }
+      showSnippets();
+    };
+    xhr.send(null);
+  } else {
+    showSnippets();
+  }
+}
+
+function showSnippets()
+{
+  let snippets = localStorage["snippets"];
+  if (snippets) {
+    let snippetsElt = document.getElementById("snippets");
+    snippetsElt.innerHTML = snippets;
+    // Scripts injected by innerHTML are inactive, so we have to relocate them
+    // through DOM manipulation to activate their contents.
+    Array.forEach(snippetsElt.getElementsByTagName("script"), function(elt) {
+      let relocatedScript = document.createElement("script");
+      relocatedScript.type = "text/javascript;version=1.8";
+      relocatedScript.text = elt.text;
+      snippetsElt.replaceChild(relocatedScript, elt);
+    });
+    snippetsElt.hidden = false;
+  } else {
+    // If there are no saved snippets, show one of the default ones.
+    let defaultSnippetsElt = document.getElementById("defaultSnippets");
+    let entries = defaultSnippetsElt.querySelectorAll("span");
+    // Choose a random snippet.  Assume there is always at least one.
+    let randIndex = Math.round(Math.random() * (entries.length - 1));
+    let entry = entries[randIndex];
+    // Inject url in the eventual link.
+    if (DEFAULT_SNIPPETS_URLS[randIndex]) {
+      let links = entry.getElementsByTagName("a");
+      if (links.length != 1)
+        return; // Something is messed up in this entry, we support just 1 link.
+      links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
+    }
+    entry.hidden = false;
   }
 }

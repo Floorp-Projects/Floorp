@@ -141,11 +141,8 @@ XPIDLSRCS	= \
 		nsIURIWithPrincipal.idl \
 		nsIURIClassifier.idl \
 		nsIRedirectResultListener.idl \
+		nsIBrowserSearchService.idl \
 		$(NULL)
-
-ifdef MOZ_TOOLKIT_SEARCH
-XPIDLSRCS	+= nsIBrowserSearchService.idl
-endif
 
 EXPORTS		= \
 		netCore.h \

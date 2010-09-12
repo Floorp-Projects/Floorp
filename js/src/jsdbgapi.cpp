@@ -1994,8 +1994,7 @@ static const char *vtuneErrorMessages[] = {
 };
 
 JS_FRIEND_API(JSBool)
-js_StartVtune(JSContext *cx, JSObject *obj,
-              uintN argc, jsval *argv, jsval *rval)
+js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTUNE_EVENT events[] = {
         { 1000000, 0, 0, 0, "CPU_CLK_UNHALTED.CORE" },
@@ -2022,6 +2021,7 @@ js_StartVtune(JSContext *cx, JSObject *obj,
         default_filename,
     };
 
+    jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
         params.tb5Filename = js_DeflateString(cx, str->chars(), str->length());
@@ -2047,8 +2047,7 @@ js_StartVtune(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-js_StopVtune(JSContext *cx, JSObject *obj,
-             uintN argc, jsval *argv, jsval *rval)
+js_StopVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     U32 status = VTStopSampling(1);
     if (status) {
@@ -2064,16 +2063,14 @@ js_StopVtune(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-js_PauseVtune(JSContext *cx, JSObject *obj,
-              uintN argc, jsval *argv, jsval *rval)
+js_PauseVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTPause();
     return JS_TRUE;
 }
 
 JS_FRIEND_API(JSBool)
-js_ResumeVtune(JSContext *cx, JSObject *obj,
-               uintN argc, jsval *argv, jsval *rval)
+js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTResume();
     return JS_TRUE;
@@ -2101,8 +2098,7 @@ js_ResumeVtune(JSContext *cx, JSObject *obj,
 #define ETHOGRAM_BUF_SIZE 65536
 
 static JSBool
-ethogram_construct(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval);
+ethogram_construct(JSContext *cx, uintN argc, jsval *vp);
 static void
 ethogram_finalize(JSContext *cx, JSObject *obj);
 
@@ -2147,8 +2143,7 @@ private:
 
 public:
     friend JSBool
-    ethogram_construct(JSContext *cx, JSObject *obj,
-                       uintN argc, jsval *argv, jsval *rval);
+    ethogram_construct(JSContext *cx, uintN argc, jsval *vp);
 
     inline void push(TraceVisState s, TraceVisExitReason r, char *filename, int lineno) {
         mBuf[mWritePos].s = s;
@@ -2291,8 +2286,7 @@ js::StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 }
 
 static JSBool
-ethogram_construct(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval)
+ethogram_construct(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
 
@@ -2324,7 +2318,7 @@ ethogram_construct(JSContext *cx, JSObject *obj,
         obj = JS_NewObject(cx, &ethogram_class, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
+        *JS_RVAL(cx, vp) = OBJECT_TO_JSVAL(obj);
     }
     JS_SetPrivate(cx, obj, p);
     return JS_TRUE;
@@ -2344,11 +2338,11 @@ ethogram_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-ethogram_addScript(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval)
+ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     char *filename = NULL;
+    jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
         filename = js_DeflateString(cx,
@@ -2363,20 +2357,22 @@ ethogram_addScript(JSContext *cx, JSObject *obj,
     EthogramEventBuffer *p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
 
     p->addScript(cx, obj, filename, str);
+    jsval *rval = JS_RVAL(cx, vp);
     JS_CallFunctionName(cx, p->filenames(), "push", 1, argv, rval);
     return JS_TRUE;
 }
 
 static JSBool
-ethogram_getAllEvents(JSContext *cx, JSObject *obj,
-                      uintN argc, jsval *argv, jsval *rval)
+ethogram_getAllEvents(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
 
+    jsval *argv = JS_ARGV(cx, vp);
     p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
     if (!p)
         return JS_FALSE;
 
+    jsval *rval = JS_RVAL(cx, vp);
     if (p->isEmpty()) {
         *rval = JSVAL_NULL;
         return JS_TRUE;
@@ -2428,11 +2424,11 @@ ethogram_getAllEvents(JSContext *cx, JSObject *obj,
 }
 
 static JSBool
-ethogram_getNextEvent(JSContext *cx, JSObject *obj,
-                      uintN argc, jsval *argv, jsval *rval)
+ethogram_getNextEvent(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
 
+    jsval *argv = JS_ARGV(cx, vp);
     p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
     if (!p)
         return JS_FALSE;
@@ -2441,6 +2437,7 @@ ethogram_getNextEvent(JSContext *cx, JSObject *obj,
     if (x == NULL)
         return JS_FALSE;
 
+    jsval *rval = JS_RVAL(cx, vp);
     if (p->isEmpty()) {
         *rval = JSVAL_NULL;
         return JS_TRUE;
@@ -2486,8 +2483,7 @@ static JSFunctionSpec ethogram_methods[] = {
  * monitored together. A single object gets events for the group.
  */
 JS_FRIEND_API(JSBool)
-js_InitEthogram(JSContext *cx, JSObject *obj,
-                uintN argc, jsval *argv, jsval *rval)
+js_InitEthogram(JSContext *cx, uintN argc, jsval *vp)
 {
     if (!traceVisScriptTable) {
         traceVisScriptTable = JS_NewHashTable(8, JS_HashString, compare_strings,
@@ -2502,8 +2498,7 @@ js_InitEthogram(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-js_ShutdownEthogram(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *rval)
+js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp)
 {
     if (traceVisScriptTable)
         JS_HashTableDestroy(traceVisScriptTable);

@@ -414,6 +414,7 @@ _TEST_FILES2 = \
 		file_x-frame-options_main.html \
 		file_x-frame-options_page.sjs \
 		test_createHTMLDocument.html \
+		test_bug578096.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

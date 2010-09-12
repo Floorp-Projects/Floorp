@@ -131,35 +131,16 @@ bool LaunchApp(const std::wstring& cmdline,
 //
 // Note that the first argument in argv must point to the filename,
 // and must be fully specified.
-#ifdef OS_MACOSX
-typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
-bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               bool wait, ProcessHandle* process_handle,
-               task_t* task_handle);
-
-#if defined(OS_LINUX) || defined(OS_MACOSX)
-typedef std::map<std::string, std::string> environment_map;
-bool LaunchApp(const std::vector<std::string>& argv,
-               const file_handle_mapping_vector& fds_to_remap,
-               const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle,
-               task_t* task_handle);
-#endif
-#else // !OS_MACOSX
 typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                bool wait, ProcessHandle* process_handle);
 
-#if defined(OS_LINUX) || defined(OS_MACOSX)
 typedef std::map<std::string, std::string> environment_map;
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
                bool wait, ProcessHandle* process_handle);
-#endif
-#endif
 #endif
 
 // Executes the application specified by cl. This function delegates to one

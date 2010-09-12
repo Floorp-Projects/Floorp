@@ -223,7 +223,7 @@ toolkit.jar:
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
 *       skin/classic/aero/global/webConsole.css
-*       skin/classic/global/webConsole_networkPanel.css
+*       skin/classic/aero/global/webConsole_networkPanel.css
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
         skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)

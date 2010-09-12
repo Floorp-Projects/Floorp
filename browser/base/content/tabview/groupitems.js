@@ -64,7 +64,6 @@
 //   title - the title for the groupItem; otherwise blank
 //   dontPush - true if this groupItem shouldn't push away on creation; default is false
 function GroupItem(listOfEls, options) {
-  try {
   if (typeof options == 'undefined')
     options = {};
 
@@ -78,6 +77,7 @@ function GroupItem(listOfEls, options) {
   this.expanded = null;
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
+  this.hidden = false;
 
   this.keepProportional = false;
 
@@ -150,10 +150,6 @@ function GroupItem(listOfEls, options) {
     .addClass('titlebar')
     .html(html)
     .appendTo($container);
-
-  this.$titlebar.css({
-      position: "absolute",
-    });
 
   var $close = iQ('<div>')
     .addClass('close')
@@ -253,12 +249,25 @@ function GroupItem(listOfEls, options) {
     .appendTo($container)
     .hide();
 
+  // ___ app tabs: create app tab tray and populate it
+  this.$appTabTray = iQ("<div/>")
+    .addClass("appTabTray")
+    .appendTo($container);
+
+  AllTabs.tabs.forEach(function(xulTab) {
+    if (xulTab.pinned && xulTab.ownerDocument.defaultView == gWindow)
+      self.addAppTab(xulTab);
+  });
+
   // ___ locking
   if (this.locked.bounds)
     $container.css({cursor: 'default'});
 
   if (this.locked.close)
     $close.hide();
+
+  // ___ Undo Close
+  this.$undoContainer = null;
 
   // ___ Superclass initialization
   this._init($container[0]);
@@ -292,10 +301,6 @@ function GroupItem(listOfEls, options) {
 
   this._inited = true;
   this.save();
-  } catch(e) {
-    Utils.log("Error in GroupItem()");
-    Utils.log(e.stack);
-  }
 };
 
 // ----------
@@ -307,15 +312,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // -----------
   // Function: setActiveTab
-  // Sets the active <TabItem> for this groupItem
+  // Sets the active <TabItem> for this groupItem; can be null, but only
+  // if there are no children.
   setActiveTab: function GroupItem_setActiveTab(tab) {
-    Utils.assert(tab && tab.isATabItem, 'tab must be a TabItem');
+    Utils.assertThrow((!tab && this._children.length == 0) || tab.isATabItem,
+        "tab must be null (if no children) or a TabItem");
+
     this._activeTab = tab;
   },
 
   // -----------
   // Function: getActiveTab
-  // Gets the active <TabItem> for this groupItem
+  // Gets the active <TabItem> for this groupItem; can be null, but only
+  // if there are no children.
   getActiveTab: function GroupItem_getActiveTab() {
     return this._activeTab;
   },
@@ -396,6 +405,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
+
+    box.width -= this.$appTabTray.width();
 
     // Make the computed bounds' "padding" and new tab button margin actually be
     // themeable --OR-- compute this from actual bounds. Bug 586546
@@ -530,9 +541,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     GroupItems.unregister(this);
     this._sendToSubscribers("close");
     this.removeTrenches();
-    iQ(this.container).fadeOut(function() {
-      iQ(this).remove();
-      Items.unsquish();
+
+    iQ(this.container).animate({
+      opacity: 0,
+      "-moz-transform": "scale(.3)",
+    }, {
+      duration: 170,
+      complete: function() {
+        iQ(this).remove();
+        Items.unsquish();
+      }
     });
 
     Storage.deleteGroupItem(gWindow, this.id);
@@ -542,17 +560,137 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: closeAll
   // Closes the groupItem and all of its children.
   closeAll: function GroupItem_closeAll() {
-    var self = this;
-    if (this._children.length) {
-      var toClose = this._children.concat();
+    if (this._children.length > 0) {
+      this._children.forEach(function(child) {
+        iQ(child.container).hide();
+      });
+
+      iQ(this.container).animate({
+         opacity: 0,
+         "-moz-transform": "scale(.3)",
+      }, {
+        duration: 170,
+        complete: function() {
+          iQ(this).hide();
+        }
+      });
+
+      this._createUndoButton();
+    } else {
+      if (!this.locked.close)
+        this.close();
+    }
+  },
+
+  // ----------
+  // Function: _createUndoButton
+  // Makes the affordance for undo a close group action
+  _createUndoButton: function() {
+    let self = this;
+    this.$undoContainer = iQ("<div/>")
+      .addClass("undo")
+      .attr("type", "button")
+      .text("Undo Close Group")
+      .appendTo("body");
+    let undoClose = iQ("<span/>")
+      .addClass("close")
+      .appendTo(this.$undoContainer);
+
+    this.$undoContainer.css({
+      left: this.bounds.left + this.bounds.width/2 - iQ(self.$undoContainer).width()/2,
+      top:  this.bounds.top + this.bounds.height/2 - iQ(self.$undoContainer).height()/2,
+      "-moz-transform": "scale(.1)",
+      opacity: 0
+    });
+    this.hidden = true;
+
+    setTimeout(function() {
+      self.$undoContainer.animate({
+        "-moz-transform": "scale(1)",
+        "opacity": 1
+      }, {
+        easing: "tabviewBounce",
+        duration: 170,
+        complete: function() {
+          self._sendToSubscribers("groupHidden", { groupItemId: self.id });
+        }
+      });
+    }, 50);
+
+    let remove = function() {
+      // close all children
+      let toClose = self._children.concat();
       toClose.forEach(function(child) {
         child.removeSubscriber(self, "close");
         child.close();
       });
-    }
+ 
+      // remove all children
+      self.removeAll();
+      GroupItems.unregister(self);
+      self._sendToSubscribers("close");
+      self.removeTrenches();
 
-    if (!this.locked.close)
-      this.close();
+      iQ(self.container).remove();
+      self.$undoContainer.remove();
+      self.$undoContainer = null;
+      Items.unsquish();
+
+      Storage.deleteGroupItem(gWindow, self.id);
+    };
+
+    this.$undoContainer.click(function(e) {
+      // Only do this for clicks on this actual element.
+      if (e.target.nodeName != self.$undoContainer[0].nodeName)
+        return;
+
+      self.$undoContainer.fadeOut(function() {
+        iQ(this).remove();
+        self.hidden = false;
+        self.$undoContainer = null;
+
+        iQ(self.container).show().animate({
+          "-moz-transform": "scale(1)",
+          "opacity": 1
+        }, {
+          duration: 170,
+          complete: function() {
+            self._children.forEach(function(child) {
+              iQ(child.container).show();
+            });
+          }
+        });
+
+        self._sendToSubscribers("groupShown", { groupItemId: self.id });
+      });
+    });
+
+    undoClose.click(function() {
+      self.$undoContainer.fadeOut(remove);
+    });
+
+    // After 15 seconds, fade away.
+    const WAIT = 15000;
+    const FADE = 300;
+
+    let fadeaway = function() {
+      if (self.$undoContainer)
+        self.$undoContainer.animate({
+          color: "transparent",
+          opacity: 0
+        }, {
+          duration: FADE,
+          complete: remove
+        });
+    };
+
+    let timeoutId = setTimeout(fadeaway, WAIT);
+    // Cancel the fadeaway if you move the mouse over the undo
+    // button, and restart the countdown once you move out of it.
+    this.$undoContainer.mouseover(function() clearTimeout(timeoutId));
+    this.$undoContainer.mouseout(function() {
+      timeoutId = setTimeout(fadeaway, WAIT);
+    });
   },
 
   // ----------
@@ -659,9 +797,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!options.dontArrange) {
         this.arrange();
       }
-      
+
       this._sendToSubscribers("childAdded",{ groupItemId: this.id, item: item });
-      
+
       UI.setReorderTabsOnHide(this);
     } catch(e) {
       Utils.log('GroupItem.add error', e);
@@ -695,6 +833,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var index = this._children.indexOf(item);
       if (index != -1)
         this._children.splice(index, 1);
+
+      if (item == this._activeTab) {
+        if (this._children.length)
+          this._activeTab = this._children[0];
+        else
+          this._activeTab = null;
+      }
 
       item.setParent(null);
       item.removeClass("tabInGroupItem");
@@ -730,6 +875,33 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     toRemove.forEach(function(child) {
       self.remove(child, {dontArrange: true});
     });
+  },
+
+  // ----------
+  // Adds the given xul:tab as an app tab in this group's apptab tray
+  addAppTab: function GroupItem_addAppTab(xulTab) {
+    let self = this;
+
+    let icon = xulTab.image || Utils.defaultFaviconURL;
+    let $appTab = iQ("<img>")
+      .addClass("appTabIcon")
+      .attr("src", icon)
+      .data("xulTab", xulTab)
+      .appendTo(this.$appTabTray)
+      .click(function(event) {
+        if (Utils.isRightClick(event))
+          return;
+
+        GroupItems.setActiveGroupItem(self);
+        GroupItems._updateTabBar();
+        UI.goToTab(iQ(this).data("xulTab"));
+      });
+
+    let columnWidth = $appTab.width();
+    if (parseInt(this.$appTabTray.css("width")) != columnWidth) {
+      this.$appTabTray.css({width: columnWidth});
+      this.arrange();
+    }
   },
 
   // ----------
@@ -1129,6 +1301,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
            className.indexOf('name') != -1 ||
            className.indexOf('close') != -1 ||
            className.indexOf('newTabButton') != -1 ||
+           className.indexOf('appTabTray') != -1 ||
+           className.indexOf('appTabIcon') != -1 ||
            className.indexOf('stackExpander') != -1) {
           return;
         }
@@ -1181,7 +1355,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     GroupItems.setActiveGroupItem(this);
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
-    // TabItems will have handled the new tab and added the tabItem property
+    // TabItems will have handled the new tab and added the tabItem property.
+    // We don't have to check if it's an app tab (and therefore wouldn't have a
+    // TabItem), since we've just created it.
     let newItem = newTab.tabItem;
 
     var self = this;
@@ -1305,16 +1481,53 @@ let GroupItems = {
   _inited: false,
   _activeGroupItem: null,
   _activeOrphanTab: null,
+  _cleanupFunctions: [],
 
   // ----------
   // Function: init
   init: function GroupItems_init() {
+    let self = this;
+
+    // setup attr modified handler, and prepare for its uninit
+    function handleAttrModified(xulTab) {
+      self._handleAttrModified(xulTab);
+    }
+
+    AllTabs.register("attrModified", handleAttrModified);
+    this._cleanupFunctions.push(function() {
+      AllTabs.unregister("attrModified", handleAttrModified);
+    });
   },
 
   // ----------
   // Function: uninit
   uninit : function GroupItems_uninit () {
+    this._cleanupFunctions.forEach(function(func) {
+      func();
+    });
+
+    this._cleanupFunctions = [];
+
     this.groupItems = null;
+  },
+
+  // ----------
+  // watch for icon changes on app tabs
+  _handleAttrModified: function GroupItems__handleAttrModified(xulTab) {
+    if (xulTab.ownerDocument.defaultView != gWindow || !xulTab.pinned)
+      return;
+
+    let iconUrl = xulTab.image || Utils.defaultFaviconURL;
+    this.groupItems.forEach(function(groupItem) {
+      iQ(".appTabIcon", groupItem.$appTabTray).each(function(icon) {
+        let $icon = iQ(icon);
+        if ($icon.data("xulTab") != xulTab)
+          return;
+
+        if (iconUrl != $icon.attr("src"))
+          $icon.attr("src", iconUrl);
+      });
+    });
   },
 
   // ----------
@@ -1423,6 +1636,7 @@ let GroupItems = {
     Utils.assert(groupItem, 'groupItem');
     Utils.assert(this.groupItems.indexOf(groupItem) == -1, 'only register once per groupItem');
     this.groupItems.push(groupItem);
+    UI.updateTabButton();
   },
 
   // ----------
@@ -1435,6 +1649,8 @@ let GroupItems = {
 
     if (groupItem == this._activeGroupItem)
       this._activeGroupItem = null;
+
+    UI.updateTabButton();
   },
 
   // ----------
@@ -1545,14 +1761,13 @@ let GroupItems = {
 
   // ----------
   // Function: setActiveGroupItem
-  // Sets the active groupItem, thereby showing only the relevent tabs, and
+  // Sets the active groupItem, thereby showing only the relevant tabs and
   // setting the groupItem which will receive new tabs.
   //
   // Paramaters:
   //  groupItem - the active <GroupItem> or <null> if no groupItem is active
   //          (which means we have an orphaned tab selected)
   setActiveGroupItem: function GroupItems_setActiveGroupItem(groupItem) {
-
     if (this._activeGroupItem)
       iQ(this._activeGroupItem.container).removeClass('activeGroupItem');
 
@@ -1604,16 +1819,18 @@ let GroupItems = {
 
   // ----------
   // Function: updateActiveGroupItemAndTabBar
-  // Sets active group item and updates tab bar
+  // Sets active TabItem and GroupItem, and updates tab bar appropriately.
   updateActiveGroupItemAndTabBar: function GroupItems_updateActiveGroupItemAndTabBar(tabItem) {
-    if (tabItem.parent) {
-      let groupItem = tabItem.parent;
-      this.setActiveGroupItem(groupItem);
+    Utils.assertThrow(tabItem && tabItem.isATabItem, "tabItem must be a TabItem");
+
+    let groupItem = tabItem.parent;
+    this.setActiveGroupItem(groupItem);
+
+    if (groupItem)
       groupItem.setActiveTab(tabItem);
-    } else {
-      this.setActiveGroupItem(null);
+    else
       this.setActiveOrphanTab(tabItem);
-    }
+
     this._updateTabBar();
   },
 
@@ -1645,10 +1862,12 @@ let GroupItems = {
     if (!activeGroupItem) {
       if (groupItems.length > 0) {
         groupItems.some(function(groupItem) {
-          var child = groupItem.getChild(0);
-          if (child) {
-            tabItem = child;
-            return true;
+          if (!groupItem.hidden) {
+            var child = groupItem.getChild(0);
+            if (child) {
+              tabItem = child;
+              return true;
+            }
           }
           return false;
         });
@@ -1656,7 +1875,7 @@ let GroupItems = {
     } else {
       var currentIndex;
       groupItems.some(function(groupItem, index) {
-        if (groupItem == activeGroupItem) {
+        if (!groupItem.hidden && groupItem == activeGroupItem) {
           currentIndex = index;
           return true;
         }
@@ -1664,10 +1883,12 @@ let GroupItems = {
       });
       var firstGroupItems = groupItems.slice(currentIndex + 1);
       firstGroupItems.some(function(groupItem) {
-        var child = groupItem.getChild(0);
-        if (child) {
-          tabItem = child;
-          return true;
+        if (!groupItem.hidden) {
+          var child = groupItem.getChild(0);
+          if (child) {
+            tabItem = child;
+            return true;
+          }
         }
         return false;
       });
@@ -1679,10 +1900,12 @@ let GroupItems = {
       if (!tabItem) {
         var secondGroupItems = groupItems.slice(0, currentIndex);
         secondGroupItems.some(function(groupItem) {
-          var child = groupItem.getChild(0);
-          if (child) {
-            tabItem = child;
-            return true;
+          if (!groupItem.hidden) {
+            var child = groupItem.getChild(0);
+            if (child) {
+              tabItem = child;
+              return true;
+            }
           }
           return false;
         });
@@ -1693,10 +1916,17 @@ let GroupItems = {
 
   // ----------
   // Function: moveTabToGroupItem
+  // Used for the right click menu in the tab strip; moves the given tab
+  // into the given group. Does nothing if the tab is an app tab.
   // Paramaters:
   //  tab - the <xul:tab>.
   //  groupItemId - the <groupItem>'s id.  If nothing, create a new <groupItem>.
   moveTabToGroupItem : function GroupItems_moveTabToGroupItem (tab, groupItemId) {
+    if (tab.pinned)
+      return;
+
+    Utils.assertThrow(tab.tabItem, "tab must be linked to a TabItem");
+
     let shouldUpdateTabBar = false;
     let shouldShowTabView = false;
     let groupItem;
@@ -1758,6 +1988,26 @@ let GroupItems = {
       if (groupItem.getTitle() == newTabGroupTitle && groupItem.locked.title) {
         groupItem.removeAll();
         groupItem.close();
+      }
+    });
+  },
+
+  // ----------
+  // Function: removeHiddenGroups
+  // Removes all hidden groups' data and its browser tabs.
+  removeHiddenGroups: function GroupItems_removeHiddenGroups() {
+    iQ(".undo").remove();
+    
+    // ToDo: encapsulate this in the group item. bug 594863
+    this.groupItems.forEach(function(groupItem) {
+      if (groupItem.hidden) {
+        let toClose = groupItem._children.concat();
+        toClose.forEach(function(child) {
+          child.removeSubscriber(groupItem, "close");
+          child.close();
+        });
+
+        Storage.deleteGroupItem(gWindow, groupItem.id);
       }
     });
   }

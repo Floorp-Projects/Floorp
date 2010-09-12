@@ -99,6 +99,10 @@
 <!ENTITY  permInstall           "Install Extensions or Themes">
 <!ENTITY  permGeo               "Share Location">
 
+<!ENTITY  permIndexedDB              "Maintain Offline Storage">
+<!ENTITY  permClearStorage           "Clear Storage">
+<!ENTITY  permClearStorage.accesskey "C">
+
 <!ENTITY  securityTab           "Security">
 <!ENTITY  securityTab.accesskey "S">
 <!ENTITY  securityHeader        "Security information for this page">

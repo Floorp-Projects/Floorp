@@ -75,6 +75,9 @@
 
 #include "mozilla/Omnijar.h"
 #ifdef MOZ_IPC
+#if defined(XP_MACOSX)
+#include "chrome/common/mach_ipc_mac.h"
+#endif
 #include "nsX11ErrorHandler.h"
 #include "base/at_exit.h"
 #include "base/command_line.h"
@@ -308,6 +311,77 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
   sChildProcessType = aProcess;
+
+  // Complete 'task_t' exchange for Mac OS X. This structure has the same size
+  // regardless of architecture so we don't have any cross-arch issues here.
+#ifdef XP_MACOSX
+  if (aArgc < 1)
+    return 1;
+  const char* const mach_port_name = aArgv[--aArgc];
+
+  const int kTimeoutMs = 1000;
+
+  MachSendMessage child_message(0);
+  if (!child_message.AddDescriptor(mach_task_self())) {
+    NS_WARNING("child AddDescriptor(mach_task_self()) failed.");
+    return 1;
+  }
+
+  ReceivePort child_recv_port;
+  mach_port_t raw_child_recv_port = child_recv_port.GetPort();
+  if (!child_message.AddDescriptor(raw_child_recv_port)) {
+    NS_WARNING("Adding descriptor to message failed");
+    return 1;
+  }
+
+  MachPortSender child_sender(mach_port_name);
+  kern_return_t err = child_sender.SendMessage(child_message, kTimeoutMs);
+  if (err != KERN_SUCCESS) {
+    NS_WARNING("child SendMessage() failed");
+    return 1;
+  }
+
+  MachReceiveMessage parent_message;
+  err = child_recv_port.WaitForMessage(&parent_message, kTimeoutMs);
+  if (err != KERN_SUCCESS) {
+    NS_WARNING("child WaitForMessage() failed");
+    return 1;
+  }
+
+  if (parent_message.GetTranslatedPort(0) == MACH_PORT_NULL) {
+    NS_WARNING("child GetTranslatedPort(0) failed");
+    return 1;
+  }
+  err = task_set_bootstrap_port(mach_task_self(),
+                                parent_message.GetTranslatedPort(0));
+  if (err != KERN_SUCCESS) {
+    NS_WARNING("child task_set_bootstrap_port() failed");
+    return 1;
+  }
+#endif
+  
+#if defined(MOZ_CRASHREPORTER)
+  if (aArgc < 1)
+    return 1;
+  const char* const crashReporterArg = aArgv[--aArgc];
+  
+#  if defined(XP_WIN) || defined(XP_MACOSX)
+  // on windows and mac, |crashReporterArg| is the named pipe on which the
+  // server is listening for requests, or "-" if crash reporting is
+  // disabled.
+  if (0 != strcmp("-", crashReporterArg)
+      && !XRE_SetRemoteExceptionHandler(crashReporterArg))
+    return 1;
+#  elif defined(OS_LINUX)
+  // on POSIX, |crashReporterArg| is "true" if crash reporting is
+  // enabled, false otherwise
+  if (0 != strcmp("false", crashReporterArg)
+      && !XRE_SetRemoteExceptionHandler(NULL))
+    return 1;
+#  else
+#    error "OOP crash reporting unsupported on this platform"
+#  endif   
+#endif // if defined(MOZ_CRASHREPORTER)
 
   gArgv = aArgv;
   gArgc = aArgc;

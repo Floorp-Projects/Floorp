@@ -214,7 +214,7 @@ var gAudioTests = [
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
-// These files ensure our hanlding of 404 errors is consistent across the
+// These files ensure our handling of 404 errors is consistent across the
 // various backends.
 var g404Tests = [
   { name:"404.wav", type:"audio/x-wav" },

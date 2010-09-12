@@ -162,6 +162,8 @@ public:
     /* See GLHelpers.java as to why this is needed */
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
+    bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
+
 protected:
     static AndroidBridge *sBridge;
 

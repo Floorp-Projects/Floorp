@@ -66,6 +66,10 @@ public:
   static PRUint32
   GetIndexedDBQuota();
 
+  static nsresult
+  GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
+                        nsIFile** aDirectory);
+
 private:
   IDBFactory() { }
   ~IDBFactory() { }

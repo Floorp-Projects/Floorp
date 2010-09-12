@@ -68,9 +68,8 @@
 
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
-#ifdef XP_WIN
-      <preference id="gfx.direct2d.disabled"           name="gfx.direct2d.disabled"           type="bool"   inverted="true"/>
-#endif
+      <preference id="layers.accelerate-none"          name="layers.accelerate-none"          type="bool"   inverted="true"
+                  onchange="gAdvancedPane.updateHardwareAcceleration()"/>
       <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
 #ifdef HAVE_SHELL_SERVICE
@@ -86,12 +85,8 @@
       <!-- Network tab -->
       <preference id="browser.cache.disk.capacity"     name="browser.cache.disk.capacity"     type="int"/>
       <preference id="browser.offline-apps.notify"     name="browser.offline-apps.notify"     type="bool"/>
- 
-      <preference id="browser.cache.disk.smart_size.enabled"
-                  name="browser.cache.disk.smart_size.enabled"
-                  type="bool"/>
- 
-     <!-- Update tab -->
+
+      <!-- Update tab -->
 #ifdef MOZ_UPDATER
       <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"
                   onchange="gAdvancedPane.updateAppUpdateItems();
@@ -181,12 +176,10 @@
                       label="&useSmoothScrolling.label;"
                       accesskey="&useSmoothScrolling.accesskey;"
                       preference="general.smoothScroll"/>
-#ifdef XP_WIN
             <checkbox id="allowHWAccel"
                       label="&allowHWAccel.label;"
                       accesskey="&allowHWAccel.accesskey;"
-                      preference="gfx.direct2d.disabled"/>
-#endif
+                      preference="layers.accelerate-none"/>
             <checkbox id="checkSpelling"
                       label="&checkSpelling.label;"
                       accesskey="&checkSpelling.accesskey;"
@@ -221,71 +214,65 @@
         <!-- Network -->
         <tabpanel id="networkPanel" orient="vertical">
 
-          <!-- Connection -->
-          <groupbox id="connectionGroup">
-            <caption label="&connection.label;"/>
+           <!-- Connection -->
+           <groupbox id="connectionGroup">
+             <caption label="&connection.label;"/>
 
-            <hbox align="center">
-              <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
-              <button id="connectionSettings" icon="network" label="&connectionSettings.label;"
-                      accesskey="&connectionSettings.accesskey;"
-                      oncommand="gAdvancedPane.showConnections();"/>
-            </hbox>
-          </groupbox>
+             <hbox align="center">
+               <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+               <button id="connectionSettings" icon="network" label="&connectionSettings.label;"
+                       accesskey="&connectionSettings.accesskey;"
+                       oncommand="gAdvancedPane.showConnections();"/>
+             </hbox>
+           </groupbox>
 
-          <!-- Cache/Offline apps -->
-          <groupbox id="offlineGroup">
-            <caption label="&offlineStorage.label;"/>
- 
-            <hbox align="center">
-              <label id="actualCacheSize" flex="1"/>
-              <button id="clearCacheButton" icon="clear"
-                      label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
-                      oncommand="gAdvancedPane.clearCache();"/>
-            </hbox>
-            <checkbox preference="browser.cache.disk.smart_size.enabled"
-                      id="allowSmartSize" flex="1"
-                      onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
-                      label="&smartSizeCache.label;"/>
-            <hbox align="center" class="indent">
-              <label id="useCacheBefore" control="cacheSize"
-                     accesskey="&useCacheBefore.accesskey;" value="&useCacheBefore.label;"/>
-              <textbox id="cacheSize" type="number" size="2"
-                       preference="browser.cache.disk.capacity"
-                       onsyncfrompreference="return gAdvancedPane.readCacheSize();"
-                       onsynctopreference="return gAdvancedPane.writeCacheSize();"
-                       aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
-              <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
-            </hbox>
-            <hbox align="center">
-              <checkbox id="offlineNotify" flex="1"
-                        label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
-                        preference="browser.offline-apps.notify"
-                        onsyncfrompreference="return gAdvancedPane.readOfflineNotify();"/>
-              <button id="offlineNotifyExceptions"
-                      label="&offlineNotifyExceptions.label;"
-                      accesskey="&offlineNotifyExceptions.accesskey;"
-                      oncommand="gAdvancedPane.showOfflineExceptions();"/>
-            </hbox>
-            <hbox>
-              <vbox flex="1">
-                <label id="offlineAppsListLabel">&offlineAppsList.label;</label>
-                <listbox id="offlineAppsList"
-                         style="height: &offlineAppsList.height;;"
-                         flex="1"
-                         aria-labelledby="offlineAppsListLabel"
-                         onselect="gAdvancedPane.offlineAppSelected(event);">
-                </listbox>
-              </vbox>
-              <vbox pack="end">
-                <button id="offlineAppsListRemove"
-                        disabled="true"
-                        label="&offlineAppsListRemove.label;"
-                        accesskey="&offlineAppsListRemove.accesskey;" 
-                        oncommand="gAdvancedPane.removeOfflineApp();"/>
-              </vbox>
-            </hbox>
-          </groupbox>
+           <!-- Cache/Offline apps -->
+           <groupbox id="offlineGroup">
+             <caption label="&offlineStorage.label;"/>
+
+             <hbox align="center">
+               <label id="useCacheBefore" control="cacheSize"
+                      accesskey="&useCacheBefore.accesskey;" value="&useCacheBefore.label;"/>
+               <textbox id="cacheSize" type="number" size="2"
+                        preference="browser.cache.disk.capacity"
+                        onsyncfrompreference="return gAdvancedPane.readCacheSize();"
+                        onsynctopreference="return gAdvancedPane.writeCacheSize();"
+                        aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
+               <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
+               <button id="clearCacheButton" icon="clear"
+                       label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
+                       oncommand="gAdvancedPane.clearCache();"/>
+             </hbox>
+	     <hbox align="center">
+	       <checkbox id="offlineNotify" flex="1"
+			 label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
+			 preference="browser.offline-apps.notify"
+			 onsyncfrompreference="return gAdvancedPane.readOfflineNotify();"/>
+	       <button id="offlineNotifyExceptions"
+		       label="&offlineNotifyExceptions.label;"
+		       accesskey="&offlineNotifyExceptions.accesskey;"
+		       oncommand="gAdvancedPane.showOfflineExceptions();"/>
+	     </hbox>
+	     <hbox>
+	       <vbox flex="1">
+
+		 <label id="offlineAppsListLabel">&offlineAppsList.label;</label>
+		 <listbox id="offlineAppsList"
+			  style="height: &offlineAppsList.height;;"
+			  flex="1"
+			  aria-labelledby="offlineAppsListLabel"
+			  onselect="gAdvancedPane.offlineAppSelected(event);">
+		 </listbox>
+	       </vbox>
+	       <vbox pack="end">
+		 <button id="offlineAppsListRemove"
+			 disabled="true"
+			 label="&offlineAppsListRemove.label;"
+			 accesskey="&offlineAppsListRemove.accesskey;" 
+			 oncommand="gAdvancedPane.removeOfflineApp();"/>
+	       </vbox>
+	     </hbox>
+	   </groupbox>
         </tabpanel>
 
         <!-- Update -->

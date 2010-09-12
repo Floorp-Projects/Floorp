@@ -52,6 +52,7 @@
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsIMutableArray.h"
 
 // form submission
 #include "nsIFormSubmitObserver.h"
@@ -368,6 +369,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
                                 kFormDefaultMethod->tag)
+NS_IMPL_BOOL_ATTR(nsHTMLFormElement, NoValidate, novalidate)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 
@@ -412,7 +414,7 @@ nsHTMLFormElement::Reset()
 NS_IMETHODIMP
 nsHTMLFormElement::CheckValidity(PRBool* retVal)
 {
-  *retVal = CheckFormValidity();
+  *retVal = CheckFormValidity(nsnull);
   return NS_OK;
 }
 
@@ -699,16 +701,6 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
     // XXX Should this return an error?
     return NS_OK;
   }
-
-#ifdef DEBUG
-  if (!CheckFormValidity()) {
-    printf("= The form is not valid!\n");
-#if 0
-    // TODO: uncomment this code whith a patch introducing a UI.
-    return NS_OK;
-#endif // 0
-  }
-#endif // DEBUG
 
   // Mark us as submitting so that we don't try to submit again
   mIsSubmitting = PR_TRUE;
@@ -1604,7 +1596,7 @@ nsHTMLFormElement::ForgetCurrentSubmission()
 }
 
 PRBool
-nsHTMLFormElement::CheckFormValidity() const
+nsHTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
 {
   PRBool ret = PR_TRUE;
 
@@ -1631,10 +1623,18 @@ nsHTMLFormElement::CheckFormValidity() const
     if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
         !cvElmt->IsValid()) {
       ret = PR_FALSE;
+      PRBool defaultAction = PR_TRUE;
       nsContentUtils::DispatchTrustedEvent(sortedControls[i]->GetOwnerDoc(),
                                            static_cast<nsIContent*>(sortedControls[i]),
                                            NS_LITERAL_STRING("invalid"),
-                                           PR_FALSE, PR_TRUE);
+                                           PR_FALSE, PR_TRUE, &defaultAction);
+
+      // Add all unhandled invalid controls to aInvalidElements if the caller
+      // requested them.
+      if (defaultAction && aInvalidElements) {
+        aInvalidElements->AppendElement((nsGenericHTMLElement*)sortedControls[i],
+                                        PR_FALSE);
+      }
     }
   }
 
@@ -1644,6 +1644,77 @@ nsHTMLFormElement::CheckFormValidity() const
   }
 
   return ret;
+}
+
+bool
+nsHTMLFormElement::CheckValidFormSubmission()
+{
+  /**
+   * Check for form validity: do not submit a form if there are unhandled
+   * invalid controls in the form.
+   * This should not be done if the form has been submitted with .submit().
+   *
+   * NOTE: for the moment, we are also checking that there is an observer for
+   * NS_INVALIDFORMSUBMIT_SUBJECT so it will prevent blocking form submission
+   * if the browser does not have implemented a UI yet.
+   *
+   * TODO: the check for observer should be removed later when HTML5 Forms will
+   * be spread enough and authors will assume forms can't be submitted when
+   * invalid. See bug 587671.
+   */
+
+  NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate),
+               "We shouldn't be there if novalidate is set!");
+
+  // When .submit() is called aEvent = nsnull so we can rely on that to know if
+  // we have to check the validity of the form.
+  nsCOMPtr<nsIObserverService> service =
+    mozilla::services::GetObserverService();
+  if (!service) {
+    NS_WARNING("No observer service available!");
+    return true;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> theEnum;
+  nsresult rv = service->EnumerateObservers(NS_INVALIDFORMSUBMIT_SUBJECT,
+                                            getter_AddRefs(theEnum));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasObserver = PR_FALSE;
+  rv = theEnum->HasMoreElements(&hasObserver);
+
+  // Do not check form validity if there is no observer for
+  // NS_INVALIDFORMSUBMIT_SUBJECT.
+  if (NS_SUCCEEDED(rv) && hasObserver) {
+    nsCOMPtr<nsIMutableArray> invalidElements =
+      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!CheckFormValidity(invalidElements.get())) {
+      nsCOMPtr<nsISupports> inst;
+      nsCOMPtr<nsIFormSubmitObserver> observer;
+      PRBool more = PR_TRUE;
+      while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
+        theEnum->GetNext(getter_AddRefs(inst));
+        observer = do_QueryInterface(inst);
+
+        if (observer) {
+          rv = observer->
+            NotifyInvalidSubmit(this,
+                                static_cast<nsIArray*>(invalidElements));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+
+      // The form is invalid. Observers have been alerted. Do not submit.
+      return false;
+    }
+  } else {
+    NS_WARNING("There is no observer for \"invalidformsubmit\". \
+One should be implemented!");
+  }
+
+  return true;
 }
 
 void
