@@ -77,6 +77,15 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     }
 
     /*
+     * Dictionary-mode objects have unique shapes, so there is no way to cache
+     * a prediction of the next shape when adding.
+     */
+    if (adding && obj->inDictionaryMode()) {
+        PCMETER(add2dictfills++);
+        return JS_NO_PROP_CACHE_FILL;
+    }
+
+    /*
      * Check for overdeep scope and prototype chain. Because resolve, getter,
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after js_LookupPropertyWithFlags has returned the nominal protoIndex,
@@ -442,6 +451,7 @@ PropertyCache::purge(JSContext *cx)
         P(rofills);
         P(disfills);
         P(oddfills);
+        P(add2dictfills);
         P(modfills);
         P(brandfills);
         P(noprotos);

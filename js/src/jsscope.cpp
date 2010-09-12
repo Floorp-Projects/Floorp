@@ -1107,11 +1107,12 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 
         /*
          * Remove shape from its non-circular doubly linked list, setting this
-         * object's shape first if shape is not lastProp so the updateShape(cx)
-         * after this if-else will generate a fresh shape for this scope.
+         * object's shape first so the updateShape(cx) after this if-else will
+         * generate a fresh shape for this scope. We need a fresh shape for all
+         * deletions, even of lastProp. Otherwise, a shape number can replay
+         * and caches may return get deleted DictionaryShapes! See bug 595365.
          */
-        if (shape != lastProp)
-            setOwnShape(lastProp->shape);
+        setOwnShape(lastProp->shape);
 
         Shape *oldLastProp = lastProp;
         shape->removeFromDictionary(this);
