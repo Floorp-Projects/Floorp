@@ -251,6 +251,7 @@ RasterImage::~RasterImage()
 nsresult
 RasterImage::Init(imgIDecoderObserver *aObserver,
                   const char* aMimeType,
+                  const char* aURIString,
                   PRUint32 aFlags)
 {
   // We don't support re-initialization
@@ -273,6 +274,7 @@ RasterImage::Init(imgIDecoderObserver *aObserver,
   // Store initialization data
   mObserver = do_GetWeakReference(aObserver);
   mSourceDataMimeType.Assign(aMimeType);
+  mURIString.Assign(aURIString);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mDecodeOnDraw = !!(aFlags & INIT_FLAG_DECODE_ON_DRAW);
   mMultipart = !!(aFlags & INIT_FLAG_MULTIPART);
@@ -336,7 +338,7 @@ RasterImage::ExtractFrame(PRUint32 aWhichFrame,
   // We don't actually have a mimetype in this case. The empty string tells the
   // init routine not to try to instantiate a decoder. This should be fixed in
   // bug 505959.
-  img->Init(nsnull, "", INIT_FLAG_NONE);
+  img->Init(nsnull, "", "", INIT_FLAG_NONE);
   img->SetSize(aRegion.width, aRegion.height);
   img->mDecoded = PR_TRUE; // Also, we need to mark the image as decoded
   img->mHasBeenDecoded = PR_TRUE;
