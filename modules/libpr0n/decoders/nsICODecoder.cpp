@@ -103,11 +103,14 @@ nsICODecoder::~nsICODecoder()
 void
 nsICODecoder::FinishInternal()
 {
+  // We shouldn't be called in error cases
+  NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call FinishInternal after error!");
+
   // We should never make multiple frames
   NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple ICO frames?");
 
   // Send notifications if appropriate
-  if (!IsSizeDecode() && !IsError() && (GetFrameCount() == 1)) {
+  if (!IsSizeDecode() && (GetFrameCount() == 1)) {
 
     // Invalidate
     nsIntRect r(0, 0, mDirEntry.mWidth, mDirEntry.mHeight);
@@ -121,9 +124,7 @@ nsICODecoder::FinishInternal()
 void
 nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 {
-  // No forgiveness
-  if (IsError())
-    return;
+  NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call WriteInternal after error!");
 
   if (!aCount) // aCount=0 means EOF
     return;
