@@ -65,15 +65,6 @@ nsIconDecoder::nsIconDecoder() :
 nsIconDecoder::~nsIconDecoder()
 { }
 
-
-void
-nsIconDecoder::InitInternal()
-{
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-}
-
 void
 nsIconDecoder::FinishInternal()
 {

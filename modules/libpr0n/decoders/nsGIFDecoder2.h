@@ -61,7 +61,6 @@ public:
   nsGIFDecoder2();
   ~nsGIFDecoder2();
 
-  virtual void InitInternal();
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
   virtual void FinishInternal();
 

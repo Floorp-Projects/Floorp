@@ -81,16 +81,6 @@ nsBMPDecoder::~nsBMPDecoder()
 }
 
 void
-nsBMPDecoder::InitInternal()
-{
-    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", mImage.get()));
-
-    // Fire OnStartDecode at init time to support bug 512435
-    if (!IsSizeDecode() && mObserver)
-        mObserver->OnStartDecode(nsnull);
-}
-
-void
 nsBMPDecoder::FinishInternal()
 {
     // We should never make multiple frames
