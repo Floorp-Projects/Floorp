@@ -66,16 +66,8 @@ endif
 endif
 endif # MOZ_PKG_FORMAT
 
-ifeq ($(OS_ARCH),OS2)
-INSTALLER_DIR   = os2
-else
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 INSTALLER_DIR   = windows
-else
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-INSTALLER_DIR   = unix
-endif
-endif
 endif
 
 PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
