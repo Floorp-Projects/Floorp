@@ -860,7 +860,9 @@ autocompleteresult[class="remotetabs-item-title"] {
 }
 
 autocompleteresult[class="history-item-title"] .bookmark-item-url,
-autocompleteresult[class="remotetabs-item-title"] .bookmark-item-url {
+autocompleteresult[class="history-item-title"] .autocomplete-item-tags,
+autocompleteresult[class="remotetabs-item-title"] .bookmark-item-url,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-tags {
   display: none;
 }
 
