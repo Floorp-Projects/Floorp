@@ -93,7 +93,7 @@ public:
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
   virtual void FinishInternal();
 
-  void NotifyDone(PRBool aSuccess);
+  void NotifyDone();
 
 protected:
   void OutputScanlines(PRBool* suspend);
@@ -123,7 +123,6 @@ public:
   qcms_transform *mTransform;
 
   PRPackedBool mReading;
-  PRPackedBool mNotifiedDone;
 };
 
 } // namespace imagelib

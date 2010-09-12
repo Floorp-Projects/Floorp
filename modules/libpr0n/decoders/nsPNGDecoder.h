@@ -64,7 +64,6 @@ public:
 
   virtual void InitInternal();
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual void FinishInternal();
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    PRInt32 width, PRInt32 height,
@@ -72,7 +71,6 @@ public:
   void SetAnimFrameInfo();
 
   void EndImageFrame();
-  void NotifyDone(PRBool aSuccess);
 
 public:
   png_structp mPNG;
@@ -93,7 +91,6 @@ public:
   PRUint8 mChannels;
   PRPackedBool mFrameHasNoAlpha;
   PRPackedBool mFrameIsHidden;
-  PRPackedBool mNotifiedDone;
 
   /*
    * libpng callbacks

@@ -135,10 +135,11 @@ void
 nsGIFDecoder2::FinishInternal()
 {
   // If the GIF got cut off, handle it anyway
-  if (!IsSizeDecode() && !IsError()) {
+  if (!IsSizeDecode() && !IsError() && mGIFOpen) {
     if (mCurrentFrame == mGIFStruct.images_decoded)
       EndImageFrame();
-    EndGIF(/* aSuccess = */ PR_TRUE);
+    PostDecodeDone();
+    mGIFOpen = PR_FALSE;
   }
 
   mImage->SetLoopCount(mGIFStruct.loop_count);
@@ -190,24 +191,6 @@ void nsGIFDecoder2::BeginGIF()
   // If we're doing a size decode, we have what we came for
   if (IsSizeDecode())
     return;
-}
-
-//******************************************************************************
-void nsGIFDecoder2::EndGIF(PRBool aSuccess)
-{
-  if (!mGIFOpen)
-    return;
-
-  if (aSuccess)
-    mImage->DecodingComplete();
-
-  if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
-                            nsnull);
-  }
-
-  mGIFOpen = PR_FALSE;
 }
 
 //******************************************************************************
@@ -1067,18 +1050,17 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
       break;
 
     case gif_done:
-      EndGIF(/* aSuccess = */ PR_TRUE);
+      PostDecodeDone();
+      mGIFOpen = PR_FALSE;
       goto done;
 
     case gif_error:
       PostDataError();
-      EndGIF(/* aSuccess = */ PR_FALSE);
       return;
 
     // Handle out of memory errors
     case gif_oom:
       PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-      EndGIF(/* aSuccess = */ PR_FALSE);
       return;
 
     // We shouldn't ever get here.
@@ -1090,7 +1072,6 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
   // if an error state is set but no data remains, code flow reaches here
   if (mGIFStruct.state == gif_error) {
       PostDataError();
-      EndGIF(/* aSuccess = */ PR_FALSE);
       return;
   }
   
