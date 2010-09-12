@@ -12,3 +12,7 @@ h1 {
 #overview {
     height: 100px;
 }
+
+.legend table {
+  width: auto;
+}
