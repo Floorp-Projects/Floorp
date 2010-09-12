@@ -66,34 +66,30 @@ nsIconDecoder::~nsIconDecoder()
 { }
 
 
-nsresult
+void
 nsIconDecoder::InitInternal()
 {
   // Fire OnStartDecode at init time to support bug 512435
   if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsIconDecoder::FinishInternal()
 {
   // If we haven't notified of completion yet for a full/success decode, we
   // didn't finish. Notify in error mode
   if (!IsSizeDecode() && !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   nsresult rv;
 
   if (IsError())
-    return NS_IMAGELIB_ERROR_FAILURE;
+    return;
 
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.
@@ -137,7 +133,7 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
                                  &mImageData, &mPixBytesTotal);
         if (NS_FAILED(rv)) {
           PostDecoderError(rv);
-          return rv;
+          return;
         }
 
         // Tell the superclass we're starting a frame
@@ -180,8 +176,6 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         break;
     }
   }
-
-  return NS_OK;
 }
 
 void

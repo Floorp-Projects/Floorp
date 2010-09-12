@@ -139,7 +139,7 @@ nsJPEGDecoder::~nsJPEGDecoder()
 }
 
 
-nsresult
+void
 nsJPEGDecoder::InitInternal()
 {
   /* Fire OnStartDecode at init time to support bug 512435 */
@@ -156,7 +156,7 @@ nsJPEGDecoder::InitInternal()
      * We need to clean up the JPEG object, close the input file, and return.
      */
     PostDecoderError(NS_ERROR_FAILURE);
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   /* Step 1: allocate and initialize JPEG decompression object */
@@ -176,11 +176,9 @@ nsJPEGDecoder::InitInternal()
   /* Record app markers for ICC data */
   for (PRUint32 m = 0; m < 16; m++)
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsJPEGDecoder::FinishInternal()
 {
   /* If we're not in any sort of error case, flush the decoder.
@@ -197,18 +195,15 @@ nsJPEGDecoder::FinishInternal()
   /* If we already know we're in an error state, don't
      bother flagging another one here. */
   if (mState == JPEG_ERROR)
-    return NS_OK;
+    return;
 
   /* If we're doing a full decode and haven't notified of completion yet,
    * we must not have got everything we wanted. Send error notifications. */
   if (!IsSizeDecode() && !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
-
-  /* Otherwise, no problems. */
-  return NS_OK;
 }
 
-nsresult
+void
 nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   mSegment = (const JOCTET *)aBuffer;
@@ -224,7 +219,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       mState = JPEG_SINK_NON_JPEG_TRAILER;
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (setjmp returned NS_ERROR_FAILURE)"));
-      return NS_OK;
+      return;
     } else {
       /* Error due to reasons external to the stream (probably out of
          memory) - let libpr0n attempt to clean up, even though
@@ -233,7 +228,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       mState = JPEG_ERROR;
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (setjmp returned an error)"));
-      return error_code;
+      return;
     }
   }
 
@@ -249,7 +244,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED) {
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (JPEG_SUSPENDED)"));
-      return NS_OK; /* I/O suspension */
+      return; /* I/O suspension */
     }
 
     // Post our size to the superclass
@@ -257,7 +252,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
     /* If we're doing a size decode, we're done. */
     if (IsSizeDecode())
-      return NS_OK;
+      return;
 
     /* We're doing a full decode. */
     JOCTET  *profile;
@@ -303,7 +298,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         PostDataError();
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                ("} (unknown colorpsace (1))"));
-        return NS_ERROR_UNEXPECTED;
+        return;
       }
 
       if (!mismatch) {
@@ -320,7 +315,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           PostDataError();
           PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                  ("} (unknown colorpsace (2))"));
-          return NS_ERROR_UNEXPECTED;
+          return;
         }
 #if 0
         /* We don't currently support CMYK profiles. The following
@@ -370,7 +365,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         PostDataError();
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                ("} (unknown colorpsace (3))"));
-        return NS_ERROR_UNEXPECTED;
+        return;
         break;
       }
     }
@@ -395,7 +390,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (could not initialize image frame)"));
-      return NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
 
     PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
@@ -426,7 +421,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (jpeg_start_decompress(&mInfo) == FALSE) {
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (I/O suspension after jpeg_start_decompress())"));
-      return NS_OK; /* I/O suspension */
+      return; /* I/O suspension */
     }
 
     /* Force to use our YCbCr to Packed RGB converter when possible */
@@ -448,14 +443,12 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::Write -- JPEG_DECOMPRESS_SEQUENTIAL case");
       
       PRBool suspend;
-      nsresult rv = OutputScanlines(&suspend);
-      if (NS_FAILED(rv))
-        return rv;
+      OutputScanlines(&suspend);
       
       if (suspend) {
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                ("} (I/O suspension after OutputScanlines() - SEQUENTIAL)"));
-        return NS_OK; /* I/O suspension */
+        return; /* I/O suspension */
       }
       
       /* If we've completed image output ... */
@@ -491,7 +484,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           if (!jpeg_start_output(&mInfo, scan)) {
             PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                    ("} (I/O suspension after jpeg_start_output() - PROGRESSIVE)"));
-            return NS_OK; /* I/O suspension */
+            return; /* I/O suspension */
           }
         }
 
@@ -499,9 +492,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           mInfo.output_scanline = 0;
 
         PRBool suspend;
-        nsresult rv = OutputScanlines(&suspend);
-        if (NS_FAILED(rv))
-          return rv;
+        OutputScanlines(&suspend);
 
         if (suspend) {
           if (mInfo.output_scanline == 0) {
@@ -511,7 +502,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           }
           PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                  ("} (I/O suspension after OutputScanlines() - PROGRESSIVE)"));
-          return NS_OK; /* I/O suspension */
+          return; /* I/O suspension */
         }
 
         if (mInfo.output_scanline == mInfo.output_height)
@@ -519,7 +510,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           if (!jpeg_finish_output(&mInfo)) {
             PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                    ("} (I/O suspension after jpeg_finish_output() - PROGRESSIVE)"));
-            return NS_OK; /* I/O suspension */
+            return; /* I/O suspension */
           }
 
           if (jpeg_input_complete(&mInfo) &&
@@ -543,7 +534,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (jpeg_finish_decompress(&mInfo) == FALSE) {
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (I/O suspension after jpeg_finish_decompress() - DONE)"));
-      return NS_OK; /* I/O suspension */
+      return; /* I/O suspension */
     }
 
     mState = JPEG_SINK_NON_JPEG_TRAILER;
@@ -563,7 +554,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
   PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
          ("} (end of function)"));
-  return NS_OK;
+  return;
 }
 
 void
@@ -586,13 +577,12 @@ nsJPEGDecoder::NotifyDone(PRBool aSuccess)
   mNotifiedDone = PR_TRUE;
 }
 
-nsresult
+void
 nsJPEGDecoder::OutputScanlines(PRBool* suspend)
 {
   *suspend = PR_FALSE;
 
   const PRUint32 top = mInfo.output_scanline;
-  nsresult rv = NS_OK;
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
       /* Use the Cairo image buffer as scanline buffer */
@@ -682,7 +672,6 @@ nsJPEGDecoder::OutputScanlines(PRBool* suspend)
       PostInvalidation(r);
   }
 
-  return rv;
 }
 
 

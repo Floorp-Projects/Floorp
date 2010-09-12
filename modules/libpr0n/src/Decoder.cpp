@@ -120,9 +120,9 @@ Decoder::FlushInvalidations()
  * Hook stubs. Override these as necessary in decoder implementations.
  */
 
-nsresult Decoder::InitInternal() {return NS_OK; }
-nsresult Decoder::WriteInternal(const char* aBuffer, PRUint32 aCount) {return NS_OK; }
-nsresult Decoder::FinishInternal() {return NS_OK; }
+void Decoder::InitInternal() { }
+void Decoder::WriteInternal(const char* aBuffer, PRUint32 aCount) { }
+void Decoder::FinishInternal() { }
 
 /*
  * Progress Notifications

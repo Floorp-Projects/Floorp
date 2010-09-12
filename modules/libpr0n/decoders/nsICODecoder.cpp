@@ -100,21 +100,17 @@ nsICODecoder::~nsICODecoder()
   mDecodingAndMask = PR_FALSE;
 }
 
-nsresult
+void
 nsICODecoder::InitInternal()
 {
   // Fire OnStartDecode at init time to support bug 512435
   if (!IsSizeDecode() && mObserver)
     mObserver->OnStartDecode(nsnull);
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsICODecoder::FinishInternal()
 {
-  nsresult rv = NS_OK;
-
   // We should never make multiple frames
   NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple ICO frames?");
 
@@ -132,25 +128,23 @@ nsICODecoder::FinishInternal()
       mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
     }
   }
-
-  return rv;
 }
 
-nsresult
+void
 nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 {
   // No forgiveness
   if (IsError())
-    return NS_ERROR_FAILURE;
+    return;
 
   if (!aCount) // aCount=0 means EOF
-    return NS_OK;
+    return;
 
   while (aCount && (mPos < ICONCOUNTOFFSET)) { // Skip to the # of icons.
     if (mPos == 2) { // if the third byte is 1: This is an icon, 2: a cursor
       if ((*aBuffer != 1) && (*aBuffer != 2)) {
         PostDataError();
-        return NS_ERROR_FAILURE;
+        return;
       }
       mIsCursor = (*aBuffer == 2);
     }
@@ -165,7 +159,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
   }
 
   if (mNumIcons == 0)
-    return NS_OK; // Nothing to do.
+    return; // Nothing to do.
 
   PRUint16 colorDepth = 0;
   while (mCurrIcon < mNumIcons) {
@@ -180,7 +174,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
       aBuffer += toCopy;
     }
     if (aCount == 0)
-      return NS_OK; // Need more data
+      return; // Need more data
 
     IconDirEntry e;
     if (mPos == 22+mCurrIcon*sizeof(mDirEntryArray)) {
@@ -194,7 +188,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         PRUint32 minImageOffset = DIRENTRYOFFSET + mNumIcons*sizeof(mDirEntryArray);
         if (mImageOffset < minImageOffset) {
           PostDataError();
-          return NS_ERROR_FAILURE;
+          return;
         }
 
         colorDepth = e.mBitCount;
@@ -233,7 +227,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     ProcessInfoHeader();
     PostSize(mDirEntry.mWidth, mDirEntry.mHeight);
     if (IsSizeDecode())
-      return NS_OK;
+      return;
 
     if (mBIH.bpp <= 8) {
       switch (mBIH.bpp) {
@@ -248,13 +242,13 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
           break;
         default:
           PostDataError();
-          return NS_ERROR_FAILURE;
+          return;
       }
 
       mColors = new colorTable[mNumColors];
       if (!mColors) {
         PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-        return NS_ERROR_OUT_OF_MEMORY;
+        return;
       }
     }
 
@@ -278,13 +272,16 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     // Also, it compensates rounding error.
     if (!mRow) {
       PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-      return NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
 
     PRUint32 imageLength;
     rv = mImage->AppendFrame(0, 0, mDirEntry.mWidth, mDirEntry.mHeight,
                              gfxASurface::ImageFormatARGB32, (PRUint8**)&mImageData, &imageLength);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      PostDecoderError(rv);
+      return;
+    }
 
     // Tell the superclass we're starting a frame
     PostFrameStart();
@@ -330,7 +327,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     NS_ASSERTION(mImageData, "mImageData is null");
     if (!mRow || !mImageData) {
       PostDataError();
-      return NS_ERROR_FAILURE;
+      return;
     }
 
     PRUint32 rowSize = (mBIH.bpp * mDirEntry.mWidth + 7) / 8; // +7 to round up
@@ -416,7 +413,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
               default:
                 // This is probably the wrong place to check this...
                 PostDataError();
-                return NS_ERROR_FAILURE;
+                return;
             }
 
             if (mCurLine == 0)
@@ -438,7 +435,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
       mRow = (PRUint8*)realloc(mRow, rowSize);
       if (!mRow) {
         PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-        return NS_ERROR_OUT_OF_MEMORY;
+        return;
       }
     }
 
@@ -447,7 +444,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     NS_ASSERTION(mImageData, "mImageData is null");
     if (!mRow || !mImageData) {
       PostDataError();
-      return NS_ERROR_FAILURE;
+      return;
     }
 
     while (mCurLine > 0 && aCount > 0) {
@@ -477,7 +474,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     }
   }
 
-  return NS_OK;
+  return;
 }
 
 void
