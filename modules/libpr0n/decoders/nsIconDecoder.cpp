@@ -67,14 +67,12 @@ nsIconDecoder::~nsIconDecoder()
 void
 nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
-  nsresult rv;
-
-  if (IsError())
-    return;
+  NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call WriteInternal after error!");
 
   // We put this here to avoid errors about crossing initialization with case
   // jumps on linux.
   PRUint32 bytesToRead = 0;
+  nsresult rv;
 
   // Performance isn't critical here, so our update rectangle is 
   // always the full icon

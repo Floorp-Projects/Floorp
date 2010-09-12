@@ -83,11 +83,14 @@ nsBMPDecoder::~nsBMPDecoder()
 void
 nsBMPDecoder::FinishInternal()
 {
+    // We shouldn't be called in error cases
+    NS_ABORT_IF_FALSE(!IsError(), "Can't call FinishInternal on error!");
+
     // We should never make multiple frames
     NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple BMP frames?");
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() && !IsError() && (GetFrameCount() == 1)) {
+    if (!IsSizeDecode() && (GetFrameCount() == 1)) {
         PostFrameStop();
         PostDecodeDone();
     }
@@ -136,9 +139,7 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
 void
 nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
 {
-    // No forgiveness
-    if (IsError())
-      return;
+    NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call WriteInternal after error!");
 
     // aCount=0 means EOF, mCurLine=0 means we're past end of image
     if (!aCount || !mCurLine)
