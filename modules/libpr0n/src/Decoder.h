@@ -117,9 +117,9 @@ public:
   PRUint32 GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
 
   // Error tracking
-  bool IsError() { return IsDataError() || IsDecoderError(); };
-  bool IsDataError() { return mDataError; };
-  bool IsDecoderError() { return NS_FAILED(mFailCode); };
+  bool HasError() { return HasDataError() || HasDecoderError(); };
+  bool HasDataError() { return mDataError; };
+  bool HasDecoderError() { return NS_FAILED(mFailCode); };
   nsresult GetDecoderError() { return mFailCode; };
 
 protected:
