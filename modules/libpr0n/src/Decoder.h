@@ -167,9 +167,10 @@ protected:
   /*
    * Member variables.
    *
-   * XXX - Some of these become private later in the patch stack.
    */
   nsRefPtr<RasterImage> mImage;
+
+private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
 
   PRUint32 mFrameCount; // Number of frames, including anything in-progress
