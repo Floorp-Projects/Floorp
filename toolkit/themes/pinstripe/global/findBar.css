@@ -134,7 +134,7 @@ label.findbar-find-fast:-moz-lwtheme,
   border-radius: 10000px;
   border: none;
   box-shadow: 0 1px 1.5px rgba(0, 0, 0, .7) inset,
-                   0 0 0 1px rgba(0, 0, 0, .17) inset;
+              0 0 0 1px rgba(0, 0, 0, .17) inset;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 5px center;
   margin: 0 4px -1px;
   padding: 3px 8px 2px;
@@ -147,7 +147,7 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-textbox[focused="true"] {
   box-shadow: @focusRingShadow@,
-                   0 1px 1.5px rgba(0, 0, 0, .8) inset;
+              0 1px 1.5px rgba(0, 0, 0, .8) inset;
 }
 
 .findbar-textbox[flash="true"] {

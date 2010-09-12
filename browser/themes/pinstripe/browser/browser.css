@@ -758,7 +758,7 @@ toolbar[mode="icons"] #zoom-in-button {
 
 #identity-box:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
-                   0 0 3px 2px -moz-mac-focusring;
+              0 0 3px 2px -moz-mac-focusring;
 }
 
 #identity-box {
@@ -774,7 +774,7 @@ toolbar[mode="icons"] #zoom-in-button {
 #identity-box:active:hover,
 #identity-box[open="true"] {
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35),
-                   inset 0 0 0 20px rgba(0, 0, 0, 0.06);
+              inset 0 0 0 20px rgba(0, 0, 0, 0.06);
 }
 
 #identity-box.verifiedDomain {
@@ -987,7 +987,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 56px, 14px, 42px);
   background-image: -moz-linear-gradient(rgb(184,221,142), rgb(154,201,111) 49%, rgb(130,187,92) 51%, rgb(114,171,79));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 1px rgba(255,255,255,.15) inset;
+              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar-reload-button {
@@ -998,14 +998,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 1px rgba(255,255,255,.15) inset;
+              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar-stop-button {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
   background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 1px rgba(255,255,255,.15) inset;
+              -1px -1px 1px rgba(255,255,255,.15) inset;
 }
 
 #urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
@@ -1618,7 +1618,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
   padding-bottom: 1px;
   box-shadow: 0 -6px 3.5px -5px rgba(0,0,0,.3) inset,
-                   0 -2px 0 rgba(0,0,0,.2) inset;
+              0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
 #TabsToolbar[tabsontop="false"] {
@@ -1987,7 +1987,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .notification-anchor-icon:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
-                   0 0 3px 2px -moz-mac-focusring;
+              0 0 3px 2px -moz-mac-focusring;
 }
 
 #geo-notification-icon {
