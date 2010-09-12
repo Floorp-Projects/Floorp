@@ -235,10 +235,6 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
       }
 
       mColors = new colorTable[mNumColors];
-      if (!mColors) {
-        PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
     }
 
     if (mIsCursor) {
@@ -255,7 +251,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
     }
 
     mCurLine = mDirEntry.mHeight;
-    mRow = (PRUint8*)malloc((mDirEntry.mWidth * mBIH.bpp)/8 + 4);
+    mRow = (PRUint8*)moz_malloc((mDirEntry.mWidth * mBIH.bpp)/8 + 4);
     // +4 because the line is padded to a 4 bit boundary, but I don't want
     // to make exact calculations here, that's unnecessary.
     // Also, it compensates rounding error.
