@@ -153,6 +153,13 @@ protected:
   // actually pass these invalidations on right away.
   void PostInvalidation(nsIntRect& aRect);
 
+  // Called by the decoders when they have successfully decoded the image. This
+  // may occur as the result of the decoder getting to the appropriate point in
+  // the stream, or by us calling FinishInternal().
+  //
+  // May not be called mid-frame.
+  void PostDecodeDone();
+
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
@@ -174,6 +181,7 @@ protected:
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
+  bool mDecodeDone;
   bool mDataError;
 };
 

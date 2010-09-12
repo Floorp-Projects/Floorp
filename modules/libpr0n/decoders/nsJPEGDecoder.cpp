@@ -99,7 +99,6 @@ nsJPEGDecoder::nsJPEGDecoder()
 {
   mState = JPEG_HEADER;
   mReading = PR_TRUE;
-  mNotifiedDone = PR_FALSE;
   mImageData = nsnull;
 
   mBytesToSkip = 0;
@@ -187,16 +186,6 @@ nsJPEGDecoder::FinishInternal()
       (mState != JPEG_ERROR) &&
       !IsSizeDecode())
     this->Write(nsnull, 0);
-
-  /* If we already know we're in an error state, don't
-     bother flagging another one here. */
-  if (mState == JPEG_ERROR)
-    return;
-
-  /* If we're doing a full decode and haven't notified of completion yet,
-   * we must not have got everything we wanted. Send error notifications. */
-  if (!IsSizeDecode() && !mNotifiedDone)
-    NotifyDone(/* aSuccess = */ PR_FALSE);
 }
 
 void
@@ -554,23 +543,10 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 }
 
 void
-nsJPEGDecoder::NotifyDone(PRBool aSuccess)
+nsJPEGDecoder::NotifyDone()
 {
-  // We should only be called once
-  NS_ABORT_IF_FALSE(!mNotifiedDone, "calling NotifyDone twice!");
-
-  // Notify
   PostFrameStop();
-  if (aSuccess)
-    mImage->DecodingComplete();
-  if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
-                            nsnull);
-  }
-
-  // Mark that we've been called
-  mNotifiedDone = PR_TRUE;
+  PostDecodeDone();
 }
 
 void
@@ -886,8 +862,8 @@ term_source (j_decompress_ptr jd)
   NS_ABORT_IF_FALSE(decoder->mState != JPEG_ERROR,
                     "Calling term_source on a JPEG with mState == JPEG_ERROR!");
 
-  // Notify
-  decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
+  // Notify using a helper method to get around protectedness issues.
+  decoder->NotifyDone();
 }
 
 } // namespace imagelib

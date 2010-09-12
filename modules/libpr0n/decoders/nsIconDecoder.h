@@ -78,7 +78,6 @@ public:
   virtual ~nsIconDecoder();
 
   virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual void FinishInternal();
 
   PRUint8 mWidth;
   PRUint8 mHeight;
@@ -86,9 +85,6 @@ public:
   PRUint32 mPixBytesTotal;
   PRUint8* mImageData;
   PRUint32 mState;
-
-  PRBool mNotifiedDone;
-  void NotifyDone(PRBool aSuccess);
 };
 
 enum {

@@ -86,8 +86,7 @@ nsPNGDecoder::nsPNGDecoder() :
   mCMSLine(nsnull), interlacebuf(nsnull),
   mInProfile(nsnull), mTransform(nsnull),
   mHeaderBuf(nsnull), mHeaderBytesRead(0),
-  mChannels(0), mFrameIsHidden(PR_FALSE),
-  mNotifiedDone(PR_FALSE)
+  mChannels(0), mFrameIsHidden(PR_FALSE)
 {
 }
 
@@ -290,16 +289,6 @@ nsPNGDecoder::InitInternal()
 }
 
 void
-nsPNGDecoder::FinishInternal()
-{
-
-  // If we're a full/success decode but haven't sent stop notifications yet,
-  // we didn't get all the data we needed. Send error notifications.
-  if (!IsSizeDecode() && !mNotifiedDone)
-    NotifyDone(/* aSuccess = */ PR_FALSE);
-}
-
-void
 nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   // We use gotos, so we need to declare variables here
@@ -366,26 +355,6 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     png_process_data(mPNG, mInfo, (unsigned char *)aBuffer, aCount);
 
   }
-}
-
-void
-nsPNGDecoder::NotifyDone(PRBool aSuccess)
-{
-  // We should only be called once
-  NS_ABORT_IF_FALSE(!mNotifiedDone, "Calling NotifyDone twice!");
-
-  // Notify
-  EndImageFrame();
-  if (aSuccess)
-    mImage->DecodingComplete();
-  if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
-                            nsnull);
-  }
-
-  // Mark that we've been called
-  mNotifiedDone = PR_TRUE;
 }
 
 // Sets up gamma pre-correction in libpng before our callback gets called.
@@ -863,7 +832,8 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   // Send final notifications
-  decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
+  decoder->EndImageFrame();
+  decoder->PostDecodeDone();
 }
 
 
