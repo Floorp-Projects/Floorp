@@ -88,6 +88,14 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
 nsresult
 Decoder::Write(const char* aBuffer, PRUint32 aCount)
 {
+  // We're strict about decoder errors
+  NS_ABORT_IF_FALSE(!IsDecoderError(),
+                    "Not allowed to make more decoder calls after error!");
+
+  // If a data error occured, just ignore future data
+  if (IsDataError())
+    return NS_OK;
+
   // Pass the data along to the implementation
   WriteInternal(aBuffer, aCount);
   return IsError() ? NS_ERROR_FAILURE : NS_OK;
@@ -97,20 +105,28 @@ nsresult
 Decoder::Finish()
 {
   // Implementation-specific finalization
-  FinishInternal();
+  if (!IsError())
+    FinishInternal();
 
   // If the implementation left us mid-frame, finish that up.
-  if (mInFrame)
+  if (mInFrame && !IsDecoderError())
     PostFrameStop();
 
-  if (IsError())
-    return NS_ERROR_FAILURE;
-
-  // If the implementation didn't post success, we assume failure
+  // If PostDecodeDone() has not been called, we need to sent teardown
+  // notifications.
   if (!IsSizeDecode() && !mDecodeDone) {
+
+    // If we only have a data error, see if things are worth salvaging
+    bool salvage = !IsDecoderError() && mImage->GetNumFrames();
+
+    // If we're salvaging, say we finished decoding
+    if (salvage)
+      mImage->DecodingComplete();
+
+    // Fire teardown notifications
     if (mObserver) {
       mObserver->OnStopContainer(nsnull, mImage);
-      mObserver->OnStopDecode(nsnull, NS_ERROR_FAILURE, nsnull);
+      mObserver->OnStopDecode(nsnull, salvage ? NS_OK : NS_ERROR_FAILURE, nsnull);
     }
   }
 
@@ -120,6 +136,9 @@ Decoder::Finish()
 void
 Decoder::FlushInvalidations()
 {
+  NS_ABORT_IF_FALSE(!IsDecoderError(),
+                    "Not allowed to make more decoder calls after error!");
+
   // If we've got an empty invalidation rect, we have nothing to do
   if (mInvalidRect.IsEmpty())
     return;

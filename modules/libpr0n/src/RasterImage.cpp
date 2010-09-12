@@ -2181,20 +2181,18 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   // Figure out what kind of decode we were doing before we get rid of our decoder
   bool wasSizeDecode = mDecoder->IsSizeDecode();
 
-  // If we're not in error mode, finalize the decoder
-  nsresult rv = NS_OK;
-  if (aIntent != eShutdownIntent_Error) {
-    mInDecoder = PR_TRUE;
-    rv = mDecoder->Finish();
-    mInDecoder = PR_FALSE;
-  }
+  // Finalize the decoder
+  mInDecoder = PR_TRUE;
+  mDecoder->Finish();
+  mInDecoder = PR_FALSE;
 
   // null out the decoder, _then_ check for errors on the close (otherwise the
   // error routine might re-invoke ShutdownDecoder)
+  nsresult decoderStatus = mDecoder->GetDecoderError();
   mDecoder = nsnull;
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(decoderStatus)) {
     DoError();
-    return rv;
+    return decoderStatus;
   }
 
   // Kill off the worker
@@ -2563,8 +2561,7 @@ RasterImage::IsDecodeFinished()
   return decodeFinished;
 }
 
-// Indempotent error flagging routine. If a decoder is open,
-// sends OnStopContainer and OnStopDecode and shuts down the decoder
+// Indempotent error flagging routine. If a decoder is open, shuts it down.
 void
 RasterImage::DoError()
 {
@@ -2572,20 +2569,9 @@ RasterImage::DoError()
   if (mError)
     return;
 
-  // If we're mid-decode
-  if (mDecoder) {
-
-    // grab the observer and give an OnStopContainer and an OnStopDecode
-    nsCOMPtr<imgIDecoderObserver> observer = do_QueryReferent(mObserver);
-    if (observer) {
-      observer->OnStopContainer(nsnull, this);
-      observer->OnStopDecode(nsnull, NS_ERROR_FAILURE, nsnull);
-    }
-
-    // Shutdown the decoder in error mode. We don't care if this flags other
-    // errors.
-    (void) ShutdownDecoder(eShutdownIntent_Error);
-  }
+  // If we're mid-decode, shut down the decoder.
+  if (mDecoder)
+    ShutdownDecoder(eShutdownIntent_Error);
 
   // Put the container in an error state
   mError = PR_TRUE;
