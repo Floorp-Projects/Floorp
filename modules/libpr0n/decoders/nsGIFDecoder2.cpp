@@ -341,7 +341,6 @@ void nsGIFDecoder2::EndImageFrame()
     // timeout for the image until here to help ensure that we have the whole 
     // image frame decoded before we go off and try to display another frame.
     mImage->SetFrameTimeout(mGIFStruct.images_decoded, mGIFStruct.delay_time);
-    mImage->EndFrameDecode(mGIFStruct.images_decoded);
   }
 
   // Unconditionally increment images_decoded, because we unconditionally
