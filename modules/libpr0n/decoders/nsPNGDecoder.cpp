@@ -208,7 +208,6 @@ void nsPNGDecoder::EndImageFrame()
   }
 #endif
 
-  mImage->EndFrameDecode(numFrames - 1);
   PostFrameStop();
 }
 

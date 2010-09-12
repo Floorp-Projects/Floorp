@@ -117,6 +117,9 @@ public:
   // is only 0 if we haven't begun any frames.
   PRUint32 GetFrameCount() { return mFrameCount; }
 
+  // The number of complete frames we have (ie, not including anything in-progress).
+  PRUint32 GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
+
   // Error tracking
   bool IsError() { return IsDataError() || IsDecoderError(); };
   bool IsDataError() { return mDataError; };

@@ -1030,20 +1030,6 @@ RasterImage::SetFrameHasNoAlpha(PRUint32 aFrameNum)
 }
 
 nsresult
-RasterImage::EndFrameDecode(PRUint32 aFrameNum)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  // Assume there's another frame.
-  // currentDecodingFrameIndex is 0 based, aFrameNum is 1 based
-  if (mAnim)
-    mAnim->currentDecodingFrameIndex = aFrameNum;
-  
-  return NS_OK;
-}
-
-nsresult
 RasterImage::DecodingComplete()
 {
   if (mError)
@@ -1054,8 +1040,6 @@ RasterImage::DecodingComplete()
   // discarding with bug 500402.
   mDecoded = PR_TRUE;
   mHasBeenDecoded = PR_TRUE;
-  if (mAnim)
-    mAnim->doneDecoding = PR_TRUE;
 
   nsresult rv;
 
@@ -1448,12 +1432,21 @@ RasterImage::Notify(nsITimer *timer)
   PRUint32 nextFrameIndex = mAnim->currentAnimationFrameIndex + 1;
   PRInt32 timeout = 0;
 
+  // Figure out if we have the next full frame. This is more complicated than
+  // just checking for mFrames.Length() because decoders append their frames
+  // before they're filled in.
+  NS_ABORT_IF_FALSE(mDecoder || nextFrameIndex <= mFrames.Length(),
+                    "How did we get 2 indicies too far by incrementing?");
+  bool haveFullNextFrame = !mDecoder || nextFrameIndex < mDecoder->GetCompleteFrameCount();
+
+  // If we don't have the next full frame, it had better be in the pipe.
+  NS_ABORT_IF_FALSE(haveFullNextFrame ||
+                    (mDecoder && mFrames.Length() > mDecoder->GetCompleteFrameCount()),
+                    "What is the next frame supposed to be?");
+
   // If we're done decoding the next frame, go ahead and display it now and
   // reinit the timer with the next frame's delay time.
-  // currentDecodingFrameIndex is not set until the second frame has
-  // finished decoding (see EndFrameDecode)
-  if (mAnim->doneDecoding || 
-      (nextFrameIndex < mAnim->currentDecodingFrameIndex)) {
+  if (haveFullNextFrame) {
     if (mFrames.Length() == nextFrameIndex) {
       // End of Animation
 
@@ -1482,23 +1475,11 @@ RasterImage::Notify(nsITimer *timer)
     }
     timeout = nextFrame->GetTimeout();
 
-  } else if (nextFrameIndex == mAnim->currentDecodingFrameIndex) {
+  } else {
     // Uh oh, the frame we want to show is currently being decoded (partial)
     // Wait a bit and try again
     mAnim->timer->SetDelay(100);
     return NS_OK;
-  } else { //  (nextFrameIndex > currentDecodingFrameIndex)
-    // We shouldn't get here. However, if we are requesting a frame
-    // that hasn't been decoded yet, go back to the last frame decoded
-    NS_WARNING("RasterImage::Notify()  Frame is passed decoded frame");
-    nextFrameIndex = mAnim->currentDecodingFrameIndex;
-    if (!(nextFrame = mFrames[nextFrameIndex])) {
-      // something wrong with the next frame, skip it
-      mAnim->currentAnimationFrameIndex = nextFrameIndex;
-      mAnim->timer->SetDelay(100);
-      return NS_OK;
-    }
-    timeout = nextFrame->GetTimeout();
   }
 
   if (timeout > 0)
