@@ -238,11 +238,7 @@ nsPNGDecoder::InitInternal()
 
   // For size decodes, we only need a small buffer
   if (IsSizeDecode()) {
-    mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);
-    if (!mHeaderBuf) {
-      PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
+    mHeaderBuf = (PRUint8 *)moz_xmalloc(BYTES_NEEDED_FOR_DIMENSIONS);
     return;
   }
 
@@ -624,7 +620,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
       (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
     PRUint32 bpp[] = { 0, 3, 4, 3, 4 };
     decoder->mCMSLine =
-      (PRUint8 *)nsMemory::Alloc(bpp[channels] * width);
+      (PRUint8 *)moz_malloc(bpp[channels] * width);
     if (!decoder->mCMSLine) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -632,8 +628,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     if (height < PR_INT32_MAX / (width * channels))
-      decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels *
-                                                         width * height);
+      decoder->interlacebuf = (PRUint8 *)moz_malloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
     }
