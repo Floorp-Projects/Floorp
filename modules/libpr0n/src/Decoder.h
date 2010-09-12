@@ -117,6 +117,12 @@ public:
   // is only 0 if we haven't begun any frames.
   PRUint32 GetFrameCount() { return mFrameCount; }
 
+  // Error tracking
+  bool IsError() { return IsDataError() || IsDecoderError(); };
+  bool IsDataError() { return mDataError; };
+  bool IsDecoderError() { return NS_FAILED(mFailCode); };
+  nsresult GetDecoderError() { return mFailCode; };
+
 protected:
 
   /*
@@ -144,6 +150,10 @@ protected:
   // actually pass these invalidations on right away.
   void PostInvalidation(nsIntRect& aRect);
 
+  // Data errors are the fault of the source data, decoder errors are our fault
+  void PostDataError();
+  void PostDecoderError(nsresult aFailCode);
+
   /*
    * Member variables.
    *
@@ -156,9 +166,12 @@ protected:
 
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
 
+  nsresult mFailCode;
+
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
+  bool mDataError;
 };
 
 } // namespace imagelib
