@@ -62,7 +62,7 @@ Decoder::~Decoder()
  * Common implementation of the decoder interface.
  */
 
-nsresult
+void
 Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
 {
   // We should always have an image
@@ -82,10 +82,9 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
   // Implementation-specific initialization
   InitInternal();
   mInitialized = true;
-  return IsError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
-nsresult
+void
 Decoder::Write(const char* aBuffer, PRUint32 aCount)
 {
   // We're strict about decoder errors
@@ -94,14 +93,13 @@ Decoder::Write(const char* aBuffer, PRUint32 aCount)
 
   // If a data error occured, just ignore future data
   if (IsDataError())
-    return NS_OK;
+    return;
 
   // Pass the data along to the implementation
   WriteInternal(aBuffer, aCount);
-  return IsError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
-nsresult
+void
 Decoder::Finish()
 {
   // Implementation-specific finalization
@@ -129,8 +127,6 @@ Decoder::Finish()
       mObserver->OnStopDecode(nsnull, salvage ? NS_OK : NS_ERROR_FAILURE, nsnull);
     }
   }
-
-  return NS_OK;
 }
 
 void
