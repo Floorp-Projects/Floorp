@@ -687,30 +687,7 @@ JSObject::checkShapeConsistency()
             }
             if (prev) {
                 JS_ASSERT(prev->slotSpan >= shape->slotSpan);
-                if (shape->kids.isShape()) {
-                    JS_ASSERT(shape->kids.toShape() == prev);
-                } else if (shape->kids.isChunk()) {
-                    bool found = false;
-                    for (KidsChunk *chunk = shape->kids.toChunk(); chunk; chunk = chunk->next) {
-                        for (uintN i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
-                            if (!chunk->kids[i]) {
-                                JS_ASSERT(!chunk->next);
-                                for (uintN j = i + 1; j < MAX_KIDS_PER_CHUNK; j++)
-                                    JS_ASSERT(!chunk->kids[j]);
-                                JS_ASSERT(found);
-                            }
-                            if (chunk->kids[i] == prev) {
-                                JS_ASSERT(!found);
-                                found = true;
-                            }
-                        }
-                    }
-                } else {
-                    JS_ASSERT(shape->kids.isHash());
-                    KidsHash *hash = shape->kids.toHash();
-                    KidsHash::Ptr ptr = hash->lookup(prev);
-                    JS_ASSERT(*ptr == prev);
-                }
+                shape->kids.checkConsistency(prev);
             }
             prev = shape;
         }
