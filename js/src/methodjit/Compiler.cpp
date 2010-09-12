@@ -2674,8 +2674,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
 
     masm.loadFunctionPrivate(funReg, temp);
     masm.load16(Address(temp, offsetof(JSFunction, flags)), temp);
-    masm.and32(Imm32(JSFUN_THISP_STRING), temp);
-    Jump noPrim = masm.branchTest32(Assembler::Zero, temp, temp);
+    Jump noPrim = masm.branchTest32(Assembler::Zero, temp, Imm32(JSFUN_THISP_STRING));
     {
         stubcc.linkExit(noPrim, Uses(2));
         stubcc.leave();
@@ -3472,8 +3471,7 @@ mjit::Compiler::iter(uintN flags)
     /* Test for active iterator. */
     Address flagsAddr(nireg, offsetof(NativeIterator, flags));
     masm.load32(flagsAddr, T1);
-    masm.and32(Imm32(JSITER_ACTIVE), T1);
-    Jump activeIterator = masm.branchTest32(Assembler::NonZero, T1, T1);
+    Jump activeIterator = masm.branchTest32(Assembler::NonZero, T1, Imm32(JSITER_ACTIVE));
     stubcc.linkExit(activeIterator, Uses(1));
 
     /* Compare shape of object with iterator. */
@@ -3558,8 +3556,7 @@ mjit::Compiler::iterNext()
 
     /* Test if for-each. */
     masm.load32(Address(T1, offsetof(NativeIterator, flags)), T3);
-    masm.and32(Imm32(JSITER_FOREACH), T3);
-    notFast = masm.branchTest32(Assembler::NonZero, T3, T3);
+    notFast = masm.branchTest32(Assembler::NonZero, T3, Imm32(JSITER_FOREACH));
     stubcc.linkExit(notFast, Uses(1));
 
     RegisterID T2 = frame.allocReg();

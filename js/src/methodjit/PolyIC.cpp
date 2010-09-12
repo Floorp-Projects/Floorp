@@ -798,8 +798,7 @@ class GetPropCompiler : public PICStubCompiler
                             + JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
                     pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
-        masm.and32(Imm32(1), pic.shapeReg);
-        Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg, pic.shapeReg);
+        Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg, Imm32(1));
         
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
