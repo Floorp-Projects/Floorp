@@ -185,6 +185,7 @@ GetDeviceAspectRatio(nsPresContext* aPresContext, const nsMediaFeature*,
     return MakeArray(GetDeviceSize(aPresContext), aResult);
 }
 
+
 static nsresult
 GetColor(nsPresContext* aPresContext, const nsMediaFeature*,
          nsCSSValue& aResult)
@@ -258,15 +259,6 @@ GetGrid(nsPresContext* aPresContext, const nsMediaFeature*,
     // feature is always 0.
     aResult.SetIntValue(0, eCSSUnit_Integer);
     return NS_OK;
-}
-
-static nsresult
-GetDevicePixelRatio(nsPresContext* aPresContext, const nsMediaFeature*,
-                    nsCSSValue& aResult)
-{
-  float ratio = aPresContext->CSSPixelsToDevPixels(1.0f);
-  aResult.SetFloatValue(ratio, eCSSUnit_Number);
-  return NS_OK;
 }
 
 static nsresult
@@ -385,13 +377,6 @@ nsMediaFeatures::features[] = {
     },
 
     // Mozilla extensions
-    {
-        &nsGkAtoms::_moz_device_pixel_ratio,
-        nsMediaFeature::eMinMaxAllowed,
-        nsMediaFeature::eFloat,
-        { nsnull },
-        GetDevicePixelRatio
-    },
     {
         &nsGkAtoms::_moz_scrollbar_start_backward,
         nsMediaFeature::eMinMaxNotAllowed,
