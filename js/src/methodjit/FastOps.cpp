@@ -1271,16 +1271,14 @@ mjit::Compiler::jsop_setelem()
         /* Test for indexed properties in Array.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
-        stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
-        Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
+        Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, Imm32(JSObject::INDEXED));
         extendedArray.linkTo(syncTarget, &stubcc.masm);
 
         /* Test for indexed properties in Object.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
-        stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
-        Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
+        Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, Imm32(JSObject::INDEXED));
         extendedObject.linkTo(syncTarget, &stubcc.masm);
 
         /* Update the array length if needed. Don't worry about overflow. */
