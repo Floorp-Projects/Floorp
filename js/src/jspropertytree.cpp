@@ -438,6 +438,37 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
 }
 
 #ifdef DEBUG
+
+void
+KidsPointer::checkConsistency(const Shape *aKid) const
+{
+    if (isShape()) {
+        JS_ASSERT(toShape() == aKid);
+    } else if (isChunk()) {
+        bool found = false;
+        for (KidsChunk *chunk = toChunk(); chunk; chunk = chunk->next) {
+            for (uintN i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
+                if (!chunk->kids[i]) {
+                    JS_ASSERT(!chunk->next);
+                    for (uintN j = i + 1; j < MAX_KIDS_PER_CHUNK; j++)
+                        JS_ASSERT(!chunk->kids[j]);
+                    break;
+                }
+                if (chunk->kids[i] == aKid) {
+                    JS_ASSERT(!found);
+                    found = true;
+                }
+            }
+        }
+        JS_ASSERT(found);
+    } else {
+        JS_ASSERT(isHash());
+        KidsHash *hash = toHash();
+        KidsHash::Ptr ptr = hash->lookup(aKid);
+        JS_ASSERT(*ptr == aKid);
+    }
+}
+
 void
 Shape::dump(JSContext *cx, FILE *fp) const
 {
@@ -495,9 +526,6 @@ Shape::dump(JSContext *cx, FILE *fp) const
 
     fprintf(fp, "shortid %d\n", shortid);
 }
-#endif
-
-#ifdef DEBUG
 
 static void
 MeterKidCount(JSBasicStats *bs, uintN nkids)
