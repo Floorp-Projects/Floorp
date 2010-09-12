@@ -54,10 +54,6 @@ public:
   virtual ~Decoder();
 
   /**
-   * XXX - These methods will stop returning nsresults in a later patch.
-   */
-
-  /**
    * Initialize an image decoder. Decoders may not be re-initialized.
    *
    * @param aContainer The image container to decode to.
@@ -65,7 +61,7 @@ public:
    *
    * Notifications Sent: TODO
    */
-  nsresult Init(RasterImage* aImage, imgIDecoderObserver* aObserver);
+  void Init(RasterImage* aImage, imgIDecoderObserver* aObserver);
 
   /**
    * Writes data to the decoder.
@@ -77,14 +73,14 @@ public:
    *
    * Notifications Sent: TODO
    */
-  nsresult Write(const char* aBuffer, PRUint32 aCount);
+  void Write(const char* aBuffer, PRUint32 aCount);
 
   /**
    * Informs the decoder that all the data has been written.
    *
    * Notifications Sent: TODO
    */
-  nsresult Finish();
+  void Finish();
 
   /**
    * Tells the decoder to flush any pending invalidations. This informs the image

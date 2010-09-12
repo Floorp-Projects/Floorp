@@ -2150,8 +2150,8 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   // Initialize the decoder
   nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   mDecoder->SetSizeDecode(aDoSizeDecode);
-  nsresult result = mDecoder->Init(this, observer);
-  CONTAINER_ENSURE_SUCCESS(result);
+  mDecoder->Init(this, observer);
+  CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Create a decode worker
   mWorker = new imgDecodeWorker(this);
@@ -2235,7 +2235,7 @@ RasterImage::WriteToDecoder(const char *aBuffer, PRUint32 aCount)
 
   // Write
   mInDecoder = PR_TRUE;
-  nsresult rv = mDecoder->Write(aBuffer, aCount);
+  mDecoder->Write(aBuffer, aCount);
   mInDecoder = PR_FALSE;
 
   // We unlock the current frame, even if that frame is different from the
@@ -2245,7 +2245,7 @@ RasterImage::WriteToDecoder(const char *aBuffer, PRUint32 aCount)
     curframe->UnlockImageData();
   }
 
-  CONTAINER_ENSURE_SUCCESS(rv);
+  CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Keep track of the total number of bytes written over the lifetime of the
   // decoder
