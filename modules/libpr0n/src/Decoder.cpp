@@ -90,11 +90,11 @@ void
 Decoder::Write(const char* aBuffer, PRUint32 aCount)
 {
   // We're strict about decoder errors
-  NS_ABORT_IF_FALSE(!IsDecoderError(),
+  NS_ABORT_IF_FALSE(!HasDecoderError(),
                     "Not allowed to make more decoder calls after error!");
 
   // If a data error occured, just ignore future data
-  if (IsDataError())
+  if (HasDataError())
     return;
 
   // Pass the data along to the implementation
@@ -105,11 +105,11 @@ void
 Decoder::Finish()
 {
   // Implementation-specific finalization
-  if (!IsError())
+  if (!HasError())
     FinishInternal();
 
   // If the implementation left us mid-frame, finish that up.
-  if (mInFrame && !IsDecoderError())
+  if (mInFrame && !HasDecoderError())
     PostFrameStop();
 
   // If PostDecodeDone() has not been called, we need to sent teardown
@@ -118,14 +118,14 @@ Decoder::Finish()
 
     // Log data errors to the error console
     nsCOMPtr<nsIConsoleService> aConsoleService = do_GetService("@mozilla.org/consoleservice;1");
-    if (aConsoleService && !IsDecoderError()) {
+    if (aConsoleService && !HasDecoderError()) {
       nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
                        NS_ConvertASCIItoUTF16(mImage->GetURIString()));
       aConsoleService->LogStringMessage(msg.get());
     }
 
     // If we only have a data error, see if things are worth salvaging
-    bool salvage = !IsDecoderError() && mImage->GetNumFrames();
+    bool salvage = !HasDecoderError() && mImage->GetNumFrames();
 
     // If we're salvaging, say we finished decoding
     if (salvage)
@@ -142,7 +142,7 @@ Decoder::Finish()
 void
 Decoder::FlushInvalidations()
 {
-  NS_ABORT_IF_FALSE(!IsDecoderError(),
+  NS_ABORT_IF_FALSE(!HasDecoderError(),
                     "Not allowed to make more decoder calls after error!");
 
   // If we've got an empty invalidation rect, we have nothing to do

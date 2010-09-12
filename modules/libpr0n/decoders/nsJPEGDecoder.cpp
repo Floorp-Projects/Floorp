@@ -194,7 +194,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
   mSegment = (const JOCTET *)aBuffer;
   mSegmentLen = aCount;
 
-  NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call WriteInternal after error!");
+  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
   /* Return here if there is a fatal error within libjpeg. */
   nsresult error_code;

@@ -295,7 +295,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
   PRUint32 width = 0;
   PRUint32 height = 0;
 
-  NS_ABORT_IF_FALSE(!IsError(), "Shouldn't call WriteInternal after error!");
+  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
   // If we only want width/height, we don't need to go through libpng
   if (IsSizeDecode()) {
@@ -342,7 +342,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
       // We might not really know what caused the error, but it makes more
       // sense to blame the data.
-      if (!IsError())
+      if (!HasError())
         PostDataError();
 
       png_destroy_read_struct(&mPNG, &mInfo, NULL);
@@ -820,7 +820,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // We shouldn't get here if we've hit an error
-  NS_ABORT_IF_FALSE(!decoder->IsError(), "Finishing up PNG but hit error!");
+  NS_ABORT_IF_FALSE(!decoder->HasError(), "Finishing up PNG but hit error!");
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
