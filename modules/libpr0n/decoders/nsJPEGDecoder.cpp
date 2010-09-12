@@ -142,10 +142,6 @@ nsJPEGDecoder::~nsJPEGDecoder()
 void
 nsJPEGDecoder::InitInternal()
 {
-  /* Fire OnStartDecode at init time to support bug 512435 */
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-
   /* We set up the normal JPEG error routines, then override error_exit. */
   mInfo.err = jpeg_std_error(&mErr.pub);
   /*   mInfo.err = jpeg_std_error(&mErr.pub); */

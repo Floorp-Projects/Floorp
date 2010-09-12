@@ -121,23 +121,15 @@ nsGIFDecoder2::nsGIFDecoder2()
 {
   // Clear out the structure, excluding the arrays
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
+
+  // Start with the version (GIF89a|GIF87a)
+  mGIFStruct.state = gif_type;
+  mGIFStruct.bytes_to_consume = 6;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2()
 {
   PR_FREEIF(mGIFStruct.local_colormap);
-}
-
-void
-nsGIFDecoder2::InitInternal()
-{
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-
-  // Start with the version (GIF89a|GIF87a)
-  mGIFStruct.state = gif_type;
-  mGIFStruct.bytes_to_consume = 6;
 }
 
 void
