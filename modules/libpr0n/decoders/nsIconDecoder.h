@@ -96,8 +96,7 @@ enum {
   iconStateStart      = 0,
   iconStateHaveHeight = 1,
   iconStateReadPixels = 2,
-  iconStateFinished   = 3,
-  iconStateError      = 4
+  iconStateFinished   = 3
 };
 
 } // namespace imagelib

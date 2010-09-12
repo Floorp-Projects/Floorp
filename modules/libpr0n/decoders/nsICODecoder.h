@@ -112,7 +112,6 @@ private:
   PRPackedBool mHaveAlphaData;
   PRPackedBool mIsCursor;
   PRPackedBool mDecodingAndMask;
-  PRPackedBool mError;
 };
 
 } // namespace imagelib
