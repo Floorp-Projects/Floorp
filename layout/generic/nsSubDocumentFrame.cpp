@@ -280,7 +280,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsRect bounds = mInnerView->GetBounds() + offset;
 
       return aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(aBuilder, this, this, &shadowTree,
+        new (aBuilder) nsDisplayClip(aBuilder, this, &shadowTree,
                                      bounds));
     }
   }
