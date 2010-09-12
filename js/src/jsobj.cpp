@@ -3193,48 +3193,52 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRUint32(xdr, &depthAndCount))
         return false;
 
-    Vector<const Shape *, 8> shapes(cx);
-    shapes.growByUninitialized(count);
-
     if (xdr->mode == JSXDR_DECODE) {
         depth = (uint16)(depthAndCount >> 16);
         count = (uint16)depthAndCount;
         obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)));
+
+        /*
+         * XDR the block object's properties. We know that there are 'count'
+         * properties to XDR, stored as id/shortid pairs.
+         */
+        for (uintN i = 0; i < count; i++) {
+            JSAtom *atom;
+            uint16 shortid;
+
+            /* XDR the real id, then the shortid. */
+            if (!js_XDRAtom(xdr, &atom) || !JS_XDRUint16(xdr, &shortid))
+                return false;
+
+            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), shortid))
+                return false;
+        }
     } else {
+        Vector<const Shape *, 8> shapes(cx);
+        shapes.growByUninitialized(count);
+
         for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
             shape = &r.front();
             shapes[shape->shortid] = shape;
         }
-    }
 
-    /*
-     * XDR the block object's properties. We know that there are 'count'
-     * properties to XDR, stored as id/shortid pairs.
-     */
-    for (uintN i = 0; i < count; i++) {
-        JSAtom *atom;
-        uint16 shortid;
-
-        if (xdr->mode == JSXDR_ENCODE) {
+        /*
+         * XDR the block object's properties. We know that there are 'count'
+         * properties to XDR, stored as id/shortid pairs.
+         */
+        for (uintN i = 0; i < count; i++) {
             shape = shapes[i];
             JS_ASSERT(shape->getter() == block_getProperty);
 
             jsid propid = shape->id;
             JS_ASSERT(JSID_IS_ATOM(propid));
-            atom = JSID_TO_ATOM(propid);
+            JSAtom *atom = JSID_TO_ATOM(propid);
 
-            shortid = uint16(shape->shortid);
+            uint16 shortid = uint16(shape->shortid);
             JS_ASSERT(shortid == i);
-        }
 
-        /* XDR the real id, then the shortid. */
-        if (!js_XDRAtom(xdr, &atom) ||
-            !JS_XDRUint16(xdr, &shortid)) {
-            return false;
-        }
-
-        if (xdr->mode == JSXDR_DECODE) {
-            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), shortid))
+            /* XDR the real id, then the shortid. */
+            if (!js_XDRAtom(xdr, &atom) || !JS_XDRUint16(xdr, &shortid))
                 return false;
         }
     }
