@@ -977,11 +977,7 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
           // as the image frame doesn't have its own palette
           mColormapSize = sizeof(PRUint32) << realDepth;
           if (!mGIFStruct.local_colormap) {
-            mGIFStruct.local_colormap = (PRUint32*)PR_MALLOC(mColormapSize);
-            if (!mGIFStruct.local_colormap) {
-              mGIFStruct.state = gif_oom;
-              break;
-            }
+            mGIFStruct.local_colormap = (PRUint32*)moz_xmalloc(mColormapSize);
           }
           mColormap = mGIFStruct.local_colormap;
         }
@@ -1056,11 +1052,6 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
     case gif_error:
       PostDataError();
-      return;
-
-    // Handle out of memory errors
-    case gif_oom:
-      PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       return;
 
     // We shouldn't ever get here.
