@@ -25,18 +25,18 @@ function formatµs(µs) µs + " µs";
 function formatms(ms) ms + " ms";
 
 function point(stamp, µs, v, b) [stamp / 1000, µs / 1000, { appVersion: v, appBuild: b }];
-function range(a, b) ({ from: a, to: b || a });
-function mark(x, y) ({ xaxis: x, yaxis: y });
-function major(r) { r.color = "black"; r.lineWidth = "3"; return r; }
-function minor(r) { r.color = "lightgrey"; r.lineWidth = "1"; return r; }
+function range(a, b) ({ from: a / 1000, to: (b || a) / 1000 });
+function mark(x, y) { var r = {}; x && (r.xaxis = x); y && (r.yaxis = y); return r };
+function major(r) { r.color = "#444"; return r; }
+function minor(r) { r.color = "#AAA"; return r; }
 function label(r, l) { r.label = l; return r; }
-function majorMark(x, l) mark(label(major(range(x)), l));
-function minorMark(x, l) mark(label(minor(range(x)), l));
-function extensionMark(x, l) mark(label(range(x), l));
+function majorMark(x, l) label(major(mark(range(x))), l);
+function minorMark(x, l) label(minor(mark(range(x))), l);
+function extensionMark(x, l) label(mark(range(x)), l);
 
 var graph, overview;
 var options = { legend: { show: false, position: "ne", margin: 10, labelBoxBorderColor: "transparent" },
-                xaxis: { mode: "time", min: Date.now() - 259200000 },
+                xaxis: { mode: "time" },
                 yaxis: { min: 0, tickFormatter: formatms },
                 selection: { mode: "xy", color: "#00A" },
                 grid: { show: true, borderWidth: 0, markings: [], aboveData: true, tickColor: "white" },
@@ -72,20 +72,23 @@ var svc = Components.classes["@mozilla.org/storage/service;1"]
                     .getService(Components.interfaces.mozIStorageService);
 var db = svc.openDatabase(file);
 var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
+var lastver, lastbuild;
 query.executeAsync({
   handleResult: function(results)
   {
-    var lastver, lastbuild;
     for (let row = results.getNextRow(); row; row = results.getNextRow())
     {
       var stamp = row.getResultByName("timestamp");
       var version = row.getResultByName("appVersion");
       var build = row.getResultByName("appBuild");
       if (lastver != version)
-        options.grid.markings.push(majorMark(stamp));
+      {
+        options.grid.markings.push(majorMark(stamp, "Firefox "+ version +" ("+ build +")"));
+      }
       else
         if (lastbuild != build)
-          options.grid.markings.push(minorMark(stamp));
+          options.grid.markings.push(minorMark(stamp, "Firefox "+ version +" ("+ build +")"));
+
       lastver = version;
       lastbuild = build;
       var l, s;
@@ -107,8 +110,33 @@ query.executeAsync({
   },
   handleCompletion: function()
   {
+    var table = $("table");
+    var height = $(window).height() - (table.offset().top + table.outerHeight(true)) - 110;
+    $("#graph").height(Math.max(350, height));
+
+    options.xaxis.min = Date.now() - 604800000; // 7 days in milliseconds
+    var max = 0;
+    for each (let [stamp, d] in series[0].data)
+      if (stamp >= options.xaxis.min && d > max)
+        max = d;
+    options.yaxis.max = max;
+
     graph = $.plot($("#graph"), series, options);
+
+    var offset = graph.getPlotOffset().left;
+    $("#overview").width($("#overview").width() - offset);
+    $("#overview").css("margin-left", offset);
     overview = $.plot($("#overview"), series, overviewOpts);
+
+    //var axes = graph.getAxes();
+    //overview.setSelection({ xaxis: { min: axes.xaxis.min,
+    //                                 max: axes.xaxis.max
+    //                               },
+    //                        yaxis: { min: axes.yaxis.min,
+    //                                 max: axes.yaxis.max
+    //                               }
+    //                      },
+    //                      true);
   },
 });
 
@@ -116,15 +144,15 @@ $("#graph").bind("plotselected", function (event, ranges)
 {
   // do the zooming
   graph = $.plot($("#graph"),
-                series,
-                $.extend(true, {}, options,
-                         { xaxis: { min: ranges.xaxis.from,
-                                    max: ranges.xaxis.to
-                                  },
-                           yaxis: { min: ranges.yaxis.from,
-                                    max: ranges.yaxis.to
-                                  },
-                         }));
+                 series,
+                 $.extend(true, {}, options,
+                          { xaxis: { min: ranges.xaxis.from,
+                                     max: ranges.xaxis.to
+                                   },
+                            yaxis: { min: ranges.yaxis.from,
+                                     max: ranges.yaxis.to
+                                   },
+                          }));
 
   // don't fire event on the overview to prevent eternal loop
   overview.setSelection(ranges, true);

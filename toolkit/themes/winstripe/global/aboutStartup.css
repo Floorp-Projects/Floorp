@@ -1,0 +1,14 @@
+h1 {
+  font-size: 140%;
+  margin: .5em 0;
+}
+
+#graph, #overview {
+    margin: 0;
+    width: 100%;
+    height: 350px;
+}
+
+#overview {
+    height: 100px;
+}

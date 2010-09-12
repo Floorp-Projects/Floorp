@@ -155,3 +155,4 @@ toolkit.jar:
   skin/classic/global/tree/item.png                                  (tree/item.png)
   skin/classic/global/tree/sort-asc.gif                              (tree/sort-asc.gif)
   skin/classic/global/tree/sort-dsc.gif                              (tree/sort-dsc.gif)
+  skin/classic/global/aboutStartup.css
