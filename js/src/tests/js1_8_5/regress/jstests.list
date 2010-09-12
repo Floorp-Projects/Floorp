@@ -31,3 +31,4 @@ script regress-584355.js
 script regress-588339.js
 script regress-yarr-regexp.js
 script regress-592556-c35.js
+script regress-593256.js

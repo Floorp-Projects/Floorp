@@ -326,8 +326,7 @@ class SetPropCompiler : public PICStubCompiler
         }
     }
 
-    bool generateStub(uint32 initialShape, uint32 initialFlagsAndFreeslot,
-                      const Shape *shape, bool adding)
+    bool generateStub(uint32 initialShape, const Shape *shape, bool adding)
     {
         /* Exits to the slow path. */
         Vector<Jump, 8> slowExits(f.cx);
@@ -371,19 +370,6 @@ class SetPropCompiler : public PICStubCompiler
             if (!slowExits.append(sharedObject))
                 return false;
 #endif
-
-            Address flagsAndFreeslot(pic.objReg, JSObject::flagsOffset());
-
-            /*
-             * We need to always check the flags match as some object flags can
-             * vary between objects of the same shape (DELEGATE, SYSTEM).
-             * It would be nice if these bits did not vary, so that just the
-             * shape check is sufficient.
-             */
-            Jump flagsMismatch = masm.branch32(Assembler::NotEqual, flagsAndFreeslot,
-                                               Imm32(initialFlagsAndFreeslot));
-            if (!slowExits.append(flagsMismatch))
-                return false;
 
             /* Emit shape guards for the object's prototype chain. */
             size_t chainLength = 0;
@@ -432,7 +418,7 @@ class SetPropCompiler : public PICStubCompiler
                     return false;
 
                 /* Check capacity. */
-                Address capacity(pic.shapeReg, -sizeof(Value));
+                Address capacity(pic.shapeReg, -ptrdiff_t(sizeof(Value)));
                 masm.load32(masm.payloadOf(capacity), pic.shapeReg);
                 Jump overCapacity = masm.branch32(Assembler::LessThanOrEqual, pic.shapeReg,
                                                   Imm32(shape->slot));
@@ -452,8 +438,15 @@ class SetPropCompiler : public PICStubCompiler
             masm.storePtr(ImmPtr(shape), Address(pic.objReg, offsetof(JSObject, lastProp)));
             masm.store32(Imm32(newShape), Address(pic.objReg, offsetof(JSObject, objShape)));
 
-            /* Write both the object's flags and new freeslot. */
-            masm.store32(Imm32(obj->flagsAndFreeslot()), flagsAndFreeslot);
+            /* If this is a method shape, update the object's flags. */
+            if (shape->isMethod()) {
+                Address flags(pic.objReg, offsetof(JSObject, flags));
+
+                /* Use shapeReg to load, bitwise-or, and store flags. */
+                masm.load32(flags, pic.shapeReg);
+                masm.or32(Imm32(JSObject::METHOD_BARRIER), pic.shapeReg);
+                masm.store32(pic.shapeReg, flags);
+            }
         } else if (shape->hasDefaultSetter()) {
             Address address(pic.objReg, offsetof(JSObject, fslots) + shape->slot * sizeof(Value));
             if (shape->slot >= JS_INITIAL_NSLOTS) {
@@ -615,7 +608,6 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("index");
 
             uint32 initialShape = obj->shape();
-            uint32 initialFlagsAndFreeslot = obj->flagsAndFreeslot();
 
             if (!obj->ensureClassReservedSlots(f.cx))
                 return false;
@@ -663,7 +655,7 @@ class SetPropCompiler : public PICStubCompiler
             if (obj->numSlots() != slots)
                 return disable("insufficient slot capacity");
 
-            return generateStub(initialShape, initialFlagsAndFreeslot, shape, true);
+            return generateStub(initialShape, shape, true);
         }
 
         AutoPropertyDropper dropper(f.cx, holder, prop);
@@ -694,7 +686,7 @@ class SetPropCompiler : public PICStubCompiler
             return patchInline(shape);
         } 
 
-        return generateStub(obj->shape(), 0, shape, false);
+        return generateStub(obj->shape(), shape, false);
     }
 };
 
@@ -798,9 +790,10 @@ class GetPropCompiler : public PICStubCompiler
         Address clasp(pic.objReg, offsetof(JSObject, clasp));
         Jump notArgs = masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&js_SlowArrayClass));
 
-        masm.load32(Address(pic.objReg, offsetof(JSObject, fslots) +
-                                        JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
-                        pic.objReg);
+        masm.load32(Address(pic.objReg,
+                            offsetof(JSObject, fslots)
+                            + JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
+                    pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
         masm.and32(Imm32(1), pic.shapeReg);
         Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg, pic.shapeReg);
@@ -843,9 +836,10 @@ class GetPropCompiler : public PICStubCompiler
                                        ImmPtr(&js_SlowArrayClass));
 
         isDense.linkTo(masm.label(), &masm);
-        masm.load32(Address(pic.objReg, offsetof(JSObject, fslots) +
-                                        JSObject::JSSLOT_ARRAY_LENGTH * sizeof(Value)),
-                        pic.objReg);
+        masm.load32(Address(pic.objReg,
+                            offsetof(JSObject, fslots)
+                            + JSObject::JSSLOT_ARRAY_LENGTH * sizeof(Value)),
+                    pic.objReg);
         Jump oob = masm.branch32(Assembler::Above, pic.objReg, Imm32(JSVAL_INT_MAX));
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
@@ -2232,7 +2226,7 @@ ic::CallProp(VMFrame &f, uint32 index)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj2->freeslot);
+            JS_ASSERT(obj2->containsSlot(slot));
             rval = obj2->lockedGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());

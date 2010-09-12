@@ -434,9 +434,9 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
             oplen = js_GetVariableBytecodeLength(pc);
 
         /*
-         * Rewrite JSOP_{GET,CALL}DSLOT as JSOP_{GET,CALL}UPVAR_DBG for the
+         * Rewrite JSOP_{GET,CALL}FCSLOT as JSOP_{GET,CALL}UPVAR_DBG for the
          * case where fun is an escaping flat closure. This works because the
-         * UPVAR and DSLOT ops by design have the same format: an upvar index
+         * UPVAR and FCSLOT ops by design have the same format: an upvar index
          * immediate operand.
          */
         switch (op) {
@@ -968,7 +968,7 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     for (Shape::Range r = callobj->lastProp; !r.empty(); r.popFront()) {
         const Shape &s = r.front();
         if (s.slot != SHAPE_INVALID_SLOT) {
-            JS_ASSERT(s.slot + 1 == callobj->freeslot);
+            JS_ASSERT(s.slot + 1 == callobj->slotSpan());
             break;
         }
     }
@@ -2415,7 +2415,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
         if (!empty)
             return false;
 
-        empty->slot += argslen;
+        empty->slotSpan += argslen;
         map = empty;
 
         if (!ensureInstanceReservedSlots(cx, argslen))
@@ -3212,6 +3212,8 @@ JSFunction::addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind)
     if (findArgInsertionPoint) {
         while (parent->parent && parent->getter() != js_GetCallArg) {
             ++parent->slot;
+            JS_ASSERT(parent->slot == parent->slotSpan);
+            ++parent->slotSpan;
             listp = &parent->parent;
             parent = *listp;
         }
