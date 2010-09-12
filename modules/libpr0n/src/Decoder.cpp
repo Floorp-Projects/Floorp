@@ -75,23 +75,25 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
   mObserver = aObserver;
 
   // Implementation-specific initialization
-  nsresult rv = InitInternal();
+  InitInternal();
   mInitialized = true;
-  return rv;
+  return IsError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
 nsresult
 Decoder::Write(const char* aBuffer, PRUint32 aCount)
 {
   // Pass the data along to the implementation
-  return WriteInternal(aBuffer, aCount);
+  WriteInternal(aBuffer, aCount);
+  return IsError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
 nsresult
 Decoder::Finish()
 {
   // Implementation-specific finalization
-  return FinishInternal();
+  FinishInternal();
+  return IsError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
 void
