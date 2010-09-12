@@ -194,6 +194,9 @@ void nsPNGDecoder::SetAnimFrameInfo()
 // set timeout and frame disposal method for the current frame
 void nsPNGDecoder::EndImageFrame()
 {
+  if (mFrameIsHidden)
+    return;
+
   PRUint32 numFrames = 1;
 #ifdef PNG_APNG_SUPPORTED
   numFrames = mImage->GetNumFrames();
@@ -372,8 +375,7 @@ nsPNGDecoder::NotifyDone(PRBool aSuccess)
   NS_ABORT_IF_FALSE(!mNotifiedDone, "Calling NotifyDone twice!");
 
   // Notify
-  if (!mFrameIsHidden)
-    EndImageFrame();
+  EndImageFrame();
   if (aSuccess)
     mImage->DecodingComplete();
   if (mObserver) {
@@ -818,9 +820,9 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // old frame is done
-  if (!decoder->mFrameIsHidden)
-    decoder->EndImageFrame();
+  decoder->EndImageFrame();
 
+  // Only the first frame can be hidden, so unhide unconditionally here.
   decoder->mFrameIsHidden = PR_FALSE;
 
   x_offset = png_get_next_frame_x_offset(png_ptr, decoder->mInfo);
