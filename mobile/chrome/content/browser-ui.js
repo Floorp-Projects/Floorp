@@ -2512,11 +2512,11 @@ var BadgeHandlers = {
       _lastUpdate: 0,
       _lastCount: 0,
       url: "http://mail.google.com",
-      updateBadge: function(aItem) {
+      updateBadge: function(aBadge) {
         // Use the cache if possible
         let now = Date.now();
         if (this._lastCount && this._lastUpdate > now - 1000) {
-          aItem.setAttribute("badge", this._lastCount);
+          aBadge.set(this._lastCount);
           return;
         }
 
@@ -2538,7 +2538,7 @@ var BadgeHandlers = {
             } else {
               this._lastCount = 0;
             }
-            this._lastCount = BadgeHandlers.setNumberBadge(aItem, this._lastCount);
+            this._lastCount = BadgeHandlers.setNumberBadge(aBadge, this._lastCount);
           }
         };
         req.send(null);
@@ -2566,12 +2566,12 @@ var BadgeHandlers = {
     return aValue;
   },
 
-  setNumberBadge: function(aItem, aValue) {
+  setNumberBadge: function(aBadge, aValue) {
     if (parseInt(aValue) != 0) {
       aValue = this.clampBadge(aValue);
-      aItem.setAttribute("badge", aValue);
+      aBadge.set(aValue);
     } else {
-      aItem.removeAttribute("badge");
+      aBadge.set("");
     }
     return aValue;
   }

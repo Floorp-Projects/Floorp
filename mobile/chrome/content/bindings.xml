@@ -391,11 +391,25 @@
               if (!item.hasAttribute("url"))
                 continue;
 
-              let itemHost = self._getEffectiveHost(Services.io.newURI(item.getAttribute("url"), null, null));
+              let currentURL = item.getAttribute("url");
+              let itemHost = self._getEffectiveHost(Services.io.newURI(currentURL, null, null));
               for (let badgeHost in self._badges) {
                 if (itemHost == badgeHost) {
+                  // wrap the item to prevent setting a badge on a wrong item
+                  let wrapper = {
+                    set: function(aBadge) {
+                      if (item.getAttribute("url") != currentURL)
+                        return;
+
+                      if (!aBadge || aBadge == "")
+                        item.removeAttribute("badge");
+                      else
+                        item.setAttribute("badge", aBadge);
+                    }
+                  };
+
                   let handler = self._badges[badgeHost];
-                  handler.updateBadge ? handler.updateBadge(item) : handler(item);
+                  handler.updateBadge ? handler.updateBadge(wrapper) : handler(wrapper);
                   break;
                 }
               }
@@ -1216,15 +1230,15 @@
             tabs.push({ name: client.clientName });
 
             client.tabs.forEach(function({title, urlHistory, icon}) {
-              let pageUrl = urlHistory[0];
+              let pageURL = urlHistory[0];
 
               // Skip tabs that are already open
-              if (engine.locallyOpenTabMatchesURL(pageUrl))
+              if (engine.locallyOpenTabMatchesURL(pageURL))
                 return;
 
               tabs.push({
-                title: title || pageUrl,
-                uri: pageUrl,
+                title: title || pageURL,
+                uri: pageURL,
                 icon: Weave.Utils.getIcon(icon, "chrome://browser/skin/images/tab.png")
               });
             });
