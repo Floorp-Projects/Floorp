@@ -101,14 +101,6 @@ nsICODecoder::~nsICODecoder()
 }
 
 void
-nsICODecoder::InitInternal()
-{
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-}
-
-void
 nsICODecoder::FinishInternal()
 {
   // We should never make multiple frames

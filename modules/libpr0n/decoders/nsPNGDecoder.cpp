@@ -235,10 +235,6 @@ nsPNGDecoder::InitInternal()
         122,  84,  88, 116, '\0'};  /* zTXt */
 #endif
 
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-
   // For size decodes, we only need a small buffer
   if (IsSizeDecode()) {
     mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);

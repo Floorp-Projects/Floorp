@@ -74,6 +74,10 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
   mImage = aImage;
   mObserver = aObserver;
 
+  // Fire OnStartDecode at init time to support bug 512435
+  if (!IsSizeDecode() && mObserver)
+      mObserver->OnStartDecode(nsnull);
+
   // Implementation-specific initialization
   InitInternal();
   mInitialized = true;
