@@ -305,6 +305,8 @@ public:
   static void SetMaxMSBeforeYield(PRUint32 aMaxMS);
   static void SetMaxBytesForSyncDecode(PRUint32 aMaxBytes);
 
+  const char* GetURIString() { return mURIString.get();}
+
 private:
   struct Anim
   {
