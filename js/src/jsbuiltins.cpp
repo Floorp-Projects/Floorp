@@ -195,12 +195,10 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyA
 
     uint32 slot;
     slot = shape->slot;
-    JS_ASSERT(slot == obj->freeslot);
+    JS_ASSERT(slot == obj->slotSpan());
 
     if (slot < obj->numSlots()) {
         JS_ASSERT(obj->getSlot(slot).isUndefined());
-        ++obj->freeslot;
-        JS_ASSERT(obj->freeslot != 0);
     } else {
         if (!obj->allocSlot(cx, &slot))
             goto exit_trace;

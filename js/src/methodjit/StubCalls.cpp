@@ -197,7 +197,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                     entry->vshape() == cx->runtime->protoHazardShape &&
                     shape->hasDefaultSetter()) {
                     slot = shape->slot;
-                    JS_ASSERT(slot == obj->freeslot);
+                    JS_ASSERT(slot == obj->slotSpan());
 
                     /*
                      * Fast path: adding a plain old property that was once at
@@ -210,8 +210,6 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
 
                     if (slot < obj->numSlots()) {
                         JS_ASSERT(obj->getSlot(slot).isUndefined());
-                        ++obj->freeslot;
-                        JS_ASSERT(obj->freeslot != 0);
                     } else {
                         if (!obj->allocSlot(cx, &slot))
                             THROW();
@@ -318,7 +316,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
             f.regs.sp[-1].setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj2->freeslot);
+            JS_ASSERT(obj2->containsSlot(slot));
             f.regs.sp++;
             f.regs.sp[-1] = obj2->lockedGetSlot(slot);
         } else {
@@ -1730,7 +1728,7 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj->freeslot);
+            JS_ASSERT(obj->containsSlot(slot));
             Value &rref = obj->getSlotRef(slot);
             int32_t tmp;
             if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
@@ -1949,7 +1947,7 @@ InlineGetProp(VMFrame &f)
                 rval.setObject(entry->vword.toFunObj());
             } else if (entry->vword.isSlot()) {
                 uint32 slot = entry->vword.toSlot();
-                JS_ASSERT(slot < obj2->freeslot);
+                JS_ASSERT(obj2->containsSlot(slot));
                 rval = obj2->lockedGetSlot(slot);
             } else {
                 JS_ASSERT(entry->vword.isShape());
@@ -2027,7 +2025,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj2->freeslot);
+            JS_ASSERT(obj2->containsSlot(slot));
             rval = obj2->lockedGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
@@ -2181,12 +2179,10 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
         /* Fast path. Property cache hit. */
         uint32 slot = shape->slot;
 
-        JS_ASSERT(slot == obj->freeslot);
+        JS_ASSERT(slot == obj->slotSpan());
         JS_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
         if (slot < obj->numSlots()) {
             JS_ASSERT(obj->getSlot(slot).isUndefined());
-            ++obj->freeslot;
-            JS_ASSERT(obj->freeslot != 0);
         } else {
             if (!obj->allocSlot(cx, &slot))
                 THROW();
@@ -2386,7 +2382,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
     JSFrameRegs &regs = f.regs;
     JSStackFrame *fp = f.fp();
 
-    JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
+    JS_ASSERT(obj->isStaticBlock());
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
     Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
     JS_ASSERT(regs.sp < vp);
@@ -2412,7 +2408,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
     if (clasp == &js_BlockClass &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
         JSObject *youngestProto = obj2->getProto();
-        JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
+        JS_ASSERT(youngestProto->isStaticBlock());
         JSObject *parent = obj;
         while ((parent = parent->getParent()) != youngestProto)
             JS_ASSERT(parent);

@@ -576,7 +576,6 @@ JSObject::initCommon(js::Class *aclasp, JSObject *proto, JSObject *parent,
 
     clasp = aclasp;
     flags = 0;
-    freeslot = JSSLOT_START(aclasp);
 
 #ifdef DEBUG
     /*
@@ -706,40 +705,6 @@ js_IsCallable(const js::Value &v)
     return v.isObject() && v.toObject().isCallable();
 }
 
-inline size_t
-JSObject::flagsOffset()
-{
-    static size_t offset = 0;
-    if (offset)
-        return offset;
-
-    /* 
-     * We can't address a bitfield, so instead we create a struct, set only
-     * the field we care about, then search for it.
-     */
-    JSObject fakeObj;
-    memset(&fakeObj, 0, sizeof(fakeObj));
-    fakeObj.flags = 1;
-    for (unsigned testOffset = 0; testOffset < sizeof(fakeObj); testOffset += sizeof(uint32)) {
-        uint32 *ptr = reinterpret_cast<uint32 *>(reinterpret_cast<char *>(&fakeObj) + testOffset);
-        if (*ptr) {
-            JS_ASSERT(*ptr == 1);
-            offset = testOffset;
-            return offset;
-        }
-    }
-    JS_NOT_REACHED("memory weirdness");
-    return 0;
-}
-
-inline uint32
-JSObject::flagsAndFreeslot()
-{
-    size_t offset = flagsOffset();
-    char *ptr = offset + (char*) this;
-    return *(uint32*)ptr;
-}
-
 namespace js {
 
 class AutoPropDescArrayRooter : private AutoGCRooter
@@ -819,7 +784,6 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
             goto bad;
         if (freeslot > JS_INITIAL_NSLOTS && !obj->allocSlots(cx, freeslot))
             goto bad;
-        obj->freeslot = freeslot;
     }
 
     obj->setMap(empty);

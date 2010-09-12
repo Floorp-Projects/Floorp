@@ -777,7 +777,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
         if (!js_GetClassPrototype(cx, scopeChain, JSProto_Function, &tobj))
             return NULL;
 
-        globalScope.globalFreeSlot = globalObj->freeslot;
+        globalScope.globalFreeSlot = globalObj->slotSpan();
     }
 
     /* Null script early in case of error, to reduce our code footprint. */
@@ -947,7 +947,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     }
 
     if (globalScope.defs.length()) {
-        JS_ASSERT(globalObj->freeslot == globalScope.globalFreeSlot);
+        JS_ASSERT(globalObj->slotSpan() == globalScope.globalFreeSlot);
         JS_ASSERT(!cg.compilingForEval());
         for (size_t i = 0; i < globalScope.defs.length(); i++) {
             GlobalScope::GlobalDef &def = globalScope.defs[i];
@@ -3326,23 +3326,21 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
-     * Define the let binding's property before storing pn in reserved slot at
-     * reserved slot index (NB: not slot number) n.
+     * Define the let binding's property before storing pn in the the binding's
+     * slot indexed by n off the class-reserved slot base.
      */
-    if (!js_DefineBlockVariable(cx, blockObj, ATOM_TO_JSID(atom), n))
+    const Shape *shape = blockObj->defineBlockVariable(cx, ATOM_TO_JSID(atom), n);
+    if (!shape)
         return false;
 
     /*
-     * Store pn temporarily in what would be reserved slots in a cloned block
-     * object (once the prototype's final population is known, after all 'let'
-     * bindings for this block have been parsed). We will free these reserved
-     * slots in jsemit.cpp:EmitEnterBlock.
+     * Store pn temporarily in what would be shape-mapped slots in a cloned
+     * block object (once the prototype's final population is known, after all
+     * 'let' bindings for this block have been parsed). We free these slots in
+     * jsemit.cpp:EmitEnterBlock so they don't tie up unused space in the so-
+     * called "static" prototype Block.
      */
-    uintN slot = JSSLOT_FREE(&js_BlockClass) + n;
-    if (slot >= blockObj->numSlots() && !blockObj->growSlots(cx, slot + 1))
-        return false;
-    blockObj->freeslot = slot + 1;
-    blockObj->setSlot(slot, PrivateValue(pn));
+    blockObj->setSlot(shape->slot, PrivateValue(pn));
     return true;
 }
 
@@ -3353,7 +3351,7 @@ PopStatement(JSTreeContext *tc)
 
     if (stmt->flags & SIF_SCOPE) {
         JSObject *obj = stmt->blockObj;
-        JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
+        JS_ASSERT(!obj->isClonedBlock());
 
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
             JSAtom *atom = JSID_TO_ATOM(r.front().id);
@@ -4136,12 +4134,9 @@ CheckDestructuring(JSContext *cx, BindData *data,
         data->binder == BindLet &&
         OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0) {
         ok = !!js_DefineNativeProperty(cx, tc->blockChain,
-                                       ATOM_TO_JSID(cx->runtime->
-                                                    atomState.emptyAtom),
+                                       ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                                        UndefinedValue(), NULL, NULL,
-                                       JSPROP_ENUMERATE |
-                                       JSPROP_PERMANENT |
-                                       JSPROP_SHARED,
+                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
                                        Shape::HAS_SHORTID, 0, NULL);
         if (!ok)
             goto out;
