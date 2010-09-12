@@ -2965,7 +2965,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         return true;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
-    for (uint32 i = 0, n = obj->freeslot; i != n; ++i) {
+    for (uint32 i = 0, n = obj->slotSpan(); i != n; ++i) {
         const Value &v = obj->getSlot(i);
         if (i == JSSLOT_PRIVATE && (obj->getClass()->flags & JSCLASS_HAS_PRIVATE))
             continue;

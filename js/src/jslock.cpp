@@ -507,7 +507,7 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
 
     JSObject *obj = TITLE_TO_OBJECT(title);
     if (obj) {
-        uint32 nslots = obj->freeslot;
+        uint32 nslots = obj->slotSpan();
         JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
         for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
             Value v = obj->getSlot(i);
@@ -674,7 +674,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * and contention-free multi-threaded cases.
      */
     JS_ASSERT(obj->title.ownercx != cx);
-    JS_ASSERT(slot < obj->freeslot);
+    JS_ASSERT(obj->containsSlot(slot));
 
     /*
      * Avoid locking if called from the GC.  Also avoid locking a sealed
@@ -752,7 +752,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      * and contention-free multi-threaded cases.
      */
     JS_ASSERT(obj->title.ownercx != cx);
-    JS_ASSERT(slot < obj->freeslot);
+    JS_ASSERT(obj->containsSlot(slot));
 
     /*
      * Avoid locking if called from the GC.  Also avoid locking a sealed

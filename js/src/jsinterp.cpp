@@ -131,7 +131,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     JSObject *limitBlock, *limitClone;
     if (fp->hasFunction() && !fp->hasCallObj()) {
-        JS_ASSERT_IF(fp->getScopeChain()->getClass() == &js_BlockClass,
+        JS_ASSERT_IF(fp->getScopeChain()->isClonedBlock(),
                      fp->getScopeChain()->getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
         if (!js_GetCallObject(cx, fp))
             return NULL;
@@ -216,7 +216,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      * found it in blockChain.
      */
     JS_ASSERT_IF(limitBlock &&
-                 limitBlock->getClass() == &js_BlockClass &&
+                 limitBlock->isBlock() &&
                  limitClone->getPrivate() == js_FloatingFrameIfGenerator(cx, fp),
                  sharedBlock);
 
@@ -1215,7 +1215,7 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
 
     JSStackFrame *fp = cx->fp();
     for (obj = fp->maybeBlockChain(); obj; obj = obj->getParent()) {
-        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        JS_ASSERT(obj->isStaticBlock());
         if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
             break;
     }
@@ -3693,7 +3693,7 @@ BEGIN_CASE(JSOP_GNAMEDEC)
         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj->freeslot);
+            JS_ASSERT(obj->containsSlot(slot));
             Value &rref = obj->getSlotRef(slot);
             int32_t tmp;
             if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
@@ -3933,7 +3933,7 @@ BEGIN_CASE(JSOP_GETXPROP)
                     rval.setObject(entry->vword.toFunObj());
                 } else if (entry->vword.isSlot()) {
                     uint32 slot = entry->vword.toSlot();
-                    JS_ASSERT(slot < obj2->freeslot);
+                    JS_ASSERT(obj2->containsSlot(slot));
                     rval = obj2->lockedGetSlot(slot);
                 } else {
                     JS_ASSERT(entry->vword.isShape());
@@ -4028,7 +4028,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj2->freeslot);
+            JS_ASSERT(obj2->containsSlot(slot));
             rval = obj2->lockedGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
@@ -4196,7 +4196,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     entry->vshape() == rt->protoHazardShape &&
                     shape->hasDefaultSetter()) {
                     slot = shape->slot;
-                    JS_ASSERT(slot == obj->freeslot);
+                    JS_ASSERT(slot == obj->slotSpan());
 
                     /*
                      * Fast path: adding a plain old property that was once at
@@ -4209,8 +4209,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
 
                     if (slot < obj->numSlots()) {
                         JS_ASSERT(obj->getSlot(slot).isUndefined());
-                        ++obj->freeslot;
-                        JS_ASSERT(obj->freeslot != 0);
                     } else {
                         if (!obj->allocSlot(cx, &slot))
                             goto error;
@@ -4683,7 +4681,7 @@ BEGIN_CASE(JSOP_CALLNAME)
             PUSH_OBJECT(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
-            JS_ASSERT(slot < obj2->freeslot);
+            JS_ASSERT(obj2->containsSlot(slot));
             PUSH_COPY(obj2->lockedGetSlot(slot));
         } else {
             JS_ASSERT(entry->vword.isShape());
@@ -5182,7 +5180,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
     JSObject *obj = fp->getScopeChain()->getGlobal();
-    JS_ASSERT(slot < obj->freeslot);
+    JS_ASSERT(obj->containsSlot(slot));
     PUSH_COPY(obj->getSlot(slot));
     if (op == JSOP_CALLGLOBAL)
         PUSH_NULL();
@@ -5198,7 +5196,7 @@ BEGIN_CASE(JSOP_FORGLOBAL)
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
     JSObject *obj = fp->getScopeChain()->getGlobal();
-    JS_ASSERT(slot < obj->freeslot);
+    JS_ASSERT(obj->containsSlot(slot));
     JS_LOCK_OBJ(cx, obj);
     {
         if (!obj->methodWriteBarrier(cx, slot, rval)) {
@@ -5217,7 +5215,7 @@ BEGIN_CASE(JSOP_SETGLOBAL)
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
     JSObject *obj = fp->getScopeChain()->getGlobal();
-    JS_ASSERT(slot < obj->freeslot);
+    JS_ASSERT(obj->containsSlot(slot));
     {
         JS_LOCK_OBJ(cx, obj);
         if (!obj->methodWriteBarrier(cx, slot, regs.sp[-1])) {
@@ -5549,7 +5547,6 @@ BEGIN_CASE(JSOP_LAMBDA)
                     JS_ASSERT(lref.isObject());
                     JSObject *obj2 = &lref.toObject();
                     JS_ASSERT(obj2->getClass() == &js_ObjectClass);
-                    JS_ASSERT(obj2->freeslot >= JSSLOT_FREE(&js_ObjectClass));
 #endif
 
                     fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
@@ -5864,12 +5861,10 @@ BEGIN_CASE(JSOP_INITMETHOD)
         /* Fast path. Property cache hit. */
         uint32 slot = shape->slot;
 
-        JS_ASSERT(slot == obj->freeslot);
+        JS_ASSERT(slot == obj->slotSpan());
         JS_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
         if (slot < obj->numSlots()) {
             JS_ASSERT(obj->getSlot(slot).isUndefined());
-            ++obj->freeslot;
-            JS_ASSERT(obj->freeslot != 0);
         } else {
             if (!obj->allocSlot(cx, &slot))
                 goto error;
@@ -6483,7 +6478,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
 {
     JSObject *obj;
     LOAD_OBJECT(0, obj);
-    JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
+    JS_ASSERT(obj->isStaticBlock());
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
     Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
     JS_ASSERT(regs.sp < vp);
@@ -6508,7 +6503,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
     if (clasp == &js_BlockClass &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
         JSObject *youngestProto = obj2->getProto();
-        JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
+        JS_ASSERT(youngestProto->isStaticBlock());
         JSObject *parent = obj;
         while ((parent = parent->getParent()) != youngestProto)
             JS_ASSERT(parent);
@@ -6523,7 +6518,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 BEGIN_CASE(JSOP_LEAVEBLOCK)
 {
 #ifdef DEBUG
-    JS_ASSERT(fp->getBlockChain()->getClass() == &js_BlockClass);
+    JS_ASSERT(fp->getBlockChain()->isStaticBlock());
     uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->getBlockChain());
 
     JS_ASSERT(blockDepth <= StackDepth(script));
@@ -6535,7 +6530,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      */
     JSObject *obj = fp->getScopeChain();
     if (obj->getProto() == fp->getBlockChain()) {
-        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        JS_ASSERT(obj->isClonedBlock());
         if (!js_PutBlockObject(cx, JS_TRUE))
             goto error;
     }
