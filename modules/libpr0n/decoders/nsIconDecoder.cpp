@@ -56,23 +56,13 @@ nsIconDecoder::nsIconDecoder() :
   mPixBytesRead(0),
   mPixBytesTotal(0),
   mImageData(nsnull),
-  mState(iconStateStart),
-  mNotifiedDone(PR_FALSE)
+  mState(iconStateStart)
 {
   // Nothing to do
 }
 
 nsIconDecoder::~nsIconDecoder()
 { }
-
-void
-nsIconDecoder::FinishInternal()
-{
-  // If we haven't notified of completion yet for a full/success decode, we
-  // didn't finish. Notify in error mode
-  if (!IsSizeDecode() && !mNotifiedDone)
-    NotifyDone(/* aSuccess = */ PR_FALSE);
-}
 
 void
 nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
@@ -154,7 +144,8 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
         // If we've got all the pixel bytes, we're finished
         if (mPixBytesRead == mPixBytesTotal) {
-          NotifyDone(/* aSuccess = */ PR_TRUE);
+          PostFrameStop();
+          PostDecodeDone();
           mState = iconStateFinished;
         }
         break;
@@ -167,26 +158,6 @@ nsIconDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         break;
     }
   }
-}
-
-void
-nsIconDecoder::NotifyDone(PRBool aSuccess)
-{
-  // We should only call this once
-  NS_ABORT_IF_FALSE(!mNotifiedDone, "Calling NotifyDone twice");
-
-  // Notify
-  PostFrameStop();
-  if (aSuccess)
-    mImage->DecodingComplete();
-  if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
-                            nsnull);
-  }
-
-  // Flag that we've notified
-  mNotifiedDone = PR_TRUE;
 }
 
 } // namespace imagelib

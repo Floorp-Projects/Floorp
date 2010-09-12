@@ -114,11 +114,7 @@ nsICODecoder::FinishInternal()
     PostInvalidation(r);
 
     PostFrameStop();
-    mImage->DecodingComplete();
-    if (mObserver) {
-      mObserver->OnStopContainer(nsnull, 0);
-      mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
-    }
+    PostDecodeDone();
   }
 }
 

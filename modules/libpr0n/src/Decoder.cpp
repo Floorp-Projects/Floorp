@@ -47,6 +47,7 @@ Decoder::Decoder()
   , mInitialized(false)
   , mSizeDecode(false)
   , mInFrame(false)
+  , mDecodeDone(false)
   , mDataError(false)
 {
 }
@@ -97,7 +98,23 @@ Decoder::Finish()
 {
   // Implementation-specific finalization
   FinishInternal();
-  return IsError() ? NS_ERROR_FAILURE : NS_OK;
+
+  // If the implementation left us mid-frame, finish that up.
+  if (mInFrame)
+    PostFrameStop();
+
+  if (IsError())
+    return NS_ERROR_FAILURE;
+
+  // If the implementation didn't post success, we assume failure
+  if (!IsSizeDecode() && !mDecodeDone) {
+    if (mObserver) {
+      mObserver->OnStopContainer(nsnull, mImage);
+      mObserver->OnStopDecode(nsnull, NS_ERROR_FAILURE, nsnull);
+    }
+  }
+
+  return NS_OK;
 }
 
 void
@@ -198,6 +215,22 @@ Decoder::PostInvalidation(nsIntRect& aRect)
 
   // Account for the new region
   mInvalidRect.UnionRect(mInvalidRect, aRect);
+}
+
+void
+Decoder::PostDecodeDone()
+{
+  NS_ABORT_IF_FALSE(!IsSizeDecode(), "Can't be done with decoding with size decode!");
+  NS_ABORT_IF_FALSE(!mInFrame, "Can't be done decoding if we're mid-frame!");
+  NS_ABORT_IF_FALSE(!mDecodeDone, "Decode already done!");
+  mDecodeDone = true;
+
+  // Notify
+  mImage->DecodingComplete();
+  if (mObserver) {
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+  }
 }
 
 void

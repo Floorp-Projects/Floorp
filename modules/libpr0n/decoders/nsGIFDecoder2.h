@@ -69,7 +69,6 @@ private:
    * frame size information, etc. */
 
   void      BeginGIF();
-  void      EndGIF(PRBool aSuccess);
   nsresult  BeginImageFrame(gfx_depth aDepth);
   void      EndImageFrame();
   void      FlushImageData();

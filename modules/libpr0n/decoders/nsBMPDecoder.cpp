@@ -89,11 +89,7 @@ nsBMPDecoder::FinishInternal()
     // Send notifications if appropriate
     if (!IsSizeDecode() && !IsError() && (GetFrameCount() == 1)) {
         PostFrameStop();
-        mImage->DecodingComplete();
-        if (mObserver) {
-            mObserver->OnStopContainer(nsnull, mImage);
-            mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
-        }
+        PostDecodeDone();
     }
 }
 
