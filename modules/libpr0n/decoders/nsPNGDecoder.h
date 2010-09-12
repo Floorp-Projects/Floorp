@@ -91,7 +91,6 @@ public:
   PRUint32 mHeaderBytesRead;
 
   PRUint8 mChannels;
-  PRPackedBool mError;
   PRPackedBool mFrameHasNoAlpha;
   PRPackedBool mFrameIsHidden;
   PRPackedBool mNotifiedDone;

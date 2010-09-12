@@ -86,7 +86,7 @@ nsPNGDecoder::nsPNGDecoder() :
   mCMSLine(nsnull), interlacebuf(nsnull),
   mInProfile(nsnull), mTransform(nsnull),
   mHeaderBuf(nsnull), mHeaderBytesRead(0),
-  mChannels(0), mError(PR_FALSE), mFrameIsHidden(PR_FALSE),
+  mChannels(0), mFrameIsHidden(PR_FALSE),
   mNotifiedDone(PR_FALSE)
 {
 }
@@ -242,8 +242,10 @@ nsPNGDecoder::InitInternal()
   // For size decodes, we only need a small buffer
   if (IsSizeDecode()) {
     mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);
-    if (!mHeaderBuf)
+    if (!mHeaderBuf) {
+      PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       return NS_ERROR_OUT_OF_MEMORY;
+    }
     return NS_OK;
   }
 
@@ -255,11 +257,14 @@ nsPNGDecoder::InitInternal()
   mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                 NULL, nsPNGDecoder::error_callback,
                                 nsPNGDecoder::warning_callback);
-  if (!mPNG)
+  if (!mPNG) {
+    PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mInfo = png_create_info_struct(mPNG);
   if (!mInfo) {
+    PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
     png_destroy_read_struct(&mPNG, NULL, NULL);
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -308,7 +313,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
   PRUint32 height = 0;
 
   // No forgiveness if we previously hit an error
-  if (mError)
+  if (IsError())
     goto error;
 
   // If we only want width/height, we don't need to go through libpng
@@ -328,16 +333,20 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {
 
       // Check that the signature bytes are right
-      if (memcmp(mHeaderBuf, pngSignatureBytes, sizeof(pngSignatureBytes)))
+      if (memcmp(mHeaderBuf, pngSignatureBytes, sizeof(pngSignatureBytes))) {
+        PostDataError();
         goto error;
+      }
 
       // Grab the width and height, accounting for endianness (thanks libpng!)
       width = png_get_uint_32(mHeaderBuf + WIDTH_OFFSET);
       height = png_get_uint_32(mHeaderBuf + HEIGHT_OFFSET);
 
       // Too big?
-      if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION))
+      if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION)) {
+        PostDataError();
         goto error;
+      }
 
       // Post our size to the superclass
       PostSize(width, height);
@@ -349,6 +358,12 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
     // libpng uses setjmp/longjmp for error handling - set the buffer
     if (setjmp(png_jmpbuf(mPNG))) {
+
+      // We might not really know what caused the error, but it makes more
+      // sense to blame the data.
+      if (!IsError())
+        PostDataError();
+
       png_destroy_read_struct(&mPNG, &mInfo, NULL);
       goto error;
     }
@@ -362,7 +377,7 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
   // Consolidate error handling
   error:
-  mError = PR_TRUE;
+  NS_ABORT_IF_FALSE(IsError(), "Should only get here if we flagged an error!");
   return NS_ERROR_FAILURE;
 }
 
@@ -791,9 +806,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       }
       break;
       default:
-        NS_ERROR("Unknown PNG format!");
-        NS_ABORT();
-        break;
+        longjmp(png_jmpbuf(decoder->mPNG), 1);
     }
 
     if (!rowHasNoAlpha)
@@ -854,7 +867,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // We shouldn't get here if we've hit an error
-  NS_ABORT_IF_FALSE(!decoder->mError, "Finishing up PNG but hit error!");
+  NS_ABORT_IF_FALSE(!decoder->IsError(), "Finishing up PNG but hit error!");
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {

@@ -155,6 +155,7 @@ nsJPEGDecoder::InitInternal()
     /* If we get here, the JPEG code has signaled an error.
      * We need to clean up the JPEG object, close the input file, and return.
      */
+    PostDecoderError(NS_ERROR_FAILURE);
     return NS_ERROR_FAILURE;
   }
 
@@ -217,6 +218,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
   nsresult error_code;
   if ((error_code = setjmp(mErr.setjmp_buffer)) != 0) {
     if (error_code == NS_ERROR_FAILURE) {
+      PostDataError();
       /* Error due to corrupt stream - return NS_OK and consume silently
          so that libpr0n doesn't throw away a partial image load */
       mState = JPEG_SINK_NON_JPEG_TRAILER;
@@ -227,6 +229,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
       /* Error due to reasons external to the stream (probably out of
          memory) - let libpr0n attempt to clean up, even though
          mozilla is seconds away from falling flat on its face. */
+      PostDecoderError(error_code);
       mState = JPEG_ERROR;
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (setjmp returned an error)"));
@@ -297,6 +300,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         break;
       default:
         mState = JPEG_ERROR;
+        PostDataError();
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                ("} (unknown colorpsace (1))"));
         return NS_ERROR_UNEXPECTED;
@@ -313,6 +317,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
           break;
         default:
           mState = JPEG_ERROR;
+          PostDataError();
           PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                  ("} (unknown colorpsace (2))"));
           return NS_ERROR_UNEXPECTED;
@@ -362,6 +367,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
         break;
       default:
         mState = JPEG_ERROR;
+        PostDataError();
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
                ("} (unknown colorpsace (3))"));
         return NS_ERROR_UNEXPECTED;
@@ -386,6 +392,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
                                            gfxASurface::ImageFormatRGB24,
                                            &mImageData, &imagelength))) {
       mState = JPEG_ERROR;
+      PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
              ("} (could not initialize image frame)"));
       return NS_ERROR_OUT_OF_MEMORY;
@@ -551,9 +558,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     break;
 
   case JPEG_ERROR:
-    PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-           ("[this=%p] nsJPEGDecoder::ProcessData -- entering JPEG_ERROR case\n", this));
-    return NS_ERROR_FAILURE;
+    NS_ABORT_IF_FALSE(0, "Should always return immediately after error and not re-enter decoder");
   }
 
   PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
