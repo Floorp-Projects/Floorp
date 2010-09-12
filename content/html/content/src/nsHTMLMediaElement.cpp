@@ -2027,6 +2027,7 @@ void nsHTMLMediaElement::PlaybackEnded()
 void nsHTMLMediaElement::SeekStarted()
 {
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("seeking"));
+  DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
 }
 
 void nsHTMLMediaElement::SeekCompleted()

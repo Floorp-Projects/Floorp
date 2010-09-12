@@ -106,12 +106,12 @@
 <!ENTITY detail.repository                    "Add-on Profile">
 <!ENTITY detail.size                          "Size">
 
-<!ENTITY detail.checkForUpdates.label         "Check for updates">
+<!ENTITY detail.checkForUpdates.label         "Check for Updates">
 <!ENTITY detail.checkForUpdates.accesskey     "F">
 <!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
 <!ENTITY detail.showPreferencesWin.label      "Options">
 <!ENTITY detail.showPreferencesWin.accesskey  "O">
-<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on's Options">
+<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on's options">
 <!ENTITY detail.showPreferencesUnix.label     "Preferences">
 <!ENTITY detail.showPreferencesUnix.accesskey "P">
 <!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on's preferences">

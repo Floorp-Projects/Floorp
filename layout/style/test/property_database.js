@@ -139,7 +139,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -185,7 +184,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 			"2px 2px -moz-calc(2px + 1%) 2px",
 			"1px 2px 2px 2px / 2px 2px -moz-calc(2px + 1%) 2px",
 					  ],
@@ -207,7 +205,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -227,7 +224,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -247,7 +243,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -267,7 +262,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -323,7 +317,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -383,28 +376,6 @@ var gCSSProperties = {
 		other_values: [ "center", "end", "justify" ],
 		invalid_values: []
 	},
-	"-moz-box-shadow": {
-		domProp: "MozBoxShadow",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
-		prerequisites: { "color": "blue" },
-		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0", "inset 2px 2px 3px 4px black", "2px -2px green inset, 4px 4px 3px blue, inset 2px 2px",
-			/* calc() values */
-			"2px 2px -moz-calc(-5px)", /* clamped */
-			"-moz-calc(3em - 2px) 2px green",
-			"green -moz-calc(3em - 2px) 2px",
-			"2px -moz-min(2px,0.2em)",
-			"blue 2px -moz-min(2px,0.2em)",
-			"2px -moz-min(2px,0.2em) blue",
-			"-moz-calc(-2px) -moz-calc(-2px)",
-			"-2px -2px",
-			"-moz-calc(2px) -moz-calc(2px)",
-			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
-			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
-		],
-		invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none" ]
-	},
 	"-moz-box-sizing": {
 		domProp: "MozBoxSizing",
 		inherited: false,
@@ -436,7 +407,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "3%", "-1px" ]
 	},
@@ -500,16 +470,6 @@ var gCSSProperties = {
 			"-moz-calc(1in - 3em + 2px)",
 			"-moz-calc(1in - (3em + 2px))",
 			"-moz-calc((1in - 3em) + 2px)",
-			"-moz-min(1in, 30em)",
-			"-moz-calc(min(1in, 30em))",
-			"-moz-max(30em, 2px + 1in)",
-			"-moz-calc(max(30em, 2px + 1in))",
-			"-moz-min(2in, 30em,200px, min(500px ,40em))",
-			"-moz-calc(min(2in, 30em,200px, min(500px ,40em)))",
-			"-moz-min(2in)",
-			"-moz-max(20px)",
-			"-moz-calc(min(2em))",
-			"-moz-calc(max(1in))",
 			"-moz-calc(50px/2)",
 			"-moz-calc(50px/(2 - 1))",
 			"-moz-calc(-3px)",
@@ -525,7 +485,6 @@ var gCSSProperties = {
 			"-moz-calc(2em * ((5*2) + 3))",
 			"-moz-calc(2em * (5*(2 + 3)))",
 
-			"-moz-calc(min(5,7) * 3em)",
 			"-moz-calc((5 + 7) * 3em)",
 			"-moz-calc((5em + 3em) - 2em)",
 			"-moz-calc((5em - 3em) + 2em)",
@@ -571,6 +530,14 @@ var gCSSProperties = {
 			"-moz-calc(min())",
 			"-moz-max()",
 			"-moz-calc(max())",
+			"-moz-min(5px)",
+			"-moz-calc(min(5px))",
+			"-moz-max(5px)",
+			"-moz-calc(max(5px))",
+			"-moz-min(5px,2em)",
+			"-moz-calc(min(5px,2em))",
+			"-moz-max(5px,2em)",
+			"-moz-calc(max(5px,2em))",
 			"-moz-calc(50px/(2 - 2))",
 			"-moz-calc(5 + 5)",
 			"-moz-calc(5 * 5)",
@@ -581,15 +548,6 @@ var gCSSProperties = {
 			"-moz-calc((4 * 3) / 2em)",
 			"-moz-calc(4 * (3 / 2em))",
 			"-moz-calc(4 / (3 * 2em))",
-
-			"-moz-min(3em, 5)",
-			"-moz-calc(min(3em, 5))",
-			"-moz-min(5, 3em)",
-			"-moz-calc(min(5, 3em))",
-			"-moz-max(3em, 5)",
-			"-moz-calc(max(3em, 5))",
-			"-moz-max(5, 3em)",
-			"-moz-calc(max(5, 3em))"
 		]
 	},
 	"-moz-column-rule-style": {
@@ -663,7 +621,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -682,7 +639,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -703,7 +659,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 			"2px 2px -moz-calc(2px + 1%) 2px",
 			"1px 2px 2px 2px / 2px 2px -moz-calc(2px + 1%) 2px",
 					  ],
@@ -725,7 +680,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -745,7 +699,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -765,7 +718,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -785,7 +737,6 @@ var gCSSProperties = {
 			"-moz-calc(20%) -moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 					  ],
 		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
@@ -802,7 +753,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -819,7 +769,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -864,7 +813,7 @@ var gCSSProperties = {
 			"matrix(1, 0, 0, 1, -moz-calc(5px * 3), -moz-calc(10% - 3px))"
 		],
 		invalid_values: ["1px", "#0000ff", "red", "auto", "translatex(1px 1px)", "translatex(translatex(1px))", "translatex(#0000ff)", "translatex(red)", "translatey()", "matrix(1, 2, 3, 4, 5, 6)", "matrix(1px, 2px, 3px, 4px, 5px, 6px)", "scale(150%)", "skewx(red)", "matrix(1%, 0, 0, 0, 0px, 0px)", "matrix(0, 1%, 2, 3, 4px,5px)", "matrix(0, 1, 2%, 3, 4px, 5px)", "matrix(0, 1, 2, 3%, 4%, 5%)",
-			/* invalid (specially for this) calc() values */
+			/* invalid calc() values */
 			"translatey(-moz-min(5px,10%))",
 			"translatex(-moz-max(5px,10%))",
 			"translate(10px, -moz-calc(min(5px,10%)))",
@@ -1352,7 +1301,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -1415,7 +1363,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -1461,7 +1408,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -1525,7 +1471,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -1554,9 +1499,30 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
+	},
+	"box-shadow": {
+		domProp: "boxShadow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		prerequisites: { "color": "blue" },
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0", "inset 2px 2px 3px 4px black", "2px -2px green inset, 4px 4px 3px blue, inset 2px 2px",
+			/* calc() values */
+			"2px 2px -moz-calc(-5px)", /* clamped */
+			"-moz-calc(3em - 2px) 2px green",
+			"green -moz-calc(3em - 2px) 2px",
+			"2px -moz-calc(2px + 0.2em)",
+			"blue 2px -moz-calc(2px + 0.2em)",
+			"2px -moz-calc(2px + 0.2em) blue",
+			"-moz-calc(-2px) -moz-calc(-2px)",
+			"-2px -2px",
+			"-moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
+		],
+		invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none" ]
 	},
 	"caption-side": {
 		domProp: "captionSide",
@@ -1742,9 +1708,7 @@ var gCSSProperties = {
 			"0px",
 			"0%",
 			"-moz-calc(2em)",
-			"-moz-min(36pt, 2em)",
-			"-moz-max(50%, 8px)",
-			"-moz-min(36pt + 75%, 30% + 2em + 2px)",
+			"-moz-calc(36pt + 75% + (30% + 2em + 2px))",
 			"-moz-calc(-2em)",
 			"-moz-calc(-50%)",
 			"-moz-calc(-1px)"
@@ -1805,7 +1769,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
@@ -1832,7 +1795,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -1940,7 +1902,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -1958,7 +1919,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ]
 	},
@@ -1976,7 +1936,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -1993,7 +1952,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -2029,7 +1987,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
@@ -2047,7 +2004,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "auto" ]
 	},
@@ -2063,7 +2019,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
@@ -2079,7 +2034,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "auto", "none" ]
 	},
@@ -2156,7 +2110,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 5em)",
-			"-moz-min(3em, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ "5%" ]
 	},
@@ -2208,7 +2161,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -2224,7 +2176,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -2240,7 +2191,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -2255,7 +2205,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: [ ]
 	},
@@ -2389,7 +2338,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -2499,7 +2447,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -2514,9 +2461,9 @@ var gCSSProperties = {
 			"2px 2px -moz-calc(-5px)", /* clamped */
 			"-moz-calc(3em - 2px) 2px green",
 			"green -moz-calc(3em - 2px) 2px",
-			"2px -moz-min(2px,0.2em)",
-			"blue 2px -moz-min(2px,0.2em)",
-			"2px -moz-min(2px,0.2em) blue",
+			"2px -moz-calc(2px + 0.2em)",
+			"blue 2px -moz-calc(2px + 0.2em)",
+			"2px -moz-calc(2px + 0.2em) blue",
 			"-moz-calc(-2px) -moz-calc(-2px)",
 			"-2px -2px",
 			"-moz-calc(2px) -moz-calc(2px)",
@@ -2549,7 +2496,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -2614,7 +2560,6 @@ var gCSSProperties = {
 			"-moz-calc(3*25px)",
 			"-moz-calc(25px*3)",
 			"-moz-calc(3*25px + 50%)",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
 		],
 		invalid_values: []
 	},
@@ -2693,16 +2638,8 @@ var gCSSProperties = {
 			"-moz-calc(50% - 3em + 2px)",
 			"-moz-calc(50% - (3em + 2px))",
 			"-moz-calc((50% - 3em) + 2px)",
-			"-moz-min(50%, 30em)",
-			"-moz-calc(min(50%, 30em))",
-			"-moz-max(30em, 2px + 50%)",
-			"-moz-calc(max(30em, 2px + 50%))",
-			"-moz-min(30%, 30em,200px, min(500px ,40em))",
-			"-moz-calc(min(30%, 30em,200px, min(500px ,40em)))",
-			"-moz-min(50%)",
-			"-moz-max(20px)",
-			"-moz-calc(min(2em))",
-			"-moz-calc(max(50%))",
+			"-moz-calc(2em)",
+			"-moz-calc(50%)",
 			"-moz-calc(50px/2)",
 			"-moz-calc(50px/(2 - 1))"
 		],
@@ -2715,6 +2652,14 @@ var gCSSProperties = {
 			"-moz-calc(min())",
 			"-moz-max()",
 			"-moz-calc(max())",
+			"-moz-min(5px)",
+			"-moz-calc(min(5px))",
+			"-moz-max(5px)",
+			"-moz-calc(max(5px))",
+			"-moz-min(5px,2em)",
+			"-moz-calc(min(5px,2em))",
+			"-moz-max(5px,2em)",
+			"-moz-calc(max(5px,2em))",
 			"-moz-calc(50px/(2 - 2))",
 			/* If we ever support division by values, which is
 			 * complicated for the reasons described in

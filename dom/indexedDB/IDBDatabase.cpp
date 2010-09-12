@@ -54,7 +54,9 @@
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "IDBFactory.h"
+#include "IndexedDatabaseManager.h"
 #include "LazyIdleThread.h"
+#include "TransactionThreadPool.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -248,12 +250,23 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
 
   db->mConnection.swap(aConnection);
 
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetInstance();
+  NS_ASSERTION(mgr, "This should never be null!");
+
+  if (!mgr->RegisterDatabase(db)) {
+    NS_WARNING("Out of memory?");
+    return nsnull;
+  }
+
   return db.forget();
 }
 
 IDBDatabase::IDBDatabase()
-: mDatabaseId(0)
+: mDatabaseId(0),
+  mInvalidated(0)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (!gDatabaseInstanceCount++) {
     NS_ASSERTION(!gPromptHelpersMutex, "Should be null!");
     gPromptHelpersMutex = new mozilla::Mutex("IDBDatabase gPromptHelpersMutex");
@@ -262,6 +275,12 @@ IDBDatabase::IDBDatabase()
 
 IDBDatabase::~IDBDatabase()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetInstance();
+  if (mgr) {
+    mgr->UnregisterDatabase(this);
+  }
+
   if (mConnectionThread) {
     mConnectionThread->SetWeakIdleObserver(nsnull);
   }
@@ -299,6 +318,10 @@ nsresult
 IDBDatabase::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (mInvalidated) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   if (!mConnection) {
     mConnection = IDBFactory::GetConnection(mFilePath);
@@ -367,6 +390,30 @@ IDBDatabase::IsQuotaDisabled()
   }
 
   return foundHelper->PromptAndReturnQuotaIsDisabled();
+}
+
+void
+IDBDatabase::Invalidate()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  PR_AtomicSet(&mInvalidated, 1);
+  CloseConnection();
+}
+
+bool
+IDBDatabase::IsInvalidated()
+{
+  return !!mInvalidated;
+}
+
+void
+IDBDatabase::WaitForConnectionReleased()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  TransactionThreadPool* threadPool = TransactionThreadPool::Get();
+  if (threadPool) {
+    threadPool->WaitForAllTransactionsToComplete(this);
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)

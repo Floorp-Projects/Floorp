@@ -49,7 +49,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["HUDService"];
+var EXPORTED_SYMBOLS = ["HUDService", "ConsoleUtils"];
 
 XPCOMUtils.defineLazyServiceGetter(this, "scriptError",
                                    "@mozilla.org/scripterror;1",
@@ -2346,6 +2346,9 @@ HUD_SERVICE.prototype =
       var urlIdx = timestampedMessage.indexOf(aActivityObject.url);
       messageObject.prefix = timestampedMessage.substring(0, urlIdx);
 
+      messageObject.messageNode.classList.add("hud-clickable");
+      messageObject.messageNode.setAttribute("crop", "end");
+
       this.logMessage(messageObject.messageObject, outputNode, messageObject.messageNode);
       return messageObject;
     }
@@ -2479,11 +2482,6 @@ HUD_SERVICE.prototype =
     let chromeDocument = aConsoleNode.ownerDocument;
     let groupNode = chromeDocument.createElement("vbox");
     groupNode.setAttribute("class", "hud-group");
-
-    let separatorNode = chromeDocument.createElement("separator");
-    separatorNode.setAttribute("class", "groove hud-divider");
-    separatorNode.setAttribute("orient", "horizontal");
-    groupNode.appendChild(separatorNode);
 
     aConsoleNode.appendChild(groupNode);
     return groupNode;
@@ -2649,8 +2647,8 @@ HUD_SERVICE.prototype =
       HUDWindowObserver.initialConsoleCreated = true;
     }
 
-    let _browser =
-      gBrowser.getBrowserForDocument(aContentWindow.document.wrappedJSObject);
+    let _browser = gBrowser.
+      getBrowserForDocument(aContentWindow.top.document.wrappedJSObject);
     let nBox = gBrowser.getNotificationBox(_browser);
     let nBoxId = nBox.getAttribute("id");
     let hudId = "hud_" + nBoxId;
@@ -2704,6 +2702,24 @@ HUD_SERVICE.prototype =
     }
     // capture JS Errors
     this.setOnErrorHandler(aContentWindow);
+
+    // register the controller to handle "select all" properly
+    this.createController(xulWindow);
+  },
+
+  /**
+   * Adds the command controller to the XUL window if it's not already present.
+   *
+   * @param nsIDOMWindow aWindow
+   *        The browser XUL window.
+   * @returns void
+   */
+  createController: function HUD_createController(aWindow)
+  {
+    if (aWindow.commandController == null) {
+      aWindow.commandController = new CommandController(aWindow);
+      aWindow.controllers.insertControllerAt(0, aWindow.commandController);
+    }
   }
 };
 
@@ -3107,6 +3123,15 @@ HeadsUpDisplay.prototype = {
     copyItem.setAttribute("command", "cmd_copy");
     menuPopup.appendChild(copyItem);
 
+    let selectAllItem = this.makeXULNode("menuitem");
+    selectAllItem.setAttribute("label", this.getStr("selectAllCmd.label"));
+    selectAllItem.setAttribute("accesskey",
+                               this.getStr("selectAllCmd.accesskey"));
+    selectAllItem.setAttribute("hudId", this.hudId);
+    selectAllItem.setAttribute("buttonType", "selectAll");
+    selectAllItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
+    menuPopup.appendChild(selectAllItem);
+
     menuPopup.appendChild(this.makeXULNode("menuseparator"));
 
     let clearItem = this.makeXULNode("menuitem");
@@ -3309,27 +3334,29 @@ function HUDConsole(aHeadsUpDisplay)
 
 /**
  * Creates a DOM Node factory for XUL nodes - as well as textNodes
- * @param   aFactoryType
- *          "xul" or "text"
- * @returns DOM Node Factory function
+ * @param aFactoryType "xul" or "text"
+ * @param ignored This parameter is currently ignored, and will be removed
+ * See bug 594304
+ * @param aDocument The document, the factory is to generate nodes from
+ * @return DOM Node Factory function
  */
-function NodeFactory(aFactoryType, aNameSpace, aDocument)
+function NodeFactory(aFactoryType, ignored, aDocument)
 {
   // aDocument is presumed to be a XULDocument
   if (aFactoryType == "text") {
-    function factory(aText) {
+    return function factory(aText)
+    {
       return aDocument.createTextNode(aText);
     }
-    return factory;
+  }
+  else if (aFactoryType == "xul") {
+    return function factory(aTag)
+    {
+      return aDocument.createElement(aTag);
+    }
   }
   else {
-    if (aNameSpace == "xul") {
-      function factory(aTag)
-      {
-        return aDocument.createElement(aTag);
-      }
-      return factory;
-    }
+    throw new Error('NodeFactory: Unknown factory type: ' + aFactoryType);
   }
 }
 
@@ -3950,8 +3977,9 @@ JSTerm.prototype = {
 
     var self = this;
     var node = this.xulElementFactory("label");
-    node.setAttribute("class", "jsterm-output-line");
+    node.setAttribute("class", "jsterm-output-line hud-clickable");
     node.setAttribute("aria-haspopup", "true");
+    node.setAttribute("crop", "end");
     node.onclick = function() {
       self.openPropertyPanel(aEvalString, aOutputObject, node);
     }
@@ -4598,23 +4626,11 @@ ConsoleUtils = {
    */
   timestampString: function ConsoleUtils_timestampString(ms)
   {
-    // TODO: L10N see bug 568656
     var d = new Date(ms ? ms : null);
-
-    function pad(n, mil)
-    {
-      if (mil) {
-        return n < 100 ? "0" + n : n;
-      }
-      else {
-        return n < 10 ? "0" + n : n;
-      }
-    }
-
-    return pad(d.getHours()) + ":"
-      + pad(d.getMinutes()) + ":"
-      + pad(d.getSeconds()) + ":"
-      + pad(d.getMilliseconds(), true);
+    let hours = d.getHours(), minutes = d.getMinutes();
+    let seconds = d.getSeconds(), milliseconds = d.getMilliseconds();
+    let parameters = [ hours, minutes, seconds, milliseconds ];
+    return HUDService.getFormatStr("timestampFormat", parameters);
   },
 
   /**
@@ -4636,32 +4652,6 @@ ConsoleUtils = {
     nsIScrollBoxObject.ensureElementIsVisible(aNode);
   }
 };
-
-/**
- * Creates a DOM Node factory for XUL nodes - as well as textNodes
- * @param   aFactoryType
- *          "xul" or "text"
- * @returns DOM Node Factory function
- */
-function NodeFactory(aFactoryType, aNameSpace, aDocument)
-{
-  // aDocument is presumed to be a XULDocument
-  if (aFactoryType == "text") {
-    function factory(aText) {
-      return aDocument.createTextNode(aText);
-    }
-    return factory;
-  }
-  else {
-    if (aNameSpace == "xul") {
-      function factory(aTag) {
-        return aDocument.createElement(aTag);
-      }
-      return factory;
-    }
-  }
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 // HeadsUpDisplayUICommands
@@ -4700,8 +4690,16 @@ HeadsUpDisplayUICommands = {
   command: function UIC_command(aButton) {
     var filter = aButton.getAttribute("buttonType");
     var hudId = aButton.getAttribute("hudId");
-    if (filter == "clear") {
-      HUDService.clearDisplay(hudId);
+    switch (filter) {
+      case "clear":
+        HUDService.clearDisplay(hudId);
+        break;
+      case "selectAll":
+        let outputNode = HUDService.getOutputNodeById(hudId);
+        let chromeWindow = outputNode.ownerDocument.defaultView;
+        let commandController = chromeWindow.commandController;
+        commandController.selectAll(outputNode);
+        break;
     }
   },
 
@@ -5003,6 +5001,67 @@ HUDWindowObserver = {
    * over initialize
    */
   initialConsoleCreated: false,
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// CommandController
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * A controller (an instance of nsIController) that makes editing actions
+ * behave appropriately in the context of the Web Console.
+ */
+function CommandController(aWindow) {
+  this.window = aWindow;
+}
+
+CommandController.prototype = {
+  /**
+   * Returns the HUD output node that currently has the focus, or null if the
+   * currently-focused element isn't inside the output node.
+   *
+   * @returns nsIDOMNode
+   *          The currently-focused output node.
+   */
+  _getFocusedOutputNode: function CommandController_getFocusedOutputNode()
+  {
+    let anchorNode = this.window.getSelection().anchorNode;
+    while (!(anchorNode.nodeType === anchorNode.ELEMENT_NODE &&
+             anchorNode.classList.contains("hud-output-node"))) {
+      anchorNode = anchorNode.parentNode;
+    }
+    return anchorNode;
+  },
+
+  /**
+   * Selects all the text in the HUD output.
+   *
+   * @param nsIDOMNode aOutputNode
+   *        The HUD output node.
+   * @returns void
+   */
+  selectAll: function CommandController_selectAll(aOutputNode)
+  {
+    let selection = this.window.getSelection();
+    selection.removeAllRanges();
+    selection.selectAllChildren(aOutputNode);
+  },
+
+  supportsCommand: function CommandController_supportsCommand(aCommand)
+  {
+    return aCommand === "cmd_selectAll" &&
+           this._getFocusedOutputNode() != null;
+  },
+
+  isCommandEnabled: function CommandController_isCommandEnabled(aCommand)
+  {
+    return aCommand === "cmd_selectAll";
+  },
+
+  doCommand: function CommandController_doCommand(aCommand)
+  {
+    this.selectAll(this._getFocusedOutputNode());
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

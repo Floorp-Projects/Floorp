@@ -2814,12 +2814,9 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateError: function UP_showUpdateError(update) {
-    if (!this._enabled)
-      return;
-
     if (update.errorCode &&
         (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-         update.errorCode != CERT_ATTR_CHECK_FAILED_HAS_UPDATE)) {
+         update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE)) {
       this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
                            UPDATE_WINDOW_NAME, null, update);
       return;

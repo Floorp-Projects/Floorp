@@ -1,6 +1,8 @@
 == boxshadow-basic.html boxshadow-basic-ref.html
 != boxshadow-blur.html boxshadow-blur-notref.html
 != boxshadow-blur.html boxshadow-blur-notref2.html
+== boxshadow-blur-2.html boxshadow-blur-2-ref.html
+!= boxshadow-blur-2.html boxshadow-blur-2-notref.html
 == boxshadow-multiple.html boxshadow-multiple-ref.html
 == boxshadow-spread.html boxshadow-spread-ref.html
 == tableboxshadow-basic.html tableboxshadow-basic-ref.html

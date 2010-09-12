@@ -195,6 +195,9 @@ protected:
   TimeContainerHashtable     mChildContainerTable;
   PRPackedBool               mResampleNeeded;
   PRPackedBool               mDeferredStartSampling;
+#ifdef DEBUG
+  PRPackedBool               mRunningSample;
+#endif
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it

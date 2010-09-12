@@ -120,11 +120,11 @@
                 accesskey="&openTabInNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
-      <menuitem id="context_pinTab" label="&pinTab.label;"
-                accesskey="&pinTab.accesskey;"
+      <menuitem id="context_pinTab" label="&pinAppTab.label;"
+                accesskey="&pinAppTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
-                accesskey="&unpinTab.accesskey;"
+      <menuitem id="context_unpinTab" label="&unpinAppTab.label;" hidden="true"
+                accesskey="&unpinAppTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
@@ -162,6 +162,9 @@
 
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
+
+    <!-- for invalid form error message -->
+    <panel id="invalid-form-popup" noautofocus="true" hidden="true" level="parent"/>
 
     <panel id="editBookmarkPanel"
            orient="vertical"
@@ -478,9 +481,9 @@
                     command="Tools:PrivateBrowsing"
                     key="key_privatebrowsing"/>
           <menuseparator class="appmenu-menuseparator"/>
-          <hbox class="split-menuitem">
-            <menuitem id="appmenu-edit-menuitem"
-                      label="&editMenu.label;"
+          <hbox>
+            <menuitem id="appmenu-edit-label"
+                      label="&appMenuEdit.label;"
                       disabled="true"/>
             <toolbarbutton id="appmenu-cut"
                            class="appmenu-edit-button"
@@ -667,6 +670,11 @@
                           key="key_sanitize"
                           command="Tools:Sanitize"/>
                 <menuseparator class="hide-if-empty-places-result"/>
+                <menuitem id="appmenu_restoreLastSession"
+                          class="restoreLastSession"
+                          label="&historyRestoreLastSession.label;"
+                          oncommand="restoreLastSession();"
+                          disabled="true"/>
                 <menu id="appmenu_recentlyClosedTabsMenu"
                       class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"
@@ -1133,7 +1141,8 @@
                      label="&tabViewButton2.label;"
                      command="Browser:ToggleTabView"
                      tooltiptext="&tabViewButton2.tooltip;"
-                     removable="true"/>
+                     removable="true"
+                     observes="tabviewGroupsNumber"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
@@ -1207,6 +1216,18 @@
                      type="checkbox"
                      label="&fullScreenCmd.label;"
                      tooltiptext="&fullScreenButton.tooltip;"/>
+
+      <toolbaritem id="zoom-controls" class="chromeclass-toolbar-additional"
+                   title="&zoomControls.label;">
+        <toolbarbutton id="zoom-out-button" class="toolbarbutton-1"
+                       label="&fullZoomReduceCmd.label;"
+                       command="cmd_fullZoomReduce"
+                       tooltiptext="&zoomOutButton.tooltip;"/>
+        <toolbarbutton id="zoom-in-button" class="toolbarbutton-1"
+                       label="&fullZoomEnlargeCmd.label;"
+                       command="cmd_fullZoomEnlarge"
+                       tooltiptext="&zoomInButton.tooltip;"/>
+      </toolbaritem>
 
     </toolbarpalette>
   </toolbox>
