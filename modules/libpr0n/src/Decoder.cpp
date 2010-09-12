@@ -43,9 +43,11 @@ namespace imagelib {
 
 Decoder::Decoder()
   : mFrameCount(0)
+  , mFailCode(NS_OK)
   , mInitialized(false)
   , mSizeDecode(false)
   , mInFrame(false)
+  , mDataError(false)
 {
 }
 
@@ -190,6 +192,26 @@ Decoder::PostInvalidation(nsIntRect& aRect)
 
   // Account for the new region
   mInvalidRect.UnionRect(mInvalidRect, aRect);
+}
+
+void
+Decoder::PostDataError()
+{
+  mDataError = true;
+
+  //XXXbholley - we should probably log to the web console here
+}
+
+void
+Decoder::PostDecoderError(nsresult aFailureCode)
+{
+  NS_ABORT_IF_FALSE(NS_FAILED(aFailureCode), "Not a failure code!");
+
+  mFailCode = aFailureCode;
+
+  // XXXbholley - we should report the image URI here, but imgContainer
+  // needs to know its URI first
+  NS_WARNING("Image decoding error - This is probably a bug!");
 }
 
 } // namespace imagelib
