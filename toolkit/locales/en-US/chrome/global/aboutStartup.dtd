@@ -18,7 +18,7 @@ when the operating system handed control over to Firefox itself. -->
 <!-- LOCALIZATION NOTE (about.startup.app.ready): The timestamp for
 when the Firefox startup process finished, and when Firefox was first
 ready for the user to use. -->
-<!ENTITY about.startup.app.ready"&brandShortName; Ready">
+<!ENTITY about.startup.app.ready "&brandShortName; Ready">
 
 <!-- LOCALIZATION NOTE (about.startup.duration.launch): The amount of
 time between the launch and startup timestamps; the duration of the
