@@ -684,6 +684,10 @@ UserAutoCompleteResult.prototype = {
         return this.logins[index].username;
     },
 
+    getLabelAt : function (index) {
+      return this.getValueAt(index);
+    },
+
     getCommentAt : function (index) {
         return "";
     },
