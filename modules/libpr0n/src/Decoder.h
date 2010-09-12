@@ -54,10 +54,6 @@ public:
   virtual ~Decoder();
 
   /**
-   * XXX - These methods will stop returning nsresults in a later patch.
-   */
-
-  /**
    * Initialize an image decoder. Decoders may not be re-initialized.
    *
    * @param aContainer The image container to decode to.
@@ -65,7 +61,7 @@ public:
    *
    * Notifications Sent: TODO
    */
-  nsresult Init(RasterImage* aImage, imgIDecoderObserver* aObserver);
+  void Init(RasterImage* aImage, imgIDecoderObserver* aObserver);
 
   /**
    * Writes data to the decoder.
@@ -77,14 +73,14 @@ public:
    *
    * Notifications Sent: TODO
    */
-  nsresult Write(const char* aBuffer, PRUint32 aCount);
+  void Write(const char* aBuffer, PRUint32 aCount);
 
   /**
    * Informs the decoder that all the data has been written.
    *
    * Notifications Sent: TODO
    */
-  nsresult Finish();
+  void Finish();
 
   /**
    * Tells the decoder to flush any pending invalidations. This informs the image
@@ -117,15 +113,24 @@ public:
   // is only 0 if we haven't begun any frames.
   PRUint32 GetFrameCount() { return mFrameCount; }
 
+  // The number of complete frames we have (ie, not including anything in-progress).
+  PRUint32 GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
+
+  // Error tracking
+  bool HasError() { return HasDataError() || HasDecoderError(); };
+  bool HasDataError() { return mDataError; };
+  bool HasDecoderError() { return NS_FAILED(mFailCode); };
+  nsresult GetDecoderError() { return mFailCode; };
+
 protected:
 
   /*
    * Internal hooks. Decoder implementations may override these and
    * only these methods.
    */
-  virtual nsresult InitInternal();
-  virtual nsresult WriteInternal(const char* aBuffer, PRUint32 aCount);
-  virtual nsresult FinishInternal();
+  virtual void InitInternal();
+  virtual void WriteInternal(const char* aBuffer, PRUint32 aCount);
+  virtual void FinishInternal();
 
   /*
    * Progress notifications.
@@ -144,21 +149,37 @@ protected:
   // actually pass these invalidations on right away.
   void PostInvalidation(nsIntRect& aRect);
 
+  // Called by the decoders when they have successfully decoded the image. This
+  // may occur as the result of the decoder getting to the appropriate point in
+  // the stream, or by us calling FinishInternal().
+  //
+  // May not be called mid-frame.
+  void PostDecodeDone();
+
+  // Data errors are the fault of the source data, decoder errors are our fault
+  void PostDataError();
+  void PostDecoderError(nsresult aFailCode);
+
   /*
    * Member variables.
    *
-   * XXX - Some of these become private later in the patch stack.
    */
   nsRefPtr<RasterImage> mImage;
+
+private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
 
   PRUint32 mFrameCount; // Number of frames, including anything in-progress
 
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
 
+  nsresult mFailCode;
+
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
+  bool mDecodeDone;
+  bool mDataError;
 };
 
 } // namespace imagelib

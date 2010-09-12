@@ -47,7 +47,7 @@ richlistitem[type="tab"] {
   background-color: menu;
   width: 44em;
   opacity: 0.9;
-  -moz-box-shadow:
+  box-shadow:
     inset rgba(255, 255, 255, 0.5) 0 1px 0px,
     inset rgba(0, 0, 0, 0.1) 0 -2px 0px,
     rgba(0, 0, 0, 0.1) 0px 1px 0px;

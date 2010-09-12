@@ -109,3 +109,7 @@ body[dir="rtl"] #searchEngineLinks {
 #aboutMozilla {
   text-align: center;
 }
+
+#defaultSnippets {
+  text-align: center;
+}

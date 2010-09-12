@@ -147,9 +147,9 @@ endif
 ifdef ENABLE_TESTS
 
 ifdef XPCSHELL_TESTS
-#ifndef MODULE
-#$(error Must define MODULE when defining XPCSHELL_TESTS.)
-#endif
+ifndef relativesrcdir
+$(error Must define relativesrcdir when defining XPCSHELL_TESTS.)
+endif
 
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 

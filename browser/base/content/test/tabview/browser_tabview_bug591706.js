@@ -80,24 +80,33 @@ function onTabViewWindowLoaded() {
   is(group.getChildren()[0].tab.linkedBrowser.contentWindow.location, secondTab.linkedBrowser.contentWindow.location, "The second tab was there first");
   is(group.getChildren()[1].tab.linkedBrowser.contentWindow.location, firstTab.linkedBrowser.contentWindow.location, "The first tab was just added and went to the end of the line");
   
+  group.addSubscriber(group, "close", function() {
+    group.removeSubscriber(group, "close");
+
+    ok(group.isEmpty(), "The group is empty again");
+
+    is(contentWindow.GroupItems.getActiveGroupItem(), null, "The active group is gone");
+    contentWindow.GroupItems.setActiveGroupItem(currentGroup);
+    isnot(contentWindow.GroupItems.getActiveGroupItem(), null, "There is an active group");
+    is(gBrowser.tabs.length, 1, "There is only one tab left");
+    is(gBrowser.visibleTabs.length, 1, "There is also only one visible tab");
+
+    let onTabViewHidden = function() {
+      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+      finish();
+    };
+    window.addEventListener("tabviewhidden", onTabViewHidden, false);
+    gBrowser.selectedTab = originalTab;
+
+    TabView.hide();
+  });
+
   // Get rid of the group and its children
   group.closeAll();
-  ok(group.isEmpty(), "The group is empty again");
-  
-  is(contentWindow.GroupItems.getActiveGroupItem(), null, "The active group is gone");
-  contentWindow.GroupItems.setActiveGroupItem(currentGroup);
-  isnot(contentWindow.GroupItems.getActiveGroupItem(), null, "There is an active group");
-  is(gBrowser.tabs.length, 1, "There is only one tab left");
-  is(gBrowser.visibleTabs.length, 1, "There is also only one visible tab");
-
-  let onTabViewHidden = function() {
-    window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    finish();
-  };
-  window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  gBrowser.selectedTab = originalTab;
-
-  TabView.hide();
+  // close undo group
+  let closeButton = group.$undoContainer.find(".close");
+  EventUtils.sendMouseEvent(
+    { type: "click" }, closeButton[0], contentWindow);
 }
 
 function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {

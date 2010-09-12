@@ -56,7 +56,7 @@
   margin: 0;
   text-shadow: @loweredShadow@;
   border: 1px solid @toolbarbuttonBorderColor@;
-  -moz-box-shadow: @loweredShadow@;
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
   list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
@@ -88,7 +88,7 @@
 .nav-button:hover:active:not([disabled="true"]) {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 .nav-button:-moz-window-inactive {
@@ -294,7 +294,7 @@
 }
 
 #header-utils-btn[open="true"] {
-  -moz-box-shadow: inset 3px 3px 8px #555;
+  box-shadow: inset 3px 3px 5.5px #555;
 }
 
 #header-utils-btn:-moz-focusring > .button-box {
@@ -710,7 +710,7 @@
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
   border-radius: 10000px;
   border: 1px solid #555;
-  -moz-box-shadow: #777 1px 1px 2px;
+  box-shadow: #777 1px 1px 1.5px;
   width: 200px;
   height: 24px;
   margin: 0px 8px;
@@ -761,7 +761,7 @@
   width: 16px;
   height: 16px;
   margin: 3px;
-  -moz-box-shadow: #777 1px 1px 1px;
+  box-shadow: #777 1px 1px 1px;
 }
 
 .download-progress .pause {
@@ -815,15 +815,15 @@
 }
 
 .addon-control.enable:hover {
-  -moz-box-shadow: #00FF00 0px 0px 6px -1px;
+  box-shadow: #00FF00 0px 0px 4px -1px;
 }
 
 .addon-control.disable:hover {
-  -moz-box-shadow: #FFD800 0px 0px 6px -1px;
+  box-shadow: #FFD800 0px 0px 4px -1px;
 }
 
 .addon-control.remove:hover {
-  -moz-box-shadow: #FF0000 0px 0px 6px -1px;
+  box-shadow: #FF0000 0px 0px 4px -1px;
 }
 
 .addon-control[disabled="true"] {

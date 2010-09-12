@@ -12,7 +12,7 @@
     color: white;
     border-radius: 12px;
     /* recessed effect with dark inner shadow and lightened bottom */
-    -moz-box-shadow: inset 0 1px 5px rgba(0,0,0,0.8),
+    box-shadow: inset 0 1px 3.5px rgba(0,0,0,0.8),
                            0 1px 0 rgba(255,255,255,0.2);
     padding: 5px;
     -moz-user-select: none;
@@ -51,7 +51,7 @@ html|a {
     font: message-box;
     font-size: 12px;
     cursor: default;
-    text-shadow: rgba(0,0,0,0.8) 0 0 5px;
+    text-shadow: rgba(0,0,0,0.8) 0 0 3.5px;
 }
 
 .submitStatus div {

@@ -65,6 +65,7 @@ CPPSRCS = \
   IDBRequest.cpp \
   IDBTransaction.cpp \
   IDBFactory.cpp \
+  IndexedDatabaseManager.cpp \
   LazyIdleThread.cpp \
   TransactionThreadPool.cpp \
   $(NULL)
@@ -79,6 +80,7 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBRequest.h \
   IDBTransaction.h \
   IndexedDatabase.h \
+  IndexedDatabaseManager.h \
   IDBFactory.h \
   LazyIdleThread.h \
   $(NULL)
@@ -108,6 +110,7 @@ XPIDLSRCS = \
   nsIIDBTransaction.idl \
   nsIIDBTransactionEvent.idl \
   nsIIDBFactory.idl \
+  nsIIndexedDatabaseManager.idl \
   $(NULL)
 
 ifdef ENABLE_TESTS

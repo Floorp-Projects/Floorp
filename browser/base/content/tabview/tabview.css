@@ -1,4 +1,4 @@
-/* Platform-independent structural styling for 
+/* Platform-independent structural styling for
  * <strike>Tab Candy</strike> Panorama
 ----------------------------------*/
 
@@ -83,15 +83,34 @@ body {
 .front {
   z-index: 999999 !important;
   border-radius: 0 !important;
-  -moz-box-shadow: none !important;
+  box-shadow: none !important;
   -moz-transform: none !important;
   image-rendering: -moz-crisp-edges;
+}
+
+/* Groups
+----------------------------------*/
+
+.groupItem {
+  position: absolute;
+}
+
+.appTabTray {
+  position: absolute;
 }
 
 /* Other Items
 ----------------------------------*/
 
-.groupItem,
+.undo {
+  position: absolute;
+}
+
+.undo .close {
+  display: inline-block;
+  position: relative;
+}
+
 .info-item {
   position: absolute;
 }
@@ -123,6 +142,10 @@ body {
 .newTabButton {
   position: absolute !important;
   z-index: 99999;
+}
+
+.titlebar {
+  position: absolute;
 }
 
 .title-shield {
@@ -167,6 +190,12 @@ body {
   display: none;
 }
 
+/* Exit button
+----------------------------------*/
+#exit-button {
+  position: absolute;
+  z-index: 1000;
+}
 
 /* Search
 ----------------------------------*/
