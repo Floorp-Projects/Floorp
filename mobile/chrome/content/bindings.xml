@@ -13,7 +13,7 @@
 
   <binding id="autocomplete-aligned" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation>
-      <property name="mIgnoreFocus" onget="return true;"/>
+      <property name="mIgnoreFocus" onget="return true;" onset="val;"/>
       <method name="openPopup">
         <body><![CDATA[
           this.popup.openAutocompletePopup(this, null);
