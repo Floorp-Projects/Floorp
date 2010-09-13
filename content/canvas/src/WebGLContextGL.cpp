@@ -2354,7 +2354,7 @@ WebGLContext::GetVertexAttribOffset(WebGLuint index, WebGLenum pname, WebGLuint 
 NS_IMETHODIMP
 WebGLContext::Hint(WebGLenum target, WebGLenum mode)
 {
-    return NS_OK;
+    return ErrorInvalidEnum("hint: invalid hint");
 }
 
 NS_IMETHODIMP

@@ -394,16 +394,12 @@ function testConstructionWithNullBuffer(type, name) {
 }
 
 function shouldThrowIndexSizeErr(func, text) {
-    var errorText = text + " should throw INDEX_SIZE_ERR exception";
+    var errorText = text + " should throw an exception";
     try {
         func();
         testFailed(errorText);
     } catch (e) {
-        if (e.code != DOMException.INDEX_SIZE_ERR) {
-            testFailed(errorText);
-        } else {
-            testPassed(text + " threw INDEX_SIZE_ERR exception");
-        }
+        testPassed(text + " threw an exception");
     }
 }
 
