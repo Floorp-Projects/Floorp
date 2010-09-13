@@ -271,9 +271,6 @@ mjit::Compiler::generatePrologue()
         masm.storeValue(UndefinedValue(), Address(JSFrameReg, JSStackFrame::offsetOfReturnValue()));
         masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetOfBlockChain()));
 
-        /* :TODO: This is entirely wrong. */
-        masm.store32(Imm32(cx->version), Address(JSFrameReg, JSStackFrame::offsetOfCallerVersion()));
-
         /* Set cx->fp */
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ReturnReg);
 

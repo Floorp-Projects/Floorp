@@ -5717,12 +5717,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newfp->setScopeChainNoCallObj(*JSStackFrame::sInvalidScopeChain);
 #endif
 
-    /*
-     * Note that fp->script is still the caller's script; set the callee
-     * inline frame's idea of caller version from its version.
-     */
-    newfp->setCallerVersion((JSVersion) fp->script()->version);
-
     /* Officially push the frame. */
     stack.pushInlineFrame(cx, newscript, newfp, cx->regs);
 

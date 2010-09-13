@@ -2097,7 +2097,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
         script = regs.fp->script();                                           \
         argv = regs.fp->maybeFormalArgs();                                    \
         atoms = FrameAtomBase(cx, regs.fp);                                   \
-        currentVersion = (JSVersion) script->version;                         \
         JS_ASSERT(cx->regs == &regs);                                         \
         if (cx->throwing)                                                     \
             goto error;                                                       \
@@ -2212,20 +2211,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
 
     if (!entryFrame)
         entryFrame = regs.fp;
-
-    /*
-     * Optimized Get and SetVersion for proper script language versioning.
-     *
-     * If any native method or a Class ObjectOps hook calls js_SetVersion
-     * and changes cx->version, the effect will "stick" and we will stop
-     * maintaining currentVersion.  This is relied upon by testsuites, for
-     * the most part -- web browsers select version before compiling and not
-     * at run-time.
-     */
-    JSVersion currentVersion = (JSVersion) script->version;
-    JSVersion originalVersion = (JSVersion) cx->version;
-    if (currentVersion != originalVersion)
-        js_SetVersion(cx, currentVersion);
 
     /*
      * Initialize the index segment register used by LOAD_ATOM and
@@ -2536,13 +2521,6 @@ BEGIN_CASE(JSOP_STOP)
         PutActivationObjects(cx, regs.fp);
 
         Probes::exitJSFun(cx, regs.fp->maybeFun());
-
-        /* Restore context version only if callee hasn't set version. */
-        if (JS_LIKELY(cx->version == currentVersion)) {
-            currentVersion = regs.fp->callerVersion();
-            if (currentVersion != cx->version)
-                js_SetVersion(cx, currentVersion);
-        }
 
         /*
          * If inline-constructing, replace primitive rval with the new object
@@ -4444,14 +4422,6 @@ BEGIN_CASE(JSOP_APPLY)
             /* Initialize frame, locals. */
             newfp->initCallFrame(cx, *callee, newfun, argc, flags);
             SetValueRangeToUndefined(newfp->slots(), newscript->nfixed);
-
-            /* Switch version if currentVersion wasn't overridden. */
-            newfp->setCallerVersion((JSVersion) cx->version);
-            if (JS_LIKELY(cx->version == currentVersion)) {
-                currentVersion = (JSVersion) newscript->version;
-                if (JS_UNLIKELY(currentVersion != cx->version))
-                    js_SetVersion(cx, currentVersion);
-            }
 
             /* Officially push the frame. */
             stack.pushInlineFrame(cx, newscript, newfp, &regs);
@@ -6753,9 +6723,6 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), !regs.fp->hasBlockChain());
     JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), !js_IsActiveWithOrBlock(cx, &regs.fp->scopeChain(), 0));
 
-    /* Undo the remaining effects committed on entry to Interpret. */
-    if (cx->version == currentVersion && currentVersion != originalVersion)
-        js_SetVersion(cx, originalVersion);
     --cx->interpLevel;
 
     return interpReturnOK;

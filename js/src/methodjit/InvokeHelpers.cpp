@@ -213,8 +213,6 @@ InlineReturn(VMFrame &f, JSBool ok)
 
     PutActivationObjects(cx, fp);
 
-    /* :TODO: version stuff */
-
     if (fp->isConstructing() && fp->returnValue().isPrimitive())
         fp->setReturnValue(fp->thisValue());
 
@@ -432,9 +430,6 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     /* Initialize frame, locals. */
     newfp->initCallFrame(cx, callee, newfun, argc, flags);
     SetValueRangeToUndefined(newfp->slots(), newscript->nfixed);
-
-    /* :TODO: Switch version if currentVersion wasn't overridden. */
-    newfp->setCallerVersion((JSVersion)cx->version);
 
     /* Officially push the frame. */
     stack.pushInlineFrame(cx, newscript, newfp, &f.regs);
