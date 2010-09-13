@@ -70,6 +70,8 @@ struct MICInfo {
     {
         GET,
         SET,
+        CALL,
+        EMPTYCALL,  /* placeholder call which cannot refer to a fast native */
         TRACER
     };
 
@@ -87,12 +89,19 @@ struct MICInfo {
     uint32 patchValueOffset;
 #endif
 
+    /* Used by CALL. */
+    uint32 argc;
+    uint32 frameDepth;
+    JSC::CodeLocationLabel knownObject;
+    JSC::CodeLocationLabel callEnd;
+    JSC::MacroAssembler::RegisterID dataReg;
+
     /* Used by TRACER. */
     JSC::CodeLocationJump traceHint;
     JSC::CodeLocationJump slowTraceHint;
 
     /* Used by all MICs. */
-    Kind kind : 3;
+    Kind kind : 4;
     union {
         /* Used by GET/SET. */
         struct {
@@ -100,6 +109,8 @@ struct MICInfo {
             bool typeConst : 1;
             bool dataConst : 1;
         } name;
+        /* Used by CALL. */
+        bool generated;
         /* Used by TRACER. */
         bool hasSlowTraceHint;
     } u;
@@ -108,87 +119,50 @@ struct MICInfo {
 void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);
 void JS_FASTCALL SetGlobalName(VMFrame &f, uint32 index);
 
-/* See MonoIC.cpp, CallCompiler for more information on call ICs. */
-struct CallICInfo {
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
+#ifdef JS_CPU_X86
 
-    enum PoolIndex {
-        Pool_ScriptStub,
-        Pool_ClosureStub,
-        Pool_NativeStub,
-        Total_Pools
+/* Compiler for generating fast paths for a MIC'ed native call. */
+class NativeCallCompiler
+{
+    typedef JSC::MacroAssembler::Jump Jump;
+
+    struct Patch {
+        Patch(Jump from, uint8 *to)
+          : from(from), to(to)
+        { }
+
+        Jump from;
+        uint8 *to;
     };
 
-    JSC::ExecutablePool *pools[Total_Pools];
+  public:
+    Assembler masm;
 
-    /* Used for rooting and reification. */
-    JSObject *fastGuardedObject;
-    JSObject *fastGuardedNative;
-    Value constantThis;
+  private:
+    /* :TODO: oom check */
+    Vector<Patch, 8, SystemAllocPolicy> jumps;
 
-    uint32 argc : 16;
-    uint32 frameDepth : 16;
+  public:
+    NativeCallCompiler();
 
-    /* Function object identity guard. */
-    JSC::CodeLocationDataLabelPtr funGuard;
+    size_t size() { return masm.size(); }
+    uint8 *buffer() { return masm.buffer(); }
 
-    /* Starting point for all slow call paths. */
-    JSC::CodeLocationLabel slowPathStart;
+    /* Exit from the call path to target. */
+    void addLink(Jump j, uint8 *target) { jumps.append(Patch(j, target)); }
 
-    /* Inline to OOL jump, redirected by stubs. */
-    JSC::CodeLocationJump funJump;
-
-    /* Offset to inline scripted call, from funGuard. */
-    uint32 hotCallOffset   : 8;
-    uint32 joinPointOffset : 8;
-
-    /* Out of line slow call. */
-    uint32 oolCallOffset   : 8;
-
-    /* Jump to patch for out-of-line scripted calls. */
-    uint32 oolJumpOffset   : 8;
-
-    /* Offset for deep-fun check to rejoin at. */
-    uint32 hotPathOffset   : 8;
-
-    /* Join point for all slow call paths. */
-    uint32 slowJoinOffset  : 9;
-
-    RegisterID funObjReg : 5;
-    RegisterID funPtrReg : 5;
-    bool isConstantThis : 1;
-    bool hit : 1;
-    bool hasJsFunCheck : 1;
-
-    inline void reset() {
-        fastGuardedObject = NULL;
-        fastGuardedNative = NULL;
-        hit = false;
-        hasJsFunCheck = false;
-        pools[0] = pools[1] = pools[2] = NULL;
-    }
-
-    inline void releasePools() {
-        releasePool(Pool_ScriptStub);
-        releasePool(Pool_ClosureStub);
-        releasePool(Pool_NativeStub);
-    }
-
-    inline void releasePool(PoolIndex index) {
-        if (pools[index]) {
-            pools[index]->release();
-            pools[index] = NULL;
-        }
-    }
+    /*
+     * Finish up this native, and add an incoming jump from start
+     * and an outgoing jump to fallthrough.
+     */
+    void finish(JSScript *script, uint8 *start, uint8 *fallthrough);
 };
 
-void * JS_FASTCALL New(VMFrame &f, uint32 index);
-void * JS_FASTCALL Call(VMFrame &f, uint32 index);
-void JS_FASTCALL NativeNew(VMFrame &f, uint32 index);
-void JS_FASTCALL NativeCall(VMFrame &f, uint32 index);
+void CallNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun, bool isNew);
+
+#endif /* JS_CPU_X86 */
 
 void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSContext *cx, JSScript *script);
 
 } /* namespace ic */
 } /* namespace mjit */

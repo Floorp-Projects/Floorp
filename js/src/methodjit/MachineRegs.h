@@ -66,13 +66,11 @@ struct Registers {
 # else
     static const RegisterID ArgReg0 = JSC::X86Registers::edi;
     static const RegisterID ArgReg1 = JSC::X86Registers::esi;
-    static const RegisterID ArgReg2 = JSC::X86Registers::edx;
 # endif
 #elif JS_CPU_ARM
     static const RegisterID ReturnReg = JSC::ARMRegisters::r0;
     static const RegisterID ArgReg0 = JSC::ARMRegisters::r0;
     static const RegisterID ArgReg1 = JSC::ARMRegisters::r1;
-    static const RegisterID ArgReg2 = JSC::ARMRegisters::r2;
 #endif
 
     static const RegisterID StackPointer = JSC::MacroAssembler::stackPointerRegister;

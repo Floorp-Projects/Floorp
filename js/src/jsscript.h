@@ -180,7 +180,6 @@ namespace ic {
 # endif
 # if defined JS_MONOIC
     struct MICInfo;
-    struct CallICInfo;
 # endif
 }
 struct CallSite;
@@ -264,7 +263,6 @@ struct JSScript {
 # endif
 # if defined JS_MONOIC
     js::mjit::ic::MICInfo *mics; /* MICs in this script. */
-    js::mjit::ic::CallICInfo *callICs; /* CallICs in this script. */
 # endif
 
     bool isValidJitCode(void *jcode);
