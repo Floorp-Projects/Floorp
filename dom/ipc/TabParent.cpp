@@ -815,12 +815,13 @@ TabParent::GetFrameLoader() const
 PExternalHelperAppParent*
 TabParent::AllocPExternalHelperApp(const IPC::URI& uri,
                                    const nsCString& aMimeContentType,
+                                   const nsCString& aContentDisposition,
                                    const bool& aForceSave,
                                    const PRInt64& aContentLength)
 {
   ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
   parent->AddRef();
-  parent->Init(this, aMimeContentType, aForceSave);
+  parent->Init(this, aMimeContentType, aContentDisposition, aForceSave);
   return parent;
 }
 
