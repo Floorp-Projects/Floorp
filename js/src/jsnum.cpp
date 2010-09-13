@@ -1039,7 +1039,7 @@ FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base = 
 {
 #ifdef DEBUG
     {
-        int32 _;
+        int32_t _;
         JS_ASSERT(!JSDOUBLE_IS_INT32(d, &_));
     }
 #endif
