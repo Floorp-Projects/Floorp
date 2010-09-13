@@ -11,17 +11,6 @@ Mochitest version of the WebGL Conformance Test Suite
 <script type="text/javascript" src="resources/webgl-test-harness.js"></script>
 <script>
 
-function occurencesCount(array, obj) {
-  var i = array.length;
-  var result = 0;
-  while (i--) {
-    if (array[i] === obj) {
-      ++result;
-    }
-  }
-  return result;
-}
-
 /**
  * This is copied from webgl-test-harness.js where it is defined as a private function, not accessible to us (argh!)
  *
@@ -50,59 +39,77 @@ var loadTextFileSynchronous = function(url) {
 
 function start() {
 
-  function webglBranch() {
-    return Components.classes["@mozilla.org/preferences-service;1"]
-                     .getService(Components.interfaces.nsIPrefService)
-                     .getBranch("webgl.");
+  function prefSvc() {
+    var svc = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService).getBranch("");
+    return svc;
   }
 
   function setEnabledForAllSites(value) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    webglBranch().setBoolPref("enabled_for_all_sites", value);
+    prefSvc().setBoolPref("webgl.enabled_for_all_sites", value);
   }
 
   function getEnabledForAllSites() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return webglBranch().getBoolPref("enabled_for_all_sites");
+    return prefSvc().getBoolPref("webgl.enabled_for_all_sites");
   }
 
-  function setForceOSMesa(value) {
+  function setAnglePath(path) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    webglBranch().setBoolPref("force_osmesa", value);
+    if (path == null) {
+      try {
+        prefSvc().clearUserPref("gfx.angle.egl.path");
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
+    try {
+      var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+      f.initWithPath(path);
+      prefSvc().setComplexValue("gfx.angle.egl.path", Components.interfaces.nsILocalFile, f);
+    } catch (e) {
+      // ignore -- the path is likely not valid, e.g. trying to use a path of "C:\libs" on non-windows boxes.
+    }
   }
 
-  function getForceOSMesa() {
+  function getAnglePath() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return webglBranch().getBoolPref("force_osmesa");
+    if (prefSvc().getPrefType("gfx.angle.egl.path") == Components.interfaces.nsIPrefBranch.PREF_INVALID)
+      return null;
+    return prefSvc().getComplexValue("gfx.angle.egl.path", Components.interfaces.nsILocalFile);
   }
 
-  function getMochitestNativeGL() {
+  function getPreferEgl() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return webglBranch().getBoolPref("mochitest_native_gl");
+    if (prefSvc().getPrefType("webgl.prefer_egl") == Components.interfaces.nsIPrefBranch.PREF_INVALID)
+      return null;
+    return prefSvc().getBoolPref("webgl.prefer_egl");
   }
 
-  function setOSMesaLib(value) {
+  function setPreferEgl(val) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    webglBranch().setCharPref("osmesalib", value);
-  }
-
-  function getOSMesaLib() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return webglBranch().getCharPref("osmesalib");
+    if (val == null) {
+      prefSvc().clearUserPref("webgl.prefer_egl");
+      return;
+    }
+    prefSvc().setBoolPref("webgl.prefer_egl", val);
   }
 
   function restoreOldPrefs() {
     setEnabledForAllSites(saved_enabled_for_all_sites);
-    setForceOSMesa(saved_force_osmesa);
-    setOSMesaLib(saved_osmesalib);
+    setAnglePath(saved_angle_path);
+    setPreferEgl(saved_prefer_egl);
   }
 
-  function forceOSMesaInThisTestRun() {
-    return timesTestSuiteAlreadyRun == 1 ? true : false;
-  }
-
-  function GLImplementationName() {
-    return forceOSMesaInThisTestRun() ? 'OSMesa' : 'default GL';
+  function getEnv(env) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var envsvc = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
+    var val = envsvc.get(env);
+    if (val == "")
+      return null;
+    return val;
   }
 
   var reportType = WebGLTestHarnessModule.TestHarness.reportType;
@@ -133,11 +140,11 @@ function start() {
   };
 
   Page.prototype.isExpectedToFullyPass = function() {
-    return occurencesCount(testsExpectedToFail, this.url) == 0;
+    return testsExpectedToFail.indexOf(this.url) == -1;
   }
 
   Page.prototype.errormsg = function(msg) {
-    return msg + ' (URL: ' + this.url + ', using ' + GLImplementationName() + ')';
+    return msg + ' (URL: ' + this.url + ')';
   }
 
   Page.prototype.addResult = function(msg, success) {
@@ -193,26 +200,21 @@ function start() {
       ++this.totalTimeouts;
       if (this.isExpectedToFullyPass()) {
         ok(false, this.errormsg('Unexpected timeout in this test page'));
-        window.dump('WebGL test error: test page timeout: ' + this.url +
-                    ' (using ' + GLImplementationName() + ')\n');
+        window.dump('WebGL test error: test page timeout: ' + this.url + '\n');
       }
     } else if (this.totalSuccessful != this.totalTests) {
       var css = 'testpagefail';
       if (this.isExpectedToFullyPass()) {
-        window.dump('WebGL test error: test page failure: ' + this.url +
-                    ' (using ' + GLImplementationName() + ')\n');
+        window.dump('WebGL test error: test page failure: ' + this.url + '\n');
       }
       // failures have already been reported for the sub-tests
     } else {
       var css = 'testpagesuccess';
-      if (forceOSMesaInThisTestRun()) {
-        testsSuccessesWithOSMesa.push(this.url);
-      }
       if (this.isExpectedToFullyPass()) {
         ok(true, this.errormsg('Successful test page'));
       }
-      window.dump('WebGL test page successful: ' + this.url +
-                    ' (using ' + GLImplementationName() + ')\n');
+      window.dump('WebGL test page successful: ' + this.url + '\n');
+      testsSuccessful.push(this.url);
     }
     this.elem.setAttribute('class', css);
     this.totalsElem.textContent = msg;
@@ -221,8 +223,7 @@ function start() {
   var Reporter = function() {
     this.localDoc = document;
 
-    this.fullResultsElem
-      = document.getElementById(forceOSMesaInThisTestRun() ? "results-osmesa" : "results-default");
+    this.fullResultsElem = document.getElementById("results-default");
 
     this.resultElem = document.getElementById("results");
     var node = this.localDoc.createTextNode('');
@@ -256,7 +257,7 @@ function start() {
   Reporter.prototype.startPage = function(url) {
     var page = this.pagesByURL[url];
     this.currentPage = page;
-    statusTextNode.textContent = 'Running (' + GLImplementationName() + '), URL: ' + url;
+    statusTextNode.textContent = 'Running URL: ' + url;
     expectedtofailTextNode.textContent = testsExpectedToFail.length +
                                          ' test pages are expected to fail out of ' +
                                          this.totalPages;
@@ -318,21 +319,21 @@ function start() {
   function doRunTests() {
     var reporter = new Reporter();
 
-    if (!mochitestNativeGL && !forceOSMesaInThisTestRun()) {
-        var errmsg = "Disabled. By default, we don't run tests on native OpenGL as it can give inconsistent results. " +
-                  "If you want to run tests on native OpenGL, set the preference webgl.mochitest_native_gl to true.";
-        reporter.fullResultsNode.textContent = errmsg;
-        reporter.completedCurrentTestSuiteRun();
-        return;
-    }
-
     // set WebGL-related preferences needed to run WebGL tests
     setEnabledForAllSites(true);
-    setForceOSMesa(forceOSMesaInThisTestRun());
+
+    // if this wasn't specified, then set it to our expected dir for the build
+    // machines
+    if (!saved_angle_path) {
+      // For windows test runners.  For everyone else, it doesn't matter,
+      // we'll use ANGLE if it's installed according to the prefs.
+      setAnglePath("C:\\libs");
+      setPreferEgl(true);
+    }
 
     // try to create a dummy WebGL context, just to catch context creation failures once here,
     // rather than having them result in 100's of failures (one in each test page)
-    var canvas = document.getElementById(forceOSMesaInThisTestRun() ? "webglcheck-osmesa" : "webglcheck-default");
+    var canvas = document.getElementById("webglcheck-default");
     var ctx = null;
     try {
         ctx = canvas.getContext("experimental-webgl");
@@ -354,16 +355,7 @@ function start() {
         // that the GL setup needs to be fixed in order for these tests to be actually run. The reason why we don't
         // currently want to fail the test is that we want to be able to land this mochitest as soon as possible and
         // just take care of the GL setups on the test machines afterwards.
-        var errmsg = "";
-        if (forceOSMesaInThisTestRun()) {
-            errmsg
-                = "Disabled, because a usable OSMesa was not found. " +
-                  "Install the OSMesa library and let webgl.osmesalib point to it. " +
-                  "This makes the WebGL tests run in a setup that is completely independent from your graphics hardware.";
-        } else {
-            errmsg
-                = "Disabled, because we were unable to create a WebGL context anyhow.";
-        }
+        var errmsg = "Disabled, because we were unable to create a WebGL context anyhow.";
         reporter.fullResultsNode.textContent = errmsg;
         todo(false, errmsg);
         reporter.completedCurrentTestSuiteRun();
@@ -371,33 +363,38 @@ function start() {
   };
 
   function runTestSuite() {
-    if (timesTestSuiteAlreadyRun == 2) {
-      for(var i = 0; i < testsExpectedToFail.length; ++i) {
-        if(occurencesCount(testsSuccessesWithOSMesa, testsExpectedToFail[i]) == 1) {
-          ok(false, 'The following test page is successful with OSMesa, ' +
-                    'remove it from the list of failing pages: ' +
-                    testsExpectedToFail[i]);
-          window.dump('WebGL test error: page must be removed from failing_tests.txt: ' +
-                      testsExpectedToFail[i] + '\n');
+    if (timesTestSuiteAlreadyRun == 1) {
+      for (var i = 0; i < testsExpectedToFail.length; ++i) {
+        if (testsSuccessful.indexOf(testsExpectedToFail[i]) != -1) {
+          todo(false, 'Test expected to fail, but passed: ' + testsExpectedToFail[i]);
+          dump('Test expected to fail, but passed: ' + testsExpectedToFail[i] + '\n');
         }
       }
+
       restoreOldPrefs();
       statusTextNode.textContent = 'Finished';
       SimpleTest.finish();
-    } else {
-      doRunTests();
+      return;
     }
+
+    doRunTests();
   };
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestLongerTimeout(2);
+
+  if (getEnv("MOZ_WEBGL_TEST_SUITE") == null) {
+    // webgl test suite is disabled unless the env var is set
+    todo(false, 'WebGL test suite is disabled!');
+    SimpleTest.finish();
+    return;
+  }
 
   var timesTestSuiteAlreadyRun = 0;
 
   var saved_enabled_for_all_sites = getEnabledForAllSites();
-  var saved_force_osmesa = getForceOSMesa();
-  var saved_osmesalib = getOSMesaLib();
-  var mochitestNativeGL = getMochitestNativeGL();
-
-  SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestLongerTimeout(2);
+  var saved_angle_path = getAnglePath();
+  var saved_prefer_egl = getPreferEgl();
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
@@ -408,7 +405,7 @@ function start() {
   expectedtofailElem.appendChild(expectedtofailTextNode);
 
   var testsExpectedToFail = loadTextFileSynchronous('failing_tests.txt').split('\n');
-  var testsSuccessesWithOSMesa = [];
+  var testsSuccessful = [];
 
   runTestSuite();
 }
@@ -429,16 +426,7 @@ function start() {
   <div style="border: 1px">
     <b>Status:</b> <div><span id="status"></span></div><br />
     <b>Results:</b>
-    <table>
-    <tr>
-        <td>With default GL:</td>
-        <td><div><span id="results-default"></span></div></td>
-    </tr>
-    <tr>
-        <td>With OSMesa:</td>
-        <td><div><span id="results-osmesa"></span></div></td>
-    </tr>
-    </table>
+    <div><span id="results-default"></span></div>
     <br />
     <div><span id="expectedtofail"></span></div>
   </div>
@@ -458,6 +446,5 @@ function start() {
 </tr>
 </table>
 <canvas id="webglcheck-default" style="display: none;"></canvas>
-<canvas id="webglcheck-osmesa" style="display: none;"></canvas>
 </body>
 </html>
