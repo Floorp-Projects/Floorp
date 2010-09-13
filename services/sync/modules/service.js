@@ -1427,8 +1427,11 @@ WeaveSvc.prototype = {
 
       // Upload meta/global if any engines changed anything
       let meta = Records.get(this.metaURL);
-      if (meta.changed)
+      if (meta.isNew || meta.changed) {
         new Resource(meta.uri).put(meta);
+        delete meta.isNew;
+        delete meta.changed;
+      }
 
       if (this._syncError)
         throw "Some engines did not sync correctly";
@@ -1468,7 +1471,7 @@ WeaveSvc.prototype = {
 
   _updateEnabledEngines: function _updateEnabledEngines() {
     let meta = Records.get(this.metaURL);
-    if (!meta.payload.engines)
+    if (meta.isNew || !meta.payload.engines)
       return;
 
     this._ignorePrefObserver = true;
@@ -1549,6 +1552,7 @@ WeaveSvc.prototype = {
     let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = this.syncID;
     meta.payload.storageVersion = STORAGE_VERSION;
+    meta.isNew = true;
 
     this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
     let resp = new Resource(meta.uri).put(meta);
