@@ -844,8 +844,8 @@ var Browser = {
     let scrollX = {}, scrollY = {};
     tab.browser.getPosition(scrollX, scrollY);
 
-    let centerX = (scrollX.value + window.innerWidth / 2) / oldZoomLevel;
-    let centerY = (scrollY.value + window.innerHeight / 2) / oldZoomLevel;
+    let [centerX, centerY] = this.transformClientToBrowser(window.innerWidth / 2,
+                                                           window.innerHeight / 2);
 
     let rect = this._getZoomRectForPoint(centerX, centerY, zoomLevel);
     this.animatedZoomTo(rect);

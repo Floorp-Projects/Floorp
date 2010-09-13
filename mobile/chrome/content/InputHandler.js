@@ -1324,6 +1324,11 @@ GestureModule.prototype = {
     getBrowser().getPosition(scrollX, scrollY);
     this._pinchScrollX = scrollX.value;
     this._pinchScrollY = scrollY.value;
+
+    let [centerX, centerY] = Browser.transformClientToBrowser(window.innerWidth / 2,
+                                                              window.innerHeight / 2);
+    this._centerX = centerX;
+    this._centerY = centerY;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
@@ -1346,8 +1351,8 @@ GestureModule.prototype = {
     pY += (this._pinchScrollY - scrollY.value) / scale;
 
     // redraw zoom canvas according to new zoom rect
-    let rect = Browser._getZoomRectForPoint(2 * this._pinchStartX - pX,
-                                            2 * this._pinchStartY - pY,
+    let rect = Browser._getZoomRectForPoint(this._centerX + this._pinchStartX - pX,
+                                            this._centerY + this._pinchStartY - pY,
                                             this._pinchZoomLevel);
     this._pinchZoom.updateTo(rect);
   },
