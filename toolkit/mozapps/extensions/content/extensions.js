@@ -501,7 +501,16 @@ var gViewController = {
     cmd_restartApp: {
       isEnabled: function() true,
       doCommand: function() {
-        Application.restart();
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
+                         createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
+                                     "restart");
+        if (cancelQuit.data)
+          return; // somebody canceled our quit request
+
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                         getService(Ci.nsIAppStartup);
+        appStartup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
       }
     },
 
