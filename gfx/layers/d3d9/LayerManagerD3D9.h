@@ -51,8 +51,28 @@
 namespace mozilla {
 namespace layers {
 
+extern cairo_user_data_key_t gKeyD3D9Texture;
+
 class LayerD3D9;
 class ThebesLayerD3D9;
+
+/**
+ * This structure is used to pass rectangles to our shader constant. We can use
+ * this for passing rectangular areas to SetVertexShaderConstant. In the format
+ * of a 4 component float(x,y,width,height). Our vertex shader can then use
+ * this to construct rectangular positions from the 0,0-1,1 quad that we source
+ * it with.
+ */
+struct ShaderConstantRect
+{
+  float mX, mY, mWidth, mHeight;
+  ShaderConstantRect(float aX, float aY, float aWidth, float aHeight)
+    : mX(aX), mY(aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  // For easy passing to SetVertexShaderConstantF.
+  operator float* () { return &mX; }
+};
 
 /*
  * This is the LayerManager used for Direct3D 9. For now this will render on
@@ -117,7 +137,12 @@ public:
 
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
+  virtual already_AddRefed<gfxASurface>
+    CreateOptimalSurface(const gfxIntSize &aSize,
+                         gfxASurface::gfxImageFormat imageFormat);
+
   virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 9"); }
 
   /*
    * Helper methods.
@@ -145,6 +170,10 @@ public:
       mDeviceManager = nsnull;
   }
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const { return "D3D9"; }
+#endif // MOZ_LAYERS_HAVE_LOG
+
 private:
   /* Device manager instance */
   static DeviceManagerD3D9 *mDeviceManager;
@@ -159,9 +188,6 @@ private:
    * Context target, NULL when drawing directly to our swap chain.
    */
   nsRefPtr<gfxContext> mTarget;
-
-  /* Current root layer. */
-  LayerD3D9 *mRootLayer;
 
   /* Callback info for current transaction */
   CallbackInfo mCurrentCallbackInfo;

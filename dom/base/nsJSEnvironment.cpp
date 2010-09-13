@@ -311,51 +311,6 @@ nsCCMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-class nsJSVersionSetter {
-public:
-  nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion);
-  ~nsJSVersionSetter();
-
-private:
-  JSContext* mContext;
-  uint32 mOldOptions;
-  JSVersion mOldVersion;
-  JSBool mOptionsChanged;
-};
-
-nsJSVersionSetter::nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion)
-  : mContext(aContext)
-{
-  // JSVERSION_HAS_XML may be set in our version mask - however, we can't
-  // simply pass this directly to JS_SetOptions as it masks out that bit -
-  // the only way to make this happen is via JS_SetOptions.
-  JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
-  mOldOptions = ::JS_GetOptions(mContext);
-  mOptionsChanged = ((hasxml) ^ !!(mOldOptions & JSOPTION_XML));
-
-  if (mOptionsChanged) {
-    ::JS_SetOptions(mContext,
-                    hasxml
-                    ? mOldOptions | JSOPTION_XML
-                    : mOldOptions & ~JSOPTION_XML);
-  }
-
-  // Change the version - this is cheap when the versions match, so no need
-  // to optimize here...
-  JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
-  mOldVersion = ::JS_SetVersion(mContext, newVer);
-}
-
-nsJSVersionSetter::~nsJSVersionSetter()
-{
-  ::JS_SetVersion(mContext, mOldVersion);
-
-  if (mOptionsChanged) {
-      ::JS_SetOptions(mContext, mOldOptions);
-  }
-}
-
-
 /****************************************************************
  ************************** AutoFree ****************************
  ****************************************************************/
@@ -961,79 +916,6 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   ctx->mOperationCallbackTime = callbackTime;
   ctx->mModalStateTime = modalStateTime;
 
-  // Check to see if we are running OOM
-  nsCOMPtr<nsIMemory> mem;
-  NS_GetMemoryManager(getter_AddRefs(mem));
-  if (!mem) {
-    JS_ClearPendingException(cx);
-    return JS_FALSE;
-  }
-
-  PRBool lowMemory;
-  mem->IsLowMemory(&lowMemory);
-  if (lowMemory) {
-    // try to clean up:
-    nsJSContext::CC();
-
-    // never prevent system scripts from running
-    if (!::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx))) {
-
-      // lets see if CC() did anything, if not, cancel the script.
-      mem->IsLowMemory(&lowMemory);
-      if (lowMemory) {
-
-        if (nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE)) {
-          JS_ClearPendingException(cx);
-          return JS_FALSE;
-        }
-
-        nsCOMPtr<nsIScriptError> errorObject =
-          do_CreateInstance("@mozilla.org/scripterror;1");
-
-        if (errorObject) {
-          nsXPIDLString msg;
-          nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                             "LowMemoryMessage",
-                                             msg);
-
-          JSStackFrame *fp, *iterator = nsnull;
-          fp = ::JS_FrameIterator(cx, &iterator);
-          PRUint32 lineno = 0;
-          nsAutoString sourcefile;
-          if (fp) {
-            JSScript* script = ::JS_GetFrameScript(cx, fp);
-            if (script) {
-              const char* filename = ::JS_GetScriptFilename(cx, script);
-              if (filename) {
-                CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
-              }
-              jsbytecode* pc = ::JS_GetFramePC(cx, fp);
-              if (pc) {
-                lineno = ::JS_PCToLineNumber(cx, script, pc);
-              }
-            }
-          }
-
-          rv = errorObject->Init(msg.get(),
-                                 sourcefile.get(),
-                                 EmptyString().get(),
-                                 lineno, 0, nsIScriptError::errorFlag,
-                                 "content javascript");
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIConsoleService> consoleService =
-              do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-              consoleService->LogMessage(errorObject);
-            }
-          }
-        }
-
-        JS_ClearPendingException(cx);
-        return JS_FALSE;
-      }
-    }
-  }
-
   PRTime now = PR_Now();
 
   if (callbackTime == 0) {
@@ -1045,7 +927,6 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   if (ctx->mModalStateDepth) {
     // We're waiting on a modal dialog, nothing more to do here.
-
     return JS_TRUE;
   }
 
@@ -1603,7 +1484,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
 
     JSAutoRequest ar(mContext);
-    nsJSVersionSetter setVersion(mContext, aVersion);
 
     JSAutoCrossCompartmentCall accc;
     if (!accc.enter(mContext, (JSObject *)aScopeObject)) {
@@ -1614,14 +1494,15 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
     ++mExecuteDepth;
 
-    ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
-                                            (JSObject *)aScopeObject,
-                                            jsprin,
-                                            (jschar*)PromiseFlatString(aScript).get(),
-                                            aScript.Length(),
-                                            aURL,
-                                            aLineNo,
-                                            &val);
+    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
+                                                   (JSObject *)aScopeObject,
+                                                   jsprin,
+                                                   (jschar*)PromiseFlatString(aScript).get(),
+                                                   aScript.Length(),
+                                                   aURL,
+                                                   aLineNo,
+                                                   &val,
+                                                   JSVersion(aVersion));
 
     --mExecuteDepth;
 
@@ -1811,16 +1692,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       return NS_ERROR_FAILURE;
     }
 
-    nsJSVersionSetter setVersion(mContext, aVersion);
-
-    ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
-                                            (JSObject *)aScopeObject,
-                                            jsprin,
-                                            (jschar*)PromiseFlatString(aScript).get(),
-                                            aScript.Length(),
-                                            aURL,
-                                            aLineNo,
-                                            vp);
+    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
+                                                   (JSObject *)aScopeObject,
+                                                   jsprin,
+                                                   (jschar*)PromiseFlatString(aScript).get(),
+                                                   aScript.Length(),
+                                                   aURL,
+                                                   aLineNo,
+                                                   vp,
+                                                   JSVersion(aVersion));
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1900,16 +1780,16 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
-    nsJSVersionSetter setVersion(mContext, aVersion);
 
     JSScript* script =
-        ::JS_CompileUCScriptForPrincipals(mContext,
-                                          (JSObject *)aScopeObject,
-                                          jsprin,
-                                          (jschar*) aText,
-                                          aTextLength,
-                                          aURL,
-                                          aLineNo);
+        ::JS_CompileUCScriptForPrincipalsVersion(mContext,
+                                                 (JSObject *)aScopeObject,
+                                                 jsprin,
+                                                 (jschar*) aText,
+                                                 aTextLength,
+                                                 aURL,
+                                                 aLineNo,
+                                                 JSVersion(aVersion));
     if (script) {
       JSObject *scriptObject = ::JS_NewScriptObject(mContext, script);
       if (scriptObject) {
@@ -2106,15 +1986,14 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   // Therefore we never bother compiling with principals.
   // (that probably means we should avoid JS_CompileUCFunctionForPrincipals!)
   JSAutoRequest ar(mContext);
-  nsJSVersionSetter setVersion(mContext, aVersion);
 
   JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipals(mContext,
-                                          nsnull, nsnull,
-                                          nsAtomCString(aName).get(), aArgCount, aArgNames,
-                                          (jschar*)PromiseFlatString(aBody).get(),
-                                          aBody.Length(),
-                                          aURL, aLineNo);
+      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
+                                                 nsnull, nsnull,
+                                                 nsAtomCString(aName).get(), aArgCount, aArgNames,
+                                                 (jschar*)PromiseFlatString(aBody).get(),
+                                                 aBody.Length(),
+                                                 aURL, aLineNo, JSVersion(aVersion));
 
   if (!fun) {
     ReportPendingException();
@@ -2169,16 +2048,16 @@ nsJSContext::CompileFunction(void* aTarget,
   JSObject *target = (JSObject*)aTarget;
 
   JSAutoRequest ar(mContext);
-  nsJSVersionSetter setVersion(mContext, aVersion);
 
   JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipals(mContext,
-                                          aShared ? nsnull : target, jsprin,
-                                          PromiseFlatCString(aName).get(),
-                                          aArgCount, aArgArray,
-                                          (jschar*)PromiseFlatString(aBody).get(),
-                                          aBody.Length(),
-                                          aURL, aLineNo);
+      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
+                                                 aShared ? nsnull : target, jsprin,
+                                                 PromiseFlatCString(aName).get(),
+                                                 aArgCount, aArgArray,
+                                                 (jschar*)PromiseFlatString(aBody).get(),
+                                                 aBody.Length(),
+                                                 aURL, aLineNo,
+                                                 JSVersion(aVersion));
 
   if (jsprin)
     JSPRINCIPALS_DROP(mContext, jsprin);
@@ -3295,8 +3174,7 @@ void NS_JProfStartProfiling();
 void NS_JProfStopProfiling();
 
 static JSBool
-JProfStartProfilingJS(JSContext *cx, JSObject *obj,
-                      uintN argc, jsval *argv, jsval *rval)
+JProfStartProfilingJS(JSContext *cx, uintN argc, jsval *vp)
 {
   NS_JProfStartProfiling();
   return JS_TRUE;
@@ -3334,8 +3212,7 @@ void NS_JProfStartProfiling()
 }
 
 static JSBool
-JProfStopProfilingJS(JSContext *cx, JSObject *obj,
-                     uintN argc, jsval *argv, jsval *rval)
+JProfStopProfilingJS(JSContext *cx, uintN argc, jsval *vp)
 {
   NS_JProfStopProfiling();
   return JS_TRUE;
@@ -3349,9 +3226,9 @@ NS_JProfStopProfiling()
 }
 
 static JSFunctionSpec JProfFunctions[] = {
-    {"JProfStartProfiling",        JProfStartProfilingJS,      0, 0, 0},
-    {"JProfStopProfiling",         JProfStopProfilingJS,       0, 0, 0},
-    {nsnull,                       nsnull,                     0, 0, 0}
+    {"JProfStartProfiling",        JProfStartProfilingJS,      0, 0},
+    {"JProfStopProfiling",         JProfStopProfilingJS,       0, 0},
+    {nsnull,                       nsnull,                     0, 0}
 };
 
 #endif /* defined(MOZ_JPROF) */
@@ -3368,28 +3245,28 @@ static JSFunctionSpec SharkFunctions[] = {
 
 #ifdef MOZ_CALLGRIND
 static JSFunctionSpec CallgrindFunctions[] = {
-    {"startCallgrind",             js_StartCallgrind,          0, 0, 0},
-    {"stopCallgrind",              js_StopCallgrind,           0, 0, 0},
-    {"dumpCallgrind",              js_DumpCallgrind,           1, 0, 0},
-    {nsnull,                       nsnull,                     0, 0, 0}
+    {"startCallgrind",             js_StartCallgrind,          0, 0},
+    {"stopCallgrind",              js_StopCallgrind,           0, 0},
+    {"dumpCallgrind",              js_DumpCallgrind,           1, 0},
+    {nsnull,                       nsnull,                     0, 0}
 };
 #endif
 
 #ifdef MOZ_VTUNE
 static JSFunctionSpec VtuneFunctions[] = {
-    {"startVtune",                 js_StartVtune,              1, 0, 0},
-    {"stopVtune",                  js_StopVtune,               0, 0, 0},
-    {"pauseVtune",                 js_PauseVtune,              0, 0, 0},
-    {"resumeVtune",                js_ResumeVtune,             0, 0, 0},
-    {nsnull,                       nsnull,                     0, 0, 0}
+    {"startVtune",                 js_StartVtune,              1, 0},
+    {"stopVtune",                  js_StopVtune,               0, 0},
+    {"pauseVtune",                 js_PauseVtune,              0, 0},
+    {"resumeVtune",                js_ResumeVtune,             0, 0},
+    {nsnull,                       nsnull,                     0, 0}
 };
 #endif
 
 #ifdef MOZ_TRACEVIS
 static JSFunctionSpec EthogramFunctions[] = {
-    {"initEthogram",               js_InitEthogram,            0, 0, 0},
-    {"shutdownEthogram",           js_ShutdownEthogram,        0, 0, 0},
-    {nsnull,                       nsnull,                     0, 0, 0}
+    {"initEthogram",               js_InitEthogram,            0, 0},
+    {"shutdownEthogram",           js_ShutdownEthogram,        0, 0},
+    {nsnull,                       nsnull,                     0, 0}
 };
 #endif
 

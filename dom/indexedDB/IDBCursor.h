@@ -40,8 +40,12 @@
 #ifndef mozilla_dom_indexeddb_idbcursor_h__
 #define mozilla_dom_indexeddb_idbcursor_h__
 
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
+
 #include "nsIIDBCursor.h"
+
+#include "nsDOMEventTargetHelper.h"
 
 class nsIRunnable;
 
@@ -49,7 +53,6 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBIndex;
 class IDBRequest;
-class IDBObjectStore;
 class IDBTransaction;
 
 struct KeyValuePair
@@ -66,14 +69,17 @@ struct KeyKeyPair
 
 class ContinueRunnable;
 
-class IDBCursor : public IDBRequest::Generator,
+class IDBCursor : public nsDOMEventTargetHelper,
                   public nsIIDBCursor
 {
   friend class ContinueRunnable;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBCURSOR
+
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBCursor,
+                                                         nsDOMEventTargetHelper)
 
   static
   already_AddRefed<IDBCursor>
@@ -106,6 +112,11 @@ public:
     INDEXOBJECT
   };
 
+  IDBTransaction* Transaction()
+  {
+    return mTransaction;
+  }
+
 protected:
   IDBCursor();
   ~IDBCursor();
@@ -126,7 +137,7 @@ protected:
   nsCOMPtr<nsIVariant> mCachedKey;
   jsval mCachedValue;
   bool mHaveCachedValue;
-  JSRuntime* mJSRuntime;
+  bool mValueRooted;
 
   bool mContinueCalled;
   PRUint32 mDataIndex;
@@ -134,6 +145,9 @@ protected:
   Type mType;
   nsTArray<KeyValuePair> mData;
   nsTArray<KeyKeyPair> mKeyData;
+
+  // Only touched on the main thread.
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -725,6 +725,8 @@ random == 387876-2.html 387876-2-ref.html # bug 471630
 == 388367-1.html about:blank
 == 388980-1.html 388980-1-ref.html
 == 389074-1.html 389074-1-ref.html
+== 389224-1.html 389224-1-ref.html
+== 389224-2.html about:blank
 == 389468-1.html 389468-1-ref.html
 == 389623-1.html 389623-1-ref.html
 == 389636-1.html about:blank  # assertion test
@@ -1465,7 +1467,7 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 563584-10b.html 563584-10-ref.html
 == 563584-11.html 563584-11-ref.html
 == 564054-1.html 564054-1-ref.html
-== 564991-1.html 564991-1-ref.html
+random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
 == 568441.html 568441-ref.html
@@ -1484,16 +1486,18 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 574898-1.html 574898-ref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-== 579323-1.html 579323-1-ref.html
+random-if(layersGPUAccelerated) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 580160-1.html 580160-1-ref.html
-== 581317-1.html 581317-1-ref.html
+random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
 == 582037-1b.html 582037-1-ref.html
 == 582037-2a.html 582037-2-ref.html
 == 582037-2b.html 582037-2-ref.html
 == 584400-dash-length.svg 584400-dash-length-ref.svg
+== 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 589672-1.html 589672-1-ref.html
 == 586400-1.html 586400-1-ref.html
+== 593544-1.html 593544-1-ref.html

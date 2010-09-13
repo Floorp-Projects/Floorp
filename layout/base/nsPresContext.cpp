@@ -898,18 +898,27 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mRefreshDriver = mDocument->GetDisplayDocument()->GetShell()->
       GetPresContext()->RefreshDriver();
   } else {
-    // We don't have our container set yet at this point
-    nsCOMPtr<nsISupports> ourContainer = mDocument->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> ourItem = do_QueryInterface(ourContainer);
-    if (ourItem) {
-      nsCOMPtr<nsIDocShellTreeItem> parentItem;
-      ourItem->GetSameTypeParent(getter_AddRefs(parentItem));
-      nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentItem);
-      if (parentDocShell) {
-        nsCOMPtr<nsIPresShell> parentPresShell;
-        parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
-        if (parentPresShell) {
-          mRefreshDriver = parentPresShell->GetPresContext()->RefreshDriver();
+    nsIDocument* parent = mDocument->GetParentDocument();
+    // Unfortunately, sometimes |parent| here has no presshell because
+    // printing screws up things.  Assert that in other cases it does,
+    // but whenever the shell is null just fall back on using our own
+    // refresh driver.
+    NS_ASSERTION(!parent || mDocument->IsStaticDocument() || parent->GetShell(),
+                 "How did we end up with a presshell if our parent doesn't "
+                 "have one?");
+    if (parent && parent->GetShell()) {
+      NS_ASSERTION(parent->GetShell()->GetPresContext(),
+                   "How did we get a presshell?");
+
+      // We don't have our container set yet at this point
+      nsCOMPtr<nsISupports> ourContainer = mDocument->GetContainer();
+
+      nsCOMPtr<nsIDocShellTreeItem> ourItem = do_QueryInterface(ourContainer);
+      if (ourItem) {
+        nsCOMPtr<nsIDocShellTreeItem> parentItem;
+        ourItem->GetSameTypeParent(getter_AddRefs(parentItem));
+        if (parentItem) {
+          mRefreshDriver = parent->GetShell()->GetPresContext()->RefreshDriver();
         }
       }
     }
@@ -2381,6 +2390,33 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
     mShell->FrameNeedsToContinueReflow(aFrame);
   }
   return mHasPendingInterrupt;
+}
+
+PRBool
+nsPresContext::IsRootContentDocument()
+{
+  // We are a root content document if: we are not chrome, we are a
+  // subdocument, and our parent is chrome.
+  if (IsChrome()) {
+    return PR_FALSE;
+  }
+  // We may not have a root frame, so use views.
+  nsIViewManager* vm = PresShell()->GetViewManager();
+  nsIView* view = nsnull;
+  if (NS_FAILED(vm->GetRootView(view)) || !view) {
+    return PR_FALSE;
+  }
+  view = view->GetParent(); // anonymous inner view
+  if (!view) {
+    return PR_FALSE;
+  }
+  view = view->GetParent(); // subdocumentframe's view
+  if (!view) {
+    return PR_FALSE;
+  }
+
+  nsIFrame* f = static_cast<nsIFrame*>(view->GetClientData());
+  return (f && f->PresContext()->IsChrome());
 }
 
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,

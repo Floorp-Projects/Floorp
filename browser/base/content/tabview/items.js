@@ -57,7 +57,7 @@
 //   locked - an object (see below)
 //
 // Make sure to call _init() from your subclass's constructor.
-window.Item = function() {
+function Item() {
   // Variable: isAnItem
   // Always true for Items
   this.isAnItem = true;
@@ -138,14 +138,14 @@ window.Item = function() {
   this.isDragging = false;
 };
 
-window.Item.prototype = {
+Item.prototype = {
   // ----------
   // Function: _init
   // Initializes the object. To be called from the subclass's intialization function.
   //
   // Parameters:
   //   container - the outermost DOM element that describes this item onscreen.
-  _init: function(container) {
+  _init: function Item__init(container) {
     Utils.assert(typeof this.addSubscriber == 'function' && 
         typeof this.removeSubscriber == 'function' && 
         typeof this._sendToSubscribers == 'function',
@@ -239,7 +239,7 @@ window.Item.prototype = {
   // ----------
   // Function: getBounds
   // Returns a copy of the Item's bounds as a <Rect>.
-  getBounds: function() {
+  getBounds: function Item_getBounds() {
     Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     return new Rect(this.bounds);
   },
@@ -247,7 +247,7 @@ window.Item.prototype = {
   // ----------
   // Function: overlapsWithOtherItems
   // Returns true if this Item overlaps with any other Item on the screen.
-  overlapsWithOtherItems: function() {
+  overlapsWithOtherItems: function Item_overlapsWithOtherItems() {
     var self = this;
     var items = Items.getTopLevelItems();
     var bounds = this.getBounds();
@@ -268,7 +268,7 @@ window.Item.prototype = {
   //   top - the new top coordinate relative to the window
   //   immediately - if false or omitted, animates to the new position;
   //   otherwise goes there immediately
-  setPosition: function(left, top, immediately) {
+  setPosition: function Item_setPosition(left, top, immediately) {
     Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     this.setBounds(new Rect(left, top, this.bounds.width, this.bounds.height), immediately);
   },
@@ -282,7 +282,7 @@ window.Item.prototype = {
   //   height - the new height in pixels
   //   immediately - if false or omitted, animates to the new size;
   //   otherwise resizes immediately
-  setSize: function(width, height, immediately) {
+  setSize: function Item_setSize(width, height, immediately) {
     Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
@@ -290,7 +290,7 @@ window.Item.prototype = {
   // ----------
   // Function: setUserSize
   // Remembers the current size as one the user has chosen.
-  setUserSize: function() {
+  setUserSize: function Item_setUserSize() {
     Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     this.userSize = new Point(this.bounds.width, this.bounds.height);
     this.save();
@@ -299,14 +299,14 @@ window.Item.prototype = {
   // ----------
   // Function: getZ
   // Returns the zIndex of the Item.
-  getZ: function() {
+  getZ: function Item_getZ() {
     return this.zIndex;
   },
 
   // ----------
   // Function: setRotation
   // Rotates the object to the given number of degrees.
-  setRotation: function(degrees) {
+  setRotation: function Item_setRotation(degrees) {
     var value = degrees ? "rotate(%deg)".replace(/%/, degrees) : null;
     iQ(this.container).css({"-moz-transform": value});
   },
@@ -314,7 +314,7 @@ window.Item.prototype = {
   // ----------
   // Function: setParent
   // Sets the receiver's parent to the given <Item>.
-  setParent: function(parent) {
+  setParent: function Item_setParent(parent) {
     this.parent = parent;
     this.removeTrenches();
     this.save();
@@ -323,7 +323,7 @@ window.Item.prototype = {
   // ----------
   // Function: pushAway
   // Pushes all other items away so none overlap this Item.
-  pushAway: function() {
+  pushAway: function Item_pushAway() {
     var buffer = Math.floor(Items.defaultGutter / 2);
 
     var items = Items.getTopLevelItems();
@@ -505,7 +505,7 @@ window.Item.prototype = {
   // Function: _updateDebugBounds
   // Called by a subclass when its bounds change, to update the debugging rectangles on screen.
   // This functionality is enabled only by the debug property.
-  _updateDebugBounds: function() {
+  _updateDebugBounds: function Item__updateDebugBounds() {
     if (this.$debug) {
       this.$debug.css(this.bounds.css());
     }
@@ -514,7 +514,7 @@ window.Item.prototype = {
   // ----------
   // Function: setTrenches
   // Sets up/moves the trenches for snapping to this item.
-  setTrenches: function(rect) {
+  setTrenches: function Item_setTrenches(rect) {
     if (this.parent !== null)
       return;
 
@@ -541,7 +541,7 @@ window.Item.prototype = {
   // ----------
   // Function: removeTrenches
   // Removes the trenches for snapping to this item.
-  removeTrenches: function() {
+  removeTrenches: function Item_removeTrenches() {
     for (var edge in this.borderTrenches) {
       Trenches.unregister(this.borderTrenches[edge]); // unregister can take an array
     }
@@ -572,7 +572,7 @@ window.Item.prototype = {
   // ----------
   // Function: draggable
   // Enables dragging on this item. Note: not to be called multiple times on the same item!
-  draggable: function() {
+  draggable: function Item_draggable() {
     try {
       Utils.assert(this.dragOptions, 'dragOptions');
 
@@ -721,7 +721,7 @@ window.Item.prototype = {
   // ----------
   // Function: droppable
   // Enables or disables dropping on this item.
-  droppable: function(value) {
+  droppable: function Item_droppable(value) {
     try {
       var $container = iQ(this.container);
       if (value)
@@ -739,7 +739,7 @@ window.Item.prototype = {
   // ----------
   // Function: resizable
   // Enables or disables resizing of this item.
-  resizable: function(value) {
+  resizable: function Item_resizable(value) {
     try {
       var $container = iQ(this.container);
       iQ('.iq-resizable-handle', $container).remove();
@@ -823,7 +823,7 @@ window.Item.prototype = {
 // ##########
 // Class: Items
 // Keeps track of all Items.
-window.Items = {
+let Items = {
   // ----------
   // Variable: defaultGutter
   // How far apart Items should be from each other and from bounds
@@ -832,14 +832,14 @@ window.Items = {
   // ----------
   // Function: item
   // Given a DOM element representing an Item, returns the Item.
-  item: function(el) {
+  item: function Items_item(el) {
     return iQ(el).data('item');
   },
 
   // ----------
   // Function: getTopLevelItems
   // Returns an array of all Items not grouped into groupItems.
-  getTopLevelItems: function() {
+  getTopLevelItems: function Items_getTopLevelItems() {
     var items = [];
 
     iQ('.tab, .groupItem, .info-item').each(function(elem) {
@@ -855,7 +855,7 @@ window.Items = {
   // ----------
   // Function: getPageBounds
   // Returns a <Rect> defining the area of the page <Item>s should stay within.
-  getPageBounds: function() {
+  getPageBounds: function Items_getPageBounds() {
     var width = Math.max(100, window.innerWidth);
     var height = Math.max(100, window.innerHeight);
     return new Rect(0, 0, width, height);
@@ -864,7 +864,7 @@ window.Items = {
   // ----------
   // Function: getSafeWindowBounds
   // Returns the bounds within which it is safe to place all non-stationary <Item>s.
-  getSafeWindowBounds: function() {
+  getSafeWindowBounds: function Items_getSafeWindowBounds() {
     // the safe bounds that would keep it "in the window"
     var gutter = Items.defaultGutter;
     // Here, I've set the top gutter separately, as the top of the window has its own
@@ -895,7 +895,7 @@ window.Items = {
   //
   // Returns:
   //   the list of rectangles if the pretend option is set; otherwise null
-  arrange: function(items, bounds, options) {
+  arrange: function Items_arrange(items, bounds, options) {
     var animate;
     if (!options || typeof options.animate == 'undefined')
       animate = true;
@@ -915,7 +915,11 @@ window.Items = {
       return rects;
 
     var columns = 1;
-    var padding = options.padding || 0;
+    // We'll assume for the time being that all the items have the same styling
+    // and that the margin is the same width around.
+    var itemMargin = items && items.length ?
+                       parseInt(iQ(items[0].container).css('margin-left')) : 0;
+    var padding = itemMargin * 2;
     var yScale = 1.1; // to allow for titles
     var rows;
     var tabWidth;
@@ -924,9 +928,9 @@ window.Items = {
 
     function figure() {
       rows = Math.ceil(count / columns);
-      tabWidth = (bounds.width - (padding * (columns - 1))) / columns;
+      tabWidth = (bounds.width - (padding * columns)) / columns;
       tabHeight = tabWidth * tabAspect;
-      totalHeight = (tabHeight * yScale * rows) + (padding * (rows - 1));
+      totalHeight = (tabHeight * yScale * rows) + (padding * rows);
     }
 
     figure();
@@ -937,8 +941,7 @@ window.Items = {
     }
 
     if (rows == 1) {
-      var maxWidth = Math.max(TabItems.tabWidth, bounds.width / 2);
-      tabWidth = Math.min(Math.min(maxWidth, bounds.width / count), bounds.height / tabAspect);
+      tabWidth = Math.min(tabWidth, (bounds.height - 2 * itemMargin) / tabAspect);
       tabHeight = tabWidth * tabAspect;
     }
 
@@ -985,7 +988,7 @@ window.Items = {
   //     modified as appropriate, but the items are not changed. If pairs is null, the
   //     operation is performed directly on all of the top level items.
   //   ignore - an <Item> to not include in calculations (because it's about to be closed, for instance)
-  unsquish: function(pairs, ignore) {
+  unsquish: function Items_unsquish(pairs, ignore) {
     var pairsProvided = (pairs ? true : false);
     if (!pairsProvided) {
       var items = Items.getTopLevelItems();

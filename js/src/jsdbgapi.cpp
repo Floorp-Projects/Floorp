@@ -64,6 +64,7 @@
 #include "jsstr.h"
 
 #include "jsatominlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
@@ -1077,7 +1078,7 @@ JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
 {
-    *iteratorp = (*iteratorp == NULL) ? js_GetTopStackFrame(cx) : (*iteratorp)->down;
+    *iteratorp = (*iteratorp == NULL) ? js_GetTopStackFrame(cx) : (*iteratorp)->prev();
     return *iteratorp;
 }
 
@@ -1104,16 +1105,16 @@ js_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
 {
     JSSecurityCallbacks *callbacks;
 
-    if (fp->hasFunction()) {
+    if (fp->isFunctionFrame()) {
         callbacks = JS_GetSecurityCallbacks(cx);
         if (callbacks && callbacks->findObjectPrincipals) {
-            if (FUN_OBJECT(fp->getFunction()) != fp->callee())
-                return callbacks->findObjectPrincipals(cx, fp->callee());
+            if (&fp->fun()->compiledFunObj() != &fp->callee())
+                return callbacks->findObjectPrincipals(cx, &fp->callee());
             /* FALL THROUGH */
         }
     }
-    if (fp->hasScript())
-        return fp->getScript()->principals;
+    if (fp->isScriptFrame())
+        return fp->script()->principals;
     return NULL;
 }
 
@@ -1140,7 +1141,7 @@ js_EvalFramePrincipals(JSContext *cx, JSObject *callee, JSStackFrame *caller)
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->hasAnnotation() && fp->hasScript()) {
+    if (fp->annotation() && fp->isScriptFrame()) {
         JSPrincipals *principals = js_StackFramePrincipals(cx, fp);
 
         if (principals && principals->globalPrivilegesEnabled(cx, principals)) {
@@ -1148,7 +1149,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
              * Give out an annotation only if privileges have not been revoked
              * or disabled globally.
              */
-            return fp->getAnnotation();
+            return fp->annotation();
         }
     }
 
@@ -1182,7 +1183,7 @@ JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->maybeScopeChain();
+    return &fp->scopeChain();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1200,7 +1201,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JS_ASSERT(cx->stack().contains(fp));
 
-    if (!fp->hasFunction())
+    if (!fp->isFunctionFrame())
         return NULL;
 
     /* Force creation of argument object if not yet created */
@@ -1218,37 +1219,36 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
 {
     if (fp->isDummyFrame())
         return NULL;
-    else
-        return fp->getThisObject(cx);
+    return fp->computeThisObject(cx);
 }
 
 JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->maybeFunction();
+    return fp->maybeFun();
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
 {
-    if (!fp->hasFunction())
+    if (!fp->isFunctionFrame())
         return NULL;
 
-    JS_ASSERT(fp->callee()->isFunction());
-    JS_ASSERT(fp->callee()->getPrivate() == fp->getFunction());
-    return fp->callee();
+    JS_ASSERT(fp->callee().isFunction());
+    JS_ASSERT(fp->callee().getPrivate() == fp->fun());
+    return &fp->callee();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return (fp->flags & JSFRAME_CONSTRUCTING) != 0;
+    return fp->isConstructing();
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->callee();
+    return fp->maybeCallee();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1265,13 +1265,13 @@ JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
 JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return (fp->flags & JSFRAME_DEBUGGER) != 0;
+    return fp->isDebuggerFrame();
 }
 
 JS_PUBLIC_API(jsval)
 JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 {
-    return Jsvalify(fp->getReturnValue());
+    return Jsvalify(fp->returnValue());
 }
 
 JS_PUBLIC_API(void)
@@ -1303,7 +1303,7 @@ JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script)
 {
-    return (JSVersion) (script->version & JSVERSION_MASK);
+    return VersionNumber(script->getVersion());
 }
 
 /***************************************************************************/
@@ -1354,7 +1354,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!script)
         return false;
 
-    bool ok = !!Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL, Valueify(rval));
+    bool ok = Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL, Valueify(rval));
 
     js_DestroyScript(cx, script);
     return ok;
@@ -1534,13 +1534,14 @@ js_GetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj
 {
     JS_ASSERT(scopeobj->isGlobal());
 
-    JSFrameRegs regs;
-    FrameGuard frame;
-    if (!cx->stack().pushDummyFrame(cx, frame, regs, scopeobj))
+    DummyFrameGuard frame;
+    if (!cx->stack().pushDummyFrame(cx, *scopeobj, &frame))
         return false;
 
     bool ok = JS_GetPropertyById(cx, obj, id, vp);
-    frame.getFrame()->putActivationObjects(cx);
+
+    JS_ASSERT(!frame.fp()->hasCallObj());
+    JS_ASSERT(!frame.fp()->hasArgsObj());
     return ok;
 }
 
@@ -1550,13 +1551,14 @@ js_SetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj
 {
     JS_ASSERT(scopeobj->isGlobal());
 
-    JSFrameRegs regs;
-    FrameGuard frame;
-    if (!cx->stack().pushDummyFrame(cx, frame, regs, scopeobj))
+    DummyFrameGuard frame;
+    if (!cx->stack().pushDummyFrame(cx, *scopeobj, &frame))
         return false;
 
     bool ok = JS_SetPropertyById(cx, obj, id, vp);
-    frame.getFrame()->putActivationObjects(cx);
+
+    JS_ASSERT(!frame.fp()->hasCallObj());
+    JS_ASSERT(!frame.fp()->hasArgsObj());
     return ok;
 }
 
@@ -1566,13 +1568,14 @@ js_CallFunctionValueWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeo
 {
     JS_ASSERT(scopeobj->isGlobal());
 
-    JSFrameRegs regs;
-    FrameGuard frame;
-    if (!cx->stack().pushDummyFrame(cx, frame, regs, scopeobj))
+    DummyFrameGuard frame;
+    if (!cx->stack().pushDummyFrame(cx, *scopeobj, &frame))
         return false;
 
     bool ok = JS_CallFunctionValue(cx, obj, funval, argc, argv, rval);
-    frame.getFrame()->putActivationObjects(cx);
+
+    JS_ASSERT(!frame.fp()->hasCallObj());
+    JS_ASSERT(!frame.fp()->hasArgsObj());
     return ok;
 }
 
@@ -1747,9 +1750,9 @@ JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         fp = js_GetTopStackFrame(cx);
     while (fp) {
-        if (fp->hasScript())
-            return JS_GetScriptFilenameFlags(fp->getScript());
-        fp = fp->down;
+        if (fp->isScriptFrame())
+            return JS_GetScriptFilenameFlags(fp->script());
+        fp = fp->prev();
     }
     return 0;
  }
@@ -1785,6 +1788,12 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 }
 
 /************************************************************************/
+
+JS_FRIEND_API(void)
+js_RevertVersion(JSContext *cx)
+{
+    cx->clearVersionOverride();
+}
 
 JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt)
@@ -1991,8 +2000,7 @@ static const char *vtuneErrorMessages[] = {
 };
 
 JS_FRIEND_API(JSBool)
-js_StartVtune(JSContext *cx, JSObject *obj,
-              uintN argc, jsval *argv, jsval *rval)
+js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTUNE_EVENT events[] = {
         { 1000000, 0, 0, 0, "CPU_CLK_UNHALTED.CORE" },
@@ -2019,6 +2027,7 @@ js_StartVtune(JSContext *cx, JSObject *obj,
         default_filename,
     };
 
+    jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
         params.tb5Filename = js_DeflateString(cx, str->chars(), str->length());
@@ -2044,8 +2053,7 @@ js_StartVtune(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-js_StopVtune(JSContext *cx, JSObject *obj,
-             uintN argc, jsval *argv, jsval *rval)
+js_StopVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     U32 status = VTStopSampling(1);
     if (status) {
@@ -2061,16 +2069,14 @@ js_StopVtune(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-js_PauseVtune(JSContext *cx, JSObject *obj,
-              uintN argc, jsval *argv, jsval *rval)
+js_PauseVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTPause();
     return JS_TRUE;
 }
 
 JS_FRIEND_API(JSBool)
-js_ResumeVtune(JSContext *cx, JSObject *obj,
-               uintN argc, jsval *argv, jsval *rval)
+js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTResume();
     return JS_TRUE;
@@ -2098,8 +2104,7 @@ js_ResumeVtune(JSContext *cx, JSObject *obj,
 #define ETHOGRAM_BUF_SIZE 65536
 
 static JSBool
-ethogram_construct(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval);
+ethogram_construct(JSContext *cx, uintN argc, jsval *vp);
 static void
 ethogram_finalize(JSContext *cx, JSObject *obj);
 
@@ -2144,8 +2149,7 @@ private:
 
 public:
     friend JSBool
-    ethogram_construct(JSContext *cx, JSObject *obj,
-                       uintN argc, jsval *argv, jsval *rval);
+    ethogram_construct(JSContext *cx, uintN argc, jsval *vp);
 
     inline void push(TraceVisState s, TraceVisExitReason r, char *filename, int lineno) {
         mBuf[mWritePos].s = s;
@@ -2254,7 +2258,7 @@ inline char *
 jstv_Filename(JSStackFrame *fp)
 {
     while (fp && fp->script == NULL)
-        fp = fp->down;
+        fp = fp->prev;
     return (fp && fp->script && fp->script->filename)
            ? (char *)fp->script->filename
            : jstv_empty;
@@ -2263,7 +2267,7 @@ inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
     while (fp && fp->pc(cx) == NULL)
-        fp = fp->down;
+        fp = fp->prev;
     return (fp && fp->pc(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
@@ -2288,8 +2292,7 @@ js::StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 }
 
 static JSBool
-ethogram_construct(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval)
+ethogram_construct(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
 
@@ -2321,7 +2324,7 @@ ethogram_construct(JSContext *cx, JSObject *obj,
         obj = JS_NewObject(cx, &ethogram_class, NULL, NULL);
         if (!obj)
             return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
+        *JS_RVAL(cx, vp) = OBJECT_TO_JSVAL(obj);
     }
     JS_SetPrivate(cx, obj, p);
     return JS_TRUE;
@@ -2341,11 +2344,11 @@ ethogram_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-ethogram_addScript(JSContext *cx, JSObject *obj,
-                   uintN argc, jsval *argv, jsval *rval)
+ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     char *filename = NULL;
+    jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
         filename = js_DeflateString(cx,
@@ -2360,20 +2363,22 @@ ethogram_addScript(JSContext *cx, JSObject *obj,
     EthogramEventBuffer *p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
 
     p->addScript(cx, obj, filename, str);
+    jsval *rval = JS_RVAL(cx, vp);
     JS_CallFunctionName(cx, p->filenames(), "push", 1, argv, rval);
     return JS_TRUE;
 }
 
 static JSBool
-ethogram_getAllEvents(JSContext *cx, JSObject *obj,
-                      uintN argc, jsval *argv, jsval *rval)
+ethogram_getAllEvents(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
 
+    jsval *argv = JS_ARGV(cx, vp);
     p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
     if (!p)
         return JS_FALSE;
 
+    jsval *rval = JS_RVAL(cx, vp);
     if (p->isEmpty()) {
         *rval = JSVAL_NULL;
         return JS_TRUE;
@@ -2425,11 +2430,11 @@ ethogram_getAllEvents(JSContext *cx, JSObject *obj,
 }
 
 static JSBool
-ethogram_getNextEvent(JSContext *cx, JSObject *obj,
-                      uintN argc, jsval *argv, jsval *rval)
+ethogram_getNextEvent(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
 
+    jsval *argv = JS_ARGV(cx, vp);
     p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
     if (!p)
         return JS_FALSE;
@@ -2438,6 +2443,7 @@ ethogram_getNextEvent(JSContext *cx, JSObject *obj,
     if (x == NULL)
         return JS_FALSE;
 
+    jsval *rval = JS_RVAL(cx, vp);
     if (p->isEmpty()) {
         *rval = JSVAL_NULL;
         return JS_TRUE;
@@ -2483,8 +2489,7 @@ static JSFunctionSpec ethogram_methods[] = {
  * monitored together. A single object gets events for the group.
  */
 JS_FRIEND_API(JSBool)
-js_InitEthogram(JSContext *cx, JSObject *obj,
-                uintN argc, jsval *argv, jsval *rval)
+js_InitEthogram(JSContext *cx, uintN argc, jsval *vp)
 {
     if (!traceVisScriptTable) {
         traceVisScriptTable = JS_NewHashTable(8, JS_HashString, compare_strings,
@@ -2499,8 +2504,7 @@ js_InitEthogram(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-js_ShutdownEthogram(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *rval)
+js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp)
 {
     if (traceVisScriptTable)
         JS_HashTableDestroy(traceVisScriptTable);

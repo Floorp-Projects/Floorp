@@ -68,7 +68,7 @@ h2 {
     margin-top: 25px;
     padding: 5px;
     border: 1px solid -moz-FieldText;
-    -moz-border-radius: 10px 10px;
+    border-radius: 10px 10px;
 }
 
 .memValue {

@@ -64,7 +64,7 @@ function setupStyleTests()
 {
   spans = doc.querySelectorAll("span");
   ok(spans, "captain, we have the spans");
-  document.addEventListener("popupshown", runStyleTests, false);
+  Services.obs.addObserver(runStyleTests, "inspector-opened", false);
   InspectorUI.openInspectorUI();
 }
 
@@ -76,11 +76,9 @@ function spanGenerator()
   }
 }
 
-function runStyleTests(evt)
+function runStyleTests()
 {
-  if (evt.target.id != "inspector-style-panel")
-    return true;
-  document.removeEventListener("popupshown", runStyleTests, false);
+  Services.obs.removeObserver(runStyleTests, "inspector-opened", false);
   document.addEventListener("popupshown", performTestComparisons, false);
   InspectorUI.stopInspecting();
   testGen = spanGenerator();
@@ -92,7 +90,7 @@ function performTestComparisons(evt)
   if (evt.target.id != "highlighter-panel")
     return true;
 
-  ok(InspectorUI.treeView.selectedNode, "selection");
+  ok(InspectorUI.selection, "selection");
   ok(InspectorUI.isStylePanelOpen, "style panel is open?");
   ok(InspectorUI.highlighter.isHighlighting, "panel is highlighting");
   ok(InspectorUI.styleBox.itemCount > 0, "styleBox has items");

@@ -59,10 +59,10 @@ random == rotate-1e.html rotate-1-ref.html
 == percent-1f.html percent-1-ref.html
 == percent-1g.html percent-1-ref.html
 # Transformed elements are abs-pos and fixed-pos containing blocks.
-== abspos-1a.html abspos-1-ref.html
-== abspos-1b.html abspos-1-ref.html
-== abspos-1c.html abspos-1-ref.html
-== abspos-1d.html abspos-1-ref.html
+fails-if(d2d) == abspos-1a.html abspos-1-ref.html
+fails-if(d2d) == abspos-1b.html abspos-1-ref.html
+fails-if(d2d) == abspos-1c.html abspos-1-ref.html
+fails-if(d2d) == abspos-1d.html abspos-1-ref.html
 != abspos-1e.html abspos-1-ref.html
 # Origin can use "top" "right" etc.
 == origin-name-1a.html origin-name-1-ref.html

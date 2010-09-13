@@ -63,6 +63,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gl;
+using namespace mozilla::layers;
 
 nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
 
@@ -102,6 +103,12 @@ WebGLContext::WebGLContext()
 
     mBlackTexturesAreInitialized = PR_FALSE;
     mFakeBlackStatus = DoNotNeedFakeBlack;
+
+    mFakeVertexAttrib0Array = nsnull;
+    mVertexAttrib0Vector[0] = 0;
+    mVertexAttrib0Vector[1] = 0;
+    mVertexAttrib0Vector[2] = 0;
+    mVertexAttrib0Vector[3] = 1;
 }
 
 WebGLContext::~WebGLContext()
@@ -508,7 +515,7 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
                              LayerManager *aManager)
 {
     if (!mResetLayer && aOldLayer &&
-        aOldLayer->GetUserData() == &gWebGLLayerUserData) {
+        aOldLayer->HasUserData(&gWebGLLayerUserData)) {
         NS_ADDREF(aOldLayer);
         if (mInvalidated) {
             aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
@@ -522,7 +529,7 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
-    canvasLayer->SetUserData(&gWebGLLayerUserData);
+    canvasLayer->SetUserData(&gWebGLLayerUserData, nsnull);
 
     CanvasLayer::Data data;
 
@@ -542,7 +549,8 @@ WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
     data.mGLBufferIsPremultiplied = PR_FALSE;
 
     canvasLayer->Initialize(data);
-    canvasLayer->SetIsOpaqueContent(gl->CreationFormat().alpha == 0 ? PR_TRUE : PR_FALSE);
+    PRUint32 flags = gl->CreationFormat().alpha == 0 ? Layer::CONTENT_OPAQUE : 0;
+    canvasLayer->SetContentFlags(flags);
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
     mInvalidated = PR_FALSE;

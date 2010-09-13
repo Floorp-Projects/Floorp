@@ -186,4 +186,30 @@ PluginPRLibrary::NPP_New(NPMIMEType pluginType, NPP instance,
   return NS_OK;
 }
 
+nsresult
+PluginPRLibrary::AsyncSetWindow(NPP instance, NPWindow* window)
+{
+  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
+  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
+  return inst->AsyncSetWindow(window);
+}
+
+nsresult
+PluginPRLibrary::NotifyPainted(NPP instance)
+{
+  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
+  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
+  return inst->NotifyPainted();
+}
+
+nsresult
+PluginPRLibrary::GetSurface(NPP instance, gfxASurface** aSurface)
+{
+  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
+  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
+  *aSurface = nsnull;
+  return NS_OK;
+}
+
+
 } // namespace mozilla

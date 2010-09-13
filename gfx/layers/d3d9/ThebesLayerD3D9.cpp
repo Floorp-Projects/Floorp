@@ -46,30 +46,10 @@
 namespace mozilla {
 namespace layers {
 
-// Returns true if it's OK to save the contents of aLayer in an
-// opaque surface (a surface without an alpha channel).
-// If we can use a surface without an alpha channel, we should, because
-// it will often make painting of antialiased text faster and higher
-// quality.
-static PRBool
-UseOpaqueSurface(Layer* aLayer)
-{
-  // If the visible content in the layer is opaque, there is no need
-  // for an alpha channel.
-  if (aLayer->IsOpaqueContent())
-    return PR_TRUE;
-  // Also, if this layer is the bottommost layer in a container which
-  // doesn't need an alpha channel, we can use an opaque surface for this
-  // layer too. Any transparent areas must be covered by something else
-  // in the container.
-  ContainerLayer* parent = aLayer->GetParent();
-  return parent && parent->GetFirstChild() == aLayer &&
-         UseOpaqueSurface(parent);
-}
-
 ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   : ThebesLayer(aManager, NULL)
   , LayerD3D9(aManager)
+  , mD2DSurfaceInitialized(false)
 {
   mImplData = static_cast<LayerD3D9*>(this);
   aManager->deviceManager()->mThebesLayers.AppendElement(this);
@@ -77,7 +57,9 @@ ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
 
 ThebesLayerD3D9::~ThebesLayerD3D9()
 {
-  mD3DManager->deviceManager()->mThebesLayers.RemoveElement(this);
+  if (mD3DManager->deviceManager()) {
+    mD3DManager->deviceManager()->mThebesLayers.RemoveElement(this);
+  }
 }
 
 /**
@@ -104,7 +86,7 @@ ThebesLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
     return;
   }
 
-  D3DFORMAT fmt = (UseOpaqueSurface(this) && !mD2DSurface) ?
+  D3DFORMAT fmt = (CanUseOpaqueSurface() && !mD2DSurface) ?
                     D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
 
   D3DSURFACE_DESC desc;
@@ -198,7 +180,7 @@ ThebesLayerD3D9::RenderLayer()
 
   // We differentiate between these formats since D3D9 will only allow us to
   // call GetDC on an opaque surface.
-  D3DFORMAT fmt = (UseOpaqueSurface(this) && !mD2DSurface) ?
+  D3DFORMAT fmt = (CanUseOpaqueSurface() && !mD2DSurface) ?
                     D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
 
   if (mTexture) {
@@ -219,6 +201,12 @@ ThebesLayerD3D9::RenderLayer()
   }
 
   if (!mValidRegion.IsEqual(mVisibleRegion)) {
+    /* We use the bounds of the visible region because we draw the bounds of
+     * this region when we draw this entire texture. We have to make sure that
+     * the areas that aren't filled with content get their background drawn.
+     * This is an issue for opaque surfaces, which otherwise won't get their
+     * background painted.
+     */
     nsIntRegion region;
     region.Sub(mVisibleRegion, mValidRegion);
 
@@ -230,20 +218,12 @@ ThebesLayerD3D9::RenderLayer()
   float quadTransform[4][4];
   /*
    * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-   * and size. To get pixel perfect mapping we offset the quad half a pixel
-   * to the top-left.
-   *
-   * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
+   * and size.
    */
   memset(&quadTransform, 0, sizeof(quadTransform));
-  quadTransform[0][0] = (float)visibleRect.width;
-  quadTransform[1][1] = (float)visibleRect.height;
   quadTransform[2][2] = 1.0f;
-  quadTransform[3][0] = (float)visibleRect.x;
-  quadTransform[3][1] = (float)visibleRect.y;
   quadTransform[3][3] = 1.0f;
 
-  device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
   device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
 
   float opacity[4];
@@ -254,10 +234,35 @@ ThebesLayerD3D9::RenderLayer()
   opacity[0] = GetOpacity();
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
-  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mD2DSurface && CanUseOpaqueSurface()) {
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+  } else
+#endif
+  mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
   device()->SetTexture(0, mTexture);
-  device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+
+  nsIntRegionRectIterator iter(mVisibleRegion);
+
+  const nsIntRect *iterRect;
+  while ((iterRect = iter.Next())) {
+    quadTransform[0][0] = (float)iterRect->width;
+    quadTransform[1][1] = (float)iterRect->height;
+    quadTransform[3][0] = (float)iterRect->x;
+    quadTransform[3][1] = (float)iterRect->y;
+    
+    device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
+    device()->SetVertexShaderConstantF(13, ShaderConstantRect(
+        (float)(iterRect->x - visibleRect.x) / (float)visibleRect.width,
+        (float)(iterRect->y - visibleRect.y) / (float)visibleRect.height,
+        (float)iterRect->width / (float)visibleRect.width,
+        (float)iterRect->height / (float)visibleRect.height), 1);
+    device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  }
+
+  // Set back to default.
+  device()->SetVertexShaderConstantF(13, ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
 }
 
 void
@@ -289,6 +294,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   if (mD2DSurface) {
     context = new gfxContext(mD2DSurface);
     nsIntRegionRectIterator iter(aRegion);
+
     context->Translate(gfxPoint(-visibleRect.x, -visibleRect.y));
     context->NewPath();
     const nsIntRect *iterRect;
@@ -296,11 +302,14 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
       context->Rectangle(gfxRect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));      
     }
     context->Clip();
-    if (mD2DSurface->GetContentType() != gfxASurface::CONTENT_COLOR) {
+    if (!mD2DSurfaceInitialized || 
+        mD2DSurface->GetContentType() != gfxASurface::CONTENT_COLOR) {
       context->SetOperator(gfxContext::OPERATOR_CLEAR);
       context->Paint();
       context->SetOperator(gfxContext::OPERATOR_OVER);
+      mD2DSurfaceInitialized = true;
     }
+
     LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
     cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
     mD2DSurface->Flush();
@@ -314,7 +323,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   }
 #endif
 
-  D3DFORMAT fmt = UseOpaqueSurface(this) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
+  D3DFORMAT fmt = CanUseOpaqueSurface() ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
   nsIntRect bounds = aRegion.GetBounds();
 
   gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatARGB32;
@@ -327,7 +336,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
 
   nsRefPtr<IDirect3DSurface9> surf;
   HDC dc;
-  if (UseOpaqueSurface(this)) {
+  if (CanUseOpaqueSurface()) {
     hr = tmpTexture->GetSurfaceLevel(0, getter_AddRefs(surf));
 
     if (FAILED(hr)) {
@@ -360,7 +369,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
   cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
 
-  if (UseOpaqueSurface(this)) {
+  if (CanUseOpaqueSurface()) {
     surf->ReleaseDC(dc);
   } else {
     D3DLOCKED_RECT r;
@@ -413,6 +422,7 @@ ThebesLayerD3D9::CreateNewTexture(const gfxIntSize &aSize)
   }
 
   mTexture = nsnull;
+  PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
 #ifdef CAIRO_HAS_D2D_SURFACE
   if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
       gfxWindowsPlatform::RENDER_DIRECT2D) {
@@ -423,7 +433,8 @@ ThebesLayerD3D9::CreateNewTexture(const gfxIntSize &aSize)
                                   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                                   D3DPOOL_DEFAULT, getter_AddRefs(mTexture), &sharedHandle);
 
-          mD2DSurface = new gfxD2DSurface(sharedHandle, UseOpaqueSurface(this) ?
+          mD2DSurfaceInitialized = false;
+          mD2DSurface = new gfxD2DSurface(sharedHandle, canUseOpaqueSurface ?
             gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
 
           // If there's an error, go on and do what we always do.
@@ -436,7 +447,7 @@ ThebesLayerD3D9::CreateNewTexture(const gfxIntSize &aSize)
 #endif
   if (!mTexture) {
     device()->CreateTexture(aSize.width, aSize.height, 1,
-                            D3DUSAGE_RENDERTARGET, UseOpaqueSurface(this) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
+                            D3DUSAGE_RENDERTARGET, canUseOpaqueSurface ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
   }
 }

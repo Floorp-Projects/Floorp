@@ -57,6 +57,7 @@
 #include "jspropertycache.h"
 #include "methodjit/MonoIC.h"
 
+#include "jsinterpinlines.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -92,7 +93,7 @@ static jsbytecode *
 FindExceptionHandler(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
-    JSScript *script = fp->getScript();
+    JSScript *script = fp->script();
 
 top:
     if (cx->throwing && script->trynotesOffset) {
@@ -129,7 +130,7 @@ top:
 
             switch (tn->kind) {
                 case JSTRY_CATCH:
-                  JS_ASSERT(js_GetOpcode(cx, fp->getScript(), pc) == JSOP_ENTERBLOCK);
+                  JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == JSOP_ENTERBLOCK);
 
 #if JS_HAS_GENERATORS
                   /* Catch cannot intercept the closing of a generator. */
@@ -165,7 +166,7 @@ top:
                    * pending exception.
                    */
                   AutoValueRooter tvr(cx, cx->exception);
-                  JS_ASSERT(js_GetOpcode(cx, fp->getScript(), pc) == JSOP_ENDITER);
+                  JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == JSOP_ENDITER);
                   cx->throwing = JS_FALSE;
                   ok = !!js_CloseIterator(cx, &cx->regs->sp[-1].toObject());
                   cx->regs->sp -= 1;
@@ -181,137 +182,16 @@ top:
     return NULL;
 }
 
-static inline void
-FixVMFrame(VMFrame &f, JSStackFrame *fp)
-{
-    JS_ASSERT(f.fp() == fp->down);
-    f.fp() = fp;
-}
-
-static inline bool
-CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
-{
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp();
-    Value *vp = f.regs.sp - (argc + 2);
-    JSObject *funobj = &vp->toObject();
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-
-    JS_ASSERT(FUN_INTERPRETED(fun));
-
-    JSScript *newscript = fun->u.i.script;
-
-    /* Allocate the frame. */
-    StackSpace &stack = cx->stack();
-    uintN nslots = newscript->nslots;
-    uintN funargs = fun->nargs;
-    Value *argv = vp + 2;
-    JSStackFrame *newfp;
-    if (argc < funargs) {
-        uintN missing = funargs - argc;
-        if (!f.ensureSpace(missing, nslots))
-            return false;
-        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, missing);
-        if (!newfp)
-            return false;
-        for (Value *v = argv + argc, *end = v + missing; v != end; ++v)
-            v->setUndefined();
-    } else {
-        if (!f.ensureSpace(0, nslots))
-            return false;
-        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, 0);
-        if (!newfp)
-            return false;
-    }
-
-    /* Initialize the frame. */
-    newfp->ncode = NULL;
-    newfp->setCallObj(NULL);
-    newfp->setArgsObj(NULL);
-    newfp->setScript(newscript);
-    newfp->setFunction(fun);
-    newfp->argc = argc;
-    newfp->argv = vp + 2;
-    newfp->clearReturnValue();
-    newfp->setAnnotation(NULL);
-    newfp->setScopeChain(funobj->getParent());
-    newfp->flags = flags;
-    newfp->setBlockChain(NULL);
-    newfp->setThisValue(vp[1]);
-    JS_ASSERT(!fp->hasIMacroPC());
-
-    /* Push void to initialize local variables. */
-    Value *newslots = newfp->slots();
-    Value *newsp = newslots + fun->u.i.nvars;
-    for (Value *v = newslots; v != newsp; ++v)
-        v->setUndefined();
-
-    /* Scope with a call object parented by callee's parent. */
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-        return false;
-
-    /* :TODO: Switch version if currentVersion wasn't overridden. */
-    newfp->setCallerVersion((JSVersion)cx->version);
-
-    // Marker for debug support.
-    if (JSInterpreterHook hook = cx->debugHooks->callHook) {
-        newfp->setHookData(hook(cx, fp, JS_TRUE, 0,
-                                cx->debugHooks->callHookData));
-        // CHECK_INTERRUPT_HANDLER();
-    } else {
-        newfp->setHookData(NULL);
-    }
-
-    stack.pushInlineFrame(cx, fp, cx->regs->pc, newfp);
-    FixVMFrame(f, newfp);
-
-    return true;
-}
-
-static inline bool
-InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
-{
-    if (!CreateFrame(f, flags, argc))
-        return false;
-
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = cx->fp();
-    JSScript *script = fp->getScript();
-    f.regs.pc = script->code;
-    f.regs.sp = fp->base();
-
-    if (cx->options & JSOPTION_METHODJIT) {
-        if (!script->ncode) {
-            if (mjit::TryCompile(cx, script, fp->getFunction(), fp->getScopeChain()) == Compile_Error) {
-                InlineReturn(f, JS_FALSE);
-                return false;
-            }
-        }
-        JS_ASSERT(script->ncode);
-        if (script->ncode != JS_UNJITTABLE_METHOD) {
-            *pret = script->jit->invoke;
-            return true;
-        }
-    }
-
-    bool ok = !!Interpret(cx, cx->fp());
-    InlineReturn(f, JS_TRUE);
-
-    *pret = NULL;
-    return ok;
-}
-
 static bool
 InlineReturn(VMFrame &f, JSBool ok)
 {
     JSContext *cx = f.cx;
-    JSStackFrame *fp = cx->fp();
+    JSStackFrame *fp = f.regs.fp;
 
-    JS_ASSERT(f.fp() == cx->fp());
     JS_ASSERT(f.fp() != f.entryFp);
 
     JS_ASSERT(!fp->hasBlockChain());
-    JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->getScopeChain(), 0));
+    JS_ASSERT(!js_IsActiveWithOrBlock(cx, &fp->scopeChain(), 0));
 
     // Marker for debug support.
     if (JS_UNLIKELY(fp->hasHookData())) {
@@ -325,32 +205,26 @@ InlineReturn(VMFrame &f, JSBool ok)
              * optimizations and uninitialised warnings.
              */
             status = ok;
-            hook(cx, fp, JS_FALSE, &status, fp->getHookData());
+            hook(cx, fp, JS_FALSE, &status, fp->hookData());
             ok = (status == JS_TRUE);
             // CHECK_INTERRUPT_HANDLER();
         }
     }
 
-    fp->putActivationObjects(cx);
+    PutActivationObjects(cx, fp);
 
-    /* :TODO: version stuff */
+    if (fp->isConstructing() && fp->returnValue().isPrimitive())
+        fp->setReturnValue(fp->thisValue());
 
-    if (fp->flags & JSFRAME_CONSTRUCTING && fp->getReturnValue().isPrimitive())
-        fp->setReturnValue(fp->getThisValue());
-
-    Value *newsp = fp->argv - 1;
-
-    cx->stack().popInlineFrame(cx, fp, fp->down);
-    f.fp() = cx->fp();
-
-    cx->regs->sp = newsp;
-    cx->regs->sp[-1] = fp->getReturnValue();
+    Value *newsp = fp->actualArgs() - 1;
+    newsp[-1] = fp->returnValue();
+    cx->stack().popInlineFrame(cx, fp->prev(), newsp);
 
     return ok;
 }
 
-static inline JSObject *
-InlineConstruct(VMFrame &f, uint32 argc)
+JSBool JS_FASTCALL
+stubs::NewObject(VMFrame &f, uint32 argc)
 {
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
@@ -360,21 +234,265 @@ InlineConstruct(VMFrame &f, uint32 argc)
 
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     if (!funobj->getProperty(cx, id, &vp[1]))
-        return NULL;
+        THROWV(JS_FALSE);
 
     JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
-    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent());
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent());
+    if (!obj)
+        THROWV(JS_FALSE);
+
+    vp[1].setObject(*obj);
+
+    return JS_TRUE;
+}
+
+void JS_FASTCALL
+stubs::SlowCall(VMFrame &f, uint32 argc)
+{
+    Value *vp = f.regs.sp - (argc + 2);
+
+    if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::SlowNew(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
+    Value *vp = f.regs.sp - (argc + 2);
+
+    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
+        THROW();
+}
+
+/*
+ * This function must only be called after the early prologue, since it depends
+ * on fp->exec.fun.
+ */
+static inline void
+RemovePartialFrame(JSContext *cx, JSStackFrame *fp)
+{
+    JSStackFrame *prev = fp->prev();
+    Value *newsp = (Value *)fp;
+    cx->stack().popInlineFrame(cx, prev, newsp);
+}
+
+/*
+ * HitStackQuota is called after the early prologue pushing the new frame would
+ * overflow f.stackLimit.
+ */
+void JS_FASTCALL
+stubs::HitStackQuota(VMFrame &f)
+{
+    /* Include space to push another frame. */
+    uintN nvals = f.fp()->script()->nslots + VALUES_PER_STACK_FRAME;
+    JS_ASSERT(f.regs.sp == f.fp()->base());
+    if (f.cx->stack().bumpCommitAndLimit(f.entryFp, f.regs.sp, nvals, &f.stackLimit))
+        return;
+
+    /* Remove the current partially-constructed frame before throwing. */
+    RemovePartialFrame(f.cx, f.fp());
+    js_ReportOverRecursed(f.cx);
+    THROW();
+}
+
+/*
+ * This function must only be called after the early prologue, since it depends
+ * on fp->exec.fun.
+ */
+void * JS_FASTCALL
+stubs::FixupArity(VMFrame &f, uint32 nactual)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *oldfp = f.fp();
+
+    JS_ASSERT(nactual != oldfp->numFormalArgs());
+
+    /*
+     * Grossssss! *move* the stack frame. If this ends up being perf-critical,
+     * we can figure out how to spot-optimize it. Be careful to touch only the
+     * members that have been initialized by initCallFrameCallerHalf and the
+     * early prologue.
+     */
+    uint32 flags         = oldfp->isConstructingFlag();
+    JSObject &scopeChain = oldfp->scopeChain();
+    JSFunction *fun      = oldfp->fun();
+    void *ncode          = oldfp->nativeReturnAddress();
+
+    /* Pop the inline frame. */
+    RemovePartialFrame(cx, oldfp);
+
+    /* Reserve enough space for a callee frame. */
+    JSStackFrame *newfp = cx->stack().getInlineFrameWithinLimit(cx, cx->regs->sp, nactual,
+                                                                fun, fun->script(), &flags,
+                                                                f.entryFp, &f.stackLimit);
+    if (!newfp)
+        THROWV(NULL);
+
+    /* Reset the part of the stack frame set by the caller. */
+    newfp->initCallFrameCallerHalf(cx, scopeChain, nactual, flags);
+
+    /* Reset the part of the stack frame set by the prologue up to now. */
+    newfp->initCallFrameEarlyPrologue(fun, ncode);
+
+    /* The caller takes care of assigning fp to regs. */
+    return newfp;
 }
 
 void * JS_FASTCALL
-stubs::SlowCall(VMFrame &f, uint32 argc)
+stubs::CompileFunction(VMFrame &f, uint32 nactual)
+{
+    /*
+     * We have a partially constructed frame. That's not really good enough to
+     * compile though because we could throw, so get a full, adjusted frame.
+     */
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp();
+
+    /*
+     * Since we can only use members set by initCallFrameCallerHalf,
+     * we must carefully extract the callee from the nactual.
+     */
+    JSObject &callee = fp->formalArgsEnd()[-(int(nactual) + 2)].toObject();
+    JSFunction *fun = callee.getFunctionPrivate();
+    JSScript *script = fun->script();
+
+    /*
+     * FixupArity/RemovePartialFrame expect to be called after the early
+     * prologue. Pass null for ncode: either we will jump into jit code, which
+     * will set ncode, or we will jump into js::Interpret, which does not care
+     * about ncode.
+     */
+    fp->initCallFrameEarlyPrologue(fun, NULL);
+
+    /* Empty script does nothing. */
+    if (script->isEmpty()) {
+        bool callingNew = fp->isConstructing();
+        RemovePartialFrame(cx, fp);
+        Value *vp = f.regs.sp - (nactual + 2);
+        if (callingNew)
+            vp[0] = vp[1];
+        else
+            vp[0].setUndefined();
+        return NULL;
+    }
+
+    if (nactual != fp->numFormalArgs()) {
+        fp = (JSStackFrame *)FixupArity(f, nactual);
+        if (!fp)
+            return NULL;
+    }
+
+    /* Finish frame initialization. */
+    fp->initCallFrameLatePrologue();
+
+    /* These would have been initialized by the prologue. */
+    f.regs.fp = fp;
+    f.regs.sp = fp->base();
+    f.regs.pc = script->code;
+
+    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+        THROWV(NULL);
+
+    CompileStatus status = CanMethodJIT(cx, script, fun, &fp->scopeChain());
+    if (status == Compile_Okay)
+        return script->jit->invoke;
+
+    /* Function did not compile... interpret it. */
+    JSBool ok = Interpret(cx, fp);
+    InlineReturn(f, ok);
+
+    if (!ok)
+        THROWV(NULL);
+
+    return NULL;
+}
+
+static inline bool
+UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 {
     JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp();
+    Value *vp = f.regs.sp - (argc + 2);
+    JSObject &callee = vp->toObject();
+    JSFunction *newfun = callee.getFunctionPrivate();
+    JSScript *newscript = newfun->script();
 
-#ifdef JS_MONOIC
-    ic::MICInfo &mic = f.fp()->getScript()->mics[argc];
-    argc = mic.argc;
-#endif
+    /* Get pointer to new frame/slots, prepare arguments. */
+    StackSpace &stack = cx->stack();
+    JSStackFrame *newfp = stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
+                                                          newfun, newscript, &flags,
+                                                          f.entryFp, &f.stackLimit);
+    if (JS_UNLIKELY(!newfp))
+        return false;
+    JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
+
+    /* Initialize frame, locals. */
+    newfp->initCallFrame(cx, callee, newfun, argc, flags);
+    SetValueRangeToUndefined(newfp->slots(), newscript->nfixed);
+
+    /* Officially push the frame. */
+    stack.pushInlineFrame(cx, newscript, newfp, &f.regs);
+    JS_ASSERT(newfp == f.regs.fp);
+
+    /* Scope with a call object parented by callee's parent. */
+    if (newfun->isHeavyweight() && !js_GetCallObject(cx, newfp))
+        return false;
+
+    /* Marker for debug support. */
+    if (JSInterpreterHook hook = cx->debugHooks->callHook) {
+        newfp->setHookData(hook(cx, fp, JS_TRUE, 0,
+                                cx->debugHooks->callHookData));
+    }
+
+    /* Try to compile if not already compiled. */
+    if (!newscript->ncode) {
+        if (mjit::TryCompile(cx, newscript, newfp->fun(), &newfp->scopeChain()) == Compile_Error) {
+            /* A runtime exception was thrown, get out. */
+            InlineReturn(f, JS_FALSE);
+            return false;
+        }
+    }
+
+    /* If newscript was successfully compiled, run it. */
+    JS_ASSERT(newscript->ncode);
+    if (newscript->ncode != JS_UNJITTABLE_METHOD) {
+        *pret = newscript->jit->invoke;
+        return true;
+    }
+
+    /* Otherwise, run newscript in the interpreter. */
+    bool ok = !!Interpret(cx, cx->fp());
+    InlineReturn(f, JS_TRUE);
+
+    *pret = NULL;
+    return ok;
+}
+
+void * JS_FASTCALL
+stubs::UncachedNew(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
+    Value *vp = f.regs.sp - (argc + 2);
+
+    /* Try to do a fast inline call before the general Invoke path. */
+    JSFunction *fun;
+    if (IsFunctionObject(*vp, &fun) && fun->isInterpreted() && !fun->script()->isEmpty()) {
+        void *ret;
+        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
+            THROWV(NULL);
+        return ret;
+    }
+
+    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
+        THROWV(NULL);
+    return NULL;
+}
+
+void * JS_FASTCALL
+stubs::UncachedCall(VMFrame &f, uint32 argc)
+{
+    JSContext *cx = f.cx;
 
     Value *vp = f.regs.sp - (argc + 2);
 
@@ -391,19 +509,13 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
                 return NULL;
             }
 
-            if (!InlineCall(f, 0, &ret, argc))
+            if (!UncachedInlineCall(f, 0, &ret, argc))
                 THROWV(NULL);
 
             return ret;
         }
 
         if (fun->isNative()) {
-#ifdef JS_MONOIC
-#ifdef JS_CPU_X86
-            ic::CallNative(cx, f.fp()->getScript(), mic, fun, false);
-#endif
-#endif
-
             if (!fun->u.n.native(cx, argc, vp))
                 THROWV(NULL);
             return NULL;
@@ -416,180 +528,18 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
     return NULL;
 }
 
-void * JS_FASTCALL
-stubs::SlowNew(VMFrame &f, uint32 argc)
-{
-    JSContext *cx = f.cx;
-
-#ifdef JS_MONOIC
-    ic::MICInfo &mic = f.fp()->getScript()->mics[argc];
-    argc = mic.argc;
-#endif
-
-    Value *vp = f.regs.sp - (argc + 2);
-
-    JSObject *obj;
-    if (IsFunctionObject(*vp, &obj)) {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
-
-        if (fun->isInterpreted()) {
-            JSScript *script = fun->u.i.script;
-            JSObject *obj2 = InlineConstruct(f, argc);
-            if (!obj2)
-                THROWV(NULL);
-
-            if (script->isEmpty()) {
-                vp[0].setObject(*obj2);
-                return NULL;
-            }
-
-            void *ret;
-            vp[1].setObject(*obj2);
-            if (!InlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
-                THROWV(NULL);
-
-            return ret;
-        }
-
-        if (fun->isConstructor()) {
-#ifdef JS_MONOIC
-#ifdef JS_CPU_X86
-            ic::CallNative(cx, f.fp()->getScript(), mic, fun, true);
-#endif
-#endif
-
-            vp[1].setMagicWithObjectOrNullPayload(NULL);
-
-            if (!fun->u.n.native(cx, argc, vp))
-                THROWV(NULL);
-            JS_ASSERT(!vp->isPrimitive());
-
-            return NULL;
-        }
-    }
-
-    if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
-        THROWV(NULL);
-
-    return NULL;
-}
-
-static inline bool
-CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
-{
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.fp();
-    Value *vp = f.regs.sp - (argc + 2);
-    JSObject *funobj = &vp->toObject();
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-
-    JS_ASSERT(FUN_INTERPRETED(fun));
-
-    JSScript *newscript = fun->u.i.script;
-
-    /* Allocate the frame. */
-    StackSpace &stack = cx->stack();
-    uintN nslots = newscript->nslots;
-    uintN funargs = fun->nargs;
-    Value *argv = vp + 2;
-    JSStackFrame *newfp;
-    if (argc < funargs) {
-        uintN missing = funargs - argc;
-        if (!f.ensureSpace(missing, nslots))
-            return false;
-        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, missing);
-        if (!newfp)
-            return false;
-        for (Value *v = argv + argc, *end = v + missing; v != end; ++v)
-            v->setUndefined();
-    } else {
-        if (!f.ensureSpace(0, nslots))
-            return false;
-        newfp = stack.getInlineFrameUnchecked(cx, f.regs.sp, 0);
-        if (!newfp)
-            return false;
-    }
-
-    /* Initialize the frame. */
-    newfp->setCallObj(NULL);
-    newfp->setArgsObj(NULL);
-    newfp->setScript(newscript);
-    newfp->setFunction(fun);
-    newfp->argc = argc;
-    newfp->argv = vp + 2;
-    newfp->clearReturnValue();
-    newfp->setAnnotation(NULL);
-    newfp->setScopeChain(funobj->getParent());
-    newfp->flags = flags;
-    newfp->setBlockChain(NULL);
-    newfp->setThisValue(vp[1]);
-    newfp->setHookData(NULL);
-    JS_ASSERT(!fp->hasIMacroPC());
-
-#if 0
-    /* :TODO: Switch version if currentVersion wasn't overridden. */
-    newfp->setCallerVersion((JSVersion)cx->version);
-#endif
-
-#ifdef DEBUG
-    newfp->savedPC = JSStackFrame::sInvalidPC;
-#endif
-    newfp->down = fp;
-    fp->savedPC = f.regs.pc;
-    FixVMFrame(f, newfp);
-
-    return true;
-}
-
-/*
- * stubs::Call is guaranteed to be called on a scripted call with JIT'd code.
- */
-void * JS_FASTCALL
-stubs::Call(VMFrame &f, uint32 argc)
-{
-    if (!CreateLightFrame(f, 0, argc))
-        THROWV(NULL);
-
-    return f.fp()->getScript()->ncode;
-}
-
-/*
- * stubs::New is guaranteed to be called on a scripted call with JIT'd code.
- */
-void * JS_FASTCALL
-stubs::New(VMFrame &f, uint32 argc)
-{
-    JSObject *obj = InlineConstruct(f, argc);
-    if (!obj)
-        THROWV(NULL);
-
-    f.regs.sp[-int(argc + 1)].setObject(*obj);
-    if (!CreateLightFrame(f, JSFRAME_CONSTRUCTING, argc))
-        THROWV(NULL);
-
-    return f.fp()->getScript()->ncode;
-}
-
 void JS_FASTCALL
 stubs::PutCallObject(VMFrame &f)
 {
     JS_ASSERT(f.fp()->hasCallObj());
     js_PutCallObject(f.cx, f.fp());
-    JS_ASSERT(!f.fp()->hasArgsObj());
 }
 
 void JS_FASTCALL
-stubs::PutArgsObject(VMFrame &f)
+stubs::PutActivationObjects(VMFrame &f)
 {
-    js_PutArgsObject(f.cx, f.fp());
-}
-
-void JS_FASTCALL
-stubs::CopyThisv(VMFrame &f)
-{
-    JS_ASSERT(f.fp()->flags & JSFRAME_CONSTRUCTING);
-    if (f.fp()->getReturnValue().isPrimitive())
-        f.fp()->setReturnValue(f.fp()->getThisValue());
+    JS_ASSERT(f.fp()->hasCallObj() || f.fp()->hasArgsObj());
+    js::PutActivationObjects(f.cx, f.fp());
 }
 
 extern "C" void *
@@ -604,7 +554,7 @@ js_InternalThrow(VMFrame &f)
     JSThrowHook handler = f.cx->debugHooks->throwHook;
     if (handler) {
         Value rval;
-        switch (handler(cx, cx->fp()->getScript(), cx->regs->pc, Jsvalify(&rval),
+        switch (handler(cx, cx->fp()->script(), cx->regs->pc, Jsvalify(&rval),
                         cx->debugHooks->throwHookData)) {
           case JSTRAP_ERROR:
             cx->throwing = JS_FALSE;
@@ -646,19 +596,16 @@ js_InternalThrow(VMFrame &f)
 
     JS_ASSERT(f.regs.sp == cx->regs->sp);
 
-    if (!pc) {
-        *f.oldRegs = f.regs;
-        f.cx->setCurrentRegs(f.oldRegs);
+    if (!pc)
         return NULL;
-    }
 
-    return cx->fp()->getScript()->pcToNative(pc);
+    return cx->fp()->script()->pcToNative(pc);
 }
 
 void JS_FASTCALL
 stubs::GetCallObject(VMFrame &f)
 {
-    JS_ASSERT(f.fp()->getFunction()->isHeavyweight());
+    JS_ASSERT(f.fp()->fun()->isHeavyweight());
     if (!js_GetCallObject(f.cx, f.fp()))
         THROW();
 }
@@ -687,13 +634,13 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
         JSStackFrame *fp = cx->fp();
 
         /* Look for an imacro with hard-coded exception handlers. */
-        if (fp->hasIMacroPC() && cx->throwing) {
-            cx->regs->pc = fp->getIMacroPC();
-            fp->clearIMacroPC();
+        if (fp->hasImacropc() && cx->throwing) {
+            cx->regs->pc = fp->imacropc();
+            fp->clearImacropc();
             if (ok)
                 break;
         }
-        JS_ASSERT(!fp->hasIMacroPC());
+        JS_ASSERT(!fp->hasImacropc());
 
         /* If there's an exception and a handler, set the pc and leave. */
         jsbytecode *pc = FindExceptionHandler(cx);
@@ -723,10 +670,10 @@ static inline bool
 AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
-    if (fp->hasIMacroPC())
+    if (fp->hasImacropc())
         return false;
 
-    JSScript *script = fp->getScript();
+    JSScript *script = fp->script();
     if (!script->nmap)
         return false;
 
@@ -740,15 +687,11 @@ PartialInterpret(VMFrame &f)
     JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp();
 
-    JS_ASSERT(fp->hasIMacroPC() || !fp->getScript()->nmap ||
-              !fp->getScript()->nmap[cx->regs->pc - fp->getScript()->code]);
+    JS_ASSERT(fp->hasImacropc() || !fp->script()->nmap ||
+              !fp->script()->nmap[cx->regs->pc - fp->script()->code]);
 
     JSBool ok = JS_TRUE;
-    fp->flags |= JSFRAME_BAILING;
-    ok = Interpret(cx, fp);
-    fp->flags &= ~JSFRAME_BAILING;
-
-    f.fp() = cx->fp();
+    ok = Interpret(cx, fp, 0, JSINTERP_SAFEPOINT);
 
     return ok;
 }
@@ -770,12 +713,11 @@ static bool
 RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 {
     JSContext *cx = f.cx;
-    while (cx->fp() != entryFrame) {
+    while (cx->fp() != entryFrame || entryFrame->hasImacropc()) {
         JSStackFrame *fp = cx->fp();
-        fp->flags &= ~JSFRAME_RECORDING;
 
         if (AtSafePoint(cx)) {
-            JSScript *script = fp->getScript();
+            JSScript *script = fp->script();
             if (!JaegerShotAtSafePoint(cx, script->nmap[cx->regs->pc - script->code])) {
                 if (!SwallowErrors(f, entryFrame))
                     return false;
@@ -789,15 +731,16 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
             if (!PartialInterpret(f)) {
                 if (!SwallowErrors(f, entryFrame))
                     return false;
-            } else {
+            } else if (cx->fp() != entryFrame) {
                 /*
                  * Partial interpret could have dropped us anywhere. Deduce the
                  * edge case: at a RETURN, needing to pop a frame.
                  */
-                if (!cx->fp()->hasIMacroPC() && FrameIsFinished(cx)) {
+                JS_ASSERT(!cx->fp()->hasImacropc());
+                if (FrameIsFinished(cx)) {
                     JSOp op = JSOp(*cx->regs->pc);
-                    if (op == JSOP_RETURN && !(cx->fp()->flags & JSFRAME_BAILED_AT_RETURN))
-                        fp->setReturnValue(f.regs.sp[-1]);
+                    if (op == JSOP_RETURN && !cx->fp()->isBailedAtReturn())
+                        cx->fp()->setReturnValue(f.regs.sp[-1]);
                     InlineReturn(f, JS_TRUE);
                     AdvanceReturnPC(cx);
                 }
@@ -877,7 +820,7 @@ RunTracer(VMFrame &f)
       case TPA_Error:
         if (!SwallowErrors(f, entryFrame))
             THROWV(NULL);
-        JS_ASSERT(!cx->fp()->hasIMacroPC());
+        JS_ASSERT(!cx->fp()->hasImacropc());
         break;
 
       case TPA_RanStuff:
@@ -912,29 +855,20 @@ RunTracer(VMFrame &f)
     if (!RemoveExcessFrames(f, entryFrame))
         THROWV(NULL);
 
-    /* Step 2. If there's an imacro on the entry frame, remove it. */
-    entryFrame->flags &= ~JSFRAME_RECORDING;
-    while (entryFrame->hasIMacroPC()) {
-        if (!PartialInterpret(f)) {
-            if (!SwallowErrors(f, entryFrame))
-                THROWV(NULL);
-        }
+    /* IMacros are guaranteed to have been removed by now. */
+    JS_ASSERT(!entryFrame->hasImacropc());
 
-        /* After partial interpreting, we could have more frames again. */
-        goto restart;
-    }
-
-    /* Step 3.1. If entryFrame is at a safe point, just leave. */
+    /* Step 2. If entryFrame is at a safe point, just leave. */
     if (AtSafePoint(cx)) {
-        uint32 offs = uint32(cx->regs->pc - entryFrame->getScript()->code);
-        JS_ASSERT(entryFrame->getScript()->nmap[offs]);
-        return entryFrame->getScript()->nmap[offs];
+        uint32 offs = uint32(cx->regs->pc - entryFrame->script()->code);
+        JS_ASSERT(entryFrame->script()->nmap[offs]);
+        return entryFrame->script()->nmap[offs];
     }
 
-    /* Step 3.2. If entryFrame is at a RETURN, then leave slightly differently. */
+    /* Step 3. If entryFrame is at a RETURN, then leave slightly differently. */
     if (JSOp op = FrameIsFinished(cx)) {
         /* We're not guaranteed that the RETURN was run. */
-        if (op == JSOP_RETURN && !(entryFrame->flags & JSFRAME_BAILED_AT_RETURN))
+        if (op == JSOP_RETURN && !entryFrame->isBailedAtReturn())
             entryFrame->setReturnValue(f.regs.sp[-1]);
 
         /* Don't pop the frame if it's maybe owned by an Invoke. */
@@ -947,7 +881,7 @@ RunTracer(VMFrame &f)
         return NULL;
     }
 
-    /* Step 3.3. Do a partial interp, then restart the whole process. */
+    /* Step 4. Do a partial interp, then restart the whole process. */
     if (!PartialInterpret(f)) {
         if (!SwallowErrors(f, entryFrame))
             THROWV(NULL);
@@ -963,7 +897,7 @@ RunTracer(VMFrame &f)
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, uint32 index)
 {
-    JSScript *script = f.fp()->getScript();
+    JSScript *script = f.fp()->script();
     ic::MICInfo &mic = script->mics[index];
 
     JS_ASSERT(mic.kind == ic::MICInfo::TRACER);

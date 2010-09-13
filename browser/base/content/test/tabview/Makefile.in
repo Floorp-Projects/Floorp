@@ -43,12 +43,16 @@ relativesrcdir  = browser/base/content/test/tabview
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-$(warning All TabView tests are disabled for now while we iterate on the UI)
-
 _BROWSER_FILES = \
                  browser_tabview_launch.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_group.js \
+                 browser_tabview_search.js \
+                 browser_tabview_snapping.js \
+                 browser_tabview_bug591706.js \
+                 browser_tabview_apptabs.js \
+                 browser_tabview_undo_group.js \
+                 browser_tabview_exit_button.js \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)

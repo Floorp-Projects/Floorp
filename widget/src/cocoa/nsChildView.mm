@@ -907,8 +907,8 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
 
     [mView setHidden:!aState];
     mVisible = aState;
-    if (!mVisible)
-      HideChildPluginViews(mView);
+    if (!mVisible && IsPluginView())
+      HidePlugin();
   }
   return NS_OK;
 
@@ -1004,14 +1004,9 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Don't so anything if we're invisible (if Show(PR_FALSE) has been
-  // called on us, or if Show(PR_TRUE) hasn't yet been called).  This
-  // resolves bug 504450.
-  if (mView && ![mView isHidden]) {
-    NSWindow* window = [mView window];
-    if (window)
-      [window makeFirstResponder:mView];
-  }
+  NSWindow* window = [mView window];
+  if (window)
+    [window makeFirstResponder:mView];
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1660,18 +1655,23 @@ void nsChildView::ApplyConfiguration(nsIWidget* aExpectedParent,
   nsWindowType kidType;
   aConfiguration.mChild->GetWindowType(kidType);
 #endif
-  NS_ASSERTION(kidType == eWindowType_plugin || kidType == eWindowType_child,
-               "Configured widget is not a child or plugin type");
+  NS_ASSERTION(kidType == eWindowType_plugin,
+               "Configured widget is not a plugin type");
   NS_ASSERTION(aConfiguration.mChild->GetParent() == aExpectedParent,
                "Configured widget is not a child of the right widget");
-  aConfiguration.mChild->Resize(
+
+  // nsIWidget::Show() doesn't get called on plugin widgets unless we call
+  // it from here.  See bug 592563.
+  nsChildView* child = static_cast<nsChildView*>(aConfiguration.mChild);
+  child->Show(!aConfiguration.mClipRegion.IsEmpty());
+
+  child->Resize(
       aConfiguration.mBounds.x, aConfiguration.mBounds.y,
       aConfiguration.mBounds.width, aConfiguration.mBounds.height,
       aRepaint);
-  // On Mac we don't use the clip region here, we just store it
-  // in case GetPluginClipRect needs it.
-  static_cast<nsChildView*>(aConfiguration.mChild)->
-    StoreWindowClipRegion(aConfiguration.mClipRegion);
+
+  // Store the clip region here in case GetPluginClipRect needs it.
+  child->StoreWindowClipRegion(aConfiguration.mClipRegion);
 }
 
 nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)

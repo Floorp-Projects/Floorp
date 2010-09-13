@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <head>
+    <style>
+      :-moz-submit-invalid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('t').removeChild(document.forms[0]);
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <table id='t'>
+      <form>
+        <tr><td><input required></td></tr>
+        <tr><td><input type='image'></td></tr>
+      </form>
+    </table>
+  </body>
+</html>

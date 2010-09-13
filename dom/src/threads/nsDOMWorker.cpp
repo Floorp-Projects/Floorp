@@ -1560,26 +1560,41 @@ nsDOMWorker::PostMessageInternal(PRBool aToInner)
 }
 
 PRBool
-nsDOMWorker::SetGlobalForContext(JSContext* aCx)
+nsDOMWorker::SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest,
+                                 JSAutoCrossCompartmentCall *aCall)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  if (!CompileGlobalObject(aCx)) {
+  if (!CompileGlobalObject(aCx, aRequest, aCall)) {
     return PR_FALSE;
   }
-
-  JSAutoRequest ar(aCx);
 
   JS_SetGlobalObject(aCx, mGlobal);
   return PR_TRUE;
 }
 
 PRBool
-nsDOMWorker::CompileGlobalObject(JSContext* aCx)
+nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
+                                 JSAutoCrossCompartmentCall *aCall)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
+  // On success, we enter a request and a cross-compartment call that both
+  // belong to the caller. But on failure, we must not remain in a request or
+  // cross-compartment call. So we enter both only locally at first. On
+  // failure, the local request and call will automatically get cleaned
+  // up. Once success is certain, we swap them into *aRequest and *aCall.
+  nsLazyAutoRequest localRequest;
+  JSAutoCrossCompartmentCall localCall;
+  localRequest.enter(aCx);
+
+  PRBool success;
   if (mGlobal) {
+    success = localCall.enter(aCx, mGlobal);
+    NS_ENSURE_TRUE(success, PR_FALSE);
+
+    aRequest->swap(localRequest);
+    aCall->swap(localCall);
     return PR_TRUE;
   }
 
@@ -1590,8 +1605,6 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
   mCompileAttempted = PR_TRUE;
 
   NS_ASSERTION(!mScriptURL.IsEmpty(), "Must have a url here!");
-
-  JSAutoRequest ar(aCx);
 
   NS_ASSERTION(!JS_GetGlobalObject(aCx), "Global object should be unset!");
 
@@ -1622,6 +1635,9 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 
   NS_ASSERTION(JS_GetGlobalObject(aCx) == global, "Global object mismatch!");
 
+  success = localCall.enter(aCx, global);
+  NS_ENSURE_TRUE(success, PR_FALSE);
+
 #ifdef DEBUG
   {
     jsval components;
@@ -1633,7 +1649,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 #endif
 
   // Set up worker thread functions.
-  PRBool success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
+  success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
   if (mPrivilegeModel == CHROME) {
@@ -1690,6 +1706,8 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
 
   NS_ASSERTION(mPrincipal && mURI, "Script loader didn't set our principal!");
 
+  aRequest->swap(localRequest);
+  aCall->swap(localCall);
   return PR_TRUE;
 }
 

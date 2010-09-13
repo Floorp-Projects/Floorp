@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469170
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body>
+<body onload="runTest();">
 <p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469170">Mozilla Bug 469170</a></p>
 
 <iframe id="source" width="50" height="50"
@@ -20,28 +20,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469170
 <script type="application/javascript">
 
 /** Test for Bug 469170 **/
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-var canvas = document.getElementById('scratch');
-var source = document.getElementById('source').contentWindow;
-var context = canvas.getContext("2d");
+SimpleTest.waitForExplicitFinish();
 
-context.clearRect(0, 0, canvas.width, canvas.height);
-context.drawWindow(source, 0, 0, source.innerWidth, source.innerHeight,
-                   "transparent");
+function runTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-var components = [ "red", "green", "blue", "alpha" ];
+  var canvas = document.getElementById('scratch');
+  var source = document.getElementById('source').contentWindow;
+  var context = canvas.getContext("2d");
 
-var data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-var failed = false;
-for (var i = 0; i < data.length; i++) {
-  if (data[i] != 0) {
-    is(data[i], 0, "pixel " + Math.floor(i/4) + " " + components[i%4]);
-    failed = true;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawWindow(source, 0, 0, source.innerWidth, source.innerHeight,
+                     "transparent");
+
+  var components = [ "red", "green", "blue", "alpha" ];
+
+  var data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  var failed = false;
+  for (var i = 0; i < data.length; i++) {
+    if (data[i] != 0) {
+      is(data[i], 0, "pixel " + Math.floor(i/4) + " " + components[i%4]);
+      failed = true;
+    }
   }
-}
-if (!failed) {
-  ok(!failed, "all pixels fully transparent");
+  if (!failed) {
+    ok(!failed, "all pixels fully transparent");
+  }
+  SimpleTest.finish();
 }
 </script>
 </pre>

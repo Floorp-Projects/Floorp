@@ -81,6 +81,11 @@ public:
                                                       const gfxIntSize& size,
                                                       gfxImageFormat format);
 
+    virtual TextQuality GetTextQualityInTransparentSurfaces()
+    {
+      return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
+    }
+
     nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
     nsresult EndPrinting();
     nsresult AbortPrinting();

@@ -1,8 +1,12 @@
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/identity.js");
 
 function run_test() {
+  let passphrase = ID.set("WeaveCryptoID", new Identity());
+  passphrase.password = "passphrase";
+
   _("Generating keypair to encrypt/decrypt symkeys");
   let {pubkey, privkey} = PubKeys.createKeypair(
     passphrase,

@@ -90,11 +90,6 @@ class Compiler
         Call call;
         ic::MICInfo::Kind kind;
         jsbytecode *jumpTarget;
-        uint32 argc;
-        uint32 frameDepth;
-        Label knownObject;
-        Label callEnd;
-        JSC::MacroAssembler::RegisterID dataReg;
         Jump traceHint;
         MaybeJump slowTraceHint;
         union {
@@ -107,6 +102,34 @@ class Compiler
             } tracer;
         } u;
     };
+
+    /* InlineFrameAssembler wants to see this. */
+  public:
+    struct CallGenInfo {
+        CallGenInfo(uint32 argc)
+          : argc(argc)
+        { }
+
+        /*
+         * These members map to members in CallICInfo. See that structure for
+         * more comments.
+         */
+        uint32       argc;
+        DataLabelPtr funGuard;
+        Jump         funJump;
+        Call         hotCall;
+        Call         oolCall;
+        Label        joinPoint;
+        Label        slowJoinPoint;
+        Label        slowPathStart;
+        Label        hotPathLabel;
+        Jump         oolJump;
+        RegisterID   funObjReg;
+        RegisterID   funPtrReg;
+        uint32       frameDepth;
+    };
+
+  private:
 #endif
 
 #if defined JS_POLYIC
@@ -184,6 +207,7 @@ class Compiler
     js::Vector<BranchPatch, 64> branchPatches;
 #if defined JS_MONOIC
     js::Vector<MICGenInfo, 64> mics;
+    js::Vector<CallGenInfo, 64> callICs;
 #endif
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 64> pics;
@@ -193,6 +217,7 @@ class Compiler
     js::Vector<uint32, 16> escapingList;
     StubCompiler stubcc;
     Label invokeLabel;
+    Label arityLabel;
     bool addTraceHints;
 
   public:
@@ -225,7 +250,7 @@ class Compiler
     void addCallSite(uint32 id, bool stub);
 
     /* Emitting helpers. */
-    void saveReturnAddress();
+    RegisterID takeHWReturnAddress(Assembler &masm);
     void restoreReturnAddress(Assembler &masm);
     void restoreFrameRegs(Assembler &masm);
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
@@ -246,6 +271,8 @@ class Compiler
     void emitReturn();
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
+    void emitUncachedCall(uint32 argc, bool callingNew);
+    void emitPrimitiveTestForNew(uint32 argc);
     void inlineCallHelper(uint32 argc, bool callingNew);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
@@ -353,6 +380,8 @@ class Compiler
     STUB_CALL_TYPE(VoidPtrStubPC);
     STUB_CALL_TYPE(VoidVpStub);
     STUB_CALL_TYPE(VoidStubPC);
+    STUB_CALL_TYPE(BoolStubUInt32);
+    STUB_CALL_TYPE(VoidStubFun);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall(Uses uses);

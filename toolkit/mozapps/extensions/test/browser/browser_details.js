@@ -55,7 +55,7 @@ function test() {
     type: "extension",
     iconURL: "chrome://foo/skin/icon.png",
     icon64URL: "chrome://foo/skin/icon64.png",
-    contributeURL: "http://foo.com",
+    contributionURL: "http://foo.com",
     contributionAmount: "$0.99",
     sourceURI: Services.io.newURI("http://example.com/foo", null, null),
     averageRating: 4,
@@ -90,7 +90,11 @@ function test() {
     appDisabled: true,
     permissions: AddonManager.PERM_CAN_ENABLE |
                  AddonManager.PERM_CAN_DISABLE |
-                 AddonManager.PERM_CAN_UPGRADE
+                 AddonManager.PERM_CAN_UPGRADE,
+    screenshots: [{
+      url: "http://example.com/screenshot",
+      thumbnailURL: "http://example.com/thumbnail"
+    }],
   }, {
     id: "addon4@tests.mozilla.org",
     name: "Test add-on 4",
@@ -243,7 +247,7 @@ add_test(function() {
     is_element_hidden(get("detail-creator")._creatorLink, "Creator link should be hidden");
 
     is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
-    ok(get("detail-screenshot").src, "http://example.com/screenshot");
+    is(get("detail-screenshot").src, "http://example.com/screenshot", "Should be showing the full sized screenshot");
     is(get("detail-desc").textContent, "Short description", "Description should be correct");
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
@@ -290,7 +294,8 @@ add_test(function() {
     is(get("detail-creator")._creatorLink.value, "Mozilla", "Creator link should be correct");
     is(get("detail-creator")._creatorLink.href, "http://www.mozilla.org", "Creator link href should be correct");
 
-    is_element_hidden(get("detail-screenshot"), "Screenshot should not be visible");
+    is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
+    is(get("detail-screenshot").src, "http://example.com/thumbnail", "Should be showing the thumbnail");
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
 

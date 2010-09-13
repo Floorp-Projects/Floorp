@@ -42,17 +42,28 @@ function test() {
   TabView.toggle();
 }
 
+let originalGroupItem = null;
+let originalTab = null;
+
 function onTabViewWindowLoaded() {
   window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
   ok(TabView.isVisible(), "Tab View is visible");
 
   let contentWindow = document.getElementById("tab-view").contentWindow;
+
+  is(contentWindow.GroupItems.groupItems.length, 1, "There is one group item on startup");
+  originalGroupItem = contentWindow.GroupItems.groupItems[0];
+  is(originalGroupItem.getChildren().length, 1, "There should be one Tab Item in that group.");
+  contentWindow.GroupItems.setActiveGroupItem(originalGroupItem);
+
+  [originalTab] = gBrowser.visibleTabs;
+
   testEmptyGroupItem(contentWindow);
 }
 
 function testEmptyGroupItem(contentWindow) {
   let groupItemCount = contentWindow.GroupItems.groupItems.length;
-
+  
   // create empty group item
   let emptyGroupItem = createEmptyGroupItem(contentWindow, 100);
   ok(emptyGroupItem.isEmpty(), "This group is empty");
@@ -81,16 +92,18 @@ function testGroupItemWithTabItem(contentWindow) {
   let groupItem = createEmptyGroupItem(contentWindow, 200);
   let tabItemCount = 0;
 
-  groupItem.addSubscriber(groupItem, "tabAdded", function() {
-    groupItem.removeSubscriber(groupItem, "tabAdded");
-    TabView.toggle();
-  });
-
   let onTabViewHidden = function() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
 
     is(groupItem.getChildren().length, ++tabItemCount,
        "The number of children in new tab group is increased by 1");
+
+    ok(!TabView.isVisible(), "Tab View is hidden because we just opened a tab");
+
+    TabView.toggle();
+  };
+  let onTabViewShown = function() {
+    window.removeEventListener("tabviewshown", onTabViewShown, false);
 
     let tabItem = groupItem.getChild(groupItem.getChildren().length - 1);
     ok(tabItem, "Tab item exists");
@@ -106,8 +119,28 @@ function testGroupItemWithTabItem(contentWindow) {
       ok(tabItemClosed, "The tab item is closed");
       is(groupItem.getChildren().length, --tabItemCount,
         "The number of children in new tab group is decreased by 1");
+        
+      ok(TabView.isVisible(), "Tab View is still shown");
 
-      finish();
+      // Now there should only be one tab left, so we need to hide TabView
+      // and go into that tab.
+      is(gBrowser.tabs.length, 1, "There is only one tab left");
+            
+      let endGame = function() {
+        window.removeEventListener("tabviewhidden", endGame, false);
+        ok(!TabView.isVisible(), "Tab View is hidden");
+        finish();
+      };
+      window.addEventListener("tabviewhidden", endGame, false);
+
+      // after the last selected tabitem is closed, there would be not active
+      // tabitem on the UI so we set the active tabitem before toggling the 
+      // visibility of tabview
+      let tabItems = contentWindow.TabItems.getItems();
+      ok(tabItems[0], "A tab item exists");
+      contentWindow.UI.setActiveTab(tabItems[0]);
+
+      TabView.toggle();
     });
 
     // remove the tab item.  The code detects mousedown and mouseup so we stimulate here
@@ -116,9 +149,12 @@ function testGroupItemWithTabItem(contentWindow) {
 
     EventUtils.sendMouseEvent({ type: "mousedown" }, closeButton[0], contentWindow);
     EventUtils.sendMouseEvent({ type: "mouseup" }, closeButton[0], contentWindow);
-  };
 
+    TabView.toggle();
+  };
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
+  window.addEventListener("tabviewshown", onTabViewShown, false);
+  
   // click on the + button
   let newTabButton = groupItem.container.getElementsByClassName("newTabButton");
   ok(newTabButton[0], "New tab button exists");

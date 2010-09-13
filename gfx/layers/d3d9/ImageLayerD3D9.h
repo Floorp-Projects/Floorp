@@ -40,6 +40,7 @@
 
 #include "LayerManagerD3D9.h"
 #include "ImageLayers.h"
+#include "yuv_convert.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
@@ -129,6 +130,7 @@ public:
   nsRefPtr<IDirect3DTexture9> mCrTexture;
   nsRefPtr<IDirect3DTexture9> mCbTexture;
   PRPackedBool mHasData;
+  gfx::YUVType mType; 
 };
 
 

@@ -2137,7 +2137,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     PRBool exists;
     lf->Exists(&exists);
     if (!exists) {
-        rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0644);
+        rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0700);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -3356,7 +3356,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
      }
      flagFile = do_QueryInterface(fFlagFile);
      if (flagFile) {
-       flagFile->SetNativeLeafName(FILE_INVALIDATE_CACHES);
+       flagFile->AppendNative(FILE_INVALIDATE_CACHES);
      }
  #endif
     PRBool cachesOK;

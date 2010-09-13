@@ -1,7 +1,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:mathml="http://www.w3.org/1998/Math/MathML">
 <box>
 m
-<mathml:munderover style="padding-left: 20%; padding-right: 50%; text-shadow: 0px 0px 5px orange; text-decoration: overline;">
+<mathml:munderover style="padding-left: 20%; padding-right: 50%; text-shadow: 0px 0px 3.5px orange; text-decoration: overline;">
 m
 <box/>
 <box/>

@@ -38,7 +38,7 @@
 
 #include "CTypes.h"
 #include "Library.h"
-#include "jsdtoa.h"
+#include "jsnum.h"
 #include <limits>
 
 #include <math.h>
@@ -2352,9 +2352,8 @@ BuildDataSource(JSContext* cx,
   case TYPE_##name: {                                                          \
     /* Serialize as a primitive double. */                                     \
     double fp = *static_cast<type*>(data);                                     \
-    char buf[DTOSTR_STANDARD_BUFFER_SIZE];                                     \
-    char* str = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof(buf),     \
-                          DTOSTR_STANDARD, 0, fp);                             \
+    ToCStringBuf cbuf;                                                         \
+    char* str = NumberToCString(cx, &cbuf, fp);                                \
     if (!str) {                                                                \
       JS_ReportOutOfMemory(cx);                                                \
       return false;                                                            \

@@ -124,11 +124,9 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
     nsresult rv = accWrap->GetKeyboardShortcut(accessKey);
 
     if (NS_SUCCEEDED(rv) && !accessKey.IsEmpty()) {
-        nsCOMPtr<nsIAccessible> parentAccessible;
-        accWrap->GetParent(getter_AddRefs(parentAccessible));
-        if (parentAccessible) {
-          PRUint32 geckoRole = nsAccUtils::RoleInternal(parentAccessible);
-          PRUint32 atkRole = atkRoleMap[geckoRole];
+        nsAccessible* parent = accWrap->GetParent();
+        if (parent) {
+          PRUint32 atkRole = atkRoleMap[parent->NativeRole()];
 
             if (atkRole == ATK_ROLE_MENU_BAR) {
                 //it is topmenu, change from "Alt+f" to "f;<Alt>f"
@@ -140,11 +138,11 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
             else if ((atkRole == ATK_ROLE_MENU) || (atkRole == ATK_ROLE_MENU_ITEM)) {
                 //it is submenu, change from "s" to "s;<Alt>f:s"
                 nsAutoString allKey = accessKey;
-                nsCOMPtr<nsIAccessible> grandParentAcc = parentAccessible;
+                nsAccessible* grandParent = parent;
 
-                while ((grandParentAcc) && (atkRole != ATK_ROLE_MENU_BAR)) {
+                do {
                     nsAutoString grandParentKey;
-                    grandParentAcc->GetKeyboardShortcut(grandParentKey);
+                    grandParent->GetKeyboardShortcut(grandParentKey);
 
                     if (!grandParentKey.IsEmpty()) {
                         nsAutoString rightChar;
@@ -152,11 +150,9 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
                         allKey = rightChar + NS_LITERAL_STRING(":") + allKey;
                     }
 
-                    nsCOMPtr<nsIAccessible> tempAcc = grandParentAcc;
-                    tempAcc->GetParent(getter_AddRefs(grandParentAcc));
-                  geckoRole = nsAccUtils::RoleInternal(grandParentAcc);
-                  atkRole = atkRoleMap[geckoRole];
-                }
+                } while ((grandParent = grandParent->GetParent()) &&
+                         atkRoleMap[grandParent->NativeRole()] != ATK_ROLE_MENU_BAR);
+
                 allKeyBinding = accessKey + NS_LITERAL_STRING(";<Alt>") +
                                 allKey;
             }

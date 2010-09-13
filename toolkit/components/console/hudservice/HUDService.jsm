@@ -49,7 +49,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["HUDService"];
+var EXPORTED_SYMBOLS = ["HUDService", "ConsoleUtils"];
 
 XPCOMUtils.defineLazyServiceGetter(this, "scriptError",
                                    "@mozilla.org/scripterror;1",
@@ -79,6 +79,11 @@ XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
   return obj.PropertyPanel;
 });
 
+XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
+  var obj = {};
+  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  return obj.namesAndValuesOf;
+});
 
 function LogFactory(aMessagePrefix)
 {
@@ -105,6 +110,11 @@ const NEW_GROUP_DELAY = 5000;
 // The amount of time in milliseconds that we wait before performing a live
 // search.
 const SEARCH_DELAY = 200;
+
+// The number of lines that are displayed in the console output by default.
+// The user can change this number by adjusting the hidden
+// "devtools.hud.loglimit" preference.
+const DEFAULT_LOG_LIMIT = 200;
 
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
@@ -160,13 +170,22 @@ ResponseListener.prototype =
     let httpActivity = this.httpActivity;
     // Check if the header isn't set yet.
     if (!httpActivity.response.header) {
-      httpActivity.response.header = {};
       if (aRequest instanceof Ci.nsIHttpChannel) {
+      httpActivity.response.header = {};
+        try {
         aRequest.visitResponseHeaders({
           visitHeader: function(aName, aValue) {
             httpActivity.response.header[aName] = aValue;
           }
         });
+      }
+        // Accessing the response header can throw an NS_ERROR_NOT_AVAILABLE
+        // exception. Catch it and stop it to make it not show up in the.
+        // This can happen if the response is not finished yet and the user
+        // reloades the page.
+        catch (ex) {
+          delete httpActivity.response.header;
+        }
       }
     }
   },
@@ -1080,6 +1099,48 @@ NetworkPanel.prototype =
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//// Private utility functions for the HUD service
+
+/**
+ * Destroys lines of output if more lines than the allowed log limit are
+ * present.
+ *
+ * @param nsIDOMNode aConsoleNode
+ *        The DOM node that holds the output of the console.
+ * @returns void
+ */
+function pruneConsoleOutputIfNecessary(aConsoleNode)
+{
+  let logLimit;
+  try {
+    let prefBranch = Services.prefs.getBranch("devtools.hud.");
+    logLimit = prefBranch.getIntPref("loglimit");
+  } catch (e) {
+    logLimit = DEFAULT_LOG_LIMIT;
+  }
+
+  let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
+  for (let i = 0; i < messageNodes.length - logLimit; i++) {
+    let messageNode = messageNodes[i];
+    let groupNode = messageNode.parentNode;
+    if (!groupNode.classList.contains("hud-group")) {
+      throw new Error("pruneConsoleOutputIfNecessary: message node not in a " +
+                      "HUD group");
+    }
+
+    groupNode.removeChild(messageNode);
+
+    // If there are no more children, then remove the group itself.
+    if (!groupNode.querySelector(".hud-msg-node")) {
+      groupNode.parentNode.removeChild(groupNode);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+//// The HUD service
+
 function HUD_SERVICE()
 {
   // TODO: provide mixins for FENNEC: bug 568621
@@ -1847,6 +1908,8 @@ HUD_SERVICE.prototype =
 
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
+
+    pruneConsoleOutputIfNecessary(aConsoleNode);
   },
 
   /**
@@ -2283,6 +2346,9 @@ HUD_SERVICE.prototype =
       var urlIdx = timestampedMessage.indexOf(aActivityObject.url);
       messageObject.prefix = timestampedMessage.substring(0, urlIdx);
 
+      messageObject.messageNode.classList.add("hud-clickable");
+      messageObject.messageNode.setAttribute("crop", "end");
+
       this.logMessage(messageObject.messageObject, outputNode, messageObject.messageNode);
       return messageObject;
     }
@@ -2416,11 +2482,6 @@ HUD_SERVICE.prototype =
     let chromeDocument = aConsoleNode.ownerDocument;
     let groupNode = chromeDocument.createElement("vbox");
     groupNode.setAttribute("class", "hud-group");
-
-    let separatorNode = chromeDocument.createElement("separator");
-    separatorNode.setAttribute("class", "groove hud-divider");
-    separatorNode.setAttribute("orient", "horizontal");
-    groupNode.appendChild(separatorNode);
 
     aConsoleNode.appendChild(groupNode);
     return groupNode;
@@ -2586,8 +2647,8 @@ HUD_SERVICE.prototype =
       HUDWindowObserver.initialConsoleCreated = true;
     }
 
-    let _browser =
-      gBrowser.getBrowserForDocument(aContentWindow.document.wrappedJSObject);
+    let _browser = gBrowser.
+      getBrowserForDocument(aContentWindow.top.document.wrappedJSObject);
     let nBox = gBrowser.getNotificationBox(_browser);
     let nBoxId = nBox.getAttribute("id");
     let hudId = "hud_" + nBoxId;
@@ -2641,6 +2702,24 @@ HUD_SERVICE.prototype =
     }
     // capture JS Errors
     this.setOnErrorHandler(aContentWindow);
+
+    // register the controller to handle "select all" properly
+    this.createController(xulWindow);
+  },
+
+  /**
+   * Adds the command controller to the XUL window if it's not already present.
+   *
+   * @param nsIDOMWindow aWindow
+   *        The browser XUL window.
+   * @returns void
+   */
+  createController: function HUD_createController(aWindow)
+  {
+    if (aWindow.commandController == null) {
+      aWindow.commandController = new CommandController(aWindow);
+      aWindow.controllers.insertControllerAt(0, aWindow.commandController);
+    }
   }
 };
 
@@ -3044,6 +3123,15 @@ HeadsUpDisplay.prototype = {
     copyItem.setAttribute("command", "cmd_copy");
     menuPopup.appendChild(copyItem);
 
+    let selectAllItem = this.makeXULNode("menuitem");
+    selectAllItem.setAttribute("label", this.getStr("selectAllCmd.label"));
+    selectAllItem.setAttribute("accesskey",
+                               this.getStr("selectAllCmd.accesskey"));
+    selectAllItem.setAttribute("hudId", this.hudId);
+    selectAllItem.setAttribute("buttonType", "selectAll");
+    selectAllItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
+    menuPopup.appendChild(selectAllItem);
+
     menuPopup.appendChild(this.makeXULNode("menuseparator"));
 
     let clearItem = this.makeXULNode("menuitem");
@@ -3246,27 +3334,29 @@ function HUDConsole(aHeadsUpDisplay)
 
 /**
  * Creates a DOM Node factory for XUL nodes - as well as textNodes
- * @param   aFactoryType
- *          "xul" or "text"
- * @returns DOM Node Factory function
+ * @param aFactoryType "xul" or "text"
+ * @param ignored This parameter is currently ignored, and will be removed
+ * See bug 594304
+ * @param aDocument The document, the factory is to generate nodes from
+ * @return DOM Node Factory function
  */
-function NodeFactory(aFactoryType, aNameSpace, aDocument)
+function NodeFactory(aFactoryType, ignored, aDocument)
 {
   // aDocument is presumed to be a XULDocument
   if (aFactoryType == "text") {
-    function factory(aText) {
+    return function factory(aText)
+    {
       return aDocument.createTextNode(aText);
     }
-    return factory;
+  }
+  else if (aFactoryType == "xul") {
+    return function factory(aTag)
+    {
+      return aDocument.createElement(aTag);
+    }
   }
   else {
-    if (aNameSpace == "xul") {
-      function factory(aTag)
-      {
-        return aDocument.createElement(aTag);
-      }
-      return factory;
-    }
+    throw new Error('NodeFactory: Unknown factory type: ' + aFactoryType);
   }
 }
 
@@ -3489,6 +3579,171 @@ function JSPropertyProvider(aScope, aInputValue)
 //////////////////////////////////////////////////////////////////////////
 
 /**
+ * JSTermHelper
+ *
+ * Defines a set of functions ("helper functions") that are available from the
+ * WebConsole but not from the webpage.
+ * A list of helper functions used by Firebug can be found here:
+ *   http://getfirebug.com/wiki/index.php/Command_Line_API
+ */
+function JSTermHelper(aJSTerm)
+{
+  return {
+    /**
+     * Returns the result of document.getElementById(aId).
+     *
+     * @param string aId
+     *        A string that is passed to window.document.getElementById.
+     * @returns nsIDOMNode or null
+     */
+    $: function JSTH_$(aId)
+    {
+      try {
+        return aJSTerm._window.document.getElementById(aId);
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+
+    /**
+     * Returns the result of document.querySelectorAll(aSelector).
+     *
+     * @param string aSelector
+     *        A string that is passed to window.document.querySelectorAll.
+     * @returns array of nsIDOMNode
+     */
+    $$: function JSTH_$$(aSelector)
+    {
+      try {
+        return aJSTerm._window.document.querySelectorAll(aSelector);
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+
+    /**
+     * Runs a xPath query and returns all matched nodes.
+     *
+     * @param string aXPath
+     *        xPath search query to execute.
+     * @param [optional] nsIDOMNode aContext
+     *        Context to run the xPath query on. Uses window.document if not set.
+     * @returns array of nsIDOMNode
+     */
+    $x: function JSTH_$x(aXPath, aContext)
+    {
+      let nodes = [];
+      let doc = aJSTerm._window.wrappedJSObject.document;
+      let aContext = aContext || doc;
+
+      try {
+        let results = doc.evaluate(aXPath, aContext, null,
+                                    Ci.nsIDOMXPathResult.ANY_TYPE, null);
+
+        let node;
+        while (node = results.iterateNext()) {
+          nodes.push(node);
+        }
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+
+      return nodes;
+    },
+
+    /**
+     * Clears the output of the JSTerm.
+     */
+    clear: function JSTH_clear()
+    {
+      aJSTerm.clearOutput();
+    },
+
+    /**
+     * Returns the result of Object.keys(aObject).
+     *
+     * @param object aObject
+     *        Object to return the property names from.
+     * @returns array of string
+     */
+    keys: function JSTH_keys(aObject)
+    {
+      try {
+        return Object.keys(XPCNativeWrapper.unwrap(aObject));
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+    },
+
+    /**
+     * Returns the values of all properties on aObject.
+     *
+     * @param object aObject
+     *        Object to display the values from.
+     * @returns array of string
+     */
+    values: function JSTH_values(aObject)
+    {
+      let arrValues = [];
+      let obj = XPCNativeWrapper.unwrap(aObject);
+
+      try {
+        for (let prop in obj) {
+          arrValues.push(obj[prop]);
+        }
+      }
+      catch (ex) {
+        aJSTerm.console.error(ex.message);
+      }
+      return arrValues;
+    },
+
+    /**
+     * Inspects the passed aObject. This is done by opening the PropertyPanel.
+     *
+     * @param object aObject
+     *        Object to inspect.
+     * @returns void
+     */
+    inspect: function JSTH_inspect(aObject)
+    {
+      let obj = XPCNativeWrapper.unwrap(aObject);
+      aJSTerm.openPropertyPanel(null, obj);
+    },
+
+    /**
+     * Prints aObject to the output.
+     *
+     * @param object aObject
+     *        Object to print to the output.
+     * @returns void
+     */
+    pprint: function JSTH_pprint(aObject)
+    {
+      if (aObject === null || aObject === undefined || aObject === true || aObject === false) {
+        aJSTerm.console.error(HUDService.getStr("helperFuncUnsupportedTypeError"));
+        return;
+      }
+      let output = [];
+      if (typeof aObject != "string") {
+        aObject = XPCNativeWrapper.unwrap(aObject);
+      }
+      let pairs = namesAndValuesOf(aObject);
+
+      pairs.forEach(function(pair) {
+        output.push("  " + pair.display);
+      });
+
+      aJSTerm.writeOutput(output.join("\n"));
+    }
+  }
+}
+
+/**
  * JSTerm
  *
  * JavaScript Terminal: creates input nodes for console code interpretation
@@ -3576,6 +3831,7 @@ JSTerm.prototype = {
     this.sandbox = new Cu.Sandbox(this._window);
     this.sandbox.window = this._window;
     this.sandbox.console = this.console;
+    this.sandbox.__helperFunctions__ = JSTermHelper(this);
     this.sandbox.__proto__ = this._window.wrappedJSObject;
   },
 
@@ -3594,7 +3850,7 @@ JSTerm.prototype = {
    */
   evalInSandbox: function JST_evalInSandbox(aString)
   {
-    let execStr = "with(window) {" + aString + "}";
+    let execStr = "with(__helperFunctions__) { with(window) {" + aString + "} }";
     return Cu.evalInSandbox(execStr,  this.sandbox, "default", "HUD Console", 1);
   },
 
@@ -3630,7 +3886,7 @@ JSTerm.prototype = {
     this.history.push(aExecuteString);
     this.historyIndex++;
     this.historyPlaceHolder = this.history.length;
-    this.inputNode.value = "";
+    this.setInputValue("");
   },
 
   /**
@@ -3721,8 +3977,9 @@ JSTerm.prototype = {
 
     var self = this;
     var node = this.xulElementFactory("label");
-    node.setAttribute("class", "jsterm-output-line");
+    node.setAttribute("class", "jsterm-output-line hud-clickable");
     node.setAttribute("aria-haspopup", "true");
+    node.setAttribute("crop", "end");
     node.onclick = function() {
       self.openPropertyPanel(aEvalString, aOutputObject, node);
     }
@@ -3735,6 +3992,7 @@ JSTerm.prototype = {
 
     lastGroupNode.appendChild(node);
     ConsoleUtils.scrollToVisible(node);
+    pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
   /**
@@ -3774,6 +4032,7 @@ JSTerm.prototype = {
 
     lastGroupNode.appendChild(node);
     ConsoleUtils.scrollToVisible(node);
+    pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
   clearOutput: function JST_clearOutput()
@@ -3787,12 +4046,46 @@ JSTerm.prototype = {
     outputNode.lastTimestamp = 0;
   },
 
+  /**
+   * Updates the size of the input field (command line) to fit its contents.
+   *
+   * @returns void
+   */
+  resizeInput: function JST_resizeInput()
+  {
+    let inputNode = this.inputNode;
+
+    // Reset the height so that scrollHeight will reflect the natural height of
+    // the contents of the input field.
+    inputNode.style.height = "auto";
+
+    // Now resize the input field to fit its contents.
+    let scrollHeight = inputNode.inputField.scrollHeight;
+    if (scrollHeight > 0) {
+      inputNode.style.height = scrollHeight + "px";
+    }
+  },
+
+  /**
+   * Sets the value of the input field (command line), and resizes the field to
+   * fit its contents. This method is preferred over setting "inputNode.value"
+   * directly, because it correctly resizes the field.
+   *
+   * @param string aNewValue
+   *        The new value to set.
+   * @returns void
+   */
+  setInputValue: function JST_setInputValue(aNewValue)
+  {
+    this.inputNode.value = aNewValue;
+    this.resizeInput();
+  },
+
   inputEventHandler: function JSTF_inputEventHandler()
   {
     var self = this;
     function handleInputEvent(aEvent) {
-      self.inputNode.setAttribute("rows",
-        Math.min(8, self.inputNode.value.split("\n").length));
+      self.resizeInput();
     }
     return handleInputEvent;
   },
@@ -3812,17 +4105,16 @@ JSTerm.prototype = {
             // control-a
             tmp = self.codeInputString;
             setTimeout(function() {
-              self.inputNode.value = tmp;
+              self.setInputValue(tmp);
               self.inputNode.setSelectionRange(0, 0);
             }, 0);
             break;
           case 101:
             // control-e
             tmp = self.codeInputString;
-            self.inputNode.value = "";
+            self.setInputValue("");
             setTimeout(function(){
-              var endPos = tmp.length + 1;
-              self.inputNode.value = tmp;
+              self.setInputValue(tmp);
             }, 0);
             break;
           default:
@@ -3923,14 +4215,14 @@ JSTerm.prototype = {
 
       let inputVal = this.history[--this.historyPlaceHolder];
       if (inputVal){
-        this.inputNode.value = inputVal;
+        this.setInputValue(inputVal);
       }
     }
     // Down Arrow key
     else {
       if (this.historyPlaceHolder == this.history.length - 1) {
         this.historyPlaceHolder ++;
-        this.inputNode.value = "";
+        this.setInputValue("");
         return;
       }
       else if (this.historyPlaceHolder >= (this.history.length)) {
@@ -3939,7 +4231,7 @@ JSTerm.prototype = {
       else {
         let inputVal = this.history[++this.historyPlaceHolder];
         if (inputVal){
-          this.inputNode.value = inputVal;
+          this.setInputValue(inputVal);
         }
       }
     }
@@ -4070,7 +4362,7 @@ JSTerm.prototype = {
       }
 
       completionStr = matches[matchIndexToUse].substring(matchOffset);
-      this.inputNode.value = inputValue +  completionStr;
+      this.setInputValue(inputValue + completionStr);
 
       selEnd = inputValue.length + completionStr.length;
 
@@ -4130,10 +4422,21 @@ JSTermFirefoxMixin.prototype = {
    */
   generateUI: function JSTF_generateUI()
   {
+    let inputContainer = this.xulElementFactory("hbox");
+    inputContainer.setAttribute("class", "jsterm-input-container");
+
     let inputNode = this.xulElementFactory("textbox");
     inputNode.setAttribute("class", "jsterm-input-node");
+    inputNode.setAttribute("flex", "1");
     inputNode.setAttribute("multiline", "true");
     inputNode.setAttribute("rows", "1");
+    inputContainer.appendChild(inputNode);
+
+    let closeButton = this.xulElementFactory("button");
+    closeButton.setAttribute("class", "jsterm-close-button");
+    inputContainer.appendChild(closeButton);
+    closeButton.addEventListener("command", HeadsUpDisplayUICommands.toggleHUD,
+                                 false);
 
     if (this.existingConsoleNode == undefined) {
       // create elements
@@ -4154,7 +4457,7 @@ JSTermFirefoxMixin.prototype = {
     }
     else {
       this.inputNode = inputNode;
-      this.term = inputNode;
+      this.term = inputContainer;
       this.outputNode = this.existingConsoleNode;
     }
   },
@@ -4323,23 +4626,11 @@ ConsoleUtils = {
    */
   timestampString: function ConsoleUtils_timestampString(ms)
   {
-    // TODO: L10N see bug 568656
     var d = new Date(ms ? ms : null);
-
-    function pad(n, mil)
-    {
-      if (mil) {
-        return n < 100 ? "0" + n : n;
-      }
-      else {
-        return n < 10 ? "0" + n : n;
-      }
-    }
-
-    return pad(d.getHours()) + ":"
-      + pad(d.getMinutes()) + ":"
-      + pad(d.getSeconds()) + ":"
-      + pad(d.getMilliseconds(), true);
+    let hours = d.getHours(), minutes = d.getMinutes();
+    let seconds = d.getSeconds(), milliseconds = d.getMilliseconds();
+    let parameters = [ hours, minutes, seconds, milliseconds ];
+    return HUDService.getFormatStr("timestampFormat", parameters);
   },
 
   /**
@@ -4361,32 +4652,6 @@ ConsoleUtils = {
     nsIScrollBoxObject.ensureElementIsVisible(aNode);
   }
 };
-
-/**
- * Creates a DOM Node factory for XUL nodes - as well as textNodes
- * @param   aFactoryType
- *          "xul" or "text"
- * @returns DOM Node Factory function
- */
-function NodeFactory(aFactoryType, aNameSpace, aDocument)
-{
-  // aDocument is presumed to be a XULDocument
-  if (aFactoryType == "text") {
-    function factory(aText) {
-      return aDocument.createTextNode(aText);
-    }
-    return factory;
-  }
-  else {
-    if (aNameSpace == "xul") {
-      function factory(aTag) {
-        return aDocument.createElement(aTag);
-      }
-      return factory;
-    }
-  }
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 // HeadsUpDisplayUICommands
@@ -4425,8 +4690,16 @@ HeadsUpDisplayUICommands = {
   command: function UIC_command(aButton) {
     var filter = aButton.getAttribute("buttonType");
     var hudId = aButton.getAttribute("hudId");
-    if (filter == "clear") {
-      HUDService.clearDisplay(hudId);
+    switch (filter) {
+      case "clear":
+        HUDService.clearDisplay(hudId);
+        break;
+      case "selectAll":
+        let outputNode = HUDService.getOutputNodeById(hudId);
+        let chromeWindow = outputNode.ownerDocument.defaultView;
+        let commandController = chromeWindow.commandController;
+        commandController.selectAll(outputNode);
+        break;
     }
   },
 
@@ -4728,6 +5001,67 @@ HUDWindowObserver = {
    * over initialize
    */
   initialConsoleCreated: false,
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// CommandController
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * A controller (an instance of nsIController) that makes editing actions
+ * behave appropriately in the context of the Web Console.
+ */
+function CommandController(aWindow) {
+  this.window = aWindow;
+}
+
+CommandController.prototype = {
+  /**
+   * Returns the HUD output node that currently has the focus, or null if the
+   * currently-focused element isn't inside the output node.
+   *
+   * @returns nsIDOMNode
+   *          The currently-focused output node.
+   */
+  _getFocusedOutputNode: function CommandController_getFocusedOutputNode()
+  {
+    let anchorNode = this.window.getSelection().anchorNode;
+    while (!(anchorNode.nodeType === anchorNode.ELEMENT_NODE &&
+             anchorNode.classList.contains("hud-output-node"))) {
+      anchorNode = anchorNode.parentNode;
+    }
+    return anchorNode;
+  },
+
+  /**
+   * Selects all the text in the HUD output.
+   *
+   * @param nsIDOMNode aOutputNode
+   *        The HUD output node.
+   * @returns void
+   */
+  selectAll: function CommandController_selectAll(aOutputNode)
+  {
+    let selection = this.window.getSelection();
+    selection.removeAllRanges();
+    selection.selectAllChildren(aOutputNode);
+  },
+
+  supportsCommand: function CommandController_supportsCommand(aCommand)
+  {
+    return aCommand === "cmd_selectAll" &&
+           this._getFocusedOutputNode() != null;
+  },
+
+  isCommandEnabled: function CommandController_isCommandEnabled(aCommand)
+  {
+    return aCommand === "cmd_selectAll";
+  },
+
+  doCommand: function CommandController_doCommand(aCommand)
+  {
+    this.selectAll(this._getFocusedOutputNode());
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

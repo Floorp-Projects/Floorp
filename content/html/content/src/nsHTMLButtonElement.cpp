@@ -63,6 +63,7 @@
 #include "nsFocusManager.h"
 #include "nsHTMLFormElement.h"
 #include "nsIConstraintValidation.h"
+#include "mozAutoDocUpdate.h"
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
 #define NS_OUTER_ACTIVATE_EVENT (1 << 1)
@@ -82,6 +83,8 @@ class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLButtonElement();
 
@@ -134,7 +137,7 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const;
+  void UpdateBarredFromConstraintValidation();
 
 protected:
   virtual PRBool AcceptAutofocus() const
@@ -503,7 +506,11 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         //
         // Using presShell to dispatch the event. It makes sure that
         // event is not handled if the window is being destroyed.
-        if (presShell) {
+        if (presShell && (event.message != NS_FORM_SUBMIT ||
+                          mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+                          mForm->CheckValidFormSubmission())) {
+          // TODO: removing this code and have the submit event sent by the form
+          // see bug 592124.
           // Hold a strong ref while dispatching
           nsRefPtr<nsHTMLFormElement> form(mForm);
           presShell->HandleDOMEventWithTarget(mForm, &event, &status);
@@ -612,17 +619,27 @@ nsresult
 nsHTMLButtonElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
 {
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::type) {
-    if (!aValue) {
-      mType = kButtonDefaultType->value;
+  PRInt32 states = 0;
+
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::type) {
+      if (!aValue) {
+        mType = kButtonDefaultType->value;
+      }
+
+      UpdateBarredFromConstraintValidation();
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_MOZ_SUBMITINVALID;
+    } else if (aName == nsGkAtoms::disabled) {
+      UpdateBarredFromConstraintValidation();
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
     }
 
-    if (aNotify) {
+    if (aNotify && states) {
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
-        doc->ContentStatesChanged(this, nsnull,
-                                  NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        doc->ContentStatesChanged(this, nsnull, states);
       }
     }
   }
@@ -668,6 +685,10 @@ nsHTMLButtonElement::IntrinsicState() const
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 
+  if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
+    state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
+  }
+
   return state | NS_EVENT_STATE_OPTIONAL;
 }
 
@@ -680,6 +701,7 @@ nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID);
   }
@@ -687,10 +709,12 @@ nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
   return NS_OK;
 }
 
-PRBool
-nsHTMLButtonElement::IsBarredFromConstraintValidation() const
+void
+nsHTMLButtonElement::UpdateBarredFromConstraintValidation()
 {
-  return (mType == NS_FORM_BUTTON_BUTTON ||
-          mType == NS_FORM_BUTTON_RESET);
+  SetBarredFromConstraintValidation(mType == NS_FORM_BUTTON_BUTTON ||
+                                    mType == NS_FORM_BUTTON_RESET ||
+                                    HasAttr(kNameSpaceID_None,
+                                            nsGkAtoms::disabled));
 }
 

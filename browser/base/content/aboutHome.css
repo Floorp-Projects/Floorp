@@ -54,7 +54,7 @@ html {
 
 #brandStart {
   background: -moz-linear-gradient(top, #42607C, #1E4262 30%, #1E4262 80%, #143552 98%, #244665);
-  -moz-border-radius: 5.6px;
+  border-radius: 5.6px;
   padding-bottom: 0.2em;
   -moz-padding-start: 0.5em;
   font-size: 250%;
@@ -67,20 +67,22 @@ html {
   color: white;
 }
 
-#brandLogo {
+#brandStart:before {
+  content: url("chrome://branding/content/icon128.png");
   position: absolute;
   top: 0;
 }
-body[dir="ltr"] #brandLogo {
+
+body[dir="ltr"] #brandStart:before {
   right: 0;
 }
-body[dir="rtl"] #brandLogo {
+body[dir="rtl"] #brandStart:before {
   left: -15px;
 }
 
 #searchContainer {
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 5.6px;
+  border-radius: 5.6px;
   padding: 3em;
 }
 #searchEngineLinks {
@@ -105,5 +107,9 @@ body[dir="rtl"] #searchEngineLinks {
 }
 
 #aboutMozilla {
+  text-align: center;
+}
+
+#defaultSnippets {
   text-align: center;
 }

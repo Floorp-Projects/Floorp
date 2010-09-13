@@ -43,8 +43,7 @@ function startTest(test, token) {
     ok(false, "Unexpected ended event");
   }, false);
 
-  v.src = test.name;
-  v.load();
+  v.src = test.name; // implicitly starts a load.
 }
 
 manager.runTests(gDecodeErrorTests, startTest);

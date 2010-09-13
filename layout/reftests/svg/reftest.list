@@ -1,6 +1,5 @@
-
-# bugs/
-include bugs/reftest.list
+# svg-as-an-image tests
+include image/reftest.list
 
 # sizing tests
 include sizing/reftest.list
@@ -150,7 +149,7 @@ fails-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBounding
 random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == switch-01.svg pass.svg
 == text-gradient-01.svg text-gradient-01-ref.svg
-== text-gradient-02.svg text-gradient-02-ref.svg
+random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg

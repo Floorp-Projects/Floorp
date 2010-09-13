@@ -73,11 +73,10 @@ nsXULColorPickerTileAccessible::GetValue(nsAString& aValue)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULColorPickerTileAccessible: nsAccessible
 
-nsresult
-nsXULColorPickerTileAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULColorPickerTileAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_PUSHBUTTON;
 }
 
 nsresult
@@ -149,11 +148,10 @@ nsXULColorPickerAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsresult
-nsXULColorPickerAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULColorPickerAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_BUTTONDROPDOWNGRID;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_BUTTONDROPDOWNGRID;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,9 +164,7 @@ nsXULColorPickerAccessible::CacheChildren()
 
   nsRefPtr<nsAccessible> child;
   while ((child = walker.GetNextChild())) {
-    // XXX: do not call nsAccessible::GetRole() while accessible not in tree
-    // (bug 574588).
-    PRUint32 role = nsAccUtils::Role(child);
+    PRUint32 role = child->Role();
 
     // Get an accessbile for menupopup or panel elements.
     if (role == nsIAccessibleRole::ROLE_ALERT) {

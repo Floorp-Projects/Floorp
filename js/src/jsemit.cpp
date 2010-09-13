@@ -234,7 +234,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         JS_ASSERT(op == JSOP_ENTERBLOCK);
         JS_ASSERT(nuses == 0);
         blockObj = cg->objectList.lastbox->object;
-        JS_ASSERT(blockObj->getClass() == &js_BlockClass);
+        JS_ASSERT(blockObj->isStaticBlock());
         JS_ASSERT(blockObj->fslots[JSSLOT_BLOCK_DEPTH].isUndefined());
 
         OBJ_SET_BLOCK_DEPTH(cx, blockObj, cg->stackDepth);
@@ -1592,7 +1592,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
             continue;
 
         JSObject *obj = stmt->blockObj;
-        JS_ASSERT(obj->getClass() == &js_BlockClass);
+        JS_ASSERT(obj->isStaticBlock());
 
         const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
         if (shape) {
@@ -1867,9 +1867,12 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
 #endif
     }
 
-    if (!blockObj->growSlots(cx, base))
-        return false;
-    blockObj->freeslot = base;
+    /*
+     * Shrink slots to free blockObj->dslots and ensure a prompt safe crash if
+     * by accident some code tries to get a slot from a compiler-created Block
+     * prototype instead of from a clone.
+     */
+    blockObj->shrinkSlots(cx, base);
     return true;
 }
 
@@ -1891,7 +1894,7 @@ static bool
 MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 {
     JSContext *cx = cg->parser->context;
-    JSFunction *fun = cg->parser->callerFrame->getFunction();
+    JSFunction *fun = cg->parser->callerFrame->fun();
     uintN upvarLevel = fun->u.i.script->staticLevel;
 
     JSFunctionBox *funbox = cg->funbox;
@@ -2074,8 +2077,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (cg->flags & TCF_IN_FOR_INIT)
                 return JS_TRUE;
 
-            JS_ASSERT(caller->hasScript());
-            if (!caller->hasFunction())
+            JS_ASSERT(caller->isScriptFrame());
+            if (!caller->isFunctionFrame())
                 return JS_TRUE;
 
             /*
@@ -2104,7 +2107,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            JSFunction *fun = cg->parser->callerFrame->getFunction();
+            JSFunction *fun = cg->parser->callerFrame->fun();
             JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
             unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
             if (cg->skipSpansGenerator(skip))
@@ -2199,8 +2202,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #ifdef DEBUG
         JSStackFrame *caller = cg->parser->callerFrame;
 #endif
-        JS_ASSERT(caller);
-        JS_ASSERT(caller->hasScript());
+        JS_ASSERT(caller->isScriptFrame());
 
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
@@ -2209,7 +2211,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->compileAndGo());
-        JS_ASSERT(caller->hasFunction() && cg->parser->callerVarObj == evalcg->scopeChain);
+        JS_ASSERT(caller->isFunctionFrame() && cg->parser->callerVarObj == evalcg->scopeChain);
 
         /*
          * Don't generate upvars on the left side of a for loop. See

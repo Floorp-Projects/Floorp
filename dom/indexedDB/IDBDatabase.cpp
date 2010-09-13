@@ -41,18 +41,22 @@
 
 #include "nsIIDBDatabaseException.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
+#include "CheckQuotaHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 #include "IDBFactory.h"
+#include "IndexedDatabaseManager.h"
 #include "LazyIdleThread.h"
+#include "TransactionThreadPool.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -60,13 +64,11 @@ namespace {
 
 const PRUint32 kDefaultDatabaseTimeoutSeconds = 30;
 
-inline
-nsISupports*
-isupports_cast(IDBDatabase* aClassPtr)
-{
-  return static_cast<nsISupports*>(
-    static_cast<IDBRequest::Generator*>(aClassPtr));
-}
+PRUint32 gDatabaseInstanceCount = 0;
+mozilla::Mutex* gPromptHelpersMutex = nsnull;
+
+// Protected by gPromptHelpersMutex.
+nsTArray<nsRefPtr<CheckQuotaHelper> >* gPromptHelpers = nsnull;
 
 class SetVersionHelper : public AsyncConnectionHelper
 {
@@ -206,42 +208,79 @@ ConvertVariantToStringArray(nsIVariant* aVariant,
   return NS_OK;
 }
 
+inline
+already_AddRefed<IDBRequest>
+GenerateRequest(IDBDatabase* aDatabase)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aDatabase),
+                            aDatabase->ScriptContext(), aDatabase->Owner());
+}
+
 } // anonymous namespace
 
 // static
 already_AddRefed<IDBDatabase>
-IDBDatabase::Create(DatabaseInfo* aDatabaseInfo,
+IDBDatabase::Create(nsIScriptContext* aScriptContext,
+                    nsPIDOMWindow* aOwner,
+                    DatabaseInfo* aDatabaseInfo,
                     LazyIdleThread* aThread,
-                    nsCOMPtr<mozIStorageConnection>& aConnection)
+                    nsCOMPtr<mozIStorageConnection>& aConnection,
+                    const nsACString& aASCIIOrigin)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabaseInfo, "Null pointer!");
   NS_ASSERTION(aThread, "Null pointer!");
   NS_ASSERTION(aConnection, "Null pointer!");
+  NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
 
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
+
+  db->mScriptContext = aScriptContext;
+  db->mOwner = aOwner;
 
   db->mDatabaseId = aDatabaseInfo->id;
   db->mName = aDatabaseInfo->name;
   db->mDescription = aDatabaseInfo->description;
   db->mFilePath = aDatabaseInfo->filePath;
+  db->mASCIIOrigin = aASCIIOrigin;
 
   aThread->SetWeakIdleObserver(db);
   db->mConnectionThread = aThread;
 
   db->mConnection.swap(aConnection);
 
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetInstance();
+  NS_ASSERTION(mgr, "This should never be null!");
+
+  if (!mgr->RegisterDatabase(db)) {
+    NS_WARNING("Out of memory?");
+    return nsnull;
+  }
+
   return db.forget();
 }
 
 IDBDatabase::IDBDatabase()
-: mDatabaseId(0)
+: mDatabaseId(0),
+  mInvalidated(0)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (!gDatabaseInstanceCount++) {
+    NS_ASSERTION(!gPromptHelpersMutex, "Should be null!");
+    gPromptHelpersMutex = new mozilla::Mutex("IDBDatabase gPromptHelpersMutex");
+  }
 }
 
 IDBDatabase::~IDBDatabase()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetInstance();
+  if (mgr) {
+    mgr->UnregisterDatabase(this);
+  }
+
   if (mConnectionThread) {
     mConnectionThread->SetWeakIdleObserver(nsnull);
   }
@@ -259,12 +298,30 @@ IDBDatabase::~IDBDatabase()
       DatabaseInfo::Remove(mDatabaseId);
     }
   }
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+
+  if (!--gDatabaseInstanceCount) {
+    NS_ASSERTION(gPromptHelpersMutex, "Should not be null!");
+
+    delete gPromptHelpers;
+    gPromptHelpers = nsnull;
+
+    delete gPromptHelpersMutex;
+    gPromptHelpersMutex = nsnull;
+  }
 }
 
 nsresult
 IDBDatabase::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (mInvalidated) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   if (!mConnection) {
     mConnection = IDBFactory::GetConnection(mFilePath);
@@ -291,15 +348,94 @@ IDBDatabase::CloseConnection()
   }
 }
 
-NS_IMPL_ADDREF(IDBDatabase)
-NS_IMPL_RELEASE(IDBDatabase)
+bool
+IDBDatabase::IsQuotaDisabled()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
 
-NS_INTERFACE_MAP_BEGIN(IDBDatabase)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, IDBRequest::Generator)
+  MutexAutoLock lock(*gPromptHelpersMutex);
+
+  if (!gPromptHelpers) {
+    gPromptHelpers = new nsAutoTArray<nsRefPtr<CheckQuotaHelper>, 10>();
+  }
+
+  CheckQuotaHelper* foundHelper = nsnull;
+
+  PRUint32 count = gPromptHelpers->Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
+    if (helper->WindowSerial() == Owner()->GetSerial()) {
+      foundHelper = helper;
+      break;
+    }
+  }
+
+  if (!foundHelper) {
+    nsRefPtr<CheckQuotaHelper>* newHelper = gPromptHelpers->AppendElement();
+    if (!newHelper) {
+      NS_WARNING("Out of memory!");
+      return false;
+    }
+    *newHelper = new CheckQuotaHelper(this, *gPromptHelpersMutex);
+    foundHelper = *newHelper;
+
+    {
+      // Unlock before calling out to XPCOM.
+      MutexAutoUnlock unlock(*gPromptHelpersMutex);
+
+      nsresult rv = NS_DispatchToMainThread(foundHelper, NS_DISPATCH_NORMAL);
+      NS_ENSURE_SUCCESS(rv, false);
+    }
+  }
+
+  return foundHelper->PromptAndReturnQuotaIsDisabled();
+}
+
+void
+IDBDatabase::Invalidate()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  PR_AtomicSet(&mInvalidated, 1);
+  CloseConnection();
+}
+
+bool
+IDBDatabase::IsInvalidated()
+{
+  return !!mInvalidated;
+}
+
+void
+IDBDatabase::WaitForConnectionReleased()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  TransactionThreadPool* threadPool = TransactionThreadPool::Get();
+  if (threadPool) {
+    threadPool->WaitForAllTransactionsToComplete(this);
+  }
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase,
+                                                nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(IDBDatabase, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBDatabase, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBDatabase, IDBDatabase)
 
@@ -397,12 +533,10 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, objectStores,
-                           nsIIDBTransaction::READ_WRITE,
+    IDBTransaction::Create(this, objectStores, nsIIDBTransaction::READ_WRITE,
                            kDefaultDatabaseTimeoutSeconds);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
@@ -443,13 +577,11 @@ IDBDatabase::RemoveObjectStore(const nsAString& aName,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen,
-                           nsIIDBTransaction::READ_WRITE,
+    IDBTransaction::Create(this, storesToOpen, nsIIDBTransaction::READ_WRITE,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveObjectStoreHelper> helper =
@@ -477,12 +609,11 @@ IDBDatabase::SetVersion(const nsAString& aVersion,
   // Lock the whole database
   nsTArray<nsString> storesToOpen;
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen, IDBTransaction::FULL_LOCK,
+    IDBTransaction::Create(this, storesToOpen, IDBTransaction::FULL_LOCK,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
-  nsRefPtr<IDBRequest> request =
-    GenerateWriteRequest(transaction->ScriptContext(), transaction->Owner());
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<SetVersionHelper> helper =
@@ -623,7 +754,7 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen, aMode,
+    IDBTransaction::Create(this, storesToOpen, aMode,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
@@ -672,7 +803,7 @@ IDBDatabase::ObjectStore(const nsAString& aName,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(aCx, this, storesToOpen, aMode,
+    IDBTransaction::Create(this, storesToOpen, aMode,
                            kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 

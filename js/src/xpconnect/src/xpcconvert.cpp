@@ -1310,8 +1310,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                     JSStackFrame* fp = JS_GetScriptedCaller(cx, NULL);
                     if(fp)
                     {
-                        script = fp->maybeScript();
-                        callee = fp->callee();
+                        script = JS_GetFrameScript(cx, fp);
+                        callee = JS_GetFrameCalleeObject(cx, fp);
                     }
                 }
                 else if(ccx.GetXPCContext()->CallerTypeIsNative())

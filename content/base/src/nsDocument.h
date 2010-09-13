@@ -264,7 +264,7 @@ private:
   nsBaseContentList *mNameContentList;
   nsRefPtr<nsContentList> mDocAllList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
-  nsCOMPtr<Element> mImageElement;
+  nsRefPtr<Element> mImageElement;
 };
 
 class nsDocHeaderData
@@ -1144,6 +1144,9 @@ protected:
   // Whether we're currently holding a lock on all of our images.
   PRPackedBool mLockingImages:1;
 
+  // Whether we currently require our images to animate
+  PRPackedBool mAnimatingImages:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
@@ -1250,6 +1253,12 @@ private:
 protected:
   PRBool mWillReparent;
 #endif
+
+protected:
+  // Makes the images on this document capable of having their animation
+  // active or suspended. An Image will animate as long as at least one of its
+  // owning Documents needs it to animate; otherwise it can suspend.
+  void SetImagesNeedAnimating(PRBool aAnimating);
 };
 
 #define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \

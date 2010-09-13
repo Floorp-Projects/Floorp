@@ -13,6 +13,7 @@ browser.jar:
 * skin/classic/browser/browser.css                    (browser.css)
 * skin/classic/browser/engineManager.css              (engineManager.css)
   skin/classic/browser/fullscreen-video.css
+  skin/classic/browser/inspector.css
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
@@ -26,6 +27,7 @@ browser.jar:
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
+  skin/classic/browser/reload-stop-go.png
   skin/classic/browser/searchbar.css                  (searchbar.css)
   skin/classic/browser/section_collapsed.png
   skin/classic/browser/section_collapsed-rtl.png
@@ -72,6 +74,7 @@ browser.jar:
   skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/progress.png         (tabbrowser/progress.png)
   skin/classic/browser/tabbrowser/progress-pulsing.png (tabbrowser/progress-pulsing.png)
+  skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
   skin/classic/browser/tabview/edit.png               (tabview/edit.png)
@@ -79,18 +82,16 @@ browser.jar:
   skin/classic/browser/tabview/tabview.css            (tabview/tabview.css)
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png            (tabview/tabview.png)
+  skin/classic/browser/tabview/search.png             (tabview/search.png)  
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.png
-  skin/classic/browser/sync-merge.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-usedBefore.png
   skin/classic/browser/sync-usedNever.png
-  skin/classic/browser/sync-wipeClient.png
-  skin/classic/browser/sync-wipeServer.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
 #endif

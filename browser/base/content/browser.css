@@ -100,6 +100,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+#wrapper-urlbar-container #urlbar-container > #urlbar > toolbarbutton,
+#urlbar-container:not([combined]) > #urlbar > toolbarbutton,
+#urlbar-container[combined] + #reload-button + #stop-button,
+#urlbar-container[combined] + #reload-button,
+toolbar:not([mode="icons"]) > #urlbar-container > #urlbar > toolbarbutton,
+toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
+toolbar[mode="icons"] > #urlbar-container > #urlbar > #urlbar-reload-button[displaystop],
 toolbar[mode="icons"] > #reload-button:not([displaystop]) + #stop-button,
 toolbar[mode="icons"] > #reload-button[displaystop] {
   visibility: collapse;
@@ -124,6 +131,16 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 .split-menuitem-menu > .menu-text,
 .split-menuitem-menu > .menu-accel-container {
   display: none;
+}
+
+.menuitem-tooltip {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-tooltip");
+}
+
+.menuitem-iconic-tooltip,
+.menuitem-tooltip[type="checkbox"],
+.menuitem-tooltip[type="radio"] {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 
 /* ::::: location bar ::::: */
@@ -178,8 +195,12 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   direction: rtl;
 }
 
+#urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
-#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button {
+#urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button,
+#urlbar[pageproxystate="invalid"][focused="true"] > #urlbar-go-button ~ toolbarbutton,
+#urlbar[pageproxystate="valid"] > #urlbar-go-button,
+#urlbar:not([focused="true"]) > #urlbar-go-button {
   visibility: collapse;
 }
 
@@ -345,6 +366,16 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 #notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
-#notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon {
+#notification-popup-box[anchorid="indexedDB-notification-icon"] > #indexedDB-notification-icon,
+#notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon,
+#notification-popup-box[anchorid="password-notification-icon"] > #password-notification-icon {
   display: -moz-box;
+}
+
+#invalid-form-popup {
+  max-width: 280px;
+}
+
+#geolocation-notification {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
 }

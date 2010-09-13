@@ -63,7 +63,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMFileInternal.h"
 #include "nsIDOMWindow.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
@@ -1743,18 +1742,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(getter_AddRefs(loadGroup));
 
-  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
-  // in turn keeps STOP button from becoming active.  If the consumer passed in
-  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
-  // necko won't generate any progress notifications
-  nsLoadFlags loadFlags;
-  if (HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)) ||
-      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
-      (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
-    loadFlags = nsIRequest::LOAD_NORMAL;
-  } else {
-    loadFlags = nsIRequest::LOAD_BACKGROUND;
-  }
   // get Content Security Policy from principal to pass into channel
   nsCOMPtr<nsIChannelPolicy> channelPolicy;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
@@ -1770,7 +1757,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
                      nsnull,                    // ioService
                      loadGroup,
                      nsnull,                    // callbacks
-                     loadFlags,
+                     nsIRequest::LOAD_BACKGROUND,
                      channelPolicy);
   if (NS_FAILED(rv)) return rv;
 
@@ -2328,29 +2315,6 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
       return NS_OK;
     }
 
-    // nsIDOMFile?
-    nsCOMPtr<nsIDOMFileInternal> file = do_QueryInterface(supports);
-    if (file) {
-      aCharset.Truncate();
-
-      nsCOMPtr<nsIFile> internalFile;
-      rv = file->GetInternalFile(getter_AddRefs(internalFile));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Get the mimetype
-      nsCOMPtr<nsIMIMEService> mimeService =
-          do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = mimeService->GetTypeFromFile(internalFile, aContentType);
-      if (NS_FAILED(rv)) {
-        aContentType.Truncate();
-      }
-
-      // Feed local file input stream into our upload channel
-      return NS_NewLocalFileInputStream(aResult, internalFile);
-    }
-
     // nsIXHRSendable?
     nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(supports);
     if (sendable) {
@@ -2391,6 +2355,21 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // Make sure we've been opened
   if (!mChannel || !(XML_HTTP_REQUEST_OPENED & mState)) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+
+  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
+  // in turn keeps STOP button from becoming active.  If the consumer passed in
+  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
+  // necko won't generate any progress notifications.
+  if (HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)) ||
+      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
+      (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
+    nsLoadFlags loadFlags;
+    mChannel->GetLoadFlags(&loadFlags);
+    loadFlags &= ~nsIRequest::LOAD_BACKGROUND;
+    loadFlags |= nsIRequest::LOAD_NORMAL;
+    mChannel->SetLoadFlags(loadFlags);
   }
 
   // XXX We should probably send a warning to the JS console

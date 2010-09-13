@@ -861,6 +861,7 @@ Volume.h
 wab.h
 wait.h
 wchar.h
+wctype.h
 winbase.h
 win/compobj.h
 windef.h

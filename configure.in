@@ -4682,6 +4682,26 @@ else
    fi
 fi
 
+dnl ======================
+dnl Detect yasm
+dnl ======================
+
+AC_MSG_CHECKING([for YASM assembler])
+AC_CHECK_PROGS(YASM, yasm, "")
+
+if test -n "$YASM"; then
+  dnl Pull out yasm's version string
+  changequote(,)
+  _YASM_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*|\1|p'
+  changequote([,])
+
+  YASM_VERSION=`yasm --version | sed -nre "$_YASM_VER_FILTER"`
+  _YASM_MAJOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $1 }'`
+  _YASM_MINOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $2 }'`
+  _YASM_RELEASE=`      echo ${YASM_VERSION} | $AWK -F\. '{ print $3 }'`
+  _YASM_BUILD=`        echo ${YASM_VERSION} | $AWK -F\. '{ print $4 }'`
+fi
+
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system JPEG support
 dnl ========================================================
@@ -5943,64 +5963,62 @@ if test -n "$MOZ_WEBM"; then
     MOZ_VORBIS=1
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
-    dnl For Win32 (MSVC) we must use MASM.
-    if test "$OS_ARCH" = "WINNT" -a "$CPU_ARCH" = "x86" -a -z "$GNU_CC"; then
-        AC_MSG_CHECKING([for MASM assembler])
-        AC_CHECK_PROGS(VPX_AS, ml, "")
-        if test -n "$VPX_AS"; then
-          VPX_X86_ASM=1
-          VPX_AS='sh $(topsrcdir)/media/libvpx/yasm2masm-as.sh'
-        else
-            AC_MSG_ERROR([Need MASM (ml.exe) in order to assemble libvpx optimized assembly. Either disable webm (reconfigure with --disable-webm) or install MASM. MASM is included in the Windows 7 SDK, or you can download MASM directly from http://www.microsoft.com/downloads/details.aspx?familyid=7a1c9da0-0510-44a2-b042-7ef370530c64&displaylang=en])
-        fi
-    else 
+    dnl We currently require yasm on all platforms and require yasm 1.1.0 on Win32.
+    VPX_AS=$YASM
 
-      dnl For Darwin x86, Darwin x86_64, Linux x86, and WINNT x86_64
-      dnl we can use YASM.
-      AC_MSG_CHECKING([for YASM assembler])
-      AC_CHECK_PROGS(VPX_AS, $YASM yasm, "")
-      dnl We have YASM, see if we have assembly on this platform.  
-      case "$OS_ARCH:$OS_TEST" in
-      Linux:x86|Linux:i?86)
-        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+    dnl See if we have assembly on this platform.  
+    case "$OS_ARCH:$CPU_ARCH" in
+    Linux:x86)
+      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+      VPX_X86_ASM=1
+    ;;
+    Linux:x86_64)
+      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+      VPX_X86_ASM=1
+    ;;
+    SunOS:x86)
+      VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+      VPX_X86_ASM=1
+    ;;
+    SunOS:x86_64)
+      VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+      VPX_X86_ASM=1
+    ;;
+    Darwin:x86)
+      VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
+      VPX_X86_ASM=1
+    ;;
+    Darwin:x86_64)
+      VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
+      VPX_X86_ASM=1
+    ;;
+    WINNT:x86_64)
+      if test -z "$GNU_CC"; then
+        VPX_ASFLAGS="-f x64 -rnasm -pnasm"
         VPX_X86_ASM=1
-      ;;
-      Linux:x86_64)
-        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-        VPX_X86_ASM=1
-      ;;
-      SunOS:i?86)
-        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-        VPX_X86_ASM=1
-      ;;
-      SunOS:x86_64)
-        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-        VPX_X86_ASM=1
-      ;;
-      Darwin:i?86)
-        VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
-        VPX_X86_ASM=1
-      ;;
-      Darwin:x86_64)
-        VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
-        VPX_X86_ASM=1
-      ;;
-      WINNT:x86_64)
-        if test -z "$GNU_CC"; then
-          VPX_ASFLAGS="-f x64 -rnasm -pnasm"
-          VPX_X86_ASM=1
-        fi
-      ;;
-      esac
-      if test "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
-        AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
       fi
-    fi # end !WINNT_x86_MSVC
+    ;;
+    WINNT:x86)
+      if test -z "$GNU_CC"; then
+        dnl Check for yasm 1.1 or greater.
+        if test "$_YASM_MAJOR_VERSION" -gt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -ge "1" \) ; then
+          VPX_ASFLAGS="-f win32 -rnasm -pnasm -DPIC"
+          VPX_X86_ASM=1
+        else
+          AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+        fi
+      fi
+    ;;
+    esac
+
+    if test "$COMPILE_ENVIROMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
+      AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+    fi
 
     if test -n "$VPX_X86_ASM"; then
       AC_DEFINE(VPX_X86_ASM)
     else
-      AC_MSG_WARN([No assembler or assembly support for libvpx, using unoptimized C routines.])
+      AC_MSG_WARN([No assembler or assembly support for libvpx. Using unoptimized C routines.])
     fi
 fi
 

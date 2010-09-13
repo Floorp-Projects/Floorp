@@ -32,6 +32,7 @@
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
     locale/browser/tabbrowser.dtd                  (%chrome/browser/tabbrowser.dtd)
     locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
+    locale/browser/tabview.properties              (%chrome/browser/tabview.properties)
     locale/browser/taskbar.properties              (%chrome/browser/taskbar.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)

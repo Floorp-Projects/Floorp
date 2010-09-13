@@ -199,8 +199,8 @@ public:
     virtual bool DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* actor);
 
 
-    virtual PGeolocationRequestParent* AllocPGeolocationRequest(const IPC::URI& uri);
-    virtual bool DeallocPGeolocationRequest(PGeolocationRequestParent* actor);
+    virtual PContentPermissionRequestParent* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
+    virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor);
 
     JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 

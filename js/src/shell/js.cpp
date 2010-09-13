@@ -92,6 +92,7 @@
 
 #include "jsworkers.h"
 
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -875,6 +876,14 @@ Version(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+RevertVersion(JSContext *cx, uintN argc, jsval *vp)
+{
+    js_RevertVersion(cx);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
 Options(JSContext *cx, uintN argc, jsval *vp)
 {
     uint32 optset, flag;
@@ -1172,7 +1181,7 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        if (cx->fp()->getScript()->nmap == NULL) {
+        if (cx->fp()->script()->nmap == NULL) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
@@ -1459,7 +1468,7 @@ ValueToScript(JSContext *cx, jsval v)
             script = (JSScript *) JS_GetPrivate(cx, obj);
         } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->getFloatingFrame()->getFunction();
+            fun = gen->floatingFrame()->fun();
             script = FUN_SCRIPT(fun);
         }
     }
@@ -1501,7 +1510,7 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
     uintN intarg;
     JSScript *script;
 
-    *scriptp = JS_GetScriptedCaller(cx, NULL)->getScript();
+    *scriptp = JS_GetScriptedCaller(cx, NULL)->script();
     *ip = 0;
     if (argc != 0) {
         v = argv[0];
@@ -1531,8 +1540,8 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     JSStackFrame *caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateUCInStackFrame(cx, caller,
                                    JS_GetStringChars(str), JS_GetStringLength(str),
-                                   caller->getScript()->filename,
-                                   caller->getScript()->lineno,
+                                   caller->script()->filename,
+                                   caller->script()->lineno,
                                    rval)) {
         return JSTRAP_ERROR;
     }
@@ -1634,7 +1643,7 @@ LineToPC(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
         return JS_FALSE;
     }
-    script = JS_GetScriptedCaller(cx, NULL)->getScript();
+    script = JS_GetScriptedCaller(cx, NULL)->script();
     if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
         return JS_FALSE;
     lineno = (i == 0) ? script->lineno : (uintN)i;
@@ -1970,15 +1979,18 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     JSScript *script;
     JSBool ok;
     uint32 oldopts;
+    jsval *argv = JS_ARGV(cx, vp);
 
-    if (!argc)
+    if (!argc) {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
+    }
 
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
 
-    str = JS_ValueToString(cx, vp[2]);
+    str = JS_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
 
@@ -1990,17 +2002,18 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     if (!script)
         return JS_FALSE;
 
-    if (script->isEmpty())
+    if (script->isEmpty()) {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
+    }
 
     JSObject *obj = JS_NewScriptObject(cx, script);
     if (!obj)
         return JS_FALSE;
 
-    *vp = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
     ok = Disassemble(cx, 1, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-
     return ok;
 }
 
@@ -3199,8 +3212,8 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
             return false;
         }
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
-                                 fp->getScript()->filename,
-                                 JS_PCToLineNumber(cx, fp->getScript(), fp->pc(cx)),
+                                 fp->script()->filename,
+                                 JS_PCToLineNumber(cx, fp->script(), fp->pc(cx)),
                                  vp)) {
             return false;
         }
@@ -3230,12 +3243,12 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
 
     FrameRegsIter fi(cx);
     for (uint32 i = 0; i < upCount; ++i, ++fi) {
-        if (!fi.fp()->down)
+        if (!fi.fp()->prev())
             break;
     }
 
     JSStackFrame *const fp = fi.fp();
-    if (!fp->hasScript()) {
+    if (!JS_IsScriptFrame(cx, fp)) {
         JS_ReportError(cx, "cannot eval in non-script frame");
         return JS_FALSE;
     }
@@ -3245,8 +3258,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
         oldfp = JS_SaveFrameChain(cx);
 
     JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
-                                          fp->getScript()->filename,
-                                          JS_PCToLineNumber(cx, fp->getScript(),
+                                          fp->script()->filename,
+                                          JS_PCToLineNumber(cx, fp->script(),
                                                             fi.pc()),
                                           vp);
 
@@ -3971,9 +3984,9 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
 
     /* Get the currently executing script's name. */
     fp = JS_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp && fp->getScript()->filename);
+    JS_ASSERT(fp && fp->script()->filename);
 #ifdef XP_UNIX
-    pathname = MakeAbsolutePathname(cx, fp->getScript()->filename, filename);
+    pathname = MakeAbsolutePathname(cx, fp->script()->filename, filename);
     if (!pathname)
         return JS_FALSE;
 #else
@@ -4081,6 +4094,7 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
+    JS_FN("revertVersion",  RevertVersion,  0,0),
     JS_FN("options",        Options,        0,0),
     JS_FN("load",           Load,           1,0),
     JS_FN("readline",       ReadLine,       0,0),
@@ -4180,7 +4194,8 @@ static const char shell_help_header[] =
 "=======                  ===========\n";
 
 static const char *const shell_help_messages[] = {
-"version([number])        Get or set JavaScript version number",
+"version([number])        Get or force a script compilation version number",
+"revertVersion()          Revert previously set version number",
 "options([option ...])    Get or toggle JavaScript options",
 "load(['foo.js' ...])     Load files named by string arguments",
 "readline()               Read a single line from stdin",

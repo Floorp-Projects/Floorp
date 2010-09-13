@@ -335,6 +335,13 @@ struct NS_GFX nsIntRect {
   PRInt32 YMost() const {return y + height;}
 
   inline nsRect ToAppUnits(nscoord aAppUnitsPerPixel) const;
+
+  // Returns a special nsIntRect that's used in some places to signify
+  // "all available space".
+  static const nsIntRect& GetMaxSizedIntRect() { return kMaxSizedIntRect; }
+
+protected:
+  static const nsIntRect kMaxSizedIntRect;
 };
 
 /*

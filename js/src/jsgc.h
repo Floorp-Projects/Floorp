@@ -51,7 +51,6 @@
 #include "jsbit.h"
 #include "jsgcchunk.h"
 #include "jsutil.h"
-#include "jstask.h"
 #include "jsvector.h"
 #include "jsversion.h"
 #include "jsobj.h"
@@ -188,17 +187,11 @@ TraceRuntime(JSTracer *trc);
 extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 MarkContext(JSTracer *trc, JSContext *acx);
 
-} /* namespace js */
-
-/*
- * Schedule the GC call at a later safe point.
- */
-#ifndef JS_THREADSAFE
-# define js_TriggerGC(cx, gcLocked)    js_TriggerGC (cx)
-#endif
-
+/* Must be called with GC lock taken. */
 extern void
-js_TriggerGC(JSContext *cx, JSBool gcLocked);
+TriggerGC(JSRuntime *rt);
+
+} /* namespace js */
 
 /*
  * Kinds of js_GC invocation.
@@ -365,17 +358,23 @@ namespace js {
 
 /*
  * During the finalization we do not free immediately. Rather we add the
- * corresponding pointers to a buffer which we later release on the
- * background thread.
+ * corresponding pointers to a buffer which we later release on a separated
+ * thread.
  *
  * The buffer is implemented as a vector of 64K arrays of pointers, not as a
  * simple vector, to avoid realloc calls during the vector growth and to not
  * bloat the binary size of the inlined freeLater method. Any OOM during
  * buffer growth results in the pointer being freed immediately.
  */
-class BackgroundSweepTask : public JSBackgroundTask {
+class GCHelperThread {
     static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
     static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
+
+    PRThread*         thread;
+    PRCondVar*        wakeup;
+    PRCondVar*        sweepingDone;
+    bool              shutdown;
+    bool              sweeping;
 
     Vector<void **, 16, js::SystemAllocPolicy> freeVector;
     void            **freeCursor;
@@ -391,18 +390,37 @@ class BackgroundSweepTask : public JSBackgroundTask {
         js_free(array);
     }
 
-  public:
-    BackgroundSweepTask()
-        : freeCursor(NULL), freeCursorEnd(NULL) { }
+    static void threadMain(void* arg);
 
+    void threadLoop(JSRuntime *rt);
+    void doSweep();
+
+  public:
+    GCHelperThread()
+      : thread(NULL),
+        wakeup(NULL),
+        sweepingDone(NULL),
+        shutdown(false),
+        sweeping(false),
+        freeCursor(NULL),
+        freeCursorEnd(NULL) { }
+    
+    bool init(JSRuntime *rt);
+    void finish(JSRuntime *rt);
+    
+    /* Must be called with GC lock taken. */
+    void startBackgroundSweep(JSRuntime *rt);
+    
+    /* Must be called outside the GC lock. */
+    void waitBackgroundSweepEnd(JSRuntime *rt);
+    
     void freeLater(void *ptr) {
+        JS_ASSERT(!sweeping);
         if (freeCursor != freeCursorEnd)
             *freeCursor++ = ptr;
         else
             replenishAndFreeLater(ptr);
     }
-
-    virtual void run();
 };
 
 #endif /* JS_THREADSAFE */
@@ -462,7 +480,7 @@ struct ConservativeGCThreadData {
             nativeStackTop = NULL;
     }
 #endif
-   
+
     bool hasStackToScan() const {
         return !!nativeStackTop;
     }
@@ -483,7 +501,7 @@ struct GCMarker : public JSTracer {
 #if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
     ConservativeGCStats conservativeStats;
 #endif
-   
+
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     struct ConservativeRoot { void *thing; uint32 traceKind; };
     Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
@@ -581,11 +599,10 @@ MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 }
 
 static inline void
-MarkObject(JSTracer *trc, JSObject *obj, const char *name)
+MarkObject(JSTracer *trc, JSObject &obj, const char *name)
 {
-    JS_ASSERT(obj);
     JS_SET_TRACING_NAME(trc, name);
-    Mark(trc, obj, JSTRACE_OBJECT);
+    Mark(trc, &obj, JSTRACE_OBJECT);
 }
 
 static inline void

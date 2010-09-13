@@ -53,6 +53,8 @@ EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
+  CheckPermissionsHelper.cpp \
+  CheckQuotaHelper.cpp \
   DatabaseInfo.cpp \
   IDBCursor.cpp \
   IDBDatabase.cpp \
@@ -63,6 +65,7 @@ CPPSRCS = \
   IDBRequest.cpp \
   IDBTransaction.cpp \
   IDBFactory.cpp \
+  IndexedDatabaseManager.cpp \
   LazyIdleThread.cpp \
   TransactionThreadPool.cpp \
   $(NULL)
@@ -77,12 +80,14 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBRequest.h \
   IDBTransaction.h \
   IndexedDatabase.h \
+  IndexedDatabaseManager.h \
   IDBFactory.h \
   LazyIdleThread.h \
   $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/src/storage \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
@@ -105,6 +110,7 @@ XPIDLSRCS = \
   nsIIDBTransaction.idl \
   nsIIDBTransactionEvent.idl \
   nsIIDBFactory.idl \
+  nsIIndexedDatabaseManager.idl \
   $(NULL)
 
 ifdef ENABLE_TESTS

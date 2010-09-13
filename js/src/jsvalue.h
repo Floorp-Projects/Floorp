@@ -702,6 +702,22 @@ class Value
         return data.s.payload.u32;
     }
 
+    /*
+     * An unmarked value is just a void* cast as a Value. Thus, the Value is
+     * not safe for GC and must not be marked. This API avoids raw casts
+     * and the ensuing strict-aliasing warnings.
+     */
+
+    JS_ALWAYS_INLINE
+    void setUnmarkedPtr(void *ptr) {
+        data.asPtr = ptr;
+    }
+
+    JS_ALWAYS_INLINE
+    void *toUnmarkedPtr() const {
+        return data.asPtr;
+    }
+
   private:
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);

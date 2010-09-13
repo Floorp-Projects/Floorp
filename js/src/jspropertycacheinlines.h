@@ -133,7 +133,7 @@ JS_ALWAYS_INLINE bool
 PropertyCache::testForInit(JSRuntime *rt, jsbytecode *pc, JSObject *obj,
                            const js::Shape **shapep, PropertyCacheEntry **entryp)
 {
-    JS_ASSERT(obj->freeslot >= JSSLOT_FREE(obj->getClass()));
+    JS_ASSERT(obj->slotSpan() >= JSSLOT_FREE(obj->getClass()));
     JS_ASSERT(!obj->sealed());
     uint32 kshape = obj->shape();
     PropertyCacheEntry *entry = &table[hash(pc, kshape)];

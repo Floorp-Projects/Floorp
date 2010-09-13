@@ -42,7 +42,7 @@
 #include "nsNetUtil.h"
 #include "nsIURIWithPrincipal.h"
 #include "nsIPrincipal.h"
-#include "nsIFileChannel.h"
+#include "nsIDOMFile.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
 #include "nsIObjectInputStream.h"
@@ -55,14 +55,15 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 // Hash table
 struct FileDataInfo
 {
-  nsCOMPtr<nsIURI> mFileUri;
+  nsCOMPtr<nsIDOMFile> mFile;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 static nsClassHashtable<nsCStringHashKey, FileDataInfo>* gFileDataTable;
 
 void
-nsFileDataProtocolHandler::AddFileDataEntry(nsACString& aUri, nsIFile* aFile,
+nsFileDataProtocolHandler::AddFileDataEntry(nsACString& aUri,
+					    nsIDOMFile* aFile,
                                             nsIPrincipal* aPrincipal)
 {
   if (!gFileDataTable) {
@@ -72,7 +73,7 @@ nsFileDataProtocolHandler::AddFileDataEntry(nsACString& aUri, nsIFile* aFile,
 
   FileDataInfo* info = new FileDataInfo;
 
-  NS_NewFileURI(getter_AddRefs(info->mFileUri), aFile);
+  info->mFile = aFile;
   info->mPrincipal = aPrincipal;
 
   gFileDataTable->Put(aUri, info);
@@ -413,8 +414,14 @@ nsFileDataProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   }
 #endif
 
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = info->mFile->GetInternalStream(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel), info->mFileUri);
+  rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+				uri,
+				stream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);

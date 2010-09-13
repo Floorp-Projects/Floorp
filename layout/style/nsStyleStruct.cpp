@@ -344,7 +344,9 @@ void nsStylePadding::RecalcData()
 {
   if (IsFixedData(mPadding, PR_FALSE)) {
     NS_FOR_CSS_SIDES(side) {
-      mCachedPadding.side(side) = CalcCoord(mPadding.Get(side), nsnull, 0);
+      // Clamp negative calc() to 0.
+      mCachedPadding.side(side) =
+        NS_MAX(CalcCoord(mPadding.Get(side), nsnull, 0), 0);
     }
     mHasCachedPadding = PR_TRUE;
   }
@@ -375,9 +377,12 @@ nsChangeHint nsStylePadding::MaxDifference()
 #endif
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
-  : mHaveBorderImageWidth(PR_FALSE),
-    mComputedBorder(0, 0, 0, 0),
-    mBorderImage(nsnull)
+  : mHaveBorderImageWidth(PR_FALSE)
+  , mComputedBorder(0, 0, 0, 0)
+  , mBorderImage(nsnull)
+#ifdef DEBUG
+  , mImageTracked(false)
+#endif
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
   nscoord medium =
@@ -451,6 +456,8 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 
 nsStyleBorder::~nsStyleBorder()
 {
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "nsStyleBorder being destroyed while still tracking image!");
   MOZ_COUNT_DTOR(nsStyleBorder);
   if (mBorderColors) {
     for (PRInt32 i = 0; i < 4; i++)
@@ -469,6 +476,8 @@ nsStyleBorder::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   
 void 
 nsStyleBorder::Destroy(nsPresContext* aContext) {
+  if (mBorderImage)
+    UntrackImage(aContext);
   this->~nsStyleBorder();
   aContext->FreeToShell(sizeof(nsStyleBorder), this);
 }
@@ -554,6 +563,42 @@ nsStyleBorder::GetActualBorder() const
     return mComputedBorder;
 }
 
+void
+nsStyleBorder::TrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
+  NS_ABORT_IF_FALSE(mBorderImage, "Can't track null image!");
+
+  // Register the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->AddImage(mBorderImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = true;
+#endif
+}
+
+void
+nsStyleBorder::UntrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
+  NS_ABORT_IF_FALSE(mBorderImage, "Can't track null image!");
+
+  // Unregister the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->RemoveImage(mBorderImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = false;
+#endif
+}
+
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
@@ -585,8 +630,9 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
     mCachedOutlineWidth = 0;
     mHasCachedOutline = PR_TRUE;
   } else if (IsFixedUnit(mOutlineWidth, PR_TRUE)) {
+    // Clamp negative calc() to 0.
     mCachedOutlineWidth =
-      CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3);
+      NS_MAX(CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3), 0);
     mCachedOutlineWidth =
       NS_ROUND_BORDER_TO_PIXELS(mCachedOutlineWidth, mTwipsPerPixel);
     mHasCachedOutline = PR_TRUE;
@@ -1983,16 +2029,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
                                       nsChangeHint_NeedDirtyReflow)));
   }
 
-  if (mClipFlags != aOther.mClipFlags || mClip != aOther.mClip) {
-    // FIXME: Bug 507764.  Could we use a more precise hint here?
-    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
-  }
   // XXX the following is conservative, for now: changing float breaking shouldn't
   // necessarily require a repaint, reflow should suffice.
   if (mBreakType != aOther.mBreakType
       || mBreakBefore != aOther.mBreakBefore
       || mBreakAfter != aOther.mBreakAfter
-      || mAppearance != aOther.mAppearance)
+      || mAppearance != aOther.mAppearance
+      || mClipFlags != aOther.mClipFlags || mClip != aOther.mClip)
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame));
 
   if (mOpacity != aOther.mOpacity) {

@@ -45,7 +45,7 @@ interface nsIProxyInfo;
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(91dbb42a-dffc-4f47-8b27-9579c0d92c3f)]
+[scriptable, uuid(9fb2a161-d075-4bf2-b07a-26bac650cc81)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -88,4 +88,19 @@ interface nsIHttpChannelInternal : nsISupports
      * Returns true iff the channel has been canceled.
      */
     readonly attribute boolean canceled;
+
+    /**
+     * Lets externalhandler tell the channel it is open on behalf of a download
+     */
+    attribute boolean channelIsForDownload;
+};
+
+[uuid(b18290f1-ff34-4e33-93a2-29aeb7b95425)]
+interface nsIHttpChannelParentInternal : nsISupports
+{
+    /**
+     * True for a chrome channel that is servicing a child channel (i.e. request
+     * originated in child process, not chrome).
+     */
+    [noscript] attribute boolean servicingRemoteChannel;
 };

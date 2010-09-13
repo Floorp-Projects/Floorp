@@ -439,6 +439,42 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
     getArgsData()->slots[i] = v;
 }
 
+inline void
+JSObject::setCallObjCallee(JSObject &callee)
+{
+    JS_ASSERT(isCall());
+    JS_ASSERT(callee.isFunction());
+    return fslots[JSSLOT_CALL_CALLEE].setObject(callee);
+}
+
+inline JSObject &
+JSObject::getCallObjCallee() const
+{
+    JS_ASSERT(isCall());
+    return fslots[JSSLOT_CALL_CALLEE].toObject();
+}
+
+inline JSFunction *
+JSObject::getCallObjCalleeFunction() const
+{
+    JS_ASSERT(isCall());
+    return fslots[JSSLOT_CALL_CALLEE].toObject().getFunctionPrivate();
+}
+
+inline const js::Value &
+JSObject::getCallObjArguments() const
+{
+    JS_ASSERT(isCall());
+    return fslots[JSSLOT_CALL_ARGUMENTS];
+}
+
+inline void
+JSObject::setCallObjArguments(const js::Value &v)
+{
+    JS_ASSERT(isCall());
+    fslots[JSSLOT_CALL_ARGUMENTS] = v;
+}
+
 inline const js::Value &
 JSObject::getDateUTCTime() const
 {
@@ -569,14 +605,13 @@ JSObject::setWithThis(JSObject *thisp)
 }
 
 inline void
-JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
-               const js::Value &privateSlotValue, JSContext *cx)
+JSObject::initCommon(js::Class *aclasp, JSObject *proto, JSObject *parent,
+                     JSContext *cx)
 {
     JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
 
     clasp = aclasp;
     flags = 0;
-    freeslot = JSSLOT_START(aclasp);
 
 #ifdef DEBUG
     /*
@@ -591,7 +626,6 @@ JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
 
     setProto(proto);
     setParent(parent);
-    fslots[JSSLOT_PRIVATE] = privateSlotValue;
     fslots[JSSLOT_PRIVATE + 1].setUndefined();
     fslots[JSSLOT_PRIVATE + 2].setUndefined();
 
@@ -602,6 +636,33 @@ JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
 #endif
 
     emptyShape = NULL;
+}
+
+inline void
+JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+               const js::Value &privateSlotValue, JSContext *cx)
+{
+    initCommon(aclasp, proto, parent, cx);
+    fslots[JSSLOT_PRIVATE] = privateSlotValue;
+}
+
+inline void
+JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+               void *priv, JSContext *cx)
+{
+    initCommon(aclasp, proto, parent, cx);
+    *(void **)&fslots[JSSLOT_PRIVATE] = priv;
+}
+
+inline void
+JSObject::init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+               JSContext *cx)
+{
+    initCommon(aclasp, proto, parent, cx);
+    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+        *(void **)&fslots[JSSLOT_PRIVATE] = NULL;
+    else
+        fslots[JSSLOT_PRIVATE].setUndefined();
 }
 
 inline void
@@ -626,6 +687,20 @@ JSObject::initSharingEmptyShape(js::Class *aclasp,
                                 JSContext *cx)
 {
     init(aclasp, proto, parent, privateSlotValue, cx);
+
+    js::EmptyShape *empty = proto->emptyShape;
+    JS_ASSERT(empty->getClass() == aclasp);
+    setMap(empty);
+}
+
+inline void
+JSObject::initSharingEmptyShape(js::Class *aclasp,
+                                JSObject *proto,
+                                JSObject *parent,
+                                void *priv,
+                                JSContext *cx)
+{
+    init(aclasp, proto, parent, priv, cx);
 
     js::EmptyShape *empty = proto->emptyShape;
     JS_ASSERT(empty->getClass() == aclasp);
@@ -664,32 +739,6 @@ static inline bool
 js_IsCallable(const js::Value &v)
 {
     return v.isObject() && v.toObject().isCallable();
-}
-
-inline size_t
-JSObject::flagsOffset()
-{
-    static size_t offset = 0;
-    if (offset)
-        return offset;
-
-    /* 
-     * We can't address a bitfield, so instead we create a struct, set only
-     * the field we care about, then search for it.
-     */
-    JSObject fakeObj;
-    memset(&fakeObj, 0, sizeof(fakeObj));
-    fakeObj.flags = 1;
-    for (unsigned testOffset = 0; testOffset < sizeof(fakeObj); testOffset += sizeof(uint32)) {
-        uint32 *ptr = reinterpret_cast<uint32 *>(reinterpret_cast<char *>(&fakeObj) + testOffset);
-        if (*ptr) {
-            JS_ASSERT(*ptr == 1);
-            offset = testOffset;
-            return offset;
-        }
-    }
-    JS_NOT_REACHED("memory weirdness");
-    return 0;
 }
 
 namespace js {
@@ -771,7 +820,6 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
             goto bad;
         if (freeslot > JS_INITIAL_NSLOTS && !obj->allocSlots(cx, freeslot))
             goto bad;
-        obj->freeslot = freeslot;
     }
 
     obj->setMap(empty);
@@ -807,7 +855,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
          * Default parent to the parent of the prototype, which was set from
          * the parent of the prototype's constructor.
          */
-        obj->init(clasp, proto, parent, JSObject::defaultPrivate(clasp), cx);
+        obj->init(clasp, proto, parent, cx);
 
         JS_LOCK_OBJ(cx, proto);
         JS_ASSERT(proto->canProvideEmptyShape(clasp));
@@ -849,7 +897,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
         if (!global)
             return NULL;
     } else {
-        global = cx->fp()->getScopeChain()->getGlobal();
+        global = cx->fp()->scopeChain().getGlobal();
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 
@@ -941,10 +989,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->init(clasp, proto,
-              (!parent && proto) ? proto->getParent() : parent,
-              JSObject::defaultPrivate(clasp),
-              cx);
+    obj->init(clasp, proto, (!parent && proto) ? proto->getParent() : parent, cx);
 
     if (clasp->isNative()) {
         if (!InitScopeForObject(cx, obj, clasp, proto)) {

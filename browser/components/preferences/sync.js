@@ -21,6 +21,7 @@
  *   Edward Lee <edilee@mozilla.com>
  *   Mike Connor <mconnor@mozilla.com>
  *   Paul O’Shannessy <paul@oshannessy.com>
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -123,9 +124,6 @@ let gSyncPane = {
       if (Weave.Status.service == Weave.LOGIN_FAILED)
         this.onLoginError();
       this.updateConnectButton();
-      let syncEverything = this._checkDefaultValues();
-      document.getElementById("weaveSyncMode").selectedIndex = syncEverything ? 0 : 1;
-      document.getElementById("syncModeOptions").selectedIndex = syncEverything ? 0 : 1;
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }
   },
@@ -177,35 +175,6 @@ let gSyncPane = {
     else
       gSyncUtils.resetPassphrase();
   },
-
-  updateSyncPrefs: function () {
-    let syncEverything = document.getElementById("weaveSyncMode").selectedItem.value == "syncEverything";
-    document.getElementById("syncModeOptions").selectedIndex = syncEverything ? 0 : 1;
-
-    if (syncEverything) {
-      let prefs = this.prefArray;
-      for (let i = 0; i < prefs.length; ++i)
-        document.getElementById(prefs[i]).value = true;
-    }
-  },
-
-  /**
-   * Check whether all the preferences values are set to their default values
-   *
-   * @param aPrefs an array of pref names to check for
-   * @returns boolean true if all of the prefs are set to their default values,
-   *                  false otherwise
-   */
-  _checkDefaultValues: function () {
-    let prefs = this.prefArray;
-    for (let i = 0; i < prefs.length; ++i) {
-      let pref = document.getElementById(prefs[i]);
-      if (pref.value != pref.defaultValue)
-        return false;
-    }
-    return true;
-  },
-
 
   handleExpanderClick: function () {
     //XXXzpao Might be fixed in bug 583441, otherwise we'll need a new bug.

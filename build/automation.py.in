@@ -307,10 +307,10 @@ class Automation(object):
     # Insert desired permissions
     c = 0
     for perm in permissions.keys():
-      for host in permissions[perm]:
+      for host,allow in permissions[perm]:
         c += 1
-        cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, 1, 0, 0)",
-                       (c, host, perm))
+        cursor.execute("INSERT INTO moz_hosts values(?, ?, ?, ?, 0, 0)",
+                       (c, host, perm, 1 if allow else 2))
 
     # Commit and close
     permDB.commit()
@@ -327,7 +327,7 @@ class Automation(object):
     # Set up permissions database
     locations = self.readLocations()
     self.setupPermissionsDatabase(profileDir,
-      {'allowXULXBL':map(lambda l: l.host, locations)});
+      {'allowXULXBL':[(l.host, 'noxul' not in l.options) for l in locations]});
 
     part = """\
 user_pref("browser.dom.window.dump.enabled", true);
@@ -343,9 +343,10 @@ user_pref("shell.checkDefaultClient", false);
 user_pref("browser.warnOnQuit", false);
 user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
+user_pref("devtools.errorconsole.enabled", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
-user_pref("javascript.options.jit.content", false);
+user_pref("javascript.options.tracejit.content", true);
 user_pref("javascript.options.methodjit.content", true);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
@@ -861,11 +862,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     startTime = datetime.now()
 
     if debuggerInfo and debuggerInfo["interactive"]:
-      # If an interactive debugger is attached, don't redirect output
-      # and don't use timeouts.
+      # If an interactive debugger is attached, don't redirect output,
+      # don't use timeouts, and don't capture ctrl-c.
       timeout = None
       maxTime = None
       outputPipe = None
+      signal.signal(signal.SIGINT, lambda sigid, frame: None)
     else:
       outputPipe = subprocess.PIPE
 

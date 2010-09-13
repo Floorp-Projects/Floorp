@@ -132,7 +132,7 @@
       <method name="_setNewlineHandling">
         <body><![CDATA[
           var str = this.getAttribute("newlines");
-          if (str) {
+          if (str && this.editor) {
             const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
             for (var x in nsIPlaintextEditor) {
               if (/^eNewlines/.test(x)) {

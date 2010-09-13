@@ -575,6 +575,7 @@ private:
 
 nsObjectFrame::nsObjectFrame(nsStyleContext* aContext)
   : nsObjectFrameSuper(aContext)
+  , mReflowCallbackPosted(PR_FALSE)
 {
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Created new nsObjectFrame %p\n", this));
@@ -932,11 +933,31 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   FixupWindow(r.Size());
+  if (!mReflowCallbackPosted) {
+    mReflowCallbackPosted = PR_TRUE;
+    aPresContext->PresShell()->PostReflowCallback(this);
+  }
 
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
+}
+
+///////////// nsIReflowCallback ///////////////
+
+PRBool
+nsObjectFrame::ReflowFinished()
+{
+  mReflowCallbackPosted = PR_FALSE;
+  CallSetWindow();
+  return PR_TRUE;
+}
+
+void
+nsObjectFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackPosted = PR_FALSE;
 }
 
 nsresult
@@ -1050,13 +1071,23 @@ nsObjectFrame::CallSetWindow()
 
   PRBool windowless = (window->type == NPWindowTypeDrawable);
 
-  nsIntPoint origin = GetWindowOriginInPixels(windowless);
-
-  window->x = origin.x;
-  window->y = origin.y;
-
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPortFromWidget();
+
+  // Adjust plugin dimensions according to pixel snap results
+  // and reduce amount of SetWindow calls
+  nsPresContext* presContext = PresContext();
+  nsRootPresContext* rootPC = presContext->GetRootPresContext();
+  if (!rootPC)
+    return;
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
+  nsRect bounds = GetContentRect() + GetParent()->GetOffsetToCrossDoc(rootFrame);
+  nsIntRect intBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
+  window->x = intBounds.x;
+  window->y = intBounds.y;
+  window->width = intBounds.width;
+  window->height = intBounds.height;
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
@@ -1152,9 +1183,6 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     if (vm)
       vm->SetViewVisibility(view, IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
-
-  // WMP10 needs an additional SetWindow call here (bug 391261)
-  CallSetWindow();
 
   return rv;
 }
@@ -1325,7 +1353,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsPresContext::nsPresContextType type = PresContext()->Type();
 
   // If we are painting in Print Preview do nothing....
@@ -1341,14 +1369,22 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
+  nsDisplayList replacedContent;
+
   // determine if we are printing
-  if (type == nsPresContext::eContext_Print)
-    return aLists.Content()->AppendNewToTop(new (aBuilder)
+  if (type == nsPresContext::eContext_Print) {
+    rv = replacedContent.AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aBuilder, this, PaintPrintPlugin, "PrintPlugin",
                          nsDisplayItem::TYPE_PRINT_PLUGIN));
+  } else {
+    rv = replacedContent.AppendNewToTop(new (aBuilder)
+        nsDisplayPlugin(aBuilder, this));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayPlugin(aBuilder, this));
+  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
 }
 
 void

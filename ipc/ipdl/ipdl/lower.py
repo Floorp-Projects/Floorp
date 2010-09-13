@@ -796,6 +796,13 @@ IPDL union type."""
         # XXX sneaky here, maybe need ExprCtor()?
         return ExprCall(self.bareType())
 
+    def getConstValue(self):
+        v = ExprDeref(self.callGetConstPtr())
+        # sigh
+        if 'Shmem' == self.ipdltype.name():
+            v = ExprCast(v, Type('Shmem', ref=1), const=1)
+        return v
+
 ##--------------------------------------------------
 
 class MessageDecl(ipdl.ast.MessageDecl):
@@ -2139,7 +2146,7 @@ def _generateCxxUnion(ud):
             const=1, force_inline=1))
         getconstvalue.addstmts([
             StmtExpr(callAssertSanity(expectTypeVar=c.enumvar())),
-            StmtReturn(ExprDeref(c.callGetConstPtr()))
+            StmtReturn(c.getConstValue())
         ])
 
         optype = MethodDefn(MethodDecl('', typeop=c.refType(), force_inline=1))
@@ -2869,8 +2876,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         fatalerror = MethodDefn(MethodDecl(
             'FatalError',
             params=[ Decl(Type('char', const=1, ptrconst=1), msgvar.name) ],
-            const=1))
+            const=1, virtual=1))
         fatalerror.addstmts([
+            Whitespace('// Virtual method to prevent inlining.\n', indent=1),
+            Whitespace('// This give us better error reporting.\n', indent=1),
+            Whitespace('// See bug 589371\n\n', indent=1),
             _printErrorMessage('IPDL error:'),
             _printErrorMessage(msgvar),
             Whitespace.NL
@@ -3875,8 +3885,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             else:
                 if c.special:
                     c = c.other       # see above
+                tmpvar = ExprVar('tmp')
+                ct = c.bareType()
                 readcase.addstmts([
-                    StmtExpr(ExprAssn(ExprDeref(var), c.defaultValue())),
+                    StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue()),
+                    StmtExpr(ExprAssn(ExprDeref(var), tmpvar)),
                     StmtReturn(self.read(
                         c.ipdltype,
                         ExprAddrOf(ExprCall(ExprSelect(var, '->',

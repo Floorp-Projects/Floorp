@@ -280,7 +280,7 @@
 // appropriate), 'line-height', 'float', 'vertical-align' (only if
 // 'float' is 'none'), margin properties, padding properties, border
 // properties, 'color', and background properties.  We also allow
-// 'text-shadow' (see above) and '-moz-box-shadow' (which is like the
+// 'text-shadow' (see above) and 'box-shadow' (which is like the
 // border properties).
 
 // We include '-moz-background-inline-policy' (css3-background's
@@ -297,51 +297,6 @@ CSS_PROP_DISPLAY(
     kAppearanceKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_SHORTHAND(
-    -moz-border-radius,
-    _moz_border_radius,
-    MozBorderRadius,
-    0)
-CSS_PROP_BORDER(
-    -moz-border-radius-topleft,
-    _moz_border_radius_topLeft,
-    MozBorderRadiusTopleft,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    Margin,
-    mBorderRadius.mTopLeft,
-    nsnull,
-    offsetof(nsStyleBorder, mBorderRadius),
-    eStyleAnimType_Corner_TopLeft)
-CSS_PROP_BORDER(
-    -moz-border-radius-topright,
-    _moz_border_radius_topRight,
-    MozBorderRadiusTopright,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    Margin,
-    mBorderRadius.mTopRight,
-    nsnull,
-    offsetof(nsStyleBorder, mBorderRadius),
-    eStyleAnimType_Corner_TopRight)
-CSS_PROP_BORDER(
-    -moz-border-radius-bottomright,
-    _moz_border_radius_bottomRight,
-    MozBorderRadiusBottomright,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    Margin,
-    mBorderRadius.mBottomRight,
-    nsnull,
-    offsetof(nsStyleBorder, mBorderRadius),
-    eStyleAnimType_Corner_BottomRight)
-CSS_PROP_BORDER(
-    -moz-border-radius-bottomleft,
-    _moz_border_radius_bottomLeft,
-    MozBorderRadiusBottomleft,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    Margin,
-    mBorderRadius.mBottomLeft,
-    nsnull,
-    offsetof(nsStyleBorder, mBorderRadius),
-    eStyleAnimType_Corner_BottomLeft)
 CSS_PROP_SHORTHAND(
     -moz-outline-radius,
     _moz_outline_radius,
@@ -1068,6 +1023,51 @@ CSS_PROP_SHORTHAND(
     border_width,
     BorderWidth,
     0)
+CSS_PROP_SHORTHAND(
+    border-radius,
+    border_radius,
+    BorderRadius,
+    0)
+CSS_PROP_BORDER(
+    border-top-left-radius,
+    border_top_left_radius,
+    BorderTopLeftRadius,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    Margin,
+    mBorderRadius.mTopLeft,
+    nsnull,
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_TopLeft)
+CSS_PROP_BORDER(
+    border-top-right-radius,
+    border_top_right_radius,
+    BorderTopRightRadius,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    Margin,
+    mBorderRadius.mTopRight,
+    nsnull,
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_TopRight)
+CSS_PROP_BORDER(
+    border-bottom-right-radius,
+    border_bottom_right_radius,
+    BorderBottomRightRadius,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    Margin,
+    mBorderRadius.mBottomRight,
+    nsnull,
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_BottomRight)
+CSS_PROP_BORDER(
+    border-bottom-left-radius,
+    border_bottom_left_radius,
+    BorderBottomLeftRadius,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    Margin,
+    mBorderRadius.mBottomLeft,
+    nsnull,
+    offsetof(nsStyleBorder, mBorderRadius),
+    eStyleAnimType_Corner_BottomLeft)
 CSS_PROP_POSITION(
     bottom,
     bottom,
@@ -1079,9 +1079,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Bottom)
 CSS_PROP_BORDER(
-    -moz-box-shadow,
+    box-shadow,
     box_shadow,
-    MozBoxShadow,
+    BoxShadow,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,

@@ -31,8 +31,8 @@ function run_test() {
   });
 
   try {
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Service.serverURL = "http://localhost:8080/";
+    Service.clusterURL = "http://localhost:8080/";
     Svc.Prefs.set("autoconnect", false);
 
     _("Force the initial state.");
@@ -40,68 +40,68 @@ function run_test() {
     do_check_eq(Status.service, STATUS_OK);
 
     _("Try logging in. It wont' work because we're not configured yet.");
-    Weave.Service.login();
+    Service.login();
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
-    do_check_false(Weave.Service.isLoggedIn);
+    do_check_false(Service.isLoggedIn);
     do_check_false(Svc.Prefs.get("autoconnect"));
 
     _("Try again with username and password set.");
-    Weave.Service.username = "johndoe";
-    Weave.Service.password = "ilovejane";
-    Weave.Service.login();
+    Service.username = "johndoe";
+    Service.password = "ilovejane";
+    Service.login();
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
-    do_check_false(Weave.Service.isLoggedIn);
+    do_check_false(Service.isLoggedIn);
     do_check_false(Svc.Prefs.get("autoconnect"));
 
     _("Success if passphrase is set.");
-    Weave.Service.passphrase = "foo";
-    Weave.Service.login();
+    Service.passphrase = "foo";
+    Service.login();
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
-    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Service.isLoggedIn);
     do_check_true(Svc.Prefs.get("autoconnect"));
 
     _("We can also pass username, password and passphrase to login().");
-    Weave.Service.login("janedoe", "incorrectpassword", "bar");
-    do_check_eq(Weave.Service.username, "janedoe");
-    do_check_eq(Weave.Service.password, "incorrectpassword");
-    do_check_eq(Weave.Service.passphrase, "bar");
+    Service.login("janedoe", "incorrectpassword", "bar");
+    do_check_eq(Service.username, "janedoe");
+    do_check_eq(Service.password, "incorrectpassword");
+    do_check_eq(Service.passphrase, "bar");
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
-    do_check_false(Weave.Service.isLoggedIn);
+    do_check_false(Service.isLoggedIn);
 
     _("Try again with correct password.");
-    Weave.Service.login("janedoe", "ilovejohn");
+    Service.login("janedoe", "ilovejohn");
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
-    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Service.isLoggedIn);
     do_check_true(Svc.Prefs.get("autoconnect"));
     
     _("Calling login() with parameters when the client is unconfigured sends notification.");
     let notified = false;
-    Weave.Svc.Obs.add("weave:service:setup-complete", function() {
+    Svc.Obs.add("weave:service:setup-complete", function() {
       notified = true;
     });
-    Weave.Service.username = "";
-    Weave.Service.password = "";
-    Weave.Service.passphrase = "";    
-    Weave.Service.login("janedoe", "ilovejohn", "bar");
+    Service.username = "";
+    Service.password = "";
+    Service.passphrase = "";    
+    Service.login("janedoe", "ilovejohn", "bar");
     do_check_true(notified);
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
-    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Service.isLoggedIn);
     do_check_true(Svc.Prefs.get("autoconnect"));
 
     _("Logout.");
-    Weave.Service.logout();
-    do_check_false(Weave.Service.isLoggedIn);
+    Service.logout();
+    do_check_false(Service.isLoggedIn);
     do_check_false(Svc.Prefs.get("autoconnect"));
 
     _("Logging out again won't do any harm.");
-    Weave.Service.logout();
-    do_check_false(Weave.Service.isLoggedIn);
+    Service.logout();
+    do_check_false(Service.isLoggedIn);
     do_check_false(Svc.Prefs.get("autoconnect"));
 
   } finally {

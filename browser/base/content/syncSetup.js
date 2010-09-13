@@ -48,17 +48,17 @@ const Cu = Components.utils;
 const INTRO_PAGE                    = 0;
 const NEW_ACCOUNT_START_PAGE        = 1;
 const NEW_ACCOUNT_PP_PAGE           = 2;
-const NEW_ACCOUNT_PREFS_PAGE        = 3;
-const NEW_ACCOUNT_CAPTCHA_PAGE      = 4;
-const EXISTING_ACCOUNT_LOGIN_PAGE   = 5;
-const EXISTING_ACCOUNT_PP_PAGE      = 6;
-const EXISTING_ACCOUNT_MERGE_PAGE   = 7;
-const EXISTING_ACCOUNT_CONFIRM_PAGE = 8;
-const SETUP_SUCCESS_PAGE            = 9;
+const NEW_ACCOUNT_CAPTCHA_PAGE      = 3;
+const EXISTING_ACCOUNT_LOGIN_PAGE   = 4;
+const EXISTING_ACCOUNT_PP_PAGE      = 5;
+const OPTIONS_PAGE                  = 6;
+const OPTIONS_CONFIRM_PAGE          = 7;
+const SETUP_SUCCESS_PAGE            = 8;
 
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 var gSyncSetup = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
@@ -76,6 +76,7 @@ var gSyncSetup = {
     email: false,
     server: false
   },
+  _haveSyncKeyBackup: false,
 
   get _usingMainServers() {
     if (this._settingUpNew)
@@ -112,26 +113,24 @@ var gSyncSetup = {
     if (window.arguments && window.arguments[0] == true) {
       // we're resetting sync
       this._resettingSync = true;
-      this.wizard.pageIndex = EXISTING_ACCOUNT_MERGE_PAGE;
+      this.wizard.pageIndex = OPTIONS_PAGE;
     }
     else {
       this.wizard.canAdvance = false;
       this.captchaBrowser.addProgressListener(this);
       Weave.Svc.Prefs.set("firstSync", "notReady");
     }
-  },
 
-  updateSyncPrefs: function () {
-    let syncEverything = document.getElementById("weaveSyncMode").selectedItem.value == "syncEverything";
-    document.getElementById("syncModeOptions").selectedIndex = syncEverything ? 0 : 1;
+    this.wizard.getButton("extra1").label =
+      this._stringBundle.GetStringFromName("button.syncOptions.label");
 
-    if (syncEverything) {
-      document.getElementById("engine.bookmarks").checked = true;
-      document.getElementById("engine.passwords").checked = true;
-      document.getElementById("engine.history").checked   = true;
-      document.getElementById("engine.tabs").checked      = true;
-      document.getElementById("engine.prefs").checked     = true;
-    }
+    // Remember these values because the options pages change them temporarily.
+    this._nextButtonLabel = this.wizard.getButton("next").label;
+    this._nextButtonAccesskey = this.wizard.getButton("next")
+                                           .getAttribute("accesskey");
+    this._backButtonLabel = this.wizard.getButton("back").label;
+    this._backButtonAccesskey = this.wizard.getButton("back")
+                                           .getAttribute("accesskey");
   },
 
   startNewAccountSetup: function () {
@@ -185,14 +184,6 @@ var gSyncSetup = {
     }
   },
 
-  handleExpanderClick: function (event) {
-    let expander = document.getElementById("setupAccountExpander");
-    let expand = expander.className == "expander-down";
-    expander.className =
-       expand ? "expander-up" : "expander-down";
-    document.getElementById("signInBox").hidden = !expand;
-  },
-
   setupInitialSync: function () {
     let action = document.getElementById("mergeChoiceRadio").selectedItem.id;
     switch (action) {
@@ -228,7 +219,7 @@ var gSyncSetup = {
 
         return true;
       case NEW_ACCOUNT_PP_PAGE:
-        return this.onPassphraseChange();
+        return this._haveSyncKeyBackup && this.checkPassphrase();
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         let hasUser = document.getElementById("existingUsername").value != "";
         let hasPass = document.getElementById("existingPassword").value != "";
@@ -279,7 +270,7 @@ var gSyncSetup = {
     if (password.value == document.getElementById("weavePassphrase").value) {
       // xxxmpc - hack, sigh
       valid = false;
-      errorString = Weave.Utils.getErrorString("change.password.pwSameAsPassphrase");
+      errorString = Weave.Utils.getErrorString("change.password.pwSameAsSyncKey");
     }
     else {
       let pwconfirm = document.getElementById("weavePasswordConfirm");
@@ -306,6 +297,31 @@ var gSyncSetup = {
   },
 
   onPassphraseChange: function () {
+    this._haveSyncKeyBackup = true;
+    this._haveCustomSyncKey = true;
+    let el = document.getElementById("generatePassphraseButton");
+    el.hidden = false;
+    this.checkFields();
+  },
+
+  onPassphraseGenerate: function () {
+    let passphrase = gSyncUtils.generatePassphrase();
+    Weave.Service.passphrase = passphrase;
+    let el = document.getElementById("weavePassphrase");
+    el.value = gSyncUtils.hyphenatePassphrase(passphrase);
+
+    el = document.getElementById("generatePassphraseButton");
+    el.hidden = true;
+    let feedback = document.getElementById("passphraseFeedbackRow");
+    this._setFeedback(feedback, true, "");
+  },
+
+  afterBackup: function () {
+    this._haveSyncKeyBackup = true;
+    this.checkFields();
+  },
+
+  checkPassphrase: function () {
     let el1 = document.getElementById("weavePassphrase");
     let valid, str;
     // xxxmpc - hack, sigh
@@ -314,8 +330,7 @@ var gSyncSetup = {
       str = Weave.Utils.getErrorString("change.passphrase.ppSameAsPassword");
     }
     else {
-      let el2 = document.getElementById("weavePassphraseConfirm");
-      [valid, str] = gSyncUtils.validatePassphrase(el1, el2);
+      [valid, str] = gSyncUtils.validatePassphrase(el1);
     }
 
     let feedback = document.getElementById("passphraseFeedbackRow");
@@ -328,25 +343,59 @@ var gSyncSetup = {
       case INTRO_PAGE:
         this.wizard.getButton("next").hidden = true;
         this.wizard.getButton("back").hidden = true;
-        this.wizard.getButton("cancel").label =
-          this._stringBundle.GetStringFromName("cancelSetup.label");
+        this.wizard.getButton("extra1").hidden = true;
         break;
       case NEW_ACCOUNT_PP_PAGE:
+        let el = document.getElementById("weavePassphrase");
+        el.blur();
+        if (!el.value)
+          this.onPassphraseGenerate();
         this.checkFields();
         break;
       case NEW_ACCOUNT_START_PAGE:
+        this.wizard.getButton("extra1").hidden = false;
         this.onServerChange();
-        this.checkFields(); // fall through
+        // fall through
       case EXISTING_ACCOUNT_LOGIN_PAGE:
-      case EXISTING_ACCOUNT_MERGE_PAGE:
+        this.checkFields();
         this.wizard.getButton("next").hidden = false;
         this.wizard.getButton("back").hidden = false;
-        this.wizard.canRewind = !this._resettingSync;
+        this.wizard.getButton("extra1").hidden = false;
+        this.wizard.canRewind = true;
         break;
       case SETUP_SUCCESS_PAGE:
         this.wizard.canRewind = false;
         this.wizard.getButton("back").hidden = true;
+        this.wizard.getButton("next").hidden = true;
         this.wizard.getButton("cancel").hidden = true;
+        this.wizard.getButton("finish").hidden = false;
+        this._handleSuccess();
+        break;
+      case OPTIONS_PAGE:
+        this.wizard.canRewind = false;
+        this.wizard.canAdvance = true;
+        if (!this._resettingSync) {
+          this.wizard.getButton("next").label =
+            this._stringBundle.GetStringFromName("button.syncOptionsDone.label");
+          this.wizard.getButton("next").removeAttribute("accesskey");
+        }
+        this.wizard.getButton("next").hidden = false;
+        this.wizard.getButton("back").hidden = true;
+        this.wizard.getButton("cancel").hidden = !this._resettingSync;
+        this.wizard.getButton("extra1").hidden = true;
+        document.getElementById("syncComputerName").value = Weave.Clients.localName;
+        document.getElementById("syncOptions").collapsed = this._resettingSync;
+        document.getElementById("mergeOptions").collapsed = this._settingUpNew;
+        break;
+      case OPTIONS_CONFIRM_PAGE:
+        this.wizard.canRewind = true;
+        this.wizard.canAdvance = true;
+        this.wizard.getButton("back").label =
+          this._stringBundle.GetStringFromName("button.syncOptionsCancel.label");
+        this.wizard.getButton("back").removeAttribute("accesskey");
+        this.wizard.getButton("back").hidden = this._resettingSync;
+        this.wizard.getButton("next").hidden = false;
+        this.wizard.getButton("finish").hidden = true;
         break;
     }
   },
@@ -356,17 +405,6 @@ var gSyncSetup = {
       return true;
 
     switch (this.wizard.pageIndex) {
-      case NEW_ACCOUNT_PREFS_PAGE:
-        if (this._settingUpNew) {
-          // time to load the captcha
-          // first check for NoScript and whitelist the right sites
-          this._handleNoScript(true);
-          this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
-          return true;
-        }
-
-        this.wizard.pageIndex = SETUP_SUCCESS_PAGE;
-        return false;
       case NEW_ACCOUNT_CAPTCHA_PAGE:
         let doc = this.captchaBrowser.contentDocument;
         let getField = function getField(field) {
@@ -374,7 +412,14 @@ var gSyncSetup = {
           return node && node.value;
         };
 
-        this.startThrobber(true);
+        // Display throbber
+        let feedback = document.getElementById("captchaFeedback");
+        let image = feedback.firstChild;
+        let label = image.nextSibling;
+        image.setAttribute("status", "active");
+        label.value = this._stringBundle.GetStringFromName("verifying.label");
+        feedback.hidden = false;
+
         let username = document.getElementById("weaveUsername").value;
         let password = document.getElementById("weavePassword").value;
         let email    = document.getElementById("weaveEmail").value;
@@ -383,24 +428,25 @@ var gSyncSetup = {
 
         let error = Weave.Service.createAccount(username, password, email,
                                                 challenge, response);
-        this.startThrobber(false);
 
         if (error == null) {
           Weave.Service.username = username;
           Weave.Service.password = password;
           this._handleNoScript(false);
           this.wizard.pageIndex = SETUP_SUCCESS_PAGE;
-          return true;
+          return false;
         }
 
-        // this could be nicer, but it'll do for now
-        Weave.Svc.Prompt.alert(window,
-                               this._stringBundle.GetStringFromName("errorCreatingAccount.title"),
-                               Weave.Utils.getErrorString(error));
+        image.setAttribute("status", "error");
+        label.value = Weave.Utils.getErrorString(error);
         return false;
       case NEW_ACCOUNT_PP_PAGE:
-        Weave.Service.passphrase = document.getElementById("weavePassphrase").value;
-        document.getElementById("syncComputerName").value = Weave.Clients.localName;
+        if (this._haveCustomSyncKey)
+          Weave.Service.passphrase = document.getElementById("weavePassphrase").value;
+        // Time to load the captcha.
+        // First check for NoScript and whitelist the right sites.
+        this._handleNoScript(true);
+        this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
         break;
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         Weave.Service.username = document.getElementById("existingUsername").value;
@@ -418,24 +464,25 @@ var gSyncSetup = {
         }
         break;
       case EXISTING_ACCOUNT_PP_PAGE:
-        Weave.Service.passphrase = document.getElementById("existingPassphrase").value;
+        let pp = document.getElementById("existingPassphrase").value;
+        Weave.Service.passphrase = gSyncUtils.normalizePassphrase(pp);
         if (Weave.Service.login())
-          return true;
-
+          this.wizard.pageIndex = SETUP_SUCCESS_PAGE;
         return false;
-      case EXISTING_ACCOUNT_MERGE_PAGE:
+      case OPTIONS_PAGE:
+        let desc = document.getElementById("mergeChoiceRadio").selectedIndex;
+        // No confirmation needed on new account setup or merge option
+        // with existing account.
+        if (this._settingUpNew || (!this._resettingSync && desc == 0))
+          return this.returnFromOptions();
         return this._handleChoice();
-      case EXISTING_ACCOUNT_CONFIRM_PAGE:
-        this.setupInitialSync();
+      case OPTIONS_CONFIRM_PAGE:
         if (this._resettingSync) {
           this.onWizardFinish();
           window.close();
           return false;
         }
-
-        this.wizard.pageIndex = NEW_ACCOUNT_PREFS_PAGE;
-        document.getElementById("syncComputerName").value = Weave.Clients.localName;
-        return false;
+        return this.returnFromOptions();
     }
     return true;
   },
@@ -449,18 +496,16 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_PP_PAGE: // no idea wtf is up here, but meh!
         this.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
         return false;
-      case NEW_ACCOUNT_PREFS_PAGE:
-        if (this._settingUpNew)
-          return true;
-
-        this.wizard.pageIndex = EXISTING_ACCOUNT_CONFIRM_PAGE;
-        return false;
+      case OPTIONS_CONFIRM_PAGE:
+        // Backing up from the confirmation page = resetting first sync to merge.
+        document.getElementById("mergeChoiceRadio").selectedIndex = 0;
+        return this.returnFromOptions();
     }
     return true;
   },
 
   onWizardFinish: function () {
-    Weave.Status.service == Weave.STATUS_OK;
+    this.setupInitialSync();
 
     if (!this._resettingSync) {
       function isChecked(element) {
@@ -493,12 +538,30 @@ var gSyncSetup = {
     if (this._resettingSync)
       return;
 
-    if (this.wizard.pageIndex == 9) {
+    if (this.wizard.pageIndex == SETUP_SUCCESS_PAGE) {
       this.onWizardFinish();
       return;
     }
     this._handleNoScript(false);
     Weave.Service.startOver();
+  },
+
+  onSyncOptions: function () {
+    this._beforeOptionsPage = this.wizard.pageIndex;
+    this.wizard.pageIndex = OPTIONS_PAGE;
+  },
+
+  returnFromOptions: function() {
+    this.wizard.getButton("next").label = this._nextButtonLabel;
+    this.wizard.getButton("next").setAttribute("accesskey",
+                                               this._nextButtonAccesskey);
+    this.wizard.getButton("back").label = this._backButtonLabel;
+    this.wizard.getButton("back").setAttribute("accesskey",
+                                               this._backButtonAccesskey);
+    this.wizard.getButton("cancel").hidden = false;
+    this.wizard.getButton("extra1").hidden = false;
+    this.wizard.pageIndex = this._beforeOptionsPage;
+    return false;
   },
 
   // _handleNoScript is needed because it blocks the captcha. So we temporarily
@@ -526,10 +589,6 @@ var gSyncSetup = {
       });
       this._disabledSites = [];
     }
-  },
-
-  startThrobber: function (start) {
-    // FIXME: stubbed (bug 583653)
   },
 
   onServerChange: function () {
@@ -615,6 +674,25 @@ var gSyncSetup = {
     return valid;
   },
 
+  _handleSuccess: function() {
+    let self = this;
+    function fill(id, string)
+      document.getElementById(id).firstChild.nodeValue =
+        string ? self._stringBundle.GetStringFromName(string) : "";
+
+    fill("firstSyncAction", "");
+    fill("firstSyncActionWarning", "");
+    if (this._settingUpNew) {
+      fill("firstSyncAction", "newAccount.action.label");
+      fill("firstSyncActionChange", "newAccount.change.label");
+      return;
+    }
+    fill("firstSyncActionChange", "existingAccount.change.label");
+    let action = document.getElementById("mergeChoiceRadio").selectedItem.id;
+    let id = action == "resetClient" ? "firstSyncAction" : "firstSyncActionWarning";
+    fill(id, action + ".change.label");
+  },
+
   _handleChoice: function () {
     let desc = document.getElementById("mergeChoiceRadio").selectedIndex;
     document.getElementById("chosenActionDeck").selectedIndex = desc;
@@ -641,7 +719,9 @@ var gSyncSetup = {
         if (stm.step())
           daysOfHistory = stm.getInt32(0);
         document.getElementById("historyCount").value =
-          this._stringBundle.formatStringFromName("historyCount.label",  [daysOfHistory], 1);
+          PluralForm.get(daysOfHistory,
+                         this._stringBundle.GetStringFromName("historyDaysCount.label"))
+                             .replace("#1", daysOfHistory);
 
         // bookmarks
         let bookmarks = 0;
@@ -654,12 +734,16 @@ var gSyncSetup = {
         if (stm.executeStep())
           bookmarks = stm.row.bookmarks;
         document.getElementById("bookmarkCount").value =
-          this._stringBundle.formatStringFromName("bookmarkCount.label", [bookmarks], 1);
+          PluralForm.get(bookmarks,
+                         this._stringBundle.GetStringFromName("bookmarksCount.label"))
+                             .replace("#1", bookmarks);
 
         // passwords
         let logins = Weave.Svc.Login.getAllLogins({});
         document.getElementById("passwordCount").value =
-          this._stringBundle.formatStringFromName("passwordCount.label",  [logins.length], 1);
+          PluralForm.get(logins.length,
+                         this._stringBundle.GetStringFromName("passwordsCount.label"))
+                             .replace("#1", logins.length);
         this._case1Setup = true;
         break;
       case 2:
@@ -685,7 +769,9 @@ var gSyncSetup = {
         }
         if (count > 5) {
           let label =
-            this._stringBundle.formatStringFromName("additionalClients.label", [count - 5], 1);
+            PluralForm.get(count - 5,
+                           this._stringBundle.GetStringFromName("additionalClientCount.label"))
+                               .replace("#1", count - 5);
           appendNode(label);
         }
         this._case2Setup = true;

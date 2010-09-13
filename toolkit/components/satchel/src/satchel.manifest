@@ -2,3 +2,5 @@ component {0c1bb408-71a2-403f-854a-3a0659829ded} nsFormHistory.js
 contract @mozilla.org/satchel/form-history;1 {0c1bb408-71a2-403f-854a-3a0659829ded}
 component {c11c21b2-71c9-4f87-a0f8-5e13f50495fd} nsFormAutoComplete.js
 contract @mozilla.org/satchel/form-autocomplete;1 {c11c21b2-71c9-4f87-a0f8-5e13f50495fd}
+component {bf1e01d0-953e-11df-981c-0800200c9a66} nsInputListAutoComplete.js
+contract @mozilla.org/satchel/inputlist-autocomplete;1 {bf1e01d0-953e-11df-981c-0800200c9a66}

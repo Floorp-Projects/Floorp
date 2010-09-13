@@ -76,6 +76,14 @@ _CHROME_FILES = \
   test_0052_check_no_updates.xul \
   test_0053_check_billboard_license_noAttr.xul \
   test_0054_check_billboard_license_404.xul \
+  test_0061_check_verifyFailPartial_noComplete.xul \
+  test_0062_check_verifyFailComplete_noPartial.xul \
+  test_0063_check_verifyFailPartialComplete.xul \
+  test_0064_check_verifyFailPartial_successComplete.xul \
+  test_0071_notify_verifyFailPartial_noComplete.xul \
+  test_0072_notify_verifyFailComplete_noPartial.xul \
+  test_0073_notify_verifyFailPartialComplete.xul \
+  test_0074_notify_verifyFailPartial_successComplete.xul \
   test_0081_error_patchApplyFailure_partial_only.xul \
   test_0082_error_patchApplyFailure_complete_only.xul \
   test_0083_error_patchApplyFailure_partial_complete.xul \

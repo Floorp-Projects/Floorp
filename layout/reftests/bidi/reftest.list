@@ -9,8 +9,8 @@
 == bidi-005.html bidi-005-ref.html
 == bidi-006.html bidi-006-ref.html
 == bidi-006-j.html bidi-006-ref.html
-== visualmarquee.html marquee-ref.html
-== logicalmarquee.html marquee-ref.html
+random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
+random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == visualmarquee.html logicalmarquee.html
 # test for glyph mirroring in right-to-left text
 == mirroring-01.html mirroring-01-ref.html
@@ -31,10 +31,10 @@ random-if(gtk2Widget) == mixedChartype-03-j.html mixedChartype-03-ref.html
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
 == 258928-1.html 258928-1-ref.html
-== 267459-1.html 267459-1-ref.html
+random-if(winWidget) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 == 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
-== 305643-1.html 305643-1-ref.html
+random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows version, see bug 590101
 == 332655-1.html 332655-1-ref.html
 == 332655-2.html 332655-2-ref.html
 == 381279-1.html 381279-1-ref.html
@@ -54,3 +54,6 @@ random-if(gtk2Widget) == 386339.html 386339-ref.html
 == 503957-1.html 503957-1-ref.html
 == 525740-1.html 525740-1-ref.html
 == 536963-1.html 536963-1-ref.html
+== 588739-1.html 588739-ref.html
+== 588739-2.html 588739-ref.html
+== 588739-3.html 588739-ref.html

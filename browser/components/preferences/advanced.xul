@@ -68,9 +68,8 @@
 
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
-#ifdef XP_WIN
-      <preference id="gfx.direct2d.disabled"           name="gfx.direct2d.disabled"           type="bool"   inverted="true"/>
-#endif
+      <preference id="layers.accelerate-none"          name="layers.accelerate-none"          type="bool"   inverted="true"
+                  onchange="gAdvancedPane.updateHardwareAcceleration()"/>
       <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
 #ifdef HAVE_SHELL_SERVICE
@@ -177,12 +176,10 @@
                       label="&useSmoothScrolling.label;"
                       accesskey="&useSmoothScrolling.accesskey;"
                       preference="general.smoothScroll"/>
-#ifdef XP_WIN
             <checkbox id="allowHWAccel"
                       label="&allowHWAccel.label;"
                       accesskey="&allowHWAccel.accesskey;"
-                      preference="gfx.direct2d.disabled"/>
-#endif
+                      preference="layers.accelerate-none"/>
             <checkbox id="checkSpelling"
                       label="&checkSpelling.label;"
                       accesskey="&checkSpelling.accesskey;"

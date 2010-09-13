@@ -4,9 +4,9 @@ Cu.import("resource://services-sync/type_records/history.js");
 Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/util.js");
 
-const TIMESTAMP1 = 1281077113313976;
-const TIMESTAMP2 = 1281088209595212;
-const TIMESTAMP3 = 1281199249129950;
+const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
+const TIMESTAMP2 = (Date.now() - 6592903) * 1000;
+const TIMESTAMP3 = (Date.now() - 123894) * 1000;
 
 function queryPlaces(uri, options) {
   let query = Svc.History.getNewQuery();
@@ -29,7 +29,7 @@ function queryHistoryVisits(uri) {
 }
 
 function waitForTitleChanged(test) {
-  let [exec, cb] = Sync.withCb(function (callback) {
+  Sync(function (callback) {
     Svc.History.addObserver({
       onBeginUpdateBatch: function onBeginUpdateBatch() {},
       onEndUpdateBatch: function onEndUpdateBatch() {},
@@ -51,8 +51,7 @@ function waitForTitleChanged(test) {
       ])
     }, true);
     test();
-  });
-  exec(cb);
+  })();
 }
 
 function run_test() {

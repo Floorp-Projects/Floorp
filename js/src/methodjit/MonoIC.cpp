@@ -41,17 +41,31 @@
 #include "jsnum.h"
 #include "MonoIC.h"
 #include "StubCalls.h"
+#include "StubCalls-inl.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/RepatchBuffer.h"
 #include "assembler/assembler/MacroAssembler.h"
+#include "assembler/assembler/CodeLocation.h"
 #include "CodeGenIncludes.h"
+#include "methodjit/Compiler.h"
+#include "InlineFrameAssembler.h"
 #include "jsobj.h"
+
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::mjit;
 using namespace js::mjit::ic;
+
+typedef JSC::MacroAssembler::RegisterID RegisterID;
+typedef JSC::MacroAssembler::Address Address;
+typedef JSC::MacroAssembler::Jump Jump;
+typedef JSC::MacroAssembler::Imm32 Imm32;
+typedef JSC::MacroAssembler::ImmPtr ImmPtr;
+typedef JSC::MacroAssembler::Call Call;
 
 #if defined JS_MONOIC
 
@@ -66,9 +80,9 @@ PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp()->getScopeChain()->getGlobal();
-    ic::MICInfo &mic = f.fp()->getScript()->mics[index];
-    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    ic::MICInfo &mic = f.fp()->script()->mics[index];
+    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(mic.kind == ic::MICInfo::GET);
@@ -117,7 +131,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetGlobalNameSlow(VMFrame &f, uint32 index)
 {
-    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     stubs::SetGlobalName(f, atom);
 }
 
@@ -142,9 +156,9 @@ GetStubForSetGlobalName(VMFrame &f)
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp()->getScopeChain()->getGlobal();
-    ic::MICInfo &mic = f.fp()->getScript()->mics[index];
-    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    ic::MICInfo &mic = f.fp()->script()->mics[index];
+    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(mic.kind == ic::MICInfo::SET);
@@ -198,133 +212,506 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     GetStubForSetGlobalName(f)(f, atom);
 }
 
+static void * JS_FASTCALL
+SlowCallFromIC(VMFrame &f, uint32 index)
+{
+    JSScript *oldscript = f.fp()->script();
+    CallICInfo &ic= oldscript->callICs[index];
+
+    stubs::SlowCall(f, ic.argc);
+
+    return NULL;
+}
+
+static void * JS_FASTCALL
+SlowNewFromIC(VMFrame &f, uint32 index)
+{
+    JSScript *oldscript = f.fp()->script();
+    CallICInfo &ic = oldscript->callICs[index];
+
+    stubs::SlowNew(f, ic.argc);
+
+    return NULL;
+}
+
+/*
+ * Calls have an inline path and an out-of-line path. The inline path is used
+ * in the fastest case: the method has JIT'd code, and |argc == nargs|.
+ * 
+ * The inline path and OOL path are separated by a guard on the identity of
+ * the callee object. This guard starts as NULL and always fails on the first
+ * hit. On the OOL path, the callee is verified to be both a function and a
+ * scripted function. If these conditions hold, |ic::Call| is invoked.
+ *
+ * |ic::Call| first ensures that the callee has JIT code. If it doesn't, the
+ * call to |ic::Call| is patched to a slow path. If it does have JIT'd code,
+ * the following cases can occur:
+ *
+ *   1) args != nargs: The call to |ic::Call| is patched with a dynamically
+ *      generated stub. This stub inlines a path that looks like:
+ *      ----
+ *      push frame
+ *      if (callee is not compiled) {
+ *          Compile(callee);
+ *      }
+ *      call callee->arityLabel
+ *
+ *      The arity label is a special entry point for correcting frames for
+ *      arity mismatches.
+ *
+ *   2) args == nargs, and the inline call site was not patched yet.
+ *      The guard dividing the two paths is patched to guard on the given
+ *      function object identity, and the proceeding call is patched to
+ *      directly call the JIT code.
+ *
+ *   3) args == nargs, and the inline call site was patched already.
+ *      A small stub is created which extends the original guard to also
+ *      guard on the JSFunction lying underneath the function object.
+ *
+ * If the OOL path does not have a scripted function, but does have a
+ * scripted native, then a small stub is generated which inlines the native
+ * invocation.
+ */
+class CallCompiler
+{
+    VMFrame &f;
+    JSContext *cx;
+    CallICInfo &ic;
+    Value *vp;
+    bool callingNew;
+
+  public:
+    CallCompiler(VMFrame &f, CallICInfo &ic, bool callingNew)
+      : f(f), cx(f.cx), ic(ic), vp(f.regs.sp - (ic.argc + 2)), callingNew(callingNew)
+    {
+    }
+
+    JSC::ExecutablePool *poolForSize(size_t size, CallICInfo::PoolIndex index)
+    {
+        mjit::ThreadData *jm = &JS_METHODJIT_DATA(cx);
+        JSC::ExecutablePool *ep = jm->execPool->poolForSize(size);
+        if (!ep) {
+            js_ReportOutOfMemory(f.cx);
+            return NULL;
+        }
+        JS_ASSERT(!ic.pools[index]);
+        ic.pools[index] = ep;
+        return ep;
+    }
+
+    bool generateFullCallStub(JSScript *script, uint32 flags)
+    {
+        /*
+         * Create a stub that works with arity mismatches. Like the fast-path,
+         * this allocates a frame on the caller side, but also performs extra
+         * checks for compilability. Perhaps this should be a separate, shared
+         * trampoline, but for now we generate it dynamically.
+         */
+        Assembler masm;
+        InlineFrameAssembler inlFrame(masm, cx, ic, flags);
+        RegisterID t0 = inlFrame.tempRegs.takeAnyReg();
+
+        /* Generate the inline frame creation. */
+        inlFrame.assemble();
+
+        /* funPtrReg is still valid. Check if a compilation is needed. */
+        Address scriptAddr(ic.funPtrReg, offsetof(JSFunction, u) +
+                           offsetof(JSFunction::U::Scripted, script));
+        masm.loadPtr(scriptAddr, t0);
+
+        /*
+         * Test if script->nmap is NULL - same as checking ncode, but faster
+         * here since ncode has two failure modes and we need to load out of
+         * nmap anyway.
+         */
+        masm.loadPtr(Address(t0, offsetof(JSScript, jit)), t0);
+        Jump hasCode = masm.branchTestPtr(Assembler::NonZero, t0, t0);
+
+        /* Try and compile. On success we get back the nmap pointer. */
+        masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
+        masm.move(Imm32(ic.argc), Registers::ArgReg1);
+        JSC::MacroAssembler::Call tryCompile =
+            masm.stubCall(JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction),
+                          script->code, ic.frameDepth);
+
+        Jump notCompiled = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
+                                              Registers::ReturnReg);
+
+        masm.call(Registers::ReturnReg);
+        Jump done = masm.jump();
+
+        hasCode.linkTo(masm.label(), &masm);
+
+        /* Get nmap[ARITY], set argc, call. */
+        masm.move(Imm32(ic.argc), JSParamReg_Argc);
+        masm.loadPtr(Address(t0, offsetof(JITScript, arityCheck)), t0);
+        masm.call(t0);
+
+        /* Rejoin with the fast path. */
+        Jump rejoin = masm.jump();
+
+        /* Worst case - function didn't compile. */
+        notCompiled.linkTo(masm.label(), &masm);
+        masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
+        notCompiled = masm.jump();
+
+        JSC::ExecutablePool *ep = poolForSize(masm.size(), CallICInfo::Pool_ScriptStub);
+        if (!ep)
+            return false;
+
+        JSC::LinkBuffer buffer(&masm, ep);
+        buffer.link(rejoin, ic.funGuard.labelAtOffset(ic.joinPointOffset));
+        buffer.link(done, ic.funGuard.labelAtOffset(ic.joinPointOffset));
+        buffer.link(notCompiled, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
+        buffer.link(tryCompile,
+                    JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction)));
+        JSC::CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+
+        JaegerSpew(JSpew_PICs, "generated CALL stub %p (%d bytes)\n", cs.executableAddress(),
+                   masm.size());
+
+        JSC::CodeLocationJump oolJump = ic.slowPathStart.jumpAtOffset(ic.oolJumpOffset);
+        uint8 *start = (uint8 *)oolJump.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+        repatch.relink(oolJump, cs);
+
+        return true;
+    }
+
+    void patchInlinePath(JSScript *script, JSObject *obj)
+    {
+        /* Very fast path. */
+        uint8 *start = (uint8 *)ic.funGuard.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+
+        ic.fastGuardedObject = obj;
+
+        repatch.repatch(ic.funGuard, obj);
+        repatch.relink(ic.funGuard.callAtOffset(ic.hotCallOffset),
+                       JSC::FunctionPtr(script->ncode));
+
+        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n", start, ic.fastGuardedObject);
+    }
+
+    bool generateStubForClosures(JSObject *obj)
+    {
+        /* Slightly less fast path - guard on fun->getFunctionPrivate() instead. */
+        Assembler masm;
+
+        Registers tempRegs;
+        tempRegs.takeReg(ic.funObjReg);
+
+        RegisterID t0 = tempRegs.takeAnyReg();
+
+        /* Guard that it's actually a function object. */
+        Jump claspGuard = masm.branchPtr(Assembler::NotEqual,
+                                         Address(ic.funObjReg, offsetof(JSObject, clasp)),
+                                         ImmPtr(&js_FunctionClass));
+
+        /* Guard that it's the same function. */
+        JSFunction *fun = obj->getFunctionPrivate();
+        masm.loadFunctionPrivate(ic.funObjReg, t0);
+        Jump funGuard = masm.branchPtr(Assembler::NotEqual, t0, ImmPtr(fun));
+        Jump done = masm.jump();
+
+        JSC::ExecutablePool *ep = poolForSize(masm.size(), CallICInfo::Pool_ClosureStub);
+        if (!ep)
+            return false;
+
+        JSC::LinkBuffer buffer(&masm, ep);
+        buffer.link(claspGuard, ic.slowPathStart);
+        buffer.link(funGuard, ic.slowPathStart);
+        buffer.link(done, ic.funGuard.labelAtOffset(ic.hotPathOffset));
+        JSC::CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+
+        JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%d bytes)\n",
+                   cs.executableAddress(), masm.size());
+
+        uint8 *start = (uint8 *)ic.funJump.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+        repatch.relink(ic.funJump, cs);
+
+        ic.hasJsFunCheck = true;
+
+        return true;
+    }
+
+    bool generateNativeStub()
+    {
+        Value *vp = f.regs.sp - (ic.argc + 2);
+
+        JSObject *obj;
+        if (!IsFunctionObject(*vp, &obj))
+            return false;
+
+        JSFunction *fun = obj->getFunctionPrivate();
+        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isConstructor()))
+            return false;
+
+        if (callingNew)
+            vp[1].setMagicWithObjectOrNullPayload(NULL);
+
+        Native fn = fun->u.n.native;
+        if (!fn(cx, ic.argc, vp))
+            THROWV(true);
+
+        /* Right now, take slow-path for IC misses or multiple stubs. */
+        if (ic.fastGuardedNative || ic.hasJsFunCheck)
+            return true;
+
+        /* Native MIC needs to warm up first. */
+        if (!ic.hit) {
+            ic.hit = true;
+            return true;
+        }
+
+        /* Generate fast-path for calling this native. */
+        Assembler masm;
+
+        /* Guard on the function object identity, for now. */
+        Jump funGuard = masm.branchPtr(Assembler::NotEqual, ic.funObjReg, ImmPtr(obj));
+
+        Registers tempRegs;
+#ifndef JS_CPU_X86
+        tempRegs.takeReg(Registers::ArgReg0);
+        tempRegs.takeReg(Registers::ArgReg1);
+        tempRegs.takeReg(Registers::ArgReg2);
+#endif
+        RegisterID t0 = tempRegs.takeAnyReg();
+
+        /* Store pc. */
+        masm.storePtr(ImmPtr(cx->regs->pc),
+                       FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
+
+        /* Store sp. */
+        uint32 spOffset = sizeof(JSStackFrame) + ic.frameDepth * sizeof(Value);
+        masm.addPtr(Imm32(spOffset), JSFrameReg, t0);
+        masm.storePtr(t0, FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, sp)));
+
+        /* Grab cx early on to avoid stack mucking on x86. */
 #ifdef JS_CPU_X86
+        RegisterID cxReg = tempRegs.takeAnyReg();
+#else
+        RegisterID cxReg = Registers::ArgReg0;
+#endif
+        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxReg);
 
-ic::NativeCallCompiler::NativeCallCompiler()
-    : jumps(SystemAllocPolicy())
-{}
-
-void
-ic::NativeCallCompiler::finish(JSScript *script, uint8 *start, uint8 *fallthrough)
-{
-    /* Add a jump to fallthrough. */
-    Jump fallJump = masm.jump();
-    addLink(fallJump, fallthrough);
-
-    uint8 *result = (uint8 *)script->jit->execPool->alloc(masm.size());
-    JSC::ExecutableAllocator::makeWritable(result, masm.size());
-    masm.executableCopy(result);
-
-    /* Overwrite start with a jump to the call buffer. */
-    BaseAssembler::insertJump(start, result);
-
-    /* Patch all calls with the correct target. */
-    masm.finalize(result);
-
-    /* Patch all jumps with the correct target. */
-    JSC::LinkBuffer linkmasm(result, masm.size());
-
-    for (size_t i = 0; i < jumps.length(); i++)
-        linkmasm.link(jumps[i].from, JSC::CodeLocationLabel(jumps[i].to));
-}
-
-void
-ic::CallNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun, bool isNew)
-{
-    if (mic.u.generated) {
-        /* Already generated a MIC at this site, don't make another one. */
-        return;
-    }
-    mic.u.generated = true;
-
-    JS_ASSERT(fun->isNative());
-    if (isNew)
-        JS_ASSERT(fun->isConstructor());
-
-    Native native = fun->u.n.native;
-
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::Imm32 Imm32;
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler::Jump Jump;
-
-    uint8 *start = (uint8*) mic.knownObject.executableAddress();
-    uint8 *stubEntry = (uint8*) mic.stubEntry.executableAddress();
-    uint8 *fallthrough = (uint8*) mic.callEnd.executableAddress();
-
-    NativeCallCompiler ncc;
-
-    Jump differentFunction = ncc.masm.branchPtr(Assembler::NotEqual, mic.dataReg, ImmPtr(fun));
-    ncc.addLink(differentFunction, stubEntry);
-
-    /* Manually construct the X86 stack. TODO: get a more portable way of doing this. */
-
-    /* Register to use for filling in the fast native's arguments. */
-    JSC::MacroAssembler::RegisterID temp = mic.dataReg;
-
-    /* Store the pc, which is the same as for the current slow call. */
-    ncc.masm.storePtr(ImmPtr(cx->regs->pc),
-                      FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
-
-    /* Store sp. */
-    uint32 spOffset = sizeof(JSStackFrame) + (mic.frameDepth + mic.argc + 2) * sizeof(jsval);
-    ncc.masm.addPtr(Imm32(spOffset), JSFrameReg, temp);
-    ncc.masm.storePtr(temp, FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, sp)));
-
-    /* Make room for the three arguments on the stack, preserving stack register alignment. */
-    const uint32 stackAdjustment = 16;
-    ncc.masm.sub32(Imm32(stackAdjustment), JSC::X86Registers::esp);
-
-    /* Compute and push vp */
-    uint32 vpOffset = sizeof(JSStackFrame) + mic.frameDepth * sizeof(jsval);
-    ncc.masm.addPtr(Imm32(vpOffset), JSFrameReg, temp);
-    ncc.masm.storePtr(temp, Address(JSC::X86Registers::esp, 0x8));
-
-    if (isNew) {
-        /* Mark 'this' as magic. */
-        Value magicCtorThis;
-        magicCtorThis.setMagicWithObjectOrNullPayload(NULL);
-        ncc.masm.storeValue(magicCtorThis, Address(temp, sizeof(Value)));
-    }
-
-    /* Push argc */
-    ncc.masm.store32(Imm32(mic.argc), Address(JSC::X86Registers::esp, 0x4));
-
-    /* Push cx. The VMFrame is homed at the stack register, so adjust for the amount we pushed. */
-    ncc.masm.loadPtr(FrameAddress(stackAdjustment + offsetof(VMFrame, cx)), temp);
-    ncc.masm.storePtr(temp, Address(JSC::X86Registers::esp, 0));
-
-    /* Do the call. */
-    ncc.masm.call(JS_FUNC_TO_DATA_PTR(void *, native));
-
-    /* Restore stack. */
-    ncc.masm.add32(Imm32(stackAdjustment), JSC::X86Registers::esp);
-
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-    // Usually JaegerThrowpoline got called from return address.
-    // So in JaegerThrowpoline without fastcall, esp was added by 8.
-    // If we just want to jump there, we need to sub esp by 8 first.
-    ncc.masm.sub32(Imm32(8), JSC::X86Registers::esp);
+#ifdef JS_CPU_X86
+        /* x86's stack should be 16-byte aligned. */
+        masm.subPtr(Imm32(16), Assembler::stackPointerRegister);
 #endif
 
-    /* Check if the call is throwing, and jump to the throwpoline. */
-    Jump hasException =
-        ncc.masm.branchTest32(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
-    ncc.addLink(hasException, JS_FUNC_TO_DATA_PTR(uint8 *, JaegerThrowpoline));
+        /* Compute vp. */
+#ifdef JS_CPU_X86
+        RegisterID vpReg = t0;
+#else
+        RegisterID vpReg = Registers::ArgReg2;
+#endif
+        
+        uint32 vpOffset = sizeof(JSStackFrame) + (ic.frameDepth - ic.argc - 2) * sizeof(Value);
+        masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
 
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-    ncc.masm.add32(Imm32(8), JSC::X86Registers::esp);
+        /* Mark vp[1] as magic for |new|. */
+        if (callingNew) {
+            Value v;
+            v.setMagicWithObjectOrNullPayload(NULL);
+            masm.storeValue(v, Address(vpReg, sizeof(Value)));
+        }
+
+#ifdef JS_CPU_X86
+        masm.storePtr(vpReg, Address(Assembler::stackPointerRegister, 8));
 #endif
 
-    /* Load *vp into the return register pair. */
-    Address rval(JSFrameReg, vpOffset);
-    ncc.masm.loadPayload(rval, JSReturnReg_Data);
-    ncc.masm.loadTypeTag(rval, JSReturnReg_Type);
+        /* Push argc. */
+#ifdef JS_CPU_X86
+        masm.store32(Imm32(ic.argc), Address(Assembler::stackPointerRegister, 4));
+#else
+        masm.move(Imm32(ic.argc), Registers::ArgReg1);
+#endif
 
-    ncc.finish(script, start, fallthrough);
+        /* Push cx. */
+#ifdef JS_CPU_X86
+        masm.storePtr(cxReg, Address(Assembler::stackPointerRegister, 0));
+#endif
+
+        /* Make the call. */
+        Assembler::Call call = masm.call();
+
+#ifdef JS_CPU_X86
+        masm.addPtr(Imm32(16), Assembler::stackPointerRegister);
+#endif
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+        // Usually JaegerThrowpoline got called from return address.
+        // So in JaegerThrowpoline without fastcall, esp was added by 8.
+        // If we just want to jump there, we need to sub esp by 8 first.
+        masm.subPtr(Imm32(8), Assembler::stackPointerRegister);
+#endif
+
+        Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
+                                              Registers::ReturnReg);
+        
+
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+        // Usually JaegerThrowpoline got called from return address.
+        // So in JaegerThrowpoline without fastcall, esp was added by 8.
+        // If we just want to jump there, we need to sub esp by 8 first.
+        masm.addPtr(Imm32(8), Assembler::stackPointerRegister);
+#endif
+
+        Jump done = masm.jump();
+
+        /* Move JaegerThrowpoline into register for very far jump on x64. */
+        hasException.linkTo(masm.label(), &masm);
+        masm.move(ImmPtr(JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline)), Registers::ReturnReg);
+        masm.jump(Registers::ReturnReg);
+
+        JSC::ExecutablePool *ep = poolForSize(masm.size(), CallICInfo::Pool_NativeStub);
+        if (!ep)
+            THROWV(true);
+
+        JSC::LinkBuffer buffer(&masm, ep);
+        buffer.link(done, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
+        buffer.link(call, JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native)));
+        buffer.link(funGuard, ic.slowPathStart);
+        
+        JSC::CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+
+        JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%d bytes)\n",
+                   cs.executableAddress(), masm.size());
+
+        uint8 *start = (uint8 *)ic.funJump.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+        repatch.relink(ic.funJump, cs);
+
+        ic.fastGuardedNative = obj;
+
+        return true;
+    }
+
+    void *update()
+    {
+        JSObject *obj;
+        if (!IsFunctionObject(*vp, &obj) || !(cx->options & JSOPTION_METHODJIT)) {
+            /* Ugh. Can't do anything with this! */
+            if (callingNew)
+                stubs::SlowNew(f, ic.argc);
+            else
+                stubs::SlowCall(f, ic.argc);
+            return NULL;
+        }
+
+        JSFunction *fun = obj->getFunctionPrivate();
+        JSObject *scopeChain = obj->getParent();
+
+        /* The slow path guards against natives. */
+        JS_ASSERT(fun->isInterpreted());
+        JSScript *script = fun->u.i.script;
+
+        if (!script->ncode && !script->isEmpty()) {
+            if (mjit::TryCompile(cx, script, fun, scopeChain) == Compile_Error)
+                THROWV(NULL);
+        }
+        JS_ASSERT(script->isEmpty() || script->ncode);
+
+        if (script->ncode == JS_UNJITTABLE_METHOD || script->isEmpty()) {
+            /* This should always go to a slow path, sadly. */
+            JSC::CodeLocationCall oolCall = ic.slowPathStart.callAtOffset(ic.oolCallOffset);
+            uint8 *start = (uint8 *)oolCall.executableAddress();
+            JSC::RepatchBuffer repatch(start - 32, 64);
+            JSC::FunctionPtr fptr = callingNew
+                                    ? JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, SlowNewFromIC))
+                                    : JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, SlowCallFromIC));
+            repatch.relink(oolCall, fptr);
+            if (callingNew)
+                stubs::SlowNew(f, ic.argc);
+            else
+                stubs::SlowCall(f, ic.argc);
+            return NULL;
+        }
+
+        uint32 flags = callingNew ? JSFRAME_CONSTRUCTING : 0;
+        if (callingNew)
+            stubs::NewObject(f, ic.argc);
+
+        if (!ic.hit) {
+            if (ic.argc != fun->nargs) {
+                if (!generateFullCallStub(script, flags))
+                    THROWV(NULL);
+            } else {
+                if (!ic.fastGuardedObject) {
+                    patchInlinePath(script, obj);
+                } else if (!ic.hasJsFunCheck &&
+                           !ic.fastGuardedNative &&
+                           ic.fastGuardedObject->getFunctionPrivate() == fun) {
+                    /*
+                     * Note: Multiple "function guard" stubs are not yet
+                     * supported, thus the fastGuardedNative check.
+                     */
+                    if (!generateStubForClosures(obj))
+                        THROWV(NULL);
+                } else {
+                    if (!generateFullCallStub(script, flags))
+                        THROWV(NULL);
+                }
+            }
+        } else {
+            ic.hit = true;
+        }
+
+        /*
+         * We are about to jump into the callee's prologue, so push the frame as
+         * if we had been executing in the caller's inline call path. In theory,
+         * we could actually jump to the inline call path, but doing it from
+         * C++ allows JSStackFrame::initCallFrameCallerHalf to serve as a
+         * reference for what the jitted path should be doing.
+         */
+        JSStackFrame *fp = (JSStackFrame *)f.regs.sp;
+        fp->initCallFrameCallerHalf(cx, *scopeChain, ic.argc, flags);
+        f.regs.fp = fp;
+
+        if (ic.argc == fun->nargs)
+            return script->ncode;
+        return script->jit->arityCheck;
+    }
+};
+
+void * JS_FASTCALL
+ic::Call(VMFrame &f, uint32 index)
+{
+    JSScript *oldscript = f.fp()->script();
+    CallICInfo &ic = oldscript->callICs[index];
+    CallCompiler cc(f, ic, false);
+    return cc.update();
 }
 
-#endif /* JS_CPU_X86 */
+void * JS_FASTCALL
+ic::New(VMFrame &f, uint32 index)
+{
+    JSScript *oldscript = f.fp()->script();
+    CallICInfo &ic = oldscript->callICs[index];
+    CallCompiler cc(f, ic, true);
+    return cc.update();
+}
+
+void JS_FASTCALL
+ic::NativeCall(VMFrame &f, uint32 index)
+{
+    JSScript *oldscript = f.fp()->script();
+    CallICInfo &ic = oldscript->callICs[index];
+    CallCompiler cc(f, ic, false);
+    if (!cc.generateNativeStub())
+        stubs::SlowCall(f, ic.argc);
+}
+
+void JS_FASTCALL
+ic::NativeNew(VMFrame &f, uint32 index)
+{
+    JSScript *oldscript = f.fp()->script();
+    CallICInfo &ic = oldscript->callICs[index];
+    CallCompiler cc(f, ic, true);
+    if (!cc.generateNativeStub())
+        stubs::SlowNew(f, ic.argc);
+}
 
 void
 ic::PurgeMICs(JSContext *cx, JSScript *script)
@@ -349,8 +736,6 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
              */
             break;
           }
-          case ic::MICInfo::CALL:
-          case ic::MICInfo::EMPTYCALL:
           case ic::MICInfo::TRACER:
             /* Nothing to patch! */
             break;
@@ -358,6 +743,44 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
             JS_NOT_REACHED("Unknown MIC type during purge");
             break;
         }
+    }
+}
+
+void
+ic::SweepCallICs(JSContext *cx, JSScript *script)
+{
+    for (uint32 i = 0; i < script->jit->nCallICs; i++) {
+        ic::CallICInfo &ic = script->callICs[i];
+
+        /*
+         * If the object is unreachable, we're guaranteed not to be currently
+         * executing a stub generated by a guard on that object. This lets us
+         * precisely GC call ICs while keeping the identity guard safe.
+         */
+        bool fastFunDead = ic.fastGuardedObject && js_IsAboutToBeFinalized(ic.fastGuardedObject);
+        bool nativeDead = ic.fastGuardedNative && js_IsAboutToBeFinalized(ic.fastGuardedNative);
+
+        if (!fastFunDead && !nativeDead)
+            continue;
+
+        uint8 *start = (uint8 *)ic.funGuard.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+
+        if (fastFunDead) {
+            repatch.repatch(ic.funGuard, NULL);
+            ic.releasePool(CallICInfo::Pool_ClosureStub);
+            ic.hasJsFunCheck = false;
+            ic.fastGuardedObject = NULL;
+        }
+
+        if (nativeDead) {
+            ic.releasePool(CallICInfo::Pool_NativeStub);
+            ic.fastGuardedNative = NULL;
+        }
+
+        repatch.relink(ic.funJump, ic.slowPathStart);
+
+        ic.hit = false;
     }
 }
 

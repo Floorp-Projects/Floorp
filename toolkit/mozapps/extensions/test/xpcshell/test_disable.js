@@ -36,13 +36,8 @@ function run_test() {
     do_check_eq(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
-    var dest = profileDir.clone();
-    dest.append("addon1@tests.mozilla.org");
-    writeInstallRDFToDir(addon1, dest);
-    // Add a fake icon to the extension
-    dest.append("icon.png");
-    dest.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
-    gIconURL = NetUtil.newURI(dest);
+    writeInstallRDFForExtension(addon1, profileDir, addon1.id, "icon.png");
+    gIconURL = do_get_addon_root_uri(profileDir.clone(), addon1.id) + "icon.png";
 
     restartManager();
 
@@ -100,7 +95,7 @@ function run_test_1() {
         do_check_true(newa1.userDisabled);
         do_check_eq(newa1.aboutURL, null);
         do_check_eq(newa1.optionsURL, null);
-        do_check_eq(newa1.iconURL, gIconURL.spec);
+        do_check_eq(newa1.iconURL, gIconURL);
         do_check_false(isExtensionInAddonsList(profileDir, newa1.id));
         do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
         do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -125,7 +120,7 @@ function run_test_2() {
     a1.userDisabled = false;
     do_check_eq(a1.aboutURL, null);
     do_check_eq(a1.optionsURL, null);
-    do_check_eq(a1.iconURL, gIconURL.spec);
+    do_check_eq(a1.iconURL, gIconURL);
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
     do_check_eq(a1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE);

@@ -29,5 +29,5 @@ category command-line-validator b-browser @mozilla.org/browser/clh;1 application
 component {eab9012e-5f74-4cbc-b2b5-a590235513cc} nsBrowserGlue.js
 contract @mozilla.org/browser/browserglue;1 {eab9012e-5f74-4cbc-b2b5-a590235513cc}
 category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1
-component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} nsBrowserGlue.js
-contract @mozilla.org/geolocation/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
+component {d8903bf6-68d5-4e97-bcd1-e4d3012f721a} nsBrowserGlue.js
+contract @mozilla.org/content-permission/prompt;1 {d8903bf6-68d5-4e97-bcd1-e4d3012f721a}
