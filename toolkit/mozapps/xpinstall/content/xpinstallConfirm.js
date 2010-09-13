@@ -84,7 +84,7 @@ XPInstallConfirm.init = function ()
   
   var introString = bundle.getString("itemWarnIntroSingle");
   if (numItemsToInstall > 4)
-    introString = bundle.getFormattedString("itemWarnIntroMultiple", [numItemsToInstall / 4]);
+    introString = bundle.getFormattedString("itemWarnIntroMultiple", [numItemsToInstall]);
   var textNode = document.createTextNode(introString);
   var introNode = document.getElementById("itemWarningIntro");
   while (introNode.hasChildNodes())
