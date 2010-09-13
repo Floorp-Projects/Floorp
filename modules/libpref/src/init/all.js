@@ -3172,6 +3172,7 @@ pref("webgl.shader_validator", true);
 pref("webgl.force_osmesa", false);
 pref("webgl.mochitest_native_gl", false);
 pref("webgl.osmesalib", "");
+pref("webgl.verbose", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
