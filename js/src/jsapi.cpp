@@ -60,7 +60,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
-#include "jsdtoa.h"
 #include "jsemit.h"
 #include "jsexn.h"
 #include "jsfun.h"

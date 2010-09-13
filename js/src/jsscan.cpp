@@ -56,7 +56,6 @@
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
-#include "jsdtoa.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
