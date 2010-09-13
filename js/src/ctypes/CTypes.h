@@ -337,6 +337,10 @@ struct ClosureInfo
 #endif
 };
 
+bool IsCTypesGlobal(JSContext* cx, JSObject* obj);
+
+JSCTypesCallbacks* GetCallbacks(JSContext* cx, JSObject* obj);
+
 JSBool InitTypeClasses(JSContext* cx, JSObject* parent);
 
 JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj,
@@ -351,6 +355,11 @@ JSBool ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
 /*******************************************************************************
 ** JSClass reserved slot definitions
 *******************************************************************************/
+
+enum CTypesGlobalSlot {
+  SLOT_CALLBACKS = 0, // pointer to JSCTypesCallbacks struct
+  CTYPESGLOBAL_SLOTS
+};
 
 enum CABISlot {
   SLOT_ABICODE = 0, // ABICode of the CABI object
@@ -444,6 +453,7 @@ namespace CType {
   JSString* GetName(JSContext* cx, JSObject* obj);
   JSObject* GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
   JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
+  JSCTypesCallbacks* GetCallbacksFromType(JSContext* cx, JSObject* obj);
 }
 
 namespace PointerType {
