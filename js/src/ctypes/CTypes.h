@@ -219,6 +219,12 @@ StringsEqual(Vector<jschar, N, AP> &v, JSString* str)
 ** Function and struct API definitions
 *******************************************************************************/
 
+JS_ALWAYS_INLINE void
+ASSERT_OK(JSBool ok)
+{
+  JS_ASSERT(ok);
+}
+
 // for JS error reporting
 enum ErrorNum {
 #define MSG_DEF(name, number, count, exception, format) \

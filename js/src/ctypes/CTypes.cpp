@@ -468,12 +468,6 @@ static inline bool FloatIsFinite(jsdouble f) {
 #endif
 }
 
-JS_ALWAYS_INLINE void
-ASSERT_OK(JSBool ok)
-{
-  JS_ASSERT(ok);
-}
-
 JS_ALWAYS_INLINE JSString*
 NewUCString(JSContext* cx, const AutoString& from)
 {
