@@ -1066,34 +1066,6 @@ FrameState::allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc)
 }
 
 void
-FrameState::ensureFullRegs(FrameEntry *fe)
-{
-    FrameEntry *backing = fe;
-    if (fe->isCopy())
-        backing = fe->copyOf();
-
-    if (!fe->type.inMemory()) {
-        if (fe->data.inRegister())
-            return;
-        if (fe->type.inRegister())
-            pinReg(fe->type.reg());
-        if (fe->data.inMemory())
-            tempRegForData(fe);
-        if (fe->type.inRegister())
-            unpinReg(fe->type.reg());
-    } else if (!fe->data.inMemory()) {
-        if (fe->type.inRegister())
-            return;
-        if (fe->data.inRegister())
-            pinReg(fe->data.reg());
-        if (fe->type.inMemory())
-            tempRegForType(fe);
-        if (fe->data.inRegister())
-            unpinReg(fe->data.reg());
-    }
-}
-
-void
 FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc,
                            bool needsResult)
 {
