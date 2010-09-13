@@ -44,7 +44,7 @@
 
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDesktopNotificationPrompt.h"
+#include "nsIContentPermissionPrompt.h"
 
 #include "nsIObserver.h"
 #include "nsString.h"
@@ -140,20 +140,20 @@ protected:
 /*
  * Simple Request
  */
-class nsDesktopNotificationRequest : public nsIDOMDesktopNotificationRequest,
+class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
                                      public nsRunnable
 {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDESKTOPNOTIFICATIONREQUEST
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
 
   nsDesktopNotificationRequest(nsDOMDesktopNotification* notification)
     : mDesktopNotification(notification) {}
 
   NS_IMETHOD Run()
   {
-    nsCOMPtr<nsIDesktopNotificationPrompt> prompt =
-      do_GetService(NS_DOM_DESKTOP_NOTIFICATION_PROMPT_CONTRACTID);
+    nsCOMPtr<nsIContentPermissionPrompt> prompt =
+      do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
     if (prompt) {
       prompt->Prompt(this);
     }
