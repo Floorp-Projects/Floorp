@@ -2854,7 +2854,10 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
 
 #define OBTAIN_UNIFORM_LOCATION(info)                                   \
     WebGLUniformLocation *location_object;                              \
-    if (!GetConcreteObject(info, ploc, &location_object))               \
+    PRBool isNull;                                                      \
+    if (!GetConcreteObject(info, ploc, &location_object, &isNull))      \
+        return NS_OK;                                                   \
+    if (isNull)                                                         \
         return NS_OK;                                                   \
     if (mCurrentProgram != location_object->Program())                  \
         return ErrorInvalidOperation("%s: this uniform location doesn't correspond to the current program", info); \
