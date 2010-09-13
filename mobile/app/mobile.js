@@ -350,8 +350,7 @@ pref("content.sink.perf_parse_time", 5000);
 pref("content.sink.interactive_time", 0);
 pref("content.sink.initial_perf_time", 0);
 
-pref("javascript.options.jit.content", true);
-pref("javascript.options.jit.chrome", true);
+pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.mem.gc_frequency", 300);
 
 pref("dom.max_chrome_script_run_time", 30);
