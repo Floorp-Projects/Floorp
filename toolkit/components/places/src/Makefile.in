@@ -82,6 +82,9 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
+# This is the default value.  Must be in sync with the one defined in SQLite.
+DEFINES += -DSQLITE_DEFAULT_PAGE_SIZE=32768
+
 EXTRA_COMPONENTS = \
   toolkitplaces.manifest \
   nsLivemarkService.js \
