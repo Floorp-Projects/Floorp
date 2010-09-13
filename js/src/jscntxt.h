@@ -233,10 +233,11 @@ struct TracerState
 namespace mjit {
     struct Trampolines
     {
-        void (* forceReturn)();
+        typedef void (*TrampolinePtr)();
+        TrampolinePtr forceReturn;
         JSC::ExecutablePool *forceReturnPool;
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-        void (* forceReturnFast)();
+        TrampolinePtr forceReturnFast;
         JSC::ExecutablePool *forceReturnFastPool;
 #endif
     };

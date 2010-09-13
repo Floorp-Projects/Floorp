@@ -46,7 +46,7 @@ namespace js {
 namespace mjit {
 
 #define CHECK_RESULT(x) if (!(x)) return false
-#define COMPILE(which, pool, how) CHECK_RESULT(compileTrampoline((void **)(&(which)), &pool, how))
+#define COMPILE(which, pool, how) CHECK_RESULT(compileTrampoline(&(which), &pool, how))
 #define RELEASE(which, pool) JS_BEGIN_MACRO \
     which = NULL;                           \
     if (pool)                               \
@@ -86,7 +86,7 @@ TrampolineCompiler::release(Trampolines *tramps)
 }
 
 bool
-TrampolineCompiler::compileTrampoline(void **where, JSC::ExecutablePool **pool,
+TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where, JSC::ExecutablePool **pool,
                                       TrampolineGenerator generator)
 {
     Assembler masm;
@@ -102,7 +102,7 @@ TrampolineCompiler::compileTrampoline(void **where, JSC::ExecutablePool **pool,
     JSC::LinkBuffer buffer(&masm, *pool);
     uint8 *result = (uint8*)buffer.finalizeCodeAddendum().dataLocation();
     masm.finalize(result);
-    *where = result + masm.distanceOf(entry);
+    *where = JS_DATA_TO_FUNC_PTR(Trampolines::TrampolinePtr, result + masm.distanceOf(entry));
 
     return true;
 }
