@@ -5137,10 +5137,30 @@ UpdateChecker.prototype = {
   syncCompatibility: null,
 
   /**
+   * Calls a method on the listener passing any number of arguments and
+   * consuming any exceptions.
+   *
+   * @param  aMethod
+   *         The method to call on the listener
+   */
+  callListener: function(aMethod) {
+    if (!(aMethod in this.listener))
+      return;
+
+    let args = Array.slice(arguments, 1);
+    try {
+      this.listener[aMethod].apply(this.listener, args);
+    }
+    catch (e) {
+      LOG("Exception calling UpdateListener method " + aMethod + ": " + e);
+    }
+  },
+
+  /**
    * Called when AddonUpdateChecker completes the update check
    *
-   * @param   updates
-   *          The list of update details for the add-on
+   * @param  updates
+   *         The list of update details for the add-on
    */
   onUpdateCheckComplete: function UC_onUpdateCheckComplete(aUpdates) {
     let AUC = AddonUpdateChecker;
@@ -5165,57 +5185,64 @@ UpdateChecker.prototype = {
                                                 this.platformVersion);
     }
 
-    if (compatUpdate) {
-      if ("onCompatibilityUpdateAvailable" in this.listener)
-        this.listener.onCompatibilityUpdateAvailable(createWrapper(this.addon));
-    }
-    else if ("onNoCompatibilityUpdateAvailable" in this.listener) {
-      this.listener.onNoCompatibilityUpdateAvailable(createWrapper(this.addon));
+    if (compatUpdate)
+      this.callListener("onCompatibilityUpdateAvailable", createWrapper(this.addon));
+    else
+      this.callListener("onNoCompatibilityUpdateAvailable", createWrapper(this.addon));
+
+    function sendUpdateAvailableMessages(aSelf, aInstall) {
+      if (aInstall) {
+        aSelf.callListener("onUpdateAvailable", createWrapper(aSelf.addon),
+                           aInstall.wrapper);
+      }
+      else {
+        aSelf.callListener("onNoUpdateAvailable", createWrapper(aSelf.addon));
+      }
+      aSelf.callListener("onUpdateFinished", createWrapper(aSelf.addon),
+                         AddonManager.UPDATE_STATUS_NO_ERROR);
     }
 
     let update = AUC.getNewestCompatibleUpdate(aUpdates,
                                                this.appVersion,
                                                this.platformVersion);
+
     if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
-      if ("onUpdateAvailable" in this.listener) {
-        let self = this;
-        AddonInstall.createUpdate(function(install) {
-          self.listener.onUpdateAvailable(createWrapper(self.addon),
-                                          install.wrapper);
-          if ("onUpdateFinished" in self.listener) {
-            self.listener.onUpdateFinished(createWrapper(self.addon),
-                                           AddonManager.UPDATE_STATUS_NO_ERROR);
-          }
-        }, this.addon, update);
+      for (let i = 0; i < XPIProvider.installs.length; i++) {
+        // Skip installs that don't match the available update
+        if (XPIProvider.installs[i].existingAddon != this.addon ||
+            XPIProvider.installs[i].version != update.version)
+          continue;
+
+        // If the existing install has not yet started downloading then send an
+        // available update notification. If it is already downloading then
+        // don't send any available update notification
+        if (XPIProvider.installs[i].state == AddonManager.STATE_AVAILABLE)
+          sendUpdateAvailableMessages(this, XPIProvider.installs[i]);
+        else
+          sendUpdateAvailableMessages(this, null);
+        return;
       }
-      else if ("onUpdateFinished" in this.listener) {
-        this.listener.onUpdateFinished(createWrapper(this.addon),
-                                       AddonManager.UPDATE_STATUS_NO_ERROR);
-      }
+
+      let self = this;
+      AddonInstall.createUpdate(function(aInstall) {
+        sendUpdateAvailableMessages(self, aInstall);
+      }, this.addon, update);
     }
     else {
-      if ("onNoUpdateAvailable" in this.listener)
-        this.listener.onNoUpdateAvailable(createWrapper(this.addon));
-      if ("onUpdateFinished" in this.listener) {
-        this.listener.onUpdateFinished(createWrapper(this.addon),
-                                       AddonManager.UPDATE_STATUS_NO_ERROR);
-      }
+      sendUpdateAvailableMessages(this, null);
     }
   },
 
   /**
    * Called when AddonUpdateChecker fails the update check
    *
-   * @param  error
+   * @param  aError
    *         An error status
    */
   onUpdateCheckError: function UC_onUpdateCheckError(aError) {
-    if ("onNoCompatibilityUpdateAvailable" in this.listener)
-      this.listener.onNoCompatibilityUpdateAvailable(createWrapper(this.addon));
-    if ("onNoUpdateAvailable" in this.listener)
-      this.listener.onNoUpdateAvailable(createWrapper(this.addon));
-    if ("onUpdateFinished" in this.listener)
-      this.listener.onUpdateFinished(createWrapper(this.addon), aError);
+    this.callListener("onNoCompatibilityUpdateAvailable", createWrapper(this.addon));
+    this.callListener("onNoUpdateAvailable", createWrapper(this.addon));
+    this.callListener("onUpdateFinished", createWrapper(this.addon), aError);
   }
 };
 
