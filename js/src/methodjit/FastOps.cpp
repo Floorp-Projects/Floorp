@@ -1482,7 +1482,7 @@ mjit::Compiler::jsop_getelem()
 
     if (id->isTypeKnown() &&
         !(id->getKnownType() == JSVAL_TYPE_INT32
-#if 0 && defined JS_POLYIC
+#ifdef JS_POLYIC
           || id->getKnownType() == JSVAL_TYPE_STRING
 #endif
          )) {
@@ -1514,7 +1514,7 @@ mjit::Compiler::jsop_getelem()
     if (id->isTypeKnown())
         return jsop_getelem_known_type(obj, id, tmpReg);
 
-#if 0 && defined JS_POLYIC
+#ifdef JS_POLYIC
     return jsop_getelem_with_pic(obj, id, tmpReg);
 #else
     return jsop_getelem_nopic(obj, id, tmpReg);
