@@ -63,8 +63,6 @@ var series = [{ label: "Launch Time",
                 data: []
               }
              ];
-var table = document.getElementsByTagName("table")[1];
-
 var file = Components.classes["@mozilla.org/file/directory_service;1"]
                      .getService(Components.interfaces.nsIProperties)
                      .get("ProfD", Components.interfaces.nsIFile);
@@ -79,6 +77,7 @@ query.executeAsync({
   handleResult: function(results)
   {
     let hasresults = false;
+    let table = document.getElementById("duration-table");
     for (let row = results.getNextRow(); row; row = results.getNextRow())
     {
       hasresults = true;
@@ -113,7 +112,7 @@ query.executeAsync({
   },
   handleError: function(error)
   {
-    table.appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
+    $("#duration-table").appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
   },
   handleCompletion: function()
   {
