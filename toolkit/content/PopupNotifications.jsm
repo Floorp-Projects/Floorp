@@ -189,6 +189,10 @@ PopupNotifications.prototype = {
    *        dismissed:   Whether the notification should be added as a dismissed
    *                     notification. Dismissed notifications can be activated
    *                     by clicking on their anchorElement.
+   *        dismissalCallback:
+   *                     Callback to be invoked when the notification is
+   *                     dismissed (i.e. the user clicks away without activating
+   *                     either the mainAction or a secondaryAction).
    *        neverShow:   Indicate that no popup should be shown for this
    *                     notification. Useful for just showing the anchor icon.
    * @returns the Notification object corresponding to the added notification.
@@ -461,10 +465,12 @@ PopupNotifications.prototype = {
     if (event.target != this.panel || this._ignoreDismissal)
       return;
 
-    // Mark notifications as dismissed
+    // Mark notifications as dismissed and call dismissal callbacks
     Array.forEach(this.panel.childNodes, function (nEl) {
       let notificationObj = nEl.notification;
       notificationObj.dismissed = true;
+      if (notificationObj.options.dismissalCallback)
+        notificationObj.options.dismissalCallback.call();
     }, this);
 
     this._update();
