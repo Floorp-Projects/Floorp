@@ -114,6 +114,7 @@ public:
   // The following content nodes have been removed from the menu system.
   // We save them here for use in command handling.
   nsCOMPtr<nsIContent> mAboutItemContent;
+  nsCOMPtr<nsIContent> mUpdateItemContent;
   nsCOMPtr<nsIContent> mPrefItemContent;
   nsCOMPtr<nsIContent> mQuitItemContent;
 
