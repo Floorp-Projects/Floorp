@@ -1593,10 +1593,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // and it was opened specifically for the download
   MaybeCloseWindow();
 
+#ifdef MOZ_IPC
   // At this point, the child process has done everything it can usefully do
   // for OnStartRequest.
   if (XRE_GetProcessType() == GeckoProcessType_Content)
      return NS_OK;
+#endif
 
   rv = SetUpTempFile(aChannel);
   if (NS_FAILED(rv)) {
