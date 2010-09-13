@@ -791,7 +791,7 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
 
         Address clasp(pic.objReg, offsetof(JSObject, clasp));
-        Jump notArgs = masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&js_SlowArrayClass));
+        Jump notArgs = masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(obj->getClass()));
 
         masm.load32(Address(pic.objReg,
                             offsetof(JSObject, fslots)
@@ -799,6 +799,7 @@ class GetPropCompiler : public PICStubCompiler
                     pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
         Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg, Imm32(1));
+        masm.rshift32(Imm32(JSObject::ARGS_PACKED_BITS_COUNT), pic.objReg);
         
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
