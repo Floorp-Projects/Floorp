@@ -1,8 +1,38 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-let launched, startup, restored;
+let stringsvc = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                          .getService(Components.interfaces.nsIStringBundleService);
+let strings = stringsvc.createBundle("chrome://global/locale/aboutStartup.properties");
+let branding = stringsvc.createBundle("chrome://branding/locale/brand.properties");
 
+function displayTimestamp(id, µs) document.getElementById(id).textContent = formatstamp(µs);
+function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatms(msFromµs(µs));
+
+function formatStr(str, args) strings.formatStringFromName("about.startup."+ str, args, args.length);
+function appVersion(version, build) formatStr("appVersion",
+//                                              [branding.getStringFromName("brandShortName"),
+                                              ["Firefox",
+                                               version, build]);
+function formatExtension(str, id, version) formatStr(str, [id, version]);
+
+function msFromµs(µs) µs / 1000;
+function formatstamp(µs) new Date(msFromµs(µs));
+function formatµs(µs) µs + " µs";
+function formatms(ms) formatStr("milliseconds", [ms]);
+
+function point(stamp, µs, v, b) [msFromµs(stamp), msFromµs(µs), { appVersion: v, appBuild: b }];
+function range(a, b) ({ from: msFromµs(a), to: msFromµs(b || a) });
+function mark(x, y) { var r = {}; x && (r.xaxis = x); y && (r.yaxis = y); return r };
+function major(r) { r.color = "#444"; return r; }
+function minor(r) { r.color = "#AAA"; return r; }
+function label(r, l) { r.label = l; return r; }
+function majorMark(x, l) label(major(mark(range(x))), l);
+function minorMark(x, l) label(minor(mark(range(x))), l);
+function extensionMark(x, l) label(mark(range(x)), l);
+
+///// First, display the timings from the current startup
+let launched, startup, restored;
 let runtime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
 
 try {
@@ -17,24 +47,17 @@ let ss = Cc["@mozilla.org/browser/sessionstartup;1"].getService(Ci.nsISessionSta
 displayTimestamp("restored", restored = ss.restoredTimestamp);
 displayDuration("restored", restored - startup);
 
-function displayTimestamp(id, µs) document.getElementById(id).textContent = formatstamp(µs);
-function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatms(msFromµs(µs));
+///// Next, load the database
+var file = Components.classes["@mozilla.org/file/directory_service;1"]
+                     .getService(Components.interfaces.nsIProperties)
+                     .get("ProfD", Components.interfaces.nsIFile);
+file.append("startup.sqlite");
 
-function msFromµs(µs) µs / 1000;
-function formatstamp(µs) new Date(msFromµs(µs)) +" ("+ formatms(msFromµs(µs)) +")";
-function formatµs(µs) µs + " µs";
-function formatms(ms) ms + " ms";
+var svc = Components.classes["@mozilla.org/storage/service;1"]
+                    .getService(Components.interfaces.mozIStorageService);
+var db = svc.openDatabase(file);
 
-function point(stamp, µs, v, b) [msFromµs(stamp), msFromµs(µs), { appVersion: v, appBuild: b }];
-function range(a, b) ({ from: msFromµs(a), to: msFromµs(b || a) });
-function mark(x, y) { var r = {}; x && (r.xaxis = x); y && (r.yaxis = y); return r };
-function major(r) { r.color = "#444"; return r; }
-function minor(r) { r.color = "#AAA"; return r; }
-function label(r, l) { r.label = l; return r; }
-function majorMark(x, l) label(major(mark(range(x))), l);
-function minorMark(x, l) label(minor(mark(range(x))), l);
-function extensionMark(x, l) label(mark(range(x)), l);
-
+///// set up the graph options
 var graph, overview;
 var options = { legend: { show: true, position: "ne", margin: 10, labelBoxBorderColor: "transparent" },
                 xaxis: { mode: "time" },
@@ -64,78 +87,6 @@ var series = [{ label: "Launch Time",
                 data: []
               }
              ];
-var file = Components.classes["@mozilla.org/file/directory_service;1"]
-                     .getService(Components.interfaces.nsIProperties)
-                     .get("ProfD", Components.interfaces.nsIFile);
-file.append("startup.sqlite");
-
-var svc = Components.classes["@mozilla.org/storage/service;1"]
-                    .getService(Components.interfaces.mozIStorageService);
-var db = svc.openDatabase(file);
-var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
-var lastver, lastbuild;
-query.executeAsync({
-  handleResult: function(results)
-  {
-    let hasresults = false;
-    let table = document.getElementById("duration-table");
-    for (let row = results.getNextRow(); row; row = results.getNextRow())
-    {
-      hasresults = true;
-      let stamp = row.getResultByName("timestamp");
-      let version = row.getResultByName("appVersion");
-      let build = row.getResultByName("appBuild");
-      if (lastver != version)
-      {
-        options.grid.markings.push(majorMark(stamp, "Firefox "+ version +" ("+ build +")"));
-      }
-      else
-        if (lastbuild != build)
-          options.grid.markings.push(minorMark(stamp, "Firefox "+ version +" ("+ build +")"));
-
-      lastver = version;
-      lastbuild = build;
-      let l = row.getResultByName("launch"),
-          s = row.getResultByName("startup");
-      series[1].data.push(point(stamp, l, version, build));
-      series[0].data.push(point(stamp, l + s, version, build));
-      table.appendChild(tr(td(formatstamp(stamp)),
-                           td(formatms(msFromµs(l))),
-                           td(formatms(msFromµs(s))),
-                           td(formatms(msFromµs((l + s)))),
-                           td(version),
-                           td(build),
-                           td(row.getResultByName("platformVersion")),
-                           td(row.getResultByName("platformBuild"))));
-    }
-    if (hasresults)
-      $("#duration-table > .empty").hide();
-  },
-  handleError: function(error)
-  {
-    $("#duration-table").appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
-  },
-  handleCompletion: function()
-  {
-    var table = $("table");
-    var height = $(window).height() - (table.offset().top + table.outerHeight(true)) - 110;
-    $("#graph").height(Math.max(350, height));
-
-    options.xaxis.min = Date.now() - 604800000; // 7 days in milliseconds
-    var max = 0;
-    for each (let [stamp, d] in series[0].data)
-      if (stamp >= options.xaxis.min && d > max)
-        max = d;
-    options.yaxis.max = max;
-
-    graph = $.plot($("#graph"), series, options);
-
-    var offset = graph.getPlotOffset().left;
-    $("#overview").width($("#overview").width() - offset);
-    $("#overview").css("margin-left", offset);
-    overview = $.plot($("#overview"), series, overviewOpts);
-  },
-});
 
 $("#graph").bind("plotselected", function (event, ranges)
 {
@@ -159,6 +110,136 @@ $("#overview").bind("plotselected", function (event, ranges) {
   graph.setSelection(ranges);
 });
 
+///// read everything from the database and graph it
+let work = (function()
+{
+  populateMeasurements();
+  yield;
+  populateEvents();
+  yield;
+})();
+
+function go()
+{
+  try {
+    work.next();
+  } catch (x) {
+    // harmless
+  }
+}
+
+go();
+
+function populateMeasurements()
+{
+  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
+  var lastver, lastbuild;
+  query.executeAsync({
+    handleResult: function(results)
+    {
+      let hasresults = false;
+      let table = document.getElementById("duration-table");
+      for (let row = results.getNextRow(); row; row = results.getNextRow())
+      {
+        hasresults = true;
+        let stamp = row.getResultByName("timestamp");
+        let version = row.getResultByName("appVersion");
+        let build = row.getResultByName("appBuild");
+        if (lastver != version)
+        {
+          options.grid.markings.push(majorMark(stamp, appVersion(version, build)));
+        }
+        else
+          if (lastbuild != build)
+            options.grid.markings.push(minorMark(stamp, appVersion(version, build)));
+
+        lastver = version;
+        lastbuild = build;
+        let l = row.getResultByName("launch"),
+            s = row.getResultByName("startup");
+        series[1].data.push(point(stamp, l, version, build));
+        series[0].data.push(point(stamp, l + s, version, build));
+        table.appendChild(tr(td(formatstamp(stamp)),
+                             td(formatms(msFromµs(l))),
+                             td(formatms(msFromµs(s))),
+                             td(formatms(msFromµs((l + s)))),
+                             td(version),
+                             td(build),
+                             td(row.getResultByName("platformVersion")),
+                             td(row.getResultByName("platformBuild"))));
+      }
+      if (hasresults)
+        $("#duration-table > .empty").hide();
+    },
+    handleError: function(error)
+    {
+      $("#duration-table").appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
+    },
+    handleCompletion: function()
+    {
+      var table = $("table");
+      var height = $(window).height() - (table.offset().top + table.outerHeight(true)) - 110;
+      $("#graph").height(Math.max(350, height));
+
+      options.xaxis.min = Date.now() - 604800000; // 7 days in milliseconds
+      var max = 0;
+      for each (let [stamp, d] in series[0].data)
+        if (stamp >= options.xaxis.min && d > max)
+          max = d;
+      options.yaxis.max = max;
+
+      graph = $.plot($("#graph"), series, options);
+
+      var offset = graph.getPlotOffset().left;
+      $("#overview").width($("#overview").width() - offset);
+      $("#overview").css("margin-left", offset);
+      overview = $.plot($("#overview"), series, overviewOpts);
+      go();
+    },
+  });
+}
+
+function populateEvents()
+{
+  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
+  let lastver, lastbuild;
+  let hasresults;
+
+  query.executeAsync({
+    handleResult: function(results)
+    {
+      let table = document.getElementById("events-table");
+      for (let row = results.getNextRow(); row; row = results.getNextRow())
+      {
+        hasresults = true;
+        let stamp = row.getResultByName("timestamp"),
+            id = row.getResultByName("extensionID"),
+            name = id,
+            version = row.getResultByName("extensionVersion"),
+            action = row.getResultByName("action");
+
+        options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
+
+        table.appendChild(tr(td(formatstamp(stamp)),
+                             td(id),
+                             td(name),
+                             td(version),
+                             td(action)));
+      }
+      if (hasresults)
+        $("#events-table > .empty").hide();
+    },
+    handleError: function(error)
+    {
+      $("#events-table").appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
+    },
+    handleCompletion: function()
+    {
+      graph = $.plot($("#graph"), series, options);
+      go();
+    },
+  });
+}
 
 function td(str)
 {
