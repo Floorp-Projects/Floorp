@@ -1109,11 +1109,6 @@ JS_SetOptions(JSContext *cx, uint32 options)
     AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
-#if DEBUG
-    bool changedVersion =   
-#else
-    (void)
-#endif
     SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
     CheckOptionVersionSync(cx);
