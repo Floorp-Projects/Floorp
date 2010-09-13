@@ -254,3 +254,19 @@ function tr()
   Array.forEach(arguments, function(cell) { row.appendChild(cell); });
   return row;
 }
+
+function showTable()
+{
+  $("#showtable").hide();
+  $("#showgraph").show();
+  $("#graphs").hide();
+  $("#tables").show();
+}
+
+function showGraph()
+{
+  $("#showgraph").hide();
+  $("#showtable").show();
+  $("#tables").hide();
+  $("#graphs").show();
+}
