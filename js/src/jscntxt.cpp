@@ -726,54 +726,20 @@ js_PurgeThreads(JSContext *cx)
 #endif
 }
 
-/*
- * JSOPTION_XML and JSOPTION_ANONFUNFIX must be part of the JS version
- * associated with scripts, so in addition to storing them in cx->options we
- * duplicate them in cx->version (script->version, etc.) and ensure each bit
- * remains synchronized between the two through these two functions.
- */
-void
-js_SyncOptionsToVersion(JSContext* cx)
+bool
+js::SyncOptionsToVersion(JSContext* cx)
 {
-    if (cx->options & JSOPTION_XML)
-        cx->version |= JSVERSION_HAS_XML;
-    else
-        cx->version &= ~JSVERSION_HAS_XML;
-    if (cx->options & JSOPTION_ANONFUNFIX)
-        cx->version |= JSVERSION_ANONFUNFIX;
-    else
-        cx->version &= ~JSVERSION_ANONFUNFIX;
-}
-
-inline void
-js_SyncVersionToOptions(JSContext* cx)
-{
-    if (cx->version & JSVERSION_HAS_XML)
-        cx->options |= JSOPTION_XML;
-    else
-        cx->options &= ~JSOPTION_XML;
-    if (cx->version & JSVERSION_ANONFUNFIX)
-        cx->options |= JSOPTION_ANONFUNFIX;
-    else
-        cx->options &= ~JSOPTION_ANONFUNFIX;
-}
-
-void
-js_OnVersionChange(JSContext *cx)
-{
-#ifdef DEBUG
-    JSVersion version = JSVERSION_NUMBER(cx);
-
-    JS_ASSERT(version == JSVERSION_DEFAULT || version >= JSVERSION_ECMA_3);
-#endif
-}
-
-void
-js_SetVersion(JSContext *cx, JSVersion version)
-{
-    cx->version = version;
-    js_SyncVersionToOptions(cx);
-    js_OnVersionChange(cx);
+    JSVersion version = cx->findVersion();
+    uint32 options = cx->options;
+    if (OptionsHasXML(options) == VersionHasXML(version) &&
+        OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version)) {
+        /* No need to override. */
+        return false;
+    }
+    VersionSetXML(&version, OptionsHasXML(options));
+    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
+    cx->maybeOverrideVersion(version);
+    return true;
 }
 
 JSContext *
@@ -799,7 +765,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #endif
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
-    JS_ASSERT(cx->version == JSVERSION_DEFAULT);
+    JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble),

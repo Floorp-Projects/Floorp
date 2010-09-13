@@ -193,9 +193,10 @@ Parser::init(const jschar *base, size_t length,
              FILE *fp, const char *filename, uintN lineno)
 {
     JSContext *cx = context;
-
+    version = cx->findVersion();
+    
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!tokenStream.init(base, length, fp, filename, lineno)) {
+    if (!tokenStream.init(version, base, length, fp, filename, lineno)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
@@ -4921,7 +4922,7 @@ Parser::statement()
         PopStatement(tc);
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_right = pn2;
-        if (JSVERSION_NUMBER(context) != JSVERSION_ECMA_3) {
+        if (VersionNumber(version) != JSVERSION_ECMA_3) {
             /*
              * All legacy and extended versions must do automatic semicolon
              * insertion after do-while.  See the testcase and discussion in
@@ -5024,7 +5025,7 @@ Parser::statement()
             if (TokenKindIsDecl(tt)
                 ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST
 #if JS_HAS_DESTRUCTURING
-                   || (JSVERSION_NUMBER(context) == JSVERSION_1_7 &&
+                   || (VersionNumber(version) == JSVERSION_1_7 &&
                        pn->pn_op == JSOP_ITER &&
                        !(pn->pn_iflags & JSITER_FOREACH) &&
                        (pn1->pn_head->pn_type == TOK_RC ||
@@ -5038,7 +5039,7 @@ Parser::statement()
                 : (pn1->pn_type != TOK_NAME &&
                    pn1->pn_type != TOK_DOT &&
 #if JS_HAS_DESTRUCTURING
-                   ((JSVERSION_NUMBER(context) == JSVERSION_1_7 &&
+                   ((VersionNumber(version) == JSVERSION_1_7 &&
                      pn->pn_op == JSOP_ITER &&
                      !(pn->pn_iflags & JSITER_FOREACH))
                     ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
@@ -5175,7 +5176,7 @@ Parser::statement()
                 if (pn1 == pn2 && !CheckDestructuring(context, NULL, pn2, NULL, tc))
                     return NULL;
 
-                if (JSVERSION_NUMBER(context) == JSVERSION_1_7) {
+                if (VersionNumber(version) == JSVERSION_1_7) {
                     /*
                      * Destructuring for-in requires [key, value] enumeration
                      * in JS1.7.
@@ -6878,7 +6879,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
             if (!CheckDestructuring(context, &data, pn3, NULL, tc))
                 return NULL;
 
-            if (JSVERSION_NUMBER(context) == JSVERSION_1_7) {
+            if (VersionNumber(version) == JSVERSION_1_7) {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
                 if (pn3->pn_type != TOK_RB || pn3->pn_count != 2) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_FOR_LEFTSIDE);
@@ -7896,8 +7897,16 @@ Parser::xmlElementOrListRoot(JSBool allowList)
      * that don't recognize <script>).
      */
     oldopts = JS_SetOptions(context, context->options | JSOPTION_XML);
+    version = context->findVersion();
+    tokenStream.setVersion(version);
+    JS_ASSERT(VersionHasXML(version));
+
     pn = xmlElementOrList(allowList);
+
     JS_SetOptions(context, oldopts);
+    version = context->findVersion();
+    tokenStream.setVersion(version);
+    JS_ASSERT(!!(oldopts & JSOPTION_XML) == VersionHasXML(version));
     return pn;
 }
 
