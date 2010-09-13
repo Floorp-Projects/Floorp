@@ -36,7 +36,7 @@ ready to use. -->
 <!ENTITY about.startup.duration.ready "Elapsed Time">
 
 <!ENTITY about.startup.version "Version">
-<!ENTITY about.startup.table "Table">
-<!ENTITY about.startup.graph "Graph">
+<!ENTITY about.startup.table "Show Table">
+<!ENTITY about.startup.graph "Show Graph">
 <!ENTITY about.startup.eventdesc "Event Description">
 <!ENTITY about.startup.noevents "No Events Recorded">
