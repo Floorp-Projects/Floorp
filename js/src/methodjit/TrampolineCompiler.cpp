@@ -54,13 +54,6 @@ namespace mjit {
     pool = NULL;                            \
 JS_END_MACRO
 
-typedef JSC::MacroAssembler::Address Address;
-typedef JSC::MacroAssembler::Label Label;
-typedef JSC::MacroAssembler::Jump Jump;
-typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-typedef JSC::MacroAssembler::Imm32 Imm32;
-typedef JSC::MacroAssembler::Address Address;
-
 bool
 TrampolineCompiler::compile()
 {
