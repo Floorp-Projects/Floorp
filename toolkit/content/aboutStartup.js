@@ -132,7 +132,7 @@ go();
 
 function populateMeasurements()
 {
-  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
+  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, FROM duration");
   var lastver, lastbuild;
   query.executeAsync({
     handleResult: function(results)
@@ -164,9 +164,7 @@ function populateMeasurements()
                              td(formatms(msFromµs(s))),
                              td(formatms(msFromµs((l + s)))),
                              td(version),
-                             td(build),
-                             td(row.getResultByName("platformVersion")),
-                             td(row.getResultByName("platformBuild"))));
+                             td(build)));
       }
       if (hasresults)
         $("#duration-table > .empty").hide();
