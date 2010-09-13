@@ -136,6 +136,20 @@ let TabView = {
     else 
       this.show();
   },
+  
+  getActiveGroupName: function Tabview_getActiveGroupName() {
+    // We get the active group this way, instead of querying
+    // GroupItems.getActiveGroupItem() because the tabSelect event
+    // will not have happened by the time the browser tries to
+    // update the title.
+    let activeTab = window.gBrowser.selectedTab;
+    if (activeTab.tabItem && activeTab.tabItem.parent){
+      let groupName = activeTab.tabItem.parent.getTitle();
+      if (groupName)
+        return groupName;
+    }
+    return null;
+  },  
 
   // ----------
   updateContextMenu: function(tab, popup) {
