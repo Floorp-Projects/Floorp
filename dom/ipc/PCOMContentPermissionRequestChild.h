@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef PCOMContentPermissionRequestChild_h
+#define PCOMContentPermissionRequestChild_h
+
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
@@ -52,3 +55,5 @@ class PCOMContentPermissionRequestChild : public mozilla::dom::PContentPermissio
 public:
   virtual void IPDLRelease() = 0;
 };
+
+#endif
