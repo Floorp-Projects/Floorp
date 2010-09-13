@@ -78,11 +78,13 @@ var lastver, lastbuild;
 query.executeAsync({
   handleResult: function(results)
   {
+    let hasresults = false;
     for (let row = results.getNextRow(); row; row = results.getNextRow())
     {
-      var stamp = row.getResultByName("timestamp");
-      var version = row.getResultByName("appVersion");
-      var build = row.getResultByName("appBuild");
+      hasresults = true;
+      let stamp = row.getResultByName("timestamp");
+      let version = row.getResultByName("appVersion");
+      let build = row.getResultByName("appBuild");
       if (lastver != version)
       {
         options.grid.markings.push(majorMark(stamp, "Firefox "+ version +" ("+ build +")"));
@@ -93,9 +95,10 @@ query.executeAsync({
 
       lastver = version;
       lastbuild = build;
-      var l, s;
-      series[1].data.push(point(stamp, l = row.getResultByName("launch"), version, build));
-      series[0].data.push(point(stamp, l + (s = row.getResultByName("startup")), version, build));
+      let l = row.getResultByName("launch"),
+          s = row.getResultByName("startup");
+      series[1].data.push(point(stamp, l, version, build));
+      series[0].data.push(point(stamp, l + s, version, build));
       table.appendChild(tr(td(formatstamp(stamp)),
                            td(formatms(msFromµs(l))),
                            td(formatms(msFromµs(s))),
@@ -105,6 +108,8 @@ query.executeAsync({
                            td(row.getResultByName("platformVersion")),
                            td(row.getResultByName("platformBuild"))));
     }
+    if (hasresults)
+      $("#duration-table > .empty").hide();
   },
   handleError: function(error)
   {
@@ -129,16 +134,6 @@ query.executeAsync({
     $("#overview").width($("#overview").width() - offset);
     $("#overview").css("margin-left", offset);
     overview = $.plot($("#overview"), series, overviewOpts);
-
-    //var axes = graph.getAxes();
-    //overview.setSelection({ xaxis: { min: axes.xaxis.min,
-    //                                 max: axes.xaxis.max
-    //                               },
-    //                        yaxis: { min: axes.yaxis.min,
-    //                                 max: axes.yaxis.max
-    //                               }
-    //                      },
-    //                      true);
   },
 });
 

@@ -33,7 +33,7 @@
     <div id="overview"/>
 
     <h1>&about.startup.table;</h1>
-    <table>
+    <table id="duration-table">
       <tr>
         <th>&about.startup.timestamp;</th>
         <th>&about.startup.duration.launch;</th>
@@ -41,11 +41,11 @@
         <th>&about.startup.duration.ready;</th>
         <th colspan="4">&about.startup.version;</th>
       </tr>
-      <tr><td colspan="8"><i>&about.startup.noevents;</i></td></tr>
+      <tr class="empty"><td colspan="8"><i>&about.startup.noevents;</i></td></tr>
     </table>
-    <table>
+    <table id="event-table">
       <tr><th>&about.startup.timestamp;</th><th>&about.startup.eventdesc;</th></tr>
-      <tr><td colspan="2"><i>&about.startup.noevents;</i></td></tr>
+      <tr class="empty"><td colspan="2"><i>&about.startup.noevents;</i></td></tr>
     </table>
     <script type="application/javascript;version=1.8" src="chrome://global/content/aboutStartup.js"/>
   </body>
