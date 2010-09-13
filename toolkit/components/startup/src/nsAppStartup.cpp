@@ -544,7 +544,7 @@ nsresult RecordStartupDuration()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = EnsureTable(db,
                    NS_LITERAL_CSTRING("events"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER, extensionID TEXT, extensionVersion TEXT"));
+                   NS_LITERAL_CSTRING("timestamp INTEGER, extensionID TEXT, extensionVersion TEXT, action TEXT"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> statement;
