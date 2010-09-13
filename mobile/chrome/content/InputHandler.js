@@ -1309,7 +1309,6 @@ GestureModule.prototype = {
 
     // start from current zoom level
     this._pinchZoomLevel = getBrowser().scale;
-    this._pinchDelta = 0;
     this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
     // cache gesture limit values
@@ -1323,31 +1322,28 @@ GestureModule.prototype = {
 
     let scrollX = {}, scrollY = {};
     getBrowser().getPosition(scrollX, scrollY);
-    this._pinchStartX += scrollX.value;
-    this._pinchStartY += scrollY.value;
+    this._pinchScrollX = scrollX.value;
+    this._pinchScrollY = scrollY.value;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
     if (!this._pinchZoom || !aEvent.delta)
       return;
 
-    // Accumulate pinch delta. Changes smaller than 1 are just jitter.
-    this._pinchDelta += aEvent.delta;
-
     // decrease the pinchDelta min/max values to limit zooming out/in speed
-    let delta = Math.max(-this._maxShrink, Math.min(this._maxGrowth, this._pinchDelta));
+    let delta = Util.clamp(aEvent.delta, -this._maxShrink, this._maxGrowth);
     this._pinchZoomLevel *= (1 + delta / this._scalingFactor);
     this._pinchZoomLevel = Browser.selectedTab.clampZoomLevel(this._pinchZoomLevel);
-    this._pinchDelta = 0;
 
     // get current pinch position to calculate opposite vector for zoom point
     let [pX, pY] =
         Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
 
+    let scale = getBrowser().scale;
     let scrollX = {}, scrollY = {};
     getBrowser().getPosition(scrollX, scrollY);
-    pX += scrollX.value;
-    pY += scrollY.value;
+    pX += (this._pinchScrollX - scrollX.value) / scale;
+    pY += (this._pinchScrollY - scrollY.value) / scale;
 
     // redraw zoom canvas according to new zoom rect
     let rect = Browser._getZoomRectForPoint(2 * this._pinchStartX - pX,
