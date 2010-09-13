@@ -14,7 +14,6 @@ conformance/gl-enum-tests.html
 conformance/gl-get-active-attribute.html
 conformance/gl-get-calls.html
 conformance/gl-object-get-calls.html
-conformance/gl-scissor-test.html
 conformance/gl-teximage.html
 conformance/gl-uniform-arrays.html
 conformance/gl-unknown-uniform.html
