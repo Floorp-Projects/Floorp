@@ -85,6 +85,25 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   keyGenEnabled: true,
 
+  get account() Svc.Prefs.get("account", this.username),
+  set account(value) {
+    if (value) {
+      value = value.toLowerCase();
+      Svc.Prefs.set("account", value);
+    } else {
+      Svc.Prefs.reset("account");
+    }
+    this.username = this._usernameFromAccount(value);
+  },
+
+  _usernameFromAccount: function _usernameFromAccount(value) {
+    // If we encounter characters not allowed by the API (as found for
+    // instance in an email address), hash the value.
+    if (value && value.match(/[^A-Z0-9._-]/i))
+      return Utils.sha1Base32(value.toLowerCase()).toLowerCase();
+    return value;
+  },
+
   get username() {
     return Svc.Prefs.get("username", "").toLowerCase();
   },
@@ -92,9 +111,6 @@ WeaveSvc.prototype = {
     if (value) {
       // Make sure all uses of this new username is lowercase
       value = value.toLowerCase();
-      // Tab characters are stripped from URIs, so make sure that the
-      // username doesn't contain any tabs.
-      value = value.replace("\t", "", "g");
       Svc.Prefs.set("username", value);
     }
     else
@@ -831,7 +847,13 @@ WeaveSvc.prototype = {
     }
   },
 
-  checkUsername: function WeaveSvc_checkUsername(username) {
+  // Backwards compat with the Firefox UI. Remove once bug 595066 has landed.
+  checkUsername: function checkUsername(username) {
+    return this.checkAccount(username);
+  }, 
+
+  checkAccount: function checkAccount(account) {
+    let username = this._usernameFromAccount(account);
     let url = this.userAPI + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
@@ -853,8 +875,9 @@ WeaveSvc.prototype = {
     return this._errorStr(data);
   },
 
-  createAccount: function WeaveSvc_createAccount(username, password, email,
+  createAccount: function WeaveSvc_createAccount(account, password, email,
                                             captchaChallenge, captchaResponse) {
+    let username = this._usernameFromAccount(account);
     let payload = JSON.stringify({
       "password": Utils.encodeUTF8(password),
       "email": email,

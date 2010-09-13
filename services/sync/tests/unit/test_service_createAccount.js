@@ -19,6 +19,8 @@ function run_test() {
   do_test_pending();
   let server = httpd_setup({
     "/user/1.0/johndoe": send(200, "OK", "0"),
+    // john@doe.com
+    "/user/1.0/7wohs32cngzuqt466q3ge7indszva4of": send(200, "OK", "0"),
     "/user/1.0/janedoe": send(400, "Bad Request", "2"),
     "/user/1.0/jimdoe": send(500, "Server Error", "Server Error")
   });
@@ -34,6 +36,11 @@ function run_test() {
     do_check_eq(payload.email, "john@doe");
     do_check_eq(payload["captcha-challenge"], "challenge");
     do_check_eq(payload["captcha-response"], "response");
+
+    _("Create an email address based account.");
+    res = Service.createAccount("john@doe.com", "mysecretpw", "john@doe.com",
+                                "challenge", "response");
+    do_check_eq(res, null);
 
     _("A non-ASCII password is UTF-8 encoded.");
     res = Service.createAccount("johndoe", "moneyislike$\u20ac\xa5\u5143",
