@@ -60,7 +60,7 @@ public:
     static void release(Trampolines *tramps);
 
 private:
-    bool compileTrampoline(void **where, JSC::ExecutablePool **pool,
+    bool compileTrampoline(Trampolines::TrampolinePtr *where, JSC::ExecutablePool **pool,
                            TrampolineGenerator generator);
     
     /* Generators for trampolines. */
