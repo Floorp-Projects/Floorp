@@ -246,11 +246,11 @@ nsDesktopNotificationCenter::CreateNotification(const nsAString & title,
 /* ------------------------------------------------------------------------ */
 
 NS_IMPL_ISUPPORTS2(nsDesktopNotificationRequest,
-                   nsIDOMDesktopNotificationRequest,
+                   nsIContentPermissionRequest,
                    nsIRunnable)
 
 NS_IMETHODIMP
-nsDesktopNotificationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
+nsDesktopNotificationRequest::GetUri(nsIURI * *aRequestingURI)
 {
   if (!mDesktopNotification)
     return NS_ERROR_NOT_INITIALIZED;
@@ -260,7 +260,7 @@ nsDesktopNotificationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
 }
 
 NS_IMETHODIMP
-nsDesktopNotificationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
+nsDesktopNotificationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
 {
   if (!mDesktopNotification)
     return NS_ERROR_NOT_INITIALIZED;
@@ -268,6 +268,12 @@ nsDesktopNotificationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWin
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mDesktopNotification->mOwner);
   NS_IF_ADDREF(*aRequestingWindow = window);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDesktopNotificationRequest::GetElement(nsIDOMElement * *aElement)
+{
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -282,6 +288,13 @@ nsDesktopNotificationRequest::Allow()
 {
   mDesktopNotification->PostDesktopNotification();
   mDesktopNotification = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDesktopNotificationRequest::GetType(nsACString & aType)
+{
+  aType = "desktop-notification";
   return NS_OK;
 }
 
