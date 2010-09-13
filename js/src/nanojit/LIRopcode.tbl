@@ -263,6 +263,9 @@ OP___(andi,     85, Op2,  I,    1)  // bitwise-AND int
 OP___(ori,      86, Op2,  I,    1)  // bitwise-OR int
 OP___(xori,     87, Op2,  I,    1)  // bitwise-XOR int
 
+// For all three integer shift operations, only the bottom five bits of the
+// second operand are used, and they are treated as unsigned.  This matches
+// x86 semantics.
 OP___(lshi,     88, Op2,  I,    1)  // left shift int
 OP___(rshi,     89, Op2,  I,    1)  // right shift int (>>)
 OP___(rshui,    90, Op2,  I,    1)  // right shift unsigned int (>>>)
@@ -274,6 +277,9 @@ OP_64(andq,     93, Op2,  Q,    1)  // bitwise-AND quad
 OP_64(orq,      94, Op2,  Q,    1)  // bitwise-OR quad
 OP_64(xorq,     95, Op2,  Q,    1)  // bitwise-XOR quad
 
+// For all three quad shift operations, only the bottom six bits of the
+// second operand are used, and they are treated as unsigned.  This matches
+// x86-64 semantics.
 OP_64(lshq,     96, Op2,  Q,    1)  // left shift quad;           2nd operand is an int
 OP_64(rshq,     97, Op2,  Q,    1)  // right shift quad;          2nd operand is an int
 OP_64(rshuq,    98, Op2,  Q,    1)  // right shift unsigned quad; 2nd operand is an int
