@@ -1,7 +1,6 @@
 conformance/array-buffer-crash.html
 conformance/array-buffer-view-crash.html
 conformance/array-unit-tests.html
-conformance/bad-arguments-test.html
 conformance/canvas-test.html
 conformance/constants.html
 conformance/context-attributes-alpha-depth-stencil-antialias.html
@@ -20,7 +19,6 @@ conformance/glsl-2types-of-textures-on-same-unit.html
 conformance/glsl-conformance.html
 conformance/invalid-passed-params.html
 conformance/methods.html
-conformance/null-object-behaviour.html
 conformance/point-size.html
 conformance/program-test.html
 conformance/read-pixels-pack-alignment.html
