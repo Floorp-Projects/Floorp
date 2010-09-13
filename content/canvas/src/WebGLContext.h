@@ -1411,10 +1411,9 @@ WebGLContext::GetConcreteObject(const char *info,
 
     if (!(*aConcreteObject)->IsCompatibleWithContext(this)) {
         // the object doesn't belong to this WebGLContext
-        if (generateErrors) {
+        if (generateErrors)
             ErrorInvalidOperation("%s: object from different WebGL context (or older generation of this one) "
                                   "passed as argument", info);
-        }
         return PR_FALSE;
     }
 
@@ -1425,7 +1424,7 @@ WebGLContext::GetConcreteObject(const char *info,
             return PR_TRUE;
         } else {
             if (generateErrors)
-                ErrorInvalidOperation("%s: deleted object passed as argument", info);
+                ErrorInvalidValue("%s: deleted object passed as argument", info);
             return PR_FALSE;
         }
     }

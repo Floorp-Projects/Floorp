@@ -310,11 +310,13 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     prefService->GetBoolPref("webgl.verbose", &verbose);
     mVerbose = verbose;
 
+    // Get some prefs for some preferred/overriden things
     PRBool forceOSMesa = PR_FALSE;
+    PRBool preferEGL = PR_FALSE;
     prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
+    prefService->GetBoolPref("webgl.prefer_egl", &preferEGL);
 
-    if (!forceOSMesa) {
-
+    // Ask GfxInfo about what we should use
     PRBool useOpenGL = PR_TRUE;
     PRBool useANGLE = PR_TRUE;
 
@@ -337,73 +339,68 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     }
 
-    #ifdef XP_WIN
-        // On Windows, we may have a choice of backends, including straight
-        // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
-        // We don't differentiate the latter two yet, but we allow for
-        // a env var to try EGL first, instead of last.
-        bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
-
-        // if we want EGL, try it first
-        if (!gl && preferEGL && useANGLE) {
-            gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-            if (gl && !InitAndValidateGL()) {
-                gl = nsnull;
-            }
-        }
-
-        // if it failed, then try the default provider, whatever that is
-        if (!gl && useOpenGL) {
-            gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
-            if (gl && !InitAndValidateGL()) {
-                gl = nsnull;
-            }
-        }
-
-        // if that failed, and we weren't already preferring EGL, try it now.
-        if (!gl && !preferEGL && useANGLE) {
-            gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-            if (gl && !InitAndValidateGL()) {
-                gl = nsnull;
-            }
-        }
-    #else
-        // other platforms just use whatever the default is
-        if (!gl && useOpenGL) {
-            gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
-            if (gl && !InitAndValidateGL()) {
-                gl = nsnull;
-            }
-        }
-    #endif
-    }
-
-    // last chance, try OSMesa
-    if (!gl) {
+    // if we're forcing osmesa, do it first
+    if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl) {
-            if (!InitAndValidateGL()) {
-                gl = nsnull;
-            } else {
-                // make sure we notify always in this case, because it's likely going to be
-                // painfully slow
-                LogMessage("WebGL: Using software rendering via OSMesa");
-            }
+        if (!gl || !InitAndValidateGL()) {
+            LogMessage("WebGL: OSMesa forced, but creating context failed -- aborting!");
+            return NS_ERROR_FAILURE;
+        }
+        LogMessage("WebGL: Using software rendering via OSMesa (THIS WILL BE SLOW)");
+    }
+
+#ifdef XP_WIN
+    // On Windows, we may have a choice of backends, including straight
+    // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
+    // We don't differentiate the latter two yet, but we allow for
+    // a env var to try EGL first, instead of last; there's also a pref,
+    // the env var being set overrides the pref
+    if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
+        preferEGL = PR_TRUE;
+    }
+
+    // force opengl instead of EGL/ANGLE
+    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
+        preferEGL = PR_FALSE;
+        useANGLE = PR_FALSE;
+        useOpenGL = PR_TRUE;
+    }
+
+    // if we want EGL, try it first
+    if (!gl && (preferEGL || useANGLE)) {
+        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
         }
     }
 
-    if (!gl) {
-        if (forceOSMesa) {
-            LogMessage("WebGL: You set the webgl.force_osmesa preference to true, but OSMesa can't be found. "
-                       "Either install OSMesa and let webgl.osmesalib point to it, "
-                       "or set webgl.force_osmesa back to false.");
-        } else {
-            #ifdef XP_WIN
-                LogMessage("WebGL: Can't get a usable OpenGL context (also tried Direct3D via ANGLE)");
-            #else
-                LogMessage("WebGL: Can't get a usable OpenGL context");
-            #endif
+    // if it failed, then try the default provider, whatever that is
+    if (!gl && useOpenGL) {
+        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
         }
+    }
+
+    // if that failed, and we weren't already preferring EGL, try it now.
+    if (!gl && !(preferEGL || useANGLE)) {
+        gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
+        }
+    }
+#else
+    // other platforms just use whatever the default is
+    if (!gl && useOpenGL) {
+        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+        if (gl && !InitAndValidateGL()) {
+            gl = nsnull;
+        }
+    }
+#endif
+
+    if (!gl) {
+        LogMessage("WebGL: Can't get a usable WebGL context");
         return NS_ERROR_FAILURE;
     }
 
