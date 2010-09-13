@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,28 +35,25 @@
 #
 # ***** END LICENSE BLOCK *****
 
-add_makefiles "
-netwerk/locales/Makefile
-dom/locales/Makefile
-toolkit/locales/Makefile
-security/manager/locales/Makefile
-mobile/app/Makefile
-mobile/app/profile/extensions/Makefile
-$MOZ_BRANDING_DIRECTORY/Makefile
-$MOZ_BRANDING_DIRECTORY/locales/Makefile
-mobile/chrome/Makefile
-mobile/chrome/tests/Makefile
-mobile/components/Makefile
-mobile/components/phone/Makefile
-mobile/modules/Makefile
-mobile/installer/Makefile
-mobile/locales/Makefile
-mobile/Makefile
-mobile/themes/Makefile
-mobile/themes/core/Makefile"
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-if test -n "$MOZ_UPDATE_PACKAGING"; then
-   add_makefiles "
-     tools/update-packaging/Makefile
-   "
-fi
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq (beta,$(MOZ_UPDATE_CHANNEL))
+EXTENSIONS = \
+  feedback@mobile.mozilla.org \
+  $(NULL)
+
+define _INSTALL_EXTENSIONS
+$(PYTHON) $(topsrcdir)/config/nsinstall.py $(wildcard $(srcdir)/$(dir)/*) $(DIST)/bin/extensions/$(dir)
+
+endef # do not remove the blank line!
+
+libs::
+	$(foreach dir,$(EXTENSIONS),$(_INSTALL_EXTENSIONS))
+endif
