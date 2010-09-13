@@ -2874,7 +2874,7 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, js::TypedArray *wa) \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
         return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % cnt != 0)                       \
-        return ErrorInvalidOperation(#name ": array must be > 0 elements and have a length multiple of %d", cnt); \
+        return ErrorInvalidValue(#name ": array must be > 0 elements and have a length multiple of %d", cnt); \
     MakeContextCurrent();                                               \
     gl->f##name(location, wa->length / cnt, (ptrType *)wa->data);            \
     return NS_OK;                                                       \
