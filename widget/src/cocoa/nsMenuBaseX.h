@@ -98,7 +98,8 @@ enum {
   eCommand_ID_HideApp    = 4,
   eCommand_ID_HideOthers = 5,
   eCommand_ID_ShowAll    = 6,
-  eCommand_ID_Last       = 7
+  eCommand_ID_Update     = 7,
+  eCommand_ID_Last       = 8
 };
 
 #endif // nsMenuBaseX_h_
