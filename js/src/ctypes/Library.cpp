@@ -147,21 +147,29 @@ Library::Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks)
 #else
   // Convert to platform native charset if the appropriate callback has been
   // provided.
-  const char* pathBytes;
-  bool requireFree = false;
+  char* pathBytes;
   if (callbacks && callbacks->unicodeToNative) {
     pathBytes = 
       callbacks->unicodeToNative(cx, pathStr->chars(), pathStr->length());
-    requireFree = true;
+    if (!pathBytes)
+      return NULL;
 
   } else {
-    // Fallback: sssume the platform native charset is UTF-8. This is true
+    // Fallback: assume the platform native charset is UTF-8. This is true
     // for Mac OS X, Android, and probably Linux.
-    pathBytes = JS_GetStringBytesZ(cx, pathStr);
-  }
+    size_t nbytes =
+      js_GetDeflatedUTF8StringLength(cx, pathStr->chars(), pathStr->length());
+    if (nbytes == (size_t) -1)
+      return NULL;
 
-  if (!pathBytes)
-    return NULL;
+    pathBytes = static_cast<char*>(JS_malloc(cx, nbytes + 1));
+    if (!pathBytes)
+      return NULL;
+
+    ASSERT_OK(js_DeflateStringToUTF8Buffer(cx, pathStr->chars(),
+                pathStr->length(), pathBytes, &nbytes));
+    pathBytes[nbytes] = 0;
+  }
 
   libSpec.value.pathname = pathBytes;
   libSpec.type = PR_LibSpec_Pathname;
@@ -169,9 +177,7 @@ Library::Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks)
 
   PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, 0);
 #ifndef XP_WIN
-  if (requireFree) {
-    JS_free(cx, const_cast<char*>(pathBytes));
-  }
+  JS_free(cx, pathBytes);
 #endif
   if (!library) {
     JS_ReportError(cx, "couldn't open library");
