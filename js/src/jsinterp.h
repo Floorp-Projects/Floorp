@@ -740,8 +740,8 @@ struct JSStackFrame
 
     static ptrdiff_t offsetOfThis(JSFunction *fun) {
         return fun == NULL
-               ? -1 * sizeof(js::Value)
-               : -(fun->nargs + 1) * sizeof(js::Value);
+               ? -1 * ptrdiff_t(sizeof(js::Value))
+               : -(fun->nargs + 1) * ptrdiff_t(sizeof(js::Value));
     }
 
     static ptrdiff_t offsetOfFormalArg(JSFunction *fun, uintN i) {
