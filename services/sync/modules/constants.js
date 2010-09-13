@@ -104,7 +104,7 @@ LOGIN_FAILED_NO_PASSPHRASE:            "error.login.reason.no_synckey",
 LOGIN_FAILED_NETWORK_ERROR:            "error.login.reason.network",
 LOGIN_FAILED_SERVER_ERROR:             "error.login.reason.server",
 LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.synckey",
-LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.password",
+LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.account",
 
 // sync failure status codes
 METARECORD_DOWNLOAD_FAIL:              "error.sync.reason.metarecord_download_fail",
