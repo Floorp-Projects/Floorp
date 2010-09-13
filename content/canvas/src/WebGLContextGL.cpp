@@ -150,6 +150,10 @@ WebGLContext::ActiveTexture(WebGLenum texture)
 NS_IMETHODIMP
 WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 {
+    // if pobj or shobj are null/not specified, it's an error
+    if (pobj == nsnull || shobj == nsnull)
+        return ErrorInvalidValue("attachShader");
+
     WebGLuint progname, shadername;
     WebGLProgram *program;
     WebGLShader *shader;
@@ -2093,13 +2097,16 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
 {
     *retval = nsnull;
 
-    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
-    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
-
     MakeContextCurrent();
 
     if (!ValidateTextureTargetEnum(target, "getTexParameter: target"))
         return NS_OK;
+
+    if (!activeBoundTextureForTarget(target))
+        return ErrorInvalidOperation("getTexParameter: no texture bound");
+
+    nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     switch (pname) {
         case LOCAL_GL_TEXTURE_MIN_FILTER:
@@ -3148,7 +3155,6 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-
     if (!GetConcreteObjectAndGLName("compileShader", sobj, &shader, &shadername))
         return NS_OK;
     MakeContextCurrent();
