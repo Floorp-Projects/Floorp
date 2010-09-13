@@ -67,7 +67,7 @@
 #include "jsobj.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
-#include "jsregexp.h"
+#include "jsstaticcheck.h"
 #include "jsutil.h"
 #include "jsarray.h"
 #include "jsvector.h"
@@ -1918,111 +1918,6 @@ namespace js {
 
 class AutoGCRooter;
 
-class RegExpStatics
-{
-    js::Vector<int, 20>         matchPairs;
-    JSContext                   *cx;
-    JSString                    *input;
-    uintN                       flags;
-
-    bool createDependent(size_t start, size_t end, Value *out) const;
-
-    size_t pairCount() const {
-        JS_ASSERT(matchPairs.length() % 2 == 0);
-        return matchPairs.length() / 2;
-    }
-    /*
-     * Check whether the index at |checkValidIndex| is valid (>= 0).
-     * If so, construct a string for it and place it in |*out|.
-     * If not, place undefined in |*out|.
-     */
-    bool makeMatch(size_t checkValidIndex, size_t pairNum, Value *out) const;
-    static const uintN allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_STICKY | JSREG_MULTILINE;
-    friend class RegExp;
-
-  public:
-    explicit RegExpStatics(JSContext *cx) : matchPairs(cx), cx(cx) { clear(); }
-    void clone(const RegExpStatics &other);
-
-    /* Mutators. */
-
-    void setMultiline(bool enabled) {
-        if (enabled)
-            flags = flags | JSREG_MULTILINE;
-        else
-            flags = flags & ~JSREG_MULTILINE;
-    }
-
-    void clear() {
-        input = 0;
-        flags = 0;
-        matchPairs.clear();
-    }
-
-    void checkInvariants() {
-        if (pairCount() > 0) {
-            JS_ASSERT(input);
-            JS_ASSERT(get(0, 0) <= get(0, 1));
-            JS_ASSERT(get(0, 1) <= int(input->length()));
-        }
-    }
-
-    void reset(JSString *newInput, bool newMultiline) {
-        clear();
-        input = newInput;
-        setMultiline(newMultiline);
-        checkInvariants();
-    }
-
-    void setInput(JSString *newInput) {
-        input = newInput;
-    }
-
-    /* Accessors. */
-
-    JSString *getInput() const { return input; }
-    uintN getFlags() const { return flags; }
-    bool multiline() const { return flags & JSREG_MULTILINE; }
-    bool matched() const { JS_ASSERT(pairCount() > 0); return get(0, 1) - get(0, 0) > 0; }
-    size_t getParenCount() const { JS_ASSERT(pairCount() > 0); return pairCount() - 1; }
-
-    void mark(JSTracer *trc) const {
-        if (input)
-            JS_CALL_STRING_TRACER(trc, input, "res->input");
-    }
-
-    size_t getParenLength(size_t parenNum) const {
-        if (pairCount() <= parenNum + 1)
-            return 0;
-        return get(parenNum + 1, 1) - get(parenNum + 1, 0);
-    }
-
-    int get(size_t pairNum, bool which) const {
-        JS_ASSERT(pairNum < pairCount());
-        return matchPairs[2 * pairNum + which];
-    }
-
-    /* Value creators. */
-
-    bool createInput(Value *out) const;
-    bool createLastMatch(Value *out) const { return makeMatch(0, 0, out); }
-    bool createLastParen(Value *out) const;
-    bool createLeftContext(Value *out) const;
-    bool createRightContext(Value *out) const;
-
-    bool createParen(size_t parenNum, Value *out) const {
-        return makeMatch((parenNum + 1) * 2, parenNum + 1, out);
-    }
-
-    /* Substring creators. */
-
-    void getParen(size_t num, JSSubString *out) const;
-    void getLastMatch(JSSubString *out) const;
-    void getLastParen(JSSubString *out) const;
-    void getLeftContext(JSSubString *out) const;
-    void getRightContext(JSSubString *out) const;
-};
-
 #define JS_HAS_OPTION(cx,option)        (((cx)->options & (option)) != 0)
 #define JS_HAS_STRICT_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_STRICT)
 #define JS_HAS_WERROR_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_WERROR)
@@ -2205,9 +2100,6 @@ struct JSContext
     /* Top-level object and pointer to top stack frame's scope chain. */
     JSObject            *globalObject;
 
-    /* Regular expression class statics. */
-    js::RegExpStatics   regExpStatics;
-
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
     js::HashSet<JSObject *> busyArrays;
@@ -2269,6 +2161,8 @@ struct JSContext
         assertSegmentsInSync();
         return currentSegment;
     }
+
+    inline js::RegExpStatics *regExpStatics();
 
     /* Add the given segment to the list as the new active segment. */
     void pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &regs);
@@ -2561,12 +2455,6 @@ private:
      */
     JS_FRIEND_API(void) checkMallocGCPressure(void *p);
 };
-
-static inline void
-js_TraceRegExpStatics(JSTracer *trc, JSContext *acx)
-{
-    acx->regExpStatics.mark(trc);
-}
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
@@ -3414,6 +3302,8 @@ CanLeaveTrace(JSContext *cx)
 
 extern void
 SetPendingException(JSContext *cx, const Value &v);
+
+class RegExpStatics;
 
 } /* namespace js */
 
