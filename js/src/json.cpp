@@ -46,7 +46,6 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsdtoa.h"
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsiter.h"
@@ -527,21 +526,11 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, 
                 return js_AppendLiteral(scx->cb, "null");
         }
 
-        char numBuf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr;
-        jsdouble d = vp->isInt32() ? jsdouble(vp->toInt32()) : vp->toDouble();
-        numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, numBuf, sizeof numBuf,
-                           DTOSTR_STANDARD, 0, d);
-        if (!numStr) {
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-
-        jschar dstr[DTOSTR_STANDARD_BUFFER_SIZE];
-        size_t dbufSize = DTOSTR_STANDARD_BUFFER_SIZE;
-        if (!js_InflateStringToBuffer(cx, numStr, strlen(numStr), dstr, &dbufSize))
+        JSCharBuffer cb(cx);
+        if (!js_NumberValueToCharBuffer(cx, *vp, cb))
             return JS_FALSE;
 
-        return scx->cb.append(dstr, dbufSize);
+        return scx->cb.append(cb.begin(), cb.length());
     }
 
     if (vp->isObject() && !IsFunctionObject(*vp) && !IsXML(*vp)) {

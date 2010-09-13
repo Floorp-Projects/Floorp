@@ -52,7 +52,6 @@
 #include "jsstdint.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
-#include "jsdtoa.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -1126,7 +1125,7 @@ SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
 {
     jsdouble d;
     ptrdiff_t todo;
-    char *s, buf[DTOSTR_STANDARD_BUFFER_SIZE];
+    char *s;
 
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
     d = JSVAL_TO_DOUBLE(v);
@@ -1143,8 +1142,8 @@ SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
                              : "1 / 0");
         *opp = JSOP_DIV;
     } else {
-        s = js_dtostr(JS_THREAD_DATA(sp->context)->dtoaState, buf, sizeof buf,
-                      DTOSTR_STANDARD, 0, d);
+        ToCStringBuf cbuf;
+        s = NumberToCString(sp->context, &cbuf, d);
         if (!s) {
             JS_ReportOutOfMemory(sp->context);
             return -1;

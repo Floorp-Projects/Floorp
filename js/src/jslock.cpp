@@ -50,7 +50,6 @@
 #include "jsstdint.h"
 #include "jsbit.h"
 #include "jscntxt.h"
-#include "jsdtoa.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsscope.h"
