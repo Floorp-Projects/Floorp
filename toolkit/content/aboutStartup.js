@@ -44,6 +44,7 @@ var options = { legend: { show: true, position: "ne", margin: 10, labelBoxBorder
                 series: { lines: { show: true, fill: true },
                           points: { show: true, fill: true },
                         },
+                colors: ["#67A9D8", "#FFC170"],
               };
 var overviewOpts = $.extend(true, {}, options,
                             { legend: { show: false },
