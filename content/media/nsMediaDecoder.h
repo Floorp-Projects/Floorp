@@ -220,6 +220,10 @@ public:
   // the result from OnStopRequest.
   virtual void NotifyDownloadEnded(nsresult aStatus) = 0;
 
+  // Called as data arrives on the stream and is read into the cache.  Called
+  // on the main thread only.
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
+
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();

@@ -363,7 +363,7 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
   while ((samples = vorbis_synthesis_pcmout(&mVorbisState->mDsp, &pcm)) > 0) {
     float* buffer = new float[samples * channels];
     float* p = buffer;
-    for (PRUint32 i = 0; i < samples; ++i) {
+    for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
       for (PRUint32 j = 0; j < channels; ++j) {
         *p++ = pcm[j][i];
       }
