@@ -2467,7 +2467,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
                               WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength)
 {
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
-        LogMessage("ReadPixels: Not allowed");
+        LogMessage(mVerbose, "ReadPixels: Not allowed");
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
