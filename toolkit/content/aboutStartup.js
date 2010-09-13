@@ -132,7 +132,7 @@ go();
 
 function populateMeasurements()
 {
-  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, FROM duration");
+  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild FROM duration");
   var lastver, lastbuild;
   query.executeAsync({
     handleResult: function(results)
