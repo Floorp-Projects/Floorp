@@ -42,9 +42,6 @@ do
     runtest $infile
 done
 
-runtest "--random 1000000"
-runtest "--random 1000000 --optimize"
-
 # ---- Platform-specific tests and configurations. ----
 
 # 64-bit platforms
@@ -101,6 +98,11 @@ then
     runtest "--random 10000 --optimize --arch 6"
     runtest "--random 10000 --optimize --arch 5 --novfp"
 fi
+
+# ---- Randomized tests, they are run last because they are slow ----
+
+runtest "--random 1000000"
+runtest "--random 1000000 --optimize"
 
 rm testoutput.txt
 
