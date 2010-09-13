@@ -71,6 +71,7 @@
 #include "nsRuleData.h"
 #include "nsEventDispatcher.h"
 #include "mozilla/dom/Element.h"
+#include "mozAutoDocUpdate.h"
 
 using namespace mozilla::dom;
 
@@ -205,6 +206,7 @@ nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID);
   }
@@ -1317,6 +1319,26 @@ nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
                                                  aValue, aNotify);
+}
+
+nsresult
+nsHTMLSelectElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  const nsAString* aValue, PRBool aNotify)
+{
+  if (aName == nsGkAtoms::disabled && aNameSpaceID == kNameSpaceID_None) {
+    SetBarredFromConstraintValidation(!!aValue);
+    if (aNotify) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
+                                                NS_EVENT_STATE_INVALID);
+      }
+    }
+  }
+
+  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
+                                                aValue, aNotify);
 }
 
 nsresult

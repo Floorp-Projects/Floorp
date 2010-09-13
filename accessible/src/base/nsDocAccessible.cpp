@@ -133,11 +133,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEventQueue");
   cb.NoteXPCOMChild(tmp->mEventQueue.get());
 
+  PRUint32 i, length = tmp->mChildDocuments.Length();
+  for (i = 0; i < length; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildDocuments[i]");
+    cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mChildDocuments[i].get()));
+  }
+
   CycleCollectorTraverseCache(tmp->mAccessibleCache, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEventQueue)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mChildDocuments)
   ClearCache(tmp->mAccessibleCache);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -203,11 +210,9 @@ nsDocAccessible::GetName(nsAString& aName)
 }
 
 // nsAccessible public method
-nsresult
-nsDocAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsDocAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_PANE; // Fall back
-
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDocument);
   if (docShellTreeItem) {
@@ -217,28 +222,24 @@ nsDocAccessible::GetRoleInternal(PRUint32 *aRole)
     docShellTreeItem->GetItemType(&itemType);
     if (sameTypeRoot == docShellTreeItem) {
       // Root of content or chrome tree
-      if (itemType == nsIDocShellTreeItem::typeChrome) {
-        *aRole = nsIAccessibleRole::ROLE_CHROME_WINDOW;
-      }
-      else if (itemType == nsIDocShellTreeItem::typeContent) {
+      if (itemType == nsIDocShellTreeItem::typeChrome)
+        return nsIAccessibleRole::ROLE_CHROME_WINDOW;
+
+      if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL
         nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-        if (xulDoc) {
-          *aRole = nsIAccessibleRole::ROLE_APPLICATION;
-        } else {
-          *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
-        }
-#else
-        *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
+        if (xulDoc)
+          return nsIAccessibleRole::ROLE_APPLICATION;
 #endif
+        return nsIAccessibleRole::ROLE_DOCUMENT;
       }
     }
     else if (itemType == nsIDocShellTreeItem::typeContent) {
-      *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
+      return nsIAccessibleRole::ROLE_DOCUMENT;
     }
   }
 
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_PANE; // Fall back;
 }
 
 // nsAccessible public method
@@ -504,6 +505,44 @@ nsDocAccessible::GetDOMDocument(nsIDOMDocument **aDOMDocument)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocAccessible::GetParentDocument(nsIAccessibleDocument** aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+  *aDocument = nsnull;
+
+  if (!IsDefunct())
+    NS_IF_ADDREF(*aDocument = ParentDocument());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocAccessible::GetChildDocumentCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  if (!IsDefunct())
+    *aCount = ChildDocumentCount();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocAccessible::GetChildDocumentAt(PRUint32 aIndex,
+                                    nsIAccessibleDocument** aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+  *aDocument = nsnull;
+
+  if (IsDefunct())
+    return NS_OK;
+
+  NS_IF_ADDREF(*aDocument = GetChildDocumentAt(aIndex));
+  return *aDocument ? NS_OK : NS_ERROR_INVALID_ARG;
+}
+
 // nsIAccessibleHyperText method
 NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
@@ -537,6 +576,7 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   return NS_OK;
 }
 
+// nsDocAccessible public method
 nsAccessible *
 nsDocAccessible::GetCachedAccessible(void *aUniqueID)
 {
@@ -609,6 +649,10 @@ nsDocAccessible::Init()
 
   AddEventListeners();
 
+  nsDocAccessible* parentDocument = mParent->GetDocAccessible();
+  if (parentDocument)
+    parentDocument->AppendChildDocument(this);
+
   // Fire reorder event to notify new accessible document has been created and
   // attached to the tree.
   nsRefPtr<AccEvent> reorderEvent =
@@ -635,8 +679,15 @@ nsDocAccessible::Shutdown()
 
   RemoveEventListeners();
 
-  if (mParent)
+  if (mParent) {
+    nsDocAccessible* parentDocument = mParent->GetDocAccessible();
+    if (parentDocument)
+      parentDocument->RemoveChildDocument(this);
+
     mParent->RemoveChild(this);
+  }
+
+  mChildDocuments.Clear();
 
   mWeakShell = nsnull;  // Avoid reentrancy
 
@@ -1284,6 +1335,23 @@ nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
 ////////////////////////////////////////////////////////////////////////////////
 // Public members
 
+nsAccessible*
+nsDocAccessible::GetCachedAccessibleInSubtree(void* aUniqueID)
+{
+  nsAccessible* child = GetCachedAccessible(aUniqueID);
+  if (child)
+    return child;
+
+  PRUint32 childDocCount = mChildDocuments.Length();
+  for (PRUint32 childDocIdx= 0; childDocIdx < childDocCount; childDocIdx++) {
+    nsDocAccessible* childDocument = mChildDocuments.ElementAt(childDocIdx);
+    child = childDocument->GetCachedAccessibleInSubtree(aUniqueID);
+    if (child)
+      return child;
+  }
+
+  return nsnull;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Protected members
@@ -1291,7 +1359,7 @@ nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
 void
 nsDocAccessible::FireValueChangeForTextFields(nsAccessible *aAccessible)
 {
-  if (nsAccUtils::Role(aAccessible) != nsIAccessibleRole::ROLE_ENTRY)
+  if (aAccessible->Role() != nsIAccessibleRole::ROLE_ENTRY)
     return;
 
   // Dependent value change event for text changes in textfields
@@ -1378,7 +1446,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
   PRInt32 offset = 0;
   if (aChangeChild) {
     // Don't fire event for the first html:br in an editor.
-    if (nsAccUtils::Role(aChangeChild) == nsIAccessibleRole::ROLE_WHITESPACE) {
+    if (aChangeChild->Role() == nsIAccessibleRole::ROLE_WHITESPACE) {
       nsCOMPtr<nsIEditor> editor;
       textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
       if (editor) {
@@ -1630,8 +1698,7 @@ nsDocAccessible::RefreshNodes(nsINode *aStartNode)
   nsAccessible *accessible = GetCachedAccessible(aStartNode);
   if (accessible) {
     // Fire menupopup end if a menu goes away
-    PRUint32 role = nsAccUtils::Role(accessible);
-    if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+    if (accessible->Role() == nsIAccessibleRole::ROLE_MENUPOPUP) {
       nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(aStartNode));
       if (!popup) {
         // Popup elements already fire these via DOMMenuInactive

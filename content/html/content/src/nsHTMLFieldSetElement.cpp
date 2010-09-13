@@ -49,6 +49,8 @@ class nsHTMLFieldSetElement : public nsGenericHTMLFormElement,
                               public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLFieldSetElement();
 
@@ -73,9 +75,6 @@ public:
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
-
-  // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; };
 };
 
 // construction, destruction
@@ -87,6 +86,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
 nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
 {
+  // <fieldset> is always barred from constraint validation.
+  SetBarredFromConstraintValidation(PR_TRUE);
 }
 
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()

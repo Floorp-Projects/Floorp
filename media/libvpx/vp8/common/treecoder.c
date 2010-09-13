@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -45,6 +45,12 @@ static void tree2tok(
 void vp8_tokens_from_tree(struct vp8_token_struct *p, vp8_tree t)
 {
     tree2tok(p, t, 0, 0, 0);
+}
+
+void vp8_tokens_from_tree_offset(struct vp8_token_struct *p, vp8_tree t,
+                                 int offset)
+{
+    tree2tok(p - offset, t, 0, 0, 0);
 }
 
 static void branch_counts(

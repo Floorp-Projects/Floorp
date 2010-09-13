@@ -181,8 +181,10 @@ struct JSObjectMap {
     static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
 
     uint32 shape;       /* shape identifier */
+    uint32 slotSpan;    /* one more than maximum live slot number */
 
-    explicit JSObjectMap(uint32 shape) : shape(shape) {}
+    explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
+    JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
 
     enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
 
@@ -305,6 +307,10 @@ struct JSObject {
     inline void setLastProperty(const js::Shape *shape);
     inline void removeLastProperty();
 
+#ifdef DEBUG
+    void checkShapeConsistency();
+#endif
+
   public:
     inline const js::Shape *lastProperty() const;
 
@@ -325,13 +331,16 @@ struct JSObject {
         OWN_SHAPE       = 0x80
     };
 
+    /*
+     * Impose a sane upper bound, originally checked only for dense arrays, on
+     * number of slots in an object.
+     */
     enum {
-        JS_NSLOTS_BITS  = 24,
-        JS_NSLOTS_LIMIT = JS_BIT(JS_NSLOTS_BITS)
+        NSLOTS_BITS     = 29,
+        NSLOTS_LIMIT    = JS_BIT(NSLOTS_BITS)
     };
 
-    uint32      flags: 32-JS_NSLOTS_BITS,   /* flags */
-                freeslot: JS_NSLOTS_BITS;   /* next free slot in abstract slot space */
+    uint32      flags;                      /* flags */
     uint32      objShape;                   /* copy of lastProp->shape, or override if different */
 
     JSObject    *proto;                     /* object's prototype */
@@ -347,8 +356,8 @@ struct JSObject {
 #endif
 
     /*
-     * Return an immutable, shareable, empty scope with the same ops as this
-     * and the same freeslot as this had when empty.
+     * Return an immutable, shareable, empty shape with the same clasp as this
+     * and the same slotSpan as this had when empty.
      *
      * If |this| is the scope of an object |proto|, the resulting scope can be
      * used as the scope of a new object whose prototype is |proto|.
@@ -370,8 +379,6 @@ struct JSObject {
     }
 
     inline void trace(JSTracer *trc);
-
-    static size_t flagsOffset();
 
     uint32 shape() const {
         JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
@@ -570,7 +577,9 @@ struct JSObject {
 
     inline bool ensureClassReservedSlots(JSContext *cx);
 
-    bool containsSlot(uint32 slot) const { return slot < freeslot; }
+    uint32 slotSpan() const { return map->slotSpan; }
+
+    bool containsSlot(uint32 slot) const { return slot < slotSpan(); }
 
     js::Value& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)
@@ -653,20 +662,12 @@ struct JSObject {
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        void *priv = fslots[JSSLOT_PRIVATE].toPrivate();
-        return priv;
+        return *(void **)&fslots[JSSLOT_PRIVATE];
     }
 
     void setPrivate(void *data) {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        JS_ASSERT((size_t(data) & 1) == 0);
-        fslots[JSSLOT_PRIVATE].setPrivate(data);
-    }
-
-    static js::Value defaultPrivate(js::Class *clasp) {
-        if (clasp->flags & JSCLASS_HAS_PRIVATE)
-            return js::PrivateValue(NULL);
-        return js::UndefinedValue();
+        *(void **)&fslots[JSSLOT_PRIVATE] = data;
     }
 
     /*
@@ -778,6 +779,25 @@ struct JSObject {
     inline const js::Value &getArgsElement(uint32 i) const;
     inline js::Value *addressOfArgsElement(uint32 i) const;
     inline void setArgsElement(uint32 i, const js::Value &v);
+
+  private:
+    /*
+     * Reserved slot structure for Arguments objects:
+     *
+     */
+    static const uint32 JSSLOT_CALL_CALLEE = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_CALL_ARGUMENTS = JSSLOT_PRIVATE + 2;
+
+  public:
+    /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
+    static const uint32 CALL_RESERVED_SLOTS = 2;
+
+    inline JSObject &getCallObjCallee() const;
+    inline JSFunction *getCallObjCalleeFunction() const; 
+    inline void setCallObjCallee(JSObject &callee);
+
+    inline const js::Value &getCallObjArguments() const;
+    inline void setCallObjArguments(const js::Value &v);
 
     /*
      * Date-specific getters and setters.
@@ -926,6 +946,12 @@ struct JSObject {
     inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
+    inline void initCommon(js::Class *aclasp, JSObject *proto, JSObject *parent,
+                           JSContext *cx);
+    inline void init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+                     JSContext *cx);
+    inline void init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+                     void *priv, JSContext *cx);
     inline void init(js::Class *aclasp, JSObject *proto, JSObject *parent,
                      const js::Value &privateSlotValue, JSContext *cx);
 
@@ -939,6 +965,11 @@ struct JSObject {
                                       JSObject *proto,
                                       JSObject *parent,
                                       const js::Value &privateSlotValue,
+                                      JSContext *cx);
+    inline void initSharingEmptyShape(js::Class *clasp,
+                                      JSObject *proto,
+                                      JSObject *parent,
+                                      void *priv,
                                       JSContext *cx);
 
     inline bool hasSlotsArray() const { return !!dslots; }
@@ -1057,6 +1088,8 @@ struct JSObject {
 
     inline JSObject *getThrowTypeError() const;
 
+    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
+
     void swap(JSObject *obj);
 
     inline bool canHaveMethodBarrier() const;
@@ -1076,6 +1109,8 @@ struct JSObject {
     inline bool isObject() const;
     inline bool isWith() const;
     inline bool isBlock() const;
+    inline bool isStaticBlock() const;
+    inline bool isClonedBlock() const;
     inline bool isCall() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
@@ -1111,7 +1146,7 @@ JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 #define MAX_DSLOTS_LENGTH   (~size_t(0) / sizeof(js::Value) - 1)
 #define MAX_DSLOTS_LENGTH32 (~uint32(0) / sizeof(js::Value) - 1)
 
-#define OBJ_CHECK_SLOT(obj,slot) (JS_ASSERT(slot < (obj)->freeslot))
+#define OBJ_CHECK_SLOT(obj,slot) JS_ASSERT((obj)->containsSlot(slot))
 
 #ifdef JS_THREADSAFE
 
@@ -1183,23 +1218,26 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
  */
 static const uint32 JSSLOT_BLOCK_DEPTH = JSSLOT_PRIVATE + 1;
 
-static inline bool
-OBJ_IS_CLONED_BLOCK(JSObject *obj)
+inline bool
+JSObject::isStaticBlock() const
 {
-    return obj->getProto() != NULL;
+    return isBlock() && !getProto();
+}
+
+inline bool
+JSObject::isClonedBlock() const
+{
+    return isBlock() && !!getProto();
 }
 
 static const uint32 JSSLOT_WITH_THIS = JSSLOT_PRIVATE + 2;
 
-extern JSBool
-js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
-
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
-    ((OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->propertyCount())
+    (obj)->propertyCount()
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
+    (obj)->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
+    (obj)->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to
@@ -1311,22 +1349,6 @@ extern const char js_defineSetter_str[];
 extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
 #endif
-
-/*
- * Allocate a new native object with the given value of the proto and private
- * slots. The parent slot is set to the value of proto's parent slot.
- *
- * clasp must be a native class. proto must be the result of a call to
- * js_InitClass(...clasp, ...).
- *
- * Note that this is the correct global object for native class instances, but
- * not for user-defined functions called as constructors.  Functions used as
- * constructors must create instances parented by the parent of the function
- * object, not by the parent of its .prototype object value.
- */
-extern JSObject*
-js_NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto,
-                           const js::Value &privateSlotValue);
 
 extern JSBool
 js_PopulateObject(JSContext *cx, JSObject *newborn, JSObject *props);

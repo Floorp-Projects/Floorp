@@ -962,16 +962,19 @@ static JSFunctionSpec regexp_methods[] = {
 static JSBool
 regexp_construct(JSContext *cx, uintN argc, Value *vp)
 {
-    /*
-     * If first arg is regexp and no flags are given, just return the arg.
-     * (regexp_compile_sub detects the regexp + flags case and throws a
-     * TypeError.)  See 10.15.3.1.
-     */
-    Value *argv = vp + 2;
-    if ((argc < 2 || argv[1].isUndefined()) && argv[0].isObject() &&
-        argv[0].toObject().getClass() == &js_RegExpClass) {
-        *vp = argv[0];
-        return true;
+    Value *argv = JS_ARGV(cx, vp);
+    if (!IsConstructing(vp)) {
+        /*
+         * If first arg is regexp and no flags are given, just return the arg.
+         * (regexp_compile_sub detects the regexp + flags case and throws a
+         * TypeError.)  See 15.10.3.1.
+         */
+        if (argc >= 1 && argv[0].isObject() && argv[0].toObject().isRegExp() &&
+            (argc == 1 || argv[1].isUndefined()))
+        {
+            *vp = argv[0];
+            return true;
+        }
     }
 
     /* Otherwise, replace obj with a new RegExp object. */

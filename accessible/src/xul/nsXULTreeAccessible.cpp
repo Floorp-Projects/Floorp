@@ -181,12 +181,9 @@ nsXULTreeAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation (put methods here)
 
-nsresult
-nsXULTreeAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULTreeAccessible::NativeRole()
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   // No primary column means we're in a list. In fact, history and mail turn off
   // the primary flag when switching to a flat view.
 
@@ -196,11 +193,9 @@ nsXULTreeAccessible::GetRoleInternal(PRUint32 *aRole)
   if (cols)
     cols->GetPrimaryColumn(getter_AddRefs(primaryCol));
 
-  *aRole = primaryCol ?
+  return primaryCol ?
     static_cast<PRUint32>(nsIAccessibleRole::ROLE_OUTLINE) :
     static_cast<PRUint32>(nsIAccessibleRole::ROLE_LIST);
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1159,21 +1154,22 @@ nsXULTreeItemAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessible: nsAccessible implementation
 
-nsresult
-nsXULTreeItemAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULTreeItemAccessible::NativeRole()
 {
   nsCOMPtr<nsITreeColumns> columns;
   mTree->GetColumns(getter_AddRefs(columns));
-  NS_ENSURE_STATE(columns);
+  if (!columns) {
+    NS_ERROR("No tree columns object in the tree!");
+    return nsIAccessibleRole::ROLE_NOTHING;
+  }
 
   nsCOMPtr<nsITreeColumn> primaryColumn;
   columns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
 
-  *aRole = primaryColumn ?
+  return primaryColumn ?
     static_cast<PRUint32>(nsIAccessibleRole::ROLE_OUTLINEITEM) :
     static_cast<PRUint32>(nsIAccessibleRole::ROLE_LISTITEM);
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

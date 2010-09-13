@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -53,10 +53,6 @@ extern struct vp8_token_struct vp8_mbsplit_encodings  [VP8_NUMMBSPLITS];
 
 extern struct vp8_token_struct vp8_mv_ref_encoding_array    [VP8_MVREFS];
 extern struct vp8_token_struct vp8_sub_mv_ref_encoding_array [VP8_SUBMVREFS];
-
-#define VP8_MVREFENCODINGS      (vp8_mv_ref_encoding_array - NEARESTMV)
-#define VP8_SUBMVREFENCODINGS   (vp8_sub_mv_ref_encoding_array - LEFT4X4)
-
 
 extern const vp8_tree_index vp8_small_mvtree[];
 

@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -27,6 +27,7 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
     int mmx_enabled = flags & HAS_MMX;
     int xmm_enabled = flags & HAS_SSE;
     int wmt_enabled = flags & HAS_SSE2;
+    int SSSE3Enabled = flags & HAS_SSSE3;
 
     /* Note:
      *
@@ -42,7 +43,7 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
     {
         rtcd->idct.idct1        = vp8_short_idct4x4llm_1_mmx;
         rtcd->idct.idct16       = vp8_short_idct4x4llm_mmx;
-        rtcd->idct.idct1_scalar = vp8_dc_only_idct_mmx;
+        rtcd->idct.idct1_scalar_add = vp8_dc_only_idct_add_mmx;
         rtcd->idct.iwalsh16     = vp8_short_inv_walsh4x4_mmx;
         rtcd->idct.iwalsh1     = vp8_short_inv_walsh4x4_1_mmx;
 
@@ -114,5 +115,17 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
     }
 
 #endif
+
+#if HAVE_SSSE3
+
+    if (SSSE3Enabled)
+    {
+        rtcd->subpix.sixtap16x16   = vp8_sixtap_predict16x16_ssse3;
+        rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_ssse3;
+        rtcd->subpix.sixtap8x4     = vp8_sixtap_predict8x4_ssse3;
+        rtcd->subpix.sixtap4x4     = vp8_sixtap_predict4x4_ssse3;
+    }
+#endif
+
 #endif
 }

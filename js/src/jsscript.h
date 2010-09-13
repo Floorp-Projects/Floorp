@@ -102,7 +102,7 @@ class UpvarCookie
     bool isFree() const { return value == FREE_VALUE; }
     uint32 asInteger() const { return value; }
     /* isFree check should be performed before using these accessors. */
-    uint16 level() const { JS_ASSERT(!isFree()); return value >> 16; }
+    uint16 level() const { JS_ASSERT(!isFree()); return uint16(value >> 16); }
     uint16 slot() const { JS_ASSERT(!isFree()); return uint16(value); }
 
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
@@ -180,6 +180,7 @@ namespace ic {
 # endif
 # if defined JS_MONOIC
     struct MICInfo;
+    struct CallICInfo;
 # endif
 }
 struct CallSite;
@@ -263,6 +264,7 @@ struct JSScript {
 # endif
 # if defined JS_MONOIC
     js::mjit::ic::MICInfo *mics; /* MICs in this script. */
+    js::mjit::ic::CallICInfo *callICs; /* CallICs in this script. */
 # endif
 
     bool isValidJitCode(void *jcode);
@@ -322,6 +324,15 @@ struct JSScript {
         js::GlobalSlotArray *arr = globals();
         JS_ASSERT(index < arr->length);
         return getAtom(arr->vector[index].atomIndex);
+    }
+
+    JSVersion getVersion() const {
+        return JSVersion(version);
+    }
+
+    void setVersion(JSVersion newVersion) {
+        JS_ASSERT((newVersion & JS_BITMASK(16)) == uint32(newVersion));
+        version = newVersion;
     }
 
     inline JSFunction *getFunction(size_t index);

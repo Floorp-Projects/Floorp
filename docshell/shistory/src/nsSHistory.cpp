@@ -62,6 +62,7 @@
 #include "mozilla/Services.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
+#include "nsDocShell.h"
 
 // For calculating max history entries and max cachable contentviewers
 #include "nspr.h"
@@ -1137,13 +1138,91 @@ PRBool RemoveChildEntries(nsISHistory* aHistory, PRInt32 aIndex,
   return root ? RemoveFromSessionHistoryContainer(root, aEntryIDs) : PR_FALSE;
 }
 
+PRBool IsSameTree(nsISHEntry* aEntry1, nsISHEntry* aEntry2)
+{
+  if (!aEntry1 && !aEntry2) {
+    return PR_TRUE;
+  }
+  if ((!aEntry1 && aEntry2) || (aEntry1 && !aEntry2)) {
+    return PR_FALSE;
+  }
+  PRUint32 id1, id2;
+  aEntry1->GetID(&id1);
+  aEntry2->GetID(&id2);
+  if (id1 != id2) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsISHContainer> container1 = do_QueryInterface(aEntry1);
+  nsCOMPtr<nsISHContainer> container2 = do_QueryInterface(aEntry2);
+  PRInt32 count1, count2;
+  container1->GetChildCount(&count1);
+  container2->GetChildCount(&count2);
+  // We allow null entries in the end of the child list.
+  PRInt32 count = PR_MAX(count1, count2);
+  for (PRInt32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsISHEntry> child1, child2;
+    container1->GetChildAt(i, getter_AddRefs(child1));
+    container2->GetChildAt(i, getter_AddRefs(child2));
+    if (!IsSameTree(child1, child2)) {
+      return PR_FALSE;
+    }
+  }
+  
+  return PR_TRUE;
+}
+
+PRBool
+nsSHistory::RemoveDuplicate(PRInt32 aIndex)
+{
+  NS_ASSERTION(aIndex > 0, "aIndex must be > 0!");
+  nsCOMPtr<nsIHistoryEntry> rootHE1, rootHE2;
+  GetEntryAtIndex(aIndex, PR_FALSE, getter_AddRefs(rootHE1));
+  GetEntryAtIndex(aIndex - 1, PR_FALSE, getter_AddRefs(rootHE2));
+  nsCOMPtr<nsISHEntry> root1 = do_QueryInterface(rootHE1);
+  nsCOMPtr<nsISHEntry> root2 = do_QueryInterface(rootHE2);
+  if (IsSameTree(root1, root2)) {
+    nsCOMPtr<nsISHTransaction> txToRemove, txToKeep, txNext;
+    GetTransactionAtIndex(aIndex, getter_AddRefs(txToRemove));
+    GetTransactionAtIndex(aIndex - 1, getter_AddRefs(txToKeep));
+    NS_ENSURE_TRUE(txToRemove, PR_FALSE);
+    NS_ENSURE_TRUE(txToKeep, PR_FALSE);
+    txToRemove->GetNext(getter_AddRefs(txNext));
+    txToRemove->SetNext(nsnull);
+    txToRemove->SetPrev(nsnull);
+    // If txNext is non-null, this will set txNext's .prev
+    txToKeep->SetNext(txNext);
+    static_cast<nsDocShell*>(mRootDocShell)->HistoryTransactionRemoved(aIndex);
+    if (mIndex >= aIndex) {
+      mIndex = mIndex - 1;
+    }
+    --mLength;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP_(void)
 nsSHistory::RemoveEntries(nsTArray<PRUint64>& aIDs, PRInt32 aStartIndex)
 {
   PRInt32 index = aStartIndex;
   while(index >= 0 && RemoveChildEntries(this, --index, aIDs));
+  // Nothing was removed from minIndex if it is > 0!
+  PRInt32 minIndex = index >= 0 ? index : 0;
   index = aStartIndex;
   while(index >= 0 && RemoveChildEntries(this, index++, aIDs));
+  
+  // We need to remove duplicate nsSHEntry trees.
+  PRBool didRemove = PR_FALSE;
+  while (index && index > minIndex) {
+    didRemove = RemoveDuplicate(index--) || didRemove;
+  }
+  if (didRemove && mRootDocShell) {
+    nsRefPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
+                           &nsDocShell::FireDummyOnLocationChange);
+    NS_DispatchToCurrentThread(ev);
+  }
 }
 
 void

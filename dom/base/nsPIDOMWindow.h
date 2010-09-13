@@ -546,6 +546,13 @@ public:
    */
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin) = 0;
 
+  /**
+   * NOTE! This function *will* be called on multiple threads so the
+   * implementation must not do any AddRef/Release or other actions that will
+   * mutate internal state.
+   */
+  virtual PRUint32 GetSerial() = 0;
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer

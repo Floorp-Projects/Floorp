@@ -145,8 +145,6 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_dont_use_document_colors.html \
 		test_font_face_parser.html \
 		test_garbage_at_end_of_declarations.html \
-		test_hover.html \
-		hover_helper.html \
 		test_ident_escaping.html \
 		test_inherit_computation.html \
 		test_inherit_storage.html \

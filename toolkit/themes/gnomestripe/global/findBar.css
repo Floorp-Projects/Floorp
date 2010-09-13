@@ -57,12 +57,12 @@ findbar {
 }
 
 .findbar-textbox[status="notfound"] {
-  -moz-box-shadow: 0 0 0 1em #f66 inset;
+  box-shadow: 0 0 0 1em #f66 inset;
   color: white;
 }
 
 .findbar-textbox[flash="true"] {
-  -moz-box-shadow: 0 0 0 1em yellow inset;
+  box-shadow: 0 0 0 1em yellow inset;
   color: black;
 }
 

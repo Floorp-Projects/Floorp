@@ -463,8 +463,19 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx, const gfxPoint& offset)
     }
 }
 
-// Blur radius is approximately 3/2 times the box-blur size
-static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * (3/2);
+/**
+ * Compute the box blur size (which we're calling the blur radius) from
+ * the standard deviation.
+ *
+ * Much of this, the 3 * sqrt(2 * pi) / 4, is the known value for
+ * approximating a Gaussian using box blurs.  This yields quite a good
+ * approximation for a Gaussian.  Then we multiply this by 1.5 since our
+ * code wants the radius of the entire triple-box-blur kernel instead of
+ * the diameter of an individual box blur.  For more details, see:
+ *   http://www.w3.org/TR/SVG11/filters.html#feGaussianBlurElement
+ *   https://bugzilla.mozilla.org/show_bug.cgi?id=590039#c19
+ */
+static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
 
 gfxIntSize gfxAlphaBoxBlur::CalculateBlurRadius(const gfxPoint& aStd)
 {

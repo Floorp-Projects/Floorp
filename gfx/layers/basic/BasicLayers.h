@@ -142,6 +142,7 @@ public:
   { return NULL; }
 
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
 
 #ifdef DEBUG
   PRBool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }

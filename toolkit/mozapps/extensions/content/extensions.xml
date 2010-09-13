@@ -791,13 +791,20 @@
               <xul:image class="spinner"/>
               <xul:label value="&addon.checkingForUpdates.label;"/>
             </xul:hbox>
-            <xul:hbox anonid="update-available" hidden="true" align="center">
-              <xul:label value="An update is available"/>
-              <xul:button anonid="update-btn" class="addon-control"
-                          label="&addon.updateNow.label;"
-                          tooltiptext="&addon.updateNow.tooltip;"
-                          oncommand="document.getBindingParent(this).upgrade();"/>
-            </xul:hbox>
+            <xul:vbox anonid="update-available" class="update-available"
+                      hidden="true" align="end">
+              <xul:checkbox anonid="include-update" class="include-update"
+                            label="&addon.includeUpdate.label;" checked="true"
+                            oncommand="document.getBindingParent(this).onIncludeUpdateChanged();"/>
+              <xul:hbox align="center">
+                <xul:label class="update-available-notice"
+                           value="&addon.updateAvailable.label;"/>
+                <xul:button anonid="update-btn" class="addon-control"
+                            label="&addon.updateNow.label;"
+                            tooltiptext="&addon.updateNow.tooltip;"
+                            oncommand="document.getBindingParent(this).upgrade();"/>
+              </xul:hbox>
+            </xul:vbox>
             <xul:hbox anonid="install-status" class="install-status"
                       hidden="true"/>
           </xul:hbox>
@@ -817,11 +824,10 @@
             <xul:button anonid="disable-btn" class="addon-control disable"
                         label="&cmd.disableAddon.label;"
                         oncommand="document.getBindingParent(this).userDisabled = true;"/>
+            <xul:button anonid="remove-btn" class="addon-control remove"
+                        label="&cmd.uninstallAddon.label;"
+                        oncommand="document.getBindingParent(this).uninstall();"/>
           </xul:hbox>
-        </xul:vbox>
-        <xul:vbox pack="start" class="remove-container">
-          <xul:button anonid="remove-btn" class="remove-button"
-                      oncommand="document.getBindingParent(this).uninstall();"/>
         </xul:vbox>
       </xul:hbox>
     </content>
@@ -856,12 +862,17 @@
         if (!this.mAddon.applyBackgroundUpdates) {
           var self = this;
           AddonManager.getAllInstalls(function(aInstallsList) {
+            // This can return after the binding has been destroyed,
+            // so try to detect that and return early
+            if (!("onNewInstall" in self))
+              return;
             for (let i = 0; i < aInstallsList.length; i++) {
               let install = aInstallsList[i];
               if (install.existingAddon &&
                   install.existingAddon.id == self.mAddon.id &&
                   install.state == AddonManager.STATE_AVAILABLE) {
                 self.onNewInstall(install);
+                self.onIncludeUpdateChanged();
               }
             }
           });
@@ -968,6 +979,10 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "update-available");
       </field>
+      <field name="_includeUpdate">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "include-update");
+      </field>
       <field name="_relNotesLoaded">false</field>
       <field name="_relNotesToggle">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -996,6 +1011,17 @@
         ]]></getter>
         <setter><![CDATA[
           this.mAddon.userDisabled = val;
+        ]]></setter>
+      </property>
+
+      <property name="includeUpdate">
+        <getter><![CDATA[
+          return this._includeUpdate.checked && !!this.mManualUpdate;
+        ]]></getter>
+        <setter><![CDATA[
+          //XXXunf Eventually, we'll want to persist this for individual
+          //       updates - see bug 594619.
+          this._includeUpdate.checked = !!val;
         ]]></setter>
       </property>
 
@@ -1304,6 +1330,14 @@
         <body><![CDATA[
           gViewController.loadView("addons://detail/" +
                                    encodeURIComponent(this.mAddon.id));
+        ]]></body>
+      </method>
+
+      <method name="onIncludeUpdateChanged">
+        <body><![CDATA[
+          var event = document.createEvent("Events");
+          event.initEvent("IncludeUpdateChanged", true, true);
+          this.dispatchEvent(event);
         ]]></body>
       </method>
 

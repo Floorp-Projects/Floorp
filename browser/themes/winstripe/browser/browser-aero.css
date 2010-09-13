@@ -13,6 +13,56 @@
     background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
+
+  /* App menu button */
+
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
+    margin-top: 1px;
+  }
+
+  #appmenu-button {
+    border: 2px solid;
+    border-top: none;
+    -moz-border-left-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
+    -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
+    -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
+    box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
+                     0 0 2px 1px rgba(255,255,255,.25) inset;
+  }
+
+  #appmenu-button:-moz-window-inactive {
+    -moz-border-left-colors: rgba(255,255,255,.4) rgba(0,0,0,.5);
+    -moz-border-bottom-colors: rgba(255,255,255,.4) rgba(0,0,0,.5);
+    -moz-border-right-colors: rgba(255,255,255,.4) rgba(0,0,0,.5);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset;
+  }
+
+  /* Bug 413060, comment 16: Vista Aero is a special case where we use a
+     tooltip appearance for the address bar popup panels */
+  #identity-popup,
+  #editBookmarkPanel,
+  #notification-popup {
+    -moz-appearance: tooltip;
+    color: InfoText;
+  }
+
+  /* Make the left and right paddings smaller, to compensate for the horizontal
+     space added by the tooltip appearance, see bug 432529. */
+  #identity-popup-container {
+    -moz-padding-start: 6px;
+    -moz-padding-end: 6px;
+  }
+
+  #sidebar-splitter {
+    border: 0;
+    -moz-border-end: 1px solid #A9B7C9;
+    min-width: 0;
+    width: 3px;
+    background-color: transparent;
+    -moz-margin-start: -3px;
+    position: relative;
+    z-index: 10;
+  }
 }
 
 @media all and (-moz-windows-compositor) {
@@ -37,7 +87,7 @@
   #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar[tabsontop="false"]:last-child:not(:-moz-lwtheme) {
     background: transparent !important;
     color: black;
-    text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
+    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
   #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
@@ -61,7 +111,7 @@
 
   #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
     background-color: rgba(255,255,255,.5);
-    -moz-border-radius: 4px;
+    border-radius: 4px;
   }
 
   #urlbar,
@@ -88,59 +138,30 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%);
+    background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
     text-shadow: 0 1px 0 rgba(255,255,255,.4);
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,75%,.6) 50%);
+    background-image: -moz-linear-gradient(hsla(214,15%,90%,.8), hsla(214,15%,75%,.8) 50%);
   }
 
   #allTabs-panel,
   #ctrlTab-panel {
     background: transparent;
     -moz-appearance: -moz-win-glass;
-    -moz-border-radius: 0;
+    border-radius: 0;
     border: none;
     font: normal 1.2em "Segoe UI";
     color: black;
-    text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
+    text-shadow: white -1px -1px .35em, white -1px 1px .35em, white 1px 1px .35em, white 1px -1px .35em;
   }
 }
 
 @media not all and (-moz-windows-compositor) {
   #print-preview-toolbar:not(:-moz-lwtheme) {
     -moz-appearance: -moz-win-browsertabbar-toolbox;
-  }
-}
-
-@media all and (-moz-windows-default-theme) {
-  /* Bug 413060, comment 16: Vista Aero is a special case where we use a
-     tooltip appearance for the address bar popup panels */
-  #identity-popup,
-  #editBookmarkPanel,
-  #notification-popup {
-    -moz-appearance: tooltip;
-    color: InfoText;
-  }
-
-  /* Make the left and right paddings smaller, to compensate for the horizontal
-     space added by the tooltip appearance, see bug 432529. */
-  #identity-popup-container {
-    -moz-padding-start: 6px;
-    -moz-padding-end: 6px;
-  }
-
-  #sidebar-splitter {
-    border: 0;
-    -moz-border-end: 1px solid #A9B7C9;
-    min-width: 0;
-    width: 3px;
-    background-color: transparent;
-    -moz-margin-start: -3px;
-    position: relative;
-    z-index: 10;
   }
 }
 

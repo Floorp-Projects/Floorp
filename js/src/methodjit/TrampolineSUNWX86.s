@@ -121,9 +121,9 @@ throwpoline_exit:
 .global InjectJaegerReturn
 .type   InjectJaegerReturn, @function
 InjectJaegerReturn:
-    movl 0x24(%ebx), %edx                        /* fp->rval data */
-    movl 0x28(%ebx), %ecx                        /* fp->rval type */
-    movl 0x38(%ebx), %eax                        /* fp->ncode */
+    movl 0x18(%ebx), %edx                        /* fp->rval_ data */
+    movl 0x1C(%ebx), %ecx                        /* fp->rval_ type */
+    movl 0x2c(%ebx), %eax                        /* fp->ncode_ */
     /* For Sun Studio there is no fast call. */
     /* We add the stack by 8 before. */
     addl $0x8, %esp
@@ -141,6 +141,6 @@ InjectJaegerReturn:
 .type   SafePointTrampoline, @function
 SafePointTrampoline:
     popl %eax
-    movl %eax, 0x38(%ebx)
+    movl %eax, 0x2c(%ebx)
     jmp  *24(%ebp)
 .size   SafePointTrampoline, . - SafePointTrampoline

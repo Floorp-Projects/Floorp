@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -122,22 +122,10 @@ vpx_codec_err_t vpx_codec_decode(vpx_codec_ctx_t    *ctx,
         res = VPX_CODEC_INVALID_PARAM;
     else if (!ctx->iface || !ctx->priv)
         res = VPX_CODEC_ERROR;
-
-#if CONFIG_EVAL_LIMIT
-    else if (ctx->priv->eval_counter >= 500)
-    {
-        ctx->priv->err_detail = "Evaluation limit exceeded.";
-        res = VPX_CODEC_ERROR;
-    }
-
-#endif
     else
     {
         res = ctx->iface->dec.decode(ctx->priv->alg_priv, data, data_sz,
                                      user_priv, deadline);
-#if CONFIG_EVAL_LIMIT
-        ctx->priv->eval_counter++;
-#endif
     }
 
     return SAVE_STATUS(ctx, res);

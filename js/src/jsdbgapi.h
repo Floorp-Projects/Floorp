@@ -492,6 +492,9 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 
+extern JS_FRIEND_API(void)
+js_RevertVersion(JSContext *cx);
+
 extern JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt);
 
@@ -546,30 +549,24 @@ js_DumpCallgrind(JSContext *cx, uintN argc, jsval *vp);
 #ifdef MOZ_VTUNE
 
 extern JS_FRIEND_API(JSBool)
-js_StartVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_StartVtune(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_StopVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval);
+js_StopVtune(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_PauseVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_PauseVtune(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_ResumeVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval);
+js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp);
 
 #endif /* MOZ_VTUNE */
 
 #ifdef MOZ_TRACEVIS
 extern JS_FRIEND_API(JSBool)
-js_InitEthogram(JSContext *cx, JSObject *obj,
-                uintN argc, jsval *argv, jsval *rval);
+js_InitEthogram(JSContext *cx, uintN argc, jsval *vp);
 extern JS_FRIEND_API(JSBool)
-js_ShutdownEthogram(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *rval);
+js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp);
 #endif /* MOZ_TRACEVIS */
 
 JS_END_EXTERN_C

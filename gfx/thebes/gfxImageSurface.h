@@ -77,7 +77,7 @@ public:
     // ImageSurface methods
     gfxImageFormat Format() const { return mFormat; }
 
-    const gfxIntSize& GetSize() const { return mSize; }
+    virtual const gfxIntSize GetSize() const { return mSize; }
     PRInt32 Width() const { return mSize.width; }
     PRInt32 Height() const { return mSize.height; }
 

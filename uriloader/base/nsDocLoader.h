@@ -69,11 +69,11 @@ struct nsListenerInfo;
  ****************************************************************************/
 
 #define NS_THIS_DOCLOADER_IMPL_CID                    \
- { /* b4ec8387-98aa-4c08-93b6-6d23069c06f2 */         \
-     0xb4ec8387,                                      \
-     0x98aa,                                          \
-     0x4c08,                                          \
-     {0x93, 0xb6, 0x6d, 0x23, 0x06, 0x9c, 0x06, 0xf2} \
+ {                                                    \
+     0x306cae1f,                                      \
+     0x90ee,                                          \
+     0x4e51,                                          \
+     {0xaf, 0x27, 0x9c, 0x13, 0xde, 0xba, 0x91, 0xb6} \
  }
 
 class nsDocLoader : public nsIDocumentLoader, 
@@ -179,10 +179,12 @@ protected:
     // @param aRedirectFlags The flags being sent to OnStateChange that
     //                       indicate the type of redirect.
     // @param aStateFlags    The channel flags normally sent to OnStateChange.
-    virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
-                                       nsIChannel* aNewChannel,
-                                       PRUint32 aRedirectFlags,
-                                       PRUint32 aStateFlags) {}
+    //
+    // @return Something else than NS_OK if the redirection should be cancelled.
+    virtual nsresult OnRedirectStateChange(nsIChannel* aOldChannel,
+                                           nsIChannel* aNewChannel,
+                                           PRUint32 aRedirectFlags,
+                                           PRUint32 aStateFlags) { return NS_OK; }
 
     void doStartDocumentLoad();
     void doStartURLLoad(nsIRequest *request);

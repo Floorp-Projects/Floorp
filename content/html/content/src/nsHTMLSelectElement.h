@@ -241,6 +241,8 @@ class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsIConstraintValidation
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                       PRUint32 aFromParser = 0);
   virtual ~nsHTMLSelectElement();
@@ -285,6 +287,8 @@ public:
    */
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
   

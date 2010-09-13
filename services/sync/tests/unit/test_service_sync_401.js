@@ -1,4 +1,4 @@
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 
 function login_handler(request, response) {
   // btoa('johndoe:ilovejane') == am9obmRvZTppbG92ZWphbmU=

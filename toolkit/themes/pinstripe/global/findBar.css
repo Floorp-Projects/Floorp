@@ -48,16 +48,16 @@ label.findbar-find-fast:-moz-lwtheme,
   margin: 0 4px;
   padding: 1px 3px;
   -moz-appearance: none;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: @roundButtonBorder@;
   background: @roundButtonBackground@;
-  -moz-box-shadow: @roundButtonShadow@;
+  box-shadow: @roundButtonShadow@;
   color: buttontext;
 }
 
 .findbar-container > toolbarbutton:-moz-focusring {
   position: relative;
-  -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
 .findbar-container > toolbarbutton > .toolbarbutton-text {
@@ -73,13 +73,13 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-highlight:not([disabled]):hover:active {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @roundButtonPressedShadow@;
+  box-shadow: @roundButtonPressedShadow@;
 }
 
 .findbar-container > toolbarbutton:hover:active:-moz-focusring {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
 .findbar-closebutton > .toolbarbutton-text {
@@ -123,17 +123,17 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-container > checkbox:-moz-focusring > .checkbox-label-box > .checkbox-icon {
-  -moz-border-radius: 4px;
-  -moz-box-shadow: @focusRingShadow@;
+  border-radius: 4px;
+  box-shadow: @focusRingShadow@;
 }
 
 /* Search field */
 
 .findbar-textbox {
   -moz-appearance: none;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: none;
-  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .7) inset,
+  box-shadow: 0 1px 1.5px rgba(0, 0, 0, .7) inset,
                    0 0 0 1px rgba(0, 0, 0, .17) inset;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 5px center;
   margin: 0 4px -1px;
@@ -146,8 +146,8 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-textbox[focused="true"] {
-  -moz-box-shadow: @focusRingShadow@,
-                   0 1px 2px rgba(0, 0, 0, .8) inset;
+  box-shadow: @focusRingShadow@,
+                   0 1px 1.5px rgba(0, 0, 0, .8) inset;
 }
 
 .findbar-textbox[flash="true"] {
@@ -168,8 +168,8 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-find-next:-moz-locale-dir(ltr),
 .findbar-find-previous:-moz-locale-dir(rtl) {
-  -moz-border-radius-topright: 0px;
-  -moz-border-radius-bottomright: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
 }
 
 /* find-previous button */
@@ -180,8 +180,8 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-find-previous:-moz-locale-dir(ltr),
 .findbar-find-next:-moz-locale-dir(rtl) {
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-bottomleft: 0px;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
 }
 
 /* highlight button */
@@ -196,7 +196,7 @@ label.findbar-find-fast:-moz-lwtheme,
   margin: 0 4px;
   -moz-margin-end: 0;
   border: 1px solid #818181;
-  -moz-border-radius: 4px;
+  border-radius: 4px;
   background-color: #F4F4F3;
 }
 

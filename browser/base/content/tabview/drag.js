@@ -61,7 +61,7 @@ var drag = {
 //   event - The DOM event that kicks off the drag
 //   isResizing - (boolean) is this a resizing instance? or (if false) dragging?
 //   isFauxDrag - (boolean) true if a faux drag, which is used when simply snapping.
-var Drag = function(item, event, isResizing, isFauxDrag) {
+function Drag(item, event, isResizing, isFauxDrag) {
   Utils.assert(item && (item.isAnItem || item.isAFauxItem), 
       'must be an item, or at least a faux item');
 
@@ -257,7 +257,7 @@ Drag.prototype = {
   // ----------
   // Function: drag
   // Called in response to an <Item> draggable "drag" event.
-  drag: function(event) {
+  drag: function Drag_drag(event) {
     this.snap('topleft', true);
 
     if (this.parent && this.parent.expanded) {
@@ -272,7 +272,7 @@ Drag.prototype = {
   // ----------
   // Function: stop
   // Called in response to an <Item> draggable "stop" event.
-  stop: function() {
+  stop: function Drag_stop() {
     Trenches.hideGuides();
     this.item.isDragging = false;
 

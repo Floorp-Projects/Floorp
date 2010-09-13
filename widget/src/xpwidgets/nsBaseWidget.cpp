@@ -292,7 +292,10 @@ NS_IMETHODIMP
 nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
                                    nsIDeviceContext *aContext)
 {
-  NS_ASSERTION((mWindowType == eWindowType_toplevel), "Can't attach to child?");
+  NS_ASSERTION((mWindowType == eWindowType_toplevel ||
+                mWindowType == eWindowType_dialog ||
+                mWindowType == eWindowType_invisible),
+               "Can't attach to child?");
 
   mViewCallback = aViewEventFunction;
 
@@ -772,6 +775,10 @@ LayerManager* nsBaseWidget::GetLayerManager()
       prefs->GetBoolPref("layers.accelerate-none",
                          &disableAcceleration);
     }
+
+    const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+    accelerateByDefault = accelerateByDefault || 
+                          (acceleratedEnv && (*acceleratedEnv != '0'));
 
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
     PRBool safeMode = PR_FALSE;

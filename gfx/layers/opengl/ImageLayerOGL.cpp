@@ -38,6 +38,7 @@
 
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
+#include "yuv_convert.h"
 #include "GLContextProvider.h"
 
 using namespace mozilla::gl;
@@ -253,22 +254,37 @@ ImageContainerOGL::GetCurrentAsSurface(gfxIntSize *aSize)
 
   GLContext *gl = nsnull;
   // tex1 will be RGBA or Y, tex2 will Cb, tex3 will be Cr
-  GLuint tex1 = 0, tex2 = 0, tex3 = 0;
+  GLuint tex1 = 0;
   gfxIntSize size;
 
   if (mActiveImage->GetFormat() == Image::PLANAR_YCBCR) {
     PlanarYCbCrImageOGL *yuvImage =
       static_cast<PlanarYCbCrImageOGL*>(mActiveImage.get());
-    if (!yuvImage->HasData() || !yuvImage->HasTextures()) {
+    if (!yuvImage->HasData()) {
       *aSize = gfxIntSize(0, 0);
       return nsnull;
     }
 
     size = yuvImage->mSize;
-    gl = yuvImage->mTextures[0].GetGLContext();
-    tex1 = yuvImage->mTextures[0].GetTextureID();
-    tex2 = yuvImage->mTextures[1].GetTextureID();
-    tex3 = yuvImage->mTextures[2].GetTextureID();
+
+    nsRefPtr<gfxImageSurface> imageSurface =
+      new gfxImageSurface(size, gfxASurface::ImageFormatRGB24);
+
+    gfx::ConvertYCbCrToRGB32(yuvImage->mData.mYChannel,
+                             yuvImage->mData.mCbChannel,
+                             yuvImage->mData.mCrChannel,
+                             imageSurface->Data(),
+                             0,
+                             0,
+                             size.width,
+                             size.height,
+                             yuvImage->mData.mYStride,
+                             yuvImage->mData.mCbCrStride,
+                             imageSurface->Stride(),
+                             yuvImage->mType);
+
+    *aSize = size;
+    return imageSurface.forget().get();
   }
 
   if (mActiveImage->GetFormat() == Image::CAIRO_SURFACE) {
@@ -279,9 +295,6 @@ ImageContainerOGL::GetCurrentAsSurface(gfxIntSize *aSize)
     tex1 = cairoImage->mTexture.GetTextureID();
   }
 
-  // XXX TODO: read all textures in YCbCr case and convert to RGB
-  // XXX Or maybe add a ReadYCbCrTextureImage that will take 3 textures
-  // and return RGB, since we can render YCbCr to the temporary framebuffer.
   nsRefPtr<gfxImageSurface> s = gl->ReadTextureImage(tex1, size, LOCAL_GL_RGBA);
   *aSize = size;
   return s.forget();
@@ -489,23 +502,35 @@ PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
      // YV24 format
      width_shift = 0;
      height_shift = 0;
+     mType = gfx::YV24;
   } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
              aData.mYSize.height == aData.mCbCrSize.height) {
     // YV16 format
     width_shift = 1;
     height_shift = 0;
+    mType = gfx::YV16;
   } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
              aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
       // YV12 format
     width_shift = 1;
     height_shift = 1;
+    mType = gfx::YV16;
   } else {
     NS_ERROR("YCbCr format not supported");
   }
   
   mData = aData;
   mData.mCbCrStride = mData.mCbCrSize.width = aData.mPicSize.width >> width_shift;
+  // Round up the values for width and height to make sure we sample enough data
+  // for the last pixel - See bug 590735
+  if (width_shift && (aData.mPicSize.width & 1)) {
+    mData.mCbCrStride++;
+    mData.mCbCrSize.width++;
+  }
   mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
+  if (height_shift && (aData.mPicSize.height & 1)) {
+      mData.mCbCrSize.height++;
+  }
   mData.mYSize = aData.mPicSize;
   mData.mYStride = mData.mYSize.width;
 

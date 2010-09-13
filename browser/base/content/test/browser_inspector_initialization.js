@@ -42,31 +42,29 @@ let doc;
 function startInspectorTests()
 {
   ok(InspectorUI, "InspectorUI variable exists");
-  document.addEventListener("popupshown", runInspectorTests, false);
+  Services.obs.addObserver(runInspectorTests, "inspector-opened", false);
   InspectorUI.toggleInspectorUI();
 }
 
-function runInspectorTests(evt)
+function runInspectorTests()
 {
-  if (evt.target.id != "inspector-dom-panel")
-    return true;
-  document.removeEventListener("popupshown", runInspectorTests, false);
-  document.addEventListener("popuphidden", finishInspectorTests, false);
+  Services.obs.removeObserver(runInspectorTests, "inspector-opened", false);
+  Services.obs.addObserver(finishInspectorTests, "inspector-closed", false);
+  let iframe = document.getElementById("inspector-tree-iframe");
+  is(InspectorUI.treeIFrame, iframe, "Inspector IFrame matches");
   ok(InspectorUI.inspecting, "Inspector is highlighting");
-  ok(InspectorUI.isPanelOpen, "Inspector Tree Panel is open");
+  ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   ok(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
   ok(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
-  InspectorUI.toggleInspectorUI();
+  InspectorUI.closeInspectorUI(true);
 }
 
-function finishInspectorTests(evt)
+function finishInspectorTests()
 {
-  if (evt.target.id != "inspector-dom-panel")
-    return true;
-  document.removeEventListener("popuphidden", finishInspectorTests, false);
+  Services.obs.removeObserver(finishInspectorTests, "inspector-closed", false);
   ok(!InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is closed");
   ok(!InspectorUI.isStylePanelOpen, "Inspector Style Panel is closed");
-  ok(!InspectorUI.isPanelOpen, "Inspector Tree Panel is closed");
+  ok(!InspectorUI.isTreePanelOpen, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not highlighting");
   gBrowser.removeCurrentTab();
   finish();

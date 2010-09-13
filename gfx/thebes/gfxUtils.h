@@ -43,6 +43,7 @@
 #include "gfxImageSurface.h"
 
 class gfxDrawable;
+class nsIntRegion;
 
 class THEBES_API gfxUtils {
 public:
@@ -83,6 +84,21 @@ public:
                                  const gfxRect&   aFill,
                                  const gfxImageSurface::gfxImageFormat aFormat,
                                  const gfxPattern::GraphicsFilter& aFilter);
+
+    /**
+     * Clip aContext to the region aRegion.
+     */
+    static void ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion);
+
+    /**
+     * Clip aContext to the region aRegion, snapping the rectangles.
+     */
+    static void ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
+
+    /*
+     * Convert image format to depth value
+     */
+    static int ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat);
 };
 
 #endif

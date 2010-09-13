@@ -18,6 +18,11 @@ var ctx1;
 var ctx2;
 var counter = 0;
 
+var file = Components.classes["@mozilla.org/file/directory_service;1"]
+             .getService(Components.interfaces.nsIProperties)
+             .get("TmpD", Components.interfaces.nsILocalFile);
+filePath = file.path;
+
 function printpreview() {
   gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
@@ -155,7 +160,7 @@ var emptyFormElements =
 var formElements =
   ["<input type='text' value='text'>",
    "<input type='password' value='password'>",
-   "<input type='file' value='file'>",
+   "<input type='file' value='" + filePath + "'>",
    "<input type='button' value='button'>",
    "<input type='submit' value='submit button'>",
    "<input type='reset' value='reset button'>",

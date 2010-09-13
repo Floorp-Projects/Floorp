@@ -282,24 +282,21 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
 {
 __try {
   *ppdispChild = NULL;
-  if (!mWeakShell || varChild.vt != VT_I4)
+  if (IsDefunct())
     return E_FAIL;
 
-  if (varChild.lVal == CHILDID_SELF) {
-    *ppdispChild = static_cast<IDispatch*>(this);
-    AddRef();
-    return S_OK;
-  }
+  // IAccessible::accChild is used to return this accessible or child accessible
+  // at the given index or to get an accessible by child ID in the case of
+  // document accessible (it's handled by overriden GetXPAccessibleFor method
+  // on the document accessible). The getting an accessible by child ID is used
+  // by AccessibleObjectFromEvent() called by AT when AT handles our MSAA event.
+  nsAccessible* child = GetXPAccessibleFor(varChild);
+  if (child)
+    *ppdispChild = NativeAccessible(child);
 
-  if (!nsAccUtils::MustPrune(this)) {
-    nsAccessible* child = GetChildAt(varChild.lVal - 1);
-    if (child) {
-      *ppdispChild = NativeAccessible(child);
-    }
-  }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
-  return (*ppdispChild)? S_OK: E_FAIL;
+  return (*ppdispChild)? S_OK: E_INVALIDARG;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accName(
@@ -399,11 +396,8 @@ __try {
                "Does not support nsIAccessibleText when it should");
 #endif
 
-  PRUint32 xpRole = 0, msaaRole = 0;
-  if (NS_FAILED(xpAccessible->GetRole(&xpRole)))
-    return E_FAIL;
-
-  msaaRole = gWindowsRoleMap[xpRole].msaaRole;
+  PRUint32 xpRole = xpAccessible->Role();
+  PRUint32 msaaRole = gWindowsRoleMap[xpRole].msaaRole;
   NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].msaaRole == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
@@ -411,7 +405,8 @@ __try {
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE)
+    nsAccessible* xpParent = GetParent();
+    if (xpParent && xpParent->Role() == nsIAccessibleRole::ROLE_TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
   }
   
@@ -1192,20 +1187,17 @@ nsAccessibleWrap::role(long *aRole)
 __try {
   *aRole = 0;
 
-  PRUint32 xpRole = 0;
-  nsresult rv = GetRole(&xpRole);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
   NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
+  PRUint32 xpRole = Role();
   *aRole = gWindowsRoleMap[xpRole].ia2Role;
 
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE)
+    nsAccessible* xpParent = GetParent();
+    if (xpParent && xpParent->Role() == nsIAccessibleRole::ROLE_TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
 
@@ -1809,7 +1801,7 @@ nsAccessibleWrap::UnattachIEnumVariant()
 nsAccessible*
 nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 {
-  if (IsDefunct())
+  if (aVarChild.vt != VT_I4)
     return nsnull;
 
   // if its us real easy - this seems to always be the case

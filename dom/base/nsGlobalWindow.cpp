@@ -78,6 +78,7 @@
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
 #include "nsGeolocation.h"
+#include "nsDesktopNotification.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
@@ -118,6 +119,7 @@
 #include "nsIDOMPopStateEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsIDOMDesktopNotification.h"
 #include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
@@ -243,10 +245,7 @@ static PRPackedBool         gMouseDown                 = PR_FALSE;
 static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
 static FILE                *gDumpFile                  = nsnull;
 static PRUint64             gNextWindowID              = 0;
-
-#ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
-#endif
 
 #ifdef DEBUG_jst
 PRInt32 gTimeoutCnt                                    = 0;
@@ -688,7 +687,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mJSObject(nsnull),
     mPendingStorageEventsObsolete(nsnull),
     mTimeoutsSuspendDepth(0),
-    mFocusMethod(0)
+    mFocusMethod(0),
+    mSerial(0)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -764,11 +764,12 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     CallGetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &gEntropyCollector);
   }
 
+  mSerial = ++gSerialCounter;
+
 #ifdef DEBUG
   printf("++DOMWINDOW == %d (%p) [serial = %d] [outer = %p]\n", gRefCnt,
          static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-         ++gSerialCounter, static_cast<void*>(aOuterWindow));
-  mSerial = gSerialCounter;
+         gSerialCounter, static_cast<void*>(aOuterWindow));
 #endif
 
 #ifdef PR_LOGGING
@@ -1757,6 +1758,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
       mInnerWindowHolder = wsh->GetInnerWindowHolder();
+      
+      NS_ASSERTION(newInnerWindow, "Got a state without inner window");
 
       // These assignments addref.
       mNavigator = wsh->GetNavigator();
@@ -1766,22 +1769,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         mNavigator->SetDocShell(mDocShell);
         mNavigator->LoadingNewDocument();
       }
+    } else if (thisChrome) {
+      newInnerWindow = new nsGlobalChromeWindow(this);
+      isChrome = PR_TRUE;
+    } else if (mIsModalContentWindow) {
+      newInnerWindow = new nsGlobalModalWindow(this);
     } else {
-      if (thisChrome) {
-        newInnerWindow = new nsGlobalChromeWindow(this);
-
-        isChrome = PR_TRUE;
-      } else {
-        if (mIsModalContentWindow) {
-          newInnerWindow = new nsGlobalModalWindow(this);
-        } else {
-          newInnerWindow = new nsGlobalWindow(this);
-        }
-      }
-    }
-
-    if (!newInnerWindow) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      newInnerWindow = new nsGlobalWindow(this);
     }
 
     if (currentInner && currentInner->mJSObject) {
@@ -2047,8 +2041,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                        wrapper, nsIXPConnect::XPC_XOW_NAVIGATED);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+  if (!aState && !reUseInnerWindow) {
+    nsContentUtils::AddScriptRunner(
+      NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+  }
 
   return NS_OK;
 }
@@ -3528,15 +3524,16 @@ nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::MozRequestAnimationFrame()
+nsGlobalWindow::MozRequestAnimationFrame(nsIAnimationFrameListener* aListener)
 {
-  FORWARD_TO_INNER(MozRequestAnimationFrame, (), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(MozRequestAnimationFrame, (aListener),
+                   NS_ERROR_NOT_INITIALIZED);
 
   if (!mDoc) {
     return NS_OK;
   }
 
-  mDoc->ScheduleBeforePaintEvent();
+  mDoc->ScheduleBeforePaintEvent(aListener);
   return NS_OK;
 }
 
@@ -4363,17 +4360,17 @@ nsGlobalWindow::Focus()
     return NS_OK;
   }
 
-  /*
-   * If caller is not chrome and dom.disable_window_flip is true,
-   * prevent bringing a window to the front if the window is not the
-   * currently active window, but do change the currently focused
-   * window in the focus controller so that focus is in the right
-   * place when the window is activated again.
-   */
+  nsIDOMWindowInternal *caller =
+    static_cast<nsIDOMWindowInternal*>(nsContentUtils::GetWindowFromCaller());
+  nsCOMPtr<nsIDOMWindowInternal> opener;
+  GetOpener(getter_AddRefs(opener));
 
-  PRBool canFocus =
-    CanSetProperty("dom.disable_window_flip") ||
-    RevisePopupAbuseLevel(gPopupControlState) < openAbused;
+  // Enforce dom.disable_window_flip (for non-chrome), but still allow the
+  // window which opened us to raise us at times when popups are allowed
+  // (bugs 355482 and 369306).
+  PRBool canFocus = CanSetProperty("dom.disable_window_flip") ||
+                    (opener == caller &&
+                     RevisePopupAbuseLevel(gPopupControlState) < openAbused);
 
   nsCOMPtr<nsIDOMWindow> activeWindow;
   fm->GetActiveWindow(getter_AddRefs(activeWindow));
@@ -4461,6 +4458,12 @@ NS_IMETHODIMP
 nsGlobalWindow::Blur()
 {
   FORWARD_TO_OUTER(Blur, (), NS_ERROR_NOT_INITIALIZED);
+
+  // If dom.disable_window_flip == true, then content should not be allowed
+  // to call this function (this would allow popunders, bug 369306)
+  if (!CanSetProperty("dom.disable_window_flip")) {
+    return NS_OK;
+  }
 
   // If embedding apps don't implement nsIEmbeddingSiteWindow2, we
   // shouldn't throw exceptions to web content.
@@ -9848,6 +9851,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -10422,5 +10426,39 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
     return NS_ERROR_FAILURE;
   
   NS_ADDREF(*_retval = mGeolocation);    
+  return NS_OK; 
+}
+
+
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorDesktopNotification
+//*****************************************************************************
+
+NS_IMETHODIMP nsNavigator::GetMozNotification(nsIDOMDesktopNotificationCenter **aRetVal)
+{
+  NS_ENSURE_ARG_POINTER(aRetVal);
+  *aRetVal = nsnull;
+
+  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+    
+  nsCOMPtr<nsIDocument> document = do_GetInterface(mDocShell);
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+
+  nsIScriptGlobalObject *sgo = document->GetScopeObject();
+  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+
+  nsIScriptContext *scx = sgo->GetContext();
+  NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
+
+  nsRefPtr<nsDesktopNotificationCenter> notification =
+    new nsDesktopNotificationCenter(window->GetCurrentInnerWindow(),
+                                    scx);
+
+  if (!notification) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aRetVal = notification.forget().get();
   return NS_OK; 
 }

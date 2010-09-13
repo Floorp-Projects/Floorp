@@ -224,6 +224,37 @@ static PRInt64 GetSimpleBookmarksQueryFolder(
 static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsTArray<nsTArray<nsString>*>* aTerms);
 
+class VacuumDBListener : public AsyncStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  VacuumDBListener(nsIPrefBranch* aBranch)
+    : mPrefBranch(aBranch)
+  {
+  }
+
+  NS_IMETHOD HandleResult(mozIStorageResultSet*)
+  {
+    // 'PRAGMA journal_mode' statements always return a result.  Ignore it.
+    return NS_OK;
+  }
+
+  NS_IMETHOD HandleCompletion(PRUint16 aReason)
+  {
+    if (aReason == REASON_FINISHED && mPrefBranch) {
+      (void)mPrefBranch->SetIntPref(PREF_LAST_VACUUM,
+                                    (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
+};
+
+NS_IMPL_ISUPPORTS1(VacuumDBListener, mozIStorageStatementCallback)
+
 } // anonymous namespace
 
 namespace mozilla {
@@ -5926,14 +5957,11 @@ nsNavHistory::VacuumDatabase()
       journalToDefault
     };
     nsCOMPtr<mozIStoragePendingStatement> ps;
-    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), nsnull,
-                               getter_AddRefs(ps));
+    nsRefPtr<VacuumDBListener> vacuumDBListener =
+      new VacuumDBListener(mPrefBranch);
+    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts),
+                               vacuumDBListener, getter_AddRefs(ps));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mPrefBranch) {
-      (void)mPrefBranch->SetIntPref(PREF_LAST_VACUUM,
-                                    (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
-    }
   }
 
   return NS_OK;

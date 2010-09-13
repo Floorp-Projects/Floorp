@@ -110,7 +110,7 @@ public:
   virtual nsINode* GetNode() const { return mDocument; }
 
   // nsAccessible
-  virtual nsresult GetRoleInternal(PRUint32 *aRole);
+  virtual PRUint32 NativeRole();
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
 
@@ -140,6 +140,24 @@ public:
    * false.
    */
   void MarkAsLoaded() { mIsLoaded = PR_TRUE; }
+
+  /**
+   * Return the parent document.
+   */
+  nsDocAccessible* ParentDocument() const
+    { return mParent ? mParent->GetDocAccessible() : nsnull; }
+
+  /**
+   * Return the child document count.
+   */
+  PRUint32 ChildDocumentCount() const
+    { return mChildDocuments.Length(); }
+
+  /**
+   * Return the child document at the given index.
+   */
+  nsDocAccessible* GetChildDocumentAt(PRUint32 aIndex) const
+    { return mChildDocuments.SafeElementAt(aIndex, nsnull); }
 
   /**
    * Non-virtual method to fire a delayed event after a 0 length timeout.
@@ -189,6 +207,12 @@ public:
   nsAccessible* GetCachedAccessible(void *aUniqueID);
 
   /**
+   * Return the cached accessible by the given unique ID looking through
+   * this and nested documents.
+   */
+  nsAccessible* GetCachedAccessibleInSubtree(void* aUniqueID);
+
+  /**
    * Cache the accessible.
    *
    * @param  aUniquID     [in] the unique identifier of accessible
@@ -216,6 +240,24 @@ protected:
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();
     void RemoveScrollListener();
+
+  /**
+   * Append the given document accessible to this document's child document
+   * accessibles.
+   */
+  bool AppendChildDocument(nsDocAccessible* aChildDocument)
+  {
+    return mChildDocuments.AppendElement(aChildDocument);
+  }
+
+  /**
+   * Remove the given document accessible from this document's child document
+   * accessibles.
+   */
+  void RemoveChildDocument(nsDocAccessible* aChildDocument)
+  {
+    mChildDocuments.RemoveElement(aChildDocument);
+  }
 
   /**
    * Invalidate parent-child relations for any cached accessible in the DOM
@@ -337,6 +379,8 @@ protected:
 
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
+
+  nsTArray<nsRefPtr<nsDocAccessible> > mChildDocuments;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,

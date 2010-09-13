@@ -60,7 +60,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
-#include "jsdtoa.h"
 #include "jsemit.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -80,7 +79,6 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jstask.h"
 #include "jstracer.h"
 #include "jsdbgapi.h"
 #include "prmjtime.h"
@@ -91,6 +89,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
@@ -107,6 +106,38 @@
 #endif
 
 using namespace js;
+
+class AutoVersionAPI
+{
+    JSContext   * const cx;
+    JSVersion   oldVersion;
+    bool        oldVersionWasOverride;
+    uint32      oldOptions;
+
+  public:
+    explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
+      : cx(cx), oldVersion(cx->findVersion()), oldVersionWasOverride(cx->isVersionOverridden()),
+        oldOptions(cx->options) {
+        JS_ASSERT(!VersionExtractFlags(newVersion) ||
+                  VersionExtractFlags(newVersion) == VersionFlags::HAS_XML);
+        cx->options = VersionHasXML(newVersion)
+                      ? (cx->options | JSOPTION_XML)
+                      : (cx->options & ~JSOPTION_XML);
+        cx->maybeOverrideVersion(newVersion);
+        SyncOptionsToVersion(cx);
+    }
+
+    ~AutoVersionAPI() {
+        cx->options = oldOptions;
+        if (oldVersionWasOverride) {
+            JS_ALWAYS_TRUE(cx->maybeOverrideVersion(oldVersion));
+        } else {
+            cx->clearVersionOverride();
+            cx->setDefaultVersion(oldVersion);
+        }
+        JS_ASSERT(cx->findVersion() == oldVersion);
+    }
+};
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
@@ -607,15 +638,6 @@ JSRuntime::init(uint32 maxbytes)
     wrapObjectCallback = js::TransparentObjectWrapper;
 
 #ifdef JS_THREADSAFE
-    gcLock = JS_NEW_LOCK();
-    if (!gcLock)
-        return false;
-    gcDone = JS_NEW_CONDVAR(gcLock);
-    if (!gcDone)
-        return false;
-    requestDone = JS_NEW_CONDVAR(gcLock);
-    if (!requestDone)
-        return false;
     /* this is asymmetric with JS_ShutDown: */
     if (!js_SetupLocks(8, 16))
         return false;
@@ -992,28 +1014,40 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
-    return JSVERSION_NUMBER(cx);
+    return VersionNumber(cx->findVersion());
+}
+
+static void
+CheckOptionVersionSync(JSContext *cx)
+{
+#if DEBUG
+    uint32 options = cx->options;
+    JSVersion version = cx->findVersion();
+    JS_ASSERT(OptionsHasXML(options) == VersionHasXML(version));
+    JS_ASSERT(OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version));
+#endif
 }
 
 JS_PUBLIC_API(JSVersion)
-JS_SetVersion(JSContext *cx, JSVersion version)
+JS_SetVersion(JSContext *cx, JSVersion newVersion)
 {
-    JSVersion oldVersion;
+    JS_ASSERT(VersionIsKnown(newVersion));
+    JS_ASSERT(!VersionHasFlags(newVersion));
+    JSVersion newVersionNumber = newVersion;
 
-    JS_ASSERT(version != JSVERSION_UNKNOWN);
-    JS_ASSERT((version & ~JSVERSION_MASK) == 0);
-
-    oldVersion = JSVERSION_NUMBER(cx);
-    if (version == oldVersion)
-        return oldVersion;
+    JSVersion oldVersion = cx->findVersion();
+    JSVersion oldVersionNumber = VersionNumber(oldVersion);
+    if (oldVersionNumber == newVersionNumber)
+        return oldVersionNumber; /* No override actually occurs! */
 
     /* We no longer support 1.4 or below. */
-    if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4)
-        return oldVersion;
+    if (newVersionNumber != JSVERSION_DEFAULT && newVersionNumber <= JSVERSION_1_4)
+        return oldVersionNumber;
 
-    cx->version = (cx->version & ~JSVERSION_MASK) | version;
-    js_OnVersionChange(cx);
-    return oldVersion;
+    VersionCloneFlags(oldVersion, &newVersion);
+    cx->maybeOverrideVersion(newVersion);
+    CheckOptionVersionSync(cx);
+    return oldVersionNumber;
 }
 
 static struct v2smap {
@@ -1060,6 +1094,11 @@ JS_StringToVersion(const char *string)
 JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx)
 {
+    /*
+     * Can't check option/version synchronization here.
+     * We may have been synchronized with a script version that was formerly on
+     * the stack, but has now been popped.
+     */
     return cx->options;
 }
 
@@ -1069,8 +1108,9 @@ JS_SetOptions(JSContext *cx, uint32 options)
     AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
-    js_SyncOptionsToVersion(cx);
+    SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
+    CheckOptionVersionSync(cx);
     return oldopts;
 }
 
@@ -1078,10 +1118,12 @@ JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
     AutoLockGC lock(cx->runtime);
+    CheckOptionVersionSync(cx);
     uint32 oldopts = cx->options;
     cx->options ^= options;
-    js_SyncOptionsToVersion(cx);
+    (void) SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
+    CheckOptionVersionSync(cx);
     return oldopts;
 }
 
@@ -1805,7 +1847,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->hasfp())
-        return cx->fp()->getScopeChain()->getGlobal();
+        return cx->fp()->scopeChain().getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
@@ -1846,7 +1888,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    return cx->updateMallocCounter(nbytes);
+    return cx->runtime->updateMallocCounter(nbytes);
 }
 
 JS_PUBLIC_API(char *)
@@ -2614,7 +2656,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     if (!str)
         return NULL;
     str->initFlat(chars, length);
-    cx->updateMallocCounter((length + 1) * sizeof(jschar));
+    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
     return str;
 }
 
@@ -2975,7 +3017,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         return true;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
-    for (uint32 i = 0, n = obj->freeslot; i != n; ++i) {
+    for (uint32 i = 0, n = obj->slotSpan(); i != n; ++i) {
         const Value &v = obj->getSlot(i);
         if (i == JSSLOT_PRIVATE && (obj->getClass()->flags & JSCLASS_HAS_PRIVATE))
             continue;
@@ -4300,6 +4342,17 @@ JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
            ((cx->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
 }
 
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                       JSPrincipals *principals,
+                                       const jschar *chars, size_t length,
+                                       const char *filename, uintN lineno,
+                                       JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno);
+}
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                                 const jschar *chars, size_t length,
@@ -4496,6 +4549,19 @@ JS_DestroyScript(JSContext *cx, JSScript *script)
 }
 
 JS_PUBLIC_API(JSFunction *)
+JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         JSPrincipals *principals, const char *name,
+                                         uintN nargs, const char **argnames,
+                                         const jschar *chars, size_t length,
+                                         const char *filename, uintN lineno,
+                                         JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_CompileUCFunctionForPrincipals(cx, obj, principals, name, nargs, argnames, chars,
+                                             length, filename, lineno);
+}
+
+JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   JSPrincipals *principals, const char *name,
                                   uintN nargs, const char **argnames,
@@ -4662,6 +4728,18 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                        JSPrincipals *principals,
+                                        const jschar *chars, uintN length,
+                                        const char *filename, uintN lineno,
+                                        jsval *rval, JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno,
+                                            rval);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  JSPrincipals *principals,
                                  const jschar *chars, uintN length,
@@ -4770,7 +4848,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, args))
+    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return NULL;
 
     args.callee().setObject(*ctor);
@@ -4825,7 +4903,10 @@ JS_TriggerOperationCallback(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_TriggerAllOperationCallbacks(JSRuntime *rt)
 {
-    js_TriggerAllOperationCallbacks(rt, JS_FALSE);
+#ifdef JS_THREADSAFE
+    AutoLockGC lock(rt);
+#endif
+    TriggerAllOperationCallbacks(rt);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4843,7 +4924,7 @@ JS_IsRunning(JSContext *cx)
 #endif
     JSStackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
-        fp = fp->down;
+        fp = fp->prev();
     return fp != NULL;
 }
 

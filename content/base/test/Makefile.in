@@ -245,6 +245,11 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug454325.html \
 		file_bug391728_2.html \
 		test_bug456262.html \
+		test_bug590870.html \
+		file_bug590870.html \
+		test_bug590812.html \
+		file_bug590812.xml \
+		file_bug590812-ref.xhtml \
 		test_bug368972.html \
 		test_bug448993.html \
 		test_bug450160.html \
@@ -408,6 +413,8 @@ _TEST_FILES2 = \
 		test_x-frame-options.html \
 		file_x-frame-options_main.html \
 		file_x-frame-options_page.sjs \
+		test_createHTMLDocument.html \
+		test_bug578096.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

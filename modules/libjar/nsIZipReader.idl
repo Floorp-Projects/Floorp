@@ -91,7 +91,7 @@ interface nsIZipEntry : nsISupports
     readonly attribute boolean          isSynthetic;
 };
 
-[scriptable, uuid(27067432-cb21-437e-99d1-f85858522bb1)]
+[scriptable, uuid(7bb925d6-833a-486c-8ef2-9bc15c670a60)]
 interface nsIZipReader : nsISupports
 {
     /**
@@ -100,6 +100,11 @@ interface nsIZipReader : nsISupports
      * but it needs to be closed first with close().
      */
     void open(in nsIFile zipFile);
+
+    /**
+     * Opens a zip file inside a zip file for reading.
+     */
+    void openInner(in nsIZipReader zipReader, in string zipEntry);
 
     /**
      * The file that represents the zip with which this zip reader was
@@ -240,6 +245,13 @@ interface nsIZipReaderCache : nsISupports
      *       will return the closed zip reader.
      */
     nsIZipReader getZip(in nsIFile zipFile);
+
+    /**
+     * Returns a (possibly shared) nsIZipReader for a zip inside another zip
+     *
+     * See getZip
+     */
+    nsIZipReader getInnerZip(in nsIFile zipFile, in string zipEntry);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

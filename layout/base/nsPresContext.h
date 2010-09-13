@@ -983,6 +983,8 @@ public:
     return result;
   }
 
+  PRBool IsRootContentDocument();
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();

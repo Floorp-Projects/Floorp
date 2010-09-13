@@ -154,7 +154,7 @@ JaegerThrowpoline ENDP
 SafePointTrampoline PROC FRAME
     .ENDPROLOG
     pop    rax
-    mov    qword ptr [rbx+60h], rax
+    mov    qword ptr [rbx+50h], rax  ; fp->ncode_
     jmp    qword ptr [rsp+8]
 SafePointTrampoline ENDP
 
@@ -162,8 +162,8 @@ SafePointTrampoline ENDP
 ; void InjectJaegerReturn();
 InjectJaegerReturn PROC FRAME
     .ENDPROLOG
-    mov     rcx, qword ptr [rbx+40h] ; load value into typeReg
-    mov     rax, qword ptr [rbx+60h] ; fp->ncode
+    mov     rcx, qword ptr [rbx+30h] ; load fp->rval_ into typeReg
+    mov     rax, qword ptr [rbx+50h] ; fp->ncode_
 
     ; Reimplementation of PunboxAssembler::loadValueAsComponents()
     mov     rdx, r14

@@ -1968,48 +1968,54 @@ main(int argc, char **argv)
         }
 
         JS_BeginRequest(cx);
+        {
+            JSAutoCrossCompartmentCall ac;
+            if (!ac.enter(cx, glob)) {
+                JS_EndRequest(cx);
+                return 1;
+            }
 
-        if (!JS_DefineFunctions(cx, glob, glob_functions)) {
-            JS_EndRequest(cx);
-            return 1;
-        }
+            if (!JS_DefineFunctions(cx, glob, glob_functions)) {
+                JS_EndRequest(cx);
+                return 1;
+            }
 
-        envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
-        if (!envobj || !JS_SetPrivate(cx, envobj, envp)) {
-            JS_EndRequest(cx);
-            return 1;
-        }
+            envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
+            if (!envobj || !JS_SetPrivate(cx, envobj, envp)) {
+                JS_EndRequest(cx);
+                return 1;
+            }
 
-        nsAutoString workingDirectory;
-        if (GetCurrentWorkingDirectory(workingDirectory))
-            gWorkingDirectory = &workingDirectory;
+            nsAutoString workingDirectory;
+            if (GetCurrentWorkingDirectory(workingDirectory))
+                gWorkingDirectory = &workingDirectory;
 
-        JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
-                          GetLocationProperty, NULL, 0);
+            JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
+                              GetLocationProperty, NULL, 0);
 
-        argc--;
-        argv++;
+            argc--;
+            argv++;
 
-        result = ProcessArgs(cx, glob, argv, argc);
+            result = ProcessArgs(cx, glob, argv, argc);
 
 
 //#define TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN 1
 
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
-        // test of late call and release (see below)
-        nsCOMPtr<nsIJSContextStack> bogus;
-        xpc->WrapJS(cx, glob, NS_GET_IID(nsIJSContextStack),
-                    (void**) getter_AddRefs(bogus));
+            // test of late call and release (see below)
+            nsCOMPtr<nsIJSContextStack> bogus;
+            xpc->WrapJS(cx, glob, NS_GET_IID(nsIJSContextStack),
+                        (void**) getter_AddRefs(bogus));
 #endif
-
-        JSPRINCIPALS_DROP(cx, gJSPrincipals);
-        JS_ClearScope(cx, glob);
-        JS_GC(cx);
-        JSContext *oldcx;
-        cxstack->Pop(&oldcx);
-        NS_ASSERTION(oldcx == cx, "JS thread context push/pop mismatch");
-        cxstack = nsnull;
-        JS_GC(cx);
+            JSPRINCIPALS_DROP(cx, gJSPrincipals);
+            JS_ClearScope(cx, glob);
+            JS_GC(cx);
+            JSContext *oldcx;
+            cxstack->Pop(&oldcx);
+            NS_ASSERTION(oldcx == cx, "JS thread context push/pop mismatch");
+            cxstack = nsnull;
+            JS_GC(cx);
+        } //this scopes the JSAutoCrossCompartmentCall
         JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
 

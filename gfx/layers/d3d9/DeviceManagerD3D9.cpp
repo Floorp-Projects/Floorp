@@ -189,6 +189,9 @@ DeviceManagerD3D9::~DeviceManagerD3D9()
   LayerManagerD3D9::OnDeviceManagerDestroy(this);
 }
 
+NS_IMPL_ADDREF(DeviceManagerD3D9)
+NS_IMPL_RELEASE(DeviceManagerD3D9)
+
 bool
 DeviceManagerD3D9::Init()
 {
@@ -281,7 +284,7 @@ DeviceManagerD3D9::Init()
     }
 
     D3DCAPS9 caps;
-    if (mDeviceEx->GetDeviceCaps(&caps)) {
+    if (mDeviceEx && mDeviceEx->GetDeviceCaps(&caps)) {
       if (LACKS_CAP(caps.Caps2, D3DCAPS2_DYNAMICTEXTURES)) {
         // XXX - Should we actually hit this we'll need a CanvasLayer that
         // supports static D3DPOOL_DEFAULT textures.
@@ -333,6 +336,13 @@ DeviceManagerD3D9::Init()
 
   hr = mDevice->CreatePixelShader((DWORD*)RGBShaderPS,
                                   getter_AddRefs(mRGBPS));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  hr = mDevice->CreatePixelShader((DWORD*)RGBAShaderPS,
+                                  getter_AddRefs(mRGBAPS));
 
   if (FAILED(hr)) {
     return false;
@@ -458,6 +468,10 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode)
     case RGBLAYER:
       mDevice->SetVertexShader(mLayerVS);
       mDevice->SetPixelShader(mRGBPS);
+      break;
+    case RGBALAYER:
+      mDevice->SetVertexShader(mLayerVS);
+      mDevice->SetPixelShader(mRGBAPS);
       break;
     case YCBCRLAYER:
       mDevice->SetVertexShader(mLayerVS);

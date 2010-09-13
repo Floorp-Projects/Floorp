@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #  David Dahl <ddahl@mozilla.com>
+#  Patrick Walton <pcwalton@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,9 +44,16 @@ relativesrcdir  = toolkit/components/console/hudservice/tests/browser
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+
 _BROWSER_TEST_FILES = \
 	browser_HUDServiceTestsAll.js \
+	browser_webconsole_bug_585237_line_limit.js \
+	browser_webconsole_bug_586388_select_all.js  \
+	browser_webconsole_bug_588967_input_expansion.js \
+	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
+	browser_webconsole_bug_593003_iframe_wrong_hud.js \
+	browser_webconsole_bug_581231_close_button.js \
 	$(NULL)
 
 _BROWSER_TEST_PAGES = \
@@ -62,6 +70,8 @@ _BROWSER_TEST_PAGES = \
 	test-duplicate-error.html \
 	test-image.png \
 	test-encoding-ISO-8859-1.html \
+	test-bug-593003-iframe-wrong-hud.html \
+	test-bug-593003-iframe-wrong-hud-iframe.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

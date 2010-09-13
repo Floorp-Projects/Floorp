@@ -42,7 +42,9 @@ namespace imagelib {
 
 // Constructor
 Image::Image(imgStatusTracker* aStatusTracker) :
-  mInitialized(PR_FALSE)
+  mAnimationConsumers(0),
+  mInitialized(PR_FALSE),
+  mAnimating(PR_FALSE)
 {
   if (aStatusTracker) {
     mStatusTracker = aStatusTracker;
@@ -98,6 +100,32 @@ Image::GetDecoderType(const char *aMimeType)
   return rv;
 }
 
+void
+Image::IncrementAnimationConsumers()
+{
+  mAnimationConsumers++;
+  EvaluateAnimation();
+}
+
+void
+Image::DecrementAnimationConsumers()
+{
+  NS_ABORT_IF_FALSE(mAnimationConsumers >= 1, "Invalid no. of animation consumers!");
+  mAnimationConsumers--;
+  EvaluateAnimation();
+}
+
+void
+Image::EvaluateAnimation()
+{
+  if (!mAnimating && ShouldAnimate()) {
+    nsresult rv = StartAnimation();
+    mAnimating = NS_SUCCEEDED(rv);
+  } else if (mAnimating && !ShouldAnimate()) {
+    StopAnimation();
+    mAnimating = PR_FALSE;
+  }
+}
 
 } // namespace imagelib
 } // namespace mozilla

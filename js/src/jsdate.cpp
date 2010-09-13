@@ -2056,7 +2056,7 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
     /* Step 6. */
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, args))
+    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.callee() = toISO;
@@ -2342,19 +2342,20 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
 
 #if JS_HAS_TOSOURCE
 #include <string.h>
-#include "jsdtoa.h"
+#include "jsnum.h"
 
 static JSBool
 date_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble utctime;
-    char buf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr, *bytes;
+    char *numStr, *bytes;
     JSString *str;
 
     if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
 
-    numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
+    ToCStringBuf cbuf;
+    numStr = NumberToCString(cx, &cbuf, utctime);
     if (!numStr) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;

@@ -49,11 +49,6 @@ namespace mjit {
 
 class TrampolineCompiler
 {
-    typedef Assembler::Label Label;
-    typedef Assembler::Jump Jump;
-    typedef Assembler::ImmPtr ImmPtr;
-    typedef Assembler::Imm32 Imm32;
-    typedef Assembler::Address Address;
     typedef bool (*TrampolineGenerator)(Assembler &masm);
 
 public:
@@ -65,7 +60,7 @@ public:
     static void release(Trampolines *tramps);
 
 private:
-    bool compileTrampoline(void **where, JSC::ExecutablePool **pool,
+    bool compileTrampoline(Trampolines::TrampolinePtr *where, JSC::ExecutablePool **pool,
                            TrampolineGenerator generator);
     
     /* Generators for trampolines. */

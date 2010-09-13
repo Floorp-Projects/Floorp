@@ -48,7 +48,7 @@ class nsGUIEvent;
 
 // Interface ID for nsILinkHandler
 #define NS_ILINKHANDLER_IID \
- { 0x71627c30, 0xd3c5, 0x4ad0,{0xb5, 0x33, 0x6e, 0x01, 0x91, 0xf2, 0x79, 0x32}}
+ { 0x1fa72627, 0x646b, 0x4573,{0xb5, 0xc8, 0xb4, 0x65, 0xc6, 0x78, 0xd4, 0x9d}}
 
 /**
  * Interface used for handling clicks on links
@@ -87,6 +87,7 @@ public:
    * @param aHeadersDataStream ???
    * @param aDocShell (out-param) the DocShell that the request was opened on
    * @param aRequest the request that was opened
+   * @param aHttpMethod forces the http channel to use a specific method
    */
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent, 
                              nsIURI* aURI,
@@ -94,7 +95,8 @@ public:
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
                              nsIDocShell** aDocShell = 0,
-                             nsIRequest** aRequest = 0) = 0;
+                             nsIRequest** aRequest = 0,
+                             const char* aHttpMethod = 0) = 0;
 
   /**
    * Process a mouse-over a link.
