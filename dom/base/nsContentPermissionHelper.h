@@ -35,32 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGeolocationOOP_h
-#define nsGeolocationOOP_h
+#ifndef nsContentPermissionHelper_h
+#define nsContentPermissionHelper_h
 
 #include "base/basictypes.h"
 
-#include "nsIGeolocationProvider.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 
-class nsGeolocationRequestProxy;
+class nsContentPermissionRequestProxy;
 
 namespace mozilla {
 namespace dom {
 
-class GeolocationRequestParent : public PContentPermissionRequestParent
+class ContentPermissionRequestParent : public PContentPermissionRequestParent
 {
  public:
-  GeolocationRequestParent(nsIDOMElement *element, const IPC::URI& principal);
-  virtual ~GeolocationRequestParent();
+  ContentPermissionRequestParent(const nsACString& type, nsIDOMElement *element, const IPC::URI& principal);
+  virtual ~ContentPermissionRequestParent();
   
   nsCOMPtr<nsIURI>           mURI;
   nsCOMPtr<nsIDOMElement>    mElement;
-  nsCOMPtr<nsGeolocationRequestProxy> mProxy;
+  nsCOMPtr<nsContentPermissionRequestProxy> mProxy;
+  nsCString mType;
 
  private:  
   virtual bool Recvprompt();
@@ -69,20 +69,21 @@ class GeolocationRequestParent : public PContentPermissionRequestParent
 } // namespace dom
 } // namespace mozilla
 
-class nsGeolocationRequestProxy : public nsIContentPermissionRequest
+class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
 {
  public:
-  nsGeolocationRequestProxy();
-  virtual ~nsGeolocationRequestProxy();
+  nsContentPermissionRequestProxy();
+  virtual ~nsContentPermissionRequestProxy();
   
-  nsresult Init(mozilla::dom::GeolocationRequestParent* parent);
+  nsresult Init(const nsACString& type, mozilla::dom::ContentPermissionRequestParent* parent);
   
   NS_DECL_ISUPPORTS;
   NS_DECL_NSICONTENTPERMISSIONREQUEST;
 
  private:
-  // Non-owning pointer to the GeolocationRequestParent object which owns this proxy.
-  mozilla::dom::GeolocationRequestParent* mParent;
+  // Non-owning pointer to the ContentPermissionRequestParent object which owns this proxy.
+  mozilla::dom::ContentPermissionRequestParent* mParent;
+  nsCString mType;
 };
-#endif // nsGeolocationOOP_h
+#endif // nsContentPermissionHelper_h
 
