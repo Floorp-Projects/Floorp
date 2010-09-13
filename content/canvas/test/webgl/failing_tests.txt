@@ -21,7 +21,6 @@ conformance/glsl-conformance.html
 conformance/invalid-passed-params.html
 conformance/methods.html
 conformance/null-object-behaviour.html
-conformance/null-uniform-location.html
 conformance/point-size.html
 conformance/program-test.html
 conformance/read-pixels-pack-alignment.html
