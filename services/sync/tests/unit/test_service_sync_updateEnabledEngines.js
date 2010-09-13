@@ -56,6 +56,35 @@ function setUp() {
 
 const PAYLOAD = 42;
 
+function test_newAccount() {
+  _("Test: New account does not disable locally enabled engines.");
+  let engine = Engines.get("steam");
+  let server = sync_httpd_setup({
+    "/1.0/johndoe/storage/meta/global": new ServerWBO("global", {}).handler(),
+    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
+    "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
+  });
+  do_test_pending();
+  setUp();
+
+  try {
+    _("Engine is enabled from the beginning.");
+    Service._ignorePrefObserver = true;
+    engine.enabled = true;
+    Service._ignorePrefObserver = false;
+
+    _("Sync.");
+    Weave.Service.login();
+    Weave.Service.sync();
+
+    _("Engine continues to be enabled.");
+    do_check_true(engine.enabled);
+  } finally {
+    server.stop(do_test_finished);
+    Service.startOver();
+  }
+}
+
 function test_enabledLocally() {
   _("Test: Engine is disabled on remote clients and enabled locally");
   Service.syncID = "abcdefghij";
@@ -309,6 +338,7 @@ function test_dependentEnginesDisabledLocally() {
 }
 
 function run_test() {
+  test_newAccount();
   test_enabledLocally();
   test_disabledLocally();
   test_enabledRemotely();
