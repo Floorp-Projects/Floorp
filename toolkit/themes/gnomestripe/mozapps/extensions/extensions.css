@@ -42,8 +42,8 @@
 #view-port {
   background-color: -moz-field;
   color: -moz-fieldtext;
-  border: 1px solid black;
-  -moz-border-radius: 5px;
+  border: 1px solid threedshadow;
+  border-radius: 5px;
 }
 
 .nav-button {
@@ -83,6 +83,46 @@
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
+/*** global warnings ***/
+
+.global-warning {
+  -moz-box-align: center;
+  margin: 0 8px;
+  color: #916D15;
+  text-shadow: #FFFFFF 1px 1px 1px;
+  font-weight: bold;
+}
+
+#addons-page[warning] .global-warning-container {
+  background-color: rgba(255, 255, 0, 0.1);
+  background-image: url("chrome://mozapps/skin/extensions/warning-stripes.png");
+  background-repeat: repeat-x;
+}
+
+/*** notification icons ***/
+
+.warning-icon {
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
+  width: 16px;
+  height: 16px;
+  margin: 3px 0;
+}
+
+.error-icon {
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
+  width: 16px;
+  height: 16px;
+  margin: 3px 0;
+}
+
+.pending-icon,
+.info-icon {
+  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
+  width: 16px;
+  height: 16px;
+  margin: 3px 0;
+}
+
 /*** category selector ***/
 
 #categories {
@@ -106,13 +146,13 @@
 }
 
 .category:-moz-locale-dir(ltr) {
-  -moz-border-radius-topleft: 5px;
-  -moz-border-radius-bottomleft: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
 .category:-moz-locale-dir(rtl) {
-  -moz-border-radius-topright: 5px;
-  -moz-border-radius-bottomright: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
 .category[disabled] {
@@ -131,7 +171,7 @@
 .category[selected] {
   background-color: -moz-field;
   color: -moz-fieldtext;
-  border-color: black;
+  border-color: threedshadow;
 }
 
 .category-name {
@@ -142,7 +182,7 @@
   background-color: #55D4FF;
   padding: 2px 8px;
   margin: 6px 0px;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   color: #FFF;
   font-weight: bold;
   text-align: center;
@@ -220,28 +260,11 @@
 }
 
 #header-utils-btn {
-  -moz-appearance: none;
   min-width: 4.5em;
-  border-width: 1px;
-  -moz-border-top-colors: #999;
-  -moz-border-bottom-colors: #999;
-  -moz-border-left-colors: #999;
-  -moz-border-right-colors: #999;
-  -moz-border-radius: 8px;
-  background-image: -moz-linear-gradient(#FFF, #BBB);
+}
+
+#header-utils-btn .button-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
-}
-
-#header-utils-btn:hover,
-#header-utils-btn[open="true"] {
-  -moz-border-top-colors: #777;
-  -moz-border-bottom-colors: #777;
-  -moz-border-left-colors: #777;
-  -moz-border-right-colors: #777;
-}
-
-#header-utils-btn[open="true"] {
-  -moz-box-shadow: inset 3px 3px 8px #555;
 }
 
 #header-utils-btn:-moz-focusring > .button-box {
@@ -265,7 +288,7 @@
   -moz-appearance: none;
   border: none;
   background-color: transparent;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   padding: 0px 6px;
   margin: 0px 6px;
   min-width: 12px !important;
@@ -379,28 +402,6 @@
   color: #4F7939;
 }
 
-.warning-icon {
-  list-style-image: url("chrome://global/skin/icons/warning-16.png");
-  width: 16px;
-  height: 16px;
-  margin: 3px 0;
-}
-
-.error-icon {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
-  width: 16px;
-  height: 16px;
-  margin: 3px 0;
-}
-
-.pending-icon,
-.info-icon {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
-  width: 16px;
-  height: 16px;
-  margin: 3px 0;
-}
-
 .addon-view[notification="warning"] {
   background-image: -moz-linear-gradient(rgba(255, 255, 0, 0.2), rgba(255, 255, 0, 0.1));
 }
@@ -462,6 +463,7 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
+
 /*** item - uninstalled ***/
 
 .addon[status="uninstalled"] {
@@ -472,7 +474,7 @@
   -moz-box-align: center;
   padding: 4px 20px;
   background-color: #FDFFA8;
-  -moz-border-radius: 8px;
+  border-radius: 8px;
   font-size: 120%;
 }
 
@@ -507,21 +509,26 @@
   display: none;
 }
 
+#search-allresults-link {
+  margin-top: 1em;
+  margin-bottom: 2em;
+}
+
 /*** detail view ***/
 
 #detail-view[active="false"] .fade {
   opacity: 0.6;
 }
 
-#detail-view > .loading {
+#detail-view .loading {
   opacity: 0;
 }
 
-#detail-view:not([loading]) > .loading {
+#detail-view:not([loading]) .loading {
   visibility: collapse;
 }
 
-#detail-view[loading-extended] > .loading {
+#detail-view[loading-extended] .loading {
   -moz-box-align: center;
   -moz-box-pack: center;
   opacity: 1;
@@ -529,7 +536,7 @@
   -moz-transition-duration: 1s;
 }
 
-#detail-view > .loading > image {
+#detail-view .loading > image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
@@ -578,7 +585,7 @@
 }
 
 #detail-contributions {
-  -moz-border-radius: 5px;
+  border-radius: 5px;
   border: 1px solid #B0C8D1;
   margin-bottom: 2em;
   padding: 1em;
@@ -651,9 +658,9 @@
 
 .download-progress {
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: 1px solid #555;
-  -moz-box-shadow: #777 1px 1px 2px;
+  box-shadow: #777 1px 1px 1.5px;
   width: 200px;
   height: 24px;
   margin: 0px 8px;
@@ -676,12 +683,12 @@
 
 .download-progress .start-cap:-moz-locale-dir(ltr),
 .download-progress .end-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 10000px 0 0 10000px;
+  border-radius: 10000px 0 0 10000px;
 }
 
 .download-progress .end-cap:-moz-locale-dir(ltr),
 .download-progress .start-cap:-moz-locale-dir(rtl) {
-  -moz-border-radius: 0 10000px 10000px 0;
+  border-radius: 0 10000px 10000px 0;
 }
 
 .download-progress .progress {
@@ -699,12 +706,12 @@
   border-style: solid;
   -moz-border-top-colors: #FFF;
   -moz-border-left-colors: #FFF;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   min-width: 16px;
   width: 16px;
   height: 16px;
   margin: 3px;
-  -moz-box-shadow: #777 1px 1px 1px;
+  box-shadow: #777 1px 1px 1px;
 }
 
 .download-progress .pause {
@@ -738,31 +745,15 @@
   font-weight: bold;
 }
 
+#update-selected {
+  margin: 12px;
+}
+
 
 /*** buttons ***/
 
 .addon-control[disabled="true"] {
   display: none;
-}
-
-.remove-button {
-  -moz-appearance: toolbarbutton;
-  margin: 0;
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  min-width: 0;
-  margin: 0;
-}
-
-.remove-button .button-text {
-  display: none;
-}
-
-.remove-button .button-icon {
-  margin: 0;
-}
-
-.remove-button .button-box {
-  padding: 0;
 }
 
 .button-link {

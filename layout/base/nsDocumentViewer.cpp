@@ -856,7 +856,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     // it in one place (Show()) and require that callers call init(), open(),
     // show() in that order or something.
     if (!mPresContext &&
-        (aParentWidget || containerView ||
+        (aParentWidget || containerView || mDocument->IsBeingUsedAsImage() ||
          (mDocument->GetDisplayDocument() &&
           mDocument->GetDisplayDocument()->GetShell()))) {
       // Create presentation context
@@ -2279,7 +2279,9 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
     nsWindowType winType;
     containerItem->GetItemType(&docType);
     mParentWidget->GetWindowType(winType);
-    if (winType == eWindowType_toplevel &&
+    if ((winType == eWindowType_toplevel ||
+         winType == eWindowType_dialog ||
+         winType == eWindowType_invisible) &&
         docType == nsIDocShellTreeItem::typeChrome) {
       // If the old view is already attached to our parent, detach
       DetachFromTopLevelWidget();
@@ -2307,13 +2309,13 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRBool isExternalResource = !!mDocument->GetDisplayDocument();
-
   // Create a widget if we were given a parent widget or don't have a
-  // container view that we can hook up to without a widget.  Don't
-  // create widgets for external resource documents, since they're not
-  // displayed.
-  if (!isExternalResource && (mParentWidget || !aContainerView)) {
+  // container view that we can hook up to without a widget.
+  // Don't create widgets for ResourceDocs (external resources & svg images),
+  // because when they're displayed, they're painted into *another* document's
+  // widget.
+  if (!mDocument->IsResourceDoc() &&
+      (mParentWidget || !aContainerView)) {
     // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
     // otherwise the view will find its own parent widget and "do the right thing" to
     // establish a parent/child widget relationship

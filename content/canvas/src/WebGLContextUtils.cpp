@@ -213,11 +213,11 @@ WebGLContext::LogMessage(const char *fmt, ...)
 void
 WebGLContext::LogMessage(const char *fmt, va_list ap)
 {
-  char buf[256];
+  char buf[1024];
 
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (console) {
-    PR_vsnprintf(buf, 256, fmt, ap);
+    PR_vsnprintf(buf, 1024, fmt, ap);
     console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
     fprintf(stderr, "%s\n", buf);
   }

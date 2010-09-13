@@ -762,7 +762,7 @@ nsComputedDOMStyle::DoGetColumnWidth(nsIDOMCSSValue** aValue)
 
   // XXX fix the auto case. When we actually have a column frame, I think
   // we should return the computed column width.
-  SetValueToCoord(val, GetStyleColumn()->mColumnWidth);
+  SetValueToCoord(val, GetStyleColumn()->mColumnWidth, PR_TRUE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -778,7 +778,7 @@ nsComputedDOMStyle::DoGetColumnGap(nsIDOMCSSValue** aValue)
   if (column->mColumnGap.GetUnit() == eStyleUnit_Normal) {
     val->SetAppUnits(GetStyleFont()->mFont.size);
   } else {
-    SetValueToCoord(val, GetStyleColumn()->mColumnGap);
+    SetValueToCoord(val, GetStyleColumn()->mColumnGap, PR_TRUE);
   }
 
   NS_ADDREF(*aValue = val);
@@ -1010,9 +1010,9 @@ nsComputedDOMStyle::DoGetMozTransformOrigin(nsIDOMCSSValue **aValue)
 
   /* Now, get the values. */
   const nsStyleDisplay* display = GetStyleDisplay();
-  SetValueToCoord(width, display->mTransformOrigin[0],
+  SetValueToCoord(width, display->mTransformOrigin[0], PR_FALSE,
                   &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
-  SetValueToCoord(height, display->mTransformOrigin[1],
+  SetValueToCoord(height, display->mTransformOrigin[1], PR_FALSE,
                   &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
 
   /* Store things as a value list, fail if we can't get one. */
@@ -1570,7 +1570,7 @@ nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
       delete valueList;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    SetValueToCoord(valSide, aCropRect.Get(side));
+    SetValueToCoord(valSide, aCropRect.Get(side), PR_FALSE);
   }
 
   nsAutoString argumentString;
@@ -2005,28 +2005,28 @@ nsComputedDOMStyle::DoGetBorderTopColors(nsIDOMCSSValue** aValue)
 }
 
 nsresult
-nsComputedDOMStyle::DoGetBorderRadiusBottomLeft(nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::DoGetBorderBottomLeftRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
                          NS_CORNER_BOTTOM_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::DoGetBorderRadiusBottomRight(nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::DoGetBorderBottomRightRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
                          NS_CORNER_BOTTOM_RIGHT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::DoGetBorderRadiusTopLeft(nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::DoGetBorderTopLeftRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
                          NS_CORNER_TOP_LEFT, aValue);
 }
 
 nsresult
-nsComputedDOMStyle::DoGetBorderRadiusTopRight(nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::DoGetBorderTopRightRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
                          NS_CORNER_TOP_RIGHT, aValue);
@@ -2128,7 +2128,7 @@ nsComputedDOMStyle::DoGetMarkerOffset(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleContent()->mMarkerOffset);
+  SetValueToCoord(val, GetStyleContent()->mMarkerOffset, PR_FALSE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -2262,7 +2262,7 @@ nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
     nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
     NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-    SetValueToCoord(val, radiusX,
+    SetValueToCoord(val, radiusX, PR_TRUE,
                     &nsComputedDOMStyle::GetFrameBorderRectWidth);
 
     NS_ADDREF(*aValue = val);
@@ -2286,9 +2286,9 @@ nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    SetValueToCoord(valX, radiusX,
+    SetValueToCoord(valX, radiusX, PR_TRUE,
                     &nsComputedDOMStyle::GetFrameBorderRectWidth);
-    SetValueToCoord(valY, radiusY,
+    SetValueToCoord(valY, radiusY, PR_TRUE,
                     &nsComputedDOMStyle::GetFrameBorderRectWidth);
 
     NS_ADDREF(*aValue = valueList);
@@ -2403,7 +2403,7 @@ nsComputedDOMStyle::DoGetZIndex(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStylePosition()->mZIndex);
+  SetValueToCoord(val, GetStylePosition()->mZIndex, PR_FALSE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -2521,7 +2521,7 @@ nsComputedDOMStyle::DoGetLineHeight(nsIDOMCSSValue** aValue)
   if (GetLineHeightCoord(lineHeight)) {
     val->SetAppUnits(lineHeight);
   } else {
-    SetValueToCoord(val, GetStyleText()->mLineHeight,
+    SetValueToCoord(val, GetStyleText()->mLineHeight, PR_TRUE,
                     nsnull, nsCSSProps::kLineHeightKTable);
   }
 
@@ -2535,7 +2535,7 @@ nsComputedDOMStyle::DoGetVerticalAlign(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleTextReset()->mVerticalAlign,
+  SetValueToCoord(val, GetStyleTextReset()->mVerticalAlign, PR_FALSE,
                   &nsComputedDOMStyle::GetLineHeightCoord,
                   nsCSSProps::kVerticalAlignKTable);
 
@@ -2590,7 +2590,7 @@ nsComputedDOMStyle::DoGetTextIndent(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleText()->mTextIndent,
+  SetValueToCoord(val, GetStyleText()->mTextIndent, PR_FALSE,
                   &nsComputedDOMStyle::GetCBContentWidth);
 
   NS_ADDREF(*aValue = val);
@@ -2637,7 +2637,7 @@ nsComputedDOMStyle::DoGetLetterSpacing(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleText()->mLetterSpacing);
+  SetValueToCoord(val, GetStyleText()->mLetterSpacing, PR_FALSE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -2960,8 +2960,7 @@ nsComputedDOMStyle::DoGetBorderImage(nsIDOMCSSValue** aValue)
       delete valueList;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    SetValueToCoord(valSplit, border->mBorderImageSplit.Get(side), nsnull,
-                    nsnull);
+    SetValueToCoord(valSplit, border->mBorderImageSplit.Get(side), PR_TRUE);
   }
 
   // copy of border-width
@@ -3332,14 +3331,14 @@ nsComputedDOMStyle::DoGetHeight(nsIDOMCSSValue** aValue)
 
     nscoord minHeight =
       StyleCoordToNSCoord(positionData->mMinHeight,
-                          &nsComputedDOMStyle::GetCBContentHeight, 0);
+                          &nsComputedDOMStyle::GetCBContentHeight, 0, PR_TRUE);
 
     nscoord maxHeight =
       StyleCoordToNSCoord(positionData->mMaxHeight,
                           &nsComputedDOMStyle::GetCBContentHeight,
-                          nscoord_MAX);
+                          nscoord_MAX, PR_TRUE);
 
-    SetValueToCoord(val, positionData->mHeight, nsnull, nsnull,
+    SetValueToCoord(val, positionData->mHeight, PR_TRUE, nsnull, nsnull,
                     minHeight, maxHeight);
   }
 
@@ -3374,14 +3373,14 @@ nsComputedDOMStyle::DoGetWidth(nsIDOMCSSValue** aValue)
 
     nscoord minWidth =
       StyleCoordToNSCoord(positionData->mMinWidth,
-                          &nsComputedDOMStyle::GetCBContentWidth, 0);
+                          &nsComputedDOMStyle::GetCBContentWidth, 0, PR_TRUE);
 
     nscoord maxWidth =
       StyleCoordToNSCoord(positionData->mMaxWidth,
                           &nsComputedDOMStyle::GetCBContentWidth,
-                          nscoord_MAX);
+                          nscoord_MAX, PR_TRUE);
 
-    SetValueToCoord(val, positionData->mWidth, nsnull,
+    SetValueToCoord(val, positionData->mWidth, PR_TRUE, nsnull,
                     nsCSSProps::kWidthKTable, minWidth, maxWidth);
   }
 
@@ -3395,7 +3394,7 @@ nsComputedDOMStyle::DoGetMaxHeight(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStylePosition()->mMaxHeight,
+  SetValueToCoord(val, GetStylePosition()->mMaxHeight, PR_TRUE,
                   &nsComputedDOMStyle::GetCBContentHeight);
 
   NS_ADDREF(*aValue = val);
@@ -3408,7 +3407,7 @@ nsComputedDOMStyle::DoGetMaxWidth(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStylePosition()->mMaxWidth,
+  SetValueToCoord(val, GetStylePosition()->mMaxWidth, PR_TRUE,
                   &nsComputedDOMStyle::GetCBContentWidth,
                   nsCSSProps::kWidthKTable);
 
@@ -3422,7 +3421,7 @@ nsComputedDOMStyle::DoGetMinHeight(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStylePosition()->mMinHeight,
+  SetValueToCoord(val, GetStylePosition()->mMinHeight, PR_TRUE,
                   &nsComputedDOMStyle::GetCBContentHeight);
 
   NS_ADDREF(*aValue = val);
@@ -3435,7 +3434,7 @@ nsComputedDOMStyle::DoGetMinWidth(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStylePosition()->mMinWidth,
+  SetValueToCoord(val, GetStylePosition()->mMinWidth, PR_TRUE,
                   &nsComputedDOMStyle::GetCBContentWidth,
                   nsCSSProps::kWidthKTable);
 
@@ -3611,7 +3610,7 @@ nsComputedDOMStyle::GetRelativeOffset(mozilla::css::Side aSide,
     baseGetter = &nsComputedDOMStyle::GetCBContentHeight;
   }
 
-  val->SetAppUnits(sign * StyleCoordToNSCoord(coord, baseGetter, 0));
+  val->SetAppUnits(sign * StyleCoordToNSCoord(coord, baseGetter, 0, PR_FALSE));
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -3624,7 +3623,7 @@ nsComputedDOMStyle::GetStaticOffset(mozilla::css::Side aSide, nsIDOMCSSValue** a
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStylePosition()->mOffset.Get(aSide));
+  SetValueToCoord(val, GetStylePosition()->mOffset.Get(aSide), PR_FALSE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -3637,7 +3636,7 @@ nsComputedDOMStyle::GetPaddingWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue*
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   if (!mInnerFrame) {
-    SetValueToCoord(val, GetStylePadding()->mPadding.Get(aSide));
+    SetValueToCoord(val, GetStylePadding()->mPadding.Get(aSide), PR_TRUE);
   } else {
     AssertFlushedPendingReflows();
 
@@ -3778,7 +3777,7 @@ nsComputedDOMStyle::GetMarginWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue**
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   if (!mInnerFrame) {
-    SetValueToCoord(val, GetStyleMargin()->mMargin.Get(aSide));
+    SetValueToCoord(val, GetStyleMargin()->mMargin.Get(aSide), PR_FALSE);
   } else {
     AssertFlushedPendingReflows();
 
@@ -3803,57 +3802,10 @@ nsComputedDOMStyle::GetBorderStyleFor(mozilla::css::Side aSide, nsIDOMCSSValue**
   return NS_OK;
 }
 
-struct StyleCoordSerializeCalcOps {
-  StyleCoordSerializeCalcOps(nsAString& aResult)
-    : mResult(aResult)
-  {
-  }
-
-  typedef nsStyleCoord input_type;
-  typedef nsStyleCoord::Array input_array_type;
-
-  static nsCSSUnit GetUnit(const input_type& aValue) {
-    if (aValue.IsCalcUnit()) {
-      return css::ConvertCalcUnit(aValue.GetUnit());
-    }
-    return eCSSUnit_Null;
-  }
-
-  void Append(const char* aString)
-  {
-    mResult.AppendASCII(aString);
-  }
-
-  void AppendLeafValue(const input_type& aValue)
-  {
-    nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
-    if (aValue.GetUnit() == eStyleUnit_Percent) {
-      val->SetPercent(aValue.GetPercentValue());
-    } else {
-      NS_ABORT_IF_FALSE(aValue.GetUnit() == eStyleUnit_Coord,
-                        "unexpected unit");
-      val->SetAppUnits(aValue.GetCoordValue());
-    }
-
-    nsAutoString tmp;
-    val->GetCssText(tmp);
-    mResult.Append(tmp);
-  }
-
-  void AppendNumber(const input_type& aValue)
-  {
-    NS_ABORT_IF_FALSE(PR_FALSE,
-                      "should not have numbers in nsStyleCoord calc()");
-  }
-
-private:
-  nsAString &mResult;
-};
-
-
 void
 nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                     const nsStyleCoord& aCoord,
+                                    PRBool aClampNegativeCalc,
                                     PercentageBaseGetter aPercentageBaseGetter,
                                     const PRInt32 aTable[],
                                     nscoord aMinAppUnits,
@@ -3909,26 +3861,50 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       aValue->SetIdent(eCSSKeyword_none);
       break;
 
-    default:
-      if (aCoord.IsCalcUnit()) {
-        nscoord percentageBase;
-        if (!aCoord.CalcHasPercent()) {
-          nscoord val = nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
-          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
-        } else if (aPercentageBaseGetter &&
-                   (this->*aPercentageBaseGetter)(percentageBase)) {
-          nscoord val =
-            nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
-          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
-        } else {
-          nsAutoString tmp;
-          StyleCoordSerializeCalcOps ops(tmp);
-          css::SerializeCalc(aCoord, ops);
-          aValue->SetString(tmp); // not really SetString
+    case eStyleUnit_Calc:
+      nscoord percentageBase;
+      if (!aCoord.CalcHasPercent()) {
+        nscoord val = nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
+        if (aClampNegativeCalc && val < 0) {
+          NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
+                            "parser should have rejected value");
+          val = 0;
         }
+        aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
+      } else if (aPercentageBaseGetter &&
+                 (this->*aPercentageBaseGetter)(percentageBase)) {
+        nscoord val =
+          nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+        if (aClampNegativeCalc && val < 0) {
+          NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
+                            "parser should have rejected value");
+          val = 0;
+        }
+        aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
       } else {
-        NS_ERROR("Can't handle this unit");
+        nsStyleCoord::Calc *calc = aCoord.GetCalcValue();
+        nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
+        nsAutoString tmp, result;
+
+        result.AppendLiteral("-moz-calc(");
+
+        val->SetAppUnits(calc->mLength);
+        val->GetCssText(tmp);
+        result.Append(tmp);
+
+        result.AppendLiteral(" + ");
+
+        val->SetPercent(calc->mPercent);
+        val->GetCssText(tmp);
+        result.Append(tmp);
+
+        result.AppendLiteral(")");
+
+        aValue->SetString(result); // not really SetString
       }
+      break;
+    default:
+      NS_ERROR("Can't handle this unit");
       break;
   }
 }
@@ -3936,7 +3912,8 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
 nscoord
 nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
                                         PercentageBaseGetter aPercentageBaseGetter,
-                                        nscoord aDefaultValue)
+                                        nscoord aDefaultValue,
+                                        PRBool aClampNegativeCalc)
 {
   NS_PRECONDITION(aPercentageBaseGetter, "Must have a percentage base getter");
   if (aCoord.GetUnit() == eStyleUnit_Coord) {
@@ -3945,7 +3922,14 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
   if (aCoord.GetUnit() == eStyleUnit_Percent || aCoord.IsCalcUnit()) {
     nscoord percentageBase;
     if ((this->*aPercentageBaseGetter)(percentageBase)) {
-      return nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+      nscoord result =
+        nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+      if (aClampNegativeCalc && result < 0) {
+        NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(),
+                          "parser should have rejected value");
+        result = 0;
+      }
+      return result;
     }
     // Fall through to returning aDefaultValue if we have no percentage base.
   }
@@ -4191,7 +4175,7 @@ nsComputedDOMStyle::DoGetStrokeDasharray(nsIDOMCSSValue** aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    SetValueToCoord(dash, svg->mStrokeDasharray[i]);
+    SetValueToCoord(dash, svg->mStrokeDasharray[i], PR_TRUE);
   }
 
   NS_ADDREF(*aValue = valueList);
@@ -4204,7 +4188,7 @@ nsComputedDOMStyle::DoGetStrokeDashoffset(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleSVG()->mStrokeDashoffset);
+  SetValueToCoord(val, GetStyleSVG()->mStrokeDashoffset, PR_FALSE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -4216,7 +4200,7 @@ nsComputedDOMStyle::DoGetStrokeWidth(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleSVG()->mStrokeWidth);
+  SetValueToCoord(val, GetStyleSVG()->mStrokeWidth, PR_TRUE);
 
   NS_ADDREF(*aValue = val);
   return NS_OK;
@@ -4826,10 +4810,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(border_left_colors,            BorderLeftColors),
     COMPUTED_STYLE_MAP_ENTRY(border_right_colors,           BorderRightColors),
     COMPUTED_STYLE_MAP_ENTRY(border_top_colors,             BorderTopColors),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_border_radius_bottomLeft, BorderRadiusBottomLeft),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_border_radius_bottomRight,BorderRadiusBottomRight),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_border_radius_topLeft,    BorderRadiusTopLeft),
-    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_border_radius_topRight,   BorderRadiusTopRight),
+    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_bottom_left_radius, BorderBottomLeftRadius),
+    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_bottom_right_radius,BorderBottomRightRadius),
+    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_top_left_radius,    BorderTopLeftRadius),
+    COMPUTED_STYLE_MAP_ENTRY_LAYOUT(border_top_right_radius,   BorderTopRightRadius),
     COMPUTED_STYLE_MAP_ENTRY(box_align,                     BoxAlign),
     COMPUTED_STYLE_MAP_ENTRY(box_direction,                 BoxDirection),
     COMPUTED_STYLE_MAP_ENTRY(box_flex,                      BoxFlex),

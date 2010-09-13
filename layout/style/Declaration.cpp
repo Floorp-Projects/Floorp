@@ -245,7 +245,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
-    case eCSSProperty__moz_border_radius:
+    case eCSSProperty_border_radius:
     case eCSSProperty__moz_outline_radius: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);

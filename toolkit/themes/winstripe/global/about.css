@@ -11,7 +11,7 @@ body {
   max-width: 50em;
   margin: 4em auto;
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
   background: -moz-Field;

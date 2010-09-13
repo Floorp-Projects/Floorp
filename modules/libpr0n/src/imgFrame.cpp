@@ -192,17 +192,6 @@ nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
   if (!AllowedImageSize(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  // Check to see if we are running OOM
-  nsCOMPtr<nsIMemory> mem;
-  NS_GetMemoryManager(getter_AddRefs(mem));
-  if (!mem)
-    return NS_ERROR_UNEXPECTED;
-
-  PRBool lowMemory;
-  mem->IsLowMemory(&lowMemory);
-  if (lowMemory)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   mOffset.MoveTo(aX, aY);
   mSize.SizeTo(aWidth, aHeight);
 
@@ -553,17 +542,6 @@ nsresult imgFrame::Extract(const nsIntRect& aRegion, imgFrame** aResult)
 
 nsresult imgFrame::ImageUpdated(const nsIntRect &aUpdateRect)
 {
-  // Check to see if we are running OOM
-  nsCOMPtr<nsIMemory> mem;
-  NS_GetMemoryManager(getter_AddRefs(mem));
-  if (!mem)
-    return NS_ERROR_UNEXPECTED;
-
-  PRBool lowMemory;
-  mem->IsLowMemory(&lowMemory);
-  if (lowMemory)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   mDecoded.UnionRect(mDecoded, aUpdateRect);
 
   // clamp to bounds, in case someone sends a bogus updateRect (I'm looking at

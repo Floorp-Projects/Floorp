@@ -48,8 +48,7 @@ const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);
 
-function InstallTrigger(installerId, window) {
-  this.installerId = installerId;
+function InstallTrigger(window) {
   this.window = window;
 }
 
@@ -130,7 +129,7 @@ InstallTrigger.prototype = {
       params.icons.push(iconUrl ? iconUrl.spec : null);
     }
     // Add callback Id, done here, so only if we actually got here
-    params.callbackId = this.addCallback(aCallback, params.uris);
+    params.callbackId = manager.addCallback(aCallback, params.uris);
     // Send message
     return sendSyncMessage(MSG_INSTALL_ADDONS, params)[0];
   },
@@ -151,39 +150,6 @@ InstallTrigger.prototype = {
    */
   installChrome: function(aType, aUrl, aSkin) {
     return this.startSoftwareUpdate(aUrl);
-  },
-
-  // == Internal, hidden machinery ==
-
-  callbacks: {},
-
-  /**
-   * Adds a callback to the list of callbacks we may receive messages
-   * about from the parent process. We save them here; only callback IDs
-   * are sent over IPC.
-   *
-   * @param  callback
-   *         The callback function
-   * @param  urls
-   *         The urls this callback function will receive responses for.
-   *         After all the callbacks have arrived, we can forget about the
-   *         callback.
-   *
-   * @return The callback ID, an integer identifying this callback.
-   */
-  addCallback: function(aCallback, aUrls) {
-    if (!aCallback)
-      return -1;
-    var callbackId = 0;
-    while (callbackId in this.callbacks)
-      callbackId++;
-    this.callbacks[callbackId] = {
-      callback: aCallback,
-      urls: aUrls.slice(0), // Clone the urls for our own use (it lets
-                            // us know when no further callbacks will
-                            // occur)
-    };
-    return callbackId;
   },
 
   /**
@@ -223,15 +189,14 @@ InstallTrigger.prototype = {
 /**
  * Child part of InstallTrigger e10s handling.
  *
- * Sets up InstallTriggers on newly-created windows,
+ * Sets up InstallTrigger for newly-created windows,
  * that will relay messages for InstallTrigger
  * activity. We also process the parameters for
  * the InstallTrigger to proper parameters for
  * amIWebInstaller.
  */
 function InstallTriggerManager() {
-  this.installerIds = [];
-  this.nextInstallerId = 0;
+  this.callbacks = {};
 
   addMessageListener(MSG_INSTALL_CALLBACK, this);
 
@@ -240,11 +205,7 @@ function InstallTriggerManager() {
   var self = this;
   addEventListener("unload", function() {
     // Clean up all references, to help gc work quickly
-    for (var installerId in self.installerIds) {
-      self.installerIds[installerId].callbacks = null;
-      self.installerIds[installerId] = null;
-    }
-    self.installerIds = null;
+    self.callbacks = null;
   }, false);
 }
 
@@ -254,32 +215,53 @@ InstallTriggerManager.prototype = {
 
     // Need to make sure we are called on what we care about -
     // content windows. DOMWindowCreated is called on *all* HTMLDocuments,
-    // some of which belong to ChromeWindows or lack defaultView.content
-    // altogether.
+    // some of which belong to chrome windows or other special content.
     //
-    // Note about the syntax used here: |"wrappedJSObject" in window|
-    // will silently fail, without even letting us catch it as an
-    // exception, and checking in the way that we do check in some
-    // cases still throws an exception; see bug 582108 about both.
-    try {
-      if (!window || !window.wrappedJSObject) {
-        return;
-      }
-    }
-    catch(e) {
+    var uri = window.document.documentURIObject;
+    if (uri.scheme === "chrome" || uri.spec.split(":")[0] == "about") {
       return;
     }
 
-    // This event happens for each HTMLDocument, so it can happen more than
-    // once per Window. We only need to work once per Window though.
-    if (window.wrappedJSObject.InstallTrigger)
-        return;
+    window.wrappedJSObject.__defineGetter__("InstallTrigger", this.createInstallTrigger);
+  },
 
-    // Create the public object which web scripts can see
-    var installerId = this.nextInstallerId ++;
-    var installTrigger = new InstallTrigger(installerId, window);
-    this.installerIds[installerId] = installTrigger;
-    window.wrappedJSObject.InstallTrigger = installTrigger;
+  createInstallTrigger: function createInstallTrigger() {
+    // 'this' is the window itself. We do this in a getter, so that
+    // we create these objects only on demand (this is a potential
+    // concern, since otherwise we might add one per iframe, and
+    // keep them alive for as long as the tab is alive).
+    delete this.InstallTrigger; // remove getter
+    this.InstallTrigger = new InstallTrigger(this);
+    return this.InstallTrigger;
+  },
+
+  /**
+   * Adds a callback to the list of callbacks we may receive messages
+   * about from the parent process. We save them here; only callback IDs
+   * are sent over IPC.
+   *
+   * @param  callback
+   *         The callback function
+   * @param  urls
+   *         The urls this callback function will receive responses for.
+   *         After all the callbacks have arrived, we can forget about the
+   *         callback.
+   *
+   * @return The callback ID, an integer identifying this callback.
+   */
+  addCallback: function(aCallback, aUrls) {
+    if (!aCallback)
+      return -1;
+    var callbackId = 0;
+    while (callbackId in this.callbacks)
+      callbackId++;
+    this.callbacks[callbackId] = {
+      callback: aCallback,
+      urls: aUrls.slice(0), // Clone the urls for our own use (it lets
+                            // us know when no further callbacks will
+                            // occur)
+    };
+    return callbackId;
   },
 
   /**
@@ -288,17 +270,15 @@ InstallTriggerManager.prototype = {
    * all URLs are exhausted, can free the callbackId and linked stuff.
    *
    * @param  message
-   *         The IPC message. Contains IDs of the installer and the
-   *         callback.
+   *         The IPC message. Contains the callback ID.
    *
    */
   receiveMessage: function(aMessage) {
     var payload = aMessage.json;
-    var installer = this.installerIds[payload.installerId];
     var callbackId = payload.callbackId;
     var url = payload.url;
     var status = payload.status;
-    var callbackObj = installer.callbacks[callbackId];
+    var callbackObj = this.callbacks[callbackId];
     if (!callbackObj)
       return;
     try {
@@ -309,9 +289,9 @@ InstallTriggerManager.prototype = {
     }
     callbackObj.urls.splice(callbackObj.urls.indexOf(url), 1);
     if (callbackObj.urls.length == 0)
-      installer.callbacks[callbackId] = null;
+      this.callbacks[callbackId] = null;
   },
 };
 
-new InstallTriggerManager();
+var manager = new InstallTriggerManager();
 

@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -24,43 +24,36 @@ extern  void vp8_init_scan_order_mask();
 void vp8_update_mode_info_border(MODE_INFO *mi, int rows, int cols)
 {
     int i;
-    vpx_memset(mi - cols - 1, 0, sizeof(MODE_INFO) * cols + 1);
+    vpx_memset(mi - cols - 2, 0, sizeof(MODE_INFO) * (cols + 1));
 
     for (i = 0; i < rows; i++)
     {
         vpx_memset(&mi[i*cols-1], 0, sizeof(MODE_INFO));
     }
 }
+
 void vp8_de_alloc_frame_buffers(VP8_COMMON *oci)
 {
+    int i;
+
+    for (i = 0; i < NUM_YV12_BUFFERS; i++)
+        vp8_yv12_de_alloc_frame_buffer(&oci->yv12_fb[i]);
+
     vp8_yv12_de_alloc_frame_buffer(&oci->temp_scale_frame);
-    vp8_yv12_de_alloc_frame_buffer(&oci->new_frame);
-    vp8_yv12_de_alloc_frame_buffer(&oci->last_frame);
-    vp8_yv12_de_alloc_frame_buffer(&oci->golden_frame);
-    vp8_yv12_de_alloc_frame_buffer(&oci->alt_ref_frame);
     vp8_yv12_de_alloc_frame_buffer(&oci->post_proc_buffer);
 
-    vpx_free(oci->above_context[Y1CONTEXT]);
-    vpx_free(oci->above_context[UCONTEXT]);
-    vpx_free(oci->above_context[VCONTEXT]);
-    vpx_free(oci->above_context[Y2CONTEXT]);
+    vpx_free(oci->above_context);
     vpx_free(oci->mip);
 
-    oci->above_context[Y1CONTEXT] = 0;
-    oci->above_context[UCONTEXT]  = 0;
-    oci->above_context[VCONTEXT]  = 0;
-    oci->above_context[Y2CONTEXT] = 0;
+    oci->above_context = 0;
     oci->mip = 0;
 
-    // Structure used to minitor GF useage
-    if (oci->gf_active_flags != 0)
-        vpx_free(oci->gf_active_flags);
-
-    oci->gf_active_flags = 0;
 }
 
 int vp8_alloc_frame_buffers(VP8_COMMON *oci, int width, int height)
 {
+    int i;
+
     vp8_de_alloc_frame_buffers(oci);
 
     // our internal buffers are always multiples of 16
@@ -71,32 +64,28 @@ int vp8_alloc_frame_buffers(VP8_COMMON *oci, int width, int height)
         height += 16 - (height & 0xf);
 
 
+    for (i = 0; i < NUM_YV12_BUFFERS; i++)
+    {
+      oci->fb_idx_ref_cnt[0] = 0;
+
+      if (vp8_yv12_alloc_frame_buffer(&oci->yv12_fb[i],  width, height, VP8BORDERINPIXELS) < 0)
+        {
+            vp8_de_alloc_frame_buffers(oci);
+            return ALLOC_FAILURE;
+        }
+    }
+
+    oci->new_fb_idx = 0;
+    oci->lst_fb_idx = 1;
+    oci->gld_fb_idx = 2;
+    oci->alt_fb_idx = 3;
+
+    oci->fb_idx_ref_cnt[0] = 1;
+    oci->fb_idx_ref_cnt[1] = 1;
+    oci->fb_idx_ref_cnt[2] = 1;
+    oci->fb_idx_ref_cnt[3] = 1;
+
     if (vp8_yv12_alloc_frame_buffer(&oci->temp_scale_frame,   width, 16, VP8BORDERINPIXELS) < 0)
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-
-    if (vp8_yv12_alloc_frame_buffer(&oci->new_frame,   width, height, VP8BORDERINPIXELS) < 0)
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    if (vp8_yv12_alloc_frame_buffer(&oci->last_frame,  width, height, VP8BORDERINPIXELS) < 0)
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    if (vp8_yv12_alloc_frame_buffer(&oci->golden_frame, width, height, VP8BORDERINPIXELS) < 0)
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    if (vp8_yv12_alloc_frame_buffer(&oci->alt_ref_frame, width, height, VP8BORDERINPIXELS) < 0)
     {
         vp8_de_alloc_frame_buffers(oci);
         return ALLOC_FAILURE;
@@ -123,53 +112,15 @@ int vp8_alloc_frame_buffers(VP8_COMMON *oci, int width, int height)
     oci->mi = oci->mip + oci->mode_info_stride + 1;
 
 
-    oci->above_context[Y1CONTEXT] = vpx_calloc(sizeof(ENTROPY_CONTEXT) * oci->mb_cols * 4 , 1);
+    oci->above_context = vpx_calloc(sizeof(ENTROPY_CONTEXT_PLANES) * oci->mb_cols, 1);
 
-    if (!oci->above_context[Y1CONTEXT])
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    oci->above_context[UCONTEXT]  = vpx_calloc(sizeof(ENTROPY_CONTEXT) * oci->mb_cols * 2 , 1);
-
-    if (!oci->above_context[UCONTEXT])
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    oci->above_context[VCONTEXT]  = vpx_calloc(sizeof(ENTROPY_CONTEXT) * oci->mb_cols * 2 , 1);
-
-    if (!oci->above_context[VCONTEXT])
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    oci->above_context[Y2CONTEXT] = vpx_calloc(sizeof(ENTROPY_CONTEXT) * oci->mb_cols     , 1);
-
-    if (!oci->above_context[Y2CONTEXT])
+    if (!oci->above_context)
     {
         vp8_de_alloc_frame_buffers(oci);
         return ALLOC_FAILURE;
     }
 
     vp8_update_mode_info_border(oci->mi, oci->mb_rows, oci->mb_cols);
-
-    // Structures used to minitor GF usage
-    if (oci->gf_active_flags != 0)
-        vpx_free(oci->gf_active_flags);
-
-    oci->gf_active_flags = (unsigned char *)vpx_calloc(oci->mb_rows * oci->mb_cols, 1);
-
-    if (!oci->gf_active_flags)
-    {
-        vp8_de_alloc_frame_buffers(oci);
-        return ALLOC_FAILURE;
-    }
-
-    oci->gf_active_count = oci->mb_rows * oci->mb_cols;
 
     return 0;
 }

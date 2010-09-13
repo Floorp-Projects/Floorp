@@ -2069,7 +2069,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         uintN p = statics.getParenCount();
         uintN argc = 1 + p + 2;
 
-        if (!rdata.args.pushed() && !cx->stack().pushInvokeArgs(cx, argc, rdata.args))
+        if (!rdata.args.pushed() && !cx->stack().pushInvokeArgs(cx, argc, &rdata.args))
             return false;
 
         PreserveRegExpStatics save(cx);
@@ -2382,7 +2382,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     /* lambda(matchStr, matchStart, textstr) */
     static const uint32 lambdaArgc = 3;
-    if (!cx->stack().pushInvokeArgs(cx, lambdaArgc, rdata.args))
+    if (!cx->stack().pushInvokeArgs(cx, lambdaArgc, &rdata.args))
         return false;
 
     CallArgs &args = rdata.args;
@@ -3285,19 +3285,6 @@ js_String(JSContext *cx, uintN argc, Value *vp)
     }
     return true;
 }
-
-#ifdef JS_TRACER
-
-JSObject* FASTCALL
-js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewObjectWithClassProto(cx, &js_StringClass, proto, StringValue(str));
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
-                     nanojit::ACCSET_STORE_ANY)
-
-#endif /* !JS_TRACER */
 
 static JSBool
 str_fromCharCode(JSContext *cx, uintN argc, Value *vp)

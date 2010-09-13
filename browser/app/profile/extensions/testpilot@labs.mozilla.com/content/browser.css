@@ -172,7 +172,7 @@ image.study-result {
     color: white;
     font-weight: bold;
     padding: 2px;
-    -moz-border-radius: 10000px;
+    border-radius: 10000px;
     margin-right: 25px;
     margin-bottom: 13px;
 }

@@ -90,7 +90,8 @@ public:
   ImageListener(nsImageDocument* aDocument);
   virtual ~ImageListener();
 
-  NS_DECL_NSIREQUESTOBSERVER
+  /* nsIRequestObserver */
+  NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt);
 };
 
 class nsImageDocument : public nsMediaDocument,
@@ -123,6 +124,7 @@ public:
 
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult aStatus, const PRUnichar *aStatusArg);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -235,43 +237,6 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   imageLoader->LoadImageWithChannel(channel, getter_AddRefs(mNextStream));
 
   return nsMediaDocumentStreamListener::OnStartRequest(request, ctxt);
-}
-
-NS_IMETHODIMP
-ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-                             nsresult status)
-{
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
-  nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
-  imgDoc->UpdateTitleAndCharset();
-  
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageContent);
-  if (imageLoader) {
-    imgDoc->mObservingImageLoader = PR_FALSE;
-    imageLoader->RemoveObserver(imgDoc);
-  }
-
-  // |status| is NS_ERROR_PARSED_DATA_CACHED if the image was found in
-  // the cache (bug 177747 comment 51, bug 475344).
-  if (status == NS_ERROR_PARSED_DATA_CACHED) {
-    status = NS_OK;
-  }
-
-  // mImageContent can be null if the document is already destroyed
-  if (NS_FAILED(status) && imgDoc->mStringBundle && imgDoc->mImageContent) {
-    nsCAutoString src;
-    imgDoc->mDocumentURI->GetSpec(src);
-    NS_ConvertUTF8toUTF16 srcString(src);
-    const PRUnichar* formatString[] = { srcString.get() };
-    nsXPIDLString errorMsg;
-    NS_NAMED_LITERAL_STRING(str, "InvalidImage");
-    imgDoc->mStringBundle->FormatStringFromName(str.get(), formatString, 1,
-                                                getter_Copies(errorMsg));
-    
-    imgDoc->mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, PR_FALSE);
-  }
-
-  return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
 }
 
 
@@ -576,6 +541,36 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
     NS_NewRunnableMethod(this, &nsImageDocument::DefaultCheckOverflowing);
   nsContentUtils::AddScriptRunner(runnable);
   UpdateTitleAndCharset();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageDocument::OnStopDecode(imgIRequest *aRequest,
+                              nsresult aStatus,
+                              const PRUnichar *aStatusArg)
+{
+  UpdateTitleAndCharset();
+
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
+  if (imageLoader) {
+    mObservingImageLoader = PR_FALSE;
+    imageLoader->RemoveObserver(this);
+  }
+
+  // mImageContent can be null if the document is already destroyed
+  if (NS_FAILED(aStatus) && mStringBundle && mImageContent) {
+    nsCAutoString src;
+    mDocumentURI->GetSpec(src);
+    NS_ConvertUTF8toUTF16 srcString(src);
+    const PRUnichar* formatString[] = { srcString.get() };
+    nsXPIDLString errorMsg;
+    NS_NAMED_LITERAL_STRING(str, "InvalidImage");
+    mStringBundle->FormatStringFromName(str.get(), formatString, 1,
+                                        getter_Copies(errorMsg));
+
+    mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, PR_FALSE);
+  }
 
   return NS_OK;
 }

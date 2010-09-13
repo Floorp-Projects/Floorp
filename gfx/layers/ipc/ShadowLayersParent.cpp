@@ -229,7 +229,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       const CommonLayerAttributes& common = attrs.common();
       layer->SetVisibleRegion(common.visibleRegion());
-      layer->SetIsOpaqueContent(common.isOpaqueContent());
+      layer->SetContentFlags(common.contentFlags());
       layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
       layer->SetTransform(common.transform());

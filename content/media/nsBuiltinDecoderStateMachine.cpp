@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: ML 1.1/GPL 2.0/LGPL 2.1
@@ -362,6 +361,8 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   PRUint64 audioDuration = 0;
   PRInt64 audioStartTime = -1;
   PRUint32 channels, rate;
+  float volume = -1;
+  PRBool setVolume;
   {
     MonitorAutoEnter mon(mDecoder->GetMonitor());
     mAudioCompleted = PR_FALSE;
@@ -395,8 +396,21 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       {
         break;
       }
+
+      // We only want to go to the expense of taking the audio monitor and
+      // changing the volume if it's the first time we've entered the loop
+      // (as we must sync the volume in case it's changed since the
+      // nsAudioStream was created) or if the volume has changed.
+      setVolume = volume != mVolume;
+      volume = mVolume;
     }
 
+    if (setVolume) {
+      MonitorAutoEnter audioMon(mAudioMonitor);
+      if (mAudioStream) {
+        mAudioStream->SetVolume(volume);
+      }
+    }
     NS_ASSERTION(mReader->mAudioQueue.GetSize() > 0,
                  "Should have data to play");
     // See if there's missing samples in the audio stream. If there is, push
@@ -678,16 +692,8 @@ nsHTMLMediaElement::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameSt
 void nsBuiltinDecoderStateMachine::SetVolume(float volume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  {
-    MonitorAutoEnter audioMon(mAudioMonitor);
-    if (mAudioStream) {
-      mAudioStream->SetVolume(volume);
-    }
-  }
-  {
-    MonitorAutoEnter mon(mDecoder->GetMonitor());
-    mVolume = volume;
-  }
+  MonitorAutoEnter mon(mDecoder->GetMonitor());
+  mVolume = volume;
 }
 
 float nsBuiltinDecoderStateMachine::GetCurrentTime()
@@ -973,6 +979,15 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         PRInt64 seekTime = mSeekTime;
         mDecoder->StopProgressUpdates();
 
+        PRBool currentTimeChanged = false;
+        if (mCurrentFrameTime != seekTime - mStartTime) {
+          currentTimeChanged = true;
+          // If in the midst of a seek, report the requested seek time
+          // as the current time as required by step 8 of 4.8.10.9 'Seeking'
+          // in the WHATWG spec.
+          UpdatePlaybackPosition(seekTime);
+        }
+
         // SeekingStarted will do a UpdateReadyStateForData which will
         // inform the element and its users that we have no frames
         // to display
@@ -982,7 +997,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
             NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStarted);
           NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
         }
-        if (mCurrentFrameTime != mSeekTime - mStartTime) {
+        if (currentTimeChanged) {
           // The seek target is different than the current playback position,
           // we'll need to seek the playback position, so shutdown our decode
           // and audio threads.

@@ -143,9 +143,6 @@ const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
 const CRC_ERROR = 4;
 
-const PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME = PREF_APP_UPDATE_CERTS_BRANCH +
-                                               "1.invalidName";
-
 const ADDON_ID_SUFFIX = "@appupdatetest.mozilla.org";
 const ADDON_PREP_DIR = "appupdateprep";
 // Preference for storing add-ons that are disabled by the tests to prevent them
@@ -158,7 +155,7 @@ const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
                       "updateversion_1", "updateversion_2",
                       "userdisabled_1", "userdisabled_2" ];
 
-const DEBUG_DUMP = false;
+const DEBUG = false;
 
 const TEST_TIMEOUT = 30000; // 30 seconds
 var gTimeoutTimer;
@@ -180,7 +177,7 @@ var gDisableNoUpdateAddon = false;
 #include ../shared.js
 
 function debugDump(msg) {
-  if (DEBUG_DUMP) {
+  if (DEBUG) {
     dump("*** " + msg + "\n");
   }
 }
@@ -713,8 +710,9 @@ function setupPrefs() {
   gAppUpdateChannel = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
   setUpdateChannel();
 
-  // Uncomment for debugging
-//  Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true)
+  if (DEBUG) {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true)
+  }
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
     gAppUpdateURL = Services.prefs.setIntPref(PREF_APP_UPDATE_URL_OVERRIDE);
@@ -734,6 +732,7 @@ function setupPrefs() {
   debugDump("extensions.update.url: " + extUpdateUrl);
 
   Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
+  Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
 }
 
 /**
@@ -771,6 +770,10 @@ function resetPrefs() {
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_IDLETIME)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_IDLETIME);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_PROMPTWAITTIME)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_PROMPTWAITTIME);
   }
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_DETAILS)) {
@@ -1145,46 +1148,38 @@ var certErrorsPrefObserver = {
  * nsIObserver for receiving window open and close notifications.
  */
 var gWindowObserver = {
-  loaded: false,
-
   observe: function WO_observe(aSubject, aTopic, aData) {
     let win = aSubject.QueryInterface(AUS_Ci.nsIDOMEventTarget);
 
     if (aTopic == "domwindowclosed") {
-      if (win.location == URI_UPDATE_PROMPT_DIALOG) {
-        // Allow tests the ability to provide their own function (it must be
-        // named finishTest) for finishing the test.
-        try {
-          finishTest();
-        }
-        catch (e) {
-          finishTestDefault();
-        }
+      if (win.location != URI_UPDATE_PROMPT_DIALOG) {
+        debugDump("gWindowObserver:observe - domwindowclosed event for " +
+                  "window not being tested - location: " + win.location +
+                  "... returning early");
+        return;
       }
-      return;
-    }
-
-    // Defensive measure to prevent adding multiple listeners.
-    if (this.loaded) {
-      // This should never happen but if it does this will provide a clue for
-      // diagnosing the cause.
-      ok(false, "Unexpected gWindowObserver:observe - called with aTopic = " +
-         aTopic + "... returning early");
+      // Allow tests the ability to provide their own function (it must be
+      // named finishTest) for finishing the test.
+      try {
+        finishTest();
+      }
+      catch (e) {
+        finishTestDefault();
+      }
       return;
     }
 
     win.addEventListener("load", function onLoad() {
-      // Defensive measure to prevent windows we shouldn't see from breaking
-      // a test.
+      win.removeEventListener("load", onLoad, false);
+      // Ignore windows other than the update UI window.
       if (win.location != URI_UPDATE_PROMPT_DIALOG) {
-        // This should never happen.
-        ok(false, "Unexpected load event - win.location got: " + location +
-           ", expected: " + URI_UPDATE_PROMPT_DIALOG + "... returning early");
+        debugDump("gWindowObserver:observe:onLoad - load event for window " +
+                  "not being tested - location: " + win.location +
+                  "... returning early");
         return;
       }
 
-      // Defensive measure to prevent an unexpected wizard page from breaking
-      // a test.
+      // The first wizard page should always be the dummy page.
       let pageid = win.document.documentElement.currentPage.pageid;
       if (pageid != PAGEID_DUMMY) {
         // This should never happen but if it does this will provide a clue
@@ -1194,7 +1189,6 @@ var gWindowObserver = {
         return;
       }
 
-      win.removeEventListener("load", onLoad, false);
       gTimeoutTimer = AUS_Cc["@mozilla.org/timer;1"].
                       createInstance(AUS_Ci.nsITimer);
       gTimeoutTimer.initWithCallback(finishTestTimeout, TEST_TIMEOUT,
@@ -1204,7 +1198,5 @@ var gWindowObserver = {
       gDocElem = gWin.document.documentElement;
       gDocElem.addEventListener("pageshow", onPageShowDefault, false);
     }, false);
-
-    this.loaded = true;
   }
 };

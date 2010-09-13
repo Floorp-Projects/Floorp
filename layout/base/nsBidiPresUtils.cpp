@@ -627,14 +627,14 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*       aCurrentFrame)
   for (nsIFrame* childFrame = aCurrentFrame; childFrame;
        childFrame = childFrame->GetNextSibling()) {
 
-    // If the real frame for a placeholder is an inline container, we need to
-    // drill down into it and include its contents in Bidi resolution. If it
-    // isn't an inline container, we just use the placeholder.
+    // If the real frame for a placeholder is a first letter frame, we need to
+    // drill down into it and include its contents in Bidi resolution.
+    // If not, we just use the placeholder.
     nsIFrame* frame = childFrame;
     if (nsGkAtoms::placeholderFrame == childFrame->GetType()) {
       nsIFrame* realFrame =
         nsPlaceholderFrame::GetRealFrameForPlaceholder(childFrame);
-      if (realFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+      if (realFrame->GetType() == nsGkAtoms::letterFrame) {
         frame = realFrame;
       }
     }
@@ -843,8 +843,10 @@ nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame)
 {
   nsIFrame* firstLeaf = aFrame;
   while (!IsBidiLeaf(firstLeaf)) {
-    firstLeaf = 
-      nsPlaceholderFrame::GetRealFrameFor(firstLeaf->GetFirstChild(nsnull));
+    nsIFrame* firstChild = firstLeaf->GetFirstChild(nsnull);
+    nsIFrame* realFrame = nsPlaceholderFrame::GetRealFrameFor(firstChild);
+    firstLeaf = (realFrame->GetType() == nsGkAtoms::letterFrame) ?
+                 realFrame : firstChild;
   }
   return NS_GET_EMBEDDING_LEVEL(firstLeaf);
 }

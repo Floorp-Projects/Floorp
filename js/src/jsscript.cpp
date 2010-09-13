@@ -66,6 +66,7 @@
 #endif
 #include "methodjit/MethodJIT.h"
 
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -162,7 +163,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
             if (!script)
                 return JS_FALSE;
 
-            script->version = JSVERSION_DEFAULT;
+            script->setVersion(JSVERSION_DEFAULT);
             script->noScriptRval = true;
             script->code[0] = JSOP_STOP;
             script->code[1] = SRC_NULL;
@@ -176,8 +177,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
 
     if (xdr->mode == JSXDR_ENCODE) {
         prologLength = script->main - script->code;
-        JS_ASSERT((int16)script->version != JSVERSION_UNKNOWN);
-        version = (uint32)script->version | (script->nfixed << 16);
+        JS_ASSERT(script->getVersion() != JSVERSION_UNKNOWN);
+        version = (uint32)script->getVersion() | (script->nfixed << 16);
         lineno = (uint32)script->lineno;
         nslots = (uint32)script->nslots;
         nslots = (uint32)((script->staticLevel << 16) | script->nslots);
@@ -235,7 +236,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
             return JS_FALSE;
 
         script->main += prologLength;
-        script->version = JSVersion(version & 0xffff);
+        script->setVersion(JSVersion(version & 0xffff));
         script->nfixed = uint16(version >> 16);
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
@@ -880,7 +881,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
 
     PodZero(script);
     script->length = length;
-    script->version = cx->version;
+    script->setVersion(cx->findVersion());
 
     cursor = (uint8 *)script + sizeof(JSScript);
     if (nobjects != 0) {
@@ -1249,7 +1250,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     if (!cx->runtime->gcRunning) {
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
-        if (!(fp && (fp->flags & JSFRAME_EVAL))) {
+        if (!(fp && fp->isEvalFrame())) {
             JS_PROPERTY_CACHE(cx).purgeForScript(script);
 
 #ifdef CHECK_SCRIPT_OWNER
@@ -1434,8 +1435,8 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 uintN
 js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp)
 {
-    return js_PCToLineNumber(cx, fp->getScript(),
-                             fp->hasIMacroPC() ? fp->getIMacroPC() : fp->pc(cx));
+    return js_PCToLineNumber(cx, fp->script(),
+                             fp->hasImacropc() ? fp->imacropc() : fp->pc(cx));
 }
 
 uintN

@@ -88,7 +88,8 @@ public:
     virtual nsresult EvictEntries(const char * clientID);
     
     void             SetCapacity(PRInt32  capacity);
- 
+
+    bool             EntryIsTooBig(PRInt64 entrySize);
 private:
     friend class nsMemoryCacheDeviceInfo;
     enum      { DELETE_ENTRY        = PR_TRUE,

@@ -78,6 +78,7 @@ _TEST_FILES = \
 		frame2.html \
 		frame3.html \
 		goback.html \
+		file_bug534178.html \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))

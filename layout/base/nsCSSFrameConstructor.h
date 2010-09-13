@@ -73,9 +73,6 @@ class nsPageContentFrame;
 struct PendingBinding;
 class nsRefreshDriver;
 
-typedef void (nsLazyFrameConstructionCallback)
-             (nsIContent* aContent, nsIFrame* aFrame, void* aArg);
-
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
 
@@ -242,18 +239,8 @@ public:
                                 nsIContent*     aContent2,
                                 PRInt32         aStateMask);
 
-  // Process the children of aContent and indicate that frames should be
-  // created for them. This is used for lazily built content such as that
-  // inside popups so that it is only created when the popup is opened.
-  // If aIsSynch is true, this method constructs the frames synchronously.
-  // aCallback will be called with three arguments, the first is the value
-  // of aContent, the second is aContent's primary frame, and the third is
-  // the value of aArg.
-  // aCallback will always be called even if the children of aContent had
-  // been generated earlier.
-  nsresult AddLazyChildren(nsIContent* aContent,
-                           nsLazyFrameConstructionCallback* aCallback,
-                           void* aArg, PRBool aIsSynch = PR_FALSE);
+  // generate the child frames and process bindings
+  nsresult GenerateChildFrames(nsIFrame* aFrame);
 
   // Should be called when a frame is going to be destroyed and
   // WillDestroyFrameTree hasn't been called yet.
@@ -1808,27 +1795,6 @@ public:
   friend class nsFrameConstructorState;
 
 private:
-
-  class LazyGenerateChildrenEvent;
-  friend class LazyGenerateChildrenEvent;
-
-  // See comments of nsCSSFrameConstructor::AddLazyChildren()
-  class LazyGenerateChildrenEvent : public nsRunnable {
-  public:
-    NS_DECL_NSIRUNNABLE
-    LazyGenerateChildrenEvent(nsIContent *aContent,
-                              nsIPresShell *aPresShell,
-                              nsLazyFrameConstructionCallback* aCallback,
-                              void* aArg)
-      : mContent(aContent), mPresShell(aPresShell), mCallback(aCallback), mArg(aArg)
-    {}
-
-  private:
-    nsCOMPtr<nsIContent> mContent;
-    nsCOMPtr<nsIPresShell> mPresShell;
-    nsLazyFrameConstructionCallback* mCallback;
-    void* mArg;
-  };
 
   nsIDocument*        mDocument;  // Weak ref
   nsIPresShell*       mPresShell; // Weak ref

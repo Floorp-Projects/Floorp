@@ -70,10 +70,6 @@ function handleLoad(aEvent) {
 
     testNum++;
 
-
-    // Remove any notification bar that might be lingering from a failed test.
-    notifyBox.removeAllNotifications(true);
-
     if (testNum <= subtests.length) {
         ok(true, "Starting test #" + testNum);
         iframe.src = subtests[testNum-1];
@@ -86,7 +82,7 @@ function handleLoad(aEvent) {
 
 // Remember, Never for This Site, Not Now
 function checkTest() {
-    var bar, notificationText, expectedText;
+    var popup, notificationText, expectedText;
 
     // The document generated from formsubmit.sjs contains the user/pass it
     // received inside <span id="blah">value</span>
@@ -101,28 +97,28 @@ function checkTest() {
       case 1:
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kNotNowButton);
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
+        popup.remove();
         break;
 
       case 2:
         // Same subtest, this time click Never
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
         is(true, pwmgr.getLoginSavingEnabled("http://mochi.test:8888"),
            "Checking for login saving enabled");
-        clickNotificationButton(bar, kNeverButton);
+        clickPopupButton(popup, kNeverButton);
         break;
 
       case 3:
         // Same subtest, make sure Never took effect
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         is(false, pwmgr.getLoginSavingEnabled("http://mochi.test:8888"),
            "Checking for login saving disabled");
         // reenable login saving.
@@ -133,22 +129,22 @@ function checkTest() {
         // Same subtest, this time click Remember
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
 
         // Sanity check, no logins should exist yet.
         var logins = pwmgr.getAllLogins();
         is(logins.length, 0, "Should not have any logins yet");
 
-        clickNotificationButton(bar, kRememberButton);
+        clickPopupButton(popup, kRememberButton);
         break;
 
       case 5:
         // Same subtest, make sure we didn't prompt for an existing login.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
 
         // Check to make sure we updated the timestamps and use count on the
         // existing loging that was submitted for this form.
@@ -166,12 +162,12 @@ function checkTest() {
       /* signons.rememberSignons pref tests... */
 
       case 6:
-        // Same subtest, make sure we're getting the bar again.
+        // Same subtest, make sure we're getting the popup again.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kNotNowButton);
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
+        popup.remove();
         // Change prefs to no longer remember signons
         prefs.setBoolPref("rememberSignons", false);
         break;
@@ -180,66 +176,66 @@ function checkTest() {
         // Same subtest, make sure we're not prompting.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         // Change prefs to remember signons again
         prefs.setBoolPref("rememberSignons", true);
         break;
 
       case 8:
-        // Same subtest, make sure we're getting the bar again.
+        // Same subtest, make sure we're getting the popup again.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kNotNowButton);
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
+        popup.remove();
         break;
 
       /* autocomplete=off tests... */
 
       case 9:
-        // Check for no notification bar when autocomplete=off present
+        // Check for no notification popup when autocomplete=off present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         break;
 
       case 10:
-        // Check for no notification bar when autocomplete=off present
+        // Check for no notification popup when autocomplete=off present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         break;
 
       case 11:
-        // Check for no notification bar when autocomplete=off present
+        // Check for no notification popup when autocomplete=off present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         break;
 
       /* no password field test... */
 
       case 12:
-        // Check for no notification bar when no password field present
+        // Check for no notification popup when no password field present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "null",     "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
 
         // Add login for the next test.
         pwmgr.addLogin(login2);
         break;
 
       case 13:
-        // Check for no notification bar when existing pw-only login matches form.
+        // Check for no notification popup when existing pw-only login matches form.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         pwmgr.removeLogin(login2);
 
         // Add login for the next test
@@ -247,11 +243,11 @@ function checkTest() {
         break;
 
       case 14:
-        // Check for no notification bar when pw-only form matches existing login.
+        // Check for no notification popup when pw-only form matches existing login.
         is(gotUser, "null",     "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(!bar, "checking for no notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
         pwmgr.removeLogin(login1);
 
         // Add login for the next test
@@ -259,47 +255,47 @@ function checkTest() {
         break;
 
       case 15:
-        // Check for notification bar when existing pw-only login doesn't match form.
+        // Check for notification popup when existing pw-only login doesn't match form.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kNotNowButton);
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
         pwmgr.removeLogin(login2B);
+        popup.remove();
 
         // Add login for the next test
         pwmgr.addLogin(login1B);
         break;
 
       case 16:
-        // Check for notification bar when pw-only form doesn't match existing login.
+        // Check for notification popup when pw-only form doesn't match existing login.
         is(gotUser, "null",     "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kNotNowButton);
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
         pwmgr.removeLogin(login1B);
+        popup.remove();
 
         // Add login for the next tests
         pwmgr.addLogin(login1);
         break;
 
       case 17:
-        // Check for change-password bar, u+p login on u+p form. (not changed)
+        // Check for change-password popup, u+p login on u+p form. (not changed)
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "pass2",    "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-change");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kDontChangeButton);
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kDontChangeButton);
         break;
 
       case 18:
-        // Check for change-password bar, u+p login on u+p form.
+        // Check for change-password popup, u+p login on u+p form.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "pass2",    "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-change");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kChangeButton);
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kChangeButton);
 
         // Check to make sure we updated the timestamps and use count for
         // the login being changed with this form.
@@ -322,64 +318,64 @@ function checkTest() {
       // ...can't change a u+p login on a p-only form...
 
       case 19:
-        // Check for change-password bar, p-only login on u+p form.
+        // Check for change-password popup, p-only login on u+p form.
         // (needed a different subtest for this because the login created in
         // test_0init was interfering)
         is(gotUser, "",         "Checking submitted username");
         is(gotPass, "pass2",    "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-change");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kChangeButton);
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kChangeButton);
         break;
 
       case 20:
-        // Check for change-password bar, p-only login on p-only form.
+        // Check for change-password popup, p-only login on p-only form.
         is(gotUser, "null",     "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-change");
-        ok(bar, "got notification bar");
-        clickNotificationButton(bar, kChangeButton);
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        clickPopupButton(popup, kChangeButton);
 
         pwmgr.removeLogin(login2);
         break;
 
       case 21:
-        // Check text on a user+pass notification bar
+        // Check text on a user+pass notification popup
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginText string.
-        notificationText = bar.getAttribute("label");
+        notificationText = popup.message;
         expectedText = /^Do you want .+ to remember the password for \"notifyu1\" on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
-        clickNotificationButton(bar, kNotNowButton);
+        popup.remove();
         break;
 
       case 22:
-        // Check text on a user+pass notification bar, username is really long
+        // Check text on a user+pass notification popup, username is really long
         is(gotUser, "nowisthetimeforallgoodmentocometotheaidoftheircountry", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginText string.
-        notificationText = bar.getAttribute("label");
+        notificationText = popup.message;
         expectedText = /^Do you want .+ to remember the password for \"nowisthetimeforallgoodmentocom[^e]\" on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
-        clickNotificationButton(bar, kNotNowButton);
+        popup.remove();
         break;
 
       case 23:
-        // Check text on a pass-only notification bar
+        // Check text on a pass-only notification popup
         is(gotUser, "null",     "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        bar = getNotificationBar(notifyBox, "password-save");
-        ok(bar, "got notification bar");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginTextNoUser string.
-        notificationText = bar.getAttribute("label");
+        notificationText = popup.message;
         expectedText = /^Do you want .+ to remember this password on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
-        clickNotificationButton(bar, kNotNowButton);
+        popup.remove();
         break;
 
       default:
@@ -425,13 +421,10 @@ var login2B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888"
 var iframe = document.getElementById("iframe");
 iframe.onload = handleLoad;
 
-// The notification box (not *bar*) is a constant, per-tab container. So, we
+// popupNotifications (not *popup*) is a constant, per-tab container. So, we
 // only need to fetch it once.
-var notifyBox = getNotificationBox(window.top);
-ok(notifyBox, "Got notification box");
-
-// Remove any notification bars that might be left over from other tests.
-notifyBox.removeAllNotifications(true);
+var popupNotifications = getPopupNotifications(window.top);
+ok(popupNotifications, "Got popupNotifications");
 
 var testNum = 1;
 ok(true, "Starting test #" + testNum);

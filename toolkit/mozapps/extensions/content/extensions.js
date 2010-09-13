@@ -51,6 +51,10 @@ Cu.import("resource://gre/modules/AddonRepository.jsm");
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_BACKGROUND_UPDATE = "extensions.update.enabled";
+const PREF_CHECK_COMPATIBILITY = "extensions.checkCompatibility";
+const PREF_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
+
+const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
 const LOADING_MSG_DELAY = 100;
 
@@ -142,6 +146,7 @@ function loadView(aViewId) {
 var gEventManager = {
   _listeners: {},
   _installListeners: [],
+  checkCompatibilityPref: "",
 
   initialize: function() {
     var self = this;
@@ -164,9 +169,26 @@ var gEventManager = {
     });
     AddonManager.addInstallListener(this);
     AddonManager.addAddonListener(this);
+    
+    var version = Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
+    this.checkCompatibilityPref = PREF_CHECK_COMPATIBILITY + "." + version;
+
+    Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
+    Services.prefs.addObserver(PREF_CHECK_UPDATE_SECURITY, this, false);
+
+    this.refreshGlobalWarning();
+
+    var contextMenu = document.getElementById("addonitem-popup");
+    contextMenu.addEventListener("popupshowing", function() {
+      var addon = gViewController.currentViewObj.getSelectedAddon();
+      contextMenu.setAttribute("addontype", addon.type);
+    }, false);
   },
 
   shutdown: function() {
+    Services.prefs.removeObserver(this.checkCompatibilityPref, this);
+    Services.prefs.removeObserver(PREF_CHECK_UPDATE_SECURITY, this);
+
     AddonManager.removeInstallListener(this);
     AddonManager.removeAddonListener(this);
   },
@@ -243,6 +265,49 @@ var gEventManager = {
         // this shouldn't be fatal
         Cu.reportError(e);
       }
+    }
+  },
+  
+  refreshGlobalWarning: function() {
+    var page = document.getElementById("addons-page");
+
+    if (Services.appinfo.inSafeMode) {
+      page.setAttribute("warning", "safemode");
+      return;
+    } 
+
+    var checkUpdateSecurity = true;
+    var checkUpdateSecurityDefault = true;
+    try {
+      checkUpdateSecurity = Services.prefs.getBoolPref(PREF_CHECK_UPDATE_SECURITY);
+    } catch(e) { }
+    try {
+      var defaultBranch = Services.prefs.getDefaultBranch("");
+      checkUpdateSecurityDefault = defaultBranch.getBoolPref(PREF_CHECK_UPDATE_SECURITY);
+    } catch(e) { }
+    if (checkUpdateSecurityDefault && !checkUpdateSecurity) {
+      page.setAttribute("warning", "updatesecurity");
+      return;
+    }
+
+    var checkCompatibility = true;
+    try {
+      checkCompatibility = Services.prefs.getBoolPref(this.checkCompatibilityPref);
+    } catch(e) { }
+    if (!checkCompatibility) {
+      page.setAttribute("warning", "checkcompatibility");
+      return;
+    }
+    
+    page.removeAttribute("warning");
+  },
+  
+  observe: function(aSubject, aTopic, aData) {
+    switch (aData) {
+    case this.checkCompatibilityPref:
+    case PREF_CHECK_UPDATE_SECURITY:
+      this.refreshGlobalWarning();
+      break;
     }
   }
 };
@@ -437,6 +502,20 @@ var gViewController = {
       isEnabled: function() true,
       doCommand: function() {
         Application.restart();
+      }
+    },
+
+    cmd_enableCheckCompatibility: {
+      isEnabled: function() true,
+      doCommand: function() {
+        Services.prefs.clearUserPref(gEventManager.checkCompatibilityPref);
+      }
+    },
+
+    cmd_enableUpdateSecurity: {
+      isEnabled: function() true,
+      doCommand: function() {
+        Services.prefs.clearUserPref(PREF_CHECK_UPDATE_SECURITY);
       }
     },
 
@@ -689,13 +768,14 @@ var gViewController = {
         return aAddon.install && aAddon.install.state == AddonManager.STATE_AVAILABLE;
       },
       doCommand: function(aAddon) {
-        // This case should never happen
-        if (gViewController.currentViewObj != gDetailView)
-          return;
-
-        gViewController.popState(function() {
+        function doInstall() {
           gViewController.currentViewObj.getListItemForID(aAddon.id)._installStatus.installRemote();
-        });
+        }
+
+        if (gViewController.currentViewObj == gDetailView)
+          gViewController.popState(doInstall);
+        else
+          doInstall();
       }
     },
 
@@ -804,10 +884,10 @@ var gViewController = {
       isEnabled: function(aAddon) {
         if (!aAddon)
           return false;
-        return ("contributeURL" in aAddon && aAddon.contributeURL);
+        return ("contributionURL" in aAddon && aAddon.contributionURL);
       },
       doCommand: function(aAddon) {
-        openURL(aAddon.contributeURL);
+        openURL(aAddon.contributionURL);
       }
     }
   },
@@ -1201,7 +1281,9 @@ var gSearchView = {
   _sorters: null,
   _listBox: null,
   _emptyNotice: null,
+  _allResultsLink: null,
   _lastQuery: null,
+  _lastRemoteTotal: 0,
   _pendingSearches: 0,
 
   initialize: function() {
@@ -1211,6 +1293,7 @@ var gSearchView = {
     this._sorters.handler = this;
     this._listBox = document.getElementById("search-list");
     this._emptyNotice = document.getElementById("search-list-empty");
+    this._allResultsLink = document.getElementById("search-allresults-link");
 
     var self = this;
     this._listBox.addEventListener("keydown", function(aEvent) {
@@ -1237,6 +1320,7 @@ var gSearchView = {
   show: function(aQuery, aRequest) {
     gHeader.isSearching = true;
     this.showEmptyNotice(false);
+    this.showAllResultsLink(0);
 
     gHeader.searchQuery = aQuery;
     aQuery = aQuery.trim().toLocaleLowerCase();
@@ -1250,8 +1334,8 @@ var gSearchView = {
     if (AddonRepository.isSearching)
       AddonRepository.cancelSearch();
 
-    while (this._listBox.lastChild.localName == "richlistitem")
-      this._listBox.removeChild(this._listBox.lastChild);
+    while (this._listBox.firstChild.localName == "richlistitem")
+      this._listBox.removeChild(this._listBox.firstChild);
 
     var self = this;
     gCachedAddons = {};
@@ -1273,7 +1357,7 @@ var gSearchView = {
         if (aIsRemote)
           gCachedAddons[aObj.id] = aObj;
 
-        self._listBox.appendChild(item);
+        self._listBox.insertBefore(item, self._listBox.lastChild);
         createdCount++;
       });
 
@@ -1315,6 +1399,8 @@ var gSearchView = {
         if (gViewController && aRequest != gViewController.currentViewRequest)
           return;
 
+        self._lastRemoteTotal = 0;
+
         // XXXunf Better handling of AMO search failure. See bug 579502
         finishSearch(0); // Silently fail
       },
@@ -1322,6 +1408,11 @@ var gSearchView = {
       searchSucceeded: function(aAddonsList, aAddonCount, aTotalResults) {
         if (gViewController && aRequest != gViewController.currentViewRequest)
           return;
+
+        if (aTotalResults > maxRemoteResults)
+          self._lastRemoteTotal = aTotalResults;
+        else
+          self._lastRemoteTotal = 0;
 
         var createdCount = createSearchResults(aAddonsList, false, true);
         finishSearch(createdCount);
@@ -1347,6 +1438,7 @@ var gSearchView = {
       }
 
       this.showEmptyNotice(isEmpty);
+      this.showAllResultsLink(this._lastRemoteTotal);
     }
 
     gViewController.updateCommands();
@@ -1407,9 +1499,24 @@ var gSearchView = {
     this._emptyNotice.hidden = !aShow;
   },
 
+  showAllResultsLink: function(aTotalResults) {
+    if (aTotalResults == 0) {
+      this._allResultsLink.hidden = true;
+      return;
+    }
+
+    var linkStr = gStrings.ext.GetStringFromName("showAllSearchResults");
+    linkStr = PluralForm.get(aTotalResults, linkStr);
+    linkStr = linkStr.replace("#1", aTotalResults);
+    this._allResultsLink.value = linkStr;
+
+    this._allResultsLink.href = AddonRepository.getSearchURL(this._lastQuery);
+    this._allResultsLink.hidden = false;
+ },
+
   onSortChanged: function(aSortBy, aAscending) {
-    var header = this._listBox.firstChild;
-    this._listBox.removeChild(header);
+    var footer = this._listBox.lastChild;
+    this._listBox.removeChild(footer);
 
     var hints = aAscending ? "ascending" : "descending";
     if (INTEGER_FIELDS.indexOf(aSortBy) >= 0)
@@ -1419,7 +1526,7 @@ var gSearchView = {
                       getService(Ci.nsIXULSortService);
     sortService.sort(this._listBox, aSortBy, hints);
 
-    this._listBox.insertBefore(header, this._listBox.firstChild);
+    this._listBox.appendChild(footer);
   },
 
   getSelectedAddon: function() {
@@ -1620,8 +1727,8 @@ var gDetailView = {
 
     var screenshot = document.getElementById("detail-screenshot");
     if (aAddon.screenshots && aAddon.screenshots.length > 0) {
-      if (aAddon.screenshots[0].thumbnail)
-        screenshot.src = aAddon.screenshots[0].thumbnail;
+      if (aAddon.screenshots[0].thumbnailURL)
+        screenshot.src = aAddon.screenshots[0].thumbnailURL;
       else
         screenshot.src = aAddon.screenshots[0].url;
       screenshot.hidden = false;
@@ -1634,7 +1741,7 @@ var gDetailView = {
                                               : aAddon.description;
 
     var contributions = document.getElementById("detail-contributions");
-    if ("contributeURL" in aAddon && aAddon.contributeURL) {
+    if ("contributionURL" in aAddon && aAddon.contributionURL) {
       contributions.hidden = false;
       var amount = document.getElementById("detail-contrib-suggested");
       amount.value = gStrings.ext.formatStringFromName("contributionAmount",
@@ -1901,6 +2008,7 @@ var gUpdatesView = {
   _listBox: null,
   _emptyNotice: null,
   _sorters: null,
+  _updateSelected: null,
   _updatePrefs: null,
   _backgroundUpdateCheck: null,
   _categoryItem: null,
@@ -1915,6 +2023,11 @@ var gUpdatesView = {
 
     this._backgroundUpdateCheck = document.getElementById("utils-backgroudUpdateCheck");
     this._categoryItem = gCategories.get("addons://updates/available");
+
+    this._updateSelected = document.getElementById("update-selected");
+    this._updateSelected.addEventListener("command", function() {
+      gUpdatesView.installSelected();
+    }, false);
 
     this._updatePrefs = Services.prefs.getBranch("extensions.update.");
     this._updatePrefs.QueryInterface(Ci.nsIPrefBranch2);
@@ -1942,6 +2055,7 @@ var gUpdatesView = {
     while (this._listBox.itemCount > 0)
       this._listBox.removeItemAt(0);
 
+    this.node.setAttribute("updatetype", aType);
     if (aType == "recent")
       this._showRecentUpdates(aRequest);
     else
@@ -1949,7 +2063,7 @@ var gUpdatesView = {
   },
 
   hide: function() {
-    // do nothing
+    this._updateSelected.hidden = true;
   },
 
   _showRecentUpdates: function(aRequest) {
@@ -1977,12 +2091,20 @@ var gUpdatesView = {
   },
 
   _showAvailableUpdates: function(aIsRefresh, aRequest) {
+    /* Disable the Update Selected button so it can't get clicked
+       before everything is initialized asynchronously.
+       It will get re-enabled by maybeDisableUpdateSelected(). */
+    this._updateSelected.disabled = true;
+
     var self = this;
     AddonManager.getAllInstalls(function(aInstallsList) {
       if (!aIsRefresh && gViewController && aRequest != gViewController.currentViewRequest)
         return;
 
       if (aIsRefresh) {
+        self.showEmptyNotice(false);
+        self._updateSelected.hidden = true;
+
         while (self._listBox.itemCount > 0)
           self._listBox.removeItemAt(0);
       }
@@ -1993,19 +2115,23 @@ var gUpdatesView = {
 
         let item = createItem(aInstall.existingAddon);
         item.setAttribute("upgrade", true);
+        item.addEventListener("IncludeUpdateChanged", function() {
+          self.maybeDisableUpdateSelected();
+        }, false);
         self._listBox.appendChild(item);
       });
 
-      if (self._listBox.itemCount > 0)
+      if (self._listBox.itemCount > 0) {
+        self._updateSelected.hidden = false;
         self.onSortChanged(self._sorters.sortBy, self._sorters.ascending);
-      else
+      } else {
         self.showEmptyNotice(true);
+      }
 
       // ensure badge count is in sync
       self._categoryItem.badgeCount = self._listBox.itemCount;
 
-      if (!aIsRefresh)
-        gViewController.notifyViewChanged();
+      gViewController.notifyViewChanged();
     });
   },
 
@@ -2077,6 +2203,30 @@ var gUpdatesView = {
       if (aInitializing)
         notifyInitialized();
     });
+  },
+  
+  maybeDisableUpdateSelected: function() {
+    for (let i = 0; i < this._listBox.childNodes.length; i++) {
+      let item = this._listBox.childNodes[i];
+      if (item.includeUpdate) {
+        this._updateSelected.disabled = false;
+        return;
+      }
+    }
+    this._updateSelected.disabled = true;
+  },
+
+  installSelected: function() {
+    /* Starting the update of one item will refresh the list,
+       which can cause problems while we're iterating over it.
+       So we update only after we've finished iterating over the list. */
+    var toUpgrade = [];
+    for (let i = 0; i < this._listBox.childNodes.length; i++) {
+      let item = this._listBox.childNodes[i];
+      if (item.includeUpdate)
+        toUpgrade.push(item);
+    }
+    toUpgrade.forEach(function(aItem) aItem.upgrade());
   },
 
   getSelectedAddon: function() {

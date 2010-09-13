@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=590353
+-->
+<head>
+  <title>Test for Bug 590353</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590353">Mozilla Bug 590353</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 590353 **/
+
+var testData = ['checkbox', 'radio'];
+
+for each(var data in testData) {
+  var e = document.createElement('input');
+  e.type = data;
+  e.checked = true;
+  e.value = "foo";
+
+  is(e.value, "foo", "foo should be the new " + data + "value");
+  is(e.getAttribute('value'), "foo", "foo should be the new " + data +
+                                     " value attribute value");
+  ok(e.checked, data  + " should still be checked");
+}
+
+</script>
+</pre>
+</body>
+</html>

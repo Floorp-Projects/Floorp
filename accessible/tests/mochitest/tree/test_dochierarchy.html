@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test document hierarchy</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  function doTest()
+  {
+    // tabDoc and testDoc are different documents depending on whether test
+    // is running in standalone mode or not.
+
+    var root = getRootAccessible();
+    var tabDoc = window.parent ?
+      getAccessible(window.parent.document, [nsIAccessibleDocument]) :
+      getAccessible(document, [nsIAccessibleDocument]);
+    var testDoc = getAccessible(document, [nsIAccessibleDocument]);
+    var iframeDoc = getAccessible("iframe").firstChild.
+      QueryInterface(nsIAccessibleDocument);
+
+    is(root.parentDocument, null,
+       "Wrong parent document of root accessible");
+    is(root.childDocumentCount, 1,
+       "Wrong child document count of root accessible");
+    is(root.getChildDocumentAt(0), tabDoc,
+       "Wrong child document at index 0 of root accessible");
+
+    is(tabDoc.parentDocument, root,
+       "Wrong parent document of tab document");
+    is(tabDoc.childDocumentCount, 1,
+       "Wrong child document count of tab document");
+    is(tabDoc.getChildDocumentAt(0), (tabDoc == testDoc ? iframeDoc : testDoc),
+       "Wrong child document at index 0 of tab document");
+
+    if (tabDoc != testDoc) {
+      is(testDoc.parentDocument, tabDoc,
+         "Wrong parent document of test document");
+      is(testDoc.childDocumentCount, 1,
+         "Wrong child document count of test document");
+      is(testDoc.getChildDocumentAt(0), iframeDoc,
+         "Wrong child document at index 0 of test document");
+    }
+
+    is(iframeDoc.parentDocument, (tabDoc == testDoc ? tabDoc : testDoc),
+       "Wrong parent document of iframe document");
+    is(iframeDoc.childDocumentCount, 0,
+       "Wrong child document count of iframe document");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=592913"
+     title="Provide a way to quickly determine whether an accessible object is a descendant of a tab document">
+    Mozilla Bug 592913
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <iframe src="about:mozilla" id="iframe"></iframe>
+</body>
+</html>

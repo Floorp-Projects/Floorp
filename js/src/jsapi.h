@@ -968,9 +968,17 @@ class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
 
     bool enter(JSContext *cx, JSObject *target);
 
+    bool entered() const { return call != NULL; }
+
     ~JSAutoCrossCompartmentCall() {
         if (call)
             JS_LeaveCrossCompartmentCall(call);
+    }
+
+    void swap(JSAutoCrossCompartmentCall &other) {
+        JSCrossCompartmentCall *tmp = call;
+        call = other.call;
+        other.call = tmp;
     }
 };
 
@@ -1329,23 +1337,12 @@ JSVAL_TRACE_KIND(jsval v)
     return JSVAL_TRACE_KIND_IMPL(l);
 }
 
-#ifdef __cplusplus
-namespace js {
-    class ConservativeGCStackMarker;
-}
-#endif
-
 struct JSTracer {
     JSContext           *context;
     JSTraceCallback     callback;
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
-#ifndef __cplusplus
-    void                *conservativeMarker;
-#else
-    js::ConservativeGCStackMarker *conservativeMarker;
-#endif
 };
 
 /*
@@ -1445,7 +1442,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
         (trc)->debugPrinter = NULL;                                           \
         (trc)->debugPrintArg = NULL;                                          \
         (trc)->debugPrintIndex = (size_t)-1;                                  \
-        (trc)->conservativeMarker = NULL;                                     \
     JS_END_MACRO
 
 extern JS_PUBLIC_API(void)
@@ -2376,6 +2372,13 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                       JSPrincipals *principals,
+                                       const jschar *chars, size_t length,
+                                       const char *filename, uintN lineno,
+                                       JSVersion version);
+
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
 
 extern JS_PUBLIC_API(JSScript *)
@@ -2441,6 +2444,14 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   uintN nargs, const char **argnames,
                                   const jschar *chars, size_t length,
                                   const char *filename, uintN lineno);
+
+extern JS_PUBLIC_API(JSFunction *)
+JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         JSPrincipals *principals, const char *name,
+                                         uintN nargs, const char **argnames,
+                                         const jschar *chars, size_t length,
+                                         const char *filename, uintN lineno,
+                                         JSVersion version);
 
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
@@ -2520,6 +2531,13 @@ JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
                     const jschar *chars, uintN length,
                     const char *filename, uintN lineno,
                     jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                        JSPrincipals *principals,
+                                        const jschar *chars, uintN length,
+                                        const char *filename, uintN lineno,
+                                        jsval *rval, JSVersion version);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,

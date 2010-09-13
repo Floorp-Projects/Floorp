@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Raymond Lee <raymond@appcoast.com>
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,21 +52,15 @@ function onTabViewWindowLoaded() {
   let [originalTab] = gBrowser.visibleTabs;
 
   // create group one and two
-  let padding = 10;
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
-  let box = new contentWindow.Rect(pageBounds);
-  box.width = 300;
-  box.height = 300;
-
-  let groupOne = new contentWindow.GroupItem([], { bounds: box });
+  let boxOne = new contentWindow.Rect(20, 20, 300, 300);
+  let groupOne = new contentWindow.GroupItem([], { bounds: boxOne });
   ok(groupOne.isEmpty(), "This group is empty");
 
-  let groupTwo = new contentWindow.GroupItem([], { bounds: box });
+  let boxTwo = new contentWindow.Rect(20, 400, 300, 300);
+  let groupTwo = new contentWindow.GroupItem([], { bounds: boxTwo });
 
-  groupOne.addSubscriber(groupOne, "tabAdded", function() {
-    groupOne.removeSubscriber(groupOne, "tabAdded");
+  groupOne.addSubscriber(groupOne, "childAdded", function() {
+    groupOne.removeSubscriber(groupOne, "childAdded");
     groupTwo.newTab();
   });
 
@@ -93,67 +88,85 @@ function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
   let groupTwo = contentWindow.GroupItems.groupItem(groupTwoId);
   let groupOneTabItemCount = groupOne.getChildren().length;
   let groupTwoTabItemCount = groupTwo.getChildren().length;
-  is(groupOneTabItemCount, 1, "GroupItem one has a tab");
-  is(groupTwoTabItemCount, 1, "GroupItem two has two tabs");
+  is(groupOneTabItemCount, 1, "GroupItem one has one tab");
+  is(groupTwoTabItemCount, 1, "GroupItem two has one tab as well");
 
-  let srcElement = groupOne.getChild(0).container;
-  ok(srcElement, "The source element exists");
+  let tabItem = groupOne.getChild(0);
+  ok(tabItem, "The tab item exists");
 
   // calculate the offsets
-  let groupTwoRect = groupTwo.container.getBoundingClientRect();
-  let srcElementRect = srcElement.getBoundingClientRect();
+  let groupTwoRect = groupTwo.getBounds();
+  let groupTwoRectCenter = groupTwoRect.center();
+  let tabItemRect = tabItem.getBounds();
+  let tabItemRectCenter = tabItemRect.center();
   let offsetX =
-    Math.round(groupTwoRect.left + groupTwoRect.width/5) - srcElementRect.left;
+    Math.round(groupTwoRectCenter.x - tabItemRectCenter.x);
   let offsetY =
-    Math.round(groupTwoRect.top + groupTwoRect.height/5) -  srcElementRect.top;
+    Math.round(groupTwoRectCenter.y - tabItemRectCenter.y);
 
-  simulateDragDrop(srcElement, offsetX, offsetY, contentWindow);
+  function endGame() {
+    groupTwo.removeSubscriber(groupTwo, "childAdded");
 
-  is(groupOne.getChildren().length, --groupOneTabItemCount,
-     "The number of children in group one is decreased by 1");
-  is(groupTwo.getChildren().length, ++groupTwoTabItemCount,
-     "The number of children in group two is increased by 1");
-
-  let onTabViewHidden = function() {
-    window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-     groupTwo.closeAll();
-  };
-  groupTwo.addSubscriber(groupTwo, "close", function() {
-    groupTwo.removeSubscriber(groupTwo, "close");
-    finish();  
-  });
-  window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  gBrowser.selectedTab = originalTab;
+    is(groupOne.getChildren().length, --groupOneTabItemCount,
+       "The number of children in group one is decreased by 1");
+    is(groupTwo.getChildren().length, ++groupTwoTabItemCount,
+       "The number of children in group two is increased by 1");
+  
+    let onTabViewHidden = function() {
+      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+      groupTwo.closeAll();
+      // close undo group
+      let closeButton = groupTwo.$undoContainer.find(".close");
+      EventUtils.sendMouseEvent(
+        { type: "click" }, closeButton[0], contentWindow);
+    };
+    groupTwo.addSubscriber(groupTwo, "close", function() {
+      groupTwo.removeSubscriber(groupTwo, "close");
+      finish();  
+    });
+    window.addEventListener("tabviewhidden", onTabViewHidden, false);
+    gBrowser.selectedTab = originalTab;
+  }
+  groupTwo.addSubscriber(groupTwo, "childAdded", endGame);
+  
+  simulateDragDrop(tabItem.container, offsetX, offsetY, contentWindow);
 }
 
-function simulateDragDrop(srcElement, offsetX, offsetY, contentWindow) {
+function simulateDragDrop(tabItem, offsetX, offsetY, contentWindow) {
   // enter drag mode
   let dataTransfer;
 
   EventUtils.synthesizeMouse(
-    srcElement, 1, 1, { type: "mousedown" }, contentWindow);
+    tabItem, 1, 1, { type: "mousedown" }, contentWindow);
   event = contentWindow.document.createEvent("DragEvents");
   event.initDragEvent(
     "dragenter", true, true, contentWindow, 0, 0, 0, 0, 0,
     false, false, false, false, 1, null, dataTransfer);
-  srcElement.dispatchEvent(event);
+  tabItem.dispatchEvent(event);
 
   // drag over
-  for (let i = 4; i >= 0; i--)
-    EventUtils.synthesizeMouse(
-      srcElement,  Math.round(offsetX/5),  Math.round(offsetY/4),
-      { type: "mousemove" }, contentWindow);
-  event = contentWindow.document.createEvent("DragEvents");
-  event.initDragEvent(
-    "dragover", true, true, contentWindow, 0, 0, 0, 0, 0,
-    false, false, false, false, 0, null, dataTransfer);
-  srcElement.dispatchEvent(event);
-
+  if (offsetX || offsetY) {
+    let Ci = Components.interfaces;
+    let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                              getInterface(Ci.nsIDOMWindowUtils);
+    let rect = tabItem.getBoundingClientRect();
+    for (let i = 1; i <= 5; i++) {
+      let left = rect.left + Math.round(i * offsetX / 5);
+      let top = rect.top + Math.round(i * offsetY / 5);
+      utils.sendMouseEvent("mousemove", left, top, 0, 1, 0);
+    }
+    event = contentWindow.document.createEvent("DragEvents");
+    event.initDragEvent(
+      "dragover", true, true, contentWindow, 0, 0, 0, 0, 0,
+      false, false, false, false, 0, null, dataTransfer);
+    tabItem.dispatchEvent(event);
+  }
+  
   // drop
-  EventUtils.synthesizeMouse(srcElement, 0, 0, { type: "mouseup" }, contentWindow);
+  EventUtils.synthesizeMouse(tabItem, 0, 0, { type: "mouseup" }, contentWindow);
   event = contentWindow.document.createEvent("DragEvents");
   event.initDragEvent(
     "drop", true, true, contentWindow, 0, 0, 0, 0, 0,
     false, false, false, false, 0, null, dataTransfer);
-  srcElement.dispatchEvent(event);
+  tabItem.dispatchEvent(event);
 }

@@ -743,7 +743,7 @@ HistoryMenu.prototype = {
     let menuitem = document.getElementById("sync-tabs-menuitem");
 
     // If Sync isn't configured yet, then don't show the menuitem.
-    if (Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
+    if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED ||
         Weave.Svc.Prefs.get("firstSync", "") == "notReady") {
       menuitem.setAttribute("hidden", true);
       return;
@@ -758,6 +758,15 @@ HistoryMenu.prototype = {
 #endif
   },
 
+  toggleRestoreLastSession: function PHM_toggleRestoreLastSession() {
+    let restoreItem = this._rootElt.getElementsByClassName("restoreLastSession")[0];
+
+    if (this._ss.canRestoreLastSession)
+      restoreItem.removeAttribute("disabled");
+    else
+      restoreItem.setAttribute("disabled", true);
+  },
+
   _onPopupShowing: function HM__onPopupShowing(aEvent) {
     PlacesMenu.prototype._onPopupShowing.apply(this, arguments);
 
@@ -768,6 +777,7 @@ HistoryMenu.prototype = {
     this.toggleRecentlyClosedTabs();
     this.toggleRecentlyClosedWindows();
     this.toggleTabsFromOtherComputers();
+    this.toggleRestoreLastSession();
   },
 
   _onCommand: function HM__onCommand(aEvent) {

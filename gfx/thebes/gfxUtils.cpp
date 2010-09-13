@@ -39,6 +39,7 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
+#include "nsRegion.h"
 
 #if defined(XP_WIN) || defined(WINCE)
 #include "gfxWindowsPlatform.h"
@@ -418,3 +419,42 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     aContext->SetOperator(op);
 }
 
+/* static */ int
+gfxUtils::ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat)
+{
+    switch (aFormat) {
+        case gfxASurface::ImageFormatARGB32:
+            return 32;
+        case gfxASurface::ImageFormatRGB24:
+            return 24;
+        case gfxASurface::ImageFormatRGB16_565:
+            return 16;
+        default:
+            break;
+    }
+    return 0;
+}
+static void
+ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
+                     PRBool aSnap)
+{
+  aContext->NewPath();
+  nsIntRegionRectIterator iter(aRegion);
+  const nsIntRect* r;
+  while ((r = iter.Next()) != nsnull) {
+    aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), aSnap);
+  }
+  aContext->Clip();
+}
+
+/*static*/ void
+gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
+{
+  ClipToRegionInternal(aContext, aRegion, PR_FALSE);
+}
+
+/*static*/ void
+gfxUtils::ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion)
+{
+  ClipToRegionInternal(aContext, aRegion, PR_TRUE);
+}

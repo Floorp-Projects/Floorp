@@ -252,6 +252,8 @@ public:
     mForwarder = aForwarder;
   }
 
+  virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Shadow"); }
+
   void DestroySharedSurface(gfxSharedImageSurface* aSurface);
 
   /** CONSTRUCTION PHASE ONLY */

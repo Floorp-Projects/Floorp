@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ImageLayers.h"
- #include "Layers.h"
+#include "Layers.h"
+#include "gfxPlatform.h"
  
 #ifdef MOZ_LAYERS_HAVE_LOG
 FILE*
@@ -140,6 +141,15 @@ namespace mozilla {
 namespace layers {
 
 //--------------------------------------------------
+// LayerManager
+already_AddRefed<gfxASurface>
+LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
+                                   gfxASurface::gfxImageFormat aFormat)
+{
+  return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFormat);
+}
+
+//--------------------------------------------------
 // Layer
 
 PRBool
@@ -147,7 +157,7 @@ Layer::CanUseOpaqueSurface()
 {
   // If the visible content in the layer is opaque, there is no need
   // for an alpha channel.
-  if (IsOpaqueContent())
+  if (GetContentFlags() & CONTENT_OPAQUE)
     return PR_TRUE;
   // Also, if this layer is the bottommost layer in a container which
   // doesn't need an alpha channel, we can use an opaque surface for this
@@ -221,14 +231,24 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (mUseClipRect) {
     AppendToString(aTo, mClipRect, " [clip=", "]");
   }
-  if (!mTransform.IsIdentity())
+  if (!mTransform.IsIdentity()) {
     AppendToString(aTo, mTransform, " [transform=", "]");
-  if (!mVisibleRegion.IsEmpty())
+  }
+  if (!mVisibleRegion.IsEmpty()) {
     AppendToString(aTo, mVisibleRegion, " [visible=", "]");
-  if (1.0 != mOpacity)
+  }
+  if (1.0 != mOpacity) {
     aTo.AppendPrintf(" [opacity=%g]", mOpacity);
-  if (IsOpaqueContent())
+  }
+  if (GetContentFlags() & CONTENT_OPAQUE) {
     aTo += " [opaqueContent]";
+  }
+  if (GetContentFlags() & CONTENT_NO_TEXT) {
+    aTo += " [noText]";
+  }
+  if (GetContentFlags() & CONTENT_NO_TEXT_OVER_TRANSPARENT) {
+    aTo += " [noTextOverTransparent]";
+  }
 
   return aTo;
 }
@@ -281,12 +301,12 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix)
 
   nsCAutoString pfx(aPrefix);
   pfx += "  ";
-  if (!mRoot) {
+  if (!GetRoot()) {
     fprintf(file, "%s(null)", pfx.get());
     return;
   }
 
-  mRoot->Dump(file, pfx.get());
+  GetRoot()->Dump(file, pfx.get());
 }
 
 void
@@ -307,12 +327,12 @@ LayerManager::Log(const char* aPrefix)
 
   nsCAutoString pfx(aPrefix);
   pfx += "  ";
-  if (!mRoot) {
+  if (!GetRoot()) {
     MOZ_LAYERS_LOG(("%s(null)", pfx.get()));
     return;
   }
 
-  mRoot->Log(pfx.get());
+  GetRoot()->Log(pfx.get());
 }
 
 void

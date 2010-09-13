@@ -92,6 +92,11 @@ struct ShmemStruct {
     Shmem mem;
 };
 
+union ShmemUnion {
+    int;
+    Shmem;
+};
+
 } // namespace _foo
 } // namespace mozilla
 
@@ -187,6 +192,8 @@ parent:
     // nsTArray's incorrect memmove() semantics works properly
     // (nsIntRegion isn't memmove()able)
     sync Test18(nsIntRegion[] ops);
+
+    sync Dummy(ShmemUnion su) returns (ShmemUnion rsu);
 
 state CONSTRUCTING:
     send PTestDataStructuresSub goto CONSTRUCTING;

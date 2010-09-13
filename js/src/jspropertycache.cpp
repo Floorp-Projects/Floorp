@@ -77,6 +77,15 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     }
 
     /*
+     * Dictionary-mode objects have unique shapes, so there is no way to cache
+     * a prediction of the next shape when adding.
+     */
+    if (adding && obj->inDictionaryMode()) {
+        PCMETER(add2dictfills++);
+        return JS_NO_PROP_CACHE_FILL;
+    }
+
+    /*
      * Check for overdeep scope and prototype chain. Because resolve, getter,
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after js_LookupPropertyWithFlags has returned the nominal protoIndex,
@@ -127,7 +136,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * opcode format flags.
      */
     pc = cx->regs->pc;
-    op = js_GetOpcode(cx, cx->fp()->getScript(), pc);
+    op = js_GetOpcode(cx, cx->fp()->script(), pc);
     cs = &js_CodeSpec[op];
     kshape = 0;
 
@@ -304,7 +313,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(cx->fp()->getScript(), pc, pcoff, atom);
+    GET_ATOM_FROM_BYTECODE(cx->fp()->script(), pc, pcoff, atom);
     return atom;
 }
 
@@ -318,10 +327,10 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     JSStackFrame *fp = cx->fp();
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(uintN((fp->hasIMacroPC() ? fp->getIMacroPC() : pc) - fp->getScript()->code)
-              < fp->getScript()->length);
+    JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - fp->script()->code)
+              < fp->script()->length);
 
-    JSOp op = js_GetOpcode(cx, fp->getScript(), pc);
+    JSOp op = js_GetOpcode(cx, fp->script(), pc);
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
@@ -442,6 +451,7 @@ PropertyCache::purge(JSContext *cx)
         P(rofills);
         P(disfills);
         P(oddfills);
+        P(add2dictfills);
         P(modfills);
         P(brandfills);
         P(noprotos);

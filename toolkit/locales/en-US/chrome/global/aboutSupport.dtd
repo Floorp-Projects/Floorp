@@ -19,6 +19,7 @@
 <!ENTITY aboutSupport.appBasicsProfileDir "Profile Directory">
 <!ENTITY aboutSupport.appBasicsEnabledPlugins "Enabled Plugins">
 <!ENTITY aboutSupport.appBasicsBuildConfig "Build Configuration">
+<!ENTITY aboutSupport.appBasicsUserAgent "User Agent">
 
 <!ENTITY aboutSupport.show.label "Open Containing Folder">
 

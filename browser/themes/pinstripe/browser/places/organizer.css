@@ -88,8 +88,8 @@
   margin: 4px 4px 5px;
   padding: 1px 3px;
   border: 1px solid @toolbarbuttonBorderColor@;
-  -moz-border-radius: @toolbarbuttonCornerRadius@;
-  -moz-box-shadow: @loweredShadow@;
+  border-radius: @toolbarbuttonCornerRadius@;
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
 }
@@ -98,7 +98,7 @@
 #placesToolbar > toolbarbutton[open="true"] {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 #placesToolbar > toolbarbutton:-moz-window-inactive {
@@ -133,8 +133,8 @@
 #back-button:-moz-locale-dir(ltr),
 #forward-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
-  -moz-border-radius-topright: 0;
-  -moz-border-radius-bottomright: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   margin-right: 0;
   border-right: 0;
 }
@@ -142,8 +142,8 @@
 #forward-button:-moz-locale-dir(ltr),
 #back-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-  -moz-border-radius-topleft: 0;
-  -moz-border-radius-bottomleft: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   margin-left: 0;
 }
 
@@ -283,7 +283,7 @@
   font: icon;
   font-weight: bold;
   color: #2D2D2D;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   padding: 0 10px 1px;
   margin: 1px;
   font-weight: bold;
@@ -302,7 +302,7 @@
 
 #organizerScopeBar > toolbarbutton:active:hover,
 #organizerScopeBar > toolbarbutton[checked="true"] {
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255,
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255,
 255, 0.4);
 }
 
@@ -336,11 +336,11 @@
   margin: 0 4px;
   padding: 0 10px;
   -moz-appearance: none;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: @roundButtonBorder@;
   text-shadow: @loweredShadow@;
   background: @roundButtonBackground@;
-  -moz-box-shadow: @roundButtonShadow@;
+  box-shadow: @roundButtonShadow@;
 }
 
 #saveSearch > .button-box > .button-text {
@@ -349,15 +349,15 @@
 
 #saveSearch:active:hover {
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @roundButtonPressedShadow@;
+  box-shadow: @roundButtonPressedShadow@;
 }
 
 #saveSearch:focus {
-  -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
 #saveSearch:active:hover:focus {
-  -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
+  box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
 /**** expanders ****/

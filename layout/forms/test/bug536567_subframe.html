@@ -2,21 +2,13 @@
 <html>
   <head>
     <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
   </head>
 <body>
 <input id="target" type="file" />
 <script type="text/javascript">
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cm = Components.manager;
-
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochikit/content/browser/toolkit/content/tests/browser/common/mockObjects.js", this);
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function MockFilePicker() { };

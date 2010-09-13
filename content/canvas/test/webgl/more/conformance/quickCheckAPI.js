@@ -845,8 +845,9 @@ ArgGenerators = {
     }
   },
   getParameter : {
-    generate : function() { return [getParameterPname.random()]; },
-    checkArgValidity : function(p) { return getParameterPname.has(p); }
+// FIXME disabled because crashes, see bug 576620
+//    generate : function() { return [getParameterPname.random()]; },
+//    checkArgValidity : function(p) { return getParameterPname.has(p); }
   },
   getBufferParameter : {}, // FIXME
   getError : {

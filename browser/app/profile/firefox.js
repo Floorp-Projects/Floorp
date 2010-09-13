@@ -56,13 +56,12 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
 
-// Preferences for the Addon Repository
+// Preferences for AMO integration
 pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
 pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/guid:%IDS%");
+pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/%APP%/search?q=%TERMS%");
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%");
-
-// Preferences for AMO integration
 pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/%APP%/discovery/%VERSION%/%OS%");
 
 // Blocklist preferences
@@ -120,7 +119,10 @@ pref("app.update.cert.maxErrors", 5);
 // no update available. This validation will not be performed when using the
 // |app.update.url.override| preference for update checking.
 pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
-pref("app.update.certs.1.commonName", "*.mozilla.org");
+pref("app.update.certs.1.commonName", "aus3.mozilla.org");
+
+pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
+pref("app.update.certs.2.commonName", "aus3.mozilla.org");
 
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
@@ -145,7 +147,7 @@ pref("app.update.mode", 1);
 pref("app.update.silent", false);
 
 // Update service URL:
-pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
 // app.update.url.manual is in branding section
 // app.update.url.details is in branding section
 
@@ -396,11 +398,9 @@ pref("browser.bookmarks.max_backups",             10);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
-#ifdef DEBUG
 pref("javascript.options.showInConsole",          true);
+#ifdef DEBUG
 pref("general.warnOnAboutConfig",                 false);
-#else
-pref("javascript.options.showInConsole",          false);
 #endif
 
 #ifdef WINCE
@@ -783,6 +783,8 @@ pref("browser.sessionstore.postdata", 0);
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
 pref("browser.sessionstore.privacy_level", 1);
+// the same as browser.sessionstore.privacy_level, but for saving deferred session data
+pref("browser.sessionstore.privacy_level_deferred", 2);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
 // how many windows can be reopened (per session) - on non-OS X platforms this
@@ -1031,3 +1033,9 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
+
+// Disable the Error Console
+pref("devtools.errorconsole.enabled", false);
+
+// disable the Inspector
+pref("devtools.inspector.enabled", false);

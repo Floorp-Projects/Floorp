@@ -479,6 +479,26 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
     return (void*) realSurface;
 }
 
+bool
+AndroidBridge::GetStaticStringField(const char *className, const char *fieldName, nsAString &result)
+{
+    AutoLocalJNIFrame jniFrame(3);
+    jclass cls = mJNIEnv->FindClass(className);
+    if (!cls)
+        return false;
+
+    jfieldID field = mJNIEnv->GetStaticFieldID(cls, fieldName, "Ljava/lang/String;");
+    if (!field)
+        return false;
+
+    jstring jstr = (jstring) mJNIEnv->GetStaticObjectField(cls, field);
+    if (!jstr)
+        return false;
+
+    result.Assign(nsJNIString(jstr));
+    return true;
+}
+
 // Available for places elsewhere in the code to link to.
 PRBool
 mozilla_AndroidBridge_SetMainThread(void *thr)

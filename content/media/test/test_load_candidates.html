@@ -25,7 +25,7 @@ var manager = new MediaTestManager;
 
 function finish(evt) {
   var v = evt.target;
-  is(v._error, false, "Shouldn't have thrown an error - " + v._name);
+  ok(v._error, "Should have received an error event before loaded");
   v._finished = true;
   v.parentNode.removeChild(v);
   manager.finished(v.token);
@@ -33,8 +33,7 @@ function finish(evt) {
 
 function errorHandler(evt) {
   evt.stopPropagation();
-  evt.target._error = true;
-  finish(evt);
+  evt.target.parentNode._error = true;
 }
 
 var extenstion = {
@@ -56,6 +55,7 @@ function startTest(test, token) {
   var s1 = document.createElement("source");
   s1.type = test.type;
   s1.src = "404." + extenstion[test.type];
+  s1.addEventListener("error", errorHandler, false);
   v.appendChild(s1);
   
   var s2 = document.createElement("source");
@@ -63,9 +63,7 @@ function startTest(test, token) {
   s2.src = test.name;
   v.appendChild(s2);
   
-  v.addEventListener("error", errorHandler, false);
   v.addEventListener("loadeddata", finish, false);
-  
   document.body.appendChild(v);
 }
 

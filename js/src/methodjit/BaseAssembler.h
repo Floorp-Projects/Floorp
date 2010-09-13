@@ -136,11 +136,13 @@ class BaseAssembler : public JSC::MacroAssembler
 
     /* Register pair storing returned type/data for calls. */
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::X86Registers::ecx;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::X86Registers::edx;
+static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::X86Registers::ecx;
 #elif defined(JS_CPU_ARM)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::ARMRegisters::r2;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegisters::r1;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::ARMRegisters::r2;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegisters::r1;
+static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
 #endif
 
     size_t distanceOf(Label l) {
@@ -256,6 +258,10 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
         /* VMFrame -> ArgReg0 */
         setupVMFrame();
 
+        return wrapCall(pfun);
+    }
+
+    Call wrapCall(void *pfun) {
 #ifdef JS_METHODJIT_PROFILE_STUBS
         push(Registers::ArgReg0);
         push(Registers::ArgReg1);
@@ -298,6 +304,10 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
         move(MacroAssembler::stackPointerRegister, Registers::ArgReg0);
     }
 
+    Call call() {
+        return JSC::MacroAssembler::call();
+    }
+
     Call call(void *fun) {
         Call cl = JSC::MacroAssembler::call();
 
@@ -313,12 +323,17 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
     {
 #ifndef JS_CPU_ARM
         /* X86 and X64's "ret" instruction expects a return address on the stack. */
-        push(Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
+        push(Address(JSFrameReg, JSStackFrame::offsetOfncode()));
 #else
         /* ARM returns either using its link register (LR) or directly from the stack, but masm.ret()
          * always emits a return to LR. */
-        load32(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), JSC::ARMRegisters::lr);
+        load32(Address(JSFrameReg, JSStackFrame::offsetOfncode()), JSC::ARMRegisters::lr);
 #endif
+    }
+
+    void saveReturnAddress(RegisterID reg)
+    {
+        storePtr(reg, Address(JSFrameReg, JSStackFrame::offsetOfncode()));
     }
 
     void finalize(uint8 *ncode) {
@@ -331,24 +346,13 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
             repatchBuffer.relink(JSC::CodeLocationCall(cp), callPatches[i].fun);
         }
     }
-
-    /*
-     * Write a jump instruction at source which goes to target, clobbering any
-     * instructions already at source.  Can't use a patch/link buffer here
-     * as there is no original instruction we are setting the target for.
-     */
-#ifdef JS_CPU_X86
-    static void insertJump(uint8 *source, const uint8 *target) {
-        source[0] = 0xE9; /* JSC::X86Assembler::OP_JMP_rel32; */
-        *reinterpret_cast<int*>(source + 1) = (int) target - (int) source - 5;
-    }
-#endif
 };
 
 /* Save some typing. */
 static const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = BaseAssembler::JSReturnReg_Type;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = BaseAssembler::JSReturnReg_Data;
+static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = BaseAssembler::JSParamReg_Argc;
 
 } /* namespace mjit */
 } /* namespace js */

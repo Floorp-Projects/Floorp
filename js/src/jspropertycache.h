@@ -176,6 +176,7 @@ class PropertyCache
     uint32              rofills;        /* set on read-only prop can't fill */
     uint32              disfills;       /* fill attempts on disabled cache */
     uint32              oddfills;       /* fill attempt after setter deleted */
+    uint32              add2dictfills;  /* fill attempt on dictionary object */
     uint32              modfills;       /* fill that rehashed to a new entry */
     uint32              brandfills;     /* scope brandings to type structural
                                            method fills */

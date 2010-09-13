@@ -120,11 +120,11 @@
                 accesskey="&openTabInNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
-      <menuitem id="context_pinTab" label="&pinTab.label;"
-                accesskey="&pinTab.accesskey;"
+      <menuitem id="context_pinTab" label="&pinAppTab.label;"
+                accesskey="&pinAppTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
-                accesskey="&unpinTab.accesskey;"
+      <menuitem id="context_unpinTab" label="&unpinAppTab.label;" hidden="true"
+                accesskey="&unpinAppTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menu id="context_tabViewMenu" label="&moveToGroup.label;"
             accesskey="&moveToGroup.accesskey;">
@@ -136,10 +136,6 @@
         </menupopup>
       </menu>
       <menuseparator/>
-      <menuitem id="context_bookmarkTab"
-                label="&bookmarkThisTab.label;"
-                accesskey="&bookmarkThisTab.accesskey;"
-                oncommand="BookmarkThisTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
@@ -166,6 +162,9 @@
 
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
+
+    <!-- for invalid form error message -->
+    <panel id="invalid-form-popup" noautofocus="true" hidden="true" level="parent"/>
 
     <panel id="editBookmarkPanel"
            orient="vertical"
@@ -234,13 +233,15 @@
            onmousemove="InspectorUI.highlighter.handleMouseMove(event);"
            onMozMousePixelScroll="InspectorUI.highlighter.handlePixelScroll(event);"/>
 
-    <panel id="inspector-panel"
+    <panel id="inspector-tree-panel"
            orient="vertical"
            hidden="true"
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
            titlebar="normal"
+           close="true"
+           onpopuphiding="InspectorUI.closeInspectorUI(true);"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
                nowindowdrag="true">
@@ -270,21 +271,7 @@
                        class="toolbarbutton-text"
                        oncommand="InspectorUI.toggleDOMPanel();"/>
       </toolbar>
-      <tree id="inspector-tree" class="plain"
-            seltype="single"
-            treelines="true"
-            onselect="InspectorUI.onTreeSelected()"
-            flex="1">
-        <treecols>
-          <treecol id="colNodeName" label="nodeName" primary="true"
-                   persist="width,hidden,ordinal" flex="1"/>
-          <splitter class="tree-splitter"/>
-          <treecol id="colNodeValue" label="nodeValue"
-                   persist="width,hidden,ordinal" flex="1"/>
-        </treecols>
-        <treechildren id="inspector-tree-body"/>
-      </tree>
-      <hbox align="end">
+      <hbox id="tree-panel-resizer-box" align="end">
         <spacer flex="1" />
         <resizer dir="bottomend" />
       </hbox>
@@ -463,35 +450,40 @@
           <hbox flex="1"
                 class="split-menuitem">
             <menuitem id="appmenu_newTab"
-                      class="split-menuitem-item"
+                      class="menuitem-tooltip split-menuitem-item"
                       flex="1"
                       label="&tabCmd.label;"
-                      command="cmd_newNavigatorTab"/>
+                      command="cmd_newNavigatorTab"
+                      key="key_newNavigatorTab"/>
               <menu class="split-menuitem-menu">
                 <menupopup>
                   <menuitem id="appmenu_newTab_popup"
                             label="&tabCmd.label;"
-                            command="cmd_newNavigatorTab"/>
+                            command="cmd_newNavigatorTab"
+                            key="key_newNavigatorTab"/>
                   <menuitem id="appmenu_newNavigator"
                             label="&newNavigatorCmd.label;"
-                            command="cmd_newNavigator"/>
+                            command="cmd_newNavigator"
+                            key="key_newNavigator"/>
                   <menuseparator/>
                   <menuitem id="appmenu_openFile"
                             label="&openFileCmd.label;"
-                            command="Browser:OpenFile"/>
+                            command="Browser:OpenFile"
+                            key="openFileKb"/>
                 </menupopup>
                </menu>
           </hbox>
           <menuitem id="appmenu_privateBrowsing"
-                    class="menuitem-iconic"
+                    class="menuitem-iconic menuitem-iconic-tooltip"
                     label="&privateBrowsingCmd.start.label;"
                     startlabel="&privateBrowsingCmd.start.label;"
                     stoplabel="&privateBrowsingCmd.stop.label;"
-                    command="Tools:PrivateBrowsing"/>
-          <menuseparator/>
-          <hbox class="split-menuitem">
-            <menuitem id="appmenu-edit-menuitem"
-                      label="&editMenu.label;"
+                    command="Tools:PrivateBrowsing"
+                    key="key_privatebrowsing"/>
+          <menuseparator class="appmenu-menuseparator"/>
+          <hbox>
+            <menuitem id="appmenu-edit-label"
+                      label="&appMenuEdit.label;"
                       disabled="true"/>
             <toolbarbutton id="appmenu-cut"
                            class="appmenu-edit-button"
@@ -510,28 +502,34 @@
                            tooltiptext="&pasteButton.tooltip;"/>
           </hbox>
           <menuitem id="appmenu_find"
+                    class="menuitem-tooltip"
                     label="&appMenuFind.label;"
-                    command="cmd_find"/>
-          <menuseparator/>
+                    command="cmd_find"
+                    key="key_find"/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_savePage"
+                    class="menuitem-tooltip"
                     label="&savePageCmd.label;"
-                    command="Browser:SavePage"/>
+                    command="Browser:SavePage"
+                    key="key_savePage"/>
           <menuitem id="appmenu_sendLink"
                     label="&sendPageCmd.label;"
                     command="Browser:SendLink"/>
           <hbox flex="1"
                 class="split-menuitem">
             <menuitem id="appmenu_print"
-                      class="menuitem-iconic split-menuitem-item"
+                      class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
                       flex="1"
                       label="&printCmd.label;"
-                      command="cmd_print"/>
+                      command="cmd_print"
+                      key="printKb"/>
             <menu class="split-menuitem-menu">
               <menupopup>
                 <menuitem id="appmenu_print_popup"
                           class="menuitem-iconic"
                           label="&printCmd.label;"
-                          command="cmd_print"/>
+                          command="cmd_print"
+                          key="printKb"/>
                 <menuitem id="appmenu_printPreview"
                           label="&printPreviewCmd.label;"
                           command="cmd_printPreview"/>
@@ -541,33 +539,43 @@
               </menupopup>
             </menu>
           </hbox>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menu id="appmenu_developer"
                 label="&developerMenu.label;">
             <menupopup id="appmenu_developer_popup">
               <menuitem id="appmenu_webConsole"
                         label="&webConsoleCmd.label;"
                         type="checkbox"
-                        oncommand="HUDConsoleUI.toggleHUD();"/>
+                        oncommand="HUDConsoleUI.toggleHUD();"
+                        key="key_webConsole"/>
               <menuitem id="appmenu_pageInspect"
+                        hidden="true"
                         label="&inspectMenu.label;"
                         type="checkbox"
-                        command="Tools:Inspect"/>
+                        command="Tools:Inspect"
+                        key="key_inspect"/>
               <menuseparator/>
               <menuitem id="appmenu_pageSource"
                         label="&viewPageSourceCmd.label;"
-                        command="View:PageSource"/>
+                        command="View:PageSource"
+                        key="key_viewSource"/>
+              <menuseparator/>
+#define ID_PREFIX appmenu_
+#include browser-charsetmenu.inc
+#undef ID_PREFIX
               <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
                         type="checkbox"
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
           </menu>
-          <menuseparator/>
+          <menuseparator class="appmenu-menuseparator"/>
           <menuitem id="appmenu_fullScreen"
+                    class="menuitem-tooltip"
                     label="&fullScreenCmd.label;"
                     type="checkbox"
-                    observes="View:FullScreen"/>
+                    observes="View:FullScreen"
+                    key="key_fullScreen"/>
           <menuitem id="appmenu-quit"
                     class="menuitem-iconic"
 #ifdef XP_WIN
@@ -580,10 +588,11 @@
         <vbox id="appmenuSecondaryPane">
           <hbox class="split-menuitem">
             <menuitem id="appmenu_bookmarks"
-                      class="menuitem-iconic split-menuitem-item"
+                      class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
                       flex="1"
                       label="&bookmarksMenu.label;"
-                      command="Browser:ShowAllBookmarks"/>
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
             <menu id="appmenu_bookmarksMenu"
                   class="split-menuitem-menu">
               <menupopup id="appmenu_bookmarksMenupopup"
@@ -604,11 +613,11 @@
                           label="&appMenuUnsorted.label;"
                           oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
                           class="menuitem-iconic"/>
-                <menuitem id="appmenu_organizeBookmarks"
-                          label="&organizeBookmarks.label;"
-                          key="manBookmarkKb"
+                <menuitem id="appmenu_showAllBookmarks"
+                          label="&showAllBookmarks.label;"
                           command="Browser:ShowAllBookmarks"
-                          context=""/>
+                          context=""
+                          key="manBookmarkKb"/>
                 <menuseparator/>
                 <menuitem id="appmenu_bookmarkThisPage"
                           class="menuitem-iconic"
@@ -636,10 +645,11 @@
           </hbox>
           <hbox class="split-menuitem">
             <menuitem id="appmenu_history"
-                      class="menuitem-iconic split-menuitem-item"
+                      class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
                       flex="1"
                       label="&historyMenu.label;"
-                      command="Browser:ShowAllHistory"/>
+                      command="Browser:ShowAllHistory"
+                      key="showAllHistoryKb"/>
             <menu id="appmenu_historyMenu"
                   class="split-menuitem-menu">
               <menupopup id="appmenu_historyMenupopup"
@@ -652,14 +662,19 @@
                          popupsinherittooltip="true">
                 <menuitem id="appmenu_showAllHistory"
                           label="&showAllHistoryCmd2.label;"
-                          key="showAllHistoryKb"
-                          command="Browser:ShowAllHistory"/>
+                          command="Browser:ShowAllHistory"
+                          key="showAllHistoryKb"/>
                 <menuseparator/>
                 <menuitem id="appmenu_sanitizeHistory"
                           label="&clearRecentHistory.label;"
                           key="key_sanitize"
                           command="Tools:Sanitize"/>
                 <menuseparator class="hide-if-empty-places-result"/>
+                <menuitem id="appmenu_restoreLastSession"
+                          class="restoreLastSession"
+                          label="&historyRestoreLastSession.label;"
+                          oncommand="restoreLastSession();"
+                          disabled="true"/>
                 <menu id="appmenu_recentlyClosedTabsMenu"
                       class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"
@@ -679,13 +694,16 @@
             </menu>
           </hbox>
             <menuitem id="appmenu_downloads"
+                      class="menuitem-tooltip"
                       label="&downloads.label;"
-                      command="Tools:Downloads"/>
+                      command="Tools:Downloads"
+                      key="key_openDownloads"/>
             <spacer id="appmenuSecondaryPane-spacer"/>
             <menuitem id="appmenu_addons"
-                      class="menuitem-iconic"
+                      class="menuitem-iconic menuitem-iconic-tooltip"
                       label="&addons.label;"
-                      command="Tools:Addons"/>
+                      command="Tools:Addons"
+                      key="key_openAddons"/>
             <hbox class="split-menuitem">
               <menuitem id="appmenu_customize"
                         label="&preferencesCmd.label;"
@@ -794,10 +812,10 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
 #ifdef WINCE
              iconsize="small" defaulticonsize="small"
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              iconsize="large"
-             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 
@@ -831,17 +849,6 @@
         </toolbarbutton>
       </toolbaritem>
 
-      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&reloadCmd.label;" removable="true"
-                     command="Browser:ReloadOrDuplicate"
-                     onclick="checkForMiddleClick(this, event);"
-                     tooltiptext="&reloadButton.tooltip;"/>
-
-      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&stopCmd.label;" removable="true"
-                     command="Browser:Stop"
-                     tooltiptext="&stopButton.tooltip;"/>
-
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      persist="class" removable="true"
                      label="&homeButton.label;"
@@ -851,7 +858,7 @@
                      ondragleave="homeButtonObserver.onDragLeave(event)"
                      onclick="BrowserGoHome(event);"/>
 
-      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
+      <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
                  placeholder="&urlbar.placeholder;"
@@ -877,6 +884,8 @@
           <box id="notification-popup-box" hidden="true" align="center">
             <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
+            <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
@@ -884,14 +893,14 @@
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
                onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
-               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
+               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
+               ondragstart="gIdentityHandler.onDragStart(event);">
             <hbox id="identity-box-inner" align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        pageproxystate="invalid"
-                       ondragstart="proxyIconDNDObserver.onDragStart(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
               <hbox id="identity-icon-labels">
@@ -923,8 +932,29 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
+          <toolbarbutton id="urlbar-go-button"
+                         onclick="gURLBar.handleCommand(event);"
+                         tooltiptext="&goEndCap.tooltip;"/>
+          <toolbarbutton id="urlbar-reload-button"
+                         command="Browser:ReloadOrDuplicate"
+                         onclick="checkForMiddleClick(this, event);"
+                         tooltiptext="&reloadButton.tooltip;"/>
+          <toolbarbutton id="urlbar-stop-button"
+                         command="Browser:Stop"
+                         tooltiptext="&stopButton.tooltip;"/>
         </textbox>
       </toolbaritem>
+
+      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&reloadCmd.label;" removable="true"
+                     command="Browser:ReloadOrDuplicate"
+                     onclick="checkForMiddleClick(this, event);"
+                     tooltiptext="&reloadButton.tooltip;"/>
+
+      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&stopCmd.label;" removable="true"
+                     command="Browser:Stop"
+                     tooltiptext="&stopButton.tooltip;"/>
 
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
@@ -960,7 +990,7 @@
                       command="Browser:BookmarkAllTabs"
                       key="bookmarkAllTabsKb"/>
             <menuitem id="BMB_bookmarksShowAll"
-                      label="&organizeBookmarks.label;"
+                      label="&showAllBookmarks.label;"
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>
@@ -1111,7 +1141,8 @@
                      label="&tabViewButton2.label;"
                      command="Browser:ToggleTabView"
                      tooltiptext="&tabViewButton2.tooltip;"
-                     removable="true"/>
+                     removable="true"
+                     observes="tabviewGroupsNumber"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
@@ -1185,6 +1216,18 @@
                      type="checkbox"
                      label="&fullScreenCmd.label;"
                      tooltiptext="&fullScreenButton.tooltip;"/>
+
+      <toolbaritem id="zoom-controls" class="chromeclass-toolbar-additional"
+                   title="&zoomControls.label;">
+        <toolbarbutton id="zoom-out-button" class="toolbarbutton-1"
+                       label="&fullZoomReduceCmd.label;"
+                       command="cmd_fullZoomReduce"
+                       tooltiptext="&zoomOutButton.tooltip;"/>
+        <toolbarbutton id="zoom-in-button" class="toolbarbutton-1"
+                       label="&fullZoomEnlargeCmd.label;"
+                       command="cmd_fullZoomEnlarge"
+                       tooltiptext="&zoomInButton.tooltip;"/>
+      </toolbaritem>
 
     </toolbarpalette>
   </toolbox>

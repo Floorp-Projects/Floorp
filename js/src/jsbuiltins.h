@@ -573,12 +573,11 @@ js_dmod(jsdouble a, jsdouble b);
 #endif /* !JS_TRACER */
 
 /* Defined in jsarray.cpp. */
-JS_DECLARE_CALLINFO(js_Array_dense_setelem)
-JS_DECLARE_CALLINFO(js_Array_dense_setelem_int)
-JS_DECLARE_CALLINFO(js_Array_dense_setelem_double)
+JS_DECLARE_CALLINFO(js_Array_dense_setelem_hole)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewPreallocatedArray)
 JS_DECLARE_CALLINFO(js_ArrayCompPush_tn)
+JS_DECLARE_CALLINFO(js_EnsureDenseArrayCapacity)
 
 /* Defined in jsbuiltins.cpp. */
 JS_DECLARE_CALLINFO(js_UnboxDouble)
@@ -599,13 +598,13 @@ JS_DECLARE_CALLINFO(js_NewNullClosure)
 
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
-JS_DECLARE_CALLINFO(js_PutArguments)
+JS_DECLARE_CALLINFO(js_PutArgumentsOnTrace)
 JS_DECLARE_CALLINFO(js_PutCallObjectOnTrace)
 JS_DECLARE_CALLINFO(js_SetCallVar)
 JS_DECLARE_CALLINFO(js_SetCallArg)
 JS_DECLARE_CALLINFO(js_CloneFunctionObject)
 JS_DECLARE_CALLINFO(js_CreateCallObjectOnTrace)
-JS_DECLARE_CALLINFO(js_Arguments)
+JS_DECLARE_CALLINFO(js_NewArgumentsOnTrace)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)

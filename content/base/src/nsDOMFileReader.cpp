@@ -15,7 +15,7 @@
  * The Original Code is mozila.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
+ * Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
@@ -71,13 +71,13 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIDOMFileInternal.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIStreamConverterService.h"
 #include "nsEventDispatcher.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsFileDataProtocolHandler.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -485,6 +485,7 @@ nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
                                  const nsAString &aCharset,
                                  eDataFormat aDataFormat)
 {
+  nsresult rv;
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
 
   //Implicit abort to clear any other activity going on
@@ -496,26 +497,28 @@ nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
   mReadyState = nsIDOMFileReader::EMPTY;
   FreeFileData();
 
+  mFile = aFile;
   mDataFormat = aDataFormat;
   mCharset = aCharset;
 
-  //Obtain the nsDOMFile's underlying nsIFile
-  nsresult rv;
-  nsCOMPtr<nsIDOMFileInternal> domFile(do_QueryInterface(aFile));
-  rv = domFile->GetInternalFile(getter_AddRefs(mFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   //Establish a channel with our file
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewFileURI(getter_AddRefs(uri), mFile);
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    // Hold the internal URL alive only as long as necessary
+    // After the channel is created it will own whatever is backing
+    // the DOMFile.
+    nsDOMFileInternalUrlHolder urlHolder(mFile);
 
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), urlHolder.mUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewChannel(getter_AddRefs(mChannel), uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   //Obtain the total size of the file before reading
   mReadTotal = -1;
-  mFile->GetFileSize(&mReadTotal);
+  mFile->GetSize(&mReadTotal);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -604,7 +607,7 @@ nsDOMFileReader::GetAsText(const nsAString &aCharset,
 }
 
 nsresult
-nsDOMFileReader::GetAsDataURL(nsIFile *aFile,
+nsDOMFileReader::GetAsDataURL(nsIDOMFile *aFile,
                               const char *aFileData,
                               PRUint32 aDataLen,
                               nsAString& aResult)
@@ -612,14 +615,10 @@ nsDOMFileReader::GetAsDataURL(nsIFile *aFile,
   aResult.AssignLiteral("data:");
 
   nsresult rv;
-  nsCOMPtr<nsIMIMEService> mimeService =
-    do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString contentType;
-  rv = mimeService->GetTypeFromFile(aFile, contentType);
-  if (NS_SUCCEEDED(rv)) {
-    AppendUTF8toUTF16(contentType, aResult);
+  nsString contentType;
+  rv = aFile->GetType(contentType);
+  if (NS_SUCCEEDED(rv) && !contentType.IsEmpty()) {
+    aResult.Append(contentType);
   } else {
     aResult.AppendLiteral("application/octet-stream");
   }

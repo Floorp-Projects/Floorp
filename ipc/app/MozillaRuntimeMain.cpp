@@ -54,37 +54,17 @@
 int
 main(int argc, char* argv[])
 {
-#if defined(MOZ_CRASHREPORTER)
-    if (argc < 2)
-        return 1;
-    const char* const crashReporterArg = argv[--argc];
-
-#  if defined(XP_WIN) || defined(XP_MACOSX)
-    // on windows and mac, |crashReporterArg| is the named pipe on which the
-    // server is listening for requests, or "-" if crash reporting is
-    // disabled.
-    if (0 != strcmp("-", crashReporterArg)
-        && !XRE_SetRemoteExceptionHandler(crashReporterArg))
-        return 1;
-#  elif defined(OS_LINUX)
-    // on POSIX, |crashReporterArg| is "true" if crash reporting is
-    // enabled, false otherwise
-    if (0 != strcmp("false", crashReporterArg)
-        && !XRE_SetRemoteExceptionHandler(NULL))
-        return 1;
-#  else
-#    error "OOP crash reporting unsupported on this platform"
-#  endif   
-#endif // if defined(MOZ_CRASHREPORTER)
-
 #if defined(XP_WIN) && defined(DEBUG_bent)
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
 #endif
 
-    GeckoProcessType proctype =
-        XRE_StringToChildProcessType(argv[argc - 1]);
+    // Check for the absolute minimum number of args we need to move
+    // forward here. We expect the last arg to be the child process type.
+    if (argc < 1)
+      return 1;
+    GeckoProcessType proctype = XRE_StringToChildProcessType(argv[--argc]);
 
-    nsresult rv = XRE_InitChildProcess(argc - 1, argv, proctype);
+    nsresult rv = XRE_InitChildProcess(argc, argv, proctype);
     NS_ENSURE_SUCCESS(rv, 1);
 
     return 0;

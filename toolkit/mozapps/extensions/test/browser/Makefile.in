@@ -60,6 +60,10 @@ _TEST_FILES = \
   browser_bug567137.js \
   browser_bug572561.js \
   browser_bug577990.js \
+  browser_bug581076.js \
+  browser_bug587970.js \
+  browser_bug591465.js \
+  browser_bug591465.xml \
   browser_details.js \
   browser_dragdrop.js \
   browser_list.js \
@@ -74,6 +78,7 @@ _TEST_FILES = \
   browser_backgroundupdate_menuitem.js \
   browser_recentupdates.js \
   browser_manualupdates.js \
+  browser_globalwarnings.js \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)

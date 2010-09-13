@@ -41,6 +41,7 @@ browser.jar:
   skin/classic/browser/Popup-blocked.png
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
+  skin/classic/browser/reload-stop-go.png
   skin/classic/browser/searchbar-dropmarker.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
@@ -64,6 +65,7 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon.png              (feeds/audioFeedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/audioFeedIcon16.png)
   skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/inspector.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
@@ -120,18 +122,16 @@ browser.jar:
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
   skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
+  skin/classic/browser/tabview/search.png                   (tabview/search.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.png
-  skin/classic/browser/sync-merge.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-usedBefore.png
   skin/classic/browser/sync-usedNever.png
-  skin/classic/browser/sync-wipeClient.png
-  skin/classic/browser/sync-wipeServer.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
 #endif

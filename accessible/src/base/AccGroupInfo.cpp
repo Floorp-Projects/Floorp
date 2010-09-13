@@ -52,7 +52,7 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   mPosInSet = 1;
   for (PRInt32 idx = indexInParent - 1; idx >=0 ; idx--) {
     nsAccessible* sibling = parent->GetChildAt(idx);
-    PRUint32 siblingRole = nsAccUtils::Role(sibling);
+    PRUint32 siblingRole = sibling->Role();
 
     // If the sibling is separator then the group is ended.
     if (siblingRole == nsIAccessibleRole::ROLE_SEPARATOR)
@@ -96,7 +96,7 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   for (PRInt32 idx = indexInParent + 1; idx < siblingCount; idx++) {
     nsAccessible* sibling = parent->GetChildAt(idx);
 
-    PRUint32 siblingRole = nsAccUtils::Role(sibling);
+    PRUint32 siblingRole = sibling->Role();
 
     // If the sibling is separator then the group is ended.
     if (siblingRole == nsIAccessibleRole::ROLE_SEPARATOR)
@@ -131,7 +131,7 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
     return;
 
   // Compute parent.
-  PRUint32 parentRole = nsAccUtils::Role(parent);
+  PRUint32 parentRole = parent->Role();
 
   // In the case of ARIA row in treegrid, return treegrid since ARIA
   // groups aren't used to organize levels in ARIA treegrids.
@@ -153,14 +153,18 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   }
 
   nsAccessible* parentPrevSibling = parent->GetSiblingAtOffset(-1);
-  PRUint32 parentPrevSiblingRole = nsAccUtils::Role(parentPrevSibling);
+  if (!parentPrevSibling)
+    return;
+
+  PRUint32 parentPrevSiblingRole = parentPrevSibling->Role();
   if (parentPrevSiblingRole == nsIAccessibleRole::ROLE_TEXT_LEAF) {
     // XXX Sometimes an empty text accessible is in the hierarchy here,
     // although the text does not appear to be rendered, GetRenderedText()
     // says that it is so we need to skip past it to find the true
     // previous sibling.
     parentPrevSibling = parentPrevSibling->GetSiblingAtOffset(-1);
-    parentPrevSiblingRole = nsAccUtils::Role(parentPrevSibling);
+    if (parentPrevSibling)
+      parentPrevSiblingRole = parentPrevSibling->Role();
   }
 
   // Previous sibling of parent group is a tree item, this is the

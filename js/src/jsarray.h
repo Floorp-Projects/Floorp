@@ -280,4 +280,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone);
 JS_FRIEND_API(JSBool)
 js_IsDensePrimitiveArray(JSObject *obj);
 
+extern JSBool JS_FASTCALL
+js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i);
+
 #endif /* jsarray_h___ */

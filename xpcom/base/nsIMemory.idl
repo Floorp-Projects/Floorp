@@ -122,6 +122,8 @@ interface nsIMemory : nsISupports
      * This predicate can be used to determine if we're in a low-memory
      * situation (what constitutes low-memory is platform dependent). This
      * can be used to trigger the memory pressure observers.
+     *
+     * DEPRECATED - Always returns false.  See bug 592308.
      */
     boolean isLowMemory();
 };

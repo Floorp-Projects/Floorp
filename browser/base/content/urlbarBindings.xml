@@ -688,4 +688,59 @@
 
     </implementation>
   </binding>
+
+  <binding id="geolocation-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
+    <content>
+      <xul:image class="popup-notification-icon"
+                 xbl:inherits="popupid"/>
+      <xul:vbox>
+        <xul:description class="popup-notification-description"
+                         xbl:inherits="value=label"/>
+        <xul:spacer flex="1"/>
+        <xul:hbox pack="end">
+          <xul:label anonid="learnmore" class="text-link geolocation-text-link"/>
+          <xul:spacer flex="1"/>
+          <xul:button anonid="button"
+                      class="popup-notification-menubutton"
+                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,type=buttontype">
+            <xul:menupopup anonid="menupopup"
+                           xbl:inherits="oncommand=menucommand">
+              <children/>
+            </xul:menupopup>
+          </xul:button>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    <implementation>  
+      <constructor><![CDATA[
+        let link = document.getAnonymousElementByAttribute(this, "anonid", "learnmore");
+        link.value = gNavigatorBundle.getString("geolocation.learnMore");
+        
+        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+        link.href = formatter.formatURLPref("browser.geolocation.warning.infoURL");
+      ]]></constructor>
+    </implementation>
+  </binding>
+
+  <binding id="menuitem-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem">
+    <implementation>
+      <constructor><![CDATA[
+        this.setAttribute("tooltiptext", this.getAttribute("acceltext"));
+        // TODO: Simplify this to this.setAttribute("acceltext", "") once bug
+        // 592424 is fixed
+        document.getAnonymousElementByAttribute(this, "anonid", "accel").firstChild.setAttribute("value", "");
+      ]]></constructor>
+    </implementation>
+  </binding>
+
+  <binding id="menuitem-iconic-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem-iconic">
+    <implementation>
+      <constructor><![CDATA[
+        this.setAttribute("tooltiptext", this.getAttribute("acceltext"));
+        // TODO: Simplify this to this.setAttribute("acceltext", "") once bug
+        // 592424 is fixed
+        document.getAnonymousElementByAttribute(this, "anonid", "accel").firstChild.setAttribute("value", "");
+      ]]></constructor>
+    </implementation>
+  </binding>
 </bindings>

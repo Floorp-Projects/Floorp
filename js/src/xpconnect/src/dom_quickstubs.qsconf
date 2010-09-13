@@ -148,6 +148,7 @@ members = [
     'nsIDOM3Document.adoptNode',
     'nsIDOM3Document.renameNode',
     'nsIDOM3Node.*',
+    'nsIDOMDOMImplementation.*',
     'nsIDOMDOMStringList.*',
     'nsIDOMDOMTokenList.*',
     'nsIDOMDOMSettableTokenList.*',

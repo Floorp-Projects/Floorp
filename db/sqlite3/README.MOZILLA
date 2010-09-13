@@ -11,6 +11,15 @@ To move to a new version:
 
 Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
+Also copy test_quota.c from the full source package.
+
 Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
 
 -- Shawn Wilsher <me@shawnwilsher.com> 01/2008
+
+We are using an experimental quota management feature included in test_quota.c.
+This file is not compiled into mozsqlite, but instead included directly into
+mozStorageService.cpp for linking into mozstorage. This allows us to continue
+supporting system sqlite installations.
+
+-- Ben Turner <bent.mozilla@gmail.com>, 09/2010

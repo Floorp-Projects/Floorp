@@ -90,6 +90,7 @@ toolkit.jar:
   skin/classic/global/icons/closetab-hover.png                       (icons/closetab-hover.png)
   skin/classic/global/icons/closetab.png                             (icons/closetab.png)
   skin/classic/global/icons/commandline.png                          (icons/commandline.png)
+  skin/classic/global/icons/console-close.png                        (icons/console-close.png)
   skin/classic/global/icons/information-16.png                       (icons/information-16.png)
   skin/classic/global/icons/information-24.png                       (icons/information-24.png)
   skin/classic/global/icons/information-32.png                       (icons/information-32.png)

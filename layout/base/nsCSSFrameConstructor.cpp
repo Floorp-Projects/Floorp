@@ -3563,7 +3563,8 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
     SIMPLE_TAG_CHAIN(embed, nsCSSFrameConstructor::FindObjectData),
     COMPLEX_TAG_CREATE(fieldset,
                        &nsCSSFrameConstructor::ConstructFieldSetFrame),
-    SIMPLE_TAG_CREATE(legend, NS_NewLegendFrame),
+    { &nsGkAtoms::legend,
+      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES, NS_NewLegendFrame) },
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
     COMPLEX_TAG_CREATE(button, &nsCSSFrameConstructor::ConstructButtonFrame),
@@ -4210,17 +4211,6 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
   // Processing by display here:
   return FindDataByInt(aDisplay->mDisplay, aContent, aStyleContext,
                        sXULDisplayData, NS_ARRAY_LENGTH(sXULDisplayData));
-}
-
-nsresult
-nsCSSFrameConstructor::AddLazyChildren(nsIContent* aContent,
-                                       nsLazyFrameConstructionCallback* aCallback,
-                                       void* aArg, PRBool aIsSynch)
-{
-  nsCOMPtr<nsIRunnable> event =
-    new LazyGenerateChildrenEvent(aContent, mPresShell, aCallback, aArg);
-  return aIsSynch ? event->Run() :
-                    NS_DispatchToCurrentThread(event);
 }
 
 already_AddRefed<nsStyleContext>
@@ -7942,9 +7932,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didInvalidate = PR_TRUE;
       }
       if (hint & nsChangeHint_UpdateCursor) {
-        nsIViewManager* viewMgr = mPresShell->GetViewManager();
-        if (viewMgr)
-          viewMgr->SynthesizeMouseMove(PR_FALSE);
+        mPresShell->SynthesizeMouseMove(PR_FALSE);
       }
     }
   }
@@ -11654,61 +11642,33 @@ nsCSSFrameConstructor::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
   PostRestyleEventInternal(PR_FALSE);
 }
 
-NS_IMETHODIMP
-nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
+nsresult
+nsCSSFrameConstructor::GenerateChildFrames(nsIFrame* aFrame)
 {
-  mPresShell->GetDocument()->FlushPendingNotifications(Flush_Layout);
+  {
+    nsAutoScriptBlocker scriptBlocker;
+    BeginUpdate();
 
-  // this is hard-coded to handle only menu popup frames
-  nsIFrame* frame = mPresShell->GetPresContext() ?
-    mPresShell->GetPresContext()->GetPrimaryFrameFor(mContent) : nsnull;
-  if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
-    nsWeakFrame weakFrame(frame);
-#ifdef MOZ_XUL
-    // it is possible that the frame is different than the one that requested
-    // the lazy generation, but as long as it's a popup frame that hasn't
-    // generated its children yet, that's OK.
-    nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame *>(frame);
-    if (menuPopupFrame->HasGeneratedChildren()) {
-      if (mCallback)
-        mCallback(mContent, frame, mArg);
-      
-      return NS_OK;
-    }     
-
-    // indicate that the children have been generated
-    menuPopupFrame->SetGeneratedChildren();
-#endif
-
-   {
-      nsAutoScriptBlocker scriptBlocker;
-      nsCSSFrameConstructor* fc = mPresShell->FrameConstructor();
-      fc->BeginUpdate();
-
-      nsFrameItems childItems;
-      nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
-      // We don't have a parent frame with a pending binding constructor here,
-      // so no need to worry about ordering of the kids' constructors with it.
-      // Pass null for the PendingBinding.
-      nsresult rv = fc->ProcessChildren(state, mContent, frame->GetStyleContext(),
-                                        frame, PR_FALSE, childItems, PR_FALSE,
-                                        nsnull);
-      if (NS_FAILED(rv)) {
-        fc->EndUpdate();
-        return rv;
-      }
-
-      frame->SetInitialChildList(nsnull, childItems);
-
-      fc->EndUpdate();
+    nsFrameItems childItems;
+    nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
+    // We don't have a parent frame with a pending binding constructor here,
+    // so no need to worry about ordering of the kids' constructors with it.
+    // Pass null for the PendingBinding.
+    nsresult rv = ProcessChildren(state, aFrame->GetContent(), aFrame->GetStyleContext(),
+                                  aFrame, PR_FALSE, childItems, PR_FALSE,
+                                  nsnull);
+    if (NS_FAILED(rv)) {
+      EndUpdate();
+      return rv;
     }
 
-    if (mCallback && weakFrame.IsAlive())
-      mCallback(mContent, frame, mArg);
+    aFrame->SetInitialChildList(nsnull, childItems);
 
-    // call XBL constructors after the frames are created
-    mPresShell->GetDocument()->BindingManager()->ProcessAttachedQueue();
+    EndUpdate();
   }
+
+  // call XBL constructors after the frames are created
+  mPresShell->GetDocument()->BindingManager()->ProcessAttachedQueue();
 
   return NS_OK;
 }

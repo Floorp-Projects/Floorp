@@ -125,8 +125,8 @@ Recompiler::recompile()
     for (AllFramesIter i(cx); !i.done(); ++i) {
         if (!firstFrame && i.fp()->maybeScript() == script)
             firstFrame = i.fp();
-        if (script->isValidJitCode(i.fp()->ncode)) {
-            if (!toPatch.append(findPatch(&i.fp()->ncode)))
+        if (script->isValidJitCode(i.fp()->nativeReturnAddress())) {
+            if (!toPatch.append(findPatch(i.fp()->addressOfNativeReturnAddress())))
                 return false;
         }
     }
@@ -152,7 +152,7 @@ Recompiler::recompile()
     /* If we get this far, the script is live, and we better be safe to re-jit. */
     JS_ASSERT(cx->compartment->debugMode);
 
-    Compiler c(cx, script, firstFrame->getFunction(), firstFrame->getScopeChain());
+    Compiler c(cx, script, firstFrame->fun(), &firstFrame->scopeChain());
     if (c.Compile() != Compile_Okay)
         return false;
 

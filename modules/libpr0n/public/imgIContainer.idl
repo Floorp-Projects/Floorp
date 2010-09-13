@@ -52,6 +52,10 @@ interface imgIDecoderObserver;
 #include "gfxPattern.h"
 #include "gfxASurface.h"
 #include "nsRect.h"
+#include "nsSize.h"
+#include "limits.h"
+
+class nsIFrame;
 %}
 
 [ptr] native gfxImageSurface(gfxImageSurface);
@@ -62,6 +66,8 @@ native gfxImageFormat(gfxASurface::gfxImageFormat);
 [ref] native gfxRect(gfxRect);
 native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
+[ref] native nsIntSize(nsIntSize);
+[ptr] native nsIFrame(nsIFrame);
 
 /**
  * imgIContainer is the interface that represents an image. It allows
@@ -71,7 +77,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(362e5b5f-f677-49e0-9a3c-03249c794624)]
+[scriptable, uuid(239dfa70-2285-4d63-99cd-e9b7ff9555c7)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -190,6 +196,13 @@ interface imgIContainer : nsISupports
    *              automatically tiled as necessary.
    * @param aSubimage The area of the image, in pixels, that we are allowed to
    *                  sample from.
+   * @param aViewportSize
+   *          The size (in CSS pixels) of the viewport that would be available
+   *          for the full image to occupy, if we were drawing the full image.
+   *          (Note that we might not actually be drawing the full image -- we
+   *          might be restricted by aSubimage -- but we still need the full
+   *          image's viewport-size in order for SVG images with the "viewBox"
+   *          attribute to position their content correctly.)
    * @param aFlags Flags of the FLAG_* variety
    */
   [noscript] void draw(in gfxContext aContext,
@@ -197,7 +210,18 @@ interface imgIContainer : nsISupports
                        [const] in gfxMatrix aUserSpaceToImageSpace,
                        [const] in gfxRect aFill,
                        [const] in nsIntRect aSubimage,
+                       [const] in nsIntSize aViewportSize,
                        in PRUint32 aFlags);
+
+  /**
+   * If this image is TYPE_VECTOR, i.e. is really an embedded SVG document,
+   * this method returns a pointer to the root nsIFrame of that document. If
+   * not (or if the root nsIFrame isn't available for some reason), this method
+   * returns nsnull.
+   *
+   * "notxpcom" for convenience, since we have no need for nsresult return-val.
+   */
+  [notxpcom] nsIFrame GetRootLayoutFrame();
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that
@@ -242,7 +266,5 @@ interface imgIContainer : nsISupports
   attribute unsigned short animationMode;
 
   /* Methods to control animation */
-  void startAnimation();
-  void stopAnimation();
   void resetAnimation();
 };

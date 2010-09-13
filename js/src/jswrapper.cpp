@@ -388,7 +388,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * This loses us some transparency, and is generally very cheesy.
      */
     JSObject *global =
-        cx->hasfp() ? cx->fp()->getScopeChain()->getGlobal() : cx->globalObject;
+        cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
     wrapper->setParent(global);
     return true;
 }
@@ -489,9 +489,6 @@ void
 JSCompartment::purge(JSContext *cx)
 {
 #ifdef JS_METHODJIT
-    if (!cx->runtime->gcRegenShapes)
-        return;
-
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
@@ -500,7 +497,12 @@ JSCompartment::purge(JSContext *cx)
             mjit::ic::PurgePICs(cx, script);
 # endif
 # if defined JS_MONOIC
-            mjit::ic::PurgeMICs(cx, script);
+            /*
+             * MICs do not refer to data which can be GC'ed, but are sensitive
+             * to shape regeneration.
+             */
+            if (cx->runtime->gcRegenShapes)
+                mjit::ic::PurgeMICs(cx, script);
 # endif
         }
     }
@@ -533,7 +535,7 @@ AutoCompartment::enter()
         context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         frame.construct();
-        if (!context->stack().pushDummyFrame(context, frame.ref(), regs, scopeChain)) {
+        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
             frame.destroy();
             context->compartment = origin;
             return false;

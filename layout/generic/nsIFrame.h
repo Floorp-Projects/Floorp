@@ -266,6 +266,9 @@ typedef PRUint64 nsFrameState;
 // NS_FRAME_HAS_CONTAINER_LAYER bit.
 #define NS_FRAME_HAS_CONTAINER_LAYER_DESCENDANT     NS_FRAME_STATE_BIT(34)
 
+// Frame's overflow area was clipped by the 'clip' property.
+#define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
@@ -916,6 +919,57 @@ public:
   nsRect GetContentRect() const;
 
   /**
+   * Get the size, in app units, of the border radii. It returns FALSE iff all
+   * returned radii == 0 (so no border radii), TRUE otherwise.
+   * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
+   * If a side is skipped via aSkipSides, its corners are forced to 0.
+   *
+   * All corner radii are then adjusted so they do not require more
+   * space than aBorderArea, according to the algorithm in css3-background.
+   *
+   * aFrameSize is used as the basis for percentage widths and heights.
+   * aBorderArea is used for the adjustment of radii that might be too
+   * large.
+   * FIXME: In the long run, we can probably get away with only one of
+   * these, especially if we change the way we handle outline-radius (by
+   * removing it and inflating the border radius)
+   *
+   * Return whether any radii are nonzero.
+   */
+  static PRBool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
+                                   const nsSize& aFrameSize,
+                                   const nsSize& aBorderArea,
+                                   PRIntn aSkipSides,
+                                   nscoord aRadii[8]);
+
+  /*
+   * Given a set of border radii for one box (e.g., border box), convert
+   * it to the equivalent set of radii for another box (e.g., in to
+   * padding box, out to outline box) by reducing radii or increasing
+   * nonzero radii as appropriate.
+   *
+   * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   *
+   * Note that InsetBorderRadii is lossy, since it can turn nonzero
+   * radii into zero, and OutsetBorderRadii does not inflate zero radii.
+   * Therefore, callers should always inset or outset directly from the
+   * original value coming from style.
+   */
+  static void InsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets);
+  static void OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets);
+
+  /**
+   * Fill in border radii for this frame.  Return whether any are
+   * nonzero.
+   *
+   * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   */
+  virtual PRBool GetBorderRadii(nscoord aRadii[8]) const;
+
+  PRBool GetPaddingBoxBorderRadii(nscoord aRadii[8]) const;
+  PRBool GetContentBoxBorderRadii(nscoord aRadii[8]) const;
+
+  /**
    * Get the position of the frame's baseline, relative to the top of
    * the frame (its top border edge).  Only valid when Reflow is not
    * needed and when the frame returned nsHTMLReflowMetrics::
@@ -1043,11 +1097,14 @@ public:
    * border/background/outline items for this frame are not clipped,
    * unless aClipBorderBackground is set to PR_TRUE. (We need this because
    * a scrollframe must overflow-clip its scrolled child's background/borders.)
+   *
+   * Indices into aClipRadii are the NS_CORNER_* constants in nsStyleConsts.h
    */
   nsresult OverflowClip(nsDisplayListBuilder*   aBuilder,
                         const nsDisplayListSet& aFromSet,
                         const nsDisplayListSet& aToSet,
                         const nsRect&           aClipRect,
+                        const nscoord           aClipRadii[8],
                         PRBool                  aClipBorderBackground = PR_FALSE,
                         PRBool                  aClipAll = PR_FALSE);
 
@@ -1070,6 +1127,15 @@ public:
                                     const nsRect&           aDirtyRect,
                                     const nsDisplayListSet& aLists,
                                     PRUint32                aFlags = 0);
+
+  /**
+   * A helper for replaced elements that want to clip their content to a
+   * border radius, but only need clipping at all when they have a
+   * border radius.
+   */
+  void WrapReplacedContentForBorderRadius(nsDisplayListBuilder* aBuilder,
+                                          nsDisplayList* aFromList,
+                                          const nsDisplayListSet& aToLists);
 
   /**
    * Does this frame need a view?
@@ -1450,6 +1516,12 @@ public:
     {}
     IntrinsicSize& operator=(const IntrinsicSize& rhs) {
       width = rhs.width; height = rhs.height; return *this;
+    }
+    PRBool operator==(const IntrinsicSize& rhs) {
+      return width == rhs.width && height == rhs.height;
+    }
+    PRBool operator!=(const IntrinsicSize& rhs) {
+      return !(*this == rhs);
     }
   };
   virtual IntrinsicSize GetIntrinsicSize() = 0;
@@ -2518,13 +2590,6 @@ protected:
    * comboboxes, menupoups) this function will invalidate the window.
    */
   void InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags);
-
-  /**
-   * Gets the overflow area for any properties that are common to all types of frames
-   * e.g. outlines.
-   */
-  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize,
-                               PRBool* aHasOutlineOrEffects);
 
   /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?

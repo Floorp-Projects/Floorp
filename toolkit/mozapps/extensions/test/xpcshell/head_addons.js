@@ -120,6 +120,31 @@ function do_get_addon(aName) {
 }
 
 /**
+ * Returns an extension uri spec
+ *
+ * @param  aProfileDir
+ *         The extension install directory
+ * @return a uri spec pointing to the root of the extension
+ */
+function do_get_addon_root_uri(aProfileDir, aId) {
+  let path = aProfileDir.clone();
+  path.append(aId);
+  if (!path.exists()) {
+    path.leafName += ".xpi";
+    return "jar:" + Services.io.newFileURI(path).spec + "!/";
+  }
+  else {
+    return Services.io.newFileURI(path).spec;
+  }
+}
+
+function do_get_expected_addon_name(aId) {
+  if (Services.prefs.getBoolPref("extensions.alwaysUnpack"))
+    return aId;
+  return aId + ".xpi";
+}
+
+/**
  * Check that an array of actual add-ons is the same as an array of
  * expected add-ons.
  *
@@ -361,8 +386,13 @@ function loadAddonsList() {
 function isItemInAddonsList(aType, aDir, aId) {
   var path = aDir.clone();
   path.append(aId);
+  var xpiPath = aDir.clone();
+  xpiPath.append(aId + ".xpi");
   for (var i = 0; i < gAddonsList[aType].length; i++) {
-    if (gAddonsList[aType][i].equals(path))
+    let file = gAddonsList[aType][i];
+    if (file.isDirectory() && file.equals(path))
+      return true;
+    if (file.isFile() && file.equals(xpiPath))
       return true;
   }
   return false;
@@ -408,19 +438,7 @@ function writeLocaleStrings(aData) {
   return rdf;
 }
 
-/**
- * Writes an install.rdf manifest into a directory using the properties passed
- * in a JS object. The objects should contain a property for each property to
- * appear in the RDFThe object may contain an array of objects with id,
- * minVersion and maxVersion in the targetApplications property to give target
- * application compatibility.
- *
- * @param   aData
- *          The object holding data about the add-on
- * @param   aDir
- *          The directory to add the install.rdf to
- */
-function writeInstallRDFToDir(aData, aDir) {
+function createInstallRDF(aData) {
   var rdf = '<?xml version="1.0"?>\n';
   rdf += '<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n' +
          '     xmlns:em="http://www.mozilla.org/2004/em-rdf#">\n';
@@ -466,7 +484,25 @@ function writeInstallRDFToDir(aData, aDir) {
   }
 
   rdf += "</Description>\n</RDF>\n";
+  return rdf;
+}
 
+/**
+ * Writes an install.rdf manifest into a directory using the properties passed
+ * in a JS object. The objects should contain a property for each property to
+ * appear in the RDFThe object may contain an array of objects with id,
+ * minVersion and maxVersion in the targetApplications property to give target
+ * application compatibility.
+ *
+ * @param   aData
+ *          The object holding data about the add-on
+ * @param   aDir
+ *          The directory to add the install.rdf to
+ * @param   aExtraFile
+ *          An optional dummy file to create in the directory
+ */
+function writeInstallRDFToDir(aData, aDir, aExtraFile) {
+  var rdf = createInstallRDF(aData);
   if (!aDir.exists())
     aDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
   var file = aDir.clone();
@@ -480,6 +516,60 @@ function writeInstallRDFToDir(aData, aDir) {
            FileUtils.PERMS_FILE, 0);
   fos.write(rdf, rdf.length);
   fos.close();
+
+  if (!aExtraFile)
+    return;
+
+  file = aDir.clone();
+  file.append(aExtraFile);
+  file.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+}
+
+/**
+ * Writes an install.rdf manifest into an extension using the properties passed
+ * in a JS object. The objects should contain a property for each property to
+ * appear in the RDFThe object may contain an array of objects with id,
+ * minVersion and maxVersion in the targetApplications property to give target
+ * application compatibility.
+ *
+ * @param   aData
+ *          The object holding data about the add-on
+ * @param   aDir
+ *          The install directory to add the extension to
+ * @param   aId
+ *          An optional string to override the default installation aId
+ * @param   aExtraFile
+ *          An optional dummy file to create in the extension
+ * @return  A file pointing to where the extension was installed
+ */
+function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
+  var id = aId ? aId : aData.id
+
+  var dir = aDir.clone();
+
+  if (Services.prefs.getBoolPref("extensions.alwaysUnpack")) {
+    dir.append(id);
+    writeInstallRDFToDir(aData, dir, aExtraFile);
+    return dir;
+  }
+
+  if (!dir.exists())
+    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  dir.append(id + ".xpi");
+  var rdf = createInstallRDF(aData);
+  var stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(AM_Ci.nsIStringInputStream);
+  stream.setData(rdf, -1);
+  var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+             createInstance(AM_Ci.nsIZipWriter);
+  zipW.open(dir, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
+  zipW.addEntryStream("install.rdf", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
+                      stream, false);
+  if (aExtraFile)
+    zipW.addEntryStream(aExtraFile, 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
+                        stream, false);
+  zipW.close();
+  return dir;
 }
 
 function registerDirectory(aKey, aDir) {
@@ -510,6 +600,19 @@ function getExpectedEvent(aId) {
   if (event instanceof Array)
     return event;
   return [event, true];
+}
+
+function getExpectedInstall(aAddon) {
+  if (gExpectedInstalls instanceof Array)
+    return gExpectedInstalls.shift();
+  if (!aAddon || !aAddon.id)
+    return gExpectedInstalls["NO_ID"].shift();
+  let id = aAddon.id;
+  if (!(id in gExpectedInstalls) || !(gExpectedInstalls[id] instanceof Array))
+    do_throw("Wasn't expecting events for " + id);
+  if (gExpectedInstalls[id].length == 0)
+    do_throw("Too many events for " + id);
+  return gExpectedInstalls[id].shift();
 }
 
 const AddonListener = {
@@ -603,66 +706,66 @@ const InstallListener = {
         install.state != AddonManager.STATE_AVAILABLE)
       do_throw("Bad install state " + install.state);
     do_check_eq(install.error, 0);
-    do_check_eq("onNewInstall", gExpectedInstalls.shift());
+    do_check_eq("onNewInstall", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADING);
     do_check_eq(install.error, 0);
-    do_check_eq("onDownloadStarted", gExpectedInstalls.shift());
+    do_check_eq("onDownloadStarted", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadEnded: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_eq(install.error, 0);
-    do_check_eq("onDownloadEnded", gExpectedInstalls.shift());
+    do_check_eq("onDownloadEnded", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadFailed: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    do_check_eq("onDownloadFailed", gExpectedInstalls.shift());
+    do_check_eq("onDownloadFailed", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadCancelled: function(install) {
     do_check_eq(install.state, AddonManager.STATE_CANCELLED);
     do_check_eq(install.error, 0);
-    do_check_eq("onDownloadCancelled", gExpectedInstalls.shift());
+    do_check_eq("onDownloadCancelled", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onInstallStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLING);
     do_check_eq(install.error, 0);
-    do_check_eq("onInstallStarted", gExpectedInstalls.shift());
+    do_check_eq("onInstallStarted", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onInstallEnded: function(install, newAddon) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLED);
     do_check_eq(install.error, 0);
-    do_check_eq("onInstallEnded", gExpectedInstalls.shift());
+    do_check_eq("onInstallEnded", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onInstallFailed: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALL_FAILED);
-    do_check_eq("onInstallFailed", gExpectedInstalls.shift());
+    do_check_eq("onInstallFailed", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onInstallCancelled: function(install) {
     do_check_eq(install.state, AddonManager.STATE_CANCELLED);
     do_check_eq(install.error, 0);
-    do_check_eq("onInstallCancelled", gExpectedInstalls.shift());
+    do_check_eq("onInstallCancelled", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onExternalInstall: function(aAddon, existingAddon, aRequiresRestart) {
-    do_check_eq("onExternalInstall", gExpectedInstalls.shift());
+    do_check_eq("onExternalInstall", getExpectedInstall(aAddon));
     do_check_false(aRequiresRestart);
     return check_test_completed(arguments);
   }
@@ -687,8 +790,13 @@ function check_test_completed(aArgs) {
   if (!gNext)
     return;
 
-  if (gExpectedInstalls.length > 0)
+  if (gExpectedInstalls instanceof Array &&
+      gExpectedInstalls.length > 0)
     return;
+  else for each (let installList in gExpectedInstalls) {
+    if (installList.length > 0)
+      return;
+  }
 
   for (let id in gExpectedEvents) {
     if (gExpectedEvents[id].length > 0)
