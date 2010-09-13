@@ -29,24 +29,32 @@
       <tr><td>&about.startup.app.ready;</td><td id="restored">—</td><td>—</td></tr>
     </table>
 
-    <div id="graph"/>
-    <div id="overview"/>
+    <div id="toggle-container">
+      <a class="toggle" id="showtable" href="#" onclick="showTable()">&about.startup.table;</a>
+      <a class="toggle" id="showgraph" href="#" onclick="showGraph()">&about.startup.graph;</a>
+    </div>
 
-    <h1>&about.startup.table;</h1>
-    <table id="duration-table">
-      <tr>
-        <th>&about.startup.timestamp;</th>
-        <th>&about.startup.duration.launch;</th>
-        <th>&about.startup.duration.startup;</th>
-        <th>&about.startup.duration.ready;</th>
-        <th colspan="4">&about.startup.version;</th>
-      </tr>
-      <tr class="empty"><td colspan="8"><i>&about.startup.noevents;</i></td></tr>
-    </table>
-    <table id="event-table">
-      <tr><th>&about.startup.timestamp;</th><th>&about.startup.eventdesc;</th></tr>
-      <tr class="empty"><td colspan="2"><i>&about.startup.noevents;</i></td></tr>
-    </table>
+    <div id="graphs">
+      <div id="graph"/>
+      <div id="overview"/>
+    </div>
+
+    <div id="tables">
+      <table id="duration-table">
+        <tr>
+          <th>&about.startup.timestamp;</th>
+          <th>&about.startup.duration.launch;</th>
+          <th>&about.startup.duration.startup;</th>
+          <th>&about.startup.duration.ready;</th>
+          <th colspan="4">&about.startup.version;</th>
+        </tr>
+        <tr class="empty"><td colspan="8"><i>&about.startup.noevents;</i></td></tr>
+      </table>
+      <table id="event-table">
+        <tr><th>&about.startup.timestamp;</th><th>&about.startup.eventdesc;</th></tr>
+        <tr class="empty"><td colspan="2"><i>&about.startup.noevents;</i></td></tr>
+      </table>
+    </div>
     <script type="application/javascript;version=1.8" src="chrome://global/content/aboutStartup.js"/>
   </body>
 </html>
