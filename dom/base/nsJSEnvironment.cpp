@@ -311,51 +311,6 @@ nsCCMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-class nsJSVersionSetter {
-public:
-  nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion);
-  ~nsJSVersionSetter();
-
-private:
-  JSContext* mContext;
-  uint32 mOldOptions;
-  JSVersion mOldVersion;
-  JSBool mOptionsChanged;
-};
-
-nsJSVersionSetter::nsJSVersionSetter(JSContext *aContext, PRUint32 aVersion)
-  : mContext(aContext)
-{
-  // JSVERSION_HAS_XML may be set in our version mask - however, we can't
-  // simply pass this directly to JS_SetOptions as it masks out that bit -
-  // the only way to make this happen is via JS_SetOptions.
-  JSBool hasxml = (aVersion & JSVERSION_HAS_XML) != 0;
-  mOldOptions = ::JS_GetOptions(mContext);
-  mOptionsChanged = ((hasxml) ^ !!(mOldOptions & JSOPTION_XML));
-
-  if (mOptionsChanged) {
-    ::JS_SetOptions(mContext,
-                    hasxml
-                    ? mOldOptions | JSOPTION_XML
-                    : mOldOptions & ~JSOPTION_XML);
-  }
-
-  // Change the version - this is cheap when the versions match, so no need
-  // to optimize here...
-  JSVersion newVer = (JSVersion)(aVersion & JSVERSION_MASK);
-  mOldVersion = ::JS_SetVersion(mContext, newVer);
-}
-
-nsJSVersionSetter::~nsJSVersionSetter()
-{
-  ::JS_SetVersion(mContext, mOldVersion);
-
-  if (mOptionsChanged) {
-      ::JS_SetOptions(mContext, mOldOptions);
-  }
-}
-
-
 /****************************************************************
  ************************** AutoFree ****************************
  ****************************************************************/
@@ -1529,7 +1484,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
 
     JSAutoRequest ar(mContext);
-    nsJSVersionSetter setVersion(mContext, aVersion);
 
     JSAutoCrossCompartmentCall accc;
     if (!accc.enter(mContext, (JSObject *)aScopeObject)) {
@@ -1540,14 +1494,15 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
     ++mExecuteDepth;
 
-    ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
-                                            (JSObject *)aScopeObject,
-                                            jsprin,
-                                            (jschar*)PromiseFlatString(aScript).get(),
-                                            aScript.Length(),
-                                            aURL,
-                                            aLineNo,
-                                            &val);
+    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
+                                                   (JSObject *)aScopeObject,
+                                                   jsprin,
+                                                   (jschar*)PromiseFlatString(aScript).get(),
+                                                   aScript.Length(),
+                                                   aURL,
+                                                   aLineNo,
+                                                   &val,
+                                                   JSVersion(aVersion));
 
     --mExecuteDepth;
 
@@ -1737,16 +1692,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       return NS_ERROR_FAILURE;
     }
 
-    nsJSVersionSetter setVersion(mContext, aVersion);
-
-    ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
-                                            (JSObject *)aScopeObject,
-                                            jsprin,
-                                            (jschar*)PromiseFlatString(aScript).get(),
-                                            aScript.Length(),
-                                            aURL,
-                                            aLineNo,
-                                            vp);
+    ok = ::JS_EvaluateUCScriptForPrincipalsVersion(mContext,
+                                                   (JSObject *)aScopeObject,
+                                                   jsprin,
+                                                   (jschar*)PromiseFlatString(aScript).get(),
+                                                   aScript.Length(),
+                                                   aURL,
+                                                   aLineNo,
+                                                   vp,
+                                                   JSVersion(aVersion));
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1826,16 +1780,16 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
-    nsJSVersionSetter setVersion(mContext, aVersion);
 
     JSScript* script =
-        ::JS_CompileUCScriptForPrincipals(mContext,
-                                          (JSObject *)aScopeObject,
-                                          jsprin,
-                                          (jschar*) aText,
-                                          aTextLength,
-                                          aURL,
-                                          aLineNo);
+        ::JS_CompileUCScriptForPrincipalsVersion(mContext,
+                                                 (JSObject *)aScopeObject,
+                                                 jsprin,
+                                                 (jschar*) aText,
+                                                 aTextLength,
+                                                 aURL,
+                                                 aLineNo,
+                                                 JSVersion(aVersion));
     if (script) {
       JSObject *scriptObject = ::JS_NewScriptObject(mContext, script);
       if (scriptObject) {
@@ -2032,15 +1986,14 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   // Therefore we never bother compiling with principals.
   // (that probably means we should avoid JS_CompileUCFunctionForPrincipals!)
   JSAutoRequest ar(mContext);
-  nsJSVersionSetter setVersion(mContext, aVersion);
 
   JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipals(mContext,
-                                          nsnull, nsnull,
-                                          nsAtomCString(aName).get(), aArgCount, aArgNames,
-                                          (jschar*)PromiseFlatString(aBody).get(),
-                                          aBody.Length(),
-                                          aURL, aLineNo);
+      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
+                                                 nsnull, nsnull,
+                                                 nsAtomCString(aName).get(), aArgCount, aArgNames,
+                                                 (jschar*)PromiseFlatString(aBody).get(),
+                                                 aBody.Length(),
+                                                 aURL, aLineNo, JSVersion(aVersion));
 
   if (!fun) {
     ReportPendingException();
@@ -2095,16 +2048,16 @@ nsJSContext::CompileFunction(void* aTarget,
   JSObject *target = (JSObject*)aTarget;
 
   JSAutoRequest ar(mContext);
-  nsJSVersionSetter setVersion(mContext, aVersion);
 
   JSFunction* fun =
-      ::JS_CompileUCFunctionForPrincipals(mContext,
-                                          aShared ? nsnull : target, jsprin,
-                                          PromiseFlatCString(aName).get(),
-                                          aArgCount, aArgArray,
-                                          (jschar*)PromiseFlatString(aBody).get(),
-                                          aBody.Length(),
-                                          aURL, aLineNo);
+      ::JS_CompileUCFunctionForPrincipalsVersion(mContext,
+                                                 aShared ? nsnull : target, jsprin,
+                                                 PromiseFlatCString(aName).get(),
+                                                 aArgCount, aArgArray,
+                                                 (jschar*)PromiseFlatString(aBody).get(),
+                                                 aBody.Length(),
+                                                 aURL, aLineNo,
+                                                 JSVersion(aVersion));
 
   if (jsprin)
     JSPRINCIPALS_DROP(mContext, jsprin);

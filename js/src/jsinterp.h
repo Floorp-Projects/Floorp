@@ -126,7 +126,6 @@ struct JSStackFrame
 
     /* TODO: remove */
     void                *ncode_;        /* bug 535912 */
-    JSVersion           callerVersion_; /* bug 535912 */
     JSObject            *blockChain_;   /* bug 540675 */
 
 #if JS_BITS_PER_WORD == 32
@@ -553,16 +552,6 @@ struct JSStackFrame
         flags_ |= JSFRAME_HAS_HOOK_DATA;
     }
 
-    /* Version */
-
-    JSVersion callerVersion() const {
-        return callerVersion_;
-    }
-
-    void setCallerVersion(JSVersion version) {
-        callerVersion_ = version;
-    }
-
     /* Return value */
 
     const js::Value& returnValue() {
@@ -738,10 +727,6 @@ struct JSStackFrame
 
     static ptrdiff_t offsetOfncode() {
         return offsetof(JSStackFrame, ncode_);
-    }
-
-    static size_t offsetOfCallerVersion() {
-        return offsetof(JSStackFrame, callerVersion_);
     }
 
     static size_t offsetOfBlockChain() {

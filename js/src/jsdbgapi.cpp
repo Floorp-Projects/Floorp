@@ -1303,7 +1303,7 @@ JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script)
 {
-    return (JSVersion) (script->version & JSVERSION_MASK);
+    return VersionNumber(script->getVersion());
 }
 
 /***************************************************************************/
@@ -1788,6 +1788,12 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 }
 
 /************************************************************************/
+
+JS_FRIEND_API(void)
+js_RevertVersion(JSContext *cx)
+{
+    cx->clearVersionOverride();
+}
 
 JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt)
