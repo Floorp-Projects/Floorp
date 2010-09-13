@@ -111,7 +111,7 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             continue;
 
         if (vd.buf == nsnull) {
-            LogMessage("No VBO bound to enabled attrib index %d!", i);
+            LogMessage(mVerbose, "No VBO bound to enabled attrib index %d!", i);
             return PR_FALSE;
         }
 
@@ -126,12 +126,12 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             CheckedUint32(vd.componentSize()) * vd.size;   // and the number of bytes needed for these components
 
         if (!checked_needed.valid()) {
-            LogMessage("Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
+            LogMessage(mVerbose, "Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
             return PR_FALSE;
         }
 
         if (vd.buf->ByteLength() < checked_needed.value()) {
-            LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
+            LogMessage(mVerbose, "VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
                        i, checked_needed.value(), vd.buf->ByteLength());
             return PR_FALSE;
         }
