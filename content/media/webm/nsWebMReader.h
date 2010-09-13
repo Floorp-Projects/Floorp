@@ -41,6 +41,7 @@
 
 #include "nsDeque.h"
 #include "nsBuiltinDecoderReader.h"
+#include "nsWebMBufferedParser.h"
 #include "nestegg/nestegg.h"
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
@@ -126,6 +127,7 @@ public:
   virtual nsresult ReadMetadata();
   virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime);
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime);
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset);
 
 private:
   // Value passed to NextPacket to determine if we are reading a video or an
@@ -189,6 +191,21 @@ private:
 
   // Number of samples we've decoded since decoding began at mAudioStartMs.
   PRUint64 mAudioSamples;
+
+  // Time in ns by which raw timecodes from the media must be scaled to
+  // produce absolute timecodes.  Used by CalculateBufferedForRange.
+  PRUint64 mTimecodeScale;
+
+  // Update aBuffered with the time range for the given data range.
+  void CalculateBufferedForRange(nsTimeRanges* aBuffered,
+                                 PRInt64 aStartOffset, PRInt64 aEndOffset);
+
+  // Sorted (by offset) map of data offsets to timecodes.  Populated
+  // on the main thread as data is received and parsed by nsWebMBufferedParsers.
+  nsTArray<nsWebMTimeDataOffset> mTimeMapping;
+
+  // Sorted (by offset) live parser instances.  Main thread only.
+  nsTArray<nsWebMBufferedParser> mRangeParsers;
 
   // Booleans to indicate if we have audio and/or video data
   PRPackedBool mHasVideo;
