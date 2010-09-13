@@ -38,6 +38,7 @@
 #include "base/basictypes.h"
 #include "jscntxt.h"
 #include "nsXULAppAPI.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "mozilla/jetpack/JetpackChild.h"
 #include "mozilla/jetpack/Handle.h"
@@ -87,6 +88,31 @@ JetpackChild::sGlobalClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+#ifdef BUILD_CTYPES
+static char*
+UnicodeToNative(JSContext *cx, const jschar *source, size_t slen)
+{
+  nsCAutoString native;
+  nsDependentString unicode(reinterpret_cast<const PRUnichar*>(source), slen);
+  nsresult rv = NS_CopyUnicodeToNative(unicode, native);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "could not convert string to native charset");
+    return NULL;
+  }
+
+  char* result = static_cast<char*>(JS_malloc(cx, native.Length() + 1));
+  if (!result)
+    return NULL;
+
+  memcpy(result, native.get(), native.Length() + 1);
+  return result;
+}
+
+static JSCTypesCallbacks sCallbacks = {
+  UnicodeToNative
+};
+#endif
+
 bool
 JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
                    MessageLoop* aIOLoop,
@@ -111,10 +137,13 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
     JS_SetContextPrivate(mCx, this);
     JSObject* implGlobal =
       JS_NewCompartmentAndGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass), NULL);
+    jsval ctypes;
     if (!implGlobal ||
         !JS_InitStandardClasses(mCx, implGlobal) ||
 #ifdef BUILD_CTYPES
         !JS_InitCTypesClass(mCx, implGlobal) ||
+        !JS_GetProperty(mCx, implGlobal, "ctypes", &ctypes) ||
+        !JS_SetCTypesCallbacks(mCx, JSVAL_TO_OBJECT(ctypes), &sCallbacks) ||
 #endif
         !JS_DefineFunctions(mCx, implGlobal,
                             const_cast<JSFunctionSpec*>(sImplMethods)))
