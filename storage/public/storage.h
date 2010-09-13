@@ -58,6 +58,8 @@
 #include "mozIStorageBindingParamsArray.h"
 #include "mozIStorageBindingParams.h"
 #include "mozIStorageServiceQuotaManagement.h"
+#include "mozIStorageCompletionCallback.h"
+#include "mozIStorageAsyncStatement.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Native Language Helpers
