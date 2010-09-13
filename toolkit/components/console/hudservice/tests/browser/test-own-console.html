@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+<head>
+<script>
+  window.console = {
+    foo: "bar"
+  }
+
+  function loadIFrame(aCallback) {
+    var iframe = document.body.querySelector("iframe");
+    iframe.addEventListener("load", function() {
+      iframe.removeEventListener("load", arguments.callee, true);
+      aCallback(iframe);
+    }, true);
+
+    iframe.setAttribute("src", "test-console.html");
+  }
+</script>
+</head>
+<body>
+  <iframe></iframe>
+</body>

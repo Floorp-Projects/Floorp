@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,7 @@ function testOpenWebConsole()
   hud = HUDService.getHeadsUpDisplay(hudId);
 
   HUDService.logWarningAboutReplacedAPI(hudId);
+  testWarning();
 }
 
 function testWarning()
@@ -67,9 +69,11 @@ function testWarning()
 
   var display = HUDService.getDisplayByURISpec(content.location.href);
   var outputNode = display.querySelectorAll(".hud-output-node")[0];
-  executeSoon(function () {
-    testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
-  });
+
+  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+
+  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
+  executeSoon(finishTest);
 }
 
 function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
@@ -77,38 +81,29 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
   var message = aOutputNode.textContent.indexOf(aMatchString);
   if (message > -1) {
     ok(true, aSuccessErrObj.success);
-  return;
+    return;
   }
   ok(false, aSuccessErrObj.err);
 }
 
-function finishTest() {
+function finishTest()
+{
   hud = null;
   hudId = null;
 
-  executeSoon(function() {
-    finish();
-  });
+  finish();
 }
 
-let hud, hudId, tab, browser, filterBox, outputNode;
-let win = gBrowser.selectedBrowser;
+let hud, hudId;
 
-tab = gBrowser.selectedTab;
-browser = gBrowser.getBrowserForTab(tab);
+content.location = TEST_REPLACED_API_URI;
 
-content.location.href = TEST_REPLACED_API_URI;
-
-function test() {
+function test()
+{
   waitForExplicitFinish();
-  browser.addEventListener("DOMContentLoaded", function onLoad(event) {
-    browser.removeEventListener("DOMContentLoaded", onLoad, false);
-    executeSoon(function (){
-      testOpenWebConsole();
-      executeSoon(function (){
-        testWarning();
-      });
-    });
-  }, false);
-  finishTest();
+  gBrowser.selectedBrowser.addEventListener("load", function() {
+    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee,
+      true);
+    testOpenWebConsole();
+  }, true);
 }
