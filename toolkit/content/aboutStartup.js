@@ -201,7 +201,7 @@ function populateMeasurements()
 
 function populateEvents()
 {
-  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild, platformVersion, platformBuild FROM duration");
+  var query = db.createStatement("SELECT timestamp, extensionID, extensionVersion, action FROM events");
   let lastver, lastbuild;
   let hasresults;
 
