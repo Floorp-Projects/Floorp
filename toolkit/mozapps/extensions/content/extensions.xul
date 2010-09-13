@@ -254,24 +254,28 @@
                      tooltiptext="&search.filter2.available.tooltip;"/>
             </radiogroup>
           </hbox>
-          <hbox class="view-header global-warning-container">
+          <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
-            <hbox class="global-warning">
+            <hbox class="global-warning" flex="1">
               <image class="warning-icon"/>
-              <label class="global-warning-safemode"
-                     value="&warning.safemode.label;"/>
-              <label class="global-warning-checkcompatibility"
-                     value="&warning.checkcompatibility.label;"/>
+              <label class="global-warning-safemode" flex="1">
+                &warning.safemode.label;
+              </label>
+              <label class="global-warning-checkcompatibility" flex="1">
+                &warning.checkcompatibility.label;
+              </label>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity"
-                     value="&warning.updatesecurity.label;"/>
+              <label class="global-warning-updatesecurity" flex="1">
+                &warning.updatesecurity.label;
+              </label>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
                       command="cmd_enableUpdateSecurity"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
             <hbox id="search-sorters" class="sort-controls"
@@ -294,24 +298,28 @@
 
         <!-- list view -->
         <vbox id="list-view" flex="1" class="view-pane">
-          <hbox class="view-header global-warning-container">
+          <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
-            <hbox class="global-warning">
+            <hbox class="global-warning" flex="1">
               <image class="warning-icon"/>
-              <label class="global-warning-safemode"
-                     value="&warning.safemode.label;"/>
-              <label class="global-warning-checkcompatibility"
-                     value="&warning.checkcompatibility.label;"/>
+              <label class="global-warning-safemode" flex="1">
+                &warning.safemode.label;
+              </label>
+              <label class="global-warning-checkcompatibility" flex="1">
+                &warning.checkcompatibility.label;
+              </label>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity"
-                     value="&warning.updatesecurity.label;"/>
+              <label class="global-warning-updatesecurity" flex="1">
+                &warning.updatesecurity.label;
+              </label>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
                       command="cmd_enableUpdateSecurity"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
             <hbox id="list-sorters" class="sort-controls" sortby="name"
@@ -330,24 +338,28 @@
 
         <!-- updates view -->
         <vbox id="updates-view" flex="1" class="view-pane">
-          <hbox class="view-header global-warning-container">
+          <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
-            <hbox class="global-warning">
+            <hbox class="global-warning" flex="1">
               <image class="warning-icon"/>
-              <label class="global-warning-safemode"
-                     value="&warning.safemode.label;"/>
-              <label class="global-warning-checkcompatibility"
-                     value="&warning.checkcompatibility.label;"/>
+              <label class="global-warning-safemode" flex="1">
+                &warning.safemode.label;
+              </label>
+              <label class="global-warning-checkcompatibility" flex="1">
+                &warning.checkcompatibility.label;
+              </label>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity"
-                     value="&warning.updatesecurity.label;"/>
+              <label class="global-warning-updatesecurity" flex="1">
+                &warning.updatesecurity.label;
+              </label>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
                       command="cmd_enableUpdateSecurity"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
             <hbox id="updates-sorters" class="sort-controls" sortby="dateUpdated"
@@ -373,22 +385,26 @@
         <!-- detail view -->
         <vbox id="detail-view" flex="1" class="view-pane">
           <!-- global warnings -->
-          <hbox class="global-warning-container global-warning" pack="start">
+          <hbox class="global-warning-container global-warning">
             <image class="warning-icon"/>
-            <label class="global-warning-safemode"
-                   value="&warning.safemode.label;"/>
-            <label class="global-warning-checkcompatibility"
-                   value="&warning.checkcompatibility.label;"/>
+            <label class="global-warning-safemode" flex="1">
+              &warning.safemode.label;
+            </label>
+            <label class="global-warning-checkcompatibility" flex="1">
+              &warning.checkcompatibility.label;
+            </label>
             <button class="button-link global-warning-checkcompatibility"
                     label="&warning.checkcompatibility.enable.label;"
                     tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                     command="cmd_enableCheckCompatibility"/>
-            <label class="global-warning-updatesecurity"
-                   value="&warning.updatesecurity.label;"/>
+            <label class="global-warning-updatesecurity" flex="1">
+              &warning.updatesecurity.label;
+            </label>
             <button class="button-link global-warning-updatesecurity"
                     label="&warning.updatesecurity.enable.label;"
                     tooltiptext="&warning.updatesecurity.enable.tooltip;"
                     command="cmd_enableUpdateSecurity"/>
+            <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
           </hbox>
           <scrollbox  flex="1" class="addon-view" orient="horizontal" pack="stretch" align="start">
             <spacer flex="1"/>
