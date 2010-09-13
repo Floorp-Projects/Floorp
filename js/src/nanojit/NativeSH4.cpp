@@ -1764,7 +1764,7 @@ namespace nanojit
     /***********************************/
 
 #define SH4_movl_PCrel(address, reg)                                    \
-	SH4_movl_dispPC(((uint32_t)(address) - (((uint32_t)_nIns) & ~0x3)), reg)
+    SH4_movl_dispPC(((uint32_t)(address) - (((uint32_t)_nIns) & ~0x3)), reg)
 
 #define SH4_LABEL(target) (int32_t)((uint32_t)(target) - (uint32_t)(_nIns) - 2)
 
@@ -2946,7 +2946,7 @@ namespace nanojit
 
         if (opcode == LIR_mulxovi || opcode == LIR_muljovi) {
             patch_target = asm_branch(false, target);
-            
+
             underrunProtect(3 * sizeof(NIns));
 
             // Remember the T-bit is equal to :
@@ -3092,7 +3092,7 @@ namespace nanojit
                 asm_inc_m32(&guard->record()->profCount);
         )
 
-        // 2. Restore the stack pointer. 
+        // 2. Restore the stack pointer.
         MR(SP, FP);
 
         // 1. Set the return value.
@@ -3199,7 +3199,7 @@ namespace nanojit
     RegisterMask Assembler::nHint(LIns* inst) {
         RegisterMask prefer = 0;
 
-        NanoAssert(inst->isop(LIR_paramp)); 
+        NanoAssert(inst->isop(LIR_paramp));
         if (inst->paramKind() == 0)
             if (inst->paramArg() < 4)
                 prefer = rmask(argRegs[inst->paramArg()]);
