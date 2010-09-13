@@ -51,6 +51,10 @@
 
   <script type="application/javascript">
   <![CDATA[
+    Components.utils.import("resource://gre/modules/ctypes.jsm");
+
+    CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
+    CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
 
     /*
      * input: string of the url where we are running from
@@ -81,23 +85,42 @@
       return dir;    
     }
 
+    function setupLibs(path) {
+      let libFile = path.clone();
+      libFile.append(CTYPES_TEST_LIB);
+      ok(libFile.exists(), "ctypes test library doesn't exist!?");
+
+      libFile.copyTo(null, CTYPES_UNICODE_LIB);
+    }
+
+    function cleanupLibs(path) {
+      let unicodeFile = path.clone();
+      unicodeFile.append(CTYPES_UNICODE_LIB);
+      ok(unicodeFile.exists(), "ctypes unicode test library doesn't exist!?");
+      unicodeFile.remove(false);
+    }
+
     function test()
     {
       SimpleTest.waitForExplicitFinish();
 
+      var dir = getCurrentDir(location.path);
+      ok(dir.exists() && dir.isDirectory(), "Chrome test dir doesn't exist?!");
+      setupLibs(dir);
+
       var worker = new ChromeWorker("ctypes_worker.js");
       worker.onmessage = function(event) {
         is(event.data, "Done!", "Wrong message!");
+        cleanupLibs(dir);
         SimpleTest.finish();
       }
       worker.onerror = function(event) {
         ok(false, "Worker had an error: " + event.message);
         worker.terminate();
+        cleanupLibs(dir);
         SimpleTest.finish();
       }
 
-      var dir = getCurrentDir(location.path);
-      ok(dir.exists() && dir.isDirectory(), "Chrome test dir doesn't exist?!");
       worker.postMessage(dir.path);
     }
 
