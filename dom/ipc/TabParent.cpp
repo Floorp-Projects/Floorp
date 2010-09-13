@@ -63,7 +63,7 @@
 #include "nsNetUtil.h"
 #include "jsarray.h"
 #include "nsContentUtils.h"
-#include "nsGeolocationOOP.h"
+#include "nsContentPermissionHelper.h"
 #include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIDialogCreator.h"
 #include "nsThreadUtils.h"
@@ -527,11 +527,7 @@ TabParent::DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* act
 PContentPermissionRequestParent*
 TabParent::AllocPContentPermissionRequest(const nsCString& type, const IPC::URI& uri)
 {
-  if (type.Equals(NS_LITERAL_CSTRING("geolocation"))) {
-    return new GeolocationRequestParent(mFrameElement, uri);
-  }
-
-  return nsnull;
+  return new ContentPermissionRequestParent(type, mFrameElement, uri);
 }
   
 bool
