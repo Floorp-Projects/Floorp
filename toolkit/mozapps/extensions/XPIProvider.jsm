@@ -121,10 +121,9 @@ const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
 // Properties that only exist in the database
 const DB_METADATA        = ["installDate", "updateDate", "size", "sourceURI",
-                            "releaseNotesURI"];
+                            "releaseNotesURI", "applyBackgroundUpdates"];
 const DB_BOOL_METADATA   = ["visible", "active", "userDisabled", "appDisabled",
-                            "pendingUninstall", "applyBackgroundUpdates",
-                            "bootstrap", "skinnable"];
+                            "pendingUninstall", "bootstrap", "skinnable"];
 
 const BOOTSTRAP_REASONS = {
   APP_STARTUP     : 1,
@@ -523,7 +522,7 @@ function loadManifestFromRDF(aUri, aStream) {
 
   addon.appDisabled = !isUsableAddon(addon);
 
-  addon.applyBackgroundUpdates = true;
+  addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   return addon;
 }
@@ -3938,8 +3937,8 @@ var XPIDatabase = {
     let stmt = this.getStatement("setAddonProperties");
     stmt.params.internal_id = aAddon._internal_id;
 
-    ["userDisabled", "appDisabled", "pendingUninstall",
-     "applyBackgroundUpdates"].forEach(function(aProp) {
+    ["userDisabled", "appDisabled",
+     "pendingUninstall"].forEach(function(aProp) {
       if (aProp in aProperties) {
         stmt.params[aProp] = convertBoolean(aProperties[aProp]);
         aAddon[aProp] = aProperties[aProp];
@@ -3948,6 +3947,14 @@ var XPIDatabase = {
         stmt.params[aProp] = convertBoolean(aAddon[aProp]);
       }
     });
+
+    if ("applyBackgroundUpdates" in aProperties) {
+      stmt.params.applyBackgroundUpdates = aProperties.applyBackgroundUpdates;
+      aAddon.applyBackgroundUpdates = aProperties.applyBackgroundUpdates;
+    }
+    else {
+      stmt.params.applyBackgroundUpdates = aAddon.applyBackgroundUpdates;
+    }
 
     executeStatement(stmt);
   },
@@ -5643,6 +5650,13 @@ function AddonWrapper(aAddon) {
     return aAddon.applyBackgroundUpdates;
   });
   this.__defineSetter__("applyBackgroundUpdates", function(val) {
+    if (val != AddonManager.AUTOUPDATE_DEFAULT &&
+        val != AddonManager.AUTOUPDATE_DISABLE &&
+        val != AddonManager.AUTOUPDATE_ENABLE) {
+      val = val ? AddonManager.AUTOUPDATE_DEFAULT :
+                  AddonManager.AUTOUPDATE_DISABLE;
+    }
+
     if (val == aAddon.applyBackgroundUpdates)
       return val;
 
