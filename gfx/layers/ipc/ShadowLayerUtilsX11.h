@@ -47,6 +47,7 @@
 #include "IPC/IPCMessageUtils.h"
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11
+#define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
 class gfxXlibSurface;
 
