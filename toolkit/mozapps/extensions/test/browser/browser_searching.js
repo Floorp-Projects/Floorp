@@ -20,6 +20,7 @@ var gServer;
 var gAddonInstalled = false;
 
 function test() {
+  requestLongerTimeout(2);
   // Turn on searching for this test
   Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
 
