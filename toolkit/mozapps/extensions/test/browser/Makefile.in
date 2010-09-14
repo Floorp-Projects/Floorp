@@ -65,6 +65,7 @@ _TEST_FILES = \
   browser_bug591465.js \
   browser_bug591465.xml \
   browser_details.js \
+  browser_discovery.js \
   browser_dragdrop.js \
   browser_list.js \
   browser_searching.js \

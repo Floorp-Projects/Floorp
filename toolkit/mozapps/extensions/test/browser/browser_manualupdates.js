@@ -21,7 +21,7 @@ function test() {
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE
   }]);
 
-  open_manager(null, function(aWindow) {
+  open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     run_next_test();
