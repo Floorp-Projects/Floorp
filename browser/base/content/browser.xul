@@ -860,7 +860,8 @@
                      ondragenter="homeButtonObserver.onDragOver(event)"
                      ondrop="homeButtonObserver.onDrop(event)"
                      ondragleave="homeButtonObserver.onDragLeave(event)"
-                     onclick="BrowserGoHome(event);"/>
+                     onclick="BrowserGoHome(event);"
+                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
