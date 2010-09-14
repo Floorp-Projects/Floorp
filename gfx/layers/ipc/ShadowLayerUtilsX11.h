@@ -38,53 +38,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef IPC_ShadowLayerUtils_h
-#define IPC_ShadowLayerUtils_h
+#ifndef mozilla_layers_ShadowLayerUtilsX11_h
+#define mozilla_layers_ShadowLayerUtilsX11_h
+
+#include <X11/extensions/Xrender.h>
+#include <X11/Xlib.h>
 
 #include "IPC/IPCMessageUtils.h"
-#include "Layers.h"
 
-#if defined(MOZ_X11)
-#  include "mozilla/layers/ShadowLayerUtilsX11.h"
-#else
-namespace mozilla { namespace layers {
+#define MOZ_HAVE_SURFACEDESCRIPTORX11
+
+class gfxXlibSurface;
+
+namespace mozilla {
+namespace layers {
+
 struct SurfaceDescriptorX11 {
-  bool operator==(const SurfaceDescriptorX11&) const { return false; }
+  SurfaceDescriptorX11()
+  { }
+
+  SurfaceDescriptorX11(gfxXlibSurface* aSurf);
+
+  // Default copy ctor and operator= are OK
+
+  bool operator==(const SurfaceDescriptorX11& aOther) const {
+    // Define == as two descriptors having the same XID for now,
+    // ignoring size and render format.  If the two indeed refer to
+    // the same valid XID, then size/format are "actually" the same
+    // anyway, regardless of the values of the fields in
+    // SurfaceDescriptorX11.
+    return mId == aOther.mId;
+  }
+
+  already_AddRefed<gfxXlibSurface> OpenForeign() const;
+
+  Drawable mId;
+  gfxIntSize mSize;
+  PictFormat mFormat;
 };
-} }
-#endif
+
+} // namespace layers
+} // namespace mozilla
 
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::layers::FrameMetrics>
-{
-  typedef mozilla::layers::FrameMetrics paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mViewportSize);
-    WriteParam(aMsg, aParam.mViewportScrollOffset);
-    WriteParam(aMsg, aParam.mDisplayPort);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return (ReadParam(aMsg, aIter, &aResult->mViewportSize) &&
-            ReadParam(aMsg, aIter, &aResult->mViewportScrollOffset) &&
-            ReadParam(aMsg, aIter, &aResult->mDisplayPort));
-  }
-};
-
-#if !defined(MOZ_HAVE_SURFACEDESCRIPTORX11)
-template <>
 struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
   typedef mozilla::layers::SurfaceDescriptorX11 paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mId);
+    WriteParam(aMsg, aParam.mSize);
+    WriteParam(aMsg, aParam.mFormat);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mId) &&
+            ReadParam(aMsg, aIter, &aResult->mSize) &&
+            ReadParam(aMsg, aIter, &aResult->mFormat));
+  }
 };
-#endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTOR)
 
-}
+} // namespace IPC
 
-#endif // IPC_ShadowLayerUtils_h
+#endif  // mozilla_layers_ShadowLayerUtilsX11_h
