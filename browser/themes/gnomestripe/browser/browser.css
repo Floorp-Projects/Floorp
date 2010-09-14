@@ -1545,17 +1545,6 @@ statusbarpanel#statusbar-display {
   -moz-image-region: auto;
 }
 
-#TabsToolbar > #new-tab-button,
-#TabsToolbar > #wrapper-new-tab-button > #new-tab-button {
-  margin-bottom: 1px;
-}
-
-#TabsToolbar > #new-tab-button > .toolbarbutton-icon,
-#TabsToolbar > #wrapper-new-tab-button > #new-tab-button > .toolbarbutton-icon {
-  margin-top: -2px;
-  margin-bottom: -2px;
-}
-
 /* Tabstrip close button */
 .tabs-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
@@ -1583,6 +1572,18 @@ statusbarpanel#statusbar-display {
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
   box-shadow: 0 0 5px 5px Highlight inset;
   -moz-transition: none;
+}
+
+#TabsToolbar > toolbarbutton > .toolbarbutton-icon,
+#TabsToolbar > toolbarbutton > .toolbarbutton-menu-dropmarker,
+#TabsToolbar > toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
+#TabsToolbar > toolbarpaletteitem > toolbarbutton > .toolbarbutton-menu-dropmarker,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-icon,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-menu-dropmarker,
+#TabsToolbar > toolbarpaletteitem > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-icon,
+#TabsToolbar > toolbarpaletteitem > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-menu-dropmarker {
+  margin-top: -2px;
+  margin-bottom: -2px;
 }
 
 #alltabs-button > .toolbarbutton-icon {
