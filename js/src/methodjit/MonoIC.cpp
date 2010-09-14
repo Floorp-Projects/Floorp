@@ -534,6 +534,10 @@ class CallCompiler
         masm.storePtr(cxReg, Address(Assembler::stackPointerRegister, 0));
 #endif
 
+#ifdef _WIN64
+        /* x64 needs to pad the stack */
+        masm.subPtr(Imm32(32), Assembler::stackPointerRegister);
+#endif
         /* Make the call. */
         Assembler::Call call = masm.call();
 
@@ -556,6 +560,9 @@ class CallCompiler
         // So in JaegerThrowpoline without fastcall, esp was added by 8.
         // If we just want to jump there, we need to sub esp by 8 first.
         masm.addPtr(Imm32(8), Assembler::stackPointerRegister);
+#elif defined(_WIN64)
+        /* JaegerThrowpoline expcets that stack is added by 32 for padding */
+        masm.addPtr(Imm32(32), Assembler::stackPointerRegister);
 #endif
 
         Jump done = masm.jump();
