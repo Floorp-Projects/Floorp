@@ -2912,11 +2912,20 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     CHECK_REQUEST(cx);
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, Valueify(clasp), NULL, NULL);
-    if (obj &&
+    if (!obj ||
         !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
                             PrivateValue(cx->compartment))) {
-        return false;
+        return NULL;
     }
+
+    /* FIXME: comment. */
+    JSObject *res = regexp_statics_construct(cx);
+    if (!res ||
+        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS,
+                            ObjectValue(*res))) {
+        return NULL;
+    }
+
     return obj;
 }
 
@@ -5386,69 +5395,96 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
  * Regular Expressions.
  */
 JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
+JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
     jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObject(cx, chars, length, flags);
+    RegExpStatics *res = RegExpStatics::extractFrom(obj);
+    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags);
+    cx->free(chars);
+    return reobj;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags)
+{
+    CHECK_REQUEST(cx);
+    RegExpStatics *res = RegExpStatics::extractFrom(obj);
+    return RegExp::createObject(cx, res, chars, length, flags);
+}
+
+JS_PUBLIC_API(void)
+JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multiline)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, input);
+
+    RegExpStatics::extractFrom(obj)->reset(input, !!multiline);
+}
+
+JS_PUBLIC_API(void)
+JS_ClearRegExpStatics(JSContext *cx, JSObject *obj)
+{
+    CHECK_REQUEST(cx);
+    JS_ASSERT(obj);
+
+    RegExpStatics::extractFrom(obj)->clear();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, size_t length,
+                 size_t *indexp, JSBool test, jsval *rval)
+{
+    CHECK_REQUEST(cx);
+
+    RegExp *re = RegExp::extractFrom(reobj);
+    if (!re)
+        return false;
+
+    JSString *str = js_NewStringCopyN(cx, chars, length);
+    if (!str)
+        return false;
+
+    return re->execute(cx, RegExpStatics::extractFrom(obj), str, indexp, test, Valueify(rval));
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN flags)
+{
+    CHECK_REQUEST(cx);
+    jschar *chars = js_InflateString(cx, bytes, &length);
+    if (!chars)
+        return NULL;
+    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags);
     cx->free(chars);
     return obj;
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
+JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObject(cx, chars, length, flags);
-}
-
-JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, input);
-
-    /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.reset(input, !!multiline);
-}
-
-JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx)
-{
-    /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clear();
-}
-
-JS_PUBLIC_API(void)
-JS_ClearRegExpRoots(JSContext *cx)
-{
-    /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clear();
+    return RegExp::createObjectNoStatics(cx, chars, length, flags);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
-                 size_t *indexp, JSBool test, jsval *rval)
+JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+                          size_t *indexp, JSBool test, jsval *rval)
 {
     CHECK_REQUEST(cx);
-
+    
     RegExp *re = RegExp::extractFrom(obj);
-    if (!re) {
-      return JS_FALSE;
-    }
+    if (!re)
+        return false;
 
     JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str) {
-        return JS_FALSE;
-    }
-    AutoValueRooter v(cx, StringValue(str));
+    if (!str)
+        return false;
 
-    return re->execute(cx, str, indexp, test, Valueify(rval));
+    return re->executeNoStatics(cx, str, indexp, test, Valueify(rval));
 }
-
-/* TODO: compile, get/set other statics... */
 
 /************************************************************************/
 
