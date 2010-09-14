@@ -85,6 +85,7 @@ public:
     virtual const gfxIntSize GetSize() const { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
+    Screen* XScreen();
     Drawable XDrawable() { return mDrawable; }
     XRenderPictFormat* XRenderFormat();
 
