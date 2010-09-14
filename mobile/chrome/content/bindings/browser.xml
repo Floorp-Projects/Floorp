@@ -467,6 +467,10 @@
             this._zoomLevel = zl;
             this._frameLoader.setViewportScale(zl, zl);
             this._updateCacheViewport();
+
+            let event = document.createEvent("Events");
+            event.initEvent("ZoomChanged", true, false);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
