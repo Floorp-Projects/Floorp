@@ -951,6 +951,8 @@ let UI = {
       activeTab = gBrowser.selectedTab.tabItem;
     if (activeTab)
       activeTab.zoomIn();
+    
+    this.blurAll();
   },
 
   // ----------
