@@ -293,7 +293,7 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
     DestroySharedSurface(mTxn->mDyingBuffers[i]);
   }
 
-  MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
+  MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
   for (ShadowableLayerSet::const_iterator it = mTxn->mMutants.begin();
        it != mTxn->mMutants.end(); ++it) {
@@ -321,6 +321,10 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
   cset.SetCapacity(mTxn->mCset.size());
   cset.AppendElements(&mTxn->mCset.front(), mTxn->mCset.size());
 
+  MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
+  PlatformSyncBeforeUpdate();
+
+  MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
   if (!mShadowManager->SendUpdate(cset, aReplies)) {
     MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
     return PR_FALSE;
@@ -355,6 +359,78 @@ ShadowLayerForwarder::DestroySharedSurface(gfxSharedImageSurface* aSurface)
   mShadowManager->DeallocShmem(aSurface->GetShmem());
 }
 
+PRBool
+ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
+                                        gfxASurface::gfxContentType aContent,
+                                        SurfaceDescriptor* aFrontBuffer,
+                                        SurfaceDescriptor* aBackBuffer)
+{
+  if (PlatformAllocDoubleBuffer(aSize, aContent, aFrontBuffer, aBackBuffer)) {
+    return PR_TRUE;
+  }
+
+  gfxASurface::gfxImageFormat format = (aContent == gfxASurface::CONTENT_COLOR) ?
+                                       gfxASurface::ImageFormatRGB24 : 
+                                       gfxASurface::ImageFormatARGB32;
+  nsRefPtr<gfxSharedImageSurface> front;
+  nsRefPtr<gfxSharedImageSurface> back;
+  if (!AllocDoubleBuffer(aSize, format,
+                         getter_AddRefs(front), getter_AddRefs(back))) {
+    return PR_FALSE;
+  }
+
+  *aFrontBuffer = front->GetShmem();
+  *aBackBuffer = back->GetShmem();
+  return PR_TRUE;
+}
+
+/*static*/ already_AddRefed<gfxASurface>
+ShadowLayerForwarder::OpenDescriptor(const SurfaceDescriptor& aSurface)
+{
+  nsRefPtr<gfxASurface> surf = PlatformOpenDescriptor(aSurface);
+  if (surf) {
+    return surf.forget();
+  }
+
+  switch (aSurface.type()) {
+  case SurfaceDescriptor::TShmem: {
+    surf = new gfxSharedImageSurface(aSurface.get_Shmem());
+    return surf.forget();
+  }
+  default:
+    NS_RUNTIMEABORT("unexpected SurfaceDescriptor type!");
+    return nsnull;
+  }
+}
+
+// Destroy the Shmem SurfaceDescriptor |aSurface|.
+template<class ShmemDeallocator>
+static void
+DestroySharedShmemSurface(SurfaceDescriptor* aSurface,
+                          ShmemDeallocator* aDeallocator)
+{
+  switch (aSurface->type()) {
+  case SurfaceDescriptor::TShmem: {
+    aDeallocator->DeallocShmem(aSurface->get_Shmem());
+    *aSurface = SurfaceDescriptor();
+    return;
+  }
+  default:
+    NS_RUNTIMEABORT("unexpected SurfaceDescriptor type!");
+    return;
+  }
+}
+
+void
+ShadowLayerForwarder::DestroySharedSurface(SurfaceDescriptor* aSurface)
+{
+  if (PlatformDestroySharedSurface(aSurface)) {
+    return;
+  }
+  DestroySharedShmemSurface(aSurface, mShadowManager);
+}
+
+
 PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {
@@ -368,6 +444,57 @@ ShadowLayerManager::DestroySharedSurface(gfxSharedImageSurface* aSurface)
 {
   mForwarder->DeallocShmem(aSurface->GetShmem());
 }
+
+void
+ShadowLayerManager::DestroySharedSurface(SurfaceDescriptor* aSurface)
+{
+  if (PlatformDestroySharedSurface(aSurface)) {
+    return;
+  }
+  DestroySharedShmemSurface(aSurface, mForwarder);
+}
+
+
+#if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
+
+PRBool
+ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
+                                                gfxASurface::gfxContentType,
+                                                SurfaceDescriptor*,
+                                                SurfaceDescriptor*)
+{
+  return PR_FALSE;
+}
+
+/*static*/ already_AddRefed<gfxASurface>
+ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
+{
+  return nsnull;
+}
+
+PRBool
+ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
+{
+  return PR_FALSE;
+}
+
+/*static*/ void
+ShadowLayerForwarder::PlatformSyncBeforeUpdate()
+{
+}
+
+PRBool
+ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor*)
+{
+  return PR_FALSE;
+}
+
+/*static*/ void
+ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
+{
+}
+
+#endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
 } // namespace layers
 } // namespace mozilla

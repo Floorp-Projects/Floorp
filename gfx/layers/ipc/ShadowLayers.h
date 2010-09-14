@@ -60,6 +60,7 @@ class ShadowableLayer;
 class ShadowThebesLayer;
 class ShadowImageLayer;
 class ShadowCanvasLayer;
+class SurfaceDescriptor;
 class Transaction;
 
 /**
@@ -230,12 +231,65 @@ public:
    */
   PRBool HasShadowManager() const { return !!mShadowManager; }
 
+  /**
+   * The following Alloc/Open/Destroy interfaces abstract over the
+   * details of working with surfaces that are shared across
+   * processes.  They provide the glue between C++ Layers and the
+   * ShadowLayer IPC system.
+   *
+   * The basic lifecycle is
+   *
+   *  - a Layer needs a buffer.  Its ShadowableLayer subclass calls
+   *    AllocDoubleBuffer(), then calls one of the Created*Buffer()
+   *    methods above to transfer the (temporary) front buffer to its
+   *    ShadowLayer in the other process.  The Layer needs a
+   *    gfxASurface to paint, so the ShadowableLayer uses
+   *    OpenDescriptor(backBuffer) to get that surface, and hands it
+   *    out to the Layer.
+   *
+   * - a Layer has painted new pixels.  Its ShadowableLayer calls one
+   *   of the Painted*Buffer() methods above with the back buffer
+   *   descriptor.  This notification is forwarded to the ShadowLayer,
+   *   which uses OpenDescriptor() to access the newly-painted pixels.
+   *   The ShadowLayer then updates its front buffer in a Layer- and
+   *   platform-dependent way, and sends a surface descriptor back to
+   *   the ShadowableLayer that becomes its new back back buffer.
+   *
+   * - a Layer wants to destroy its buffers.  Its ShadowableLayer
+   *   calls Destroyed*Buffer(), which gives up control of the back
+   *   buffer descriptor.  The actual back buffer surface is then
+   *   destroyed using DestroySharedSurface() just before notifying
+   *   the parent process.  When the parent process is notified, the
+   *   ShadowLayer also calls DestroySharedSurface() on its front
+   *   buffer, and the double-buffer pair is gone.
+   */
+
+  /**
+   * Shmem (gfxSharedImageSurface) buffers are available on all
+   * platforms, but they may not be optimal.
+   *
+   * NB: this interface is being deprecated in favor of the
+   * SurfaceDescriptor variant below.
+   */
   PRBool AllocDoubleBuffer(const gfxIntSize& aSize,
                            gfxASurface::gfxImageFormat aFormat,
                            gfxSharedImageSurface** aFrontBuffer,
                            gfxSharedImageSurface** aBackBuffer);
-
   void DestroySharedSurface(gfxSharedImageSurface* aSurface);
+
+  /**
+   * In the absence of platform-specific buffers these fall back to
+   * Shmem/gfxSharedImageSurface.
+   */
+  PRBool AllocDoubleBuffer(const gfxIntSize& aSize,
+                           gfxASurface::gfxContentType aContent,
+                           SurfaceDescriptor* aFrontBuffer,
+                           SurfaceDescriptor* aBackBuffer);
+
+  static already_AddRefed<gfxASurface>
+  OpenDescriptor(const SurfaceDescriptor& aSurface);
+
+  void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
   /**
    * Construct a shadow of |aLayer| on the "other side", at the
@@ -249,6 +303,18 @@ protected:
   PLayersChild* mShadowManager;
 
 private:
+  PRBool PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
+                                   gfxASurface::gfxContentType aContent,
+                                   SurfaceDescriptor* aFrontBuffer,
+                                   SurfaceDescriptor* aBackBuffer);
+
+  static already_AddRefed<gfxASurface>
+  PlatformOpenDescriptor(const SurfaceDescriptor& aDescriptor);
+
+  PRBool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
+
+  static void PlatformSyncBeforeUpdate();
+
   Transaction* mTxn;
 };
 
@@ -270,6 +336,8 @@ public:
 
   void DestroySharedSurface(gfxSharedImageSurface* aSurface);
 
+  void DestroySharedSurface(SurfaceDescriptor* aSurface);
+
   /** CONSTRUCTION PHASE ONLY */
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer() = 0;
   /** CONSTRUCTION PHASE ONLY */
@@ -277,8 +345,12 @@ public:
   /** CONSTRUCTION PHASE ONLY */
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer() = 0;
 
+  static void PlatformSyncBeforeReplyUpdate();
+
 protected:
   ShadowLayerManager() : mForwarder(NULL) {}
+
+  PRBool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
 
   PLayersParent* mForwarder;
 };
