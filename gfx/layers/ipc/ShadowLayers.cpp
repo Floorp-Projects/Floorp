@@ -52,7 +52,7 @@
 namespace mozilla {
 namespace layers {
 
-typedef nsTArray<nsRefPtr<gfxSharedImageSurface> > BufferArray; 
+typedef nsTArray<SurfaceDescriptor> BufferArray; 
 typedef std::vector<Edit> EditVector;
 typedef std::set<ShadowableLayer*> ShadowableLayerSet;
 
@@ -74,6 +74,10 @@ public:
     mMutants.insert(aLayer);
   }
   void AddBufferToDestroy(gfxSharedImageSurface* aBuffer)
+  {
+    return AddBufferToDestroy(aBuffer->GetShmem());
+  }
+  void AddBufferToDestroy(const SurfaceDescriptor& aBuffer)
   {
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mDyingBuffers.AppendElement(aBuffer);
@@ -168,11 +172,11 @@ ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 void
 ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
                                           nsIntRect aBufferRect,
-                                          gfxSharedImageSurface* aTempFrontBuffer)
+                                          const SurfaceDescriptor& aTempFrontBuffer)
 {
   mTxn->AddEdit(OpCreateThebesBuffer(NULL, Shadow(aThebes),
                                      aBufferRect,
-                                     aTempFrontBuffer->GetShmem()));
+                                     aTempFrontBuffer));
 }
 
 void
@@ -197,7 +201,7 @@ ShadowLayerForwarder::CreatedCanvasBuffer(ShadowableLayer* aCanvas,
 
 void
 ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
-                                            gfxSharedImageSurface* aBackBufferToDestroy)
+                                            const SurfaceDescriptor& aBackBufferToDestroy)
 {
   mTxn->AddEdit(OpDestroyThebesFrontBuffer(NULL, Shadow(aThebes)));
   mTxn->AddBufferToDestroy(aBackBufferToDestroy);
@@ -251,10 +255,10 @@ void
 ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
                                           nsIntRect aBufferRect,
                                           nsIntPoint aBufferRotation,
-                                          gfxSharedImageSurface* aNewFrontBuffer)
+                                          const SurfaceDescriptor& aNewFrontBuffer)
 {
   mTxn->AddEdit(OpPaintThebesBuffer(NULL, Shadow(aThebes),
-                                    ThebesBuffer(aNewFrontBuffer->GetShmem(),
+                                    ThebesBuffer(aNewFrontBuffer,
                                                  aBufferRect,
                                                  aBufferRotation)));
 }
@@ -290,7 +294,7 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
   MOZ_LAYERS_LOG(("[LayersForwarder] destroying buffers..."));
 
   for (PRUint32 i = 0; i < mTxn->mDyingBuffers.Length(); ++i) {
-    DestroySharedSurface(mTxn->mDyingBuffers[i]);
+    DestroySharedSurface(&mTxn->mDyingBuffers[i]);
   }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));

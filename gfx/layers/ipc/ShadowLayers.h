@@ -149,7 +149,7 @@ public:
    */
   void CreatedThebesBuffer(ShadowableLayer* aThebes,
                            nsIntRect aBufferRect,
-                           gfxSharedImageSurface* aInitialFrontBuffer);
+                           const SurfaceDescriptor& aInitialFrontBuffer);
   /**
    * For the next two methods, |aSize| is the size of
    * |aInitialFrontSurface|.
@@ -170,7 +170,7 @@ public:
    * resize, e.g.
    */
   void DestroyedThebesBuffer(ShadowableLayer* aThebes,
-                             gfxSharedImageSurface* aBackBufferToDestroy);
+                             const SurfaceDescriptor& aBackBufferToDestroy);
   void DestroyedImageBuffer(ShadowableLayer* aImage);
   void DestroyedCanvasBuffer(ShadowableLayer* aCanvas);
 
@@ -209,7 +209,7 @@ public:
   void PaintedThebesBuffer(ShadowableLayer* aThebes,
                            nsIntRect aBufferRect,
                            nsIntPoint aBufferRotation,
-                           gfxSharedImageSurface* aNewFrontBuffer);
+                           const SurfaceDescriptor& aNewFrontBuffer);
   /**
    * NB: this initial implementation only forwards RGBA data for
    * ImageLayers.  This is slow, and will be optimized.
@@ -436,8 +436,8 @@ public:
    * will tell!  (Maybe possible to choose between both depending on
    * size of blit vs. expense of re-fill?)
    */
-  virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* aNewFront,
+  virtual SurfaceDescriptor
+  Swap(const SurfaceDescriptor& aNewFront,
        const nsIntRect& aBufferRect,
        const nsIntPoint& aRotation) = 0;
 
