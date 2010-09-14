@@ -1006,7 +1006,8 @@ let TabItems = {
           if (groupItem) {
             groupItem.add(item);
 
-            if (item.tab == gBrowser.selectedTab)
+            // We're reconnecting a visible tab, so it's the active group
+            if (!item.tab.hidden)
               GroupItems.setActiveGroupItem(item.parent);
           }
         }
