@@ -75,7 +75,7 @@ FrameState::init(uint32 nargs)
     uint8 *cursor = (uint8 *)cx->malloc(sizeof(FrameEntry) * nslots +       // entries[]
                                         sizeof(FrameEntry *) * nslots +     // base[]
                                         sizeof(FrameEntry *) * nslots +     // tracker.entries[]
-                                        sizeof(bool) * nslots               // closedVars[]
+                                        sizeof(uint32) * nlocals            // escaping[]
                                         );
     if (!cursor)
         return false;
@@ -98,8 +98,8 @@ FrameState::init(uint32 nargs)
     cursor += sizeof(FrameEntry *) * nslots;
 
     if (nlocals) {
-        closedVars = (bool *)cursor;
-        memset(closedVars, 0, sizeof(*closedVars) * nslots);
+        escaping = (uint32 *)cursor;
+        memset(escaping, 0, sizeof(uint32) * nlocals);
     }
 
     return true;
@@ -858,7 +858,7 @@ void
 FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 {
     FrameEntry *localFe = getLocal(n);
-    bool cacheable = !eval && !isClosedVar(n);
+    bool cacheable = !eval && !escaping[n];
 
     if (!popGuaranteed && !cacheable) {
         JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),

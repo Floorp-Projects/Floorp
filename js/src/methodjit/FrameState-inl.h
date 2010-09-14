@@ -700,7 +700,7 @@ FrameState::dupAt(int32 n)
 inline void
 FrameState::pushLocal(uint32 n)
 {
-    if (!eval && !isClosedVar(n)) {
+    if (!eval && !escaping[n]) {
         pushCopyOf(indexOfFe(getLocal(n)));
     } else {
 #ifdef DEBUG
@@ -732,8 +732,6 @@ FrameState::enterBlock(uint32 n)
     JS_ASSERT(!tracker.nentries);
     JS_ASSERT(uint32(sp + n - locals) <= script->nslots);
 
-    if (!eval)
-        memset(&closedVars[uint32(sp - locals)], 0, n * sizeof(*closedVars));
     sp += n;
 }
 
@@ -747,11 +745,15 @@ FrameState::eviscerate(FrameEntry *fe)
     fe->setCopyOf(NULL);
 }
 
-inline void
-FrameState::setClosedVar(uint32 slot)
+inline bool
+FrameState::addEscaping(uint32 local)
 {
-    if (!eval)
-        closedVars[slot] = true;
+    if (!eval) {
+        uint32 already = escaping[local];
+        escaping[local] = 1;
+        return !already;
+    }
+    return false;
 }
 
 inline StateRemat
@@ -849,12 +851,6 @@ FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) cons
     } while (0);
 
     masm.loadDouble(address, fpReg);
-}
-
-inline bool
-FrameState::isClosedVar(uint32 slot)
-{
-    return closedVars[slot];
 }
 
 } /* namspace mjit */
