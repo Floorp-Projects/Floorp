@@ -703,7 +703,7 @@ template <class T, size_t N, class AP>
 inline bool
 Vector<T,N,AP>::insert(T *p, const T &val)
 {
-    JS_ASSERT(begin() <= p && p < end());
+    JS_ASSERT(begin() <= p && p <= end());
     size_t pos = p - begin();
     JS_ASSERT(pos <= length());
     size_t oldLength = length();

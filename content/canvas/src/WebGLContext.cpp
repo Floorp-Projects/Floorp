@@ -86,6 +86,7 @@ WebGLContext::WebGLContext()
     mGeneration = 0;
     mInvalidated = PR_FALSE;
     mResetLayer = PR_TRUE;
+    mVerbose = PR_FALSE;
 
     mActiveTexture = 0;
     mSynthesizedGLError = LOCAL_GL_NO_ERROR;
@@ -216,7 +217,9 @@ WebGLContext::DestroyResourcesAndContext()
 
     // We just got rid of everything, so the context had better
     // have been going away.
+#ifdef DEBUG
     printf_stderr("--- WebGL context destroyed: %p\n", gl.get());
+#endif
 
     gl = nsnull;
 }
@@ -302,7 +305,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
 
-    PRBool forceOSMesa;
+    PRBool verbose = PR_FALSE;
+    prefService->GetBoolPref("webgl.verbose", &verbose);
+    mVerbose = verbose;
+
+    PRBool forceOSMesa = PR_FALSE;
     prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
 
     if (!forceOSMesa) {
@@ -376,7 +383,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         return NS_ERROR_FAILURE;
     }
 
+#ifdef DEBUG
     printf_stderr ("--- WebGL context created: %p\n", gl.get());
+#endif
 
     mWidth = width;
     mHeight = height;

@@ -37,15 +37,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Decoder.h"
+#include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
 
 namespace mozilla {
 namespace imagelib {
 
 Decoder::Decoder()
   : mFrameCount(0)
+  , mFailCode(NS_OK)
   , mInitialized(false)
   , mSizeDecode(false)
   , mInFrame(false)
+  , mDecodeDone(false)
+  , mDataError(false)
 {
 }
 
@@ -59,7 +64,7 @@ Decoder::~Decoder()
  * Common implementation of the decoder interface.
  */
 
-nsresult
+void
 Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
 {
   // We should always have an image
@@ -72,29 +77,74 @@ Decoder::Init(RasterImage* aImage, imgIDecoderObserver* aObserver)
   mImage = aImage;
   mObserver = aObserver;
 
+  // Fire OnStartDecode at init time to support bug 512435
+  if (!IsSizeDecode() && mObserver)
+      mObserver->OnStartDecode(nsnull);
+
   // Implementation-specific initialization
-  nsresult rv = InitInternal();
+  InitInternal();
   mInitialized = true;
-  return rv;
 }
 
-nsresult
+void
 Decoder::Write(const char* aBuffer, PRUint32 aCount)
 {
+  // We're strict about decoder errors
+  NS_ABORT_IF_FALSE(!HasDecoderError(),
+                    "Not allowed to make more decoder calls after error!");
+
+  // If a data error occured, just ignore future data
+  if (HasDataError())
+    return;
+
   // Pass the data along to the implementation
-  return WriteInternal(aBuffer, aCount);
+  WriteInternal(aBuffer, aCount);
 }
 
-nsresult
+void
 Decoder::Finish()
 {
   // Implementation-specific finalization
-  return FinishInternal();
+  if (!HasError())
+    FinishInternal();
+
+  // If the implementation left us mid-frame, finish that up.
+  if (mInFrame && !HasDecoderError())
+    PostFrameStop();
+
+  // If PostDecodeDone() has not been called, we need to sent teardown
+  // notifications.
+  if (!IsSizeDecode() && !mDecodeDone) {
+
+    // Log data errors to the error console
+    nsCOMPtr<nsIConsoleService> aConsoleService = do_GetService("@mozilla.org/consoleservice;1");
+    if (aConsoleService && !HasDecoderError()) {
+      nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
+                       NS_ConvertASCIItoUTF16(mImage->GetURIString()));
+      aConsoleService->LogStringMessage(msg.get());
+    }
+
+    // If we only have a data error, see if things are worth salvaging
+    bool salvage = !HasDecoderError() && mImage->GetNumFrames();
+
+    // If we're salvaging, say we finished decoding
+    if (salvage)
+      mImage->DecodingComplete();
+
+    // Fire teardown notifications
+    if (mObserver) {
+      mObserver->OnStopContainer(nsnull, mImage);
+      mObserver->OnStopDecode(nsnull, salvage ? NS_OK : NS_ERROR_FAILURE, nsnull);
+    }
+  }
 }
 
 void
 Decoder::FlushInvalidations()
 {
+  NS_ABORT_IF_FALSE(!HasDecoderError(),
+                    "Not allowed to make more decoder calls after error!");
+
   // If we've got an empty invalidation rect, we have nothing to do
   if (mInvalidRect.IsEmpty())
     return;
@@ -116,9 +166,9 @@ Decoder::FlushInvalidations()
  * Hook stubs. Override these as necessary in decoder implementations.
  */
 
-nsresult Decoder::InitInternal() {return NS_OK; }
-nsresult Decoder::WriteInternal(const char* aBuffer, PRUint32 aCount) {return NS_OK; }
-nsresult Decoder::FinishInternal() {return NS_OK; }
+void Decoder::InitInternal() { }
+void Decoder::WriteInternal(const char* aBuffer, PRUint32 aCount) { }
+void Decoder::FinishInternal() { }
 
 /*
  * Progress Notifications
@@ -190,6 +240,40 @@ Decoder::PostInvalidation(nsIntRect& aRect)
 
   // Account for the new region
   mInvalidRect.UnionRect(mInvalidRect, aRect);
+}
+
+void
+Decoder::PostDecodeDone()
+{
+  NS_ABORT_IF_FALSE(!IsSizeDecode(), "Can't be done with decoding with size decode!");
+  NS_ABORT_IF_FALSE(!mInFrame, "Can't be done decoding if we're mid-frame!");
+  NS_ABORT_IF_FALSE(!mDecodeDone, "Decode already done!");
+  mDecodeDone = true;
+
+  // Notify
+  mImage->DecodingComplete();
+  if (mObserver) {
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+  }
+}
+
+void
+Decoder::PostDataError()
+{
+  mDataError = true;
+}
+
+void
+Decoder::PostDecoderError(nsresult aFailureCode)
+{
+  NS_ABORT_IF_FALSE(NS_FAILED(aFailureCode), "Not a failure code!");
+
+  mFailCode = aFailureCode;
+
+  // XXXbholley - we should report the image URI here, but imgContainer
+  // needs to know its URI first
+  NS_WARNING("Image decoding error - This is probably a bug!");
 }
 
 } // namespace imagelib

@@ -4,5 +4,7 @@ try {
 } catch (e) {
 }
 
-assertEq(Q, 3000);
+// Exact behavior of recursion check depends on which JIT we use.
+var ok = (Q == 3000 || Q == 3001);
+assertEq(ok, true);
 

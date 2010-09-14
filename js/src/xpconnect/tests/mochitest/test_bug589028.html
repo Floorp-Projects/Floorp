@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=589028
+-->
+<head>
+  <title>Test for Bug 589028</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=589028">Mozilla Bug 589028</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+
+/** Test for Bug 589028 **/
+SimpleTest.waitForExplicitFinish();
+var p = 0;
+function go() {
+    var ifr = $('ifr');
+    var ifrwin = ifr.contentWindow;
+    var ifrdoc = ifr.contentDocument;
+
+    o1 = new ifrwin.Option();
+    is(o1.ownerDocument, ifrdoc, "ownerDocument doesn't match iframe");
+
+    o2 = ifrwin.getMyOption();
+    is(o2.ownerDocument, ifrdoc, "ownerDocument doesn't match iframe");
+
+    o3 = ifrwin.getCallersOption(this);
+    is(o3.ownerDocument, document);
+
+    a1 = new ifrwin.Audio();
+    is(a1.ownerDocument, ifrdoc, "ownerDocument doesn't match iframe");
+
+    a2 = ifrwin.getMyAudio();
+    is(a2.ownerDocument, ifrdoc, "ownerDocument doesn't match iframe");
+
+    a3 = ifrwin.getCallersAudio(this);
+    is(a3.ownerDocument, document);
+
+    i1 = new ifrwin.Image();
+    is(i1.ownerDocument, ifrdoc, "ownerDocument doesn't match iframe");
+
+    i2 = ifrwin.getMyImage();
+    is(i2.ownerDocument, ifrdoc, "ownerDocument doesn't match iframe");
+
+    i3 = ifrwin.getCallersImage(this);
+    is(i3.ownerDocument, document);
+
+    SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+<iframe src="bug589028_helper.html" id="ifr" onload="go()"></iframe>
+</body>
+</html>

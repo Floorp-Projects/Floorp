@@ -751,15 +751,6 @@ JSD_GetNameForStackFrame(JSDContext* jsdc,
 }
 
 JSD_PUBLIC_API(JSBool)
-JSD_IsStackFrameNative(JSDContext* jsdc,
-                       JSDThreadState* jsdthreadstate,
-                       JSDStackFrameInfo* jsdframe)
-{
-    JSD_ASSERT_VALID_CONTEXT(jsdc);
-    return jsd_IsStackFrameNative(jsdc, jsdthreadstate, jsdframe);
-}
-
-JSD_PUBLIC_API(JSBool)
 JSD_IsStackFrameDebugger(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe)

@@ -4,6 +4,15 @@
 
 load(libdir + 'range.js');
 
+/* Test different combinations of literals/variables. */
+var s = 4;
+var t = 100;
+assertEq(42 >> s, 2);
+assertEq(s >> 1, 2);
+assertEq(23 >> 3, 2);
+assertEq(t >> s, 6);
+
+
 function testShiftRightArithmetic()
 {
     var r = [];

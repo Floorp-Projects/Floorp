@@ -51,7 +51,6 @@
 #include "jsbit.h"
 #include "jsgcchunk.h"
 #include "jsutil.h"
-#include "jstask.h"
 #include "jsvector.h"
 #include "jsversion.h"
 #include "jsobj.h"
@@ -64,6 +63,18 @@
  * One past the maximum trace kind.
  */
 #define JSTRACE_LIMIT       3
+
+/*
+ * Lower limit after which we limit the heap growth
+ */
+const size_t GC_ARENA_ALLOCATION_TRIGGER = 25 * js::GC_CHUNK_SIZE;
+
+/*
+ * A GC is triggered once the number of newly allocated arenas 
+ * is 1.5 times the number of live arenas after the last GC.
+ * (Starting after the lower limit of GC_ARENA_ALLOCATION_TRIGGER)
+ */
+const float GC_HEAP_GROWTH_FACTOR = 1.5;
 
 const uintN JS_EXTERNAL_STRING_LIMIT = 8;
 
@@ -165,21 +176,22 @@ js_GCThingIsMarked(void *thing, uint32 color);
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
 
+namespace js {
+
 extern JS_REQUIRES_STACK void
-js_TraceRuntime(JSTracer *trc);
-
-extern JS_REQUIRES_STACK JS_FRIEND_API(void)
-js_TraceContext(JSTracer *trc, JSContext *acx);
-
-/*
- * Schedule the GC call at a later safe point.
- */
-#ifndef JS_THREADSAFE
-# define js_TriggerGC(cx, gcLocked)    js_TriggerGC (cx)
-#endif
+MarkRuntime(JSTracer *trc);
 
 extern void
-js_TriggerGC(JSContext *cx, JSBool gcLocked);
+TraceRuntime(JSTracer *trc);
+
+extern JS_REQUIRES_STACK JS_FRIEND_API(void)
+MarkContext(JSTracer *trc, JSContext *acx);
+
+/* Must be called with GC lock taken. */
+extern void
+TriggerGC(JSRuntime *rt);
+
+} /* namespace js */
 
 /*
  * Kinds of js_GC invocation.
@@ -287,7 +299,7 @@ js_NewGCExternalString(JSContext *cx, uintN type)
     return (JSString *) js_NewFinalizableGCThing(cx, type);
 }
 
-static inline JSFunction*
+static inline JSFunction *
 js_NewGCFunction(JSContext *cx)
 {
     JSFunction* obj = (JSFunction *)js_NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
@@ -346,17 +358,23 @@ namespace js {
 
 /*
  * During the finalization we do not free immediately. Rather we add the
- * corresponding pointers to a buffer which we later release on the
- * background thread.
+ * corresponding pointers to a buffer which we later release on a separated
+ * thread.
  *
  * The buffer is implemented as a vector of 64K arrays of pointers, not as a
  * simple vector, to avoid realloc calls during the vector growth and to not
  * bloat the binary size of the inlined freeLater method. Any OOM during
  * buffer growth results in the pointer being freed immediately.
  */
-class BackgroundSweepTask : public JSBackgroundTask {
+class GCHelperThread {
     static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
     static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
+
+    PRThread*         thread;
+    PRCondVar*        wakeup;
+    PRCondVar*        sweepingDone;
+    bool              shutdown;
+    bool              sweeping;
 
     Vector<void **, 16, js::SystemAllocPolicy> freeVector;
     void            **freeCursor;
@@ -372,18 +390,37 @@ class BackgroundSweepTask : public JSBackgroundTask {
         js_free(array);
     }
 
-  public:
-    BackgroundSweepTask()
-        : freeCursor(NULL), freeCursorEnd(NULL) { }
+    static void threadMain(void* arg);
 
-    void freeLater(void* ptr) {
+    void threadLoop(JSRuntime *rt);
+    void doSweep();
+
+  public:
+    GCHelperThread()
+      : thread(NULL),
+        wakeup(NULL),
+        sweepingDone(NULL),
+        shutdown(false),
+        sweeping(false),
+        freeCursor(NULL),
+        freeCursorEnd(NULL) { }
+    
+    bool init(JSRuntime *rt);
+    void finish(JSRuntime *rt);
+    
+    /* Must be called with GC lock taken. */
+    void startBackgroundSweep(JSRuntime *rt);
+    
+    /* Must be called outside the GC lock. */
+    void waitBackgroundSweepEnd(JSRuntime *rt);
+    
+    void freeLater(void *ptr) {
+        JS_ASSERT(!sweeping);
         if (freeCursor != freeCursorEnd)
             *freeCursor++ = ptr;
         else
             replenishAndFreeLater(ptr);
     }
-
-    virtual void run();
 };
 
 #endif /* JS_THREADSAFE */
@@ -426,11 +463,27 @@ struct ConservativeGCThreadData {
         jsuword         words[JS_HOWMANY(sizeof(jmp_buf), sizeof(jsuword))];
     } registerSnapshot;
 
-    int                 enableCount;
+    /*
+     * Cycle collector uses this to communicate that the native stack of the
+     * GC thread should be scanned only if the thread have more than the given
+     * threshold of requests.
+     */
+    unsigned requestThreshold;
 
-    JS_NEVER_INLINE JS_FRIEND_API(void) enable(bool knownStackBoundary = false);
-    JS_FRIEND_API(void) disable();
-    bool isEnabled() const { return enableCount > 0; }
+    JS_NEVER_INLINE void recordStackTop();
+
+#ifdef JS_THREADSAFE
+    void updateForRequestEnd(unsigned suspendCount) {
+        if (suspendCount)
+            recordStackTop();
+        else
+            nativeStackTop = NULL;
+    }
+#endif
+
+    bool hasStackToScan() const {
+        return !!nativeStackTop;
+    }
 };
 
 struct GCMarker : public JSTracer {
@@ -448,7 +501,7 @@ struct GCMarker : public JSTracer {
 #if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
     ConservativeGCStats conservativeStats;
 #endif
-   
+
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     struct ConservativeRoot { void *thing; uint32 traceKind; };
     Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
@@ -593,6 +646,9 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 {
     MarkValueRange(trc, vec, vec + len, name);
 }
+
+void
+MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
 static inline void
 MarkId(JSTracer *trc, jsid id)

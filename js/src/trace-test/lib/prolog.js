@@ -2,7 +2,7 @@
 
 const HAVE_TM = 'tracemonkey' in this;
 
-const HOTLOOP = HAVE_TM ? tracemonkey.HOTLOOP : 2;
+const HOTLOOP = HAVE_TM ? tracemonkey.HOTLOOP : 8;
 const RECORDLOOP = HOTLOOP;
 const RUNLOOP = HOTLOOP + 1;
 
@@ -10,15 +10,17 @@ var checkStats;
 if (HAVE_TM) {
     checkStats = function(stats)
     {
+        // Temporarily disabled while we work on heuristics.
+        return;
         function jit(on)
         {
-          if (on && !options().match(/jit/))
+          if (on && !options().match(/tracejit/))
           {
-            options('jit');
+            options('tracejit');
           }
-          else if (!on && options().match(/jit/))
+          else if (!on && options().match(/tracejit/))
           {
-            options('jit');
+            options('tracejit');
           }
         }
 
@@ -39,3 +41,8 @@ if (HAVE_TM) {
 var appendToActual = function(s) {
     actual += s + ',';
 }
+
+if (!("gczeal" in this)) {
+  gczeal = function() { }
+}
+

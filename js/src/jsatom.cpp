@@ -176,6 +176,7 @@ const char *const js_common_atom_names[] = {
     js_configurable_str,        /* configurableAtom             */
     js_writable_str,            /* writableAtom                 */
     js_value_str,               /* valueAtom                    */
+    js_test_str,                /* testAtom                     */
     "use strict",               /* useStrictAtom                */
 
 #if JS_HAS_XML_SUPPORT
@@ -265,6 +266,7 @@ const char js_enumerable_str[]      = "enumerable";
 const char js_configurable_str[]    = "configurable";
 const char js_writable_str[]        = "writable";
 const char js_value_str[]           = "value";
+const char js_test_str[]            = "test";
 
 #if JS_HAS_XML_SUPPORT
 const char js_etago_str[]           = "</";

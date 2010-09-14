@@ -48,10 +48,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
-
-#ifdef MOZ_TOOLKIT_SEARCH
 #include "nsIBrowserSearchService.h"
-#endif
 
 #include "nsIURIFixup.h"
 #include "nsDefaultURIFixup.h"
@@ -402,7 +399,6 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
         return NS_NewURI(aURI, spec);
     }
 
-#ifdef MOZ_TOOLKIT_SEARCH
     // Try falling back to the search service's default search engine
     nsCOMPtr<nsIBrowserSearchService> searchSvc = do_GetService("@mozilla.org/browser/search-service;1");
     if (searchSvc) {
@@ -440,7 +436,6 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
             }
         }
     }
-#endif
 
     // out of options
     return NS_ERROR_NOT_AVAILABLE;

@@ -11,9 +11,9 @@ function testBug504520Harder() {
                     var xz = eval(x + op + z);
                     var yz = eval(y + op + z);
 
-                    var arr = [x, x, x, x, x, y];
+                    var arr = [x, x, x, x, x, x, x, x, x, y];
                     assertEq(arr.length > RUNLOOP, true);
-                    var expected = [xz, xz, xz, xz, xz, yz];
+                    var expected = [xz, xz, xz, xz, xz, xz, xz, xz, xz, yz];
 
                     // ?: looks superfluous but that's what we're testing here
                     var fun = eval(
@@ -23,6 +23,7 @@ function testBug504520Harder() {
                         '});\n');
                     var actual = [];
                     fun(arr, actual);
+		    print(x, y, op, z);
                     assertEq("" + actual, "" + expected);
                 }
             }

@@ -187,7 +187,7 @@
           this.tabContainer.adjustTabstrip();
 
           let event = document.createEvent("Events");
-          event.initEvent("TabPin", true, false);
+          event.initEvent("TabPinned", true, false);
           aTab.dispatchEvent(event);
         ]]></body>
       </method>
@@ -206,7 +206,7 @@
           this.tabContainer.adjustTabstrip();
 
           let event = document.createEvent("Events");
-          event.initEvent("TabUnpin", true, false);
+          event.initEvent("TabUnpinned", true, false);
           aTab.dispatchEvent(event);
         ]]></body>
       </method>
@@ -2052,15 +2052,9 @@
         <parameter name="aTab"/><!-- can be from a different window as well -->
         <body>
           <![CDATA[
-            // try to have SessionStore duplicate the given tab
-            try {
-              var ss = Components.classes["@mozilla.org/browser/sessionstore;1"]
-                                 .getService(Components.interfaces.nsISessionStore);
-              return ss.duplicateTab(window, aTab);
-            } catch (ex) {
-              // fall back to basic URL copying
-              return this.loadOneTab(this.getBrowserForTab(aTab).currentURI.spec);
-            }
+            return Cc["@mozilla.org/browser/sessionstore;1"]
+                     .getService(Ci.nsISessionStore)
+                     .duplicateTab(window, aTab);
           ]]>
         </body>
       </method>

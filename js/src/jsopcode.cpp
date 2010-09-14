@@ -297,15 +297,18 @@ ToDisassemblySource(JSContext *cx, jsval v)
 
         if (clasp == &js_BlockClass) {
             char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
-            for (JSScopeProperty *sprop = obj->scope()->lastProperty();
-                 sprop;
-                 sprop = sprop->parent) {
-                const char *bytes = js_AtomToPrintableString(cx, JSID_TO_ATOM(sprop->id));
+
+            Shape::Range r = obj->lastProperty()->all();
+            while (!r.empty()) {
+                const Shape &shape = r.front();
+                const char *bytes = js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id));
                 if (!bytes)
                     return NULL;
+
+                r.popFront();
                 source = JS_sprintf_append(source, "%s: %d%s",
-                                           bytes, sprop->shortid,
-                                           sprop->parent ? ", " : "");
+                                           bytes, shape.shortid,
+                                           !r.empty() ? ", " : "");
             }
 
             source = JS_sprintf_append(source, "}");
@@ -400,6 +403,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 obj = script->getRegExp(index);
             v = OBJECT_TO_JSVAL(obj);
         }
+        bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
+            return 0;
+        fprintf(fp, " %s", bytes);
+        break;
+
+      case JOF_GLOBAL:
+        atom = script->getGlobalAtom(GET_SLOTNO(pc));
+        v = ATOM_TO_JSVAL(atom);
         bytes = ToDisassemblySource(cx, v);
         if (!bytes)
             return 0;
@@ -784,7 +796,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->fun = fun;
     jp->localNames = NULL;
     if (fun && FUN_INTERPRETED(fun) && fun->hasLocalNames()) {
-        jp->localNames = js_GetLocalNameArray(cx, fun, &jp->pool);
+        jp->localNames = fun->getLocalNameArray(cx, &jp->pool);
         if (!jp->localNames) {
             js_DestroyPrinter(jp);
             return NULL;
@@ -1303,19 +1315,9 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
 const char *
 GetLocal(SprintStack *ss, jsint i)
 {
-    ptrdiff_t off;
-    JSContext *cx;
-    JSScript *script;
-    jsatomid j, n;
-    JSAtom *atom;
-    JSObject *obj;
-    jsint depth, count;
-    JSScopeProperty *sprop;
-    const char *rval;
-
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, "")
 
-    off = ss->offsets[i];
+    ptrdiff_t off = ss->offsets[i];
     if (off >= 0)
         return OFF2STR(&ss->sprinter, off);
 
@@ -1329,35 +1331,41 @@ GetLocal(SprintStack *ss, jsint i)
      * none of the script's object literals are blocks), or the stack slot i is
      * not in a block. In either case, return GetStr(ss, i).
      */
-    cx = ss->sprinter.context;
-    script = ss->printer->script;
+    JSScript *script = ss->printer->script;
     if (script->objectsOffset == 0)
         return GetStr(ss, i);
-    for (j = 0, n = script->objects()->length; ; j++) {
-        if (j == n)
-            return GetStr(ss, i);
-        obj = script->getObject(j);
-        if (obj->getClass() == &js_BlockClass) {
-            depth = OBJ_BLOCK_DEPTH(cx, obj);
-            count = OBJ_BLOCK_COUNT(cx, obj);
-            if ((jsuint)(i - depth) < (jsuint)count)
+
+    for (jsatomid j = 0, n = script->objects()->length; j != n; j++) {
+        JSObject *obj = script->getObject(j);
+        if (obj->isBlock()) {
+            jsint depth = OBJ_BLOCK_DEPTH(cx, obj);
+            jsint count = OBJ_BLOCK_COUNT(cx, obj);
+
+            if (jsuint(i - depth) < jsuint(count)) {
+                jsint slot = i - depth;
+
+                for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
+                    const Shape &shape = r.front();
+
+                    if (shape.shortid == slot) {
+                        LOCAL_ASSERT(JSID_IS_ATOM(shape.id));
+
+                        JSAtom *atom = JSID_TO_ATOM(shape.id);
+                        const char *rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
+                        if (!rval)
+                            return NULL;
+
+                        RETRACT(&ss->sprinter, rval);
+                        return rval;
+                    }
+                }
+
                 break;
+            }
         }
     }
 
-    i -= depth;
-    for (sprop = obj->scope()->lastProperty(); sprop; sprop = sprop->parent) {
-        if (sprop->shortid == i)
-            break;
-    }
-
-    LOCAL_ASSERT(sprop && JSID_IS_ATOM(sprop->id));
-    atom = JSID_TO_ATOM(sprop->id);
-    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
-    if (!rval)
-        return NULL;
-    RETRACT(&ss->sprinter, rval);
-    return rval;
+    return GetStr(ss, i);
 
 #undef LOCAL_ASSERT
 }
@@ -1431,8 +1439,8 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         LOCAL_ASSERT(*pc == JSOP_POP);
         break;
 
+      case JSOP_SETGLOBAL:
       case JSOP_SETARG:
-      case JSOP_SETGVAR:
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
         /* FALL THROUGH */
@@ -1443,8 +1451,8 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         if (op == JSOP_SETARG) {
             atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
             LOCAL_ASSERT(atom);
-        } else if (op == JSOP_SETGVAR) {
-            LOAD_ATOM(0);
+        } else if (op == JSOP_SETGLOBAL) {
+            atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
         } else if (IsVarSlot(jp, pc, &i)) {
             atom = GetArgOrVarAtom(jp, i);
             LOCAL_ASSERT(atom);
@@ -2323,6 +2331,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 /* FALL THROUGH */
 
               case JSOP_BINDNAME:
+              case JSOP_BINDGNAME:
                 todo = Sprint(&ss->sprinter, "");
                 break;
 
@@ -2650,7 +2659,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_ENTERBLOCK:
               {
                 JSAtom **atomv, *smallv[5];
-                JSScopeProperty *sprop;
 
                 LOAD_OBJECT(0);
                 argc = OBJ_BLOCK_COUNT(cx, obj);
@@ -2665,12 +2673,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 MUST_FLOW_THROUGH("enterblock_out");
 #define LOCAL_ASSERT_OUT(expr) LOCAL_ASSERT_CUSTOM(expr, ok = JS_FALSE; \
                                                    goto enterblock_out)
-                for (sprop = obj->scope()->lastProperty(); sprop;
-                     sprop = sprop->parent) {
-                    if (!sprop->hasShortID())
+                for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
+                    const Shape &shape = r.front();
+
+                    if (!shape.hasShortID())
                         continue;
-                    LOCAL_ASSERT_OUT(sprop->shortid < argc);
-                    atomv[sprop->shortid] = JSID_TO_ATOM(sprop->id);
+                    LOCAL_ASSERT_OUT(shape.shortid < argc);
+                    atomv[shape.shortid] = JSID_TO_ATOM(shape.id);
                 }
                 ok = JS_TRUE;
                 for (i = 0; i < argc; i++) {
@@ -2843,8 +2852,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLUPVAR:
               case JSOP_GETUPVAR_DBG:
               case JSOP_CALLUPVAR_DBG:
-              case JSOP_GETDSLOT:
-              case JSOP_CALLDSLOT:
+              case JSOP_GETFCSLOT:
+              case JSOP_CALLFCSLOT:
               {
                 if (!jp->fun) {
                     JS_ASSERT(jp->script->savedCallerFun);
@@ -2852,7 +2861,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
 
                 if (!jp->localNames)
-                    jp->localNames = js_GetLocalNameArray(cx, jp->fun, &jp->pool);
+                    jp->localNames = jp->fun->getLocalNameArray(cx, &jp->pool);
 
                 uintN index = GET_UINT16(pc);
                 if (index < jp->fun->u.i.nupvars) {
@@ -3384,6 +3393,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 xval = "&&";
                 goto do_logical_connective;
 
+              case JSOP_FORGLOBAL:
+                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
+                goto do_forname;
+
               case JSOP_FORARG:
                 sn = NULL;
                 i = GET_ARGNO(pc);
@@ -3407,6 +3420,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_FORNAME:
                 LOAD_ATOM(0);
+
+              do_forname:
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = SprintCString(&ss->sprinter, VarPrefix(sn));
                 if (todo < 0 || !QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
@@ -3519,9 +3534,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOCAL_ASSERT(atom);
                 goto do_setname;
 
+              case JSOP_SETGLOBAL:
+                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
+                goto do_setname;
+
               case JSOP_SETCONST:
               case JSOP_SETNAME:
-              case JSOP_SETGVAR:
+              case JSOP_SETGNAME:
                 LOAD_ATOM(0);
 
               do_setname:
@@ -3529,7 +3548,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if (!lval)
                     return NULL;
                 rval = POP_STR();
-                if (op == JSOP_SETNAME)
+                if (op == JSOP_SETNAME || op == JSOP_SETGNAME)
                     (void) PopOff(ss, op);
 
               do_setlval:
@@ -3690,10 +3709,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOCAL_ASSERT(atom);
                 goto do_incatom;
 
+              case JSOP_INCGLOBAL:
+              case JSOP_DECGLOBAL:
+                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
+                goto do_incatom;
+
               case JSOP_INCNAME:
               case JSOP_DECNAME:
-              case JSOP_INCGVAR:
-              case JSOP_DECGVAR:
+              case JSOP_INCGNAME:
+              case JSOP_DECGNAME:
                 LOAD_ATOM(0);
               do_incatom:
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -3746,10 +3770,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOCAL_ASSERT(atom);
                 goto do_atominc;
 
+              case JSOP_GLOBALINC:
+              case JSOP_GLOBALDEC:
+                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
+                goto do_atominc;
+
               case JSOP_NAMEINC:
               case JSOP_NAMEDEC:
-              case JSOP_GVARINC:
-              case JSOP_GVARDEC:
+              case JSOP_GNAMEINC:
+              case JSOP_GNAMEDEC:
                 LOAD_ATOM(0);
               do_atominc:
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -3951,10 +3980,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #endif
                 goto do_name;
 
+              case JSOP_CALLGLOBAL:
+              case JSOP_GETGLOBAL:
+                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
+                goto do_name;
+
               case JSOP_CALLNAME:
               case JSOP_NAME:
-              case JSOP_GETGVAR:
-              case JSOP_CALLGVAR:
+              case JSOP_GETGNAME:
+              case JSOP_CALLGNAME:
                 LOAD_ATOM(0);
               do_name:
                 lval = "";
@@ -4031,7 +4065,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (!fun->hasLocalNames()) {
                         innerLocalNames = NULL;
                     } else {
-                        innerLocalNames = js_GetLocalNameArray(cx, fun, &cx->tempPool);
+                        innerLocalNames = fun->getLocalNameArray(cx, &cx->tempPool);
                         if (!innerLocalNames)
                             return NULL;
                     }
@@ -4954,20 +4988,6 @@ js_DecompileFunction(JSPrinter *jp)
         pc = script->main;
         endpc = pc + script->length;
         ok = JS_TRUE;
-
-        /* Skip trace hint if it appears here. */
-#if JS_HAS_GENERATORS
-        if (js_GetOpcode(jp->sprinter.context, script, script->code) != JSOP_GENERATOR)
-#endif
-        {
-            JSOp op = js_GetOpcode(jp->sprinter.context, script, pc);
-            if (op == JSOP_TRACE || op == JSOP_NOP) {
-                JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
-                pc += JSOP_TRACE_LENGTH;
-            } else {
-                JS_ASSERT(op == JSOP_STOP);  /* empty script singleton */
-            }
-        }
 
 #if JS_HAS_DESTRUCTURING
         ss.printer = NULL;

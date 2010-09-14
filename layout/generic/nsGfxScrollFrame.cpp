@@ -1580,8 +1580,7 @@ PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
   // child of a chrome document is always treated as "active".
   // XXX maybe we should extend this so that IFRAMEs which are fill the
   // entire viewport (like GMail!) are always active
-  return mIsRoot &&
-    !nsContentUtils::IsChildOfSameType(mOuter->GetContent()->GetCurrentDoc());
+  return mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 }
 
 PRBool nsGfxScrollFrameInner::IsScrollingActive() const
@@ -1697,7 +1696,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   // We pass in the amount to move visually
   ScrollVisual(curPosDevPx - ptDevPx);
 
-  presContext->PresShell()->GetViewManager()->SynthesizeMouseMove(PR_TRUE);
+  presContext->PresShell()->SynthesizeMouseMove(PR_TRUE);
   UpdateScrollbarPosition();
   PostScrollEvent();
 
@@ -1754,7 +1753,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // that's much larger than necessary. Creating independent layers for each
   // scrollbar works around the problem.
   PRBool createLayersForScrollbars = mIsRoot &&
-      !nsContentUtils::IsChildOfSameType(mOuter->GetContent()->GetCurrentDoc());
+    mOuter->PresContext()->IsRootContentDocument();
   for (nsIFrame* kid = mOuter->GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
     if (kid != mScrolledFrame) {
       if (kid == mScrollCornerBox && hasResizer) {

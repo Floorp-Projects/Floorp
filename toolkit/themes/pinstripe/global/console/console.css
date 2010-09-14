@@ -172,7 +172,7 @@
   border-radius: 10000px;
   border: @roundButtonBorder@;
   background: @roundButtonBackground@;
-  -moz-box-shadow: @roundButtonShadow@;
+  box-shadow: @roundButtonShadow@;
 }
 
 #ButtonEval > .toolbarbutton-text {
@@ -182,7 +182,7 @@
 #ButtonEval:hover:active {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @roundButtonPressedShadow@;
+  box-shadow: @roundButtonPressedShadow@;
 }
 
 toolbarseparator {
@@ -209,7 +209,7 @@ toolbarseparator {
   padding: 0 4px;
   border: 1px solid @toolbarbuttonBorderColor@;
   border-radius: @toolbarbuttonCornerRadius@;
-  -moz-box-shadow: @loweredShadow@;
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
 }
@@ -217,7 +217,7 @@ toolbarseparator {
 #Console\:clear:active:hover {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 #Console\:clear:-moz-window-inactive {

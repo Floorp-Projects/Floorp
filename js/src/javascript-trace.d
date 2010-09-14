@@ -32,15 +32,8 @@
  * javascript provider probes
  *
  * function-entry       (filename, classname, funcname)
- * function-info        (filename, classname, funcname, lineno,
- *                      runfilename, runlineno)
- * function-args        (filename, classname, funcname, argc, argv, argv0,
- *                      argv1, argv2, argv3, argv4)
- * function-rval        (filename, classname, funcname, lineno, rval, rval0)
  * function-return      (filename, classname, funcname)
- * object-create-start  (filename, classname)
- * object-create        (filename, classname, *object, rlineno)
- * object-create-done   (filename, classname)
+ * object-create        (classname, *object)
  * object-finalize      (NULL, classname, *object)
  * execute-start        (filename, lineno)
  * execute-done         (filename, lineno)
@@ -48,16 +41,10 @@
 
 provider javascript {
  probe function__entry(char *, char *, char *);
- probe function__info(char *, char *, char *, int, char *, int);
- probe function__args(char *, char *, char *, int, void *, void *, void *,
-     void *, void *, void *);
- probe function__rval(char *, char *, char *, int, void *, void *);
  probe function__return(char *, char *, char *);
- probe object__create__start(char *, char *);
- probe object__create__done(char *, char *);
  /* XXX must use unsigned longs here instead of uintptr_t for OS X 
     (Apple radar: 5194316 & 5565198) */
- probe object__create(char *, char *, unsigned long, int);
+ probe object__create(char *, unsigned long);
  probe object__finalize(char *, char *, unsigned long);
  probe execute__start(char *, int);
  probe execute__done(char *, int);
@@ -68,6 +55,5 @@ provider javascript {
 #pragma D attributes Private/Private/Unknown provider mozilla module
 #pragma D attributes Private/Private/Unknown provider mozilla function
 #pragma D attributes Unstable/Unstable/Common provider mozilla name
-#pragma D attributes Unstable/Unstable/Common provider mozilla args
 */
 
