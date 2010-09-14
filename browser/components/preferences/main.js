@@ -83,7 +83,7 @@ var gMainPane = {
     if (homePref.value.toLowerCase() == "about:home")
       return "";
 
-    // If the pref is actually "", show about:blank. The actual home page
+    // If the pref is actually "", show about:blank.  The actual home page
     // loading code treats them the same, and we don't want the placeholder text
     // to be shown.
     if (homePref.value == "")
