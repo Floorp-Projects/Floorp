@@ -82,7 +82,8 @@ public:
   };
 
   ThebesLayerBuffer(BufferSizePolicy aBufferSizePolicy)
-    : mBufferRotation(0,0)
+    : mBufferDims(0,0)
+    , mBufferRotation(0,0)
     , mBufferSizePolicy(aBufferSizePolicy)
   {
     MOZ_COUNT_CTOR(ThebesLayerBuffer);
@@ -99,6 +100,7 @@ public:
   void Clear()
   {
     mBuffer = nsnull;
+    mBufferDims.SizeTo(0, 0);
     mBufferRect.Empty();
   }
 
@@ -157,11 +159,12 @@ protected:
   const nsIntPoint& BufferRotation() const { return mBufferRotation; }
 
   already_AddRefed<gfxASurface>
-  SetBuffer(gfxASurface* aBuffer,
+  SetBuffer(gfxASurface* aBuffer, const nsIntSize& aBufferDims,
             const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
   {
     nsRefPtr<gfxASurface> tmp = mBuffer.forget();
     mBuffer = aBuffer;
+    mBufferDims = aBufferDims;
     mBufferRect = aBufferRect;
     mBufferRotation = aBufferRotation;
     return tmp.forget();
@@ -170,12 +173,18 @@ protected:
 private:
   PRBool BufferSizeOkFor(const nsIntSize& aSize)
   {
-    return (aSize == mBufferRect.Size() ||
+    return (aSize == mBufferDims ||
             (SizedToVisibleBounds != mBufferSizePolicy &&
-             aSize < mBufferRect.Size()));
+             aSize < mBufferDims));
   }
 
   nsRefPtr<gfxASurface> mBuffer;
+  /**
+   * The actual dimensions of mBuffer.  For the ContainsVisibleBounds
+   * policy or with resolution-scaled drawing, mBufferDims might be
+   * different than mBufferRect.Size().
+   */
+  nsIntSize             mBufferDims;
   /** The area of the ThebesLayer that is covered by the buffer as a whole */
   nsIntRect             mBufferRect;
   /**
