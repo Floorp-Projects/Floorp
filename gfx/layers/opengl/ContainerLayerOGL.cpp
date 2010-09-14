@@ -168,6 +168,9 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   nsIntPoint childOffset(aOffset);
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
+  GLint savedScissor[4];
+  gl()->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, savedScissor);
+
   float opacity = GetOpacity();
   bool needsFramebuffer = (opacity != 1.0) || !mTransform.IsIdentity();
   if (needsFramebuffer) {
@@ -177,6 +180,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                       &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
+    mOGLManager->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
     mOGLManager->gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
     mOGLManager->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
