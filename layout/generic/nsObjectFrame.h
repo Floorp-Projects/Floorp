@@ -49,8 +49,6 @@
 #include "nsRegion.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
-#include "Layers.h"
-#include "ImageLayers.h"
 
 #ifdef ACCESSIBILITY
 class nsIAccessible;
@@ -69,11 +67,6 @@ class nsObjectFrame : public nsObjectFrameSuper,
                       public nsIObjectFrame,
                       public nsIReflowCallback {
 public:
-  typedef mozilla::LayerState LayerState;
-  typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::LayerManager LayerManager;
-  typedef mozilla::layers::ImageContainer ImageContainer;
-
   NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -176,15 +169,6 @@ public:
   virtual PRBool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
-  already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                     LayerManager* aManager,
-                                     nsDisplayItem* aItem);
-
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager);
-
-  ImageContainer* GetImageContainer();
-
 protected:
   nsObjectFrame(nsStyleContext* aContext);
   virtual ~nsObjectFrame();
@@ -282,10 +266,6 @@ private:
   PRBool mPreventInstantiation;
 
   PRPackedBool mReflowCallbackPosted;
-
-  // A reference to the ImageContainer which contains the current frame
-  // of plugin to display.
-  nsRefPtr<ImageContainer> mImageContainer;
 };
 
 class nsDisplayPlugin : public nsDisplayItem {
@@ -319,18 +299,6 @@ public:
   // simply does nothing.
   void GetWidgetConfiguration(nsDisplayListBuilder* aBuilder,
                               nsTArray<nsIWidget::Configuration>* aConfigurations);
-
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager)
-  {
-    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
-  }
-
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
-  {
-    return static_cast<nsObjectFrame*>(mFrame)->GetLayerState(aBuilder, aManager);
-  }
 
 private:
   nsRegion mVisibleRegion;
