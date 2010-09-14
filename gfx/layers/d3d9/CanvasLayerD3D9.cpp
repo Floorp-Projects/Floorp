@@ -109,7 +109,12 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
   if (mGLContext) {
     // WebGL reads entire surface.
     D3DLOCKED_RECT r;
-    mTexture->LockRect(0, &r, NULL, 0);
+    HRESULT hr = mTexture->LockRect(0, &r, NULL, 0);
+
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to lock CanvasLayer texture.");
+      return;
+    }
 
     PRUint8 *destination;
     if (r.Pitch != mBounds.width * 4) {
@@ -165,7 +170,12 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
     r.bottom = aRect.YMost();
 
     D3DLOCKED_RECT lockedRect;
-    mTexture->LockRect(0, &lockedRect, &r, 0);
+    HRESULT hr = mTexture->LockRect(0, &lockedRect, &r, 0);
+
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to lock CanvasLayer texture.");
+      return;
+    }
 
     PRUint8 *startBits;
     PRUint32 sourceStride;
