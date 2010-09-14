@@ -1087,7 +1087,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
          * object's shape first so the updateShape(cx) after this if-else will
          * generate a fresh shape for this scope. We need a fresh shape for all
          * deletions, even of lastProp. Otherwise, a shape number can replay
-         * and caches may return get deleted DictionaryShapes! See bug 595365.
+         * and caches may return deleted DictionaryShapes! See bug 595365.
          */
         setOwnShape(lastProp->shape);
 
