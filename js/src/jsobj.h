@@ -1220,6 +1220,7 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
  * outlives the frame).
  */
 static const uint32 JSSLOT_BLOCK_DEPTH = JSSLOT_PRIVATE + 1;
+static const uint32 JSSLOT_BLOCK_FIRST_FREE_SLOT = JSSLOT_BLOCK_DEPTH + 1;
 
 inline bool
 JSObject::isStaticBlock() const
