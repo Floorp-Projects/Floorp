@@ -248,7 +248,6 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
 
     // Determine how much audio data is decoded ahead of the current playback
     // position.
-    int audioQueueSize = mReader->mAudioQueue.GetSize();
     PRInt64 initialDownloadPosition = 0;
     PRInt64 currentTime = 0;
     PRInt64 audioDecoded = 0;
@@ -299,17 +298,10 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     {
       MonitorAutoEnter mon(mDecoder->GetMonitor());
 
-      if (!IsPlaying() &&
-          (!audioWait || !videoWait) &&
-          (videoQueueSize < 2 || audioQueueSize < 2))
-      {
-        // Transitioning from 0 to 1 frames or from 1 to 2 frames could
-        // affect HaveNextFrameData and hence what UpdateReadyStateForData does.
-        // This could change us from HAVE_CURRENT_DATA to HAVE_FUTURE_DATA
-        // (or even HAVE_ENOUGH_DATA), so we'd better trigger an
-        // update to the ready state. We only need to do this if we're
-        // not playing; if we're playing the playback code will post an update
-        // whenever it advances a frame.
+      if (!IsPlaying()) {
+        // Update the ready state, so that the play DOM events fire. We only
+        // need to do this if we're not playing; if we're playing the playback
+        // code will do an update whenever it advances a frame.
         UpdateReadyState();
       }
 
@@ -317,8 +309,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         break;
       }
 
-      if ((!HasAudio() || (audioWait && audioPlaying)) &&
-          (!HasVideo() || (videoWait && videoPlaying)))
+      if ((!HasAudio() || audioWait) &&
+          (!HasVideo() || videoWait))
       {
         // All active bitstreams' decode is well ahead of the playback
         // position, we may as well wait for the playback to catch up.
@@ -1000,7 +992,8 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         mDecoder->StopProgressUpdates();
 
         PRBool currentTimeChanged = false;
-        if (mCurrentFrameTime != seekTime - mStartTime) {
+        PRInt64 mediaTime = GetMediaTime();
+        if (mediaTime != seekTime) {
           currentTimeChanged = true;
           // If in the midst of a seek, report the requested seek time
           // as the current time as required by step 8 of 4.8.10.9 'Seeking'
@@ -1024,7 +1017,6 @@ nsresult nsBuiltinDecoderStateMachine::Run()
           StopPlayback(AUDIO_SHUTDOWN);
           StopDecodeThreads();
           ResetPlayback();
-          PRInt64 currentTime = GetMediaTime();
           nsresult res;
           {
             MonitorAutoExit exitMon(mDecoder->GetMonitor());
@@ -1033,7 +1025,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
             res = mReader->Seek(seekTime,
                                 mStartTime,
                                 mEndTime,
-                                currentTime);
+                                mediaTime);
           }
           if (NS_SUCCEEDED(res)){
             PRInt64 audioTime = seekTime;
