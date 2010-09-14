@@ -707,6 +707,7 @@ IsPercentageAware(const nsIFrame* aFrame)
     if ((
 #ifdef MOZ_SVG
          fType == nsGkAtoms::svgOuterSVGFrame ||
+         fType == nsGkAtoms::imageFrame ||
 #endif
          fType == nsGkAtoms::subDocumentFrame) &&
         const_cast<nsIFrame*>(aFrame)->GetIntrinsicSize().width.GetUnit() ==
