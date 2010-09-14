@@ -43,8 +43,6 @@
 
 #include "mozilla/unused.h"
 
-#ifdef MOZ_IPC
-
 using mozilla::unused;          // <snicker>
 
 nsContentPermissionRequestProxy::nsContentPermissionRequestProxy()
@@ -164,4 +162,3 @@ ContentPermissionRequestParent::Recvprompt()
 
 } // namespace dom
 } // namespace mozilla
-#endif
