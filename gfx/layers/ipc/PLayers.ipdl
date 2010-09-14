@@ -52,6 +52,7 @@ using nsIntRegion;
 using nsIntSize;
 using mozilla::GraphicsFilterType;
 using mozilla::layers::FrameMetrics;
+using mozilla::layers::SurfaceDescriptorX11;
 using mozilla::null_t;
 
 /**
@@ -75,10 +76,16 @@ struct OpCreateCanvasLayer     { PLayer layer; };
 // For the "buffer creation" operations, we send an initial front
 // buffer that only contains (transparent) black pixels just so that
 // we can swap it back after the first OpPaint without a special case.
+
+union SurfaceDescriptor {
+  Shmem;
+  SurfaceDescriptorX11;
+};
+
 struct OpCreateThebesBuffer {
   PLayer layer;
   nsIntRect bufferRect;
-  Shmem initialFront;
+  SurfaceDescriptor initialFront;
 };
 struct OpDestroyThebesFrontBuffer { PLayer layer; };
 
@@ -146,7 +153,7 @@ struct OpRemoveChild  { PLayer container; PLayer childLayer; };
 
 // Paint (buffer update)
 struct ThebesBuffer {
-  Shmem buffer;
+  SurfaceDescriptor buffer;
   nsIntRect rect;
   nsIntPoint rotation; 
 };
@@ -195,7 +202,7 @@ union Edit {
 
 
 // Replies to operations
-struct OpBufferSwap   { PLayer layer; Shmem newBackBuffer; };
+struct OpBufferSwap   { PLayer layer; SurfaceDescriptor newBackBuffer; };
 
 /*
  * XXX: if we choose *not* to do a new-front-to-new-back fill in the
