@@ -109,6 +109,7 @@ public:
                               const nsDisplayListSet& aLists);
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual IntrinsicSize GetIntrinsicSize();
   virtual nsSize GetIntrinsicRatio();
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
