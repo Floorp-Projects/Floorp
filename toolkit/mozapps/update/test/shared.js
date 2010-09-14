@@ -83,6 +83,9 @@ const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
+const CRC_ERROR   = 4;
+const WRITE_ERROR = 7;
+
 const FILE_BACKUP_LOG     = "backup-update.log";
 const FILE_LAST_LOG       = "last-update.log";
 const FILE_UPDATES_DB     = "updates.xml";

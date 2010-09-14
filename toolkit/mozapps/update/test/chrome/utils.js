@@ -141,8 +141,6 @@ const URL_UPDATE = URL_HOST + URL_PATH + "/update.sjs";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
-const CRC_ERROR = 4;
-
 const ADDON_ID_SUFFIX = "@appupdatetest.mozilla.org";
 const ADDON_PREP_DIR = "appupdateprep";
 // Preference for storing add-ons that are disabled by the tests to prevent them
