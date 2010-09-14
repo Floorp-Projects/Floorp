@@ -48,9 +48,9 @@ let Keys = { meta: false };
 // Class: UI
 // Singleton top-level UI manager.
 let UI = {
-  // Variable: _frameInitalized
+  // Variable: _frameInitialized
   // True if the Tab View UI frame has been initialized.
-  _frameInitalized: false,
+  _frameInitialized: false,
 
   // Variable: _pageBounds
   // Stores the page bounds.
@@ -229,8 +229,14 @@ let UI = {
       Services.obs.addObserver(observer, "quit-application-requested", false);
 
       // ___ Done
-      this._frameInitalized = true;
+      this._frameInitialized = true;
       this._save();
+
+      // fire an iframe initialized event so everyone knows tab view is 
+      // initialized.
+      let event = document.createEvent("Events");
+      event.initEvent("tabviewframeinitialized", true, false);
+      dispatchEvent(event);
     } catch(e) {
       Utils.log(e);
     }
@@ -254,6 +260,7 @@ let UI = {
     this._pageBounds = null;
     this._reorderTabItemsOnShow = null;
     this._reorderTabsOnHide = null;
+    this._frameInitialized = false;
   },
 
   // ----------
@@ -1031,7 +1038,7 @@ let UI = {
   // Function: _save
   // Saves the data for this object to persistent storage
   _save: function UI__save() {
-    if (!this._frameInitalized)
+    if (!this._frameInitialized)
       return;
 
     var data = {
