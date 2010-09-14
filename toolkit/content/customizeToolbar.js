@@ -143,10 +143,10 @@ function removeToolboxListeners()
 {
   var elts = getRootElements();
   for (let i=0; i < elts.length; i++) {
-    elts[i].addEventListener("dragstart", onToolbarDragStart, true);
-    elts[i].addEventListener("dragover", onToolbarDragOver, true);
-    elts[i].addEventListener("dragleave", onToolbarDragLeave, true);
-    elts[i].addEventListener("drop", onToolbarDrop, true);
+    elts[i].removeEventListener("dragstart", onToolbarDragStart, true);
+    elts[i].removeEventListener("dragover", onToolbarDragOver, true);
+    elts[i].removeEventListener("dragleave", onToolbarDragLeave, true);
+    elts[i].removeEventListener("drop", onToolbarDrop, true);
   }
 }
 
@@ -248,6 +248,7 @@ function unwrapToolbarItems()
   let elts = getRootElements();
   for (let i=0; i < elts.length; i++) {
     let paletteItems = elts[i].getElementsByTagName("toolbarpaletteitem");
+    let paletteItem;
     while ((paletteItem = paletteItems.item(0)) != null) {
       let toolbarItem = paletteItem.firstChild;
       restoreItemForToolbar(toolbarItem, paletteItem);
