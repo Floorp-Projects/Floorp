@@ -1103,6 +1103,13 @@ public:
   float GetYResolution() { return mYResolution; }
 
   /**
+   * Dispatch a mouse move event based on the most recent mouse position if
+   * this PresShell is visible. This is used when the contents of the page
+   * moved (aFromScroll is false) or scrolled (aFromScroll is true).
+   */
+  virtual void SynthesizeMouseMove(PRBool aFromScroll) = 0;
+
+  /**
    * Refresh observer management.
    */
 protected:
