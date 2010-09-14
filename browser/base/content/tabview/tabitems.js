@@ -1006,7 +1006,10 @@ let TabItems = {
           if (groupItem) {
             groupItem.add(item);
 
-            if (item.tab == gBrowser.selectedTab)
+            // if it matches the selected tab or no active tab and the browser 
+            // tab is hidden, the active group item would be set.
+            if (item.tab == gBrowser.selectedTab || 
+                (!GroupItems.getActiveGroupItem() && !item.tab.hidden))
               GroupItems.setActiveGroupItem(item.parent);
           }
         }
