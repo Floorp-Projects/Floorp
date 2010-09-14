@@ -3244,7 +3244,7 @@ nsWindow::GetLayerManager()
 
     // Fall back to software if we couldn't use any hardware backends.
     if (!mLayerManager)
-      mLayerManager = new BasicLayerManager(this);
+      mLayerManager = CreateBasicLayerManager();
   }
 #endif
 

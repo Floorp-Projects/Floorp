@@ -591,7 +591,7 @@ nsWindow::GetLayerManager()
 
     if (!topWindow) {
         printf_stderr(" -- no topwindow\n");
-        mLayerManager = new BasicLayerManager(this);
+        mLayerManager = CreateBasicLayerManager();
         return mLayerManager;
     }
 
@@ -601,7 +601,7 @@ nsWindow::GetLayerManager()
         sFailedToCreateGLContext)
     {
         printf_stderr(" -- creating basic, not accelerated\n");
-        mLayerManager = new BasicLayerManager(this);
+        mLayerManager = CreateBasicLayerManager();
         return mLayerManager;
     }
 
@@ -622,7 +622,7 @@ nsWindow::GetLayerManager()
         sGLContext = nsnull;
         sFailedToCreateGLContext = PR_TRUE;
 
-        mLayerManager = new BasicLayerManager(this);
+        mLayerManager = CreateBasicLayerManager();
     }
 
     return mLayerManager;
