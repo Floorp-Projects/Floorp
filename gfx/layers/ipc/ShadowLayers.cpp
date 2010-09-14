@@ -389,7 +389,12 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
                                         SurfaceDescriptor* aFrontBuffer,
                                         SurfaceDescriptor* aBackBuffer)
 {
-  if (PlatformAllocDoubleBuffer(aSize, aContent, aFrontBuffer, aBackBuffer)) {
+  PRBool tryPlatformSurface = PR_TRUE;
+#ifdef DEBUG
+  tryPlatformSurface = !PR_GetEnv("MOZ_LAYERS_FORCE_SHMEM_SURFACES");
+#endif
+  if (tryPlatformSurface &&
+      PlatformAllocDoubleBuffer(aSize, aContent, aFrontBuffer, aBackBuffer)) {
     return PR_TRUE;
   }
 
