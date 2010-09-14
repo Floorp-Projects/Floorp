@@ -261,6 +261,22 @@ public:
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(ContentType aType, const nsIntSize& aSize);
 
+  /**
+   * Swap out the old backing buffer for |aBuffer|.
+   *
+   * CAVEAT EMPTOR: |aBuffer| must have the same dimensions and pixels
+   * as the previous buffer.  If not, rendering glitches will occur.
+   * This is a rather dangerous and low-level interface added in bug
+   * 570625 as an intermediate step to a better interface.
+   */
+  void SetBackingBuffer(gfxASurface* aBuffer)
+  {
+    gfxIntSize prevSize = gfxIntSize(BufferDims().width, BufferDims().height);
+    NS_ABORT_IF_FALSE(aBuffer->GetSize() == prevSize,
+                      "Swapped-in buffer size doesn't match old buffer's!");
+    SetBuffer(aBuffer, BufferDims(), BufferRect(), BufferRotation());
+  }
+
 private:
   BasicThebesLayer* mLayer;
 };
@@ -1343,6 +1359,7 @@ public:
   virtual void SetBackBuffer(gfxSharedImageSurface* aBuffer)
   {
     mBackBuffer = aBuffer;
+    mBuffer.SetBackingBuffer(aBuffer);
   }
 
   virtual void Disconnect()
@@ -1367,6 +1384,8 @@ private:
   NS_OVERRIDE virtual already_AddRefed<gfxASurface>
   CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize);
 
+  // We give a ref to this buffer to our ThebesLayerBuffer, and keep
+  // this ref here that we can destroy its underlying shmem segment.
   nsRefPtr<gfxSharedImageSurface> mBackBuffer;
   nsIntSize mBufferSize;
 };
@@ -1384,11 +1403,6 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
   if (HasShadow()) {
     NS_ABORT_IF_FALSE(!!mBackBuffer, "should have a back buffer by now");
 
-    nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
-    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx->DrawSurface(aContext->OriginalSurface(),
-                        gfxIntSize(mBufferSize.width, mBufferSize.height));
-
     BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
                                         mBuffer.BufferRect(),
                                         mBuffer.BufferRotation(),
@@ -1400,31 +1414,35 @@ already_AddRefed<gfxASurface>
 BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
                                          const nsIntSize& aSize)
 {
-  if (HasShadow()) {
-    if (mBackBuffer) {
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
-      mBackBuffer = nsnull;
-
-      BasicManager()->DestroyedThebesBuffer(BasicManager()->Hold(this));
-    }
-
-    nsRefPtr<gfxSharedImageSurface> tmpFront;
-    // XXX error handling
-    if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
-                                           gfxASurface::ImageFormatARGB32,
-                                           getter_AddRefs(tmpFront),
-                                           getter_AddRefs(mBackBuffer)))
-      NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
-    mBufferSize = aSize;
-
-    BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
-                                        // only |aSize| really matters
-                                        // here, since Painted() soon
-                                        // follows
-                                        nsIntRect(nsIntPoint(0, 0), aSize),
-                                        tmpFront);
+  if (!HasShadow()) {
+    return BasicThebesLayer::CreateBuffer(aType, aSize);
   }
-  return Base::CreateBuffer(aType, aSize);
+
+  if (mBackBuffer) {
+    BasicManager()->DestroyedThebesBuffer(BasicManager()->Hold(this),
+                                          mBackBuffer);
+    mBackBuffer = nsnull;
+  }
+
+  gfxASurface::gfxImageFormat format = (aType == gfxASurface::CONTENT_COLOR) ?
+                                       gfxASurface::ImageFormatRGB24 : 
+                                       gfxASurface::ImageFormatARGB32;
+  nsRefPtr<gfxSharedImageSurface> tmpFront;
+  // XXX error handling
+  if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
+                                         format,
+                                         getter_AddRefs(tmpFront),
+                                         getter_AddRefs(mBackBuffer)))
+    NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+  mBufferSize = aSize;
+
+  BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
+                                      // only |aSize| really matters
+                                      // here, since Painted() soon
+                                      // follows
+                                      nsIntRect(nsIntPoint(0, 0), aSize),
+                                      tmpFront);
+  return nsRefPtr<gfxASurface>(mBackBuffer).forget();
 }
 
 
@@ -1671,6 +1689,15 @@ public:
     nsRefPtr<gfxASurface> newBackBuffer = SetBuffer(aNewFrontBuffer,
                                                     aBufferDims,
                                                     aBufferRect, aRotation);
+    if (newBackBuffer && aNewFrontBuffer) {
+      // Copy the new pixels in the new front buffer to our previous
+      // front buffer.  This is intended to be optimized!  Many
+      // factors are involved.
+      nsRefPtr<gfxContext> tmpCtx = new gfxContext(newBackBuffer);
+      tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      tmpCtx->DrawSurface(aNewFrontBuffer,
+                          gfxIntSize(aBufferDims.width, aBufferDims.height));
+    }
     return static_cast<gfxSharedImageSurface*>(newBackBuffer.forget().get());
   }
 
@@ -1717,7 +1744,7 @@ public:
   virtual void DestroyFrontBuffer()
   {
     nsRefPtr<gfxSharedImageSurface> frontBuffer =
-      mFrontBuffer.Swap(0, nsIntSize(), nsIntRect());
+      mFrontBuffer.Swap(nsnull, nsIntSize(), nsIntRect());
     if (frontBuffer) {
       BasicManager()->ShadowLayerManager::DestroySharedSurface(frontBuffer);
     }
