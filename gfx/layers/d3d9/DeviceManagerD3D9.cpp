@@ -518,8 +518,8 @@ DeviceManagerD3D9::VerifyReadyForRendering()
     return false;
   }
 
-  for(unsigned int i = 0; i < mThebesLayers.Length(); i++) {
-    mThebesLayers[i]->CleanResources();
+  for(unsigned int i = 0; i < mLayersWithResources.Length(); i++) {
+    mLayersWithResources[i]->CleanResources();
   }
   for(unsigned int i = 0; i < mSwapChains.Length(); i++) {
     mSwapChains[i]->Reset();

@@ -13,6 +13,10 @@ wizardpage {
   padding: 0;
 }
 
+.update-header {
+  padding: 0px 10px;
+}
+
 .update-content {
   padding: 10px;
 }
@@ -35,13 +39,6 @@ wizardpage {
 
 .wizard-buttons-separator {
   margin-top: 0 !important;
-}
-
-#updates[currentpageid="updatesfoundbasic"] .wizard-button[dlgtype="next"],
-#updates[currentpageid="updatesfoundbillboard"] .wizard-button[dlgtype="next"],
-#updates[currentpageid="finished"] .wizard-button[dlgtype="finish"],
-#updates[currentpageid="finishedBackground"] .wizard-button[dlgtype="finish"] {
-  font-weight: bold;
 }
 
 #licenseContent, #incompatibleListbox {

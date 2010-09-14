@@ -153,6 +153,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_media_queries.html \
 		test_media_queries_dynamic.html \
 		test_media_queries_dynamic_xbl.html \
+		test_moz_device_pixel_ratio.html \
 		test_namespace_rule.html \
 		test_of_type_selectors.xhtml \
 		test_parse_rule.html \

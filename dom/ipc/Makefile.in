@@ -79,7 +79,7 @@ LOCAL_INCLUDES += \
 		-I$(topsrcdir)/chrome/src \
 		-I$(topsrcdir)/uriloader/exthandler \
 		-I$(srcdir)/../../netwerk/base/src \
-		-I$(srcdir)/../src/geolocation \
+		-I$(srcdir)/../src/base \
 		$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

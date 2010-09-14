@@ -699,6 +699,10 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     if (!tabchild)
       return NS_ERROR_FAILURE;
 
+    nsCString disp;
+    if (channel)
+      ExtractDisposition(channel, disp);
+
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
     // helperAppService listener on the parent-side, via another call to
@@ -709,23 +713,19 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     mozilla::dom::PExternalHelperAppChild *pc;
     pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
                                                   nsCString(aMimeContentType),
+                                                  disp,
                                                   aForceSave, contentLength);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
     NS_ADDREF(*aStreamListener = childListener);
 
-    // FIXME:  Eventually we'll use this original listener to finish up client-side
-    // work, such as closing a no-longer-needed window.  (Bug 588255)
-    // nsExternalAppHandler * handler = new nsExternalAppHandler(nsnull,
-    //                                                           EmptyCString(),
-    //                                                           aWindowContext,
-    //                                                           fileName,
-    //                                                           reason,
-    //                                                           aForceSave);
-    // if (!handler)
-    //   return NS_ERROR_OUT_OF_MEMORY;
-    //
-    // childListener->SetHandler(handler);
+    nsRefPtr<nsExternalAppHandler> handler =
+      new nsExternalAppHandler(nsnull, EmptyCString(), aWindowContext, fileName,
+                               reason, aForceSave);
+    if (!handler)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    childListener->SetHandler(handler);
 
     return NS_OK;
   }
@@ -1573,21 +1573,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
-  rv = SetUpTempFile(aChannel);
-  if (NS_FAILED(rv)) {
-    mCanceled = PR_TRUE;
-    request->Cancel(rv);
-    nsAutoString path;
-    if (mTempFile)
-      mTempFile->GetPath(path);
-    SendStatusChange(kWriteError, rv, request, path);
-    return NS_OK;
-  }
-
-  // Extract mime type for later use below.
-  nsCAutoString MIMEType;
-  mMimeInfo->GetMIMEType(MIMEType);
-
   // retarget all load notifications to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
 
@@ -1607,6 +1592,24 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // Close the underlying DOMWindow if there is no refresh header
   // and it was opened specifically for the download
   MaybeCloseWindow();
+
+#ifdef MOZ_IPC
+  // At this point, the child process has done everything it can usefully do
+  // for OnStartRequest.
+  if (XRE_GetProcessType() == GeckoProcessType_Content)
+     return NS_OK;
+#endif
+
+  rv = SetUpTempFile(aChannel);
+  if (NS_FAILED(rv)) {
+    mCanceled = PR_TRUE;
+    request->Cancel(rv);
+    nsAutoString path;
+    if (mTempFile)
+      mTempFile->GetPath(path);
+    SendStatusChange(kWriteError, rv, request, path);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
   if (encChannel) 
@@ -1682,6 +1685,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
       handlerSvc->Exists(mMimeInfo, &mimeTypeIsInDatastore);
     if (!handlerSvc || !mimeTypeIsInDatastore)
     {
+      nsCAutoString MIMEType;
+      mMimeInfo->GetMIMEType(MIMEType);
+
       if (!GetNeverAskFlagFromPref(NEVER_ASK_FOR_SAVE_TO_DISK_PREF, MIMEType.get()))
       {
         // Don't need to ask after all.

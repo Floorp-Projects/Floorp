@@ -16,12 +16,12 @@ function test() {
     id: "addon1@tests.mozilla.org",
     name: "addon 1",
     version: "1.0",
-    applyBackgroundUpdates: false
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }, {
     id: "addon2@tests.mozilla.org",
     name: "addon 2",
     version: "2.0",
-    applyBackgroundUpdates: false
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }]);
   
 

@@ -726,7 +726,7 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this.blocklistState = 0;
   this.appDisabled = false;
   this._userDisabled = false;
-  this._applyBackgroundUpdates = true;
+  this._applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
   this.scope = AddonManager.SCOPE_PROFILE;
   this.isActive = true;
   this.creator = "";
@@ -781,6 +781,11 @@ MockAddon.prototype = {
   },
   
   set applyBackgroundUpdates(val) {
+    if (val != AddonManager.AUTOUPDATE_DEFAULT &&
+        val != AddonManager.AUTOUPDATE_DISABLE &&
+        val != AddonManager.AUTOUPDATE_ENABLE) {
+      ok(false, "addon.applyBackgroundUpdates set to an invalid value: " + val);
+    }
     this._applyBackgroundUpdates = val;
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
   },

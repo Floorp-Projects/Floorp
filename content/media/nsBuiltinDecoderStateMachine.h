@@ -240,6 +240,11 @@ public:
     return mReader->GetBuffered(aBuffered, mStartTime);
   }
 
+  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
+  }
+
 protected:
 
   // Returns PR_TRUE when there's decoded audio waiting to play.

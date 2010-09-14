@@ -22,7 +22,7 @@
 <![CDATA[
 
 const TESTS = [ {
-  pageid: PAGEID_ERROR_CERT_CHECK,
+  pageid: PAGEID_ERROR_EXTRA,
   extraDelayedCheckFunction: checkCertErrorPage,
   shouldBeHidden: true,
   buttonClick: "finish"
