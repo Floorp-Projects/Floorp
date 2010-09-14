@@ -56,6 +56,7 @@ const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
+const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -111,6 +112,7 @@ const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
 AUS_Cu.import("resource://gre/modules/Services.jsm");
+AUS_Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const URI_UPDATES_PROPERTIES = "chrome://mozapps/locale/update/updates.properties";
 const gUpdateBundle = Services.strings.createBundle(URI_UPDATES_PROPERTIES);
