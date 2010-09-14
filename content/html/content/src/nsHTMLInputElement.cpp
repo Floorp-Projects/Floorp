@@ -973,6 +973,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, FormMethod, formmethod,
                                 kFormDefaultMethod->tag)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, FormTarget, formtarget)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
@@ -2442,6 +2443,9 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // form, see bug 592124.
             if (presShell && (event.message != NS_FORM_SUBMIT ||
                               mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+                              // We know the element is a submit control, if this check is moved,
+                              // make sure formnovalidate is used only if it's a submit control.
+                              HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
                               mForm->CheckValidFormSubmission())) {
               // Hold a strong ref while dispatching
               nsRefPtr<nsHTMLFormElement> form(mForm);

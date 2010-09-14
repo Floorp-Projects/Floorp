@@ -51,7 +51,7 @@ interface nsIDOMValidityState;
   * http://www.w3.org/TR/DOM-Level-2-HTML/
   */
 
-[scriptable, uuid(2f79a4be-8143-45fc-ac42-67cd16b2322f)]
+[scriptable, uuid(0805059d-f18f-4095-ae6b-0bf6df80b7b8)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -66,6 +66,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             formAction;
            attribute DOMString             formEnctype;
            attribute DOMString             formMethod;
+           attribute boolean               formNoValidate;
            attribute DOMString             formTarget;
 
   readonly attribute nsIDOMFileList        files;
