@@ -623,8 +623,8 @@ const AddonListener = {
     properties.forEach(function(aProperty) {
       // Only test that the expected properties are listed, having additional
       // properties listed is not necessary a problem
-      if (aProperties.indexOf(aProperty) != -1)
-        ok(false, "Did not see property change for " + aProperty);
+      if (aProperties.indexOf(aProperty) == -1)
+        do_throw("Did not see property change for " + aProperty);
     });
     return check_test_completed(arguments);
   },

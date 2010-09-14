@@ -83,20 +83,20 @@ function run_test_1() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
-    do_check_true(a1.applyBackgroundUpdates);
+    do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_eq(a1.releaseNotesURI, null);
 
-    a1.applyBackgroundUpdates = true;
+    a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
     prepare_test({
       "addon1@tests.mozilla.org": [
         ["onPropertyChanged", ["applyBackgroundUpdates"]]
       ]
     });
-    a1.applyBackgroundUpdates = false;
+    a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
     check_test_completed();
 
-    a1.applyBackgroundUpdates = false;
+    a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
     prepare_test({}, [
       "onNewInstall",
@@ -214,7 +214,7 @@ function check_test_2() {
       do_check_neq(a1, null);
       do_check_eq(a1.version, "2.0");
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
-      do_check_false(a1.applyBackgroundUpdates);
+      do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
       do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
       a1.uninstall();
@@ -847,7 +847,7 @@ function run_test_14() {
   restartManager();
 
   AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
-    a8.applyBackgroundUpdates = false;
+    a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
     // The background update check will find updates for both add-ons but only
     // proceed to install one of them.
