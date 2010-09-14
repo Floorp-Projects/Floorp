@@ -48,7 +48,7 @@ namespace mozilla {
 namespace layers {
 
 class DeviceManagerD3D9;
-class ThebesLayerD3D9;
+class LayerD3D9;
 class Nv3DVUtils;
 
 /**
@@ -146,10 +146,10 @@ public:
   Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; } 
 
   /**
-   * We keep a list of all thebes layers since we need their D3DPOOL_DEFAULT
-   * surfaces to be released when we want to reset the device.
+   * We keep a list of all layers here that may have hardware resource allocated
+   * so we can clean their resources on reset.
    */
-  nsTArray<ThebesLayerD3D9*> mThebesLayers;
+  nsTArray<LayerD3D9*> mLayersWithResources;
 private:
   friend class SwapChainD3D9;
 
