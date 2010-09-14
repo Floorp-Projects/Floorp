@@ -1664,11 +1664,12 @@ public:
   }
 
   already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* aNewFrontBuffer,
+  Swap(gfxSharedImageSurface* aNewFrontBuffer, const nsIntSize& aBufferDims,
        const nsIntRect& aBufferRect,
        const nsIntPoint& aRotation=nsIntPoint(0, 0))
   {
     nsRefPtr<gfxASurface> newBackBuffer = SetBuffer(aNewFrontBuffer,
+                                                    aBufferDims,
                                                     aBufferRect, aRotation);
     return static_cast<gfxSharedImageSurface*>(newBackBuffer.forget().get());
   }
@@ -1708,13 +1709,15 @@ public:
        const nsIntRect& aBufferRect,
        const nsIntPoint& aRotation)
   {
-    return mFrontBuffer.Swap(aNewFront, aBufferRect, aRotation);
+    gfxIntSize size = aNewFront->GetSize();
+    return mFrontBuffer.Swap(aNewFront, nsIntSize(size.width, size.height),
+                             aBufferRect, aRotation);
   }
 
   virtual void DestroyFrontBuffer()
   {
     nsRefPtr<gfxSharedImageSurface> frontBuffer =
-      mFrontBuffer.Swap(0, nsIntRect());
+      mFrontBuffer.Swap(0, nsIntSize(), nsIntRect());
     if (frontBuffer) {
       BasicManager()->ShadowLayerManager::DestroySharedSurface(frontBuffer);
     }

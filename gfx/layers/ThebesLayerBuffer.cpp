@@ -178,12 +178,13 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
 
   nsIntRect visibleBounds = aLayer->GetVisibleRegion().GetBounds();
-  nsIntSize scaledBufferSize = ScaledSize(visibleBounds.Size(),
-                                          aXResolution, aYResolution);
+  nsIntSize destBufferDims = ScaledSize(visibleBounds.Size(),
+                                        aXResolution, aYResolution);
   nsRefPtr<gfxASurface> destBuffer;
   nsIntRect destBufferRect;
+  PRBool bufferDimsChanged = PR_FALSE;
 
-  if (BufferSizeOkFor(scaledBufferSize)) {
+  if (BufferSizeOkFor(destBufferDims)) {
     NS_ASSERTION(curXRes == aXResolution && curYRes == aYResolution,
                  "resolution changes must Clear()!");
 
@@ -219,9 +220,10 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
           destBufferRect = visibleBounds;
-          destBuffer = CreateBuffer(aContentType,
-                                    ScaledSize(destBufferRect.Size(),
-                                               aXResolution, aYResolution));
+          destBufferDims = ScaledSize(destBufferRect.Size(),
+                                      aXResolution, aYResolution);
+          bufferDimsChanged = PR_TRUE;
+          destBuffer = CreateBuffer(aContentType, destBufferDims);
           if (!destBuffer)
             return result;
         }
@@ -239,9 +241,10 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   } else {
     // The buffer's not big enough, so allocate a new one
     destBufferRect = visibleBounds;
-    destBuffer = CreateBuffer(aContentType,
-                              ScaledSize(destBufferRect.Size(),
-                                         aXResolution, aYResolution));
+    destBufferDims = ScaledSize(destBufferRect.Size(),
+                                aXResolution, aYResolution);
+    bufferDimsChanged = PR_TRUE;
+    destBuffer = CreateBuffer(aContentType, destBufferDims);
     if (!destBuffer)
       return result;
   }
@@ -266,6 +269,9 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     mBuffer = destBuffer.forget();
     mBufferRect = destBufferRect;
     mBufferRotation = nsIntPoint(0,0);
+  }
+  if (bufferDimsChanged) {
+    mBufferDims = destBufferDims;
   }
 
   nsIntRegion invalidate;
