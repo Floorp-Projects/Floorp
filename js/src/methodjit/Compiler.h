@@ -229,7 +229,6 @@ class Compiler
     js::Vector<CallPatchInfo, 64> callPatches;
     js::Vector<InternalCallSite, 64> callSites;
     js::Vector<DoublePatch, 16> doubleList;
-    js::Vector<uint32, 16> escapingList;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
@@ -312,6 +311,8 @@ class Compiler
     bool jsop_callprop_generic(JSAtom *atom);
     void jsop_instanceof();
     void jsop_name(JSAtom *atom);
+    void enterBlock(JSObject *obj);
+    void leaveBlock();
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);

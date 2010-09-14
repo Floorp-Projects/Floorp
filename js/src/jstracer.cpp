@@ -15790,12 +15790,6 @@ TraceRecorder::record_JSOP_GETARGPROP()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_DEFUPVAR()
-{
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETLOCALPROP()
 {
     return getProp(varval(GET_SLOTNO(cx->regs->pc)));
