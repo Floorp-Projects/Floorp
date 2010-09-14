@@ -315,6 +315,24 @@ struct ParamTraits<float>
 };
 
 template<>
+struct ParamTraits<gfxIntSize>
+{
+  typedef gfxIntSize paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
+
+template<>
 struct ParamTraits<gfxMatrix>
 {
   typedef gfxMatrix paramType;
