@@ -436,10 +436,19 @@ Shape::getChild(JSContext *cx, const js::Shape &child, Shape **listp)
         return NULL;
     }
 
+    if ((*listp)->entryCount() >= PropertyTree::MAX_HEIGHT) {
+        Shape *dprop = Shape::newDictionaryList(cx, listp);
+        if (!dprop)
+            return NULL;
+        return dprop->getChild(cx, child, listp);
+    }
+
     Shape *shape = JS_PROPERTY_TREE(cx).getChild(cx, this, child);
     if (shape) {
         JS_ASSERT(shape->parent == this);
         JS_ASSERT(this == *listp);
+        if (!shape->table)
+            shape->maybeHash(cx);
         *listp = shape;
     }
     return shape;
@@ -730,8 +739,6 @@ JSObject::addProperty(JSContext *cx, jsid id,
     return addPropertyCommon(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
 }
 
-const uint32 MAX_PROPERTY_TREE_HEIGHT = 64;
-
 const Shape *
 JSObject::addPropertyCommon(JSContext *cx, jsid id,
                             PropertyOp getter, PropertyOp setter,
@@ -741,7 +748,7 @@ JSObject::addPropertyCommon(JSContext *cx, jsid id,
 {
     PropertyTable *table = NULL;
     if (!inDictionaryMode()) {
-        if (lastProp->entryCount() > MAX_PROPERTY_TREE_HEIGHT) {
+        if (lastProp->entryCount() >= PropertyTree::MAX_HEIGHT) {
             if (!toDictionaryMode(cx))
                 return NULL;
             spp = nativeSearch(id, true);
