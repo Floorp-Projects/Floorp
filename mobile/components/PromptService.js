@@ -163,7 +163,7 @@ PromptService.prototype = {
   /* ----------  nsIPromptService  ---------- */
 
   alert: function() {
-    return this.callProxy("alert", arguments);
+    return this.callProxy("alert", arguments);IA
   },
   alertCheck: function() {
     return this.callProxy("alertCheck", arguments);
@@ -477,8 +477,6 @@ Prompt.prototype = {
       aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
     var params = new Object();
     params.result = false;
-    //if(!aCheckState)
-      //aCheckState = { value: false };
     params.checkbox = aCheckState;
     params.user = aUsername;
     params.password = aPassword;
@@ -530,43 +528,69 @@ Prompt.prototype = {
     return this.nsIPrompt_prompt(title, text, result, null, {});
   },
 
-  nsIAuthPrompt_promptUsernameAndPassword : function (title, text, passwordRealm, savePassword, user, pass) {
-    // TODO: Port functions from nsLoginManagerPrompter.js to here
-    return this.nsIPrompt_promptUsernameAndPassword(title, text, user, pass, null, {value: false});
+  nsIAuthPrompt_promptUsernameAndPassword : function (aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass) {
+    return nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass);
   },
 
-  nsIAuthPrompt_promptPassword : function (title, text, passwordRealm, savePassword, pass) {
-    // TODO: Port functions from nsLoginManagerPrompter.js to here
-    return this.nsIPrompt_promptPassword(title, text, pass, null, {});
+  nsIAuthPrompt_promptPassword : function (aTitle, aText, aPasswordRealm, aSavePassword, aPass) {
+    return nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, null, aPass);
   },
+
+  nsIAuthPrompt_loginPrompt: function(aTitle, aPasswordRealm, aSavePassword, aUser, aPass) {
+    let checkMsg = null;
+    let check = { value: false };
+    let [hostname, realm, aUser] = PromptUtils.getHostnameAndRealm(aPasswordRealm);
+
+    let canSave = PromptUtils.canSaveLogin(hostname, aSavePassword);
+    if (canSave) {
+      // Look for existing logins.
+      let foundLogins = PromptUtils.pwmgr.findLogins({}, hostname, null, realm);
+      [checkMsg, check] = PromptUtils.getUsernameAndPassword(foundLogins, aUser, aPass);
+    }
+
+    let ok = false;
+    if (aUser)
+      ok = this.nsIPrompt_promptUsernameAndPassword(aTitle, aText, aUser, aPass, checkMsg, check);
+    else
+      ok = this.nsIPrompt_promptPassword(aTitle, aText, aPass, checkMsg, check);
+
+    if (ok && canSave && check.value)
+      PromptUtils.savePassword(hostname, realm, aUser, aPass);
+
+    return ok;  },
 
   /* ----------  nsIAuthPrompt2  ---------- */
   
   promptAuth: function promptAuth(aChannel, aLevel, aAuthInfo) {
-    let res = false;
-
-    let defaultUser = aAuthInfo.username;
-    if ((aAuthInfo.flags & aAuthInfo.NEED_DOMAIN) && (aAuthInfo.domain.length > 0))
-      defaultUser = aAuthInfo.domain + "\\" + defaultUser;
-    
-    let username = { value: defaultUser };
-    let password = { value: aAuthInfo.password };
-    
+    let checkMsg = null;
+    let check = { value: false };
     let message = PromptUtils.makeDialogText(aChannel, aAuthInfo);
-    let title = PromptUtils.getLocaleString("PromptUsernameAndPassword2");
-    let checkMsg = PromptUtils.getLocaleString("rememberButtonText", "passwdmgr");
-    
-    if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD)
-      res = this.promptPassword(title, message, password, checkMsg, {});
-    else
-      res = this.promptUsernameAndPassword(title, message, username, password, checkMsg, {});
-    
-    if (res) {
-      aAuthInfo.username = username.value;
-      aAuthInfo.password = password.value;
+    let [username, password] = PromptUtils.getAuthInfo(aAuthInfo);
+    let [hostname, httpRealm] = PromptUtils.getAuthTarget(aChannel, aAuthInfo);
+    let foundLogins = PromptUtils.pwmgr.findLogins({}, hostname, null, httpRealm);
+
+    let canSave = PromptUtils.canSaveLogin(hostname, null);
+    if (canSave)
+      [checkMsg, check] = PromptUtils.getUsernameAndPassword(foundLogins, username, password);
+
+    if (username.value && password.value) {
+      PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
+      return true;
     }
     
-    return res;
+    let ok;
+    if (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD)
+      ok = this.nsIPrompt_promptPassword(null, message, password, checkMsg, check);
+    else
+      ok = this.nsIPrompt_promptUsernameAndPassword(null, message, username, password, checkMsg, check);
+
+    PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
+
+    if (ok && canSave && check.value) {
+      PromptUtils.savePassword(foundLogins, username, password, hostname, httpRealm);
+    }
+
+    return ok;
   },
   
   asyncPromptAuth: function asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo) {
@@ -576,57 +600,145 @@ Prompt.prototype = {
 };
 
 let PromptUtils = {
-  getLocaleString: function getLocaleString(aKey, aService) {
-    if(aService && aService == "passwdmgr")
+  getLocaleString: function pu_getLocaleString(aKey, aService) {
+    if (aService == "passwdmgr")
       return this.passwdBundle.GetStringFromName(aKey);
 
     return this.bundle.GetStringFromName(aKey);
   },
   
-  // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/src/nsPrompt.cpp#388
-  makeDialogText: function makeDialogText(aChannel, aAuthInfo) {
-    let HostPort = this.getAuthHostPort(aChannel, aAuthInfo);
-    let displayHost = HostPort.host;
-    let uri = aChannel.URI;
-    let scheme = uri.scheme;
-    let username = aAuthInfo.username;
-    let proxyAuth = (aAuthInfo.flags & aAuthInfo.AUTH_PROXY) != 0;
-    let realm = aAuthInfo.realm;
-    if (realm.length > 100) { // truncate and add ellipsis
-      let pref = Services.prefs;
-      let ellipsis = pref.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
-      if (!ellipsis)
-        ellipsis = "...";
-      realm = realm.substring(0, 100) + ellipsis;
+  get pwmgr() {
+    delete this.pwmgr;
+    return this.pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+  },
+
+  getHostnameAndRealm: function pu_getHostnameAndRealm(aRealmString) {
+    let httpRealm = /^.+ \(.+\)$/;
+    if (httpRealm.test(aRealmString))
+      return [null, null, null];
+
+    let uri = Services.io.newURI(aRealmString, null, null);
+    let pathname = "";
+
+    if (uri.path != "/")
+      pathname = uri.path;
+
+    let formattedHostname = this._getFormattedHostname(uri);
+    return [formattedHostname, formattedHostname + pathname, uri.username];
+  },
+
+  canSaveLogin: function pu_canSaveLogin(aHostname, aSavePassword) {
+    let canSave = !this._inPrivateBrowsing && this.pwmgr.getLoginSavingEnabled(aHostname)
+    if (aSavePassword)
+      canSave = canSave && (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY)
+    return canSave;
+  },
+
+  getUsernameAndPassword: function pu_getUsernameAndPassword(aFoundLogins, aUser, aPass) {
+    let checkLabel = null;
+    let check = { value: false };
+    let selectedLogin;
+
+    checkLabel = this.getLocaleString("rememberPassword", "passwdmgr");
+
+    // XXX Like the original code, we can't deal with multiple
+    // account selection. (bug 227632)
+    if (aFoundLogins.length > 0) {
+      selectedLogin = aFoundLogins[0];
+
+      // If the caller provided a username, try to use it. If they
+      // provided only a password, this will try to find a password-only
+      // login (or return null if none exists).
+      if (aUser.value)
+        selectedLogin = this.findLogin(aFoundLogins, "username", aUser.value);
+
+      if (selectedLogin) {
+        check.value = true;
+        aUser.value = selectedLogin.username;
+        // If the caller provided a password, prefer it.
+        if (!aPass.value)
+          aPass.value = selectedLogin.password;
+      }
     }
-    
-    if (HostPort.port != -1)
-      displayHost += ":" + HostPort.port;
-    
-    let text = null;
-    if (proxyAuth) {
-      text = "EnterLoginForProxy";
+
+    return [checkLabel, check];
+  },
+
+  findLogin: function pu_findLogin(aLogins, aName, aValue) {
+    for (let i = 0; i < aLogins.length; i++)
+      if (aLogins[i][aName] == aValue)
+        return aLogins[i];
+    return null;
+  },
+
+  savePassword: function pu_savePassword(aLogins, aUser, aPass, aHostname, aRealm) {
+    let selectedLogin = this.findLogin(aLogins, "username", aUser.value);
+
+    // If we didn't find an existing login, or if the username
+    // changed, save as a new login.
+    if (!selectedLogin) {
+      // add as new
+      var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+      newLogin.init(aHostname, null, aRealm, aUser.value, aPass.value, "", "");
+      this.pwmgr.addLogin(newLogin);
+    } else if (aPass.value != selectedLogin.password) {
+      // update password
+      this.updateLogin(selectedLogin, aPass.value);
     } else {
-      text = "EnterLoginForRealm";
-      displayHost = scheme + "://" + displayHost;
+      this.updateLogin(selectedLogin);
     }
-    
-    let strings = [realm, displayHost];
-    let count = 2;
-    if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD) {
-      text = "EnterPasswordFor";
-      strings[0] = username;
-    } else if (!proxyAuth && (realm.length == 0)) {
-      text = "EnterUserPasswordFor";
-      count = 1;
-      strings[0] = strings[1];
+  },
+
+  updateLogin: function pu_updateLogin(aLogin, aPassword) {
+    let now = Date.now();
+    let propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag);
+    if (aPassword) {
+      propBag.setProperty("password", aPassword);
+      // Explicitly set the password change time here (even though it would
+      // be changed automatically), to ensure that it's exactly the same
+      // value as timeLastUsed.
+      propBag.setProperty("timePasswordChanged", now);
     }
-    
-    return this.bundle.formatStringFromName(text, strings, count);
+    propBag.setProperty("timeLastUsed", now);
+    propBag.setProperty("timesUsedIncrement", 1);
+
+    this.pwmgr.modifyLogin(aLogin, propBag);
+  },
+  
+  // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/src/nsPrompt.cpp#388
+  makeDialogText: function pu_makeDialogText(aChannel, aAuthInfo) {
+    let isProxy    = (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY);
+    let isPassOnly = (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD);
+
+    let username = aAuthInfo.username;
+    let [displayHost, realm] = this.getAuthTarget(aChannel, aAuthInfo);
+
+    // Suppress "the site says: $realm" when we synthesized a missing realm.
+    if (!aAuthInfo.realm && !isProxy)
+    realm = "";
+
+    // Trim obnoxiously long realms.
+    if (realm.length > 150) {
+      realm = realm.substring(0, 150);
+      // Append "..." (or localized equivalent).
+      realm += this.ellipsis;
+    }
+
+    let text;
+    if (isProxy)
+      text = this.bundle.formatStringFromName("EnterLoginForProxy", [realm, displayHost], 2);
+    else if (isPassOnly)
+      text = this.bundle.formatStringFromName("EnterPasswordFor", [username, displayHost], 2);
+    else if (!realm)
+      text = this.bundle.formatStringFromName("EnterUserPasswordFor", [displayHost], 1);
+    else
+      text = this.bundle.formatStringFromName("EnterLoginForRealm", [realm, displayHost], 2);
+
+    return text;
   },
   
   // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/public/nsPromptUtils.h#89
-  getAuthHostPort: function getAuthHostPort(aChannel, aAuthInfo) {
+  getAuthHostPort: function pu_getAuthHostPort(aChannel, aAuthInfo) {
     let uri = aChannel.URI;
     let res = { host: null, port: -1 };
     if (aAuthInfo.flags & aAuthInfo.AUTH_PROXY) {
@@ -638,7 +750,88 @@ let PromptUtils = {
       res.port = uri.port;
     }
     return res;
-  }
+  },
+
+  getAuthTarget : function pu_getAuthTarget(aChannel, aAuthInfo) {
+    let hostname, realm;
+    // If our proxy is demanding authentication, don't use the
+    // channel's actual destination.
+    if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
+        if (!(aChannel instanceof Ci.nsIProxiedChannel))
+          throw "proxy auth needs nsIProxiedChannel";
+  
+      let info = aChannel.proxyInfo;
+      if (!info)
+        throw "proxy auth needs nsIProxyInfo";
+  
+      // Proxies don't have a scheme, but we'll use "moz-proxy://"
+      // so that it's more obvious what the login is for.
+      let idnService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+      hostname = "moz-proxy://" + idnService.convertUTF8toACE(info.host) + ":" + info.port;
+      realm = aAuthInfo.realm;
+      if (!realm)
+        realm = hostname;
+  
+      return [hostname, realm];
+    }
+    hostname = this.getFormattedHostname(aChannel.URI);
+
+    // If a HTTP WWW-Authenticate header specified a realm, that value
+    // will be available here. If it wasn't set or wasn't HTTP, we'll use
+    // the formatted hostname instead.
+    realm = aAuthInfo.realm;
+    if (!realm)
+      realm = hostname;
+
+    return [hostname, realm];
+  },
+
+  getAuthInfo : function pu_getAuthInfo(aAuthInfo) {
+    let flags = aAuthInfo.flags;
+    let username = {value: ""};
+    let password = {value: ""};
+
+    if (flags & Ci.nsIAuthInformation.NEED_DOMAIN && aAuthInfo.domain)
+      username.value = aAuthInfo.domain + "\\" + aAuthInfo.username;
+    else
+      username.value = aAuthInfo.username;
+
+    password.value = aAuthInfo.password
+
+    return [username, password];
+  },
+
+  setAuthInfo : function (aAuthInfo, username, password) {
+    var flags = aAuthInfo.flags;
+    if (flags & Ci.nsIAuthInformation.NEED_DOMAIN) {
+      // Domain is separated from username by a backslash
+      var idx = username.indexOf("\\");
+      if (idx == -1) {
+        aAuthInfo.username = username;
+      } else {
+        aAuthInfo.domain   =  username.substring(0, idx);
+        aAuthInfo.username =  username.substring(idx+1);
+      }
+    } else {
+      aAuthInfo.username = username;
+    }
+    aAuthInfo.password = password;
+  },
+
+  getFormattedHostname : function pu_getFormattedHostname(uri) {
+    let scheme = uri.scheme;
+    let hostname = scheme + "://" + uri.host;
+
+    // If the URI explicitly specified a port, only include it when
+    // it's not the default. (We never want "http://foo.com:80")
+    port = uri.port;
+    if (port != -1) {
+      let handler = Services.io.getProtocolHandler(scheme);
+      if (port != handler.defaultPort)
+        hostname += ":" + port;
+    }
+    return hostname;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "passwdBundle", function () {
