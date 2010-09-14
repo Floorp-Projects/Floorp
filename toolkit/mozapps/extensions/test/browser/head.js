@@ -26,6 +26,7 @@ function getChromeRoot(path) {
 
 var gPendingTests = [];
 var gTestsRun = 0;
+var gTestStart = null;
 
 var gUseInContentUI = ("switchToTabHavingURI" in window);
 
@@ -47,15 +48,23 @@ function add_test(test) {
 }
 
 function run_next_test() {
+  if (gTestsRun > 0)
+    info("Test " + gTestsRun + " took " + (Date.now() - gTestStart) + "ms");
+
   if (gPendingTests.length == 0) {
     end_test();
     return;
   }
 
   gTestsRun++;
-  info("Running test " + gTestsRun);
+  var test = gPendingTests.shift();
+  if (test.name)
+    info("Running test " + gTestsRun + " (" + test.name + ")");
+  else
+    info("Running test " + gTestsRun);
 
-  gPendingTests.shift()();
+  gTestStart = Date.now();
+  test();
 }
 
 function get_addon_file_url(aFilename) {
