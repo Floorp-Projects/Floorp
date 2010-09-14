@@ -45,6 +45,22 @@
 #include "jsparse.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
+#include "jsregexp.h"
+
+inline js::RegExpStatics *
+JSContext::regExpStatics()
+{
+    VOUCH_HAVE_STACK();
+    /*
+     * Whether we're on trace or not, the scope chain associated with cx->fp
+     * will lead us to the appropriate global. Although cx->fp is stale on
+     * trace, trace execution never crosses globals.
+     */
+    JS_ASSERT(hasfp());
+    JSObject *global = fp()->scopeChain().getGlobal();
+    js::RegExpStatics *res = js::RegExpStatics::extractFrom(global);
+    return res;
+}
 
 inline bool
 JSContext::ensureGeneratorStackSpace()

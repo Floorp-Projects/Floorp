@@ -514,7 +514,6 @@ AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
       origin(cx->compartment),
       target(target),
       destination(target->getCompartment(cx)),
-      statics(cx),
       input(cx),
       entered(false)
 {
@@ -540,7 +539,6 @@ AutoCompartment::enter()
             context->compartment = origin;
             return false;
         }
-        js_SaveAndClearRegExpStatics(context, &statics, &input);
     }
     entered = true;
     return true;
@@ -551,7 +549,6 @@ AutoCompartment::leave()
 {
     JS_ASSERT(entered);
     if (origin != destination) {
-        js_RestoreRegExpStatics(context, &statics);
         frame.destroy();
         context->compartment = origin;
         origin->wrapException(context);

@@ -124,9 +124,7 @@
 #include "nsTextEditRules.h"
 
 // JS headers are needed for the pattern attribute.
-#include "jsapi.h"    // for js_SaveAndClearRegExpStatics 
-                      // and js_RestoreRegExpStatics
-#include "jsregexp.h" // for js::AutoValueRooter
+#include "jsapi.h"
 #include "jscntxt.h"
 
 #include "nsHTMLInputElement.h"
@@ -4008,25 +4006,18 @@ nsHTMLInputElement::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
   aPattern.Append(NS_LITERAL_STRING(")$"));
 
-  JSObject* re = JS_NewUCRegExpObject(ctx, reinterpret_cast<jschar*>
-                                             (aPattern.BeginWriting()),
-                                      aPattern.Length(), 0);
+  JSObject* re = JS_NewUCRegExpObjectNoStatics(ctx, reinterpret_cast<jschar*>
+                                                 (aPattern.BeginWriting()),
+                                                aPattern.Length(), 0);
   NS_ENSURE_TRUE(re, PR_TRUE);
 
-  js::AutoObjectRooter re_root(ctx, re);
-  js::AutoStringRooter tvr(ctx);
-  js::RegExpStatics statics(ctx);
   jsval rval = JSVAL_NULL;
   size_t idx = 0;
   JSBool res;
 
-  js_SaveAndClearRegExpStatics(ctx, &statics, &tvr);
-
-  res = JS_ExecuteRegExp(ctx, re, reinterpret_cast<jschar*>
+  res = JS_ExecuteRegExpNoStatics(ctx, re, reinterpret_cast<jschar*>
                                     (aValue.BeginWriting()),
-                         aValue.Length(), &idx, JS_TRUE, &rval);
-
-  js_RestoreRegExpStatics(ctx, &statics);
+                                  aValue.Length(), &idx, JS_TRUE, &rval);
 
   return res == JS_FALSE || rval != JSVAL_NULL;
 }

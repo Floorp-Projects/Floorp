@@ -255,7 +255,7 @@ IDBCursor::IDBCursor()
 : mDirection(nsIIDBCursor::NEXT),
   mCachedValue(JSVAL_VOID),
   mHaveCachedValue(false),
-  mValueRooted(false),
+  mJSRuntime(nsnull),
   mContinueCalled(false),
   mDataIndex(0),
   mType(OBJECTSTORE)
@@ -267,8 +267,8 @@ IDBCursor::~IDBCursor()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mValueRooted) {
-    NS_DROP_JS_OBJECTS(this, IDBCursor);
+  if (mJSRuntime) {
+    js_RemoveRoot(mJSRuntime, &mCachedValue);
   }
 
   if (mListenerManager) {
@@ -280,38 +280,18 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBCursor,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRequest,
-                                                       nsPIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
-                                                       nsPIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mObjectStore,
                                                        nsPIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mIndex,
                                                        nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
+                                                       nsPIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(IDBCursor)
-  if (tmp->mValueRooted) {
-    NS_DROP_JS_OBJECTS(tmp, IDBCursor);
-    tmp->mCachedValue = JSVAL_VOID;
-    tmp->mHaveCachedValue = false;
-    tmp->mValueRooted = false;
-  }
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
-  if (JSVAL_IS_GCTHING(tmp->mCachedValue)) {
-    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedValue);
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing)
-  }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBCursor,
                                                 nsDOMEventTargetHelper)
   // Don't unlink mObjectStore, mIndex, or mTransaction!
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -397,14 +377,18 @@ IDBCursor::GetValue(JSContext* aCx,
   if (!mHaveCachedValue) {
     JSAutoRequest ar(aCx);
 
+    if (!mJSRuntime) {
+      JSRuntime* rt = JS_GetRuntime(aCx);
+      JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                               "IDBCursor::mCachedValue");
+      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+      mJSRuntime = rt;
+    }
+
     nsCOMPtr<nsIJSON> json(new nsJSON());
     rv = json->DecodeToJSVal(mData[mDataIndex].value, aCx, &mCachedValue);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mValueRooted) {
-      NS_HOLD_JS_OBJECTS(this, IDBCursor);
-      mValueRooted = true;
-    }
 
     mHaveCachedValue = true;
   }

@@ -53,6 +53,25 @@
 
 namespace js {
 
+/*
+ * res = RegExp statics.
+ */
+
+extern Class regexp_statics_class;
+
+static inline JSObject *
+regexp_statics_construct(JSContext *cx)
+{
+    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, NULL);
+    if (!obj)
+        return NULL;
+    RegExpStatics *res = cx->create<RegExpStatics>();
+    if (!res)
+        return NULL;
+    obj->setPrivate(static_cast<void *>(res));
+    return obj;
+}
+
 /* Defined in the inlines header to avoid Yarr dependency includes in main header. */
 class RegExp
 {
@@ -73,6 +92,12 @@ class RegExp
     static const uint32 allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_MULTILINE | JSREG_STICKY;
     void handlePCREError(JSContext *cx, int error);
     void handleYarrError(JSContext *cx, int error);
+    static inline bool initArena(JSContext *cx);
+    static inline void checkMatchPairs(int *buf, size_t matchItemCount);
+    JSObject *createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount,
+                           size_t inputOffset);
+    inline bool executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
+                                size_t *lastIndex, bool test, Value *rval);
 
   public:
     ~RegExp() {
@@ -97,7 +122,16 @@ class RegExp
      *              Return true if test is true. Place an array in |*rval| if test is false.
      * On mismatch: Make |*rval| null.
      */
-    bool execute(JSContext *cx, JSString *input, size_t *lastIndex, bool test, Value *rval);
+    bool execute(JSContext *cx, RegExpStatics *res, JSString *input, size_t *lastIndex, bool test,
+                 Value *rval) {
+        JS_ASSERT(res);
+        return executeInternal(cx, res, input, lastIndex, test, rval);
+    }
+
+    bool executeNoStatics(JSContext *cx, JSString *input, size_t *lastIndex, bool test,
+                          Value *rval) {
+        return executeInternal(cx, NULL, input, lastIndex, test, rval);
+    }
 
     /* Factories. */
     static RegExp *create(JSContext *cx, JSString *source, uint32 flags);
@@ -108,7 +142,10 @@ class RegExp
      *          so this function is really meant for object creation during code
      *          execution, as opposed to during something like XDR.
      */
-    static JSObject *createObject(JSContext *cx, const jschar *chars, size_t length, uint32 flags);
+    static JSObject *createObject(JSContext *cx, RegExpStatics *res, const jschar *chars,
+                                  size_t length, uint32 flags);
+    static JSObject *createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
+                                           uint32 flags);
     static RegExp *extractFrom(JSObject *obj);
     static RegExp *clone(JSContext *cx, const RegExp &other);
 
@@ -127,7 +164,184 @@ class RegExp
     uint32 flagCount() const;
 };
 
+class RegExpMatchBuilder
+{
+    JSContext   * const cx;
+    JSObject    * const array;
+
+  public:
+    RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(array) {}
+
+    bool append(int index, JSString *str) {
+        JS_ASSERT(str);
+        return append(INT_TO_JSID(index), StringValue(str));
+    }
+
+    bool append(jsid id, Value val) {
+        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::PropertyStub,
+                                   JSPROP_ENUMERATE);
+    }
+
+    bool appendIndex(int index) {
+        return append(ATOM_TO_JSID(cx->runtime->atomState.indexAtom), Int32Value(index));
+    }
+
+    /* Sets the input attribute of the match array. */
+    bool appendInput(JSString *str) {
+        JS_ASSERT(str);
+        return append(ATOM_TO_JSID(cx->runtime->atomState.inputAtom), StringValue(str));
+    }
+};
+
 /* RegExp inlines. */
+
+inline bool
+RegExp::initArena(JSContext *cx)
+{
+    if (cx->regExpPool.first.next)
+        return true;
+
+    /*
+     * The regular expression arena pool is special... we want to hang on to it
+     * until a GC is performed so rapid subsequent regexp executions don't
+     * thrash malloc/freeing arena chunks.
+     *
+     * Stick a timestamp at the base of that pool.
+     */
+    int64 *timestamp;
+    JS_ARENA_ALLOCATE_CAST(timestamp, int64 *, &cx->regExpPool, sizeof *timestamp);
+    if (!timestamp)
+        return false;
+    *timestamp = JS_Now();
+    return true;
+}
+
+inline void
+RegExp::checkMatchPairs(int *buf, size_t matchItemCount)
+{
+#if DEBUG
+    for (size_t i = 0; i < matchItemCount; i += 2)
+        JS_ASSERT(buf[i + 1] >= buf[i]); /* Limit index must be larger than the start index. */
+#endif
+}
+
+inline JSObject *
+RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount,
+                     size_t inputOffset)
+{
+#define MATCH_VALUE(__index) (buf[(__index)] + inputOffset)
+    /*
+     * Create the result array for a match. Array contents:
+     *  0:              matched string
+     *  1..parenCount:  paren matches
+     */
+    JSObject *array = js_NewSlowArrayObject(cx);
+    if (!array)
+        return NULL;
+
+    RegExpMatchBuilder builder(cx, array);
+    for (size_t i = 0; i < matchItemCount; i += 2) {
+        int start = MATCH_VALUE(i);
+        int end = MATCH_VALUE(i + 1);
+
+        JSString *captured;
+        if (start >= 0) {
+            JS_ASSERT(start <= end);
+            JS_ASSERT((unsigned) end <= input->length());
+            captured = js_NewDependentString(cx, input, start, end - start);
+            if (!(captured && builder.append(i / 2, captured)))
+                return NULL;
+        } else {
+            /* Missing parenthesized match. */
+            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
+            JS_ASSERT(start == end && end == -1);
+            if (!builder.append(INT_TO_JSID(i / 2), UndefinedValue()))
+                return NULL;
+        }
+    }
+
+    if (!builder.appendIndex(MATCH_VALUE(0)) ||
+        !builder.appendInput(input))
+        return NULL;
+
+    return array;
+#undef MATCH_VALUE
+}
+
+inline bool
+RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
+                        size_t *lastIndex, bool test, Value *rval)
+{
+#if !ENABLE_YARR_JIT
+    JS_ASSERT(compiled);
+#endif
+    const size_t pairCount = parenCount + 1;
+    const size_t bufCount = pairCount * 3; /* Should be x2, but PCRE has... needs. */
+    const size_t matchItemCount = pairCount * 2;
+
+    if (!initArena(cx))
+        return false;
+
+    AutoArenaAllocator aaa(&cx->regExpPool);
+    int *buf = aaa.alloc<int>(bufCount);
+    if (!buf)
+        return false;
+
+    /*
+     * The JIT regexp procedure doesn't always initialize matchPair values.
+     * Maybe we can make this faster by ensuring it does?
+     */
+    for (int *it = buf; it != buf + matchItemCount; ++it)
+        *it = -1;
+
+    const jschar *chars = input->chars();
+    size_t len = input->length();
+    size_t inputOffset = 0;
+
+    if (sticky()) {
+        /* Sticky matches at the last index for the regexp object. */
+        chars += *lastIndex;
+        len -= *lastIndex;
+        inputOffset = *lastIndex;
+    }
+
+#if ENABLE_YARR_JIT
+    int result = JSC::Yarr::executeRegex(cx, compiled, chars, *lastIndex - inputOffset, len, buf,
+                                         bufCount);
+#else
+    int result = jsRegExpExecute(cx, compiled, chars, len, *lastIndex - inputOffset, buf, 
+                                 bufCount) < 0 ? -1 : buf[0];
+#endif
+    if (result == -1) {
+        *rval = NullValue();
+        return true;
+    }
+
+    checkMatchPairs(buf, matchItemCount);
+
+    if (res) {
+        res->input = input;
+        res->matchPairs.clear();
+        if (!res->matchPairs.reserve(matchItemCount))
+            return false;
+        for (size_t i = 0; i < matchItemCount; ++i)
+            JS_ALWAYS_TRUE(res->matchPairs.append(buf[i] + inputOffset));
+    }
+
+    *lastIndex = buf[1] + inputOffset;
+
+    if (test) {
+        *rval = BooleanValue(true);
+        return true;
+    }
+
+    JSObject *array = createResult(cx, input, buf, matchItemCount, inputOffset);
+    if (!array)
+        return false;
+
+    *rval = ObjectValue(*array);
+    return true;
+}
 
 inline RegExp *
 RegExp::create(JSContext *cx, JSString *source, uint32 flags)
@@ -145,16 +359,21 @@ RegExp::create(JSContext *cx, JSString *source, uint32 flags)
 }
 
 inline JSObject *
-RegExp::createObject(JSContext *cx, const jschar *chars, size_t length, uint32 flags)
+RegExp::createObject(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
+                     uint32 flags)
+{
+    uint32 staticsFlags = res->getFlags();
+    return createObjectNoStatics(cx, chars, length, flags | staticsFlags);
+}
+
+inline JSObject *
+RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length, uint32 flags)
 {
     JS_ASSERT((flags & allFlags) == flags);
     JSString *str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
-    AutoValueRooter tvr(cx, StringValue(str));
-    uint32 staticsFlags = cx->regExpStatics.getFlags();
-    JS_ASSERT((staticsFlags & allFlags) == staticsFlags);
-    RegExp *re = RegExp::create(cx, str, flags | staticsFlags);
+    RegExp *re = RegExp::create(cx, str, flags);
     if (!re)
         return NULL;
     JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
@@ -267,6 +486,15 @@ RegExp::clone(JSContext *cx, const RegExp &other)
 
 /* RegExpStatics inlines. */
 
+
+inline RegExpStatics *
+RegExpStatics::extractFrom(JSObject *global)
+{
+    Value resVal = global->getReservedSlot(JSRESERVED_GLOBAL_REGEXP_STATICS);
+    RegExpStatics *res = static_cast<RegExpStatics *>(resVal.toObject().getPrivate());
+    return res;
+}
+
 inline void
 RegExpStatics::clone(const RegExpStatics &other)
 {
@@ -279,7 +507,7 @@ RegExpStatics::clone(const RegExpStatics &other)
 }
 
 inline bool
-RegExpStatics::createDependent(size_t start, size_t end, Value *out) const 
+RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out) const 
 {
     JS_ASSERT(start <= end);
     JS_ASSERT(end <= input->length());
@@ -291,24 +519,24 @@ RegExpStatics::createDependent(size_t start, size_t end, Value *out) const
 }
 
 inline bool
-RegExpStatics::createInput(Value *out) const
+RegExpStatics::createInput(JSContext *cx, Value *out) const
 {
     *out = input ? StringValue(input) : Valueify(JS_GetEmptyStringValue(cx));
     return true;
 }
 
 inline bool
-RegExpStatics::makeMatch(size_t checkValidIndex, size_t pairNum, Value *out) const
+RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out) const
 {
     if (checkValidIndex / 2 >= pairCount() || matchPairs[checkValidIndex] < 0) {
         *out = Valueify(JS_GetEmptyStringValue(cx));
         return true;
     }
-    return createDependent(get(pairNum, 0), get(pairNum, 1), out);
+    return createDependent(cx, get(pairNum, 0), get(pairNum, 1), out);
 }
 
 inline bool
-RegExpStatics::createLastParen(Value *out) const
+RegExpStatics::createLastParen(JSContext *cx, Value *out) const
 {
     if (pairCount() <= 1) {
         *out = Valueify(JS_GetEmptyStringValue(cx));
@@ -323,11 +551,11 @@ RegExpStatics::createLastParen(Value *out) const
         return true;
     }
     JS_ASSERT(start >= 0 && end >= 0);
-    return createDependent(start, end, out);
+    return createDependent(cx, start, end, out);
 }
 
 inline bool
-RegExpStatics::createLeftContext(Value *out) const
+RegExpStatics::createLeftContext(JSContext *cx, Value *out) const
 {
     if (!pairCount()) {
         *out = Valueify(JS_GetEmptyStringValue(cx));
@@ -337,11 +565,11 @@ RegExpStatics::createLeftContext(Value *out) const
         *out = UndefinedValue();
         return true;
     }
-    return createDependent(0, matchPairs[0], out);
+    return createDependent(cx, 0, matchPairs[0], out);
 }
 
 inline bool
-RegExpStatics::createRightContext(Value *out) const
+RegExpStatics::createRightContext(JSContext *cx, Value *out) const
 {
     if (!pairCount()) {
         *out = Valueify(JS_GetEmptyStringValue(cx));
@@ -351,7 +579,7 @@ RegExpStatics::createRightContext(Value *out) const
         *out = UndefinedValue();
         return true;
     }
-    return createDependent(matchPairs[1], input->length(), out);
+    return createDependent(cx, matchPairs[1], input->length(), out);
 }
 
 inline void
