@@ -61,7 +61,6 @@ _TEST_FILES = \
   browser_bug572561.js \
   browser_bug577990.js \
   browser_bug581076.js \
-  browser_bug586574.js \
   browser_bug587970.js \
   browser_bug591465.js \
   browser_bug591465.xml \
@@ -83,6 +82,8 @@ _TEST_FILES = \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)
+
+# Disabled browser_bug586574.js due to bug 596174
 
 include $(topsrcdir)/config/rules.mk
 
