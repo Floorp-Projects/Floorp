@@ -1863,7 +1863,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
 
     masm.call(r0);
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
     masm.callLabel = masm.label();
 #endif
     ADD_CALLSITE(false);
