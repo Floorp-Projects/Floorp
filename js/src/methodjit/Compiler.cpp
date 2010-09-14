@@ -53,6 +53,7 @@
 #include "jsscriptinlines.h"
 #include "InlineFrameAssembler.h"
 #include "jscompartment.h"
+#include "jsobjinlines.h"
 
 #include "jsautooplen.h"
 
@@ -86,7 +87,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
     callPatches(ContextAllocPolicy(cx)),
     callSites(ContextAllocPolicy(cx)), 
     doubleList(ContextAllocPolicy(cx)),
-    escapingList(ContextAllocPolicy(cx)),
     stubcc(cx, *this, frame, script)
 #if defined JS_TRACER
     ,addTraceHints(cx->traceJitEnabled)
@@ -140,6 +140,9 @@ mjit::Compiler::Compile()
 #ifdef JS_METHODJIT
     script->debugMode = cx->compartment->debugMode;
 #endif
+
+    for (uint32 i = 0; i < script->nClosedVars; i++)
+        frame.setClosedVar(script->getClosedVar(i));
 
     CHECK_STATUS(generatePrologue());
     CHECK_STATUS(generateMethod());
@@ -304,7 +307,6 @@ mjit::Compiler::finishThisUp()
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
     size_t totalBytes = sizeof(JITScript) +
-                        sizeof(uint32) * escapingList.length() +
                         sizeof(void *) * script->length +
 #if defined JS_MONOIC
                         sizeof(ic::MICInfo) * mics.length() +
@@ -329,16 +331,6 @@ mjit::Compiler::finishThisUp()
     script->jit->outOfLineLength = stubcc.size();
     script->jit->nCallSites = callSites.length();
     script->jit->invoke = result;
-
-    script->jit->nescaping = escapingList.length();
-    if (escapingList.length()) {
-        script->jit->escaping = (uint32 *)cursor;
-        cursor += sizeof(uint32) * escapingList.length();
-        for (uint32 i = 0; i < escapingList.length(); i++)
-            script->jit->escaping[i] = escapingList[i];
-    } else {
-        script->jit->escaping = NULL;
-    }
 
     /* Build the pc -> ncode mapping. */
     void **nmap = (void **)cursor;
@@ -1548,31 +1540,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STOP)
 
           BEGIN_CASE(JSOP_ENTERBLOCK)
-          {
-            // If this is an exception entry point, then jsl_InternalThrow has set
-            // VMFrame::fp to the correct fp for the entry point. We need to copy
-            // that value here to FpReg so that FpReg also has the correct sp.
-            // Otherwise, we would simply be using a stale FpReg value.
-            if (analysis[PC].exceptionEntry)
-                restoreFrameRegs(masm);
-
-            /* For now, don't bother doing anything for this opcode. */
-            JSObject *obj = script->getObject(fullAtomIndex(PC));
-            frame.syncAndForgetEverything();
-            masm.move(ImmPtr(obj), Registers::ArgReg1);
-            uint32 n = js_GetEnterBlockStackDefs(cx, script, PC);
-            stubCall(stubs::EnterBlock);
-            frame.enterBlock(n);
-          }
-          END_CASE(JSOP_ENTERBLOCK)
+            enterBlock(script->getObject(fullAtomIndex(PC)));
+          END_CASE(JSOP_ENTERBLOCK);
 
           BEGIN_CASE(JSOP_LEAVEBLOCK)
-          {
-            uint32 n = js_GetVariableStackUses(op, PC);
-            prepareStubCall(Uses(n));
-            stubCall(stubs::LeaveBlock);
-            frame.leaveBlock(n);
-          }
+            leaveBlock();
           END_CASE(JSOP_LEAVEBLOCK)
 
           BEGIN_CASE(JSOP_CALLLOCAL)
@@ -1667,16 +1639,6 @@ mjit::Compiler::generateMethod()
             jsop_globalinc(op, GET_SLOTNO(PC));
             break;
           END_CASE(JSOP_GLOBALINC)
-
-          BEGIN_CASE(JSOP_DEFUPVAR)
-          {
-            uint32 slot = GET_SLOTNO(PC);
-            if (frame.addEscaping(slot) && slot < script->nfixed) {
-                if (!escapingList.append(slot))
-                    return Compile_Error;
-            }
-          }
-          END_CASE(JSOP_DEFUPVAR)
 
           default:
            /* Sorry, this opcode isn't implemented yet. */
@@ -4222,5 +4184,47 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne, Jump *sl
     mics.append(mic);
 # endif
 #endif
+}
+
+void
+mjit::Compiler::enterBlock(JSObject *obj)
+{
+    // If this is an exception entry point, then jsl_InternalThrow has set
+    // VMFrame::fp to the correct fp for the entry point. We need to copy
+    // that value here to FpReg so that FpReg also has the correct sp.
+    // Otherwise, we would simply be using a stale FpReg value.
+    if (analysis[PC].exceptionEntry)
+        restoreFrameRegs(masm);
+
+    uint32 oldFrameDepth = frame.frameDepth();
+
+    /* For now, don't bother doing anything for this opcode. */
+    frame.syncAndForgetEverything();
+    masm.move(ImmPtr(obj), Registers::ArgReg1);
+    uint32 n = js_GetEnterBlockStackDefs(cx, script, PC);
+    stubCall(stubs::EnterBlock);
+    frame.enterBlock(n);
+
+    uintN base = JSSLOT_FREE(&js_BlockClass);
+    uintN count = OBJ_BLOCK_COUNT(cx, obj);
+    uintN limit = base + count;
+    for (uintN slot = base, i = 0; slot < limit; slot++, i++) {
+        const Value &v = obj->getSlotRef(slot);
+        if (v.isBoolean() && v.toBoolean())
+            frame.setClosedVar(oldFrameDepth + i);
+    }
+}
+
+void
+mjit::Compiler::leaveBlock()
+{
+    /*
+     * Note: After bug 535912, we can pass the block obj directly, inline
+     * PutBlockObject, and do away with the muckiness in PutBlockObject.
+     */
+    uint32 n = js_GetVariableStackUses(JSOP_LEAVEBLOCK, PC);
+    prepareStubCall(Uses(n));
+    stubCall(stubs::LeaveBlock);
+    frame.leaveBlock(n);
 }
 
