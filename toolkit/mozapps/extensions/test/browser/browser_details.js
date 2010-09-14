@@ -39,6 +39,7 @@ function get(aId) {
 }
 
 function test() {
+  requestLongerTimeout(2);
   // Turn on searching for this test
   Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
   Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, SEARCH_URL);
