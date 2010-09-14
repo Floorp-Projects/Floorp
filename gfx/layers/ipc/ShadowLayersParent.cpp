@@ -424,6 +424,11 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     reply->AppendElements(&replyv.front(), replyv.size());
   }
 
+  // Ensure that any pending operations involving back and front
+  // buffers have completed, so that neither process stomps on the
+  // other's buffer contents.
+  ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
+
   Frame()->ShadowLayersUpdated();
 
   return true;
