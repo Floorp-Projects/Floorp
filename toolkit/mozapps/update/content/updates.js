@@ -405,7 +405,7 @@ var gUpdates = {
         this.setUpdate(arg0);
         if (this.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
             this.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
-          aCallback("errorcertcheck");
+          aCallback("errorextra");
           return;
         }
 
@@ -667,7 +667,7 @@ var gCheckingPage = {
       if (update.errorCode &&
           (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
            update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE )) {
-        gUpdates.wiz.goTo("errorcertcheck");
+        gUpdates.wiz.goTo("errorextra");
       }
       else {
         gUpdates.wiz.goTo("errors");
@@ -1610,9 +1610,10 @@ var gErrorsPage = {
 };
 
 /**
- * The page shown when there is a certificate attribute check error.
+ * The page shown when there is a background check or a certificate attribute
+ * error.
  */
-var gErrorCertCheckPage = {
+var gErrorExtraPage = {
   /**
    * Initialize
    */

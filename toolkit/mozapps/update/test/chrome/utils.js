@@ -127,7 +127,7 @@ const PAGEID_LICENSE          = "license";               // Done
 const PAGEID_INCOMPAT_LIST    = "incompatibleList";      // Done
 const PAGEID_DOWNLOADING      = "downloading";           // Done
 const PAGEID_ERRORS           = "errors";                // Done
-const PAGEID_ERROR_CERT_CHECK = "errorcertcheck";        // Done
+const PAGEID_ERROR_EXTRA      = "errorextra";            // Done
 const PAGEID_ERROR_PATCHING   = "errorpatching";         // Done
 const PAGEID_FINISHED         = "finished";              // Done
 const PAGEID_FINISHED_BKGRD   = "finishedBackground";    // Done
@@ -454,7 +454,7 @@ function getExpectedButtonStates() {
     case PAGEID_NO_UPDATES_FOUND:
     case PAGEID_MANUAL_UPDATE:
     case PAGEID_ERRORS:
-    case PAGEID_ERROR_CERT_CHECK:
+    case PAGEID_ERROR_EXTRA:
     case PAGEID_INSTALLED:
       return { finish: { disabled: false, hidden: false } };
     case PAGEID_ERROR_PATCHING:
