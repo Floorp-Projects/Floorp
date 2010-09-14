@@ -1938,6 +1938,19 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
     return NPERR_NO_ERROR;
 }
 
+bool
+PluginInstanceChild::RecvPaintFinished(void)
+{
+    return false;
+}
+
+bool
+PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
+                                        const NPRemoteWindow& aWindow)
+{
+    return true;
+}
+
 void
 PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
 {
