@@ -496,6 +496,12 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
     return (XRenderPictFormat*)NULL;
 }
 
+Screen*
+gfxXlibSurface::XScreen()
+{
+    return cairo_xlib_surface_get_screen(CairoSurface());
+}
+
 XRenderPictFormat*
 gfxXlibSurface::XRenderFormat()
 {
