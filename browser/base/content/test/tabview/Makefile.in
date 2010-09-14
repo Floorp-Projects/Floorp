@@ -52,6 +52,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug591706.js \
                  browser_tabview_apptabs.js \
                  browser_tabview_undo_group.js \
+                 browser_tabview_undo_window.js \
                  browser_tabview_exit_button.js \
                  $(NULL)
 
