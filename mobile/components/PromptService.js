@@ -95,17 +95,6 @@ PromptService.prototype = {
 
   // XXX Copied from nsPrompter.js.
   getPrompt: function getPrompt(domWin, iid) {
-    // This is still kind of dumb; the C++ code delegated to login manager
-    // here, which in turn calls back into us via nsIPromptService2.
-    if (iid.equals(Ci.nsIAuthPrompt2) || iid.equals(Ci.nsIAuthPrompt)) {
-      try {
-        let pwmgr = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
-          getService(Ci.nsIPromptFactory);
-        return pwmgr.getPrompt(domWin, iid);
-      } catch (e) {
-        Cu.reportError("nsPrompter: Delegation to password manager failed: " + e);
-      }
-    }
 
     let doc = this.getDocument();
     if (!doc && !this.inContentProcess) {
@@ -488,6 +477,8 @@ Prompt.prototype = {
       aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
     var params = new Object();
     params.result = false;
+    //if(!aCheckState)
+      //aCheckState = { value: false };
     params.checkbox = aCheckState;
     params.user = aUsername;
     params.password = aPassword;
@@ -533,27 +524,27 @@ Prompt.prototype = {
   /* ----------  nsIAuthPrompt  ---------- */
 
   nsIAuthPrompt_prompt : function (title, text, passwordRealm, savePassword, defaultText, result) {
-    // The passwordRealm and savePassword args were ignored by nsPrompt.cpp
+    // TODO: Port functions from nsLoginManagerPrompter.js to here
     if (defaultText)
       result.value = defaultText;
     return this.nsIPrompt_prompt(title, text, result, null, {});
   },
 
   nsIAuthPrompt_promptUsernameAndPassword : function (title, text, passwordRealm, savePassword, user, pass) {
-    // The passwordRealm and savePassword args were ignored by nsPrompt.cpp
-    return this.nsIPrompt_promptUsernameAndPassword(title, text, user, pass, null, {});
+    // TODO: Port functions from nsLoginManagerPrompter.js to here
+    return this.nsIPrompt_promptUsernameAndPassword(title, text, user, pass, null, {value: false});
   },
 
   nsIAuthPrompt_promptPassword : function (title, text, passwordRealm, savePassword, pass) {
-    // The passwordRealm and savePassword args were ignored by nsPrompt.cpp
+    // TODO: Port functions from nsLoginManagerPrompter.js to here
     return this.nsIPrompt_promptPassword(title, text, pass, null, {});
   },
 
   /* ----------  nsIAuthPrompt2  ---------- */
   
-  promptAuth: function promptAuth(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
+  promptAuth: function promptAuth(aChannel, aLevel, aAuthInfo) {
     let res = false;
-    
+
     let defaultUser = aAuthInfo.username;
     if ((aAuthInfo.flags & aAuthInfo.NEED_DOMAIN) && (aAuthInfo.domain.length > 0))
       defaultUser = aAuthInfo.domain + "\\" + defaultUser;
@@ -563,11 +554,12 @@ Prompt.prototype = {
     
     let message = PromptUtils.makeDialogText(aChannel, aAuthInfo);
     let title = PromptUtils.getLocaleString("PromptUsernameAndPassword2");
+    let checkMsg = PromptUtils.getLocaleString("rememberButtonText", "passwdmgr");
     
     if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD)
-      res = this.promptPassword(title, message, password, aCheckMsg, aCheckState);
+      res = this.promptPassword(title, message, password, checkMsg, {});
     else
-      res = this.promptUsernameAndPassword(title, message, username, password, aCheckMsg, aCheckState);
+      res = this.promptUsernameAndPassword(title, message, username, password, checkMsg, {});
     
     if (res) {
       aAuthInfo.username = username.value;
@@ -577,15 +569,18 @@ Prompt.prototype = {
     return res;
   },
   
-  asyncPromptAuth: function asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
+  asyncPromptAuth: function asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo) {
     // bug 514196
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   }
 };
 
 let PromptUtils = {
-  getLocaleString: function getLocaleString(key) {
-    return this.bundle.GetStringFromName(key);
+  getLocaleString: function getLocaleString(aKey, aService) {
+    if(aService && aService == "passwdmgr")
+      return this.passwdBundle.GetStringFromName(aKey);
+
+    return this.bundle.GetStringFromName(aKey);
   },
   
   // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/src/nsPrompt.cpp#388
@@ -645,6 +640,10 @@ let PromptUtils = {
     return res;
   }
 };
+
+XPCOMUtils.defineLazyGetter(PromptUtils, "passwdBundle", function () {
+  return Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
+});
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "bundle", function () {
   return Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");

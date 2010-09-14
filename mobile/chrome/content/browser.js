@@ -891,7 +891,7 @@ var Browser = {
     }
   },
 
-  getNotificationBox: function getNotificationBox() {
+  getNotificationBox: function getNotificationBox(aBrowser) {
     return document.getElementById("notifications");
   },
 
@@ -2125,8 +2125,8 @@ var MemoryObserver = {
   }
 };
 
-function getNotificationBox(aWindow) {
-  return Browser.getNotificationBox();
+function getNotificationBox(aBrowser) {
+  return Browser.getNotificationBox(aBrowser);
 }
 
 function importDialog(aParent, aSrc, aArguments) {
