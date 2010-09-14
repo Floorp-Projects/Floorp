@@ -171,6 +171,20 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 // Default type is 'text'.
 static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[12];
 
+static const PRUint8 NS_INPUT_AUTOCOMPLETE_OFF     = 0;
+static const PRUint8 NS_INPUT_AUTOCOMPLETE_ON      = 1;
+static const PRUint8 NS_INPUT_AUTOCOMPLETE_DEFAULT = 2;
+
+static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
+  { "", NS_INPUT_AUTOCOMPLETE_DEFAULT },
+  { "on", NS_INPUT_AUTOCOMPLETE_ON },
+  { "off", NS_INPUT_AUTOCOMPLETE_OFF },
+  { 0 }
+};
+
+// Default autocomplete value is "".
+static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocompleteTable[0];
+
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
   0xdc3b3d14,                                      \
@@ -959,6 +973,8 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Autocomplete, autocomplete,
+                                kInputDefaultAutocomplete->tag)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Autofocus, autofocus)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
@@ -2676,6 +2692,9 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
     }
     if (aAttribute == nsGkAtoms::formenctype) {
       return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
+    }
+    if (aAttribute == nsGkAtoms::autocomplete) {
+      return aResult.ParseEnumValue(aValue, kInputAutocompleteTable, PR_FALSE);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       // We have to call |ParseImageAttribute| unconditionally since we
