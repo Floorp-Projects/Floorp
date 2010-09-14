@@ -326,7 +326,7 @@ var loginManager = {
 
 
     _getActionOrigin : function (form) {
-        var uriString = form.action;
+        var uriString = form.mozActionUri;
 
         // A blank or mission action submits to where it came from.
         if (uriString == "")
