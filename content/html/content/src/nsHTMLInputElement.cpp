@@ -307,10 +307,8 @@ AsyncClickHandler::Run()
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  nsFileControlFrame* frame = static_cast<nsFileControlFrame*>(mInput->GetPrimaryFrame());
-  nsTextControlFrame* textFrame = nsnull;
-  if (frame)
-    textFrame = static_cast<nsTextControlFrame*>(frame->GetTextFrame());
+  nsFileControlFrame* frame =
+    static_cast<nsFileControlFrame*>(mInput->GetPrimaryFrame());
 
   PRBool multi;
   rv = mInput->GetMultiple(&multi);
@@ -384,17 +382,14 @@ AsyncClickHandler::Run()
     filePicker->SetDisplayDirectory(localFile);
   }
 
-  // Tell our textframe to remember the currently focused value
-  if (textFrame)
-    textFrame->InitFocusedValue();
-
   // Open dialog
   PRInt16 mode;
   rv = filePicker->Show(&mode);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (mode == nsIFilePicker::returnCancel)
+  if (mode == nsIFilePicker::returnCancel) {
     return NS_OK;
-  
+  }
+
   // Collect new selected filenames
   nsCOMArray<nsIDOMFile> newFiles;
   if (multi) {
@@ -404,7 +399,9 @@ AsyncClickHandler::Run()
 
     nsCOMPtr<nsISupports> tmp;
     PRBool prefSaved = PR_FALSE;
-    while (NS_SUCCEEDED(iter->GetNext(getter_AddRefs(tmp)))) {
+    PRBool loop = PR_TRUE;
+    while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
+      iter->GetNext(getter_AddRefs(tmp));
       nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(tmp);
       if (localFile) {
         nsString unicodePath;
@@ -444,21 +441,14 @@ AsyncClickHandler::Run()
 
   // Set new selected files
   if (newFiles.Count()) {
-    // Tell mTextFrame that this update of the value is a user initiated
-    // change. Otherwise it'll think that the value is being set by a script
-    // and not fire onchange when it should.
-    PRBool oldState;
-    if (textFrame) {
-      oldState = textFrame->GetFireChangeEventState();
-      textFrame->SetFireChangeEventState(PR_TRUE);
-    }
-
+    // The text control frame (if there is one) isn't going to send a change
+    // event because it will think this is done by a script.
+    // So, we can safely send one by ourself.
     mInput->SetFiles(newFiles);
-    if (textFrame) {
-      textFrame->SetFireChangeEventState(oldState);
-      // May need to fire an onchange here
-      textFrame->CheckFireOnChange();
-    }
+    nsContentUtils::DispatchTrustedEvent(mInput->GetOwnerDoc(),
+                                         static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                         NS_LITERAL_STRING("change"), PR_FALSE,
+                                         PR_FALSE);
   }
 
   return NS_OK;
