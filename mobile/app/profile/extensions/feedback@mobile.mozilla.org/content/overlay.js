@@ -39,6 +39,15 @@ var Feedback = {
   init: function(aEvent) {
     let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
     document.getElementById("feedback-about").setAttribute("desc", appInfo.version);
+
+    // Try to delay the widget initialization during startup
+    messageManager.addMessageListener("DOMContentLoaded", function() {
+      // We only want to delay one time
+      messageManager.removeMessageListener("DOMContentLoaded", arguments.callee, true);
+
+      // We unhide the panelUI so the XBL and settings can initialize
+      document.getElementById("feedback-container").hidden = false;
+    });
   },
 
   openReadme: function() {

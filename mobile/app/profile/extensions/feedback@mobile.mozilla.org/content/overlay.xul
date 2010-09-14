@@ -52,7 +52,7 @@
   </box>
 
   <deck id="panel-items">
-    <vbox id="feedback-container" flex="1">
+    <vbox id="feedback-container" flex="1" hidden="true">
       <hbox id="feedback-header" class="panel-header">
         <label value="&feedbackHeader.label;" flex="1"/>
       </hbox>
