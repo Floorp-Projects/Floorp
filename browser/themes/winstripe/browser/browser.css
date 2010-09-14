@@ -1786,10 +1786,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   visibility: collapse;
 }
 
-#checkForUpdates[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
 /* Bookmarks toolbar */
 #PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);

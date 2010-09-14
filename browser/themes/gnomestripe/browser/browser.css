@@ -1650,10 +1650,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   visibility: collapse;
 }
 
-#checkForUpdates[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
 #download-monitor {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
