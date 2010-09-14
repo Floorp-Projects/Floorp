@@ -241,6 +241,8 @@ class nsWaveDecoder : public nsMediaDecoder
   // are buffered and playable.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered);
 
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {}
+
 private:
   // Notifies the element that seeking has started.
   void SeekingStarted();

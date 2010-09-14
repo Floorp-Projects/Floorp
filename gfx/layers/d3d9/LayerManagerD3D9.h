@@ -233,6 +233,11 @@ public:
 
   virtual void RenderLayer() = 0;
 
+  /* This function may be used on device resets to clear all VRAM resources
+   * that a layer might be using.
+   */
+  virtual void CleanResources() {}
+
   IDirect3DDevice9 *device() const { return mD3DManager->device(); }
 protected:
   LayerManagerD3D9 *mD3DManager;

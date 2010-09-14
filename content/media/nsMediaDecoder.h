@@ -205,6 +205,10 @@ public:
   // than the result of downloaded data.
   virtual void Progress(PRBool aTimer);
 
+  // Fire timeupdate events if needed according to the time constraints
+  // outlined in the specification.
+  virtual void FireTimeUpdate();
+
   // Called by nsMediaStream when the "cache suspended" status changes.
   // If nsMediaStream::IsSuspendedByCache returns true, then the decoder
   // should stop buffering or otherwise waiting for download progress and
@@ -219,6 +223,10 @@ public:
   // download has ended. Called on the main thread only. aStatus is
   // the result from OnStopRequest.
   virtual void NotifyDownloadEnded(nsresult aStatus) = 0;
+
+  // Called as data arrives on the stream and is read into the cache.  Called
+  // on the main thread only.
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
@@ -285,6 +293,12 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
+  // Start timer to send timeupdate event
+  nsresult StartTimeUpdate();
+
+  // Stop timeupdate timer
+  nsresult StopTimeUpdate();
+
   // Ensures our media stream has been pinned.
   void PinForSeek();
 
@@ -294,6 +308,9 @@ protected:
 protected:
   // Timer used for updating progress events
   nsCOMPtr<nsITimer> mProgressTimer;
+
+  // Timer used for updating timeupdate events
+  nsCOMPtr<nsITimer> mTimeUpdateTimer;
 
   // This should only ever be accessed from the main thread.
   // It is set in Init and cleared in Shutdown when the element goes away.
@@ -309,12 +326,20 @@ protected:
   // main thread only.
   TimeStamp mProgressTime;
 
+  // Time that the last timeupdate event was fired. Read/Write from the
+  // main thread only.
+  TimeStamp mTimeUpdateTime;
+
   // Time that data was last read from the media resource. Used for
   // computing if the download has stalled and to rate limit progress events
   // when data is arriving slower than PROGRESS_MS. A value of null indicates
   // that a stall event has already fired and not to fire another one until
   // more data is received. Read/Write from the main thread only.
   TimeStamp mDataTime;
+
+  // Media 'currentTime' value when the last timeupdate event occurred.
+  // Read/Write from the main thread only.
+  float mLastCurrentTime;
 
   // Lock around the video RGB, width and size data. This
   // is used in the decoder backend threads and the main thread

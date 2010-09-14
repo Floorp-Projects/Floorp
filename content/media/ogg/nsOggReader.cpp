@@ -284,14 +284,10 @@ nsresult nsOggReader::ReadMetadata()
   // Theora spec these can be considered the 'primary' bitstreams for playback.
   // Extract the metadata needed from these streams.
   // Set a default callback period for if we have no video data
-  if (mTheoraState) {
-    if (mTheoraState->Init()) {
-      gfxIntSize sz(mTheoraState->mInfo.pic_width,
-                    mTheoraState->mInfo.pic_height);
-      mDecoder->SetVideoData(sz, mTheoraState->mPixelAspectRatio, nsnull);
-    } else {
-      mTheoraState = nsnull;
-    }
+  if (mTheoraState && mTheoraState->Init()) {
+    gfxIntSize sz(mTheoraState->mInfo.pic_width,
+                  mTheoraState->mInfo.pic_height);
+    mDecoder->SetVideoData(sz, mTheoraState->mPixelAspectRatio, nsnull);
   }
   if (mVorbisState) {
     mVorbisState->Init();
@@ -363,7 +359,7 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
   while ((samples = vorbis_synthesis_pcmout(&mVorbisState->mDsp, &pcm)) > 0) {
     float* buffer = new float[samples * channels];
     float* p = buffer;
-    for (PRUint32 i = 0; i < samples; ++i) {
+    for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
       for (PRUint32 j = 0; j < channels; ++j) {
         *p++ = pcm[j][i];
       }
@@ -910,7 +906,7 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset,
       // We need more data if we've not encountered a page we've seen before,
       // or we've read to the end of file.
       if (mustBackOff || readHead == aEndOffset) {
-        if (endTime != -1) {
+        if (endTime != -1 || readStartOffset == 0) {
           // We have encountered a page before, or we're at the end of file.
           break;
         }
@@ -1542,6 +1538,16 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
 nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+  // HasAudio and HasVideo are not used here as they take a lock and cause
+  // a deadlock. Accessing mInfo doesn't require a lock - it doesn't change
+  // after metadata is read and GetBuffered isn't called before metadata is
+  // read.
+  if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
+    // No need to search through the file if there are no audio or video tracks
+    return NS_OK;
+  }
+
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
   // Traverse across the buffered byte ranges, determining the time ranges
@@ -1603,6 +1609,16 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       if (codecState && codecState->mActive) {
         startTime = codecState->Time(granulepos) - aStartTime;
         NS_ASSERTION(startTime > 0, "Must have positive start time");
+      }
+      else if(codecState) {
+        // Page is for an inactive stream, skip it.
+        startOffset += page.header_len + page.body_len;
+        continue;
+      }
+      else {
+        // Page is for a stream we don't know about (possibly a chained
+        // ogg), return an error.
+        return PAGE_SYNC_ERROR;
       }
     }
 

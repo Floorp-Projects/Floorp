@@ -24,7 +24,7 @@
 const TESTS = [ {
   pageid: PAGEID_CHECKING
 }, {
-  pageid: PAGEID_ERROR_CERT_CHECK,
+  pageid: PAGEID_ERROR_EXTRA,
   extraDelayedCheckFunction: checkCertErrorPage,
   shouldBeHidden: false,
   buttonClick: "finish"
