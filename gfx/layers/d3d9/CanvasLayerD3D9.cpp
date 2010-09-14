@@ -47,6 +47,9 @@ namespace layers {
 
 CanvasLayerD3D9::~CanvasLayerD3D9()
 {
+  if (mD3DManager->deviceManager()) {
+    mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
+  }
 }
 
 void
@@ -270,6 +273,15 @@ CanvasLayerD3D9::RenderLayer()
   if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
     device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+  }
+}
+
+void
+CanvasLayerD3D9::CleanResources()
+{
+  if (mD3DManager->deviceManager()->HasDynamicTextures()) {
+    // In this case we have a texture in POOL_DEFAULT
+    mTexture = nsnull;
   }
 }
 
