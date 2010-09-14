@@ -161,11 +161,15 @@ public:
                            gfxSharedImageSurface* aInitialFrontSurface);
 
   /**
-   * The specified layer should destroy its front buffer.  This can
-   * happen when a new front/back buffer pair have been created
-   * because of a layer resize, e.g.
+   * The specified layer is destroying its buffers.
+   * |aBackBufferToDestroy| is deallocated when this transaction is
+   * posted to the parent.  During the parent-side transaction, the
+   * shadow is told to destroy its front buffer.  This can happen when
+   * a new front/back buffer pair have been created because of a layer
+   * resize, e.g.
    */
-  void DestroyedThebesBuffer(ShadowableLayer* aThebes);
+  void DestroyedThebesBuffer(ShadowableLayer* aThebes,
+                             gfxSharedImageSurface* aBackBufferToDestroy);
   void DestroyedImageBuffer(ShadowableLayer* aImage);
   void DestroyedCanvasBuffer(ShadowableLayer* aCanvas);
 
