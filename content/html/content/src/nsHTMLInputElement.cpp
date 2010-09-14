@@ -2532,6 +2532,10 @@ nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 void
 nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 {
+  ValueModeType aOldValueMode = GetValueMode();
+  nsAutoString aOldValue;
+  GetValue(aOldValue);
+
   // Only single line text inputs have a text editor state.
   PRBool isNewTypeSingleLine =
     IsSingleLineTextControlInternal(PR_FALSE, aNewType);
@@ -2547,15 +2551,40 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 
   mType = aNewType;
 
-  // We have to sanitize the value when the type changes.
-  // We could check that we are not changing to a type with the same
-  // sanitization algorithm than the current one but that would be bad for
-  // readability and not so helpful.
-  if (IsSingleLineTextControlInternal(PR_FALSE, mType)) {
-    nsAutoString value;
-    GetValue(value);
-    // SetValueInternal is going to sanitize the value.
-    SetValueInternal(value, PR_FALSE, PR_FALSE);
+  /**
+   * The following code is trying to reproduce the algorithm described here:
+   * http://www.whatwg.org/specs/web-apps/current-work/complete.html#input-type-change
+   */
+  switch (GetValueMode()) {
+    case VALUE_MODE_DEFAULT:
+    case VALUE_MODE_DEFAULT_ON:
+      // If the previous value mode was value, we need to set the value content
+      // attribute to the previous value.
+      // There is no value sanitizing algorithm for elements in this mode.
+      if (aOldValueMode == VALUE_MODE_VALUE && !aOldValue.IsEmpty()) {
+        SetAttr(kNameSpaceID_None, nsGkAtoms::value, aOldValue, PR_TRUE);
+      }
+      break;
+    case VALUE_MODE_VALUE:
+      // If the previous value mode wasn't value, we have to set the value to
+      // the value content attribute.
+      // SetValueInternal is going to sanitize the value.
+      {
+        nsAutoString value;
+        if (aOldValueMode != VALUE_MODE_VALUE) {
+          GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+        } else {
+          // We get the current value so we can sanitize it.
+          GetValue(value);
+        }
+        SetValueInternal(value, PR_FALSE, PR_FALSE);
+      }
+      break;
+    case VALUE_MODE_FILENAME:
+    default:
+      // We don't care about the value.
+      // There is no value sanitizing algorithm for elements in this mode.
+      break;
   }
 
   // Do not notify, it will be done after if needed.
