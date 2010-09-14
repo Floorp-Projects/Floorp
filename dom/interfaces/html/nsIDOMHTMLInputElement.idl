@@ -51,12 +51,13 @@ interface nsIDOMValidityState;
   * http://www.w3.org/TR/DOM-Level-2-HTML/
   */
 
-[scriptable, uuid(613c8e19-53b6-4719-8f6b-3c3e33012536)]
+[scriptable, uuid(2f79a4be-8143-45fc-ac42-67cd16b2322f)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
            attribute DOMString             alt;
 
+           attribute DOMString             autocomplete;
            attribute boolean               autofocus;
            attribute boolean               defaultChecked;
            attribute boolean               checked;
