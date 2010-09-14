@@ -878,7 +878,7 @@ LoginManagerPrompter.prototype = {
     
             aNotifyObj.show(browser, "password-save", notificationText,
                             "password-notification-icon", mainAction,
-                            secondaryActions, { timeout: Date.now() + 30000 });
+                            secondaryActions, { timeout: Date.now() + 20000 });
         } else {
             var buttons = [
                 // "Remember" button
@@ -1074,7 +1074,7 @@ LoginManagerPrompter.prototype = {
     
             aNotifyObj.show(browser, "password-change", notificationText,
                             "password-notification-icon", mainAction,
-                            null, { timeout: Date.now() + 30000 });    
+                            null, { timeout: Date.now() + 20000 });    
         } else {
             var buttons = [
                 // "Yes" button
