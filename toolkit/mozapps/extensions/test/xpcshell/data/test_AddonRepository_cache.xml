@@ -19,10 +19,11 @@
         <link>http://localhost:4444/repo/1/secondDeveloper.html</link>
       </author>
     </authors>
-    <summary>Repo Add-on 1 - Description</summary>
-    <description>Repo Add-on 1 - Full Description</description>
+    <summary>Repo Add-on 1 - Description&lt;br&gt;Second line</summary>
+    <description>&lt;p&gt;Repo Add-on 1 - Full Description &amp;amp; some extra&lt;/p&gt;</description>
     <eula>Repo Add-on 1 - EULA</eula>
-    <developer_comments>Repo Add-on 1 - Developer Comments</developer_comments>
+    <developer_comments>Repo Add-on 1
+                        Developer Comments</developer_comments>
     <icon>http://localhost:4444/repo/1/icon.png</icon>
     <status id="4">Public</status>
     <rating>1</rating>
