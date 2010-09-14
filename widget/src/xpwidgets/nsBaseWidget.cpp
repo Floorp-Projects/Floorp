@@ -816,14 +816,19 @@ LayerManager* nsBaseWidget::GetLayerManager()
       }
     }
     if (!mLayerManager) {
-#if !defined(MOZ_IPC)
-      mLayerManager = new BasicLayerManager(this);
-#else
-      mLayerManager = new BasicShadowLayerManager(this);
-#endif
+      mLayerManager = CreateBasicLayerManager();
     }
   }
   return mLayerManager;
+}
+
+BasicLayerManager* nsBaseWidget::CreateBasicLayerManager()
+{
+#if !defined(MOZ_IPC)
+      return new BasicLayerManager(this);
+#else
+      return new BasicShadowLayerManager(this);
+#endif
 }
 
 //-------------------------------------------------------------------------

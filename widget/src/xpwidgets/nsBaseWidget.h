@@ -243,6 +243,8 @@ protected:
     return widget.forget();
   }
 
+  BasicLayerManager* CreateBasicLayerManager();
+
 protected: 
   void*             mClientData;
   ViewWrapper*      mViewWrapperPtr;
