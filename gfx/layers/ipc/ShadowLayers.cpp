@@ -52,6 +52,7 @@
 namespace mozilla {
 namespace layers {
 
+typedef nsTArray<nsRefPtr<gfxSharedImageSurface> > BufferArray; 
 typedef std::vector<Edit> EditVector;
 typedef std::set<ShadowableLayer*> ShadowableLayerSet;
 
@@ -72,10 +73,16 @@ public:
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mMutants.insert(aLayer);
   }
+  void AddBufferToDestroy(gfxSharedImageSurface* aBuffer)
+  {
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
+    mDyingBuffers.AppendElement(aBuffer);
+  }
 
   void End()
   {
     mCset.clear();
+    mDyingBuffers.Clear();
     mMutants.clear();
     mOpen = PR_FALSE;
   }
@@ -84,6 +91,7 @@ public:
   PRBool Finished() const { return !mOpen && Empty(); }
 
   EditVector mCset;
+  BufferArray mDyingBuffers;
   ShadowableLayerSet mMutants;
 
 private:
@@ -188,9 +196,11 @@ ShadowLayerForwarder::CreatedCanvasBuffer(ShadowableLayer* aCanvas,
 }
 
 void
-ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes)
+ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
+                                            gfxSharedImageSurface* aBackBufferToDestroy)
 {
   mTxn->AddEdit(OpDestroyThebesFrontBuffer(NULL, Shadow(aThebes)));
+  mTxn->AddBufferToDestroy(aBackBufferToDestroy);
 }
 
 void
@@ -275,6 +285,12 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
   if (mTxn->Empty()) {
     MOZ_LAYERS_LOG(("[LayersForwarder] 0-length cset (?), skipping Update()"));
     return PR_TRUE;
+  }
+
+  MOZ_LAYERS_LOG(("[LayersForwarder] destroying buffers..."));
+
+  for (PRUint32 i = 0; i < mTxn->mDyingBuffers.Length(); ++i) {
+    DestroySharedSurface(mTxn->mDyingBuffers[i]);
   }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));

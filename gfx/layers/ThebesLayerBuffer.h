@@ -155,6 +155,18 @@ protected:
   void DrawBufferWithRotation(gfxContext* aTarget, float aOpacity,
                               float aXRes, float aYRes);
 
+  /**
+   * |BufferRect()| is the rect of device pixels that this
+   * ThebesLayerBuffer covers.  That is what DrawBufferWithRotation()
+   * will paint when it's called.
+   *
+   * |BufferDims()| is the actual dimensions of the underlying surface
+   * maintained by this, also in device pixels.  It is *not*
+   * necessarily true that |BufferRect().Size() == BufferDims()|.
+   * They may differ if a ThebesLayer is drawn at a non-1.0
+   * resolution.
+   */
+  const nsIntSize& BufferDims() const { return mBufferDims; }
   const nsIntRect& BufferRect() const { return mBufferRect; }
   const nsIntPoint& BufferRotation() const { return mBufferRotation; }
 
