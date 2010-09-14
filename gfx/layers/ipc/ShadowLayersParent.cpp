@@ -189,7 +189,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
         AsShadowLayer(otb)->AsLayer());
 
-      unused << thebes->Swap(new gfxSharedImageSurface(otb.initialFront()),
+      unused << thebes->Swap(otb.initialFront(),
                              otb.bufferRect(),
                              nsIntPoint(0, 0));
 
@@ -368,14 +368,12 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
-      nsRefPtr<gfxSharedImageSurface> newBack =
-        thebes->Swap(new gfxSharedImageSurface(newFront.buffer()),
-                     newFront.rect(),
-                     newFront.rotation());
+      SurfaceDescriptor newBack = thebes->Swap(newFront.buffer(),
+                                               newFront.rect(),
+                                               newFront.rotation());
 
       // XXX figure me out
-      replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack->GetShmem()));
+      replyv.push_back(OpBufferSwap(shadow, NULL, newBack));
       break;
     }
     case Edit::TOpPaintCanvas: {
