@@ -1352,8 +1352,6 @@ HUD_SERVICE.prototype =
 
     this.unregisterActiveContext(hudId);
     this.unregisterDisplay(hudId);
-    window.wrappedJSObject.console = null;
-
   },
 
   /**
@@ -1711,6 +1709,13 @@ HUD_SERVICE.prototype =
     }
     // remove the DOM Nodes
     parent.removeChild(outputNode);
+
+    this.windowRegistry[aId].forEach(function(aContentWindow) {
+      if (aContentWindow.wrappedJSObject.console instanceof HUDConsole) {
+        delete aContentWindow.wrappedJSObject.console;
+      }
+    });
+
     // remove our record of the DOM Nodes from the registry
     delete this._headsUpDisplays[aId];
     // remove the HeadsUpDisplay object from memory
@@ -1959,6 +1964,45 @@ HUD_SERVICE.prototype =
         // noop
         break;
     }
+  },
+
+  /**
+   * Get OutputNode by Id
+   *
+   * @param string aId
+   * @returns nsIDOMNode
+   */
+  getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
+  {
+    let displayNode = this.getHeadsUpDisplay(aId);
+    return displayNode.querySelector(".hud-output-node");
+  },
+
+  /**
+   * Inform user that the Web Console API has been replaced by a script
+   * in a content page.
+   *
+   * @param string aHUDId
+   * @returns void
+   */
+  logWarningAboutReplacedAPI:
+  function HS_logWarningAboutReplacedAPI(aHUDId)
+  {
+    let domId = "hud-log-node-" + this.sequenceId();
+    let outputNode = this.getConsoleOutputNode(aHUDId);
+
+    let msgFormat = {
+      logLevel: "error",
+      activityObject: {},
+      hudId: aHUDId,
+      origin: "console-listener",
+      domId: domId,
+      message: this.getStr("ConsoleAPIDisabled"),
+    };
+
+    let messageObject =
+    this.messageFactory(msgFormat, "error", outputNode, msgFormat.activityObject);
+    this.logMessage(messageObject.messageObject, outputNode, messageObject.messageNode);
   },
 
   /**
@@ -2523,18 +2567,24 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Initialize the JSTerm object to create a JS Workspace
+   * Initialize the JSTerm object to create a JS Workspace by attaching the UI
+   * into the given parent node, using the mixin.
    *
-   * @param nsIDOMWindow aContext
-   * @param nsIDOMNode aParentNode
-   * @returns void
+   * @param nsIDOMWindow aContext the context used for evaluating user input
+   * @param nsIDOMNode aParentNode where to attach the JSTerm
+   * @param object aConsole
+   *        Console object used within the JSTerm instance to report errors
+   *        and log data (by calling console.error(), console.log(), etc).
    */
-  initializeJSTerm: function HS_initializeJSTerm(aContext, aParentNode)
+  initializeJSTerm: function HS_initializeJSTerm(aContext, aParentNode, aConsole)
   {
     // create Initial JS Workspace:
     var context = Cu.getWeakReference(aContext);
+
+    // Attach the UI into the target parent node using the mixin.
     var firefoxMixin = new JSTermFirefoxMixin(context, aParentNode);
-    var jsTerm = new JSTerm(context, aParentNode, firefoxMixin);
+    var jsTerm = new JSTerm(context, aParentNode, firefoxMixin, aConsole);
+
     // TODO: injection of additional functionality needs re-thinking/api
     // see bug 559748
   },
@@ -2659,47 +2709,45 @@ HUD_SERVICE.prototype =
 
     this.registerDisplay(hudId, aContentWindow);
 
-    // check if aContentWindow has a console Object
-    let _console = aContentWindow.wrappedJSObject.console;
-    if (!_console) {
-      // no console exists. does the HUD exist?
-      let hudNode;
-      let childNodes = nBox.childNodes;
+    let hudNode;
+    let childNodes = nBox.childNodes;
 
-      for (var i = 0; i < childNodes.length; i++) {
-        let id = childNodes[i].getAttribute("id");
-        if (id.split("_")[0] == "hud") {
-          hudNode = childNodes[i];
-          break;
-        }
-      }
-
-      if (!hudNode) {
-        // get nBox object and call new HUD
-        let config = { parentNode: nBox,
-                       contentWindow: aContentWindow
-                     };
-
-        let _hud = new HeadsUpDisplay(config);
-
-        let hudWeakRef = Cu.getWeakReference(_hud);
-        HUDService.registerHUDWeakReference(hudWeakRef, hudId);
-      }
-      else {
-        // only need to attach a console object to the window object
-        let config = { hudNode: hudNode,
-                       consoleOnly: true,
-                       contentWindow: aContentWindow
-                     };
-
-        let _hud = new HeadsUpDisplay(config);
-
-        let hudWeakRef = Cu.getWeakReference(_hud);
-        HUDService.registerHUDWeakReference(hudWeakRef, hudId);
-
-        aContentWindow.wrappedJSObject.console = _hud.console;
+    for (let i = 0; i < childNodes.length; i++) {
+      let id = childNodes[i].getAttribute("id");
+      // `id` is a string with the format "hud_<number>".
+      if (id.split("_")[0] == "hud") {
+        hudNode = childNodes[i];
+        break;
       }
     }
+
+    let hud;
+    // If there is no HUD for this tab create a new one.
+    if (!hudNode) {
+      // get nBox object and call new HUD
+      let config = { parentNode: nBox,
+                     contentWindow: aContentWindow,
+                   };
+
+      hud = new HeadsUpDisplay(config);
+
+      let hudWeakRef = Cu.getWeakReference(hud);
+      HUDService.registerHUDWeakReference(hudWeakRef, hudId);
+    }
+    else {
+      hud = this.hudWeakReferences[hudId].get();
+      hud.reattachConsole(aContentWindow.top);
+    }
+
+    // Check if aContentWindow has a console object. If so, don't attach
+    // our console, but warn the user about this.
+    if (aContentWindow.wrappedJSObject.console) {
+      this.logWarningAboutReplacedAPI(hudId);
+    }
+    else {
+      aContentWindow.wrappedJSObject.console = hud.console;
+    }
+
     // capture JS Errors
     this.setOnErrorHandler(aContentWindow);
 
@@ -2743,23 +2791,6 @@ function HeadsUpDisplay(aConfig)
   //                  placement: "insertBefore",
   //                  placementChildNodeIndex: 0,
   //                }
-  //
-  // or, just create a new console - as there is already a HUD in place
-  // config: { hudNode: existingHUDDOMNode,
-  //           consoleOnly: true,
-  //           contentWindow: aWindow
-  //         }
-
-  if (aConfig.consoleOnly) {
-    this.HUDBox = aConfig.hudNode;
-    this.parentNode = aConfig.hudNode.parentNode;
-    this.notificationBox = this.parentNode;
-    this.contentWindow = aConfig.contentWindow;
-    this.uriSpec = aConfig.contentWindow.location.href;
-    this.reattachConsole();
-    this.HUDBox.querySelectorAll(".jsterm-input-node")[0].focus();
-    return;
-  }
 
   this.HUDBox = null;
 
@@ -2847,11 +2878,10 @@ function HeadsUpDisplay(aConfig)
   this.notificationBox.insertBefore(splitter,
                                     this.notificationBox.childNodes[1]);
 
-  let console = this.createConsole();
-
   this.HUDBox.lastTimestamp = 0;
 
-  this.contentWindow.wrappedJSObject.console = console;
+  // Create the console object that is attached to the window later.
+  this._console = this.createConsole();
 
   // create the JSTerm input element
   try {
@@ -2907,7 +2937,7 @@ HeadsUpDisplay.prototype = {
     if (appName() == "FIREFOX") {
       let outputCSSClassOverride = "hud-msg-node";
       let mixin = new JSTermFirefoxMixin(context, aParentNode, aExistingConsole, outputCSSClassOverride);
-      this.jsterm = new JSTerm(context, aParentNode, mixin);
+      this.jsterm = new JSTerm(context, aParentNode, mixin, this.console);
     }
     else {
       throw new Error("Unsupported Gecko Application");
@@ -2917,24 +2947,26 @@ HeadsUpDisplay.prototype = {
   /**
    * Re-attaches a console when the contentWindow is recreated
    *
+   * @param nsIDOMWindow aContentWindow
    * @returns void
    */
-  reattachConsole: function HUD_reattachConsole()
+  reattachConsole: function HUD_reattachConsole(aContentWindow)
   {
-    this.hudId = this.HUDBox.getAttribute("id");
+    this.contentWindow = aContentWindow;
+    this.contentDocument = this.contentWindow.document;
+    this.uriSpec = this.contentWindow.location.href;
 
-    this.outputNode = this.HUDBox.querySelectorAll(".hud-output-node")[0];
+    if (!this._console) {
+      this._console = this.createConsole();
+    }
 
-    this.chromeWindow = HUDService.
-      getChromeWindowFromContentWindow(this.contentWindow);
-    this.chromeDocument = this.HUDBox.ownerDocument;
-
-    if (this.outputNode) {
-      // createConsole
-      this.createConsole();
+    if (!this.jsterm) {
+      this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
     }
     else {
-      throw new Error("Cannot get output node");
+      this.jsterm.context = Cu.getWeakReference(this.contentWindow);
+      this.jsterm.console = this.console;
+      this.jsterm.createSandbox();
     }
   },
 
@@ -3221,7 +3253,13 @@ HeadsUpDisplay.prototype = {
     }
   },
 
-  get console() { return this._console || this.createConsole(); },
+  get console() {
+    if (!this._console) {
+      this._console = this.createConsole();
+    }
+
+    return this._console;
+  },
 
   getLogCount: function HUD_getLogCount()
   {
@@ -3269,8 +3307,6 @@ function HUDConsole(aHeadsUpDisplay)
   let hudId = hud.hudId;
   let outputNode = hud.outputNode;
   let chromeDocument = hud.chromeDocument;
-
-  aHeadsUpDisplay._console = this;
 
   let sendToHUDService = function console_send(aLevel, aArguments)
   {
@@ -3751,18 +3787,18 @@ function JSTermHelper(aJSTerm)
  */
 
 /**
- * Create a JSTerminal or attach a JSTerm input node to an existing output node
- *
- *
+ * Create a JSTerminal or attach a JSTerm input node to an existing output node,
+ * given by the parent node.
  *
  * @param object aContext
  *        Usually nsIDOMWindow, but doesn't have to be
- * @param nsIDOMNode aParentNode
+ * @param nsIDOMNode aParentNode where to attach the JSTerm
  * @param object aMixin
  *        Gecko-app (or Jetpack) specific utility object
- * @returns void
+ * @param object aConsole
+ *        Console object to use within the JSTerm.
  */
-function JSTerm(aContext, aParentNode, aMixin)
+function JSTerm(aContext, aParentNode, aMixin, aConsole)
 {
   // set the context, attach the UI by appending to aParentNode
 
@@ -3770,6 +3806,7 @@ function JSTerm(aContext, aParentNode, aMixin)
   this.context = aContext;
   this.parentNode = aParentNode;
   this.mixins = aMixin;
+  this.console = aConsole;
 
   this.xulElementFactory =
     NodeFactory("xul", "xul", aParentNode.ownerDocument);
@@ -3826,8 +3863,6 @@ JSTerm.prototype = {
   createSandbox: function JST_setupSandbox()
   {
     // create a JS Sandbox out of this.context
-    this._window.wrappedJSObject.jsterm = {};
-    this.console = this._window.wrappedJSObject.console;
     this.sandbox = new Cu.Sandbox(this._window);
     this.sandbox.window = this._window;
     this.sandbox.console = this.console;

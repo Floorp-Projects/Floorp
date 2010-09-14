@@ -315,7 +315,6 @@ protected:
 
     void               ThemeChanged(void);
 
-    virtual LayerManager* GetLayerManager();
     gfxASurface*       GetThebesSurface();
 
 private:

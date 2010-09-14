@@ -186,7 +186,7 @@ RegExp::compileHelper(JSContext *cx, UString &pattern)
     compiled = jsRegExpCompile(pattern.chars(), pattern.length(),
                                ignoreCase() ? JSRegExpIgnoreCase : JSRegExpDoNotIgnoreCase,
                                multiline() ? JSRegExpMultiline : JSRegExpSingleLine,
-                               NULL, &error);
+                               &parenCount, &error);
     if (!error)
         return true;
     handlePCREError(cx, error);
@@ -203,8 +203,19 @@ RegExp::compile(JSContext *cx)
      * The sticky case we implement hackily by prepending a caret onto the front
      * and relying on |::execute| to pseudo-slice the string when it sees a sticky regexp.
      */
-    JSString *fakeySource = js_ConcatStringsZ(cx, "^", source);
-    AutoValueRooter rooter(cx, StringValue(fakeySource));
+    static const jschar prefix[] = {'^', '(', '?', ':'};
+    static const jschar postfix[] = {')'};
+
+    JSCharBuffer cb(cx);
+    if (!cb.reserve(JS_ARRAY_LENGTH(prefix) + source->length() + JS_ARRAY_LENGTH(postfix)))
+        return false;
+    JS_ALWAYS_TRUE(cb.append(prefix, JS_ARRAY_LENGTH(prefix)));
+    JS_ALWAYS_TRUE(cb.append(source->chars(), source->length()));
+    JS_ALWAYS_TRUE(cb.append(postfix, JS_ARRAY_LENGTH(postfix)));
+
+    JSString *fakeySource = js_NewStringFromCharBuffer(cx, cb);
+    if (!fakeySource)
+        return false;
     return compileHelper(cx, *fakeySource);
 }
 

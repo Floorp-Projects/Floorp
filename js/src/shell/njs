@@ -35,13 +35,18 @@ if __name__ == '__main__':
             help='enable interactive shell')
     op.add_option('-H', '--harmony', dest='js_harmony', action='store_true',
             help='enable ECMAScript Harmony mode')
+    op.add_option('-S', '--ssa', dest='js_ssa', action='store_true',
+            help='enable parse-time SSA construction')
 
     (options, args) = op.parse_args()
 
     cmd = ""
 
     if options.js_harmony:
-        cmd += 'Narcissus.options={version:"harmony"}; '
+        cmd += 'Narcissus.options.version = "harmony"; '
+
+    if options.js_ssa:
+        cmd += 'Narcissus.options.builderType = "ssa"; '
 
     if options.js_exps:
         for exp in options.js_exps:

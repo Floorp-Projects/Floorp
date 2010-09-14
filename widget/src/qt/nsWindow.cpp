@@ -2452,23 +2452,6 @@ nsWindow::SetAcceleratedRendering(PRBool aEnabled)
     return NS_OK;
 }
 
-
-mozilla::layers::LayerManager*
-nsWindow::GetLayerManager()
-{
-    nsWindow *topWindow = static_cast<nsWindow*>(GetTopLevelWidget());
-    if (!topWindow)
-        return nsBaseWidget::GetLayerManager();
-
-    if (mUseAcceleratedRendering != topWindow->GetAcceleratedRendering()
-        && IsAcceleratedQView(static_cast<QGraphicsView*>(GetViewWidget()))) {
-        mLayerManager = NULL;
-        mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
-    }
-
-    return nsBaseWidget::GetLayerManager();
-}
-
 // return the gfxASurface for rendering to this widget
 gfxASurface*
 nsWindow::GetThebesSurface()

@@ -70,6 +70,9 @@ private:
    */
   nsRefPtr<IDirect3DTexture9> mTexture;
 
+  /* Checks if our D2D surface has the right content type */
+  void VerifyContentType();
+
   /* This contains the D2D surface if we have one */
   nsRefPtr<gfxASurface> mD2DSurface;
 

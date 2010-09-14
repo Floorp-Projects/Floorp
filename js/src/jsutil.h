@@ -256,7 +256,7 @@ public:
         *mStatementDone = true;
     }
 
-    void SetStatementDone(bool *aStatementDone) {
+    void setStatementDone(bool *aStatementDone) {
         mStatementDone = aStatementDone;
     }
 };
@@ -284,7 +284,7 @@ public:
          * temporary, but we really intend it as non-const
          */
         const_cast<JSGuardObjectNotifier&>(aNotifier).
-            SetStatementDone(&mStatementDone);
+            setStatementDone(&mStatementDone);
     }
 };
 

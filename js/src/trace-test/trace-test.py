@@ -40,24 +40,31 @@ def _relpath(path, start=None):
 os.path.relpath = _relpath
 
 class Test:
-    def __init__(self, path, slow, allow_oom, tmflags, error, valgrind):
-        """  path        path to test file
-             slow        True means the test is slow-running
-             allow_oom   True means OOM should not be considered a failure
-             valgrind    True means test should run under valgrind """
-        self.path = path
-        self.slow = slow
-        self.allow_oom = allow_oom
-        self.tmflags = tmflags
-        self.error = error
-        self.valgrind = valgrind
+    def __init__(self, path):
+        self.path = path       # path to test file
+        
+        self.jitflags = []     # jit flags to enable
+        self.slow = False      # True means the test is slow-running
+        self.allow_oom = False # True means that OOM is not considered a failure
+        self.valgrind = False  # True means run under valgrind
+        self.tmflags = ''      # Value of TMFLAGS env var to pass
+        self.error = ''        # Errors to expect and consider passing
+
+    def copy(self):
+        t = Test(self.path)
+        t.jitflags = self.jitflags
+        t.slow = self.slow
+        t.allow_oom = self.allow_oom
+        t.valgrind = self.valgrind
+        t.tmflags = self.tmflags
+        t.error = self.error
+        return t
 
     COOKIE = '|trace-test|'
 
     @classmethod
     def from_file(cls, path, options):
-        slow = allow_oom = valgrind = False
-        error = tmflags = ''
+        test = cls(path)
 
         line = open(path).readline()
         i = line.find(cls.COOKIE)
@@ -72,22 +79,25 @@ class Test:
                 if value:
                     value = value.strip()
                     if name == 'TMFLAGS':
-                        tmflags = value
+                        test.tmflags = value
                     elif name == 'error':
-                        error = value
+                        test.error = value
                     else:
                         print('warning: unrecognized |trace-test| attribute %s'%part)
                 else:
                     if name == 'slow':
-                        slow = True
+                        test.slow = True
                     elif name == 'allow-oom':
-                        allow_oom = True
+                        test.allow_oom = True
                     elif name == 'valgrind':
-                        valgrind = options.valgrind
+                        test.valgrind = options.valgrind
                     else:
                         print('warning: unrecognized |trace-test| attribute %s'%part)
 
-        return cls(path, slow, allow_oom, tmflags, error, valgrind or options.valgrind_all)
+        if options.valgrind_all:
+            test.valgrind = True
+
+        return test
 
 def find_tests(dir, substring = None):
     ans = []
@@ -106,12 +116,12 @@ def find_tests(dir, substring = None):
                 ans.append(test)
     return ans
 
-def get_test_cmd(path, lib_dir):
+def get_test_cmd(path, jitflags, lib_dir):
     libdir_var = lib_dir
     if not libdir_var.endswith('/'):
         libdir_var += '/'
     expr = "const platform=%r; const libdir=%r;"%(sys.platform, libdir_var)
-    return [ JS, '-j', '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
+    return [ JS ] + jitflags + [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
              '-f', path ]
 
 def run_test(test, lib_dir):
@@ -120,7 +130,7 @@ def run_test(test, lib_dir):
         env['TMFLAGS'] = test.tmflags
     else:
         env = None
-    cmd = get_test_cmd(test.path, lib_dir)
+    cmd = get_test_cmd(test.path, test.jitflags, lib_dir)
 
     if (test.valgrind and
         any([os.path.exists(os.path.join(d, 'valgrind'))
@@ -144,6 +154,7 @@ def run_test(test, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
+        sys.stdout.write('Exit code: ' + str(p.returncode) + "\n")
     if test.valgrind:
         sys.stdout.write(err)
     return (check_output(out, err, p.returncode, test.allow_oom, test.error), 
@@ -173,7 +184,7 @@ def run_tests(tests, test_dir, lib_dir):
     if not OPTIONS.hide_progress and not OPTIONS.show_cmd:
         try:
             from progressbar import ProgressBar
-            pb = ProgressBar('', len(tests), 13)
+            pb = ProgressBar('', len(tests), 16)
         except ImportError:
             pass
 
@@ -187,7 +198,7 @@ def run_tests(tests, test_dir, lib_dir):
             doing = 'after %s'%test.path
 
             if not ok:
-                failures.append(test.path)
+                failures.append(test)
 
             if OPTIONS.tinderbox:
                 if ok:
@@ -204,7 +215,7 @@ def run_tests(tests, test_dir, lib_dir):
 
             n = i + 1
             if pb:
-                pb.label = '[%3d|%3d|%3d]'%(n - len(failures), len(failures), n)
+                pb.label = '[%4d|%4d|%4d]'%(n - len(failures), len(failures), n)
                 pb.update(n)
         complete = True
     except KeyboardInterrupt:
@@ -217,8 +228,12 @@ def run_tests(tests, test_dir, lib_dir):
         if OPTIONS.write_failures:
             try:
                 out = open(OPTIONS.write_failures, 'w')
+                # Don't write duplicate entries when we are doing multiple failures per job.
+                written = set()
                 for test in failures:
-                    out.write(os.path.relpath(test, test_dir) + '\n')
+                    if test.path not in written:
+                        out.write(os.path.relpath(test.path, test_dir) + '\n')
+                        written.add(test.path)
                 out.close()
             except IOError:
                 sys.stderr.write("Exception thrown trying to write failure file '%s'\n"%
@@ -229,13 +244,23 @@ def run_tests(tests, test_dir, lib_dir):
         print('FAILURES:')
         for test in failures:
             if OPTIONS.show_failed:
-                print('    ' + subprocess.list2cmdline(get_test_cmd(test, lib_dir)))
+                print('    ' + subprocess.list2cmdline(get_test_cmd(test.path, test.jitflags, lib_dir)))
             else:
-                print('    ' + test)
+                print('    ' + ' '.join(test.jitflags + [ test.path ]))
         return False
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)'%doing))
         return True
+
+def parse_jitflags():
+    jitflags = [ [ '-' + flag for flag in flags ] 
+                 for flags in OPTIONS.jitflags.split(',') ]
+    for flags in jitflags:
+        for flag in flags:
+            if flag not in ('-j', '-m'):
+                print('Invalid jit flag: "%s"'%flag)
+                sys.exit(1)
+    return jitflags
 
 if __name__ == '__main__':
     script_path = os.path.abspath(__file__)
@@ -274,6 +299,8 @@ if __name__ == '__main__':
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
+    op.add_option('--jitflags', dest='jitflags', default='j',
+                  help='Example: --jitflags=j,mj to run each test with -j and -m -j')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
@@ -327,20 +354,30 @@ if __name__ == '__main__':
     if not OPTIONS.run_slow:
         test_list = [ _ for _ in test_list if not _.slow ]
 
+    # The full test list is ready. Now create copies for each JIT configuration.
+    job_list = []
+    jitflags_list = parse_jitflags()
+    for test in test_list:
+        for jitflags in jitflags_list:
+            new_test = test.copy()
+            new_test.jitflags = jitflags
+            job_list.append(new_test)
+    
+
     if OPTIONS.debug:
-        if len(test_list) > 1:
+        if len(job_list) > 1:
             print('Multiple tests match command line arguments, debugger can only run one')
-            for tc in test_list:
+            for tc in job_list:
                 print('    %s'%tc.path)
             sys.exit(1)
 
-        tc = test_list[0]
-        cmd = [ 'gdb', '--args' ] + get_test_cmd(tc.path, lib_dir)
+        tc = job_list[0]
+        cmd = [ 'gdb', '--args' ] + get_test_cmd(tc.path, tc.jitflags, lib_dir)
         call(cmd)
         sys.exit()
 
     try:
-        ok = run_tests(test_list, test_dir, lib_dir)
+        ok = run_tests(job_list, test_dir, lib_dir)
         if not ok:
             sys.exit(2)
     except OSError:

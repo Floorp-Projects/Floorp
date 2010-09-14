@@ -413,14 +413,6 @@ XPCNativeInterface::HasAncestor(const nsIID* iid) const
     return found;
 }
 
-inline void
-XPCNativeInterface::DealWithDyingGCThings(JSContext* cx, XPCJSRuntime* rt)
-{
-    XPCNativeMember* member = mMembers;
-    for(int i = (int) mMemberCount; i > 0; i--, member++)
-        member->DealWithDyingGCThings(cx, rt);
-}
-
 /***************************************************************************/
 
 inline JSBool

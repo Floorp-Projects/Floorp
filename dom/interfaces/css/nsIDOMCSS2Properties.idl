@@ -50,7 +50,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(6e583050-7345-4623-9acf-44dc7136e09f)]
+[scriptable, uuid(abedfd52-9821-4311-b50c-7ef229b43abf)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        azimuth;
@@ -156,6 +156,9 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        bottom;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        boxShadow;
                                         // raises(DOMException) on setting
 
            attribute DOMString        captionSide;
@@ -699,9 +702,6 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozStackSizing;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozBoxShadow;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBorderImage;

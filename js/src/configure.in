@@ -2058,6 +2058,9 @@ ia64*-hpux*)
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
+        if test "$AS_BIN"; then
+          AS="$(basename "$AS_BIN")"
+        fi
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
@@ -2068,6 +2071,7 @@ ia64*-hpux*)
         UNZIP=unzip
         DOXYGEN=:
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
+        ASM_SUFFIX=asm
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
@@ -2589,24 +2593,74 @@ case "$target" in
 i?86-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=i386
+    ENABLE_METHODJIT=1
+    ENABLE_MONOIC=1
+    ENABLE_POLYIC=1
+    AC_DEFINE(JS_CPU_X86)
+    AC_DEFINE(JS_NUNBOX32)
     ;;
 x86_64*-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=X64
+    ENABLE_METHODJIT=1
+    ENABLE_MONOIC=1
+    ENABLE_POLYIC=1
+    AC_DEFINE(JS_CPU_X64)
+    AC_DEFINE(JS_PUNBOX64)
     ;;
 arm*-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=ARM
+    AC_DEFINE(JS_CPU_ARM)
+    AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=Sparc
+    AC_DEFINE(JS_CPU_SPARC)
     ;;
 esac
+
+MOZ_ARG_DISABLE_BOOL(methodjit,
+[  --disable-methodjit           Disable method JIT support],
+  ENABLE_METHODJIT= )
+
+MOZ_ARG_DISABLE_BOOL(monoic,
+[  --disable-monoic      Disable use of MICs by JIT compiler],
+  ENABLE_MONOIC= )
+
+MOZ_ARG_DISABLE_BOOL(polyic,
+[  --disable-polyic      Disable use of PICs by JIT compiler],
+  ENABLE_POLYIC= )
 
 MOZ_ARG_DISABLE_BOOL(tracejit,
 [  --disable-tracejit      Disable tracing JIT support],
   ENABLE_TRACEJIT=)
+
+MOZ_ARG_ENABLE_BOOL(methodjit-spew,
+[  --enable-methodjit-spew      Enable method JIT spew support],
+  ENABLE_METHODJIT_SPEW=1,
+  ENABLE_METHODJIT_SPEW= )
+
+AC_SUBST(ENABLE_METHODJIT)
+
+if test "$ENABLE_METHODJIT"; then
+    AC_DEFINE(JS_METHODJIT)
+else
+    ENABLE_TRACEJIT= 
+fi
+
+if test "$ENABLE_MONOIC"; then
+    AC_DEFINE(JS_MONOIC)
+fi
+
+if test "$ENABLE_POLYIC"; then
+    AC_DEFINE(JS_POLYIC)
+fi
+
+if test "$ENABLE_METHODJIT_SPEW"; then
+    AC_DEFINE(JS_METHODJIT_SPEW)
+fi
 
 if test "$ENABLE_TRACEJIT"; then
 

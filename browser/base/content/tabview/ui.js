@@ -549,6 +549,13 @@ let UI = {
         this._reorderTabItemsOnShow.push(groupItem);
     }
   },
+  
+  // ----------
+  updateTabButton: function UI__updateTabButton(){
+    let groupsNumber = gWindow.document.getElementById("tabviewGroupsNumber");
+    let numberOfGroups = GroupItems.groupItems.length;
+    groupsNumber.setAttribute("groups", numberOfGroups);
+  },
 
   // ----------
   // Function: _setTabViewFrameKeyHandlers

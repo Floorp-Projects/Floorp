@@ -1,4 +1,7 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=79:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,7 +24,8 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ * 
+ * ***** END LICENSE BLOCK ***** */
 
 #ifndef X86Assembler_h
 #define X86Assembler_h
@@ -181,6 +185,7 @@ private:
         OP_OR_EvGv                      = 0x09,
         OP_OR_GvEv                      = 0x0B,
         OP_2BYTE_ESCAPE                 = 0x0F,
+        OP_3BYTE_ESCAPE                 = 0x3A,
         OP_AND_EvGv                     = 0x21,
         OP_AND_GvEv                     = 0x23,
         OP_SUB_EvGv                     = 0x29,
@@ -257,6 +262,10 @@ private:
         OP2_MOVZX_GvEw      = 0xB7,
         OP2_PEXTRW_GdUdIb   = 0xC5
     } TwoByteOpcodeID;
+
+    typedef enum {
+        OP3_PINSRD_VsdWsd   = 0x22
+    } ThreeByteOpcodeID;
 
     TwoByteOpcodeID jccRel32(Condition cond)
     {
@@ -840,7 +849,9 @@ public:
 #if WTF_CPU_X86_64
     void xorq_rr(RegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "xorq       %s, %s\n", MAYBE_PAD,
+                       nameIReg(4,src), nameIReg(4, dst));
         m_formatter.oneByteOp64(OP_XOR_EvGv, src, dst);
     }
 
@@ -2006,6 +2017,16 @@ public:
         m_formatter.twoByteOp(OP2_SQRTSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
+    void pinsrd_rr(RegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "pinsrd     $1, %s, %s\n", MAYBE_PAD,
+                       nameIReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PINSRD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(0x01); // the $1
+    }
+
     // Misc instructions:
 
     void int3()
@@ -2360,6 +2381,16 @@ private:
             memoryModRM(reg, address);
         }
 #endif
+
+        void threeByteOp(ThreeByteOpcodeID opcode, int reg, RegisterID rm)
+        {
+            m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIfNeeded(reg, 0, rm);
+            m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(OP_3BYTE_ESCAPE);
+            m_buffer.putByteUnchecked(opcode);
+            registerModRM(reg, rm);
+        }
 
 #if WTF_CPU_X86_64
         // Quad-word-sized operands:

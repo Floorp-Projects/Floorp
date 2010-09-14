@@ -155,22 +155,25 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   GLuint frameBuffer;
 
   nsIntPoint childOffset(aOffset);
-  bool needsFramebuffer = false;
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
   float opacity = GetOpacity();
-  if (opacity != 1.0 || !mTransform.IsIdentity()) {
+  bool needsFramebuffer = (opacity != 1.0) || !mTransform.IsIdentity();
+  if (needsFramebuffer) {
     mOGLManager->CreateFBOWithTexture(visibleRect.width,
                                       visibleRect.height,
                                       &frameBuffer,
                                       &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
-    mOGLManager->gl()->fClearColor(0, 0, 0, 0);
+    mOGLManager->gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
     mOGLManager->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
     frameBuffer = aPreviousFrameBuffer;
   }
+
+  GLint savedScissor[4];
+  gl()->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, savedScissor);
 
   /**
    * Render this container's contents.
@@ -179,12 +182,23 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   while (layerToRender) {
     const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
     if (clipRect) {
-      gl()->fScissor(clipRect->x - visibleRect.x,
-                     clipRect->y - visibleRect.y,
-                     clipRect->width,
-                     clipRect->height);
+      if (needsFramebuffer) {
+        gl()->fScissor(clipRect->x - visibleRect.x,
+                       clipRect->y - visibleRect.y,
+                       clipRect->width,
+                       clipRect->height);
+      } else {
+        gl()->fScissor(clipRect->x,
+                       clipRect->y,
+                       clipRect->width,
+                       clipRect->height);
+      }
     } else {
-      gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
+      if (needsFramebuffer) {
+        gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
+      } else {
+        gl()->fScissor(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
+      }
     }
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
@@ -195,7 +209,9 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                 : nsnull;
   }
 
-  if (opacity != 1.0 || !mTransform.IsIdentity()) {
+  gl()->fScissor(savedScissor[0], savedScissor[1], savedScissor[2], savedScissor[3]);
+
+  if (needsFramebuffer) {
     // Unbind the current framebuffer and rebind the previous one.
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);
