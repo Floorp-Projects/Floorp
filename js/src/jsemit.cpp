@@ -103,7 +103,9 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     emitLevel(0),
     constMap(parser->context),
     constList(parser->context),
-    globalUses(ContextAllocPolicy(parser->context))
+    globalUses(ContextAllocPolicy(parser->context)),
+    closedArgs(ContextAllocPolicy(parser->context)),
+    closedVars(ContextAllocPolicy(parser->context))
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -1811,6 +1813,12 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
     return bigSuffix == JSOP_NOP || js_Emit1(cx, cg, bigSuffix) >= 0;
 }
 
+bool
+JSCodeGenerator::shouldNoteClosedName(JSParseNode *pn)
+{
+    return !callsEval() && pn->pn_defn && pn->isClosed();
+}
+
 /*
  * Adjust the slot for a block local to account for the number of variables
  * that share the same index space with locals. Due to the incremental code
@@ -1866,14 +1874,16 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
             JS_ASSERT(pnu->pn_cookie.isFree());
         }
 #endif
+
+        /*
+         * If this variable is closed over, and |eval| is not present, then
+         * then set a bit in dslots so the Method JIT can deoptimize this
+         * slot.
+         */
+        bool isClosed = cg->shouldNoteClosedName(dn);
+        blockObj->setSlot(slot, BooleanValue(isClosed));
     }
 
-    /*
-     * Shrink slots to free blockObj->dslots and ensure a prompt safe crash if
-     * by accident some code tries to get a slot from a compiler-created Block
-     * prototype instead of from a clone.
-     */
-    blockObj->shrinkSlots(cx, base);
     return true;
 }
 
@@ -3639,7 +3649,7 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 
     return js_EmitTree(cx, cg, body) &&
            js_Emit1(cx, cg, JSOP_STOP) >= 0 &&
-           js_NewScriptFromCG(cx, cg);
+           JSScript::NewScriptFromCG(cx, cg);
 }
 
 /* A macro for inlining at the top of js_EmitTree (whence it came). */
@@ -3708,13 +3718,11 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     }
 
     if (JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
-        !(cg->flags & TCF_FUN_CALLS_EVAL) &&
-        pn->pn_defn &&
-        (((JSDefinition *)pn)->pn_dflags & PND_CLOSED))
+        pn->pn_cookie.slot() < cg->fun->u.i.nvars &&
+        cg->shouldNoteClosedName(pn))
     {
-        CG_SWITCH_TO_PROLOG(cg);
-        EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie.asInteger());
-        CG_SWITCH_TO_MAIN(cg);
+        if (!cg->closedVars.append(pn->pn_cookie.slot()))
+            return JS_FALSE;
     }
 
     if (result)
@@ -4543,10 +4551,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;
             op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
-            if ((pn->pn_dflags & PND_CLOSED) && !(cg->flags & TCF_FUN_CALLS_EVAL)) {
-                CG_SWITCH_TO_PROLOG(cg);
-                EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie.asInteger());
-                CG_SWITCH_TO_MAIN(cg);
+            if (pn->isClosed() &&
+                !cg->callsEval() &&
+                !cg->closedVars.append(pn->pn_cookie.slot())) {
+                return JS_FALSE;
             }
             if (!EmitSlotIndexOp(cx, op, slot, index, cg))
                 return JS_FALSE;
@@ -4555,8 +4563,21 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       }
 
       case TOK_ARGSBODY:
-        ok = js_EmitTree(cx, cg, pn->last());
+      {
+        JSParseNode *pnlast = pn->last();
+        for (JSParseNode *pn2 = pn->pn_head; pn2 != pnlast; pn2 = pn2->pn_next) {
+            if (!pn2->pn_defn)
+                continue;
+            if (!BindNameToSlot(cx, cg, pn2))
+                return JS_FALSE;
+            if (JOF_OPTYPE(pn2->pn_op) == JOF_QARG && cg->shouldNoteClosedName(pn2)) {
+                if (!cg->closedArgs.append(pn2->pn_cookie.slot()))
+                    return JS_FALSE;
+            }
+        }
+        ok = js_EmitTree(cx, cg, pnlast);
         break;
+      }
 
       case TOK_UPVARS:
         JS_ASSERT(cg->lexdeps.count == 0);
@@ -5620,7 +5641,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * functions, see bug 419662.
                  */
                 JS_ASSERT(pnchild->pn_type == TOK_SEMI);
-                JS_ASSERT(pnchild->pn_kid->pn_type == TOK_COMMA);
+                JS_ASSERT(pnchild->pn_kid->pn_type == TOK_VAR);
                 if (!js_EmitTree(cx, cg, pnchild))
                     return JS_FALSE;
                 pnchild = pnchild->pn_next;

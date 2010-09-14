@@ -983,7 +983,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
-    script = js_NewScriptFromCG(cx, &cg);
+    script = JSScript::NewScriptFromCG(cx, &cg);
     if (script && funbox && script != script->emptyScript())
         script->savedCallerFun = true;
 
@@ -1551,9 +1551,9 @@ static JSParseNode *
 MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *tc)
 {
     /*
-     * If dn is var, const, or let, and it has an initializer, then we must
-     * rewrite it to be an assignment node, whose freshly allocated left-hand
-     * side becomes a use of pn.
+     * If dn is arg, or in [var, const, let] and has an initializer, then we
+     * must rewrite it to be an assignment node, whose freshly allocated
+     * left-hand side becomes a use of pn.
      */
     if (dn->isBindingForm()) {
         JSParseNode *rhs = dn->expr();
@@ -2610,7 +2610,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
              * Make sure to deoptimize lexical dependencies that are polluted
              * by eval or with, to safely statically bind globals (see bug 561923).
              */
-            if ((funtc->flags & TCF_FUN_CALLS_EVAL) ||
+            if (funtc->callsEval() ||
                 (outer_ale && tc->innermostWith &&
                  ALE_DEFN(outer_ale)->pn_pos < tc->innermostWith->pn_pos)) {
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
@@ -2785,7 +2785,7 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunctio
                     list = ListNode::create(&funtc);
                     if (!list)
                         return false;
-                    list->pn_type = TOK_COMMA;
+                    list->pn_type = TOK_VAR;
                     list->makeEmpty();
                     *listp = list;
                 }
