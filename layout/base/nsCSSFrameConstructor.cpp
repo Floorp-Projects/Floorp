@@ -2341,7 +2341,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                                   display->mBinding->mOriginPrincipal,
                                   PR_FALSE, getter_AddRefs(binding),
                                   &resolveStyle);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
       return NS_OK; // Binding will load asynchronously.
 
     if (binding) {
@@ -2349,12 +2349,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       // after all of its kids' constructors.  So tell the binding
       // manager about it right now.
       mDocument->BindingManager()->AddToAttachedQueue(binding);
-    }
 
-    if (resolveStyle) {
-      styleContext = mPresShell->StyleSet()->ResolveStyleFor(aDocElement,
-                                                             nsnull);
-      display = styleContext->GetStyleDisplay();
+      if (resolveStyle) {
+        styleContext = mPresShell->StyleSet()->ResolveStyleFor(aDocElement,
+                                                               nsnull);
+        display = styleContext->GetStyleDisplay();
+      }
     }
   }
 
@@ -5095,22 +5095,22 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                            PR_FALSE,
                                            getter_AddRefs(newPendingBinding->mBinding),
                                            &resolveStyle);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
       return;
 
     if (newPendingBinding->mBinding) {
       pendingBinding = newPendingBinding;
       // aState takes over owning newPendingBinding
       aState.AddPendingBinding(newPendingBinding.forget());
-    }
 
-    if (resolveStyle) {
-      styleContext = ResolveStyleContext(styleContext->GetParent(), aContent);
-      display = styleContext->GetStyleDisplay();
-      aStyleContext = styleContext;
+      if (resolveStyle) {
+        styleContext = ResolveStyleContext(styleContext->GetParent(), aContent);
+        display = styleContext->GetStyleDisplay();
+        aStyleContext = styleContext;
+      }
+  
+      aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
     }
-
-    aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
   }
 
   PRBool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
