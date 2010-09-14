@@ -562,6 +562,15 @@ class SetPropCompiler : public PICStubCompiler
         if (obj->sealed())
             return disable("sealed");
 
+        Class *clasp = obj->getClass();
+
+        if (clasp->setProperty != PropertyStub)
+            return disable("set property hook");
+        if (clasp->ops.lookupProperty)
+            return disable("ops lookup property hook");
+        if (clasp->ops.setProperty)
+            return disable("ops set property hook");
+
 #ifdef JS_THREADSAFE
         if (!CX_OWNS_OBJECT_TITLE(f.cx, obj))
             return disable("shared object");
@@ -601,10 +610,10 @@ class SetPropCompiler : public PICStubCompiler
             if (obj->isDelegate())
                 return disable("delegate");
 
-            Class *clasp = obj->getClass();
-
             if (clasp->addProperty != PropertyStub)
                 return disable("add property hook");
+            if (clasp->ops.defineProperty)
+                return disable("ops define property hook");
 
             uint32 index;
             if (js_IdIsIndex(id, &index))
