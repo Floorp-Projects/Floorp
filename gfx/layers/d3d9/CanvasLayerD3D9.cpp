@@ -86,23 +86,14 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 
   mIsInteropTexture = false;
 
-  if (mD3DManager->deviceManager()->HasDynamicTextures()) {
-    device()->CreateTexture(mBounds.width, mBounds.height, 1, D3DUSAGE_DYNAMIC,
-                            D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
-                            getter_AddRefs(mTexture), NULL);    
-  } else {
-    // D3DPOOL_MANAGED is fine here since we require Dynamic Textures for D3D9Ex
-    // devices.
-    device()->CreateTexture(mBounds.width, mBounds.height, 1, 0,
-                            D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
-                            getter_AddRefs(mTexture), NULL);
-  }
+  CreateTexture();
 }
 
 void
 CanvasLayerD3D9::Updated(const nsIntRect& aRect)
 {
   if (!mTexture) {
+    CreateTexture();
     NS_WARNING("CanvasLayerD3D9::Updated called but no texture present!");
     return;
   }
@@ -228,6 +219,10 @@ CanvasLayerD3D9::GetLayer()
 void
 CanvasLayerD3D9::RenderLayer()
 {
+  if (!mTexture) {
+    Updated(mBounds);
+  }
+
   float quadTransform[4][4];
   /*
    * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
@@ -282,6 +277,22 @@ CanvasLayerD3D9::CleanResources()
   if (mD3DManager->deviceManager()->HasDynamicTextures()) {
     // In this case we have a texture in POOL_DEFAULT
     mTexture = nsnull;
+  }
+}
+
+void
+CanvasLayerD3D9::CreateTexture()
+{
+  if (mD3DManager->deviceManager()->HasDynamicTextures()) {
+    device()->CreateTexture(mBounds.width, mBounds.height, 1, D3DUSAGE_DYNAMIC,
+                            D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
+                            getter_AddRefs(mTexture), NULL);    
+  } else {
+    // D3DPOOL_MANAGED is fine here since we require Dynamic Textures for D3D9Ex
+    // devices.
+    device()->CreateTexture(mBounds.width, mBounds.height, 1, 0,
+                            D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+                            getter_AddRefs(mTexture), NULL);
   }
 }
 

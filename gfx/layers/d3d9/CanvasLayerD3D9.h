@@ -73,6 +73,8 @@ public:
   virtual void RenderLayer();
   virtual void CleanResources();
 
+  void CreateTexture();
+
 protected:
   typedef mozilla::gl::GLContext GLContext;
 
