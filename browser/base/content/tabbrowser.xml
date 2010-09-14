@@ -733,6 +733,12 @@
               }
             } catch (e) {}
 
+            if (window.TabView) {
+              let groupName = TabView.getActiveGroupName();
+              if (groupName)
+                newTitle = groupName + sep + newTitle;
+            }
+
             return newTitle;
           ]]>
         </body>
@@ -745,7 +751,8 @@
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.windowTitle;
-            } else {
+            }
+            else {
               this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
             }
           ]]>

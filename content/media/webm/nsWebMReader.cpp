@@ -42,6 +42,7 @@
 #include "nsMediaStream.h"
 #include "nsWebMReader.h"
 #include "VideoUtils.h"
+#include "nsTimeRanges.h"
 
 using namespace mozilla;
 
@@ -62,6 +63,8 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #endif
 
 static const unsigned NS_PER_MS = 1000000;
+static const float NS_PER_S = 1e9;
+static const float MS_PER_S = 1e3;
 
 // Functions for reading and seeking using nsMediaStream required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -118,8 +121,9 @@ nsWebMReader::nsWebMReader(nsBuiltinDecoder* aDecoder)
   mChannels(0),
   mVideoTrack(0),
   mAudioTrack(0),
-  mAudioSamples(0),
   mAudioStartMs(-1),
+  mAudioSamples(0),
+  mTimecodeScale(1000000),
   mHasVideo(PR_FALSE),
   mHasAudio(PR_FALSE)
 {
@@ -206,6 +210,12 @@ nsresult nsWebMReader::ReadMetadata()
     MonitorAutoExit exitReaderMon(mMonitor);
     MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
     mDecoder->GetStateMachine()->SetDuration(duration / NS_PER_MS);
+  }
+
+  r = nestegg_tstamp_scale(mContext, &mTimecodeScale);
+  if (r == -1) {
+    Cleanup();
+    return NS_ERROR_FAILURE;
   }
 
   unsigned int ntracks = 0;
@@ -418,7 +428,7 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
     while ((samples = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
       float* buffer = new float[samples * mChannels];
       float* p = buffer;
-      for (PRUint32 i = 0; i < samples; ++i) {
+      for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
         for (PRUint32 j = 0; j < mChannels; ++j) {
           *p++ = pcm[j][i];
         }
@@ -677,7 +687,8 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   return PR_TRUE;
 }
 
-nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime, PRInt64 aCurrentTime)
+nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime,
+                            PRInt64 aCurrentTime)
 {
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
@@ -686,14 +697,118 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
   }
-  int r = nestegg_track_seek(mContext, 0, aTarget * NS_PER_MS);
+  PRUint32 trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
+  int r = nestegg_track_seek(mContext, trackToSeek, aTarget * NS_PER_MS);
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
   return DecodeToTarget(aTarget);
 }
 
+void nsWebMReader::CalculateBufferedForRange(nsTimeRanges* aBuffered,
+                                             PRInt64 aStartOffset, PRInt64 aEndOffset)
+{
+  // Find the first nsWebMTimeDataOffset at or after aStartOffset.
+  PRUint32 start;
+  mTimeMapping.GreatestIndexLtEq(aStartOffset, start);
+  if (start == mTimeMapping.Length()) {
+    return;
+  }
+
+  // Find the first nsWebMTimeDataOffset at or before aEndOffset.
+  PRUint32 end;
+  if (!mTimeMapping.GreatestIndexLtEq(aEndOffset, end) && end > 0) {
+    // No exact match, so adjust end to be the first entry before
+    // aEndOffset.
+    end -= 1;
+  }
+
+  // Range is empty.
+  if (end <= start) {
+    return;
+  }
+
+  NS_ASSERTION(mTimeMapping[start].mOffset >= aStartOffset &&
+               mTimeMapping[end].mOffset <= aEndOffset,
+               "Computed time range must lie within data range.");
+  if (start > 0) {
+    NS_ASSERTION(mTimeMapping[start - 1].mOffset <= aStartOffset,
+                 "Must have found least nsWebMTimeDataOffset for start");
+  }
+  if (end < mTimeMapping.Length() - 1) {
+    NS_ASSERTION(mTimeMapping[end + 1].mOffset >= aEndOffset,
+                 "Must have found greatest nsWebMTimeDataOffset for end");
+  }
+
+  float startTime = mTimeMapping[start].mTimecode * mTimecodeScale / NS_PER_S;
+  float endTime = mTimeMapping[end].mTimecode * mTimecodeScale / NS_PER_S;
+  aBuffered->Add(startTime, endTime);
+}
+
 nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
+
+  // Special case completely cached files.  This also handles local files.
+  if (stream->IsDataCachedToEndOfStream(0)) {
+    uint64_t duration = 0;
+    if (mContext && nestegg_duration(mContext, &duration) == 0) {
+      aBuffered->Add(aStartTime / MS_PER_S, duration / NS_PER_S);
+    }
+  } else {
+    PRInt64 startOffset = stream->GetNextCachedData(0);
+    while (startOffset >= 0) {
+      PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
+      NS_ASSERTION(startOffset < endOffset, "Cached range invalid");
+
+      CalculateBufferedForRange(aBuffered, startOffset, endOffset);
+
+      // Advance to the next cached data range.
+      startOffset = stream->GetNextCachedData(endOffset);
+      NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
+                   "Next cached range invalid");
+    }
+  }
+
   return NS_OK;
+}
+
+void nsWebMReader::NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset)
+{
+  PRUint32 idx;
+  if (!mRangeParsers.GreatestIndexLtEq(aOffset, idx)) {
+    // If the incoming data overlaps an already parsed range, adjust the
+    // buffer so that we only reparse the new data.  It's also possible to
+    // have an overlap where the end of the incoming data is within an
+    // already parsed range, but we don't bother handling that other than by
+    // avoiding storing duplicate timecodes when the parser runs.
+    if (idx != mRangeParsers.Length() && mRangeParsers[idx].mStartOffset <= aOffset) {
+      // Complete overlap, skip parsing.
+      if (aOffset + aLength <= mRangeParsers[idx].mCurrentOffset) {
+        return;
+      }
+
+      // Partial overlap, adjust the buffer to parse only the new data.
+      PRInt64 adjust = mRangeParsers[idx].mCurrentOffset - aOffset;
+      NS_ASSERTION(adjust >= 0, "Overlap detection bug.");
+      aBuffer += adjust;
+      aLength -= PRUint32(adjust);
+    } else {
+      mRangeParsers.InsertElementAt(idx, nsWebMBufferedParser(aOffset));
+    }
+  }
+
+  mRangeParsers[idx].Append(reinterpret_cast<const unsigned char*>(aBuffer), aLength, mTimeMapping);
+
+  // Merge parsers with overlapping regions and clean up the remnants.
+  PRUint32 i = 0;
+  while (i + 1 < mRangeParsers.Length()) {
+    if (mRangeParsers[i].mCurrentOffset >= mRangeParsers[i + 1].mStartOffset) {
+      mRangeParsers[i + 1].mStartOffset = mRangeParsers[i].mStartOffset;
+      mRangeParsers.RemoveElementAt(i);
+    } else {
+      i += 1;
+    }
+  }
 }

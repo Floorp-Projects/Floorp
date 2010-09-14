@@ -1433,6 +1433,7 @@ nsWaveDecoder::MetadataLoaded()
   } else {
     StartProgress();
   }
+  StartTimeUpdate();
 }
 
 void
@@ -1552,6 +1553,7 @@ nsWaveDecoder::Shutdown()
     return;
 
   mShuttingDown = PR_TRUE;
+  StopTimeUpdate();
 
   nsMediaDecoder::Shutdown();
 
@@ -1678,7 +1680,7 @@ nsWaveDecoder::PlaybackPositionChanged()
 
   if (mElement && lastTime != mCurrentTime) {
     UpdateReadyStateForData();
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    FireTimeUpdate();
   }
 }
 

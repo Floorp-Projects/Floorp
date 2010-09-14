@@ -83,6 +83,10 @@ let UI = {
   // Keeps track of event listeners added to the AllTabs object.
   _eventListeners: {},
 
+  // Variable: _cleanupFunctions
+  // An array of functions to be called at uninit time
+  _cleanupFunctions: [],
+
   // ----------
   // Function: init
   // Must be called after the object is created.
@@ -233,6 +237,14 @@ let UI = {
   },
 
   uninit: function UI_uninit() {
+    // call our cleanup functions
+    this._cleanupFunctions.forEach(function(func) {
+      func();
+    });
+
+    this._cleanupFunctions = [];
+
+    // additional clean up
     TabItems.uninit();
     GroupItems.uninit();
     Storage.uninit();
@@ -459,6 +471,28 @@ let UI = {
 
     for (let name in this._eventListeners)
       AllTabs.register(name, this._eventListeners[name]);
+
+    // Start watching for tab pin events, and set up our uninit for same.
+    function handleTabPin(event) {
+      TabItems.handleTabPin(event.originalTarget);
+      GroupItems.handleTabPin(event.originalTarget);
+    }
+
+    gBrowser.tabContainer.addEventListener("TabPinned", handleTabPin, false);
+    this._cleanupFunctions.push(function() {
+      gBrowser.tabContainer.removeEventListener("TabPinned", handleTabPin, false);
+    });
+
+    // Start watching for tab unpin events, and set up our uninit for same.
+    function handleTabUnpin(event) {
+      TabItems.handleTabUnpin(event.originalTarget);
+      GroupItems.handleTabUnpin(event.originalTarget);
+    }
+
+    gBrowser.tabContainer.addEventListener("TabUnpinned", handleTabUnpin, false);
+    this._cleanupFunctions.push(function() {
+      gBrowser.tabContainer.removeEventListener("TabUnpinned", handleTabUnpin, false);
+    });
   },
 
   // ----------
@@ -582,7 +616,7 @@ let UI = {
 
       function getClosestTabBy(norm) {
         var centers =
-          [[item.bounds.center(), item] 
+          [[item.bounds.center(), item]
              for each(item in TabItems.getItems()) if (!item.parent || !item.parent.hidden)];
         var myCenter = self.getActiveTab().bounds.center();
         var matches = centers

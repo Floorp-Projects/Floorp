@@ -1,0 +1,14 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<textarea id="t" rows="4"></textarea>
+<script>
+  var area = document.getElementById('t');
+  area.focus();
+
+  sendKey('VK_ENTER'); // press Enter once
+</script>
+</body>
+</html>
