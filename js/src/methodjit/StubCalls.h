@@ -67,6 +67,37 @@ void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
 
+/*
+ * Result struct for UncachedXHelper.
+ *
+ * These functions can have one of two results:
+ *
+ *   (1) The function was executed in the interpreter. Then all fields
+ *       are NULL.
+ *
+ *   (2) The function was not executed, and the function has been compiled
+ *       to JM native code. Then all fields are non-NULL.
+ */
+struct UncachedCallResult {
+    JSObject   *callee;       // callee object
+    JSFunction *fun;          // callee function
+    void       *codeAddr;     // code address of compiled callee function
+
+    void init() {
+        callee = NULL;
+        fun = NULL;
+        codeAddr = NULL;
+    }        
+};
+
+/*
+ * Helper functions for stubs and IC functions for calling functions.
+ * These functions either execute the function, return a native code
+ * pointer that can be used to call the function, or throw.
+ */
+void UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+
 JSBool JS_FASTCALL NewObject(VMFrame &f, uint32 argc);
 void JS_FASTCALL Throw(VMFrame &f);
 void JS_FASTCALL PutCallObject(VMFrame &f);
