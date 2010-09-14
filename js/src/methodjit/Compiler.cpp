@@ -474,6 +474,7 @@ mjit::Compiler::finishThisUp()
         script->callICs[i].hotPathOffset = offset;
         JS_ASSERT(script->callICs[i].hotPathOffset == offset);
 
+        script->callICs[i].pc = callICs[i].pc;
         script->callICs[i].argc = callICs[i].argc;
         script->callICs[i].funObjReg = callICs[i].funObjReg;
         script->callICs[i].funPtrReg = callICs[i].funPtrReg;
@@ -1908,6 +1909,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * Save constant |this| to optimize thisv stores for common call cases
      * like CALL[LOCAL, GLOBAL, ARG] which push NULL.
      */
+    callIC.pc = PC;
     callIC.frameDepth = frame.frameDepth();
 
     /* Grab type and data registers up-front. */
@@ -2057,7 +2059,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     if (callingNew)
         flags |= JSFRAME_CONSTRUCTING;
 
-    InlineFrameAssembler inlFrame(masm, callIC, PC, flags);
+    InlineFrameAssembler inlFrame(masm, callIC, flags);
     inlFrame.assemble();
 
     callIC.hotCall = masm.call();
