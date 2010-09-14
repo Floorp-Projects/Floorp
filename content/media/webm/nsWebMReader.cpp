@@ -753,7 +753,7 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
   // Special case completely cached files.  This also handles local files.
   if (stream->IsDataCachedToEndOfStream(0)) {
     uint64_t duration = 0;
-    if (nestegg_duration(mContext, &duration) == 0) {
+    if (mContext && nestegg_duration(mContext, &duration) == 0) {
       aBuffered->Add(aStartTime / MS_PER_S, duration / NS_PER_S);
     }
   } else {
