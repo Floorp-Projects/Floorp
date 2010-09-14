@@ -253,14 +253,16 @@ ShadowLayerForwarder::RemoveChild(ShadowableLayer* aContainer,
 
 void
 ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
-                                          nsIntRect aBufferRect,
-                                          nsIntPoint aBufferRotation,
+                                          const nsIntRegion& aUpdatedRegion,
+                                          const nsIntRect& aBufferRect,
+                                          const nsIntPoint& aBufferRotation,
                                           const SurfaceDescriptor& aNewFrontBuffer)
 {
   mTxn->AddEdit(OpPaintThebesBuffer(NULL, Shadow(aThebes),
                                     ThebesBuffer(aNewFrontBuffer,
                                                  aBufferRect,
-                                                 aBufferRotation)));
+                                                 aBufferRotation),
+                                    aUpdatedRegion));
 }
 void
 ShadowLayerForwarder::PaintedImage(ShadowableLayer* aImage,

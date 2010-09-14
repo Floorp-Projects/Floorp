@@ -61,6 +61,7 @@ class ShadowThebesLayer;
 class ShadowImageLayer;
 class ShadowCanvasLayer;
 class SurfaceDescriptor;
+class ThebesBuffer;
 class Transaction;
 
 /**
@@ -207,8 +208,9 @@ public:
    * is buffer's rotation, if any.
    */
   void PaintedThebesBuffer(ShadowableLayer* aThebes,
-                           nsIntRect aBufferRect,
-                           nsIntPoint aBufferRotation,
+                           const nsIntRegion& aUpdatedRegion,
+                           const nsIntRect& aBufferRect,
+                           const nsIntPoint& aBufferRotation,
                            const SurfaceDescriptor& aNewFrontBuffer);
   /**
    * NB: this initial implementation only forwards RGBA data for
@@ -399,7 +401,7 @@ public:
   /**
    * CONSTRUCTION PHASE ONLY
    */
-  void SetValidRegion(const nsIntRegion& aRegion)
+  virtual void SetValidRegion(const nsIntRegion& aRegion)
   {
     mValidRegion = aRegion;
     Mutated();
@@ -408,7 +410,7 @@ public:
   /**
    * CONSTRUCTION PHASE ONLY
    */
-  void SetResolution(float aXResolution, float aYResolution)
+  virtual void SetResolution(float aXResolution, float aYResolution)
   {
     mXResolution = aXResolution;
     mYResolution = aYResolution;
@@ -421,25 +423,11 @@ public:
    * Publish the remote layer's back ThebesLayerBuffer to this shadow,
    * swapping out the old front ThebesLayerBuffer (the new back buffer
    * for the remote layer).
-   *
-   * XXX should the receiving process blit updates from the new front
-   * buffer to the previous front buffer (new back buffer) while it has
-   * access to the new front buffer?  Or is it better to fill the
-   * updates bits in anew on the new back buffer?
-   *
-   * Seems like memcpy()s from new-front to new-back would have to
-   * always be no slower than any kind of fill from content, so one
-   * would expect the former to win in terms of total throughput.
-   * However, that puts the blit on the critical path of
-   * publishing-process-blocking-on-receiving-process, so
-   * responsiveness might suffer, pointing to the latter.  Experience
-   * will tell!  (Maybe possible to choose between both depending on
-   * size of blit vs. expense of re-fill?)
    */
-  virtual SurfaceDescriptor
-  Swap(const SurfaceDescriptor& aNewFront,
-       const nsIntRect& aBufferRect,
-       const nsIntPoint& aRotation) = 0;
+  virtual void
+  Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
+       ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
+       float* aNewXResolution, float* aNewYResolution) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
