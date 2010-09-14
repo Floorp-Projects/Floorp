@@ -38,53 +38,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef IPC_ShadowLayerUtils_h
-#define IPC_ShadowLayerUtils_h
+#include "mozilla/layers/ShadowLayerUtilsX11.h"
 
-#include "IPC/IPCMessageUtils.h"
-#include "Layers.h"
+#include "gfxXlibSurface.h"
+#include "mozilla/X11Util.h"
 
-#if defined(MOZ_X11)
-#  include "mozilla/layers/ShadowLayerUtilsX11.h"
-#else
-namespace mozilla { namespace layers {
-struct SurfaceDescriptorX11 {
-  bool operator==(const SurfaceDescriptorX11&) const { return false; }
-};
-} }
-#endif
+namespace mozilla {
+namespace layers {
 
-namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::layers::FrameMetrics>
+// LookReturn a pointer to |aFormat| that lives in the Xrender library.
+// All code using render formats assumes it doesn't need to copy.
+static XRenderPictFormat*
+GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
 {
-  typedef mozilla::layers::FrameMetrics paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mViewportSize);
-    WriteParam(aMsg, aParam.mViewportScrollOffset);
-    WriteParam(aMsg, aParam.mDisplayPort);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return (ReadParam(aMsg, aIter, &aResult->mViewportSize) &&
-            ReadParam(aMsg, aIter, &aResult->mViewportScrollOffset) &&
-            ReadParam(aMsg, aIter, &aResult->mDisplayPort));
-  }
-};
-
-#if !defined(MOZ_HAVE_SURFACEDESCRIPTORX11)
-template <>
-struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
-  typedef mozilla::layers::SurfaceDescriptorX11 paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
-};
-#endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTOR)
-
+  XRenderPictFormat tmplate;
+  tmplate.id = aFormatId;
+  return XRenderFindFormat(aDisplay, PictFormatID, &tmplate, 0);
 }
 
-#endif // IPC_ShadowLayerUtils_h
+SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
+  : mId(aSurf->XDrawable())
+  , mSize(aSurf->GetSize())
+  , mFormat(aSurf->XRenderFormat()->id)
+{ }
+
+already_AddRefed<gfxXlibSurface>
+SurfaceDescriptorX11::OpenForeign() const
+{
+  Display* display = DefaultXDisplay();
+  Screen* screen = DefaultScreenOfDisplay(display);
+
+  XRenderPictFormat* format = GetXRenderPictFormatFromId(display, mFormat);
+  nsRefPtr<gfxXlibSurface> surf =
+    new gfxXlibSurface(screen, mId, format, mSize);
+  return surf->CairoStatus() ? nsnull : surf.forget();
+}
+
+} // namespace layers
+} // namespace mozilla
