@@ -2089,6 +2089,9 @@ struct JSContext
     /* 'regs' must only be changed by calling this function. */
     void setCurrentRegs(JSFrameRegs *regs) {
         this->regs = regs;
+
+        JSObject *obj = JS_GetGlobalForScopeChain(this);
+        compartment = obj ? obj->getCompartment(this) : runtime->defaultCompartment;
     }
 
     /* Temporary arena pool used while compiling and decompiling. */
