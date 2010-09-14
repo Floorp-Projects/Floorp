@@ -62,7 +62,6 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug446584.html \
 		test_bug462428.html \
 		test_bug478438.html \
-		test_bug484107.html \
 		test_bug484459.html \
 		test_bug500691.html \
 		test_bug502959.html \
@@ -78,6 +77,8 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug589028.html \
 		bug589028_helper.html \
 		$(NULL)
+
+		#test_bug484107.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

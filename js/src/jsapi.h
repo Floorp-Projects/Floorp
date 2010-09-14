@@ -1697,10 +1697,11 @@ struct JSClass {
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
 /* Additional global reserved slots, beyond those for standard prototypes. */
-#define JSRESERVED_GLOBAL_SLOTS_COUNT     3
+#define JSRESERVED_GLOBAL_SLOTS_COUNT     4
 #define JSRESERVED_GLOBAL_COMPARTMENT     (JSProto_LIMIT * 3)
 #define JSRESERVED_GLOBAL_THIS            (JSRESERVED_GLOBAL_COMPARTMENT + 1)
 #define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
+#define JSRESERVED_GLOBAL_REGEXP_STATICS  (JSRESERVED_GLOBAL_THROWTYPEERROR + 1)
 
 /*
  * ECMA-262 requires that most constructors used internally create objects
@@ -2951,25 +2952,32 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
 #define JSREG_NOCOMPILE 0x20    /* do not try to compile to native code */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags);
+JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags);
+JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags);
 
 extern JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline);
+JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multiline);
 
 extern JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_ClearRegExpRoots(JSContext *cx);
+JS_ClearRegExpStatics(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, size_t length,
                  size_t *indexp, JSBool test, jsval *rval);
 
-/* TODO: compile, get/set other statics... */
+/* RegExp interface for clients without a global object. */
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN flags);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
+                          size_t *indexp, JSBool test, jsval *rval);
 
 /************************************************************************/
 
