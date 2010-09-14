@@ -8541,9 +8541,19 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
 
-        JSObject *obj = RegExp::createObject(context, tokenStream.getTokenbuf().begin(),
-                                             tokenStream.getTokenbuf().length(),
-                                             tokenStream.currentToken().t_reflags);
+        JSObject *obj;
+        if (context->hasfp()) {
+            obj = RegExp::createObject(context, context->regExpStatics(),
+                                       tokenStream.getTokenbuf().begin(),
+                                       tokenStream.getTokenbuf().length(),
+                                       tokenStream.currentToken().t_reflags);
+        } else {
+            obj = RegExp::createObjectNoStatics(context,
+                                                tokenStream.getTokenbuf().begin(),
+                                                tokenStream.getTokenbuf().length(),
+                                                tokenStream.currentToken().t_reflags);
+        }
+
         if (!obj)
             return NULL;
         if (!tc->compileAndGo()) {
