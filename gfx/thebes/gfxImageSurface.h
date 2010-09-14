@@ -43,8 +43,6 @@
 
 // ARGB -- raw buffer.. wont be changed.. good for storing data.
 
-class gfxSubimageSurface;
-
 /**
  * A raw image buffer. The format can be set in the constructor. Its main
  * purpose is for storing read-only images and using it as a source surface,
@@ -101,11 +99,6 @@ public:
     /* Fast copy from another image surface; returns TRUE if successful, FALSE otherwise */
     PRBool CopyFrom (gfxImageSurface *other);
 
-    /* return new Subimage with pointing to original image starting from aRect.pos
-     * and size of aRect.size. New subimage keeping current image reference
-     */
-    already_AddRefed<gfxSubimageSurface> GetSubimage(const gfxRect& aRect);
-
 protected:
     gfxImageSurface();
     void InitFromSurface(cairo_surface_t *csurf);
@@ -116,16 +109,6 @@ protected:
     unsigned char *mData;
     gfxImageFormat mFormat;
     long mStride;
-};
-
-class THEBES_API gfxSubimageSurface : public gfxImageSurface {
-protected:
-    friend class gfxImageSurface;
-    gfxSubimageSurface(gfxImageSurface* aParent,
-                       unsigned char* aData,
-                       const gfxIntSize& aSize);
-private:
-    nsRefPtr<gfxImageSurface> mParent;
 };
 
 #endif /* GFX_IMAGESURFACE_H */
