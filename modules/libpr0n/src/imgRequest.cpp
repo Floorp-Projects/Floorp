@@ -1106,10 +1106,16 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     if (mIsMultiPartChannel)
       imageFlags |= Image::INIT_FLAG_MULTIPART;
 
+    // Get our URI string
+    nsCAutoString uriString;
+    rv = mURI->GetSpec(uriString);
+    if (NS_FAILED(rv))
+      uriString.Assign("<unknown image URI>");
+
     // Initialize the image that we created above. For RasterImages, this
     // instantiates a decoder behind the scenes, so if we don't have a decoder
     // for this mimetype we'll find out about it here.
-    rv = mImage->Init(this, mContentType.get(), imageFlags);
+    rv = mImage->Init(this, mContentType.get(), uriString.get(), imageFlags);
     if (NS_FAILED(rv)) { // Probably bad mimetype
 
       this->Cancel(rv);

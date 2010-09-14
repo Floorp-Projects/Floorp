@@ -417,7 +417,7 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
   // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
   // even if JS_ConsumeJSONText fails.  But if either fails, we'll report an
   // error.
-  ok = ok && JS_FinishJSONParse(cx, parser, JSVAL_NULL);
+  ok &= JS_FinishJSONParse(cx, parser, JSVAL_NULL);
 
   if (!ok) {
     return NS_ERROR_UNEXPECTED;
@@ -429,7 +429,8 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 nsresult
 nsJSON::DecodeInternal(nsIInputStream *aStream,
                        PRInt32 aContentLength,
-                       PRBool aNeedsConverter)
+                       PRBool aNeedsConverter,
+                       DecodingMode mode /* = STRICT */)
 {
   nsresult rv;
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
@@ -464,7 +465,7 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
     return NS_ERROR_FAILURE;
 
   nsRefPtr<nsJSONListener>
-    jsonListener(new nsJSONListener(cx, retvalPtr, aNeedsConverter));
+    jsonListener(new nsJSONListener(cx, retvalPtr, aNeedsConverter, mode));
 
   if (!jsonListener)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -514,6 +515,52 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsJSON::LegacyDecode(const nsAString& json)
+{
+  const PRUnichar *data;
+  PRUint32 len = NS_StringGetData(json, &data);
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                                      (const char*) data,
+                                      len * sizeof(PRUnichar),
+                                      NS_ASSIGNMENT_DEPEND);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return DecodeInternal(stream, len, PR_FALSE, LEGACY);
+}
+
+NS_IMETHODIMP
+nsJSON::LegacyDecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength)
+{
+  return DecodeInternal(aStream, aContentLength, PR_TRUE, LEGACY);
+}
+
+NS_IMETHODIMP
+nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
+{
+  JSAutoRequest ar(cx);
+
+  JSONParser *parser = JS_BeginJSONParse(cx, result);
+  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
+
+  JSBool ok = js_ConsumeJSONText(cx, parser,
+                                 (jschar*)PromiseFlatString(str).get(),
+                                 (uint32)str.Length(),
+                                 LEGACY);
+
+  // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
+  // even if js_ConsumeJSONText fails.  But if either fails, we'll report an
+  // error.
+  ok &= JS_FinishJSONParse(cx, parser, JSVAL_NULL);
+
+  if (!ok) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -528,11 +575,13 @@ NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 nsJSONListener::nsJSONListener(JSContext *cx, jsval *rootVal,
-                               PRBool needsConverter)
+                               PRBool needsConverter,
+                               DecodingMode mode /* = STRICT */)
   : mNeedsConverter(needsConverter), 
     mJSONParser(nsnull),
     mCx(cx),
-    mRootVal(rootVal)
+    mRootVal(rootVal),
+    mDecodingMode(mode)
 {
 }
 
@@ -706,7 +755,8 @@ nsJSONListener::Consume(const PRUnichar* aBuffer, PRUint32 aByteLength)
   if (!mJSONParser)
     return NS_ERROR_FAILURE;
 
-  if (!JS_ConsumeJSONText(mCx, mJSONParser, (jschar*) aBuffer, aByteLength)) {
+  if (!js_ConsumeJSONText(mCx, mJSONParser, (jschar*) aBuffer, aByteLength,
+                          mDecodingMode)) {
     Cleanup();
     return NS_ERROR_FAILURE;
   }

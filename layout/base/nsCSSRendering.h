@@ -464,6 +464,15 @@ public:
    */
   gfxContext* GetContext();
 
+
+  /**
+   * Get the margin associated with the given blur radius, i.e., the
+   * additional area that might be painted as a result of it.  (The
+   * margin for a spread radius is itself, on all sides.)
+   */
+  static nsMargin GetBlurRadiusMargin(nscoord aBlurRadius,
+                                      PRInt32 aAppUnitsPerDevPixel);
+
 protected:
   gfxAlphaBoxBlur blur;
   nsRefPtr<gfxContext> mContext;

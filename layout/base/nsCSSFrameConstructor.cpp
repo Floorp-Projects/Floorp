@@ -7932,9 +7932,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didInvalidate = PR_TRUE;
       }
       if (hint & nsChangeHint_UpdateCursor) {
-        nsIViewManager* viewMgr = mPresShell->GetViewManager();
-        if (viewMgr)
-          viewMgr->SynthesizeMouseMove(PR_FALSE);
+        mPresShell->SynthesizeMouseMove(PR_FALSE);
       }
     }
   }

@@ -45,6 +45,11 @@
 #include "jsnum.h"
 #include "jsregexp.h"
 #include "jswrapper.h"
+#include "methodjit/PolyIC.h"
+#include "methodjit/MonoIC.h"
+#ifdef JS_METHODJIT
+# include "assembler/jit/ExecutableAllocator.h"
+#endif
 
 #include "jsobjinlines.h"
 
@@ -289,8 +294,9 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, u
 }
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false)
+  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(false)
 {
+    JS_INIT_CLIST(&scripts);
 }
 
 JSCompartment::~JSCompartment()
@@ -410,7 +416,8 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp)
 }
 
 bool
-JSCompartment::wrapId(JSContext *cx, jsid *idp) {
+JSCompartment::wrapId(JSContext *cx, jsid *idp)
+{
     if (JSID_IS_INT(*idp))
         return true;
     AutoValueRooter tvr(cx, IdToValue(*idp));
@@ -430,7 +437,8 @@ JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc) {
+JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
+{
     return wrap(cx, &desc->obj) &&
            (!(desc->attrs & JSPROP_GETTER) || wrap(cx, &desc->getter)) &&
            (!(desc->attrs & JSPROP_SETTER) || wrap(cx, &desc->setter)) &&
@@ -438,7 +446,8 @@ JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc) {
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, AutoIdVector &props) {
+JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
+{
     jsid *vector = props.begin();
     jsint length = props.length();
     for (size_t n = 0; n < size_t(length); ++n) {
@@ -449,7 +458,8 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props) {
 }
 
 bool
-JSCompartment::wrapException(JSContext *cx) {
+JSCompartment::wrapException(JSContext *cx)
+{
     JS_ASSERT(cx->compartment == this);
 
     if (cx->throwing) {
@@ -473,6 +483,30 @@ JSCompartment::sweep(JSContext *cx)
         if (js_IsAboutToBeFinalized(e.front().value.asGCThing()))
             e.removeFront();
     }
+}
+
+void
+JSCompartment::purge(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    for (JSScript *script = (JSScript *)scripts.next;
+         &script->links != &scripts;
+         script = (JSScript *)script->links.next) {
+        if (script->jit) {
+# if defined JS_POLYIC
+            mjit::ic::PurgePICs(cx, script);
+# endif
+# if defined JS_MONOIC
+            /*
+             * MICs do not refer to data which can be GC'ed, but are sensitive
+             * to shape regeneration.
+             */
+            if (cx->runtime->gcRegenShapes)
+                mjit::ic::PurgeMICs(cx, script);
+# endif
+        }
+    }
+#endif
 }
 
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)

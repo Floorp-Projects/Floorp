@@ -335,3 +335,5 @@ MSG_DEF(JSMSG_THROW_TYPE_ERROR,       252, 0, JSEXN_TYPEERR, "'caller', 'callee'
 MSG_DEF(JSMSG_BAD_TOISOSTRING_PROP,   253, 0, JSEXN_TYPEERR, "toISOString property is not callable")
 MSG_DEF(JSMSG_BAD_PARSE_NODE,         254, 0, JSEXN_INTERNALERR, "bad parse node")
 MSG_DEF(JSMSG_NOT_EXPECTED_TYPE,      255, 3, JSEXN_TYPEERR, "{0}: expected {1}, got {2}")
+MSG_DEF(JSMSG_CALLER_IS_STRICT,       256, 0, JSEXN_TYPEERR, "access to strict mode caller function is censored")
+MSG_DEF(JSMSG_NEED_DEBUG_MODE,        257, 0, JSEXN_ERR, "function can be called only in debug mode")

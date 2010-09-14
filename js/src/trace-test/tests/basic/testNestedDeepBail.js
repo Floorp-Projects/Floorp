@@ -12,6 +12,7 @@ function testNestedDeepBail()
         loop();
         _quit = true;
     }
+
     var stk = [[1], [], [], [], []];
     while (!_quit)
         stk.pop().forEach(f);

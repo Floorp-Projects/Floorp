@@ -119,7 +119,7 @@ richlistitem[type="download"] button {
   text-shadow: @loweredShadow@;
   border: 1px solid @toolbarbuttonBorderColor@;
   border-radius: @toolbarbuttonCornerRadius@;
-  -moz-box-shadow: @loweredShadow@;
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
 }
@@ -127,7 +127,7 @@ richlistitem[type="download"] button {
 #clearListButton:hover:active:not([disabled="true"]) {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 #clearListButton:-moz-window-inactive {

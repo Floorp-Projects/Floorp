@@ -5909,22 +5909,24 @@ DirectoryInstallLocation.prototype = {
       if (id == DIR_STAGE)
         continue;
 
+      let directLoad = false;
+      if (entry.isFile() &&
+          id.substring(id.length - 4).toLowerCase() == ".xpi") {
+        directLoad = true;
+        id = id.substring(0, id.length - 4);
+      }
+
       if (!gIDTest.test(id)) {
         LOG("Ignoring file entry whose name is not a valid add-on ID: " +
              entry.path);
         continue;
       }
 
-      if (entry.isFile()) {
-        if (id.substring(id.length - 4).toLowerCase() == ".xpi") {
-          id = id.substring(0, id.length - 4);
-        }
-        else {
-          newEntry = this._readDirectoryFromFile(entry);
-          if (!newEntry)
-            continue;
-          entry = newEntry;
-        }
+      if (entry.isFile() && !directLoad) {
+        newEntry = this._readDirectoryFromFile(entry);
+        if (!newEntry)
+          continue;
+        entry = newEntry;
       }
 
       this._IDToFileMap[id] = entry;

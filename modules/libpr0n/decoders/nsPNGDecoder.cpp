@@ -86,8 +86,7 @@ nsPNGDecoder::nsPNGDecoder() :
   mCMSLine(nsnull), interlacebuf(nsnull),
   mInProfile(nsnull), mTransform(nsnull),
   mHeaderBuf(nsnull), mHeaderBytesRead(0),
-  mChannels(0), mError(PR_FALSE), mFrameIsHidden(PR_FALSE),
-  mNotifiedDone(PR_FALSE)
+  mChannels(0), mFrameIsHidden(PR_FALSE)
 {
 }
 
@@ -194,6 +193,9 @@ void nsPNGDecoder::SetAnimFrameInfo()
 // set timeout and frame disposal method for the current frame
 void nsPNGDecoder::EndImageFrame()
 {
+  if (mFrameIsHidden)
+    return;
+
   PRUint32 numFrames = 1;
 #ifdef PNG_APNG_SUPPORTED
   numFrames = mImage->GetNumFrames();
@@ -208,11 +210,10 @@ void nsPNGDecoder::EndImageFrame()
   }
 #endif
 
-  mImage->EndFrameDecode(numFrames - 1);
   PostFrameStop();
 }
 
-nsresult
+void
 nsPNGDecoder::InitInternal()
 {
 
@@ -235,16 +236,10 @@ nsPNGDecoder::InitInternal()
         122,  84,  88, 116, '\0'};  /* zTXt */
 #endif
 
-  // Fire OnStartDecode at init time to support bug 512435
-  if (!IsSizeDecode() && mObserver)
-    mObserver->OnStartDecode(nsnull);
-
   // For size decodes, we only need a small buffer
   if (IsSizeDecode()) {
-    mHeaderBuf = (PRUint8 *)nsMemory::Alloc(BYTES_NEEDED_FOR_DIMENSIONS);
-    if (!mHeaderBuf)
-      return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    mHeaderBuf = (PRUint8 *)moz_xmalloc(BYTES_NEEDED_FOR_DIMENSIONS);
+    return;
   }
 
   /* For full decodes, do png init stuff */
@@ -255,13 +250,16 @@ nsPNGDecoder::InitInternal()
   mPNG = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                 NULL, nsPNGDecoder::error_callback,
                                 nsPNGDecoder::warning_callback);
-  if (!mPNG)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!mPNG) {
+    PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
   mInfo = png_create_info_struct(mPNG);
   if (!mInfo) {
+    PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
     png_destroy_read_struct(&mPNG, NULL, NULL);
-    return NS_ERROR_OUT_OF_MEMORY;
+    return;
   }
 
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
@@ -284,39 +282,23 @@ nsPNGDecoder::InitInternal()
                               nsPNGDecoder::row_callback,
                               nsPNGDecoder::end_callback);
 
-
-  return NS_OK;
 }
 
-nsresult
-nsPNGDecoder::FinishInternal()
-{
-
-  // If we're a full/success decode but haven't sent stop notifications yet,
-  // we didn't get all the data we needed. Send error notifications.
-  if (!IsSizeDecode() && !mNotifiedDone)
-    NotifyDone(/* aSuccess = */ PR_FALSE);
-
-  return NS_OK;
-}
-
-nsresult
+void
 nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 {
   // We use gotos, so we need to declare variables here
   PRUint32 width = 0;
   PRUint32 height = 0;
 
-  // No forgiveness if we previously hit an error
-  if (mError)
-    goto error;
+  NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
   // If we only want width/height, we don't need to go through libpng
   if (IsSizeDecode()) {
 
     // Are we done?
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS)
-      return NS_OK;
+      return;
 
     // Read data into our header buffer
     PRUint32 bytesToRead = PR_MIN(aCount, BYTES_NEEDED_FOR_DIMENSIONS -
@@ -328,16 +310,20 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {
 
       // Check that the signature bytes are right
-      if (memcmp(mHeaderBuf, pngSignatureBytes, sizeof(pngSignatureBytes)))
-        goto error;
+      if (memcmp(mHeaderBuf, pngSignatureBytes, sizeof(pngSignatureBytes))) {
+        PostDataError();
+        return;
+      }
 
       // Grab the width and height, accounting for endianness (thanks libpng!)
       width = png_get_uint_32(mHeaderBuf + WIDTH_OFFSET);
       height = png_get_uint_32(mHeaderBuf + HEIGHT_OFFSET);
 
       // Too big?
-      if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION))
-        goto error;
+      if ((width > MOZ_PNG_MAX_DIMENSION) || (height > MOZ_PNG_MAX_DIMENSION)) {
+        PostDataError();
+        return;
+      }
 
       // Post our size to the superclass
       PostSize(width, height);
@@ -349,42 +335,20 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
     // libpng uses setjmp/longjmp for error handling - set the buffer
     if (setjmp(png_jmpbuf(mPNG))) {
+
+      // We might not really know what caused the error, but it makes more
+      // sense to blame the data.
+      if (!HasError())
+        PostDataError();
+
       png_destroy_read_struct(&mPNG, &mInfo, NULL);
-      goto error;
+      return;
     }
 
     // Pass the data off to libpng
     png_process_data(mPNG, mInfo, (unsigned char *)aBuffer, aCount);
 
   }
-
-  return NS_OK;
-
-  // Consolidate error handling
-  error:
-  mError = PR_TRUE;
-  return NS_ERROR_FAILURE;
-}
-
-void
-nsPNGDecoder::NotifyDone(PRBool aSuccess)
-{
-  // We should only be called once
-  NS_ABORT_IF_FALSE(!mNotifiedDone, "Calling NotifyDone twice!");
-
-  // Notify
-  if (!mFrameIsHidden)
-    EndImageFrame();
-  if (aSuccess)
-    mImage->DecodingComplete();
-  if (mObserver) {
-    mObserver->OnStopContainer(nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, aSuccess ? NS_OK : NS_ERROR_FAILURE,
-                            nsnull);
-  }
-
-  // Mark that we've been called
-  mNotifiedDone = PR_TRUE;
 }
 
 // Sets up gamma pre-correction in libpng before our callback gets called.
@@ -656,7 +620,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
       (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
     PRUint32 bpp[] = { 0, 3, 4, 3, 4 };
     decoder->mCMSLine =
-      (PRUint8 *)nsMemory::Alloc(bpp[channels] * width);
+      (PRUint8 *)moz_malloc(bpp[channels] * width);
     if (!decoder->mCMSLine) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -664,8 +628,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     if (height < PR_INT32_MAX / (width * channels))
-      decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels *
-                                                         width * height);
+      decoder->interlacebuf = (PRUint8 *)moz_malloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(png_jmpbuf(decoder->mPNG), 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -791,9 +754,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       }
       break;
       default:
-        NS_ERROR("Unknown PNG format!");
-        NS_ABORT();
-        break;
+        longjmp(png_jmpbuf(decoder->mPNG), 1);
     }
 
     if (!rowHasNoAlpha)
@@ -821,9 +782,9 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // old frame is done
-  if (!decoder->mFrameIsHidden)
-    decoder->EndImageFrame();
+  decoder->EndImageFrame();
 
+  // Only the first frame can be hidden, so unhide unconditionally here.
   decoder->mFrameIsHidden = PR_FALSE;
 
   x_offset = png_get_next_frame_x_offset(png_ptr, decoder->mInfo);
@@ -854,7 +815,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // We shouldn't get here if we've hit an error
-  NS_ABORT_IF_FALSE(!decoder->mError, "Finishing up PNG but hit error!");
+  NS_ABORT_IF_FALSE(!decoder->HasError(), "Finishing up PNG but hit error!");
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
@@ -864,7 +825,8 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   // Send final notifications
-  decoder->NotifyDone(/* aSuccess = */ PR_TRUE);
+  decoder->EndImageFrame();
+  decoder->PostDecodeDone();
 }
 
 

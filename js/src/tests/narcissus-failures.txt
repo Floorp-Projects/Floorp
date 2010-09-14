@@ -127,6 +127,7 @@ e4x/Regress/regress-465063.js
 e4x/Regress/regress-470619.js
 e4x/Regress/regress-474319.js
 e4x/Regress/regress-561031.js
+e4x/Regress/regress-587434.js
 e4x/Statements/12.1.js
 e4x/Statements/12.2.js
 e4x/TypeConversion/10.1.1.js
@@ -271,7 +272,6 @@ ecma/Date/15.9.5.23-3-n.js
 ecma/Date/15.9.5.3-1-n.js
 ecma/Date/15.9.5.4-2-n.js
 ecma/Date/15.9.5.8.js
-ecma/Date/15.9.5.9.js
 ecma/ExecutionContexts/10.2.2-1.js
 ecma/ExecutionContexts/10.2.2-2.js
 ecma/Expressions/11.12-2-n.js
@@ -494,8 +494,6 @@ ecma_2/Exceptions/string-002.js
 ecma_2/FunctionObjects/apply-001-n.js
 ecma_2/LexicalConventions/keywords-001.js
 ecma_2/LexicalConventions/regexp-literals-002.js
-ecma_2/RegExp/exec-002.js
-ecma_2/RegExp/octal-003.js
 ecma_2/Statements/forin-002.js
 ecma_2/String/split-001.js
 ecma_2/String/split-003.js
@@ -548,7 +546,6 @@ ecma_3/RegExp/regress-188206.js
 ecma_3/RegExp/regress-223273.js
 ecma_3/RegExp/regress-375715-01-n.js
 ecma_3/RegExp/regress-375715-04.js
-ecma_3/RegExp/regress-436700.js
 ecma_3/RegExp/regress-57631.js
 ecma_3/Regress/regress-385393-04.js
 ecma_3/Regress/regress-580544.js
@@ -579,9 +576,11 @@ ecma_5/Expressions/object-literal-accessor-arguments.js
 ecma_5/Function/15.3.4.3-01.js
 ecma_5/Function/arguments-caller-callee.js
 ecma_5/Function/arguments-property-attributes.js
+ecma_5/Function/function-bind.js
 ecma_5/Function/function-caller.js
 ecma_5/Function/strict-arguments.js
 ecma_5/JSON/cyclic-stringify.js
+ecma_5/JSON/small-codepoints.js
 ecma_5/Object/15.2.3.3-01.js
 ecma_5/Object/15.2.3.4-03.js
 ecma_5/Object/15.2.3.6-dictionary-redefinition-1-of-8.js
@@ -698,7 +697,6 @@ js1_5/Regress/regress-179524.js
 js1_5/Regress/regress-214761.js
 js1_5/Regress/regress-224956.js
 js1_5/Regress/regress-234389.js
-js1_5/Regress/regress-238945.js
 js1_5/Regress/regress-243389-n.js
 js1_5/Regress/regress-244470.js
 js1_5/Regress/regress-245113.js
@@ -769,8 +767,6 @@ js1_5/Regress/regress-462292.js
 js1_5/Regress/regress-462879.js
 js1_5/Regress/regress-463259.js
 js1_5/Regress/regress-477733.js
-js1_5/Regress/regress-477758.js
-js1_5/Regress/regress-480147.js
 js1_5/Regress/regress-503860.js
 js1_5/Regress/regress-511859.js
 js1_5/Regress/regress-68498-003.js
@@ -841,7 +837,6 @@ js1_5/extensions/regress-314874.js
 js1_5/extensions/regress-319683.js
 js1_5/extensions/regress-325269.js
 js1_5/extensions/regress-328443.js
-js1_5/extensions/regress-330569.js
 js1_5/extensions/regress-333541.js
 js1_5/extensions/regress-336409-1.js
 js1_5/extensions/regress-336409-2.js
@@ -854,7 +849,6 @@ js1_5/extensions/regress-350312-01.js
 js1_5/extensions/regress-350312-02.js
 js1_5/extensions/regress-351102-02.js
 js1_5/extensions/regress-351102-06.js
-js1_5/extensions/regress-351448.js
 js1_5/extensions/regress-352261.js
 js1_5/extensions/regress-352372.js
 js1_5/extensions/regress-353214.js
@@ -1033,6 +1027,7 @@ js1_7/extensions/regress-470300-02.js
 js1_7/extensions/regress-474771-01.js
 js1_7/extensions/regress-476257.js
 js1_7/extensions/regress-477048.js
+js1_7/extensions/regress-590813.js
 js1_7/geniter/326466-01.js
 js1_7/geniter/builtin-Iterator-function.js
 js1_7/geniter/evens.js
@@ -1135,11 +1130,9 @@ js1_7/regress/regress-470388-02.js
 js1_7/regress/regress-470388-03.js
 js1_7/regress/regress-474771.js
 js1_8/decompilation/regress-346749.js
-js1_8/decompilation/regress-381372.js
 js1_8/decompilation/regress-381963-01.js
 js1_8/decompilation/regress-381963-02.js
 js1_8/decompilation/regress-382981.js
-js1_8/decompilation/regress-460504.js
 js1_8/extensions/expclo.js
 js1_8/extensions/expclo2.js
 js1_8/extensions/regress-353116.js
@@ -1147,6 +1140,8 @@ js1_8/extensions/regress-385393-01.js
 js1_8/extensions/regress-385393-10.js
 js1_8/extensions/regress-385393-11.js
 js1_8/extensions/regress-385729.js
+js1_8/extensions/regress-394709.js
+js1_8/extensions/regress-422269.js
 js1_8/extensions/regress-452476.js
 js1_8/extensions/regress-452913.js
 js1_8/extensions/regress-455973.js
@@ -1158,6 +1153,7 @@ js1_8/extensions/regress-472450-04.js
 js1_8/extensions/regress-473040.js
 js1_8/extensions/regress-476414-01.js
 js1_8/extensions/regress-476414-02.js
+js1_8/extensions/regress-476427.js
 js1_8/extensions/regress-476653.js
 js1_8/extensions/regress-476869.js
 js1_8/extensions/regress-476871-01.js
@@ -1169,7 +1165,6 @@ js1_8/genexps/regress-349012-01.js
 js1_8/genexps/regress-349326.js
 js1_8/genexps/regress-349331.js
 js1_8/genexps/regress-380237-01.js
-js1_8/genexps/regress-380237-02.js
 js1_8/genexps/regress-380237-03.js
 js1_8/regress/regress-366941.js
 js1_8/regress/regress-384412.js
@@ -1275,7 +1270,6 @@ js1_8_1/extensions/strict-warning.js
 js1_8_1/regress/regress-420399.js
 js1_8_1/regress/regress-452498-027.js
 js1_8_1/regress/regress-452498-038.js
-js1_8_1/regress/regress-452498-039.js
 js1_8_1/regress/regress-452498-050.js
 js1_8_1/regress/regress-452498-051.js
 js1_8_1/regress/regress-452498-052-a.js
@@ -1334,7 +1328,9 @@ js1_8_1/strict/12.2.1.js
 js1_8_1/strict/generator-eval-arguments.js
 js1_8_1/strict/let-block-eval-arguments.js
 js1_8_1/trace/math-trace-tests.js
+js1_8_1/trace/testDeepBailFromNonNative.js
 js1_8_1/trace/trace-test.js
+js1_8_5/extensions/censor-strict-caller.js
 js1_8_5/extensions/destructure-accessor.js
 js1_8_5/extensions/reflect-parse.js
 js1_8_5/extensions/scripted-proxies.js

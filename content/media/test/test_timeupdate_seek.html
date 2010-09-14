@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: timeupdate and seek</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test if the currentTime when a seek is requested is set to
+// the requested seek time as per 4.8.10.9 'seeking' in the
+// WHATWG spec.
+//
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#seeking
+
+var manager = new MediaTestManager;
+
+function do_loadedmetadata(e) {
+  var v = e.target;
+  if (e._finished)
+    return false;
+
+  v._seekTime = Math.round(v.duration / 2);
+  v.currentTime=v._seekTime;
+  return false;
+}
+
+function do_seeking(e) {
+  var v = e.target;
+  if (v._finished)
+    return false;
+
+  v._seeking = true;
+  ok(v.currentTime == v._seekTime,
+     "Check currentTime of " + v.currentTime +
+     " is requested seek time of " + v._seekTime +
+     " in " + v._name);
+  return false;
+}
+
+function do_timeupdate(e) {
+  var v = e.target;
+  if (v._finished)
+    return false;
+
+  ok(v.currentTime == v._seekTime,
+     "Check currentTime of " + v.currentTime +
+     " is requested seek time of " + v._seekTime +
+     " in " + v._name);
+  v._finished= true;
+  v.pause();
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
+  return false;
+}
+
+function startTest(test, token) {
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._name = test.name;
+  v._seeking = false;
+  v._finished = false;
+  v.addEventListener("loadedmetadata", do_loadedmetadata, false);
+  v.addEventListener("seeking", do_seeking, false);
+  v.addEventListener("timeupdate", do_timeupdate, false);
+  document.body.appendChild(v);
+}
+
+manager.runTests(gSeekTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -976,17 +976,6 @@ nsChildView::GetDPI()
   return 96.0;
 }
 
-LayerManager*
-nsChildView::GetLayerManager()
-{
-  nsCocoaWindow* window = GetXULWindowWidget();
-  if (window && window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
-    mLayerManager = NULL;
-    mUseAcceleratedRendering = window->GetAcceleratedRendering();
-  }
-  return nsBaseWidget::GetLayerManager();
-}
-
 NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 {
   return NS_OK;

@@ -140,7 +140,7 @@ ScriptErrorReporter(JSContext *cx,
     // Don't report an exception from inner JS frames as the callers may intend
     // to handle it.
     while ((fp = JS_FrameIterator(cx, &fp))) {
-        if (!JS_IsNativeFrame(cx, fp)) {
+        if (JS_IsScriptFrame(cx, fp)) {
             return;
         }
     }
@@ -243,14 +243,13 @@ ContextCallback(JSContext *cx,
 
 static JSBool
 Print(JSContext *cx,
-      JSObject *obj,
       uintN argc,
-      jsval *argv,
-      jsval *rval)
+      jsval *vp)
 {
     uintN i, n;
     JSString *str;
 
+    jsval *argv = JS_ARGV(cx, vp);
     for (i = n = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
@@ -261,6 +260,7 @@ Print(JSContext *cx,
     n++;
     if (n)
         fputc('\n', stdout);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
@@ -280,16 +280,16 @@ GetLine(char *bufp,
 
 static JSBool
 Dump(JSContext *cx,
-     JSObject *obj,
      uintN argc,
-     jsval *argv,
-     jsval *rval)
+     jsval *vp)
 {
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+
     JSString *str;
     if (!argc)
         return JS_TRUE;
 
-    str = JS_ValueToString(cx, argv[0]);
+    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return JS_FALSE;
 
@@ -300,10 +300,8 @@ Dump(JSContext *cx,
 
 static JSBool
 Load(JSContext *cx,
-     JSObject *obj,
      uintN argc,
-     jsval *argv,
-     jsval *rval)
+     jsval *vp)
 {
     uintN i;
     JSString *str;
@@ -313,6 +311,11 @@ Load(JSContext *cx,
     jsval result;
     FILE *file;
 
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+
+    jsval *argv = JS_ARGV(cx, vp);
     for (i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
@@ -337,25 +340,25 @@ Load(JSContext *cx,
         if (!ok)
             return JS_FALSE;
     }
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
 Version(JSContext *cx,
-        JSObject *obj,
         uintN argc,
-        jsval *argv,
-        jsval *rval)
+        jsval *vp)
 {
+    jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_INT(argv[0]))
-        *rval = INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(argv[0]))));
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(argv[0])))));
     else
-        *rval = INT_TO_JSVAL(JS_GetVersion(cx));
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
     return JS_TRUE;
 }
 
 static JSBool
-BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+BuildDate(JSContext *cx, uintN argc, jsval *vp)
 {
     fprintf(stdout, "built on %s at %s\n", __DATE__, __TIME__);
     return JS_TRUE;
@@ -363,13 +366,11 @@ BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSBool
 Quit(JSContext *cx,
-     JSObject *obj,
      uintN argc,
-     jsval *argv,
-     jsval *rval)
+     jsval *vp)
 {
     int exitCode = 0;
-    JS_ConvertArguments(cx, argc, argv, "/ i", &exitCode);
+    JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/ i", &exitCode);
 
     XPCShellEnvironment* env = Environment(cx);
     env->SetExitCode(exitCode);
@@ -380,30 +381,27 @@ Quit(JSContext *cx,
 
 static JSBool
 DumpXPC(JSContext *cx,
-        JSObject *obj,
         uintN argc,
-        jsval *argv,
-        jsval *rval)
+        jsval *vp)
 {
     int32 depth = 2;
 
     if (argc > 0) {
-        if (!JS_ValueToInt32(cx, argv[0], &depth))
+        if (!JS_ValueToInt32(cx, JS_ARGV(cx, vp)[0], &depth))
             return JS_FALSE;
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
     if(xpc)
         xpc->DebugDump((int16)depth);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
 static JSBool
 GC(JSContext *cx,
-   JSObject *obj,
    uintN argc,
-   jsval *argv,
-   jsval *rval)
+   jsval *vp)
 {
     JSRuntime *rt;
     uint32 preBytes;
@@ -422,6 +420,7 @@ GC(JSContext *cx,
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
@@ -429,10 +428,8 @@ GC(JSContext *cx,
 
 static JSBool
 DumpHeap(JSContext *cx,
-         JSObject *obj,
          uintN argc,
-         jsval *argv,
-         jsval *rval)
+         jsval *vp)
 {
     char *fileName = NULL;
     void* startThing = NULL;
@@ -440,12 +437,14 @@ DumpHeap(JSContext *cx,
     void *thingToFind = NULL;
     size_t maxDepth = (size_t)-1;
     void *thingToIgnore = NULL;
-    jsval *vp;
     FILE *dumpFile;
     JSBool ok;
 
-    vp = &argv[0];
-    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+    jsval *argv = JS_ARGV(cx, vp);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+
+    vp = argv + 0;
+    if (argc > 0 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         JSString *str;
 
         str = JS_ValueToString(cx, *vp);
@@ -455,23 +454,23 @@ DumpHeap(JSContext *cx,
         fileName = JS_GetStringBytes(str);
     }
 
-    vp = &argv[1];
-    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+    vp = argv + 1;
+    if (argc > 1 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         if (!JSVAL_IS_TRACEABLE(*vp))
             goto not_traceable_arg;
         startThing = JSVAL_TO_TRACEABLE(*vp);
         startTraceKind = JSVAL_TRACE_KIND(*vp);
     }
 
-    vp = &argv[2];
-    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+    vp = argv + 2;
+    if (argc > 2 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         if (!JSVAL_IS_TRACEABLE(*vp))
             goto not_traceable_arg;
         thingToFind = JSVAL_TO_TRACEABLE(*vp);
     }
 
-    vp = &argv[3];
-    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+    vp = argv + 3;
+    if (argc > 3 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         uint32 depth;
 
         if (!JS_ValueToECMAUint32(cx, *vp, &depth))
@@ -479,8 +478,8 @@ DumpHeap(JSContext *cx,
         maxDepth = depth;
     }
 
-    vp = &argv[4];
-    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+    vp = argv + 4;
+    if (argc > 4 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         if (!JSVAL_IS_TRACEABLE(*vp))
             goto not_traceable_arg;
         thingToIgnore = JSVAL_TO_TRACEABLE(*vp);
@@ -514,46 +513,46 @@ DumpHeap(JSContext *cx,
 
 static JSBool
 Clear(JSContext *cx,
-      JSObject *obj,
       uintN argc,
-      jsval *argv,
-      jsval *rval)
+      jsval *vp)
 {
+    jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && !JSVAL_IS_PRIMITIVE(argv[0])) {
         JS_ClearScope(cx, JSVAL_TO_OBJECT(argv[0]));
     } else {
         JS_ReportError(cx, "'clear' requires an object");
         return JS_FALSE;
     }
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
 JSFunctionSpec gGlobalFunctions[] =
 {
-    {"print",           Print,          0,0,0},
-    {"load",            Load,           1,0,0},
-    {"quit",            Quit,           0,0,0},
-    {"version",         Version,        1,0,0},
-    {"build",           BuildDate,      0,0,0},
-    {"dumpXPC",         DumpXPC,        1,0,0},
-    {"dump",            Dump,           1,0,0},
-    {"gc",              GC,             0,0,0},
-    {"clear",           Clear,          1,0,0},
+    {"print",           Print,          0,0},
+    {"load",            Load,           1,0},
+    {"quit",            Quit,           0,0},
+    {"version",         Version,        1,0},
+    {"build",           BuildDate,      0,0},
+    {"dumpXPC",         DumpXPC,        1,0},
+    {"dump",            Dump,           1,0},
+    {"gc",              GC,             0,0},
+    {"clear",           Clear,          1,0},
 #ifdef DEBUG
-    {"dumpHeap",        DumpHeap,       5,0,0},
+    {"dumpHeap",        DumpHeap,       5,0},
 #endif
 #ifdef MOZ_SHARK
-    {"startShark",      js_StartShark,      0,0,0},
-    {"stopShark",       js_StopShark,       0,0,0},
-    {"connectShark",    js_ConnectShark,    0,0,0},
-    {"disconnectShark", js_DisconnectShark, 0,0,0},
+    {"startShark",      js_StartShark,      0,0},
+    {"stopShark",       js_StopShark,       0,0},
+    {"connectShark",    js_ConnectShark,    0,0},
+    {"disconnectShark", js_DisconnectShark, 0,0},
 #endif
 #ifdef MOZ_CALLGRIND
-    {"startCallgrind",  js_StartCallgrind,  0,0,0},
-    {"stopCallgrind",   js_StopCallgrind,   0,0,0},
-    {"dumpCallgrind",   js_DumpCallgrind,   1,0,0},
+    {"startCallgrind",  js_StartCallgrind,  0,0},
+    {"stopCallgrind",   js_StopCallgrind,   0,0},
+    {"dumpCallgrind",   js_DumpCallgrind,   1,0},
 #endif
-    {nsnull,nsnull,0,0,0}
+    {nsnull,nsnull,0,0}
 };
 
 typedef enum JSShellErrNum
@@ -565,25 +564,6 @@ typedef enum JSShellErrNum
     JSShellErr_Limit
 #undef MSGDEF
 } JSShellErrNum;
-
-JSErrorFormatString gErrorFormatString[JSErr_Limit] =
-{
-#define MSG_DEF(name, number, count, exception, format) \
-    { format, count } ,
-#include "jsshell.msg"
-#undef MSG_DEF
-};
-
-static const JSErrorFormatString *
-GetErrorMessage(void *userRef,
-                const char *locale,
-                const uintN errorNumber)
-{
-    if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
-        return &gErrorFormatString[errorNumber];
-
-    return NULL;
-}
 
 static void
 ProcessFile(JSContext *cx,
