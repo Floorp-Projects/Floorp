@@ -1,0 +1,1 @@
+http://hg.mozilla.org/labs/jetpack-sdk/archive/tip.tar.bz2
