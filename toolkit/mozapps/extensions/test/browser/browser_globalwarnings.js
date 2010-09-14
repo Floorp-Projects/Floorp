@@ -21,7 +21,7 @@ add_test(function() {
   info("Setting " + pref + " pref to false")
   Services.prefs.setBoolPref(pref, false);
 
-  open_manager(null, function(aWindow) {
+  open_manager("addons://list/extension", function(aWindow) {
     var label = aWindow.document.querySelector("#list-view label.global-warning-checkcompatibility");
     is_element_visible(label, "Check Compatibility warning label should be visible");
     var button = aWindow.document.querySelector("#list-view button.global-warning-checkcompatibility");
