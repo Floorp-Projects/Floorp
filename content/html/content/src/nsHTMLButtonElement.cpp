@@ -218,6 +218,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormMethod, formmethod,
                                 kFormDefaultMethod->tag)
+NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormTarget, formtarget)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, TabIndex, tabindex, 0)
@@ -508,6 +509,9 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         // event is not handled if the window is being destroyed.
         if (presShell && (event.message != NS_FORM_SUBMIT ||
                           mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+                          // We know the element is a submit control, if this check is moved,
+                          // make sure formnovalidate is used only if it's a submit control.
+                          HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
                           mForm->CheckValidFormSubmission())) {
           // TODO: removing this code and have the submit event sent by the form
           // see bug 592124.
