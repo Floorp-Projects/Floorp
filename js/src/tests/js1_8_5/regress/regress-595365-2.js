@@ -5,10 +5,10 @@
  */
 
 /*
- * NB: this test hardcodes the value of MAX_PROPERTY_TREE_HEIGHT.
+ * NB: this test hardcodes the value of PropertyTree::MAX_HEIGHT.
  */
 var i = 0;
-function add0to64(o) {
+function add_p0to63(o) {
   o.p00 = ++i;o.p01 = ++i;o.p02 = ++i;o.p03 = ++i;o.p04 = ++i;o.p05 = ++i;o.p06 = ++i;o.p07 = ++i;
   o.p10 = ++i;o.p11 = ++i;o.p12 = ++i;o.p13 = ++i;o.p14 = ++i;o.p15 = ++i;o.p16 = ++i;o.p17 = ++i;
   o.p20 = ++i;o.p21 = ++i;o.p22 = ++i;o.p23 = ++i;o.p24 = ++i;o.p25 = ++i;o.p26 = ++i;o.p27 = ++i;
@@ -17,23 +17,22 @@ function add0to64(o) {
   o.p50 = ++i;o.p51 = ++i;o.p52 = ++i;o.p53 = ++i;o.p54 = ++i;o.p55 = ++i;o.p56 = ++i;o.p57 = ++i;
   o.p60 = ++i;o.p61 = ++i;o.p62 = ++i;o.p63 = ++i;o.p64 = ++i;o.p65 = ++i;o.p66 = ++i;o.p67 = ++i;
   o.p70 = ++i;o.p71 = ++i;o.p72 = ++i;o.p73 = ++i;o.p74 = ++i;o.p75 = ++i;o.p76 = ++i;o.p77 = ++i;
-  o.p100 = ++i;
   return o;
 }
-function add65th(o) {
-  o.p101 = ++i;
+function add_p64(o) {
+  o.p100 = ++i;
 }
-var o = add0to64({});
-var o2 = add0to64({});
+var o = add_p0to63({});
+var o2 = add_p0to63({});
+var o_shape63 = shapeOf(o);
+assertEq(o_shape63, shapeOf(o2));
+add_p64(o);
+add_p64(o2);
 var o_shape64 = shapeOf(o);
-assertEq(o_shape64, shapeOf(o2));
-add65th(o);
-add65th(o2);
-var o_shape65 = shapeOf(o);
-assertEq(false, o_shape65 === shapeOf(o2));
-delete o.p101;
+assertEq(false, o_shape64 === shapeOf(o2));
+delete o.p100;
+assertEq(false, shapeOf(o) === o_shape63);
+add_p64(o);
 assertEq(false, shapeOf(o) === o_shape64);
-add65th(o);
-assertEq(false, shapeOf(o) === o_shape65);
 
 reportCompare(true, true, "don't crash");
