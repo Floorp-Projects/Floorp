@@ -1195,25 +1195,35 @@ var PageActions = {
   },
 
   savePageAsPDF: function saveAsPDF() {
+    let browser = Browser.selectedBrowser;
+    let fileName = getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
+    fileName = fileName.trim() + ".pdf";
+#ifdef MOZ_PLATFORM_MAEMO
+    fileName = fileName.replace(/[\*\:\?]+/g, " ");
+#endif
+
+    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    let downloadsDir = dm.defaultDownloadsDirectory;
+
+#ifdef ANDROID
+    let file = downloadsDir.clone();
+    file.append(fileName);
+#else
     let strings = Elements.browserBundle;
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, strings.getString("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
     picker.appendFilter("PDF", "*.pdf");
     picker.defaultExtension = "pdf";
 
-    let browser = Browser.selectedBrowser;
-    let fileName = getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
-    fileName = fileName.trim();
-#ifdef MOZ_PLATFORM_MAEMO
-    fileName = fileName.replace(/[\*\:\?]+/g, " ");
-#endif
-    picker.defaultString = fileName + ".pdf";
+    picker.defaultString = fileName;
 
-    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    picker.displayDirectory = dm.defaultDownloadsDirectory;
+    picker.displayDirectory = downloadsDir;
     let rv = picker.show();
     if (rv == Ci.nsIFilePicker.returnCancel)
       return;
+
+    let file = picker.file;
+#endif
 
     // We must manually add this to the download system
     let db = dm.DBConnection;
@@ -1223,10 +1233,10 @@ var PageActions = {
       "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
     );
 
-    let current = Browser.selectedBrowser.currentURI.spec;
-    stmt.params.name = picker.file.leafName;
+    let current = browser.currentURI.spec;
+    stmt.params.name = file.leafName;
     stmt.params.source = current;
-    stmt.params.target = Services.io.newFileURI(picker.file).spec;
+    stmt.params.target = Services.io.newFileURI(file).spec;
     stmt.params.startTime = Date.now() * 1000;
     stmt.params.endTime = Date.now() * 1000;
     stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
@@ -1246,7 +1256,7 @@ var PageActions = {
       type: Ci.nsIPrintSettings.kOutputFormatPDF,
       id: newItemId,
       referrer: current,
-      filePath: picker.file.path
+      filePath: file.path
     };
 
     Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:SaveAs", data);
