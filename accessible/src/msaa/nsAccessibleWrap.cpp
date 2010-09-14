@@ -387,6 +387,9 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
 __try {
   VariantInit(pvarRole);
 
+  if (IsDefunct())
+    return E_FAIL;
+
   nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_FAIL;
@@ -1186,6 +1189,9 @@ nsAccessibleWrap::role(long *aRole)
 {
 __try {
   *aRole = 0;
+
+  if (IsDefunct())
+    return E_FAIL;
 
   NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
