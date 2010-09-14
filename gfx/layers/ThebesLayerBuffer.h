@@ -160,11 +160,11 @@ protected:
   SetBuffer(gfxASurface* aBuffer,
             const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
   {
-    gfxASurface* tmp = mBuffer;
+    nsRefPtr<gfxASurface> tmp = mBuffer.forget();
     mBuffer = aBuffer;
     mBufferRect = aBufferRect;
     mBufferRotation = aBufferRotation;
-    return tmp;
+    return tmp.forget();
   }
 
 private:
