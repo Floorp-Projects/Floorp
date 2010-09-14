@@ -160,6 +160,7 @@ struct ThebesBuffer {
 struct OpPaintThebesBuffer {
   PLayer layer;
   ThebesBuffer newFrontBuffer;
+  nsIntRegion updatedRegion;
 };
 
 struct OpPaintCanvas  {
@@ -204,22 +205,19 @@ union Edit {
 // Replies to operations
 struct OpBufferSwap   { PLayer layer; SurfaceDescriptor newBackBuffer; };
 
-/*
- * XXX: if we choose *not* to do a new-front-to-new-back fill in the
- * parent process, then we'll need to send back the old buffer
- * attributes so that it can be filled anew.
- *
 struct OpThebesBufferSwap {
   PLayer layer;
   ThebesBuffer newBackBuffer;
+  nsIntRegion newValidRegion;
+  float newXResolution;
+  float newYResolution;
 };
-*/
 
 // Unit of a "changeset reply".  This is a weird abstraction, probably
 // only to be used for buffer swapping.
 union EditReply {
   OpBufferSwap;
-//  OpThebesBufferSwap;
+  OpThebesBufferSwap;
 };
 
 

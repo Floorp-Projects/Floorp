@@ -189,9 +189,12 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
         AsShadowLayer(otb)->AsLayer());
 
-      unused << thebes->Swap(otb.initialFront(),
-                             otb.bufferRect(),
-                             nsIntPoint(0, 0));
+      ThebesBuffer unusedBuffer;
+      nsIntRegion unusedRegion; float unusedXRes, unusedYRes;
+      thebes->Swap(
+        ThebesBuffer(otb.initialFront(), otb.bufferRect(), nsIntPoint(0, 0)),
+        unusedRegion,
+        &unusedBuffer, &unusedRegion, &unusedXRes, &unusedYRes);
 
       break;
     }
@@ -368,12 +371,15 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
-      SurfaceDescriptor newBack = thebes->Swap(newFront.buffer(),
-                                               newFront.rect(),
-                                               newFront.rotation());
-
-      // XXX figure me out
-      replyv.push_back(OpBufferSwap(shadow, NULL, newBack));
+      ThebesBuffer newBack;
+      nsIntRegion newValidRegion;
+      float newXResolution, newYResolution;
+      thebes->Swap(newFront, op.updatedRegion(),
+                   &newBack, &newValidRegion, &newXResolution, &newYResolution);
+      replyv.push_back(
+        OpThebesBufferSwap(
+          shadow, NULL,
+          newBack, newValidRegion, newXResolution, newYResolution));
       break;
     }
     case Edit::TOpPaintCanvas: {
