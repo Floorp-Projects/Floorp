@@ -697,7 +697,8 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
   }
-  int r = nestegg_track_seek(mContext, 0, aTarget * NS_PER_MS);
+  PRUint32 trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
+  int r = nestegg_track_seek(mContext, trackToSeek, aTarget * NS_PER_MS);
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
