@@ -748,6 +748,12 @@ function test_background_position_size_common(prop) {
   div.style.setProperty(prop, "12px 20px, 40% 16%", "");
   is(cs.getPropertyValue(prop), "-moz-calc(3px + 15%) -moz-calc(5px + 30%), -moz-calc(6px + 10%) -moz-calc(9px + 4%)",
      "property " + prop + ": interpolation that computes to calc()");
+  div.style.setProperty(prop, "-moz-calc(20% + 40px) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)", "");
+  is(cs.getPropertyValue(prop), "-moz-calc(40px + 20%) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty(prop, "12px 20%, -moz-calc(20%) -moz-calc(16px + 60%), -moz-calc(8px + 20%) -moz-calc(40px + 16%)", "");
+  is(cs.getPropertyValue(prop), "-moz-calc(33px + 15%) -moz-calc(30px + 35%), -moz-calc(6px + 5%) -moz-calc(4px + 24%), -moz-calc(17px + 14%) -moz-calc(28px + 10%)",
+     "property " + prop + ": interpolation that computes to calc()");
 }
 
 function test_transform_transition(prop) {
