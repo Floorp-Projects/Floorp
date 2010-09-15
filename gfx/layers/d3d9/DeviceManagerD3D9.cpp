@@ -181,6 +181,7 @@ SwapChainD3D9::Reset()
 
 DeviceManagerD3D9::DeviceManagerD3D9()
   : mHasDynamicTextures(false)
+  , mDeviceWasRemoved(false)
 {
 }
 
@@ -492,6 +493,13 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   if (SUCCEEDED(hr)) {
     if (IsD3D9Ex()) {
       hr = mDeviceEx->CheckDeviceState(mFocusWnd);
+
+      if (hr == D3DERR_DEVICEREMOVED) {
+        mDeviceWasRemoved = true;
+        LayerManagerD3D9::OnDeviceManagerDestroy(this);
+        return false;
+      }
+
       if (FAILED(hr)) {
         D3DPRESENT_PARAMETERS pp;
         memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
@@ -505,17 +513,12 @@ DeviceManagerD3D9::VerifyReadyForRendering()
         pp.hDeviceWindow = mFocusWnd;
         
         hr = mDeviceEx->ResetEx(&pp, NULL);
-        // Handle D3DERR_DEVICEREMOVED!
         if (FAILED(hr)) {
           return false;
         }
       }
     }
     return true;
-  }
-
-  if (hr != D3DERR_DEVICENOTRESET) {
-    return false;
   }
 
   for(unsigned int i = 0; i < mLayersWithResources.Length(); i++) {
@@ -538,7 +541,13 @@ DeviceManagerD3D9::VerifyReadyForRendering()
 
   hr = mDevice->Reset(&pp);
 
+  if (hr == D3DERR_DEVICELOST) {
+    return false;
+  }
+
   if (FAILED(hr)) {
+    mDeviceWasRemoved = true;
+    LayerManagerD3D9::OnDeviceManagerDestroy(this);
     return false;
   }
 
