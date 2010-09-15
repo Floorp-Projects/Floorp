@@ -180,8 +180,8 @@
                   command="cmd_goToRecentUpdates"/>
         <menuseparator id="utils-installFromFile-separator"/>
         <menuitem id="utils-installFromFile"
-                  label="&installFromFile.label;"
-                  accesskey="&installFromFile.accesskey;"
+                  label="&installAddonFromFile.label;"
+                  accesskey="&installAddonFromFile.accesskey;"
                   command="cmd_installFromFile"/>
         <menuseparator/>
         <menuitem id="utils-autoUpdateDefault"
