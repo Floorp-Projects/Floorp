@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=595449
+-->
+<head>
+  <title>Test for Bug 595449</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=595449">Mozilla Bug 595449</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 595449 **/
+
+var fieldset = document.createElement("fieldset");
+
+ok("elements" in fieldset,
+   "fieldset element should have an 'elements' IDL attribute");
+
+ok(fieldset.elements instanceof HTMLCollection,
+   "fieldset.elements should be an instance of HTMLCollection");
+
+var catched = false;
+try {
+  ok(fieldset.elements instanceof HTMLFormControlsCollection,
+     "fieldset.elements should be an instance of HTMLFormControlsCollection");
+} catch(e) {
+  catched = true;
+}
+todo(!catched, "HTMLFormControlsCollection should be defined");
+
+is(fieldset.elements.length, 0, "Nothing should be in fieldset.elements");
+
+var oldElements = fieldset.elements;
+
+is(fieldset.elements, oldElements,
+   "fieldset.elements should always return the same object");
+
+var tmpElement = document.createElement("input");
+
+fieldset.appendChild(tmpElement);
+
+is(fieldset.elements.length, 1,
+   "fieldset.elements should now contain one element");
+
+is(fieldset.elements[0], tmpElement,
+   "fieldset.elements[0] should be the input element");
+
+tmpElement.name = "foo";
+is(fieldset.elements.foo, tmpElement,
+   "we should be able to access to an element using it's name as a property on .elements");
+
+is(fieldset.elements, oldElements,
+   "fieldset.elements should always return the same object");
+
+fieldset.removeChild(tmpElement);
+
+var testData = [
+  [ "<input>", 1 , [ HTMLInputElement ] ],
+  [ "<button></button>", 1, [ HTMLButtonElement ] ],
+  [ "<button><input></button>", 2, [ HTMLButtonElement, HTMLInputElement ] ],
+  [ "<object>", 1, [ HTMLObjectElement ] ],
+  [ "<output></output>", 1, [ HTMLOutputElement ] ],
+  [ "<select></select>", 1, [ HTMLSelectElement ] ],
+  [ "<select><option>foo</option></select>", 1, [ HTMLSelectElement ] ],
+  [ "<select><option>foo</option><input></select>", 2, [ HTMLSelectElement, HTMLInputElement ] ],
+  [ "<textarea></textarea>", 1, [ HTMLTextAreaElement ] ],
+  [ "<label>foo</label>", 0 ],
+  [ "<progress>", 0 ],
+  [ "<meter>", 0 ],
+  [ "<keygen>", 1, [ HTMLSelectElement ] ],
+  [ "<legend></legend>", 0 ],
+  [ "<legend><input></legend>", 1, [ HTMLInputElement ] ],
+  [ "<legend><input></legend><legend><input></legend>", 2, [ HTMLInputElement, HTMLInputElement ] ],
+  [ "<legend><input></legend><input>", 2, [ HTMLInputElement, HTMLInputElement ] ],
+  [ "<fieldset></fieldset>", 1, [ HTMLFieldSetElement ] ],
+  [ "<fieldset><input></fieldset>", 2, [ HTMLFieldSetElement, HTMLInputElement ] ],
+  [ "<fieldset><fieldset><input></fieldset></fieldset>", 3, [ HTMLFieldSetElement, HTMLFieldSetElement, HTMLInputElement ] ],
+  [ "<button></button><fieldset></fieldset><input><keygen><object><output></output><select></select><textarea></textarea>", 8, [ HTMLButtonElement, HTMLFieldSetElement, HTMLInputElement, HTMLSelectElement, HTMLObjectElement, HTMLOutputElement, HTMLSelectElement, HTMLTextAreaElement ] ],
+];
+
+for each(var data in testData) {
+  fieldset.innerHTML = data[0];
+  is(fieldset.elements.length, data[1],
+     "fieldset.elements should contain " + data[1] + " elements");
+
+  for (var i=0; i<data[1]; ++i) {
+    ok(fieldset.elements[i] instanceof data[2][i],
+       "fieldset.elements[" + i + "] should be instance of " + data[2][i])
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
