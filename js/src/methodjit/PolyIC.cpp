@@ -2121,7 +2121,8 @@ ic::SetPropDumb(VMFrame &f, uint32 index)
     if (!obj)
         THROW();
     Value rval = f.regs.sp[-1];
-    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1]))
+    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1],
+                          script->strictModeCode))
         THROW();
     f.regs.sp[-2] = rval;
 }
@@ -2134,7 +2135,7 @@ SetPropSlow(VMFrame &f, uint32 index)
     JS_ASSERT(pic.isSet());
 
     JSAtom *atom = pic.atom;
-    stubs::SetName(f, atom);
+    STRICT_VARIANT(stubs::SetName)(f, atom);
 }
 
 void JS_FASTCALL

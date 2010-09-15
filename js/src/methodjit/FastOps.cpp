@@ -1234,7 +1234,7 @@ mjit::Compiler::jsop_setelem()
         stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
-        stubcc.call(stubs::SetElem);
+        stubcc.call(STRICT_VARIANT(stubs::SetElem));
 
         /* Infallible, start killing everything. */
         frame.eviscerate(obj);
@@ -1316,7 +1316,7 @@ mjit::Compiler::jsop_setelem()
         stubcc.crossJump(jmpHoleExit, lblRejoin);
 
         stubcc.leave();
-        stubcc.call(stubs::SetElem);
+        stubcc.call(STRICT_VARIANT(stubs::SetElem));
 
         /* Infallible, start killing everything. */
         frame.eviscerate(obj);

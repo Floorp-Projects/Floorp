@@ -927,6 +927,9 @@ class TraceRecorder
     JSAtom**                        atoms;
     Value*                          consts;
 
+    /* An instruction yielding the current script's strict mode code flag.  */
+    nanojit::LIns*                  strictModeCode_ins;
+
     /* FIXME: Dead, but soon to be used for something or other. */
     Queue<jsbytecode*>              cfgMerges;
 
