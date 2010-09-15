@@ -304,25 +304,6 @@ typedef JSBool
                    JSProperty **propp);
 
 /*
- * Define obj[id], a direct property of obj named id, having the given initial
- * value, with the specified getter, setter, and attributes.
- */
-typedef JSBool
-(* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const jsval *value,
-                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
-
-/*
- * Get, set, or delete obj[id], returning false on error or exception, true
- * on success.  If getting or setting, the new value is returned in *vp on
- * success.  If deleting without error, *vp will be JSVAL_FALSE if obj[id] is
- * permanent, and JSVAL_TRUE if id named a direct property of obj that was in
- * fact deleted, or if id names no direct property of obj (id could name a
- * prototype property, or no property in obj or its prototype chain).
- */
-typedef JSBool
-(* JSPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
-
-/*
  * Get or set attributes of the property obj[id]. Return false on error or
  * exception, true with current attributes in *attrsp.
  */
