@@ -162,7 +162,6 @@ static nsresult
 MakeArray(const nsSize& aSize, nsCSSValue& aResult)
 {
     nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
-    NS_ENSURE_TRUE(a, NS_ERROR_OUT_OF_MEMORY);
 
     a->Item(0).SetIntValue(aSize.width, eCSSUnit_Integer);
     a->Item(1).SetIntValue(aSize.height, eCSSUnit_Integer);
