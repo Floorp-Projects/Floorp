@@ -69,7 +69,6 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug566879.html \
 		test_compatmode.html \
 		invalidchar.xml \
-		test_bug534293.html \
 		file_bug534293.sjs \
 		file_bug534293-slow.sjs \
 		$(NULL)
@@ -78,6 +77,9 @@ _TEST_FILES =	parser_datreader.js \
 #		test_bug568470.html \
 #		file_bug568470.sjs \
 #		file_bug568470-script.sjs \
+
+# Disable test due to frequent orange on Mac
+#		test_bug534293.html \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
