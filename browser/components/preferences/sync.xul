@@ -117,6 +117,9 @@
                 <row id="manageAccountControls" hidden="true">
                   <spacer/>
                     <vbox class="indent">
+                     <label class="text-link"
+                             onclick="gSyncPane.openQuotaDialog(); return false;"
+                             value="&viewQuota.label;"/>
                       <label class="text-link"
                              onclick="gSyncUtils.changePassword(); return false;"
                              value="&changePassword.label;"/>

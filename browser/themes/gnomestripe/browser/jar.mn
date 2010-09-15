@@ -95,4 +95,5 @@ browser.jar:
   skin/classic/browser/sync-usedNever.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
+  skin/classic/browser/syncQuota.css
 #endif

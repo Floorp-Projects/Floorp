@@ -206,6 +206,15 @@ let gSyncPane = {
     }
   },
 
+  openQuotaDialog: function () {
+    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
+    if (win)
+      win.focus();
+    else 
+      window.openDialog("chrome://browser/content/syncQuota.xul", "",
+                        "centerscreen,chrome,dialog,modal");
+  },
+
   resetSync: function () {
     this.openSetup(true);
   }

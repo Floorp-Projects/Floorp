@@ -75,6 +75,8 @@
     locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
     locale/browser/syncGenericChange.properties         (%chrome/browser/syncGenericChange.properties)
+    locale/browser/syncQuota.dtd                (%chrome/browser/syncQuota.dtd)
+    locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 #endif
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
