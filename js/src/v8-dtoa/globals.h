@@ -31,82 +31,6 @@
 namespace v8 {
 namespace internal {
 
-// Processor architecture detection.  For more info on what's defined, see:
-//   http://msdn.microsoft.com/en-us/library/b0084kay.aspx
-//   http://www.agner.org/optimize/calling_conventions.pdf
-//   or with gcc, run: "echo | gcc -E -dM -"
-#if defined(_M_X64) || defined(__x86_64__)
-#define V8_HOST_ARCH_X64 1
-#define V8_HOST_ARCH_64_BIT 1
-#define V8_HOST_CAN_READ_UNALIGNED 1
-#elif defined(_M_IX86) || defined(__i386__)
-#define V8_HOST_ARCH_IA32 1
-#define V8_HOST_ARCH_32_BIT 1
-#define V8_HOST_CAN_READ_UNALIGNED 1
-#elif defined(__ARMEL__)
-#define V8_HOST_ARCH_ARM 1
-#define V8_HOST_ARCH_32_BIT 1
-// Some CPU-OS combinations allow unaligned access on ARM. We assume
-// that unaligned accesses are not allowed unless the build system
-// defines the CAN_USE_UNALIGNED_ACCESSES macro to be non-zero.
-#if CAN_USE_UNALIGNED_ACCESSES
-#define V8_HOST_CAN_READ_UNALIGNED 1
-#endif
-#elif defined(_MIPS_ARCH_MIPS32R2)
-#define V8_HOST_ARCH_MIPS 1
-#define V8_HOST_ARCH_32_BIT 1
-#else
-#error Host architecture was not detected as supported by v8
-#endif
-
-// Target architecture detection. This may be set externally. If not, detect
-// in the same way as the host architecture, that is, target the native
-// environment as presented by the compiler.
-#if !defined(V8_TARGET_ARCH_X64) && !defined(V8_TARGET_ARCH_IA32) && \
-    !defined(V8_TARGET_ARCH_ARM) && !defined(V8_TARGET_ARCH_MIPS)
-#if defined(_M_X64) || defined(__x86_64__)
-#define V8_TARGET_ARCH_X64 1
-#elif defined(_M_IX86) || defined(__i386__)
-#define V8_TARGET_ARCH_IA32 1
-#elif defined(__ARMEL__)
-#define V8_TARGET_ARCH_ARM 1
-#elif defined(_MIPS_ARCH_MIPS32R2)
-#define V8_TARGET_ARCH_MIPS 1
-#else
-#error Target architecture was not detected as supported by v8
-#endif
-#endif
-
-// Check for supported combinations of host and target architectures.
-#if defined(V8_TARGET_ARCH_IA32) && !defined(V8_HOST_ARCH_IA32)
-#error Target architecture ia32 is only supported on ia32 host
-#endif
-#if defined(V8_TARGET_ARCH_X64) && !defined(V8_HOST_ARCH_X64)
-#error Target architecture x64 is only supported on x64 host
-#endif
-#if (defined(V8_TARGET_ARCH_ARM) && \
-    !(defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_ARM)))
-#error Target architecture arm is only supported on arm and ia32 host
-#endif
-#if (defined(V8_TARGET_ARCH_MIPS) && \
-    !(defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_MIPS)))
-#error Target architecture mips is only supported on mips and ia32 host
-#endif
-
-// Define unaligned read for the target architectures supporting it.
-#if defined(V8_TARGET_ARCH_X64) || defined(V8_TARGET_ARCH_IA32)
-#define V8_TARGET_CAN_READ_UNALIGNED 1
-#elif V8_TARGET_ARCH_ARM
-// Some CPU-OS combinations allow unaligned access on ARM. We assume
-// that unaligned accesses are not allowed unless the build system
-// defines the CAN_USE_UNALIGNED_ACCESSES macro to be non-zero.
-#if CAN_USE_UNALIGNED_ACCESSES
-#define V8_TARGET_CAN_READ_UNALIGNED 1
-#endif
-#elif V8_TARGET_ARCH_MIPS
-#else
-#error Target architecture is not supported by v8
-#endif
 
 // The following macro works on both 32 and 64-bit platforms.
 // Usage: instead of writing 0x1234567890123456
@@ -121,12 +45,6 @@ const int kCharSize     = sizeof(char);      // NOLINT
 
 // -----------------------------------------------------------------------------
 // Macros
-
-
-// The USE(x) template is used to silence C++ compiler warnings
-// issued for (yet) unused variables (typically parameters).
-template <typename T>
-static inline void USE(T) { }
 
 
 // A macro to disallow the evil copy constructor and operator= functions
