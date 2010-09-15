@@ -3180,7 +3180,7 @@ nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(PRInt32 pos)
 void 
 nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
 {
-  for (; ; ) {
+  for (PRInt32 i = 0; i < NS_HTML5TREE_BUILDER_AAA_MAX_ITERATIONS; ++i) {
     PRInt32 formattingEltListPos = listPtr;
     while (formattingEltListPos > -1) {
       nsHtml5StackNode* listNode = listOfActiveFormattingElements[formattingEltListPos];
@@ -3238,7 +3238,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
     PRInt32 bookmark = formattingEltListPos;
     PRInt32 nodePos = furthestBlockPos;
     nsHtml5StackNode* lastNode = furthestBlock;
-    for (; ; ) {
+    for (PRInt32 j = 0; j < NS_HTML5TREE_BUILDER_AAA_MAX_ITERATIONS; ++j) {
       nodePos--;
       nsHtml5StackNode* node = stack[nodePos];
       PRInt32 nodeListPos = findInListOfActiveFormattingElements(node);
