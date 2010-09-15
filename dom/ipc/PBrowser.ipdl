@@ -43,7 +43,6 @@ include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PContentPermissionRequest;
-include protocol PExternalHelperApp;
 include protocol PRenderFrame;
 
 include "TabMessageUtils.h";
@@ -72,7 +71,6 @@ rpc protocol PBrowser
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
     manages PContentPermissionRequest;
-    manages PExternalHelperApp;
     manages PRenderFrame;
 
 both:
@@ -127,10 +125,6 @@ parent:
     async PRenderFrame();
 
     __delete__();
-
-    PExternalHelperApp(URI uri, nsCString aMimeContentType,
-                       nsCString aContentDisposition, bool aForceSave,
-                       PRInt64 aContentLength);
 
 child:
     /**

@@ -63,6 +63,7 @@ public:
   virtual PRBool IsEmpty();
   virtual void RenderLayer();
   virtual void CleanResources();
+  virtual void LayerManagerDestroyed();
 
 private:
   /*

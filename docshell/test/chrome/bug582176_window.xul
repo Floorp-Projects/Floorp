@@ -70,6 +70,12 @@
          "variable should still be there");
       is(notificationCount, 2, "Should not notify on back navigation");
 
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_xml.xml");
+      yield;
+      is(browser.contentDocument.body.textContent, "xslt result",
+         "Transform performed successfully");
+      is(notificationCount, 3, "Should notify only once on XSLT navigation");
+
       os.removeObserver(observer, "content-document-global-created")
 
       // Tell the framework the test is finished.  Include the final 'yield' 

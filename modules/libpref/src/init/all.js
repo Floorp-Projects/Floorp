@@ -3202,9 +3202,6 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
 
-// Initialize default render-mode.
-pref("mozilla.widget.render-mode", -1);
-
 // Default value of acceleration for all widgets.
 #ifdef XP_WIN
 pref("layers.accelerate-all", true);
@@ -3219,6 +3216,9 @@ pref("layers.accelerate-none", false);
 #ifndef WINCE
 // Whether to disable the automatic detection and use of direct2d.
 pref("gfx.direct2d.disabled", false);
+// Whether to attempt to enable Direct2D regardless of automatic detection or
+// blacklisting
+pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
 #endif

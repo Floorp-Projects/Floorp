@@ -143,7 +143,12 @@ public:
   /** 
    * Return pointer to the Nv3DVUtils instance 
    */ 
-  Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; } 
+  Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; }
+
+  /**
+   * Returns true if this device was removed.
+   */
+  bool DeviceWasRemoved() { return mDeviceWasRemoved; }
 
   /**
    * We keep a list of all layers here that may have hardware resource allocated
@@ -205,6 +210,9 @@ private:
 
   /* If this device supports dynamic textures */
   bool mHasDynamicTextures;
+
+  /* If this device was removed */
+  bool mDeviceWasRemoved;
 
   /* Nv3DVUtils instance */ 
   nsAutoPtr<Nv3DVUtils> mNv3DVUtils; 

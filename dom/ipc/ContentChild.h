@@ -83,6 +83,14 @@ public:
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);
 
+    virtual PExternalHelperAppChild *AllocPExternalHelperApp(
+            const IPC::URI& uri,
+            const nsCString& aMimeContentType,
+            const nsCString& aContentDisposition,
+            const bool& aForceSave,
+            const PRInt64& aContentLength);
+    virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
+
     virtual bool RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
                                     const nsTArray<ResourceMapping>& resources,
                                     const nsTArray<OverrideMapping>& overrides);

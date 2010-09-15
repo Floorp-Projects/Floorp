@@ -72,6 +72,7 @@ public:
   virtual Layer* GetLayer();
   virtual void RenderLayer();
   virtual void CleanResources();
+  virtual void LayerManagerDestroyed();
 
   void CreateTexture();
 

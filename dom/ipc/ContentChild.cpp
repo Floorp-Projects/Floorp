@@ -48,6 +48,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
+#include "mozilla/dom/ExternalHelperAppChild.h"
 
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
@@ -295,6 +296,26 @@ bool
 ContentChild::DeallocPNecko(PNeckoChild* necko)
 {
     delete necko;
+    return true;
+}
+
+PExternalHelperAppChild*
+ContentChild::AllocPExternalHelperApp(const IPC::URI& uri,
+                                      const nsCString& aMimeContentType,
+                                      const nsCString& aContentDisposition,
+                                      const bool& aForceSave,
+                                      const PRInt64& aContentLength)
+{
+    ExternalHelperAppChild *child = new ExternalHelperAppChild();
+    child->AddRef();
+    return child;
+}
+
+bool
+ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
+{
+    ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
+    child->Release();
     return true;
 }
 

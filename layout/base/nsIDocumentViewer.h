@@ -49,8 +49,8 @@ class nsIStyleSheet;
 class nsIView;
 
 #define NS_IDOCUMENT_VIEWER_IID \
-  { 0x79c0bdbf, 0xf508, 0x4970, \
-    { 0x94, 0x65, 0x03, 0x5e, 0xda, 0x2c, 0x02, 0x72 } }
+  { 0x5a5c9a1d, 0x49c4, 0x4f3f, \
+    { 0x80, 0xcd, 0x12, 0x09, 0x5b, 0x1e, 0x1f, 0x61 } }
 
 /**
  * A document viewer is a kind of content viewer that uses NGLayout
@@ -64,6 +64,9 @@ public:
   NS_IMETHOD GetPresShell(nsIPresShell** aResult) = 0;
   
   NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
+
+  NS_IMETHOD SetDocumentInternal(nsIDocument* aDocument,
+                                 PRBool aForceReuseInnerWindow) = 0;
 
   virtual nsIView* FindContainerView() = 0;
 };

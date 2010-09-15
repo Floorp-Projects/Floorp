@@ -39,6 +39,7 @@
 include protocol PBrowser;
 include protocol PTestShell;
 include protocol PNecko;
+include protocol PExternalHelperApp;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
@@ -56,6 +57,7 @@ rpc protocol PContent
     manages PBrowser;
     manages PTestShell;
     manages PNecko;
+    manages PExternalHelperApp;
 
 child:
     PBrowser(PRUint32 chromeFlags);
@@ -109,6 +111,10 @@ parent:
                           PRBool textClickable,
                           nsString cookie,
                           nsString name);
+
+    PExternalHelperApp(URI uri, nsCString aMimeContentType,
+                       nsCString aContentDisposition, bool aForceSave,
+                       PRInt64 aContentLength);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);

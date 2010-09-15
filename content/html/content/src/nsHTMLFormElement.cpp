@@ -1576,19 +1576,6 @@ nsHTMLFormElement::SetEncoding(const nsAString& aEncoding)
   return SetEnctype(aEncoding);
 }
 
-NS_IMETHODIMP
-nsHTMLFormElement::GetFormData(nsIDOMFormData** aFormData)
-{
-  nsRefPtr<nsFormData> fd = new nsFormData();
-
-  nsresult rv = WalkFormElements(fd);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aFormData = fd.forget().get();
-
-  return NS_OK;
-}
- 
 NS_IMETHODIMP    
 nsHTMLFormElement::GetLength(PRInt32* aLength)
 {
