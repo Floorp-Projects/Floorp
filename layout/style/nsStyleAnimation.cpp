@@ -229,25 +229,20 @@ ExtractCalcValue(const nsCSSValue& aValue)
   return ExtractCalcValueInternal(aValue);
 }
 
-static bool
+static void
 SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
 {
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
-  if (!arr)
-    return false;
   if (!aCalc->mHasPercent) {
     nscoordToCSSValue(aCalc->mLength, arr->Item(0));
   } else {
     nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
-    if (!arr2)
-      return false;
     arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
     nscoordToCSSValue(aCalc->mLength, arr2->Item(0));
     arr2->Item(1).SetPercentValue(aCalc->mPercent);
   }
 
   aValue.SetArrayValue(arr, eCSSUnit_Calc);
-  return true;
 }
 
 // CLASS METHODS
@@ -785,9 +780,6 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   nsCSSValue::Array *array1 = aValue1.GetArrayValue();
   nsCSSValue::Array *array2 = aValue2.GetArrayValue();
   nsRefPtr<nsCSSValue::Array> resultArray = nsCSSValue::Array::Create(6);
-  if (!resultArray) {
-    return PR_FALSE;
-  }
 
   for (size_t i = 0; i < 4; ++i) {
     AddCSSValuePixel(aCoeff1, array1->Item(i), aCoeff2, array2->Item(i),
@@ -1463,15 +1455,9 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                       (aCoeff2 != 0.0 && v2.mHasPercent);
       nsCSSValue *val = new nsCSSValue();
       nsCSSValue::Array *arr = nsCSSValue::Array::Create(1);
-      if (!arr) {
-        return PR_FALSE;
-      }
       val->SetArrayValue(arr, eCSSUnit_Calc);
       if (hasPct) {
         nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
-        if (!arr2) {
-          return PR_FALSE;
-        }
         arr2->Item(0).SetFloatValue(len, eCSSUnit_Pixel);
         arr2->Item(1).SetPercentValue(pct);
         arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
@@ -2097,8 +2083,7 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
       break;
     case eStyleUnit_Calc: {
       nsAutoPtr<nsCSSValue> val(new nsCSSValue);
-      if (!SetCalcValue(aCoord.GetCalcValue(), *val))
-        return PR_FALSE;
+      SetCalcValue(aCoord.GetCalcValue(), *val);
       aValue.SetAndAdoptCSSValueValue(val.forget(),
                                       nsStyleAnimation::eUnit_Calc);
       break;
@@ -2120,8 +2105,7 @@ StyleCoordToCSSValue(const nsStyleCoord& aCoord, nsCSSValue& aCSSValue)
       aCSSValue.SetPercentValue(aCoord.GetPercentValue());
       break;
     case eStyleUnit_Calc:
-      if (!SetCalcValue(aCoord.GetCalcValue(), aCSSValue))
-        return PR_FALSE;
+      SetCalcValue(aCoord.GetCalcValue(), aCSSValue);
       break;
     default:
       NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
@@ -2436,8 +2420,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               calc.mLength = pos.mXPosition.mLength;
               calc.mPercent = pos.mXPosition.mPercent;
               calc.mHasPercent = PR_TRUE;
-              if (!SetCalcValue(&calc, item->mXValue))
-                return PR_FALSE;
+              SetCalcValue(&calc, item->mXValue);
             }
             if (pos.mYPosition.mLength == 0) {
               item->mYValue.SetPercentValue(pos.mYPosition.mPercent);
@@ -2448,8 +2431,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               calc.mLength = pos.mYPosition.mLength;
               calc.mPercent = pos.mYPosition.mPercent;
               calc.mHasPercent = PR_TRUE;
-              if (!SetCalcValue(&calc, item->mYValue))
-                return PR_FALSE;
+              SetCalcValue(&calc, item->mYValue);
             }
           }
 
@@ -2488,8 +2470,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                   calc.mLength = size.mWidth.mLength;
                   calc.mPercent = size.mWidth.mPercent;
                   calc.mHasPercent = PR_TRUE;
-                  if (!SetCalcValue(&calc, item->mXValue))
-                    return PR_FALSE;
+                  SetCalcValue(&calc, item->mXValue);
                 }
                 break;
             }
@@ -2512,8 +2493,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                   calc.mLength = size.mHeight.mLength;
                   calc.mPercent = size.mHeight.mPercent;
                   calc.mHasPercent = PR_TRUE;
-                  if (!SetCalcValue(&calc, item->mYValue))
-                    return PR_FALSE;
+                  SetCalcValue(&calc, item->mYValue);
                 }
                 break;
             }
