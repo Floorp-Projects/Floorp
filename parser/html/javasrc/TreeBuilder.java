@@ -5221,6 +5221,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     // ]NOCPP]
 
     /**
+     * @see nu.validator.htmlparser.common.TokenHandler#cdataSectionAllowed()
+     */
+    @Override public boolean cdataSectionAllowed() throws SAXException {
+        return inForeign && currentPtr >= 0
+                && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml";
+    }
+
+    /**
      * The argument MUST be an interned string or <code>null</code>.
      * 
      * @param context
@@ -5582,7 +5590,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * Returns the foreignFlag.
      *
-     * @see nu.validator.htmlparser.common.TokenHandler#isInForeign()
      * @return the foreignFlag
      */
     public boolean isInForeign() {
