@@ -4407,7 +4407,9 @@ nsDocument::CreateElement(const nsAString& aTagName,
     ToLowerCase(aTagName, lcTagName);
   }
 
-  rv = CreateElem(needsLowercase ? lcTagName : aTagName, nsnull,
+  rv = CreateElem(needsLowercase ? static_cast<const nsAString&>(lcTagName)
+                                 : aTagName,
+                  nsnull,
                   IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
                   PR_TRUE, aReturn);
   return rv;
@@ -5846,7 +5848,7 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  for (PRInt32 i = 0; i < mChildren.ChildCount(); ++i) {
+  for (PRUint32 i = 0; i < mChildren.ChildCount(); ++i) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren.ChildAt(i)));
     node->Normalize();
   }
