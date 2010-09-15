@@ -110,8 +110,6 @@ browser.jar:
         skin/classic/browser/sync-bg.png
         skin/classic/browser/sync-desktopIcon.png
         skin/classic/browser/sync-mobileIcon.png
-        skin/classic/browser/sync-usedBefore.png
-        skin/classic/browser/sync-usedNever.png
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
         skin/classic/browser/syncQuota.css
@@ -228,8 +226,6 @@ browser.jar:
         skin/classic/aero/browser/sync-bg.png
         skin/classic/aero/browser/sync-desktopIcon.png
         skin/classic/aero/browser/sync-mobileIcon.png
-        skin/classic/aero/browser/sync-usedBefore.png
-        skin/classic/aero/browser/sync-usedNever.png
         skin/classic/aero/browser/syncSetup.css
         skin/classic/aero/browser/syncCommon.css
         skin/classic/aero/browser/syncQuota.css
