@@ -74,6 +74,7 @@ EXTRA_COMPONENTS = \
         LoginManager.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
+        UpdatePrompt.js \
 	$(NULL)
 
 ifndef ANDROID
