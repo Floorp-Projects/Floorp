@@ -336,6 +336,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private static final int NOT_FOUND_ON_STACK = Integer.MAX_VALUE;
 
+    private static final int AAA_MAX_ITERATIONS = 10;
+
     // [NOCPP[
 
     private static final @Local String HTML_LOCAL = "html";
@@ -4334,7 +4336,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void adoptionAgencyEndTag(@Local String name) throws SAXException {
         // If you crash around here, perhaps some stack node variable claimed to
         // be a weak ref isn't.
-        for (;;) {
+        for (int i = 0; i < AAA_MAX_ITERATIONS; ++i) {
             int formattingEltListPos = listPtr;
             while (formattingEltListPos > -1) {
                 StackNode<T> listNode = listOfActiveFormattingElements[formattingEltListPos]; // weak
@@ -4410,7 +4412,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             int bookmark = formattingEltListPos;
             int nodePos = furthestBlockPos;
             StackNode<T> lastNode = furthestBlock; // weak ref
-            for (;;) {
+            for (int j = 0; j < AAA_MAX_ITERATIONS; ++j) {
                 nodePos--;
                 StackNode<T> node = stack[nodePos]; // weak ref
                 int nodeListPos = findInListOfActiveFormattingElements(node);
