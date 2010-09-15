@@ -420,7 +420,7 @@ nsFrameLoader::GetWebProgress(nsIWebProgress **aWebProgress)
 #ifdef MOZ_IPC
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
-      TryNewProcess();
+      TryRemoteBrowser();
     }
     if (!mRemoteBrowser) {
       return NS_ERROR_UNEXPECTED;
