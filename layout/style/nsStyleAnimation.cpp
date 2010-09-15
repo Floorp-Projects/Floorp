@@ -73,14 +73,21 @@ namespace css = mozilla::css;
  */
 static
 nsStyleAnimation::Unit
-GetCommonUnit(nsStyleAnimation::Unit aFirstUnit,
+GetCommonUnit(nsCSSProperty aProperty,
+              nsStyleAnimation::Unit aFirstUnit,
               nsStyleAnimation::Unit aSecondUnit)
 {
-  // XXXdholbert Naive implementation for now: simply require that the input
-  // units match.
   if (aFirstUnit != aSecondUnit) {
-    // NOTE: Some unit-pairings will need special handling,
-    // e.g. percent vs coord (bug 520234)
+    if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_STORES_CALC) &&
+        (aFirstUnit == nsStyleAnimation::eUnit_Coord ||
+         aFirstUnit == nsStyleAnimation::eUnit_Percent ||
+         aFirstUnit == nsStyleAnimation::eUnit_Calc) &&
+        (aSecondUnit == nsStyleAnimation::eUnit_Coord ||
+         aSecondUnit == nsStyleAnimation::eUnit_Percent ||
+         aSecondUnit == nsStyleAnimation::eUnit_Calc)) {
+      // We can use calc() as the common unit.
+      return nsStyleAnimation::eUnit_Calc;
+    }
     return nsStyleAnimation::eUnit_Null;
   }
   return aFirstUnit;
@@ -129,13 +136,26 @@ struct CalcValue {
 static CalcValue
 ExtractCalcValue(const nsStyleAnimation::Value& aValue)
 {
+  CalcValue result;
+  if (aValue.GetUnit() == nsStyleAnimation::eUnit_Coord) {
+    result.mLength =
+      nsPresContext::AppUnitsToFloatCSSPixels(aValue.GetCoordValue());
+    result.mPercent = 0.0f;
+    result.mHasPercent = PR_FALSE;
+    return result;
+  }
+  if (aValue.GetUnit() == nsStyleAnimation::eUnit_Percent) {
+    result.mLength = 0.0f;
+    result.mPercent = aValue.GetPercentValue();
+    result.mHasPercent = PR_TRUE;
+    return result;
+  }
   NS_ABORT_IF_FALSE(aValue.GetUnit() == nsStyleAnimation::eUnit_Calc,
                     "unexpected unit");
   nsCSSValue *val = aValue.GetCSSValueValue();
   NS_ABORT_IF_FALSE(val->GetUnit() == eCSSUnit_Calc, "unexpected unit");
   nsCSSValue::Array *arr = val->GetArrayValue();
   NS_ABORT_IF_FALSE(arr->Count() == 1, "unexpected length");
-  CalcValue result;
 
   const nsCSSValue &topval = arr->Item(0);
   if (topval.GetUnit() == eCSSUnit_Pixel) {
@@ -188,7 +208,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                                   const Value& aEndValue,
                                   double& aDistance)
 {
-  Unit commonUnit = GetCommonUnit(aStartValue.GetUnit(), aEndValue.GetUnit());
+  Unit commonUnit =
+    GetCommonUnit(aProperty, aStartValue.GetUnit(), aEndValue.GetUnit());
 
   switch (commonUnit) {
     case eUnit_Null:
@@ -1232,7 +1253,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                               double aCoeff2, const Value& aValue2,
                               Value& aResultValue)
 {
-  Unit commonUnit = GetCommonUnit(aValue1.GetUnit(), aValue2.GetUnit());
+  Unit commonUnit =
+    GetCommonUnit(aProperty, aValue1.GetUnit(), aValue2.GetUnit());
   // Maybe need a followup method to convert the inputs into the common
   // unit-type, if they don't already match it. (Or would it make sense to do
   // that in GetCommonUnit? in which case maybe ConvertToCommonUnit would be
