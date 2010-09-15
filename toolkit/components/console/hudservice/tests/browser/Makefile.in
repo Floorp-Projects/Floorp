@@ -49,6 +49,7 @@ _BROWSER_TEST_FILES = \
 	browser_HUDServiceTestsAll.js \
 	browser_warn_user_about_replaced_api.js \
 	browser_webconsole_bug_585237_line_limit.js \
+	browser_webconsole_bug_586142_insert_newlines.js \
 	browser_webconsole_bug_586388_select_all.js  \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \

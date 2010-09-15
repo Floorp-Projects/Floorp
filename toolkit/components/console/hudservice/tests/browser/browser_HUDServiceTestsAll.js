@@ -445,7 +445,7 @@ function testNullUndefinedOutput()
   is(group.childNodes.length, 2, "Three children in output");
   let outputChildren = group.childNodes;
 
-  is (outputChildren[1].childNodes[0].nodeValue, "null",
+  is (outputChildren[1].childNodes[0].nodeValue, "null\n",
       "'null' printed to output");
 
   jsterm.clearOutput();
@@ -455,7 +455,7 @@ function testNullUndefinedOutput()
   is(group.childNodes.length, 2, "Three children in output");
   outputChildren = group.childNodes;
 
-  is (outputChildren[1].childNodes[0].nodeValue, "undefined",
+  is (outputChildren[1].childNodes[0].nodeValue, "undefined\n",
       "'undefined' printed to output");
 }
 
@@ -1036,39 +1036,40 @@ function testJSTermHelper()
   jsterm.clearOutput();
   jsterm.execute("'id=' + $('header').getAttribute('id')");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[1].textContent, "id=header", "$() worked");
+  is(group.childNodes[1].textContent, "id=header\n", "$() worked");
 
   jsterm.clearOutput();
   jsterm.execute("headerQuery = $$('h1')");
   jsterm.execute("'length=' + headerQuery.length");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[3].textContent, "length=1", "$$() worked");
+  is(group.childNodes[3].textContent, "length=1\n", "$$() worked");
 
   jsterm.clearOutput();
   jsterm.execute("xpathQuery = $x('.//*', document.body);");
   jsterm.execute("'headerFound='  + (xpathQuery[0] == headerQuery[0])");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[3].textContent, "headerFound=true", "$x() worked");
+  is(group.childNodes[3].textContent, "headerFound=true\n", "$x() worked");
 
   // no jsterm.clearOutput() here as we clear the output using the clear() fn.
   jsterm.execute("clear()");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[0].textContent, "undefined", "clear() worked");
+  is(group.childNodes[0].textContent, "undefined\n", "clear() worked");
 
   jsterm.clearOutput();
   jsterm.execute("'keysResult=' + (keys({b:1})[0] == 'b')");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[1].textContent, "keysResult=true", "keys() worked");
+  is(group.childNodes[1].textContent, "keysResult=true\n", "keys() worked");
 
   jsterm.clearOutput();
   jsterm.execute("'valuesResult=' + (values({b:1})[0] == 1)");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[1].textContent, "valuesResult=true", "values() worked");
+  is(group.childNodes[1].textContent, "valuesResult=true\n",
+     "values() worked");
 
   jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
   let group = jsterm.outputNode.querySelector(".hud-group");
-  is(group.childNodes[1].textContent, "  a: 1\n  b: 2", "pprint() worked");
+  is(group.childNodes[1].textContent, "  a: 1\n  b: 2\n", "pprint() worked");
 }
 
 function testPropertyPanel()
