@@ -378,8 +378,8 @@ ffi_prep_cif_machdep (ffi_cif *cif)
 	  if (align < 8)
 	    align = 8;
 
-	  bytes = ALIGN(bytes, align);
 	  bytes += cif->arg_types[i]->size;
+	  bytes = ALIGN(bytes, align);
 	}
       else
 	{
