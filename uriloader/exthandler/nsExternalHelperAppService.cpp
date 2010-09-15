@@ -1876,6 +1876,9 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                 mWebProgressListener->OnStatusChange(nsnull, (type == kReadError) ? aRequest : nsnull, rv, msgText);
               }
               else
+#ifdef MOZ_IPC
+              if (XRE_GetProcessType() == GeckoProcessType_Default)
+#endif
               {
                 // We don't have a listener.  Simply show the alert ourselves.
                 nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mWindowContext));
