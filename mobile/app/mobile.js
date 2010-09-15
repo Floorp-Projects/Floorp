@@ -181,11 +181,11 @@ pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/Ve
 
 /* preferences for the Get Add-ons pane */
 pref("extensions.getAddons.cache.enabled", true);
-pref("extensions.getAddons.maxResults", 5);
+pref("extensions.getAddons.maxResults", 15);
 pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/recommended/");
-pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/list/featured/all/10/%OS%/%VERSION%");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/list/featured/all/%MAX_RESULTS%/%OS%/%VERSION%");
 pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/search?q=%TERMS%");
-pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/%TERMS%/all/10/%OS%/%VERSION%");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%");
 pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/mobile/");
 
 /* blocklist preferences */
@@ -388,9 +388,13 @@ pref("browser.ui.touch.bottom", 4);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
+#if ANDROID
 pref("plugin.disable", true);
-pref("plugin.default_plugin_disabled", true);
 pref("dom.ipc.plugins.enabled", false);
+#else
+pref("plugin.disable", false);
+pref("dom.ipc.plugins.enabled", true);
+#endif
 
 // product URLs
 // The breakpad report server to link to in about:crashes
@@ -445,7 +449,9 @@ pref("browser.search.param.yahoo-fr-ja", "mozff");
 pref("app.update.timer", 60000); // milliseconds (1 min)
 
 #ifdef MOZ_UPDATER
-pref("app.update.auto", true);
+pref("app.update.enabled", true);
+pref("app.update.timerFirstInterval", 20000); // milliseconds
+pref("app.update.auto", false);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 pref("app.update.mode", 1);
 pref("app.update.silent", false);
@@ -455,10 +461,10 @@ pref("app.update.promptWaitTime", 43200);
 pref("app.update.idletime", 60);
 pref("app.update.showInstalledUI", false);
 pref("app.update.incompatible.mode", 0);
+pref("app.update.download.backgroundInterval", 0);
 
 #ifdef MOZ_OFFICIAL_BRANDING
 pref("app.update.interval", 86400);
-pref("app.update.download.backgroundInterval", 600);
 pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
 pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
 #else

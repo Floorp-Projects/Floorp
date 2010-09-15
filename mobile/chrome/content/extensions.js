@@ -314,7 +314,8 @@ var ExtensionsView = {
         listitem.setAttribute("opType", opType);
         listitem.setAttribute("updateable", updateable);
         listitem.setAttribute("isReadonly", !uninstallable);
-        listitem.setAttribute("blockedStatus", blocked);
+        if (blocked)
+          listitem.setAttribute("blockedStatus", blocked);
         listitem.addon = addon;
         self._list.insertBefore(listitem, self._repoItem);
       }
@@ -538,7 +539,8 @@ var ExtensionsView = {
       listitem.install = addon.install;
       listitem.setAttribute("sourceURL", addon.install.sourceURI.spec);
       if (!aIsRecommended)
-        listitem.setAttribute("rating", addon.rating);
+        listitem.setAttribute("rating", addon.averageRating);
+
       let item = this._list.appendChild(listitem);
 
       if (aSelectFirstResult && !foundItem) {

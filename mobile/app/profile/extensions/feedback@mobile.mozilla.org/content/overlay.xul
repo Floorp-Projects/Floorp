@@ -52,7 +52,7 @@
   </box>
 
   <deck id="panel-items">
-    <vbox id="feedback-container" flex="1">
+    <vbox id="feedback-container" flex="1" hidden="true">
       <hbox id="feedback-header" class="panel-header">
         <label value="&feedbackHeader.label;" flex="1"/>
       </hbox>
@@ -60,8 +60,8 @@
         <richlistbox id="feedback-list" flex="1" onselect="this.ensureSelectedElementIsVisible()">
           <settings id="feedback-communicate" label="&feedback.communicate.title;">
             <setting title="&feedback.feedback.title;" type="control">
-              <button id="feedback-feedback-happy" class="button-dark" oncommand="BrowserUI.newTab('http://m.input.mozilla.com/en-US/happy');"/>
-              <button id="feedback-feedback-sad" class="button-dark" oncommand="BrowserUI.newTab('http://m.input.mozilla.com/en-US/sad');"/>
+              <button id="feedback-feedback-happy" class="button-dark" oncommand="Feedback.openFeedback('http://m.input.mozilla.com/en-US/happy');"/>
+              <button id="feedback-feedback-sad" class="button-dark" oncommand="Feedback.openFeedback('http://m.input.mozilla.com/en-US/sad');"/>
             </setting>
           </settings>
           <settings id="feedback-information" label="&feedback.information.title;">

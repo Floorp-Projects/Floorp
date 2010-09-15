@@ -39,6 +39,29 @@ var Feedback = {
   init: function(aEvent) {
     let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
     document.getElementById("feedback-about").setAttribute("desc", appInfo.version);
+
+    // A simple frame script to fill in the referrer page
+    messageManager.loadFrameScript("data:,addMessageListener('Feedback:InitPage', function(m) { content.document.getElementById('id_url').value = m.json.referrer; });", true);
+
+    // Try to delay the widget initialization during startup
+    messageManager.addMessageListener("DOMContentLoaded", function() {
+      // We only want to delay one time
+      messageManager.removeMessageListener("DOMContentLoaded", arguments.callee, true);
+
+      // We unhide the panelUI so the XBL and settings can initialize
+      document.getElementById("feedback-container").hidden = false;
+    });
+  },
+
+  openFeedback: function(aURL) {
+    let currentURL = Browser.selectedBrowser.currentURI.spec;
+    let newTab = BrowserUI.newTab(aURL);
+
+    // Tell the feedback page to fill in the referrer URL
+    newTab.browser.messageManager.addMessageListener("DOMContentLoaded", function() {
+      newTab.browser.messageManager.removeMessageListener("DOMContentLoaded", arguments.callee, true);
+      newTab.browser.messageManager.sendAsyncMessage("Feedback:InitPage", { referrer: currentURL });
+    });
   },
 
   openReadme: function() {
