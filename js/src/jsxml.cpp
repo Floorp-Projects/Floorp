@@ -4145,7 +4145,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (!nameqn)
             goto bad;
         if (!JSID_IS_VOID(funid)) {
-            ok = js_SetProperty(cx, obj, funid, Valueify(vp));
+            ok = js_SetProperty(cx, obj, funid, Valueify(vp), false);
             goto out;
         }
         nameobj = nameqn;
@@ -4729,7 +4729,7 @@ xml_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-xml_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+xml_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     return PutProperty(cx, obj, id, Jsvalify(vp));
 }
@@ -4761,7 +4761,7 @@ xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
-xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
+xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     JSXML *xml;
     jsval idval;
@@ -4775,7 +4775,7 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
         if (xml->xml_class != JSXML_CLASS_LIST) {
             /* See NOTE in spec: this variation is reserved for future use. */
             ReportBadXMLName(cx, IdToValue(id));
-            return JS_FALSE;
+            return false;
         }
 
         /* ECMA-357 9.2.1.3. */
@@ -4783,9 +4783,9 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     } else {
         nameqn = ToXMLName(cx, idval, &funid);
         if (!nameqn)
-            return JS_FALSE;
+            return false;
         if (!JSID_IS_VOID(funid))
-            return js_DeleteProperty(cx, obj, funid, rval);
+            return js_DeleteProperty(cx, obj, funid, rval, false);
 
         DeleteNamedProperty(cx, xml, nameqn,
                             nameqn->getClass() == &js_AttributeNameClass);
@@ -4798,11 +4798,11 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
      * property's getter or setter. But now it's time to remove any such
      * property, to purge the property cache and remove the scope entry.
      */
-    if (!obj->nativeEmpty() && !js_DeleteProperty(cx, obj, id, rval))
-        return JS_FALSE;
+    if (!obj->nativeEmpty() && !js_DeleteProperty(cx, obj, id, rval, false))
+        return false;
 
     rval->setBoolean(true);
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -5738,7 +5738,7 @@ NamespacesToJSArray(JSContext *cx, JSXMLArray *array, jsval *rval)
         if (!ns)
             continue;
         tvr.set(ObjectValue(*ns));
-        if (!arrayobj->setProperty(cx, INT_TO_JSID(i), tvr.addr()))
+        if (!arrayobj->setProperty(cx, INT_TO_JSID(i), tvr.addr(), false))
             return false;
     }
     return true;

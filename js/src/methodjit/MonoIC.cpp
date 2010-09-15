@@ -131,8 +131,12 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetGlobalNameSlow(VMFrame &f, uint32 index)
 {
-    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
-    stubs::SetGlobalName(f, atom);
+    JSScript *script = f.fp()->script();
+    JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
+    if (script->strictModeCode)
+        stubs::SetGlobalName<true>(f, atom);
+    else
+        stubs::SetGlobalName<false>(f, atom);
 }
 
 static void
@@ -146,11 +150,12 @@ PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
 static VoidStubAtom
 GetStubForSetGlobalName(VMFrame &f)
 {
+    JSScript *script = f.fp()->script();
     // The property cache doesn't like inc ops, so we use a simpler
     // stub for that case.
     return js_CodeSpec[*f.regs.pc].format & (JOF_INC | JOF_DEC)
-         ? stubs::SetGlobalNameDumb
-         : stubs::SetGlobalName;
+         ? STRICT_VARIANT(stubs::SetGlobalNameDumb)
+         : STRICT_VARIANT(stubs::SetGlobalName);
 }
 
 void JS_FASTCALL

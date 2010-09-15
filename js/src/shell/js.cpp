@@ -2787,7 +2787,7 @@ split_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         /* Make sure to define this property on the inner object. */
         if (!JS_ValueToId(cx, *vp, &asId))
             return JS_FALSE;
-        return cpx->inner->deleteProperty(cx, asId, Valueify(vp));
+        return cpx->inner->deleteProperty(cx, asId, Valueify(vp), true);
     }
     return JS_TRUE;
 }

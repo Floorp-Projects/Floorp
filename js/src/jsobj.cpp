@@ -2843,9 +2843,9 @@ with_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return obj->getProto()->setProperty(cx, id, vp);
+    return obj->getProto()->setProperty(cx, id, vp, strict);
 }
 
 static JSBool
@@ -2861,9 +2861,9 @@ with_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
-with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
+with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
-    return obj->getProto()->deleteProperty(cx, id, rval);
+    return obj->getProto()->deleteProperty(cx, id, rval, strict);
 }
 
 static JSBool
@@ -3484,7 +3484,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 bad:
     if (named) {
         Value rval;
-        obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval);
+        obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, false);
     }
     return NULL;
 }
@@ -4917,6 +4917,14 @@ ReportReadOnly(JSContext* cx, jsid id, uintN flags)
                                     NULL, NULL);
 }
 
+JSBool
+ReportNotConfigurable(JSContext* cx, jsid id, uintN flags)
+{
+    return js_ReportValueErrorFlags(cx, flags, JSMSG_CANT_DELETE,
+                                    JSDVG_IGNORE_STACK, IdToValue(id), NULL,
+                                    NULL, NULL);
+}
+
 }
 
 /*
@@ -4926,7 +4934,7 @@ ReportReadOnly(JSContext* cx, jsid id, uintN flags)
  */
 JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
-                     Value *vp)
+                     Value *vp, JSBool strict)
 {
     int protoIndex;
     JSObject *pobj;
@@ -5005,7 +5013,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                     TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, shape);
                 }
 
-                /* Warn in strict mode, otherwise do nothing. */
+                /* Error in strict mode code, warn with strict option, otherwise do nothing. */
+                if (strict)
+                    return ReportReadOnly(cx, id, 0);
                 if (JS_HAS_STRICT_OPTION(cx))
                     return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                 return JS_TRUE;
@@ -5164,9 +5174,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 }
 
 JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+js_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return js_SetPropertyHelper(cx, obj, id, 0, vp);
+    return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
 }
 
 JSBool
@@ -5212,7 +5222,7 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 JSBool
-js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
+js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     JSObject *proto;
     JSProperty *prop;
@@ -5225,7 +5235,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     id = js_CheckForStringIndex(id);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
-        return JS_FALSE;
+        return false;
     if (!prop || proto != obj) {
         /*
          * If the property was found in a native prototype, check whether it's
@@ -5233,15 +5243,16 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
          * in all delegating objects, matching ECMA semantics without bloating
          * each delegating object.
          */
-        if (prop) {
-            if (proto->isNative()) {
-                shape = (Shape *)prop;
-                if (shape->isSharedPermanent())
-                    rval->setBoolean(false);
+        if (prop && proto->isNative()) {
+            shape = (Shape *)prop;
+            if (shape->isSharedPermanent()) {
                 JS_UNLOCK_OBJ(cx, proto);
+                if (strict)
+                    return ReportNotConfigurable(cx, id, 0);
+                rval->setBoolean(false);
+                return true;
             }
-            if (rval->isBoolean() && rval->toBoolean() == false)
-                return JS_TRUE;
+            JS_UNLOCK_OBJ(cx, proto);
         }
 
         /*
@@ -5255,14 +5266,16 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     shape = (Shape *)prop;
     if (!shape->configurable()) {
         JS_UNLOCK_OBJ(cx, obj);
+        if (strict)
+            return ReportNotConfigurable(cx, id, 0);
         rval->setBoolean(false);
-        return JS_TRUE;
+        return true;
     }
 
     /* XXXbe called with obj locked */
     if (!CallJSPropertyOp(cx, obj->getClass()->delProperty, obj, SHAPE_USERID(shape), rval)) {
         JS_UNLOCK_OBJ(cx, obj);
-        return JS_FALSE;
+        return false;
     }
 
     if (obj->containsSlot(shape->slot)) {

@@ -53,7 +53,7 @@
  *    getDenseArrayCapacity().
  *
  * In dense mode, holes in the array are represented by (JS_ARRAY_HOLE) invalid
- * values.  The final two slot in fslots are unused.
+ * values.  The final slot in fslots is unused.
  *
  * NB: the capacity and length of a dense array are entirely unrelated!  The
  * length may be greater than, less than, or equal to the capacity.  See
@@ -516,7 +516,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
     JS_ASSERT(!JSID_IS_VOID(idr.id()));
 
     Value tmp = v;
-    return obj->setProperty(cx, idr.id(), &tmp);
+    return obj->setProperty(cx, idr.id(), &tmp, true);
 }
 
 #ifdef JS_TRACER
@@ -537,7 +537,7 @@ JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT,
 #endif
 
 static JSBool
-DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
+DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool strict)
 {
     JS_ASSERT(index >= 0);
     if (obj->isDenseArray()) {
@@ -559,7 +559,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
         return JS_TRUE;
 
     Value junk;
-    return obj->deleteProperty(cx, idr.id(), &junk);
+    return obj->deleteProperty(cx, idr.id(), &junk, strict);
 }
 
 /*
@@ -572,7 +572,7 @@ SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index,
 {
     if (hole) {
         JS_ASSERT(v.isUndefined());
-        return DeleteArrayElement(cx, obj, index);
+        return DeleteArrayElement(cx, obj, index, true);
     }
     return SetArrayElement(cx, obj, index, v);
 }
@@ -585,7 +585,8 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
 
     v.setNumber(length);
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    return obj->setProperty(cx, id, &v);
+    /* We don't support read-only array length yet. */
+    return obj->setProperty(cx, id, &v, false);
 }
 
 JSBool
@@ -623,7 +624,7 @@ array_length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     jsuint newlen, oldlen, gap, index;
     Value junk;
@@ -669,8 +670,17 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     } else if (oldlen - newlen < (1 << 24)) {
         do {
             --oldlen;
-            if (!JS_CHECK_OPERATION_LIMIT(cx) || !DeleteArrayElement(cx, obj, oldlen))
+            if (!JS_CHECK_OPERATION_LIMIT(cx)) {
+                obj->setArrayLength(oldlen + 1);
                 return false;
+            }
+            if (!DeleteArrayElement(cx, obj, oldlen, true)) {
+                obj->setArrayLength(oldlen + 1);
+                if (strict)
+                    return false;
+                JS_ClearPendingException(cx);
+                return true;
+            }
         } while (oldlen != newlen);
         obj->setArrayLength(newlen);
     } else {
@@ -695,7 +705,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             if (JSID_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
-                !obj->deleteProperty(cx, id, &junk)) {
+                !obj->deleteProperty(cx, id, &junk, false)) {
                 return false;
             }
         }
@@ -827,30 +837,30 @@ array_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     uint32 i;
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
-        return array_length_setter(cx, obj, id, vp);
+        return array_length_setter(cx, obj, id, vp, strict);
 
     if (!obj->isDenseArray())
-        return js_SetProperty(cx, obj, id, vp);
+        return js_SetProperty(cx, obj, id, vp, strict);
 
     if (!js_IdIsIndex(id, &i) || js_PrototypeHasIndexedProperties(cx, obj) ||
         INDEX_TOO_SPARSE(obj, i)) {
         if (!obj->makeDenseArraySlow(cx))
-            return JS_FALSE;
-        return js_SetProperty(cx, obj, id, vp);
+            return false;
+        return js_SetProperty(cx, obj, id, vp, strict);
     }
 
     if (!obj->ensureDenseArrayElements(cx, i + 1))
-        return JS_FALSE;
+        return false;
 
     if (i >= obj->getArrayLength())
         obj->setArrayLength(i + 1);
     obj->setDenseArrayElement(i, *vp);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -921,7 +931,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     }
 
     Value tmp = *value;
-    return array_setProperty(cx, obj, id, &tmp);
+    return array_setProperty(cx, obj, id, &tmp, false);
 }
 
 static JSBool
@@ -941,12 +951,12 @@ array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
-array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
+array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     uint32 i;
 
     if (!obj->isDenseArray())
-        return js_DeleteProperty(cx, obj, id, rval);
+        return js_DeleteProperty(cx, obj, id, rval, strict);
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         rval->setBoolean(false);
@@ -1469,7 +1479,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     do {
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
-            !obj->setProperty(cx, idr.id(), tvr.addr())) {
+            !obj->setProperty(cx, idr.id(), tvr.addr(), true)) {
             return JS_FALSE;
         }
         idval.getDoubleRef() += 1;
@@ -2030,8 +2040,8 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
 
     /* Re-create any holes that sorted to the end of the array. */
     while (len > newlen) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx) || !DeleteArrayElement(cx, obj, --len))
-            return JS_FALSE;
+        if (!JS_CHECK_OPERATION_LIMIT(cx) || !DeleteArrayElement(cx, obj, --len, true))
+            return false;
     }
     vp->setObject(*obj);
     return true;
@@ -2142,7 +2152,7 @@ array_pop_slowly(JSContext *cx, JSObject* obj, Value *vp)
         /* Get the to-be-deleted property's value into vp. */
         if (!GetArrayElement(cx, obj, index, &hole, vp))
             return JS_FALSE;
-        if (!hole && !DeleteArrayElement(cx, obj, index))
+        if (!hole && !DeleteArrayElement(cx, obj, index, true))
             return JS_FALSE;
     }
     return js_SetLengthProperty(cx, obj, index);
@@ -2162,7 +2172,7 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
     index--;
     if (!GetArrayElement(cx, obj, index, &hole, vp))
         return JS_FALSE;
-    if (!hole && !DeleteArrayElement(cx, obj, index))
+    if (!hole && !DeleteArrayElement(cx, obj, index, true))
         return JS_FALSE;
     obj->setArrayLength(index);
     return JS_TRUE;
@@ -2221,7 +2231,7 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Delete the only or last element when it exists. */
-        if (!hole && !DeleteArrayElement(cx, obj, length))
+        if (!hole && !DeleteArrayElement(cx, obj, length, true))
             return JS_FALSE;
     }
     return js_SetLengthProperty(cx, obj, length);
