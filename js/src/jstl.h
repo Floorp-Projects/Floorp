@@ -40,17 +40,17 @@
 #ifndef jstl_h_
 #define jstl_h_
 
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JS_UNDEFD_MOZALLOC_WRAPPERS
+/* The "anti-header" */
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 #include "jsbit.h"
 
 #include <new>
 #include <string.h>
-
-/* Gross special case for Gecko, which defines malloc/calloc/free. */
-#ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JSSTL_UNDEFD_MOZALLOC_WRAPPERS
-/* The "anti-header" */
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
 
 namespace js {
 
@@ -456,9 +456,5 @@ Max(T t1, T t2)
 }
 
 } /* namespace js */
-
-#ifdef JSSTL_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_macro_wrappers.h"
-#endif
 
 #endif /* jstl_h_ */
