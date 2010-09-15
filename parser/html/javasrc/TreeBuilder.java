@@ -893,7 +893,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      */
                                     start = i + 1;
                                     continue;
-                                case FRAMESET_OK:
                                 case IN_HEAD:
                                 case IN_HEAD_NOSCRIPT:
                                 case AFTER_HEAD:
@@ -904,10 +903,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Append the character to the current node.
                                      */
                                     continue;
+                                case FRAMESET_OK:
                                 case IN_BODY:
                                 case IN_CELL:
                                 case IN_CAPTION:
-                                    // XXX is this dead code?
                                     if (start < i) {
                                         accumulateCharacters(buf, start, i
                                                 - start);

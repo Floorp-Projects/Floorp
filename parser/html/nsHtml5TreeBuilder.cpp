@@ -227,7 +227,6 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
                 start = i + 1;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_FRAMESET_OK:
               case NS_HTML5TREE_BUILDER_IN_HEAD:
               case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT:
               case NS_HTML5TREE_BUILDER_AFTER_HEAD:
@@ -236,6 +235,7 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
               case NS_HTML5TREE_BUILDER_AFTER_FRAMESET: {
                 continue;
               }
+              case NS_HTML5TREE_BUILDER_FRAMESET_OK:
               case NS_HTML5TREE_BUILDER_IN_BODY:
               case NS_HTML5TREE_BUILDER_IN_CELL:
               case NS_HTML5TREE_BUILDER_IN_CAPTION: {
