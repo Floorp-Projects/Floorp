@@ -168,8 +168,8 @@ public:
   PRBool Is3DEnabled() { return mIs3DEnabled; } 
 
   static void OnDeviceManagerDestroy(DeviceManagerD3D9 *aDeviceManager) {
-    if(aDeviceManager == mDeviceManager)
-      mDeviceManager = nsnull;
+    if(aDeviceManager == mDefaultDeviceManager)
+      mDefaultDeviceManager = nsnull;
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -177,8 +177,11 @@ public:
 #endif // MOZ_LAYERS_HAVE_LOG
 
 private:
-  /* Device manager instance */
-  static DeviceManagerD3D9 *mDeviceManager;
+  /* Default device manager instance */
+  static DeviceManagerD3D9 *mDefaultDeviceManager;
+
+  /* Device manager instance for this layer manager */
+  nsRefPtr<DeviceManagerD3D9> mDeviceManager;
 
   /* Swap chain associated with this layer manager */
   nsRefPtr<SwapChainD3D9> mSwapChain;
