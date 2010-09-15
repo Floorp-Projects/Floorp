@@ -68,6 +68,11 @@ public:
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mCset.push_back(aEdit);
   }
+  void AddPaint(const Edit& aPaint)
+  {
+    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
+    mPaints.push_back(aPaint);
+  }
   void AddMutant(ShadowableLayer* aLayer)
   {
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
@@ -86,15 +91,19 @@ public:
   void End()
   {
     mCset.clear();
+    mPaints.clear();
     mDyingBuffers.Clear();
     mMutants.clear();
     mOpen = PR_FALSE;
   }
 
-  PRBool Empty() const { return mCset.empty() && mMutants.empty(); }
+  PRBool Empty() const {
+    return mCset.empty() && mPaints.empty() && mMutants.empty();
+  }
   PRBool Finished() const { return !mOpen && Empty(); }
 
   EditVector mCset;
+  EditVector mPaints;
   BufferArray mDyingBuffers;
   ShadowableLayerSet mMutants;
 
@@ -258,26 +267,26 @@ ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
                                           const nsIntPoint& aBufferRotation,
                                           const SurfaceDescriptor& aNewFrontBuffer)
 {
-  mTxn->AddEdit(OpPaintThebesBuffer(NULL, Shadow(aThebes),
-                                    ThebesBuffer(aNewFrontBuffer,
-                                                 aBufferRect,
-                                                 aBufferRotation),
-                                    aUpdatedRegion));
+  mTxn->AddPaint(OpPaintThebesBuffer(NULL, Shadow(aThebes),
+                                     ThebesBuffer(aNewFrontBuffer,
+                                                  aBufferRect,
+                                                  aBufferRotation),
+                                     aUpdatedRegion));
 }
 void
 ShadowLayerForwarder::PaintedImage(ShadowableLayer* aImage,
                                    gfxSharedImageSurface* aNewFrontSurface)
 {
-  mTxn->AddEdit(OpPaintImage(NULL, Shadow(aImage),
-                             aNewFrontSurface->GetShmem()));
+  mTxn->AddPaint(OpPaintImage(NULL, Shadow(aImage),
+                              aNewFrontSurface->GetShmem()));
 }
 void
 ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
                                     gfxSharedImageSurface* aNewFrontSurface)
 {
-  mTxn->AddEdit(OpPaintCanvas(NULL, Shadow(aCanvas),
-                              nsIntRect(),
-                              aNewFrontSurface->GetShmem()));
+  mTxn->AddPaint(OpPaintCanvas(NULL, Shadow(aCanvas),
+                               nsIntRect(),
+                               aNewFrontSurface->GetShmem()));
 }
 
 PRBool
@@ -301,6 +310,10 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
+  // We purposely add attribute-change ops to the final changeset
+  // before we add paint ops.  This allows layers to record the
+  // attribute changes before new pixels arrive, which can be useful
+  // for setting up back/front buffers.
   for (ShadowableLayerSet::const_iterator it = mTxn->mMutants.begin();
        it != mTxn->mMutants.end(); ++it) {
     ShadowableLayer* shadow = *it;
@@ -323,9 +336,14 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
   }
 
   nsAutoTArray<Edit, 10> cset;
-  NS_ABORT_IF_FALSE(mTxn->mCset.size() > 0, "should have bailed by now");
-  cset.SetCapacity(mTxn->mCset.size());
+  size_t nCsets = mTxn->mCset.size() + mTxn->mPaints.size();
+  NS_ABORT_IF_FALSE(nCsets > 0, "should have bailed by now");
+
+  cset.SetCapacity(nCsets);
   cset.AppendElements(&mTxn->mCset.front(), mTxn->mCset.size());
+  // Paints after non-paint ops, including attribute changes.  See
+  // above.
+  cset.AppendElements(&mTxn->mPaints.front(), mTxn->mPaints.size());
 
   MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
   PlatformSyncBeforeUpdate();
