@@ -152,6 +152,7 @@
 
 #include "nsCSSParser.h"
 #include "nsTPtrArray.h"
+#include "prprf.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGFeatures.h"
