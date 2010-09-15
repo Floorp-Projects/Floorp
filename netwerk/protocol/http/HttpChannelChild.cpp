@@ -139,7 +139,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
   NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
@@ -988,29 +987,6 @@ HttpChannelChild::IsFromCache(PRBool *value)
 
   *value = mIsFromCache;
   return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIEncodedChannel
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::GetContentEncodings(nsIUTF8StringEnumerator **result)
-{
-  DROP_DEAD();
-}
-
-/* attribute boolean applyConversion; */
-NS_IMETHODIMP
-HttpChannelChild::GetApplyConversion(PRBool *aApplyConversion)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::SetApplyConversion(PRBool aApplyConversion)
-{
-  DROP_DEAD();
 }
 
 //-----------------------------------------------------------------------------
