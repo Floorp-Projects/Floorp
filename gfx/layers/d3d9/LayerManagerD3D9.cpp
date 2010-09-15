@@ -52,14 +52,14 @@
 namespace mozilla {
 namespace layers {
 
-DeviceManagerD3D9 *LayerManagerD3D9::mDeviceManager = nsnull;
+DeviceManagerD3D9 *LayerManagerD3D9::mDefaultDeviceManager = nsnull;
 
 LayerManagerD3D9::LayerManagerD3D9(nsIWidget *aWidget)
   : mIs3DEnabled(PR_FALSE)
 {
-    mWidget = aWidget;
-    mCurrentCallbackInfo.Callback = NULL;
-    mCurrentCallbackInfo.CallbackData = NULL;
+  mWidget = aWidget;
+  mCurrentCallbackInfo.Callback = NULL;
+  mCurrentCallbackInfo.CallbackData = NULL;
 }
 
 LayerManagerD3D9::~LayerManagerD3D9()
@@ -74,17 +74,17 @@ LayerManagerD3D9::Initialize()
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID); 
   prefs->GetBoolPref("gfx.3d_video.enabled", &mIs3DEnabled); 
 
-  if (!mDeviceManager) {
+  if (!mDefaultDeviceManager) {
     mDeviceManager = new DeviceManagerD3D9;
-    mDeviceManager->AddRef();
 
     if (!mDeviceManager->Init()) {
-      mDeviceManager->Release();
       mDeviceManager = nsnull;
       return PR_FALSE;
     }
+
+    mDefaultDeviceManager = mDeviceManager;
   } else {
-    mDeviceManager->AddRef();
+    mDeviceManager = mDefaultDeviceManager;
   }
 
   mSwapChain = mDeviceManager->
@@ -114,10 +114,7 @@ LayerManagerD3D9::Destroy()
      * device manager
      */
     mSwapChain = nsnull;
-
-    if (mDeviceManager && mDeviceManager->Release() == 0) {
-      mDeviceManager = nsnull;
-    }
+    mDeviceManager = nsnull;
   }
   LayerManager::Destroy();
 }

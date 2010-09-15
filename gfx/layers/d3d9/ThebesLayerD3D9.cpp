@@ -57,7 +57,7 @@ ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
 
 ThebesLayerD3D9::~ThebesLayerD3D9()
 {
-  if (mD3DManager && mD3DManager->deviceManager()) {
+  if (mD3DManager) {
     mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
   }
 }
