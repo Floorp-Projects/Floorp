@@ -75,6 +75,17 @@ public:
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLFieldSetElement,
+                                           nsGenericHTMLFormElement)
+private:
+
+  // This function is used to generate the nsContentList (listed form elements).
+  static PRBool MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
+                                    nsIAtom* aAtom, void* aData);
+
+  // listed form controls elements.
+  nsRefPtr<nsContentList> mElements;
 };
 
 // construction, destruction
@@ -95,6 +106,16 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 }
 
 // nsISupports
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLFieldSetElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElements)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLFieldSetElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFieldSetElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mElements, nsIDOMNodeList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
@@ -130,6 +151,27 @@ NS_IMETHODIMP
 nsHTMLFieldSetElement::GetType(nsAString& aType)
 {
   aType.AssignLiteral("fieldset");
+  return NS_OK;
+}
+
+/* static */
+PRBool
+nsHTMLFieldSetElement::MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
+                                           nsIAtom* aAtom, void* aData)
+{
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aContent);
+  return formControl && formControl->GetType() != NS_FORM_LABEL;
+}
+
+NS_IMETHODIMP
+nsHTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
+{
+  if (!mElements) {
+    mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull, PR_TRUE);
+  }
+
+  NS_ADDREF(*aElements = mElements);
+
   return NS_OK;
 }
 
