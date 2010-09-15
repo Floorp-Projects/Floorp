@@ -798,12 +798,23 @@ pref("network.IDN.whitelist.vn", true);
 // IDN ccTLDs
 // ae, UAE, .<Emarat>
 pref("network.IDN.whitelist.xn--mgbaam7a8h", true); 
-// sa, Saudi Arabia, .<al-Saudiah>
-pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
-// ru, Russian Federation, .<RF>
-pref("network.IDN.whitelist.xn--p1ai", true);
+// cn, China, .<China> with variants
+pref("network.IDN.whitelist.xn--fiqz9s", true); // Traditional
+pref("network.IDN.whitelist.xn--fiqs8s", true); // Simplified
+// hk, Hong Kong, .<Hong Kong>
+pref("network.IDN.whitelist.xn--j6w193g", true);
 // jo, Jordan, .<Al-Ordon>
 pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+// ru, Russian Federation, .<RF>
+pref("network.IDN.whitelist.xn--p1ai", true);
+// sa, Saudi Arabia, .<al-Saudiah> with variants
+pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
+pref("network.IDN.whitelist.xn--mgberp4a5d4a87g", true);
+pref("network.IDN.whitelist.xn--mgbqly7c0a67fbc", true);
+pref("network.IDN.whitelist.xn--mgbqly7cvafr", true);
+// tw, Taiwan, <.Taiwan> with variants
+pref("network.IDN.whitelist.xn--kpry57d", true);  // Traditional
+pref("network.IDN.whitelist.xn--kprw13d", true);  // Simplified
 
 // gTLDs
 pref("network.IDN.whitelist.biz", true);

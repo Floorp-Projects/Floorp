@@ -2390,6 +2390,9 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
             delete widget;
             return nsnull;
         }
+        if (!IsAcceleratedQView(newView) && GetShouldAccelerate()) {
+            newView->setViewport(new QGLWidget());
+        }
 
         // Enable gestures:
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
@@ -2428,28 +2431,6 @@ nsWindow::IsAcceleratedQView(QGraphicsView *view)
         return (type == QPaintEngine::OpenGL || type == QPaintEngine::OpenGL2);
     }
     return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsWindow::SetAcceleratedRendering(PRBool aEnabled)
-{
-    if (mUseAcceleratedRendering == aEnabled)
-        return NS_OK;
-
-    mUseAcceleratedRendering = aEnabled;
-    mLayerManager = NULL;
-
-    QGraphicsView* view = static_cast<QGraphicsView*>(GetViewWidget());
-    if (view) {
-        if (aEnabled && !IsAcceleratedQView(view))
-            view->setViewport(new QGLWidget());
-        if (!aEnabled && IsAcceleratedQView(view))
-            view->setViewport(new QWidget());
-        view->viewport()->setAttribute(Qt::WA_PaintOnScreen, aEnabled);
-        view->viewport()->setAttribute(Qt::WA_NoSystemBackground, aEnabled);
-    }
-
-    return NS_OK;
 }
 
 // return the gfxASurface for rendering to this widget

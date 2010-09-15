@@ -52,9 +52,29 @@ using NPRect;
 using NPNURLVariable;
 using NPCoordinateSpace;
 using mozilla::plugins::NativeWindowHandle;
+using mozilla::gfxSurfaceType;
+using gfxIntSize;
+using mozilla::null_t;
 
 namespace mozilla {
 namespace plugins {
+
+struct SurfaceDescriptorX11 {
+  int XID;
+  int xrenderPictID;
+  gfxIntSize size;
+};
+
+union SurfaceDescriptor {
+  Shmem;
+  SurfaceDescriptorX11;
+  // Descriptor can be null here in case
+  // 1) of first Show call (prevSurface is null)
+  // 2) when child is going to destroy
+  //    and it just want to grab prevSurface
+  //     back without giving new surface
+  null_t;
+};
 
 rpc protocol PPluginInstance
 {
@@ -91,6 +111,20 @@ child:
     returns (int16_t handled);
   // this is only used on windows to forward WM_WINDOWPOSCHANGE
   async WindowPosChanged(NPRemoteEvent event);
+
+  // ********************** Async plugins rendering
+  // see https://wiki.mozilla.org/Gecko:AsyncPluginPainting
+  // **********************
+
+  // Plugin parent notify child that plugin frame
+  // has been painted to the screen
+  async PaintFinished();
+
+  // Async version of SetWindow call
+  // @param surfaceType - gfxASurface::gfxSurfaceType
+  //        plugin child must create offscreen buffer
+  //        with type equals to surfaceType
+  async AsyncSetWindow(gfxSurfaceType surfaceType, NPRemoteWindow window);
 
   rpc NPP_Destroy()
     returns (NPError rv);
@@ -133,6 +167,16 @@ parent:
     returns (NPError result);
 
   async NPN_InvalidateRect(NPRect rect);
+
+  // Give |newSurface|, containing this instance's updated pixels, to
+  // the browser for compositing.  Get back |prevSurface|, containing
+  // old pixels, to be recycled
+  // @param rect - actually updated rectangle, comparing to prevSurface content
+  //               could be used for partial render of layer to topLevel context
+  // @param newSurface - remotable surface
+  // @param prevSurface - return surface for recycling
+  sync Show(NPRect updatedRect, SurfaceDescriptor newSurface)
+    returns (SurfaceDescriptor prevSurface);
 
   rpc NPN_PushPopupsEnabledState(bool aState);
 
