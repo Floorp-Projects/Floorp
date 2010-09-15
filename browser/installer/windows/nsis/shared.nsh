@@ -85,7 +85,7 @@
   ${SetUninstallKeys}
 
   ; Win7 taskbar and start menu link maintenance
-  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}"
+  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $0
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
