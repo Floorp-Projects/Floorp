@@ -104,6 +104,9 @@ function xmlAttr(value) Pattern({ type: "XMLAttribute", value: value })
 function xmlText(text) Pattern({ type: "XMLText", text: text })
 function xmlPI(target, contents) Pattern({ type: "XMLProcessingInstruction", target: target, contents: contents })
 function xmlDefNS(ns) Pattern({ type: "XMLDefaultDeclaration", namespace: ns })
+function xmlName(name) Pattern({ type: "XMLName", contents: name })
+function xmlComment(contents) Pattern({ type: "XMLComment", contents: contents })
+function xmlCdata(cdata) Pattern({ type: "XMLCdata", contents: cdata })
 
 function assertBlockStmt(src, patt) {
     blockPatt(patt).assert(Reflect.parse(blockSrc(src)));
@@ -850,7 +853,26 @@ assertStmt("for (x.* in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), 
 assertStmt("for (x[*] in foo);", emptyForInPatt(memExpr(ident("x"), xmlAnyName), ident("foo")));
 
 
-// NOTE: We appear to be unable to test XMLNAME, XMLCDATA, and XMLCOMMENT.
+// I'm not quite sure why, but putting XML in the callee of a call expression is
+// the only way I've found to be able to preserve TOK_XMLNAME, TOK_XMLSPACE,
+// TOK_XMLCDATA, and TOK_XMLCOMMENT parse nodes.
+
+assertExpr("(<x> </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
+                                            xmlText(" "),
+                                            xmlEndTag([xmlName("x")])]),
+                                    []));
+assertExpr("(<x>    </x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
+                                               xmlText("    "),
+                                               xmlEndTag([xmlName("x")])]),
+                                       []));
+assertExpr("(<x><![CDATA[hello, world]]></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
+                                                                   xmlCdata("hello, world"),
+                                                                   xmlEndTag([xmlName("x")])]),
+                                                           []));
+assertExpr("(<x><!-- hello, world --></x>)()", callExpr(xmlElt([xmlStartTag([xmlName("x")]),
+                                                                xmlComment(" hello, world "),
+                                                                xmlEndTag([xmlName("x")])]),
+                                                        []));
 
 
 // Source location information

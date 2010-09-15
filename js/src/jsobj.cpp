@@ -6076,6 +6076,7 @@ JSObject::getCompartment(JSContext *cx)
 
     Class *clasp = obj->getClass();
     if (!(clasp->flags & JSCLASS_IS_GLOBAL)) {
+#if JS_HAS_XML_SUPPORT
         // The magic AnyName object is runtime-wide.
         if (clasp == &js_AnyNameClass)
             return cx->runtime->defaultCompartment;
@@ -6083,9 +6084,10 @@ JSObject::getCompartment(JSContext *cx)
         // The magic function namespace object is runtime-wide.
         if (clasp == &js_NamespaceClass &&
             obj->getNameURI() == ATOM_TO_JSVAL(cx->runtime->
-                                               atomState.lazy.functionNamespaceURIAtom)) {
+                                               atomState.functionNamespaceURIAtom)) {
             return cx->runtime->defaultCompartment;
         }
+#endif
 
         /*
          * Script objects and compile-time Function, Block, RegExp objects

@@ -628,6 +628,7 @@ FrameState::getLocal(uint32 slot)
 inline void
 FrameState::pinReg(RegisterID reg)
 {
+    JS_ASSERT(!freeRegs.hasReg(reg));
     JS_ASSERT(regstate[reg].fe);
     regstate[reg].save = regstate[reg].fe;
     regstate[reg].fe = NULL;
@@ -636,6 +637,7 @@ FrameState::pinReg(RegisterID reg)
 inline void
 FrameState::unpinReg(RegisterID reg)
 {
+    JS_ASSERT(!freeRegs.hasReg(reg));
     JS_ASSERT(!regstate[reg].fe);
     regstate[reg].fe = regstate[reg].save;
 }
