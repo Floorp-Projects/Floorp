@@ -5,6 +5,8 @@
 // flag behaviours that differ for certain elements
 //   allow-other-value - alternate values for the value property may be used
 //                       besides those in the list
+//   other-value-clears-selection - alternative values for the value property
+//                                  clears the selected item
 //   selection-required - an item must be selected in the list, unless there
 //                        aren't any to select
 //   activate-disabled-menuitem - disabled menuitems can be highlighted
@@ -15,7 +17,7 @@
 // The win:, mac: and gtk: or other prefixes may be used for platform specific behaviour
 var behaviours = {
   menu: "win:activate-disabled-menuitem activate-disabled-menuitem-mousemove select-keynav-wraps select-extended-keynav",
-  menulist: "allow-other-value",
+  menulist: "allow-other-value other-value-clears-selection",
   listbox: "select-extended-keynav",
   richlistbox: "select-extended-keynav",
   radiogroup: "select-keynav-wraps dont-select-disabled allow-other-value",
@@ -102,17 +104,22 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
   is(element.getItemAtIndex(2), null, testid + "getItemAtIndex - index 2 is null");
 
   // check if setting the value changes the selection
-  element.value = "first";
-  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 1", 2, firstitem, 0, "first");
-  element.value = "second";
-  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 2", 2, seconditem, 1, "second");
+  element.value = firstvalue;
+  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 1", 2, firstitem, 0, firstvalue);
+  element.value = secondvalue;
+  test_nsIDOMXULSelectControlElement_States(element, testid + "set value 2", 2, seconditem, 1, secondvalue);
   // setting the value attribute to one not in the list doesn't change the selection.
   // The value is only changed for elements which support having a value other than the
   // selection.
   element.value = "other";
   var allowOtherValue = behaviourContains(element.localName, "allow-other-value");
-  test_nsIDOMXULSelectControlElement_States(element, testid + "set value other", 2, seconditem, 1,
-                                            allowOtherValue ? "other" : "second");
+  var otherValueClearsSelection = behaviourContains(element.localName, "other-value-clears-selection");
+  test_nsIDOMXULSelectControlElement_States(element, testid + "set value other", 2,
+                                            otherValueClearsSelection ? null : seconditem,
+                                            otherValueClearsSelection ? -1 : 1,
+                                            allowOtherValue ? "other" : secondvalue);
+  if (allowOtherValue)
+    element.value = "";
 
   // 'removeItemAt' - check if removeItemAt removes the right item
   if (selectionRequired)
@@ -170,7 +177,8 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
     test_nsIDOMXULSelectControlElement_States(element, testid + "removeItemAt 6", 1, fourthitem, 0, fourthvalue);
 
   // 'insertItemAt' - check if insertItemAt inserts items at the right locations
-  var fifthitem = test_nsIDOMXULSelectControlElement_insertItemAt(element, 0, 0, testid, 5);
+  element.selectedIndex = 0;
+  test_nsIDOMXULSelectControlElement_insertItemAt(element, 0, 0, testid, 5);
   test_nsIDOMXULSelectControlElement_insertItemAt(element, 2, 2, testid, 6);
   test_nsIDOMXULSelectControlElement_insertItemAt(element, -1, 3, testid, 7);
   test_nsIDOMXULSelectControlElement_insertItemAt(element, 6, 4, testid, 8);
@@ -194,19 +202,24 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
 
 function test_nsIDOMXULSelectControlElement_init(element, testprefix)
 {
+  // editable menulists use the label as the value
+  var isEditable = (element.localName == "menulist" && element.editable);
+
   var id = element.id;
   element = document.getElementById(id + "-initwithvalue");
   if (element) {
     var seconditem = element.getItemAtIndex(1);
     test_nsIDOMXULSelectControlElement_States(element, testprefix + " value initialization",
-                                              3, seconditem, 1, seconditem.value);
+                                              3, seconditem, 1,
+                                              isEditable ? seconditem.label : seconditem.value);
   }
 
   element = document.getElementById(id + "-initwithselected");
   if (element) {
     var thirditem = element.getItemAtIndex(2);
     test_nsIDOMXULSelectControlElement_States(element, testprefix + " selected initialization",
-                                              3, thirditem, 2, thirditem.value);
+                                              3, thirditem, 2,
+                                              isEditable ? thirditem.label : thirditem.value);
   }
 }
 
@@ -240,7 +253,7 @@ function test_nsIDOMXULSelectControlElement_insertItemAt(element, index, expecte
   if (expectedSelIndex >= expectedindex)
     expectedSelIndex++;
 
-  test_nsIDOMXULSelectControlElement_States(element, testid + "insertItemAt " + expectedindex,
+  test_nsIDOMXULSelectControlElement_States(element, testid + "insertItemAt " + index,
                                            expectedCount, expectedSelItem,
                                            expectedSelIndex, expectedSelValue);
   return newitem;
