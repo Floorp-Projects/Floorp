@@ -430,14 +430,11 @@ void
 nsHtml5TreeBuilder::eof()
 {
   flushCharacters();
-  if (inForeign) {
-
-    while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
-      popOnEof();
-    }
-    inForeign = PR_FALSE;
-  }
   for (; ; ) {
+    if (inForeign) {
+
+      NS_HTML5_BREAK(eofloop);
+    }
     switch(mode) {
       case NS_HTML5TREE_BUILDER_INITIAL: {
         documentModeInternal(QUIRKS_MODE, nsnull, nsnull, PR_FALSE);
@@ -596,19 +593,23 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_PRE_OR_LISTING:
           case NS_HTML5TREE_BUILDER_TABLE: {
 
-            while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
+            while (!isSpecialParentInForeign(stack[currentPtr])) {
               pop();
             }
-            inForeign = PR_FALSE;
+            if (!hasForeignInScope()) {
+              inForeign = PR_FALSE;
+            }
             NS_HTML5_CONTINUE(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_FONT: {
             if (attributes->contains(nsHtml5AttributeName::ATTR_COLOR) || attributes->contains(nsHtml5AttributeName::ATTR_FACE) || attributes->contains(nsHtml5AttributeName::ATTR_SIZE)) {
 
-              while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
+              while (!isSpecialParentInForeign(stack[currentPtr])) {
                 pop();
               }
-              inForeign = PR_FALSE;
+              if (!hasForeignInScope()) {
+                inForeign = PR_FALSE;
+              }
               NS_HTML5_CONTINUE(starttagloop);
             }
           }
@@ -1795,6 +1796,20 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
   if (attributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
     delete attributes;
   }
+}
+
+PRBool 
+nsHtml5TreeBuilder::isSpecialParentInForeign(nsHtml5StackNode* stackNode)
+{
+  PRInt32 ns = stackNode->ns;
+  if (kNameSpaceID_XHTML == ns) {
+    return PR_TRUE;
+  }
+  if (ns == kNameSpaceID_SVG) {
+    return stackNode->group == NS_HTML5TREE_BUILDER_FOREIGNOBJECT_OR_DESC || stackNode->group == NS_HTML5TREE_BUILDER_TITLE;
+  }
+
+  return stackNode->group == NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT;
 }
 
 nsString* 
