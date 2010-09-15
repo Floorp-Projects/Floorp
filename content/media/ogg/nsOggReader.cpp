@@ -340,7 +340,7 @@ nsresult nsOggReader::ReadMetadata()
   return NS_OK;
 }
 
-nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
+nsresult nsOggReader::DecodeVorbis(nsTArray<nsAutoPtr<SoundData> >& aChunks,
                                    ogg_packet* aPacket)
 {
   // Successfully read a packet.
@@ -377,7 +377,9 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
     if (mVorbisGranulepos != -1) {
       mVorbisGranulepos += samples;
     }
-    aChunks.AppendElement(s);
+    if (!aChunks.AppendElement(s)) {
+      delete s;
+    }
     if (vorbis_synthesis_read(&mVorbisState->mDsp, samples) != 0) {
       return NS_ERROR_FAILURE;
     }
@@ -396,7 +398,7 @@ PRBool nsOggReader::DecodeAudioData()
 
   PRBool endOfStream = PR_FALSE;
 
-  nsAutoTArray<SoundData*, 64> chunks;
+  nsAutoTArray<nsAutoPtr<SoundData>, 64> chunks;
   if (mVorbisGranulepos == -1) {
     // Not captured Vorbis granulepos, read up until we get a granulepos, and
     // back propagate the granulepos.
@@ -461,7 +463,7 @@ PRBool nsOggReader::DecodeAudioData()
   // We've successfully decoded some sound chunks. Push them onto the audio
   // queue.
   for (PRUint32 i = 0; i < chunks.Length(); ++i) {
-    mAudioQueue.Push(chunks[i]);
+    mAudioQueue.Push(chunks[i].forget());
   }
 
   if (endOfStream) {
@@ -494,7 +496,7 @@ TheoraVersion(th_info* info,
 // Ensures that all the VideoData in aFrames array are stored in increasing
 // order by timestamp. Used in assertions in debug builds.
 static PRBool
-AllFrameTimesIncrease(nsTArray<VideoData*>& aFrames)
+AllFrameTimesIncrease(nsTArray<nsAutoPtr<VideoData> >& aFrames)
 {
   PRInt64 prevTime = -1;
   PRInt64 prevGranulepos = -1;
@@ -511,14 +513,7 @@ AllFrameTimesIncrease(nsTArray<VideoData*>& aFrames)
 }
 #endif
 
-static void Clear(nsTArray<VideoData*>& aFrames) {
-  for (PRUint32 i = 0; i < aFrames.Length(); ++i) {
-    delete aFrames[i];
-  }
-  aFrames.Clear();
-}
-
-nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
+nsresult nsOggReader::DecodeTheora(nsTArray<nsAutoPtr<VideoData> >& aFrames,
                                    ogg_packet* aPacket)
 {
   int ret = th_decode_packetin(mTheoraState->mCtx, aPacket, 0);
@@ -529,10 +524,13 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
     ? mTheoraState->StartTime(aPacket->granulepos) : -1;
   PRInt64 endTime = time != -1 ? time + mTheoraState->mFrameDuration : -1;
   if (ret == TH_DUPFRAME) {
-    aFrames.AppendElement(VideoData::CreateDuplicate(mPageOffset,
-                                                     time,
-                                                     endTime,
-                                                     aPacket->granulepos));
+    VideoData* v = VideoData::CreateDuplicate(mPageOffset,
+                                              time,
+                                              endTime,
+                                              aPacket->granulepos);
+    if (!aFrames.AppendElement(v)) {
+      delete v;
+    }
   } else if (ret == 0) {
     th_ycbcr_buffer buffer;
     ret = th_decode_ycbcr_out(mTheoraState->mCtx, buffer);
@@ -557,10 +555,11 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
       // There may be other reasons for this error, but for
       // simplicity just assume the worst case: out of memory.
       NS_WARNING("Failed to allocate memory for video frame");
-      Clear(aFrames);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    aFrames.AppendElement(v);
+    if (!aFrames.AppendElement(v)) {
+      delete v;
+    }
   }
   return NS_OK;
 }
@@ -578,7 +577,7 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   // will be wrong. Whenever we read a packet which has a granulepos, we use
   // its granulepos, otherwise we increment the previous packet's granulepos.
 
-  nsAutoTArray<VideoData*, 8> frames;
+  nsAutoTArray<nsAutoPtr<VideoData>, 8> frames;
   ogg_packet packet;
   PRBool endOfStream = PR_FALSE;
   if (mTheoraGranulepos == -1) {
@@ -728,15 +727,13 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
 
   // Push decoded data into the video frame queue.
   for (PRUint32 i = 0; i < frames.Length(); i++) {
-    nsAutoPtr<VideoData> data(frames[i]);
-    if (!aKeyframeSkip || (aKeyframeSkip && frames[i]->mKeyframe)) {
+    nsAutoPtr<VideoData> data(frames[i].forget());
+    if (aKeyframeSkip && data->mKeyframe) {
+      aKeyframeSkip = PR_FALSE;
+    }
+
+    if (!aKeyframeSkip) {
       mVideoQueue.Push(data.forget());
-      if (aKeyframeSkip && frames[i]->mKeyframe) {
-        aKeyframeSkip = PR_FALSE;
-      }
-    } else {
-      frames[i] = nsnull;
-      data = nsnull;
     }
   }
 

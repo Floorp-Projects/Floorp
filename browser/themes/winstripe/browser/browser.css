@@ -27,6 +27,7 @@
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
  *   Jim Mathies (jmathies@mozilla.com)
+ *   Drew Willcoxon (adw@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -962,12 +963,27 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 .searchbar-textbox {
   -moz-appearance: none;
   margin: 1px 3px;
-  padding: 2px;
   background-clip: padding-box;
   border: 1px solid ThreeDDarkShadow;
   border-radius: 4px;
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
               0 1px 0 rgba(255,255,255,.4);
+}
+
+.urlbar-textbox-container {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-right: 2px;
+}
+
+.urlbar-frontcap {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: 2px;
+}
+
+.searchbar-textbox {
+  padding: 2px;
 }
 
 @media all and (-moz-windows-default-theme) {
@@ -984,7 +1000,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   color: black;
 }
 
-#urlbar:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder,
+html|*.urlbar-input:-moz-lwtheme,
 .searchbar-textbox:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #777;
 }
@@ -1025,11 +1041,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-margin-start: 0;
 }
 
-#wrapper-urlbar-container > #urlbar-container > #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
-#urlbar > .autocomplete-textbox-container {
+.urlbar-frontcap-and-textbox {
   direction: ltr;
   -moz-box-align: stretch;
 }
@@ -1043,6 +1055,28 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   color: GrayText;
   -moz-border-end: 1px solid #AAA;
   -moz-margin-end: 3px;
+}
+
+/* over-link in location bar */
+
+.urlbar-origin-label {
+  padding: 0 0 0 4px;
+  margin: 0;
+}
+
+.urlbar-over-link-box {
+  position: relative;
+  right: 0;
+  color: GrayText;
+  padding: 0 5px 0 18px;
+  min-height: 22px;
+  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
+}
+
+.urlbar-over-link-host-label,
+.urlbar-over-link-path-label {
+  padding: 0;
+  margin: 0;
 }
 
 /* identity box */
@@ -1096,7 +1130,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 
 /* Location bar dropmarker */
 
-#urlbar > .autocomplete-history-dropmarker {
+.urlbar-history-dropmarker {
   -moz-appearance: none;
   padding: 0 1px;
   background-color: transparent;
@@ -1106,12 +1140,12 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-image-region: rect(0, 13px, 11px, 0);
 }
 
-#urlbar > .autocomplete-history-dropmarker:-moz-system-metric(touch-enabled) {
+.urlbar-history-dropmarker:-moz-system-metric(touch-enabled) {
   min-width: 6.4mozmm;
 }
 
-#urlbar > .autocomplete-history-dropmarker:hover:active,
-#urlbar > .autocomplete-history-dropmarker[open="true"] {
+.urlbar-history-dropmarker:hover:active,
+.urlbar-history-dropmarker[open="true"] {
   -moz-image-region: rect(0, 26px, 11px, 13px);
 }
 
@@ -1242,8 +1276,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  margin: -2px;
-  -moz-margin-start: 0;
   padding: 0 3px;
   background-origin: border-box;
   border: none;
@@ -1479,35 +1511,35 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(rgba(255,0,0,.5), rgba(255,0,0,.5)) !important;
 }
 
-.tabbrowser-tab[busy] > .tab-icon-image {
+.tab-icon-image[busy] {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
-.tabbrowser-tab[busy][stalled] > .tab-icon-image {
+.tab-icon-image[busy][stalled] {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
 }
-.tabbrowser-tab[busy][progress="1"] > .tab-icon-image {
+.tab-icon-image[busy][progress="1"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
-.tabbrowser-tab[busy][progress="2"] > .tab-icon-image {
+.tab-icon-image[busy][progress="2"] {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
-.tabbrowser-tab[busy][progress="3"] > .tab-icon-image {
+.tab-icon-image[busy][progress="3"] {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
-.tabbrowser-tab[busy][progress="4"] > .tab-icon-image {
+.tab-icon-image[busy][progress="4"] {
   -moz-image-region: rect(0, 80px, 16px, 64px);
 }
-.tabbrowser-tab[busy][progress="5"] > .tab-icon-image {
+.tab-icon-image[busy][progress="5"] {
   -moz-image-region: rect(0, 96px, 16px, 80px);
 }
-.tabbrowser-tab[busy][progress="6"] > .tab-icon-image {
+.tab-icon-image[busy][progress="6"] {
   -moz-image-region: rect(0, 112px, 16px, 96px);
 }
-.tabbrowser-tab[busy][progress="7"] > .tab-icon-image {
+.tab-icon-image[busy][progress="7"] {
   -moz-image-region: rect(0, 128px, 16px, 112px);
 }
-.tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
+.tab-icon-image[busy][progress="8"] {
   -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
@@ -1523,22 +1555,13 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-height: 16px; /* corresponds to the max. height of non-textual tab contents, i.e. the favicon */
 }
 
-.tabbrowser-tab[pinned] > .tab-icon-image {
+.tab-icon-image[pinned] {
   -moz-margin-start: 2px;
   -moz-margin-end: 2px;
 }
 
 /* tabbrowser-tab focus ring */
-.tabbrowser-tab > .tab-text {
-  border: 1px dotted transparent;
-  margin: -1px !important; /* let the border not consume any space, like outline */
-}
-
-.tabbrowser-tab:focus > .tab-text {
-  border: 1px dotted -moz-DialogText;
-}
-
-.tabbrowser-tab[pinned]:focus > .tab-icon-image {
+.tabbrowser-tab:focus > .tab-stack {
   outline: 1px dotted;
 }
 
@@ -1561,20 +1584,17 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tab-close-button:hover,
-.tabbrowser-tab[selected="true"] > .tab-close-button:hover {
+.tab-close-button:hover[selected="true"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .tab-close-button:hover:active,
-.tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
+.tab-close-button:hover:active[selected="true"] {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-.tabbrowser-tab[selected="true"] > .tab-close-button {
+.tab-close-button[selected="true"] {
   -moz-image-region: rect(0, 16px, 16px, 0);
-  /* Make this button focusable so clicking on it will not focus the tab while
-     it's getting closed */
-  -moz-user-focus: normal;
 }
 
 .tab-close-button:focus {
@@ -1784,10 +1804,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 /* ::::: About Popup Blocking dialog ::::: */
 #pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;
-}
-
-#checkForUpdates[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 /* Bookmarks toolbar */

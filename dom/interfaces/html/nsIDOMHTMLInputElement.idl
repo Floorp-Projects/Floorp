@@ -51,12 +51,13 @@ interface nsIDOMValidityState;
   * http://www.w3.org/TR/DOM-Level-2-HTML/
   */
 
-[scriptable, uuid(613c8e19-53b6-4719-8f6b-3c3e33012536)]
+[scriptable, uuid(0805059d-f18f-4095-ae6b-0bf6df80b7b8)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
            attribute DOMString             alt;
 
+           attribute DOMString             autocomplete;
            attribute boolean               autofocus;
            attribute boolean               defaultChecked;
            attribute boolean               checked;
@@ -65,6 +66,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             formAction;
            attribute DOMString             formEnctype;
            attribute DOMString             formMethod;
+           attribute boolean               formNoValidate;
            attribute DOMString             formTarget;
 
   readonly attribute nsIDOMFileList        files;

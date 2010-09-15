@@ -83,5 +83,5 @@ function test() {
 
   let button = document.getElementById("tabview-button");
   ok(button, "Tab View button exists");
-  EventUtils.synthesizeMouse(button, 1, 1, {});
+  button.doCommand();
 }

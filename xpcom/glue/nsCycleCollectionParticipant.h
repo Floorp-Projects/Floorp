@@ -333,7 +333,7 @@ public:
 #define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, _refcnt)                     \
     cb.DescribeNode(RefCounted, _refcnt, sizeof(_class), #_class);
 
-#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_REFCNT(_class, _refcnt)        \
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)               \
   NS_IMETHODIMP                                                                \
   NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
                          (void *p,                                             \
@@ -342,11 +342,11 @@ public:
     nsISupports *s = static_cast<nsISupports*>(p);                             \
     NS_ASSERTION(CheckForRightISupports(s),                                    \
                  "not the nsISupports pointer we expect");                     \
-    _class *tmp = Downcast(s);                                                 \
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, _refcnt)
+    _class *tmp = static_cast<_class*>(Downcast(s));
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_REFCNT(_class, tmp->mRefCnt.get())
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)                     \
+  NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
 // Base class' CC participant should return NS_SUCCESS_INTERRUPTED_TRAVERSE
 // from Traverse if it wants derived classes to not traverse anything from
@@ -355,15 +355,7 @@ public:
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 2)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
-  NS_IMETHODIMP                                                                \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
-                         (void *p,                                             \
-                          nsCycleCollectionTraversalCallback &cb)              \
-  {                                                                            \
-    nsISupports *s = static_cast<nsISupports*>(p);                             \
-    NS_ASSERTION(CheckForRightISupports(s),                                    \
-                 "not the nsISupports pointer we expect");                     \
-    _class *tmp = static_cast<_class*>(Downcast(s));                           \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)                     \
     if (NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb) ==         \
         NS_SUCCESS_INTERRUPTED_TRAVERSE) {                                     \
       return NS_SUCCESS_INTERRUPTED_TRAVERSE;                                  \

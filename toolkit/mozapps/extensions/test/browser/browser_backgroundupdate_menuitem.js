@@ -9,7 +9,7 @@ var gManagerWindow;
 function test() {
   waitForExplicitFinish();
 
-  open_manager(null, function(aWindow) {
+  open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
     run_next_test();
   });

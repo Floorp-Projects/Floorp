@@ -188,7 +188,7 @@ public:
 
   // CC does always call cycle collector and it also updates the counters
   // that MaybeCC uses.
-  static void CC();
+  static void CC(nsICycleCollectorListener *aListener);
 
   // MaybeCC calls cycle collector if certain conditions are fulfilled.
   // The conditions are:

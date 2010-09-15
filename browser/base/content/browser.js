@@ -2979,8 +2979,6 @@ function openHomeDialog(aURL)
       str.data = aURL;
       gPrefService.setComplexValue("browser.startup.homepage",
                                    Components.interfaces.nsISupportsString, str);
-      var homeButton = document.getElementById("home-button");
-      homeButton.setAttribute("tooltiptext", aURL);
     } catch (ex) {
       dump("Failed to set the home page.\n"+ex+"\n");
     }
@@ -4010,7 +4008,6 @@ var XULBrowserWindow = {
   defaultStatus: "",
   jsStatus: "",
   jsDefaultStatus: "",
-  overLink: "",
   startTime: 0,
   statusText: "",
   isBusy: false,
@@ -4093,16 +4090,16 @@ var XULBrowserWindow = {
     this.updateStatusField();
   },
 
-  setOverLink: function (link, b) {
+  setOverLink: function (link) {
     // Encode bidirectional formatting characters.
     // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-    this.overLink = link.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
-                                 encodeURIComponent);
-    this.updateStatusField();
+    link = link.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+                        encodeURIComponent);
+    gURLBar.setOverLink(link);
   },
 
   updateStatusField: function () {
-    var text = this.overLink || this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
+    var text = this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
@@ -5001,7 +4998,10 @@ var gHomeButton = {
     if (homeButton) {
       var homePage = this.getHomePage();
       homePage = homePage.replace(/\|/g,', ');
-      homeButton.setAttribute("tooltiptext", homePage);
+      if (homePage.toLowerCase() == "about:home")
+        homeButton.setAttribute("tooltiptext", homeButton.getAttribute("aboutHomeOverrideTooltip"));
+      else
+        homeButton.setAttribute("tooltiptext", homePage);
     }
   },
 

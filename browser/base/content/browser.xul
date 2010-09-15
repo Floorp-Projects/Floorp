@@ -415,7 +415,7 @@
       <stack id="allTabs-stack">
         <vbox id="allTabs-container"><hbox/></vbox>
         <toolbarbutton id="allTabs-tab-close-button"
-                       class="tab-close-button"
+                       class="tabs-closebutton"
                        oncommand="allTabs.closeTab(event);"
                        tooltiptext="&closeCmd.label;"
                        style="visibility:hidden"/>
@@ -860,7 +860,8 @@
                      ondragenter="homeButtonObserver.onDragOver(event)"
                      ondrop="homeButtonObserver.onDrop(event)"
                      ondragleave="homeButtonObserver.onDragLeave(event)"
-                     onclick="BrowserGoHome(event);"/>
+                     onclick="BrowserGoHome(event);"
+                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">

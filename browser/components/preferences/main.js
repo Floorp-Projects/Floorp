@@ -74,6 +74,35 @@ var gMainPane = {
    *   option is preserved.
    */
 
+  syncFromHomePref: function ()
+  {
+    let homePref = document.getElementById("browser.startup.homepage");
+
+    // If the pref is set to about:home, set the value to "" to show the
+    // placeholder text (about:home title).
+    if (homePref.value.toLowerCase() == "about:home")
+      return "";
+
+    // If the pref is actually "", show about:blank.  The actual home page
+    // loading code treats them the same, and we don't want the placeholder text
+    // to be shown.
+    if (homePref.value == "")
+      return "about:blank";
+
+    // Otherwise, show the actual pref value.
+    return undefined;
+  },
+
+  syncToHomePref: function (value)
+  {
+    // If the value is "", use about:home.
+    if (value == "")
+      return "about:home";
+
+    // Otherwise, use the actual textbox value.
+    return undefined;
+  },
+
   /**
    * Sets the home page to the current displayed page (or frontmost tab, if the
    * most recent browser window contains multiple tabs), updating preference
