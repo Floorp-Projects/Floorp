@@ -33,6 +33,36 @@ function completesNormally(code) {
 }
 
 /*
+ * returns(VALUE)(CODE) returns true if evaluating CODE (as eval code)
+ * completes normally (rather than throwing an exception), yielding a value
+ * strictly equal to VALUE.
+ */
+function returns(value) {
+  return function(code) {
+    try {
+      return eval(code) === value;
+    } catch (exception) {
+      return false;
+    }
+  }
+}
+
+/*
+ * returnsCopyOf(VALUE)(CODE) returns true if evaluating CODE (as eval code)
+ * completes normally (rather than throwing an exception), yielding a value
+ * that is deep_equal to VALUE.
+ */
+function returnsCopyOf(value) {
+  return function(code) {
+    try {
+      return deep_equal(eval(code), value);
+    } catch (exception) {
+      return false;
+    }
+  }
+}
+
+/*
  * raisesException(EXCEPTION)(CODE) returns true if evaluating CODE (as eval
  * code) throws an exception object whose prototype is
  * EXCEPTION.prototype, and returns false if it throws any other error
@@ -85,4 +115,31 @@ function parseRaisesException(exception) {
  */
 function clean_uneval(val) {
   return uneval(val).replace(/\s+/g, ' ');
+}
+
+/*
+ * Return true if A is equal to B, where equality on arrays and objects
+ * means that they have the same set of enumerable properties, the values
+ * of each property are deep_equal, and their 'length' properties are
+ * equal. Equality on other types is ==.
+ */
+function deep_equal(a, b) {
+  if (typeof a != typeof b)
+    return false;
+  if (typeof a == 'object') {
+    props = {}
+    // For every property of a, does b have that property with an equal value?
+    for (prop in a) {
+      if (!deep_equal(a[prop], b[prop]))
+        return false;
+      props[prop] = true;
+    }
+    // Are all of b's properties present on a?
+    for (prop in b)
+      if (!props[prop])
+        return false;
+    // length isn't enumerable, but we want to check it, too.
+    return a.length == b.length;
+  }
+  return a == b;
 }
