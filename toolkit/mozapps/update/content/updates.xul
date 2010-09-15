@@ -242,7 +242,7 @@
       <label id="genericBackgroundErrorLabel"
              hidden="true">&genericBackgroundError.label;</label>
       <hbox>
-        <label id="errorCertAttrLinkLabel" class="text-link" hidden="true"
+        <label id="errorExtraLinkLabel" class="text-link" hidden="true"
                value="" onclick="openUpdateURL(event);"/>
       </hbox>
     </vbox>
