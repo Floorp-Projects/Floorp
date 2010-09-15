@@ -460,6 +460,15 @@ PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
     return true;
 }
 
+bool
+PluginInstanceParent::RecvShow(const NPRect& updatedRect,
+                               const SurfaceDescriptor& newSurface,
+                               SurfaceDescriptor* prevSurface)
+{
+    *prevSurface = null_t();
+    return false;
+}
+
 nsresult
 PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
 {
