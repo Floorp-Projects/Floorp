@@ -130,6 +130,13 @@ with a boolean value, indicating whether the tests were successful.
 NPN_PluginThreadAsyncCall.  When finished, calls the script callback
 with a boolean value, indicating whether the tests were successful.
 
+* paintscript="..." content attribute
+If the "paintscript" attribute is set on the plugin element during plugin
+initialization, then every time the plugin paints it gets the contents of that
+attribute and evaluates it as a script in the context of the plugin's DOM
+window. This is useful for testing evil plugin code that might, for example,
+modify the DOM during painting.
+
 == Private browsing ==
 
 The test plugin object supports the following scriptable methods:
