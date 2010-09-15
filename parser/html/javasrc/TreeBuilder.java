@@ -2877,6 +2877,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     }
                 case AFTER_AFTER_FRAMESET:
                     switch (group) {
+                        case HTML:
+                            err("Stray \u201Chtml\u201D start tag.");
+                            if (!fragment) {
+                                addAttributesToHtml(attributes);
+                                attributes = null; // CPP
+                            }
+                            break starttagloop;
                         case NOFRAMES:
                             appendToCurrentNodeAndPushElementMayFoster(
                                     "http://www.w3.org/1999/xhtml",
