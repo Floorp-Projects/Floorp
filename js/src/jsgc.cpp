@@ -1638,10 +1638,16 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         JSObject *obj = (JSObject *) thing;
         if (!obj->map)
             break;
+
+        /* Trace universal (ops-independent) members. */
         if (JSObject *proto = obj->getProto())
             JS_CALL_OBJECT_TRACER(trc, proto, "proto");
         if (JSObject *parent = obj->getParent())
             JS_CALL_OBJECT_TRACER(trc, parent, "parent");
+        if (obj->emptyShape)
+            obj->emptyShape->trace(trc);
+
+        /* Delegate to ops or the native marking op. */
         JSTraceOp op = obj->getOps()->trace;
         (op ? op : js_TraceObject)(trc, obj);
         break;

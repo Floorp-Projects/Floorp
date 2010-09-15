@@ -3452,6 +3452,9 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 
     jschar *chars = base->chars() + start;
 
+    if (length == 1 && *chars < UNIT_STRING_LIMIT)
+        return &JSString::unitStringTable[*chars];
+
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())
         base = base->dependentBase();
