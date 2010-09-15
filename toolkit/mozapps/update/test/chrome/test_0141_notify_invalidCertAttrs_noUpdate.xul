@@ -23,8 +23,9 @@
 
 const TESTS = [ {
   pageid: PAGEID_ERROR_EXTRA,
-  extraDelayedCheckFunction: checkCertErrorPage,
+  extraDelayedCheckFunction: checkErrorExtraPage,
   shouldBeHidden: false,
+  displayedTextElem: "errorCertCheckNoUpdateLabel",
   buttonClick: "finish"
 } ];
 
@@ -39,7 +40,8 @@ function runTest() {
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
   debugDump("Default Update URL: " + url);
 
-  certErrorsPrefObserver.init();
+  errorsPrefObserver.init(PREF_APP_UPDATE_CERT_ERRORS,
+                          PREF_APP_UPDATE_CERT_MAXERRORS);
 
   gAUS.notify(null);
 }
