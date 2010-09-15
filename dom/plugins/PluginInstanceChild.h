@@ -97,6 +97,12 @@ protected:
     virtual bool
     AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event, const uint32_t& surface, int16_t* handled);
 
+    // Async rendering
+    virtual bool
+    RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
+                       const NPRemoteWindow& aWindow);
+    virtual bool RecvPaintFinished(void);
+
     NS_OVERRIDE
     virtual bool
     AnswerPaint(const NPRemoteEvent& event, int16_t* handled)
