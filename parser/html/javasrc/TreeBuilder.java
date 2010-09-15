@@ -1233,14 +1233,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     public final void eof() throws SAXException {
         flushCharacters();
-        if (inForeign) {
-            err("End of file in a foreign namespace context.");
-            while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
-                popOnEof();
-            }
-            inForeign = false;
-        }
         eofloop: for (;;) {
+            if (inForeign) {
+                err("End of file in a foreign namespace context.");
+                break eofloop;
+            }
             switch (mode) {
                 case INITIAL:
                     /*
@@ -1485,10 +1482,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             err("HTML start tag \u201C"
                                     + name
                                     + "\u201D in a foreign namespace context.");
-                            while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                            while (!isSpecialParentInForeign(stack[currentPtr])) {
                                 pop();
                             }
-                            inForeign = false;
+                            if (!hasForeignInScope()) {
+                                inForeign = false;
+                            }
                             continue starttagloop;
                         case FONT:
                             if (attributes.contains(AttributeName.COLOR)
@@ -1497,10 +1496,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 err("HTML start tag \u201C"
                                         + name
                                         + "\u201D in a foreign namespace context.");
-                                while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                                while (!isSpecialParentInForeign(stack[currentPtr])) {
                                     pop();
                                 }
-                                inForeign = false;
+                                if (!hasForeignInScope()) {
+                                    inForeign = false;
+                                }
                                 continue starttagloop;
                             }
                             // else fall thru
@@ -2913,6 +2914,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (attributes != HtmlAttributes.EMPTY_ATTRIBUTES) {
             Portability.delete(attributes);
         }
+    }
+
+    private boolean isSpecialParentInForeign(StackNode<T> stackNode) {
+        @NsUri String ns = stackNode.ns;
+        if ("http://www.w3.org/1999/xhtml" == ns) {
+            return true;
+        }
+        if (ns == "http://www.w3.org/2000/svg") {
+            return stackNode.group == FOREIGNOBJECT_OR_DESC
+                    || stackNode.group == TITLE;
+        }
+        assert ns == "http://www.w3.org/1998/Math/MathML" : "Unexpected namespace.";
+        return stackNode.group == MI_MO_MN_MS_MTEXT;
     }
 
     /**

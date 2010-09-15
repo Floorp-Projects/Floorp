@@ -105,6 +105,9 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void eof();
     void endTokenization();
     void startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, PRBool selfClosing);
+  private:
+    PRBool isSpecialParentInForeign(nsHtml5StackNode* stackNode);
+  public:
     static nsString* extractCharsetFromContent(nsString* attributeValue);
   private:
     void checkMetaCharset(nsHtml5HtmlAttributes* attributes);
