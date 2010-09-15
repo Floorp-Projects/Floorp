@@ -1932,7 +1932,8 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     mWillReparent = PR_TRUE;
 #endif
 
-    rv = window->SetNewDocument(this, nsnull);
+    // Should this pass PR_TRUE for aForceReuseInnerWindow?
+    rv = window->SetNewDocument(this, nsnull, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
