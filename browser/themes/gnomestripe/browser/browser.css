@@ -682,10 +682,24 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #zoom-out-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar");
-}
 
 #zoom-in-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar");
+}
+
+/* sync button */
+#sync-button {
+  list-style-image: url("chrome://browser/skin/sync-16.png");
+}
+
+#sync-button[status="active"] {
+  list-style-image: url("chrome://browser/skin/sync-16-throbber.png");
+}
+
+toolbar:not([iconsize="small"]) #sync-button > .toolbarbutton-icon {
+  margin: 1px;
+  width: 16px;
+  height: 16px;
 }
 
 /* 16px primary toolbar buttons */

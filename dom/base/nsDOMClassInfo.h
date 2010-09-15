@@ -380,6 +380,7 @@ protected:
   static jsid sOnratechange_id;
   static jsid sOndurationchange_id;
   static jsid sOnvolumechange_id;
+  static jsid sOnmessage_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;

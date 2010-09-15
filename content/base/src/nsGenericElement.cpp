@@ -1365,8 +1365,9 @@ nsGenericElement::GetChildrenList()
   NS_ENSURE_TRUE(slots, nsnull);
 
   if (!slots->mChildrenList) {
-    slots->mChildrenList = new nsContentList(this, nsGkAtoms::_asterix,
-                                             kNameSpaceID_Wildcard, PR_FALSE);
+    slots->mChildrenList = new nsContentList(this, kNameSpaceID_Wildcard, 
+                                             nsGkAtoms::_asterix, nsGkAtoms::_asterix,
+                                             PR_FALSE);
   }
 
   return slots->mChildrenList;
@@ -2495,12 +2496,13 @@ nsresult
 nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
                                        nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
-  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+  nsAutoString lowercaseName;
+  nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
+  nsCOMPtr<nsIAtom> XMLAtom = do_GetAtom(aTagname);
+  nsCOMPtr<nsIAtom> HTMLAtom = do_GetAtom(lowercaseName);
 
-  nsContentList *list = NS_GetContentList(this, nameAtom,
-                                          kNameSpaceID_Unknown).get();
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+  nsContentList *list = NS_GetContentList(this, kNameSpaceID_Unknown, 
+                                          HTMLAtom, XMLAtom).get();
 
   // transfer ref to aReturn
   *aReturn = list;
@@ -2627,10 +2629,8 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   }
 
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
-  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsContentList *list = NS_GetContentList(this, nameAtom, nameSpaceId).get();
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+  nsContentList *list = NS_GetContentList(this, nameSpaceId, nameAtom).get();
 
   // transfer ref to aReturn
   *aReturn = list;

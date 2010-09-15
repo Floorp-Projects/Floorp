@@ -78,6 +78,7 @@ _BROWSER_FILES = head.js \
                  browser_auth.js \
                  browser_auth2.js \
                  browser_auth3.js \
+                 browser_auth4.js \
                  browser_offline.js \
                  browser_navigateaway.js \
                  browser_navigateaway2.js \
