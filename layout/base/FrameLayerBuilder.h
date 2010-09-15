@@ -94,7 +94,14 @@ public:
   typedef layers::ThebesLayer ThebesLayer;
   typedef layers::LayerManager LayerManager;
 
-  FrameLayerBuilder();
+  FrameLayerBuilder() :
+    mRetainingManager(nsnull),
+    mInvalidateAllThebesContent(PR_FALSE),
+    mInvalidateAllLayers(PR_FALSE)
+  {
+    mNewDisplayItemData.Init();
+    mThebesLayerItems.Init();
+  }
 
   /**
    * Call this to notify that we are about to start a transaction on the
@@ -403,13 +410,6 @@ protected:
                                                  void* aUserArg);
 
   /**
-   * Returns true if the DOM has been modified since we started painting,
-   * in which case we should bail out and not paint anymore. This should
-   * never happen, but plugins can trigger it in some cases.
-   */
-  PRBool CheckDOMModified();
-
-  /**
    * The layer manager belonging to the widget that is being retained
    * across paints.
    */
@@ -424,15 +424,6 @@ protected:
    * clipping data) to be rendered in the layer.
    */
   nsTHashtable<ThebesLayerItemsEntry> mThebesLayerItems;
-  /**
-   * Saved generation counter so we can detect DOM changes.
-   */
-  PRUint32                            mInitialDOMGeneration;
-  /**
-   * Set to true if we have detected and reported DOM modification during
-   * the current paint.
-   */
-  PRPackedBool                        mDetectedDOMModification;
   /**
    * Indicates that the contents of all ThebesLayers should be rerendered
    * during this paint.

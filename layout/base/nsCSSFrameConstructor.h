@@ -274,10 +274,6 @@ public:
   // itself.
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
 
-  // The DOMGeneration is updated every time we're notified of a DOM change
-  // that could cause frame construction or destruction
-  static PRUint32 GetDOMGeneration() { return gDOMGeneration; }
-
 private:
 
   friend class mozilla::css::RestyleTracker;
@@ -1840,7 +1836,6 @@ private:
   RestyleTracker mPendingAnimationRestyles;
 
   static nsIXBLService * gXBLService;
-  static PRUint32 gDOMGeneration;
 };
 
 #endif /* nsCSSFrameConstructor_h___ */
