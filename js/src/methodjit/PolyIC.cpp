@@ -647,6 +647,14 @@ class SetPropCompiler : public PICStubCompiler
             if (!shape)
                 return false;
 
+            /*
+             * Test after calling putProperty since it can switch obj into
+             * dictionary mode, specifically if the shape tree ancestor line
+             * exceeds PropertyTree::MAX_HEIGHT.
+             */
+            if (obj->inDictionaryMode())
+                return disable("dictionary");
+
             if (!shape->hasDefaultSetter())
                 return disable("adding non-default setter");
             if (!shape->hasSlot())
