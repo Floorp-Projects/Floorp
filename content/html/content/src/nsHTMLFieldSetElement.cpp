@@ -110,14 +110,13 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)
 
+NS_IMPL_ELEMENT_CLONE(nsHTMLFieldSetElement)
 
-// nsIDOMHTMLFieldSetElement
+
+NS_IMPL_STRING_ATTR(nsHTMLFieldSetElement, Name, name)
 
 // nsIConstraintValidation
 NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLFieldSetElement)
-
-NS_IMPL_ELEMENT_CLONE(nsHTMLFieldSetElement)
-
 
 // nsIDOMHTMLFieldSetElement
 
