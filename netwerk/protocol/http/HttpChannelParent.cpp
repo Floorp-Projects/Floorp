@@ -292,6 +292,10 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);
 
+  nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
+  if (encodedChannel)
+    encodedChannel->SetApplyConversion(PR_FALSE);
+
   // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
   // It could be already released by nsHttpChannel at that time.
   chan->GetCacheToken(getter_AddRefs(mCacheDescriptor));
