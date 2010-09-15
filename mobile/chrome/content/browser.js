@@ -191,7 +191,9 @@ var Browser = {
       },
 
       getPosition: function(scrollX, scrollY) {
-        getBrowser().getPosition(scrollX, scrollY);
+        let { x: x, y: y } = getBrowser().getPosition();
+        scrollX.value = x;
+        scrollY.value = y;
       }
     };
 
@@ -841,9 +843,6 @@ var Browser = {
 
     zoomLevel = tab.clampZoomLevel(zoomLevel);
 
-    let scrollX = {}, scrollY = {};
-    tab.browser.getPosition(scrollX, scrollY);
-
     let [centerX, centerY] = this.transformClientToBrowser(window.innerWidth / 2,
                                                            window.innerHeight / 2);
 
@@ -890,24 +889,25 @@ var Browser = {
     let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
 
     // Make sure rectangle doesn't poke out of viewport
-    return result.translateInside(new Rect(0, 0, getBrowser()._widthInDevicePx, getBrowser()._heightInDevicePx));
+    return result.translateInside(new Rect(0, 0, getBrowser().contentDocumentWidth, getBrowser().contentDocumentHeight));
   },
 
   animatedZoomTo: function animatedZoomTo(rect) {
-    animatedZoom.animateTo(rect);
+    AnimatedZoom.animateTo(rect);
   },
 
   setVisibleRect: function setVisibleRect(rect) {
+    let browser = getBrowser();
     let zoomRatio = window.innerWidth / rect.width;
-    let zoomLevel = getBrowser().scale * zoomRatio;
+    let zoomLevel = browser.scale * zoomRatio;
     let scrollX = rect.left * zoomRatio;
     let scrollY = rect.top * zoomRatio;
 
     this.hideSidebars();
     this.hideTitlebar();
 
-    getBrowser().setScale(this.selectedTab.clampZoomLevel(zoomLevel));
-    getBrowser().scrollTo(scrollX, scrollY);
+    browser.scale = this.selectedTab.clampZoomLevel(zoomLevel);
+    browser.scrollTo(scrollX, scrollY);
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
@@ -949,9 +949,8 @@ var Browser = {
     if (arguments.length > 1)
       y0 = Math.round(containerBCR.top);
 
-    let scrollX = {}, scrollY = {};
-    getBrowser().getPosition(scrollX, scrollY);
-    return (arguments.length > 1) ? [x - x0 + scrollX.value, y - y0 + scrollY.value] : (x - x0 + scrollX.value);
+    let scroll = getBrowser().getPosition();
+    return (arguments.length > 1) ? [x - x0 + scroll.x, y - y0 + scroll.y] : (x - x0 + scroll.x);
   },
 
   browserViewToClient: function browserViewToClient(x, y) {
@@ -1079,7 +1078,6 @@ Browser.MainDragger.prototype = {
       x = Math.min(doffset.x, rect.left);
 
     let height = document.getElementById("tile-stack").getBoundingClientRect().height;
-    // XXX change
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
     if (doffset.y < 0 && rect.bottom < height)
       y = Math.max(doffset.y, rect.bottom - height);
@@ -2242,7 +2240,7 @@ Tab.prototype = {
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
 
-      browser.setCssViewportSize(viewportW, viewportH);
+      browser.setWindowSize(viewportW, viewportH);
     }
     else {
       let browserBCR = browser.getBoundingClientRect();
@@ -2254,16 +2252,8 @@ Tab.prototype = {
         h /= dpiScale;
       }
 
-      browser.setCssViewportSize(w, h);
+      browser.setWindowSize(w, h);
     }
-
-    // Local XUL documents are not firing MozScrolledAreaChanged
-    /*let contentDocument = browser.contentDocument;
-    if (contentDocument && contentDocument instanceof XULDocument) {
-      let width = contentDocument.documentElement.scrollWidth;
-      let height = contentDocument.documentElement.scrollHeight;
-      BrowserView.Util.ensureMozScrolledAreaEvent(browser, width, height);
-    } */
   },
 
   startLoading: function startLoading() {
@@ -2364,27 +2354,25 @@ Tab.prototype = {
     return rounded || 1.0;
   },
 
-  /**
-   * XXX document me
-   */
+  /** Record the initial zoom level when a page first loads. */
   resetZoomLevel: function resetZoomLevel() {
-    let browser = this._browser;
-    this._defaultZoomLevel = browser.scale;
+    this._defaultZoomLevel = this._browser.scale;
   },
 
   /**
-   * XXX document me
+   * Recalculate default zoom level when page size changes, and update zoom
+   * level if we are at default.
    */
   updateDefaultZoomLevel: function updateDefaultZoomLevel() {
     let browser = this._browser;
     let isDefault = (browser.scale == this._defaultZoomLevel);
     this._defaultZoomLevel = this.getDefaultZoomLevel();
     if (isDefault)
-      browser.setScale(this._defaultZoomLevel);
+      browser.scale = this._defaultZoomLevel;
   },
 
   isDefaultZoomLevel: function isDefaultZoomLevel() {
-    return getBrowser().scale == this._defaultZoomLevel;
+    return this._browser.scale == this._defaultZoomLevel;
   },
 
   getDefaultZoomLevel: function getDefaultZoomLevel() {
@@ -2404,7 +2392,7 @@ Tab.prototype = {
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
-    let browserW = this._browser._widthInCSSPx;
+    let browserW = this._browser.contentDocumentWidth;
     return this._browser.getBoundingClientRect().width / browserW;
   },
 

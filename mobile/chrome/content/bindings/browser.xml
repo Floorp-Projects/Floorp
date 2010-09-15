@@ -147,8 +147,8 @@
               break;
 
             case "MozScrolledAreaChanged":
-              this._widthInCSSPx = aMessage.json.width;
-              this._heightInCSSPx = aMessage.json.height;
+              this._contentDocumentWidth = aMessage.json.width;
+              this._contentDocumentHeight = aMessage.json.height;
               this._updateCacheViewport();
               break;
          }
@@ -263,7 +263,7 @@
                   this._browser._searchEngines = [];
                 }
 
-                this._browser._zoomLevel = 1;
+                this._browser.scale = 1;
                 this._browser._updateCacheViewport();
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
@@ -385,28 +385,28 @@
       <field name="_frameLoader">null</field>
 
       <!-- Dimensions of content window -->
-      <property name="viewportWidthInCSSPx"
-                onget="return this._viewportWidthInCSSPx;"
+      <property name="contentWindowWidth"
+                onget="return this._contentWindowWidth;"
                 readonly="true"/>
-      <property name="viewportHeightInCSSPx"
-                onget="return this._viewportHeightInCSSPx;"
+      <property name="contentWindowHeight"
+                onget="return this._contentWindowHeight;"
                 readonly="true"/>
 
       <!-- Dimensions of content document -->
-      <field name="_widthInCSSPx">0</field>
-      <field name="_heightInCSSPx">0</field>
-      <property name="_widthInDevicePx"
-                onget="return this._widthInCSSPx * this._zoomLevel;"
+      <field name="_contentDocumentWidth">0</field>
+      <field name="_contentDocumentHeight">0</field>
+      <property name="contentDocumentWidth"
+                onget="return this._contentDocumentWidth;"
                 readonly="true"/>
-      <property name="_heightInDevicePx"
-                onget="return this._heightInCSSPx * this._zoomLevel;"
+      <property name="contentDocumentHeight"
+                onget="return this._contentDocumentHeight;"
                 readonly="true"/>
 
       <!-- Zoom level is the ratio of device pixels to CSS pixels -->
-      <field name="_zoomLevel">1</field>
+      <field name="_scale">1</field>
       <property name="scale"
-                onget="return this._zoomLevel;"
-                readonly="true"/>
+                onget="return this._scale;"
+                onset="return this._setScale(val);"/>
 
       <!-- These counters are used to update the cached viewport after they reach a certain
            threshold when scrolling -->
@@ -415,10 +415,10 @@
       <field name="_pendingThresholdX">0</field>
       <field name="_pendingThresholdY">0</field>
       <!-- This determines what percentage of cached pixels are not yet visible before the cache
-           is refreshed. For instance, if we recached at 50% and there are originally a total of
-           400px offscreen, we'd refresh once 200 of those pixels have been scrolled into
+           is refreshed. For instance, if we recached at 25% and there are originally a total of
+           400px offscreen, we'd refresh once 100 of those pixels have been scrolled into
            view. -->
-      <field name="_recacheRatio">0</field>
+      <field name="_recacheRatio">1</field>
 
       <!-- The cache viewport is what parts of content is cached in the parent process for
            fast scrolling. This syncs that up with the current projection viewport. -->
@@ -431,11 +431,11 @@
 
             let frameLoader = this._frameLoader;
             this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              x: (frameLoader.viewportScrollX + bcr.width  / 2 - cacheX) / this._zoomLevel,
-              y: (frameLoader.viewportScrollY + bcr.height / 2 - cacheY) / this._zoomLevel,
-              w: (cacheX * 2) / this._zoomLevel,
-              h: (cacheY * 2) / this._zoomLevel,
-              zoomLevel: this._zoomLevel
+              x: (frameLoader.viewportScrollX + bcr.width  / 2 - cacheX) / this._scale,
+              y: (frameLoader.viewportScrollY + bcr.height / 2 - cacheY) / this._scale,
+              w: (cacheX * 2) / this._scale,
+              h: (cacheY * 2) / this._scale,
+              scale: this._scale
             });
 
             this._pendingPixelsX = 0;
@@ -450,22 +450,22 @@
           <![CDATA[
             let frameLoader = this._frameLoader;
             this.messageManager.sendAsyncMessage("Content:ScrollTo", {
-              x: frameLoader.viewportScrollX / this._zoomLevel,
-              y: frameLoader.viewportScrollY / this._zoomLevel
+              x: frameLoader.viewportScrollX / this._scale,
+              y: frameLoader.viewportScrollY / this._scale
             });
           ]]>
         </body>
       </method>
 
       <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
-      <method name="setScale">
-        <parameter name="zl"/>
+      <method name="_setScale">
+        <parameter name="scale"/>
         <body>
           <![CDATA[
-            if (zl <= 0) throw "Bad zoom level given.";
+            if (scale <= 0) throw "Bad scale given.";
 
-            this._zoomLevel = zl;
-            this._frameLoader.setViewportScale(zl, zl);
+            this._scale = scale;
+            this._frameLoader.setViewportScale(scale, scale);
             this._updateCacheViewport();
 
             let event = document.createEvent("Events");
@@ -476,14 +476,14 @@
       </method>
 
       <!-- Sets size of CSS viewport, which affects how page is layout. -->
-      <method name="setCssViewportSize">
+      <method name="setWindowSize">
         <parameter name="width"/>
         <parameter name="height"/>
         <body>
           <![CDATA[
-            this._viewportWidthInCSSPx = width;
-            this._viewportHeightInCSSPx = height;
-            this.messageManager.sendAsyncMessage("Content:SetCssViewportSize", {
+            this._contentWindowWidth = width;
+            this._contentWindowHeight = height;
+            this.messageManager.sendAsyncMessage("Content:SetWindowSize", {
               width: width,
               height: height
             });
@@ -519,9 +519,11 @@
         <parameter name="scrollY"/>
         <body>
           <![CDATA[
+            let scrollX = {}, scrollY = {};
             let cwu = this.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                       getInterface(Components.interfaces.nsIDOMWindowUtils);
             cwu.getScrollXY(false, scrollX, scrollY);
+            return { x: scrollX.value, y: scrollY.value };
           ]]>
         </body>
       </method>
@@ -741,7 +743,7 @@
                   this._browser._searchEngines = [];
                 }
 
-                this._browser._zoomLevel = 1;
+                this._browser._scale = 1;
                 this._browser._updateCacheViewport();
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
@@ -814,6 +816,7 @@
                 onget="throw 'documentCharsetInfo: Not Remoteable'"
                 readonly="true"/>
 
+      <!-- Scroll by (x, y) device pixels -->
       <method name="scrollBy">
         <parameter name="x"/>
         <parameter name="y"/>
@@ -821,12 +824,16 @@
           <![CDATA[
             let frameLoader = this._frameLoader;
 
+            // Bounding content rectangle is in device pixels
             let bcr = this.getBoundingClientRect();
             let viewportWidth = bcr.width;
             let viewportHeight = bcr.height;
+            // Calculate document dimensions in device pixels
+            let docWidth = this.contentDocumentWidth * this.scale;
+            let docHeight = this.contentDocumentHeight * this.scale;
 
-            x = Math.floor(Math.max(0, Math.min(this._widthInDevicePx - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX);
-            y = Math.floor(Math.max(0, Math.min(this._heightInDevicePx - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY);
+            x = Math.floor(Math.max(0, Math.min(docWidth - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX);
+            y = Math.floor(Math.max(0, Math.min(docHeight - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY);
 
             if (x == 0 && y == 0)
               return;
@@ -845,6 +852,7 @@
         </body>
       </method>
 
+      <!-- Scroll to position (x, y) in device pixels -->
       <method name="scrollTo">
         <parameter name="x"/>
         <parameter name="y"/>
@@ -856,14 +864,12 @@
         </body>
       </method>
 
+      <!-- Get position of window in device pixels -->
       <method name="getPosition">
-        <parameter name="scrollX"/>
-        <parameter name="scrollY"/>
         <body>
           <![CDATA[
             let frameLoader = this._frameLoader;
-            scrollX.value = frameLoader.viewportScrollX;
-            scrollY.value = frameLoader.viewportScrollY;
+            return { x: frameLoader.viewportScrollX, y: frameLoader.viewportScrollY };
           ]]>
         </body>
       </method>
