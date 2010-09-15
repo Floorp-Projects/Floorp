@@ -4461,16 +4461,13 @@ struct BackgroundPositionAxis {
   nsCSSValue nsCSSValuePairList::*specified;
   nsStyleBackground::Position::PositionCoord
     nsStyleBackground::Position::*result;
-  PRPackedBool nsStyleBackground::Position::*isPercent;
 };
 
 static const BackgroundPositionAxis gBGPosAxes[] = {
   { &nsCSSValuePairList::mXValue,
-    &nsStyleBackground::Position::mXPosition,
-    &nsStyleBackground::Position::mXIsPercent },
+    &nsStyleBackground::Position::mXPosition },
   { &nsCSSValuePairList::mYValue,
-    &nsStyleBackground::Position::mYPosition,
-    &nsStyleBackground::Position::mYIsPercent }
+    &nsStyleBackground::Position::mYPosition }
 };
 
 NS_SPECIALIZE_TEMPLATE
@@ -4487,19 +4484,19 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
          axis != axis_end; ++axis) {
       const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
       if (eCSSUnit_Percent == specified.GetUnit()) {
-        (position.*(axis->result)).mFloat = specified.GetPercentValue();
-        position.*(axis->isPercent) = PR_TRUE;
+        (position.*(axis->result)).mLength = 0;
+        (position.*(axis->result)).mPercent = specified.GetPercentValue();
       }
       else if (specified.IsLengthUnit()) {
-        (position.*(axis->result)).mCoord =
+        (position.*(axis->result)).mLength =
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
-        position.*(axis->isPercent) = PR_FALSE;
+        (position.*(axis->result)).mPercent = 0.0f;
       }
       else if (eCSSUnit_Enumerated == specified.GetUnit()) {
-        (position.*(axis->result)).mFloat =
+        (position.*(axis->result)).mLength = 0;
+        (position.*(axis->result)).mPercent =
           GetFloatFromBoxPosition(specified.GetIntValue());
-        position.*(axis->isPercent) = PR_TRUE;
       } else {
         NS_NOTREACHED("unexpected unit");
       }
@@ -4569,15 +4566,17 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
         size.*(axis->type) = size.mWidthType;
       }
       else if (eCSSUnit_Percent == specified.GetUnit()) {
-        (size.*(axis->result)).mFloat = specified.GetPercentValue();
-        size.*(axis->type) = nsStyleBackground::Size::ePercentage;
+        (size.*(axis->result)).mLength = 0;
+        (size.*(axis->result)).mPercent = specified.GetPercentValue();
+        size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       }
       else {
         NS_ABORT_IF_FALSE(specified.IsLengthUnit(), "unexpected unit");
-        (size.*(axis->result)).mCoord =
+        (size.*(axis->result)).mLength =
           CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
                      aCanStoreInRuleTree);
-        size.*(axis->type) = nsStyleBackground::Size::eLength;
+        (size.*(axis->result)).mPercent = 0.0f;
+        size.*(axis->type) = nsStyleBackground::Size::eLengthPercentage;
       }
     }
 

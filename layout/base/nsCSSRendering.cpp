@@ -881,23 +881,17 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground::Layer& aLayer,
                              nsPoint* aTopLeft,
                              nsPoint* aAnchorPoint)
 {
-  if (!aLayer.mPosition.mXIsPercent) {
-    aTopLeft->x = aAnchorPoint->x = aLayer.mPosition.mXPosition.mCoord;
-  }
-  else {
-    double percent = aLayer.mPosition.mXPosition.mFloat;
-    aAnchorPoint->x = NSToCoordRound(percent*aOriginBounds.width);
-    aTopLeft->x = NSToCoordRound(percent*(aOriginBounds.width - aImageSize.width));
-  }
+  double percentX = aLayer.mPosition.mXPosition.mPercent;
+  nscoord lengthX = aLayer.mPosition.mXPosition.mLength;
+  aAnchorPoint->x = lengthX + NSToCoordRound(percentX*aOriginBounds.width);
+  aTopLeft->x = lengthX +
+    NSToCoordRound(percentX*(aOriginBounds.width - aImageSize.width));
 
-  if (!aLayer.mPosition.mYIsPercent) {
-    aTopLeft->y = aAnchorPoint->y = aLayer.mPosition.mYPosition.mCoord;
-  }
-  else {
-    double percent = aLayer.mPosition.mYPosition.mFloat;
-    aAnchorPoint->y = NSToCoordRound(percent*aOriginBounds.height);
-    aTopLeft->y = NSToCoordRound(percent*(aOriginBounds.height - aImageSize.height));
-  }
+  double percentY = aLayer.mPosition.mYPosition.mPercent;
+  nscoord lengthY = aLayer.mPosition.mYPosition.mLength;
+  aAnchorPoint->y = lengthY + NSToCoordRound(percentY*aOriginBounds.height);
+  aTopLeft->y = lengthY +
+    NSToCoordRound(percentY*(aOriginBounds.height - aImageSize.height));
 }
 
 nsIFrame*
@@ -2303,15 +2297,15 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 }
 
 static inline float
-ScaleDimension(nsStyleBackground::Size::Dimension aDimension,
+ScaleDimension(const nsStyleBackground::Size::Dimension& aDimension,
                PRUint8 aType,
                nscoord aLength, nscoord aAvailLength)
 {
   switch (aType) {
-    case nsStyleBackground::Size::ePercentage:
-      return double(aDimension.mFloat) * (double(aAvailLength) / double(aLength));
-    case nsStyleBackground::Size::eLength:
-      return double(aDimension.mCoord) / double(aLength);
+    case nsStyleBackground::Size::eLengthPercentage:
+      return (double(aDimension.mPercent) * double(aAvailLength) +
+              double(aDimension.mLength)) /
+             double(aLength);
     default:
       NS_ABORT_IF_FALSE(PR_FALSE, "bad aDimension.mType");
       return 1.0f;

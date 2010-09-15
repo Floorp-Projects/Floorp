@@ -1719,16 +1719,20 @@ nsComputedDOMStyle::DoGetBackgroundPosition(nsIDOMCSSValue** aValue)
 
     const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
 
-    if (pos.mXIsPercent) {
-      valX->SetPercent(pos.mXPosition.mFloat);
+    if (pos.mXPosition.mLength != 0) {
+      NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
+                        "can't have both until calc() implemented");
+      valX->SetAppUnits(pos.mXPosition.mLength);
     } else {
-      valX->SetAppUnits(pos.mXPosition.mCoord);
+      valX->SetPercent(pos.mXPosition.mPercent);
     }
 
-    if (pos.mYIsPercent) {
-      valY->SetPercent(pos.mYPosition.mFloat);
+    if (pos.mYPosition.mLength != 0) {
+      NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
+                        "can't have both until calc() implemented");
+      valY->SetAppUnits(pos.mYPosition.mLength);
     } else {
-      valY->SetAppUnits(pos.mYPosition.mCoord);
+      valY->SetPercent(pos.mYPosition.mPercent);
     }
   }
 
@@ -1796,22 +1800,32 @@ nsComputedDOMStyle::DoGetMozBackgroundSize(nsIDOMCSSValue** aValue)
 
         if (size.mWidthType == nsStyleBackground::Size::eAuto) {
           valX->SetIdent(eCSSKeyword_auto);
-        } else if (size.mWidthType == nsStyleBackground::Size::ePercentage) {
-          valX->SetPercent(size.mWidth.mFloat);
         } else {
-          NS_ABORT_IF_FALSE(size.mWidthType == nsStyleBackground::Size::eLength,
+          NS_ABORT_IF_FALSE(size.mWidthType ==
+                              nsStyleBackground::Size::eLengthPercentage,
                             "bad mWidthType");
-          valX->SetAppUnits(size.mWidth.mCoord);
+          if (size.mWidth.mLength != 0) {
+            NS_ABORT_IF_FALSE(size.mWidth.mPercent == 0.0f,
+                              "can't have both until calc() implemented");
+            valX->SetAppUnits(size.mWidth.mLength);
+          } else {
+            valX->SetPercent(size.mWidth.mPercent);
+          }
         }
 
         if (size.mHeightType == nsStyleBackground::Size::eAuto) {
           valY->SetIdent(eCSSKeyword_auto);
-        } else if (size.mHeightType == nsStyleBackground::Size::ePercentage) {
-          valY->SetPercent(size.mHeight.mFloat);
         } else {
-          NS_ABORT_IF_FALSE(size.mHeightType == nsStyleBackground::Size::eLength,
+          NS_ABORT_IF_FALSE(size.mHeightType ==
+                              nsStyleBackground::Size::eLengthPercentage,
                             "bad mHeightType");
-          valY->SetAppUnits(size.mHeight.mCoord);
+          if (size.mHeight.mLength != 0) {
+            NS_ABORT_IF_FALSE(size.mHeight.mPercent == 0.0f,
+                              "can't have both until calc() implemented");
+            valY->SetAppUnits(size.mHeight.mLength);
+          } else {
+            valY->SetPercent(size.mHeight.mPercent);
+          }
         }
         break;
       }
