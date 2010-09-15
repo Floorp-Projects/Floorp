@@ -2287,7 +2287,7 @@ HUD_SERVICE.prototype =
                 msgObject.messageNode.appendChild(
                   msgObject.textFactory(
                     msgObject.prefix +
-                    self.getFormatStr("networkUrlWithStatus", data)));
+                    self.getFormatStr("networkUrlWithStatus", data) + "\n"));
 
                 break;
 
@@ -2312,7 +2312,8 @@ HUD_SERVICE.prototype =
                 msgObject.messageNode.appendChild(
                   msgObject.textFactory(
                     msgObject.prefix +
-                    self.getFormatStr("networkUrlWithStatusAndDuration", data)));
+                    self.getFormatStr("networkUrlWithStatusAndDuration",
+                                      data) + "\n"));
 
                 delete self.openRequests[item.id];
                 updatePanel = true;
@@ -3324,7 +3325,7 @@ function HUDConsole(aHeadsUpDisplay)
 
     let message = argumentArray.join(' ');
     let timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
-      message;
+      message + "\n";
 
     messageNode.appendChild(chromeDocument.createTextNode(timestampedMessage));
 
@@ -4022,7 +4023,7 @@ JSTerm.prototype = {
     // TODO: format the aOutputObject and don't just use the
     // aOuputObject.toString() function: [object object] -> Object {prop, ...}
     // See bug 586249.
-    let textNode = this.textFactory(aOutputObject);
+    let textNode = this.textFactory(aOutputObject + "\n");
     node.appendChild(textNode);
 
     lastGroupNode.appendChild(node);
@@ -4062,7 +4063,7 @@ JSTerm.prototype = {
       }
     }
 
-    var textNode = this.textFactory(aOutputMessage);
+    var textNode = this.textFactory(aOutputMessage + "\n");
     node.appendChild(textNode);
 
     lastGroupNode.appendChild(node);
@@ -4552,7 +4553,7 @@ LogMessage.prototype = {
     var ts = ConsoleUtils.timestamp();
     this.timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
       this.message.message;
-    var messageTxtNode = this.textFactory(this.timestampedMessage);
+    var messageTxtNode = this.textFactory(this.timestampedMessage + "\n");
 
     this.messageNode.appendChild(messageTxtNode);
 

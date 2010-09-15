@@ -7,8 +7,8 @@
 <!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
-<!ENTITY installFromFile.label                "Install From File…">
-<!ENTITY installFromFile.accesskey            "I">
+<!ENTITY installAddonFromFile.label           "Install Add-on From File…">
+<!ENTITY installAddonFromFile.accesskey       "I">
 
 <!ENTITY cmd.back.tooltip                     "Go back one page">
 <!ENTITY cmd.forward.tooltip                  "Go forward one page">
@@ -40,8 +40,6 @@
 <!ENTITY updates.updateAddonsNow.accesskey    "U">
 <!ENTITY updates.viewUpdates.label            "View Recent Updates">
 <!ENTITY updates.viewUpdates.accesskey        "V">
-<!ENTITY updates.backgroudUpdateCheck.label   "Check for Updates Automatically">
-<!ENTITY updates.backgroudUpdateCheck.accesskey "C">
 <!ENTITY updates.updateAddonsAutomatically.label     "Update Add-ons Automatically">
 <!ENTITY updates.updateAddonsAutomatically.accesskey "A">
 <!ENTITY updates.resetUpdatesToAutomatic.label       "Reset All Add-ons to Update Automatically">

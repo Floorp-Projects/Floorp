@@ -448,7 +448,11 @@
 #endif
           style="-moz-user-focus: ignore;">
     <menupopup id="appmenu-popup"
+#ifdef MOZ_SERVICES_SYNC
+               onpopupshowing="updateEditUIVisibility();gSyncUI.updateUI();">
+#else
                onpopupshowing="updateEditUIVisibility();">
+#endif
       <hbox>
         <vbox id="appmenuPrimaryPane">
           <hbox flex="1"
@@ -764,6 +768,18 @@
                 </menupopup>
               </menu>
             </hbox>
+#ifdef MOZ_SERVICES_SYNC
+            <spacer flex="1"/>
+            <!-- only one of sync-setup or sync-syncnow will be showing at once -->
+            <menuitem id="sync-setup-appmenu"
+                      label="&syncSetup.label;"
+                      observes="sync-setup-state"
+                      oncommand="gSyncUI.openSetup()"/>
+            <menuitem id="sync-syncnowitem-appmenu"
+                      label="&syncSyncNowItem.label;"
+                      observes="sync-syncnow-state"
+                      oncommand="gSyncUI.doSync(event);"/>
+#endif
         </vbox>
       </hbox>
     </menupopup>
@@ -1233,7 +1249,12 @@
                        command="cmd_fullZoomEnlarge"
                        tooltiptext="&zoomInButton.tooltip;"/>
       </toolbaritem>
-
+#ifdef MOZ_SERVICES_SYNC
+      <toolbarbutton id="sync-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&syncToolbarButton.label;"
+                     oncommand="gSyncUI.handleToolbarButton()"/>
+#endif
     </toolbarpalette>
   </toolbox>
 
@@ -1276,14 +1297,6 @@
                       hidden="true"
                       onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
 #ifdef MOZ_SERVICES_SYNC
-      <statusbarpanel id="sync-status-button"
-                      class="statusbarpanel-iconic"
-                      image="chrome://browser/skin/sync-16.png"
-                      label="&syncLogInItem.label;"
-                      oncommand="gSyncUI.handleStatusbarButton();"
-                      onmousedown="event.preventDefault();">
-      </statusbarpanel>
-      <separator class="thin"/>
       <statusbarpanel id="sync-notifications-button"
                       class="statusbarpanel-iconic-text"
                       hidden="true"

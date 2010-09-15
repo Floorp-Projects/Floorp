@@ -375,6 +375,9 @@ user_pref("urlclassifier.updateinterval", 172800);
 user_pref("browser.safebrowsing.provider.0.gethashURL", "http://%(server)s/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.provider.0.keyURL", "http://%(server)s/safebrowsing-dummy/newkey");
 user_pref("browser.safebrowsing.provider.0.updateURL", "http://%(server)s/safebrowsing-dummy/update");
+// Point update checks to the local testing server for fast failures
+user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL");
+user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
