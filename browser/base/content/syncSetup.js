@@ -297,9 +297,18 @@ var gSyncSetup = {
   },
 
   onPassphraseChange: function () {
+    // Ignore if there's no actual change from the generated one.
+    let el = document.getElementById("weavePassphrase");
+    if (gSyncUtils.normalizePassphrase(el.value) == Weave.Service.passphrase) {
+      el = document.getElementById("generatePassphraseButton");
+      el.hidden = true;
+      this._haveCustomSyncKey = false;
+      return;
+    }
+
     this._haveSyncKeyBackup = true;
     this._haveCustomSyncKey = true;
-    let el = document.getElementById("generatePassphraseButton");
+    el = document.getElementById("generatePassphraseButton");
     el.hidden = false;
     this.checkFields();
   },
