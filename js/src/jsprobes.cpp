@@ -51,9 +51,9 @@
 
 using namespace js;
 
-char Probes::nullName[] = "(null)";
+const char Probes::nullName[] = "(null)";
 
-char *
+const char *
 Probes::FunctionClassname(const JSFunction *fun)
 {
     return (fun && !FUN_INTERPRETED(fun) && !(fun->flags & JSFUN_TRCINFO) && FUN_CLASP(fun))
@@ -61,7 +61,7 @@ Probes::FunctionClassname(const JSFunction *fun)
            : nullName;
 }
 
-char *
+const char *
 Probes::ScriptFilename(JSScript *script)
 {
     return (script && script->filename) ? (char *)script->filename : nullName;
@@ -123,7 +123,7 @@ jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
 }
 #endif
 
-char *
+const char *
 Probes::FunctionName(JSContext *cx, const JSFunction *fun)
 {
     if (!fun)
