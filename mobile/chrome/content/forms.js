@@ -164,9 +164,14 @@ FormAssistant.prototype = {
         break;
       }
 
-      case "FormAssist:AutoComplete":
+      case "FormAssist:AutoComplete": {
         currentElement.value = json.value;
+
+        let event = currentElement.ownerDocument.createEvent("Events");
+        event.initEvent("DOMAutoComplete", true, true);
+        currentElement.dispatchEvent(event);
         break;
+      }
     }
   },
 
