@@ -45,12 +45,12 @@
 namespace js {
 
 class Probes {
-    static char nullName[];
+    static const char nullName[];
 
-    static char *FunctionClassname(const JSFunction *fun);
-    static char *ScriptFilename(JSScript *script);
+    static const char *FunctionClassname(const JSFunction *fun);
+    static const char *ScriptFilename(JSScript *script);
     static int FunctionLineNumber(JSContext *cx, const JSFunction *fun);
-    static char *FunctionName(JSContext *cx, const JSFunction *fun);
+    static const char *FunctionName(JSContext *cx, const JSFunction *fun);
 
     static void enterJSFunImpl(JSContext *cx, const JSFunction *fun);
     static void handleFunctionReturn(JSContext *cx, JSFunction *fun);
