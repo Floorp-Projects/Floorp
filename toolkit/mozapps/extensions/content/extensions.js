@@ -592,14 +592,6 @@ var gViewController = {
       }
     },
 
-    cmd_toggleBackgroundUpdateCheck: {
-      isEnabled: function() true,
-      doCommand: function() {
-        var enabled = !Services.prefs.getBoolPref(PREF_BACKGROUND_UPDATE);
-        Services.prefs.setBoolPref(PREF_BACKGROUND_UPDATE, enabled);
-      }
-    },
-
     cmd_showItemDetails: {
       isEnabled: function(aAddon) {
         return !!aAddon;
@@ -2120,7 +2112,6 @@ var gUpdatesView = {
   _sorters: null,
   _updateSelected: null,
   _updatePrefs: null,
-  _backgroundUpdateCheck: null,
   _categoryItem: null,
   _numManualUpdaters: 0,
 
@@ -2131,7 +2122,6 @@ var gUpdatesView = {
     this._sorters = document.getElementById("updates-sorters");
     this._sorters.handler = this;
 
-    this._backgroundUpdateCheck = document.getElementById("utils-backgroudUpdateCheck");
     this._categoryItem = gCategories.get("addons://updates/available");
 
     this._updateSelected = document.getElementById("update-selected");
@@ -2142,7 +2132,6 @@ var gUpdatesView = {
     this._updatePrefs = Services.prefs.getBranch("extensions.update.");
     this._updatePrefs.QueryInterface(Ci.nsIPrefBranch2);
     this._updatePrefs.addObserver("", this, false);
-    this.updateBackgroundCheck();
     this.updateManualUpdatersCount(true);
     this.updateAvailableCount(true);
 
@@ -2260,15 +2249,8 @@ var gUpdatesView = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic != "nsPref:changed")
       return;
-    if (aData == "enabled")
-      this.updateBackgroundCheck();
-    else if (aData == "autoUpdateDefault")
+    if (aData == "autoUpdateDefault")
       this.updateManualUpdatersCount();
-  },
-
-  updateBackgroundCheck: function() {
-    let isEnabled = this._updatePrefs.getBoolPref("enabled");
-    this._backgroundUpdateCheck.setAttribute("checked", isEnabled);
   },
 
   maybeRefresh: function() {
