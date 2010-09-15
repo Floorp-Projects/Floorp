@@ -105,7 +105,7 @@ let Change = {
           document.title = this._str("change.synckey.title");
           introText.innerHTML = this._str("change.synckey.introText");
           introText2.innerHTML = this._str("change.synckey.introText2");
-          warningText.innerHTML = this._str("change.synckey.warningText");
+          warningText.innerHTML = this._str("change.synckey2.warningText");
           this._dialog.getButton("accept")
               .setAttribute("label", this._str("change.synckey.acceptButton"));
         }
@@ -127,7 +127,7 @@ let Change = {
         else {
           document.title = this._str("change.password.title");
           box2label.value = this._str("new.password.confirm");
-          introText.textContent = this._str("change.password.introText");
+          introText.textContent = this._str("change.password2.introText");
           warningText.textContent = this._str("change.password.warningText");
           this._dialog.getButton("accept")
               .setAttribute("label", this._str("change.password.acceptButton"));
@@ -181,7 +181,7 @@ let Change = {
     if (this._updatingPassphrase) {
       Weave.Service.passphrase = pp;
       if (Weave.Service.login()) {
-        this._updateStatus("change.synckey.success", "success");
+        this._updateStatus("change.synckey2.success", "success");
         Weave.Service.persistLogin();
       }
       else {
@@ -192,9 +192,9 @@ let Change = {
       this._updateStatus("change.synckey.label", "active");
 
       if (Weave.Service.changePassphrase(pp))
-        this._updateStatus("change.synckey.success", "success");
+        this._updateStatus("change.synckey2.success", "success");
       else
-        this._updateStatus("change.synckey.error", "error");
+        this._updateStatus("change.synckey2.error", "error");
     }
 
     return false;
