@@ -3722,6 +3722,12 @@ nsHtml5TreeBuilder::requestSuspension()
   tokenizer->requestSuspension();
 }
 
+PRBool 
+nsHtml5TreeBuilder::cdataSectionAllowed()
+{
+  return inForeign && currentPtr >= 0 && stack[currentPtr]->ns != kNameSpaceID_XHTML;
+}
+
 void 
 nsHtml5TreeBuilder::setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks)
 {
