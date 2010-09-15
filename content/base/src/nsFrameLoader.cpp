@@ -1414,6 +1414,14 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
   NS_ASSERTION(treeItem, "docshell must be a treeitem!");
+
+  // Check that we're still in the docshell tree.
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_WARN_IF_FALSE(treeOwner,
+                   "Trying to load a new url to a docshell without owner!");
+  NS_ENSURE_STATE(treeOwner);
+  
   
   PRInt32 ourType;
   rv = treeItem->GetItemType(&ourType);
