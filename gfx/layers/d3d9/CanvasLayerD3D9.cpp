@@ -47,7 +47,7 @@ namespace layers {
 
 CanvasLayerD3D9::~CanvasLayerD3D9()
 {
-  if (mD3DManager->deviceManager()) {
+  if (mD3DManager && mD3DManager->deviceManager()) {
     mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
   }
 }
@@ -288,6 +288,13 @@ CanvasLayerD3D9::CleanResources()
     // In this case we have a texture in POOL_DEFAULT
     mTexture = nsnull;
   }
+}
+
+void
+CanvasLayerD3D9::LayerManagerDestroyed()
+{
+  mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
+  mD3DManager = nsnull;
 }
 
 void

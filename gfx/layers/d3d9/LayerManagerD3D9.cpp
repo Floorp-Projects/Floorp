@@ -64,14 +64,7 @@ LayerManagerD3D9::LayerManagerD3D9(nsIWidget *aWidget)
 
 LayerManagerD3D9::~LayerManagerD3D9()
 {
-  /* Important to release this first since it also holds a reference to the
-   * device manager
-   */
-  mSwapChain = nsnull;
-
-  if (mDeviceManager && mDeviceManager->Release() == 0) {
-    mDeviceManager = nsnull;
-  }
+  Destroy();
 }
 
 PRBool
@@ -108,6 +101,25 @@ void
 LayerManagerD3D9::SetClippingRegion(const nsIntRegion &aClippingRegion)
 {
   mClippingRegion = aClippingRegion;
+}
+
+void
+LayerManagerD3D9::Destroy()
+{
+  if (!IsDestroyed()) {
+    if (mRoot) {
+      static_cast<LayerD3D9*>(mRoot->ImplData())->LayerManagerDestroyed();
+    }
+    /* Important to release this first since it also holds a reference to the
+     * device manager
+     */
+    mSwapChain = nsnull;
+
+    if (mDeviceManager && mDeviceManager->Release() == 0) {
+      mDeviceManager = nsnull;
+    }
+  }
+  LayerManager::Destroy();
 }
 
 void
