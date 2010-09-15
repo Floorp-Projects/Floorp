@@ -52,6 +52,7 @@ struct OverrideMapping;
 namespace mozilla {
 namespace dom {
 
+class AlertObserver;
 class PrefObserver;
 
 class ContentChild : public PContentChild
@@ -101,14 +102,20 @@ public:
                                       const nsCString& aPrefRoot, 
                                       nsIObserver* aObserver);
 
+    // auto remove when alertfinished is received.
+    nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);
+
     virtual bool RecvNotifyRemotePrefObserver(const nsCString& aDomain);
     
+    virtual bool RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData);
+
     virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
 
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
 
+    nsTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsTArray<nsAutoPtr<PrefObserver> > mPrefObservers;
     bool mDead;
 
