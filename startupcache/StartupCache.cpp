@@ -175,6 +175,9 @@ StartupCache::Init()
   rv = mObserverService->AddObserver(mListener, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                      PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = mObserverService->AddObserver(mListener, "startupcache-invalidate",
+                                     PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   rv = LoadArchive();
   
@@ -420,6 +423,10 @@ StartupCacheListener::Observe(nsISupports *subject, const char* topic, const PRU
   nsresult rv = NS_OK;
   if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     StartupCache::gShutdownInitiated = PR_TRUE;
+  } else if (strcmp(topic, "startupcache-invalidate") == 0) {
+    StartupCache* sc = StartupCache::GetSingleton();
+    if (sc)
+      sc->InvalidateCache();
   }
   return rv;
 } 

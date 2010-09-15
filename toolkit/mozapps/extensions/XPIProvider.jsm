@@ -889,6 +889,34 @@ function resultRows(aStatement) {
 }
 
 /**
+  * Returns the timestamp of the most recently modified file in a directory,
+  * or simply the file's own timestamp if it is not a directory.
+  * 
+  * @param aFile
+  * A non-null nsIFile object
+  * @return Epoch time, as described above. 0 for an empty directory.
+  */
+function recursiveLastModifiedTime(aFile) {
+  if (aFile.isFile())
+    return aFile.lastModifiedTime;
+
+  if (aFile.isDirectory()) {
+    let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+    let entry, time;
+    let maxTime = aFile.lastModifiedTime;
+    while (entry = entries.nextFile) {
+      time = recursiveLastModifiedTime(entry);
+      maxTime = Math.max(time, maxTime);
+    }
+    entries.close();
+    return maxTime;
+  }
+  
+  // If the file is something else, just ignore it.
+  return 0;
+}
+
+/**
  * A helpful wrapper around the prefs service that allows for default values
  * when requested values aren't set.
  */
@@ -1296,9 +1324,10 @@ var XPIProvider = {
     }
     catch (e) { }
   },
-
+  
   /**
-   * Gets the add-on states for an install location.
+   * Gets the add-on states for an install location. 
+   * This function may be expensive because of the recursiveLastModifiedTime call.
    *
    * @param  location
    *         The install location to retrieve the add-on states for
@@ -1313,7 +1342,7 @@ var XPIProvider = {
       let id = aLocation.getIDForLocation(file);
       addonStates[id] = {
         descriptor: file.persistentDescriptor,
-        mtime: file.lastModifiedTime
+        mtime: recursiveLastModifiedTime(file)
       };
     });
 
@@ -1323,7 +1352,7 @@ var XPIProvider = {
   /**
    * Gets an array of install location states which uniquely describes all
    * installed add-ons with the add-on's InstallLocation name and last modified
-   * time.
+   * time. This function may be expensive because of the getAddonStates() call.
    *
    * @return an array of add-on states for each install location. Each state
    *         is an object with a name property holding the location's name and
@@ -1461,7 +1490,8 @@ var XPIProvider = {
   /**
    * Compares the add-ons that are currently installed to those that were
    * known to be installed when the application last ran and applies any
-   * changes found to the database.
+   * changes found to the database. Also sends "startupcache-invalidate" signal to 
+   * observerservice if it detects that data may have changed.
    *
    * @param  aState
    *         The array of current install location states
@@ -1869,6 +1899,12 @@ var XPIProvider = {
     // Cache the new install location states
     cache = JSON.stringify(this.getInstallLocationStates());
     Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
+    
+    if (changed) {
+      // Init this, so it will get the notification.
+      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+    }
     return changed;
   },
 
@@ -4975,7 +5011,7 @@ AddonInstall.prototype = {
 
         // Update the metadata in the database
         this.addon._installLocation = this.installLocation;
-        this.addon.updateDate = file.lastModifiedTime;
+        this.addon.updateDate = recursiveLastModifiedTime(file);
         this.addon.visible = true;
         if (isUpgrade) {
           XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon,
