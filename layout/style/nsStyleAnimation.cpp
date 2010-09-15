@@ -113,6 +113,13 @@ lcm(PRUint32 a, PRUint32 b)
   return (a / gcd(a, b)) * b;
 }
 
+inline void
+nscoordToCSSValue(nscoord aCoord, nsCSSValue& aCSSValue)
+{
+  aCSSValue.SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(aCoord),
+                          eCSSUnit_Pixel);
+}
+
 // Like nsStyleCoord::Calc, but with length in float pixels instead of nscoord.
 struct CalcValue {
   float mLength, mPercent;
@@ -149,6 +156,27 @@ ExtractCalcValue(const nsStyleAnimation::Value& aValue)
   }
 
   return result;
+}
+
+static bool
+SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
+{
+  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
+  if (!arr)
+    return false;
+  if (!aCalc->mHasPercent) {
+    nscoordToCSSValue(aCalc->mLength, arr->Item(0));
+  } else {
+    nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
+    if (!arr2)
+      return false;
+    arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
+    nscoordToCSSValue(aCalc->mLength, arr2->Item(0));
+    arr2->Item(1).SetPercentValue(aCalc->mPercent);
+  }
+
+  aValue.SetArrayValue(arr, eCSSUnit_Calc);
+  return true;
 }
 
 // CLASS METHODS
@@ -538,13 +566,6 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
   NS_ABORT_IF_FALSE(false, "Can't compute distance using the given common unit");
   return PR_FALSE;
-}
-
-inline void
-nscoordToCSSValue(nscoord aCoord, nsCSSValue& aCSSValue)
-{
-  aCSSValue.SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(aCoord),
-                          eCSSUnit_Pixel);
 }
 
 #define MAX_PACKED_COLOR_COMPONENT 255
@@ -1943,6 +1964,14 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
       aValue.SetIntValue(aCoord.GetIntValue(),
                          nsStyleAnimation::eUnit_Integer);
       break;
+    case eStyleUnit_Calc: {
+      nsAutoPtr<nsCSSValue> val(new nsCSSValue);
+      if (!SetCalcValue(aCoord.GetCalcValue(), *val))
+        return PR_FALSE;
+      aValue.SetAndAdoptCSSValueValue(val.forget(),
+                                      nsStyleAnimation::eUnit_Calc);
+      break;
+    }
     default:
       return PR_FALSE;
   }
@@ -2266,16 +2295,24 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             } else if (pos.mXPosition.mPercent == 0.0f) {
               nscoordToCSSValue(pos.mXPosition.mLength, item->mXValue);
             } else {
-              // FIXME: calc()
-              return PR_FALSE;
+              nsStyleCoord::Calc calc;
+              calc.mLength = pos.mXPosition.mLength;
+              calc.mPercent = pos.mXPosition.mPercent;
+              calc.mHasPercent = PR_TRUE;
+              if (!SetCalcValue(&calc, item->mXValue))
+                return PR_FALSE;
             }
             if (pos.mYPosition.mLength == 0) {
               item->mYValue.SetPercentValue(pos.mYPosition.mPercent);
             } else if (pos.mYPosition.mPercent == 0.0f) {
               nscoordToCSSValue(pos.mYPosition.mLength, item->mYValue);
             } else {
-              // FIXME: calc()
-              return PR_FALSE;
+              nsStyleCoord::Calc calc;
+              calc.mLength = pos.mYPosition.mLength;
+              calc.mPercent = pos.mYPosition.mPercent;
+              calc.mHasPercent = PR_TRUE;
+              if (!SetCalcValue(&calc, item->mYValue))
+                return PR_FALSE;
             }
           }
 
@@ -2310,8 +2347,12 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                 } else if (size.mWidth.mPercent == 0.0f) {
                   nscoordToCSSValue(size.mWidth.mLength, item->mXValue);
                 } else {
-                  // FIXME: calc()
-                  return PR_FALSE;
+                  nsStyleCoord::Calc calc;
+                  calc.mLength = size.mWidth.mLength;
+                  calc.mPercent = size.mWidth.mPercent;
+                  calc.mHasPercent = PR_TRUE;
+                  if (!SetCalcValue(&calc, item->mXValue))
+                    return PR_FALSE;
                 }
                 break;
             }
@@ -2330,8 +2371,12 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                 } else if (size.mHeight.mPercent == 0.0f) {
                   nscoordToCSSValue(size.mHeight.mLength, item->mYValue);
                 } else {
-                  // FIXME: calc()
-                  return PR_FALSE;
+                  nsStyleCoord::Calc calc;
+                  calc.mLength = size.mHeight.mLength;
+                  calc.mPercent = size.mHeight.mPercent;
+                  calc.mHasPercent = PR_TRUE;
+                  if (!SetCalcValue(&calc, item->mYValue))
+                    return PR_FALSE;
                 }
                 break;
             }
