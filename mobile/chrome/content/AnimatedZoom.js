@@ -46,7 +46,7 @@ let Cu = Components.utils;
 /**
  * Responsible for zooming in to a given view rectangle
  */
-const animatedZoom = {
+const AnimatedZoom = {
   /** Starts an animated zoom to zoomRect. */
   animateTo: function(aZoomRect) {
     if (!aZoomRect)
@@ -61,17 +61,15 @@ const animatedZoom = {
     Browser.hideTitlebar();
     Browser.forceChromeReflow();
 
-    this.beginTime = Date.now();
+    this.beginTime = mozAnimationStartTime;
 
     // Check if zooming animations were occuring before.
     if (this.zoomRect) {
       this.zoomFrom = this.zoomRect;
-    }
-    else {
+    } else {
       let browserRect = Rect.fromRect(getBrowser().getBoundingClientRect());
-      let scrollX = {}, scrollY = {};
-      getBrowser().getPosition(scrollX, scrollY);
-      this.zoomFrom = browserRect.translate(scrollX.value, scrollY.value);
+      let scroll = getBrowser().getPosition();
+      this.zoomFrom = browserRect.translate(scroll.x, scroll.y);
       this.updateTo(this.zoomFrom);
 
       window.addEventListener("MozBeforePaint", this, false);
@@ -109,16 +107,14 @@ const animatedZoom = {
       let counter = tdiff / this.animationDuration;
       if (counter < 1) {
         // update browser to interpolated rectangle
-        let rect = this.zoomFrom.blend(this.zoomTo, Math.min(counter, 1));
+        let rect = this.zoomFrom.blend(this.zoomTo, counter);
         this.updateTo(rect);
         mozRequestAnimationFrame();
-      }
-      else {
+      } else {
         // last cycle already rendered final scaled image, now clean up
         this.finish();
       }
-    }
-    catch(e) {
+    } catch(e) {
       this.finish();
       throw e;
     }

@@ -367,7 +367,7 @@ let ContentScroll =  {
           break;
 
         let cwu = Util.getWindowUtils(content);
-        cwu.setResolution(json.zoomLevel, json.zoomLevel);
+        cwu.setResolution(json.scale, json.scale);
         cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
         break;
       }
@@ -388,11 +388,11 @@ let ContentScroll =  {
 
       case "MozScrolledAreaChanged": {
         let doc = aEvent.originalTarget;
-        let win = doc.defaultView;
-        // XXX need to make some things in Util as its own module!
-        let scrollOffset = Util.getScrollOffset(win);
-        if (win.parent != win) // We are only interested in root scroll pane changes
+        if (content != doc.defaultView) // We are only interested in root scroll pane changes
           return;
+
+        // XXX need to make some things in Util as its own module!
+        let scrollOffset = Util.getScrollOffset(content);
 
         // Adjust width and height from the incoming event properties so that we
         // ignore changes to width and height contributed by growth in page

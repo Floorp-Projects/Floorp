@@ -37,8 +37,8 @@
 #filter substitution
 
 // for browser.xml binding
-pref("toolkit.browser.cachePixelX", 400);
-pref("toolkit.browser.cachePixelY", 1000);
+pref("toolkit.browser.cachePixelX", 800);
+pref("toolkit.browser.cachePixelY", 2000);
 pref("toolkit.browser.recacheRatio", 60);
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
@@ -373,7 +373,7 @@ pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
 pref("browser.ui.zoom.pageFitGranularity", 9); // don't zoom to fit by less than 1/9
-pref("browser.ui.zoom.animationDuration", 350); // ms duration of double-tap zoom animation
+pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoom animation
 
 // pinch gesture
 pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth

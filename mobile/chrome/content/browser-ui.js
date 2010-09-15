@@ -1057,15 +1057,15 @@ var TapHighlightHelper = {
   },
 
   show: function show(aRects) {
-    let scrollX = {}, scrollY = {};
-    getBrowser().getPosition(scrollX, scrollY);
+    let browser = getBrowser();
+    let scroll = browser.getPosition();
 
     let union = aRects.reduce(function(a, b) {
       return a.expandToContain(b);
-    }, new Rect(0, 0, 0, 0)).map(function(val) { return val * getBrowser().scale; })
-                            .translate(-scrollX.value, -scrollY.value);
+    }, new Rect(0, 0, 0, 0)).map(function(val) val * browser.scale)
+                            .translate(-scroll.x, -scroll.y);
 
-    let vis = Rect.fromRect(getBrowser().getBoundingClientRect());
+    let vis = Rect.fromRect(browser.getBoundingClientRect());
     let canvasArea = vis.intersect(union);
 
     let overlay = this._overlay;
@@ -1077,14 +1077,14 @@ var TapHighlightHelper = {
     let ctx = overlay.getContext("2d");
     ctx.save();
     ctx.translate(-canvasArea.left, -canvasArea.top);
-    ctx.scale(getBrowser().scale, getBrowser().scale);
+    ctx.scale(browser.scale, browser.scale);
 
     overlay.style.left = canvasArea.left + "px";
     overlay.style.top = canvasArea.top + "px";
     ctx.fillStyle = "rgba(0, 145, 255, .5)";
     for (let i = aRects.length - 1; i >= 0; i--) {
       let rect = aRects[i];
-      ctx.fillRect(rect.left - scrollX.value / getBrowser().scale, rect.top - scrollY.value / getBrowser().scale, rect.width, rect.height);
+      ctx.fillRect(rect.left - scroll.x / browser.scale, rect.top - scroll.y / browser.scale, rect.width, rect.height);
     }
     ctx.restore();
     overlay.style.display = "block";
@@ -1877,6 +1877,7 @@ var FormHelperUI = {
 
   /** Zoom and move viewport so that element is legible and touchable. */
   _zoom: function _formHelperZoom(aElementRect, aCaretRect) {
+    let browser = getBrowser();
     if (aElementRect && aCaretRect && this._open) {
       this._currentCaretRect = aCaretRect;
 
@@ -1929,7 +1930,7 @@ var FormHelperUI = {
         aCaretRect.x = aElementRect.x;
       }
 
-      let zoomLevel = getBrowser().scale;
+      let zoomLevel = browser.scale;
       let enableZoom = Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom");
       if (enableZoom) {
         zoomLevel = (viewAreaHeight / caretLines) / harmonizedCaretHeight;
@@ -1947,25 +1948,24 @@ var FormHelperUI = {
                : aCaretRect.x - viewAreaWidth + margin + marginRight;
       // use the adjustet Caret Y minus a margin four our visible rect
       let y = harmonizedCaretY - margin;
+      x *= browser.scale;
+      y *= browser.scale;
 
-      let scrollX = {}, scrollY = {};
-      getBrowser().getPosition(scrollX, scrollY);
-      let vis = new Rect(scrollX.value, scrollY.value, window.innerWidth, window.innerHeight);
-      x *= getBrowser().scale;
-      y *= getBrowser().scale;
+      let scroll = browser.getPosition(scrollX, scrollY);
+      let vis = new Rect(scroll.x, scroll.y, window.innerWidth, window.innerHeight);
 
       // from here on play with zoomed values
       // if we want to have it animated, build up zoom rect and animate.
-      if (enableZoom && getBrowser().scale != zoomLevel) {
+      if (enableZoom && browser.scale != zoomLevel) {
         // don't use browser functions they are bogus for this case
-        let zoomRatio = zoomLevel / getBrowser().scale;
+        let zoomRatio = zoomLevel / browser.scale;
         let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
         let zoomRect = new Rect(x, y, newVisW, newVisH);
 
         Browser.animatedZoomTo(zoomRect);
       }
       else { // no zooming at all
-        getBrowser().scrollBy(x - vis.x, y - vis.y);
+        browser.scrollBy(x - vis.x, y - vis.y);
       }
     }
   },

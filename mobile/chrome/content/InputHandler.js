@@ -432,7 +432,6 @@ MouseModule.prototype = {
       = this.getScrollboxFromElement(aEvent.target);
 
     // stop kinetic panning if targetScrollbox has changed
-    let oldDragger = this._dragger;
     if (this._kinetic.isActive() && this._dragger != dragger)
       this._kinetic.end();
 
@@ -445,7 +444,8 @@ MouseModule.prototype = {
     if (this._clicker)
       this._clicker.mouseDown(aEvent.clientX, aEvent.clientY);
 
-    if (this._dragger && this._dragger.isDraggable(targetScrollbox, targetScrollInterface))
+    let draggable = this._dragger.isDraggable(targetScrollbox, targetScrollInterface);
+    if (this._dragger && (draggable.x || draggable.y))
       this._doDragStart(aEvent);
 
     if (this._targetIsContent(aEvent)) {
@@ -1305,7 +1305,7 @@ GestureModule.prototype = {
     document.getElementById("inputhandler-overlay").customClicker.panBegin();
 
     // create the AnimatedZoom object for fast arbitrary zooming
-    this._pinchZoom = animatedZoom;
+    this._pinchZoom = AnimatedZoom;
 
     // start from current zoom level
     this._pinchZoomLevel = getBrowser().scale;
@@ -1320,10 +1320,9 @@ GestureModule.prototype = {
     [this._pinchStartX, this._pinchStartY] =
         Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
 
-    let scrollX = {}, scrollY = {};
-    getBrowser().getPosition(scrollX, scrollY);
-    this._pinchScrollX = scrollX.value;
-    this._pinchScrollY = scrollY.value;
+    let scroll = getBrowser().getPosition();
+    this._pinchScrollX = scroll.x;
+    this._pinchScrollY = scroll.y
 
     let [centerX, centerY] = Browser.transformClientToBrowser(window.innerWidth / 2,
                                                               window.innerHeight / 2);
@@ -1345,10 +1344,9 @@ GestureModule.prototype = {
         Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
 
     let scale = getBrowser().scale;
-    let scrollX = {}, scrollY = {};
-    getBrowser().getPosition(scrollX, scrollY);
-    pX += (this._pinchScrollX - scrollX.value) / scale;
-    pY += (this._pinchScrollY - scrollY.value) / scale;
+    let scroll = getBrowser().getPosition();
+    pX += (this._pinchScrollX - scroll.x) / scale;
+    pY += (this._pinchScrollY - scroll.y) / scale;
 
     // redraw zoom canvas according to new zoom rect
     let rect = Browser._getZoomRectForPoint(this._centerX + this._pinchStartX - pX,
