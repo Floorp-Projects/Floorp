@@ -1633,6 +1633,7 @@ jsid nsDOMClassInfo::sOnended_id         = JSID_VOID;
 jsid nsDOMClassInfo::sOnratechange_id    = JSID_VOID;
 jsid nsDOMClassInfo::sOndurationchange_id= JSID_VOID;
 jsid nsDOMClassInfo::sOnvolumechange_id  = JSID_VOID;
+jsid nsDOMClassInfo::sOnmessage_id       = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
@@ -1856,6 +1857,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnratechange_id,    cx, "onratechange");
   SET_JSID_TO_STRING(sOndurationchange_id,cx, "ondurationchange");
   SET_JSID_TO_STRING(sOnvolumechange_id,  cx, "onvolumechange");
+  SET_JSID_TO_STRING(sOnmessage_id,       cx, "onmessage");
 #endif // MOZ_MEDIA
 
   return NS_OK;
@@ -4928,6 +4930,7 @@ nsDOMClassInfo::ShutDown()
   sOnratechange_id    = JSID_VOID;
   sOndurationchange_id= JSID_VOID;
   sOnvolumechange_id  = JSID_VOID;
+  sOnmessage_id       = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -7777,7 +7780,8 @@ nsEventReceiverSH::ReallyIsEventName(jsid id, jschar aFirstChar)
             id == sOnmouseout_id     ||
             id == sOnmouseover_id    ||
             id == sOnmouseup_id      ||
-            id == sOnmousedown_id);
+            id == sOnmousedown_id    ||
+            id == sOnmessage_id);
   case 'p' :
     return (id == sOnpaint_id        ||
             id == sOnpageshow_id     ||
