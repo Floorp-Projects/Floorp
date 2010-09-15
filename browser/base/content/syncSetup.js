@@ -729,7 +729,7 @@ var gSyncSetup = {
         document.getElementById("historyCount").value =
           PluralForm.get(daysOfHistory,
                          this._stringBundle.GetStringFromName("historyDaysCount.label"))
-                             .replace("#1", daysOfHistory);
+                             .replace("%S", daysOfHistory);
 
         // bookmarks
         let bookmarks = 0;
@@ -744,14 +744,14 @@ var gSyncSetup = {
         document.getElementById("bookmarkCount").value =
           PluralForm.get(bookmarks,
                          this._stringBundle.GetStringFromName("bookmarksCount.label"))
-                             .replace("#1", bookmarks);
+                             .replace("%S", bookmarks);
 
         // passwords
         let logins = Weave.Svc.Login.getAllLogins({});
         document.getElementById("passwordCount").value =
           PluralForm.get(logins.length,
                          this._stringBundle.GetStringFromName("passwordsCount.label"))
-                             .replace("#1", logins.length);
+                             .replace("%S", logins.length);
         this._case1Setup = true;
         break;
       case 2:
@@ -779,7 +779,7 @@ var gSyncSetup = {
           let label =
             PluralForm.get(count - 5,
                            this._stringBundle.GetStringFromName("additionalClientCount.label"))
-                               .replace("#1", count - 5);
+                               .replace("%S", count - 5);
           appendNode(label);
         }
         this._case2Setup = true;
