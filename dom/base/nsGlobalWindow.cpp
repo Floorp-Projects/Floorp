@@ -168,6 +168,8 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
+#include "nsFileDataProtocolHandler.h"
+#include "nsIDOMFile.h"
 #include "nsIURIFixup.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsCDefaultURIFixup.h"
@@ -2943,6 +2945,35 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
   }
 
   NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::CreateBlobURL(nsIDOMFile* aFile, nsAString& aURL)
+{
+  FORWARD_TO_INNER(CreateBlobURL, (aFile, aURL), NS_ERROR_UNEXPECTED);
+
+  NS_ENSURE_STATE(mDoc);
+
+  nsresult rv = aFile->GetInternalUrl(aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mDoc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::RevokeBlobURL(const nsAString& aURL)
+{
+  FORWARD_TO_INNER(RevokeBlobURL, (aURL), NS_ERROR_UNEXPECTED);
+
+  NS_ENSURE_STATE(mDoc);
+
+  NS_LossyConvertUTF16toASCII asciiurl(aURL);
+  mDoc->UnregisterFileDataUri(asciiurl);
+  nsFileDataProtocolHandler::RemoveFileDataEntry(asciiurl);
 
   return NS_OK;
 }
