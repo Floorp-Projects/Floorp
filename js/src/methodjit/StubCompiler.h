@@ -109,9 +109,12 @@ class StubCompiler
 
     Call vpInc(JSOp op, uint32 depth);
 
-#define STUB_CALL_TYPE(type)                                    \
-    Call call(type stub) {                                      \
-        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));     \
+#define STUB_CALL_TYPE(type)                                        \
+    Call call(type stub) {                                          \
+        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));         \
+    }                                                               \
+    Call call(type stub, uint32 slots) {                            \
+        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots);  \
     }
 
     STUB_CALL_TYPE(JSObjStub);
