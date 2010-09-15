@@ -949,12 +949,11 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
               NS_HTML5_CONTINUE(stateloop);
             }
             case '[': {
-              if (tokenHandler->isInForeign()) {
+              if (tokenHandler->cdataSectionAllowed()) {
                 clearLongStrBufAndAppend(c);
                 index = 0;
                 state = NS_HTML5TOKENIZER_CDATA_START;
                 NS_HTML5_CONTINUE(stateloop);
-              } else {
               }
             }
             default: {

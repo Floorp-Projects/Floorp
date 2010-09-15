@@ -209,6 +209,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent** node);
   public:
+    PRBool cdataSectionAllowed();
     void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks);
   protected:
     nsIContent** currentNode();
