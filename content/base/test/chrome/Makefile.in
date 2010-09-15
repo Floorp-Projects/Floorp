@@ -45,7 +45,6 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
     bug421622-referer.sjs \
-    bug514705.html \
     $(NULL)
 
 _CHROME_FILES = \
@@ -54,8 +53,6 @@ _CHROME_FILES = \
     test_bug429785.xul \
     test_bug430050.xul \
     test_bug467123.xul \
-    test_bug514705.xul \
-    bug514705_helper.xul \
     test_title.xul \
     title_window.xul \
     test_bug549682.xul \

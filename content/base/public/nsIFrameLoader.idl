@@ -41,23 +41,17 @@
 
 interface nsIDocShell;
 interface nsIURI;
-interface nsIWebProgress;
 interface nsIFrame;
 interface nsIChromeFrameMessageManager;
 interface nsIVariant;
 
-[scriptable, uuid(65d2c9e2-852c-48cf-a95d-9b82f1273c15)]
+[scriptable, uuid(50a67436-bb44-11df-8d9a-001e37d2764a)]
 interface nsIFrameLoader : nsISupports
 {
   /**
    * Get the docshell from the frame loader.
    */
   readonly attribute nsIDocShell docShell;
-
-  /**
-   * Get the nsIWebProgress from the frame loader, allowing listener registration.
-   */
-  readonly attribute nsIWebProgress webProgress;
 
   /**
    * Start loading the frame. This method figures out what to load
