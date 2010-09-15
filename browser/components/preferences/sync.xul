@@ -131,7 +131,7 @@
                              value="&resetSync.label;"/>
                       <label class="text-link"
                              onclick="gSyncPane.startOver(true); return false;"
-                             value="&differentAccount.label;"/>
+                             value="&stopUsingAccount.label;"/>
                     </vbox>
                   <spacer/>
                 </row>
