@@ -1460,11 +1460,9 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
     NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
   mBufferSize = aSize;
 
+  nsIntRect bufRect = mVisibleRegion.GetBounds();
   BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
-                                      // only |aSize| really matters
-                                      // here, since Painted() soon
-                                      // follows
-                                      nsIntRect(nsIntPoint(0, 0), aSize),
+                                      bufRect,
                                       tmpFront);
   return BasicManager()->OpenDescriptor(mBackBuffer);
 }
@@ -1775,6 +1773,7 @@ public:
   virtual void DestroyFrontBuffer()
   {
     mFrontBuffer.Clear();
+    mValidRegion.SetEmpty();
     mOldValidRegion.SetEmpty();
     mOldXResolution = 1.0;
     mOldYResolution = 1.0;
@@ -1814,12 +1813,22 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
                              nsIntRegion* aNewBackValidRegion,
                              float* aNewXResolution, float* aNewYResolution)
 {
+  // This code relies on Swap() arriving *after* attribute mutations.
   aNewBack->buffer() = mFrontBufferDescriptor;
   // We have to invalidate the pixels painted into the new buffer.
   // They might overlap with our old pixels.
-  aNewBackValidRegion->Sub(mOldValidRegion, aUpdatedRegion);
-  *aNewXResolution = mOldXResolution;
-  *aNewYResolution = mOldYResolution;
+  if (mOldXResolution == mXResolution && mOldYResolution == mYResolution) {
+    aNewBackValidRegion->Sub(mValidRegion, aUpdatedRegion);
+  } else {
+    // On resolution changes, pretend that our buffer has the new
+    // resolution, but just has no valid content.  This can avoid
+    // unnecessary buffer reallocs.
+    aNewBackValidRegion->SetEmpty();
+    mOldXResolution = mXResolution;
+    mOldYResolution = mYResolution;
+  }
+  *aNewXResolution = mXResolution;
+  *aNewYResolution = mYResolution;
 
   nsRefPtr<gfxASurface> newFrontBuffer =
     BasicManager()->OpenDescriptor(aNewFront.buffer());
