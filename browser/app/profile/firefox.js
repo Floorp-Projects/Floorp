@@ -91,6 +91,11 @@ pref("app.update.timer", 600000);
 // Enables some extra Application Update Logging (can reduce performance)
 pref("app.update.log", false);
 
+// The number of general background check failures to allow before notifying the
+// user of the failure. User initiated update checks always notify the user of
+// the failure.
+pref("app.update.backgroundMaxErrors", 10);
+
 // When |app.update.cert.requireBuiltIn| is true or not specified the
 // final certificate and all certificates the connection is redirected to before
 // the final certificate for the url specified in the |app.update.url|
