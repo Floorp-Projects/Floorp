@@ -119,7 +119,7 @@ let gSyncPane = {
       this.page = PAGE_NO_ACCOUNT;
     else {
       this.page = PAGE_HAS_ACCOUNT;
-      document.getElementById("currentUser").value = Weave.Service.username;
+      document.getElementById("currentAccount").value = Weave.Service.account;
       document.getElementById("syncComputerName").value = Weave.Clients.localName;
       if (Weave.Status.service == Weave.LOGIN_FAILED)
         this.onLoginError();

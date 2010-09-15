@@ -90,8 +90,8 @@
             <grid>
               <rows>
                 <row align="center">
-                  <label value="&currentUser.label;" control="currentUser"/>
-                  <textbox id="currentUser" readonly="true">
+                  <label value="&currentAccount.label;" control="currentAccount"/>
+                  <textbox id="currentAccount" readonly="true">
                     <image/>
                   </textbox>
                   <hbox align="center">
