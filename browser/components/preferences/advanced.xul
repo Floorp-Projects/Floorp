@@ -243,11 +243,11 @@
             <checkbox preference="browser.cache.disk.smart_size.enabled"
                       id="allowSmartSize" flex="1"
                       onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
-                      label="&smartSizeCache.label;"/>
+                      label="&smartSizeCache.label;" accesskey="&smartSizeCache.accesskey;"/>
             <hbox align="center" class="indent">
               <label id="useCacheBefore" control="cacheSize"
                      accesskey="&useCacheBefore.accesskey;" value="&useCacheBefore.label;"/>
-              <textbox id="cacheSize" type="number" size="2"
+              <textbox id="cacheSize" type="number" size="4" max="1024"
                        preference="browser.cache.disk.capacity"
                        onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                        onsynctopreference="return gAdvancedPane.writeCacheSize();"
