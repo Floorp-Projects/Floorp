@@ -7997,7 +7997,7 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
     return PR_FALSE;
 
   nsRefPtr<nsCSSValue::Array> srcVals
-    = nsCSSValue::Array::Create(values.Length());
+    = nsCSSValue::Array::Create(mozilla::fallible_t(), values.Length());
   if (!srcVals) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -8084,7 +8084,7 @@ CSSParserImpl::ParseFontRanges(nsCSSValue& aValue)
     return PR_FALSE;
 
   nsRefPtr<nsCSSValue::Array> srcVals
-    = nsCSSValue::Array::Create(ranges.Length());
+    = nsCSSValue::Array::Create(mozilla::fallible_t(), ranges.Length());
   if (!srcVals) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
