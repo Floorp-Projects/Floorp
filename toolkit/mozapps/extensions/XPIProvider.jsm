@@ -4085,6 +4085,11 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
   this.listeners = [];
   this.existingAddon = aExistingAddon;
   this.error = 0;
+  if (aLoadGroup)
+    this.window = aLoadGroup.notificationCallbacks
+                            .getInterface(Ci.nsIDOMWindow);
+  else
+    this.window = null;
 
   if (aUrl instanceof Ci.nsIFileURL) {
     this.file = aUrl.file.QueryInterface(Ci.nsILocalFile);
@@ -4968,7 +4973,7 @@ AddonInstall.prototype = {
     if (iid.equals(Ci.nsIAuthPrompt2)) {
       var factory = Cc["@mozilla.org/prompter;1"].
                     getService(Ci.nsIPromptFactory);
-      return factory.getPrompt(null, Ci.nsIAuthPrompt);
+      return factory.getPrompt(this.window, Ci.nsIAuthPrompt);
     }
     else if (iid.equals(Ci.nsIChannelEventSink)) {
       return this;
