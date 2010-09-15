@@ -43,7 +43,6 @@ include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PContentPermissionRequest;
-include protocol PExternalHelperApp;
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
@@ -72,7 +71,6 @@ rpc protocol PBrowser
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
     manages PContentPermissionRequest;
-    manages PExternalHelperApp;
 
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
@@ -120,10 +118,6 @@ parent:
                    PRInt32[] aIntParams, nsString[] aStringParams);
 
     __delete__();
-
-    PExternalHelperApp(URI uri, nsCString aMimeContentType,
-                       nsCString aContentDisposition, bool aForceSave,
-                       PRInt64 aContentLength);
 
 child:
     CreateWidget(MagicWindowHandle parentWidget);

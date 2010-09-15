@@ -140,7 +140,7 @@
 #include "nsIPrivateBrowsingService.h"
 
 #ifdef MOZ_IPC
-#include "TabChild.h"
+#include "ContentChild.h"
 #include "nsXULAppAPI.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShellTreeOwner.h"
@@ -684,19 +684,15 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 #ifdef MOZ_IPC
   PRInt64 contentLength = GetContentLengthAsInt64(aRequest);
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // We need to get a hold of a TabChild so that we can begin forwarding
+    // We need to get a hold of a ContentChild so that we can begin forwarding
     // this data to the parent.  In the HTTP case, this is unfortunate, since
     // we're actually passing data from parent->child->parent wastefully, but
     // the Right Fix will eventually be to short-circuit those channels on the
     // parent side based on some sort of subscription concept.
-    nsCOMPtr<nsIDocShell> docshell(do_GetInterface(aWindowContext));
-    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
-    nsCOMPtr<nsIDocShellTreeOwner> owner;
-    item->GetTreeOwner(getter_AddRefs(owner));
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsITabChild> tabchild = do_GetInterface(owner);
-    if (!tabchild)
+    using mozilla::dom::ContentChild;
+    using mozilla::dom::ExternalHelperAppChild;
+    ContentChild *child = ContentChild::GetSingleton();
+    if (!child)
       return NS_ERROR_FAILURE;
 
     nsCString disp;
@@ -707,9 +703,6 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     // protocol will act as a listener on the child-side and create a "real"
     // helperAppService listener on the parent-side, via another call to
     // DoContent.
-    using mozilla::dom::TabChild;
-    using mozilla::dom::ExternalHelperAppChild;
-    TabChild *child = static_cast<TabChild*>(tabchild.get());
     mozilla::dom::PExternalHelperAppChild *pc;
     pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
                                                   nsCString(aMimeContentType),

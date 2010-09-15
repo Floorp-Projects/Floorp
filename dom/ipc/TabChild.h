@@ -224,13 +224,6 @@ public:
                                                      const nsTArray<int>&,
                                                      const nsTArray<nsString>&);
     virtual bool DeallocPContentDialog(PContentDialogChild* aDialog);
-    virtual PExternalHelperAppChild *AllocPExternalHelperApp(
-            const IPC::URI& uri,
-            const nsCString& aMimeContentType,
-            const nsCString& aContentDisposition,
-            const bool& aForceSave,
-            const PRInt64& aContentLength);
-    virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
     static void ParamsToArrays(nsIDialogParamBlock* aParams,
                                nsTArray<int>& aIntParams,
                                nsTArray<nsString>& aStringParams);

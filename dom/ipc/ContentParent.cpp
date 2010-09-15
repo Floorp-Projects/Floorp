@@ -59,6 +59,8 @@
 #include "nsIAlertsService.h"
 #include "nsToolkitCompsCID.h"
 
+#include "mozilla/dom/ExternalHelperAppParent.h"
+
 #ifdef ANDROID
 #include "AndroidBridge.h"
 using namespace mozilla;
@@ -420,6 +422,27 @@ bool
 ContentParent::DeallocPNecko(PNeckoParent* necko)
 {
     delete necko;
+    return true;
+}
+
+PExternalHelperAppParent*
+ContentParent::AllocPExternalHelperApp(const IPC::URI& uri,
+                                       const nsCString& aMimeContentType,
+                                       const nsCString& aContentDisposition,
+                                       const bool& aForceSave,
+                                       const PRInt64& aContentLength)
+{
+    ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
+    parent->AddRef();
+    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave);
+    return parent;
+}
+
+bool
+ContentParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
+{
+    ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
+    parent->Release();
     return true;
 }
 

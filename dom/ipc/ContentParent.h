@@ -114,6 +114,14 @@ private:
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
 
+    virtual PExternalHelperAppParent* AllocPExternalHelperApp(
+            const IPC::URI& uri,
+            const nsCString& aMimeContentType,
+            const nsCString& aContentDisposition,
+            const bool& aForceSave,
+            const PRInt64& aContentLength);
+    virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
+
     virtual bool RecvGetPrefType(const nsCString& prefName,
             PRInt32* retValue, nsresult* rv);
 
