@@ -752,6 +752,9 @@ DDRAW_FAILED:
           result = DispatchWindowEvent(&event, eventStatus);
           if (layerManagerD3D9->DeviceWasRemoved()) {
             mLayerManager = nsnull;
+            // When our device was removed, we should have gfxWindowsPlatform
+            // check if its render mode is up to date!
+            gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
             Invalidate(PR_FALSE);
           }
         }
