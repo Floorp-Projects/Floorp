@@ -57,7 +57,7 @@ ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
 
 ThebesLayerD3D9::~ThebesLayerD3D9()
 {
-  if (mD3DManager->deviceManager()) {
+  if (mD3DManager && mD3DManager->deviceManager()) {
     mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
   }
 }
@@ -273,6 +273,13 @@ void
 ThebesLayerD3D9::CleanResources()
 {
   mTexture = nsnull;
+}
+
+void
+ThebesLayerD3D9::LayerManagerDestroyed()
+{
+  mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
+  mD3DManager = nsnull;
 }
 
 Layer*
