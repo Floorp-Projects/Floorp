@@ -48,6 +48,8 @@
 #include "nsCOMPtr.h"
 #include "nsITabParent.h"
 #include "nsIBrowserDOMWindow.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIAuthPromptProvider.h"
@@ -64,11 +66,34 @@ struct JSObject;
 
 namespace mozilla {
 namespace dom {
+struct TabParentListenerInfo 
+{
+  TabParentListenerInfo(nsIWeakReference *aListener, unsigned long aNotifyMask)
+    : mWeakListener(aListener), mNotifyMask(aNotifyMask)
+  {
+  }
+
+  TabParentListenerInfo(const TabParentListenerInfo& obj)
+    : mWeakListener(obj.mWeakListener), mNotifyMask(obj.mNotifyMask) 
+  {
+  }
+
+  nsWeakPtr mWeakListener;
+
+  PRUint32 mNotifyMask;
+};
+
+inline    
+bool operator==(const TabParentListenerInfo& lhs, const TabParentListenerInfo& rhs)
+{
+  return &lhs == &rhs;
+}
 
 class ContentDialogParent : public PContentDialogParent {};
 
 class TabParent : public PBrowserParent 
                 , public nsITabParent 
+                , public nsIWebProgress
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
                 , public nsISSLStatusProvider
@@ -85,6 +110,24 @@ public:
  
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
+    virtual bool RecvNotifyProgressChange(const PRInt64& aProgress,
+                                          const PRInt64& aProgressMax,
+                                          const PRInt64& aTotalProgress,
+                                          const PRInt64& aMaxTotalProgress);
+    virtual bool RecvNotifyStateChange(const PRUint32& aStateFlags,
+                                       const nsresult& aStatus);
+    virtual bool RecvNotifyLocationChange(const nsCString& aUri);
+    virtual bool RecvNotifyStatusChange(const nsresult& status,
+                                        const nsString& message);
+    virtual bool RecvNotifySecurityChange(const PRUint32& aState,
+                                          const PRBool& aUseSSLStatusObject,
+                                          const nsString& aTooltip,
+                                          const nsCString& aSecInfoAsString);
+
+    virtual bool RecvRefreshAttempted(const nsCString& aURI,
+                                      const PRInt32& aMillis,
+                                      const bool& aSameURI,
+                                      bool* aAllowRefresh);
 
     virtual bool AnswerCreateWindow(PBrowserParent** retval);
     virtual bool RecvSyncMessage(const nsString& aMessage,
@@ -163,6 +206,7 @@ public:
     JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBPROGRESS
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSISECUREBROWSERUI
     NS_DECL_NSISSLSTATUSPROVIDER
@@ -174,10 +218,14 @@ protected:
                         const nsString& aJSON,
                         nsTArray<nsString>* aJSONRetVal = nsnull);
 
+    TabParentListenerInfo* GetListenerInfo(nsIWebProgressListener *aListener);
+
     void ActorDestroy(ActorDestroyReason why);
 
     nsIDOMElement* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
+
+    nsTArray<TabParentListenerInfo> mListenerInfoList;
 
     struct DelayedDialogData
     {
