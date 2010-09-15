@@ -121,7 +121,6 @@ nsHttpChannel::nsHttpChannel()
     , mAsyncCacheOpen(PR_FALSE)
     , mPendingAsyncCallOnResume(nsnull)
     , mSuspendCount(0)
-    , mApplyConversion(PR_TRUE)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
@@ -3479,7 +3478,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
-    NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
     NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
@@ -3696,48 +3694,6 @@ nsHttpChannel::SetServicingRemoteChannel(PRBool value)
     mRemoteChannel = value;
     return NS_OK;
 }
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIEncodedChannel
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetApplyConversion(PRBool *value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-    *value = mApplyConversion;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetApplyConversion(PRBool value)
-{
-    LOG(("nsHttpChannel::SetApplyConversion [this=%p value=%d]\n", this, value));
-    mApplyConversion = value;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings)
-{
-    NS_PRECONDITION(aEncodings, "Null out param");
-    if (!mResponseHead) {
-        *aEncodings = nsnull;
-        return NS_OK;
-    }
-    
-    const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-    if (!encoding) {
-        *aEncodings = nsnull;
-        return NS_OK;
-    }
-    nsContentEncodings* enumerator = new nsContentEncodings(this, encoding);
-    if (!enumerator)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aEncodings = enumerator);
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -4749,145 +4705,6 @@ nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
         "Trying to pop wrong method from redirect async stack!");
 
     mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsContentEncodings <public>
-//-----------------------------------------------------------------------------
-
-nsHttpChannel::nsContentEncodings::nsContentEncodings(nsIHttpChannel* aChannel,
-                                                          const char* aEncodingHeader) :
-    mEncodingHeader(aEncodingHeader), mChannel(aChannel), mReady(PR_FALSE)
-{
-    mCurEnd = aEncodingHeader + strlen(aEncodingHeader);
-    mCurStart = mCurEnd;
-}
-    
-nsHttpChannel::nsContentEncodings::~nsContentEncodings()
-{
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsContentEncodings::nsISimpleEnumerator
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::nsContentEncodings::HasMore(PRBool* aMoreEncodings)
-{
-    if (mReady) {
-        *aMoreEncodings = PR_TRUE;
-        return NS_OK;
-    }
-    
-    nsresult rv = PrepareForNext();
-    *aMoreEncodings = NS_SUCCEEDED(rv);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
-{
-    aNextEncoding.Truncate();
-    if (!mReady) {
-        nsresult rv = PrepareForNext();
-        if (NS_FAILED(rv)) {
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    const nsACString & encoding = Substring(mCurStart, mCurEnd);
-
-    nsACString::const_iterator start, end;
-    encoding.BeginReading(start);
-    encoding.EndReading(end);
-
-    PRBool haveType = PR_FALSE;
-    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("gzip"),
-                                      start,
-                                      end)) {
-        aNextEncoding.AssignLiteral(APPLICATION_GZIP);
-        haveType = PR_TRUE;
-    }
-
-    if (!haveType) {
-        encoding.BeginReading(start);
-        if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("compress"),
-                                          start,
-                                          end)) {
-            aNextEncoding.AssignLiteral(APPLICATION_COMPRESS);
-                                           
-            haveType = PR_TRUE;
-        }
-    }
-    
-    if (! haveType) {
-        encoding.BeginReading(start);
-        if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("deflate"),
-                                          start,
-                                          end)) {
-            aNextEncoding.AssignLiteral(APPLICATION_ZIP);
-            haveType = PR_TRUE;
-        }
-    }
-
-    // Prepare to fetch the next encoding
-    mCurEnd = mCurStart;
-    mReady = PR_FALSE;
-    
-    if (haveType)
-        return NS_OK;
-
-    NS_WARNING("Unknown encoding type");
-    return NS_ERROR_FAILURE;
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsContentEncodings::nsISupports
-//-----------------------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS1(nsHttpChannel::nsContentEncodings, nsIUTF8StringEnumerator)
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsContentEncodings <private>
-//-----------------------------------------------------------------------------
-
-nsresult
-nsHttpChannel::nsContentEncodings::PrepareForNext(void)
-{
-    NS_PRECONDITION(mCurStart == mCurEnd, "Indeterminate state");
-    
-    // At this point both mCurStart and mCurEnd point to somewhere
-    // past the end of the next thing we want to return
-    
-    while (mCurEnd != mEncodingHeader) {
-        --mCurEnd;
-        if (*mCurEnd != ',' && !nsCRT::IsAsciiSpace(*mCurEnd))
-            break;
-    }
-    if (mCurEnd == mEncodingHeader)
-        return NS_ERROR_NOT_AVAILABLE; // no more encodings
-    ++mCurEnd;
-        
-    // At this point mCurEnd points to the first char _after_ the
-    // header we want.  Furthermore, mCurEnd - 1 != mEncodingHeader
-    
-    mCurStart = mCurEnd - 1;
-    while (mCurStart != mEncodingHeader &&
-           *mCurStart != ',' && !nsCRT::IsAsciiSpace(*mCurStart))
-        --mCurStart;
-    if (*mCurStart == ',' || nsCRT::IsAsciiSpace(*mCurStart))
-        ++mCurStart; // we stopped because of a weird char, so move up one
-        
-    // At this point mCurStart and mCurEnd bracket the encoding string
-    // we want.  Check that it's not "identity"
-    if (Substring(mCurStart, mCurEnd).Equals("identity",
-                                             nsCaseInsensitiveCStringComparator())) {
-        mCurEnd = mCurStart;
-        return PrepareForNext();
-    }
-        
-    mReady = PR_TRUE;
-    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
