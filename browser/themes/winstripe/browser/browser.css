@@ -912,22 +912,17 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   border-bottom-left-radius: 0;
 }
 
-/* sync button */
-
+ /* sync button */
+ 
 #sync-button {
-  list-style-image: url("chrome://browser/skin/sync-16.png");
+  -moz-image-region: rect(0, 324px, 18px, 306px);
 }
 
 #sync-button[status="active"] {
-  list-style-image: url("chrome://browser/skin/sync-16-throbber.png");
+  list-style-image: url("chrome://browser/skin/sync-throbber.png");
+  -moz-image-region: rect(0, 18px, 18px, 0);
 }
-
-toolbar:not([iconsize="small"]) #sync-button > .toolbarbutton-icon {
-  margin: 1px;
-  width: 16px;
-  height: 16px;
-}
-
+ 
 /* ::::: fullscreen window controls ::::: */
 
 #minimize-button,
