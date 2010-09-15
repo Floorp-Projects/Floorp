@@ -14,8 +14,8 @@
 <!ENTITY server.label               "Server">
 <!ENTITY serverType.main.label      "&syncBrand.fullName.label; Server">
 <!ENTITY serverType.custom.label    "Use a custom server">
-<!ENTITY signIn.username.label      "User Name">
-<!ENTITY signIn.username.accesskey  "U">
+<!ENTITY signIn.account.label       "Email Address / User Name">
+<!ENTITY signIn.account.accesskey   "E">
 <!ENTITY signIn.password.label      "Password">
 <!ENTITY signIn.password.accesskey  "P">
 <!ENTITY signIn.serverURL.label     "Server URL">
