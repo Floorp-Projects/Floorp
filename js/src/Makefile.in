@@ -331,6 +331,41 @@ endif
 
 endif
 
+###############################################
+# BEGIN include sources for V8 dtoa
+#
+VPATH += 	$(srcdir)/v8-dtoa \
+		$(NONE)
+
+CPPSRCS += 	checks.cc \
+		conversions.cc \
+		diy-fp.cc \
+		v8-dtoa.cc \
+		fast-dtoa.cc \
+		platform.cc \
+		utils.cc \
+		$(NONE)
+
+INSTALLED_HEADERS += \
+		cached-powers.h \
+		checks.h \
+		conversions.h \
+		diy-fp.h \
+		double.h \
+		dtoa.h \
+		fast-dtoa.h \
+		globals.h \
+		include-v8.h \
+		platform.h \
+		powers-ten.h \
+		utils.h \
+		v8.h \
+		$(NULL)
+
+#
+# END enclude sources for V8 dtoa
+#############################################
+
 ifeq (,$(filter-out powerpc sparc,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
