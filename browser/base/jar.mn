@@ -67,6 +67,8 @@ browser.jar:
         content/browser/syncGenericChange.js          (content/syncGenericChange.js)
 *       content/browser/syncKey.xhtml                 (content/syncKey.xhtml)
 *       content/browser/syncNotification.xml          (content/syncNotification.xml)
+*       content/browser/syncQuota.xul                 (content/syncQuota.xul)
+        content/browser/syncQuota.js                  (content/syncQuota.js)
         content/browser/syncUtils.js                  (content/syncUtils.js)
 #endif
 # XXX: We should exclude this one as well (bug 71895)
