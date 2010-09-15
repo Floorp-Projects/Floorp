@@ -580,6 +580,32 @@ HttpChannelChild::OnCancel(const nsresult& status)
     PHttpChannelChild::Send__delete__(this);
 }
 
+class DeleteSelfEvent : public ChannelEvent
+{
+ public:
+  DeleteSelfEvent(HttpChannelChild* child) : mChild(child) {}
+  void Run() { mChild->DeleteSelf(); }
+ private:
+  HttpChannelChild* mChild;
+};
+
+bool
+HttpChannelChild::RecvDeleteSelf()
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new DeleteSelfEvent(this));
+  } else {
+    DeleteSelf();
+  }
+  return true;
+}
+
+void
+HttpChannelChild::DeleteSelf()
+{
+  Send__delete__(this);
+}
+
 class Redirect1Event : public ChannelEvent
 {
  public:

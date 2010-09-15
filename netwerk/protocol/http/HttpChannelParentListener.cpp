@@ -287,7 +287,7 @@ HttpChannelParentListener::OnRedirectResult(PRBool succeeded)
   }
 
   if (!channelToDelete->mIPCClosed)
-    unused << HttpChannelParent::Send__delete__(channelToDelete);
+    unused << channelToDelete->SendDeleteSelf();
   mRedirectChannel = nsnull;
 
   return NS_OK;
