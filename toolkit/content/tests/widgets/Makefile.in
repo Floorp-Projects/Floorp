@@ -57,6 +57,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_closemenu_attribute.xul \
 		test_colorpicker_popup.xul \
 		test_deck.xul \
+		test_menulist.xul \
 		test_menuitem_blink.xul \
 		test_menulist_keynav.xul \
 		test_menulist_null_value.xul \
