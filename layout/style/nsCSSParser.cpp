@@ -1799,11 +1799,6 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
         // Two integers separated by '/', with optional whitespace on
         // either side of the '/'.
         nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
-        if (!a) {
-          mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-          SkipUntil(')');
-          return PR_FALSE;
-        }
         expr->mValue.SetArrayValue(a, eCSSUnit_Array);
         // We don't bother with ParseNonNegativeVariant since we have to
         // check for != 0 as well; no need to worry about the UngetToken
@@ -4520,10 +4515,6 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
 
     nsRefPtr<nsCSSValue::Array> val =
       nsCSSValue::Array::Create(unit == eCSSUnit_Counter ? 2 : 3);
-    if (!val) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      break;
-    }
 
     val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_Ident);
 
@@ -6648,10 +6639,6 @@ CSSParserImpl::ParseBorderImage()
   // <uri> [<number> | <percentage>]{1,4}
   //       [ / <border-width>{1,4} ]? [stretch | repeat | round]{0,2}
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(11);
-  if (!arr) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
 
   nsCSSValue& url = arr->Item(0);
   nsCSSValue& splitTop = arr->Item(1);
@@ -6935,10 +6922,6 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   do {
     // The toplevel of a calc() is always an nsCSSValue::Array of length 1.
     nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
-    if (!arr) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      break;
-    }
 
     if (!ParseCalcAdditiveExpression(arr->Item(0), aVariantMask))
       break;
@@ -6993,10 +6976,6 @@ CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
       return PR_FALSE;
 
     nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(2);
-    if (!arr) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      return PR_FALSE;
-    }
     arr->Item(0) = aValue;
     storage = &arr->Item(1);
     aValue.SetArrayValue(arr, unit);
@@ -7098,10 +7077,6 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
     }
 
     nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(2);
-    if (!arr) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      return PR_FALSE;
-    }
     arr->Item(0) = aValue;
     storage = &arr->Item(1);
     aValue.SetArrayValue(arr, unit);
@@ -7671,11 +7646,7 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
                           foundValues.Length() + 1 : MAX_ALLOWED_ELEMS);
   nsRefPtr<nsCSSValue::Array> convertedArray =
     nsCSSValue::Array::Create(numElements);
-  if (!convertedArray) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
-  
+
   /* Copy things over. */
   convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_Ident);
   for (PRUint16 index = 0; index + 1 < numElements; ++index)
@@ -8519,10 +8490,6 @@ CSSParserImpl::ParseTransitionTimingFunctionValues(nsCSSValue& aValue)
                "unexpected initial state");
 
   nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(4);
-  if (!val) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
 
   float x1, x2, y1, y2;
   if (!ParseTransitionTimingFunctionValueComponent(x1, ',', PR_TRUE) ||
