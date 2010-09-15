@@ -139,8 +139,6 @@ pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
   if (!instanceData)
     return;
 
-  notifyDidPaint(instanceData);
-
   NPP npp = instanceData->npp;
   if (!npp)
     return;
@@ -243,6 +241,8 @@ pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
     break;
   }
   }
+
+  notifyDidPaint(instanceData);
 }
 
 int16_t
