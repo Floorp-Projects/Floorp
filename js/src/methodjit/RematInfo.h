@@ -57,7 +57,19 @@ struct ValueRemat {
         } s;
         jsval v;
     } u;
-    bool isConstant;
+    bool isConstant : 1;
+    bool isDataSynced : 1;
+    bool isTypeSynced : 1;
+
+    RegisterID dataReg() {
+        JS_ASSERT(!isConstant);
+        return u.s.data;
+    }
+
+    RegisterID typeReg() {
+        JS_ASSERT(!isConstant && !u.s.isTypeKnown);
+        return u.s.type.reg;
+    }
 };
 
 /*
