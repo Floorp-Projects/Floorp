@@ -112,7 +112,6 @@
     <command id="cmd_goToDiscoverPane"/>
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
-    <command id="cmd_toggleBackgroundUpdateCheck"/>
     <command id="cmd_installFromFile"/>
     <command id="cmd_back"/>
     <command id="cmd_forward"/>
@@ -185,11 +184,6 @@
                   accesskey="&installFromFile.accesskey;"
                   command="cmd_installFromFile"/>
         <menuseparator/>
-        <menuitem id="utils-backgroudUpdateCheck"
-                  label="&updates.backgroudUpdateCheck.label;"
-                  accesskey="&updates.backgroudUpdateCheck.accesskey;"
-                  type="checkbox" autocheck="false"
-                  command="cmd_toggleBackgroundUpdateCheck"/>
         <menuitem id="utils-autoUpdateDefault"
                   label="&updates.updateAddonsAutomatically.label;"
                   accesskey="&updates.updateAddonsAutomatically.accesskey;"
