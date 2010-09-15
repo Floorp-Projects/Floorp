@@ -1,4 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_5/extensions/
-script string-literal-getter-setter-decompilation.js
+script 15.4.4.11.js
 script 8.12.5-01.js
 script regress-bug567606.js
+script string-literal-getter-setter-decompilation.js
