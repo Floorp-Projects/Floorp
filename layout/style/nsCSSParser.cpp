@@ -4835,6 +4835,11 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, PRBool aIsRadial,
     break;
 
   case eCSSToken_Function:
+    if (id.LowerCaseEqualsLiteral("-moz-calc")) {
+      haveGradientLine = PR_TRUE;
+      break;
+    }
+    // fall through
   case eCSSToken_ID:
   case eCSSToken_Ref:
     // this is a color
@@ -6352,7 +6357,9 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
       }
     } else if (tt == eCSSToken_Dimension ||
                tt == eCSSToken_Number ||
-               tt == eCSSToken_Percentage) {
+               tt == eCSSToken_Percentage ||
+               (tt == eCSSToken_Function &&
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc"))) {
       if (havePosition)
         return PR_FALSE;
       havePosition = PR_TRUE;
@@ -6462,16 +6469,17 @@ PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
   // First try a percentage or a length value
   nsCSSValue &xValue = aOut.mXValue,
              &yValue = aOut.mYValue;
-  PRInt32 variantMask = aAcceptsInherit ? VARIANT_HLP : VARIANT_LP;
+  PRInt32 variantMask =
+    (aAcceptsInherit ? VARIANT_INHERIT : 0) | VARIANT_LP | VARIANT_CALC;
   if (ParseVariant(xValue, variantMask, nsnull)) {
     if (eCSSUnit_Inherit == xValue.GetUnit() ||
         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
       yValue = xValue;
       return PR_TRUE;
     }
-    // We have one percentage/length. Get the optional second
-    // percentage/length/keyword.
-    if (ParseVariant(yValue, VARIANT_LP, nsnull)) {
+    // We have one percentage/length/calc. Get the optional second
+    // percentage/length/calc/keyword.
+    if (ParseVariant(yValue, VARIANT_LP | VARIANT_CALC, nsnull)) {
       // We have two numbers
       return PR_TRUE;
     }
@@ -6511,8 +6519,8 @@ PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
       mask |= bit;
     }
     else {
-      // Only one keyword.  See if we have a length or percentage.
-      if (ParseVariant(yValue, VARIANT_LP, nsnull)) {
+      // Only one keyword.  See if we have a length, percentage, or calc.
+      if (ParseVariant(yValue, VARIANT_LP | VARIANT_CALC, nsnull)) {
         if (!(mask & BG_CLR)) {
           // The first keyword can only be 'center', 'left', or 'right'
           return PR_FALSE;
@@ -6584,16 +6592,17 @@ CSSParserImpl::ParseBackgroundSize()
  * @param aOut The nsCSSValuePair in which to place the result.
  * @return Whether or not the operation succeeded.
  */
+#define BG_SIZE_VARIANT (VARIANT_LP | VARIANT_AUTO | VARIANT_CALC)
 PRBool CSSParserImpl::ParseBackgroundSizeValues(nsCSSValuePair &aOut)
 {
   // First try a percentage or a length value
   nsCSSValue &xValue = aOut.mXValue,
              &yValue = aOut.mYValue;
-  if (ParseNonNegativeVariant(xValue, VARIANT_LP | VARIANT_AUTO, nsnull)) {
-    // We have one percentage/length/auto. Get the optional second
-    // percentage/length/keyword.
-    if (ParseNonNegativeVariant(yValue, VARIANT_LP | VARIANT_AUTO, nsnull)) {
-      // We have a second percentage/length/auto.
+  if (ParseNonNegativeVariant(xValue, BG_SIZE_VARIANT, nsnull)) {
+    // We have one percentage/length/calc/auto. Get the optional second
+    // percentage/length/calc/keyword.
+    if (ParseNonNegativeVariant(yValue, BG_SIZE_VARIANT, nsnull)) {
+      // We have a second percentage/length/calc/auto.
       return PR_TRUE;
     }
 
@@ -6609,6 +6618,7 @@ PRBool CSSParserImpl::ParseBackgroundSizeValues(nsCSSValuePair &aOut)
   yValue.Reset();
   return PR_TRUE;
 }
+#undef BG_SIZE_VARIANT
 
 PRBool
 CSSParserImpl::ParseBorderColor()

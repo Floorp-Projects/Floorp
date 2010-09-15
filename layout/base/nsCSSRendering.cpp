@@ -1665,6 +1665,11 @@ ConvertGradientValueToPixels(const nsStyleCoord& aCoord,
       return aCoord.GetPercentValue() * aFillLength;
     case eStyleUnit_Coord:
       return NSAppUnitsToFloatPixels(aCoord.GetCoordValue(), aAppUnitsPerPixel);
+    case eStyleUnit_Calc: {
+      const nsStyleCoord::Calc *calc = aCoord.GetCalcValue();
+      return calc->mPercent * aFillLength +
+             NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
+    }
     default:
       NS_WARNING("Unexpected coord unit");
       return 0;
@@ -2303,8 +2308,10 @@ ScaleDimension(const nsStyleBackground::Size::Dimension& aDimension,
 {
   switch (aType) {
     case nsStyleBackground::Size::eLengthPercentage:
-      return (double(aDimension.mPercent) * double(aAvailLength) +
-              double(aDimension.mLength)) /
+      // negative values could result from calc()
+      return NS_MAX(double(aDimension.mPercent) * double(aAvailLength) +
+                      double(aDimension.mLength),
+                    0.0) /
              double(aLength);
     default:
       NS_ABORT_IF_FALSE(PR_FALSE, "bad aDimension.mType");

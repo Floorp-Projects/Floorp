@@ -1586,16 +1586,19 @@ gfxPoint GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
     /* If the -moz-transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
-    if (display->mTransformOrigin[index].GetUnit() == eStyleUnit_Percent)
+    const nsStyleCoord &coord = display->mTransformOrigin[index];
+    if (coord.GetUnit() == eStyleUnit_Calc) {
+      const nsStyleCoord::Calc *calc = coord.GetCalcValue();
       *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
-        display->mTransformOrigin[index].GetPercentValue();
-    
-    /* Otherwise, it's a length. */
-    else
-      *coords[index] =
-        NSAppUnitsToFloatPixels(display->
-                                mTransformOrigin[index].GetCoordValue(),
-                                aFactor);
+                         calc->mPercent +
+                       NSAppUnitsToFloatPixels(calc->mLength, aFactor);
+    } else if (coord.GetUnit() == eStyleUnit_Percent) {
+      *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
+        coord.GetPercentValue();
+    } else {
+      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      *coords[index] = NSAppUnitsToFloatPixels(coord.GetCoordValue(), aFactor);
+    }
   }
   
   /* Adjust based on the origin of the rectangle. */
