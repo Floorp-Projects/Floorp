@@ -50,6 +50,7 @@
 #include "gfxPattern.h"
 #include "nsRect.h"
 #include "nsRegion.h"
+#include "gfxASurface.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -59,6 +60,7 @@
 namespace mozilla {
 
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
+typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 
 // XXX there are out of place and might be generally useful.  Could
 // move to nscore.h or something.
@@ -419,6 +421,38 @@ struct ParamTraits<mozilla::GraphicsFilterType>
     }
   }
 };
+
+ template<>
+struct ParamTraits<mozilla::gfxSurfaceType>
+{
+  typedef mozilla::gfxSurfaceType paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    if (gfxASurface::SurfaceTypeImage <= param &&
+        param < gfxASurface::SurfaceTypeMax) {
+      WriteParam(msg, int32(param));
+      return;
+    }
+    NS_RUNTIMEABORT("surface type not reached");
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    int32 filter;
+    if (!ReadParam(msg, iter, &filter))
+      return false;
+
+    if (gfxASurface::SurfaceTypeImage <= filter &&
+        filter < gfxASurface::SurfaceTypeMax) {
+      *result = paramType(filter);
+      return true;
+    }
+    return false;
+  }
+};
+
+
 template<>
 struct ParamTraits<gfxRGBA>
 {
@@ -538,6 +572,24 @@ template<>
 struct ParamTraits<nsIntSize>
 {
   typedef nsIntSize paramType;
+  
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.width);
+    WriteParam(msg, param.height); 
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->width) &&
+            ReadParam(msg, iter, &result->height));
+  }
+};
+
+template<>
+struct ParamTraits<gfxIntSize>
+{
+  typedef gfxIntSize paramType;
   
   static void Write(Message* msg, const paramType& param)
   {
