@@ -468,7 +468,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
           // We re-use our knowledge of the implementation to reuse
           // JSVERSION_HAS_XML as a safe version flag.
           // If version has JSVERSION_UNKNOWN (-1), then this is still OK.
-          version |= JSVERSION_HAS_XML;
+          version |= js::VersionFlags::HAS_XML;
       }
     }
   } else {

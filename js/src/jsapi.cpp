@@ -60,7 +60,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
-#include "jsdtoa.h"
 #include "jsemit.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -90,6 +89,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
@@ -106,6 +106,38 @@
 #endif
 
 using namespace js;
+
+class AutoVersionAPI
+{
+    JSContext   * const cx;
+    JSVersion   oldVersion;
+    bool        oldVersionWasOverride;
+    uint32      oldOptions;
+
+  public:
+    explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
+      : cx(cx), oldVersion(cx->findVersion()), oldVersionWasOverride(cx->isVersionOverridden()),
+        oldOptions(cx->options) {
+        JS_ASSERT(!VersionExtractFlags(newVersion) ||
+                  VersionExtractFlags(newVersion) == VersionFlags::HAS_XML);
+        cx->options = VersionHasXML(newVersion)
+                      ? (cx->options | JSOPTION_XML)
+                      : (cx->options & ~JSOPTION_XML);
+        cx->maybeOverrideVersion(newVersion);
+        SyncOptionsToVersion(cx);
+    }
+
+    ~AutoVersionAPI() {
+        cx->options = oldOptions;
+        if (oldVersionWasOverride) {
+            JS_ALWAYS_TRUE(cx->maybeOverrideVersion(oldVersion));
+        } else {
+            cx->clearVersionOverride();
+            cx->setDefaultVersion(oldVersion);
+        }
+        JS_ASSERT(cx->findVersion() == oldVersion);
+    }
+};
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
@@ -982,28 +1014,40 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
-    return JSVERSION_NUMBER(cx);
+    return VersionNumber(cx->findVersion());
+}
+
+static void
+CheckOptionVersionSync(JSContext *cx)
+{
+#if DEBUG
+    uint32 options = cx->options;
+    JSVersion version = cx->findVersion();
+    JS_ASSERT(OptionsHasXML(options) == VersionHasXML(version));
+    JS_ASSERT(OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version));
+#endif
 }
 
 JS_PUBLIC_API(JSVersion)
-JS_SetVersion(JSContext *cx, JSVersion version)
+JS_SetVersion(JSContext *cx, JSVersion newVersion)
 {
-    JSVersion oldVersion;
+    JS_ASSERT(VersionIsKnown(newVersion));
+    JS_ASSERT(!VersionHasFlags(newVersion));
+    JSVersion newVersionNumber = newVersion;
 
-    JS_ASSERT(version != JSVERSION_UNKNOWN);
-    JS_ASSERT((version & ~JSVERSION_MASK) == 0);
-
-    oldVersion = JSVERSION_NUMBER(cx);
-    if (version == oldVersion)
-        return oldVersion;
+    JSVersion oldVersion = cx->findVersion();
+    JSVersion oldVersionNumber = VersionNumber(oldVersion);
+    if (oldVersionNumber == newVersionNumber)
+        return oldVersionNumber; /* No override actually occurs! */
 
     /* We no longer support 1.4 or below. */
-    if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4)
-        return oldVersion;
+    if (newVersionNumber != JSVERSION_DEFAULT && newVersionNumber <= JSVERSION_1_4)
+        return oldVersionNumber;
 
-    cx->version = (cx->version & ~JSVERSION_MASK) | version;
-    js_OnVersionChange(cx);
-    return oldVersion;
+    VersionCloneFlags(oldVersion, &newVersion);
+    cx->maybeOverrideVersion(newVersion);
+    CheckOptionVersionSync(cx);
+    return oldVersionNumber;
 }
 
 static struct v2smap {
@@ -1050,6 +1094,11 @@ JS_StringToVersion(const char *string)
 JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx)
 {
+    /*
+     * Can't check option/version synchronization here.
+     * We may have been synchronized with a script version that was formerly on
+     * the stack, but has now been popped.
+     */
     return cx->options;
 }
 
@@ -1059,8 +1108,9 @@ JS_SetOptions(JSContext *cx, uint32 options)
     AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
-    js_SyncOptionsToVersion(cx);
+    SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
+    CheckOptionVersionSync(cx);
     return oldopts;
 }
 
@@ -1068,10 +1118,12 @@ JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
     AutoLockGC lock(cx->runtime);
+    CheckOptionVersionSync(cx);
     uint32 oldopts = cx->options;
     cx->options ^= options;
-    js_SyncOptionsToVersion(cx);
+    (void) SyncOptionsToVersion(cx);
     cx->updateJITEnabled();
+    CheckOptionVersionSync(cx);
     return oldopts;
 }
 
@@ -1795,7 +1847,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->hasfp())
-        return cx->fp()->getScopeChain()->getGlobal();
+        return cx->fp()->scopeChain().getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
@@ -2860,11 +2912,20 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     CHECK_REQUEST(cx);
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, Valueify(clasp), NULL, NULL);
-    if (obj &&
+    if (!obj ||
         !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
                             PrivateValue(cx->compartment))) {
-        return false;
+        return NULL;
     }
+
+    /* FIXME: comment. */
+    JSObject *res = regexp_statics_construct(cx);
+    if (!res ||
+        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS,
+                            ObjectValue(*res))) {
+        return NULL;
+    }
+
     return obj;
 }
 
@@ -4290,6 +4351,17 @@ JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
            ((cx->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
 }
 
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                       JSPrincipals *principals,
+                                       const jschar *chars, size_t length,
+                                       const char *filename, uintN lineno,
+                                       JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno);
+}
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                                 const jschar *chars, size_t length,
@@ -4486,6 +4558,19 @@ JS_DestroyScript(JSContext *cx, JSScript *script)
 }
 
 JS_PUBLIC_API(JSFunction *)
+JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         JSPrincipals *principals, const char *name,
+                                         uintN nargs, const char **argnames,
+                                         const jschar *chars, size_t length,
+                                         const char *filename, uintN lineno,
+                                         JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_CompileUCFunctionForPrincipals(cx, obj, principals, name, nargs, argnames, chars,
+                                             length, filename, lineno);
+}
+
+JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   JSPrincipals *principals, const char *name,
                                   uintN nargs, const char **argnames,
@@ -4652,6 +4737,18 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                        JSPrincipals *principals,
+                                        const jschar *chars, uintN length,
+                                        const char *filename, uintN lineno,
+                                        jsval *rval, JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno,
+                                            rval);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  JSPrincipals *principals,
                                  const jschar *chars, uintN length,
@@ -4760,7 +4857,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, args))
+    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return NULL;
 
     args.callee().setObject(*ctor);
@@ -4836,7 +4933,7 @@ JS_IsRunning(JSContext *cx)
 #endif
     JSStackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
-        fp = fp->down;
+        fp = fp->prev();
     return fp != NULL;
 }
 
@@ -5298,69 +5395,96 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
  * Regular Expressions.
  */
 JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
+JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
     jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    JSObject *obj = RegExp::createObject(cx, chars, length, flags);
+    RegExpStatics *res = RegExpStatics::extractFrom(obj);
+    JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags);
+    cx->free(chars);
+    return reobj;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags)
+{
+    CHECK_REQUEST(cx);
+    RegExpStatics *res = RegExpStatics::extractFrom(obj);
+    return RegExp::createObject(cx, res, chars, length, flags);
+}
+
+JS_PUBLIC_API(void)
+JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multiline)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, input);
+
+    RegExpStatics::extractFrom(obj)->reset(input, !!multiline);
+}
+
+JS_PUBLIC_API(void)
+JS_ClearRegExpStatics(JSContext *cx, JSObject *obj)
+{
+    CHECK_REQUEST(cx);
+    JS_ASSERT(obj);
+
+    RegExpStatics::extractFrom(obj)->clear();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, size_t length,
+                 size_t *indexp, JSBool test, jsval *rval)
+{
+    CHECK_REQUEST(cx);
+
+    RegExp *re = RegExp::extractFrom(reobj);
+    if (!re)
+        return false;
+
+    JSString *str = js_NewStringCopyN(cx, chars, length);
+    if (!str)
+        return false;
+
+    return re->execute(cx, RegExpStatics::extractFrom(obj), str, indexp, test, Valueify(rval));
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN flags)
+{
+    CHECK_REQUEST(cx);
+    jschar *chars = js_InflateString(cx, bytes, &length);
+    if (!chars)
+        return NULL;
+    JSObject *obj = RegExp::createObjectNoStatics(cx, chars, length, flags);
     cx->free(chars);
     return obj;
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
+JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    return RegExp::createObject(cx, chars, length, flags);
-}
-
-JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, input);
-
-    /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.reset(input, !!multiline);
-}
-
-JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx)
-{
-    /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clear();
-}
-
-JS_PUBLIC_API(void)
-JS_ClearRegExpRoots(JSContext *cx)
-{
-    /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clear();
+    return RegExp::createObjectNoStatics(cx, chars, length, flags);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
-                 size_t *indexp, JSBool test, jsval *rval)
+JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+                          size_t *indexp, JSBool test, jsval *rval)
 {
     CHECK_REQUEST(cx);
-
+    
     RegExp *re = RegExp::extractFrom(obj);
-    if (!re) {
-      return JS_FALSE;
-    }
+    if (!re)
+        return false;
 
     JSString *str = js_NewStringCopyN(cx, chars, length);
-    if (!str) {
-        return JS_FALSE;
-    }
-    AutoValueRooter v(cx, StringValue(str));
+    if (!str)
+        return false;
 
-    return re->execute(cx, str, indexp, test, Valueify(rval));
+    return re->executeNoStatics(cx, str, indexp, test, Valueify(rval));
 }
-
-/* TODO: compile, get/set other statics... */
 
 /************************************************************************/
 

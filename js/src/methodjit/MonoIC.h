@@ -124,7 +124,6 @@ struct CallICInfo {
     /* Used for rooting and reification. */
     JSObject *fastGuardedObject;
     JSObject *fastGuardedNative;
-    Value constantThis;
 
     uint32 argc : 16;
     uint32 frameDepth : 16;
@@ -156,7 +155,6 @@ struct CallICInfo {
 
     RegisterID funObjReg : 5;
     RegisterID funPtrReg : 5;
-    bool isConstantThis : 1;
     bool hit : 1;
     bool hasJsFunCheck : 1;
 

@@ -323,17 +323,17 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     {
 #ifndef JS_CPU_ARM
         /* X86 and X64's "ret" instruction expects a return address on the stack. */
-        push(Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
+        push(Address(JSFrameReg, JSStackFrame::offsetOfncode()));
 #else
         /* ARM returns either using its link register (LR) or directly from the stack, but masm.ret()
          * always emits a return to LR. */
-        load32(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), JSC::ARMRegisters::lr);
+        load32(Address(JSFrameReg, JSStackFrame::offsetOfncode()), JSC::ARMRegisters::lr);
 #endif
     }
 
     void saveReturnAddress(RegisterID reg)
     {
-        storePtr(reg, Address(JSFrameReg, offsetof(JSStackFrame, ncode)));
+        storePtr(reg, Address(JSFrameReg, JSStackFrame::offsetOfncode()));
     }
 
     void finalize(uint8 *ncode) {

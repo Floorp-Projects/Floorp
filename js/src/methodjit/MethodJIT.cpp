@@ -49,6 +49,25 @@
 using namespace js;
 using namespace js::mjit;
 
+
+void
+JSStackFrame::methodjitStaticAsserts()
+{
+        /* Static assert for x86 trampolines in MethodJIT.cpp. */
+#if defined(JS_CPU_X86)
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, rval_)     == 0x18);
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, rval_) + 4 == 0x1C);
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode_)    == 0x2C);
+        /* ARM uses decimal literals. */
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, rval_)     == 24);
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, rval_) + 4 == 28);
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode_)    == 44);
+#elif defined(JS_CPU_X64)
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, rval_)     == 0x30);
+        JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode_)    == 0x50);
+#endif
+}
+
 /*
  * Explanation of VMFrame activation and various helper thunks below.
  *
@@ -137,6 +156,12 @@ JS_STATIC_ASSERT(offsetof(JSFrameRegs, sp) == 0);
 # define SYMBOL_STRING_RELOC(name) SYMBOL_STRING(name)
 #endif
 
+#if defined(XP_WIN) && defined(JS_CPU_X86)
+# define SYMBOL_STRING_VMFRAME(name) "@" #name "@4"
+#else
+# define SYMBOL_STRING_VMFRAME(name) SYMBOL_STRING_RELOC(name)
+#endif
+
 #if defined(XP_MACOSX)
 # define HIDE_SYMBOL(name) ".private_extern _" #name
 #elif defined(__linux__)
@@ -209,16 +234,16 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Set cx->regs and set the active frame. Save rdx and align frame in one. */
     "pushq %rdx"                         "\n"
     "movq  %rsp, %rdi"                   "\n"
-    "call " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
+    "call " SYMBOL_STRING_VMFRAME(SetVMFrameRegs) "\n"
     "movq  %rsp, %rdi"                   "\n"
-    "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
+    "call " SYMBOL_STRING_VMFRAME(PushActiveVMFrame) "\n"
 
     /*
      * Jump into into the JIT'd code.
      */
     "call *0(%rsp)"                      "\n"
     "movq %rsp, %rdi"                    "\n"
-    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+    "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
     "addq $0x58, %rsp"                   "\n"
     "popq %rbx"                          "\n"
@@ -242,7 +267,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "jmp  *%rax"                            "\n"
   "throwpoline_exit:"                       "\n"
     "movq %rsp, %rdi"                       "\n"
-    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+    "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
     "addq $0x58, %rsp"                      "\n"
     "popq %rbx"                             "\n"
     "popq %r15"                             "\n"
@@ -254,7 +279,6 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "ret"                                   "\n"
 );
 
-JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
 
 asm volatile (
@@ -262,7 +286,7 @@ asm volatile (
 ".globl " SYMBOL_STRING(SafePointTrampoline)   "\n"
 SYMBOL_STRING(SafePointTrampoline) ":"         "\n"
     "popq %rax"                             "\n"
-    "movq %rax, 0x60(%rbx)"                 "\n"
+    "movq %rax, 0x50(%rbx)"                 "\n"
     "jmp  *8(%rsp)"                         "\n"
 );
 
@@ -270,8 +294,8 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
 SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
-    "movq 0x40(%rbx), %rcx"                 "\n" /* load Value into typeReg */
-    "movq 0x60(%rbx), %rax"                 "\n" /* fp->ncode */
+    "movq 0x30(%rbx), %rcx"                 "\n" /* load fp->rval_ into typeReg */
+    "movq 0x50(%rbx), %rax"                 "\n" /* fp->ncode_ */
 
     /* Reimplementation of PunboxAssembler::loadValueAsComponents() */
     "movq %r14, %rdx"                       "\n" /* payloadReg = payloadMaskReg */
@@ -317,13 +341,13 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
 
     /* Jump into the JIT'd code. */
     "movl  %esp, %ecx"                   "\n"
-    "call " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
+    "call " SYMBOL_STRING_VMFRAME(SetVMFrameRegs) "\n"
     "movl  %esp, %ecx"                   "\n"
-    "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
+    "call " SYMBOL_STRING_VMFRAME(PushActiveVMFrame) "\n"
 
     "call  *16(%ebp)"                    "\n"
     "movl  %esp, %ecx"                   "\n"
-    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+    "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
     "addl $0x2C, %esp"                   "\n"
     "popl %ebx"                          "\n"
@@ -353,7 +377,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "jmp  *%eax"                         "\n"
   "throwpoline_exit:"                    "\n"
     "movl %esp, %ecx"                    "\n"
-    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+    "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
     "addl $0x2c, %esp"                   "\n"
     "popl %ebx"                          "\n"
     "popl %edi"                          "\n"
@@ -363,16 +387,15 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "ret"                                "\n"
 );
 
-JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x3C);
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x1C);
 
 asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(InjectJaegerReturn)   "\n"
 SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
-    "movl 0x28(%ebx), %edx"                 "\n" /* fp->rval data */
-    "movl 0x2C(%ebx), %ecx"                 "\n" /* fp->rval type */
-    "movl 0x3C(%ebx), %eax"                 "\n" /* fp->ncode */
+    "movl 0x18(%ebx), %edx"                 "\n" /* fp->rval_ data */
+    "movl 0x1C(%ebx), %ecx"                 "\n" /* fp->rval_ type */
+    "movl 0x2C(%ebx), %eax"                 "\n" /* fp->ncode_ */
     "movl 0x1C(%esp), %ebx"                 "\n" /* f.fp */
     "pushl %eax"                            "\n"
     "ret"                                   "\n"
@@ -387,7 +410,7 @@ asm volatile (
 ".globl " SYMBOL_STRING(SafePointTrampoline)   "\n"
 SYMBOL_STRING(SafePointTrampoline) ":"         "\n"
     "popl %eax"                             "\n"
-    "movl %eax, 0x3C(%ebx)"                 "\n"
+    "movl %eax, 0x2C(%ebx)"                 "\n"
     "jmp  *24(%ebp)"                        "\n"
 );
 
@@ -401,7 +424,6 @@ JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) ==          (4*7));
 JS_STATIC_ASSERT(offsetof(VMFrame, unused) ==           (4*4));
 JS_STATIC_ASSERT(offsetof(VMFrame, previous) ==         (4*3));
-JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 60);
 
 JS_STATIC_ASSERT(JSFrameReg == JSC::ARMRegisters::r11);
 JS_STATIC_ASSERT(JSReturnReg_Data == JSC::ARMRegisters::r1);
@@ -412,9 +434,9 @@ asm volatile (
 ".globl " SYMBOL_STRING(InjectJaegerReturn) "\n"
 SYMBOL_STRING(InjectJaegerReturn) ":"       "\n"
     /* Restore frame regs. */
-    "ldr lr, [r11, #60]"                    "\n" /* fp->ncode */
-    "ldr r1, [r11, #40]"                    "\n" /* fp->rval data */
-    "ldr r2, [r11, #44]"                    "\n" /* fp->rval type */
+    "ldr lr, [r11, #44]"                    "\n" /* fp->ncode */
+    "ldr r1, [r11, #24]"                    "\n" /* fp->rval data */
+    "ldr r2, [r11, #28]"                    "\n" /* fp->rval type */
     "ldr r11, [sp, #28]"                    "\n" /* load f.fp */
     "bx  lr"                                "\n"
 );
@@ -430,7 +452,7 @@ SYMBOL_STRING(SafePointTrampoline) ":"
      */
     "ldr    ip, [sp, #80]"                  "\n"
     /* Save the return address (in JaegerTrampoline) to fp->ncode. */
-    "str    lr, [r11, #60]"                 "\n"
+    "str    lr, [r11, #44]"                 "\n"
     /* Jump to 'safePoint' via 'ip' because a load into the PC from an address on
      * the stack looks like a return, and may upset return stack prediction. */
     "bx     ip"                             "\n"
@@ -487,16 +509,16 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
 "   mov     r11, r1"                            "\n"
 
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_RELOC(SetVMFrameRegs)   "\n"
+"   bl  " SYMBOL_STRING_VMFRAME(SetVMFrameRegs)   "\n"
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_RELOC(PushActiveVMFrame)"\n"
+"   bl  " SYMBOL_STRING_VMFRAME(PushActiveVMFrame)"\n"
 
     /* Call the compiled JavaScript function. */
 "   blx     r4"                                 "\n"
 
     /* Tidy up. */
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+"   bl  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
 "   add     sp, sp, #(4*7 + 4*4)"               "\n"
@@ -524,7 +546,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
     /* Tidy up, then return '0' to represent an unhandled exception. */
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
+"   bl  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 "   add     sp, sp, #(4*7 + 4*4)"               "\n"
 "   mov     r0, #0"                         "\n"
 "   pop     {r4-r11,pc}"                    "\n"
@@ -566,9 +588,9 @@ extern "C" {
     __declspec(naked) void InjectJaegerReturn()
     {
         __asm {
-            mov edx, [ebx + 0x28];
-            mov ecx, [ebx + 0x2C];
-            mov eax, [ebx + 0x3C];
+            mov edx, [ebx + 0x18];
+            mov ecx, [ebx + 0x1C];
+            mov eax, [ebx + 0x2C];
             mov ebx, [esp + 0x1C];
             push eax;
             ret;
@@ -579,7 +601,7 @@ extern "C" {
     {
         __asm {
             pop eax;
-            mov [ebx + 0x3C], eax;
+            mov [ebx + 0x2C], eax;
             jmp [ebp + 24];
         }
     }
@@ -666,7 +688,6 @@ extern "C" {
  */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
-JS_STATIC_ASSERT(offsetof(JSStackFrame, ncode) == 0x60);
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 
@@ -728,7 +749,7 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
 
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
-    JSScript *script = fp->getScript();
+    JSScript *script = fp->script();
 
     JaegerSpew(JSpew_Prof, "%s jaeger script: %s, line %d\n",
                safePoint ? "dropping" : "entering",
@@ -740,19 +761,9 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
     JSStackFrame *checkFp = fp;
 #endif
 
-    Value *fpAsVp = reinterpret_cast<Value*>(fp);
-    StackSpace &stack = cx->stack();
-    Value *stackLimit = stack.makeStackLimit(fpAsVp);
-
-    /*
-     * We ensure that there is always enough space to speculatively create a
-     * stack frame. By passing nslots = 0, we ensure only sizeof(JSStackFrame).
-     */
-    if (fpAsVp + VALUES_PER_STACK_FRAME >= stackLimit &&
-        !stack.ensureSpace(cx, fpAsVp, cx->regs->sp, stackLimit, 0)) {
-        js_ReportOutOfScriptQuota(cx);
+    Value *stackLimit = cx->stack().getStackLimit(cx);
+    if (!stackLimit)
         return false;
-    }
 
     JSFrameRegs *oldRegs = cx->regs;
 
@@ -774,7 +785,7 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, void *safePoint)
 JSBool
 mjit::JaegerShot(JSContext *cx)
 {
-    JSScript *script = cx->fp()->getScript();
+    JSScript *script = cx->fp()->script();
 
     JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
 
@@ -866,11 +877,4 @@ mjit::ProfileStubCall(VMFrame &f)
     StubCallsForOp[op]++;
 }
 #endif
-
-bool
-VMFrame::slowEnsureSpace(uint32 nslots)
-{
-    return cx->stack().ensureSpace(cx, reinterpret_cast<Value*>(entryFp), regs.sp,
-                                   stackLimit, nslots + VALUES_PER_STACK_FRAME);
-}
 
