@@ -676,47 +676,6 @@ nsHttpChannel::SetupTransaction()
     return rv;
 }
 
-nsresult
-nsHttpChannel::ApplyContentConversions()
-{
-    if (!mResponseHead)
-        return NS_OK;
-
-    LOG(("nsHttpChannel::ApplyContentConversions [this=%p]\n", this));
-
-    if (!mApplyConversion) {
-        LOG(("not applying conversion per mApplyConversion\n"));
-        return NS_OK;
-    }
-
-    const char *val = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-    if (gHttpHandler->IsAcceptableEncoding(val)) {
-        nsCOMPtr<nsIStreamConverterService> serv;
-        nsresult rv = gHttpHandler->
-                GetStreamConverterService(getter_AddRefs(serv));
-        // we won't fail to load the page just because we couldn't load the
-        // stream converter service.. carry on..
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIStreamListener> converter;
-            nsCAutoString from(val);
-            ToLowerCase(from);
-            rv = serv->AsyncConvertData(from.get(),
-                                        "uncompressed",
-                                        mListener,
-                                        mListenerContext,
-                                        getter_AddRefs(converter));
-            if (NS_SUCCEEDED(rv)) {
-                LOG(("converter installed from \'%s\' to \'uncompressed\'\n", val));
-                mListener = converter;
-            }
-        }
-    } else if (val != nsnull) {
-        LOG(("Unknown content encoding '%s', ignoring\n", val));
-    }
-
-    return NS_OK;
-}
-
 // NOTE: This function duplicates code from nsBaseChannel. This will go away
 // once HTTP uses nsBaseChannel (part of bug 312760)
 static void
