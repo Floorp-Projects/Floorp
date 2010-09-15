@@ -878,6 +878,8 @@ typedef JSBool
 typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 typedef JSBool
+(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
 
 static inline Native            Valueify(JSNative f)          { return (Native)f; }
@@ -945,18 +947,18 @@ struct ClassExtension {
 #define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
 
 struct ObjectOps {
-    JSLookupPropOp      lookupProperty;
-    js::DefinePropOp    defineProperty;
-    js::PropertyIdOp    getProperty;
-    js::PropertyIdOp    setProperty;
-    JSAttributesOp      getAttributes;
-    JSAttributesOp      setAttributes;
-    js::PropertyIdOp    deleteProperty;
-    js::NewEnumerateOp  enumerate;
-    JSTypeOfOp          typeOf;
-    JSTraceOp           trace;
-    JSObjectOp          thisObject;
-    JSFinalizeOp        clear;
+    JSLookupPropOp          lookupProperty;
+    js::DefinePropOp        defineProperty;
+    js::PropertyIdOp        getProperty;
+    js::StrictPropertyIdOp  setProperty;
+    JSAttributesOp          getAttributes;
+    JSAttributesOp          setAttributes;
+    js::StrictPropertyIdOp  deleteProperty;
+    js::NewEnumerateOp      enumerate;
+    JSTypeOfOp              typeOf;
+    JSTraceOp               trace;
+    JSObjectOp              thisObject;
+    JSFinalizeOp            clear;
 };
 
 #define JS_NULL_OBJECT_OPS  {NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL}

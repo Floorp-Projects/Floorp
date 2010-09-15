@@ -896,79 +896,79 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_VOID)
 
           BEGIN_CASE(JSOP_INCNAME)
-            jsop_nameinc(op, stubs::IncName, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::IncName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_INCNAME)
 
           BEGIN_CASE(JSOP_INCGNAME)
-            jsop_gnameinc(op, stubs::IncGlobalName, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::IncGlobalName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_INCGNAME)
 
           BEGIN_CASE(JSOP_INCPROP)
-            jsop_propinc(op, stubs::IncProp, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::IncProp), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_INCPROP)
 
           BEGIN_CASE(JSOP_INCELEM)
-            jsop_eleminc(op, stubs::IncElem);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::IncElem));
           END_CASE(JSOP_INCELEM)
 
           BEGIN_CASE(JSOP_DECNAME)
-            jsop_nameinc(op, stubs::DecName, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::DecName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_DECNAME)
 
           BEGIN_CASE(JSOP_DECGNAME)
-            jsop_gnameinc(op, stubs::DecGlobalName, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::DecGlobalName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_DECGNAME)
 
           BEGIN_CASE(JSOP_DECPROP)
-            jsop_propinc(op, stubs::DecProp, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::DecProp), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_DECPROP)
 
           BEGIN_CASE(JSOP_DECELEM)
-            jsop_eleminc(op, stubs::DecElem);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::DecElem));
           END_CASE(JSOP_DECELEM)
 
           BEGIN_CASE(JSOP_NAMEINC)
-            jsop_nameinc(op, stubs::NameInc, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::NameInc), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_NAMEINC)
 
           BEGIN_CASE(JSOP_GNAMEINC)
-            jsop_gnameinc(op, stubs::GlobalNameInc, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameInc), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_GNAMEINC)
 
           BEGIN_CASE(JSOP_PROPINC)
-            jsop_propinc(op, stubs::PropInc, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::PropInc), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_PROPINC)
 
           BEGIN_CASE(JSOP_ELEMINC)
-            jsop_eleminc(op, stubs::ElemInc);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::ElemInc));
           END_CASE(JSOP_ELEMINC)
 
           BEGIN_CASE(JSOP_NAMEDEC)
-            jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::NameDec), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_NAMEDEC)
 
           BEGIN_CASE(JSOP_GNAMEDEC)
-            jsop_gnameinc(op, stubs::GlobalNameDec, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameDec), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_GNAMEDEC)
 
           BEGIN_CASE(JSOP_PROPDEC)
-            jsop_propinc(op, stubs::PropDec, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::PropDec), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_PROPDEC)
 
           BEGIN_CASE(JSOP_ELEMDEC)
-            jsop_eleminc(op, stubs::ElemDec);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::ElemDec));
           END_CASE(JSOP_ELEMDEC)
 
           BEGIN_CASE(JSOP_GETTHISPROP)
@@ -1249,7 +1249,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_FORNAME)
             prepareStubCall(Uses(1));
             masm.move(ImmPtr(script->getAtom(fullAtomIndex(PC))), Registers::ArgReg1);
-            stubCall(stubs::ForName);
+            stubCall(STRICT_VARIANT(stubs::ForName));
           END_CASE(JSOP_FORNAME)
 
           BEGIN_CASE(JSOP_INCLOCAL)
@@ -1322,7 +1322,7 @@ mjit::Compiler::generateMethod()
 
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(inner), Registers::ArgReg1);
-            stubCall(stubs::DefFun);
+            stubCall(STRICT_VARIANT(stubs::DefFun));
           }
           END_CASE(JSOP_DEFFUN)
 
@@ -2207,7 +2207,7 @@ mjit::Compiler::jsop_setprop_slow(JSAtom *atom)
 {
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::SetName);
+    stubCall(STRICT_VARIANT(stubs::SetName));
     JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
     frame.shimmy(1);
 }
@@ -2852,7 +2852,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         if (op == JSOP_SETNAME || op == JSOP_SETPROP || op == JSOP_SETGNAME || op ==
             JSOP_SETMETHOD) {
             stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
-            stubcc.call(stubs::SetName);
+            stubcc.call(STRICT_VARIANT(stubs::SetName));
         } else {
             stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
             stubcc.call(ic::SetPropDumb);
@@ -3800,7 +3800,7 @@ mjit::Compiler::jsop_setgname_slow(uint32 index)
     JSAtom *atom = script->getAtom(index);
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::SetGlobalName);
+    stubCall(STRICT_VARIANT(stubs::SetGlobalName));
     frame.popn(2);
     frame.pushSynced();
 }
@@ -3948,7 +3948,7 @@ void
 mjit::Compiler::jsop_setelem_slow()
 {
     prepareStubCall(Uses(3));
-    stubCall(stubs::SetElem);
+    stubCall(STRICT_VARIANT(stubs::SetElem));
     frame.popn(3);
     frame.pushSynced();
 }
