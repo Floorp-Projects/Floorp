@@ -1099,7 +1099,9 @@ var PageActions = {
   init: function init() {
     this.register("pageaction-reset", this.updatePagePermissions, this);
     this.register("pageaction-password", this.updateForgetPassword, this);
+#ifdef NS_PRINTING
     this.register("pageaction-saveas", this.updatePageSaveAs, this);
+#endif
     this.register("pageaction-share", this.updateShare, this);
     this.register("pageaction-search", BrowserSearch.updatePageSearchEngines, BrowserSearch);
   },
