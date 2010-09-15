@@ -1501,11 +1501,11 @@ static JSParseNode *
 MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *tc)
 {
     /*
-     * If dn is var, const, or let, and it has an initializer, then we must
-     * rewrite it to be an assignment node, whose freshly allocated left-hand
-     * side becomes a use of pn.
+     * If dn is arg, or in [var, const, let], and has an initializer, then we
+     * must rewrite it to be an assignment node, whose freshly allocated
+     * left-hand side becomes a use of pn.
      */
-    if (dn->isBindingForm()) {
+    if (dn->isArgOrBindingForm()) {
         JSParseNode *rhs = dn->expr();
         if (rhs) {
             JSParseNode *lhs = MakeAssignment(dn, rhs, tc);
@@ -2456,10 +2456,10 @@ JSDefinition::kindString(Kind kind)
 {
     static const char *table[] = {
         js_var_str, js_const_str, js_let_str,
-        js_function_str, js_argument_str, js_unknown_str
+        js_argument_str, js_function_str, js_unknown_str
     };
 
-    JS_ASSERT(unsigned(kind) <= unsigned(ARG));
+    JS_ASSERT(unsigned(kind) <= unsigned(FUNCTION));
     return table[kind];
 }
 
