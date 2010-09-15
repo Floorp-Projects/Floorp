@@ -104,7 +104,7 @@ browser.jar:
         skin/classic/browser/tabview/tabview.png                    (tabview/tabview.png)
         skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
-        skin/classic/browser/sync-16-throbber.png
+        skin/classic/browser/sync-throbber.png
         skin/classic/browser/sync-16.png
         skin/classic/browser/sync-32.png
         skin/classic/browser/sync-bg.png
@@ -220,7 +220,7 @@ browser.jar:
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
         skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
-        skin/classic/aero/browser/sync-16-throbber.png
+        skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png
         skin/classic/aero/browser/sync-32.png
         skin/classic/aero/browser/sync-bg.png
