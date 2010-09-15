@@ -90,6 +90,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 listPtr;
     nsIContent** formPointer;
     nsIContent** headPointer;
+    nsIContent** deepTreeSurrogateParent;
   protected:
     jArray<PRUnichar,PRInt32> charBuffer;
     PRInt32 charBufferLen;
@@ -223,6 +224,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     nsIContent** getFormPointer();
     nsIContent** getHeadPointer();
+    nsIContent** getDeepTreeSurrogateParent();
     jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements();
     jArray<nsHtml5StackNode*,PRInt32> getStack();
     PRInt32 getMode();

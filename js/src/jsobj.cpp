@@ -78,6 +78,7 @@
 #include "jsdbgapi.h"
 #include "json.h"
 
+#include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
@@ -951,7 +952,7 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
 #endif
 
     JS_ASSERT(principals || !(callbacks  && callbacks->findObjectPrincipals));
-    flags = JS_GetScriptFilenameFlags(caller->getScript());
+    flags = JS_GetScriptFilenameFlags(caller->script());
     if ((flags & JSFILENAME_PROTECTED) &&
         principals &&
         strcmp(principals->codebase, "[System Principal]")) {
@@ -960,13 +961,13 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
     }
 
     jsbytecode *pc = caller->pc(cx);
-    if (pc && js_GetOpcode(cx, caller->getScript(), pc) == JSOP_EVAL) {
-        JS_ASSERT(js_GetOpcode(cx, caller->getScript(), pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+    if (pc && js_GetOpcode(cx, caller->script(), pc) == JSOP_EVAL) {
+        JS_ASSERT(js_GetOpcode(cx, caller->script(), pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
         *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
     } else {
         *linenop = js_FramePCToLineNumber(cx, caller);
     }
-    return caller->getScript()->filename;
+    return caller->script()->filename;
 }
 
 #ifndef EVAL_CACHE_CHAIN_LIMIT
@@ -1056,18 +1057,18 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      * when evaluating the code string.  Warn when such uses are seen so that
      * authors will know that support for eval(s, o) has been removed.
      */
-    if (argc > 1 && !caller->getScript()->warnedAboutTwoArgumentEval) {
+    if (argc > 1 && !caller->script()->warnedAboutTwoArgumentEval) {
         static const char TWO_ARGUMENT_WARNING[] =
             "Support for eval(code, scopeObject) has been removed. "
             "Use |with (scopeObject) eval(code);| instead.";
         if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
             return JS_FALSE;
-        caller->getScript()->warnedAboutTwoArgumentEval = true;
+        caller->script()->warnedAboutTwoArgumentEval = true;
     }
 
     /* From here on, control must exit through label out with ok set. */
     MUST_FLOW_THROUGH("out");
-    uintN staticLevel = caller->getScript()->staticLevel + 1;
+    uintN staticLevel = caller->script()->staticLevel + 1;
 
     /*
      * Bring fp->scopeChain up to date. We're either going to use
@@ -1104,7 +1105,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
          *
          * NB: This means that the C API must not be used to call eval.
          */
-        JS_ASSERT_IF(caller->argv, caller->hasCallObj());
+        JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
         scopeobj = callerScopeChain;
     }
 #endif
@@ -1162,15 +1163,16 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      * calls to eval from global code are not cached.
      */
     JSScript **bucket = EvalCacheHash(cx, str);
-    if (!indirectCall && caller->hasFunction()) {
+    if (!indirectCall && caller->isFunctionFrame()) {
         uintN count = 0;
         JSScript **scriptp = bucket;
 
         EVAL_CACHE_METER(probe);
+        JSVersion version = cx->findVersion();
         while ((script = *scriptp) != NULL) {
             if (script->savedCallerFun &&
                 script->staticLevel == staticLevel &&
-                script->version == cx->version &&
+                script->version == version &&
                 (script->principals == principals ||
                  (principals->subsume(principals, script->principals) &&
                   script->principals->subsume(script->principals, principals)))) {
@@ -1180,7 +1182,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                  */
                 JSFunction *fun = script->getFunction(0);
 
-                if (fun == caller->getFunction()) {
+                if (fun == caller->fun()) {
                     /*
                      * Get the source string passed for safekeeping in the
                      * atom map by the prior eval to Compiler::compileScript.
@@ -2727,10 +2729,10 @@ Detecting(JSContext *cx, jsbytecode *pc)
     JSOp op;
     JSAtom *atom;
 
-    script = cx->fp()->getScript();
+    script = cx->fp()->script();
     endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
-        JS_ASSERT_IF(!cx->fp()->hasIMacroPC(), script->code <= pc && pc < endpc);
+        JS_ASSERT_IF(!cx->fp()->hasImacropc(), script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
         op = js_GetOpcode(cx, script, pc);
@@ -2801,16 +2803,15 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
     JSStackFrame *const fp = js_GetTopStackFrame(cx);
     if (!fp || !(pc = cx->regs->pc))
         return defaultFlags;
-    cs = &js_CodeSpec[js_GetOpcode(cx, fp->getScript(), pc)];
+    cs = &js_CodeSpec[js_GetOpcode(cx, fp->script(), pc)];
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
-    if ((format & (JOF_SET | JOF_FOR)) ||
-        (fp->flags & JSFRAME_ASSIGNING)) {
+    if ((format & (JOF_SET | JOF_FOR)) || fp->isAssigning()) {
         flags |= JSRESOLVE_ASSIGNING;
     } else if (cs->length >= 0) {
         pc += cs->length;
-        JSScript *script = cx->fp()->getScript();
+        JSScript *script = cx->fp()->script();
         if (pc < script->code + script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
@@ -2987,7 +2988,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
 
     JSStackFrame *const fp = cx->fp();
-    JSObject *obj = fp->getScopeChain();
+    JSObject *obj = &fp->scopeChain();
     JS_ASSERT(obj->isClonedBlock());
     JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
 
@@ -3008,7 +3009,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
         uintN flen = JS_MIN(count, JS_INITIAL_NSLOTS - slot);
         uintN stop = slot + flen;
 
-        depth += fp->getFixedCount();
+        depth += fp->numFixed();
         while (slot < stop)
             obj->fslots[slot++] = fp->slots()[depth++];
         count -= flen;
@@ -3018,7 +3019,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* We must clear the private slot even with errors. */
     obj->setPrivate(NULL);
-    fp->setScopeChain(obj->getParent());
+    fp->setScopeChainNoCallObj(*obj->getParent());
     return normalUnwind;
 }
 
@@ -3037,8 +3038,8 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         fp = js_LiveFrameIfGenerator(fp);
-        index += fp->getFixedCount() + OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(index < fp->getSlotCount());
+        index += fp->numFixed() + OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->numSlots());
         *vp = fp->slots()[index];
         return true;
     }
@@ -3058,8 +3059,8 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         fp = js_LiveFrameIfGenerator(fp);
-        index += fp->getFixedCount() + OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(index < fp->getSlotCount());
+        index += fp->numFixed() + OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->numSlots());
         fp->slots()[index] = *vp;
         return true;
     }
@@ -3745,7 +3746,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
      */
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (!start && (fp = cx->maybefp()) != NULL)
-        start = fp->maybeScopeChain();
+        start = &fp->scopeChain();
 
     if (start) {
         /* Find the topmost object in the scope chain. */
@@ -4483,7 +4484,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     JSProperty *prop;
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
-    scopeChain = js_GetTopStackFrame(cx)->getScopeChain();
+    scopeChain = &js_GetTopStackFrame(cx)->scopeChain();
 
     /* Scan entries on the scope chain that we can cache across. */
     entry = JS_NO_PROP_CACHE_FILL;
@@ -4800,7 +4801,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
             op = (JSOp) *pc;
             if (op == JSOP_TRAP) {
                 JS_ASSERT_NOT_ON_TRACE(cx);
-                op = JS_GetTrapOpcode(cx, cx->fp()->getScript(), pc);
+                op = JS_GetTrapOpcode(cx, cx->fp()->script(), pc);
             }
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
@@ -4892,7 +4893,7 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         return true;
 
     /* If neither cx nor the code is strict, then no check is needed. */
-    if (!(fp->hasScript() && fp->getScript()->strictModeCode) &&
+    if (!(fp->isScriptFrame() && fp->script()->strictModeCode) &&
         !JS_HAS_STRICT_OPTION(cx)) {
         return true;
     }
@@ -5286,11 +5287,12 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
                 JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
 
                 if (fun != funobj) {
-                    for (JSStackFrame *fp = cx->maybefp(); fp; fp = fp->down) {
-                        if (fp->callee() == fun &&
-                            fp->getThisValue().isObject() &&
-                            &fp->getThisValue().toObject() == obj) {
-                            fp->setCalleeObject(*funobj);
+                    for (JSStackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
+                        if (fp->isFunctionFrame() &&
+                            &fp->callee() == &fun->compiledFunObj() &&
+                            fp->thisValue().isObject() &&
+                            &fp->thisValue().toObject() == obj) {
+                            fp->calleeValue().setObject(*funobj);
                         }
                     }
                 }
@@ -5583,7 +5585,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
     if (protoKey != JSProto_Null) {
         if (!scopeobj) {
             if (cx->hasfp())
-                scopeobj = cx->fp()->maybeScopeChain();
+                scopeobj = &cx->fp()->scopeChain();
             if (!scopeobj) {
                 scopeobj = cx->globalObject;
                 if (!scopeobj) {
@@ -6389,27 +6391,27 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         JSStackFrame *const fp = i.fp();
 
         fprintf(stderr, "JSStackFrame at %p\n", (void *) fp);
-        if (fp->argv) {
-            fprintf(stderr, "callee: ");
-            dumpValue(fp->argv[-2]);
+        if (fp->isFunctionFrame()) {
+            fprintf(stderr, "callee fun: ");
+            dumpValue(ObjectValue(fp->callee()));
         } else {
             fprintf(stderr, "global frame, no callee");
         }
         fputc('\n', stderr);
 
-        if (fp->hasScript()) {
+        if (fp->isScriptFrame()) {
             fprintf(stderr, "file %s line %u\n",
-                    fp->getScript()->filename, (unsigned) fp->getScript()->lineno);
+                    fp->script()->filename, (unsigned) fp->script()->lineno);
         }
 
         if (jsbytecode *pc = i.pc()) {
-            if (!fp->hasScript()) {
+            if (!fp->isScriptFrame()) {
                 fprintf(stderr, "*** pc && !script, skipping frame\n\n");
                 continue;
             }
-            if (fp->hasIMacroPC()) {
+            if (fp->hasImacropc()) {
                 fprintf(stderr, "  pc in imacro at %p\n  called from ", pc);
-                pc = fp->getIMacroPC();
+                pc = fp->imacropc();
             } else {
                 fprintf(stderr, "  ");
             }
@@ -6426,38 +6428,37 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
                 fputc('\n', stderr);
             }
         }
-        fprintf(stderr, "  argv:  %p (argc: %u)\n",
-                (void *) fp->argv, (unsigned) fp->numActualArgs());
+        if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
+            fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actualArgs(), (unsigned) fp->numActualArgs());
+            fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formalArgs(), (unsigned) fp->numFormalArgs());
+        }
         MaybeDumpObject("callobj", fp->maybeCallObj());
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
-        MaybeDumpValue("this", fp->getThisValue());
+        MaybeDumpValue("this", fp->thisValue());
         fprintf(stderr, "  rval: ");
-        dumpValue(fp->getReturnValue());
+        dumpValue(fp->returnValue());
         fputc('\n', stderr);
 
         fprintf(stderr, "  flags:");
-        if (fp->flags == 0)
-            fprintf(stderr, " none");
-        if (fp->flags & JSFRAME_CONSTRUCTING)
+        if (fp->isConstructing())
             fprintf(stderr, " constructing");
-        if (fp->flags & JSFRAME_ASSIGNING)
-            fprintf(stderr, " assigning");
-        if (fp->flags & JSFRAME_DEBUGGER)
-            fprintf(stderr, " debugger");
-        if (fp->flags & JSFRAME_EVAL)
-            fprintf(stderr, " eval");
-        if (fp->flags & JSFRAME_YIELDING)
-            fprintf(stderr, " yielding");
-        if (fp->flags & JSFRAME_GENERATOR)
-            fprintf(stderr, " generator");
-        if (fp->flags & JSFRAME_OVERRIDE_ARGS)
+        if (fp->hasOverriddenArgs())
             fprintf(stderr, " overridden_args");
+        if (fp->isAssigning())
+            fprintf(stderr, " assigning");
+        if (fp->isDebuggerFrame())
+            fprintf(stderr, " debugger");
+        if (fp->isEvalFrame())
+            fprintf(stderr, " eval");
+        if (fp->isYielding())
+            fprintf(stderr, " yielding");
+        if (fp->isGeneratorFrame())
+            fprintf(stderr, " generator");
         fputc('\n', stderr);
 
-        if (fp->hasScopeChain())
-            fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->getScopeChain());
+        fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) &fp->scopeChain());
         if (fp->hasBlockChain())
-            fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->getBlockChain());
+            fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain());
 
         fputc('\n', stderr);
     }

@@ -1284,6 +1284,9 @@ var gHeader = {
 var gDiscoverView = {
   node: null,
   enabled: true,
+  // Set to true after the view is first shown. If initialization completes
+  // after this then it must also load the discover homepage
+  loaded: false,
   _browser: null,
 
   initialize: function() {
@@ -1314,19 +1317,36 @@ var gDiscoverView = {
         }
       });
 
-      gDiscoverView._browser.homePage = url + "#" + JSON.stringify(list);
-      notifyInitialized();
+      var browser = gDiscoverView._browser;
+      browser.homePage = url + "#" + JSON.stringify(list);
+
+      if (gDiscoverView.loaded) {
+        browser.addEventListener("load", function() {
+          browser.removeEventListener("load", arguments.callee, true);
+          notifyInitialized();
+        }, true);
+        browser.goHome();
+      } else {
+        notifyInitialized();
+      }
     });
   },
 
   show: function() {
-    // load content only if we're not already showing something on AMO
-    // XXXunf should only be comparing hostname. bug 557698
-    if (this._browser.currentURI.spec.indexOf(this._browser.homePage) == -1)
-      this._browser.goHome();
+    if (!this.loaded) {
+      this.loaded = true;
 
-    gViewController.updateCommands();
-    gViewController.notifyViewChanged();
+      var browser = gDiscoverView._browser;
+      browser.addEventListener("load", function() {
+        browser.removeEventListener("load", arguments.callee, true);
+        gViewController.updateCommands();
+        gViewController.notifyViewChanged();
+      }, true);
+      browser.goHome();
+    } else {
+      gViewController.updateCommands();
+      gViewController.notifyViewChanged();
+    }
   },
 
   hide: function() { },

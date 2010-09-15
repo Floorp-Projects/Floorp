@@ -320,7 +320,8 @@ class TokenStream
      * Create a new token stream, either from an input buffer or from a file.
      * Return false on file-open or memory-allocation failure.
      */
-    bool init(const jschar *base, size_t length, FILE *fp, const char *filename, uintN lineno);
+    bool init(JSVersion version, const jschar *base, size_t length, FILE *fp,
+              const char *filename, uintN lineno);
     void close();
     ~TokenStream() {}
 
@@ -441,6 +442,8 @@ class TokenStream
         return JS_FALSE;
     }
 
+    void setVersion(JSVersion newVersion) { version = newVersion; }
+
   private:
     typedef struct TokenBuf {
         jschar              *base;      /* base of line or stream buffer */
@@ -511,6 +514,7 @@ class TokenStream
     JSCharBuffer        tokenbuf;       /* current token string buffer */
     bool                maybeEOL[256];  /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
+    JSVersion           version;        /* cached version number for scan */
 };
 
 } /* namespace js */

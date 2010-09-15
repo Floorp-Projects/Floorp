@@ -26,7 +26,6 @@ browser.jar:
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
-*       content/browser/credits.xhtml                 (content/credits.xhtml)
 *       content/browser/fullscreen-video.xhtml        (content/fullscreen-video.xhtml)
 *       content/browser/inspector.html                (content/inspector.html)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
@@ -68,6 +67,8 @@ browser.jar:
         content/browser/syncGenericChange.js          (content/syncGenericChange.js)
 *       content/browser/syncKey.xhtml                 (content/syncKey.xhtml)
 *       content/browser/syncNotification.xml          (content/syncNotification.xml)
+*       content/browser/syncQuota.xul                 (content/syncQuota.xul)
+        content/browser/syncQuota.js                  (content/syncQuota.js)
         content/browser/syncUtils.js                  (content/syncUtils.js)
 #endif
 # XXX: We should exclude this one as well (bug 71895)

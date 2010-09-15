@@ -326,6 +326,15 @@ struct JSScript {
         return getAtom(arr->vector[index].atomIndex);
     }
 
+    JSVersion getVersion() const {
+        return JSVersion(version);
+    }
+
+    void setVersion(JSVersion newVersion) {
+        JS_ASSERT((newVersion & JS_BITMASK(16)) == uint32(newVersion));
+        version = newVersion;
+    }
+
     inline JSFunction *getFunction(size_t index);
 
     inline JSObject *getRegExp(size_t index);

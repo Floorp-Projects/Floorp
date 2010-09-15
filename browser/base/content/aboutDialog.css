@@ -3,104 +3,82 @@
   -moz-padding-end: 0;
   padding-bottom: 10px;
   -moz-padding-start: 0;
-  width: 299px;
-}
-
-#modes {
-  min-height: 400px;
+  width: 600px;
 }
 
 #clientBox {
-  /* Add a min-width equal to chrome://branding/content/about.png's
-   * width, to maintain the dialog layout on OS X where the dialog is
-   * align="end" to right-align the button.
-   */
-  min-width: 300px;
-  background-image: url("chrome://branding/content/about.png");
+  background-color: #F7F7F7;
+  color: #222222;
+}
+
+#leftBox {
+  background-image: url("chrome://branding/content/about-logo.png");
   background-repeat: no-repeat;
-  background-color: #FFFFFF;
-  padding-top: 203px;
-  color: #000000;
+  /* min-width and min-height create room for the logo */
+  min-width: 210px;
+  min-height: 210px;
+  margin-top:20px;
+  -moz-margin-start: 30px;
 }
 
-#brandName {
-  font-weight: bold; font-size: larger;
+#rightBox {
+  background-image: url("chrome://branding/content/about-wordmark.png");
+  background-repeat: no-repeat;
+  /* padding-top creates room for the wordmark */
+  padding-top: 38px;
+  margin-top:20px;
+  -moz-margin-end: 30px;
+  -moz-margin-start: 30px;
 }
 
-#userAgent {
-  direction: ltr;
-  margin-top: 10px;
-  -moz-margin-end: 13px;
-  margin-bottom: 0;
-  -moz-margin-start: 13px;
-  background-color: #FFFFFF;
-  color: #000000;
-  padding-top: 1px;
-  -moz-padding-end: 1px;
-  padding-bottom: 1px;
-  -moz-padding-start: 3px;
-  -moz-appearance: none;
-  overflow: hidden;
-  border: 0;
+#rightBox:-moz-locale-dir(rtl) {
+  background-position: 100% 0;
 }
 
-#groove {
-  margin-top: 0;
-}
-
-#creditsIframe {
-  cursor: default;
-  -moz-user-select: none;
-  border: 0;
+#bottomBox {
+  padding: 15px 10px 0;
 }
 
 #version {
-  font-weight: bold;
-  color: #909090;
-  margin-top: 1em;
-  -moz-margin-end: 0;
-  margin-bottom: 10px;
-  -moz-margin-start: 17px;
+  margin-top: 5px;
 }
 
-#distribution {
-  font-weight: bold;
-  color: #909090;
-  display: none;
-  margin-top: 0;
-  -moz-margin-end: 0;
-  margin-bottom: 0;
-  -moz-margin-start: 17px;
+#released {
+  color: #666666;
 }
 
+#distribution,
 #distributionId {
   font-weight: bold;
-  color: #909090;
   display: none;
   margin-top: 0;
-  -moz-margin-end: 0;
+  margin-bottom: 0;
+}
+
+#checkForUpdatesButton,
+.text-blurb {
   margin-bottom: 10px;
-  -moz-margin-start: 17px;
+  -moz-margin-start: 0;
+  -moz-padding-start: 0;
 }
 
-#copyright {
-  margin-top: 0;
-  -moz-margin-end: 16px;
-  margin-bottom: 3px;
-  -moz-margin-start: 16px;
-}
-
-button[dlgtype="extra2"] {
-  -moz-margin-start: 13px;
-}
-
-button[dlgtype="accept"] {
-  -moz-margin-end: 13px;
-}
-
+.version-label,
+.trademark-label,
 .text-link,
 .text-link:focus {
   margin: 0px;
   padding: 0px;
-  border: 0px;
+}
+
+.bottom-link,
+.bottom-link:focus {
+  text-align: center;
+  margin: 0 40px;
+}
+
+#trademark {
+  font-size: xx-small;
+  text-align: center;
+  color: #999999;
+  margin-top: 10px;
 }

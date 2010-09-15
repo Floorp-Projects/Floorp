@@ -73,6 +73,8 @@ public:
   NS_DECL_NSIIDBEVENT
   NS_FORWARD_TO_NSDOMEVENT
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBEvent, nsDOMEvent)
+
   static already_AddRefed<nsIDOMEvent>
   CreateGenericEvent(const nsAString& aType);
 
@@ -121,6 +123,8 @@ public:
   NS_FORWARD_NSIDOMEVENT(IDBEvent::)
   NS_FORWARD_NSIIDBEVENT(IDBEvent::)
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBSuccessEvent, IDBEvent)
+
   static already_AddRefed<nsIDOMEvent>
   Create(IDBRequest* aRequest,
          nsIVariant* aResult,
@@ -144,15 +148,14 @@ public:
   GetSuccessEvent(const nsAString& aValue)
   : mValue(aValue),
     mCachedValue(JSVAL_VOID),
-    mJSRuntime(nsnull)
+    mValueRooted(PR_FALSE)
   { }
 
-  ~GetSuccessEvent()
-  {
-    if (mJSRuntime) {
-      js_RemoveRoot(mJSRuntime, &mCachedValue);
-    }
-  }
+  ~GetSuccessEvent();
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(GetSuccessEvent,
+                                                         IDBSuccessEvent)
 
   NS_IMETHOD GetResult(JSContext* aCx,
                        jsval* aResult);
@@ -164,8 +167,11 @@ private:
   nsString mValue;
 
 protected:
+  void RootCachedValue();
+
   jsval mCachedValue;
   JSRuntime* mJSRuntime;
+  PRBool mValueRooted;
 };
 
 class GetAllSuccessEvent : public GetSuccessEvent

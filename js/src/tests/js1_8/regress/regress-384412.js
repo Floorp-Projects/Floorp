@@ -209,11 +209,11 @@ function test()
   {
     var v = version(150);
     f = new Function("return version(arguments[0])");
-    version(v);
+    revertVersion();
     expect(150, f());
-    //expect(150, eval("f()"));
+    expect(150, eval("f()"));
     expect(0, eval("f(0); f()"));
-    version(v);
+    revertVersion();
   }
   print("End of Tests");
 

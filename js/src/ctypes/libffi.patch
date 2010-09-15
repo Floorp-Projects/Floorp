@@ -1,4 +1,4 @@
-Patch libffi to fix bug 550602 and bug 538216.
+Patch libffi to fix bug 550602, bug 538216 and bug 594611.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
@@ -108,3 +108,26 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
    archive_cmds_need_lc=no
    hardcode_direct=no
 
+diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
+--- a/js/src/ctypes/libffi/src/x86/ffi64.c
++++ b/js/src/ctypes/libffi/src/x86/ffi64.c
+@@ -373,18 +373,18 @@ ffi_prep_cif_machdep (ffi_cif *cif)
+ 	  || gprcount + ngpr > MAX_GPR_REGS
+ 	  || ssecount + nsse > MAX_SSE_REGS)
+ 	{
+ 	  long align = cif->arg_types[i]->alignment;
+ 
+ 	  if (align < 8)
+ 	    align = 8;
+ 
++	  bytes += cif->arg_types[i]->size;
+ 	  bytes = ALIGN(bytes, align);
+-	  bytes += cif->arg_types[i]->size;
+ 	}
+       else
+ 	{
+ 	  gprcount += ngpr;
+ 	  ssecount += nsse;
+ 	}
+     }
+   if (ssecount)

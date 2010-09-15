@@ -388,7 +388,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * This loses us some transparency, and is generally very cheesy.
      */
     JSObject *global =
-        cx->hasfp() ? cx->fp()->getScopeChain()->getGlobal() : cx->globalObject;
+        cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
     wrapper->setParent(global);
     return true;
 }
@@ -514,7 +514,6 @@ AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
       origin(cx->compartment),
       target(target),
       destination(target->getCompartment(cx)),
-      statics(cx),
       input(cx),
       entered(false)
 {
@@ -535,12 +534,11 @@ AutoCompartment::enter()
         context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         frame.construct();
-        if (!context->stack().pushDummyFrame(context, frame.ref(), regs, scopeChain)) {
+        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
             frame.destroy();
             context->compartment = origin;
             return false;
         }
-        js_SaveAndClearRegExpStatics(context, &statics, &input);
     }
     entered = true;
     return true;
@@ -551,7 +549,6 @@ AutoCompartment::leave()
 {
     JS_ASSERT(entered);
     if (origin != destination) {
-        js_RestoreRegExpStatics(context, &statics);
         frame.destroy();
         context->compartment = origin;
         origin->wrapException(context);

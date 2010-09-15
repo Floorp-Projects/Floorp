@@ -81,8 +81,10 @@ CPPSRCS += nsEmbedFunctions.cpp
 endif
 
 ifdef MOZ_UPDATER
+ifneq ($(OS_TARGET),Android)
 CPPSRCS += nsUpdateDriver.cpp
 DEFINES += -DMOZ_UPDATER
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

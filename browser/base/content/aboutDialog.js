@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Margaret Leibovic <margaret.leibovic@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,27 +36,25 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
-var gSelectedPage = 0;
+// Services = object with smart getters for common XPCOM services
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function init(aEvent)
 {
   if (aEvent.target != document)
     return;
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-
   try {
-    var distroId = prefs.getCharPref("distribution.id");
+    var distroId = Services.prefs.getCharPref("distribution.id");
     if (distroId) {
-      var distroVersion = prefs.getCharPref("distribution.version");
-      var distroAbout = prefs.getComplexValue("distribution.about",
+      var distroVersion = Services.prefs.getCharPref("distribution.version");
+      var distroAbout = Services.prefs.getComplexValue("distribution.about",
         Components.interfaces.nsISupportsString);
-  
+
       var distroField = document.getElementById("distribution");
       distroField.value = distroAbout;
       distroField.style.display = "block";
-    
+
       var distroIdField = document.getElementById("distributionId");
       distroIdField.value = distroId + " - " + distroVersion;
       distroIdField.style.display = "block";
@@ -65,19 +64,9 @@ function init(aEvent)
     // Pref is unset
   }
 
-  var userAgentField = document.getElementById("userAgent");
-  userAgentField.value = navigator.userAgent;
-
-  var button = document.documentElement.getButton("extra2");
-  button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
-  button.setAttribute("accesskey", document.documentElement.getAttribute("creditsaccesskey"));
-  button.addEventListener("command", switchPage, false);
-
-  var acceptButton = document.documentElement.getButton("accept");
-#ifdef XP_UNIX
-  acceptButton.setAttribute("icon", "close");
+#ifdef MOZ_UPDATER
+  initUpdates();
 #endif
-  acceptButton.focus();
 
 #ifdef XP_MACOSX
   // it may not be sized at this point, and we need its width to calculate its position
@@ -86,34 +75,27 @@ function init(aEvent)
 #endif
 }
 
-function uninit(aEvent)
+#ifdef MOZ_UPDATER
+/**
+ * Creates "Last Updated" message and sets up "Check for Updates..." button.
+ */
+function initUpdates()
 {
-  if (aEvent.target != document)
-    return;
-  var iframe = document.getElementById("creditsIframe");
-  iframe.setAttribute("src", "");
-}
+  var um = Components.classes["@mozilla.org/updates/update-manager;1"].
+           getService(Components.interfaces.nsIUpdateManager);
+  var browserBundle = Services.strings.
+                      createBundle("chrome://browser/locale/browser.properties");
 
-function switchPage(aEvent)
-{
-  var button = aEvent.target;
-  if (button.localName != "button")
-    return;
-
-  var iframe = document.getElementById("creditsIframe");
-  if (gSelectedPage == 0) {
-    iframe.setAttribute("src", "chrome://browser/content/credits.xhtml");
-    button.setAttribute("label", document.documentElement.getAttribute("aboutlabel"));
-    button.setAttribute("accesskey", document.documentElement.getAttribute("aboutaccesskey"));
-    gSelectedPage = 1;
+  if (um.updateCount) {
+    let buildID = um.getUpdateAt(0).buildID;
+    let released = browserBundle.formatStringFromName("aboutdialog.released", 
+                                                      [buildID.substring(0, 4), 
+                                                       buildID.substring(4, 6), 
+                                                       buildID.substring(6, 8)], 3);
+    document.getElementById("released").setAttribute("value", released);
   }
-  else {
-    iframe.setAttribute("src", ""); 
-    button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
-    button.setAttribute("accesskey", document.documentElement.getAttribute("creditsaccesskey"));
-    gSelectedPage = 0;
-  }
-  var modes = document.getElementById("modes");
-  modes.setAttribute("selectedIndex", gSelectedPage);
-}
 
+  var checkForUpdates = document.getElementById("checkForUpdatesButton");
+  setupCheckForUpdates(checkForUpdates, browserBundle);
+}
+#endif

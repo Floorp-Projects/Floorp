@@ -136,7 +136,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * opcode format flags.
      */
     pc = cx->regs->pc;
-    op = js_GetOpcode(cx, cx->fp()->getScript(), pc);
+    op = js_GetOpcode(cx, cx->fp()->script(), pc);
     cs = &js_CodeSpec[op];
     kshape = 0;
 
@@ -313,7 +313,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(cx->fp()->getScript(), pc, pcoff, atom);
+    GET_ATOM_FROM_BYTECODE(cx->fp()->script(), pc, pcoff, atom);
     return atom;
 }
 
@@ -327,10 +327,10 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     JSStackFrame *fp = cx->fp();
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(uintN((fp->hasIMacroPC() ? fp->getIMacroPC() : pc) - fp->getScript()->code)
-              < fp->getScript()->length);
+    JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - fp->script()->code)
+              < fp->script()->length);
 
-    JSOp op = js_GetOpcode(cx, fp->getScript(), pc);
+    JSOp op = js_GetOpcode(cx, fp->script(), pc);
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;

@@ -43,8 +43,10 @@
 <!DOCTYPE overlay [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
   <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
+  <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
   %brandDTD;
   %mainDTD;
+  %aboutHomeDTD;
 ]>
 
 <overlay id="MainPaneOverlay"
@@ -118,6 +120,9 @@
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserHomePage"/>
         <textbox id="browserHomePage" class="padded uri-element" flex="1"
                  type="autocomplete" autocompletesearch="history"
+                 onsyncfrompreference="return gMainPane.syncFromHomePref();"
+                 onsynctopreference="return gMainPane.syncToHomePref(this.value);"
+                 placeholder="&abouthome.pageTitle;"
                  preference="browser.startup.homepage"/>
       </hbox>
       <hbox align="center" pack="end">

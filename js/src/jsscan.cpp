@@ -56,7 +56,6 @@
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
-#include "jsdtoa.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
@@ -185,15 +184,16 @@ TokenStream::TokenStream(JSContext *cx)
 #endif
 
 bool
-TokenStream::init(const jschar *base, size_t length, FILE *fp, const char *fn, uintN ln)
+TokenStream::init(JSVersion version, const jschar *base, size_t length, FILE *fp,
+                  const char *fn, uintN ln)
 {
-    jschar *buf;
-
+    this->version = version;
     JS_ASSERT_IF(fp, !base);
     JS_ASSERT_IF(!base, length == 0);
     size_t nb = fp
          ? (UNGET_LIMIT + 2 * LINE_LIMIT) * sizeof(jschar)    /* see below */
          : (UNGET_LIMIT + 1 * LINE_LIMIT) * sizeof(jschar);
+    jschar *buf;
     JS_ARENA_ALLOCATE_CAST(buf, jschar *, &cx->tempPool, nb);
     if (!buf) {
         js_ReportOutOfScriptQuota(cx);
@@ -1102,7 +1102,7 @@ TokenStream::getTokenInternal()
                                               JSMSG_RESERVED_ID, kw->chars)) {
                     goto error;
                 }
-            } else if (kw->version <= JSVERSION_NUMBER(cx)) {
+            } else if (kw->version <= VersionNumber(version)) {
                 tt = kw->tokentype;
                 tp->t_op = (JSOp) kw->op;
                 goto out;
@@ -1438,7 +1438,7 @@ TokenStream::getTokenInternal()
          * The check for this is in jsparse.cpp, Compiler::compileScript.
          */
         if ((flags & TSF_OPERAND) &&
-            (JS_HAS_XML_OPTION(cx) || peekChar() != '!')) {
+            (VersionHasXML(version) || peekChar() != '!')) {
             /* Check for XML comment or CDATA section. */
             if (matchChar('!')) {
                 tokenbuf.clear();

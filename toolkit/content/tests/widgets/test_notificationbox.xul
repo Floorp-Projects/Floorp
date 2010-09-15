@@ -359,9 +359,9 @@ function runTimedTests(tests, idx, element, arg)
 
 function runTimedTestsWait(tests, idx, element, arg)
 {
-  // use this secret property to check if the timer is still running. If it
-  // is, then the notification hasn't opened or closed yet
-  if (element._timer)
+  // use this secret property to check if the animation is still running. If it
+  // is, then the notification hasn't fully opened or closed yet
+  if (element._animating)
     setTimeout(runTimedTestsWait, 50, tests, idx, element, arg);
   else
     runTimedTests(tests, idx, element, arg);

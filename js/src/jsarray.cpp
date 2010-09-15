@@ -90,7 +90,6 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h" /* for js_TraceWatchPoints */
-#include "jsdtoa.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -1350,7 +1349,7 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, args))
+    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.callee() = join;
@@ -1954,7 +1953,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
             LeaveTrace(cx);
 
             CompareArgs ca(cx, fval);
-            if (!cx->stack().pushInvokeArgs(cx, 2, ca.args))
+            if (!cx->stack().pushInvokeArgs(cx, 2, &ca.args))
                 return false;
 
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
@@ -2743,7 +2742,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     argc = 3 + REDUCE_MODE(mode);
 
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, args))
+    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return JS_FALSE;
 
     MUST_FLOW_THROUGH("out");

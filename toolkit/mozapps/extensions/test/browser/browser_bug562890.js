@@ -24,7 +24,7 @@ function test() {
     optionsURL: addonPrefsURI
   }]);
   
-  open_manager(null, function(aWindow) {
+  open_manager("addons://list/extension", function(aWindow) {
     var addonList = aWindow.document.getElementById("addon-list");
     for (var i = 0; i < addonList.childNodes.length; i++) {
       var addonItem = addonList.childNodes[i];
