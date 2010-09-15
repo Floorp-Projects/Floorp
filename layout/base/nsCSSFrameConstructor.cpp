@@ -235,6 +235,7 @@ NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Global object maintenance
 nsIXBLService * nsCSSFrameConstructor::gXBLService = nsnull;
+PRUint32 nsCSSFrameConstructor::gDOMGeneration = 0;
 
 #ifdef DEBUG
 // Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
@@ -8188,6 +8189,7 @@ nsCSSFrameConstructor::BeginUpdate() {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
 
+  ++gDOMGeneration;
   ++mUpdateCount;
 }
 
