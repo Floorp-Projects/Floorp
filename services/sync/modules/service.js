@@ -847,13 +847,14 @@ WeaveSvc.prototype = {
     }
   },
 
-  // Backwards compat with the Firefox UI. Remove once bug 595066 has landed.
-  checkUsername: function checkUsername(username) {
-    return this.checkAccount(username);
-  }, 
-
   checkAccount: function checkAccount(account) {
     let username = this._usernameFromAccount(account);
+    return this.checkUsername(username);
+  },
+
+  // Backwards compat with the Firefox UI. Fold into checkAccount() once
+  // bug 595066 has landed.
+  checkUsername: function checkUsername(username) {
     let url = this.userAPI + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
@@ -875,9 +876,18 @@ WeaveSvc.prototype = {
     return this._errorStr(data);
   },
 
-  createAccount: function WeaveSvc_createAccount(account, password, email,
-                                            captchaChallenge, captchaResponse) {
-    let username = this._usernameFromAccount(account);
+  createAccount: function createAccount() {
+    // Backwards compat with the Firefox UI. Change to signature to
+    // (email, password, captchaChallenge, captchaResponse) once
+    // bug 595066 has landed.
+    let username, email, password, captchaChallenge, captchaResponse;
+    if (arguments.length == 4) {
+      [email, password, captchaChallenge, captchaResponse] = arguments;
+      username = this._usernameFromAccount(email);
+    } else {
+      [username, password, email, captchaChallenge, captchaResponse] = arguments;
+    }
+
     let payload = JSON.stringify({
       "password": Utils.encodeUTF8(password),
       "email": email,
