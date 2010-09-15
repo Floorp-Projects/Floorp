@@ -3920,11 +3920,11 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
 
         /*
          * Freeing a slot other than the last one mapped by this object's
-         * shape: push the slot onto the dictionary table's freelist. We want
-         * to let the last slot be freed by shrinking the dslots vector; see
-         * js_TraceObject.
+         * shape (and not a reserved slot; see bug 595230): push the slot onto
+         * the dictionary property table's freelist. We want to let the last
+         * slot be freed by shrinking the dslots vector; see js_TraceObject.
          */
-        if (slot + 1 < limit) {
+        if (JSSLOT_FREE(clasp) <= slot && slot + 1 < limit) {
             JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
             vref.setPrivateUint32(last);
             last = slot;
