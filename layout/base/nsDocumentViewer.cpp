@@ -326,6 +326,8 @@ public:
   // nsIDocumentViewer interface...
   NS_IMETHOD GetPresShell(nsIPresShell** aResult);
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
+  NS_IMETHOD SetDocumentInternal(nsIDocument* aDocument,
+                                 PRBool aForceReuseInnerWindow);
   /**
    * Find the view to use as the container view for MakeWindow. Returns
    * null if this will be the root of a view manager hierarchy. In that
@@ -952,7 +954,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       nsCOMPtr<nsIDocument> curDoc =
         do_QueryInterface(window->GetExtantDocument());
       if (!mIsPageMode || curDoc != mDocument) {
-        window->SetNewDocument(mDocument, aState);
+        window->SetNewDocument(mDocument, aState, PR_FALSE);
         nsJSContext::LoadStart();
       }
     }
@@ -1682,31 +1684,38 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   // occurred for the current document.
   // That work can happen when and if it is needed.
 
-  nsresult rv;
   if (!aDocument)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(aDocument, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(aDocument);
+  NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
+
+  return SetDocumentInternal(newDoc, PR_FALSE);
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::SetDocumentInternal(nsIDocument* aDocument,
+                                        PRBool aForceReuseInnerWindow)
+{
 
   // Set new container
   nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
-  newDoc->SetContainer(container);
+  aDocument->SetContainer(container);
 
-  if (mDocument != newDoc) {
+  if (mDocument != aDocument) {
     // Replace the old document with the new one. Do this only when
     // the new document really is a new document.
-    mDocument = newDoc;
+    mDocument = aDocument;
 
     // Set the script global object on the new document
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
     if (window) {
-      window->SetNewDocument(newDoc, nsnull);
+      window->SetNewDocument(aDocument, nsnull, aForceReuseInnerWindow);
     }
 
     // Clear the list of old child docshells. CChild docshells for the new
     // document will be constructed as frames are created.
-    if (!newDoc->IsStaticDocument()) {
+    if (!aDocument->IsStaticDocument()) {
       nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(container);
       if (node) {
         PRInt32 count;
@@ -1720,7 +1729,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     }
   }
 
-  rv = SyncParentSubDocMap();
+  nsresult rv = SyncParentSubDocMap();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Replace the current pres shell with a new shell for the new document

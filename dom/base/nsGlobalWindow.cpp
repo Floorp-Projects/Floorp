@@ -1588,7 +1588,8 @@ NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 
 nsresult
 nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
-                               nsISupports* aState)
+                               nsISupports* aState,
+                               PRBool aForceReuseInnerWindow)
 {
   NS_TIME_FUNCTION;
 
@@ -1612,7 +1613,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    return GetOuterWindowInternal()->SetNewDocument(aDocument, aState);
+    return GetOuterWindowInternal()->SetNewDocument(aDocument, aState,
+                                                    aForceReuseInnerWindow);
   }
 
   NS_PRECONDITION(IsOuterWindow(), "Must only be called on outer windows");
@@ -1630,6 +1632,15 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                GetCurrentInnerWindow()->GetExtantDocument() == mDocument,
                "Uh, mDocument doesn't match the current inner window "
                "document!");
+
+  PRBool wouldReuseInnerWindow = WouldReuseInnerWindow(aDocument);
+  if (aForceReuseInnerWindow &&
+      !wouldReuseInnerWindow &&
+      mDoc &&
+      mDoc->NodePrincipal() != aDocument->NodePrincipal()) {
+    NS_ERROR("Attempted forced inner window reuse while changing principal");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsresult rv = NS_OK;
 
@@ -1670,7 +1681,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsContentUtils::AddScriptRunner(
     NS_NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
 
-  PRBool reUseInnerWindow = WouldReuseInnerWindow(aDocument);
+  PRBool reUseInnerWindow = aForceReuseInnerWindow || wouldReuseInnerWindow;
 
   // Remember the old document's principal.
   nsIPrincipal *oldPrincipal = nsnull;
@@ -9814,7 +9825,8 @@ nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
 
 nsresult
 nsGlobalModalWindow::SetNewDocument(nsIDocument *aDocument,
-                                    nsISupports *aState)
+                                    nsISupports *aState,
+                                    PRBool aForceReuseInnerWindow)
 {
   // If we're loading a new document into a modal dialog, clear the
   // return value that was set, if any, by the current document.
@@ -9822,7 +9834,8 @@ nsGlobalModalWindow::SetNewDocument(nsIDocument *aDocument,
     mReturnValue = nsnull;
   }
 
-  return nsGlobalWindow::SetNewDocument(aDocument, aState);
+  return nsGlobalWindow::SetNewDocument(aDocument, aState,
+                                        aForceReuseInnerWindow);
 }
 
 //*****************************************************************************
