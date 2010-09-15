@@ -134,6 +134,8 @@ class PropertyTree
     void removeChild(JSContext *cx, js::Shape *child);
 
   public:
+    enum { MAX_HEIGHT = 64 };
+
     bool init();
     void finish();
 

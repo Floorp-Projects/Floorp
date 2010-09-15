@@ -1185,22 +1185,20 @@ JSAutoCrossCompartmentCall::enter(JSContext *cx, JSObject *target)
     return call != NULL;
 }
 
-JSAutoEnterCompartment::JSAutoEnterCompartment(JSContext *cx,
-                                               JSCompartment *newCompartment)
-  : cx(cx), compartment(cx->compartment)
+JS_FRIEND_API(JSCompartment *)
+js_SwitchToCompartment(JSContext *cx, JSCompartment *compartment)
 {
-    cx->compartment = newCompartment;
-}
-
-JSAutoEnterCompartment::JSAutoEnterCompartment(JSContext *cx, JSObject *target)
-  : cx(cx), compartment(cx->compartment)
-{
-    cx->compartment = target->getCompartment(cx);
-}
-
-JSAutoEnterCompartment::~JSAutoEnterCompartment()
-{
+    JSCompartment *c = cx->compartment;
     cx->compartment = compartment;
+    return c;
+}
+
+JS_FRIEND_API(JSCompartment *)
+js_SwitchToObjectCompartment(JSContext *cx, JSObject *obj)
+{
+    JSCompartment *c = cx->compartment;
+    cx->compartment = obj->getCompartment(cx);
+    return c;
 }
 
 JS_PUBLIC_API(void *)
@@ -1245,7 +1243,8 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
+    if (!cx->maybefp())
+        cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
 }
 
 class AutoResolvingEntry {
@@ -1334,10 +1333,14 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
 
-    if (cx->globalObject)
-        assertSameCompartment(cx, obj);
-    else
+    /*
+     * JS_SetGlobalObject might or might not change cx's compartment, so call
+     * it before assertSameCompartment. (The API contract is that *after* this,
+     * cx and obj must be in the same compartment.)
+     */
+    if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
+    assertSameCompartment(cx, obj);
 
     /* Define a top-level property 'undefined' with the undefined value. */
     JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
