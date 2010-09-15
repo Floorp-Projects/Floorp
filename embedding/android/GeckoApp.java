@@ -41,6 +41,7 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 import java.nio.*;
+import java.nio.channels.FileChannel;
 
 import android.os.*;
 import android.app.*;
@@ -88,6 +89,8 @@ abstract public class GeckoApp
 
         // hide our window's title, we don't want it
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        checkAndLaunchUpdate();
 
         surfaceView = new GeckoSurfaceView(this);
         
@@ -303,6 +306,7 @@ abstract public class GeckoApp
         byte[] buf = new byte[8192];
         unpackFile(zip, buf, null, "application.ini");
         unpackFile(zip, buf, null, getContentProcessName());
+        unpackFile(zip, buf, null, "update.locale");
 
         try {
             ZipEntry componentsList = zip.getEntry("components/components.manifest");
@@ -443,5 +447,79 @@ abstract public class GeckoApp
 
     public void handleNotification(String action, String alertName, String alertCookie) {
         GeckoAppShell.handleNotification(action, alertName, alertCookie);
+    }
+
+    private void checkAndLaunchUpdate() {
+        Log.i("GeckoAppJava", "Checking for an update");
+
+        int statusCode = 8; // UNEXPECTED_ERROR
+
+        String updateDir = "/data/data/org.mozilla." + getAppName() + "/updates/0/";
+        File updateFile = new File(updateDir + "update.apk");
+
+        if (!updateFile.exists())
+            return;
+
+        Log.i("GeckoAppJava", "Update is available!");
+
+        // Launch APK
+        File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File updateFileToRun = new File(downloadDir, getAppName() + "-update.apk");
+        try {
+            if (moveFile(updateFile, updateFileToRun)) {
+                String amCmd = "/system/bin/am start -a android.intent.action.VIEW " +
+                               "-n com.android.packageinstaller/.PackageInstallerActivity -d file://" +
+                               updateFileToRun.getPath();
+                Log.i("GeckoAppJava", amCmd);
+                Runtime.getRuntime().exec(amCmd);
+                statusCode = 0; // OK
+            } else {
+                Log.i("GeckoAppJava", "Cannot move the update file!");
+                statusCode = 7; // WRITE_ERROR
+            }
+        } catch (Exception e) {
+            Log.i("GeckoAppJava", e.toString());
+        }
+
+        // Update the status file
+        String status = statusCode == 0 ? "succeeded\n" : "failed: "+ statusCode + "\n";
+
+        File statusFile = new File(updateDir + "update.status");
+        OutputStream outStream;
+        try {
+            byte[] buf = status.getBytes("UTF-8");
+            outStream = new FileOutputStream(statusFile);
+            outStream.write(buf, 0, buf.length);
+            outStream.close();
+        } catch (Exception e) {
+            Log.i("GeckoAppJava", e.toString());
+        }
+
+        if (statusCode == 0)
+            System.exit(0);
+    }
+
+    private static boolean moveFile(File fromFile, File toFile) {
+        try {
+            if (fromFile.renameTo(toFile))
+                return true;
+
+            // Simple rename failed, transfer the data explicitly
+            FileChannel inChannel = new FileInputStream(fromFile).getChannel();
+            FileChannel outChannel = new FileOutputStream(toFile).getChannel();
+
+            long tansferred = inChannel.transferTo(0, inChannel.size(), outChannel);
+
+            inChannel.close();
+            outChannel.close();
+
+            if (tansferred > 0)
+                fromFile.delete();
+
+            return (tansferred > 0);
+        } catch (Exception e) {
+            Log.i("GeckoAppJava", e.toString());
+            return false;
+        }
     }
 }

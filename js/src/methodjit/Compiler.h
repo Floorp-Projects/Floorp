@@ -107,7 +107,7 @@ class Compiler
   public:
     struct CallGenInfo {
         CallGenInfo(uint32 argc)
-          : argc(argc), constantThis(UndefinedValue())
+          : argc(argc)
         { }
 
         /*
@@ -127,8 +127,6 @@ class Compiler
         RegisterID   funObjReg;
         RegisterID   funPtrReg;
         uint32       frameDepth;
-        bool         isConstantThis;
-        Value        constantThis;
     };
 
   private:

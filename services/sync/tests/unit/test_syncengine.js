@@ -112,10 +112,48 @@ function test_resetClient() {
   }
 }
 
+function test_wipeServer() {
+  _("SyncEngine.wipeServer deletes server data and resets the client.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  let engine = makeSteamEngine();
+
+  const PAYLOAD = 42;
+  let steamCrypto = new ServerWBO("steam", PAYLOAD);
+  let steamCollection = new ServerWBO("steam", PAYLOAD);
+  let server = httpd_setup({
+    "/1.0/foo/storage/crypto/steam": steamCrypto.handler(),
+    "/1.0/foo/storage/steam": steamCollection.handler()
+  });
+  do_test_pending();
+
+  try {
+    // Some data to reset.
+    engine.toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
+    engine.lastSync = 123.45;
+
+    _("Wipe server data and reset client.");
+    engine.wipeServer(true);
+    do_check_eq(steamCollection.payload, undefined);
+    do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.toFetch.length, 0);
+
+    _("We passed a truthy arg earlier in which case it doesn't wipe the crypto collection.");
+    do_check_eq(steamCrypto.payload, PAYLOAD);
+    engine.wipeServer();
+    do_check_eq(steamCrypto.payload, undefined);
+
+  } finally {
+    server.stop(do_test_finished);
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+    Svc.Prefs.resetBranch("");
+  }
+}
+
 function run_test() {
   test_url_attributes();
   test_syncID();
   test_lastSync();
   test_toFetch();
   test_resetClient();
+  test_wipeServer();
 }

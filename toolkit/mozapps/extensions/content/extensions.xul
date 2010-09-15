@@ -252,7 +252,7 @@
         <!-- discover view -->
         <vbox id="discover-view" flex="1" class="view-pane">
           <browser id="discover-browser" type="content" flex="1"
-                   disablehistory="true"/>
+                   disablehistory="true" homepage="about:blank"/>
         </vbox>
 
         <!-- search view -->

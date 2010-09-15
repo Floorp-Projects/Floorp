@@ -127,9 +127,9 @@ endif
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" \
 	-e "s|%NSPR_NAME%|$(NSPR_NAME)|" \
-	-e "s|%NSPR_VERSION%|$(NSPR_VERSION)|" > $@
+	-e "s|%NSPR_VERSION%|$(NSPR_VERSION)|" \
 	-e "s|%MOZ_XUL_LINK%|$(MOZ_XUL_LINK)|" \
-	-e "s|%MOZ_JS_LINK%|$(MOZ_JS_LINK)|" \
+	-e "s|%MOZ_JS_LINK%|$(MOZ_JS_LINK)|" > $@
 	chmod 644 $@
 
 install:: $(pkg_config_files)

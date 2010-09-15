@@ -22,6 +22,7 @@
 #  Chris Beard <cbeard@mozilla.com>
 #  Dan Mosedale <dmose@mozilla.org>
 #  Paul O’Shannessy <paul@oshannessy.com>
+#  Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,6 +57,7 @@ let gSyncUI = {
                "weave:service:sync:finish",
                "weave:service:sync:error",
                "weave:service:sync:delayed",
+               "weave:service:quota:remaining",
                "weave:service:setup-complete",
                "weave:service:login:start",
                "weave:service:login:finish",
@@ -218,6 +220,21 @@ let gSyncUI = {
     this.updateUI();
   },
 
+  onQuotaNotice: function onQuotaNotice(subject, data) {
+    let title = this._stringBundle.GetStringFromName("warning.sync.quota.label");
+    let description = this._stringBundle.GetStringFromName("warning.sync.quota.description");
+    let buttons = [];
+    buttons.push(new Weave.NotificationButton(
+      this._stringBundle.GetStringFromName("error.sync.viewQuotaButton.label"),
+      this._stringBundle.GetStringFromName("error.sync.viewQuotaButton.accesskey"),
+      function() { gSyncUI.openQuotaDialog(); return true; }
+    ));
+
+    let notification = new Weave.Notification(
+      title, description, null, Weave.Notifications.PRIORITY_WARNING, buttons);
+    Weave.Notifications.replaceTitle(notification);
+  },
+
   onNotificationAdded: function SUI_onNotificationAdded() {
     if (!gBrowser)
       return;
@@ -308,6 +325,16 @@ let gSyncUI = {
     }
   },
 
+  openQuotaDialog: function SUI_openQuotaDialog() {
+    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
+    if (win)
+      win.focus();
+    else 
+      Services.ww.activeWindow.openDialog(
+        "chrome://browser/content/syncQuota.xul", "",
+        "centerscreen,chrome,dialog,modal");
+  },
+
   openPrefs: function SUI_openPrefs() {
     openPreferences("paneSync");
   },
@@ -352,7 +379,18 @@ let gSyncUI = {
       let priority = Weave.Notifications.PRIORITY_WARNING;
       let buttons = [];
 
-      if (!Weave.Status.enforceBackoff) {
+      if (Weave.Status.sync == Weave.OVER_QUOTA) {
+        description = this._stringBundle.GetStringFromName(
+          "error.sync.quota.description");
+        buttons.push(new Weave.NotificationButton(
+          this._stringBundle.GetStringFromName(
+            "error.sync.viewQuotaButton.label"),
+          this._stringBundle.GetStringFromName(
+            "error.sync.viewQuotaButton.accesskey"),
+          function() { gSyncUI.openQuotaDialog(); return true; } )
+        );
+      }
+      else if (!Weave.Status.enforceBackoff) {
         priority = Weave.Notifications.PRIORITY_INFO;
         buttons.push(new Weave.NotificationButton(
           this._stringBundle.GetStringFromName("error.sync.tryAgainButton.label"),
@@ -393,6 +431,9 @@ let gSyncUI = {
         break;
       case "weave:service:sync:delayed":
         this.onSyncDelay();
+        break;
+      case "weave:service:quota:remaining":
+        this.onQuotaNotice();
         break;
       case "weave:service:setup-complete":
         this.onLoginFinish();

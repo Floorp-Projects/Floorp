@@ -1,5 +1,6 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
+  skin/classic/browser/urlbar-over-link-arrow.png
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
@@ -130,8 +131,7 @@ browser.jar:
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.png
   skin/classic/browser/sync-mobileIcon.png
-  skin/classic/browser/sync-usedBefore.png
-  skin/classic/browser/sync-usedNever.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
+  skin/classic/browser/syncQuota.css
 #endif

@@ -50,6 +50,8 @@
 #include "methodjit/Compiler.h"
 #include "InlineFrameAssembler.h"
 #include "jsobj.h"
+
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -78,9 +80,9 @@ PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp()->getScopeChain()->getGlobal();
-    ic::MICInfo &mic = f.fp()->getScript()->mics[index];
-    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    ic::MICInfo &mic = f.fp()->script()->mics[index];
+    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(mic.kind == ic::MICInfo::GET);
@@ -129,7 +131,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetGlobalNameSlow(VMFrame &f, uint32 index)
 {
-    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     stubs::SetGlobalName(f, atom);
 }
 
@@ -154,9 +156,9 @@ GetStubForSetGlobalName(VMFrame &f)
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, uint32 index)
 {
-    JSObject *obj = f.fp()->getScopeChain()->getGlobal();
-    ic::MICInfo &mic = f.fp()->getScript()->mics[index];
-    JSAtom *atom = f.fp()->getScript()->getAtom(GET_INDEX(f.regs.pc));
+    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    ic::MICInfo &mic = f.fp()->script()->mics[index];
+    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(mic.kind == ic::MICInfo::SET);
@@ -213,7 +215,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
 static void * JS_FASTCALL
 SlowCallFromIC(VMFrame &f, uint32 index)
 {
-    JSScript *oldscript = f.fp()->getScript();
+    JSScript *oldscript = f.fp()->script();
     CallICInfo &ic= oldscript->callICs[index];
 
     stubs::SlowCall(f, ic.argc);
@@ -224,7 +226,7 @@ SlowCallFromIC(VMFrame &f, uint32 index)
 static void * JS_FASTCALL
 SlowNewFromIC(VMFrame &f, uint32 index)
 {
-    JSScript *oldscript = f.fp()->getScript();
+    JSScript *oldscript = f.fp()->script();
     CallICInfo &ic = oldscript->callICs[index];
 
     stubs::SlowNew(f, ic.argc);
@@ -297,23 +299,6 @@ class CallCompiler
         return ep;
     }
 
-    inline void pushFrameFromCaller(JSObject *scopeChain, uint32 flags)
-    {
-        JSStackFrame *fp = (JSStackFrame *)f.regs.sp;
-        fp->argc = ic.argc;
-        fp->argv = vp + 2;
-        fp->flags = flags;
-        fp->setScopeChain(scopeChain);
-        fp->setThisValue(vp[1]);
-        fp->down = f.fp();
-        fp->savedPC = f.regs.pc;
-        fp->down->savedPC = f.regs.pc;
-#ifdef DEBUG
-        fp->savedPC = JSStackFrame::sInvalidPC;
-#endif
-        f.regs.fp = fp;
-    }
-
     bool generateFullCallStub(JSScript *script, uint32 flags)
     {
         /*
@@ -344,6 +329,7 @@ class CallCompiler
 
         /* Try and compile. On success we get back the nmap pointer. */
         masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
+        masm.move(Imm32(ic.argc), Registers::ArgReg1);
         JSC::MacroAssembler::Call tryCompile =
             masm.stubCall(JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction),
                           script->code, ic.frameDepth);
@@ -548,6 +534,10 @@ class CallCompiler
         masm.storePtr(cxReg, Address(Assembler::stackPointerRegister, 0));
 #endif
 
+#ifdef _WIN64
+        /* x64 needs to pad the stack */
+        masm.subPtr(Imm32(32), Assembler::stackPointerRegister);
+#endif
         /* Make the call. */
         Assembler::Call call = masm.call();
 
@@ -570,6 +560,9 @@ class CallCompiler
         // So in JaegerThrowpoline without fastcall, esp was added by 8.
         // If we just want to jump there, we need to sub esp by 8 first.
         masm.addPtr(Imm32(8), Assembler::stackPointerRegister);
+#elif defined(_WIN64)
+        /* JaegerThrowpoline expcets that stack is added by 32 for padding */
+        masm.addPtr(Imm32(32), Assembler::stackPointerRegister);
 #endif
 
         Jump done = masm.jump();
@@ -648,7 +641,7 @@ class CallCompiler
             stubs::NewObject(f, ic.argc);
 
         if (!ic.hit) {
-            if (ic.argc < fun->nargs) {
+            if (ic.argc != fun->nargs) {
                 if (!generateFullCallStub(script, flags))
                     THROWV(NULL);
             } else {
@@ -672,9 +665,18 @@ class CallCompiler
             ic.hit = true;
         }
 
-        /* We'll still return to the OOL path, so make sure a frame exists. */
-        pushFrameFromCaller(scopeChain, flags);
-        if (ic.argc >= fun->nargs)
+        /*
+         * We are about to jump into the callee's prologue, so push the frame as
+         * if we had been executing in the caller's inline call path. In theory,
+         * we could actually jump to the inline call path, but doing it from
+         * C++ allows JSStackFrame::initCallFrameCallerHalf to serve as a
+         * reference for what the jitted path should be doing.
+         */
+        JSStackFrame *fp = (JSStackFrame *)f.regs.sp;
+        fp->initCallFrameCallerHalf(cx, *scopeChain, ic.argc, flags);
+        f.regs.fp = fp;
+
+        if (ic.argc == fun->nargs)
             return script->ncode;
         return script->jit->arityCheck;
     }
@@ -683,7 +685,7 @@ class CallCompiler
 void * JS_FASTCALL
 ic::Call(VMFrame &f, uint32 index)
 {
-    JSScript *oldscript = f.fp()->getScript();
+    JSScript *oldscript = f.fp()->script();
     CallICInfo &ic = oldscript->callICs[index];
     CallCompiler cc(f, ic, false);
     return cc.update();
@@ -692,7 +694,7 @@ ic::Call(VMFrame &f, uint32 index)
 void * JS_FASTCALL
 ic::New(VMFrame &f, uint32 index)
 {
-    JSScript *oldscript = f.fp()->getScript();
+    JSScript *oldscript = f.fp()->script();
     CallICInfo &ic = oldscript->callICs[index];
     CallCompiler cc(f, ic, true);
     return cc.update();
@@ -701,7 +703,7 @@ ic::New(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::NativeCall(VMFrame &f, uint32 index)
 {
-    JSScript *oldscript = f.fp()->getScript();
+    JSScript *oldscript = f.fp()->script();
     CallICInfo &ic = oldscript->callICs[index];
     CallCompiler cc(f, ic, false);
     if (!cc.generateNativeStub())
@@ -711,7 +713,7 @@ ic::NativeCall(VMFrame &f, uint32 index)
 void JS_FASTCALL
 ic::NativeNew(VMFrame &f, uint32 index)
 {
-    JSScript *oldscript = f.fp()->getScript();
+    JSScript *oldscript = f.fp()->script();
     CallICInfo &ic = oldscript->callICs[index];
     CallCompiler cc(f, ic, true);
     if (!cc.generateNativeStub())

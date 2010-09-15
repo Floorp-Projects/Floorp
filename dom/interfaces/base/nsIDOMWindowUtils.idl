@@ -45,6 +45,7 @@
  * getInterface on a DOMWindow.
  */
 
+interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
 interface nsIDOMElement;
@@ -332,13 +333,16 @@ interface nsIDOMWindowUtils : nsISupports {
   void focus(in nsIDOMElement aElement);
 
   /**
-   * Force a garbage collection. This will run the cycle-collector twice to
-   * make sure all garbage is collected.
+   * Force a garbage collection followed by a cycle collection.
    *
    * Will throw a DOM security error if called without UniversalXPConnect
    * privileges in non-debug builds. Available to all callers in debug builds.
+   *
+   * @param aListener listener that receives information about the CC graph
+   *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
+   *                   component)
    */
-  void garbageCollect();
+  void garbageCollect([optional] in nsICycleCollectorListener aListener);
 
   /**
    * Force processing of any queued paints

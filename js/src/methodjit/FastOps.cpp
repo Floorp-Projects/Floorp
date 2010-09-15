@@ -194,10 +194,14 @@ mjit::Compiler::jsop_rsh_int_unknown(FrameEntry *lhs, FrameEntry *rhs)
 void
 mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
 {
+    JS_ASSERT(!lhs->isTypeKnown());
+    JS_ASSERT(!rhs->isNotType(JSVAL_TYPE_INT32));
+
+    /* Allocate registers. */
     RegisterID rhsData = rightRegForShift(rhs);
 
     MaybeRegisterID rhsType;
-    if (rhs->isNotType(JSVAL_TYPE_INT32)) {
+    if (!rhs->isTypeKnown()) {
         rhsType.setReg(frame.tempRegForType(rhs));
         frame.pinReg(rhsType.reg());
     }
@@ -206,16 +210,19 @@ mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
     frame.pinReg(lhsType);
     RegisterID lhsData = frame.copyDataIntoReg(lhs);
     frame.unpinReg(lhsType);
-    if (rhsType.isSet())
-        frame.unpinReg(rhsType.reg());
 
+    /* Non-integer rhs jumps to stub. */
     MaybeJump rhsIntGuard;
-    if (rhs->isNotType(JSVAL_TYPE_INT32))
+    if (rhsType.isSet()) {
         rhsIntGuard.setJump(masm.testInt32(Assembler::NotEqual, rhsType.reg()));
+        frame.unpinReg(rhsType.reg());
+    }
 
+    /* Non-integer lhs jumps to double guard. */
     Jump lhsIntGuard = masm.testInt32(Assembler::NotEqual, lhsType);
     stubcc.linkExitDirect(lhsIntGuard, stubcc.masm.label());
 
+    /* Attempt to convert lhs double to int32. */
     Jump lhsDoubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, lhsType);
     frame.loadDouble(lhs, FPRegisters::First, stubcc.masm);
     Jump lhsTruncateGuard = stubcc.masm.branchTruncateDoubleToInt32(FPRegisters::First, lhsData);
@@ -230,6 +237,7 @@ mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
     stubcc.call(stubs::Rsh);
 
     masm.rshift32(rhsData, lhsData);
+
     frame.freeReg(rhsData);
     frame.popn(2);
     frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
@@ -1132,21 +1140,16 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
     stubcc.linkExit(ovf, Uses(0));
 
-    Address argv(JSFrameReg, offsetof(JSStackFrame, argv));
-
     stubcc.leave();
-    stubcc.masm.loadPtr(argv, Registers::ArgReg1);
-    stubcc.masm.addPtr(Imm32(sizeof(Value) * slot), Registers::ArgReg1, Registers::ArgReg1);
+    stubcc.masm.addPtr(Imm32(JSStackFrame::offsetOfFormalArg(fun, slot)),
+                       JSFrameReg, Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
     fe = frame.peek(-1);
 
-    reg = frame.allocReg();
-    masm.loadPtr(argv, reg);
-    Address address = Address(reg, slot * sizeof(Value));
+    Address address = Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
     frame.storeTo(fe, address, popped);
-    frame.freeReg(reg);
 
     if (post || popped)
         frame.pop();
@@ -1276,16 +1279,14 @@ mjit::Compiler::jsop_setelem()
         /* Test for indexed properties in Array.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
-        stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
-        Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
+        Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, Imm32(JSObject::INDEXED));
         extendedArray.linkTo(syncTarget, &stubcc.masm);
 
         /* Test for indexed properties in Object.prototype. */
         stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
         stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
-        stubcc.masm.and32(Imm32(JSObject::INDEXED), T1);
-        Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
+        Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, Imm32(JSObject::INDEXED));
         extendedObject.linkTo(syncTarget, &stubcc.masm);
 
         /* Update the array length if needed. Don't worry about overflow. */

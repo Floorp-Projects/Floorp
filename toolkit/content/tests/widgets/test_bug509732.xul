@@ -33,7 +33,7 @@ function test() {
                                       null);
 
   is(gNotificationBox.allNotifications.length, 1, "Notification exists");
-  is(gNotificationBox._timer, null, "Notification timer should be null");
+  is(gNotificationBox._animating, false, "Notification shouldn't be animating");
 
   test1();
 }
@@ -43,7 +43,7 @@ function test1() {
   let notification = gNotificationBox.getNotificationWithValue("notification1");
   gNotificationBox.removeNotification(notification);
   ok(!gNotificationBox.currentNotification, "Test 1 should show no current animation");
-  is(gNotificationBox._timer, null, "Notification timer should be null");
+  is(gNotificationBox._animating, false, "Notification shouldn't be animating");
   is(gNotificationBox.allNotifications.length, 0, "Test 1 should show no notifications present");
 
   SimpleTest.finish();

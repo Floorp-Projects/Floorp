@@ -780,6 +780,25 @@ struct JSObject {
     inline js::Value *addressOfArgsElement(uint32 i) const;
     inline void setArgsElement(uint32 i, const js::Value &v);
 
+  private:
+    /*
+     * Reserved slot structure for Arguments objects:
+     *
+     */
+    static const uint32 JSSLOT_CALL_CALLEE = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_CALL_ARGUMENTS = JSSLOT_PRIVATE + 2;
+
+  public:
+    /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
+    static const uint32 CALL_RESERVED_SLOTS = 2;
+
+    inline JSObject &getCallObjCallee() const;
+    inline JSFunction *getCallObjCalleeFunction() const; 
+    inline void setCallObjCallee(JSObject &callee);
+
+    inline const js::Value &getCallObjArguments() const;
+    inline void setCallObjArguments(const js::Value &v);
+
     /*
      * Date-specific getters and setters.
      */
