@@ -47,7 +47,7 @@ namespace layers {
 
 CanvasLayerD3D9::~CanvasLayerD3D9()
 {
-  if (mD3DManager && mD3DManager->deviceManager()) {
+  if (mD3DManager) {
     mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
   }
 }
