@@ -4771,8 +4771,9 @@
       ClearErrors
       ${GetOptions} "$R0" "/UpdateShortcutAppUserModelIds" $R2
       IfErrors hideshortcuts +1
-      ${UpdateShortcutAppModelIDs}  "$INSTDIR\${FileMainEXE}" "${AppUserModelID}"
-      GoTo finish
+      ${UpdateShortcutAppModelIDs}  "$INSTDIR\${FileMainEXE}" "${AppUserModelID}" $R2
+      StrCmp "$R2" "true" finish +1 ; true indicates that shortcuts have been updated
+      Quit ; Nothing initialized so no need to call OnEndCommon
 
       ; Require elevation if the user can elevate
       hideshortcuts:
@@ -6131,6 +6132,9 @@
  *          The install path of the app
  * @param   _APP_ID
  *          The application user model ID for the current install
+ * @return  _RESULT
+ *          false if no shotcuts were found for this install location.
+ *          true if shotcuts were found for this install location.
  */
 !macro UpdateShortcutAppModelIDs
 
@@ -6149,9 +6153,11 @@
       Push $R7 ; stack: $R7, $R8, $R9
       Push $R6
       Push $R5
-      Push $R4 ; stack: $R4, $R5, $R6, $R7, $R8, $R9
+      Push $R4
+      Push $R3 ; stack: $R3, $R5, $R6, $R7, $R8, $R9
 
       StrCpy $R7 "$QUICKLAUNCH\User Pinned"
+      StrCpy $R3 "false"
 
       ClearErrors
 
@@ -6171,6 +6177,7 @@
         ${If} "$R4" == "$R9" ; link path == install path
           ApplicationID::Set "$R7\TaskBar\$R5" "$R8"
           Pop $R4 ; pop Set result off the stack
+          StrCpy $R3 "true"
         ${EndIf}
       ${EndIf}
       ClearErrors
@@ -6191,6 +6198,7 @@
         ${If} "$R4" == "$R9" ; link path == install path
           ApplicationID::Set "$R7\StartMenu\$R5" "$R8"
           Pop $R4 ; pop Set result off the stack
+          StrCpy $R3 "true"
         ${EndIf}
       ${EndIf}
       ClearErrors
@@ -6200,6 +6208,9 @@
       ${EndUnless}
       FindClose $R6
 
+      StrCpy $R9 $R3
+
+      Pop $R3  ; stack: $R4, $R5, $R6, $R7, $R8, $R9
       Pop $R4  ; stack: $R5, $R6, $R7, $R8, $R9
       Pop $R5  ; stack: $R6, $R7, $R8, $R9
       Pop $R6  ; stack: $R7, $R8, $R9
@@ -6213,11 +6224,12 @@
   !endif
 !macroend
 
-!macro UpdateShortcutAppModelIDsCall _INSTALL_PATH _APP_ID
+!macro UpdateShortcutAppModelIDsCall _INSTALL_PATH _APP_ID _RESULT
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
   Push "${_APP_ID}"
   Push "${_INSTALL_PATH}"
   Call UpdateShortcutAppModelIDs
+  Pop ${_RESULT}
   !verbose pop
 !macroend
