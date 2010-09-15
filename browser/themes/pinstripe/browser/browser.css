@@ -26,6 +26,7 @@
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
  *   Stephen Horlander (stephen@noved.org)
+ *   Drew Willcoxon (adw@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -789,7 +790,7 @@ toolbar[mode="icons"] #zoom-in-button {
   margin: 0 4px 1px;
 }
 
-#urlbar > .autocomplete-textbox-container > .textbox-input-box {
+.urlbar-input-box {
   -moz-margin-start: 0;
   padding: 3px 0 2px;
 }
@@ -848,11 +849,6 @@ toolbar[mode="icons"] #zoom-in-button {
   max-width: 20em;
 }
 
-#wrapper-urlbar-container > * > * > * > * > #identity-icon-labels,
-#wrapper-urlbar-container > * > * > .autocomplete-history-dropmarker {
-  display: none;
-}
-
 #urlbar-display {
   margin-top: -3px;
   margin-bottom: -2px;
@@ -876,6 +872,32 @@ statusbarpanel#statusbar-display {
 .statusbarpanel-text {
   margin-top: 2px;
   margin-bottom: 0;
+}
+
+/* over-link in location bar */
+
+.urlbar-origin-label {
+  padding: 0 0 0 1px;
+  margin: 0;
+}
+
+.urlbar-origin-label:-moz-locale-dir(rtl) {
+  -moz-padding-start: 4px;
+}
+
+.urlbar-over-link-box {
+  position: relative;
+  right: 0;
+  color: GrayText;
+  padding: 0 5px 0 18px;
+  min-height: 20px;
+  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
+}
+
+.urlbar-over-link-host-label,
+.urlbar-over-link-path-label {
+  padding: 0;
+  margin: 0;
 }
 
 /* ----- AUTOCOMPLETE ----- */

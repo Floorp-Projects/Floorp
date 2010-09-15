@@ -27,6 +27,7 @@
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
+ *   Drew Willcoxon (adw@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -849,13 +850,13 @@ toolbar[iconsize="small"] #zoom-in-button {
   padding: 0;
 }
 
-#urlbar > .autocomplete-textbox-container {
+.urlbar-frontcap-and-textbox {
   -moz-appearance: none;
   /* keep the URL bar content LTR */
   direction: ltr;
 }
 
-#urlbar > .autocomplete-history-dropmarker {
+.urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
 }
 
@@ -884,10 +885,6 @@ toolbar[iconsize="small"] #zoom-in-button {
   -moz-margin-start: 0;
 }
 
-#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
 #urlbar-display {
   margin-top: -2px;
   margin-bottom: -2px;
@@ -910,6 +907,33 @@ toolbar[iconsize="small"] #zoom-in-button {
 
 #PopupAutoComplete .autocomplete-treebody {
   direction: ltr;
+}
+
+/* over-link in location bar */
+
+.urlbar-over-link-layer {
+  margin: -2px 0;
+  -moz-margin-start: 0;
+}
+
+.urlbar-origin-label {
+  padding: 0 0 0 4px;
+  margin: 0;
+}
+
+.urlbar-over-link-box {
+  position: relative;
+  right: 0;
+  color: GrayText;
+  padding: 0 5px 0 18px;
+  min-height: 22px;
+  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
+}
+
+.urlbar-over-link-host-label,
+.urlbar-over-link-path-label {
+  padding: 0;
+  margin: 0;
 }
 
 /* Favicon */
@@ -1211,7 +1235,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  margin: -1px;
+  margin: -2px;
   -moz-margin-start: 0;
   padding: 0 3px;
   background-origin: border-box;
