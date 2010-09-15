@@ -7606,39 +7606,14 @@ nsWindow::GetRootAccessible()
   }
 
   NS_LOG_WMGETOBJECT_THISWND
-
-  if (mContentType != eContentTypeInherit) {
-    // We're on a MozillaContentWindowClass or MozillaUIWindowClass window.
-    // Search for the correct visible child window to get an accessible 
-    // document from. Make sure to use an active child window. If this window
-    // doesn't have child windows then return an accessible for it.
-    HWND accessibleWnd = ::GetTopWindow(mWnd);
-    NS_LOG_WMGETOBJECT_WND("Top Window", accessibleWnd);
-    if (!accessibleWnd) {
-      NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
-      return DispatchAccessibleEvent(NS_GETACCESSIBLE);
-    }
-
-    nsWindow* accessibleWindow = nsnull;
-    while (accessibleWnd) {
-      // Loop through windows and find the first one with accessibility info
-      accessibleWindow = GetNSWindowPtr(accessibleWnd);
-      if (accessibleWindow) {
-        nsAccessible *rootAccessible =
-          accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE);
-        if (rootAccessible) {
-          // Success, one of the child windows was active.
-          return rootAccessible;
-        }
-      }
-      accessibleWnd = ::GetNextWindow(accessibleWnd, GW_HWNDNEXT);
-      NS_LOG_WMGETOBJECT_WND("Next Window", accessibleWnd);
-    }
-    return nsnull;
-  }
-
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
-  return DispatchAccessibleEvent(NS_GETACCESSIBLE);
+
+  nsAccessible* docAcc = DispatchAccessibleEvent(NS_GETACCESSIBLE);
+
+  nsCOMPtr<nsIAccessibleDocument> rootDocAcc;
+  docAcc->GetRootDocument(getter_AddRefs(rootDocAcc));
+  nsRefPtr<nsAccessible> rootAcc(do_QueryObject(rootDocAcc));
+  return rootAcc;
 }
 
 STDMETHODIMP_(LRESULT)
