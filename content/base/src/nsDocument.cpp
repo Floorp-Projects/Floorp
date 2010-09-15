@@ -7910,9 +7910,15 @@ nsDocument::GetCurrentContentSink()
 }
 
 void
-nsDocument::RegisterFileDataUri(nsACString& aUri)
+nsDocument::RegisterFileDataUri(const nsACString& aUri)
 {
   mFileDataUris.AppendElement(aUri);
+}
+
+void
+nsDocument::UnregisterFileDataUri(const nsACString& aUri)
+{
+  mFileDataUris.RemoveElement(aUri);
 }
 
 void

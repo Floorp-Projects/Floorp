@@ -956,7 +956,8 @@ public:
 
   virtual PRInt32 GetDocumentState();
 
-  virtual void RegisterFileDataUri(nsACString& aUri);
+  virtual void RegisterFileDataUri(const nsACString& aUri);
+  virtual void UnregisterFileDataUri(const nsACString& aUri);
 
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
