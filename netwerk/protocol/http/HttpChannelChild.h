@@ -141,6 +141,7 @@ protected:
                           const PRUint32& redirectFlags,
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
+  bool RecvDeleteSelf();
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nsnull);
 
@@ -185,6 +186,7 @@ private:
                       const PRUint32& redirectFlags,
                       const nsHttpResponseHead& responseHead);
   void Redirect3Complete();
+  void DeleteSelf();
 
   friend class AutoEventEnqueuer;
   friend class StartRequestEvent;
@@ -195,6 +197,7 @@ private:
   friend class CancelEvent;
   friend class Redirect1Event;
   friend class Redirect3Event;
+  friend class DeleteSelfEvent;
 };
 
 //-----------------------------------------------------------------------------
