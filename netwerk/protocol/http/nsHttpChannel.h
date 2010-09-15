@@ -176,7 +176,6 @@ private:
     void     HandleAsyncNotifyListener();
     void     DoNotifyListener();
     nsresult SetupTransaction();
-    nsresult ApplyContentConversions();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
     nsresult ContinueProcessResponse(nsresult);

@@ -293,12 +293,17 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
   AutoEventEnqueuer ensureSerialDispatch(this);
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
-  if (NS_SUCCEEDED(rv)) {
-    if (mResponseHead)
-      SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
-  } else {
+  if (NS_FAILED(rv)) {
     Cancel(rv);
+    return;
   }
+
+  if (mResponseHead)
+    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+
+  rv = ApplyContentConversions();
+  if (NS_FAILED(rv))
+    Cancel(rv);
 }
 
 class DataAvailableEvent : public ChildChannelEvent

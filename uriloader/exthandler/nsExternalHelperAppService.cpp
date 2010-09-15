@@ -1593,24 +1593,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // and it was opened specifically for the download
   MaybeCloseWindow();
 
-#ifdef MOZ_IPC
-  // At this point, the child process has done everything it can usefully do
-  // for OnStartRequest.
-  if (XRE_GetProcessType() == GeckoProcessType_Content)
-     return NS_OK;
-#endif
-
-  rv = SetUpTempFile(aChannel);
-  if (NS_FAILED(rv)) {
-    mCanceled = PR_TRUE;
-    request->Cancel(rv);
-    nsAutoString path;
-    if (mTempFile)
-      mTempFile->GetPath(path);
-    SendStatusChange(kWriteError, rv, request, path);
-    return NS_OK;
-  }
-
+  // In an IPC setting, we're allowing the child process, here, to make
+  // decisions about decoding the channel (e.g. decompression).  It will
+  // still forward the decoded (uncompressed) data back to the parent.
+  // Con: Uncompressed data means more IPC overhead.
+  // Pros: ExternalHelperAppParent doesn't need to implement nsIEncodedChannel.
+  //       Parent process doesn't need to expect CPU time on decompression.
   nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
   if (encChannel) 
   {
@@ -1646,6 +1634,24 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     }
 
     encChannel->SetApplyConversion( applyConversion );
+  }
+
+#ifdef MOZ_IPC
+  // At this point, the child process has done everything it can usefully do
+  // for OnStartRequest.
+  if (XRE_GetProcessType() == GeckoProcessType_Content)
+     return NS_OK;
+#endif
+
+  rv = SetUpTempFile(aChannel);
+  if (NS_FAILED(rv)) {
+    mCanceled = PR_TRUE;
+    request->Cancel(rv);
+    nsAutoString path;
+    if (mTempFile)
+      mTempFile->GetPath(path);
+    SendStatusChange(kWriteError, rv, request, path);
+    return NS_OK;
   }
 
   // Inform channel it is open on behalf of a download to prevent caching.

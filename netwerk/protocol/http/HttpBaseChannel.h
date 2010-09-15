@@ -208,6 +208,8 @@ public:
     };
 
 protected:
+  nsresult ApplyContentConversions();
+
   void AddCookiesToRequest();
   virtual nsresult SetupReplacementChannel(nsIURI *,
                                            nsIChannel *,
