@@ -144,7 +144,7 @@ let gSyncPane = {
                   Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL;
       let buttonChoice =
         Services.prompt.confirmEx(window,
-                                  this._stringBundle.GetStringFromName("differentAccount.title"),
+                                  this._stringBundle.GetStringFromName("stopUsingAccount.title"),
                                   this._stringBundle.GetStringFromName("differentAccount.label"),
                                   flags,
                                   this._stringBundle.GetStringFromName("differentAccountConfirm.label"),
