@@ -439,6 +439,42 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
     getArgsData()->slots[i] = v;
 }
 
+inline void
+JSObject::setCallObjCallee(JSObject &callee)
+{
+    JS_ASSERT(isCall());
+    JS_ASSERT(callee.isFunction());
+    return fslots[JSSLOT_CALL_CALLEE].setObject(callee);
+}
+
+inline JSObject &
+JSObject::getCallObjCallee() const
+{
+    JS_ASSERT(isCall());
+    return fslots[JSSLOT_CALL_CALLEE].toObject();
+}
+
+inline JSFunction *
+JSObject::getCallObjCalleeFunction() const
+{
+    JS_ASSERT(isCall());
+    return fslots[JSSLOT_CALL_CALLEE].toObject().getFunctionPrivate();
+}
+
+inline const js::Value &
+JSObject::getCallObjArguments() const
+{
+    JS_ASSERT(isCall());
+    return fslots[JSSLOT_CALL_ARGUMENTS];
+}
+
+inline void
+JSObject::setCallObjArguments(const js::Value &v)
+{
+    JS_ASSERT(isCall());
+    fslots[JSSLOT_CALL_ARGUMENTS] = v;
+}
+
 inline const js::Value &
 JSObject::getDateUTCTime() const
 {
@@ -861,7 +897,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp)
         if (!global)
             return NULL;
     } else {
-        global = cx->fp()->getScopeChain()->getGlobal();
+        global = cx->fp()->scopeChain().getGlobal();
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 

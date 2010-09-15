@@ -108,9 +108,6 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 inline void
 JSObject::trace(JSTracer *trc)
 {
-    if (emptyShape)
-        emptyShape->trace(trc);
-
     if (!isNative())
         return;
 
