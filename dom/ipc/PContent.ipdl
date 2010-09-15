@@ -72,6 +72,8 @@ child:
 
     NotifyRemotePrefObserver(nsCString aDomain);
 
+    NotifyAlertsObserver(nsCString topic, nsString data);
+
 parent:
     PNecko();
 
@@ -101,6 +103,13 @@ parent:
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
+
+    ShowAlertNotification(nsString imageUrl, 
+                          nsString title, 
+                          nsString text, 
+                          PRBool textClickable,
+                          nsString cookie,
+                          nsString name);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);

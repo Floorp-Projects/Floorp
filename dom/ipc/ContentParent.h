@@ -158,9 +158,11 @@ private:
     virtual bool RecvNotifyIME(const int&, const int&);
 
     virtual bool RecvNotifyIMEChange(const nsString&, const PRUint32&, const int&, 
-                               const int&, const int&)
-;
+                                     const int&, const int&);
 
+    virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
+                                           const nsString& aText, const PRBool& aTextClickable,
+                                           const nsString& aCookie, const nsString& aName);
 
     virtual bool RecvLoadURIExternal(const IPC::URI& uri);
 
