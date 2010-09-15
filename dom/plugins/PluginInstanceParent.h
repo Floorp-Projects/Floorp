@@ -52,6 +52,10 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRect.h"
+#include "gfxASurface.h"
+#ifdef MOZ_X11
+class gfxXlibSurface;
+#endif
 
 namespace mozilla {
 namespace plugins {
@@ -315,6 +319,12 @@ private:
     int16_t            mDrawingModel;
     nsIOSurface       *mIOSurface;
 #endif // definied(OS_MACOSX)
+
+    // ObjectFrame layer wrapper
+    nsRefPtr<gfxASurface>    mFrontSurface;
+
+    // Don't spam plugin process with extra paint notifications
+    PRPackedBool             mSentPaintNotification;
 };
 
 
