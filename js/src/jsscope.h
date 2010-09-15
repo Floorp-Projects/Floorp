@@ -414,6 +414,9 @@ struct Shape : public JSObjectMap
     }
 
     void insertFree(js::Shape **freep) {
+#ifdef DEBUG
+        memset(this, JS_FREE_PATTERN, sizeof *this);
+#endif
         id = JSID_VOID;
         parent = *freep;
         if (parent)

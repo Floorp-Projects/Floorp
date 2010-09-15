@@ -599,11 +599,10 @@ MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 }
 
 static inline void
-MarkObject(JSTracer *trc, JSObject *obj, const char *name)
+MarkObject(JSTracer *trc, JSObject &obj, const char *name)
 {
-    JS_ASSERT(obj);
     JS_SET_TRACING_NAME(trc, name);
-    Mark(trc, obj, JSTRACE_OBJECT);
+    Mark(trc, &obj, JSTRACE_OBJECT);
 }
 
 static inline void
