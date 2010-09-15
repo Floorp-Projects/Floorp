@@ -2789,9 +2789,9 @@ IsFunctionQName(JSContext *cx, JSObject *qn, jsid *funidp)
     JSAtom *atom;
     JSString *uri;
 
-    atom = cx->runtime->atomState.lazy.functionNamespaceURIAtom;
+    atom = cx->runtime->atomState.functionNamespaceURIAtom;
     uri = GetURI(qn);
-    if (uri && atom &&
+    if (uri &&
         (uri == ATOM_TO_STRING(atom) ||
          js_EqualStrings(uri, ATOM_TO_STRING(atom)))) {
         return JS_ValueToId(cx, STRING_TO_JSVAL(GetLocalName(qn)), funidp);
@@ -7147,11 +7147,7 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
 {
     JSRuntime *rt;
     JSObject *obj;
-    JSAtom *atom;
     JSString *prefix, *uri;
-
-    /* An invalid URI, for internal use only, guaranteed not to collide. */
-    static const char anti_uri[] = "@mozilla.org/js/function";
 
     /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
     rt = cx->runtime;
@@ -7162,20 +7158,8 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
         if (!obj) {
             JS_UNLOCK_GC(rt);
 
-            /*
-             * Note that any race to atomize anti_uri here is resolved by
-             * the atom table code, such that at most one atom for anti_uri
-             * is created.  We store in rt->atomState.lazy unconditionally,
-             * since we are guaranteed to overwrite either null or the same
-             * atom pointer.
-             */
-            atom = js_Atomize(cx, anti_uri, sizeof anti_uri - 1, ATOM_PINNED);
-            if (!atom)
-                return JS_FALSE;
-            rt->atomState.lazy.functionNamespaceURIAtom = atom;
-
             prefix = ATOM_TO_STRING(rt->atomState.typeAtoms[JSTYPE_FUNCTION]);
-            uri = ATOM_TO_STRING(atom);
+            uri = ATOM_TO_STRING(rt->atomState.functionNamespaceURIAtom);
             obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
             if (!obj)
                 return JS_FALSE;

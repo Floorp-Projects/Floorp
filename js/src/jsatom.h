@@ -382,6 +382,9 @@ struct JSAtomState
     JSAtom              *starQualifierAtom;
     JSAtom              *tagcAtom;
     JSAtom              *xmlAtom;
+
+    /* Represents an invalid URI, for internal use only. */
+    JSAtom              *functionNamespaceURIAtom;
 #endif
 
     JSAtom              *ProxyAtom;
@@ -411,7 +414,6 @@ struct JSAtomState
         JSAtom          *encodeURIAtom;
         JSAtom          *encodeURIComponentAtom;
         JSAtom          *escapeAtom;
-        JSAtom          *functionNamespaceURIAtom;
         JSAtom          *hasOwnPropertyAtom;
         JSAtom          *isFiniteAtom;
         JSAtom          *isNaNAtom;
