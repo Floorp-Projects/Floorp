@@ -745,9 +745,19 @@ DDRAW_FAILED:
         break;
 #ifdef MOZ_ENABLE_D3D9_LAYER
       case LayerManager::LAYERS_D3D9:
-        static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager())->
-          SetClippingRegion(event.region);
-        result = DispatchWindowEvent(&event, eventStatus);
+        {
+          LayerManagerD3D9 *layerManagerD3D9 =
+            static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager());
+          layerManagerD3D9->SetClippingRegion(event.region);
+          result = DispatchWindowEvent(&event, eventStatus);
+          if (layerManagerD3D9->DeviceWasRemoved()) {
+            mLayerManager = nsnull;
+            // When our device was removed, we should have gfxWindowsPlatform
+            // check if its render mode is up to date!
+            gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
+            Invalidate(PR_FALSE);
+          }
+        }
         break;
 #endif
       default:

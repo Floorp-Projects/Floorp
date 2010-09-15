@@ -41,7 +41,7 @@
 #include "nsIDocument.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalHelperAppService.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsStringStream.h"
 
@@ -69,17 +69,12 @@ ExternalHelperAppParent::ExternalHelperAppParent(
 }
 
 void
-ExternalHelperAppParent::Init(TabParent *parent,
+ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
                               const nsCString& aContentDisposition,
                               const PRBool& aForceSave)
 {
   nsHashPropertyBag::Init();
-
-  NS_ASSERTION(parent, "must have a non-null TabParent");
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(parent->GetOwnerElement());
-  nsCOMPtr<nsISupports> container = frame->GetOwnerDoc()->GetContainer();
-  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(container);
 
   nsCOMPtr<nsIExternalHelperAppService> helperAppService =
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
@@ -87,7 +82,7 @@ ExternalHelperAppParent::Init(TabParent *parent,
 
   SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, mContentLength);
   SetContentDisposition(aContentDisposition);
-  helperAppService->DoContent(aMimeContentType, this, ir,
+  helperAppService->DoContent(aMimeContentType, this, nsnull,
                               aForceSave, getter_AddRefs(mListener));
 }
 

@@ -265,5 +265,14 @@ ContainerLayerD3D9::RenderLayer()
   }
 }
 
+void
+ContainerLayerD3D9::LayerManagerDestroyed()
+{
+  while (mFirstChild) {
+    GetFirstChildD3D9()->LayerManagerDestroyed();
+    RemoveChild(mFirstChild);
+  }
+}
+
 } /* layers */
 } /* mozilla */

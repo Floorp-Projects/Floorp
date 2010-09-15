@@ -149,6 +149,21 @@ public:
     RenderMode GetRenderMode() { return mRenderMode; }
     void SetRenderMode(RenderMode rmode) { mRenderMode = rmode; }
 
+    /**
+     * Updates render mode with relation to the current preferences and
+     * available devices.
+     */
+    void UpdateRenderMode();
+
+    /**
+     * Verifies a D2D device is present and working, will attempt to create one
+     * it is non-functional or non-existant.
+     *
+     * \param aAttemptForce Attempt to force D2D cairo device creation by using
+     * cairo device creation routines.
+     */
+    void VerifyD2DDevice(PRBool aAttemptForce);
+
     HDC GetScreenDC() { return mScreenDC; }
 
     nsresult GetFontList(nsIAtom *aLangGroup,
@@ -215,8 +230,8 @@ public:
     virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
 
 #ifdef CAIRO_HAS_DWRITE_FONT
-    IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
-    inline PRBool DWriteEnabled() { return !!mDWriteFactory; }
+    IDWriteFactory *GetDWriteFactory() { return mUseDirectWrite ? mDWriteFactory : nsnull; }
+    inline PRBool DWriteEnabled() { return mUseDirectWrite; }
 #else
     inline PRBool DWriteEnabled() { return PR_FALSE; }
 #endif
@@ -237,6 +252,8 @@ protected:
 
 private:
     void Init();
+
+    PRBool mUseDirectWrite;
 
 #ifdef CAIRO_HAS_DWRITE_FONT
     nsRefPtr<IDWriteFactory> mDWriteFactory;

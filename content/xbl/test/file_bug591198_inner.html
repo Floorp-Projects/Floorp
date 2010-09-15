@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      #b {
+        -moz-binding: url("file_bug591198_xbl.xml#xbltest");
+      }
+      span {
+        white-space: nowrap;
+      }
+    </style>
+    <script>
+function sendResults() {
+  var res = {
+    widths: []
+  };
+
+  ps = document.getElementsByTagName('span');
+  for (var i = 0; i < ps.length; i++) {
+    res.widths.push(ps[i].offsetWidth);
+  }
+  
+  try {
+    res.anonChildCount =
+      document.getAnonymousNodes(document.getElementById('b')).length;
+  }
+  catch (ex) {}
+
+  parent.postMessage(JSON.stringify(res), "*");
+}
+    </script>
+  </head>
+  <body onload="sendResults();">
+    <div><span id=b>long long text here</span></div>
+    <div><span>long long text here</span></div>
+    <div><span>PASS</span></div>
+  </body>
+</html>

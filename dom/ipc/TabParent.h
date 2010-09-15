@@ -42,7 +42,6 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
-#include "mozilla/dom/PExternalHelperApp.h"
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
@@ -146,14 +145,6 @@ public:
       delete aDialog;
       return true;
     }
-
-    virtual PExternalHelperAppParent* AllocPExternalHelperApp(
-            const IPC::URI& uri,
-            const nsCString& aMimeContentType,
-            const nsCString& aContentDisposition,
-            const bool& aForceSave,
-            const PRInt64& aContentLength);
-    virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
     void LoadURL(nsIURI* aURI);
     // XXX/cjones: it's not clear what we gain by hiding these

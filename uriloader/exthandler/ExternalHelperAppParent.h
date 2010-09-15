@@ -49,7 +49,7 @@ class URI;
 namespace mozilla {
 namespace dom {
 
-class TabParent;
+class ContentParent;
 
 class ExternalHelperAppParent : public PExternalHelperAppParent
                               , public nsHashPropertyBag
@@ -69,7 +69,7 @@ public:
     bool RecvOnStopRequest(const nsresult& code);
     
     ExternalHelperAppParent(const IPC::URI& uri, const PRInt64& contentLength);
-    void Init(TabParent *parent,
+    void Init(ContentParent *parent,
               const nsCString& aMimeContentType,
               const nsCString& aContentDisposition,
               const PRBool& aForceSave);
