@@ -85,6 +85,25 @@ WeaveSvc.prototype = {
   _loggedIn: false,
   keyGenEnabled: true,
 
+  get account() Svc.Prefs.get("account", this.username),
+  set account(value) {
+    if (value) {
+      value = value.toLowerCase();
+      Svc.Prefs.set("account", value);
+    } else {
+      Svc.Prefs.reset("account");
+    }
+    this.username = this._usernameFromAccount(value);
+  },
+
+  _usernameFromAccount: function _usernameFromAccount(value) {
+    // If we encounter characters not allowed by the API (as found for
+    // instance in an email address), hash the value.
+    if (value && value.match(/[^A-Z0-9._-]/i))
+      return Utils.sha1Base32(value.toLowerCase()).toLowerCase();
+    return value;
+  },
+
   get username() {
     return Svc.Prefs.get("username", "").toLowerCase();
   },
@@ -92,9 +111,6 @@ WeaveSvc.prototype = {
     if (value) {
       // Make sure all uses of this new username is lowercase
       value = value.toLowerCase();
-      // Tab characters are stripped from URIs, so make sure that the
-      // username doesn't contain any tabs.
-      value = value.replace("\t", "", "g");
       Svc.Prefs.set("username", value);
     }
     else
@@ -207,12 +223,12 @@ WeaveSvc.prototype = {
       return;
 
     let storageAPI = this.clusterURL + Svc.Prefs.get("storageAPI") + "/";
-    let userBase = storageAPI + this.username + "/";
-    this._log.debug("Caching URLs under storage user base: " + userBase);
+    this.userBaseURL = storageAPI + this.username + "/";
+    this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
 
     // Generate and cache various URLs under the storage API for this user
-    this.infoURL = userBase + "info/collections";
-    this.storageURL = userBase + "storage/";
+    this.infoURL = this.userBaseURL + "info/collections";
+    this.storageURL = this.userBaseURL + "storage/";
     this.metaURL = this.storageURL + "meta/global";
     PubKeys.defaultKeyUri = this.storageURL + "keys/pubkey";
     PrivKeys.defaultKeyUri = this.storageURL + "keys/privkey";
@@ -262,6 +278,7 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:backoff:interval", this);
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("weave:resource:status:401", this);
+    Svc.Prefs.observe("engine.", this);
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -419,6 +436,12 @@ WeaveSvc.prototype = {
         this._idleTime = 0;
         Utils.delay(function() this.sync(false), 0, this);
         break;
+      case "nsPref:changed":
+        if (this._ignorePrefObserver)
+          return;
+        let engine = data.slice((PREFS_BRANCH + "engine.").length);
+        this._handleEngineStatusChanged(engine);
+        break;
     }
   },
 
@@ -437,6 +460,17 @@ WeaveSvc.prototype = {
 
     this._log.trace("Global score updated: " + this.globalScore);
     this._checkSyncStatus();
+  },
+
+  _handleEngineStatusChanged: function handleEngineDisabled(engine) {
+    this._log.trace("Status for " + engine + " engine changed.");
+    if (Svc.Prefs.get("engineStatusChanged." + engine, false)) {
+      // The enabled status being changed back to what it was before.
+      Svc.Prefs.reset("engineStatusChanged." + engine);
+    } else {
+      // Remember that the engine status changed locally until the next sync.
+      Svc.Prefs.set("engineStatusChanged." + engine, true);
+    }
   },
 
   _handleResource401: function _handleResource401(request) {
@@ -676,7 +710,9 @@ WeaveSvc.prototype = {
     // Reset all engines
     this.resetClient();
     // Reset Weave prefs
+    this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
+    this._ignorePrefObserver = false;
     // set lastversion pref
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
@@ -811,7 +847,14 @@ WeaveSvc.prototype = {
     }
   },
 
-  checkUsername: function WeaveSvc_checkUsername(username) {
+  checkAccount: function checkAccount(account) {
+    let username = this._usernameFromAccount(account);
+    return this.checkUsername(username);
+  },
+
+  // Backwards compat with the Firefox UI. Fold into checkAccount() once
+  // bug 595066 has landed.
+  checkUsername: function checkUsername(username) {
     let url = this.userAPI + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
@@ -833,8 +876,18 @@ WeaveSvc.prototype = {
     return this._errorStr(data);
   },
 
-  createAccount: function WeaveSvc_createAccount(username, password, email,
-                                            captchaChallenge, captchaResponse) {
+  createAccount: function createAccount() {
+    // Backwards compat with the Firefox UI. Change to signature to
+    // (email, password, captchaChallenge, captchaResponse) once
+    // bug 595066 has landed.
+    let username, email, password, captchaChallenge, captchaResponse;
+    if (arguments.length == 4) {
+      [email, password, captchaChallenge, captchaResponse] = arguments;
+      username = this._usernameFromAccount(email);
+    } else {
+      [username, password, email, captchaChallenge, captchaResponse] = arguments;
+    }
+
     let payload = JSON.stringify({
       "password": Utils.encodeUTF8(password),
       "email": email,
@@ -1359,7 +1412,7 @@ WeaveSvc.prototype = {
 
     // Make sure we have an up-to-date list of clients before sending commands
     this._log.trace("Refreshing client list");
-    Clients.sync();
+    this._syncEngine(Clients);
 
     // Wipe data in the desired direction if necessary
     switch (Svc.Prefs.get("firstSync")) {
@@ -1388,12 +1441,13 @@ WeaveSvc.prototype = {
       }
       finally {
         // Always immediately push back the local client (now without commands)
-        Clients.sync();
+        this._syncEngine(Clients);
       }
     }
 
-    // Update the client mode now because it might change what we sync
+    // Update the client mode and engines because it might change what we sync.
     this._updateClientMode();
+    this._updateEnabledEngines();
 
     try {
       for each (let engine in Engines.getEnabled()) {
@@ -1406,8 +1460,11 @@ WeaveSvc.prototype = {
 
       // Upload meta/global if any engines changed anything
       let meta = Records.get(this.metaURL);
-      if (meta.changed)
+      if (meta.isNew || meta.changed) {
         new Resource(meta.uri).put(meta);
+        delete meta.isNew;
+        delete meta.changed;
+      }
 
       if (this._syncError)
         throw "Some engines did not sync correctly";
@@ -1445,6 +1502,56 @@ WeaveSvc.prototype = {
     }
   },
 
+  _updateEnabledEngines: function _updateEnabledEngines() {
+    let meta = Records.get(this.metaURL);
+    if (meta.isNew || !meta.payload.engines)
+      return;
+
+    this._ignorePrefObserver = true;
+
+    let enabled = [eng.name for each (eng in Engines.getEnabled())];
+    for (let engineName in meta.payload.engines) {
+      let index = enabled.indexOf(engineName);
+      if (index != -1) {
+        // The engine is enabled locally. Nothing to do.
+        enabled.splice(index, 1);
+        continue;
+      }
+      let engine = Engines.get(engineName);
+      if (!engine) {
+        // The engine doesn't exist locally. Nothing to do.
+        continue;
+      }
+
+      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
+        // The engine was disabled locally. Wipe server data and
+        // disable it everywhere.
+        this._log.trace("Wiping data for " + engineName + " engine.");
+        engine.wipeServer();
+        delete meta.payload.engines[engineName];
+        meta.changed = true;
+      } else {
+        // The engine was enabled remotely. Enable it locally.
+        this._log.trace(engineName + " engine was enabled remotely.");
+        engine.enabled = true;
+      }
+    }
+
+    // Any remaining engines were either enabled locally or disabled remotely.
+    for each (engineName in enabled) {
+      let engine = Engines.get(engineName);
+      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
+        this._log.trace("The " + engineName + " engine was enabled locally.");
+      } else {
+        this._log.trace("The " + engineName + " engine was disabled remotely.");
+        engine.enabled = false;
+      }
+    }
+
+    Svc.Prefs.resetBranch("engineStatusChanged.");
+    this._ignorePrefObserver = false;
+  },
+
   // returns true if sync should proceed
   // false / no return value means sync should be aborted
   _syncEngine: function WeaveSvc__syncEngine(engine) {
@@ -1478,6 +1585,7 @@ WeaveSvc.prototype = {
     let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = this.syncID;
     meta.payload.storageVersion = STORAGE_VERSION;
+    meta.isNew = true;
 
     this._log.debug("New metadata record: " + JSON.stringify(meta.payload));
     let resp = new Resource(meta.uri).put(meta);
@@ -1500,8 +1608,11 @@ WeaveSvc.prototype = {
     if (Utils.checkStatus(resp.status, null, [500, [502, 504]])) {
       Status.enforceBackoff = true;
       if (resp.status == 503 && resp.headers["retry-after"])
-        Svc.Obs.notify("weave:service:backoff:interval", parseInt(resp.headers["retry-after"], 10));
+        Svc.Obs.notify("weave:service:backoff:interval",
+                       parseInt(resp.headers["retry-after"], 10));
     }
+    if (resp.status == 400 && resp == RESPONSE_OVER_QUOTA)
+      Status.sync = OVER_QUOTA;
   },
   /**
    * Return a value for a backoff interval.  Maximum is eight hours, unless
@@ -1730,6 +1841,21 @@ WeaveSvc.prototype = {
     this._log.debug("Sending clients: " + [command, args, commandData.desc]);
     Clients.sendCommand(command, args);
   },
+
+  _getInfo: function _getInfo(what)
+    this._catch(this._notify(what, "", function() {
+      let url = this.userBaseURL + "info/" + what;
+      let response = new Resource(url).get();
+      if (response.status != 200)
+        return null;
+      return response.obj;
+    }))(),
+
+  getCollectionUsage: function getCollectionUsage()
+    this._getInfo("collection_usage"),
+
+  getQuota: function getQuota() this._getInfo("quota")
+
 };
 
 // Load Weave on the first time this file is loaded

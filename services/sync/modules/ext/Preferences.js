@@ -499,11 +499,11 @@ PrefObserver.prototype = {
     // The pref service only observes whole branches, but we only observe
     // individual preferences, so we check here that the pref that changed
     // is the exact one we're observing (and not some sub-pref on the branch).
-    if (data != this.prefName)
+    if (data.indexOf(this.prefName) != 0)
       return;
 
     if (typeof this.callback == "function") {
-      let prefValue = Preferences.get(this.prefName);
+      let prefValue = Preferences.get(data);
 
       if (this.thisObject)
         this.callback.call(this.thisObject, prefValue);

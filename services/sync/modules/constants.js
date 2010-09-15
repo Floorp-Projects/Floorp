@@ -100,11 +100,11 @@ ENGINE_SUCCEEDED:                      "success.engine",
 // login failure status codes:
 LOGIN_FAILED_NO_USERNAME:              "error.login.reason.no_username",
 LOGIN_FAILED_NO_PASSWORD:              "error.login.reason.no_password",
-LOGIN_FAILED_NO_PASSPHRASE:            "error.login.reason.no_passphrase",
+LOGIN_FAILED_NO_PASSPHRASE:            "error.login.reason.no_synckey",
 LOGIN_FAILED_NETWORK_ERROR:            "error.login.reason.network",
 LOGIN_FAILED_SERVER_ERROR:             "error.login.reason.server",
-LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.passphrase",
-LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.password",
+LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.synckey",
+LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.account",
 
 // sync failure status codes
 METARECORD_DOWNLOAD_FAIL:              "error.sync.reason.metarecord_download_fail",
@@ -117,6 +117,9 @@ SETUP_FAILED_NO_PASSPHRASE:            "error.sync.reason.setup_failed_no_passph
 CREDENTIALS_CHANGED:                   "error.sync.reason.credentials_changed",
 ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
+OVER_QUOTA:                            "error.sync.reason.over_quota",
+
+RESPONSE_OVER_QUOTA:                   "14",
 
 // engine failure status codes
 ENGINE_UPLOAD_FAIL:                    "error.engine.reason.record_upload_fail",
