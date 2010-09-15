@@ -2173,8 +2173,8 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_background_position: {
           const nsStyleBackground *bg =
             static_cast<const nsStyleBackground*>(styleStruct);
-          nsCSSValuePairList *result = nsnull;
-          nsCSSValuePairList **resultTail = &result;
+          nsAutoPtr<nsCSSValuePairList> result;
+          nsCSSValuePairList **resultTail = getter_Transfers(result);
           NS_ABORT_IF_FALSE(bg->mPositionCount > 0, "unexpected count");
           for (PRUint32 i = 0, i_end = bg->mPositionCount; i != i_end; ++i) {
             nsCSSValuePairList *item = new nsCSSValuePairList;
@@ -2184,29 +2184,31 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
             if (pos.mXPosition.mLength == 0) {
               item->mXValue.SetPercentValue(pos.mXPosition.mPercent);
-            } else {
-              NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
-                                "calc() isn't supported yet");
+            } else if (pos.mXPosition.mPercent == 0.0f) {
               nscoordToCSSValue(pos.mXPosition.mLength, item->mXValue);
+            } else {
+              // FIXME: calc()
+              return PR_FALSE;
             }
             if (pos.mYPosition.mLength == 0) {
               item->mYValue.SetPercentValue(pos.mYPosition.mPercent);
-            } else {
-              NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
-                                "calc() isn't supported yet");
+            } else if (pos.mYPosition.mPercent == 0.0f) {
               nscoordToCSSValue(pos.mYPosition.mLength, item->mYValue);
+            } else {
+              // FIXME: calc()
+              return PR_FALSE;
             }
           }
 
-          aComputedValue.SetAndAdoptCSSValuePairListValue(result);
+          aComputedValue.SetAndAdoptCSSValuePairListValue(result.forget());
           break;
         }
 
         case eCSSProperty_background_size: {
           const nsStyleBackground *bg =
             static_cast<const nsStyleBackground*>(styleStruct);
-          nsCSSValuePairList *result = nsnull;
-          nsCSSValuePairList **resultTail = &result;
+          nsAutoPtr<nsCSSValuePairList> result;
+          nsCSSValuePairList **resultTail = getter_Transfers(result);
           NS_ABORT_IF_FALSE(bg->mSizeCount > 0, "unexpected count");
           for (PRUint32 i = 0, i_end = bg->mSizeCount; i != i_end; ++i) {
             nsCSSValuePairList *item = new nsCSSValuePairList;
@@ -2226,10 +2228,11 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               case nsStyleBackground::Size::eLengthPercentage:
                 if (size.mWidth.mLength == 0) {
                   item->mXValue.SetPercentValue(size.mWidth.mPercent);
-                } else {
-                  NS_ABORT_IF_FALSE(size.mWidth.mPercent == 0.0f,
-                                    "calc() isn't supported yet");
+                } else if (size.mWidth.mPercent == 0.0f) {
                   nscoordToCSSValue(size.mWidth.mLength, item->mXValue);
+                } else {
+                  // FIXME: calc()
+                  return PR_FALSE;
                 }
                 break;
             }
@@ -2245,16 +2248,17 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               case nsStyleBackground::Size::eLengthPercentage:
                 if (size.mHeight.mLength == 0) {
                   item->mYValue.SetPercentValue(size.mHeight.mPercent);
-                } else {
-                  NS_ABORT_IF_FALSE(size.mHeight.mPercent == 0.0f,
-                                    "calc() isn't supported yet");
+                } else if (size.mHeight.mPercent == 0.0f) {
                   nscoordToCSSValue(size.mHeight.mLength, item->mYValue);
+                } else {
+                  // FIXME: calc()
+                  return PR_FALSE;
                 }
                 break;
             }
           }
 
-          aComputedValue.SetAndAdoptCSSValuePairListValue(result);
+          aComputedValue.SetAndAdoptCSSValuePairListValue(result.forget());
           break;
         }
 
