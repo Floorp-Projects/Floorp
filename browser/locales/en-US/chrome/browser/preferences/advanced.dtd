@@ -52,6 +52,7 @@
 <!ENTITY clearCacheNow.label             "Clear Now">
 <!ENTITY clearCacheNow.accesskey         "C">
 <!ENTITY smartSizeCache.label            "Let &brandShortName; manage the size of my cache">
+<!ENTITY smartSizeCache.accesskey        "L">
 
 <!ENTITY updateTab.label                 "Update">
 

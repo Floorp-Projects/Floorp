@@ -700,21 +700,16 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 /* sync button */
-
+ 
 #sync-button {
-  list-style-image: url("chrome://browser/skin/sync-16.png");
+  -moz-image-region: rect(0, 440px, 20px, 420px);
 }
 
 #sync-button[status="active"] {
-  list-style-image: url("chrome://browser/skin/sync-16-throbber.png");
+  list-style-image: url("chrome://browser/skin/sync-throbber.png");
+  -moz-image-region: rect(0, 20px, 20px, 0px);
 }
-
-toolbar:not([iconsize="small"]) #sync-button > .toolbarbutton-icon {
-  margin: 1px;
-  width: 16px;
-  height: 16px;
-}
-
+ 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 
 #minimize-button,
