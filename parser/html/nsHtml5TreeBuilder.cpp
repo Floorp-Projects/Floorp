@@ -879,7 +879,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET:
           case NS_HTML5TREE_BUILDER_OBJECT:
           case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR:
+          case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
           case NS_HTML5TREE_BUILDER_BR:
           case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
           case NS_HTML5TREE_BUILDER_INPUT:
@@ -1075,7 +1075,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             case NS_HTML5TREE_BUILDER_BR:
             case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
-            case NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR: {
+            case NS_HTML5TREE_BUILDER_AREA_OR_WBR: {
               reconstructTheActiveFormattingElements();
             }
             case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE: {
@@ -2392,7 +2392,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             appendVoidElementToCurrentMayFoster(kNameSpaceID_XHTML, elementName, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR:
+          case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
           case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE:
           case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
           case NS_HTML5TREE_BUILDER_IMAGE:

@@ -163,7 +163,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int EMBED_OR_IMG = 48;
 
-    final static int AREA_OR_SPACER_OR_WBR = 49;
+    final static int AREA_OR_WBR = 49;
 
     final static int DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU = 50;
 
@@ -1795,7 +1795,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case MARQUEE_OR_APPLET:
                         case OBJECT:
                         case TABLE:
-                        case AREA_OR_SPACER_OR_WBR:
+                        case AREA_OR_WBR:
                         case BR:
                         case EMBED_OR_IMG:
                         case INPUT:
@@ -2016,7 +2016,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break starttagloop;
                             case BR:
                             case EMBED_OR_IMG:
-                            case AREA_OR_SPACER_OR_WBR:
+                            case AREA_OR_WBR:
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE
                             case PARAM_OR_SOURCE:
@@ -3552,7 +3552,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     elementName,
                                     HtmlAttributes.EMPTY_ATTRIBUTES);
                             break endtagloop;
-                        case AREA_OR_SPACER_OR_WBR:
+                        case AREA_OR_WBR:
                         case PARAM_OR_SOURCE:
                         case EMBED_OR_IMG:
                         case IMAGE:
