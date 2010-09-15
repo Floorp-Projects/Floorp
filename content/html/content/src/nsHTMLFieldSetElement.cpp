@@ -126,6 +126,13 @@ nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
+NS_IMETHODIMP
+nsHTMLFieldSetElement::GetType(nsAString& aType)
+{
+  aType.AssignLiteral("fieldset");
+  return NS_OK;
+}
+
 // nsIFormControl
 
 nsresult
