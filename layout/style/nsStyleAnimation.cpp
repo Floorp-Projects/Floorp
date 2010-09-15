@@ -2182,15 +2182,19 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             resultTail = &item->mNext;
 
             const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
-            if (pos.mXIsPercent) {
-              item->mXValue.SetPercentValue(pos.mXPosition.mFloat);
+            if (pos.mXPosition.mLength == 0) {
+              item->mXValue.SetPercentValue(pos.mXPosition.mPercent);
             } else {
-              nscoordToCSSValue(pos.mXPosition.mCoord, item->mXValue);
+              NS_ABORT_IF_FALSE(pos.mXPosition.mPercent == 0.0f,
+                                "calc() isn't supported yet");
+              nscoordToCSSValue(pos.mXPosition.mLength, item->mXValue);
             }
-            if (pos.mYIsPercent) {
-              item->mYValue.SetPercentValue(pos.mYPosition.mFloat);
+            if (pos.mYPosition.mLength == 0) {
+              item->mYValue.SetPercentValue(pos.mYPosition.mPercent);
             } else {
-              nscoordToCSSValue(pos.mYPosition.mCoord, item->mYValue);
+              NS_ABORT_IF_FALSE(pos.mYPosition.mPercent == 0.0f,
+                                "calc() isn't supported yet");
+              nscoordToCSSValue(pos.mYPosition.mLength, item->mYValue);
             }
           }
 
@@ -2216,14 +2220,17 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                 item->mXValue.SetIntValue(size.mWidthType,
                                           eCSSUnit_Enumerated);
                 break;
-              case nsStyleBackground::Size::ePercentage:
-                item->mXValue.SetPercentValue(size.mWidth.mFloat);
-                break;
               case nsStyleBackground::Size::eAuto:
                 item->mXValue.SetAutoValue();
                 break;
-              case nsStyleBackground::Size::eLength:
-                nscoordToCSSValue(size.mWidth.mCoord, item->mXValue);
+              case nsStyleBackground::Size::eLengthPercentage:
+                if (size.mWidth.mLength == 0) {
+                  item->mXValue.SetPercentValue(size.mWidth.mPercent);
+                } else {
+                  NS_ABORT_IF_FALSE(size.mWidth.mPercent == 0.0f,
+                                    "calc() isn't supported yet");
+                  nscoordToCSSValue(size.mWidth.mLength, item->mXValue);
+                }
                 break;
             }
 
@@ -2232,14 +2239,17 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               case nsStyleBackground::Size::eCover:
                 // leave it null
                 break;
-              case nsStyleBackground::Size::ePercentage:
-                item->mYValue.SetPercentValue(size.mHeight.mFloat);
-                break;
               case nsStyleBackground::Size::eAuto:
                 item->mYValue.SetAutoValue();
                 break;
-              case nsStyleBackground::Size::eLength:
-                nscoordToCSSValue(size.mHeight.mCoord, item->mYValue);
+              case nsStyleBackground::Size::eLengthPercentage:
+                if (size.mHeight.mLength == 0) {
+                  item->mYValue.SetPercentValue(size.mHeight.mPercent);
+                } else {
+                  NS_ABORT_IF_FALSE(size.mHeight.mPercent == 0.0f,
+                                    "calc() isn't supported yet");
+                  nscoordToCSSValue(size.mHeight.mLength, item->mYValue);
+                }
                 break;
             }
           }
