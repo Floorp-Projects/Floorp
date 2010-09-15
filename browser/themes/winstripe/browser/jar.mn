@@ -114,6 +114,7 @@ browser.jar:
         skin/classic/browser/sync-usedNever.png
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
+        skin/classic/browser/syncQuota.css
 #endif
 
 #ifdef XP_WIN
@@ -231,5 +232,6 @@ browser.jar:
         skin/classic/aero/browser/sync-usedNever.png
         skin/classic/aero/browser/syncSetup.css
         skin/classic/aero/browser/syncCommon.css
+        skin/classic/aero/browser/syncQuota.css
 #endif
 #endif
