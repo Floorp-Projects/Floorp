@@ -192,3 +192,27 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
 
     return PR_TRUE;
 }
+
+already_AddRefed<gfxSubimageSurface>
+gfxImageSurface::GetSubimage(const gfxRect& aRect)
+{
+    gfxRect r(aRect);
+    r.Round();
+    unsigned char* subData = Data() +
+        (Stride() * (int)r.Y()) +
+        (int)r.X() * gfxASurface::BytePerPixelFromFormat(Format());
+
+    nsRefPtr<gfxSubimageSurface> image =
+        new gfxSubimageSurface(this, subData,
+                               gfxIntSize((int)r.Width(), (int)r.Height()));
+
+    return image.forget().get();
+}
+
+gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
+                                       unsigned char* aData,
+                                       const gfxIntSize& aSize)
+  : gfxImageSurface(aData, aSize, aParent->Stride(), aParent->Format())
+  , mParent(aParent)
+{
+}
