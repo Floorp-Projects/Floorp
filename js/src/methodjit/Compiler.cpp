@@ -411,9 +411,12 @@ mjit::Compiler::finishThisUp()
             JS_ASSERT(jumpMap[offs].isValid());
             script->mics[i].traceHint = fullCode.locationOf(mics[i].traceHint);
             script->mics[i].load = fullCode.locationOf(jumpMap[offs]);
-            script->mics[i].u.hasSlowTraceHint = mics[i].slowTraceHint.isSet();
-            if (mics[i].slowTraceHint.isSet())
-                script->mics[i].slowTraceHint = stubCode.locationOf(mics[i].slowTraceHint.get());
+            script->mics[i].u.hints.hasSlowTraceHintOne = mics[i].slowTraceHintOne.isSet();
+            if (mics[i].slowTraceHintOne.isSet())
+                script->mics[i].slowTraceHintOne = stubCode.locationOf(mics[i].slowTraceHintOne.get());
+            script->mics[i].u.hints.hasSlowTraceHintTwo = mics[i].slowTraceHintTwo.isSet();
+            if (mics[i].slowTraceHintTwo.isSet())
+                script->mics[i].slowTraceHintTwo = stubCode.locationOf(mics[i].slowTraceHintTwo.get());
             break;
           }
           default:
@@ -2867,32 +2870,14 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
 
     /* Get info about the RHS and pin it. */
     ValueRemat vr;
-    if (rhs->isConstant()) {
-        vr.isConstant = true;
-        vr.u.v = Jsvalify(rhs->getValue());
-    } else {
-        vr.isConstant = false;
-        vr.u.s.isTypeKnown = rhs->isTypeKnown();
-        if (vr.u.s.isTypeKnown) {
-            vr.u.s.type.knownType = rhs->getKnownType();
-        } else {
-            vr.u.s.type.reg = frame.tempRegForType(rhs);
-            frame.pinReg(vr.u.s.type.reg);
-        }
-        vr.u.s.data = frame.tempRegForData(rhs);
-        frame.pinReg(vr.u.s.data);
-    }
+    frame.pinEntry(rhs, vr);
     pic.vr = vr;
 
     RegisterID shapeReg = frame.allocReg();
     pic.shapeReg = shapeReg;
     pic.objRemat = frame.dataRematInfo(lhs);
 
-    if (!vr.isConstant) {
-        if (!vr.u.s.isTypeKnown)
-            frame.unpinReg(vr.u.s.type.reg);
-        frame.unpinReg(vr.u.s.data);
-    }
+    frame.unpinEntry(vr);
 
     /* Guard on shape. */
     masm.loadShape(objReg, shapeReg);
@@ -4074,7 +4059,7 @@ mjit::Compiler::jsop_instanceof()
  * after rejoin()s.
  */
 void
-mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
+mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne, Jump *slowTwo)
 {
 #ifndef JS_TRACER
     jumpInScript(j, target);
@@ -4083,8 +4068,10 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 #else
     if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
         jumpInScript(j, target);
-        if (slow)
-            stubcc.jumpInScript(*slow, target);
+        if (slowOne)
+            stubcc.jumpInScript(*slowOne, target);
+        if (slowTwo)
+            stubcc.jumpInScript(*slowTwo, target);
         return;
     }
 
@@ -4094,13 +4081,19 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     mic.entry = masm.label();
     mic.jumpTarget = target;
     mic.traceHint = j;
-    if (slow)
-        mic.slowTraceHint = *slow;
+    if (slowOne)
+        mic.slowTraceHintOne = *slowOne;
+    if (slowTwo)
+        mic.slowTraceHintTwo = *slowTwo;
 # endif
 
-    stubcc.linkExitDirect(j, stubcc.masm.label());
-    if (slow)
-        slow->linkTo(stubcc.masm.label(), &stubcc.masm);
+    Label traceStart = stubcc.masm.label();
+
+    stubcc.linkExitDirect(j, traceStart);
+    if (slowOne)
+        slowOne->linkTo(traceStart, &stubcc.masm);
+    if (slowTwo)
+        slowTwo->linkTo(traceStart, &stubcc.masm);
 # if JS_MONOIC
     stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
 # endif

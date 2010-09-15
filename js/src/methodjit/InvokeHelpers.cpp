@@ -753,31 +753,33 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 
 #if JS_MONOIC
 static void
-DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
+DisableTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
 {
-    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
-
     /*
      * Hack: The value that will be patched is before the executable address,
      * so to get protection right, just unprotect the general region around
      * the jump.
      */
-    uint8 *addr = (uint8 *)(mic.traceHint.executableAddress());
+    uint8 *addr = (uint8 *)(jump.executableAddress());
     JSC::RepatchBuffer repatch(addr - 64, 128);
-    repatch.relink(mic.traceHint, mic.load);
+    repatch.relink(jump, target);
 
-    JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n", mic.traceHint.executableAddress(),
-               mic.load.executableAddress());
+    JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
+               jump.executableAddress(), target.executableAddress());
+}
 
-    if (mic.u.hasSlowTraceHint) {
-        addr = (uint8 *)(mic.slowTraceHint.executableAddress());
-        JSC::RepatchBuffer repatch(addr - 64, 128);
-        repatch.relink(mic.slowTraceHint, mic.load);
+static void
+DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
+{
+    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
 
-        JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
-                   mic.slowTraceHint.executableAddress(),
-                   mic.load.executableAddress());
-    }
+    DisableTraceHintSingle(mic.traceHint, mic.load);
+
+    if (mic.u.hints.hasSlowTraceHintOne)
+        DisableTraceHintSingle(mic.slowTraceHintOne, mic.load);
+
+    if (mic.u.hints.hasSlowTraceHintTwo)
+        DisableTraceHintSingle(mic.slowTraceHintTwo, mic.load);
 }
 #endif
 

@@ -369,11 +369,13 @@ FrameState::sync(Assembler &masm, Uses uses) const
 }
 
 void
-FrameState::syncAndKill(Registers kill, Uses uses)
+FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
 {
     /* Backwards, so we can allocate registers to backing slots better. */
     FrameEntry *tos = tosFe();
     FrameEntry *bottom = tos - uses.nuses;
+
+    tos -= ignore.nuses;
 
     if (inTryBlock)
         bottom = NULL;
@@ -1031,6 +1033,56 @@ FrameState::shift(int32 n)
     pop();
 }
 
+void
+FrameState::pinEntry(FrameEntry *fe, ValueRemat &vr)
+{
+    vr.isDataSynced = fe->data.synced();
+    vr.isTypeSynced = fe->type.synced();
+    if (fe->isConstant()) {
+        vr.isConstant = true;
+        vr.u.v = Jsvalify(fe->getValue());
+    } else {
+        vr.isConstant = false;
+        vr.u.s.isTypeKnown = fe->isTypeKnown();
+        if (vr.u.s.isTypeKnown) {
+            vr.u.s.type.knownType = fe->getKnownType();
+        } else {
+            vr.u.s.type.reg = tempRegForType(fe);
+            pinReg(vr.u.s.type.reg);
+        }
+        vr.u.s.data = tempRegForData(fe);
+        pinReg(vr.u.s.data);
+    }
+}
+
+void
+FrameState::unpinEntry(const ValueRemat &vr)
+{
+    if (!vr.isConstant) {
+        if (!vr.u.s.isTypeKnown)
+            unpinReg(vr.u.s.type.reg);
+        unpinReg(vr.u.s.data);
+    }
+}
+
+void
+FrameState::syncEntry(Assembler &masm, FrameEntry *fe, const ValueRemat &vr)
+{
+    if (vr.isConstant) {
+        if (!vr.isDataSynced || !vr.isTypeSynced)
+            masm.storeValue(Valueify(vr.u.v), addressOf(fe));
+    } else {
+        if (!vr.isDataSynced)
+            masm.storePayload(vr.u.s.data, addressOf(fe));
+        if (!vr.isTypeSynced) {
+            if (vr.u.s.isTypeKnown)
+                masm.storeTypeTag(ImmType(vr.u.s.type.knownType), addressOf(fe));
+            else
+                masm.storeTypeTag(vr.u.s.type.reg, addressOf(fe));
+        }
+    }
+}
+
 static inline bool
 AllocHelper(RematInfo &info, MaybeRegisterID &maybe)
 {
@@ -1130,6 +1182,7 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
 
     bool commu;
     switch (op) {
+      case JSOP_EQ:
       case JSOP_GT:
       case JSOP_GE:
       case JSOP_LT:
