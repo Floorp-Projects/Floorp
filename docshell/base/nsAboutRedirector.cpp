@@ -91,6 +91,8 @@ static RedirEntry kRedirMap[] = {
     { "addons", "chrome://mozapps/content/extensions/extensions.xul",
       nsIAboutModule::ALLOW_SCRIPT },
     { "support", "chrome://global/content/aboutSupport.xhtml",
+      nsIAboutModule::ALLOW_SCRIPT },
+    { "startup", "chrome://global/content/aboutStartup.xhtml",
       nsIAboutModule::ALLOW_SCRIPT }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
