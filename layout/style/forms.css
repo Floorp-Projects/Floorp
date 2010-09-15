@@ -360,7 +360,9 @@ input[disabled],
 textarea[disabled],
 option[disabled],
 optgroup[disabled],
-select[disabled] {
+select[disabled][disabled] /* Need the attr twice to have the specificity be at
+                              least the same as select[size][multiple] above */
+{
   -moz-user-input: disabled;
   -moz-user-focus: ignore;
   color: GrayText;
