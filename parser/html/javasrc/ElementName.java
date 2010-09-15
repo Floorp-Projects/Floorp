@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Mozilla Foundation
+ * Copyright (c) 2008-2010 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -283,8 +283,8 @@ public final class ElementName
 //                return "NOEMBED";
 //            case TreeBuilder.EMBED_OR_IMG:
 //                return "EMBED_OR_IMG";
-//            case TreeBuilder.AREA_OR_SPACER_OR_WBR:
-//                return "AREA_OR_SPACER_OR_WBR";
+//            case TreeBuilder.AREA_OR_WBR:
+//                return "AREA_OR_WBR";
 //            case TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
 //                return "DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU";
 //            case TreeBuilder.FIELDSET:
@@ -433,10 +433,10 @@ public final class ElementName
     public static final ElementName TAN = new ElementName("tan", "tan", TreeBuilder.OTHER, false, false, false);
     public static final ElementName USE = new ElementName("use", "use", TreeBuilder.OTHER, false, false, false);
     public static final ElementName VAR = new ElementName("var", "var", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR, false, false, false);
-    public static final ElementName WBR = new ElementName("wbr", "wbr", TreeBuilder.AREA_OR_SPACER_OR_WBR, true, false, false);
+    public static final ElementName WBR = new ElementName("wbr", "wbr", TreeBuilder.AREA_OR_WBR, true, false, false);
     public static final ElementName XMP = new ElementName("xmp", "xmp", TreeBuilder.XMP, false, false, false);
     public static final ElementName XOR = new ElementName("xor", "xor", TreeBuilder.OTHER, false, false, false);
-    public static final ElementName AREA = new ElementName("area", "area", TreeBuilder.AREA_OR_SPACER_OR_WBR, true, false, false);
+    public static final ElementName AREA = new ElementName("area", "area", TreeBuilder.AREA_OR_WBR, true, false, false);
     public static final ElementName ABBR = new ElementName("abbr", "abbr", TreeBuilder.OTHER, false, false, false);
     public static final ElementName BASE = new ElementName("base", "base", TreeBuilder.BASE, true, false, false);
     public static final ElementName BVAR = new ElementName("bvar", "bvar", TreeBuilder.OTHER, false, false, false);
@@ -578,7 +578,6 @@ public final class ElementName
     public static final ElementName STRONG = new ElementName("strong", "strong", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U, false, false, false);
     public static final ElementName SWITCH = new ElementName("switch", "switch", TreeBuilder.OTHER, false, false, false);
     public static final ElementName SYMBOL = new ElementName("symbol", "symbol", TreeBuilder.OTHER, false, false, false);
-    public static final ElementName SPACER = new ElementName("spacer", "spacer", TreeBuilder.AREA_OR_SPACER_OR_WBR, true, false, false);
     public static final ElementName SELECT = new ElementName("select", "select", TreeBuilder.SELECT, true, false, false);
     public static final ElementName SUBSET = new ElementName("subset", "subset", TreeBuilder.OTHER, false, false, false);
     public static final ElementName SCRIPT = new ElementName("script", "script", TreeBuilder.SCRIPT, true, false, false);
@@ -969,7 +968,6 @@ public final class ElementName
     STRONG,
     SWITCH,
     SYMBOL,
-    SPACER,
     SELECT,
     SUBSET,
     SCRIPT,
@@ -1361,7 +1359,6 @@ public final class ElementName
     221493746,
     221515401,
     221658189,
-    221844577,
     221908140,
     221910626,
     221921586,
@@ -1520,5 +1517,6 @@ public final class ElementName
     642202932,
     644420819,
     };
+
 
 }
