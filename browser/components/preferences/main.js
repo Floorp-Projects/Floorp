@@ -51,6 +51,13 @@ var gMainPane = {
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
     window.addEventListener("focus", this._updateUseCurrentButton, false);
+
+    this.updateBrowserStartupLastSession();
+
+    // Notify observers that the UI is now ready
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService(Components.interfaces.nsIObserverService)
+              .notifyObservers(window, "main-pane-loaded", null);
   },
 
   // HOME PAGE
@@ -491,5 +498,26 @@ var gMainPane = {
   showAddonsMgr: function ()
   {
     openUILinkIn("about:addons", "window");
+  },
+
+  /**
+   * Hide/show the "Show my windows and tabs from last time" option based
+   * on the value of the browser.privatebrowsing.autostart pref.
+   */
+  updateBrowserStartupLastSession: function()
+  {
+    let pbAutoStartPref = document.getElementById("browser.privatebrowsing.autostart");
+    let startupPref = document.getElementById("browser.startup.page");
+    let menu = document.getElementById("browserStartupPage");
+    let option = document.getElementById("browserStartupLastSession");
+    if (pbAutoStartPref.value) {
+      option.setAttribute("disabled", "true");
+      if (option.selected) {
+        menu.selectedItem = document.getElementById("browserStartupHomePage");
+      }
+    } else {
+      option.removeAttribute("disabled");
+      startupPref.updateElements(); // select the correct index in the startup menulist
+    }
   }
 };
