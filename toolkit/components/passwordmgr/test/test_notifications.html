@@ -347,7 +347,7 @@ function checkTest() {
         ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginText string.
         notificationText = popup.message;
-        expectedText = /^Do you want .+ to remember the password for \"notifyu1\" on example.org\?$/;
+        expectedText = /^Remember password for \"notifyu1\" on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
         popup.remove();
         break;
@@ -360,7 +360,7 @@ function checkTest() {
         ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginText string.
         notificationText = popup.message;
-        expectedText = /^Do you want .+ to remember the password for \"nowisthetimeforallgoodmentocom[^e]\" on example.org\?$/;
+        expectedText = /^Remember password for \"nowisthetimeforallgoodmentocom[^e]\" on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
         popup.remove();
         break;
@@ -373,7 +373,7 @@ function checkTest() {
         ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginTextNoUser string.
         notificationText = popup.message;
-        expectedText = /^Do you want .+ to remember this password on example.org\?$/;
+        expectedText = /^Remember password on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
         popup.remove();
         break;
