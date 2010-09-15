@@ -70,7 +70,7 @@
 .tabbrowser-tab:-moz-lwtheme[selected="true"] {
   background-color: transparent !important;
 }
-.tabbrowser-tab:-moz-lwtheme:not([selected="true"]):not(:hover) > .tab-text {
+.tabbrowser-tab:not(:hover) > * > * > .tab-label:not([selected="true"]):-moz-lwtheme {
   opacity: .8;
 }
 
@@ -1482,43 +1482,43 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/tree/item.png");
 }
 
-.tabbrowser-tab[busy] > .tab-icon-image {
+.tab-icon-image[busy] {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
-.tabbrowser-tab[busy][stalled] > .tab-icon-image {
+.tab-icon-image[busy][stalled] {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
 }
-.tabbrowser-tab[busy][progress="1"] > .tab-icon-image {
+.tab-icon-image[busy][progress="1"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
-.tabbrowser-tab[busy][progress="2"] > .tab-icon-image {
+.tab-icon-image[busy][progress="2"] {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
-.tabbrowser-tab[busy][progress="3"] > .tab-icon-image {
+.tab-icon-image[busy][progress="3"] {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
-.tabbrowser-tab[busy][progress="4"] > .tab-icon-image {
+.tab-icon-image[busy][progress="4"] {
   -moz-image-region: rect(0, 80px, 16px, 64px);
 }
-.tabbrowser-tab[busy][progress="5"] > .tab-icon-image {
+.tab-icon-image[busy][progress="5"] {
   -moz-image-region: rect(0, 96px, 16px, 80px);
 }
-.tabbrowser-tab[busy][progress="6"] > .tab-icon-image {
+.tab-icon-image[busy][progress="6"] {
   -moz-image-region: rect(0, 112px, 16px, 96px);
 }
-.tabbrowser-tab[busy][progress="7"] > .tab-icon-image {
+.tab-icon-image[busy][progress="7"] {
   -moz-image-region: rect(0, 128px, 16px, 112px);
 }
-.tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
+.tab-icon-image[busy][progress="8"] {
   -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
-.tabbrowser-tab:not(:hover):not([selected="true"]) > .tab-icon-image {
+.tabbrowser-tab:not(:hover) > * > * > .tab-icon-image:not([selected="true"]) {
   opacity: .6;
 }
 
-.tabbrowser-tab > .tab-text {
+.tab-label {
   margin-top: 1px;
   margin-bottom: 0;
   font: message-box;
@@ -1597,7 +1597,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-image: -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.58));
 }
 
-.tabbrowser-tab:focus > .tab-text {
+.tabbrowser-tab:focus > .tab-stack {
   box-shadow: @focusRingShadow@;
 }
 
@@ -1678,12 +1678,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tab-close-button:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
-}
-
-.tabbrowser-tab[selected="true"] > .tab-close-button {
-  /* Make this button focusable so clicking on it will not focus the tab while
-     it's getting closed */
-  -moz-user-focus: normal;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,

@@ -1432,16 +1432,7 @@ statusbarpanel#statusbar-display {
   min-height: 18px; /* corresponds to the max. height of non-textual tab contents, i.e. the tab close button */
 }
 
-.tabbrowser-tab > .tab-text {
-  border: 1px dotted transparent;
-  margin: -1px !important; /* let the border not consume any space, like outline */
-}
-
-.tabbrowser-tab:focus > .tab-text {
-  border: 1px dotted -moz-DialogText;
-}
-
-.tabbrowser-tab[pinned]:focus > .tab-icon-image {
+.tabbrowser-tab:focus > .tab-stack {
   outline: 1px dotted;
 }
 
@@ -1453,41 +1444,41 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-.tabbrowser-tab[pinned] > .tab-icon-image,
+.tab-icon-image[pinned],
 .tabs-newtab-button > .toolbarbutton-icon {
   -moz-margin-start: 2px;
   -moz-margin-end: 2px;
 }
 
-.tabbrowser-tab[busy] > .tab-icon-image {
+.tab-icon-image[busy] {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
-.tabbrowser-tab[busy][stalled] > .tab-icon-image {
+.tab-icon-image[busy][stalled] {
   list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
 }
-.tabbrowser-tab[busy][progress="1"] > .tab-icon-image {
+.tab-icon-image[busy][progress="1"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
-.tabbrowser-tab[busy][progress="2"] > .tab-icon-image {
+.tab-icon-image[busy][progress="2"] {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
-.tabbrowser-tab[busy][progress="3"] > .tab-icon-image {
+.tab-icon-image[busy][progress="3"] {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
-.tabbrowser-tab[busy][progress="4"] > .tab-icon-image {
+.tab-icon-image[busy][progress="4"] {
   -moz-image-region: rect(0, 80px, 16px, 64px);
 }
-.tabbrowser-tab[busy][progress="5"] > .tab-icon-image {
+.tab-icon-image[busy][progress="5"] {
   -moz-image-region: rect(0, 96px, 16px, 80px);
 }
-.tabbrowser-tab[busy][progress="6"] > .tab-icon-image {
+.tab-icon-image[busy][progress="6"] {
   -moz-image-region: rect(0, 112px, 16px, 96px);
 }
-.tabbrowser-tab[busy][progress="7"] > .tab-icon-image {
+.tab-icon-image[busy][progress="7"] {
   -moz-image-region: rect(0, 128px, 16px, 112px);
 }
-.tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
+.tab-icon-image[busy][progress="8"] {
   -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
@@ -1529,12 +1520,6 @@ statusbarpanel#statusbar-display {
   margin-top: -1px;
   margin-bottom: -1px;
   -moz-margin-end: -1px;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-close-button {
-  /* Make this button focusable so clicking on it will not focus the tab while
-     it's getting closed */
-  -moz-user-focus: normal;
 }
 
 /* Tabstrip new tab button */
