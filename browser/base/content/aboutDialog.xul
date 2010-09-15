@@ -83,10 +83,10 @@
         </hbox>
 #endif
         <description class="text-blurb">
-          &community.start;<label class="text-link" href="http://www.mozilla.org">&community.mozillaLink;</label>&community.end;
+          &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end2;
         </description>
         <description class="text-blurb">
-          &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute">&contribute.getInvolvedLink;</label>&contribute.end;
+          &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute/">&contribute.getInvolvedLink;</label>&contribute.end;
         </description>
       </vbox>
     </hbox>
