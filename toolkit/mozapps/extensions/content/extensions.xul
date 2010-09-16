@@ -171,8 +171,8 @@
 #endif
       <menupopup id="utils-menu">
         <menuitem id="utils-updateNow"
-                  label="&updates.updateAddonsNow.label;"
-                  accesskey="&updates.updateAddonsNow.accesskey;"
+                  label="&updates.checkForUpdates.label;"
+                  accesskey="&updates.checkForUpdates.accesskey;"
                   command="cmd_findAllUpdates"/>
         <menuitem id="utils-viewUpdates"
                   label="&updates.viewUpdates.label;"

@@ -36,8 +36,8 @@
 <!ENTITY view.utilites.preferencesUnix.tooltip "Preferences for all add-ons">
 
 <!-- addon updates -->
-<!ENTITY updates.updateAddonsNow.label        "Update Add-ons Now">
-<!ENTITY updates.updateAddonsNow.accesskey    "U">
+<!ENTITY updates.checkForUpdates.label        "Check for Updates">
+<!ENTITY updates.checkForUpdates.accesskey    "C">
 <!ENTITY updates.viewUpdates.label            "View Recent Updates">
 <!ENTITY updates.viewUpdates.accesskey        "V">
 <!ENTITY updates.updateAddonsAutomatically.label     "Update Add-ons Automatically">
