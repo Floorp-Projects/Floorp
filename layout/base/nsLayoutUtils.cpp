@@ -3549,7 +3549,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
       if (wantImageSurface) {
         surf = new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
       } else {
-        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ImageFormatARGB32);
+        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::CONTENT_COLOR_ALPHA);
       }
 
       nsRefPtr<gfxContext> ctx = new gfxContext(surf);
@@ -3695,7 +3695,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
       gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
     } else {
       gfxsurf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(imgWidth, imgHeight),
-                                                                   gfxASurface::ImageFormatARGB32);
+                                                                   gfxASurface::CONTENT_COLOR_ALPHA);
     }
 
     nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);

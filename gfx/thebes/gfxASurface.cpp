@@ -424,6 +424,20 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
     }
 }
 
+gfxASurface::gfxImageFormat
+gfxASurface::FormatFromContent(gfxASurface::gfxContentType type)
+{
+    switch (type) {
+        case CONTENT_COLOR_ALPHA:
+            return ImageFormatARGB32;
+        case CONTENT_ALPHA:
+            return ImageFormatA8;
+        case CONTENT_COLOR:
+        default:
+            return ImageFormatRGB24;
+    }
+}
+
 PRInt32
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {

@@ -454,7 +454,7 @@ protected:
         mUpdateSize = aSize;
         mUpdateFormat = aFmt;
 
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
+        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
     }
 
     virtual already_AddRefed<gfxImageSurface>

@@ -56,7 +56,7 @@ public:
     already_AddRefed<gfxASurface>
         CreateOffscreenSurface(PRUint32 width,
                                PRUint32 height,
-                               gfxASurface::gfxImageFormat imageFormat);
+                               gfxASurface::gfxContentType contentType);
 
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
