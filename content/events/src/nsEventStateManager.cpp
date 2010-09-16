@@ -185,6 +185,7 @@ static PRUint32 sESMInstanceCount = 0;
 static PRInt32 sChromeAccessModifier = 0, sContentAccessModifier = 0;
 PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
 PRBool nsEventStateManager::sNormalLMouseEventInProcess = PR_FALSE;
+nsEventStateManager* nsEventStateManager::sActiveESM = nsnull;
 
 static PRUint32 gMouseOrKeyboardEventCounter = 0;
 static nsITimer* gUserInteractionTimer = nsnull;
@@ -853,6 +854,9 @@ nsEventStateManager::Init()
 
 nsEventStateManager::~nsEventStateManager()
 {
+  if (sActiveESM == this) {
+    sActiveESM = nsnull;
+  }
   if (mClickHoldContextMenu)
     KillClickHoldTimer();
 
@@ -2913,7 +2917,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             if (par)
               activeContent = par;
           }
-          SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
+          SetGlobalActiveContent(this, activeContent);
         }
       }
       else {
@@ -2925,7 +2929,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_MOUSE_BUTTON_UP:
     {
-      SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+      SetGlobalActiveContent(this, nsnull);
       if (IsMouseEventReal(aEvent)) {
         if (!mCurrentTarget) {
           nsIFrame* targ;
@@ -4708,4 +4712,17 @@ nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
   // The caller may want synchronous scrolling.
   sf->ScrollBy(pt, scrollUnit, nsIScrollableFrame::INSTANT);
   return NS_OK;
+}
+
+void
+nsEventStateManager::SetGlobalActiveContent(nsEventStateManager* aNewESM,
+                                            nsIContent* aContent)
+{
+  if (sActiveESM && aNewESM != sActiveESM) {
+    sActiveESM->SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+  }
+  sActiveESM = aNewESM;
+  if (sActiveESM) {
+    sActiveESM->SetContentState(aContent, NS_EVENT_STATE_ACTIVE);
+  }
 }
