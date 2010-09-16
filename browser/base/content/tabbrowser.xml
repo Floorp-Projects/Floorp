@@ -343,7 +343,7 @@
             mBrowser: aBrowser,
             mBlank: aStartsBlank,
 
-            // cache flags for correct status bar update after tab switching
+            // cache flags for correct status UI update after tab switching
             mStateFlags: 0,
             mStatus: 0,
             mMessage: "",

@@ -415,15 +415,12 @@ pref("general.warnOnAboutConfig",                 false);
 pref("dom.max_script_run_time",                   20);
 #endif
 
-// Make the status bar reliably present and unaffected by pages
-pref("dom.disable_window_open_feature.status",    true);
 // This is the pref to control the location bar, change this to true to 
-// force this instead of or in addition to the status bar - this makes 
-// the origin of popup windows more obvious to avoid spoofing. We would 
-// rather not do it by default because it affects UE for web applications, but
-// without it there isn't a really good way to prevent chrome spoofing, see bug 337344
+// force this - this makes the origin of popup windows more obvious to avoid
+// spoofing. We would rather not do it by default because it affects UE for web
+// applications, but without it there isn't a really good way to prevent chrome
+// spoofing, see bug 337344
 pref("dom.disable_window_open_feature.location",  true);
-pref("dom.disable_window_status_change",          true);
 // allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize",            false);
 // prevent JS from monkeying with window focus, etc
@@ -998,8 +995,6 @@ pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);
 pref("services.sync.prefs.sync.dom.disable_open_during_load", true);
 pref("services.sync.prefs.sync.dom.disable_window_flip", true);
 pref("services.sync.prefs.sync.dom.disable_window_move_resize", true);
-pref("services.sync.prefs.sync.dom.disable_window_open_feature.status", true);
-pref("services.sync.prefs.sync.dom.disable_window_status_change", true);
 pref("services.sync.prefs.sync.dom.event.contextmenu.enabled", true);
 pref("services.sync.prefs.sync.extensions.personas.current", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);

@@ -57,10 +57,6 @@
      <preference id="dom.event.contextmenu.enabled"  name="dom.event.contextmenu.enabled"  type="bool"/>
      <preference id="dom.disable_window_move_resize" name="dom.disable_window_move_resize" type="bool" inverted="true"/>
      <preference id="dom.disable_window_flip"        name="dom.disable_window_flip"        type="bool" inverted="true"/>
-     <preference id="dom.disable_window_open_feature.status" inverted="true"
-                 name="dom.disable_window_open_feature.status" type="bool"/>
-     <preference id="dom.disable_window_status_change" inverted="true"
-                 name="dom.disable_window_status_change" type="bool"/>
     </preferences>
     
     <script type="application/javascript" src="chrome://browser/content/preferences/advanced-scripts.js"/>
@@ -78,12 +74,6 @@
     <checkbox id="disableContextMenus" label="&disableContextMenus.label;" 
               accesskey="&disableContextMenus.accesskey;"
               preference="dom.event.contextmenu.enabled"/>
-    <checkbox id="hideStatusBar" label="&hideStatusBar.label;" 
-              accesskey="&hideStatusBar.accesskey;"
-              preference="dom.disable_window_open_feature.status"/>
-    <checkbox id="changeStatusBar" label="&changeStatusBar.label;" 
-              accesskey="&changeStatusBar.accesskey;"
-              preference="dom.disable_window_status_change"/>
 
   </prefpane>
 </prefwindow>

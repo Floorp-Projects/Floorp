@@ -220,6 +220,7 @@ _BROWSER_FILES = \
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \
+    browser_addon_bar.js \
 		browser_bug462289.js \
 		$(NULL)
 else
