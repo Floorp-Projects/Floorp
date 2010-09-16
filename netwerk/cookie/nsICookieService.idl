@@ -88,10 +88,10 @@ interface nsICookieService : nsISupports
    * Get the complete cookie string associated with the URI.
    *
    * @param aURI
-   *        the URI of the document for which cookies are being queried.
-   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
-   *        is acceptable, and will be stripped.
+   *        is acceptable, and will be stripped. This argument must not be null.
    * @param aChannel
    *        the channel used to load the document.  this parameter should not
    *        be null, otherwise the cookies will not be returned if third-party
@@ -110,10 +110,10 @@ interface nsICookieService : nsISupports
    * will be different based on httponly (see bug 178993)
    *
    * @param aURI
-   *        the URI of the document for which cookies are being queried.
-   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
-   *        is acceptable, and will be stripped.
+   *        is acceptable, and will be stripped. This argument must not be null.
    * @param aFirstURI
    *        the URI that the user originally typed in or clicked on to initiate
    *        the load of the document referenced by aURI.
@@ -132,12 +132,14 @@ interface nsICookieService : nsISupports
    * Set the cookie string associated with the URI.
    *
    * @param aURI
-   *        the URI of the document for which cookies are being set.
-   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
-   *        is acceptable, and will be stripped.
+   *        is acceptable, and will be stripped. This argument must not be null.
    * @param aPrompt
-   *        the prompt to use for all user-level cookie notifications.
+   *        the prompt to use for all user-level cookie notifications. This is
+   *        presently ignored and can be null. (Prompt information is determined
+   *        from the channel if necessary.)
    * @param aCookie
    *        the cookie string to set.
    * @param aChannel
@@ -146,9 +148,6 @@ interface nsICookieService : nsISupports
    *        cookies have been disabled by the user. (the channel is used
    *        to determine the originating URI of the document; if it is not
    *        provided, the cookies will be assumed third-party.)
-   *
-   * XXX should be able to allow null aPrompt, since nsIPrompt can be queryied
-   * from aChannel.
    */
   void setCookieString(in nsIURI aURI, in nsIPrompt aPrompt, in string aCookie, in nsIChannel aChannel);
 
@@ -159,20 +158,25 @@ interface nsICookieService : nsISupports
    * will be different based on httponly (see bug 178993)
    *
    * @param aURI
-   *        the URI of the document for which cookies are being set.
-   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        The URI of the document for which cookies are being queried.
+   *        file:// URIs (i.e. with an empty host) are allowed, but any other
    *        scheme must have a non-empty host. A trailing dot in the host
-   *        is acceptable, and will be stripped.
+   *        is acceptable, and will be stripped. This argument must not be null.
    * @param aFirstURI
    *        the URI that the user originally typed in or clicked on to initiate
    *        the load of the document referenced by aURI.
    * @param aPrompt
-   *        the prompt to use for all user-level cookie notifications.
+   *        the prompt to use for all user-level cookie notifications. This is
+   *        presently ignored and can be null. (Prompt information is determined
+   *        from the channel if necessary.)
    * @param aCookie
    *        the cookie string to set.
    * @param aServerTime
-   *        the expiry information of the cookie (the Date header from the HTTP
-   *        response).
+   *        the current time reported by the server, if available. This should
+   *        be the string from the Date header in an HTTP response. If the
+   *        string is empty or null, server time is assumed to be the current
+   *        local time. If provided, it will be used to calculate the expiry
+   *        time of the cookie relative to the server's local time.
    * @param aChannel
    *        the channel used to load the document.  this parameter should not
    *        be null, otherwise the cookies will not be set if third-party
