@@ -1559,7 +1559,9 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext,
     nsRefPtr<gfxSharedImageSurface> tmpFrontSurface;
     // XXX error handling?
     if (!BasicManager()->AllocDoubleBuffer(
-          mSize, gfxASurface::ImageFormatARGB32,
+          mSize,
+          (GetContentFlags() & CONTENT_OPAQUE) ?
+            gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
           getter_AddRefs(tmpFrontSurface), getter_AddRefs(mBackSurface)))
       NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
 
@@ -1675,7 +1677,8 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
   // XXX error handling?
   if (!BasicManager()->AllocDoubleBuffer(
         gfxIntSize(aData.mSize.width, aData.mSize.height),
-        gfxASurface::ImageFormatARGB32,
+        (GetContentFlags() & CONTENT_OPAQUE) ?
+          gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
         getter_AddRefs(tmpFrontBuffer), getter_AddRefs(mBackBuffer)))
     NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
 

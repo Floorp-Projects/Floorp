@@ -80,14 +80,18 @@ CreateSimilar(gfxXlibSurface* aReference,
       format = gfxASurface::ImageFormatRGB24; break;
     case gfxASurface::CONTENT_ALPHA:
       format = gfxASurface::ImageFormatA8; break;
-    case gfxASurface::CONTENT_COLOR_ALPHA:
-      format = gfxASurface::ImageFormatARGB32; break;
     default:
       NS_NOTREACHED("unknown gfxContentType");
+    case gfxASurface::CONTENT_COLOR_ALPHA:
+      format = gfxASurface::ImageFormatARGB32; break;
     }
     xrenderFormat = gfxXlibSurface::FindRenderFormat(display, format);
   }
-  NS_ABORT_IF_FALSE(xrenderFormat, "should have a render format by now");
+
+  if (!xrenderformat) {
+    NS_WARNING("couldn't find suitable render format");
+    return nsnull;
+  }
 
   return gfxXlibSurface::Create(aReference->XScreen(), xrenderFormat,
                                 aSize, aReference->XDrawable());
