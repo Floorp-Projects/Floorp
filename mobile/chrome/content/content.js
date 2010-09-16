@@ -379,10 +379,14 @@ Content.prototype = {
         if (!element)
           return;
 
-        if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
-          let rects = getContentClientRects(element);
-          sendAsyncMessage("Browser:Highlight", { rects: rects, messageId: json.messageId });
-        }
+        let highlightRects = null;
+        if (element.mozMatchesSelector("*:link,*:visited,*[role=button],button,input,option,select,textarea,label"))
+          highlightRects = getContentClientRects(element);
+        else if (element.mozMatchesSelector("*:link *, *:visited *"))
+          highlightRects = getContentClientRects(element.parentNode);
+
+        if (highlightRects)
+          sendAsyncMessage("Browser:Highlight", { rects: highlightRects, messageId: json.messageId });
 
         ContextHandler.messageId = json.messageId;
 
