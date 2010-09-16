@@ -37,12 +37,14 @@ tabbrowser {
   min-width: 1px;
 }
 
+.tab-progress:not([fadein]):not([pinned]),
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),
 .tab-close-button:not([fadein]):not([pinned]) {
   opacity: 0 !important;
 }
 
+.tab-progress,
 .tab-label,
 .tab-icon-image,
 .tab-close-button {

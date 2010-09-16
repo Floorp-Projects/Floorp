@@ -954,6 +954,7 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
 
 /* urlbar progress */
 
+.tab-progress,
 #urlbar-progress {
   -moz-appearance: none;
   min-height: 0px;
@@ -963,10 +964,12 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
   background-color: transparent;
 }
 
+.tab-progress[busy][stalled][value="0"],
 #urlbar-progress[busy][stalled][value="0"] {
   /* TODO: add connecting state (bug 596812) */
 }
 
+.tab-progress > .progress-bar,
 #urlbar-progress > .progress-bar {
   -moz-appearance: none;
   min-width: 3px;
@@ -978,18 +981,21 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
                                                rgba(255,255,255,.8));
 }
 
+.tab-progress > .progress-bar:-moz-locale-dir(rtl),
 #urlbar-progress > .progress-bar:-moz-locale-dir(rtl) {
   background-image: -moz-linear-gradient(right, rgba(255,255,255,.1) 50%,
                                                 rgba(255,255,255,.4) 90%,
                                                 rgba(255,255,255,.8));
 }
 
+.tab-progress > .progress-remainder,
 #urlbar-progress > .progress-remainder {
   border-top: 1px solid rgba(100,100,100,.1);
   border-bottom: 1px solid rgba(0,0,0,.2);
   background-image: -moz-linear-gradient(right, ThreeDShadow 80%, ThreeDLightShadow);
 }
 
+.tab-progress > .progress-remainder:-moz-locale-dir(rtl),
 #urlbar-progress > .progress-remainder:-moz-locale-dir(rtl) {
   background-image: -moz-linear-gradient(left, ThreeDShadow 80%, ThreeDLightShadow);
 }
@@ -1538,38 +1544,6 @@ statusbarpanel#statusbar-display {
 .tabs-newtab-button > .toolbarbutton-icon {
   -moz-margin-start: 2px;
   -moz-margin-end: 2px;
-}
-
-.tab-icon-image[busy] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-.tab-icon-image[busy][stalled] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
-}
-.tab-icon-image[busy][progress="1"] {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-.tab-icon-image[busy][progress="2"] {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-.tab-icon-image[busy][progress="3"] {
-  -moz-image-region: rect(0, 64px, 16px, 48px);
-}
-.tab-icon-image[busy][progress="4"] {
-  -moz-image-region: rect(0, 80px, 16px, 64px);
-}
-.tab-icon-image[busy][progress="5"] {
-  -moz-image-region: rect(0, 96px, 16px, 80px);
-}
-.tab-icon-image[busy][progress="6"] {
-  -moz-image-region: rect(0, 112px, 16px, 96px);
-}
-.tab-icon-image[busy][progress="7"] {
-  -moz-image-region: rect(0, 128px, 16px, 112px);
-}
-.tab-icon-image[busy][progress="8"] {
-  -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
 #context_reloadTab {
