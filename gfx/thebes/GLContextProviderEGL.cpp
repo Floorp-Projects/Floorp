@@ -964,7 +964,7 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
   nsRefPtr<gfxASurface> pixmap =
     gfxPlatform::GetPlatform()->
       CreateOffscreenSurface(gfxIntSize(aSize.width, aSize.height),
-                             imageFormat);
+                             gfxASurface::ContentFromFormat(imageFormat));
 
   impl = GLContextProviderEGL::CreateForNativePixmapSurface(pixmap);
   if (impl) {

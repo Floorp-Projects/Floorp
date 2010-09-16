@@ -278,7 +278,7 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize)
         format = gfxASurface::ImageFormatRGB24;
 
     gBufferSurface = gfxPlatform::GetPlatform()->
-        CreateOffscreenSurface(gBufferMaxSize, format);
+        CreateOffscreenSurface(gBufferMaxSize, gfxASurface::ContentFromFormat(format));
     return true;
 }
 

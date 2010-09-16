@@ -611,7 +611,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
   nsRefPtr<gfxASurface> surface =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(destSize.width, destSize.height),
-                                                       gfxASurface::ImageFormatARGB32);
+                                                       gfxASurface::CONTENT_COLOR_ALPHA);
   if (!surface)
     return NS_ERROR_FAILURE;
 

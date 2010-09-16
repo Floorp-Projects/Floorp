@@ -245,7 +245,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 
     gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
     nsRefPtr<gfxASurface> temp =
-        gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, aFormat);
+        gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
     if (!temp || temp->CairoStatus())
         return nsnull;
 
