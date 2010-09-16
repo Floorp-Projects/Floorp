@@ -46,6 +46,7 @@
 #ifdef XP_MACOSX
 #include "chrome/common/mach_ipc_mac.h"
 #include "base/rand_util.h"
+#include "nsILocalFileMac.h"
 #endif
 
 #include "prprf.h"
@@ -119,6 +120,122 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 #endif
 }
 
+void GetPathToBinary(FilePath& exePath)
+{
+#if defined(OS_WIN)
+  exePath = FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
+  exePath = exePath.DirName();
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+#elif defined(OS_POSIX)
+  nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsIFile> greDir;
+  nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsCString path;
+    greDir->GetNativePath(path);
+    exePath = FilePath(path.get());
+  }
+  else {
+    exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
+    exePath = exePath.DirName();
+  }
+
+#ifdef OS_MACOSX
+  // We need to use an App Bundle on OS X so that we can hide
+  // the dock icon. See Bug 557225
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_BUNDLE);
+#endif
+
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+#endif
+}
+
+#ifdef XP_MACOSX
+class AutoCFTypeObject {
+public:
+  AutoCFTypeObject(CFTypeRef object)
+  {
+    mObject = object;
+  }
+  ~AutoCFTypeObject()
+  {
+    ::CFRelease(mObject);
+  }
+private:
+  CFTypeRef mObject;
+};
+#endif
+
+nsresult GeckoChildProcessHost::GetArchitecturesForBinary(const char *path, uint32 *result)
+{
+  *result = 0;
+
+#ifdef XP_MACOSX
+  CFURLRef url = ::CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault,
+                                                           (const UInt8*)path,
+                                                           strlen(path),
+                                                           false);
+  if (!url) {
+    return NS_ERROR_FAILURE;
+  }
+  AutoCFTypeObject autoPluginContainerURL(url);
+
+  CFArrayRef pluginContainerArchs = ::CFBundleCopyExecutableArchitecturesForURL(url);
+  if (!pluginContainerArchs) {
+    return NS_ERROR_FAILURE;
+  }
+  AutoCFTypeObject autoPluginContainerArchs(pluginContainerArchs);
+
+  CFIndex pluginArchCount = ::CFArrayGetCount(pluginContainerArchs);
+  for (CFIndex i = 0; i < pluginArchCount; i++) {
+    CFNumberRef currentArch = static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(pluginContainerArchs, i));
+    int currentArchInt = 0;
+    if (!::CFNumberGetValue(currentArch, kCFNumberIntType, &currentArchInt)) {
+      continue;
+    }
+    switch (currentArchInt) {
+      case kCFBundleExecutableArchitectureI386:
+        *result |= base::PROCESS_ARCH_I386;
+        break;
+      case kCFBundleExecutableArchitectureX86_64:
+        *result |= base::PROCESS_ARCH_X86_64;
+        break;
+      case kCFBundleExecutableArchitecturePPC:
+        *result |= base::PROCESS_ARCH_PPC;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return (*result ? NS_OK : NS_ERROR_FAILURE);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+uint32 GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType type)
+{
+#ifdef XP_MACOSX
+  if (type == GeckoProcessType_Plugin) {
+    // Cache this, it shouldn't ever change.
+    static uint32 pluginContainerArchs = 0;
+    if (pluginContainerArchs == 0) {
+      FilePath exePath;
+      GetPathToBinary(exePath);
+      nsresult rv = GetArchitecturesForBinary(exePath.value().c_str(), &pluginContainerArchs);
+      NS_ASSERTION(NS_SUCCEEDED(rv) && pluginContainerArchs != 0, "Getting architecture of plugin container failed!");
+      if (NS_FAILED(rv) || pluginContainerArchs == 0) {
+        pluginContainerArchs = base::GetCurrentProcessArchitecture();
+      }
+    }
+    return pluginContainerArchs;
+  }
+#endif
+
+  return base::GetCurrentProcessArchitecture();
+}
+
 #ifdef XP_WIN
 void GeckoChildProcessHost::InitWindowsGroupID()
 {
@@ -143,7 +260,7 @@ void GeckoChildProcessHost::InitWindowsGroupID()
 #endif
 
 bool
-GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs)
+GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs, base::ProcessArchitecture arch)
 {
 #ifdef XP_WIN
   InitWindowsGroupID();
@@ -157,7 +274,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
                                      &GeckoChildProcessHost::PerformAsyncLaunch,
-                                     aExtraOpts));
+                                     aExtraOpts, arch));
   // NB: this uses a different mechanism than the chromium parent
   // class.
   MonitorAutoEnter mon(mMonitor);
@@ -194,7 +311,7 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
                                      &GeckoChildProcessHost::PerformAsyncLaunch,
-                                     aExtraOpts));
+                                     aExtraOpts, base::GetCurrentProcessArchitecture()));
 
   // This may look like the sync launch wait, but we only delay as
   // long as it takes to create the channel.
@@ -217,7 +334,7 @@ GeckoChildProcessHost::InitializeChannel()
 }
 
 bool
-GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
+GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
 {
   // FIXME/cjones: make this work from non-IO threads, too
 
@@ -246,18 +363,14 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // and passing wstrings from one config to the other is unsafe.  So
   // we split the logic here.
 
-  FilePath exePath;
 #if defined(OS_LINUX) || defined(OS_MACOSX)
   base::environment_map newEnvVars;
-#endif
-
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsIFile> greDir;
   nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
   if (NS_SUCCEEDED(rv)) {
     nsCString path;
     greDir->GetNativePath(path);
-    exePath = FilePath(path.get());
 #ifdef OS_LINUX
 #ifdef ANDROID
     path += "/lib";
@@ -267,18 +380,10 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
 #endif
   }
-  else {
-    exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
-    exePath = exePath.DirName();
-  }
-
-#ifdef OS_MACOSX
-  // We need to use an App Bundle on OS X so that we can hide
-  // the dock icon. See Bug 557225
-  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_BUNDLE);
 #endif
 
-  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+  FilePath exePath;
+  GetPathToBinary(exePath);
 
 #ifdef ANDROID
   // The java wrapper unpacks this for us but can't make it executable
@@ -350,7 +455,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 #if defined(OS_LINUX) || defined(OS_MACOSX)
                   newEnvVars,
 #endif
-                  false, &process);
+                  false, &process, arch);
 
 #ifdef XP_MACOSX
   // Wait for the child process to send us its 'task_t' data.
@@ -394,11 +499,8 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 //--------------------------------------------------
 #elif defined(OS_WIN)
 
-  FilePath exePath =
-    FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
-  exePath = exePath.DirName();
-
-  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+  FilePath exePath;
+  GetPathToBinary(exePath);
 
   CommandLine cmdLine(exePath.ToWStringHack());
   cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());

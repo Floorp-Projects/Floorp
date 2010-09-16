@@ -22,6 +22,14 @@
 
 namespace base {
 
+void FreeEnvVarsArray(char* array[], int length)
+{
+  for (int i = 0; i < length; i++) {
+    free(array[i]);
+  }
+  delete[] array;
+}
+
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                bool wait, ProcessHandle* process_handle) {
@@ -32,7 +40,8 @@ bool LaunchApp(const std::vector<std::string>& argv,
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle) {
+               bool wait, ProcessHandle* process_handle,
+               ProcessArchitecture arch) {
   bool retval = true;
 
   char* argv_copy[argv.size() + 1];
@@ -75,10 +84,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
-    for(int j = 0; j < varsLen; j++) {
-      free(vars[j]);
-    }  
-    delete[] vars;
+    FreeEnvVarsArray(vars, varsLen);
     return false;
   }
 
@@ -97,29 +103,58 @@ bool LaunchApp(const std::vector<std::string>& argv,
     } else {
       if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
         posix_spawn_file_actions_destroy(&file_actions);
-        for(int j = 0; j < varsLen; j++) {
-          free(vars[j]);
-        }  
-        delete[] vars;
+        FreeEnvVarsArray(vars, varsLen);
         return false;
       }
     }
+  }
+
+  // Set up the CPU preference array.
+  cpu_type_t cpu_types[1];
+  switch (arch) {
+    case PROCESS_ARCH_I386:
+      cpu_types[0] = CPU_TYPE_X86;
+      break;
+    case PROCESS_ARCH_X86_64:
+      cpu_types[0] = CPU_TYPE_X86_64;
+      break;
+    case PROCESS_ARCH_PPC:
+      cpu_types[0] = CPU_TYPE_POWERPC;
+    default:
+      cpu_types[0] = CPU_TYPE_ANY;
+      break;
+  }
+
+  // Initialize spawn attributes.
+  posix_spawnattr_t spawnattr;
+  if (posix_spawnattr_init(&spawnattr) != 0) {
+    FreeEnvVarsArray(vars, varsLen);
+    return false;
+  }
+
+  // Set spawn attributes.
+  size_t attr_count = 1;
+  size_t attr_ocount = 0;
+  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, cpu_types, &attr_ocount) != 0 ||
+      attr_ocount != attr_count) {
+    FreeEnvVarsArray(vars, varsLen);
+    posix_spawnattr_destroy(&spawnattr);
+    return false;
   }
 
   int pid = 0;
   int spawn_succeeded = (posix_spawnp(&pid,
                                       argv_copy[0],
                                       &file_actions,
-                                      NULL,
+                                      &spawnattr,
                                       argv_copy,
                                       vars) == 0);
 
-  for(int j = 0; j < varsLen; j++) {
-    free(vars[j]);
-  }  
-  delete[] vars;
+  FreeEnvVarsArray(vars, varsLen);
 
   posix_spawn_file_actions_destroy(&file_actions);
+
+  posix_spawnattr_destroy(&spawnattr);
 
   bool process_handle_valid = pid > 0;
   if (!spawn_succeeded || !process_handle_valid) {
