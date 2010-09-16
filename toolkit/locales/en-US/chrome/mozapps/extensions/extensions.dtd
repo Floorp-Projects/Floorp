@@ -77,6 +77,9 @@
 <!ENTITY cmd.disableTheme.accesskey           "W">
 <!ENTITY cmd.installAddon.label               "Install">
 <!ENTITY cmd.installAddon.accesskey           "I">
+<!-- LOCALIZATION NOTE (cmd.purchaseAddon.accesskey): The access key for
+     cmd.purchaseAddon.label in extensions.properties -->
+<!ENTITY cmd.purchaseAddon.accesskey          "u">
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
 <!ENTITY cmd.showPreferencesWin.label         "Options">
@@ -138,6 +141,8 @@
 <!ENTITY sort.dateUpdated.tooltip             "Sort by date updated">
 <!ENTITY sort.relevance.label                 "Best match">
 <!ENTITY sort.relevance.tooltip               "Sort by relevance">
+<!ENTITY sort.price.label                     "Price">
+<!ENTITY sort.price.tooltip                   "Sort by price">
 
 <!ENTITY search.filter2.label                 "Search:">
 <!ENTITY search.filter2.installed.label       "My Add-ons">
@@ -165,6 +170,9 @@
 <!ENTITY addon.restartNow.label               "Restart now">
 <!ENTITY addon.install.label                  "Install">
 <!ENTITY addon.install.tooltip                "Install this add-on">
+<!-- LOCALIZATION NOTE (cmd.purchaseAddon.accesskey): The tooltip for
+     addon.purchase.label in extensions.properties -->
+<!ENTITY addon.purchase.tooltip               "Visit the add-ons gallery to purchase this add-on">
 <!ENTITY addon.updateNow.label                "Update Now">
 <!ENTITY addon.updateNow.tooltip              "Install the update for this add-on">
 <!ENTITY addon.includeUpdate.label            "Include in Update">
