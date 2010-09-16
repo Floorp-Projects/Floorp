@@ -274,7 +274,7 @@ public:
    * SurfaceDescriptor variant below.
    */
   PRBool AllocDoubleBuffer(const gfxIntSize& aSize,
-                           gfxASurface::gfxImageFormat aFormat,
+                           gfxASurface::gfxContentType aContent,
                            gfxSharedImageSurface** aFrontBuffer,
                            gfxSharedImageSurface** aBackBuffer);
   void DestroySharedSurface(gfxSharedImageSurface* aSurface);

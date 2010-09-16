@@ -358,18 +358,36 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
   return PR_TRUE;
 }
 
+static gfxASurface::gfxImageFormat
+OptimalFormatFor(gfxASurface::gfxContentType aContent)
+{
+  switch (aContent) {
+  case gfxASurface::CONTENT_COLOR:
+    // FIXME/bug 593175: investigate 16bpp
+    return gfxASurface::ImageFormatRGB24;
+  case gfxASurface::CONTENT_ALPHA:
+    return gfxASurface::ImageFormatA8;
+  case gfxASurface::CONTENT_COLOR_ALPHA:
+    return gfxASurface::ImageFormatARGB32;
+  default:
+    NS_NOTREACHED("unknown gfxContentType");
+    return gfxASurface::ImageFormatARGB32;
+  }
+}
+
 PRBool
 ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
-                                        gfxASurface::gfxImageFormat aFormat,
+                                        gfxASurface::gfxContentType aContent,
                                         gfxSharedImageSurface** aFrontBuffer,
                                         gfxSharedImageSurface** aBackBuffer)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
 
+  gfxASurface::gfxImageFormat format = OptimalFormatFor(aContent);
   nsRefPtr<gfxSharedImageSurface> front = new gfxSharedImageSurface();
   nsRefPtr<gfxSharedImageSurface> back = new gfxSharedImageSurface();
-  if (!front->Init(mShadowManager, aSize, aFormat) ||
-      !back->Init(mShadowManager, aSize, aFormat))
+  if (!front->Init(mShadowManager, aSize, format) ||
+      !back->Init(mShadowManager, aSize, format))
     return PR_FALSE;
 
   *aFrontBuffer = NULL;       *aBackBuffer = NULL;
@@ -398,12 +416,9 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
     return PR_TRUE;
   }
 
-  gfxASurface::gfxImageFormat format = (aContent == gfxASurface::CONTENT_COLOR) ?
-                                       gfxASurface::ImageFormatRGB24 : 
-                                       gfxASurface::ImageFormatARGB32;
   nsRefPtr<gfxSharedImageSurface> front;
   nsRefPtr<gfxSharedImageSurface> back;
-  if (!AllocDoubleBuffer(aSize, format,
+  if (!AllocDoubleBuffer(aSize, aContent,
                          getter_AddRefs(front), getter_AddRefs(back))) {
     return PR_FALSE;
   }
