@@ -444,9 +444,11 @@ MouseModule.prototype = {
     if (this._clicker)
       this._clicker.mouseDown(aEvent.clientX, aEvent.clientY);
 
-    let draggable = this._dragger.isDraggable(targetScrollbox, targetScrollInterface);
-    if (this._dragger && (draggable.x || draggable.y))
-      this._doDragStart(aEvent);
+    if (this._dragger) {
+      let draggable = this._dragger.isDraggable(targetScrollbox, targetScrollInterface);
+      if (draggable.x || draggable.y)
+        this._doDragStart(aEvent);
+    }
 
     if (this._targetIsContent(aEvent)) {
       this._recordEvent(aEvent);
