@@ -381,6 +381,8 @@ protected:
   static jsid sOndurationchange_id;
   static jsid sOnvolumechange_id;
   static jsid sOnmessage_id;
+  static jsid sOnbeforescriptexecute_id;
+  static jsid sOnafterscriptexecute_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;

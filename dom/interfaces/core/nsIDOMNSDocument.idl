@@ -43,7 +43,7 @@
 interface nsIBoxObject;
 interface nsIDOMLocation;
 
-[scriptable, uuid(7485b35e-d215-42a0-8a67-896f86c8afd9)]
+[scriptable, uuid(92f2c6f8-3668-4a47-8251-2a900afe11fa)]
 interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString      characterSet;
@@ -61,6 +61,8 @@ interface nsIDOMNSDocument : nsISupports
   boolean      hasFocus();
 
   readonly attribute nsIDOMElement  activeElement;
+
+  readonly attribute nsIDOMElement  currentScript;
 
   /*
    * Retrieve elements matching all classes listed in a
