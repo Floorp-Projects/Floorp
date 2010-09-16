@@ -189,10 +189,18 @@ PopupNotifications.prototype = {
    *        dismissed:   Whether the notification should be added as a dismissed
    *                     notification. Dismissed notifications can be activated
    *                     by clicking on their anchorElement.
-   *        dismissalCallback:
-   *                     Callback to be invoked when the notification is
-   *                     dismissed (i.e. the user clicks away without activating
-   *                     either the mainAction or a secondaryAction).
+   *        eventCallback:
+   *                     Callback to be invoked when the notification changes
+   *                     state. The callback's first argument is a string
+   *                     identifying the state change:
+   *                     "dismissed": notification has been dismissed by the
+   *                                  user (e.g. by clicking away or switching
+   *                                  tabs)
+   *                     "removed": notification has been removed (due to
+   *                                location change or user action)
+   *                     "shown": notification has been shown (this can be fired
+   *                              multiple times as notifications are dismissed
+   *                              and re-shown)
    *        neverShow:   Indicate that no popup should be shown for this
    *                     notification. Useful for just showing the anchor icon.
    * @returns the Notification object corresponding to the added notification.
@@ -316,6 +324,7 @@ PopupNotifications.prototype = {
 
     // remove the notification
     notifications.splice(index, 1);
+    this._fireCallback(notification, "removed");
   },
 
   /**
@@ -385,6 +394,9 @@ PopupNotifications.prototype = {
     this._currentAnchorElement = anchorElement;
 
     this.panel.openPopup(anchorElement, position);
+    notificationsToShow.forEach(function (n) {
+      this._fireCallback(n, "shown");
+    }, this);
   },
 
   /**
@@ -461,6 +473,11 @@ PopupNotifications.prototype = {
     this._update(anchor);
   },
 
+  _fireCallback: function PopupNotifications_fireCallback(n, event) {
+    if (n.options.eventCallback)
+      n.options.eventCallback.call(n, event);
+  },
+
   _onPopupHidden: function PopupNotifications_onPopupHidden(event) {
     if (event.target != this.panel || this._ignoreDismissal)
       return;
@@ -469,8 +486,7 @@ PopupNotifications.prototype = {
     Array.forEach(this.panel.childNodes, function (nEl) {
       let notificationObj = nEl.notification;
       notificationObj.dismissed = true;
-      if (notificationObj.options.dismissalCallback)
-        notificationObj.options.dismissalCallback.call();
+      this._fireCallback(notificationObj, "dismissed");
     }, this);
 
     this._update();
