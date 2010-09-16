@@ -462,15 +462,7 @@
         <parameter name="scale"/>
         <body>
           <![CDATA[
-            if (scale <= 0) throw "Bad scale given.";
-
-            this._scale = scale;
-            this._frameLoader.setViewportScale(scale, scale);
-            this._updateCacheViewport();
-
-            let event = document.createEvent("Events");
-            event.initEvent("ZoomChanged", true, false);
-            this.dispatchEvent(event);
+            // XXX Not implemented for local browsers.
           ]]>
         </body>
       </method>
@@ -815,6 +807,24 @@
       <property name="documentCharsetInfo"
                 onget="throw 'documentCharsetInfo: Not Remoteable'"
                 readonly="true"/>
+
+      <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
+      <method name="_setScale">
+        <parameter name="scale"/>
+        <body>
+          <![CDATA[
+            if (scale <= 0) throw "Bad scale given.";
+
+            this._scale = scale;
+            this._frameLoader.setViewportScale(scale, scale);
+            this._updateCacheViewport();
+
+            let event = document.createEvent("Events");
+            event.initEvent("ZoomChanged", true, false);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
 
       <!-- Scroll by (x, y) device pixels -->
       <method name="scrollBy">
