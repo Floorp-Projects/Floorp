@@ -579,6 +579,11 @@ let ViewportHandler = {
     if (content.document instanceof XULDocument)
       return { defaultZoom: 1.0, autoSize: true, allowZoom: false };
 
+    // HACK: Since we can't set the scale in local tabs (bug 597081), we force
+    // them to device-width and scale=1 so they will lay out reasonably.
+    if (Util.isParentProcess())
+      return { defaultZoom: 1.0, autoSize: true, allowZoom: false };
+
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
