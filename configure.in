@@ -8983,6 +8983,20 @@ if test "$USING_HCC"; then
    AC_SUBST(CXX)
 fi
 
+AC_MSG_CHECKING([for posix_fallocate])       
+AC_TRY_LINK([#define _XOPEN_SOURCE 600
+  #include <fcntl.h>],
+                 [posix_fallocate(0, 0, 0);],
+                 [ac_cv___posix_fallocate=true],
+                 [ac_cv___posix_fallocate=false])
+
+if test "$ac_cv___posix_fallocate" = true ; then
+  AC_DEFINE(HAVE_POSIX_FALLOCATE)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl Check for missing components
 if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_X11"; then
