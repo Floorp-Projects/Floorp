@@ -390,7 +390,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
     gfxPlatform::GetPlatform()->
       CreateOffscreenSurface(gfxIntSize(bounds.width,
                                         bounds.height),
-                             imageFormat);
+                             gfxASurface::ContentFromFormat(imageFormat));
   }
 
   context = new gfxContext(destinationSurface);

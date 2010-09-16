@@ -105,7 +105,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
 
   mSurface = gfxPlatform::GetPlatform()
              ->CreateOffscreenSurface(gfxIntSize(1, 1),
-                                      gfxASurface::ImageFormatARGB32);
+                                      gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
