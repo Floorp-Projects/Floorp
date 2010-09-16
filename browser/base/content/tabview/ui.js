@@ -24,6 +24,7 @@
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
+ * Sean Dunn <seanedunn@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -261,6 +262,15 @@ let UI = {
     this._reorderTabItemsOnShow = null;
     this._reorderTabsOnHide = null;
     this._frameInitialized = false;
+  },
+
+  // Function: blurAll
+  // Blurs any currently focused element
+  //
+  blurAll: function UI_blurAll() {
+    iQ(":focus").each(function(element) {
+      element.blur();
+    });
   },
 
   // ----------
