@@ -328,7 +328,7 @@ Content.prototype = {
       case "DOMActivate": {
         // In a local tab, open remote links in new tabs.
         let href = Util.getHrefForElement(aEvent.originalTarget);
-        if (!Util.isLocalScheme(href)) {
+        if (/^http(s?):/.test(href)) {
           aEvent.preventDefault();
           sendAsyncMessage("Browser:OpenURI", { uri: href, bringFront: true });
         }
