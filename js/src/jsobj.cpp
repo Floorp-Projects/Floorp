@@ -152,7 +152,7 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     /* ECMAScript 5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
     if (!obj->isExtensible()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OBJECT_NOT_EXTENSIBLE);
+        obj->reportNotExtensible(cx);
         return false;
     }
 
@@ -1971,10 +1971,17 @@ Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
 }
 
 static JSBool
-Reject(JSContext *cx, uintN errorNumber, bool throwError, bool *rval)
+Reject(JSContext *cx, JSObject *obj, uintN errorNumber, bool throwError, bool *rval)
 {
     if (throwError) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber);
+        if (js_ErrorFormatString[errorNumber].argCount == 1) {
+            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
+                                     JSDVG_IGNORE_STACK, ObjectValue(*obj),
+                                     NULL, NULL, NULL);
+        } else {
+            JS_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber);
+        }
         return JS_FALSE;
     }
 
@@ -2006,7 +2013,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
     /* 8.12.9 steps 2-4. */
     if (!current) {
         if (!obj->isExtensible())
-            return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
+            return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
 
         *rval = true;
 
@@ -2094,8 +2101,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                  */
                 if (!shape->configurable() &&
                     (!shape->hasDefaultGetter() || !shape->hasDefaultSetter())) {
-                    return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
-                                  throwError, desc.id, rval);
+                    return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_PROP, throwError,
+                                  desc.id, rval);
                 }
 
                 if (!js_NativeGet(cx, obj, obj2, shape, JSGET_NO_METHOD_BARRIER, &v)) {
@@ -2141,8 +2148,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         JS_ASSERT_IF(!desc.hasConfigurable, !desc.configurable());
         if (desc.configurable() ||
             (desc.hasEnumerable && desc.enumerable() != shape->enumerable())) {
-            return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP, throwError,
-                          desc.id, rval);
+            return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
         }
     }
 
@@ -2150,18 +2156,16 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         /* 8.12.9 step 8, no validation required */
     } else if (desc.isDataDescriptor() != shape->isDataDescriptor()) {
         /* 8.12.9 step 9. */
-        if (!shape->configurable()) {
-            return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
-                          throwError, desc.id, rval);
-        }
+        if (!shape->configurable())
+            return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
     } else if (desc.isDataDescriptor()) {
         /* 8.12.9 step 10. */
         JS_ASSERT(shape->isDataDescriptor());
         if (!shape->configurable() && !shape->writable()) {
             if ((desc.hasWritable && desc.writable()) ||
                 (desc.hasValue && !SameValue(desc.value, v, cx))) {
-                return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
-                              throwError, desc.id, rval);
+                return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id,
+                              rval);
             }
         }
     } else {
@@ -2172,8 +2176,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                  !SameValue(desc.setterValue(), shape->setterOrUndefined(), cx)) ||
                 (desc.hasGet &&
                  !SameValue(desc.getterValue(), shape->getterOrUndefined(), cx))) {
-                return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
-                              throwError, desc.id, rval);
+                return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id,
+                              rval);
             }
         }
     }
@@ -2281,7 +2285,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
          * to define the "length" property, rather than attempting to implement
          * some difficult-for-authors-to-grasp subset of that functionality.
          */
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEFINE_ARRAY_LENGTH_UNSUPPORTED);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_DEFINE_ARRAY_LENGTH);
         return JS_FALSE;
     }
 
@@ -2290,12 +2294,12 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
         /*
         // Disabled until we support defining "length":
         if (index >= oldLen && lengthPropertyNotWritable())
-            return ThrowTypeError(cx, JSMSG_CANT_APPEND_PROPERTIES_TO_UNWRITABLE_LENGTH_ARRAY);
+            return ThrowTypeError(cx, JSMSG_CANT_APPEND_TO_ARRAY);
          */
         if (!DefinePropertyOnObject(cx, obj, desc, false, rval))
             return JS_FALSE;
         if (!*rval)
-            return Reject(cx, JSMSG_CANT_DEFINE_ARRAY_INDEX, throwError, rval);
+            return Reject(cx, obj, JSMSG_CANT_DEFINE_ARRAY_INDEX, throwError, rval);
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
@@ -2319,7 +2323,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwErr
     if (obj->getOps()->lookupProperty) {
         if (obj->isProxy())
             return JSProxy::defineProperty(cx, obj, desc.id, desc.pd);
-        return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
+        return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
     }
 
     return DefinePropertyOnObject(cx, obj, desc, throwError, rval);
@@ -5101,31 +5105,28 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
                                         JSMSG_UNDECLARED_VAR, bytes);
 }
 
-namespace js {
-
-JSBool
-ReportReadOnly(JSContext* cx, jsid id, uintN flags)
+bool
+JSObject::reportReadOnly(JSContext* cx, jsid id, uintN report)
 {
-    return js_ReportValueErrorFlags(cx, flags, JSMSG_READ_ONLY,
+    return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
                                     JSDVG_IGNORE_STACK, IdToValue(id), NULL,
                                     NULL, NULL);
 }
 
-JSBool
-ReportNotConfigurable(JSContext* cx, jsid id, uintN flags)
+bool
+JSObject::reportNotConfigurable(JSContext* cx, jsid id, uintN report)
 {
-    return js_ReportValueErrorFlags(cx, flags, JSMSG_CANT_DELETE,
+    return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
                                     JSDVG_IGNORE_STACK, IdToValue(id), NULL,
                                     NULL, NULL);
 }
 
-JSBool
-ReportNotExtensible(JSContext* cx, uintN flags)
+bool
+JSObject::reportNotExtensible(JSContext *cx, uintN report)
 {
-    return JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage, NULL,
-                                        JSMSG_OBJECT_NOT_EXTENSIBLE);
-}
-
+    return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
+                                    JSDVG_IGNORE_STACK, ObjectValue(*this),
+                                    NULL, NULL, NULL);
 }
 
 /*
@@ -5212,9 +5213,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
                 /* Error in strict mode code, warn with strict option, otherwise do nothing. */
                 if (strict)
-                    return ReportReadOnly(cx, id, 0);
+                    return obj->reportReadOnly(cx, id);
                 if (JS_HAS_STRICT_OPTION(cx))
-                    return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+                    return obj->reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                 return JS_TRUE;
 
 #ifdef JS_TRACER
@@ -5300,11 +5301,10 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (!obj->isExtensible()) {
             /* Error in strict mode code, warn with strict option, otherwise do nothing. */
             if (strict)
-                return ReportNotExtensible(cx, 0);
+                return obj->reportNotExtensible(cx);
             if (JS_HAS_STRICT_OPTION(cx))
-                return ReportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
-            else
-                return JS_TRUE;
+                return obj->reportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
+            return JS_TRUE;
         }
 
         /*
@@ -5451,7 +5451,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
             if (shape->isSharedPermanent()) {
                 JS_UNLOCK_OBJ(cx, proto);
                 if (strict)
-                    return ReportNotConfigurable(cx, id, 0);
+                    return obj->reportNotConfigurable(cx, id);
                 rval->setBoolean(false);
                 return true;
             }
@@ -5470,7 +5470,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
     if (!shape->configurable()) {
         JS_UNLOCK_OBJ(cx, obj);
         if (strict)
-            return ReportNotConfigurable(cx, id, 0);
+            return obj->reportNotConfigurable(cx, id);
         rval->setBoolean(false);
         return true;
     }

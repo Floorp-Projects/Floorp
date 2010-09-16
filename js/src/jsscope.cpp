@@ -513,21 +513,6 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
     return shape;
 }
 
-void
-JSObject::reportReadOnlyScope(JSContext *cx)
-{
-    JSString *str;
-    const char *bytes;
-
-    str = js_ValueToString(cx, ObjectValue(*this));
-    if (!str)
-        return;
-    bytes = js_GetStringBytes(cx, str);
-    if (!bytes)
-        return;
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY, bytes);
-}
-
 Shape *
 Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
 {
@@ -720,29 +705,27 @@ JSObject::addProperty(JSContext *cx, jsid id,
 {
     JS_ASSERT(!JSID_IS_VOID(id));
 
+    if (!isExtensible()) {
+        reportNotExtensible(cx);
+        return NULL;
+    }
+
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
     /* Search for id with adding = true in order to claim its entry. */
     Shape **spp = nativeSearch(id, true);
     JS_ASSERT(!SHAPE_FETCH(spp));
-    return addPropertyCommon(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
+    return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
 }
 
 const Shape *
-JSObject::addPropertyCommon(JSContext *cx, jsid id,
-                            PropertyOp getter, PropertyOp setter,
-                            uint32 slot, uintN attrs,
-                            uintN flags, intN shortid,
-                            Shape **spp)
+JSObject::addPropertyInternal(JSContext *cx, jsid id,
+                              PropertyOp getter, PropertyOp setter,
+                              uint32 slot, uintN attrs,
+                              uintN flags, intN shortid,
+                              Shape **spp)
 {
-    /*
-     * You can't add properties to a non-extensible object, but you can change
-     * attributes of properties in such objects.
-     */
-    if (!isExtensible()) {
-        reportReadOnlyScope(cx);
-        return NULL;
-    }
+    JS_ASSERT_IF(inDictionaryMode(), !lastProp->frozen());
 
     PropertyTable *table = NULL;
     if (!inDictionaryMode()) {
@@ -822,137 +805,182 @@ JSObject::putProperty(JSContext *cx, jsid id,
                       uint32 slot, uintN attrs,
                       uintN flags, intN shortid)
 {
-    Shape **spp, *shape, *overwriting;
-
     JS_ASSERT(!JSID_IS_VOID(id));
+
+    /*
+     * Horrid non-strict eval, debuggers, and |default xml namespace ...| may
+     * extend Call objects.
+     */
+    if (lastProp->frozen()) {
+        if (!Shape::newDictionaryList(cx, &lastProp))
+            return NULL;
+        JS_ASSERT(!lastProp->frozen());
+    }
 
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
     /* Search for id in order to claim its entry if table has been allocated. */
-    spp = nativeSearch(id, true);
-    shape = SHAPE_FETCH(spp);
-    if (!shape)
-        return addPropertyCommon(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
+    Shape **spp = nativeSearch(id, true);
+    Shape *shape = SHAPE_FETCH(spp);
+    if (!shape) {
+        /*
+         * You can't add properties to a non-extensible object, but you can change
+         * attributes of properties in such objects.
+         */
+        if (!isExtensible()) {
+            reportNotExtensible(cx);
+            return NULL;
+        }
+
+        return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
+    }
 
     /* Property exists: search must have returned a valid *spp. */
     JS_ASSERT(!SHAPE_IS_REMOVED(*spp));
-    overwriting = shape;
 
     /*
-     * If all property members match, this is a redundant add and we can
-     * return early.  If the caller wants to allocate a slot, but doesn't
-     * care which slot, copy shape->slot into slot so we can match shape,
-     * if all other members match.
+     * If the caller wants to allocate a slot, but doesn't care which slot,
+     * copy the existing shape's slot into slot so we can match shape, if all
+     * other members match.
      */
-    bool hadSlot = !shape->isAlias() && containsSlot(shape->slot);
+    bool hadSlot = !shape->isAlias() && shape->hasSlot();
     uint32 oldSlot = shape->slot;
     if (!(attrs & JSPROP_SHARED) && slot == SHAPE_INVALID_SLOT && hadSlot)
         slot = oldSlot;
+
+    /*
+     * Now that we've possibly preserved slot, check whether all members match.
+     * If so, this is a redundant "put" and we can return without more work.
+     */
     if (shape->matchesParamsAfterId(getter, setter, slot, attrs, flags, shortid)) {
         METER(redundantPuts);
         return shape;
     }
 
-    PropertyTable *table = inDictionaryMode() ? lastProp->table : NULL;
+    /*
+     * Overwriting a non-last property requires switching to dictionary mode.
+     * The shape tree is shared immutable, and we can't removeProperty and then
+     * addPropertyInternal because a failure under add would lose data.
+     */
+    if (shape != lastProp && !inDictionaryMode()) {
+        if (!toDictionaryMode(cx))
+            return false;
+        spp = nativeSearch(shape->id);
+        shape = SHAPE_FETCH(spp);
+    }
 
     /*
-     * If we are clearing shape to force the existing property that it
-     * describes to be overwritten, then we have to unlink shape from the
-     * ancestor line at lastProp->lastProp.
+     * Now that we have passed the lastProp->frozen() check at the top of this
+     * method, and the non-last-property conditioning just above, we are ready
+     * to overwrite.
      *
-     * If shape is not lastProp and this scope is not in dictionary mode,
-     * we must switch to dictionary mode so we can unlink the non-terminal
-     * shape without breaking anyone sharing the property lineage via our
-     * prototype's property tree.
+     * Optimize the case of a non-frozen dictionary-mode object based on the
+     * property that dictionaries exclusively own their mutable shape structs,
+     * each of which has a unique shape number (not shared via a shape tree).
      */
-    Shape *oldLastProp = lastProp;
-    if (shape == lastProp && !inDictionaryMode()) {
-        removeLastProperty();
-    } else {
-        if (!inDictionaryMode()) {
-            if (!toDictionaryMode(cx))
+    if (inDictionaryMode()) {
+        /* FIXME bug 593129 -- slot allocation and JSObject *this must move out of here! */
+        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED) && !(flags & Shape::ALIAS)) {
+            if (!allocSlot(cx, &slot))
                 return NULL;
-
-            spp = nativeSearch(id);
-            shape = SHAPE_FETCH(spp);
-            table = lastProp->table;
-            oldLastProp = lastProp;
-        }
-        shape->removeFromDictionary(this);
-    }
-
-#ifdef DEBUG
-    if (shape == oldLastProp) {
-        JS_ASSERT(lastProp->slotSpan <= shape->slotSpan);
-        if (shape->hasSlot())
-            JS_ASSERT(shape->slot < shape->slotSpan);
-        if (lastProp->slotSpan < numSlots())
-            getSlotRef(lastProp->slotSpan).setUndefined();
-    }
-#endif
-
-    /*
-     * If we fail later on trying to find or create a new shape, we will
-     * restore *spp from |overwriting|. Note that we don't bother to keep
-     * table->removedCount in sync, because we will fix up both *spp and
-     * table->entryCount shortly.
-     */
-    if (table)
-        SHAPE_STORE_PRESERVING_COLLISION(spp, NULL);
-
-    {
-        /* Find or create a property tree node labeled by our arguments. */
-        Shape child(id, getter, setter, slot, attrs, flags, shortid);
-        shape = getChildProperty(cx, lastProp, child);
-    }
-
-    if (shape) {
-        JS_ASSERT(shape == lastProp);
-
-        if (table) {
-            /* Store the tree node pointer in the table entry for id. */
-            SHAPE_STORE_PRESERVING_COLLISION(spp, shape);
-
-            /* Move table from oldLastProp to the new lastProp, aka shape. */
-            JS_ASSERT(oldLastProp->table == table);
-            oldLastProp->setTable(NULL);
-            shape->setTable(table);
-        }
-
-        if (!lastProp->table) {
-            /* See comment in JSObject::addPropertyCommon about ignoring OOM here. */
-            lastProp->maybeHash(cx);
         }
 
         /*
-         * Can't fail now, so free the previous incarnation's slot if the new
-         * shape has no slot. But we do not need to free oldSlot (and must not,
-         * as trying to will botch an assertion in JSObject::freeSlot) if the
-         * new lastProp (shape here) has a slotSpan that does not cover it.
+         * We are going to mutate shape and move it to be lastProp if it isn't
+         * already, so we must regenerate its shape.
          */
-        if (hadSlot && !shape->hasSlot() && oldSlot < shape->slotSpan) {
-            freeSlot(cx, oldSlot);
-            JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
+        shape->shape = js_GenerateShape(cx, false);
+
+        /*
+         * Set shape->slot before calling shape->insertIntoDictionary, which
+         * uses it under shape->setParent.
+         */
+        shape->slot = slot;
+
+        if (shape != lastProp) {
+            if (PropertyTable *table = lastProp->table) {
+                shape->table = table;
+                lastProp->table = NULL;
+            }
+            shape->removeFromDictionary(this);
+            shape->insertIntoDictionary(&lastProp);
+        } else {
+            if (slot != SHAPE_INVALID_SLOT && slot >= shape->slotSpan)
+                shape->slotSpan = slot + 1;
         }
 
-        CHECK_SHAPE_CONSISTENCY(this);
-        METER(puts);
-        return shape;
+        shape->rawGetter = getter;
+        shape->rawSetter = setter;
+        shape->attrs = attrs;
+        shape->flags = flags | Shape::IN_DICTIONARY;
+        shape->shortid = shortid;
+
+        /*
+         * We are done updating shape and lastProp. Now we may need to update
+         * flags and objShape. In the last non-dictionary property case in the
+         * else clause just below, getChildProperty handles this for us.
+         */
+        updateFlags(shape);
+        updateShape(cx);
+    } else {
+        /*
+         * Updating lastProp in a non-dictionary-mode object. Such objects
+         * share their shapes via a tree rooted at a prototype emptyShape, or
+         * perhaps a well-known compartment-wide singleton emptyShape.
+         *
+         * If any shape in the tree has a property hashtable, it is shared and
+         * immutable too, therefore we must not update *spp.
+         */
+        JS_ASSERT(shape == lastProp);
+        removeLastProperty();
+
+        /* Find or create a property tree node labeled by our arguments. */
+        Shape child(id, getter, setter, slot, attrs, flags, shortid);
+
+        Shape *newShape = getChildProperty(cx, lastProp, child);
+        if (!newShape) {
+            setLastProperty(shape);
+            CHECK_SHAPE_CONSISTENCY(this);
+            METER(putFails);
+            return NULL;
+        }
+
+        shape = newShape;
     }
 
-    if (table)
-        SHAPE_STORE_PRESERVING_COLLISION(spp, overwriting);
+    JS_ASSERT(shape == lastProp);
+
+    if (!shape->table) {
+        /* See JSObject::addPropertyInternal comment about ignoring OOM. */
+        shape->maybeHash(cx);
+    }
+
+    /*
+     * Can't fail now, so free the previous incarnation's slot if the new shape
+     * has no slot. But we do not need to free oldSlot (and must not, as trying
+     * to will botch an assertion in JSObject::freeSlot) if the new lastProp
+     * (shape here) has a slotSpan that does not cover it.
+     */
+    if (hadSlot && !shape->hasSlot()) {
+        if (oldSlot < shape->slotSpan)
+            freeSlot(cx, oldSlot);
+#ifdef DEBUG
+        else
+            getSlotRef(oldSlot).setUndefined();
+#endif
+        JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
+    }
+
     CHECK_SHAPE_CONSISTENCY(this);
-    METER(putFails);
-    return NULL;
+    METER(puts);
+    return shape;
 }
 
 const Shape *
 JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN mask,
                          PropertyOp getter, PropertyOp setter)
 {
-    const Shape *newShape;
-
+    JS_ASSERT_IF(inDictionaryMode(), !lastProp->frozen());
     JS_ASSERT(!JSID_IS_VOID(shape->id));
     JS_ASSERT(nativeContains(*shape));
 
@@ -973,6 +1001,8 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
         return shape;
 
     Shape child(shape->id, getter, setter, shape->slot, attrs, shape->flags, shape->shortid);
+
+    const Shape *newShape;
 
     if (inDictionaryMode()) {
         shape->removeFromDictionary(this);
@@ -1014,11 +1044,15 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
         /*
          * Let JSObject::putProperty handle this |overwriting| case, including
          * the conservation of shape->slot (if it's valid). We must not call
-         * JSObject::removeProperty because it will free a valid shape->slot and
-         * JSObject::putProperty won't re-allocate it.
+         * removeProperty because it will free an allocated shape->slot, and
+         * putProperty won't re-allocate it.
          */
         newShape = putProperty(cx, child.id, child.rawGetter, child.rawSetter, child.slot,
                                child.attrs, child.flags, child.shortid);
+#ifdef DEBUG
+        if (newShape)
+            METER(changePuts);
+#endif
     }
 
 #ifdef DEBUG
@@ -1041,27 +1075,26 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         return true;
     }
 
-    /* If shape is not the last property added, switch to dictionary mode. */
-    if (shape != lastProp) {
-        if (!inDictionaryMode()) {
-            if (!toDictionaryMode(cx))
-                return false;
-            spp = nativeSearch(shape->id);
-            shape = SHAPE_FETCH(spp);
-        }
-        JS_ASSERT(SHAPE_FETCH(spp) == shape);
-    }
-
-    /* First, if shape is unshared and not cleared, free its slot number. */
-    bool hadSlot = !shape->isAlias() && containsSlot(shape->slot);
+    /* First, if shape is unshared and not has a slot, free its slot number. */
+    bool hadSlot = !shape->isAlias() && shape->hasSlot();
     if (hadSlot) {
         freeSlot(cx, shape->slot);
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
+
+    /* If shape is not the last property added, switch to dictionary mode. */
+    if (shape != lastProp && !inDictionaryMode()) {
+        if (!toDictionaryMode(cx))
+            return false;
+        spp = nativeSearch(shape->id);
+        shape = SHAPE_FETCH(spp);
+    }
+
     /*
-     * Next, consider removing id from lastProp->table if in dictionary mode,
-     * by setting its entry to a removed or free sentinel.
+     * A dictionary-mode object owns mutable, unique shapes on a non-circular
+     * doubly linked list, optionally hashed by lastProp->table. So we can edit
+     * the list and hash in place.
      */
     if (inDictionaryMode()) {
         PropertyTable *table = lastProp->table;
@@ -1092,12 +1125,13 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 
         /*
          * Remove shape from its non-circular doubly linked list, setting this
-         * object's shape first so the updateShape(cx) after this if-else will
-         * generate a fresh shape for this scope. We need a fresh shape for all
-         * deletions, even of lastProp. Otherwise, a shape number can replay
-         * and caches may return get deleted DictionaryShapes! See bug 595365.
+         * object's OWN_SHAPE flag so the updateShape(cx) further below will
+         * generate a fresh shape id for this object, distinct from the id of
+         * any shape in the list. We need a fresh shape for all deletions, even
+         * of lastProp. Otherwise, a shape number could replay and caches might
+         * return get deleted DictionaryShapes! See bug 595365.
          */
-        setOwnShape(lastProp->shape);
+        flags |= OWN_SHAPE;
 
         Shape *oldLastProp = lastProp;
         shape->removeFromDictionary(this);
@@ -1132,7 +1166,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
     }
     updateShape(cx);
 
-    /* Last, consider shrinking table if its load factor is <= .25. */
+    /* On the way out, consider shrinking table if its load factor is <= .25. */
     if (PropertyTable *table = lastProp->table) {
         uint32 size = table->capacity();
         if (size > PropertyTable::MIN_SIZE && table->entryCount <= size >> 2) {

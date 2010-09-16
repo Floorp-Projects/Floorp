@@ -1005,16 +1005,25 @@ struct JSObject {
     bool allocSlot(JSContext *cx, uint32 *slotp);
     void freeSlot(JSContext *cx, uint32 slot);
 
-  private:
-    void reportReadOnlyScope(JSContext *cx);
+    bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
+    bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
+    bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);
 
+  private:
     js::Shape *getChildProperty(JSContext *cx, js::Shape *parent, js::Shape &child);
 
-    const js::Shape *addPropertyCommon(JSContext *cx, jsid id,
-                                       js::PropertyOp getter, js::PropertyOp setter,
-                                       uint32 slot, uintN attrs,
-                                       uintN flags, intN shortid,
-                                       js::Shape **spp);
+    /*
+     * Internal helper that adds a shape not yet mapped by this object.
+     *
+     * Notes:
+     * 1. getter and setter must be normalized based on flags (see jsscope.cpp).
+     * 2. !isExtensible() checking must be done by callers.
+     */
+    const js::Shape *addPropertyInternal(JSContext *cx, jsid id,
+                                         js::PropertyOp getter, js::PropertyOp setter,
+                                         uint32 slot, uintN attrs,
+                                         uintN flags, intN shortid,
+                                         js::Shape **spp);
 
     bool toDictionaryMode(JSContext *cx);
 
@@ -1041,7 +1050,7 @@ struct JSObject {
     const js::Shape *changeProperty(JSContext *cx, const js::Shape *shape, uintN attrs, uintN mask,
                                     js::PropertyOp getter, js::PropertyOp setter);
 
-    /* Remove id from this object. */
+    /* Remove the property named by id from this object. */
     bool removeProperty(JSContext *cx, jsid id);
 
     /* Clear the scope, making it empty. */
