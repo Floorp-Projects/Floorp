@@ -10076,17 +10076,19 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
         return;
     }
 
-    /* For simplicitly, flush 'em all, even non-canonical arg slots. */
-    Value *vp = fp->actualArgs() - 2 /* callee, this */;
-    Value *vpend = fp->formalArgsEnd();
-    for (; vp < vpend; ++vp)
-        which.set(vp, (LIns*)0);
+    if (!fp->isEvalFrame()) {
+        /* For simplicitly, flush 'em all, even non-canonical arg slots. */
+        Value *vp = fp->actualArgs() - 2 /* callee, this */;
+        Value *vpend = fp->formalArgsEnd();
+        for (; vp < vpend; ++vp)
+            which.set(vp, (LIns*)0);
+    }
 
     which.set(fp->addressOfArgs(), (LIns*)0);
     which.set(fp->addressOfScopeChain(), (LIns*)0);
 
-    vp = fp->slots();
-    vpend = fp->slots() + fp->functionScript()->nslots;
+    Value *vp = fp->slots();
+    Value *vpend = fp->slots() + fp->functionScript()->nslots;
     for (; vp < vpend; ++vp)
         which.set(vp, (LIns*)0);
 }
