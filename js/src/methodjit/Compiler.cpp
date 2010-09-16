@@ -87,7 +87,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
     escapingList(ContextAllocPolicy(cx)),
     stubcc(cx, *this, frame, script)
 #if defined JS_TRACER
-    ,addTraceHints(cx->jitEnabled)
+    ,addTraceHints(cx->traceJitEnabled)
 #endif
 {
 }

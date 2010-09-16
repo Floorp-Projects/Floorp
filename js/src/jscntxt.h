@@ -2291,27 +2291,24 @@ struct JSContext
     js::VMSideExit      *bailExit;
 
     /*
-     * True if traces may be executed. Invariant: The value of jitEnabled is
-     * always equal to the expression in updateJITEnabled below.
+     * True if traces may be executed. Invariant: The value of traceJitenabled
+     * is always equal to the expression in updateJITEnabled below.
      *
      * This flag and the fields accessed by updateJITEnabled are written only
      * in runtime->gcLock, to avoid race conditions that would leave the wrong
-     * value in jitEnabled. (But the interpreter reads this without
+     * value in traceJitEnabled. (But the interpreter reads this without
      * locking. That can race against another thread setting debug hooks, but
      * we always read cx->debugHooks without locking anyway.)
      */
-    bool                 jitEnabled;
+    bool                 traceJitEnabled;
+#endif
+
+#ifdef JS_METHODJIT
+    bool                 methodJitEnabled;
 #endif
 
     /* Caller must be holding runtime->gcLock. */
-    void updateJITEnabled() {
-#ifdef JS_TRACER
-        jitEnabled = ((options & JSOPTION_JIT) &&
-                      (debugHooks == &js_NullDebugHooks ||
-                       (debugHooks == &runtime->globalDebugHooks &&
-                        !runtime->debuggerInhibitsJIT())));
-#endif
-    }
+    void updateJITEnabled();
 
 #ifdef MOZ_TRACE_JSCALLS
     /* Function entry/exit debugging callback. */
