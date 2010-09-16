@@ -72,7 +72,7 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 
 /* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
 
-static const nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
+static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
 {
   HKEY key;
   DWORD dwcbData;
@@ -142,7 +142,7 @@ static const nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName
 // The driver ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD, possibly
 // followed by &REV_XXXX.  We uppercase the string, and strip the &REV_ part
 // from it, if found.
-static const void normalizeDriverId(nsString& driverid) {
+static void normalizeDriverId(nsString& driverid) {
   ToUpperCase(driverid);
   PRInt32 rev = driverid.Find(NS_LITERAL_CSTRING("&REV_"));
   if (rev != -1) {
@@ -526,7 +526,7 @@ static const GfxDriverInfo driverInfo[] = {
   { 0, 0, allDevices, 0 }
 };
 
-static const bool
+static bool
 ParseDriverVersion(nsAString& aVersion, PRUint64 *aNumericVersion)
 {
   int a, b, c, d;
