@@ -81,6 +81,7 @@ XPCOM_GLUENS_SRC_LCPPSRCS =      \
   nsProxyRelease.cpp             \
   nsTextFormatter.cpp            \
   GenericFactory.cpp             \
+  FileUtils.cpp                  \
   $(NULL)
 
 XPCOM_GLUENS_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCPPSRCS))
