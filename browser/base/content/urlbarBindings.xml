@@ -124,6 +124,25 @@
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
         this._overLinkBox.addEventListener("transitionend", this, false);
+
+        const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        var textBox = document.getAnonymousElementByAttribute(this,
+                                                "anonid", "textbox-input-box");
+        var cxmenu = document.getAnonymousElementByAttribute(textBox,
+                                            "anonid", "input-box-contextmenu");
+        var insertLocation = cxmenu.firstChild;
+        while (insertLocation.nextSibling &&
+               insertLocation.getAttribute("cmd") != "cmd_paste")
+          insertLocation = insertLocation.nextSibling;
+        if (insertLocation) {
+          let element = document.createElement("menuitem");
+          let label = Services.strings.createBundle("chrome://browser/locale/browser.properties").
+                                   GetStringFromName("pasteAndGo.label");
+          element.setAttribute("label", label);
+          element.setAttribute("cmd", "cmd_paste");
+          element.setAttribute("oncommand", "goDoCommand('cmd_paste'); gURLBar.handleCommand();");
+          cxmenu.insertBefore(element, insertLocation.nextSibling);
+        }
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -299,7 +318,7 @@
               // Tack www. and suffix on.  If user has appended directories, insert
               // suffix before them (bug 279035).  Be careful not to get two slashes.
               // Also, don't add the suffix if it's in the original url (bug 233853).
-      
+
               let firstSlash = url.indexOf("/");
               let existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
 
@@ -309,7 +328,7 @@
               // Yes slash, no suffix: Insert suffix (mozilla/stuff)
               // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
               // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
-      
+
               if (firstSlash >= 0) {
                 if (existingSuffix == -1 || existingSuffix > firstSlash)
                   url = url.substring(0, firstSlash) + suffix +
@@ -738,7 +757,7 @@
           if (searchBar && searchBar.textbox == this.mInput) {
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
-  
+
             // close the autocomplete popup and revert the entered search term
             this.closePopup();
             controller.handleEscape();
