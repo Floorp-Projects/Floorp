@@ -853,7 +853,8 @@ $(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
 ifdef HAVE_DTRACE
 $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 	dtrace -h -s $(srcdir)/javascript-trace.d -o javascript-trace.h.in
-	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
+	sed -e 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
+	    -e '/const/!s/char \*/const char */g' \
 	    javascript-trace.h.in > javascript-trace.h
 
 # We can't automatically generate dependencies on auto-generated headers;
