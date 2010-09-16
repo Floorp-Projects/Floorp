@@ -127,7 +127,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     }
     if (desc.attrs & JSPROP_GETTER) {
         return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.getter),
-                                JSACC_READ, 0, 0, vp);
+                                JSACC_READ, 0, NULL, vp);
     }
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
@@ -146,7 +146,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
                 return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
-                                        JSACC_READ, 0, 0, vp);
+                                        JSACC_WRITE, 1, vp, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
@@ -163,7 +163,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
                 return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
-                                        JSACC_READ, 0, 0, vp);
+                                        JSACC_WRITE, 1, vp, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
