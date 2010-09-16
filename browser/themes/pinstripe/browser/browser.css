@@ -914,16 +914,19 @@ statusbarpanel#statusbar-display {
 
 /* urlbar progress */
 
+.tab-progress,
 #urlbar-progress {
   -moz-appearance: none;
   height: 3px;
   margin: -2px 0 -1px;
 }
 
+.tab-progress[busy][stalled][value="0"],
 #urlbar-progress[busy][stalled][value="0"] {
   /* TODO: add connecting state (bug 596812) */
 }
 
+.tab-progress > .progress-bar,
 #urlbar-progress > .progress-bar {
   -moz-appearance: none;
   border: 0;
@@ -933,20 +936,24 @@ statusbarpanel#statusbar-display {
   background-image: -moz-linear-gradient(left, rgb(107,160,193), rgb(169,223,251));
 }
 
+.tab-progress > .progress-bar:-moz-window-inactive,
 #urlbar-progress > .progress-bar:-moz-window-inactive {
   border-top: 1px solid rgba(0,0,0,.2);
   border-bottom: 1px solid rgba(0,0,0,.1);
   background-image: -moz-linear-gradient(left, rgb(150,150,150), rgb(210,210,210));
 }
 
+.tab-progress > .progress-bar:-moz-locale-dir(rtl),
 #urlbar-progress > .progress-bar:-moz-locale-dir(rtl) {
   background-image: -moz-linear-gradient(right, rgb(107,160,193), rgb(169,223,251));
 }
 
+.tab-progress > .progress-bar:-moz-window-inactive:-moz-locale-dir(rtl),
 #urlbar-progress > .progress-bar:-moz-window-inactive:-moz-locale-dir(rtl) {
   background-image: -moz-linear-gradient(right, rgb(150,150,150), rgb(210,210,210));
 }
 
+.tab-progress > .progress-remainder,
 #urlbar-progress > .progress-remainder {
   border-top: 1px solid rgba(0,0,0,.1);
   border-bottom: 1px solid rgba(0,0,0,.1);
@@ -959,6 +966,17 @@ statusbarpanel#statusbar-display {
 
 .urlbar-history-dropmarker {
   -moz-margin-end: 2px;
+}
+
+/* tab progress */
+
+.tab-progress-container {
+  margin-top: -2px;
+}
+
+#tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab > .tab-stack > .tab-progress-container {
+  -moz-box-pack: end;
+  margin-bottom: -2px;
 }
 
 /* ----- AUTOCOMPLETE ----- */
@@ -1563,38 +1581,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://global/skin/tree/item.png");
-}
-
-.tab-icon-image[busy] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-.tab-icon-image[busy][stalled] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
-}
-.tab-icon-image[busy][progress="1"] {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-.tab-icon-image[busy][progress="2"] {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-.tab-icon-image[busy][progress="3"] {
-  -moz-image-region: rect(0, 64px, 16px, 48px);
-}
-.tab-icon-image[busy][progress="4"] {
-  -moz-image-region: rect(0, 80px, 16px, 64px);
-}
-.tab-icon-image[busy][progress="5"] {
-  -moz-image-region: rect(0, 96px, 16px, 80px);
-}
-.tab-icon-image[busy][progress="6"] {
-  -moz-image-region: rect(0, 112px, 16px, 96px);
-}
-.tab-icon-image[busy][progress="7"] {
-  -moz-image-region: rect(0, 128px, 16px, 112px);
-}
-.tab-icon-image[busy][progress="8"] {
-  -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
 .tabbrowser-tab:not(:hover) > * > * > .tab-icon-image:not([selected="true"]) {
