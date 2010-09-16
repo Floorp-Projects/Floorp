@@ -683,15 +683,14 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #zoom-out-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar");
 }
+
 #zoom-in-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar");
 }
 
-/* sync button */
- #sync-button {
+#sync-button {
   -moz-image-region: rect(0px 144px 24px 120px);
 }
-
 #sync-button[status="active"] {
   list-style-image: url("chrome://browser/skin/sync-24-throbber.png");
   -moz-image-region: rect(0px 24px 24px 0px);

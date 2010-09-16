@@ -700,7 +700,7 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 /* sync button */
- 
+
 #sync-button {
   -moz-image-region: rect(0, 440px, 20px, 420px);
 }
@@ -709,7 +709,7 @@ toolbar[mode="icons"] #zoom-in-button {
   list-style-image: url("chrome://browser/skin/sync-throbber.png");
   -moz-image-region: rect(0, 20px, 20px, 0px);
 }
- 
+
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 
 #minimize-button,
