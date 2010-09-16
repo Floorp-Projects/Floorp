@@ -26,10 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=510426
 SimpleTest.waitForExplicitFinish();
 
 function openNotification() {
-  SimpleTest.todo(false, "test disabled, see bug 596522");
-  SimpleTest.finish();
-  return;
-
   var nb = document.getElementById("nb");
   var n = nb.appendNotification("Notification", "", null,
                                 nb.PRIORITY_WARNING_LOW, [{
