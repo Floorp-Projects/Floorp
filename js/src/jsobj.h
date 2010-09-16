@@ -215,7 +215,7 @@ extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp, JSBool strict);
 
 extern JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
@@ -224,7 +224,7 @@ extern JSBool
 js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
 
 extern JSBool
-js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval);
+js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
 
 extern JS_FRIEND_API(JSBool)
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
@@ -1042,9 +1042,9 @@ struct JSObject {
         return (op ? op : js_GetProperty)(cx, this, id, vp);
     }
 
-    JSBool setProperty(JSContext *cx, jsid id, js::Value *vp) {
-        js::PropertyIdOp op = getOps()->setProperty;
-        return (op ? op : js_SetProperty)(cx, this, id, vp);
+    JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
+        js::StrictPropertyIdOp op = getOps()->setProperty;
+        return (op ? op : js_SetProperty)(cx, this, id, vp, strict);
     }
 
     JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
@@ -1057,9 +1057,9 @@ struct JSObject {
         return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
     }
 
-    JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval) {
-        js::PropertyIdOp op = getOps()->deleteProperty;
-        return (op ? op : js_DeleteProperty)(cx, this, id, rval);
+    JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict) {
+        js::StrictPropertyIdOp op = getOps()->deleteProperty;
+        return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
     }
 
     JSBool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp) {
@@ -1530,8 +1530,11 @@ js_NativeSet(JSContext *cx, JSObject *obj, const js::Shape *shape, bool added,
              js::Value *vp);
 
 extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
-                     js::Value *vp);
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, js::Value *vp);
+
+extern bool
+js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id, uint32 getHow,
+                              js::Value *vp, const js::Shape **shapeOut, JSObject **holderOut);
 
 extern JSBool
 js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
@@ -1550,7 +1553,7 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
 
 extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
-                     js::Value *vp);
+                     js::Value *vp, JSBool strict);
 
 /*
  * Change attributes for the given native property. The caller must ensure

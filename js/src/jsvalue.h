@@ -878,6 +878,8 @@ typedef JSBool
 typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 typedef JSBool
+(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
 
 static inline Native            Valueify(JSNative f)          { return (Native)f; }
@@ -894,10 +896,6 @@ static inline CheckAccessOp     Valueify(JSCheckAccessOp f)   { return (CheckAcc
 static inline JSCheckAccessOp   Jsvalify(CheckAccessOp f)     { return (JSCheckAccessOp)f; }
 static inline EqualityOp        Valueify(JSEqualityOp f);     /* Same type as JSHasInstanceOp */
 static inline JSEqualityOp      Jsvalify(EqualityOp f);       /* Same type as HasInstanceOp */
-static inline DefinePropOp      Valueify(JSDefinePropOp f)    { return (DefinePropOp)f; }
-static inline JSDefinePropOp    Jsvalify(DefinePropOp f)      { return (JSDefinePropOp)f; }
-static inline PropertyIdOp      Valueify(JSPropertyIdOp f);   /* Same type as JSPropertyOp */
-static inline JSPropertyIdOp    Jsvalify(PropertyIdOp f);     /* Same type as PropertyOp */
 
 static const PropertyOp    PropertyStub  = (PropertyOp)JS_PropertyStub;
 static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
@@ -949,18 +947,18 @@ struct ClassExtension {
 #define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
 
 struct ObjectOps {
-    JSLookupPropOp      lookupProperty;
-    js::DefinePropOp    defineProperty;
-    js::PropertyIdOp    getProperty;
-    js::PropertyIdOp    setProperty;
-    JSAttributesOp      getAttributes;
-    JSAttributesOp      setAttributes;
-    js::PropertyIdOp    deleteProperty;
-    js::NewEnumerateOp  enumerate;
-    JSTypeOfOp          typeOf;
-    JSTraceOp           trace;
-    JSObjectOp          thisObject;
-    JSFinalizeOp        clear;
+    JSLookupPropOp          lookupProperty;
+    js::DefinePropOp        defineProperty;
+    js::PropertyIdOp        getProperty;
+    js::StrictPropertyIdOp  setProperty;
+    JSAttributesOp          getAttributes;
+    JSAttributesOp          setAttributes;
+    js::StrictPropertyIdOp  deleteProperty;
+    js::NewEnumerateOp      enumerate;
+    JSTypeOfOp              typeOf;
+    JSTraceOp               trace;
+    JSObjectOp              thisObject;
+    JSFinalizeOp            clear;
 };
 
 #define JS_NULL_OBJECT_OPS  {NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL}

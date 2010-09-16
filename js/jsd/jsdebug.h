@@ -143,6 +143,16 @@ JSD_DebuggerOnForUser(JSRuntime*         jsrt,
                       void*              user);
 
 /*
+ * Startup JSD in an application that uses compartments. Debugger
+ * objects will be allocated in the same compartment as scopeobj.
+ */
+extern JSD_PUBLIC_API(JSDContext*)
+JSD_DebuggerOnForUserWithCompartment(JSRuntime*         jsrt,
+                                     JSD_UserCallbacks* callbacks,
+                                     void*              user,
+                                     JSObject*          scopeobj);
+
+/*
 * Shutdown JSD for this JSDContext
 */
 extern JSD_PUBLIC_API(void)

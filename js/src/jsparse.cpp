@@ -1808,6 +1808,8 @@ MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
     if (tt == TOK_ERROR)
         return JS_FALSE;
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
+        /* Advance the scanner for proper error location reporting. */
+        ts->getToken(TSF_OPERAND);
         ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_SEMI_BEFORE_STMNT);
         return JS_FALSE;
     }
@@ -4567,6 +4569,19 @@ Parser::letBlock(JSBool statement)
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
 
     if (statement && !tokenStream.matchToken(TOK_LC, TSF_OPERAND)) {
+        /*
+         * Strict mode eliminates a grammar ambiguity with unparenthesized
+         * LetExpressions in an ExpressionStatement. If followed immediately
+         * by an arguments list, it's ambiguous whether the let expression
+         * is the callee or the call is inside the let expression body.
+         *
+         * See bug 569464.
+         */
+        if (!ReportStrictModeError(context, &tokenStream, tc, pnlet,
+                                   JSMSG_STRICT_CODE_LET_EXPR_STMT)) {
+            return NULL;
+        }
+
         /*
          * If this is really an expression in let statement guise, then we
          * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop

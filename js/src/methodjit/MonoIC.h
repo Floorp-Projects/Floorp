@@ -89,7 +89,8 @@ struct MICInfo {
 
     /* Used by TRACER. */
     JSC::CodeLocationJump traceHint;
-    JSC::CodeLocationJump slowTraceHint;
+    JSC::CodeLocationJump slowTraceHintOne;
+    JSC::CodeLocationJump slowTraceHintTwo;
 
     /* Used by all MICs. */
     Kind kind : 3;
@@ -101,7 +102,10 @@ struct MICInfo {
             bool dataConst : 1;
         } name;
         /* Used by TRACER. */
-        bool hasSlowTraceHint;
+        struct {
+            bool hasSlowTraceHintOne : 1;
+            bool hasSlowTraceHintTwo : 1;
+        } hints;
     } u;
 };
 
@@ -124,6 +128,9 @@ struct CallICInfo {
     /* Used for rooting and reification. */
     JSObject *fastGuardedObject;
     JSObject *fastGuardedNative;
+
+    /* PC at the call site. */
+    jsbytecode *pc;
 
     uint32 argc : 16;
     uint32 frameDepth : 16;

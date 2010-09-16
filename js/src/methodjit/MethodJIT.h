@@ -210,7 +210,7 @@ SweepCallICs(JSContext *cx);
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {
-    if (!(cx->options & JSOPTION_METHODJIT) || script->ncode == JS_UNJITTABLE_METHOD)
+    if (!cx->methodJitEnabled || script->ncode == JS_UNJITTABLE_METHOD)
         return Compile_Abort;
     if (script->ncode == NULL)
         return TryCompile(cx, script, fun, scopeChain);

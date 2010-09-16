@@ -1185,22 +1185,20 @@ JSAutoCrossCompartmentCall::enter(JSContext *cx, JSObject *target)
     return call != NULL;
 }
 
-JSAutoEnterCompartment::JSAutoEnterCompartment(JSContext *cx,
-                                               JSCompartment *newCompartment)
-  : cx(cx), compartment(cx->compartment)
+JS_FRIEND_API(JSCompartment *)
+js_SwitchToCompartment(JSContext *cx, JSCompartment *compartment)
 {
-    cx->compartment = newCompartment;
-}
-
-JSAutoEnterCompartment::JSAutoEnterCompartment(JSContext *cx, JSObject *target)
-  : cx(cx), compartment(cx->compartment)
-{
-    cx->compartment = target->getCompartment(cx);
-}
-
-JSAutoEnterCompartment::~JSAutoEnterCompartment()
-{
+    JSCompartment *c = cx->compartment;
     cx->compartment = compartment;
+    return c;
+}
+
+JS_FRIEND_API(JSCompartment *)
+js_SwitchToObjectCompartment(JSContext *cx, JSObject *obj)
+{
+    JSCompartment *c = cx->compartment;
+    cx->compartment = obj->getCompartment(cx);
+    return c;
 }
 
 JS_PUBLIC_API(void *)
@@ -1245,7 +1243,8 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
+    if (!cx->maybefp())
+        cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
 }
 
 class AutoResolvingEntry {
@@ -1334,10 +1333,14 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
 
-    if (cx->globalObject)
-        assertSameCompartment(cx, obj);
-    else
+    /*
+     * JS_SetGlobalObject might or might not change cx's compartment, so call
+     * it before assertSameCompartment. (The API contract is that *after* this,
+     * cx and obj must be in the same compartment.)
+     */
+    if (!cx->globalObject)
         JS_SetGlobalObject(cx, obj);
+    assertSameCompartment(cx, obj);
 
     /* Define a top-level property 'undefined' with the undefined value. */
     JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
@@ -3709,7 +3712,7 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setProperty(cx, id, Valueify(vp));
+    return obj->setProperty(cx, id, Valueify(vp), false);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3738,7 +3741,7 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->deleteProperty(cx, id, Valueify(rval));
+    return obj->deleteProperty(cx, id, Valueify(rval), false);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4865,7 +4868,9 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     memcpy(args.argv(), argv, argc * sizeof(jsval));
 
     bool ok = InvokeConstructor(cx, args);
-    JSObject *obj = ok ? args.rval().toObjectOrNull() : NULL;
+    JSObject *obj = (ok && args.rval().isObject())
+                    ? &args.rval().toObject()
+                    : NULL;
 
     LAST_FRAME_CHECKS(cx, ok);
     return obj;
