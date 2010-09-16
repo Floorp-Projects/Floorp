@@ -49,10 +49,6 @@
   background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
 }
 
-.searchbar-engine-button[addengines="true"] {
-  box-shadow: 0 -5px 14px Highlight inset;
-}
-
 .searchbar-dropmarker-image {
   -moz-appearance: toolbarbutton-dropdown !important;
   width: 12px;
