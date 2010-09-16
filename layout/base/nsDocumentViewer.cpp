@@ -1159,47 +1159,43 @@ DocumentViewerImpl::PermitUnload(PRBool aCallerClosesWindow, PRBool *aPermitUnlo
   beforeUnload->GetReturnValue(text);
   if (pEvent->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
       !text.IsEmpty()) {
-    nsAutoString tmp;
-    nsContentUtils::StripNullChars(text, tmp);
-    text = tmp;
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt = do_GetInterface(docShellNode);
 
     if (prompt) {
-      nsXPIDLString preMsg, postMsg;
-      rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                              "OnBeforeUnloadPreMessage",
-                                              preMsg);
+      nsXPIDLString title, message, stayLabel, leaveLabel;
+      rv  = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                               "OnBeforeUnloadTitle",
+                                               title);
       rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                               "OnBeforeUnloadPostMessage",
-                                               postMsg);
+                                               "OnBeforeUnloadMessage",
+                                               message);
+      rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                               "OnBeforeUnloadLeaveButton",
+                                               leaveLabel);
+      rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                               "OnBeforeUnloadStayButton",
+                                               stayLabel);
 
-      // GetStringFromName can succeed, yet give NULL strings back.
-      if (NS_FAILED(rv) || preMsg.IsEmpty() || postMsg.IsEmpty()) {
+      if (NS_FAILED(rv) || !title || !message || !stayLabel || !leaveLabel) {
         NS_ERROR("Failed to get strings from dom.properties!");
         return NS_OK;
       }
 
-      // Limit the length of the text the page can inject into this
-      // dialogue to 1024 characters.
-      PRInt32 len = NS_MIN(text.Length(), 1024U);
+      PRBool dummy;
+      PRInt32 buttonPressed = 0;
+      PRUint32 buttonFlags = (nsIPrompt::BUTTON_POS_0_DEFAULT |
+                             (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) |
+                             (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1));
 
-      nsAutoString msg;
-      if (len == 0) {
-        msg = preMsg + NS_LITERAL_STRING("\n\n") + postMsg;
-      } else {
-        msg = preMsg + NS_LITERAL_STRING("\n\n") +
-              StringHead(text, len) +
-              NS_LITERAL_STRING("\n\n") + postMsg;
-      } 
+      rv = prompt->ConfirmEx(title, message, buttonFlags,
+                             leaveLabel, stayLabel, nsnull, nsnull,
+                             &dummy, &buttonPressed);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      // This doesn't pass a title, which makes the title be
-      // "Confirm", is that ok, or do we want a localizable title for
-      // this dialogue?
-      if (NS_FAILED(prompt->Confirm(nsnull, msg.get(), aPermitUnload))) {
-        *aPermitUnload = PR_TRUE;
-      }
+      // Button 0 == leave, button 1 == stay
+      *aPermitUnload = (buttonPressed == 0);
     }
   }
 
