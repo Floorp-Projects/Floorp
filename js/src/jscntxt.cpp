@@ -75,6 +75,10 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
+#ifdef JS_METHODJIT
+# include "assembler/assembler/MacroAssembler.h"
+#endif
+
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -2181,6 +2185,25 @@ JSContext::purge()
     FreeOldArenas(runtime, &regExpPool);
     /* FIXME: bug 586161 */
     compartment->purge(this);
+}
+
+void
+JSContext::updateJITEnabled()
+{
+#ifdef JS_TRACER
+    traceJitEnabled = ((options & JSOPTION_JIT) &&
+                       (debugHooks == &js_NullDebugHooks ||
+                        (debugHooks == &runtime->globalDebugHooks &&
+                         !runtime->debuggerInhibitsJIT())));
+#endif
+#ifdef JS_METHODJIT
+    methodJitEnabled = (options & JSOPTION_METHODJIT)
+# ifdef JS_CPU_X86
+                       && JSC::MacroAssemblerX86Common::getSSEState() >=
+                          JSC::MacroAssemblerX86Common::HasSSE2
+# endif
+                        ;
+#endif
 }
 
 namespace js {
