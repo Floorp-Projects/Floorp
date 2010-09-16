@@ -468,5 +468,13 @@ WebGLContext::InitAndValidateGL()
     }
 #endif
 
+    // notice that the point of calling GetError here is not only to check for error,
+    // it is also to reset the error flag so that a subsequent WebGL getError call will give the correct result.
+    GLenum error = gl->fGetError();
+    if (error != LOCAL_GL_NO_ERROR) {
+        LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+        return PR_FALSE;
+    }
+
     return PR_TRUE;
 }
