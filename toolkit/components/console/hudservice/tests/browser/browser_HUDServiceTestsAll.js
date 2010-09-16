@@ -45,23 +45,23 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
-  Cu.import("resource://gre/modules/HUDService.jsm");
   try {
-    return HUDService;
+    Cu.import("resource://gre/modules/HUDService.jsm");
   }
   catch (ex) {
     dump(ex + "\n");
   }
+  return HUDService;
 });
 
 XPCOMUtils.defineLazyGetter(this, "ConsoleUtils", function () {
-  Cu.import("resource://gre/modules/HUDService.jsm");
   try {
-    return ConsoleUtils;
+    Cu.import("resource://gre/modules/HUDService.jsm");
   }
   catch (ex) {
     dump(ex + "\n");
   }
+  return ConsoleUtils;
 });
 
 let log = function _log(msg) {
@@ -87,8 +87,6 @@ const TEST_ENCODING_ISO_8859_1 = "http://example.com/browser/toolkit/components/
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
 }
-
-content.location.href = TEST_URI;
 
 function testRegistries() {
   var displaysIdx = HUDService.displaysIndex();
@@ -1372,6 +1370,7 @@ browser = gBrowser.getBrowserForTab(tab);
 
 function test() {
   waitForExplicitFinish();
+  content.location.href = TEST_URI;
   browser.addEventListener("DOMContentLoaded", function onLoad(event) {
     browser.removeEventListener("DOMContentLoaded", onLoad, false);
 
