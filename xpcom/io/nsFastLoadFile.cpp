@@ -1851,6 +1851,9 @@ nsresult
 nsFastLoadFileWriter::Open()
 {
     nsresult rv;
+    
+    if (!mSeekableOutput)
+        return NS_ERROR_FAILURE;
 
     rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
                                sizeof(nsFastLoadHeader));
