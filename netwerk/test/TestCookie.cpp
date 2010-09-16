@@ -765,12 +765,6 @@ main(PRInt32 argc, char *argv[])
         name += NS_LITERAL_CSTRING("=creation");
         SetACookie(cookieService, "http://creation.ordering.tests/", nsnull, name.get(), nsnull);
 
-        if (i == 9) {
-          // sleep a couple of seconds, to make sure the first 10 cookies are older than
-          // subsequent ones (timer resolution varies on different platforms).
-          PR_Sleep(2 * PR_TicksPerSecond());
-        }
-
         if (i >= 10) {
           expected += name;
           if (i < 59)
