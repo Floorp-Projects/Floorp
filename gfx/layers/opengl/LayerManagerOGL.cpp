@@ -55,6 +55,8 @@
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
 
+#include "nsIGfxInfo.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -147,6 +149,18 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
   } else {
     if (mGLContext)
       CleanupResources();
+
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      PRInt32 status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
+        if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+            status != nsIGfxInfo::FEATURE_AVAILABLE) {
+          NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
+          return PR_FALSE;
+        }
+      }
+    }
 
     mGLContext = nsnull;
 
