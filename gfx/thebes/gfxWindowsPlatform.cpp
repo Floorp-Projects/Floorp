@@ -426,27 +426,27 @@ gfxWindowsPlatform::CreatePlatformFontList()
 
 already_AddRefed<gfxASurface>
 gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
-                                           gfxASurface::gfxImageFormat imageFormat)
+                                           gfxASurface::gfxContentType contentType)
 {
     gfxASurface *surf = nsnull;
 
 #ifdef CAIRO_HAS_DDRAW_SURFACE
     if (mRenderMode == RENDER_DDRAW || mRenderMode == RENDER_DDRAW_GL)
-        surf = new gfxDDrawSurface(NULL, size, imageFormat);
+        surf = new gfxDDrawSurface(NULL, size, gfxASurface::FormatFromContent(contentType));
 #endif
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
     if (mRenderMode == RENDER_GDI)
-        surf = new gfxWindowsSurface(size, imageFormat);
+        surf = new gfxWindowsSurface(size, gfxASurface::FormatFromContent(contentType));
 #endif
 
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mRenderMode == RENDER_DIRECT2D)
-        surf = new gfxD2DSurface(size, imageFormat);
+        surf = new gfxD2DSurface(size, gfxASurface::FormatFromContent(contentType));
 #endif
 
     if (surf == nsnull)
-        surf = new gfxImageSurface(size, imageFormat);
+        surf = new gfxImageSurface(size, gfxASurface::FormatFromContent(contentType));
 
     NS_IF_ADDREF(surf);
 

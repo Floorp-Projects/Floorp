@@ -190,17 +190,18 @@ gfxQtPlatform::~gfxQtPlatform()
 
 already_AddRefed<gfxASurface>
 gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
-                                      gfxASurface::gfxImageFormat imageFormat)
+                                      gfxASurface::gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface = nsnull;
 
     // try to optimize it for 16bpp screen
-    if (gfxASurface::ImageFormatRGB24 == imageFormat
+    gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(contentType);
+    if (gfxASurface::CONTENT_COLOR == contentType
         && 16 == QX11Info().depth())
         imageFormat = gfxASurface::ImageFormatRGB16_565;
 
     if (mRenderMode == RENDER_QPAINTER) {
-      newSurface = new gfxQPainterSurface(size, gfxASurface::ContentFromFormat(imageFormat));
+      newSurface = new gfxQPainterSurface(size, imageFormat);
       return newSurface.forget();
     }
 

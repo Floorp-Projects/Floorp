@@ -118,7 +118,7 @@ public:
     virtual gfxPlatformFontList* CreatePlatformFontList();
 
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
-                                                         gfxASurface::gfxImageFormat imageFormat);
+                                                         gfxASurface::gfxContentType contentType);
 
     enum RenderMode {
         /* Use GDI and windows surfaces */
