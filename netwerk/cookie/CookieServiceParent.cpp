@@ -75,8 +75,8 @@ CookieServiceParent::RecvGetCookieString(const IPC::URI& aHost,
   if (!hostURI)
     return false;
 
-  mCookieService->GetCookieInternal(hostURI, originatingURI,
-                                    aFromHttp, *aResult);
+  mCookieService->GetCookieStringInternal(hostURI, originatingURI,
+                                          aFromHttp, *aResult);
   return true;
 }
 
