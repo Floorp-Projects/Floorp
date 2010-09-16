@@ -24,7 +24,7 @@ EventUtils.synthesizeString = function synthesizeString(aString, aWindow) {
 };
 
 EventUtils.synthesizeMouseForContent = function synthesizeMouseForContent(aElement, aOffsetX, aOffsetY, aEvent, aWindow) {
-  let container = document.getElementById("tile-container");
+  let container = document.getElementById("browsers");
   let rect = container.getBoundingClientRect();
 
   EventUtils.synthesizeMouse(aElement, rect.left + aOffsetX, rect.top + aOffsetY, aEvent, aWindow);

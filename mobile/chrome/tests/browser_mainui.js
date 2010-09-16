@@ -19,18 +19,9 @@ function test() {
 }
 
 function testContentContainerSize() {
-  let tiles = document.getElementById("tile-container");
-  let oldtilesstyle = tiles.getAttribute("style");
+  let container = document.getElementById("content-viewport");
 
-  try {
-    tiles.style.width = (window.innerWidth + 100) + "px";
-    tiles.style.height = (window.innerHeight + 100) + "px";
-    let container = Browser.contentScrollbox;
-    let rect = container.getBoundingClientRect();
-    ok(rect.width == window.innerWidth, "Content container is same width as window");
-    ok(rect.height == window.innerHeight, "Content container is same height as window");
-  }
-  finally {
-    tiles.setAttribute("style", oldtilesstyle);
-  }
+  let rect = container.getBoundingClientRect();
+  ok(rect.width == window.innerWidth, "Content container is same width as window");
+  ok(rect.height == window.innerHeight, "Content container is same height as window");
 }

@@ -48,11 +48,7 @@ gTests.push({
 
   onPopupReady: function() {
     is(Elements.urlbarState.getAttribute("mode"), "edit", "bcast_urlbarState mode attribute should be equal to 'edit'");
-    is(BrowserUI._edit.readOnly, true, "urlbar input textbox be readonly");
-
-    // Simulate a new opening of the awesomescreen
-    BrowserUI.doCommand("cmd_openLocation");
-    is(BrowserUI._edit.readOnly, false, "urlbar input textbox should not be readonly");
+    is(BrowserUI._edit.readOnly, false, "urlbar input textbox should not be readonly once it is open");
 
     runNextTest();
   }
