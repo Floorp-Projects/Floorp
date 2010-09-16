@@ -162,7 +162,7 @@ static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,
-                                   PRBool aIsWheel);
+                                   PRBool aIsWheel, PRBool aAlwaysRollup);
 static PRBool     is_mouse_in_window(GdkWindow* aWindow,
                                      gdouble aMouseX, gdouble aMouseY);
 static nsWindow  *get_window_for_gtk_widget(GtkWidget *widget);
@@ -2215,6 +2215,10 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         mBounds.y == aEvent->y)
         return FALSE;
 
+    if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
+        check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
+    }
+
     // Toplevel windows need to have their bounds set so that we can
     // keep track of our location.  It's not often that the x,y is set
     // by the layout engine.  Width and height are set elsewhere.
@@ -2651,9 +2655,9 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     // check to see if we should rollup
     PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
-                                       aEvent->y_root, PR_FALSE);
+                                       aEvent->y_root, PR_FALSE, PR_FALSE);
     if (gConsumeRollupEvent && rolledUp)
-            return;
+        return;
 
     gdouble pressure = 0;
     gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
@@ -2801,6 +2805,10 @@ void
 nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
     LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void *)this));
+
+    if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
+        check_for_rollup(aEvent->window, 0, 0, PR_FALSE, PR_TRUE);
+    }
 
 #ifdef MOZ_X11
     // plugin lose focus
@@ -3127,7 +3135,7 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
     PRBool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
-                                        aEvent->y_root, PR_TRUE);
+                                        aEvent->y_root, PR_TRUE, PR_FALSE);
     if (gConsumeRollupEvent && rolledUp)
         return;
 
@@ -5112,7 +5120,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
 
 PRBool
 check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
-                 PRBool aIsWheel)
+                 PRBool aIsWheel, PRBool aAlwaysRollup)
 {
     PRBool retVal = PR_FALSE;
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
@@ -5120,17 +5128,17 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
     if (rollupWidget && gRollupListener) {
         GdkWindow *currentPopup =
             (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-        if (!is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
+        if (aAlwaysRollup || !is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
             PRBool rollup = PR_TRUE;
             if (aIsWheel) {
                 gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
                 retVal = PR_TRUE;
             }
             // if we're dealing with menus, we probably have submenus and
-            // we don't want to rollup if the clickis in a parent menu of
+            // we don't want to rollup if the click is in a parent menu of
             // the current submenu
             PRUint32 popupsToRollup = PR_UINT32_MAX;
-            if (gMenuRollup) {
+            if (gMenuRollup && !aAlwaysRollup) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
                 PRUint32 sameTypeCount = gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
                 for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
