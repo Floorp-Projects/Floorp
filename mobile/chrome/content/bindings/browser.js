@@ -344,7 +344,7 @@ let ContentScroll =  {
     addMessageListener("Content:ScrollBy", this);
     addMessageListener("Content:SetResolution", this);
     addMessageListener("Content:SetCacheViewport", this);
-    addMessageListener("Content:SetCssViewportSize", this);
+    addMessageListener("Content:SetWindowSize", this);
 
     addEventListener("scroll", this, false);
     addEventListener("MozScrolledAreaChanged", this, false);
@@ -372,7 +372,7 @@ let ContentScroll =  {
         break;
       }
 
-      case "Content:SetCssViewportSize": {
+      case "Content:SetWindowSize": {
         let cwu = Util.getWindowUtils(content);
         cwu.setCSSViewport(json.width, json.height);
         break;
