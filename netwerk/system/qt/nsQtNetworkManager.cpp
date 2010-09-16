@@ -47,9 +47,6 @@
 
 #include "nsINetworkLinkService.h"
 
-#include "nsIWindowMediator.h"
-#include "nsISimpleEnumerator.h"
-
 #include "nsIOService.h"
 #include "nsIObserverService.h"
 #include "nsIOService.h"
@@ -67,29 +64,6 @@ nsQtNetworkManager::OpenConnectionSync()
     //do not request when we are online...
     if (sNetworkConfig->isOnline())
         return PR_FALSE;
-
-    //Check that there is atleast one XUL window. If there isn't just return
-    //without establishing connectivity
-    nsresult rv;
-    nsCOMPtr <nsIWindowMediator> windowMediator =
-            do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-
-    NS_ENSURE_SUCCESS (rv,PR_FALSE);
-
-    nsCOMPtr <nsISimpleEnumerator> windowEnumerator;
-
-    rv = windowMediator->GetXULWindowEnumerator(nsnull,
-                                                getter_AddRefs(windowEnumerator));
-
-    NS_ENSURE_SUCCESS (rv,PR_FALSE);
-
-    PRBool moreElements = PR_FALSE;
-    windowEnumerator->HasMoreElements(&moreElements);
-    if (!moreElements) {
-        return PR_FALSE;
-    }
-
-    //Window found -> we can continue
 
     if (!(sNetworkConfig->capabilities() & QNetworkConfigurationManager::CanStartAndStopInterfaces))
         return PR_FALSE;
