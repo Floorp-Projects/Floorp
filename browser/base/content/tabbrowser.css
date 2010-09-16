@@ -38,3 +38,20 @@ tabpanels {
   position: relative;
   z-index: 1;
 }
+
+/* tab progress */
+
+.tab-progress {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter") !important;
+  margin: 0;
+  min-width: 0;
+}
+
+.tab-progress[selected],
+.tab-progress:not([busy]) {
+  display: none;
+}
+
+.tab-progress-container {
+  -moz-box-pack: start;
+}
