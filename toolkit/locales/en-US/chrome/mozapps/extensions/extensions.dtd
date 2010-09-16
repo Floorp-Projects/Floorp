@@ -9,6 +9,7 @@
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
 <!ENTITY installAddonFromFile.label           "Install Add-on From File…">
 <!ENTITY installAddonFromFile.accesskey       "I">
+<!ENTITY toolsMenu.tooltip                    "Tools for all add-ons">
 
 <!ENTITY cmd.back.tooltip                     "Go back one page">
 <!ENTITY cmd.forward.tooltip                  "Go forward one page">
@@ -32,8 +33,6 @@
 <!ENTITY view.plugins.label                   "Plugins">
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
-<!ENTITY view.utilites.preferences.tooltip    "Options for all add-ons">
-<!ENTITY view.utilites.preferencesUnix.tooltip "Preferences for all add-ons">
 
 <!-- addon updates -->
 <!ENTITY updates.checkForUpdates.label        "Check for Updates">
