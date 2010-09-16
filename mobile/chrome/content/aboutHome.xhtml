@@ -253,11 +253,14 @@
     }
 
     function updateWeaveButton() {
-      let chromeWin = getChromeWin();
-      if (chromeWin.Weave) {
-        let isDisabled = !chromeWin.Weave.Service.isLoggedIn;
-        document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
-      }
+      let weave = getChromeWin().Weave;
+      if (!weave)
+        return;
+
+      let isDisabled =
+        (weave.Status.checkSetup() == weave.CLIENT_NOT_CONFIGURED)
+        || !weave.Service.isLoggedIn;
+      document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
     }
 
     function openRemoteTabs() {
