@@ -885,6 +885,26 @@ mjit::Compiler::generateMethod()
             jsop_pos();
           END_CASE(JSOP_POS)
 
+          BEGIN_CASE(JSOP_DELPROP)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            prepareStubCall(Uses(1));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(STRICT_VARIANT(stubs::DelProp));
+            frame.pop();
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_DELPROP) 
+
+          BEGIN_CASE(JSOP_DELELEM)
+            prepareStubCall(Uses(2));
+            stubCall(STRICT_VARIANT(stubs::DelElem));
+            frame.popn(2);
+            frame.pushSynced();
+          END_CASE(JSOP_DELELEM)
+
           BEGIN_CASE(JSOP_TYPEOF)
           BEGIN_CASE(JSOP_TYPEOFEXPR)
             jsop_typeof();

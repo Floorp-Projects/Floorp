@@ -2665,3 +2665,44 @@ stubs::ArgSub(VMFrame &f, uint32 n)
     f.regs.sp[0] = rval;
 }
 
+template<JSBool strict>
+void JS_FASTCALL
+stubs::DelProp(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+
+    JSObject *obj = ValueToObject(cx, &f.regs.sp[-1]);
+    if (!obj)
+        THROW();
+
+    Value rval;
+    if (!obj->deleteProperty(cx, ATOM_TO_JSID(atom), &rval, strict))
+        THROW();
+
+    f.regs.sp[-1] = rval;
+}
+
+template void JS_FASTCALL stubs::DelProp<true>(VMFrame &f, JSAtom *atom);
+template void JS_FASTCALL stubs::DelProp<false>(VMFrame &f, JSAtom *atom);
+
+template<JSBool strict>
+void JS_FASTCALL
+stubs::DelElem(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+
+    JSObject *obj = ValueToObject(cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+
+    jsid id;
+    if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
+        THROW();
+
+    if (!obj->deleteProperty(cx, id, &f.regs.sp[-2], strict))
+        THROW();
+}
+
+template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
+template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
+
