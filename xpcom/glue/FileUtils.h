@@ -72,7 +72,7 @@ private:
  * @param aLength length of file to grow to.
  * @return true on success.
  */
-bool fallocate(PRFileDesc *aFD, PRInt64 aLength);
+NS_COM_GLUE bool fallocate(PRFileDesc *aFD, PRInt64 aLength);
 
 } // namespace mozilla
 #endif
