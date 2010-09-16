@@ -120,7 +120,8 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         vp->setUndefined();
         return true;
     }
-    if (!desc.getter) {
+    if (!desc.getter ||
+        (!(desc.attrs & JSPROP_GETTER) && desc.getter == PropertyStub)) {
         *vp = desc.value;
         return true;
     }
@@ -142,7 +143,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
-        if (desc.setter) {
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
                 return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
                                         JSACC_READ, 0, 0, vp);
@@ -159,7 +160,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (!getPropertyDescriptor(cx, proxy, id, &desc))
         return false;
     if (desc.obj) {
-        if (desc.setter) {
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
                 return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
                                         JSACC_READ, 0, 0, vp);
