@@ -448,6 +448,13 @@ let UI = {
       } else {
         // if not closing the last tab
         if (gBrowser.tabs.length > 1) {
+          // Don't return to TabView if there are any app tabs
+          for (let a = 0; a < gBrowser.tabs.length; a++) {
+            let theTab = gBrowser.tabs[a]; 
+            if (theTab.pinned && gBrowser._removingTabs.indexOf(theTab) == -1) 
+              return;
+          }
+
           var groupItem = GroupItems.getActiveGroupItem();
 
           // 1) Only go back to the TabView tab when there you close the last
@@ -458,7 +465,7 @@ let UI = {
           // Can't use timeout here because user would see a flicker of
           // switching to another tab before the TabView interface shows up.
           if ((groupItem && groupItem._children.length == 1) ||
-              (groupItem == null && gBrowser.visibleTabs.length == 1)) {
+              (groupItem == null && gBrowser.visibleTabs.length <= 1)) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
             // remove the zoom prep.
