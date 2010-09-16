@@ -2403,6 +2403,7 @@ ASTSerializer::xml(JSParseNode *pn, Value *dst)
       }
 
       case TOK_XMLTEXT:
+      case TOK_XMLSPACE:
         return builder.xmlText(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
       case TOK_XMLNAME:

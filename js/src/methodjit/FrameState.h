@@ -398,6 +398,18 @@ class FrameState
     RegisterID copyInt32ConstantIntoReg(FrameEntry *fe);
     RegisterID copyInt32ConstantIntoReg(Assembler &masm, FrameEntry *fe);
 
+    /*
+     * Gets registers for the components of fe where needed,
+     * pins them and stores into vr.
+     */
+    void pinEntry(FrameEntry *fe, ValueRemat &vr);
+
+    /* Unpins registers from a call to pinEntry. */
+    void unpinEntry(const ValueRemat &vr);
+
+    /* Syncs fe to memory, given its state as constructed by a call to pinEntry. */
+    void syncEntry(Assembler &masm, FrameEntry *fe, const ValueRemat &vr);
+
     struct BinaryAlloc {
         MaybeRegisterID lhsType;
         MaybeRegisterID lhsData;
@@ -509,9 +521,10 @@ class FrameState
 
     /*
      * Syncs all outstanding stores to memory and possibly kills regs in the
-     * process.
+     * process.  The top [ignored..uses-1] frame entries will be synced.
      */
-    void syncAndKill(Registers kill, Uses uses); 
+    void syncAndKill(Registers kill, Uses uses, Uses ignored);
+    void syncAndKill(Registers kill, Uses uses) { syncAndKill(kill, uses, Uses(0)); }
 
     /*
      * Reset the register state.

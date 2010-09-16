@@ -957,6 +957,12 @@ JS_RewrapObject(JSContext *cx, JSObject **objp);
 extern JS_PUBLIC_API(JSBool)
 JS_RewrapValue(JSContext *cx, jsval *p);
 
+extern JS_FRIEND_API(JSCompartment *)
+js_SwitchToCompartment(JSContext *cx, JSCompartment *compartment);
+
+extern JS_FRIEND_API(JSCompartment *)
+js_SwitchToObjectCompartment(JSContext *cx, JSObject *obj);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -982,14 +988,20 @@ class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
     }
 };
 
-class JS_FRIEND_API(JSAutoEnterCompartment)
+class JSAutoEnterCompartment
 {
     JSContext *cx;
     JSCompartment *compartment;
   public:
-    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment);
-    JSAutoEnterCompartment(JSContext *cx, JSObject *target);
-    ~JSAutoEnterCompartment();
+    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment) : cx(cx) {
+        compartment = js_SwitchToCompartment(cx, newCompartment);
+    }
+    JSAutoEnterCompartment(JSContext *cx, JSObject *target) : cx(cx) {
+        compartment = js_SwitchToObjectCompartment(cx, target);
+    }
+    ~JSAutoEnterCompartment() {
+        js_SwitchToCompartment(cx, compartment);
+    }
 };
 
 JS_BEGIN_EXTERN_C

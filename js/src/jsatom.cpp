@@ -190,6 +190,7 @@ const char *const js_common_atom_names[] = {
     js_starQualifier_str,       /* starQualifierAtom            */
     js_tagc_str,                /* tagcAtom                     */
     js_xml_str,                 /* xmlAtom                      */
+    "@mozilla.org/js/function", /* functionNamespaceURIAtom     */
 #endif
 
     "Proxy",                    /* ProxyAtom                    */

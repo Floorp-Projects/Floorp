@@ -131,8 +131,12 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
 static void JS_FASTCALL
 SetGlobalNameSlow(VMFrame &f, uint32 index)
 {
-    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
-    stubs::SetGlobalName(f, atom);
+    JSScript *script = f.fp()->script();
+    JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
+    if (script->strictModeCode)
+        stubs::SetGlobalName<true>(f, atom);
+    else
+        stubs::SetGlobalName<false>(f, atom);
 }
 
 static void
@@ -146,11 +150,12 @@ PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
 static VoidStubAtom
 GetStubForSetGlobalName(VMFrame &f)
 {
+    JSScript *script = f.fp()->script();
     // The property cache doesn't like inc ops, so we use a simpler
     // stub for that case.
     return js_CodeSpec[*f.regs.pc].format & (JOF_INC | JOF_DEC)
-         ? stubs::SetGlobalNameDumb
-         : stubs::SetGlobalName;
+         ? STRICT_VARIANT(stubs::SetGlobalNameDumb)
+         : STRICT_VARIANT(stubs::SetGlobalName);
 }
 
 void JS_FASTCALL
@@ -308,7 +313,7 @@ class CallCompiler
          * trampoline, but for now we generate it dynamically.
          */
         Assembler masm;
-        InlineFrameAssembler inlFrame(masm, cx, ic, flags);
+        InlineFrameAssembler inlFrame(masm, ic, flags);
         RegisterID t0 = inlFrame.tempRegs.takeAnyReg();
 
         /* Generate the inline frame creation. */
@@ -597,31 +602,15 @@ class CallCompiler
 
     void *update()
     {
-        JSObject *obj;
-        if (!IsFunctionObject(*vp, &obj) || !(cx->options & JSOPTION_METHODJIT)) {
-            /* Ugh. Can't do anything with this! */
-            if (callingNew)
-                stubs::SlowNew(f, ic.argc);
-            else
-                stubs::SlowCall(f, ic.argc);
-            return NULL;
-        }
+        stubs::UncachedCallResult ucr;
+        if (callingNew)
+            stubs::UncachedNewHelper(f, ic.argc, &ucr);
+        else
+            stubs::UncachedCallHelper(f, ic.argc, &ucr);
 
-        JSFunction *fun = obj->getFunctionPrivate();
-        JSObject *scopeChain = obj->getParent();
-
-        /* The slow path guards against natives. */
-        JS_ASSERT(fun->isInterpreted());
-        JSScript *script = fun->u.i.script;
-
-        if (!script->ncode && !script->isEmpty()) {
-            if (mjit::TryCompile(cx, script, fun, scopeChain) == Compile_Error)
-                THROWV(NULL);
-        }
-        JS_ASSERT(script->isEmpty() || script->ncode);
-
-        if (script->ncode == JS_UNJITTABLE_METHOD || script->isEmpty()) {
-            /* This should always go to a slow path, sadly. */
+        // If the function cannot be jitted (generally unjittable or empty script),
+        // patch this site to go to a slow path always.
+        if (!ucr.codeAddr) {
             JSC::CodeLocationCall oolCall = ic.slowPathStart.callAtOffset(ic.oolCallOffset);
             uint8 *start = (uint8 *)oolCall.executableAddress();
             JSC::RepatchBuffer repatch(start - 32, 64);
@@ -629,56 +618,45 @@ class CallCompiler
                                     ? JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, SlowNewFromIC))
                                     : JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, SlowCallFromIC));
             repatch.relink(oolCall, fptr);
-            if (callingNew)
-                stubs::SlowNew(f, ic.argc);
-            else
-                stubs::SlowCall(f, ic.argc);
             return NULL;
         }
+            
+        JSFunction *fun = ucr.fun;
+        JS_ASSERT(fun);
+        JSScript *script = fun->script();
+        JS_ASSERT(script);
+        JSObject *callee = ucr.callee;
+        JS_ASSERT(callee);
 
         uint32 flags = callingNew ? JSFRAME_CONSTRUCTING : 0;
-        if (callingNew)
-            stubs::NewObject(f, ic.argc);
 
         if (!ic.hit) {
-            if (ic.argc != fun->nargs) {
-                if (!generateFullCallStub(script, flags))
-                    THROWV(NULL);
-            } else {
-                if (!ic.fastGuardedObject) {
-                    patchInlinePath(script, obj);
-                } else if (!ic.hasJsFunCheck &&
-                           !ic.fastGuardedNative &&
-                           ic.fastGuardedObject->getFunctionPrivate() == fun) {
-                    /*
-                     * Note: Multiple "function guard" stubs are not yet
-                     * supported, thus the fastGuardedNative check.
-                     */
-                    if (!generateStubForClosures(obj))
-                        THROWV(NULL);
-                } else {
-                    if (!generateFullCallStub(script, flags))
-                        THROWV(NULL);
-                }
-            }
-        } else {
             ic.hit = true;
+            return ucr.codeAddr;
         }
 
-        /*
-         * We are about to jump into the callee's prologue, so push the frame as
-         * if we had been executing in the caller's inline call path. In theory,
-         * we could actually jump to the inline call path, but doing it from
-         * C++ allows JSStackFrame::initCallFrameCallerHalf to serve as a
-         * reference for what the jitted path should be doing.
-         */
-        JSStackFrame *fp = (JSStackFrame *)f.regs.sp;
-        fp->initCallFrameCallerHalf(cx, *scopeChain, ic.argc, flags);
-        f.regs.fp = fp;
+        if (ic.argc != fun->nargs) {
+            if (!generateFullCallStub(script, flags))
+                THROWV(NULL);
+        } else {
+            if (!ic.fastGuardedObject) {
+                patchInlinePath(script, callee);
+            } else if (!ic.hasJsFunCheck &&
+                       !ic.fastGuardedNative &&
+                       ic.fastGuardedObject->getFunctionPrivate() == fun) {
+                /*
+                 * Note: Multiple "function guard" stubs are not yet
+                 * supported, thus the fastGuardedNative check.
+                 */
+                if (!generateStubForClosures(callee))
+                    THROWV(NULL);
+            } else {
+                if (!generateFullCallStub(script, flags))
+                    THROWV(NULL);
+            }
+        }
 
-        if (ic.argc == fun->nargs)
-            return script->ncode;
-        return script->jit->arityCheck;
+        return ucr.codeAddr;
     }
 };
 

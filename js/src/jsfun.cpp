@@ -582,8 +582,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * collect its value.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
-           js_SetProperty(cx, obj, id, vp);
+    return js_DeleteProperty(cx, obj, id, tvr.addr(), false) &&
+           js_SetProperty(cx, obj, id, vp, false);
 }
 
 static JSBool
@@ -698,8 +698,8 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * collect its value.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
-           js_SetProperty(cx, obj, id, vp);
+    return js_DeleteProperty(cx, obj, id, tvr.addr(), true) &&
+           js_SetProperty(cx, obj, id, vp, true);
 }
 
 JSBool
@@ -1646,8 +1646,8 @@ struct PoisonPillProp {
 /* NB: no sentinels at ends -- use JS_ARRAY_LENGTH to bound loops. */
 
 const LazyFunctionDataProp lazyFunctionDataProps[] = {
-    {ATOM_OFFSET(arity),     FUN_ARITY,      JSPROP_PERMANENT},
-    {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT},
+    {ATOM_OFFSET(arity),     FUN_ARITY,      JSPROP_PERMANENT|JSPROP_READONLY},
+    {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT|JSPROP_READONLY},
 };
 
 /* Properties censored into [[ThrowTypeError]] in strict mode. */
@@ -1707,7 +1707,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * fun is not a compiler-created function object, which must never leak to
      * script or embedding code and then be mutated.
      */
-    if ((flags & JSRESOLVE_ASSIGNING) && !JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+    if ((flags & JSRESOLVE_ASSIGNING) && JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
         return JS_TRUE;
     }

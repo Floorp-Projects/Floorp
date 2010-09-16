@@ -86,19 +86,18 @@ class InlineFrameAssembler {
      */
     Registers  tempRegs;
 
-    InlineFrameAssembler(Assembler &masm, JSContext *cx, ic::CallICInfo &ic, uint32 flags)
-      : masm(masm), flags(flags)
+    InlineFrameAssembler(Assembler &masm, ic::CallICInfo &ic, uint32 flags)
+      : masm(masm), pc(ic.pc), flags(flags)
     {
         frameDepth = ic.frameDepth;
         argc = ic.argc;
         funObjReg = ic.funObjReg;
-        pc = cx->regs->pc;
         tempRegs.takeReg(ic.funPtrReg);
         tempRegs.takeReg(funObjReg);
     }
 
-    InlineFrameAssembler(Assembler &masm, Compiler::CallGenInfo &gen, jsbytecode *pc, uint32 flags)
-      : masm(masm), pc(pc), flags(flags)
+    InlineFrameAssembler(Assembler &masm, Compiler::CallGenInfo &gen, uint32 flags)
+      : masm(masm), pc(gen.pc), flags(flags)
     {
         frameDepth = gen.frameDepth;
         argc = gen.argc;
