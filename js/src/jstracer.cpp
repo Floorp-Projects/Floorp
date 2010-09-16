@@ -12048,19 +12048,90 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
     return true;
 }
 
+static const size_t PIC_TABLE_ENTRY_COUNT = 32;
+
+struct PICTableEntry
+{
+    jsid    id;
+    uint32  shape;
+    uint32  slot;
+};
+
+struct PICTable
+{
+    PICTable() : entryCount(0) {}
+
+    PICTableEntry   entries[PIC_TABLE_ENTRY_COUNT];
+    uint32          entryCount;
+
+    bool scan(uint32 shape, jsid id, uint32 *slotOut) {
+        for (size_t i = 0; i < entryCount; ++i) {
+            PICTableEntry &entry = entries[i];
+            if (entry.shape == shape && entry.id == id) {
+                *slotOut = entry.slot;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void update(uint32 shape, jsid id, uint32 slot) {
+        if (entryCount >= PIC_TABLE_ENTRY_COUNT)
+            return;
+        PICTableEntry &newEntry = entries[entryCount++];
+        newEntry.shape = shape;
+        newEntry.id = id;
+        newEntry.slot = slot;
+    }
+};
+
 static JSBool FASTCALL
-GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp)
+GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PICTable *picTable)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
+    if (!RootedStringToId(cx, namep, &id)) {
         SetBuiltinError(cx);
         return false;
     }
+    
+    /* Delegate to the op, if present. */
+    PropertyIdOp op = obj->getOps()->getProperty;
+    if (op) {
+        bool result = op(cx, obj, id, vp);
+        if (!result)
+            SetBuiltinError(cx);
+        return result;
+    }
+
+    /* Try to hit in the cache. */
+    uint32 slot;
+    if (picTable->scan(obj->shape(), id, &slot)) {
+        *vp = obj->getSlot(slot);
+        return cx->tracerState->builtinStatus == 0;
+    }
+
+    const Shape *shape;
+    JSObject *holder;
+    if (!js_GetPropertyHelperWithShape(cx, obj, id, JSGET_METHOD_BARRIER, vp, &shape, &holder)) {
+        SetBuiltinError(cx);
+        return false;
+    }
+
+    /* Only update the table when the object is the holder of the property. */
+    if (obj == holder && shape->hasSlot()) {
+        /*
+         * Note: we insert the non-normalized id into the table so you don't need to
+         * normalize it before hitting in the table (faster lookup).
+         */
+        picTable->update(obj->shape(), id, shape->slot);
+    }
+    
     return cx->tracerState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
+JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
+                     PICTABLE,
                      0, ACCSET_STORE_ANY)
 
 // Convert the value in a slot to a string and store the resulting string back
@@ -12099,7 +12170,9 @@ TraceRecorder::getPropertyByName(LIns* obj_ins, Value* idvalp, Value* outp)
     // interpreter stack, but the slot at vp is not a root.
     LIns* vp_ins = addName(lir->insAlloc(sizeof(Value)), "vp");
     LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
-    LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
+    PICTable *picTable = new (traceAlloc()) PICTable();
+    LIns* pic_ins = INS_CONSTPTR(picTable);
+    LIns* args[] = {pic_ins, vp_ins, idvalp_ins, obj_ins, cx_ins};
     LIns* ok_ins = lir->insCall(&GetPropertyByName_ci, args);
 
     // GetPropertyByName can assign to *idvalp, so the tracker has an incorrect

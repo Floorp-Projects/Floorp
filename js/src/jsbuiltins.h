@@ -231,6 +231,7 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_CHARPTR           _JS_CTYPE(char *,                 _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAMEINFO         _JS_CTYPE(FrameInfo *,            _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_PICTABLE          _JS_CTYPE(PICTable *,             _JS_PTR, --, --, INFALLIBLE)
 
 /*
  * The "VALUE" type is used to indicate that a native takes a js::Value
