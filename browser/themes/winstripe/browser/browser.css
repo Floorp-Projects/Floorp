@@ -107,10 +107,6 @@
   -moz-appearance: toolbox;
 }
 
-statusbarpanel#statusbar-display {
-  -moz-padding-start: 0;
-}
-
 /* ::::: app menu button ::::: */
 
 #appmenu-button {
@@ -1450,24 +1446,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-padding-start: 0px;
 }
 
-#status-bar {
-  border-top: none;
-}
-
-#security-button[level="high"],
-#security-button[level="low"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-
-#security-button[level="broken"] {
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-#page-report-button {
-  width: 20px;
-  list-style-image: url("chrome://browser/skin/Info.png");
-}
-
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
@@ -1860,11 +1838,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 #feed-button[open="true"],
 #feed-button:hover:active {
   -moz-image-region: rect(0px 48px 16px 32px);
-}
-
-/* ::::: About Popup Blocking dialog ::::: */
-#pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
-  visibility: collapse;
 }
 
 /* Bookmarks toolbar */

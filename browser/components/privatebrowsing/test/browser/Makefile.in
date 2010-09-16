@@ -49,7 +49,6 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_certexceptionsui.js \
 		browser_privatebrowsing_commandline_toggle.js \
 		browser_privatebrowsing_crh.js \
-		browser_privatebrowsing_downloadmonitor.js \
 		browser_privatebrowsing_fastswitch.js \
 		browser_privatebrowsing_findbar.js \
 		browser_privatebrowsing_forgetthissite.js \
@@ -83,6 +82,9 @@ _BROWSER_TEST_FILES =  \
 		staller.sjs \
 		title.sjs \
 		$(NULL)
+
+# Disabled until bug 564934 is fixed:
+#		browser_privatebrowsing_downloadmonitor.js \
 
 # Turn off private browsing tests that perma-timeout on Linux.
 ifneq (Linux,$(OS_ARCH))
