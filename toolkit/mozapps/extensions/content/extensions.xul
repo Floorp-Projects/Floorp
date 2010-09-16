@@ -163,12 +163,7 @@
               label="&updates.restart.label;"
               command="cmd_restartApp"/>
     </hbox>
-    <button id="header-utils-btn" type="menu"
-#ifdef XP_WIN
-            tooltiptext="&view.utilites.preferences.tooltip;">
-#else
-            tooltiptext="&view.utilites.preferencesUnix.tooltip;">
-#endif
+    <button id="header-utils-btn" type="menu" tooltiptext="&toolsMenu.tooltip;">
       <menupopup id="utils-menu">
         <menuitem id="utils-updateNow"
                   label="&updates.checkForUpdates.label;"
