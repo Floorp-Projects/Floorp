@@ -2814,6 +2814,19 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 }
 
 NS_IMETHODIMP
+nsDocument::GetCurrentScript(nsIDOMElement **aElement)
+{
+  nsIScriptElement* script = mScriptLoader->GetCurrentScript();
+  if (script) {
+    return CallQueryInterface(script, aElement);
+  }
+  
+  *aElement = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocument::ElementFromPoint(float aX, float aY, nsIDOMElement** aReturn)
 {
   return ElementFromPointHelper(aX, aY, PR_FALSE, PR_TRUE, aReturn);
