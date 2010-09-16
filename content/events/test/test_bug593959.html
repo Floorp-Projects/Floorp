@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=593959
+-->
+<head>
+  <title>Test for Bug 593959</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  body:active {
+    background: red;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=593959">Mozilla Bug 593959</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 593959 **/
+
+  function doTest() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var e = document.createEvent("MouseEvent");
+    e.initEvent("mousedown", false, false, window, 0, 1, 1, 1, 1,
+                false, false, false, false, 0, null);
+    utils.dispatchDOMEventViaPresShell(document.body, e, true);
+    
+    is(document.querySelector("body:active"), document.body, "body should be active!")
+    
+    var ifrwindow = document.getElementById("ifr").contentWindow;
+    
+    var utils2 = ifrwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+   
+    var e2 = ifrwindow.document.createEvent("MouseEvent");
+    e2.initEvent("mouseup", false, false, ifrwindow, 0, 1, 1, 1, 1,
+                 false, false, false, false, 0, null);
+    utils2.dispatchDOMEventViaPresShell(ifrwindow.document.body, e2, true);
+    
+    isnot(document.querySelector("body:active"), document.body, "body shouldn't be active!")
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(doTest);
+
+
+
+</script>
+</pre>
+<iframe id="ifr"></iframe>
+</body>
+</html>
