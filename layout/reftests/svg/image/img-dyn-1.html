@@ -6,10 +6,11 @@
     function go() {
       document.getElementById("wrapper").style.width = "200px";
 
-      // Use a setTimeout to delay snapshot, to fix randomorange (bug 596478)
+      // Use a setTimeout to delay snapshot, to hopefully workaround
+      // random orange bug 596478.
       setTimeout(
         function() { document.documentElement.removeAttribute("class"); },
-        0);
+        200);
     }
   </script>
 </head>
