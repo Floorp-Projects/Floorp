@@ -5,8 +5,8 @@
 <!ENTITY startupHomePage.label     "Show my home page">
 <!ENTITY startupBlankPage.label    "Show a blank page">
 <!ENTITY startupLastSession.label  "Show my windows and tabs from last time">
-<!ENTITY location.label            "Home Page:">
-<!ENTITY location.accesskey        "H">
+<!ENTITY homepage.label            "Home Page:">
+<!ENTITY homepage.accesskey        "P">
 <!ENTITY useCurrentPage.label      "Use Current Page">
 <!ENTITY useCurrentPage.accesskey  "C">
 <!ENTITY useMultiple.label         "Use Current Pages">
