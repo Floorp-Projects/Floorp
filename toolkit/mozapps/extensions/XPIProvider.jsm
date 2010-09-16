@@ -555,7 +555,7 @@ function loadManifestFromDir(aDir) {
   let file = aDir.clone();
   file.append(FILE_INSTALL_MANIFEST);
   if (!file.exists() || !file.isFile())
-    throw new Error("Directory " + dir.path + " does not contain a valid " +
+    throw new Error("Directory " + aDir.path + " does not contain a valid " +
                     "install manifest");
 
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
