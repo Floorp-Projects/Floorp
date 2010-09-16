@@ -50,6 +50,22 @@ function getBrowserURL()
   return "chrome://browser/content/browser.xul";
 }
 
+function goToggleToolbar( id, elementID )
+{
+  var toolbar = document.getElementById(id);
+  var element = document.getElementById(elementID);
+  if (toolbar)
+  {
+    var isHidden = toolbar.hidden;
+    toolbar.hidden = !isHidden;
+    document.persist(id, 'hidden');
+    if (element) {
+      element.setAttribute("checked", isHidden ? "true" : "false");
+      document.persist(elementID, 'checked');
+    }
+  }
+}
+
 function getTopWin()
 {
   return Services.wm.getMostRecentWindow("navigator:browser");

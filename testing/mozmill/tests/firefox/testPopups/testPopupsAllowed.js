@@ -82,6 +82,11 @@ var testPopUpAllowed = function()
                                              '/{"class":"messageCloseButton tabbable"}');
   controller.assertNodeNotExist(button);
 
+  // Check for the status bar icon
+  var cssInfo = controller.window.getComputedStyle(controller.window.document.getElementById("page-report-button"), "");
+  controller.assertJS("subject.isReportButtonVisible == false",
+                      {isReportButtonVisible: cssInfo.getPropertyValue('display') != 'none'});
+
   // Check that the window count has changed
   controller.assertJS("subject.preWindowCount != subject.postWindowCount",
                       {preWindowCount: windowCount, postWindowCount: mozmill.utils.getWindows().length});
