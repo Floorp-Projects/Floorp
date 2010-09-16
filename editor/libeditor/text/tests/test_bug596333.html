@@ -94,7 +94,7 @@ function runTest() {
         gMisspeltWords = ["workd"];
         edit.value = "";
         append("workd");
-        paste(" x");
+        paste("           x");
         SimpleTest.executeSoon(function() {
           is(isSpellingCheckOk(), true, "Misspelling is accounted for after pasting.");
 

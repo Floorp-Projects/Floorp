@@ -459,8 +459,10 @@ FindPrevNode(nsIDOMNode* aNode, nsIDOMNode* aRoot)
 /**
  * Check if there's a DOM word separator before aBeforeOffset in this node.
  * Always returns PR_TRUE if it's a BR element.
- * aSeparatorOffset is set to the index of the last separator if any is found
- * (0 for BR elements).
+ * aSeparatorOffset is set to the index of the first character in the last
+ * separator if any is found (0 for BR elements).
+ *
+ * This function does not modify aSeparatorOffset when it returns false.
  */
 static PRBool
 ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
@@ -480,6 +482,14 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
   NS_ASSERTION(textFragment, "Where is our text?");
   for (PRInt32 i = NS_MIN(aBeforeOffset, PRInt32(textFragment->GetLength())) - 1; i >= 0; --i) {
     if (IsDOMWordSeparator(textFragment->CharAt(i))) {
+      // Be greedy, find as many separators as we can
+      for (PRInt32 j = i - 1; j >= 0; --j) {
+        if (IsDOMWordSeparator(textFragment->CharAt(j))) {
+          i = j;
+        } else {
+          break;
+        }
+      }
       *aSeparatorOffset = i;
       return PR_TRUE;
     }
