@@ -2035,7 +2035,7 @@ CountStackAndArgs(JSStackFrame *next, Value *stack)
     if (JS_LIKELY(!next->hasOverflowArgs()))
         return (Value *)next - stack;
     size_t nvals = (next->formalArgs() - 2 /* callee, this */) - stack;
-    JS_ASSERT(nvals == ((next->actualArgs() - 2) - stack) + (2 + next->numActualArgs()));
+    JS_ASSERT(nvals == unsigned((next->actualArgs() - 2) - stack) + (2 + next->numActualArgs()));
     return nvals;
 }
 
