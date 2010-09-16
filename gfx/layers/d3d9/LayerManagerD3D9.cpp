@@ -45,6 +45,8 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "gfxWindowsPlatform.h"
+#include "nsIGfxInfo.h"
+
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 #endif
@@ -72,7 +74,20 @@ LayerManagerD3D9::Initialize()
 {
   /* Check the user preference for whether 3d video is enabled or not */ 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID); 
-  prefs->GetBoolPref("gfx.3d_video.enabled", &mIs3DEnabled); 
+  prefs->GetBoolPref("gfx.3d_video.enabled", &mIs3DEnabled);
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  if (gfxInfo) {
+    PRInt32 status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
+      if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+          status != nsIGfxInfo::FEATURE_AVAILABLE)
+      {
+        NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
+        return PR_FALSE;
+      }
+    }
+  }
 
   if (!mDefaultDeviceManager) {
     mDeviceManager = new DeviceManagerD3D9;
