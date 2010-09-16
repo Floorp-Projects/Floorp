@@ -1335,7 +1335,7 @@ HUD_SERVICE.prototype =
   activateHUDForContext: function HS_activateHUDForContext(aContext)
   {
     var window = aContext.linkedBrowser.contentWindow;
-    var id = aContext.linkedBrowser.parentNode.getAttribute("id");
+    var id = aContext.linkedBrowser.parentNode.parentNode.getAttribute("id");
     this.registerActiveContext(id);
     HUDService.windowInitializer(window);
   },
@@ -2613,8 +2613,12 @@ HUD_SERVICE.prototype =
     var nodes = hud.parentNode.childNodes;
 
     for (var i = 0; i < nodes.length; i++) {
-      if (nodes[i].contentWindow) {
-        return nodes[i].contentWindow;
+      var node = nodes[i];
+
+      if (node.localName == "stack" &&
+          node.firstChild &&
+          node.firstChild.contentWindow) {
+        return node.firstChild.contentWindow;
       }
     }
     throw new Error("HS_getContentWindowFromHUD: Cannot get contentWindow");
