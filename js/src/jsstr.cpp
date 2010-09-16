@@ -1641,6 +1641,7 @@ class FlatMatch
     friend class RegExpGuard;
 
   public:
+    FlatMatch() : patstr(NULL) {} /* Old GCC wants this initialization. */
     JSString *pattern() const { return patstr; }
     size_t patternLength() const { return patlen; }
 
