@@ -363,8 +363,11 @@ OptimalFormatFor(gfxASurface::gfxContentType aContent)
 {
   switch (aContent) {
   case gfxASurface::CONTENT_COLOR:
-    // FIXME/bug 593175: investigate 16bpp
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    return gfxASurface::ImageFormatRGB16_565;
+#else
     return gfxASurface::ImageFormatRGB24;
+#endif
   case gfxASurface::CONTENT_ALPHA:
     return gfxASurface::ImageFormatA8;
   case gfxASurface::CONTENT_COLOR_ALPHA:
