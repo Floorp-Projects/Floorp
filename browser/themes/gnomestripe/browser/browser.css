@@ -1401,6 +1401,28 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-color: Window;
 }
 
+#status-bar {
+  border-top: none;
+}
+
+statusbarpanel#statusbar-display {
+  -moz-padding-start: 0;
+}
+
+#security-button[level="high"],
+#security-button[level="low"] {
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+
+#security-button[level="broken"] {
+  list-style-image: url("chrome://browser/skin/Security-broken.png");
+}
+
+#page-report-button {
+  list-style-image: url("chrome://browser/skin/Info.png");
+  width: 20px;
+}
+
 /* Throbber */
 #navigator-throbber {
   width: 16px;
@@ -1697,6 +1719,11 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   display: -moz-box; /* display chevron icon in text mode */
+}
+
+/* Popup blocking dialog */
+#pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
+  visibility: collapse;
 }
 
 #download-monitor {

@@ -56,13 +56,16 @@
         screenX="24" screenY="24">
               
   <description>
-    &startDescriptionText.label;
+    &startDescription.label;
   </description>
 
   <separator class="thin"/>
 
   <hbox pack="center">
-    <!-- insert example here! (bug 594294) -->
+    <statusbar style="width:20em">
+      <statusbarpanel flex="1" pack="left"><description>&done.label;</description></statusbarpanel>
+      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="page-report-button"/>
+    </statusbar>
   </hbox>
 
   <separator class="thin"/>

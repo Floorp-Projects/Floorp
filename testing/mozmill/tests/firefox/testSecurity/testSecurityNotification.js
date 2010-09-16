@@ -62,6 +62,11 @@ var testSecNotification = function() {
   var identLabel = new elementslib.ID(controller.window.document, "identity-icon-label");
   controller.assertValue(identLabel, 'Mozilla Corporation (US)');
 
+  // The security button should be visible in the status bar
+  var securityButton = controller.window.document.getElementById("security-button");
+  var cssSecButton = controller.window.getComputedStyle(securityButton, "");
+  controller.assertJS("subject.getPropertyValue('list-style-image') != 'none'", cssSecButton);
+
   // Identity box should have a green background
   var identityBox = new elementslib.ID(controller.window.document, "identity-box");
   controller.assertProperty(identityBox, "className", "verifiedIdentity");
@@ -72,6 +77,9 @@ var testSecNotification = function() {
 
   var projects = new elementslib.Link(controller.tabs.activeTab, "Our Projects");
   controller.assertNode(projects);
+
+  // Security button should not be visible
+  controller.assertJS("subject.getPropertyValue('list-style-image') == 'none'", cssSecButton);
 
   // Identity box should have a gray background
   controller.assertProperty(identityBox, "className", "unknownIdentity");

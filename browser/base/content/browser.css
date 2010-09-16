@@ -317,9 +317,21 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 #navigator-toolbox ,
+#status-bar ,
 #mainPopupSet {
   min-width: 1px;
 }
+
+/* Sync statusbar UI */
+%ifdef MOZ_SERVICES_SYNC
+#sync-notifications-box {
+  -moz-binding: url("chrome://browser/content/syncNotification.xml#notificationbox");
+}
+
+#sync-notifications-box notification {
+  -moz-binding: url("chrome://browser/content/syncNotification.xml#notification");
+}
+%endif
 
 /* Identity UI */
 #identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
