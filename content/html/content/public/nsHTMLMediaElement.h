@@ -333,6 +333,12 @@ public:
    */
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) = 0;
 
+  /**
+   * Sets the required request headers on the HTTP channel for
+   * video or audio requests.
+   */
+  void SetRequestHeaders(nsIHttpChannel* aChannel);
+
 protected:
   class MediaLoadListener;
 
