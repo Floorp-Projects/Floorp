@@ -721,7 +721,7 @@
               <menu class="split-menuitem-menu"
                     label="&preferencesCmd.label;">
                 <menupopup id="appmenu_customizeMenu"
-                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_preferences').nextSibling.nextSibling);">
+                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleStatusbar'));">
                   <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                             label="&preferencesCmdUnix.label;"
@@ -730,6 +730,10 @@
 #endif
                             oncommand="openPreferences();"/>
                   <menuseparator/>
+                  <menuitem id="appmenu_toggleStatusbar"
+                            type="checkbox"
+                            command="cmd_toggleTaskbar"
+                            observes="toggle_taskbar"/>
                   <menuseparator/>
                   <menuitem id="appmenu_toggleTabsOnTop"
                             label="&viewTabsOnTop.label;"
@@ -1278,10 +1282,40 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
-    <toolbar id="addon-bar" toolbarname="&addonBarCmd.label;" collapsed="true"
-             class="toolbar-primary chromeclass-toolbar"
-             context="toolbar-context-menu" toolboxid="navigator-toolbox"
-             customizable="true"/>
+    <statusbar class="chromeclass-status" id="status-bar"
+#ifdef WINCE
+               hidden="true"
+#endif
+               >
+      <statusbarpanel id="statusbar-display" label="" flex="1"/>
+      <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
+                      tooltiptext="&downloadMonitor2.tooltip;" hidden="true"
+                      command="Tools:Downloads"/>
+      <statusbarpanel id="security-button" class="statusbarpanel-iconic"
+                      hidden="true"
+                      onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
+#ifdef MOZ_SERVICES_SYNC
+      <statusbarpanel id="sync-notifications-button"
+                      class="statusbarpanel-iconic-text"
+                      hidden="true"
+                      popup="sync-notifications-panel">
+      </statusbarpanel>
+      <panel id="sync-notifications-panel" position="before_end">
+          <notificationbox id="sync-notifications-box"/>
+      </panel>
+#endif
+      <statusbarpanel id="page-report-button" type="menu"
+                      class="statusbarpanel-menu-iconic"
+                      hidden="true"
+                      tooltiptext="&pageReportIcon.tooltip;">
+        <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+          <menuitem observes="blockedPopupAllowSite"/>
+          <menuitem observes="blockedPopupEditSettings"/>
+          <menuitem observes="blockedPopupDontShowMessage"/>
+          <menuseparator observes="blockedPopupsSeparator"/>
+        </menupopup>
+      </statusbarpanel>
+    </statusbar>
   </vbox>
 #ifndef XP_UNIX
   <svg:svg height="0">

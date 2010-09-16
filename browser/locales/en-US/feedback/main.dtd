@@ -1,4 +1,5 @@
 <!ENTITY testpilot.brand.label                      "Test Pilot">
+<!-- browser window: menu and status bar -->
 <!ENTITY testpilot.settings.label                   "Settings">
 <!ENTITY testpilot.settings.dataSubmission.label    "Data Submission">
 <!ENTITY testpilot.settings.notifications.label     "Notifications">
