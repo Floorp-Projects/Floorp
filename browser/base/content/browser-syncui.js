@@ -108,13 +108,17 @@ let gSyncUI = {
     document.getElementById("sync-setup-state").hidden = !needsSetup;
     document.getElementById("sync-syncnow-state").hidden = needsSetup;
 
-    if (gBrowser) {
-      document.getElementById("sync-button").removeAttribute("status");
-      this._updateLastSyncTime();
-    }
-    if (needsSetup) {
-      document.getElementById("sync-button").removeAttribute("tooltiptext");
-    }
+    if (!gBrowser)
+      return;
+
+    let button = document.getElementById("sync-button");
+    if (!button)
+      return;
+
+    button.removeAttribute("status");
+    this._updateLastSyncTime();
+    if (needsSetup)
+      button.removeAttribute("tooltiptext");
   },
 
   alltabsPopupShowing: function(event) {
@@ -147,9 +151,14 @@ let gSyncUI = {
 
   // Functions called by observers
   onActivityStart: function SUI_onActivityStart() {
-    //XXXzpao Followup: Do this with a class. (bug 583384)
-    if (gBrowser)
-      document.getElementById("sync-button").setAttribute("status", "active");
+    if (!gBrowser)
+      return;
+
+    let button = document.getElementById("sync-button");
+    if (!button)
+      return;
+
+    button.setAttribute("status", "active");
   },
 
   onSyncFinish: function SUI_onSyncFinish() {
@@ -312,6 +321,9 @@ let gSyncUI = {
       return;
 
     let syncButton = document.getElementById("sync-button");
+    if (!syncButton)
+      return;
+
     let lastSync;
     try {
       lastSync = Services.prefs.getCharPref("services.sync.lastSync");
