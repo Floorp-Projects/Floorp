@@ -596,26 +596,12 @@
                                                 "textbox-container");
       ]]></field>
 
-      <field name="_overLinkDelay" readonly="true"><![CDATA[
-        100
-      ]]></field>
-
-      <field name="_overLinkDelayTimer"><![CDATA[
-        undefined
-      ]]></field>
-
       <method name="setOverLink">
         <parameter name="aURL"/>
         <body><![CDATA[
           // Hide the over-link if aURL is falsey or if the URL bar is focused.
           if (!aURL || this.focused) {
-            if (this._overLinkDelayTimer) {
-              // Over-link is scheduled to appear.  Cancel the timer.
-              clearTimeout(this._overLinkDelayTimer);
-              delete this._overLinkDelayTimer;
-            }
-            else if (this.hasAttribute("overlinkstate")) {
-              // Over-link is fading in or showing.  Fade out.
+            if (this.hasAttribute("overlinkstate")) {
               this.removeAttribute("overlinkstate");
               this._overLinkTransitioning = true;
             }
@@ -670,12 +656,8 @@
           if (this._overLinkTransitioning)
             this.setAttribute("overlinkstate", "showing");
           else {
-            this._overLinkDelayTimer =
-              setTimeout(function overLinkDelayTimer(self) {
-                delete self._overLinkDelayTimer;
-                self.setAttribute("overlinkstate", "fade-in");
-                self._overLinkTransitioning = true;
-              }, this._overLinkDelay, this);
+            this.setAttribute("overlinkstate", "fade-in");
+            this._overLinkTransitioning = true;
           }
         ]]></body>
       </method>
