@@ -5,7 +5,11 @@
   <script>
     function go() {
       document.getElementById("wrapper").style.width = "200px";
-      document.documentElement.removeAttribute("class");
+
+      // Use a setTimeout to delay snapshot, to fix randomorange (bug 596478)
+      setTimeout(
+        function() { document.documentElement.removeAttribute("class"); },
+        0);
     }
   </script>
 </head>
