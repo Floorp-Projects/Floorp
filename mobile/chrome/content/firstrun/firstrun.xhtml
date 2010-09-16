@@ -64,12 +64,12 @@
     <div id="header">
       <a href="http://mozilla.com/m"><img src="chrome://browser/content/firstrun/mozilla.png" width="64" height="17"/></a>
     </div>
-    
+
     <div id="head">
       <h1><img src="chrome://branding/content/logoWordmark.png"/></h1>
       <p>&firstrun.heading2;</p>
     </div>
-  
+
     <div id="content">
       <h2></h2>
       <ul id="recommended">
@@ -85,7 +85,7 @@
         let links = [
           {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
         ];
-        
+
         function getChromeWin() {
           if (!gChromeWin) {
             gChromeWin = window
@@ -118,11 +118,11 @@
         function init() {
           setupLinks();
         }
-        
+
         function setupLinks() {
           try {
             let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                                      .getService(Ci.nsIURLFormatter);            
+                                      .getService(Ci.nsIURLFormatter);
             links.forEach(function (link) {
               let url = formatter.formatURLPref(link.pref);
               let element = document.getElementById(link.id);
@@ -130,19 +130,20 @@
             });
           } catch (ex) {}
         }
+
         document.addEventListener("DOMContentLoaded", init, false);
       ]]></script>
     </div>
-  
+
     <div id="footer">
-      
+
       <ul class="nav">
         <!--
         <li><a href="http://mozilla.com/m/faq">&firstrun.faq;</a></li>
         <li><a href="http://mozilla.com/m/privacy">&firstrun.privacy;</a></li>
         -->
       </ul>
-  
+
       <div id="follow">
         <p>&firstrun.follow;</p>
         <ul>
@@ -150,7 +151,7 @@
           <li id="follow-facebook"><a href="http://www.facebook.com/firefoxformobile"><img src="chrome://browser/content/firstrun/facebook.png" height="41" width="42" /></a></li>
         </ul>
       </div>
-    </div>  
+    </div>
   </div>
 </body>
 </html>
