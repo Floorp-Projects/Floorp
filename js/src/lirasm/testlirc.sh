@@ -44,6 +44,18 @@ done
 
 # ---- Platform-specific tests and configurations. ----
 
+# Tests for hardware floating-point.
+# These tests use LIR instructions which are normally removed by the soft-float
+# filter, so soft-float targets do not need to support them.
+#
+# There is no conditional check for hardfloat support as every platform appears
+# to support it. If the default for a particular platform does not support
+# hardfloat, exclude the hardfloat tests (based on something like "uname -m").
+for infile in "$TESTS_DIR"/hardfloat/*.in
+do
+    runtest $infile
+done
+
 # 64-bit platforms
 if [[ $($LIRASM --word-size) == 64 ]]
 then
@@ -72,15 +84,13 @@ then
         # a platform seems so unlikely that it probably isn't worthwhile. It's also
         # unlikely that it's worth testing ARMv5 with VFP.
         runtest $infile "--arch 6"
-        
-        # For --novfp, Skip tests that require hard floating-point.
-        # Note that these are also disabled in the --random test. The
-        # soft-float filter normally removes instructions that these tests use.
-        if [[ $infile =~ .*/(f2i|d2i|i2d|ui2d)\.in$ ]]
-        then
-            continue
-        fi
         runtest $infile "--arch 5 --novfp"
+    done
+
+    for infile in "$TESTS_DIR"/hardfloat/*.in
+    do
+        # Run tests that require hardware floating-point.
+        runtest $infile "--arch 6"
     done
 
     # Run specific soft-float tests, but only for ARMv5 without VFP.
