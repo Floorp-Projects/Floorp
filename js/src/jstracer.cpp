@@ -4476,7 +4476,7 @@ ProhibitFlush(JSContext* cx)
 static void
 ResetJITImpl(JSContext* cx)
 {
-    if (cx->traceJitEnabled || cx->methodJitEnabled)
+    if (!(cx->traceJitEnabled || cx->methodJitEnabled))
         return;
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     debug_only_print0(LC_TMTracer, "Flushing cache.\n");
