@@ -101,7 +101,7 @@ reportCompare('abc', value, summary + ': push');
 
 // pop
 value  = 'abc';
-expect = "TypeError: property 'Array.prototype.pop.call(value)' is non-configurable and cannot be deleted";
+expect = "TypeError: property Array.prototype.pop.call(value) is non-configurable and can't be deleted";
 try
 {
   actual = Array.prototype.pop.call(value);

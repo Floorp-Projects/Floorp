@@ -808,6 +808,7 @@ struct JSScopeStats {
     jsrefcount          redundantPuts;
     jsrefcount          putFails;
     jsrefcount          changes;
+    jsrefcount          changePuts;
     jsrefcount          changeFails;
     jsrefcount          compresses;
     jsrefcount          grows;
