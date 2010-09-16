@@ -2484,7 +2484,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          * the trace runs too few iterations to be worthwhile. Do this only if the methodjit
          * is on--otherwise we must try to trace as much as possible.
          */
-        if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+        if (cx->methodJitEnabled) {
             LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
             LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
             LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
@@ -4476,7 +4476,7 @@ ProhibitFlush(JSContext* cx)
 static void
 ResetJITImpl(JSContext* cx)
 {
-    if (!(cx->jitEnabled || (cx->options & JSOPTION_METHODJIT)))
+    if (cx->traceJitEnabled || cx->methodJitEnabled)
         return;
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     debug_only_print0(LC_TMTracer, "Flushing cache.\n");
@@ -6632,7 +6632,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
     JS_ASSERT_IF(cx->throwing, !ok);
 
-    if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+    if (cx->methodJitEnabled) {
         if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
             debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
                               (void*)f, f->execs);
