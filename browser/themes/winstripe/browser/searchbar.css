@@ -38,14 +38,6 @@
   border: 0;
 }
 
-.searchbar-engine-button[addengines="true"]:not([open="true"]) > .button-box {
-  background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
-}
-
-.searchbar-engine-button[addengines="true"]:-moz-locale-dir(rtl) > .button-box {
-  background-position: left center;
-}
-
 .searchbar-dropmarker-image {
   list-style-image: url(mainwindow-dropdown-arrow.png);
   -moz-image-region: rect(0, 13px, 11px, 0);

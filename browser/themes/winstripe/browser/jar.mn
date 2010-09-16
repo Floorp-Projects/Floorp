@@ -40,7 +40,6 @@ browser.jar:
         skin/classic/browser/Toolbar.png                             (Toolbar.png)
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
-        skin/classic/browser/Search-addengines.png
         skin/classic/browser/section_collapsed.png
         skin/classic/browser/section_collapsed-rtl.png
         skin/classic/browser/section_expanded.png
@@ -155,7 +154,6 @@ browser.jar:
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
-        skin/classic/aero/browser/Search-addengines.png
         skin/classic/aero/browser/section_collapsed.png
         skin/classic/aero/browser/section_collapsed-rtl.png
         skin/classic/aero/browser/section_expanded.png
