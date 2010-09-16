@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+@font-face {
+  font-family: dvsm;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+
+p {
+  font-family: dvsm; /* family with only a single weight */
+}
+
+.test {
+  color: white; /* hide the text, we're only comparing metrics */
+  font-weight: bold; /* synthetic bold will be used */
+}
+</style>
+</head>
+<body>
+<p>AbcdefghijklmnopqrstuvwxyZ</p>
+<!-- the "test" span here uses synthetic bold, which should cause the following
+     'Z' to appear further to the right -->
+<p>A<span class="test">bcdefghijklmnopqrstuvwxy</span>Z</p>
+</body>
+</html>
