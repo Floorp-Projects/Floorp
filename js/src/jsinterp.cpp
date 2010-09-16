@@ -1915,7 +1915,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 
 namespace js {
 
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN interpFlags)
 {
 #ifdef MOZ_TRACEVIS
