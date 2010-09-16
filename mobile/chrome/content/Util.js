@@ -163,6 +163,11 @@ let Util = {
 #endif
   },
 
+  isParentProcess: function isInParentProcess() {
+    let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+    return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
+  },
+
   isPortrait: function isPortrait() {
     return (window.innerWidth < 500);
   }

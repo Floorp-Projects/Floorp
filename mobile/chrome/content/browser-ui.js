@@ -866,7 +866,7 @@ var BrowserUI = {
         break;
 
       case "Browser:OpenURI":
-        Browser.addTab(json.uri, false, Browser.selectedTab);
+        Browser.addTab(json.uri, json.bringFront, Browser.selectedTab);
     }
   },
 

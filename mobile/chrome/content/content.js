@@ -216,26 +216,6 @@ function getContentClientRects(aElement) {
   return result;
 };
 
-/** Reponsible for sending messages about viewport size changes and painting. */
-function Coalescer() {
-}
-
-Coalescer.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "MozApplicationManifest": {
-        let doc = aEvent.originalTarget;
-        sendAsyncMessage("Browser:MozApplicationManifest", {
-          location: doc.documentURIObject.spec,
-          manifest: doc.documentElement.getAttribute("manifest"),
-          charset: doc.characterSet
-        });
-        break;
-      }
-    }
-  }
-};
-
 
 /**
  * Responsible for sending messages about security, location, and page load state.
@@ -329,8 +309,10 @@ function Content() {
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
 
-  this._coalescer = new Coalescer();
-  addEventListener("MozApplicationManifest", this._coalescer, false);
+  if (Util.isParentProcess())
+    addEventListener("DOMActivate", this, true);
+
+  addEventListener("MozApplicationManifest", this, false);
 
   this._progressController = new ProgressController(this);
   this._progressController.start();
@@ -341,6 +323,30 @@ function Content() {
 }
 
 Content.prototype = {
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "DOMActivate": {
+        // In a local tab, open remote links in new tabs.
+        let href = Util.getHrefForElement(aEvent.originalTarget);
+        if (!Util.isLocalScheme(href)) {
+          aEvent.preventDefault();
+          sendAsyncMessage("Browser:OpenURI", { uri: href, bringFront: true });
+        }
+        break;
+      }
+
+      case "MozApplicationManifest": {
+        let doc = aEvent.originalTarget;
+        sendAsyncMessage("Browser:MozApplicationManifest", {
+          location: doc.documentURIObject.spec,
+          manifest: doc.documentElement.getAttribute("manifest"),
+          charset: doc.characterSet
+        });
+        break;
+      }
+    }
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
     let json = aMessage.json;
     let x = json.x;
@@ -629,7 +635,7 @@ var ContextHandler = {
   _types: [],
 
   _getLinkURL: function ch_getLinkURL(aLink) {
-    let href = aLink.href;  
+    let href = aLink.href;
     if (href)
       return href;
 
@@ -712,13 +718,13 @@ var ContextHandler = {
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))
         state.types.push(this._types[i].name);
-    
+
     sendAsyncMessage("Browser:ContextMenu", state);
   },
 
   /**
    * For add-ons to add new types and data to the ContextMenu message.
-   * 
+   *
    * @param aName A string to identify the new type.
    * @param aHandler A function that takes a state object and a target element.
    *    If aHandler returns true, then aName will be added to the list of types.
