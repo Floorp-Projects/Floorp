@@ -1060,13 +1060,10 @@ var TapHighlightHelper = {
     let browser = getBrowser();
     let scroll = browser.getPosition();
 
-    let union = aRects.reduce(function(a, b) {
+    let canvasArea = aRects.reduce(function(a, b) {
       return a.expandToContain(b);
     }, new Rect(0, 0, 0, 0)).map(function(val) val * browser.scale)
                             .translate(-scroll.x, -scroll.y);
-
-    let vis = Rect.fromRect(browser.getBoundingClientRect());
-    let canvasArea = vis.intersect(union);
 
     let overlay = this._overlay;
     overlay.width = canvasArea.width;
