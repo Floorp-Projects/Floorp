@@ -2062,6 +2062,7 @@ MaybeCreateShadowFor(BasicShadowableLayer* aLayer,
 
   aLayer->SetShadow(shadow);
   (aMgr->*aMethod)(aLayer);
+  aMgr->Hold(aLayer->AsLayer());
 }
 #define MAYBE_CREATE_SHADOW(_type)                                      \
   MaybeCreateShadowFor(layer, this,                                     \
