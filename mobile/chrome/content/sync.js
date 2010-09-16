@@ -166,7 +166,7 @@ let WeaveGlue = {
     if (login == Weave.LOGIN_SUCCEEDED)
       connect.removeAttribute("desc");
     else if (login != null)
-      connect.setAttribute("desc", Weave.Str.errors.get(login));
+      connect.setAttribute("desc", Weave.Utils.getErrorString(login));
 
     // Load the values for the string inputs
     user.value = Weave.Service.username || "";
