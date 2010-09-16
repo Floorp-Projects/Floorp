@@ -57,6 +57,29 @@ struct kinfo_proc;
 
 namespace base {
 
+// These can be used in a 32-bit bitmask.
+enum ProcessArchitecture {
+  PROCESS_ARCH_I386 = 0x1,
+  PROCESS_ARCH_X86_64 = 0x2,
+  PROCESS_ARCH_PPC = 0x4,
+  PROCESS_ARCH_ARM = 0x8
+};
+
+static ProcessArchitecture GetCurrentProcessArchitecture()
+{
+  base::ProcessArchitecture currentArchitecture;
+#if defined(ARCH_CPU_X86)
+  currentArchitecture = base::PROCESS_ARCH_I386;
+#elif defined(ARCH_CPU_X86_64)
+  currentArchitecture = base::PROCESS_ARCH_X86_64;
+#elif defined(ARCH_CPU_PPC)
+  currentArchitecture = base::PROCESS_ARCH_PPC;
+#elif defined(ARCH_CPU_ARMEL)
+  currentArchitecture = base::PROCESS_ARCH_ARM;
+#endif
+  return currentArchitecture;
+}
+
 // A minimalistic but hopefully cross-platform set of exit codes.
 // Do not change the enumeration values or you will break third-party
 // installers.
@@ -140,7 +163,8 @@ typedef std::map<std::string, std::string> environment_map;
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle);
+               bool wait, ProcessHandle* process_handle,
+               ProcessArchitecture arch=GetCurrentProcessArchitecture());
 #endif
 
 // Executes the application specified by cl. This function delegates to one
