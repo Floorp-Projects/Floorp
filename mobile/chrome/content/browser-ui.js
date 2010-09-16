@@ -2531,7 +2531,8 @@ var BadgeHandlers = {
         req.onreadystatechange = function(aEvent) {
           if (req.readyState == 4) {
             if (req.status == 200) {
-              this._lastCount = req.responseXML.getElementsByTagName("fullcount")[0].childNodes[0].nodeValue;
+              let count = req.responseXML.getElementsByTagName("fullcount");
+              this._lastCount = count ? count[0].childNodes[0].nodeValue : 0;
             } else {
               this._lastCount = 0;
             }
