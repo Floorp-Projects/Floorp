@@ -953,6 +953,7 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
+          <progressmeter id="urlbar-progress" mode="normal"/>
           <toolbarbutton id="urlbar-go-button"
                          onclick="gURLBar.handleCommand(event);"
                          tooltiptext="&goEndCap.tooltip;"/>
@@ -1287,9 +1288,6 @@
 #endif
                >
       <statusbarpanel id="statusbar-display" label="" flex="1"/>
-      <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
-        <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
-      </statusbarpanel>
       <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
                       tooltiptext="&downloadMonitor2.tooltip;" hidden="true"
                       command="Tools:Downloads"/>
