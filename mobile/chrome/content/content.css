@@ -48,10 +48,6 @@
   */
 }
 
-html {
-  background: white;
-}
-
 *:link:focus, *:visited:focus {
   outline-offset: -2px;
 }
