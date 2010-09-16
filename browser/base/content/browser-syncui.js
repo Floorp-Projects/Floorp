@@ -160,7 +160,7 @@ let gSyncUI = {
 
     // Fake the tab object on the menu entries, so that we don't have to worry
     // about removing them ourselves. They will just get cleaned up by popup
-    // binding. This also makes sure the statusbar updates with the URL.
+    // binding.
     menuitem.tab = { "linkedBrowser": { "currentURI": { "spec": label } } };
     sep.tab = { "linkedBrowser": { "currentURI": { "spec": " " } } };
 

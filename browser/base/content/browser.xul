@@ -726,7 +726,7 @@
               <menu class="split-menuitem-menu"
                     label="&preferencesCmd.label;">
                 <menupopup id="appmenu_customizeMenu"
-                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleStatusbar'));">
+                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_preferences').nextSibling.nextSibling);">
                   <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                             label="&preferencesCmdUnix.label;"
@@ -735,10 +735,6 @@
 #endif
                             oncommand="openPreferences();"/>
                   <menuseparator/>
-                  <menuitem id="appmenu_toggleStatusbar"
-                            type="checkbox"
-                            command="cmd_toggleTaskbar"
-                            observes="toggle_taskbar"/>
                   <menuseparator/>
                   <menuitem id="appmenu_toggleTabsOnTop"
                             label="&viewTabsOnTop.label;"
@@ -1296,31 +1292,16 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
-    <statusbar class="chromeclass-status" id="status-bar"
-#ifdef WINCE
-               hidden="true"
-#endif
-               >
-      <statusbarpanel id="statusbar-display" label="" flex="1"/>
-      <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
-                      tooltiptext="&downloadMonitor2.tooltip;" hidden="true"
-                      command="Tools:Downloads"/>
-      <statusbarpanel id="security-button" class="statusbarpanel-iconic"
-                      hidden="true"
-                      onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
-      <statusbarpanel id="page-report-button" type="menu"
-                      class="statusbarpanel-menu-iconic"
-                      hidden="true"
-                      tooltiptext="&pageReportIcon.tooltip;">
-        <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
-          <menuitem observes="blockedPopupAllowSite"/>
-          <menuitem observes="blockedPopupEditSettings"/>
-          <menuitem observes="blockedPopupDontShowMessage"/>
-          <menuseparator observes="blockedPopupsSeparator"/>
-        </menupopup>
-      </statusbarpanel>
-    </statusbar>
+    <toolbar id="addon-bar" toolbarname="&addonBarCmd.label;" collapsed="true"
+             class="toolbar-primary chromeclass-toolbar"
+             context="toolbar-context-menu" toolboxid="navigator-toolbox"
+             mode="icons" iconsize="small" defaulticonsize="small"
+             lockiconsize="true"
+             customizable="true" align="right">
+      <statusbar id="status-bar"/>
+    </toolbar>
   </vbox>
+
 #ifndef XP_UNIX
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
