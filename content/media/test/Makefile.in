@@ -77,6 +77,7 @@ _TEST_FILES = \
 		manifest.js \
 		reactivate_helper.html \
 		redirect.sjs \
+		referer.sjs \
 		seek1.js \
 		seek2.js \
 		seek3.js \
@@ -241,6 +242,7 @@ _TEST_FILES += \
 		file_audio_event_adopt_iframe.html \
 		test_audio_event_adopt.html \
 		test_framebuffer.html \
+		test_referer.html \
 		$(NULL)
 else
 _TEST_FILES += \

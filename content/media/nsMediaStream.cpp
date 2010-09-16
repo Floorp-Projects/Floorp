@@ -486,7 +486,7 @@ void nsMediaChannelStream::SetupChannelHeaders()
     if (!element) {
       return;
     }
-    element->SetAcceptHeader(hc);
+    element->SetRequestHeaders(hc);
   } else {
     NS_ASSERTION(mOffset == 0, "Don't know how to seek on this channel type");
   }

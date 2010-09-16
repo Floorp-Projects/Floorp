@@ -992,8 +992,7 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
                          NS_LITERAL_CSTRING("bytes=0-"),
                          PR_FALSE);
 
-    // Send Accept header for video and audio types only (Bug 489071)
-    SetAcceptHeader(hc);
+    SetRequestHeaders(hc);
   }
 
   rv = mChannel->AsyncOpen(listener, nsnull);
@@ -2553,4 +2552,16 @@ nsresult nsHTMLMediaElement::GetBuffered(nsIDOMTimeRanges** aBuffered)
     mDecoder->GetBuffered(ranges);
   }
   return NS_OK;
+}
+
+void nsHTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel)
+{
+  // Send Accept header for video and audio types only (Bug 489071)
+  SetAcceptHeader(aChannel);
+
+  // Set the Referer header
+  nsIDocument* doc = GetOwnerDoc();
+  if (doc) {
+    aChannel->SetReferrer(doc->GetDocumentURI());
+  }
 }
