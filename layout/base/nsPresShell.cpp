@@ -8362,7 +8362,7 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   nsRefPtr<gfxASurface> surface = 
     gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(gfxIntSize(width, height),
-      gfxASurface::ImageFormatARGB32);
+      gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
   NS_ENSURE_TRUE(surface, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<gfxContext> context = new gfxContext(surface);
