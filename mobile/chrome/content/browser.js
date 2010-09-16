@@ -2389,7 +2389,7 @@ Tab.prototype = {
         viewportH = viewportW * (screenH / screenW);
       } else if (!validW && validH) {
         viewportW = viewportH * (screenW / screenH);
-      } else {
+      } else if (!validW && !validH) {
         viewportW = kDefaultBrowserWidth;
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
