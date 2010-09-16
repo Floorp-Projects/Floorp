@@ -270,7 +270,7 @@
             <notificationbox id="notifications" class="window-width"/>
 
             <!-- Content viewport -->
-            <vbox class="window-width window-height">
+            <vbox id="content-viewport" class="window-width window-height">
               <stack id="tile-stack" class="window-width" flex="1">
               <!-- Content viewport -->
                 <html:div>
