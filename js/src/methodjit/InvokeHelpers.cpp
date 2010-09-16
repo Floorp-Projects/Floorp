@@ -472,60 +472,76 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 void * JS_FASTCALL
 stubs::UncachedNew(VMFrame &f, uint32 argc)
 {
+    UncachedCallResult ucr;
+    UncachedNewHelper(f, argc, &ucr);
+    return ucr.codeAddr;
+}
+
+void
+stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+{
+    ucr->init();
+
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
     /* Try to do a fast inline call before the general Invoke path. */
-    JSFunction *fun;
-    if (IsFunctionObject(*vp, &fun) && fun->isInterpreted() && !fun->script()->isEmpty()) {
-        void *ret;
-        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
-            THROWV(NULL);
-        return ret;
+    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpreted() && 
+        !ucr->fun->script()->isEmpty()) {
+        ucr->callee = &vp->toObject();
+        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ucr->codeAddr, argc))
+            THROW();
+        return;
     }
 
     if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
-        THROWV(NULL);
-    return NULL;
+        THROW();
+    return;
 }
 
 void * JS_FASTCALL
 stubs::UncachedCall(VMFrame &f, uint32 argc)
 {
-    JSContext *cx = f.cx;
+    UncachedCallResult ucr;
+    UncachedCallHelper(f, argc, &ucr);
+    return ucr.codeAddr;
+}
 
+void
+stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+{
+    ucr->init();
+
+    JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    JSObject *obj;
-    if (IsFunctionObject(*vp, &obj)) {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    if (IsFunctionObject(*vp, &ucr->callee)) {
+        ucr->callee = &vp->toObject();
+        ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
-        if (fun->isInterpreted()) {
-            void *ret;
-
-            if (fun->u.i.script->isEmpty()) {
+        if (ucr->fun->isInterpreted()) {
+            if (ucr->fun->u.i.script->isEmpty()) {
                 vp->setUndefined();
                 f.regs.sp = vp + 1;
-                return NULL;
+                return;
             }
 
-            if (!UncachedInlineCall(f, 0, &ret, argc))
-                THROWV(NULL);
-
-            return ret;
+            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, argc))
+                THROW();
+            return;
         }
 
-        if (fun->isNative()) {
-            if (!fun->u.n.native(cx, argc, vp))
-                THROWV(NULL);
-            return NULL;
+        if (ucr->fun->isNative()) {
+            if (!ucr->fun->u.n.native(cx, argc, vp))
+                THROW();
+            return;
         }
     }
 
     if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
-        THROWV(NULL);
+        THROW();
 
-    return NULL;
+    return;
 }
 
 void JS_FASTCALL
@@ -753,31 +769,33 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 
 #if JS_MONOIC
 static void
-DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
+DisableTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
 {
-    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
-
     /*
      * Hack: The value that will be patched is before the executable address,
      * so to get protection right, just unprotect the general region around
      * the jump.
      */
-    uint8 *addr = (uint8 *)(mic.traceHint.executableAddress());
+    uint8 *addr = (uint8 *)(jump.executableAddress());
     JSC::RepatchBuffer repatch(addr - 64, 128);
-    repatch.relink(mic.traceHint, mic.load);
+    repatch.relink(jump, target);
 
-    JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n", mic.traceHint.executableAddress(),
-               mic.load.executableAddress());
+    JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
+               jump.executableAddress(), target.executableAddress());
+}
 
-    if (mic.u.hasSlowTraceHint) {
-        addr = (uint8 *)(mic.slowTraceHint.executableAddress());
-        JSC::RepatchBuffer repatch(addr - 64, 128);
-        repatch.relink(mic.slowTraceHint, mic.load);
+static void
+DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
+{
+    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
 
-        JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
-                   mic.slowTraceHint.executableAddress(),
-                   mic.load.executableAddress());
-    }
+    DisableTraceHintSingle(mic.traceHint, mic.load);
+
+    if (mic.u.hints.hasSlowTraceHintOne)
+        DisableTraceHintSingle(mic.slowTraceHintOne, mic.load);
+
+    if (mic.u.hints.hasSlowTraceHintTwo)
+        DisableTraceHintSingle(mic.slowTraceHintTwo, mic.load);
 }
 #endif
 
@@ -794,7 +812,7 @@ RunTracer(VMFrame &f)
     TracePointAction tpa;
 
     /* :TODO: nuke PIC? */
-    if (!cx->jitEnabled)
+    if (!cx->traceJitEnabled)
         return NULL;
 
     bool blacklist;

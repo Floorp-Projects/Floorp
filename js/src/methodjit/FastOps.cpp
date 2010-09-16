@@ -701,8 +701,10 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
 
     /* Always slow path... */
-    if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
-        (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE))) {
+    if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE) &&
+         lhs->isNotType(JSVAL_TYPE_STRING)) ||
+        (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE) &&
+         rhs->isNotType(JSVAL_TYPE_STRING))) {
         if (op == JSOP_EQ || op == JSOP_NE)
             jsop_equality(op, stub, target, fused);
         else
@@ -711,15 +713,21 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     }
 
     if (op == JSOP_EQ || op == JSOP_NE) {
-        if (lhs->isNotType(JSVAL_TYPE_INT32) || rhs->isNotType(JSVAL_TYPE_INT32))
+        if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_STRING)) ||
+            (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_STRING))) {
             emitStubCmpOp(stub, target, fused);
-        else
-            jsop_relational_int(op, stub, target, fused);
+        } else if (!target && (lhs->isType(JSVAL_TYPE_STRING) || rhs->isType(JSVAL_TYPE_STRING))) {
+            emitStubCmpOp(stub, target, fused);
+        } else {
+            jsop_equality_int_string(op, stub, target, fused);
+        }
         return;
     }
 
     if (frame.haveSameBacking(lhs, rhs)) {
         jsop_relational_self(op, stub, target, fused);
+    } else if (lhs->isType(JSVAL_TYPE_STRING) || rhs->isType(JSVAL_TYPE_STRING)) {
+        emitStubCmpOp(stub, target, fused);
     } else if (lhs->isType(JSVAL_TYPE_DOUBLE) || rhs->isType(JSVAL_TYPE_DOUBLE)) {
         jsop_relational_double(op, stub, target, fused);
     } else {
@@ -1226,7 +1234,7 @@ mjit::Compiler::jsop_setelem()
         stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
-        stubcc.call(stubs::SetElem);
+        stubcc.call(STRICT_VARIANT(stubs::SetElem));
 
         /* Infallible, start killing everything. */
         frame.eviscerate(obj);
@@ -1308,7 +1316,7 @@ mjit::Compiler::jsop_setelem()
         stubcc.crossJump(jmpHoleExit, lblRejoin);
 
         stubcc.leave();
-        stubcc.call(stubs::SetElem);
+        stubcc.call(STRICT_VARIANT(stubs::SetElem));
 
         /* Infallible, start killing everything. */
         frame.eviscerate(obj);

@@ -87,7 +87,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
     escapingList(ContextAllocPolicy(cx)),
     stubcc(cx, *this, frame, script)
 #if defined JS_TRACER
-    ,addTraceHints(cx->jitEnabled)
+    ,addTraceHints(cx->traceJitEnabled)
 #endif
 {
 }
@@ -411,9 +411,12 @@ mjit::Compiler::finishThisUp()
             JS_ASSERT(jumpMap[offs].isValid());
             script->mics[i].traceHint = fullCode.locationOf(mics[i].traceHint);
             script->mics[i].load = fullCode.locationOf(jumpMap[offs]);
-            script->mics[i].u.hasSlowTraceHint = mics[i].slowTraceHint.isSet();
-            if (mics[i].slowTraceHint.isSet())
-                script->mics[i].slowTraceHint = stubCode.locationOf(mics[i].slowTraceHint.get());
+            script->mics[i].u.hints.hasSlowTraceHintOne = mics[i].slowTraceHintOne.isSet();
+            if (mics[i].slowTraceHintOne.isSet())
+                script->mics[i].slowTraceHintOne = stubCode.locationOf(mics[i].slowTraceHintOne.get());
+            script->mics[i].u.hints.hasSlowTraceHintTwo = mics[i].slowTraceHintTwo.isSet();
+            if (mics[i].slowTraceHintTwo.isSet())
+                script->mics[i].slowTraceHintTwo = stubCode.locationOf(mics[i].slowTraceHintTwo.get());
             break;
           }
           default:
@@ -471,6 +474,7 @@ mjit::Compiler::finishThisUp()
         script->callICs[i].hotPathOffset = offset;
         JS_ASSERT(script->callICs[i].hotPathOffset == offset);
 
+        script->callICs[i].pc = callICs[i].pc;
         script->callICs[i].argc = callICs[i].argc;
         script->callICs[i].funObjReg = callICs[i].funObjReg;
         script->callICs[i].funPtrReg = callICs[i].funPtrReg;
@@ -892,79 +896,79 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_VOID)
 
           BEGIN_CASE(JSOP_INCNAME)
-            jsop_nameinc(op, stubs::IncName, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::IncName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_INCNAME)
 
           BEGIN_CASE(JSOP_INCGNAME)
-            jsop_gnameinc(op, stubs::IncGlobalName, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::IncGlobalName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_INCGNAME)
 
           BEGIN_CASE(JSOP_INCPROP)
-            jsop_propinc(op, stubs::IncProp, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::IncProp), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_INCPROP)
 
           BEGIN_CASE(JSOP_INCELEM)
-            jsop_eleminc(op, stubs::IncElem);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::IncElem));
           END_CASE(JSOP_INCELEM)
 
           BEGIN_CASE(JSOP_DECNAME)
-            jsop_nameinc(op, stubs::DecName, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::DecName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_DECNAME)
 
           BEGIN_CASE(JSOP_DECGNAME)
-            jsop_gnameinc(op, stubs::DecGlobalName, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::DecGlobalName), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_DECGNAME)
 
           BEGIN_CASE(JSOP_DECPROP)
-            jsop_propinc(op, stubs::DecProp, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::DecProp), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_DECPROP)
 
           BEGIN_CASE(JSOP_DECELEM)
-            jsop_eleminc(op, stubs::DecElem);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::DecElem));
           END_CASE(JSOP_DECELEM)
 
           BEGIN_CASE(JSOP_NAMEINC)
-            jsop_nameinc(op, stubs::NameInc, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::NameInc), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_NAMEINC)
 
           BEGIN_CASE(JSOP_GNAMEINC)
-            jsop_gnameinc(op, stubs::GlobalNameInc, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameInc), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_GNAMEINC)
 
           BEGIN_CASE(JSOP_PROPINC)
-            jsop_propinc(op, stubs::PropInc, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::PropInc), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_PROPINC)
 
           BEGIN_CASE(JSOP_ELEMINC)
-            jsop_eleminc(op, stubs::ElemInc);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::ElemInc));
           END_CASE(JSOP_ELEMINC)
 
           BEGIN_CASE(JSOP_NAMEDEC)
-            jsop_nameinc(op, stubs::NameDec, fullAtomIndex(PC));
+            jsop_nameinc(op, STRICT_VARIANT(stubs::NameDec), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_NAMEDEC)
 
           BEGIN_CASE(JSOP_GNAMEDEC)
-            jsop_gnameinc(op, stubs::GlobalNameDec, fullAtomIndex(PC));
+            jsop_gnameinc(op, STRICT_VARIANT(stubs::GlobalNameDec), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_GNAMEDEC)
 
           BEGIN_CASE(JSOP_PROPDEC)
-            jsop_propinc(op, stubs::PropDec, fullAtomIndex(PC));
+            jsop_propinc(op, STRICT_VARIANT(stubs::PropDec), fullAtomIndex(PC));
             break;
           END_CASE(JSOP_PROPDEC)
 
           BEGIN_CASE(JSOP_ELEMDEC)
-            jsop_eleminc(op, stubs::ElemDec);
+            jsop_eleminc(op, STRICT_VARIANT(stubs::ElemDec));
           END_CASE(JSOP_ELEMDEC)
 
           BEGIN_CASE(JSOP_GETTHISPROP)
@@ -1245,7 +1249,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_FORNAME)
             prepareStubCall(Uses(1));
             masm.move(ImmPtr(script->getAtom(fullAtomIndex(PC))), Registers::ArgReg1);
-            stubCall(stubs::ForName);
+            stubCall(STRICT_VARIANT(stubs::ForName));
           END_CASE(JSOP_FORNAME)
 
           BEGIN_CASE(JSOP_INCLOCAL)
@@ -1318,7 +1322,7 @@ mjit::Compiler::generateMethod()
 
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(inner), Registers::ArgReg1);
-            stubCall(stubs::DefFun);
+            stubCall(STRICT_VARIANT(stubs::DefFun));
           }
           END_CASE(JSOP_DEFFUN)
 
@@ -1905,6 +1909,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * Save constant |this| to optimize thisv stores for common call cases
      * like CALL[LOCAL, GLOBAL, ARG] which push NULL.
      */
+    callIC.pc = PC;
     callIC.frameDepth = frame.frameDepth();
 
     /* Grab type and data registers up-front. */
@@ -2054,7 +2059,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     if (callingNew)
         flags |= JSFRAME_CONSTRUCTING;
 
-    InlineFrameAssembler inlFrame(masm, callIC, PC, flags);
+    InlineFrameAssembler inlFrame(masm, callIC, flags);
     inlFrame.assemble();
 
     callIC.hotCall = masm.call();
@@ -2202,7 +2207,7 @@ mjit::Compiler::jsop_setprop_slow(JSAtom *atom)
 {
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::SetName);
+    stubCall(STRICT_VARIANT(stubs::SetName));
     JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
     frame.shimmy(1);
 }
@@ -2847,7 +2852,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         if (op == JSOP_SETNAME || op == JSOP_SETPROP || op == JSOP_SETGNAME || op ==
             JSOP_SETMETHOD) {
             stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
-            stubcc.call(stubs::SetName);
+            stubcc.call(STRICT_VARIANT(stubs::SetName));
         } else {
             stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
             stubcc.call(ic::SetPropDumb);
@@ -2867,32 +2872,14 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
 
     /* Get info about the RHS and pin it. */
     ValueRemat vr;
-    if (rhs->isConstant()) {
-        vr.isConstant = true;
-        vr.u.v = Jsvalify(rhs->getValue());
-    } else {
-        vr.isConstant = false;
-        vr.u.s.isTypeKnown = rhs->isTypeKnown();
-        if (vr.u.s.isTypeKnown) {
-            vr.u.s.type.knownType = rhs->getKnownType();
-        } else {
-            vr.u.s.type.reg = frame.tempRegForType(rhs);
-            frame.pinReg(vr.u.s.type.reg);
-        }
-        vr.u.s.data = frame.tempRegForData(rhs);
-        frame.pinReg(vr.u.s.data);
-    }
+    frame.pinEntry(rhs, vr);
     pic.vr = vr;
 
     RegisterID shapeReg = frame.allocReg();
     pic.shapeReg = shapeReg;
     pic.objRemat = frame.dataRematInfo(lhs);
 
-    if (!vr.isConstant) {
-        if (!vr.u.s.isTypeKnown)
-            frame.unpinReg(vr.u.s.type.reg);
-        frame.unpinReg(vr.u.s.data);
-    }
+    frame.unpinEntry(vr);
 
     /* Guard on shape. */
     masm.loadShape(objReg, shapeReg);
@@ -3813,7 +3800,7 @@ mjit::Compiler::jsop_setgname_slow(uint32 index)
     JSAtom *atom = script->getAtom(index);
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::SetGlobalName);
+    stubCall(STRICT_VARIANT(stubs::SetGlobalName));
     frame.popn(2);
     frame.pushSynced();
 }
@@ -3961,7 +3948,7 @@ void
 mjit::Compiler::jsop_setelem_slow()
 {
     prepareStubCall(Uses(3));
-    stubCall(stubs::SetElem);
+    stubCall(STRICT_VARIANT(stubs::SetElem));
     frame.popn(3);
     frame.pushSynced();
 }
@@ -4074,7 +4061,7 @@ mjit::Compiler::jsop_instanceof()
  * after rejoin()s.
  */
 void
-mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
+mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne, Jump *slowTwo)
 {
 #ifndef JS_TRACER
     jumpInScript(j, target);
@@ -4083,8 +4070,10 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 #else
     if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
         jumpInScript(j, target);
-        if (slow)
-            stubcc.jumpInScript(*slow, target);
+        if (slowOne)
+            stubcc.jumpInScript(*slowOne, target);
+        if (slowTwo)
+            stubcc.jumpInScript(*slowTwo, target);
         return;
     }
 
@@ -4094,13 +4083,19 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     mic.entry = masm.label();
     mic.jumpTarget = target;
     mic.traceHint = j;
-    if (slow)
-        mic.slowTraceHint = *slow;
+    if (slowOne)
+        mic.slowTraceHintOne = *slowOne;
+    if (slowTwo)
+        mic.slowTraceHintTwo = *slowTwo;
 # endif
 
-    stubcc.linkExitDirect(j, stubcc.masm.label());
-    if (slow)
-        slow->linkTo(stubcc.masm.label(), &stubcc.masm);
+    Label traceStart = stubcc.masm.label();
+
+    stubcc.linkExitDirect(j, traceStart);
+    if (slowOne)
+        slowOne->linkTo(traceStart, &stubcc.masm);
+    if (slowTwo)
+        slowTwo->linkTo(traceStart, &stubcc.masm);
 # if JS_MONOIC
     stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
 # endif

@@ -810,7 +810,7 @@ static JSBool
 str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
-    if (!JSID_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
+    if (!JSID_IS_INT(id))
         return JS_TRUE;
 
     JSString *str = obj->getPrimitiveThis().toString();
@@ -1880,7 +1880,7 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
         return false;
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
+    return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v, false);
 }
 
 static JSBool
@@ -3451,6 +3451,9 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
         return base;
 
     jschar *chars = base->chars() + start;
+
+    if (length == 1 && *chars < UNIT_STRING_LIMIT)
+        return &JSString::unitStringTable[*chars];
 
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())
