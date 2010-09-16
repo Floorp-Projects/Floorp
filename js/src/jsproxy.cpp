@@ -129,6 +129,8 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.getter),
                                 JSACC_READ, 0, NULL, vp);
     }
+    if (!(desc.attrs & JSPROP_SHARED))
+        *vp = desc.value;
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
     return CallJSPropertyOp(cx, desc.getter, proxy, id, vp);
