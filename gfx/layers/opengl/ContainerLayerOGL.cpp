@@ -144,6 +144,17 @@ ContainerLayerOGL::GetFirstChildOGL()
   return static_cast<LayerOGL*>(mFirstChild->ImplData());
 }
 
+static inline GLint GetYCoordOfRectStartingFromBottom(GLint y, GLint height, GLint viewportHeight)
+{
+#ifdef XP_MAC
+    (void) height;
+    (void) viewportHeight;
+    return y;
+#else
+    return viewportHeight - height - y;
+#endif
+}
+
 void
 ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                const nsIntPoint& aOffset)
@@ -175,6 +186,9 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   GLint savedScissor[4];
   gl()->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, savedScissor);
 
+  GLint viewport[4];
+  gl()->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
+
   /**
    * Render this container's contents.
    */
@@ -184,12 +198,12 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     if (clipRect) {
       if (needsFramebuffer) {
         gl()->fScissor(clipRect->x - visibleRect.x,
-                       clipRect->y - visibleRect.y,
+                       GetYCoordOfRectStartingFromBottom(clipRect->y - visibleRect.y, clipRect->height, viewport[3]),
                        clipRect->width,
                        clipRect->height);
       } else {
         gl()->fScissor(clipRect->x,
-                       clipRect->y,
+                       GetYCoordOfRectStartingFromBottom(clipRect->y, clipRect->height, viewport[3]),
                        clipRect->width,
                        clipRect->height);
       }
@@ -197,7 +211,10 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       if (needsFramebuffer) {
         gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
       } else {
-        gl()->fScissor(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
+        gl()->fScissor(visibleRect.x,
+                       GetYCoordOfRectStartingFromBottom(visibleRect.y, visibleRect.height, viewport[3]),
+                       visibleRect.width,
+                       visibleRect.height);
       }
     }
 
