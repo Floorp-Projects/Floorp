@@ -1530,10 +1530,10 @@ js_NativeSet(JSContext *cx, JSObject *obj, const js::Shape *shape, bool added,
              js::Value *vp);
 
 extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp);
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, js::Value *vp);
 
 extern bool
-js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
+js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id, uint32 getHow,
                               js::Value *vp, const js::Shape **shapeOut, JSObject **holderOut);
 
 extern JSBool

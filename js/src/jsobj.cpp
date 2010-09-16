@@ -4762,7 +4762,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
     return true;
 }
 
-JS_ALWAYS_INLINE bool
+static JS_ALWAYS_INLINE bool
 js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
                                     uintN getHow, Value *vp,
                                     const Shape **shapeOut, JSObject **holderOut)
@@ -4866,15 +4866,15 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-bool
+extern bool
 js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id,
-                              uintN getHow, Value *vp,
+                              uint32 getHow, Value *vp,
                               const Shape **shapeOut, JSObject **holderOut)
 {
     return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, shapeOut, holderOut);
 }
 
-JSBool
+extern JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
 {
     const Shape *shape;
