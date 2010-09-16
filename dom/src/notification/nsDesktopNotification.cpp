@@ -46,7 +46,6 @@
 using namespace mozilla::dom;
 #endif
 
-
 class nsDesktopNotification;
 
 /* ------------------------------------------------------------------------ */
