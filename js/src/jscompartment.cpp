@@ -190,19 +190,6 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         return false;
 
     /*
-     * We hand in the original wrapped object into the wrap hook to allow
-     * the wrap hook to reason over what wrappers are currently applied
-     * to the object.
-     */
-    JSObject *wrapper = cx->runtime->wrapObjectCallback(cx, obj, proto, flags);
-    if (!wrapper)
-        return false;
-    wrapper->setProto(proto);
-    vp->setObject(*wrapper);
-    if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
-        return false;
-
-    /*
      * Wrappers should really be parented to the wrapped parent of the wrapped
      * object, but in that case a wrapped global object would have a NULL
      * parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead,
@@ -218,6 +205,29 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (!global)
             return false;
     }
+
+    /*
+     * We hand in the original wrapped object into the wrap hook to allow
+     * the wrap hook to reason over what wrappers are currently applied
+     * to the object.
+     */
+    JSObject *wrapper = cx->runtime->wrapObjectCallback(cx, obj, proto, global, flags);
+    if (!wrapper)
+        return false;
+
+    vp->setObject(*wrapper);
+
+    /*
+     * If the returned "wrapper" is not a proxy, then we were attempting to
+     * wrap an XPConnect "holder" object and the actual wrapped object was
+     * in our compartment.
+     */
+    if (!wrapper->isProxy())
+        return true;
+
+    wrapper->setProto(proto);
+    if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
+        return false;
 
     wrapper->setParent(global);
     return true;

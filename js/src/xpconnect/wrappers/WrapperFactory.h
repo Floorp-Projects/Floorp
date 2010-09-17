@@ -57,6 +57,7 @@ class WrapperFactory {
     static JSObject *Rewrap(JSContext *cx,
                             JSObject *obj,
                             JSObject *wrappedProto,
+                            JSObject *parent,
                             uintN flags);
 };
 
