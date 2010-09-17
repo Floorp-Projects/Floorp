@@ -573,9 +573,8 @@ AutoCompartment::leave()
     JS_ASSERT(entered);
     if (origin != destination) {
         frame.destroy();
-        context->resetCompartment();
-        JS_ASSERT_IF(context->hasfp(), context->compartment == origin);
-        context->compartment->wrapException(context);
+        context->compartment = origin;
+        origin->wrapException(context);
     }
     entered = false;
 }
