@@ -2086,41 +2086,9 @@ struct JSContext
     friend class js::StackSpace;
     friend bool js::Interpret(JSContext *, JSStackFrame *, uintN, uintN);
 
-    void resetCompartment() {
-        JSObject *scopeobj;
-        if (hasfp()) {
-            scopeobj = &fp()->scopeChain();
-        } else {
-            scopeobj = globalObject;
-            if (!scopeobj) {
-                compartment = runtime->defaultCompartment;
-                return;
-            }
-
-            /*
-             * Innerize. Assert, but check anyway, that this succeeds. (It
-             * can only fail due to bugs in the engine or embedding.)
-             */
-            OBJ_TO_INNER_OBJECT(this, scopeobj);
-            if (!scopeobj) {
-                /*
-                 * Bug. Return NULL, not defaultCompartment, to crash rather
-                 * than open a security hole.
-                 */
-                JS_ASSERT(0);
-                compartment = NULL;
-                return;
-            }
-        }
-        compartment = scopeobj->getCompartment(this);
-    }
-
     /* 'regs' must only be changed by calling this function. */
     void setCurrentRegs(JSFrameRegs *regs) {
-        JS_ASSERT_IF(regs, regs->fp);
         this->regs = regs;
-        if (!regs)
-            resetCompartment();
     }
 
     /* Temporary arena pool used while compiling and decompiling. */
