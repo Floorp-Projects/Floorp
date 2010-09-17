@@ -51,7 +51,7 @@ const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";
 
 const LPCWSTR kJAWSModuleHandle = L"jhook";
 const LPCWSTR kWEModuleHandle = L"gwm32inc";
-const LPCWSTR kNVDAModuleHandle = L"VBufBackend_gecko_ia2";
+const LPCWSTR kDolphnModuleHandle = L"dolwinhk";
 
 class nsWinUtils
 {
