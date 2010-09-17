@@ -73,4 +73,9 @@ protected:
                                   PRInt32 aModifiers,
                                   PRBool aIgnoreRootScrollFrame,
                                   PRBool aToWindow);
+
+  nsresult RenderDocument(const nsRect& aRect,
+                          PRUint32 aFlags,
+                          nscolor aBackgroundColor,
+                          gfxContext* aThebesContext);
 };
