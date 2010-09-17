@@ -310,6 +310,8 @@ _TEST_FILES2 = \
 		file_xhtmlserializer_2_latin1.xhtml \
 		test_bug500937.html \
 		test_htmlcopyencoder.html \
+		test_bug313646.html \
+		bug313646.txt \
 		test_htmlcopyencoder.xhtml \
 		test_bug270145.xhtml \
 		test_elementTraversal.html \
