@@ -89,8 +89,18 @@ public:
         /* [optional][in] */ VARIANT varChild,
         /* [retval][out] */ BSTR __RPC_FAR *pszValue);
 
+  // nsAccessNode
+  virtual PRBool Init();
+  virtual void Shutdown();
+
   // nsAccessibleWrap
   virtual nsAccessible *GetXPAccessibleFor(const VARIANT& varChild);
+
+  // nsDocAccessible
+  virtual void* GetNativeWindow() const;
+
+protected:
+  void* mHWND;
 };
 
 #endif

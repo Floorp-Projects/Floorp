@@ -68,6 +68,8 @@
 #include "nsICrashReporter.h"
 #endif
 
+#include "nsRefPtrHashtable.h"
+
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
 
@@ -154,6 +156,7 @@ public: // construction, destruction
     static HINSTANCE gmAccLib;
     static HINSTANCE gmUserLib;
     static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
+    static LPFNLRESULTFROMOBJECT gmLresultFromObject;
     static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
     static LPFNGETGUITHREADINFO gmGetGUIThreadInfo;
 
@@ -164,6 +167,13 @@ public: // construction, destruction
     static void TurnOffNewTabSwitchingForJawsAndWE();
 
     static void DoATSpecificProcessing();
+
+  static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
+
+  static LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg,
+                                     WPARAM WParam, LPARAM lParam);
+
+  static nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible> sHWNDCache;
 
 protected:
 
