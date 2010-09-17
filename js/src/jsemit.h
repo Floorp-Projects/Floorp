@@ -372,6 +372,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
     }
 
     bool callsEval() const {
+        JS_ASSERT(inFunction());
         return flags & TCF_FUN_CALLS_EVAL;
     }
 
@@ -549,11 +550,6 @@ struct JSCodeGenerator : public JSTreeContext
     GlobalUseVector globalUses;     /* per-script global uses */
     JSAtomList      globalMap;      /* per-script map of global name to globalUses vector */
 
-    /* Vectors of pn_cookie slot values. */
-    typedef js::Vector<uint32, 8, js::ContextAllocPolicy> SlotVector;
-    SlotVector      closedArgs;
-    SlotVector      closedVars;
-
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
@@ -586,8 +582,6 @@ struct JSCodeGenerator : public JSTreeContext
     }
 
     bool compilingForEval() { return !!(flags & TCF_COMPILE_FOR_EVAL); }
-
-    bool shouldNoteClosedName(JSParseNode *pn);
 };
 
 #define CG_TS(cg)               TS((cg)->parser)
