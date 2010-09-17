@@ -884,16 +884,19 @@ var Browser = {
    * @return Rect in viewport coordinates
    */
   _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
-    x = x * getBrowser().scale;
-    y = y * getBrowser().scale;
+    let browser = getBrowser();
+    x = x * browser.scale;
+    y = y * browser.scale;
 
     zoomLevel = Math.min(ZoomManager.MAX, zoomLevel);
-    let zoomRatio = zoomLevel / getBrowser().scale;
+    let oldScale = browser.scale;
+    let zoomRatio = zoomLevel / oldScale;
     let newVisW = window.innerWidth / zoomRatio, newVisH = window.innerHeight / zoomRatio;
     let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
 
     // Make sure rectangle doesn't poke out of viewport
-    return result.translateInside(new Rect(0, 0, getBrowser().contentDocumentWidth, getBrowser().contentDocumentHeight));
+    return result.translateInside(new Rect(0, 0, browser.contentDocumentWidth * oldScale,
+                                                 browser.contentDocumentHeight * oldScale));
   },
 
   animatedZoomTo: function animatedZoomTo(rect) {

@@ -67,14 +67,19 @@ const AnimatedZoom = {
     if (this.zoomRect) {
       this.zoomFrom = this.zoomRect;
     } else {
-      let browserRect = Rect.fromRect(getBrowser().getBoundingClientRect());
-      let scroll = getBrowser().getPosition();
-      this.zoomFrom = browserRect.translate(scroll.x, scroll.y);
+      this.zoomFrom = this.getStartRect();
       this.updateTo(this.zoomFrom);
 
       window.addEventListener("MozBeforePaint", this, false);
       mozRequestAnimationFrame();
     }
+  },
+
+  getStartRect: function getStartRect() {
+    let browser = getBrowser();
+    let browserRect = Rect.fromRect(browser.getBoundingClientRect());
+    let scroll = browser.getPosition();
+    return browserRect.translate(scroll.x, scroll.y);
   },
 
   /** Updates the zoom to new rect. */
