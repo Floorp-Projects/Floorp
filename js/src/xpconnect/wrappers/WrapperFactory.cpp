@@ -94,11 +94,11 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
 
     JSWrapper *wrapper;
     if (AccessCheck::isChrome(target)) {
-        NS_ASSERTION(!AccessCheck::isChrome(origin), "we shouldn't rewrap from chrome into chrome");
-
-        // If we waived the X-ray wrapper for this object, wrap it into a
-        // special wrapper to transitively maintain the X-ray waiver.
-        if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
+        if (AccessCheck::isChrome(origin)) {
+            wrapper = &JSCrossCompartmentWrapper::singleton;
+        } else if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
+            // If we waived the X-ray wrapper for this object, wrap it into a
+            // special wrapper to transitively maintain the X-ray waiver.
             wrapper = &XrayWrapperWaivedWrapper;
         } else {
             // Native objects must be wrapped into an X-ray wrapper.
