@@ -72,7 +72,7 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     for (size_t n = 0; n < props.length(); ++n) {
         jsid id = props[n];
         Permission perm;
-        if (perm != PermitObjectAccess && !Policy::check(cx, wrapper, id, false, perm))
+        if (perm != PermitObjectAccess && !Policy::check(cx, wrapper, id, JSWrapper::GET, perm))
             return false; // Error
         if (perm != DenyAccess) {
             props[w++] = id;
@@ -84,9 +84,9 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 
 template <typename Policy>
 static bool
-CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, bool set, Permission &perm)
+CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act, Permission &perm)
 {
-    if (!Policy::check(cx, wrapper, id, set, perm)) {
+    if (!Policy::check(cx, wrapper, id, act, perm)) {
         return false;
     }
     if (perm == DenyAccess) {
@@ -141,11 +141,12 @@ FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN 
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
+FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
+                                      JSWrapper::Action act)
 {
     Permission perm;
-    return CheckAndReport<Policy>(cx, wrapper, id, set, perm) &&
-           Base::enter(cx, wrapper, id, set);
+    return CheckAndReport<Policy>(cx, wrapper, id, act, perm) &&
+           Base::enter(cx, wrapper, id, act);
 }
 
 #define SOW FilteringWrapper<JSCrossCompartmentWrapper, OnlyIfSubjectIsSystem>
