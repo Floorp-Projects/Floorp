@@ -641,12 +641,8 @@ MouseModule.prototype = {
       window.clearTimeout(this._clickTimeout);
       this._doDoubleClick();
     } else {
-      let time = this._downUpEvents[1].time - this._downUpEvents[0].time;
-      if (time >= kDoubleClickThreshold)
-        this._doSingleClick();
-      else
-        this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); },
-                                               kDoubleClickInterval, this);
+      this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); },
+                                             kDoubleClickInterval, this);
     }
   },
 
