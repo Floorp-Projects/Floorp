@@ -287,7 +287,8 @@ JSWrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
 namespace js {
 
 extern JSObject *
-TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, uintN flags)
+TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
+                         uintN flags)
 {
     // Allow wrapping outer window proxies.
     JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);

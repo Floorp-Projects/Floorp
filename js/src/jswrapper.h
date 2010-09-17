@@ -173,7 +173,8 @@ class AutoCompartment
 };
 
 extern JSObject *
-TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, uintN flags);
+TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
+                         uintN flags);
 
 }
 
