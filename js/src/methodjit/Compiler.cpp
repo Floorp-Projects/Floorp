@@ -4035,10 +4035,19 @@ mjit::Compiler::jsop_instanceof()
         RegisterID reg = frame.tempRegForData(rhs);
         j = masm.testFunction(Assembler::NotEqual, reg);
         stubcc.linkExit(j, Uses(2));
+    }
+
+    /* Test for bound functions. */
+    RegisterID obj = frame.tempRegForData(rhs);
+    Jump isBound = masm.branchTest32(Assembler::NonZero, Address(obj, offsetof(JSObject, flags)),
+                                     Imm32(JSObject::BOUND_FUNCTION));
+    {
+        stubcc.linkExit(isBound, Uses(2));
         stubcc.leave();
         stubcc.call(stubs::InstanceOf);
         firstSlow = stubcc.masm.jump();
     }
+    
 
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
@@ -4051,7 +4060,7 @@ mjit::Compiler::jsop_instanceof()
     stubcc.linkExit(j, Uses(3));
 
     /* Allocate registers up front, because of branchiness. */
-    RegisterID obj = frame.copyDataIntoReg(lhs);
+    obj = frame.copyDataIntoReg(lhs);
     RegisterID proto = frame.copyDataIntoReg(rhs);
     RegisterID temp = frame.allocReg();
 

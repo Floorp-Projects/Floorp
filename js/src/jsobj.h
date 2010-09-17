@@ -321,14 +321,15 @@ struct JSObject {
     inline bool nativeContains(const js::Shape &shape);
 
     enum {
-        DELEGATE        = 0x01,
-        SYSTEM          = 0x02,
-        SEALED          = 0x04,
-        BRANDED         = 0x08,
-        GENERIC         = 0x10,
-        METHOD_BARRIER  = 0x20,
-        INDEXED         = 0x40,
-        OWN_SHAPE       = 0x80
+        DELEGATE        =  0x01,
+        SYSTEM          =  0x02,
+        SEALED          =  0x04,
+        BRANDED         =  0x08,
+        GENERIC         =  0x10,
+        METHOD_BARRIER  =  0x20,
+        INDEXED         =  0x40,
+        OWN_SHAPE       =  0x80,
+        BOUND_FUNCTION  = 0x100
     };
 
     /*
@@ -387,6 +388,8 @@ struct JSObject {
 
     bool isDelegate() const     { return !!(flags & DELEGATE); }
     void setDelegate()          { flags |= DELEGATE; }
+
+    bool isBoundFunction() const { return !!(flags & BOUND_FUNCTION); }
 
     static void setDelegateNullSafe(JSObject *obj) {
         if (obj)
