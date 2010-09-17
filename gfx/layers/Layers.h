@@ -495,10 +495,16 @@ public:
   }
   /**
    * CONSTRUCTION PHASE ONLY
-   * Tell this layer which region will be visible. It is the responsibility
-   * of the caller to ensure that content outside this region does not
-   * contribute to the final visible window. This can be an
-   * overapproximation to the true visible region.
+   * Tell this layer which region will be visible. The visible region
+   * is a region which contains all the contents of the layer that can
+   * actually affect the rendering of the window. It can exclude areas
+   * that are covered by opaque contents of other layers, and it can
+   * exclude areas where this layer simply contains no content at all.
+   * (This can be an overapproximation to the "true" visible region.)
+   * 
+   * There is no general guarantee that drawing outside the bounds of the
+   * visible region will be ignored. So if a layer draws outside the bounds
+   * of its visible region, it needs to ensure that what it draws is valid.
    */
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
