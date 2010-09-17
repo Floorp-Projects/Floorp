@@ -60,7 +60,7 @@ GetCompartmentPrincipal(JSCompartment *compartment)
 }
 
 bool
-CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
+CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
 {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (!ssm) {

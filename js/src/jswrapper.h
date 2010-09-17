@@ -92,7 +92,8 @@ class JSWrapper : public js::JSProxyHandler {
     virtual JS_FRIEND_API(void) trace(JSTracer *trc, JSObject *wrapper);
 
     /* Policy enforcement traps. */
-    virtual JS_FRIEND_API(bool) enter(JSContext *cx, JSObject *wrapper, jsid id, bool set);
+    enum Action { GET, SET, CALL };
+    virtual JS_FRIEND_API(bool) enter(JSContext *cx, JSObject *wrapper, jsid id, Action act);
     virtual JS_FRIEND_API(void) leave(JSContext *cx, JSObject *wrapper);
 
     static JS_FRIEND_API(JSWrapper) singleton;

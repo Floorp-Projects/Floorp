@@ -87,17 +87,17 @@ JSWrapper::~JSWrapper()
 {
 }
 
-#define CHECKED(op, set)                                                     \
+#define CHECKED(op, act)                                                     \
     JS_BEGIN_MACRO                                                           \
-        if (!enter(cx, wrapper, id, set))                                    \
+        if (!enter(cx, wrapper, id, act))                                    \
             return false;                                                    \
         bool ok = (op);                                                      \
         leave(cx, wrapper);                                                  \
         return ok;                                                           \
     JS_END_MACRO
 
-#define SET(action) CHECKED(action, true)
-#define GET(action) CHECKED(action, false)
+#define SET(action) CHECKED(action, SET)
+#define GET(action) CHECKED(action, GET)
 
 bool
 JSWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
@@ -223,7 +223,7 @@ bool
 JSWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, Value *vp)
 {
     const jsid id = JSID_VOID;
-    GET(JSProxyHandler::call(cx, wrapper, argc, vp));
+    CHECKED(JSProxyHandler::call(cx, wrapper, argc, vp), CALL);
 }
 
 bool
@@ -237,7 +237,7 @@ JSString *
 JSWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
 {
     JSString *str;
-    if (!enter(cx, wrapper, JSID_VOID, false))
+    if (!enter(cx, wrapper, JSID_VOID, GET))
         return NULL;
     str = JSProxyHandler::obj_toString(cx, wrapper);
     leave(cx, wrapper);
@@ -248,7 +248,7 @@ JSString *
 JSWrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN indent)
 {
     JSString *str;
-    if (!enter(cx, wrapper, JSID_VOID, false))
+    if (!enter(cx, wrapper, JSID_VOID, GET))
         return NULL;
     str = JSProxyHandler::fun_toString(cx, wrapper, indent);
     leave(cx, wrapper);
@@ -262,7 +262,7 @@ JSWrapper::trace(JSTracer *trc, JSObject *wrapper)
 }
 
 bool
-JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
+JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
 {
     return true;
 }
