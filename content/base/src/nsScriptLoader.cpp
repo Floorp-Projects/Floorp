@@ -724,9 +724,6 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
                                          NS_LITERAL_STRING("afterscriptexecute"),
                                          PR_TRUE, PR_FALSE);
   }
-  else {
-    rv = NS_ERROR_ABORT;
-  }
 
   FireScriptEvaluated(rv, aRequest);
 
