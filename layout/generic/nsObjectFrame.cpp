@@ -2821,6 +2821,10 @@ nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
   NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set once!");
 
   mInstance = aInstance;
+  PRBool useAsyncPainting = PR_FALSE;
+  if (mInstance &&
+      NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncPainting)))
+      mUsePluginLayers = useAsyncPainting;
 
   return NS_OK;
 }
