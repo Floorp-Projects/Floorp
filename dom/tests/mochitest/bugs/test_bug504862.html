@@ -9,27 +9,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=504862
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="runTest()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=504862">Mozilla Bug 504862</a>
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 504862 **/
-
+SimpleTest.waitForExplicitFinish();
 function onMsgRcv(event)
 {
   is(event.data, "args: undefined", "Unexpected cross origin dialog arguments.");
 }
 
-window.addEventListener("message", onMsgRcv, false);
+function runTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  window.addEventListener("message", onMsgRcv, false);
 
-var subsequentDlg = "data:text/html,<html><body onload='opener.is(window.dialogArguments, \'my args\', \'subsequent dialog document did not get the right arguments.\'); close();'>";
+  var subsequentDlg = "data:text/html,<html><body onload='opener.is(window.dialogArguments, \'my args\', \'subsequent dialog document did not get the right arguments.\'); close();'>";
 
-var result = window.showModalDialog("file_bug504862.html", "my args");
-is(result, null, "window sees previous dialog documents return value.");
+  var result = window.showModalDialog("file_bug504862.html", "my args");
+  is(result, null, "window sees previous dialog documents return value.");
 
-result = window.showModalDialog("http://test1.example.com/tests/dom/tests/mochitest/bugs/file_bug504862.html", "my args");
+  result = window.showModalDialog("http://test1.example.com/tests/dom/tests/mochitest/bugs/file_bug504862.html", "my args");
 
-is(result, null, "Able to see return value from cross origin dialog.");
+  is(result, null, "Able to see return value from cross origin dialog.");
+  SimpleTest.finish();
+}
 
 </script>
 </pre>
