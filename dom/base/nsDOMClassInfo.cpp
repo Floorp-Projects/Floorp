@@ -5055,9 +5055,8 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
                              getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, JS_FALSE);
 
-    if (!::JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull, 0)) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
-
+    if (!JS_WrapValue(cx, &v) ||
+        !JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull, 0)) {
       return JS_FALSE;
     }
 
@@ -6601,7 +6600,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         JSAutoRequest ar(cx);
 
-        PRBool ok = ::JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull, 0);
+        PRBool ok = JS_WrapValue(cx, &v) &&
+                    JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull, 0);
         if (!ok) {
           return NS_ERROR_FAILURE;
         }
@@ -6707,8 +6707,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     &v, getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSBool ok = ::JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull,
-                                        JSPROP_PERMANENT | JSPROP_ENUMERATE);
+    JSBool ok = JS_WrapValue(cx, &v) &&
+                JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull,
+                                      JSPROP_PERMANENT | JSPROP_ENUMERATE);
 
     if (!ok) {
       return NS_ERROR_FAILURE;
@@ -6760,8 +6761,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       rv = WrapNative(cx, obj, navigator, &NS_GET_IID(nsIDOMNavigator), PR_TRUE,
                       &v, getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      JSAutoRequest ar(cx);
 
       if (!::JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull,
                                    JSPROP_READONLY | JSPROP_PERMANENT |
