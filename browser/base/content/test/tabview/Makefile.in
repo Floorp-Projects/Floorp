@@ -45,6 +45,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
                  browser_tabview_apptabs.js \
+                 browser_tabview_bug587040.js \
                  browser_tabview_bug587990.js \
                  browser_tabview_bug591706.js \
                  browser_tabview_bug595191.js \
