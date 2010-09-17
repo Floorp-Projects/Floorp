@@ -116,10 +116,6 @@
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.reloadAllTabs();"/>
       <menuseparator/>
-      <menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
-                accesskey="&openTabInNewWindow.accesskey;"
-                tbattr="tabbrowser-multiple"
-                oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
       <menuitem id="context_pinTab" label="&pinAppTab.label;"
                 accesskey="&pinAppTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
@@ -135,6 +131,10 @@
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
         </menupopup>
       </menu>
+      <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
+                accesskey="&moveToNewWindow.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
