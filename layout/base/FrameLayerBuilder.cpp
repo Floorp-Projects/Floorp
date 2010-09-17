@@ -44,6 +44,7 @@
 #include "BasicLayers.h"
 #include "nsSubDocumentFrame.h"
 #include "nsCSSRendering.h"
+#include "nsCSSFrameConstructor.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -359,6 +360,15 @@ PRUint8 gColorLayerUserData;
 PRUint8 gLayerManagerUserData;
 
 } // anonymous namespace
+
+void
+FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder)
+{
+  mRootPresContext = aBuilder->ReferenceFrame()->PresContext()->GetRootPresContext();
+  if (mRootPresContext) {
+    mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
+  }
+}
 
 PRBool
 FrameLayerBuilder::DisplayItemDataEntry::HasContainerLayer()
@@ -1540,6 +1550,10 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 {
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
+
+  if (builder->LayerBuilder()->CheckDOMModified())
+    return;
+
   nsTArray<ClippedDisplayItem> items;
   nsIFrame* containerLayerFrame;
   {
@@ -1669,11 +1683,32 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     } else {
       cdi->mItem->Paint(builder, rc);
     }
+
+    if (builder->LayerBuilder()->CheckDOMModified())
+      break;
   }
 
   if (setClipRect) {
     aContext->Restore();
   }
+}
+
+PRBool
+FrameLayerBuilder::CheckDOMModified()
+{
+  if (mRootPresContext &&
+      mInitialDOMGeneration == mRootPresContext->GetDOMGeneration())
+    return PR_FALSE;
+  if (mDetectedDOMModification) {
+    // Don't spam the console with extra warnings
+    return PR_TRUE;
+  }
+  mDetectedDOMModification = PR_TRUE;
+  // Painting is not going to complete properly. There's not much
+  // we can do here though. Invalidating the window to get another repaint
+  // is likely to lead to an infinite repaint loop.
+  NS_WARNING("Detected DOM modification during paint, bailing out!");
+  return PR_TRUE;
 }
 
 #ifdef DEBUG
