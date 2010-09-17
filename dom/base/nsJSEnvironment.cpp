@@ -3355,7 +3355,7 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
     // chain when we're clearing an outer window whose current inner we
     // still want.
     if (aClearFromProtoChain) {
-      nsCommonWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
+      nsWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
 
       // Clear up obj's prototype chain, but not Object.prototype.
       for (JSObject *o = ::JS_GetPrototype(mContext, obj), *next;
