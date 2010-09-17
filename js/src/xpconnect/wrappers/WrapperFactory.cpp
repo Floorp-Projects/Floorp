@@ -71,6 +71,13 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     NS_ASSERTION(!obj->isWrapper() || obj->getClass()->ext.innerObject,
                  "wrapped object passed to rewrap");
 
+    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
+        return nsnull;
+
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return nsnull;
+
     JSCompartment *origin = obj->getCompartment(cx);
     JSCompartment *target = cx->compartment;
 
