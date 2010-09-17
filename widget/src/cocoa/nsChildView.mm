@@ -176,7 +176,9 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)setIsPluginView:(BOOL)aIsPlugin;
 - (BOOL)isPluginView;
 - (void)setPluginEventModel:(NPEventModel)eventModel;
+- (void)setPluginDrawingModel:(NPDrawingModel)drawingModel;
 - (NPEventModel)pluginEventModel;
+- (NPDrawingModel)pluginDrawingModel;
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
@@ -470,7 +472,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
-, mPluginIsCG(PR_FALSE)
 , mIsDispatchPaint(PR_FALSE)
 , mPluginInstanceOwner(nsnull)
 {
@@ -732,22 +733,18 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_PLUGIN_PORT_QD:
     case NS_NATIVE_PLUGIN_PORT_CG:
     {
-#ifdef NP_NO_QUICKDRAW
-      aDataType = NS_NATIVE_PLUGIN_PORT_CG;
-#endif
-      mPluginIsCG = (aDataType == NS_NATIVE_PLUGIN_PORT_CG);
-
       // The NP_CGContext pointer should always be NULL in the Cocoa event model.
       if ([(ChildView*)mView pluginEventModel] == NPEventModelCocoa)
         return nsnull;
 
       UpdatePluginPort();
-      if (mPluginIsCG)
-        retVal = (void*)&mPluginCGContext;
 #ifndef NP_NO_QUICKDRAW
-      else
+      if (aDataType != NS_NATIVE_PLUGIN_PORT_CG) {
         retVal = (void*)&mPluginQDPort;
+        break;
+      }
 #endif
+      retVal = (void*)&mPluginCGContext;
       break;
     }
   }
@@ -810,7 +807,9 @@ void nsChildView::HidePlugin()
   NS_ASSERTION(mWindowType == eWindowType_plugin,
                "HidePlugin called on non-plugin view");
 
-  if (mPluginInstanceOwner && !mPluginIsCG) {
+#ifndef NP_NO_QUICKDRAW
+  if (mPluginInstanceOwner && mView &&
+      [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw) {
     NPWindow* window;
     mPluginInstanceOwner->GetWindow(window);
     nsCOMPtr<nsIPluginInstance> instance;
@@ -823,6 +822,7 @@ void nsChildView::HidePlugin()
        instance->SetWindow(window);
     }
   }
+#endif
 }
 
 void nsChildView::UpdatePluginPort()
@@ -835,7 +835,11 @@ void nsChildView::UpdatePluginPort()
   WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
 #endif
 
-  if (mPluginIsCG) {
+  if (!mView
+#ifndef NP_NO_QUICKDRAW
+    || [(ChildView*)mView pluginDrawingModel] != NPDrawingModelQuickDraw
+#endif
+    ) {
     // [NSGraphicsContext currentContext] is supposed to "return the
     // current graphics context of the current thread."  But sometimes
     // (when called while mView isn't focused for drawing) it returns a
@@ -1252,7 +1256,8 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // without regressing bug 409615.  See bug 435041.  (StartDrawPlugin() and
   // EndDrawPlugin() wrap every call to nsIPluginInstance::HandleEvent() --
   // not just calls that "draw" or paint.)
-  if (!mPluginIsCG || mIsDispatchPaint) {
+  PRBool isQDPlugin = [(ChildView*)mView pluginDrawingModel] == NPDrawingModelQuickDraw;
+  if (isQDPlugin || mIsDispatchPaint) {
     if (mPluginDrawing)
       return NS_ERROR_FAILURE;
   }
@@ -1267,8 +1272,9 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // window's port even for CoreGraphics plugins, because they may still use Carbon
   // internally (see bug #420527 for details).
   CGrafPtr port = ::GetWindowPort(WindowRef([window windowRef]));
-  if (!mPluginIsCG)
+  if (isQDPlugin) {
     port = mPluginQDPort.port;
+  }
 
   RgnHandle pluginRegion = ::NewRgn();
   if (pluginRegion) {
@@ -1338,6 +1344,12 @@ NS_IMETHODIMP nsChildView::SetPluginEventModel(int inEventModel)
 NS_IMETHODIMP nsChildView::GetPluginEventModel(int* outEventModel)
 {
   *outEventModel = [(ChildView*)mView pluginEventModel];
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChildView::SetPluginDrawingModel(int inDrawingModel)
+{
+  [(ChildView*)mView setPluginDrawingModel:(NPDrawingModel)inDrawingModel];
   return NS_OK;
 }
 
@@ -2104,6 +2116,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #else
     mPluginEventModel = NPEventModelCocoa;
 #endif
+#ifndef NP_NO_QUICKDRAW
+    mPluginDrawingModel = NPDrawingModelQuickDraw;
+#else
+    mPluginDrawingModel = NPDrawingModelCoreGraphics;
+#endif
     mCurKeyEvent = nil;
     mKeyDownHandled = PR_FALSE;
     mKeyPressHandled = NO;
@@ -2368,9 +2385,19 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mPluginEventModel = eventModel;
 }
 
+- (void)setPluginDrawingModel:(NPDrawingModel)drawingModel
+{
+  mPluginDrawingModel = drawingModel;
+}
+
 - (NPEventModel)pluginEventModel;
 {
   return mPluginEventModel;
+}
+
+- (NPDrawingModel)pluginDrawingModel;
+{
+  return mPluginDrawingModel;
 }
 
 - (void)sendFocusEvent:(PRUint32)eventType

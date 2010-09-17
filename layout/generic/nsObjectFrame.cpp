@@ -820,6 +820,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     if (!pluginWidget)
       return NS_ERROR_FAILURE;
     pluginWidget->SetPluginEventModel(mInstanceOwner->GetEventModel());
+    pluginWidget->SetPluginDrawingModel(mInstanceOwner->GetDrawingModel());
 
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
       mInstanceOwner->SetupCARefresh();
