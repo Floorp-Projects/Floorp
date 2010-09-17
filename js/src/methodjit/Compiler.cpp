@@ -1839,8 +1839,7 @@ mjit::Compiler::emitReturn()
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
 
     Address rval(JSFrameReg, JSStackFrame::offsetOfReturnValue());
-    masm.loadPayload(rval, JSReturnReg_Data);
-    masm.loadTypeTag(rval, JSReturnReg_Type);
+    masm.loadValueAsComponents(rval, JSReturnReg_Type, JSReturnReg_Data);
     masm.restoreReturnAddress();
     masm.move(Registers::ReturnReg, JSFrameReg);
 #ifdef DEBUG
@@ -1896,8 +1895,7 @@ mjit::Compiler::emitPrimitiveTestForNew(uint32 argc)
     stubcc.linkExitDirect(primitive, stubcc.masm.label());
     FrameEntry *fe = frame.peek(-int(argc + 1));
     Address thisv(frame.addressOf(fe));
-    stubcc.masm.loadTypeTag(thisv, JSReturnReg_Type);
-    stubcc.masm.loadPayload(thisv, JSReturnReg_Data);
+    stubcc.masm.loadValueAsComponents(thisv, JSReturnReg_Type, JSReturnReg_Data);
     Jump primFix = stubcc.masm.jump();
     stubcc.crossJump(primFix, masm.label());
 }
