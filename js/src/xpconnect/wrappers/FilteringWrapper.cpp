@@ -72,11 +72,10 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     for (size_t n = 0; n < props.length(); ++n) {
         jsid id = props[n];
         Permission perm;
-        if (perm != PermitObjectAccess && !Policy::check(cx, wrapper, id, JSWrapper::GET, perm))
+        if (!Policy::check(cx, wrapper, id, JSWrapper::GET, perm))
             return false; // Error
-        if (perm != DenyAccess) {
+        if (perm != DenyAccess)
             props[w++] = id;
-        }
     }
     props.resize(w);
     return true;
