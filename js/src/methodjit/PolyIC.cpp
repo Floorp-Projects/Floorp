@@ -1799,8 +1799,9 @@ class ScopeNameCompiler : public PICStubCompiler
             if (kind == VAR)
                 slot += fun->nargs;
             Address dslot(pic.objReg, slot * sizeof(Value));
-            masm.loadTypeTag(dslot, pic.shapeReg);
-            masm.loadPayload(dslot, pic.objReg);
+
+            /* Safe because type is loaded first. */
+            masm.loadValueAsComponents(dslot, pic.shapeReg, pic.objReg);
         }
 
         skipOver.linkTo(masm.label(), &masm);
@@ -2121,7 +2122,8 @@ ic::SetPropDumb(VMFrame &f, uint32 index)
     if (!obj)
         THROW();
     Value rval = f.regs.sp[-1];
-    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1]))
+    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1],
+                          script->strictModeCode))
         THROW();
     f.regs.sp[-2] = rval;
 }
@@ -2134,7 +2136,7 @@ SetPropSlow(VMFrame &f, uint32 index)
     JS_ASSERT(pic.isSet());
 
     JSAtom *atom = pic.atom;
-    stubs::SetName(f, atom);
+    STRICT_VARIANT(stubs::SetName)(f, atom);
 }
 
 void JS_FASTCALL

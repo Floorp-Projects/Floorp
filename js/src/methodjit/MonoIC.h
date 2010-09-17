@@ -129,6 +129,9 @@ struct CallICInfo {
     JSObject *fastGuardedObject;
     JSObject *fastGuardedNative;
 
+    /* PC at the call site. */
+    jsbytecode *pc;
+
     uint32 argc : 16;
     uint32 frameDepth : 16;
 

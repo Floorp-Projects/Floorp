@@ -472,60 +472,76 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
 void * JS_FASTCALL
 stubs::UncachedNew(VMFrame &f, uint32 argc)
 {
+    UncachedCallResult ucr;
+    UncachedNewHelper(f, argc, &ucr);
+    return ucr.codeAddr;
+}
+
+void
+stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+{
+    ucr->init();
+
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
     /* Try to do a fast inline call before the general Invoke path. */
-    JSFunction *fun;
-    if (IsFunctionObject(*vp, &fun) && fun->isInterpreted() && !fun->script()->isEmpty()) {
-        void *ret;
-        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ret, argc))
-            THROWV(NULL);
-        return ret;
+    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpreted() && 
+        !ucr->fun->script()->isEmpty()) {
+        ucr->callee = &vp->toObject();
+        if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ucr->codeAddr, argc))
+            THROW();
+        return;
     }
 
     if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(vp, argc)))
-        THROWV(NULL);
-    return NULL;
+        THROW();
+    return;
 }
 
 void * JS_FASTCALL
 stubs::UncachedCall(VMFrame &f, uint32 argc)
 {
-    JSContext *cx = f.cx;
+    UncachedCallResult ucr;
+    UncachedCallHelper(f, argc, &ucr);
+    return ucr.codeAddr;
+}
 
+void
+stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+{
+    ucr->init();
+
+    JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 
-    JSObject *obj;
-    if (IsFunctionObject(*vp, &obj)) {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
+    if (IsFunctionObject(*vp, &ucr->callee)) {
+        ucr->callee = &vp->toObject();
+        ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
-        if (fun->isInterpreted()) {
-            void *ret;
-
-            if (fun->u.i.script->isEmpty()) {
+        if (ucr->fun->isInterpreted()) {
+            if (ucr->fun->u.i.script->isEmpty()) {
                 vp->setUndefined();
                 f.regs.sp = vp + 1;
-                return NULL;
+                return;
             }
 
-            if (!UncachedInlineCall(f, 0, &ret, argc))
-                THROWV(NULL);
-
-            return ret;
+            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, argc))
+                THROW();
+            return;
         }
 
-        if (fun->isNative()) {
-            if (!fun->u.n.native(cx, argc, vp))
-                THROWV(NULL);
-            return NULL;
+        if (ucr->fun->isNative()) {
+            if (!ucr->fun->u.n.native(cx, argc, vp))
+                THROW();
+            return;
         }
     }
 
     if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
-        THROWV(NULL);
+        THROW();
 
-    return NULL;
+    return;
 }
 
 void JS_FASTCALL
@@ -796,7 +812,7 @@ RunTracer(VMFrame &f)
     TracePointAction tpa;
 
     /* :TODO: nuke PIC? */
-    if (!cx->jitEnabled)
+    if (!cx->traceJitEnabled)
         return NULL;
 
     bool blacklist;

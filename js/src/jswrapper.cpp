@@ -287,7 +287,8 @@ namespace js {
 extern JSObject *
 TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, uintN flags)
 {
-    JS_ASSERT(!obj->isWrapper());
+    // Allow wrapping outer window proxies.
+    JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
     return JSWrapper::New(cx, obj, wrappedProto, NULL, &JSCrossCompartmentWrapper::singleton);
 }
 
@@ -328,8 +329,22 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     /* Unwrap incoming objects. */
     if (vp->isObject()) {
-        JSObject *obj = vp->toObject().unwrap(&flags);
-        vp->setObject(*obj);
+        JSObject *obj = &vp->toObject();
+
+        /* If the object is already in this compartment, we are done. */
+        if (obj->getCompartment(cx) == this)
+            return true;
+
+        /* Don't unwrap an outer window proxy. */
+        if (!obj->getClass()->ext.innerObject) {
+            obj = vp->toObject().unwrap(&flags);
+            OBJ_TO_OUTER_OBJECT(cx, obj);
+            if (!obj)
+                return false;
+
+            vp->setObject(*obj);
+        }
+
         /* If the wrapped object is already in this compartment, we are done. */
         if (obj->getCompartment(cx) == this)
             return true;
@@ -387,8 +402,16 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      * we parent all wrappers to the global object in their home compartment.
      * This loses us some transparency, and is generally very cheesy.
      */
-    JSObject *global =
-        cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
+    JSObject *global;
+    if (cx->hasfp()) {
+        global = cx->fp()->scopeChain().getGlobal();
+    } else {
+        global = cx->globalObject;
+        OBJ_TO_INNER_OBJECT(cx, global);
+        if (!global)
+            return false;
+    }
+
     wrapper->setParent(global);
     return true;
 }

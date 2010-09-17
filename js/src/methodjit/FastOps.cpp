@@ -1234,7 +1234,7 @@ mjit::Compiler::jsop_setelem()
         stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
-        stubcc.call(stubs::SetElem);
+        stubcc.call(STRICT_VARIANT(stubs::SetElem));
 
         /* Infallible, start killing everything. */
         frame.eviscerate(obj);
@@ -1316,7 +1316,7 @@ mjit::Compiler::jsop_setelem()
         stubcc.crossJump(jmpHoleExit, lblRejoin);
 
         stubcc.leave();
-        stubcc.call(stubs::SetElem);
+        stubcc.call(STRICT_VARIANT(stubs::SetElem));
 
         /* Infallible, start killing everything. */
         frame.eviscerate(obj);
@@ -1376,29 +1376,26 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
 #if defined JS_NUNBOX32
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
+        masm.loadTypeTag(slot, tmpReg);
+        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
+        masm.loadPayload(slot, objReg);
 #elif defined JS_PUNBOX64
-        masm.loadTypeTag(slot, Registers::ValueReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
+        masm.loadValueAsComponents(slot, tmpReg, objReg);
+        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif
         stubcc.linkExit(notHole, Uses(2));
-
-        /* Load slot address into regs. */
-        masm.loadTypeTag(slot, tmpReg);
-        masm.loadPayload(slot, objReg);
     } else {
         /* guard not a hole */
         BaseIndex slot(objReg, idReg.reg(), Assembler::JSVAL_SCALE);
 #if defined JS_NUNBOX32
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
+        masm.loadTypeTag(slot, tmpReg);
+        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
+        masm.loadPayload(slot, objReg);
 #elif defined JS_PUNBOX64
-        masm.loadTypeTag(slot, Registers::ValueReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
+        masm.loadValueAsComponents(slot, tmpReg, objReg);
+        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif
         stubcc.linkExit(notHole, Uses(2));
-
-        masm.loadTypeTag(slot, tmpReg);
-        masm.loadPayload(slot, objReg);
     }
     /* Postcondition: type must be in tmpReg, data must be in objReg. */
 
