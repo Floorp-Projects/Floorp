@@ -41,6 +41,7 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jsvector.h"
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -304,4 +305,79 @@ protected:
     };                                                                  \
     static cls_##testname cls_##testname##_instance;
 
+/*
+ * A "fixture" is a subclass of JSAPITest that holds common definitions for a
+ * set of tests. Each test that wants to use the fixture should use
+ * BEGIN_FIXTURE_TEST and END_FIXTURE_TEST, just as one would use BEGIN_TEST and
+ * END_TEST, but include the fixture class as the first argument. The fixture
+ * class's declarations are then in scope for the test bodies.
+ */
 
+#define BEGIN_FIXTURE_TEST(fixture, testname)                           \
+    class cls_##testname : public fixture {                             \
+    public:                                                             \
+        virtual const char * name() { return #testname; }               \
+        virtual bool run()
+
+#define END_FIXTURE_TEST(fixture, testname)                             \
+    };                                                                  \
+    static cls_##testname cls_##testname##_instance;
+
+/*
+ * A class for creating and managing one temporary file.
+ * 
+ * We could use the ISO C temporary file functions here, but those try to
+ * create files in the root directory on Windows, which fails for users
+ * without Administrator privileges.
+ */
+class TempFile {
+    const char *name;
+    FILE *stream;
+
+  public:
+    TempFile() : name(), stream() { }
+    ~TempFile() {
+        if (stream)
+            close();
+        if (name)
+            remove();
+    }
+
+    /*
+     * Return a stream for a temporary file named |fileName|. Infallible.
+     * Use only once per TempFile instance. If the file is not explicitly
+     * closed and deleted via the member functions below, this object's
+     * destructor will clean them up.
+     */
+    FILE *open(const char *fileName)
+    {
+        stream = fopen(fileName, "wb+");
+        if (!stream) {
+            fprintf(stderr, "error opening temporary file '%s': %s\n",
+                    fileName, strerror(errno));
+            exit(1);
+        }            
+        name = fileName;
+        return stream;
+    }
+
+    /* Close the temporary file's stream. */
+    void close() {
+        if (fclose(stream) == EOF) {
+            fprintf(stderr, "error closing temporary file '%s': %s\n",
+                    name, strerror(errno));
+            exit(1);
+        }
+        stream = NULL;
+    }
+
+    /* Delete the temporary file. */
+    void remove() {
+        if (::remove(name) != 0) {
+            fprintf(stderr, "error deleting temporary file '%s': %s\n",
+                    name, strerror(errno));
+            exit(1);
+        }
+        name = NULL;
+    }
+};

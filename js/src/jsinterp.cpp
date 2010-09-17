@@ -1915,7 +1915,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 
 namespace js {
 
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN interpFlags)
 {
 #ifdef MOZ_TRACEVIS
@@ -2823,7 +2823,7 @@ BEGIN_CASE(JSOP_FORNAME)
         JS_ASSERT(regs.sp[-1].isObject());
         if (!IteratorNext(cx, &regs.sp[-1].toObject(), tvr.addr()))
             goto error;
-        if (!obj->setProperty(cx, id, tvr.addr()))
+        if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
     }
 }
@@ -2842,7 +2842,7 @@ BEGIN_CASE(JSOP_FORPROP)
         JS_ASSERT(regs.sp[-2].isObject());
         if (!IteratorNext(cx, &regs.sp[-2].toObject(), tvr.addr()))
             goto error;
-        if (!obj->setProperty(cx, id, tvr.addr()))
+        if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
     }
     regs.sp--;
@@ -3490,11 +3490,14 @@ BEGIN_CASE(JSOP_DELNAME)
     if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
         goto error;
 
+    /* Strict mode code should never contain JSOP_DELNAME opcodes. */
+    JS_ASSERT(!script->strictModeCode);
+
     /* ECMA says to return true if name is undefined or inherited. */
     PUSH_BOOLEAN(true);
     if (prop) {
         obj2->dropProperty(cx, prop);
-        if (!obj->deleteProperty(cx, id, &regs.sp[-1]))
+        if (!obj->deleteProperty(cx, id, &regs.sp[-1], false))
             goto error;
     }
 }
@@ -3510,7 +3513,7 @@ BEGIN_CASE(JSOP_DELPROP)
     FETCH_OBJECT(cx, -1, obj);
 
     Value rval;
-    if (!obj->deleteProperty(cx, id, &rval))
+    if (!obj->deleteProperty(cx, id, &rval, script->strictModeCode))
         goto error;
 
     regs.sp[-1] = rval;
@@ -3528,7 +3531,7 @@ BEGIN_CASE(JSOP_DELELEM)
     FETCH_ELEMENT_ID(obj, -1, id);
 
     /* Get or set the element. */
-    if (!obj->deleteProperty(cx, id, &regs.sp[-2]))
+    if (!obj->deleteProperty(cx, id, &regs.sp[-2], script->strictModeCode))
         goto error;
 
     regs.sp--;
@@ -3651,7 +3654,7 @@ do_incop:
         else
             ref.getInt32Ref() = tmp += incr;
         regs.fp->setAssigning();
-        JSBool ok = obj->setProperty(cx, id, &ref);
+        JSBool ok = obj->setProperty(cx, id, &ref, script->strictModeCode);
         regs.fp->clearAssigning();
         if (!ok)
             goto error;
@@ -3667,7 +3670,7 @@ do_incop:
         if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
             goto error;
         regs.fp->setAssigning();
-        JSBool ok = obj->setProperty(cx, id, &regs.sp[-1]);
+        JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
         regs.fp->clearAssigning();
         if (!ok)
             goto error;
@@ -3743,7 +3746,6 @@ BEGIN_CASE(JSOP_LOCALINC)
   do_local_incop:
     slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < regs.fp->numSlots());
-    vp = regs.fp->slots() + slot;
     METER_SLOT_OP(op, slot);
     vp = regs.fp->slots() + slot;
 
@@ -4173,10 +4175,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
             else
                 defineHow = JSDNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval))
+            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode))
                 goto error;
         } else {
-            if (!obj->setProperty(cx, id, &rval))
+            if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
                 goto error;
             ABORT_RECORDING(cx, "Non-native set");
         }
@@ -4309,7 +4311,7 @@ BEGIN_CASE(JSOP_SETELEM)
         }
     } while (0);
     rval = regs.sp[-1];
-    if (!obj->setProperty(cx, id, &rval))
+    if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
   end_setelem:;
 }
@@ -4323,7 +4325,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     Value rval = regs.sp[-3];
-    if (!obj->setProperty(cx, id, &rval))
+    if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -5100,11 +5102,6 @@ BEGIN_CASE(JSOP_DEFVAR)
     uint32 index = GET_INDEX(regs.pc);
     JSAtom *atom = atoms[index];
 
-    /*
-     * index is relative to atoms at this point but for global var
-     * code below we need the absolute value.
-     */
-    index += atoms - script->atomMap.vector;
     JSObject *obj = &regs.fp->varobj(cx);
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;
@@ -5254,7 +5251,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     }
     Value rval = ObjectValue(*obj);
     ok = doSet
-         ? parent->setProperty(cx, id, &rval)
+         ? parent->setProperty(cx, id, &rval, script->strictModeCode)
          : parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs);
     if (!ok)
         goto error;
@@ -5286,7 +5283,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
         goto error;
 
     if ((attrs == JSPROP_ENUMERATE)
-        ? !parent.setProperty(cx, id, &rval)
+        ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
         : !parent.defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs)) {
         goto error;
     }
@@ -5748,7 +5745,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
                           : JSDNP_CACHE_RESULT;
         if (!(JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-              ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval)
+              ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
               : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                         JSPROP_ENUMERATE, 0, 0, NULL,
                                         defineHow))) {
@@ -6145,7 +6142,7 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
-    if (!obj->setProperty(cx, id, &rval))
+    if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
     regs.sp -= 2;

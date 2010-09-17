@@ -115,6 +115,7 @@ class Compiler
          * These members map to members in CallICInfo. See that structure for
          * more comments.
          */
+        jsbytecode   *pc;
         uint32       argc;
         DataLabelPtr funGuard;
         Jump         funJump;

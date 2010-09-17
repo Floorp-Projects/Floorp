@@ -535,7 +535,7 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
     {
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
@@ -620,11 +620,11 @@ class TypedArrayTemplate
             return true;
 
         Value tmp = *v;
-        return obj_setProperty(cx, obj, id, &tmp);
+        return obj_setProperty(cx, obj, id, &tmp, false);
     }
 
     static JSBool
-    obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
+    obj_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
     {
         if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
             rval->setBoolean(false);

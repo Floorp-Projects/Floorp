@@ -616,7 +616,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
                 if (!Walk(cx, idName, obj, reviver, propValue.addr()))
                     return false;
                 if (propValue.value().isUndefined()) {
-                    if (!js_DeleteProperty(cx, obj, idName, propValue.addr()))
+                    if (!js_DeleteProperty(cx, obj, idName, propValue.addr(), false))
                         return false;
                 } else {
                     if (!obj->defineProperty(cx, idName, propValue.value(), NULL, NULL,

@@ -429,8 +429,18 @@ JS_STATIC_ASSERT(JSFrameReg == JSC::ARMRegisters::r11);
 JS_STATIC_ASSERT(JSReturnReg_Data == JSC::ARMRegisters::r1);
 JS_STATIC_ASSERT(JSReturnReg_Type == JSC::ARMRegisters::r2);
 
+#ifdef MOZ_THUMB2
+#define FUNCTION_HEADER_EXTRA \
+  ".align 2\n" \
+  ".thumb\n" \
+  ".thumb_func\n"
+#else
+#define FUNCTION_HEADER_EXTRA
+#endif
+
 asm volatile (
 ".text\n"
+FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(InjectJaegerReturn) "\n"
 SYMBOL_STRING(InjectJaegerReturn) ":"       "\n"
     /* Restore frame regs. */
@@ -443,6 +453,7 @@ SYMBOL_STRING(InjectJaegerReturn) ":"       "\n"
 
 asm volatile (
 ".text\n"
+FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(SafePointTrampoline)  "\n"
 SYMBOL_STRING(SafePointTrampoline) ":"
     /*
@@ -460,6 +471,7 @@ SYMBOL_STRING(SafePointTrampoline) ":"
 
 asm volatile (
 ".text\n"
+FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerTrampoline)   "\n"
 SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /*
@@ -509,16 +521,16 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
 "   mov     r11, r1"                            "\n"
 
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_VMFRAME(SetVMFrameRegs)   "\n"
+"   blx  " SYMBOL_STRING_VMFRAME(SetVMFrameRegs)   "\n"
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_VMFRAME(PushActiveVMFrame)"\n"
+"   blx  " SYMBOL_STRING_VMFRAME(PushActiveVMFrame)"\n"
 
     /* Call the compiled JavaScript function. */
 "   blx     r4"                                 "\n"
 
     /* Tidy up. */
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
+"   blx  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
     /* Skip past the parameters we pushed (such as cx and the like). */
 "   add     sp, sp, #(4*7 + 4*4)"               "\n"
@@ -530,13 +542,14 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
 
 asm volatile (
 ".text\n"
+FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     /* Find the VMFrame pointer for js_InternalThrow. */
 "   mov     r0, sp"                         "\n"
 
     /* Call the utility function that sets up the internal throw routine. */
-"   bl  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
+"   blx  " SYMBOL_STRING_RELOC(js_InternalThrow) "\n"
     
     /* If js_InternalThrow found a scripted handler, jump to it. Otherwise, tidy
      * up and return. */
@@ -546,7 +559,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
     /* Tidy up, then return '0' to represent an unhandled exception. */
 "   mov     r0, sp"                             "\n"
-"   bl  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
+"   blx  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 "   add     sp, sp, #(4*7 + 4*4)"               "\n"
 "   mov     r0, #0"                         "\n"
 "   pop     {r4-r11,pc}"                    "\n"
@@ -554,6 +567,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 
 asm volatile (
 ".text\n"
+FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerStubVeneer)   "\n"
 SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
     /* We enter this function as a veneer between a compiled method and one of the js_ stubs. We
