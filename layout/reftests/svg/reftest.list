@@ -110,7 +110,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == nested-viewBox-01.svg pass.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
-fails-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
+random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
 == objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
