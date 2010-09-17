@@ -328,7 +328,8 @@ nsFocusManager::SetActiveWindow(nsIDOMWindow* aWindow)
 {
   // only top-level windows can be made active
   nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  NS_ASSERTION(!piWindow || piWindow->IsOuterWindow(), "outer window expected");
+  if (piWindow)
+      piWindow = piWindow->GetOuterWindow();
 
   NS_ENSURE_TRUE(piWindow && (piWindow == piWindow->GetPrivateRoot()),
                  NS_ERROR_INVALID_ARG);

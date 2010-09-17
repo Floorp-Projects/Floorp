@@ -6970,15 +6970,9 @@ nsWindowSH::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
-  NS_ASSERTION(win->IsOuterWindow(),
-               "Inner window detected in Equality hook!");
-
   nsCOMPtr<nsPIDOMWindow> other = do_QueryWrappedNative(other_wrapper);
 
   if (other) {
-    NS_ASSERTION(other->IsOuterWindow(),
-                 "Inner window detected in Equality hook!");
-
     *bp = win->GetOuterWindow() == other->GetOuterWindow();
   }
 
