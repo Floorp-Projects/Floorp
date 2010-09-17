@@ -163,9 +163,13 @@ IsWindow(const char *name)
 }
 
 bool
-AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id, bool set)
+AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id,
+                                          JSWrapper::Action act)
 {
     if (!XPCWrapper::GetSecurityManager())
+        return true;
+
+    if (act == JSWrapper::CALL)
         return true;
 
     JSObject *obj = JSWrapper::wrappedObject(wrapper);
@@ -182,14 +186,14 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     if (JSID_IS_ATOM(id)) {
         JSString *str = ATOM_TO_STRING(JSID_TO_ATOM(id));
         const char *prop = JS_GetStringBytes(str);
-        if (IsPermitted(name, prop, set))
+        if (IsPermitted(name, prop, act == JSWrapper::SET))
             return true;
     }
 
     if (IsWindow(name) && IsFrameId(cx, obj, id))
         return true;
 
-    return set
+    return (act == JSWrapper::SET)
            ? nsContentUtils::IsCallerTrustedForWrite()
            : nsContentUtils::IsCallerTrustedForRead();
 }
@@ -270,7 +274,8 @@ AccessCheck::deny(JSContext *cx, jsid id)
 typedef enum { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 } Access;
 
 bool
-ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, bool set, Permission &perm)
+ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
+                             Permission &perm)
 {
     JSObject *holder = JSWrapper::wrappedObject(wrapper);
 
@@ -351,8 +356,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, bool set
         return false;
     }
 
-    if ((set && !(access & WRITE)) ||
-        (!set && !(access & READ))) {
+    if ((act == JSWrapper::SET && !(access & WRITE)) ||
+        (act != JSWrapper::SET && !(access & READ))) {
         return true; // Deny
     }
 

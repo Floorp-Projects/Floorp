@@ -50,7 +50,7 @@ class CrossOriginWrapper : public JSCrossCompartmentWrapper {
     CrossOriginWrapper(uintN flags);
     virtual ~CrossOriginWrapper();
 
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, bool set);
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act);
     virtual void leave(JSContext *cx, JSObject *wrapper);
 
     static CrossOriginWrapper singleton;
