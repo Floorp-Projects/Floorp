@@ -368,7 +368,10 @@ nsDiskCacheDevice::Init()
 
     nsresult rv;
 
-    NS_ENSURE_TRUE(!Initialized(), NS_ERROR_FAILURE);
+    if (Initialized()) {
+        NS_ERROR("Disk cache already initialized!");
+        return NS_ERROR_UNEXPECTED;
+    }
        
     if (!mCacheDirectory)
         return NS_ERROR_FAILURE;
