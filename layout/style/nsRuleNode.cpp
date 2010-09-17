@@ -646,16 +646,8 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   }
   else if (((aMask & SETCOORD_STORE_CALC) != 0) &&
            (aValue.IsCalcUnit())) {
-    if (aValue.GetUnit() == eCSSUnit_Calc) {
-      // Don't copy the extra Calc node at top-level.
-      nsCSSValue::Array *array = aValue.GetArrayValue();
-      NS_ABORT_IF_FALSE(array->Count() == 1, "unexpected count");
-      SpecifiedCalcToComputedCalc(array->Item(0), aCoord, aStyleContext,
-                                  aCanStoreInRuleTree);
-    } else {
-      SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
-                                  aCanStoreInRuleTree);
-    }
+    SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
+                                aCanStoreInRuleTree);
   }
   else {
     result = PR_FALSE;  // didn't set anything
