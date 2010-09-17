@@ -112,7 +112,7 @@
               }
             }
 
-            newitem.priority = aPriority;
+            newitem.setAttribute("priority", aPriority);
             if (aPriority >= this.PRIORITY_CRITICAL_LOW)
               newitem.setAttribute("type", "critical");
             else if (aPriority <= this.PRIORITY_INFO_HIGH)
