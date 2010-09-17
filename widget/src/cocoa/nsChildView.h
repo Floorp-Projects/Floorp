@@ -404,6 +404,8 @@ public:
 
   PRBool IsPluginView() { return (mWindowType == eWindowType_plugin); }
 
+  void PaintQD();
+
 protected:
 
   PRBool            ReportDestroyEvent();

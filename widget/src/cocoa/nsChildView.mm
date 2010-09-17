@@ -1232,6 +1232,40 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+#ifndef NP_NO_CARBON
+static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
+{
+  memset(event, 0, sizeof(EventRecord));
+  if (aMousePosition) {
+    event->where = *aMousePosition;
+  } else {
+    ::GetGlobalMouse(&event->where);
+  }
+  event->when = ::TickCount();
+  event->modifiers = ::GetCurrentKeyModifiers();
+}
+#endif
+
+void nsChildView::PaintQD()
+{
+#ifndef NP_NO_CARBON
+  void *pluginPort = this->GetNativeData(NS_NATIVE_PLUGIN_PORT_QD);
+  void *window = ::GetWindowFromPort(static_cast<NP_Port*>(pluginPort)->port);
+
+  NS_SUCCEEDED(StartDrawPlugin());
+  EventRecord updateEvent;
+  InitializeEventRecord(&updateEvent, nsnull);
+  updateEvent.what = updateEvt;
+  updateEvent.message = UInt32(window);
+
+  nsCOMPtr<nsIPluginInstance> instance;
+  mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+
+  instance->HandleEvent(&updateEvent, nsnull);
+  EndDrawPlugin();
+#endif
+}
+
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -2555,6 +2589,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
       !isVisible)
     return;
+
+#ifndef NP_NO_QUICKDRAW
+  if (mIsPluginView && mPluginDrawingModel == NPDrawingModelQuickDraw) {
+    mGeckoChild->PaintQD();
+    return;
+  }
+#endif
 
 #ifdef DEBUG_UPDATE
   nsIntRect geckoBounds;
