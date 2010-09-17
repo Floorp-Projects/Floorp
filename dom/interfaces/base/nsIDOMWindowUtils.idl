@@ -45,6 +45,12 @@
  * getInterface on a DOMWindow.
  */
 
+%{C++
+#include "nsColor.h"
+#include "nsRect.h"
+#include "gfxContext.h"
+%}
+
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -54,7 +60,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(d0d23c20-16ca-4c0f-b2d2-74ae4c7b858b)]
+[scriptable, uuid(74fdd125-52c7-4345-a086-270df15b829a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -787,4 +793,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * error if there is no widget associated with this window.
    */
   readonly attribute AString layerManagerType;
+
+%{C++
+  virtual nsresult RenderDocument(const nsRect& aRect,
+                                  PRUint32 aFlags,
+                                  nscolor aBackgroundColor,
+                                  gfxContext* aThebesContext) = 0;
+%}
 };
