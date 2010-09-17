@@ -47,6 +47,7 @@
 #include "nsIDocument.h"
 #include "nsFocusManager.h"
 #include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 
 #include "nsIScrollableFrame.h"
 
@@ -1574,4 +1575,36 @@ nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
 
     // Render Document
     return presShell->RenderDocument(aRect, aFlags, aBackgroundColor, aThebesContext);
+}
+
+NS_IMETHODIMP 
+nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
+{
+  NS_ENSURE_ARG_POINTER(aCursor);
+
+  PRBool isSameDoc = PR_FALSE;
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  do {
+    if (nsEventStateManager::sMouseOverDocument == doc.get()) {
+      isSameDoc = PR_TRUE;
+      break;
+    }
+  } while ((doc = doc->GetParentDocument()));
+
+  if (!isSameDoc) {
+    *aCursor = eCursor_none;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  // fetch cursor value from window's widget
+  *aCursor = widget->GetCursor();
+
+  return NS_OK;
 }
