@@ -2633,12 +2633,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     return rv;
   }
 
-  // Now that we've successfully opened the channel, we can change state.  Note
-  // that this needs to come after the AsyncOpen() and rv check, because this
-  // can run script that would try to restart this request, and that could end
-  // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
-  ChangeState(XML_HTTP_REQUEST_SENT);
-
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
@@ -2661,6 +2655,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       }
     }
 
+    ChangeState(XML_HTTP_REQUEST_SENT);
+    // Note, calling ChangeState may have cleared
+    // XML_HTTP_REQUEST_SYNCLOOPING flag.
     nsIThread *thread = NS_GetCurrentThread();
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       if (!NS_ProcessNextEvent(thread)) {
@@ -2677,6 +2674,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       NS_DispatchToCurrentThread(resumeTimeoutRunnable);
     }
   } else {
+    // Now that we've successfully opened the channel, we can change state.  Note
+    // that this needs to come after the AsyncOpen() and rv check, because this
+    // can run script that would try to restart this request, and that could end
+    // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
+    ChangeState(XML_HTTP_REQUEST_SENT);
     if (!mUploadComplete &&
         HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
         (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
@@ -2993,9 +2995,11 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
     mProgressNotifier->Cancel();
   }
 
-  if ((mState & XML_HTTP_REQUEST_ASYNC) &&
-      (aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
-      aBroadcast) {
+  if ((aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
+      aBroadcast &&
+      (mState & XML_HTTP_REQUEST_ASYNC ||
+       aState & XML_HTTP_REQUEST_OPENED ||
+       aState & XML_HTTP_REQUEST_COMPLETED)) {
     nsCOMPtr<nsIDOMEvent> event;
     rv = CreateReadystatechangeEvent(getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);
