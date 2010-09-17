@@ -20,6 +20,7 @@
 # Contributor(s):
 #  David Dahl <ddahl@mozilla.com>
 #  Patrick Walton <pcwalton@mozilla.com>
+#  Mihai Șucan <mihai.sucan@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,6 +59,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_581231_close_button.js \
 	browser_webconsole_consoleonpage.js \
 	browser_webconsole_bug_587617_output_copy.js \
+	browser_webconsole_bug_588342_document_focus.js \
 	$(NULL)
 
 _BROWSER_TEST_PAGES = \
