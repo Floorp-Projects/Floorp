@@ -153,9 +153,6 @@ struct PropDesc {
         return js::CastAsPropertyOp(setterObject());
     }
 
-    static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
-    static void finalizeDescriptorArray(JSContext* cx, JSObject* obj);
-
     js::Value pd;
     jsid id;
     js::Value value, get, set;

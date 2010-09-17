@@ -1743,8 +1743,9 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 roots[1] = shape->setterValue();
         }
         JS_UNLOCK_OBJ(cx, pobj);
-    } else if (!pobj->getAttributes(cx, id, &attrs)) {
-        return false;
+    } else {
+        if (!pobj->getAttributes(cx, id, &attrs))
+            return false;
     }
 
     if (doGet && !obj->getProperty(cx, id, &roots[2]))
@@ -1829,16 +1830,23 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-HasProperty(JSContext* cx, JSObject* obj, jsid id, Value* vp, JSBool* answerp)
+static bool
+HasProperty(JSContext* cx, JSObject* obj, jsid id, Value* vp, bool *foundp)
 {
-    if (!JS_HasPropertyById(cx, obj, id, answerp))
-        return JS_FALSE;
-    if (!*answerp) {
+    if (!obj->hasProperty(cx, id, foundp, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING))
+        return false;
+    if (!*foundp) {
         vp->setUndefined();
-        return JS_TRUE;
+        return true;
     }
-    return JS_GetPropertyById(cx, obj, id, Jsvalify(vp));
+
+    /*
+     * We must go through the method read barrier in case id is 'get' or 'set'.
+     * There is no obvious way to defer cloning a joined function object whose
+     * identity will be used by DefinePropertyOnObject, e.g., or reflected via
+     * js_GetOwnPropertyDescriptor, as the getter or setter callable object.
+     */
+    return !!obj->getProperty(cx, id, vp);
 }
 
 PropDesc::PropDesc()
@@ -1876,51 +1884,47 @@ PropDesc::initialize(JSContext* cx, jsid id, const Value &origval)
     /* Start with the proper defaults. */
     attrs = JSPROP_PERMANENT | JSPROP_READONLY;
 
-    JSBool hasProperty;
+    bool found;
 
     /* 8.10.5 step 3 */
-    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.enumerableAtom), &v,
-                     &hasProperty)) {
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.enumerableAtom), &v, &found))
         return false;
-    }
-    if (hasProperty) {
+    if (found) {
         hasEnumerable = JS_TRUE;
         if (js_ValueToBoolean(v))
             attrs |= JSPROP_ENUMERATE;
     }
 
     /* 8.10.5 step 4 */
-    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.configurableAtom), &v,
-                     &hasProperty)) {
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.configurableAtom), &v, &found))
         return false;
-    }
-    if (hasProperty) {
+    if (found) {
         hasConfigurable = JS_TRUE;
         if (js_ValueToBoolean(v))
             attrs &= ~JSPROP_PERMANENT;
     }
 
     /* 8.10.5 step 5 */
-    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.valueAtom), &v, &hasProperty))
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.valueAtom), &v, &found))
         return false;
-    if (hasProperty) {
+    if (found) {
         hasValue = true;
         value = v;
     }
 
     /* 8.10.6 step 6 */
-    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.writableAtom), &v, &hasProperty))
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.writableAtom), &v, &found))
         return false;
-    if (hasProperty) {
+    if (found) {
         hasWritable = JS_TRUE;
         if (js_ValueToBoolean(v))
             attrs &= ~JSPROP_READONLY;
     }
 
     /* 8.10.7 step 7 */
-    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &hasProperty))
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.getAtom), &v, &found))
         return false;
-    if (hasProperty) {
+    if (found) {
         if ((v.isPrimitive() || !js_IsCallable(v)) && !v.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
@@ -1932,9 +1936,9 @@ PropDesc::initialize(JSContext* cx, jsid id, const Value &origval)
     }
 
     /* 8.10.7 step 8 */
-    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &hasProperty))
+    if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.setAtom), &v, &found))
         return false;
-    if (hasProperty) {
+    if (found) {
         if ((v.isPrimitive() || !js_IsCallable(v)) && !v.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
