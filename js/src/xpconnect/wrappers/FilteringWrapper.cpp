@@ -90,6 +90,14 @@ CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, bool set, Permission &
         return false;
     }
     if (perm == DenyAccess) {
+        // Reporting an error here indicates a problem entering the
+        // compartment. Therefore, any errors that we throw should be
+        // thrown in our *caller's* compartment, so they can inspect
+        // the error object.
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wrapper))
+            return false;
+
         AccessCheck::deny(cx, id);
         return false;
     }
@@ -136,7 +144,7 @@ bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
 {
     Permission perm;
-    return CheckAndReport<Policy>(cx, wrapper, JSID_VOID, set, perm) &&
+    return CheckAndReport<Policy>(cx, wrapper, id, set, perm) &&
            Base::enter(cx, wrapper, id, set);
 }
 
