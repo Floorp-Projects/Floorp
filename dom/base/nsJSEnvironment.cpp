@@ -2460,11 +2460,18 @@ nsJSContext::CreateNativeGlobalForInner(
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   PRUint32 flags = aIsChrome? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
   nsCOMPtr<nsIXPConnectJSObjectHolder> jsholder;
+
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+  if (aIsChrome) {
+    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
+    ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+  }
+
   nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(mContext,
                                           aNewInner, NS_GET_IID(nsISupports),
-                                          aPrincipal, EmptyCString(),
-                                          flags,
+                                          aIsChrome ? systemPrincipal.get() : aPrincipal,
+                                          EmptyCString(), flags,
                                           getter_AddRefs(jsholder));
   if (NS_FAILED(rv))
     return rv;
