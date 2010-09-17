@@ -2423,6 +2423,7 @@ nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),
     mUpdatePluginGeometryForFrame(nsnull),
+    mDOMGeneration(0),
     mNeedsToUpdatePluginGeometry(PR_FALSE)
 {
   mRegisteredPlugins.Init();
