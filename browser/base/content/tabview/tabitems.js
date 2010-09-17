@@ -489,6 +489,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Updates this item to visually indicate that it's active.
   makeActive: function TabItem_makeActive() {
     iQ(this.container).addClass("focus");
+
+    if (this.parent)
+      this.parent.setActiveTab(this);
   },
 
   // ----------

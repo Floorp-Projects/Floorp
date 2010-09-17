@@ -790,6 +790,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (typeof item.setResizable == 'function')
           item.setResizable(false);
 
+        // if it is visually active, set it as the active tab.
+        if (iQ(item.container).hasClass("focus"))
+          this.setActiveTab(item);
+
         // if it matches the selected tab or no active tab and the browser 
         // tab is hidden, the active group item would be set.
         if (item.tab == gBrowser.selectedTab || 
@@ -838,7 +842,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this._children.splice(index, 1);
 
       if (item == this._activeTab) {
-        if (this._children.length)
+        if (this._children.length > 0)
           this._activeTab = this._children[0];
         else
           this._activeTab = null;
