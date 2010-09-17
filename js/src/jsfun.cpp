@@ -582,8 +582,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * collect its value.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
-           js_SetProperty(cx, obj, id, vp);
+    return js_DeleteProperty(cx, obj, id, tvr.addr(), false) &&
+           js_SetProperty(cx, obj, id, vp, false);
 }
 
 static JSBool
@@ -698,8 +698,8 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * collect its value.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
-           js_SetProperty(cx, obj, id, vp);
+    return js_DeleteProperty(cx, obj, id, tvr.addr(), true) &&
+           js_SetProperty(cx, obj, id, vp, true);
 }
 
 JSBool
@@ -1646,8 +1646,8 @@ struct PoisonPillProp {
 /* NB: no sentinels at ends -- use JS_ARRAY_LENGTH to bound loops. */
 
 const LazyFunctionDataProp lazyFunctionDataProps[] = {
-    {ATOM_OFFSET(arity),     FUN_ARITY,      JSPROP_PERMANENT},
-    {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT},
+    {ATOM_OFFSET(arity),     FUN_ARITY,      JSPROP_PERMANENT|JSPROP_READONLY},
+    {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT|JSPROP_READONLY},
 };
 
 /* Properties censored into [[ThrowTypeError]] in strict mode. */
@@ -1666,7 +1666,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     jsid id;
     bool found;
 
-    if (!obj->getFunctionPrivate()->isBound()) {
+    if (!obj->isBoundFunction()) {
         id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
         if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
             return false;
@@ -1707,7 +1707,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * fun is not a compiler-created function object, which must never leak to
      * script or embedding code and then be mutated.
      */
-    if ((flags & JSRESOLVE_ASSIGNING) && !JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+    if ((flags & JSRESOLVE_ASSIGNING) && JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
         return JS_TRUE;
     }
@@ -1728,7 +1728,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             return JS_TRUE;
 
         /* ES5 15.3.4.5: bound functions don't have a prototype property. */
-        if (fun->isBound())
+        if (obj->isBoundFunction())
             return JS_TRUE;
 
         /*
@@ -1797,7 +1797,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             PropertyOp getter, setter;
             uintN attrs = JSPROP_PERMANENT;
-            if (fun->inStrictMode() || fun->isBound()) {
+            if (fun->inStrictMode() || obj->isBoundFunction()) {
                 JSObject *throwTypeError = obj->getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);
@@ -2023,7 +2023,7 @@ static JSBool
 fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     while (obj->isFunction()) {
-        if (!obj->getFunctionPrivate()->isBound())
+        if (!obj->isBoundFunction())
             break;
         obj = obj->getBoundFunctionTarget();
     }
@@ -2398,19 +2398,13 @@ JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
 }
 
-bool
-JSFunction::isBound() const
-{
-    return isNative() && u.n.native == CallOrConstructBoundFunction;
-}
-
 inline bool
 JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
                             const Value *args, uintN argslen)
 {
     JS_ASSERT(isFunction());
-    JS_ASSERT(getFunctionPrivate()->isBound());
 
+    flags |= JSObject::BOUND_FUNCTION;
     fslots[JSSLOT_BOUND_FUNCTION_THIS] = thisArg;
     fslots[JSSLOT_BOUND_FUNCTION_ARGS_COUNT].setPrivateUint32(argslen);
     if (argslen != 0) {
@@ -2436,7 +2430,7 @@ inline JSObject *
 JSObject::getBoundFunctionTarget() const
 {
     JS_ASSERT(isFunction());
-    JS_ASSERT(getFunctionPrivate()->isBound());
+    JS_ASSERT(isBoundFunction());
 
     /* Bound functions abuse |parent| to store their target function. */
     return getParent();
@@ -2446,7 +2440,7 @@ inline const js::Value &
 JSObject::getBoundFunctionThis() const
 {
     JS_ASSERT(isFunction());
-    JS_ASSERT(getFunctionPrivate()->isBound());
+    JS_ASSERT(isBoundFunction());
 
     return fslots[JSSLOT_BOUND_FUNCTION_THIS];
 }
@@ -2455,7 +2449,7 @@ inline const js::Value *
 JSObject::getBoundFunctionArguments(uintN &argslen) const
 {
     JS_ASSERT(isFunction());
-    JS_ASSERT(getFunctionPrivate()->isBound());
+    JS_ASSERT(isBoundFunction());
 
     argslen = fslots[JSSLOT_BOUND_FUNCTION_ARGS_COUNT].toPrivateUint32();
     JS_ASSERT_IF(argslen > 0, dslots);
@@ -2471,7 +2465,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->isFunction());
-    JS_ASSERT(obj->getFunctionPrivate()->isBound());
+    JS_ASSERT(obj->isBoundFunction());
 
     LeaveTrace(cx);
 

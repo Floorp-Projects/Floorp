@@ -120,14 +120,17 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         vp->setUndefined();
         return true;
     }
-    if (!desc.getter) {
+    if (!desc.getter ||
+        (!(desc.attrs & JSPROP_GETTER) && desc.getter == PropertyStub)) {
         *vp = desc.value;
         return true;
     }
     if (desc.attrs & JSPROP_GETTER) {
         return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.getter),
-                                JSACC_READ, 0, 0, vp);
+                                JSACC_READ, 0, NULL, vp);
     }
+    if (!(desc.attrs & JSPROP_SHARED))
+        *vp = desc.value;
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
     return CallJSPropertyOp(cx, desc.getter, proxy, id, vp);
@@ -142,10 +145,10 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
-        if (desc.setter) {
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
                 return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
-                                        JSACC_READ, 0, 0, vp);
+                                        JSACC_WRITE, 1, vp, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
@@ -159,10 +162,10 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (!getPropertyDescriptor(cx, proxy, id, &desc))
         return false;
     if (desc.obj) {
-        if (desc.setter) {
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
                 return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
-                                        JSACC_READ, 0, 0, vp);
+                                        JSACC_WRITE, 1, vp, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
@@ -805,6 +808,12 @@ JSProxy::fun_toString(JSContext *cx, JSObject *proxy, uintN indent)
     return proxy->getProxyHandler()->fun_toString(cx, proxy, indent);
 }
 
+static JSObject *
+proxy_innerObject(JSContext *cx, JSObject *obj)
+{
+    return obj->getProxyPrivate().toObjectOrNull();
+}
+
 static JSBool
 proxy_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                      JSProperty **propp)
@@ -844,8 +853,9 @@ proxy_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-proxy_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+proxy_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
+    // TODO: throwing away strict
     return JSProxy::set(cx, obj, obj, id, vp);
 }
 
@@ -871,8 +881,9 @@ proxy_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 static JSBool
-proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
+proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
+    // TODO: throwing away strict
     bool deleted;
     if (!JSProxy::delete_(cx, obj, id, &deleted))
         return false;
@@ -923,6 +934,46 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
     NULL,           /* hasInstance */
     NULL,           /* mark        */
     JS_NULL_CLASS_EXT,
+    {
+        proxy_LookupProperty,
+        proxy_DefineProperty,
+        proxy_GetProperty,
+        proxy_SetProperty,
+        proxy_GetAttributes,
+        proxy_SetAttributes,
+        proxy_DeleteProperty,
+        NULL,       /* enumerate       */
+        NULL,       /* typeof          */
+        proxy_TraceObject,
+        NULL,       /* thisObject      */
+        proxy_Finalize, /* clear */
+    }
+};
+
+JS_FRIEND_API(Class) OuterWindowProxyClass = {
+    "Proxy",
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(2),
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    NULL,           /* finalize */
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    NULL,           /* mark        */
+    {
+        NULL,       /* equality    */
+        NULL,       /* outerObject */
+        proxy_innerObject,
+        NULL,       /* wrappedObject */
+    },
     {
         proxy_LookupProperty,
         proxy_DefineProperty,
@@ -1006,7 +1057,11 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
                JSObject *parent, JSObject *call, JSObject *construct)
 {
     bool fun = call || construct;
-    Class *clasp = fun ? &FunctionProxyClass : &ObjectProxyClass;
+    Class *clasp;
+    if (fun)
+        clasp = &FunctionProxyClass;
+    else
+        clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!obj || (construct && !obj->ensureInstanceReservedSlots(cx, 0)))
         return NULL;

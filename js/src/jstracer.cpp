@@ -2035,7 +2035,7 @@ CountStackAndArgs(JSStackFrame *next, Value *stack)
     if (JS_LIKELY(!next->hasOverflowArgs()))
         return (Value *)next - stack;
     size_t nvals = (next->formalArgs() - 2 /* callee, this */) - stack;
-    JS_ASSERT(nvals == ((next->actualArgs() - 2) - stack) + (2 + next->numActualArgs()));
+    JS_ASSERT(nvals == unsigned((next->actualArgs() - 2) - stack) + (2 + next->numActualArgs()));
     return nvals;
 }
 
@@ -2316,6 +2316,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     consts(cx->fp()->script()->constOffset
            ? cx->fp()->script()->consts()->vector
            : NULL),
+    strictModeCode_ins(NULL),
     cfgMerges(&tempAlloc()),
     trashSelf(false),
     whichTreesToTrash(&tempAlloc()),
@@ -2453,6 +2454,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     InitConst(eor_ins) =
         addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(TracerState, eor), ACCSET_OTHER), "eor");
 
+    strictModeCode_ins = addName(lir->insImmI(cx->fp()->script()->strictModeCode), "strict");
+
 #ifdef DEBUG
     // Need to update these before any stack/rstack loads/stores occur.
     extras[0] = lirbuf->sp;
@@ -2481,7 +2484,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          * the trace runs too few iterations to be worthwhile. Do this only if the methodjit
          * is on--otherwise we must try to trace as much as possible.
          */
-        if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+        if (cx->methodJitEnabled) {
             LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
             LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
             LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
@@ -4473,7 +4476,7 @@ ProhibitFlush(JSContext* cx)
 static void
 ResetJITImpl(JSContext* cx)
 {
-    if (!(cx->jitEnabled || (cx->options & JSOPTION_METHODJIT)))
+    if (!(cx->traceJitEnabled || cx->methodJitEnabled))
         return;
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     debug_only_print0(LC_TMTracer, "Flushing cache.\n");
@@ -6629,7 +6632,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
     JS_ASSERT_IF(cx->throwing, !ok);
 
-    if (JS_HAS_OPTION(cx, JSOPTION_METHODJIT)) {
+    if (cx->methodJitEnabled) {
         if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
             debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
                               (void*)f, f->execs);
@@ -7919,10 +7922,12 @@ TraceRecorder::stackval(int n) const
 JS_REQUIRES_STACK void
 TraceRecorder::updateAtoms()
 {
+    JSScript *script = cx->fp()->script();
     atoms = FrameAtomBase(cx, cx->fp());
-    consts = cx->fp()->hasImacropc() || cx->fp()->script()->constOffset == 0
+    consts = cx->fp()->hasImacropc() || script->constOffset == 0
            ? 0 
-           : cx->fp()->script()->consts()->vector;
+           : script->consts()->vector;
+    strictModeCode_ins = addName(lir->insImmI(script->strictModeCode), "strict");
 }
 
 JS_REQUIRES_STACK void
@@ -7930,6 +7935,7 @@ TraceRecorder::updateAtoms(JSScript *script)
 {
     atoms = script->atomMap.vector;
     consts = script->constOffset == 0 ? 0 : script->consts()->vector;
+    strictModeCode_ins = addName(lir->insImmI(script->strictModeCode), "strict");
 }
 
 /*
@@ -10070,17 +10076,19 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
         return;
     }
 
-    /* For simplicitly, flush 'em all, even non-canonical arg slots. */
-    Value *vp = fp->actualArgs() - 2 /* callee, this */;
-    Value *vpend = fp->formalArgsEnd();
-    for (; vp < vpend; ++vp)
-        which.set(vp, (LIns*)0);
+    if (!fp->isEvalFrame()) {
+        /* For simplicitly, flush 'em all, even non-canonical arg slots. */
+        Value *vp = fp->actualArgs() - 2 /* callee, this */;
+        Value *vpend = fp->formalArgsEnd();
+        for (; vp < vpend; ++vp)
+            which.set(vp, (LIns*)0);
+    }
 
     which.set(fp->addressOfArgs(), (LIns*)0);
     which.set(fp->addressOfScopeChain(), (LIns*)0);
 
-    vp = fp->slots();
-    vpend = fp->slots() + fp->functionScript()->nslots;
+    Value *vp = fp->slots();
+    Value *vpend = fp->slots() + fp->functionScript()->nslots;
     for (; vp < vpend; ++vp)
         which.set(vp, (LIns*)0);
 }
@@ -11466,19 +11474,20 @@ TraceRecorder::record_JSOP_DELNAME()
 }
 
 JSBool JS_FASTCALL
-DeleteIntKey(JSContext* cx, JSObject* obj, int32 i)
+DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
     Value v = BooleanValue(false);
     jsid id = INT_TO_JSID(i);
-    if (!obj->deleteProperty(cx, id, &v))
+    if (!obj->deleteProperty(cx, id, &v, strict))
         SetBuiltinError(cx);
     return v.toBoolean();
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, 0, ACCSET_STORE_ANY)
+JS_DEFINE_CALLINFO_4(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, BOOL,
+                     0, ACCSET_STORE_ANY)
 
 JSBool JS_FASTCALL
-DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str)
+DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
     Value v = BooleanValue(false);
@@ -11489,11 +11498,12 @@ DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str)
      * jsatominlines.h) that helper early-returns if the computed property name
      * string is already atomized, and we are *not* on a perf-critical path!
      */
-    if (!js_ValueToStringId(cx, StringValue(str), &id) || !obj->deleteProperty(cx, id, &v))
+    if (!js_ValueToStringId(cx, StringValue(str), &id) || !obj->deleteProperty(cx, id, &v, strict))
         SetBuiltinError(cx);
     return v.toBoolean();
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, DeleteStrKey, CONTEXT, OBJECT, STRING, 0, ACCSET_STORE_ANY)
+JS_DEFINE_CALLINFO_4(extern, BOOL_FAIL, DeleteStrKey, CONTEXT, OBJECT, STRING, BOOL,
+                     0, ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DELPROP()
@@ -11507,7 +11517,7 @@ TraceRecorder::record_JSOP_DELPROP()
     JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
 
     enterDeepBailCall();
-    LIns* args[] = { INS_ATOM(atom), get(&lval), cx_ins };
+    LIns* args[] = { strictModeCode_ins, INS_ATOM(atom), get(&lval), cx_ins };
     LIns* rval_ins = lir->insCall(&DeleteStrKey_ci, args);
 
     LIns* status_ins = lir->insLoad(LIR_ldi,
@@ -11534,10 +11544,10 @@ TraceRecorder::record_JSOP_DELELEM()
 
     enterDeepBailCall();
     if (hasInt32Repr(idx)) {
-        LIns* args[] = { makeNumberInt32(get(&idx)), get(&lval), cx_ins };
+        LIns* args[] = { strictModeCode_ins, makeNumberInt32(get(&idx)), get(&lval), cx_ins };
         rval_ins = lir->insCall(&DeleteIntKey_ci, args);
     } else if (idx.isString()) {
-        LIns* args[] = { get(&idx), get(&lval), cx_ins };
+        LIns* args[] = { strictModeCode_ins, get(&idx), get(&lval), cx_ins };
         rval_ins = lir->insCall(&DeleteStrKey_ci, args);
     } else {
         RETURN_STOP_A("JSOP_DELELEM on non-int, non-string index");
@@ -12040,19 +12050,90 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
     return true;
 }
 
+static const size_t PIC_TABLE_ENTRY_COUNT = 32;
+
+struct PICTableEntry
+{
+    jsid    id;
+    uint32  shape;
+    uint32  slot;
+};
+
+struct PICTable
+{
+    PICTable() : entryCount(0) {}
+
+    PICTableEntry   entries[PIC_TABLE_ENTRY_COUNT];
+    uint32          entryCount;
+
+    bool scan(uint32 shape, jsid id, uint32 *slotOut) {
+        for (size_t i = 0; i < entryCount; ++i) {
+            PICTableEntry &entry = entries[i];
+            if (entry.shape == shape && entry.id == id) {
+                *slotOut = entry.slot;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void update(uint32 shape, jsid id, uint32 slot) {
+        if (entryCount >= PIC_TABLE_ENTRY_COUNT)
+            return;
+        PICTableEntry &newEntry = entries[entryCount++];
+        newEntry.shape = shape;
+        newEntry.id = id;
+        newEntry.slot = slot;
+    }
+};
+
 static JSBool FASTCALL
-GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp)
+GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PICTable *picTable)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
+    if (!RootedStringToId(cx, namep, &id)) {
         SetBuiltinError(cx);
         return false;
     }
+    
+    /* Delegate to the op, if present. */
+    PropertyIdOp op = obj->getOps()->getProperty;
+    if (op) {
+        bool result = op(cx, obj, id, vp);
+        if (!result)
+            SetBuiltinError(cx);
+        return result;
+    }
+
+    /* Try to hit in the cache. */
+    uint32 slot;
+    if (picTable->scan(obj->shape(), id, &slot)) {
+        *vp = obj->getSlot(slot);
+        return cx->tracerState->builtinStatus == 0;
+    }
+
+    const Shape *shape;
+    JSObject *holder;
+    if (!js_GetPropertyHelperWithShape(cx, obj, id, JSGET_METHOD_BARRIER, vp, &shape, &holder)) {
+        SetBuiltinError(cx);
+        return false;
+    }
+
+    /* Only update the table when the object is the holder of the property. */
+    if (obj == holder && shape->hasSlot()) {
+        /*
+         * Note: we insert the non-normalized id into the table so you don't need to
+         * normalize it before hitting in the table (faster lookup).
+         */
+        picTable->update(obj->shape(), id, shape->slot);
+    }
+    
     return cx->tracerState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
+JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
+                     PICTABLE,
                      0, ACCSET_STORE_ANY)
 
 // Convert the value in a slot to a string and store the resulting string back
@@ -12091,7 +12172,9 @@ TraceRecorder::getPropertyByName(LIns* obj_ins, Value* idvalp, Value* outp)
     // interpreter stack, but the slot at vp is not a root.
     LIns* vp_ins = addName(lir->insAlloc(sizeof(Value)), "vp");
     LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
-    LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
+    PICTable *picTable = new (traceAlloc()) PICTable();
+    LIns* pic_ins = INS_CONSTPTR(picTable);
+    LIns* args[] = {pic_ins, vp_ins, idvalp_ins, obj_ins, cx_ins};
     LIns* ok_ins = lir->insCall(&GetPropertyByName_ci, args);
 
     // GetPropertyByName can assign to *idvalp, so the tracker has an incorrect
@@ -12530,18 +12613,19 @@ TraceRecorder::record_JSOP_GETELEM()
 /* Functions used by JSOP_SETELEM */
 
 static JSBool FASTCALL
-SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp)
+SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->setProperty(cx, id, vp)) {
+    if (!RootedStringToId(cx, namep, &id) || !obj->setProperty(cx, id, vp, strict)) {
         SetBuiltinError(cx);
-        return JS_FALSE;
+        return false;
     }
     return cx->tracerState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, SetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
+JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, SetPropertyByName, 
+                     CONTEXT, OBJECT, STRINGPTR, VALUEPTR, BOOL,
                      0, ACCSET_STORE_ANY)
 
 static JSBool FASTCALL
@@ -12576,7 +12660,7 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, Value* idvalp, Value* rval
         LIns* vp_ins = box_value_into_alloc(*rvalp, get(rvalp));
         enterDeepBailCall();
         LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
-        LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
+        LIns* args[] = { strictModeCode_ins, vp_ins, idvalp_ins, obj_ins, cx_ins };
         pendingGuardCondition = lir->insCall(&SetPropertyByName_ci, args);
     }
 
@@ -12585,18 +12669,18 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, Value* idvalp, Value* rval
 }
 
 static JSBool FASTCALL
-SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp)
+SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
     AutoIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setProperty(cx, idr.id(), vp)) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setProperty(cx, idr.id(), vp, strict)) {
         SetBuiltinError(cx);
-        return JS_FALSE;
+        return false;
     }
     return cx->tracerState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, SetPropertyByIndex, CONTEXT, OBJECT, INT32, VALUEPTR,
+JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, SetPropertyByIndex, CONTEXT, OBJECT, INT32, VALUEPTR, BOOL,
                      0, ACCSET_STORE_ANY)
 
 static JSBool FASTCALL
@@ -12629,7 +12713,7 @@ TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, Value* r
         // See note in getPropertyByName about vp.
         LIns* vp_ins = box_value_into_alloc(*rvalp, get(rvalp));
         enterDeepBailCall();
-        LIns* args[] = {vp_ins, index_ins, obj_ins, cx_ins};
+        LIns* args[] = {strictModeCode_ins, vp_ins, index_ins, obj_ins, cx_ins};
         pendingGuardCondition = lir->insCall(&SetPropertyByIndex_ci, args);
     }
 

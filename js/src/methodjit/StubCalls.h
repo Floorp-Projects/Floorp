@@ -67,6 +67,37 @@ void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
 
+/*
+ * Result struct for UncachedXHelper.
+ *
+ * These functions can have one of two results:
+ *
+ *   (1) The function was executed in the interpreter. Then all fields
+ *       are NULL.
+ *
+ *   (2) The function was not executed, and the function has been compiled
+ *       to JM native code. Then all fields are non-NULL.
+ */
+struct UncachedCallResult {
+    JSObject   *callee;       // callee object
+    JSFunction *fun;          // callee function
+    void       *codeAddr;     // code address of compiled callee function
+
+    void init() {
+        callee = NULL;
+        fun = NULL;
+        codeAddr = NULL;
+    }        
+};
+
+/*
+ * Helper functions for stubs and IC functions for calling functions.
+ * These functions either execute the function, return a native code
+ * pointer that can be used to call the function, or throw.
+ */
+void UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+
 JSBool JS_FASTCALL NewObject(VMFrame &f, uint32 argc);
 void JS_FASTCALL Throw(VMFrame &f);
 void JS_FASTCALL PutCallObject(VMFrame &f);
@@ -84,38 +115,43 @@ void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
-void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL CallElem(VMFrame &f);
-void JS_FASTCALL SetElem(VMFrame &f);
+template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
 void JS_FASTCALL Length(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);
 void JS_FASTCALL GetGlobalName(VMFrame &f);
 
-void JS_FASTCALL NameInc(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL NameDec(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL IncName(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL DecName(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL GlobalNameInc(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL GlobalNameDec(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL IncGlobalName(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL DecGlobalName(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL PropInc(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL PropDec(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL IncProp(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL DecProp(VMFrame &f, JSAtom *atom);
-void JS_FASTCALL ElemInc(VMFrame &f);
-void JS_FASTCALL ElemDec(VMFrame &f);
-void JS_FASTCALL IncElem(VMFrame &f);
-void JS_FASTCALL DecElem(VMFrame &f);
+template<JSBool strict> void JS_FASTCALL NameInc(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL NameDec(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL IncName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL DecName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL GlobalNameInc(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL GlobalNameDec(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL IncGlobalName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL DecGlobalName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL PropInc(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL PropDec(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL IncProp(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL DecProp(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL ElemInc(VMFrame &f);
+template<JSBool strict> void JS_FASTCALL ElemDec(VMFrame &f);
+template<JSBool strict> void JS_FASTCALL IncElem(VMFrame &f);
+template<JSBool strict> void JS_FASTCALL DecElem(VMFrame &f);
 void JS_FASTCALL CallProp(VMFrame &f, JSAtom *atom);
+template <JSBool strict> void JS_FASTCALL DelProp(VMFrame &f, JSAtom *atom);
+template <JSBool strict> void JS_FASTCALL DelElem(VMFrame &f);
+void JS_FASTCALL DelName(VMFrame &f, JSAtom *atom);
+JSBool JS_FASTCALL In(VMFrame &f);
 
-void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
+void JS_FASTCALL DefVar(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun_FC(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL RegExp(VMFrame &f, JSObject *regex);
@@ -168,7 +204,7 @@ void JS_FASTCALL Iter(VMFrame &f, uint32 flags);
 void JS_FASTCALL IterNext(VMFrame &f);
 JSBool JS_FASTCALL IterMore(VMFrame &f);
 void JS_FASTCALL EndIter(VMFrame &f);
-void JS_FASTCALL ForName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL ForName(VMFrame &f, JSAtom *atom);
 
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 JSString * JS_FASTCALL TypeOf(VMFrame &f);
@@ -177,7 +213,25 @@ void JS_FASTCALL FastInstanceOf(VMFrame &f);
 void JS_FASTCALL ArgCnt(VMFrame &f);
 void JS_FASTCALL Unbrand(VMFrame &f);
 
-}}} /* namespace stubs,mjit,js */
+} /* namespace stubs */
+
+/* 
+ * If COND is true, return A; otherwise, return B. This allows us to choose between
+ * function template instantiations without running afoul of C++'s overload resolution
+ * rules. (Try simplifying, and you'll either see the problem --- or have found a
+ * better solution!)
+ */
+template<typename FuncPtr>
+inline FuncPtr FunctionTemplateConditional(bool cond, FuncPtr a, FuncPtr b) {
+    return cond ? a : b;
+}
+
+/* Return f<true> if the script is strict mode code, f<false> otherwise. */
+#define STRICT_VARIANT(f)                                                     \
+    (FunctionTemplateConditional(script->strictModeCode,                      \
+                                 f<true>, f<false>))
+
+}} /* namespace stubs,mjit,js */
 
 extern "C" void *
 js_InternalThrow(js::VMFrame &f);

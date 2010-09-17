@@ -1032,6 +1032,12 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
+namespace v8 {
+namespace internal {
+extern char* DoubleToCString(double v, char* buffer, int buflen);
+}
+}
+
 namespace js {
 
 static char *
@@ -1043,10 +1049,27 @@ FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base = 
         JS_ASSERT(!JSDOUBLE_IS_INT32(d, &_));
     }
 #endif
-    return (base == 10)
-           ? js_dtostr(JS_THREAD_DATA(cx)->dtoaState, cbuf->sbuf, cbuf->sbufSize,
-                       DTOSTR_STANDARD, 0, d)
-           : cbuf->dbuf = js_dtobasestr(JS_THREAD_DATA(cx)->dtoaState, base, d);
+
+    char* numStr;
+    if (base == 10) {
+        /*
+         * This is V8's implementation of the algorithm described in the
+         * following paper:
+         *
+         *   Printing floating-point numbers quickly and accurately with integers. 
+         *   Florian Loitsch, PLDI 2010.
+         *
+         * It fails on a small number of cases, whereupon we fall back to
+         * js_dtostr() (which uses David Gay's dtoa).
+         */
+        numStr = v8::internal::DoubleToCString(d, cbuf->sbuf, cbuf->sbufSize);
+        if (!numStr)
+            numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, cbuf->sbuf, cbuf->sbufSize,
+                               DTOSTR_STANDARD, 0, d);
+    } else {
+        numStr = cbuf->dbuf = js_dtobasestr(JS_THREAD_DATA(cx)->dtoaState, base, d);
+    }
+    return numStr;
 }
 
 char *

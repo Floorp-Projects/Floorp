@@ -4101,6 +4101,7 @@ if test -n "$MOZ_THUMB2"; then
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
+        AC_DEFINE(MOZ_THUMB2)
         CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
