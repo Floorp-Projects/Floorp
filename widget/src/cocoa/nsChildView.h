@@ -123,6 +123,7 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
   BOOL mIsPluginView;
   NPEventModel mPluginEventModel;
+  NPDrawingModel mPluginDrawingModel;
 
   // The following variables are only valid during key down event processing.
   // Their current usage needs to be fixed to avoid problems with nested event
@@ -355,6 +356,7 @@ public:
 
   NS_IMETHOD        SetPluginEventModel(int inEventModel);
   NS_IMETHOD        GetPluginEventModel(int* outEventModel);
+  NS_IMETHOD        SetPluginDrawingModel(int inDrawingModel);
 
   NS_IMETHOD        StartComplexTextInputForCurrentEvent();
 
@@ -441,7 +443,6 @@ protected:
   PRPackedBool          mVisible;
   PRPackedBool          mDrawing;
   PRPackedBool          mPluginDrawing;
-  PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
   PRPackedBool          mIsDispatchPaint; // Is a paint event being dispatched
 
   NP_CGContext          mPluginCGContext;
