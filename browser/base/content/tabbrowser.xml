@@ -430,7 +430,6 @@
                 if (!this.mBlank) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
-                    this.mTab.setAttribute("progress", "0");
                     this.mTab.setAttribute("progresspercent", "0");
                     this._startStalledTimer();
                     this.mTabBrowser.updateIcon(this.mTab);
@@ -459,7 +458,6 @@
                   this.mBlank = false;
 
                 this.mTab.removeAttribute("busy");
-                this.mTab.removeAttribute("progress");
                 this.mTab.removeAttribute("progresspercent");
                 this.mTab.removeAttribute("stalled");
                 this._cancelStalledTimer();
@@ -3333,7 +3331,7 @@
                              xbl:inherits="value=progresspercent,busy,stalled,fadein,selected"/>
         </xul:vbox>
         <xul:hbox class="tab-content" align="center">
-          <xul:image xbl:inherits="validate,src=image,fadein,pinned,busy,stalled,progress,selected"
+          <xul:image xbl:inherits="validate,src=image,fadein,pinned,busy,stalled,selected"
                      class="tab-icon-image"
                      role="presentation"/>
           <xul:label flex="1"
