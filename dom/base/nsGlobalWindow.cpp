@@ -1469,7 +1469,7 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
       // Do NOT set mOpenerScriptPrincipal in this case, just to be safe.
       return;
     }
-    
+
 #ifdef DEBUG
     // We better have an about:blank document loaded at this point.  Otherwise,
     // something is really weird.
@@ -1479,13 +1479,11 @@ nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
                  IsAboutBlank(mDoc->GetDocumentURI()),
                  "Unexpected original document");
 #endif
-    
-    // Set the opener principal on our document; given the above check, this
-    // is safe.
-    mDoc->SetPrincipal(aPrincipal);
+
+    nsCOMPtr<nsIDocShell_MOZILLA_2_0_BRANCH> ds(do_QueryInterface(GetDocShell()));
+    ds->CreateAboutBlankContentViewer(aPrincipal);
+    mDoc->SetIsInitialDocument(PR_TRUE);
   }
-    
-  mOpenerScriptPrincipal = aPrincipal;
 }
 
 nsIPrincipal*
