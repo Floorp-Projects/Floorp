@@ -349,7 +349,7 @@ function MouseModule(owner, browserViewContainer) {
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    if (aEvent.button !== 0 && aEvent.type != "contextmenu")
+    if (aEvent.button !== 0 && aEvent.type != "contextmenu" && aEvent.type != "MozBeforePaint")
       return;
 
     switch (aEvent.type) {
@@ -371,6 +371,10 @@ MouseModule.prototype = {
         // disallow kinetic panning after gesture
         if (this._dragData.dragging)
           this._doDragStop(0, 0, true);
+        break;
+      case "MozBeforePaint":
+        this._waitingForPaint = false;
+        removeEventListener("MozBeforePaint", this, false);
         break;
     }
   },
@@ -525,7 +529,7 @@ MouseModule.prototype = {
   _onMouseMove: function _onMouseMove(aEvent) {
     let dragData = this._dragData;
 
-    if (dragData.dragging) {
+    if (dragData.dragging && !this._waitingForPaint) {
       let oldIsPan = dragData.isPan();
       dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
       aEvent.stopPropagation();
@@ -609,7 +613,13 @@ MouseModule.prototype = {
    */
   _dragBy: function _dragBy(dX, dY) {
     let dragData = this._dragData;
-    return this._dragger.dragMove(dX, dY, this._targetScrollInterface);
+    let dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface);
+    if (dragged && !this._waitingForPaint) {
+      this._waitingForPaint = true;
+      mozRequestAnimationFrame();
+      addEventListener("MozBeforePaint", this, false);
+    }
+    return dragged;
   },
 
   /** Callback for kinetic scroller. */
