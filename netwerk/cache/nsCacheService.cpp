@@ -109,7 +109,7 @@
 
 static const char * observerList[] = { 
     "profile-before-change",
-    "profile-after-change",
+    "profile-do-change",
     NS_XPCOM_SHUTDOWN_OBSERVER_ID,
     NS_PRIVATE_BROWSING_SWITCH_TOPIC
 };
@@ -364,7 +364,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         nsCacheService::OnProfileShutdown(!strcmp("shutdown-cleanse",
                                                   data.get()));
         
-    } else if (!strcmp("profile-after-change", topic)) {
+    } else if (!strcmp("profile-do-change", topic)) {
         // profile after change
         mHaveProfile = PR_TRUE;
         nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
