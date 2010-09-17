@@ -5,12 +5,7 @@
   <script>
     function go() {
       document.getElementById("wrapper").style.width = "200px";
-
-      // Use a setTimeout to delay snapshot, to hopefully workaround
-      // random orange bug 596478.
-      setTimeout(
-        function() { document.documentElement.removeAttribute("class"); },
-        200);
+      document.documentElement.removeAttribute("class");
     }
   </script>
 </head>

@@ -30,7 +30,7 @@ include zoom/reftest.list
 
 # More complex <img> tests
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
-random-if(winWidget) == img-dyn-1.html img-dyn-1-ref.html
+random == img-dyn-1.html img-dyn-1-ref.html # Bug 596478
 
 # XXXdholbert Some of the tests below fail on Windows 7 right now. Marking them
 # random-on-windows right now while I investigate.
