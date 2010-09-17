@@ -263,6 +263,16 @@ RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
 JSObject *
 UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj)
 {
+  if (obj->isProxy()) {
+    JSObject *wrappedObj = obj->unwrap();
+    if (wrappedObj->getJSClass() == &xpc::HolderClass) {
+      typedef xpc::XrayWrapper<JSCrossCompartmentWrapper> Xray;
+      wrappedObj = Xray::unwrapHolder(cx, wrappedObj);
+    }
+
+    return wrappedObj;
+  }
+
   if (IsSecurityWrapper(obj)) {
     jsval v;
     JS_GetReservedSlot(cx, obj, sWrappedObjSlot, &v);

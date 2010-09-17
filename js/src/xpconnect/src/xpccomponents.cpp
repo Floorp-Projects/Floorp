@@ -50,6 +50,7 @@
 #include "xpcJSWeakReference.h"
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
+#include "jsproxy.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -3070,16 +3071,25 @@ SandboxImport(JSContext *cx, uintN argc, jsval *vp)
     if (!thisobj)
         return JS_FALSE;
 
-    if (argc < 1) {
+    jsval *argv = JS_ARGV(cx, vp);
+    if (argc < 1 || JSVAL_IS_PRIMITIVE(argv[0])) {
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
         return JS_FALSE;
     }
 
-    jsval *argv = JS_ARGV(cx, vp);
-    JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
-    if (!fun) {
-        XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
-        return JS_FALSE;
+    JSFunction *fun;
+    {
+        // NB: funobj must only be used to get the JSFunction out.
+        JSObject *funobj = JSVAL_TO_OBJECT(argv[0]);
+        if (funobj->isProxy()) {
+            funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, funobj);
+        }
+
+        fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
+        if (!fun) {
+            XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
+            return JS_FALSE;
+        }
     }
 
     JSString *funname;
@@ -3290,10 +3300,8 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
 
     if (vp) {
         *vp = OBJECT_TO_JSVAL(sandbox);
-        JSObject *scope;
-        if (!(scope = JS_GetScopeChain(cx)) ||
-            !XPCWrapper::RewrapObject(cx, scope, sandbox, XPCWrapper::NONE, vp)) {
-            return NS_ERROR_FAILURE;
+        if (!JS_WrapValue(cx, vp)) {
+            return NS_ERROR_UNEXPECTED;
         }
     }
 
@@ -3654,7 +3662,14 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
     {
         JSAutoRequest req(sandcx->GetJSContext());
+        JSAutoEnterCompartment ac;
+        jsval v;
         JSString *str = nsnull;
+
+        if (!ac.enter(sandcx->GetJSContext(), sandbox)) {
+            // XXX HELP!
+            NS_ABORT();
+        }
 
         JSBool ok =
             JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
@@ -3662,9 +3677,9 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                                              reinterpret_cast<const jschar *>
                                                              (PromiseFlatString(source).get()),
                                              source.Length(), filename, lineNo,
-                                             rval);
-        if (ok && returnStringOnly && !(JSVAL_IS_VOID(*rval))) {
-            ok = !!(str = JS_ValueToString(sandcx->GetJSContext(), *rval));
+                                             &v);
+        if (ok && returnStringOnly && !(JSVAL_IS_VOID(v))) {
+            ok = !!(str = JS_ValueToString(sandcx->GetJSContext(), v));
         }
 
         if (!ok) {
@@ -3673,10 +3688,8 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
             jsval exn;
             if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
-                // Root the exception temporarily so we can execute code on
-                // sandcx without a pending exception.
-                js::AutoValueRooter exnroot(sandcx->GetJSContext(), exn);
                 JS_ClearPendingException(sandcx->GetJSContext());
+
                 if (returnStringOnly) {
                     // The caller asked for strings only, convert the
                     // exception into a string.
@@ -3686,7 +3699,13 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                     if (str) {
                         // We converted the exception to a string. Use that
                         // as the value exception.
-                        JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                        exn = STRING_TO_JSVAL(str);
+                        if (JS_WrapValue(cx, &exn)) {
+                            JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                        } else {
+                            JS_ClearPendingException(cx);
+                            rv = NS_ERROR_FAILURE;
+                        }
                     } else {
                         JS_ClearPendingException(cx);
                         rv = NS_ERROR_FAILURE;
@@ -3694,10 +3713,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                 } else {
                     JSAutoRequest req(cx);
 
-                    if (!JSVAL_IS_PRIMITIVE(exn) &&
-                        XPCWrapper::RewrapObject(cx, callingScope,
-                                                 JSVAL_TO_OBJECT(exn),
-                                                 XPCWrapper::SJOW, &exn)) {
+                    if (JS_WrapValue(cx, &exn)) {
                         JS_SetPendingException(cx, exn);
                     }
                 }
@@ -3710,15 +3726,17 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
             }
         } else {
             // Convert the result into something safe for our caller.
+            JSAutoRequest req(cx);
             if (str) {
-                *rval = STRING_TO_JSVAL(str);
-            } else if (!JSVAL_IS_PRIMITIVE(*rval)) {
-                if (!XPCWrapper::RewrapObject(sandcx->GetJSContext(),
-                                              callingScope,
-                                              JSVAL_TO_OBJECT(*rval),
-                                              XPCWrapper::SJOW, rval)) {
-                    rv = NS_ERROR_FAILURE;
-                }
+                v = STRING_TO_JSVAL(str);
+            }
+
+            if (!JS_WrapValue(cx, &v)) {
+                rv = NS_ERROR_FAILURE;
+            }
+
+            if (NS_SUCCEEDED(rv)) {
+                *rval = v;
             }
         }
     }
