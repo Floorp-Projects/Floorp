@@ -7621,6 +7621,8 @@ nsWindow::GetRootAccessible()
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
 
   nsAccessible* docAcc = DispatchAccessibleEvent(NS_GETACCESSIBLE);
+  if (!docAcc)
+    return nsnull;
 
   nsCOMPtr<nsIAccessibleDocument> rootDocAcc;
   docAcc->GetRootDocument(getter_AddRefs(rootDocAcc));
