@@ -1124,6 +1124,12 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if(!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    // Note: This call cooperates with a call to wrapper->RefreshPrototype()
+    // in nsJSEnvironment::CreateOuterObject in order to ensure that the
+    // prototype defines its constructor on the right global object.
+    if(wrapper->GetProto()->GetScriptableInfo())
+        scope->RemoveWrappedNativeProtos();
+
     NS_ASSERTION(scope->GetGlobalJSObject() == tempGlobal, "stealing scope!");
 
     scope->SetGlobal(ccx, globalJSObj);
