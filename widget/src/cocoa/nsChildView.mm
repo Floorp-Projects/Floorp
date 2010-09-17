@@ -2400,7 +2400,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (BOOL)isOpaque
 {
-  return [[self window] isOpaque];
+  return [[self window] isOpaque] && !mIsPluginView;
 }
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
@@ -2597,6 +2597,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 #endif
 
+  // Don't ever draw non-QuickDraw plugin views explicitly; they'll be drawn as
+  // part of their parent widget.
+  if (mIsPluginView)
+    return;
+
 #ifdef DEBUG_UPDATE
   nsIntRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
@@ -2627,17 +2632,22 @@ NSEvent* gLastDragMouseDownEvent = nil;
       nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
   }
 
-  // Subtract child view rectangles from the region
+#ifndef NP_NO_QUICKDRAW
+  // Subtract quickdraw plugin rectangles from the region
   NSArray* subviews = [self subviews];
   for (int i = 0; i < int([subviews count]); ++i) {
     NSView* view = [subviews objectAtIndex:i];
     if (![view isKindOfClass:[ChildView class]] || [view isHidden])
       continue;
-    NSRect frame = [view frame];
-    paintEvent.region.Sub(paintEvent.region,
-      nsIntRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height));
+    ChildView* cview = (ChildView*) view;
+    if ([cview isPluginView] && [cview pluginDrawingModel] == NPDrawingModelQuickDraw) {
+      NSRect frame = [view frame];
+      paintEvent.region.Sub(paintEvent.region,
+        nsIntRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height));
+    }
   }
-  
+#endif
+
   if (mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager());
     manager->SetClippingRegion(paintEvent.region); 
