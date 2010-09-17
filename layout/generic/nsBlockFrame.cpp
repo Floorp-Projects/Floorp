@@ -5094,11 +5094,11 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     nsBlockFrame::reverse_line_iterator rline = aFrame->rline(cursor);
     nsBlockFrame::line_iterator line_end = aFrame->end_lines();
     nsBlockFrame::reverse_line_iterator rline_end = aFrame->rend_lines();
-    for (--rline;;) {
-      if (line == line_end && rline == rline_end) {
-        // Didn't find the line
-        break;
-      }
+    // rline is positioned on the line containing 'cursor', so it's not
+    // rline_end. So we can safely increment it (i.e. move it to one line
+    // earlier) to start searching there.
+    ++rline;
+    while (line != line_end || rline != rline_end) {
       if (line != line_end) {
         if (line->Contains(child)) {
           *aFoundValidLine = PR_TRUE;
@@ -5116,6 +5116,7 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
         ++rline;
       }
     }
+    // Didn't find the line
   }
 
   // If we reach here, it means that we have not been able to find the
