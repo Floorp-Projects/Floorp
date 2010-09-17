@@ -147,6 +147,7 @@ template<JSBool strict> void JS_FASTCALL DecElem(VMFrame &f);
 void JS_FASTCALL CallProp(VMFrame &f, JSAtom *atom);
 template <JSBool strict> void JS_FASTCALL DelProp(VMFrame &f, JSAtom *atom);
 template <JSBool strict> void JS_FASTCALL DelElem(VMFrame &f);
+void JS_FASTCALL DelName(VMFrame &f, JSAtom *atom);
 
 void JS_FASTCALL DefVar(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);

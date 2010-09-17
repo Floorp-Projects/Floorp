@@ -885,6 +885,18 @@ mjit::Compiler::generateMethod()
             jsop_pos();
           END_CASE(JSOP_POS)
 
+          BEGIN_CASE(JSOP_DELNAME)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            prepareStubCall(Uses(0));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::DelName);
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_DELNAME)
+
           BEGIN_CASE(JSOP_DELPROP)
           {
             uint32 index = fullAtomIndex(PC);
