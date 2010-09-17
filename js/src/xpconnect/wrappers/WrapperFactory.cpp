@@ -78,6 +78,17 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     if (!obj)
         return nsnull;
 
+    // Ugly hack to avoid wrapping holder objects instead of the actual
+    // underlying wrapped native JS object.
+    if (JS_GET_CLASS(cx, obj) == &HolderClass) {
+        obj = XrayWrapper<JSCrossCompartmentWrapper>::unwrapHolder(cx, obj);
+        OBJ_TO_OUTER_OBJECT(cx, obj);
+        if (!JS_WrapObject(cx, &obj))
+            return nsnull;
+
+        return obj;
+    }
+
     JSCompartment *origin = obj->getCompartment(cx);
     JSCompartment *target = cx->compartment;
 
