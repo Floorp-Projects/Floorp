@@ -492,6 +492,15 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   mBuffer.DrawTo(this, canUseOpaqueSurface, target, aOpacity);
 }
 
+static PRBool
+IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
+{
+  // Assume clipping is cheap if the context just has an integer
+  // translation, and the visible region is simple.
+  return !aTarget->CurrentMatrix().HasNonIntegerTranslation() &&
+         aRegion.GetNumRects() <= 1; 
+}
+
 void
 BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
                                PRBool aIsOpaqueContent,
@@ -499,7 +508,15 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
                                float aOpacity)
 {
   aTarget->Save();
-  gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+  // If the entire buffer is valid, we can just draw the whole thing,
+  // no need to clip. But we'll still clip if clipping is cheap ---
+  // that might let us copy a smaller region of the buffer.
+  if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
+      IsClippingCheap(aTarget, aLayer->GetVisibleRegion())) {
+    // We don't want to draw invalid stuff, so we need to clip. Might as
+    // well clip to the smallest area possible --- the visible region.
+    gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+  }
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
