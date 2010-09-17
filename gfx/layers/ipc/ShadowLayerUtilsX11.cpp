@@ -59,44 +59,6 @@ GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
   return XRenderFindFormat(aDisplay, PictFormatID, &tmplate, 0);
 }
 
-// FIXME/bug 594921: stopgap until we have better cairo_xlib_surface
-// APIs for working with Xlib surfaces across processes
-static already_AddRefed<gfxXlibSurface>
-CreateSimilar(gfxXlibSurface* aReference,
-              gfxASurface::gfxContentType aType, const gfxIntSize& aSize)
-{
-  Display* display = aReference->XDisplay();
-  XRenderPictFormat* xrenderFormat = nsnull;
-
-  // Try to re-use aReference's render format if it's compatible
-  if (aReference->GetContentType() == aType) {
-    xrenderFormat = aReference->XRenderFormat();
-  } else {
-    // Couldn't use aReference's directly.  Use a standard format then.
-    gfxASurface::gfxImageFormat format;
-    switch (aType) {
-    case gfxASurface::CONTENT_COLOR:
-      // FIXME/bug 593175: investigate 16bpp
-      format = gfxASurface::ImageFormatRGB24; break;
-    case gfxASurface::CONTENT_ALPHA:
-      format = gfxASurface::ImageFormatA8; break;
-    default:
-      NS_NOTREACHED("unknown gfxContentType");
-    case gfxASurface::CONTENT_COLOR_ALPHA:
-      format = gfxASurface::ImageFormatARGB32; break;
-    }
-    xrenderFormat = gfxXlibSurface::FindRenderFormat(display, format);
-  }
-
-  if (!xrenderformat) {
-    NS_WARNING("couldn't find suitable render format");
-    return nsnull;
-  }
-
-  return gfxXlibSurface::Create(aReference->XScreen(), xrenderFormat,
-                                aSize, aReference->XDrawable());
-}
-
 static PRBool
 TakeAndDestroyXlibSurface(SurfaceDescriptor* aSurface)
 {
@@ -132,24 +94,25 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
                                                 SurfaceDescriptor* aFrontBuffer,
                                                 SurfaceDescriptor* aBackBuffer)
 {
-  gfxASurface* reference = gfxPlatform::GetPlatform()->ScreenReferenceSurface();
-  NS_ABORT_IF_FALSE(reference->GetType() == gfxASurface::SurfaceTypeXlib,
-                    "can't alloc an Xlib surface on non-X11");
-  gfxXlibSurface* xlibRef = static_cast<gfxXlibSurface*>(reference);
+  gfxPlatform* platform = gfxPlatform::GetPlatform();
 
-  nsRefPtr<gfxXlibSurface> front = CreateSimilar(xlibRef, aContent, aSize);
-  nsRefPtr<gfxXlibSurface> back = CreateSimilar(xlibRef, aContent, aSize);
-  if (!front || !back) {
+  nsRefPtr<gfxASurface> front = platform->CreateOffscreenSurface(aSize, aContent);
+  nsRefPtr<gfxASurface> back = platform->CreateOffscreenSurface(aSize, aContent);
+  if (!front || !back ||
+      front->GetType() != gfxASurface::SurfaceTypeXlib ||
+      back->GetType() != gfxASurface::SurfaceTypeXlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");
     return PR_FALSE;
   }
 
+  gfxXlibSurface* frontX = static_cast<gfxXlibSurface*>(front.get());
+  gfxXlibSurface* backX = static_cast<gfxXlibSurface*>(back.get());
   // Release Pixmap ownership to the layers model
-  front->ReleasePixmap();
-  back->ReleasePixmap();
+  frontX->ReleasePixmap();
+  backX->ReleasePixmap();
 
-  *aFrontBuffer = SurfaceDescriptorX11(front);
-  *aBackBuffer = SurfaceDescriptorX11(back);
+  *aFrontBuffer = SurfaceDescriptorX11(frontX);
+  *aBackBuffer = SurfaceDescriptorX11(backX);
   return PR_TRUE;
 }
 
