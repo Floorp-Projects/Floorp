@@ -187,9 +187,6 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     frameBuffer = aPreviousFrameBuffer;
   }
 
-  GLint savedScissor[4];
-  gl()->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, savedScissor);
-
   GLint viewport[4];
   gl()->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
 
