@@ -43,6 +43,7 @@
 #include "nsPrintfCString.h"
 #include "nsIPrefService.h" 
 #include "Nv3DVUtils.h"
+#include "plstr.h"
 
 namespace mozilla {
 namespace layers {
@@ -257,6 +258,19 @@ DeviceManagerD3D9::Init()
     if (!mD3D9) {
       return false;
     }
+  }
+
+  D3DADAPTER_IDENTIFIER9 ident;
+  hr = mD3D9->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &ident);
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  if (!PL_strncasecmp(ident.Driver, "nvumdshim.dll", PL_strlen(ident.Driver))) {
+    // XXX - This is a device using NVidia Optimus. We have no idea how to do
+    // interop here so let's fail and use BasicLayers. See bug 597320.
+    return false;
   }
 
   D3DPRESENT_PARAMETERS pp;
