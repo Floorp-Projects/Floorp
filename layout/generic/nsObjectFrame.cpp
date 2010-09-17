@@ -1235,8 +1235,16 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 nsRect
 nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetContentRect() - mFrame->GetPosition() +
+  nsRect r = mFrame->GetContentRect() - mFrame->GetPosition() +
     ToReferenceFrame();
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  if (mozilla::LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
+    gfxIntSize size = f->GetImageContainer()->GetCurrentSize();
+    PRInt32 appUnitsPerDevPixel = f->PresContext()->AppUnitsPerDevPixel();
+    r -= nsPoint((r.width - size.width * appUnitsPerDevPixel) / 2,
+                 (r.height - size.height * appUnitsPerDevPixel) / 2);
+  }
+  return r;
 }
 
 void
