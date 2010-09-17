@@ -1735,7 +1735,9 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   mInstanceOwner->GetInstance(*getter_AddRefs(pi));
   // Give plugin info about layer paint
   if (pi) {
-    pi->NotifyPainted();
+    if (NS_FAILED(pi->NotifyPainted())) {
+      return nsnull;
+    }
   }
 
   if (!layer)
