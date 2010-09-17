@@ -149,6 +149,8 @@
             case "MozScrolledAreaChanged":
               this._contentDocumentWidth = aMessage.json.width;
               this._contentDocumentHeight = aMessage.json.height;
+              // Recalculate whether the visible area is actually in bounds
+              this.scrollBy(0, 0);
               this._updateCacheViewport();
               break;
          }

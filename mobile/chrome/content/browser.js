@@ -249,6 +249,14 @@ var Browser = {
       for (let i = Browser.tabs.length - 1; i >= 0; i--)
         Browser.tabs[i].updateViewportSize();
 
+      // XXX page scrollbox jumps to a strange value on resize. Scrolling it will
+      // bound it to a sane place, but not where we were when the resize began :(
+      Browser.hideTitlebar();
+
+      // XXX Hack. Browser also behaves badly on resize.
+      getBrowser().style.display = "none";
+      getBrowser().style.display = "block";
+
       let curEl = document.activeElement;
       if (curEl && curEl.scrollIntoView)
         curEl.scrollIntoView(false);
@@ -1084,7 +1092,7 @@ Browser.MainDragger.prototype = {
     if (doffset.x > 0 && rect.left > 0)
       x = Math.min(doffset.x, rect.left);
 
-    let height = document.getElementById("tile-stack").getBoundingClientRect().height;
+    let height = document.getElementById("content-viewport").getBoundingClientRect().height;
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
     if (doffset.y < 0 && rect.bottom < height)
       y = Math.max(doffset.y, rect.bottom - height);
