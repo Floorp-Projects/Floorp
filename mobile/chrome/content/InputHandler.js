@@ -1305,8 +1305,8 @@ GestureModule.prototype = {
     if (this._pinchZoom || (aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom)
       return;
 
-    // grab events during pinch
     this._owner.grab(this);
+    this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
     // hide element highlight
     // XXX ugh, this is awful. None of this code should be in InputHandler.
@@ -1314,10 +1314,10 @@ GestureModule.prototype = {
 
     // create the AnimatedZoom object for fast arbitrary zooming
     this._pinchZoom = AnimatedZoom;
+    this._pinchZoomRect = AnimatedZoom.getStartRect()
 
     // start from current zoom level
-    this._pinchZoomLevel = getBrowser().scale;
-    this._ignoreNextUpdate = true; // first update gives useless, huge delta
+    this._pinchStartScale = this._pinchScale = getBrowser().scale;
 
     // cache gesture limit values
     this._maxGrowth = Services.prefs.getIntPref("browser.ui.pinch.maxGrowth");
@@ -1325,17 +1325,8 @@ GestureModule.prototype = {
     this._scalingFactor = Services.prefs.getIntPref("browser.ui.pinch.scalingFactor");
 
     // save the initial gesture start point as reference
-    [this._pinchStartX, this._pinchStartY] =
-        Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
-
-    let scroll = getBrowser().getPosition();
-    this._pinchScrollX = scroll.x;
-    this._pinchScrollY = scroll.y
-
-    let [centerX, centerY] = Browser.transformClientToBrowser(window.innerWidth / 2,
-                                                              window.innerHeight / 2);
-    this._centerX = centerX;
-    this._centerY = centerY;
+    this._pinchClientX = aEvent.clientX;
+    this._pinchClientY = aEvent.clientY;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
@@ -1344,23 +1335,32 @@ GestureModule.prototype = {
 
     // decrease the pinchDelta min/max values to limit zooming out/in speed
     let delta = Util.clamp(aEvent.delta, -this._maxShrink, this._maxGrowth);
-    this._pinchZoomLevel *= (1 + delta / this._scalingFactor);
-    this._pinchZoomLevel = Browser.selectedTab.clampZoomLevel(this._pinchZoomLevel);
 
-    // get current pinch position to calculate opposite vector for zoom point
-    let [pX, pY] =
-        Browser.transformClientToBrowser(aEvent.clientX, aEvent.clientY);
+    let startScale = this._pinchStartScale;
+    let oldScale = this._pinchScale;
+    let newScale = Browser.selectedTab.clampZoomLevel(oldScale * (1 + delta / this._scalingFactor));
 
-    let scale = getBrowser().scale;
-    let scroll = getBrowser().getPosition();
-    pX += (this._pinchScrollX - scroll.x) / scale;
-    pY += (this._pinchScrollY - scroll.y) / scale;
+    let scaleRatio = oldScale / newScale;
+    let [cX, cY] = [aEvent.clientX, aEvent.clientY];
+
+    // Calculate the new zoom rect.
+    let rect = this._pinchZoomRect.clone();
+    rect.translate(this._pinchClientX - cX + startScale * (1-scaleRatio) * cX * rect.width / window.innerWidth,
+                   this._pinchClientY - cY + startScale * (1-scaleRatio) * cY * rect.height / window.innerHeight);
+
+    rect.width *= scaleRatio;
+    rect.height *= scaleRatio;
+
+    rect.translateInside(new Rect(0, 0, getBrowser().contentDocumentWidth * startScale,
+                                        getBrowser().contentDocumentHeight * startScale));
 
     // redraw zoom canvas according to new zoom rect
-    let rect = Browser._getZoomRectForPoint(this._centerX + this._pinchStartX - pX,
-                                            this._centerY + this._pinchStartY - pY,
-                                            this._pinchZoomLevel);
-    this._pinchZoom.updateTo(rect);
+    this._pinchZoomRect = rect;
+    this._pinchZoom.updateTo(this._pinchZoomRect);
+
+    this._pinchScale = newScale;
+    this._pinchClientX = cX;
+    this._pinchClientY = cY;
   },
 
   _pinchEnd: function _pinchEnd(aEvent) {
