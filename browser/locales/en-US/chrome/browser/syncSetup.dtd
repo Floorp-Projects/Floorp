@@ -52,9 +52,6 @@
 <!ENTITY button.syncKeyBackup.save.label      "Save…">
 <!ENTITY button.syncKeyBackup.save.accesskey  "S">
 
-<!ENTITY page.syncKeyBackup.title     "Your Firefox Sync Key">
-<!ENTITY page.syncKeyBackup.descr     "This secret key is used to encrypt your personal data. It is not uploaded to the server and cannot be recovered. Do not lose it or share with other people.">
-
 <!-- New Account Page 3: Captcha -->
 <!ENTITY setup.captchaPage2.title.label     "Please Confirm You're Not a Robot">
 
