@@ -132,6 +132,7 @@ BrowserCLH.prototype = {
       let searchService = Services.search;
       let autoComplete = Cc["@mozilla.org/autocomplete/search;1?name=history"].
                          getService(Ci.nsIAutoCompleteSearch);
+      return;
     }
 
     // Handle chrome windows loaded via commandline
@@ -152,6 +153,7 @@ BrowserCLH.prototype = {
       catch (e) {
         Cu.reportError(e);
       }
+      return;
     }
 
     // Keep an array of possible URL arguments
