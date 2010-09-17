@@ -40,6 +40,8 @@ import os, os.path
 import subprocess
 import sys
 
+CL_INCLUDES_PREFIX = os.environ.get("CL_INCLUDES_PREFIX", "Note: including file:")
+
 def InvokeClWithDependencyGeneration(cmdline):
     target = ""
     # Figure out what the target is
@@ -61,8 +63,8 @@ def InvokeClWithDependencyGeneration(cmdline):
     for line in cl.stdout:
         # cl -showIncludes prefixes every header with "Note: including file:"
         # and an indentation corresponding to the depth (which we don't need)
-        if line.startswith("Note: including file:"):
-            dep = line[21:].strip()
+        if line.startswith(CL_INCLUDES_PREFIX):
+            dep = line[len(CL_INCLUDES_PREFIX):].strip()
             # We can't handle pathes with spaces properly in mddepend.pl, but
             # we can assume that anything in a path with spaces is a system
             # header and throw it away.
