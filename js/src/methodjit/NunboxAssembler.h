@@ -151,6 +151,21 @@ class Assembler : public BaseAssembler
         store32(imm, payloadOf(address));
     }
 
+    /* Loads type first, then payload, returning label after type load. */
+    Label loadValueAsComponents(Address address, RegisterID type, RegisterID payload) {
+        loadTypeTag(address, type);
+        Label l = label();
+        loadPayload(address, payload);
+        return l;
+    }
+
+    Label loadValueAsComponents(BaseIndex address, RegisterID type, RegisterID payload) {
+        loadTypeTag(address, type);
+        Label l = label();
+        loadPayload(address, payload);
+        return l;
+    }
+
     /*
      * Stores type first, then payload.
      */
