@@ -1321,6 +1321,14 @@ mjit::Compiler::generateMethod()
             frame.pop();
           END_CASE(JSOP_THROW)
 
+          BEGIN_CASE(JSOP_IN)
+            prepareStubCall(Uses(2));
+            stubCall(stubs::In);
+            frame.popn(2);
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
+          END_CASE(JSOP_IN)
+
           BEGIN_CASE(JSOP_INSTANCEOF)
             jsop_instanceof();
           END_CASE(JSOP_INSTANCEOF)

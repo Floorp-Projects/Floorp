@@ -2762,6 +2762,34 @@ stubs::DefVar(VMFrame &f, JSAtom *atom)
     obj2->dropProperty(cx, prop);
 }
 
+JSBool JS_FASTCALL
+stubs::In(VMFrame &f)
+{
+    JSContext *cx = f.cx;
+
+    const Value &rref = f.regs.sp[-1];
+    if (!rref.isObject()) {
+        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NULL);
+        THROWV(JS_FALSE);
+    }
+
+    JSObject *obj = &rref.toObject();
+    jsid id;
+    if (!FetchElementId(f, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
+        THROWV(JS_FALSE);
+
+    JSObject *obj2;
+    JSProperty *prop;
+    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+        THROWV(JS_FALSE);
+
+    JSBool cond = !!prop;
+    if (prop)
+        obj2->dropProperty(cx, prop);
+
+    return cond;
+}
+
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
