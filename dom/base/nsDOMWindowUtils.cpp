@@ -1551,3 +1551,27 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 
   return NS_OK;
 }
+
+nsresult
+nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
+                                 PRUint32 aFlags,
+                                 nscolor aBackgroundColor,
+                                 gfxContext* aThebesContext)
+{
+    // Get DOM Document
+    nsresult rv;
+    nsCOMPtr<nsIDOMDocument> ddoc;
+    rv = mWindow->GetDocument(getter_AddRefs(ddoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get Document
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get Primary Shell
+    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+    // Render Document
+    return presShell->RenderDocument(aRect, aFlags, aBackgroundColor, aThebesContext);
+}
