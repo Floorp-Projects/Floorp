@@ -3879,11 +3879,15 @@ ConstructSlimWrapper(XPCCallContext &ccx,
         return JS_FALSE;
     }
 
+    nsWrapperCache *cache = aHelper.GetWrapperCache();
     JSObject* plannedParent = parent;
     rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
     if(rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS)
     {
-        SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
+        if(cache->IsProxy())
+            NS_ASSERTION(cache->GetWrapper(), "out of memory?");
+        else
+            SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
 
         return JS_FALSE;
     }
@@ -3902,7 +3906,6 @@ ConstructSlimWrapper(XPCCallContext &ccx,
 
     // The PreCreate hook could have forced the creation of a wrapper, need
     // to check for that here and return early.
-    nsWrapperCache *cache = aHelper.GetWrapperCache();
     JSObject* wrapper = cache->GetWrapper();
     if(wrapper)
     {
