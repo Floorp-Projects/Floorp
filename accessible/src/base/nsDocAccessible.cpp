@@ -93,7 +93,7 @@ nsIAtom *nsDocAccessible::gLastFocusedFrameType = nsnull;
 nsDocAccessible::
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
                   nsIWeakReference *aShell) :
-  nsHyperTextAccessibleWrap(aRootContent, aShell), mWnd(nsnull),
+  nsHyperTextAccessibleWrap(aRootContent, aShell),
   mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE)
 {
   // XXX aaronl should we use an algorithm for the initial cache size?
@@ -102,17 +102,6 @@ nsDocAccessible::
   // For GTK+ native window, we do nothing here.
   if (!mDocument)
     return;
-
-  // Initialize mWnd
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-  nsIViewManager* vm = shell->GetViewManager();
-  if (vm) {
-    nsCOMPtr<nsIWidget> widget;
-    vm->GetRootWidget(getter_AddRefs(widget));
-    if (widget) {
-      mWnd = widget->GetNativeData(NS_NATIVE_WINDOW);
-    }
-  }
 
   // nsAccDocManager creates document accessible when scrollable frame is
   // available already, it should be safe time to add scroll listener.
@@ -473,7 +462,8 @@ NS_IMETHODIMP nsDocAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAStr
 
 NS_IMETHODIMP nsDocAccessible::GetWindowHandle(void **aWindow)
 {
-  *aWindow = mWnd;
+  NS_ENSURE_ARG_POINTER(aWindow);
+  *aWindow = GetNativeWindow();
   return NS_OK;
 }
 
@@ -1334,6 +1324,20 @@ nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public members
+
+void*
+nsDocAccessible::GetNativeWindow() const
+{
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  nsIViewManager* vm = shell->GetViewManager();
+  if (vm) {
+    nsCOMPtr<nsIWidget> widget;
+    vm->GetRootWidget(getter_AddRefs(widget));
+    if (widget)
+      return widget->GetNativeData(NS_NATIVE_WINDOW);
+  }
+  return nsnull;
+}
 
 nsAccessible*
 nsDocAccessible::GetCachedAccessibleInSubtree(void* aUniqueID)

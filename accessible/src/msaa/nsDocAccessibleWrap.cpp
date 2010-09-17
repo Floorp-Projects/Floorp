@@ -39,6 +39,9 @@
 #include "nsDocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
+#include "nsRootAccessible.h"
+#include "nsWinUtils.h"
+
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIFrame.h"
@@ -60,7 +63,7 @@
 nsDocAccessibleWrap::
   nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
                       nsIWeakReference *aShell) :
-  nsDocAccessible(aDocument, aRootContent, aShell)
+  nsDocAccessible(aDocument, aRootContent, aShell), mHWND(NULL)
 {
 }
 
@@ -244,4 +247,54 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
     return hr;
 
   return get_URL(pszValue);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessNode
+
+PRBool
+nsDocAccessibleWrap::Init()
+{
+  if (nsWinUtils::IsWindowEmulationEnabled()) {
+    // Create window for tab document.
+    if (nsWinUtils::IsTabDocument(mDocument)) {
+      nsRefPtr<nsRootAccessible> root = GetRootAccessible();
+      mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
+                                             static_cast<HWND>(root->GetNativeWindow()));
+
+      nsAccessibleWrap::sHWNDCache.Put(mHWND, this);
+
+    } else {
+      nsDocAccessible* parentDocument = ParentDocument();
+      if (parentDocument)
+        mHWND = parentDocument->GetNativeWindow();
+    }
+  }
+
+  return nsDocAccessible::Init();
+}
+
+void
+nsDocAccessibleWrap::Shutdown()
+{
+  if (nsWinUtils::IsWindowEmulationEnabled()) {
+    // Destroy window created for root document.
+    if (nsWinUtils::IsTabDocument(mDocument)) {
+      nsAccessibleWrap::sHWNDCache.Remove(mHWND);
+      ::DestroyWindow(static_cast<HWND>(mHWND));
+    }
+
+    mHWND = nsnull;
+  }
+
+  nsDocAccessible::Shutdown();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsDocAccessible
+
+void*
+nsDocAccessibleWrap::GetNativeWindow() const
+{
+  return mHWND ? mHWND : nsDocAccessible::GetNativeWindow();
 }
