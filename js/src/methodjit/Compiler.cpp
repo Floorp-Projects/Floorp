@@ -1349,6 +1349,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
 
+          BEGIN_CASE(JSOP_CONDSWITCH)
+            /* No-op for the decompiler. */
+          END_CASE(JSOP_CONDSWITCH)
+
           BEGIN_CASE(JSOP_DEFFUN)
           {
             uint32 index = fullAtomIndex(PC);
@@ -1589,6 +1593,10 @@ mjit::Compiler::generateMethod()
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
           END_CASE(JSOP_NEWARRAY)
+
+          BEGIN_CASE(JSOP_HOLE)
+            frame.push(MagicValue(JS_ARRAY_HOLE));
+          END_CASE(JSOP_HOLE)
 
           BEGIN_CASE(JSOP_LAMBDA_FC)
           {
