@@ -2665,6 +2665,28 @@ stubs::ArgSub(VMFrame &f, uint32 n)
     f.regs.sp[0] = rval;
 }
 
+void JS_FASTCALL
+stubs::DelName(VMFrame &f, JSAtom *atom)
+{
+    jsid id = ATOM_TO_JSID(atom);
+    JSObject *obj, *obj2;
+    JSProperty *prop;
+    if (!js_FindProperty(f.cx, id, &obj, &obj2, &prop))
+        THROW();
+
+    /* Strict mode code should never contain JSOP_DELNAME opcodes. */
+    JS_ASSERT(!f.fp()->script()->strictModeCode);
+
+    /* ECMA says to return true if name is undefined or inherited. */
+    f.regs.sp++;
+    f.regs.sp[-1] = BooleanValue(true);
+    if (prop) {
+        obj2->dropProperty(f.cx, prop);
+        if (!obj->deleteProperty(f.cx, id, &f.regs.sp[-1], false))
+            THROW();
+    }
+}
+
 template<JSBool strict>
 void JS_FASTCALL
 stubs::DelProp(VMFrame &f, JSAtom *atom)
