@@ -842,10 +842,9 @@ struct JSDefinition : public JSParseNode
 #ifdef CONST
 # undef CONST
 #endif
-    enum Kind { VAR, CONST, LET, ARG, FUNCTION, UNKNOWN };
+    enum Kind { VAR, CONST, LET, FUNCTION, ARG, UNKNOWN };
 
     bool isBindingForm() { return int(kind()) <= int(LET); }
-    bool isArgOrBindingForm() { return int(kind()) <= int(ARG); }
 
     static const char *kindString(Kind kind);
 
