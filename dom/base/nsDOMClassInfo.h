@@ -382,6 +382,7 @@ protected:
   static jsid sOnmessage_id;
   static jsid sOnbeforescriptexecute_id;
   static jsid sOnafterscriptexecute_id;
+  static jsid sWrappedJSObject_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;

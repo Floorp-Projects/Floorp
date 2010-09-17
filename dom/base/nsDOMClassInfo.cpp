@@ -1618,6 +1618,7 @@ jsid nsDOMClassInfo::sOnvolumechange_id  = JSID_VOID;
 jsid nsDOMClassInfo::sOnmessage_id       = JSID_VOID;
 jsid nsDOMClassInfo::sOnbeforescriptexecute_id = JSID_VOID;
 jsid nsDOMClassInfo::sOnafterscriptexecute_id = JSID_VOID;
+jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
@@ -1844,6 +1845,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnbeforescriptexecute_id, cx, "onbeforescriptexecute");
   SET_JSID_TO_STRING(sOnafterscriptexecute_id, cx, "onafterscriptexecute");
 #endif // MOZ_MEDIA
+  SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
 
   return NS_OK;
 }
@@ -4878,6 +4880,7 @@ nsDOMClassInfo::ShutDown()
   sOnmessage_id       = JSID_VOID;
   sOnbeforescriptexecute_id = JSID_VOID;
   sOnafterscriptexecute_id = JSID_VOID;
+  sWrappedJSObject_id = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -5283,6 +5286,11 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         return NS_SUCCESS_I_DID_SOMETHING;
       }
     }
+  }
+
+  if (id == sWrappedJSObject_id) {
+    *vp = OBJECT_TO_JSVAL(obj);
+    return NS_SUCCESS_I_DID_SOMETHING;
   }
 
   return NS_OK;
