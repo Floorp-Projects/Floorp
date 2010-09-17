@@ -183,6 +183,17 @@ let gSyncUtils = {
       let el = iframe.contentDocument.getElementById("synckey");
       el.firstChild.nodeValue = pp;
 
+      // Insert the TOS and Privacy Policy URLs into the page.
+      let termsURL = Weave.Svc.Prefs.get("termsURL");
+      el = iframe.contentDocument.getElementById("tosLink");
+      el.setAttribute("href", termsURL);
+      el.firstChild.nodeValue = termsURL;
+
+      let privacyURL = Weave.Svc.Prefs.get("privacyURL");
+      el = iframe.contentDocument.getElementById("ppLink");
+      el.setAttribute("href", privacyURL);
+      el.firstChild.nodeValue = privacyURL;
+
       callback(iframe);
     }, false);
   },
@@ -237,6 +248,9 @@ let gSyncUtils = {
 
         let serializer = new XMLSerializer();
         let output = serializer.serializeToString(iframe.contentDocument);
+        output = output.replace(/<!DOCTYPE (.|\n)*?]>/,
+          '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" ' +
+          '"DTD/xhtml1-strict.dtd">');
         output = Weave.Utils.encodeUTF8(output);
         stream.write(output, output.length);
       }
