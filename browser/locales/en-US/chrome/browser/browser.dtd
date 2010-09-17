@@ -18,8 +18,6 @@
 <!ENTITY  reloadAllTabs.accesskey            "A">
 <!ENTITY  closeOtherTabs.label               "Close Other Tabs">
 <!ENTITY  closeOtherTabs.accesskey           "o">
-<!ENTITY  openTabInNewWindow.label           "Open in a New Window">
-<!ENTITY  openTabInNewWindow.accesskey       "W">
 
 <!-- LOCALIZATION NOTE (pinAppTab.label, unpinAppTab.label): "Pin" is being
 used as a metaphor for expressing the fact that these tabs are "pinned" to the
@@ -33,6 +31,8 @@ can reach it easily. -->
 <!ENTITY  moveToGroup.label                  "Move to Group">
 <!ENTITY  moveToGroup.accesskey              "M">
 <!ENTITY  moveToNewGroup.label               "New Group">
+<!ENTITY  moveToNewWindow.label              "Move to New Window">
+<!ENTITY  moveToNewWindow.accesskey          "W">
 <!ENTITY  bookmarkAllTabs.label              "Bookmark All Tabs…">
 <!ENTITY  bookmarkAllTabs.accesskey          "T">
 <!ENTITY  undoCloseTab.label                 "Undo Close Tab">
