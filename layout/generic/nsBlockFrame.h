@@ -808,13 +808,17 @@ public:
   /**
    * Set up the iterator to point to the first line found starting from
    * aFrame. Sets aFoundValidLine to false if there is no such line.
+   * After aFoundValidLine has returned false, don't call any methods on this
+   * object again.
    */
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, PRBool* aFoundValidLine);
   /**
    * Set up the iterator to point to the line that contains aFindFrame (either
    * directly or indirectly).  If aFrame is out of flow, or contained in an
    * out-of-flow, finds the line containing the out-of-flow's placeholder. If
-   * the frame is not found, sets aFoundValidLine to false.
+   * the frame is not found, sets aFoundValidLine to false. After
+   * aFoundValidLine has returned false, don't call any methods on this
+   * object again.
    */
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, nsIFrame* aFindFrame,
                             PRBool* aFoundValidLine);
