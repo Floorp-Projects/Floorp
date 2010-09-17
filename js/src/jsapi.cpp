@@ -3593,8 +3593,8 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);
             return own
-                   ? JSProxy::getOwnPropertyDescriptor(cx, obj2, id, desc)
-                   : JSProxy::getPropertyDescriptor(cx, obj2, id, desc);
+                   ? JSProxy::getOwnPropertyDescriptor(cx, obj2, id, false, desc)
+                   : JSProxy::getPropertyDescriptor(cx, obj2, id, false, desc);
         }
         if (!obj2->getAttributes(cx, id, &desc->attrs))
             return false;

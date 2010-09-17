@@ -93,7 +93,7 @@ JSProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoPropertyDescriptorRooter desc(cx);
-    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+    if (!getPropertyDescriptor(cx, proxy, id, false, &desc))
         return false;
     *bp = !!desc.obj;
     return true;
@@ -104,7 +104,7 @@ JSProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoPropertyDescriptorRooter desc(cx);
-    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
+    if (!getOwnPropertyDescriptor(cx, proxy, id, false, &desc))
         return false;
     *bp = !!desc.obj;
     return true;
@@ -115,7 +115,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoPropertyDescriptorRooter desc(cx);
-    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+    if (!getPropertyDescriptor(cx, proxy, id, false, &desc))
         return false;
     if (!desc.obj) {
         vp->setUndefined();
@@ -142,7 +142,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoPropertyDescriptorRooter desc(cx);
-    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
+    if (!getOwnPropertyDescriptor(cx, proxy, id, true, &desc))
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
@@ -160,7 +160,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         desc.value = *vp;
         return defineProperty(cx, proxy, id, &desc);
     }
-    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+    if (!getPropertyDescriptor(cx, proxy, id, true, &desc))
         return false;
     if (desc.obj) {
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
@@ -200,7 +200,7 @@ JSProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props
     for (size_t j = 0, len = props.length(); j < len; j++) {
         JS_ASSERT(i <= j);
         jsid id = props[j];
-        if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
+        if (!getOwnPropertyDescriptor(cx, proxy, id, false, &desc))
             return false;
         if (desc.obj && (desc.attrs & JSPROP_ENUMERATE))
             props[i++] = id;
@@ -435,9 +435,9 @@ class JSScriptedProxyHandler : public JSProxyHandler {
     virtual ~JSScriptedProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                        PropertyDescriptor *desc);
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                           PropertyDescriptor *desc);
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc);
@@ -487,7 +487,7 @@ GetProxyHandlerObject(JSContext *cx, JSObject *proxy)
 }
 
 bool
-JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                               PropertyDescriptor *desc)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
@@ -499,7 +499,7 @@ JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, js
 }
 
 bool
-JSScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+JSScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                                  PropertyDescriptor *desc)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
@@ -665,35 +665,36 @@ class AutoPendingProxyOperation {
 };
 
 bool
-JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
+JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+                               PropertyDescriptor *desc)
 {
     AutoPendingProxyOperation pending(cx, proxy);
-    return proxy->getProxyHandler()->getPropertyDescriptor(cx, proxy, id, desc);
+    return proxy->getProxyHandler()->getPropertyDescriptor(cx, proxy, id, set, desc);
 }
 
 bool
-JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, Value *vp)
+JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set, Value *vp)
 {
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
-    return JSProxy::getPropertyDescriptor(cx, proxy, id, &desc) &&
+    return JSProxy::getPropertyDescriptor(cx, proxy, id, set, &desc) &&
            MakePropertyDescriptorObject(cx, id, &desc, vp);
 }
 
 bool
-JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                   PropertyDescriptor *desc)
 {
     AutoPendingProxyOperation pending(cx, proxy);
-    return proxy->getProxyHandler()->getOwnPropertyDescriptor(cx, proxy, id, desc);
+    return proxy->getProxyHandler()->getOwnPropertyDescriptor(cx, proxy, id, set, desc);
 }
 
 bool
-JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, Value *vp)
+JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set, Value *vp)
 {
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
-    return JSProxy::getOwnPropertyDescriptor(cx, proxy, id, &desc) &&
+    return JSProxy::getOwnPropertyDescriptor(cx, proxy, id, set, &desc) &&
            MakePropertyDescriptorObject(cx, id, &desc, vp);
 }
 
@@ -866,7 +867,7 @@ static JSBool
 proxy_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     AutoPropertyDescriptorRooter desc(cx);
-    if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, &desc))
+    if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, false, &desc))
         return false;
     *attrsp = desc.attrs;
     return true;
@@ -877,7 +878,7 @@ proxy_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
     /* Lookup the current property descriptor so we have setter/getter/value. */
     AutoPropertyDescriptorRooter desc(cx);
-    if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, &desc))
+    if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, true, &desc))
         return false;
     desc.attrs = (*attrsp & (~JSPROP_SHORTID));
     return JSProxy::defineProperty(cx, obj, id, &desc);

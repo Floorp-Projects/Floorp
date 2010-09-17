@@ -324,7 +324,8 @@ XrayWrapper<Base>::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsi
 
 template <typename Base>
 bool
-XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc_in)
+XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                         bool set, PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
 
@@ -337,7 +338,7 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
         desc->value = JSVAL_VOID;
         return true;
     }
-    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc_in)) {
+    if (!Base::getPropertyDescriptor(cx, wrapper, id, set, desc_in)) {
         return false;
     }
     if (desc->obj)
@@ -347,9 +348,10 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
 
 template <typename Base>
 bool
-XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc)
+XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                            bool set, PropertyDescriptor *desc)
 {
-    return getPropertyDescriptor(cx, wrapper, id, desc);
+    return getPropertyDescriptor(cx, wrapper, id, set, desc);
 }
 
 template <typename Base>

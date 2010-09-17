@@ -61,9 +61,9 @@ class JSWrapper : public js::JSProxyHandler {
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual JS_FRIEND_API(bool) getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                      js::PropertyDescriptor *desc);
+                                                      bool set, js::PropertyDescriptor *desc);
     virtual JS_FRIEND_API(bool) getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
-                                                         js::PropertyDescriptor *desc);
+                                                         bool set, js::PropertyDescriptor *desc);
     virtual JS_FRIEND_API(bool) defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                                js::PropertyDescriptor *desc);
     virtual JS_FRIEND_API(bool) getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
@@ -115,9 +115,9 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
     virtual ~JSCrossCompartmentWrapper();
 
     /* ES5 Harmony fundamental wrapper traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
                                        js::PropertyDescriptor *desc);
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
                                           js::PropertyDescriptor *desc);
     virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                 js::PropertyDescriptor *desc);
