@@ -2571,6 +2571,19 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
     JS_SetOptions(mContext, JS_GetOptions(mContext) | JSOPTION_XML);
   }
 
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+
+  nsresult rv = xpc->WrapNative(mContext, aCurrentInner->GetGlobalJSObject(),
+                                aCurrentInner, NS_GET_IID(nsISupports),
+                                getter_AddRefs(holder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(holder));
+  NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
+
+  wrapper->RefreshPrototype();
+
   JSObject *outer =
     NS_NewOuterWindowProxy(mContext, aCurrentInner->GetGlobalJSObject());
   if (!outer) {
