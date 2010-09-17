@@ -831,6 +831,37 @@ let Utils = {
   },
 
   /**
+   * Generate 20 random characters a-z
+   */
+  generatePassphrase: function() {
+    let rng = Cc["@mozilla.org/security/random-generator;1"]
+                .createInstance(Ci.nsIRandomGenerator);
+    let bytes = rng.generateRandomBytes(20);
+    return [String.fromCharCode(97 + Math.floor(byte * 26 / 256))
+            for each (byte in bytes)].join("");
+  },
+
+  /**
+   * Hyphenate a 20 character passphrase in 4 groups of 5.
+   */
+  hyphenatePassphrase: function(passphrase) {
+    return passphrase.slice(0, 5) + '-'
+         + passphrase.slice(5, 10) + '-'
+         + passphrase.slice(10, 15) + '-'
+         + passphrase.slice(15, 20);
+  },
+
+  /**
+   * Remove hyphens as inserted by hyphenatePassphrase().
+   */
+  normalizePassphrase: function(pp) {
+    if (pp.length == 23 && pp[5] == '-' && pp[11] == '-' && pp[17] == '-')
+      return pp.slice(0, 5) + pp.slice(6, 11)
+           + pp.slice(12, 17) + pp.slice(18, 23);
+    return pp;
+  },
+
+  /**
    * Create an array like the first but without elements of the second
    */
   arraySub: function arraySub(minuend, subtrahend) {
