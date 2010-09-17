@@ -1352,6 +1352,7 @@ HUD_SERVICE.prototype =
 
     this.unregisterActiveContext(hudId);
     this.unregisterDisplay(hudId);
+    window.focus();
   },
 
   /**
