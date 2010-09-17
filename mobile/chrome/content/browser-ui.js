@@ -1085,10 +1085,44 @@ var TapHighlightHelper = {
     }
     ctx.restore();
     overlay.style.display = "block";
+
+    addEventListener("MozBeforePaint", this, false);
+    mozRequestAnimationFrame();
   },
 
-  hide: function hide() {
+  /**
+   * Hide the highlight. aGuaranteeShowMsecs specifies how many milliseconds the
+   * highlight should be shown before it disappears.
+   */
+  hide: function hide(aGuaranteeShowMsecs) {
+    if (this._overlay.style.display == "none")
+      return;
+
+    this._guaranteeShow = Math.max(0, aGuaranteeShowMsecs);
+    if (this._guaranteeShow) {
+      // _shownAt is set once highlight has been painted
+      if (this._shownAt)
+        setTimeout(this._hide.bind(this),
+                   Math.max(0, this._guaranteeShow - (mozAnimationStartTime - this._shownAt)));
+    } else {
+      this._hide();
+    }
+  },
+
+  /** Helper function that hides popup immediately. */
+  _hide: function _hide() {
+    this._shownAt = 0;
+    this._guaranteeShow = 0;
     this._overlay.style.display = "none";
+  },
+
+  handleEvent: function handleEvent(ev) {
+    removeEventListener("MozBeforePaint", this, false);
+    this._shownAt = ev.timeStamp;
+    // hide has been called, so hide the tap highlight after it has
+    // been shown for a moment.
+    if (this._guaranteeShow)
+      this.hide(this._guaranteeShow);
   }
 };
 

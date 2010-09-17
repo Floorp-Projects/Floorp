@@ -1,9 +1,6 @@
 // This stays here because otherwise it's hard to tell if there's a parsing error
 dump("###################################### content loaded\n");
 
-// how many milliseconds before the mousedown and the overlay of an element
-const kTapOverlayTimeout = 200;
-
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
@@ -318,7 +315,6 @@ function Content() {
   this._progressController.start();
 
   this._formAssistant = new FormAssistant();
-  this._overlayTimeout = new Util.Timeout();
   this._contextTimeout = new Util.Timeout();
 }
 
@@ -380,7 +376,6 @@ Content.prototype = {
         break;
 
       case "Browser:MouseDown":
-        this._overlayTimeout.clear();
         this._contextTimeout.clear();
 
         let element = elementFromPoint(x, y);
@@ -388,15 +383,11 @@ Content.prototype = {
           return;
 
         if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
-          this._overlayTimeout.once(kTapOverlayTimeout, function() {
-            let rects = getContentClientRects(element);
-            sendAsyncMessage("Browser:Highlight", { rects: rects });
-          });
+          let rects = getContentClientRects(element);
+          sendAsyncMessage("Browser:Highlight", { rects: rects });
         }
 
-        // We add a few milliseconds because of how the InputHandler wait before
-        // dispatching a single click (default: 500)
-        this._contextTimeout.once(500 + kTapOverlayTimeout, function() {
+        this._contextTimeout.once(500, function() {
           let event = content.document.createEvent("PopupEvents");
           event.initEvent("contextmenu", true, true);
           element.dispatchEvent(event);
@@ -419,7 +410,6 @@ Content.prototype = {
       }
 
       case "Browser:MouseCancel":
-        this._overlayTimeout.clear();
         this._contextTimeout.clear();
         break;
 
@@ -508,7 +498,6 @@ Content.prototype = {
 
   startLoading: function startLoading() {
     this._contextTimeout.clear();
-    this._overlayTimeout.clear();
     this._loading = true;
   },
 

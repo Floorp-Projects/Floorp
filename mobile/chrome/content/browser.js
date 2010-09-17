@@ -579,6 +579,8 @@ var Browser = {
     if (!tab || this._selectedTab == tab)
       return;
 
+    TapHighlightHelper.hide();
+
     if (this._selectedTab) {
       this._selectedTab.pageScrollOffset = this.getScrollboxPosition(this.pageScrollboxScroller);
 
@@ -1275,16 +1277,17 @@ ContentCustomClicker.prototype = {
   },
 
   mouseUp: function mouseUp(aX, aY) {
+    TapHighlightHelper.hide(200);
   },
 
   panBegin: function panBegin() {
-    TapHighlightHelper.hide();
+    TapHighlightHelper.hide(0);
 
     this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
   singleClick: function singleClick(aX, aY, aModifiers) {
-    TapHighlightHelper.hide();
+    TapHighlightHelper.hide(200);
 
     // Cancel the mouse click if we are showing a context menu
     if (!ContextHelper.popupState)
@@ -2009,6 +2012,8 @@ ProgressController.prototype = {
     this._hostChanged = true;
 
     if (location != this.browser.lastLocation) {
+      TapHighlightHelper.hide();
+
       this.browser.lastLocation = location;
       Browser.removeTransientNotificationsForTab(this._tab);
       this._tab.resetZoomLevel();
