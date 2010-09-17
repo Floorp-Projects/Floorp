@@ -1778,17 +1778,6 @@ return_tearoff:
                                               pTearOff);
     }
 
-    // If we didn't find a wrapper using the given funobj and obj, try
-    // again with obj's outer object, if it's got one.
-
-    if(JSObjectOp op = obj->getClass()->ext.outerObject)
-    {
-        JSObject *outer = op(cx, obj);
-        if(outer && outer != obj)
-            return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
-                                              pTearOff);
-    }
-
     if(pobj2)
         *pobj2 = nsnull;
     return nsnull;
@@ -3852,6 +3841,35 @@ MorphSlimWrapper(JSContext *cx, JSObject *obj)
 static PRUint32 sSlimWrappers;
 #endif
 
+JSObject *
+ConstructProxyObject(XPCCallContext &ccx,
+                     xpcObjectHelper &aHelper,
+                     XPCWrappedNativeScope *xpcscope)
+{
+    nsISupports *identityObj = aHelper.GetCanonical();
+    nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
+
+#ifdef DEBUG
+    {
+        JSUint32 flagsInt;
+        nsresult debug_rv = classInfoHelper->GetScriptableFlags(&flagsInt);
+        XPCNativeScriptableFlags flags(flagsInt);
+        NS_ASSERTION(NS_SUCCEEDED(debug_rv) && flags.WantPreCreate(),
+                     "bad flags, cache->IsProxy() implies WantPreCreate()");
+    }
+#endif
+
+    // We re-use the PreCreate hook to create the actual proxy object.
+    JSObject* parent = xpcscope->GetGlobalJSObject();
+    nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    nsWrapperCache *cache = aHelper.GetWrapperCache();
+    JSObject *flat = cache->GetWrapper();
+    NS_ASSERTION(flat, "PreCreate is supposed to create the wrapper");
+    return flat;
+}
+
 JSBool
 ConstructSlimWrapper(XPCCallContext &ccx,
                      xpcObjectHelper &aHelper,
@@ -3879,15 +3897,11 @@ ConstructSlimWrapper(XPCCallContext &ccx,
         return JS_FALSE;
     }
 
-    nsWrapperCache *cache = aHelper.GetWrapperCache();
     JSObject* plannedParent = parent;
     rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
     if(rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS)
     {
-        if(cache->IsProxy())
-            NS_ASSERTION(cache->GetWrapper(), "out of memory?");
-        else
-            SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
+        SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
 
         return JS_FALSE;
     }
@@ -3906,6 +3920,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
 
     // The PreCreate hook could have forced the creation of a wrapper, need
     // to check for that here and return early.
+    nsWrapperCache *cache = aHelper.GetWrapperCache();
     JSObject* wrapper = cache->GetWrapper();
     if(wrapper)
     {

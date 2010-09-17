@@ -143,6 +143,7 @@ public:
   virtual nsresult InitContext();
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                      nsIScriptGlobalObject *aCurrentInner);
+  virtual nsresult SetOuterObject(void *aOuterObject);
   virtual nsresult InitOuterWindow();
   virtual PRBool IsContextInitialized();
   virtual void FinalizeContext();

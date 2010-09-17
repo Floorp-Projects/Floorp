@@ -2282,6 +2282,10 @@ private:
 };
 
 class xpcObjectHelper;
+JSObject *
+ConstructProxyObject(XPCCallContext &ccx,
+                     xpcObjectHelper &aHelper,
+                     XPCWrappedNativeScope *xpcscope);
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
                                    xpcObjectHelper &aHelper,
                                    XPCWrappedNativeScope* xpcScope,
