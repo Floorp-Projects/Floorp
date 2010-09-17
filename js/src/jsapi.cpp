@@ -1148,9 +1148,8 @@ JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback)
 }
 
 JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback)
+JS_SetWrapObjectCallback(JSRuntime *rt, JSWrapObjectCallback callback)
 {
-    JSRuntime *rt = cx->runtime;
     JSWrapObjectCallback old = rt->wrapObjectCallback;
     rt->wrapObjectCallback = callback;
     return old;
@@ -1225,6 +1224,69 @@ JS_WrapValue(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
     return cx->compartment->wrap(cx, Valueify(vp));
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
+{
+    JS_ASSERT(wrapper->isWrapper());
+
+    /*
+     * This function is called when a window is navigating. In that case, we
+     * need to "move" the window from wrapper's compartment to target's
+     * compartment.
+     */
+    JSCompartment *destination = target->getCompartment(cx);
+
+    JSObject *obj;
+    WrapperMap &map = destination->crossCompartmentWrappers;
+    Value wrapperv = ObjectValue(*wrapper);
+
+    // There might already be a wrapper for the window in the new compartment.
+    if (WrapperMap::Ptr p = map.lookup(wrapperv)) {
+        // If there is, make it the primary outer window proxy around the
+        // inner (accomplished by swapping target's innards with the old,
+        // possibly security wrapper, innards).
+        obj = &p->value.toObject();
+        map.remove(p);
+        obj->swap(target);
+    } else {
+        // Otherwise, this is going to be our outer window proxy in the new
+        // compartment.
+        obj = target;
+    }
+
+    // Now, iterate through other scopes looking for references to the old
+    // outer window. They need to be updated to point at the new outer window.
+    // They also might transition between different types of security wrappers
+    // based on whether the new compartment is same origin with them.
+    Value targetv = ObjectValue(*target);
+    WrapperVector &vector = cx->runtime->compartments;
+    for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
+        WrapperMap &pmap = (*p)->crossCompartmentWrappers;
+        if (WrapperMap::Ptr wp = pmap.lookup(wrapperv)) {
+            // We found a wrapper around the outer window!
+            JSObject *wobj = &wp->value.toObject();
+
+            // First, we wrap it in the new compartment. This will return a
+            // new wrapper.
+            JSAutoEnterCompartment ec;
+            JSObject *tobj = obj;
+            if (!ec.enter(cx, wobj) || !(*p)->wrap(cx, &tobj))
+                return NULL;
+
+            // Now, because we need to maintain object identity, we do a brain
+            // transplant on the old object. At the same time, we update the
+            // entry in the compartment's wrapper map to point to the old
+            // wrapper, and remove the old outer window from the wrapper map,
+            // since it is now an obsolete reference.
+            wobj->swap(tobj);
+            pmap.put(targetv, ObjectValue(*wobj));
+            pmap.remove(wp);
+        }
+    }
+
+    return obj;
 }
 
 JS_PUBLIC_API(JSObject *)

@@ -937,7 +937,7 @@ extern JS_PUBLIC_API(JSCompartmentCallback)
 JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
+JS_SetWrapObjectCallback(JSRuntime *rt, JSWrapObjectCallback callback);
 
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
@@ -956,6 +956,9 @@ JS_WrapObject(JSContext *cx, JSObject **objp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
