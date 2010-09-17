@@ -1243,8 +1243,8 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    if (!cx->maybefp())
-        cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
+    if (!cx->hasfp())
+        cx->resetCompartment();
 }
 
 class AutoResolvingEntry {
