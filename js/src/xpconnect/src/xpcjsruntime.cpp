@@ -41,6 +41,7 @@
 /* Per JSRuntime object */
 
 #include "xpcprivate.h"
+#include "WrapperFactory.h"
 #include "dom_quickstubs.h"
 
 #include "jsgcchunk.h"
@@ -1144,6 +1145,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
+        JS_SetWrapObjectCallback(mJSRuntime, xpc::WrapperFactory::Rewrap);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
 
         mJSRuntime->setActivityCallback(ActivityCallback, this);
