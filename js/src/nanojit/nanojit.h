@@ -90,7 +90,7 @@
 #endif
 #ifdef JS_VALGRIND
 #  include <valgrind/valgrind.h>
-#else
+#elif !defined(VALGRIND_DISCARD_TRANSLATIONS)
 #  define VALGRIND_DISCARD_TRANSLATIONS(addr, szB)
 #endif
 
