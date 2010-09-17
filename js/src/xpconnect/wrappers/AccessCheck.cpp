@@ -233,7 +233,9 @@ AccessCheck::isSystemOnlyAccessPermitted(JSContext *cx)
 bool
 AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
 {
-    NS_ASSERTION(IS_WN_WRAPPER_OBJECT(obj), "expected a wrapped native here");
+    if (!IS_WN_WRAPPER(obj))
+        return false;
+
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(obj->getPrivate());
     return wn->NeedsSOW();
 }
