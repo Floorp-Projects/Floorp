@@ -60,7 +60,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(74fdd125-52c7-4345-a086-270df15b829a)]
+[scriptable, uuid(8707ed93-3277-42a5-a235-533aa661a263)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -88,6 +88,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * Cannot be accessed from unprivileged context (not content-accessible)
    */
   readonly attribute boolean docCharsetIsForced;
+
+  /**
+   * Get current cursor type from this window
+   * @return the current value of nsCursor
+   */
+  short getCursorType();
 
   /**
    * Function to get metadata associated with the window's current document
