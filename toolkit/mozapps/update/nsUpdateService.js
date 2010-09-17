@@ -2618,6 +2618,14 @@ Downloader.prototype = {
         if (this.background)
           shouldShowPrompt = true;
 
+#ifdef ANDROID
+        // Give read permissions to everyone so the .APK file is accessible by
+        // the system installer (bug 596662).
+        let patchFile = getUpdatesDir().QueryInterface(Ci.nsILocalFile);
+        patchFile.append(FILE_UPDATE_ARCHIVE);
+        patchFile.permissions = FileUtils.PERMS_FILE;
+#endif
+
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
         writeVersionFile(getUpdatesDir(), this._update.appVersion);
