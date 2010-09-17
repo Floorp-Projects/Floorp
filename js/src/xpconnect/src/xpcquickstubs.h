@@ -627,6 +627,12 @@ xpc_qsGetWrapperCache(nsWrapperCache *cache)
     return cache;
 }
 
+// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
+// try to use it without fixing that first.
+class nsGlobalWindow;
+inline nsWrapperCache*
+xpc_qsGetWrapperCache(nsGlobalWindow *not_allowed);
+
 inline nsWrapperCache*
 xpc_qsGetWrapperCache(void *p)
 {
