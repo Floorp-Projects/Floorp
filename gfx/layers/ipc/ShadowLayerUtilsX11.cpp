@@ -95,6 +95,11 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
                                                 SurfaceDescriptor* aBackBuffer)
 {
   gfxPlatform* platform = gfxPlatform::GetPlatform();
+#ifdef MOZ_WIDGET_QT
+  // If optimized platform surface is Image, then it is better to continue with Shmem
+  if (platform->ScreenReferenceSurface()->GetType() != gfxASurface::SurfaceTypeXlib)
+    return PR_FALSE;
+#endif
 
   nsRefPtr<gfxASurface> front = platform->CreateOffscreenSurface(aSize, aContent);
   nsRefPtr<gfxASurface> back = platform->CreateOffscreenSurface(aSize, aContent);
