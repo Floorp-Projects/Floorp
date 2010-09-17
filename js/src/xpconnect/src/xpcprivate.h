@@ -450,7 +450,13 @@ public:
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
     nsIXPCSecurityManager* GetDefaultSecurityManager() const
-        {return mDefaultSecurityManager;}
+    {
+        // mDefaultSecurityManager is main-thread only.
+        if (!NS_IsMainThread()) {
+            return nsnull;
+        }
+        return mDefaultSecurityManager;
+    }
 
     PRUint16 GetDefaultSecurityManagerFlags() const
         {return mDefaultSecurityManagerFlags;}
