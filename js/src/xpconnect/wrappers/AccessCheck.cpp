@@ -42,8 +42,10 @@
 #include "nsJSPrincipals.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsContentUtils.h"
 
 #include "XPCWrapper.h"
+#include "XrayWrapper.h"
 
 namespace xpc {
 
@@ -91,11 +93,15 @@ IsPermitted(const char *name, const char* prop, bool set)
              PROP('c', RW("code"))
              PROP('m', RW("message"))
              PROP('n', RW("name"))
-             PROP('r', RW("result")))
+             PROP('r', RW("result"))
+             PROP('t', R("toString")))
         NAME('H', "History",
              PROP('b', R("back"))
              PROP('f', R("forward"))
              PROP('g', R("go")))
+        NAME('L', "Location",
+             PROP('h', W("hash") W("href"))
+             PROP('r', R("replace")))
         NAME('N', "Navigator",
              PROP('p', RW("preference")))
         NAME('W', "Window",
@@ -109,10 +115,6 @@ IsPermitted(const char *name, const char* prop, bool set)
              PROP('s', R("self"))
              PROP('t', R("top"))
              PROP('w', R("window")))
-         NAME('X', "XMLHttpRequest",
-             PROP('o', RW("open-uri")))
-         NAME('S', "SOAPCall",
-             PROP('i', RW("invokeVerifySourceHeader")))
     }
     return false;
 }
@@ -123,9 +125,12 @@ IsPermitted(const char *name, const char* prop, bool set)
 #undef W
 
 static bool
-IsFrameId(JSObject *obj, jsid id)
+IsFrameId(JSContext *cx, JSObject *obj, jsid id)
 {
-    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(obj->getPrivate());
+    XPCWrappedNative *wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+    if (!wn) {
+        return false;
+    }
 
     nsCOMPtr<nsIDOMWindow> domwin(do_QueryWrappedNative(wn));
     if (!domwin) {
@@ -160,14 +165,17 @@ IsWindow(const char *name)
 bool
 AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id, bool set)
 {
+    if (!XPCWrapper::GetSecurityManager())
+        return true;
+
     JSObject *obj = JSWrapper::wrappedObject(wrapper);
 
-    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    if (!ssm) {
-         return true;
-    }
-
-    const char *name = obj->getClass()->name;
+    const char *name;
+    js::Class *clasp = obj->getClass();
+    if (clasp->ext.innerObject)
+        name = "Window";
+    else
+        name = clasp->name;
 
     if (JSID_IS_ATOM(id)) {
         JSString *str = ATOM_TO_STRING(JSID_TO_ATOM(id));
@@ -176,11 +184,12 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
             return true;
     }
 
-    if (IsWindow(name) && IsFrameId(obj, id))
+    if (IsWindow(name) && IsFrameId(cx, obj, id))
         return true;
 
-    PRBool privileged;
-    return NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) && privileged;
+    return set
+           ? nsContentUtils::IsCallerTrustedForWrite()
+           : nsContentUtils::IsCallerTrustedForRead();
 }
 
 bool
@@ -252,7 +261,7 @@ AccessCheck::deny(JSContext *cx, jsid id)
         JSString *str = JS_ValueToString(cx, idval);
         if (!str)
             return;
-        JS_ReportError(cx, "Permission denied to access property '%hs'", str);
+        JS_ReportError(cx, "Permission denied to access property '%hs'", JS_GetStringChars(str));
     }
 }
 
