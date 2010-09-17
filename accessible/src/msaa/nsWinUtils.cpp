@@ -133,7 +133,8 @@ bool
 nsWinUtils::IsWindowEmulationEnabled()
 {
   return ::GetModuleHandleW(kJAWSModuleHandle) ||
-    ::GetModuleHandleW(kWEModuleHandle);
+    ::GetModuleHandleW(kWEModuleHandle)  ||
+    ::GetModuleHandleW(kDolphnModuleHandle);
 }
 
 bool
