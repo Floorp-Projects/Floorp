@@ -1169,18 +1169,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 // nsGlobalWindow::nsISupports
 //*****************************************************************************
 
-#define WINDOW_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                      \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||                                \
-      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {                              \
-    foundInterface = NS_GetDOMClassInfoInstance(IsInnerWindow()               \
-                                                ? eDOMClassInfo_Inner##_class##_id \
-                                                : eDOMClassInfo_##_class##_id);\
-    if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
-      return NS_ERROR_OUT_OF_MEMORY;                                          \
-    }                                                                         \
-  } else
-
 #define OUTER_WINDOW_ONLY                                                     \
   if (IsOuterWindow()) {
 
@@ -1191,7 +1179,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
 DOMCI_DATA(Window, nsGlobalWindow)
-DOMCI_DATA(InnerWindow, nsGlobalWindow)
 
 // QueryInterface implementation for nsGlobalWindow
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
@@ -1213,7 +1200,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  WINDOW_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
   OUTER_WINDOW_ONLY
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   END_OUTER_WINDOW_ONLY
@@ -1806,7 +1793,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow = currentInner;
 
     if (aDocument != oldDoc) {
-      nsCommonWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
     }
   } else {
     if (aState) {
@@ -2018,8 +2005,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   if ((!reUseInnerWindow || aDocument != oldDoc) && !aState) {
     nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
-    nsCommonWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
-                                                 html_doc);
+    nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
+                                           html_doc);
   }
 
   if (aDocument) {
@@ -2627,7 +2614,7 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   if (mIsModalContentWindow) {
     // Modal content windows don't have an "arguments" property, they
     // have a "dialogArguments" property which is handled
-    // separately. See nsCommonWindowSH::NewResolve().
+    // separately. See nsWindowSH::NewResolve().
 
     return NS_OK;
   }
@@ -9710,12 +9697,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
-DOMCI_DATA(InnerChromeWindow, nsGlobalChromeWindow)
 
 // QueryInterface implementation for nsGlobalChromeWindow
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalChromeWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMChromeWindow)
-  WINDOW_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ChromeWindow)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ChromeWindow)
 NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
@@ -9994,11 +9980,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalModalWindow,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(ModalContentWindow, nsGlobalModalWindow)
-DOMCI_DATA(InnerModalContentWindow, nsGlobalModalWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalModalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMModalContentWindow)
-  WINDOW_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ModalContentWindow)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ModalContentWindow)
 NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
