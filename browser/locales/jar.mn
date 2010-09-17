@@ -75,6 +75,7 @@
     locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
     locale/browser/syncGenericChange.properties         (%chrome/browser/syncGenericChange.properties)
+    locale/browser/syncKey.dtd                  (%chrome/browser/syncKey.dtd)
     locale/browser/syncQuota.dtd                (%chrome/browser/syncQuota.dtd)
     locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 #endif
