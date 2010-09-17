@@ -147,6 +147,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
                                            nsIEventStateManager)
 
+  static nsIDocument* sMouseOverDocument;
+
 protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**

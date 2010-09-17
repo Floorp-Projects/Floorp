@@ -186,6 +186,7 @@ static PRInt32 sChromeAccessModifier = 0, sContentAccessModifier = 0;
 PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
 PRBool nsEventStateManager::sNormalLMouseEventInProcess = PR_FALSE;
 nsEventStateManager* nsEventStateManager::sActiveESM = nsnull;
+nsIDocument* nsEventStateManager::sMouseOverDocument = nsnull;
 
 static PRUint32 gMouseOrKeyboardEventCounter = 0;
 static nsITimer* gUserInteractionTimer = nsnull;
@@ -859,6 +860,9 @@ nsEventStateManager::~nsEventStateManager()
   }
   if (mClickHoldContextMenu)
     KillClickHoldTimer();
+
+  if (mDocument == sMouseOverDocument)
+    sMouseOverDocument = nsnull;
 
   --sESMInstanceCount;
   if(sESMInstanceCount == 0) {
@@ -3410,6 +3414,10 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                                float aHotspotX, float aHotspotY,
                                nsIWidget* aWidget, PRBool aLockCursor)
 {
+  EnsureDocument(mPresContext);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  sMouseOverDocument = mDocument.get();
+
   nsCursor c;
 
   NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
