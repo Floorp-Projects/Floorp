@@ -56,9 +56,9 @@ class JSProxyHandler {
     virtual ~JSProxyHandler();
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                        PropertyDescriptor *desc) = 0;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                           PropertyDescriptor *desc) = 0;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) = 0;
@@ -97,12 +97,13 @@ class JSProxyHandler {
 class JSProxy {
   public:
     /* ES5 Harmony fundamental proxy traps. */
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                       PropertyDescriptor *desc);
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, Value *vp);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set, Value *vp);
+    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                          PropertyDescriptor *desc);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, Value *vp);
+    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
+                                         Value *vp);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v);
     static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);

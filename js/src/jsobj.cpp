@@ -1676,7 +1676,7 @@ JSBool
 js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     if (obj->isProxy()) {
-        if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, vp))
+        if (!JSProxy::getOwnPropertyDescriptor(cx, obj, id, false, vp))
             return false;
     }
 
