@@ -1919,22 +1919,31 @@ var XPIProvider = {
       migrateData = XPIDatabase.migrateData(schema);
     }
 
-    XPIDatabase.beginTransaction();
-
-    // Catch any errors during the main startup and rollback the database changes
-    try {
-      // If the database exists then the previous file cache can be trusted
-      // otherwise create an empty database
-      let db = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-      if (db.exists()) {
-        cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
-      }
-      else {
+    // If the database exists then the previous file cache can be trusted
+    // otherwise create an empty database
+    let db = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
+    if (db.exists()) {
+      cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
+    }
+    else {
+      try {
         LOG("Database is missing, recreating");
         XPIDatabase.openConnection();
         XPIDatabase.createSchema();
       }
+      catch (e) {
+        try {
+          db.remove(true);
+        }
+        catch (e) {
+        }
+        return;
+      }
+    }
 
+    // Catch any errors during the main startup and rollback the database changes
+    XPIDatabase.beginTransaction();
+    try {
       // Load the list of bootstrapped add-ons first so processFileChanges can
       // modify it
       this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
@@ -3235,6 +3244,8 @@ var XPIDatabase = {
       ERROR("Failed to create database schema");
       logSQLError(this.connection.lastError, this.connection.lastErrorString);
       this.rollbackTransaction();
+      this.connection.close();
+      this.connection = null;
       throw e;
     }
   },
@@ -6191,8 +6202,10 @@ WinRegInstallLocation.prototype = {
                 createInstance(Ci.nsILocalFile);
       file.initWithPath(aKey.readStringValue(id));
 
-      if (!file.exists())
+      if (!file.exists()) {
         WARN("Ignoring missing add-on in " + file.path);
+        continue;
+      }
 
       this._IDToFileMap[id] = file;
       this._FileToIDMap[file.path] = id;
