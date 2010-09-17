@@ -1346,6 +1346,17 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_DEFFUN)
 
+          BEGIN_CASE(JSOP_DEFVAR)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            prepareStubCall(Uses(0));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::DefVar);
+          }
+          END_CASE(JSOP_DEFVAR)
+
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
             uint32 slot = GET_SLOTNO(PC);

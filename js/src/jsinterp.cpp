@@ -5102,11 +5102,6 @@ BEGIN_CASE(JSOP_DEFVAR)
     uint32 index = GET_INDEX(regs.pc);
     JSAtom *atom = atoms[index];
 
-    /*
-     * index is relative to atoms at this point but for global var
-     * code below we need the absolute value.
-     */
-    index += atoms - script->atomMap.vector;
     JSObject *obj = &regs.fp->varobj(cx);
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;

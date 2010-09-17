@@ -2703,6 +2703,43 @@ stubs::DelElem(VMFrame &f)
         THROW();
 }
 
+void JS_FASTCALL
+stubs::DefVar(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp();
+
+    JSObject *obj = &fp->varobj(cx);
+    JS_ASSERT(!obj->getOps()->defineProperty);
+    uintN attrs = JSPROP_ENUMERATE;
+    if (!fp->isEvalFrame())
+        attrs |= JSPROP_PERMANENT;
+
+    /* Lookup id in order to check for redeclaration problems. */
+    jsid id = ATOM_TO_JSID(atom);
+    JSProperty *prop = NULL;
+    JSObject *obj2;
+
+    /*
+     * Redundant declaration of a |var|, even one for a non-writable
+     * property like |undefined| in ES5, does nothing.
+     */
+    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+        THROW();
+
+    /* Bind a variable only if it's not yet defined. */
+    if (!prop) {
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, PropertyStub,
+                                     attrs, 0, 0, &prop)) {
+            THROW();
+        }
+        JS_ASSERT(prop);
+        obj2 = obj;
+    }
+
+    obj2->dropProperty(cx, prop);
+}
+
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
