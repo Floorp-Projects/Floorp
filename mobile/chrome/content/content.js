@@ -556,7 +556,7 @@ let ViewportHandler = {
 
   resetMetadata: function resetMetadata() {
     this.metadata = null;
-    sendAsyncMessage("Browser:ViewportMetadata", {});
+    sendAsyncMessage("Browser:ViewportMetadata", null);
   },
 
   updateMetadata: function updateMetadata() {

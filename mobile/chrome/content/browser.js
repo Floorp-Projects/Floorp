@@ -61,6 +61,8 @@ const kBrowserFormZoomLevelMin = 1.0;
 const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 
+const kDefaultMetadata = { allowZoom: true };
+
 // Override sizeToContent in the main window. It breaks things (bug 565887)
 window.sizeToContent = function() {
   Components.utils.reportError("window.sizeToContent is not allowed in this window");
@@ -2216,7 +2218,7 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    let metaData = this.metaData || {};
+    let metaData = this.metaData || kDefaultMetadata;
     if (!metaData.autoSize) {
       let screenW = window.innerWidth;
       let screenH = window.innerHeight;
