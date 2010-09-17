@@ -72,10 +72,10 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
-// 5b6d04a3-f095-4924-ad84-4f44f9b3fae0
+// a7139c0e-962c-44b6-bec3-e4166bfe84eb
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x5b6d04a3, 0xf095, 0x4924, \
-  { 0xad, 0x84, 0x4f, 0x44, 0xf9, 0xb3, 0xfa, 0xe0 } }
+{ 0xa7139c0e, 0x962c, 0x44b6, \
+  { 0xbe, 0xc3, 0xe4, 0x16, 0x6b, 0xfe, 0x84, 0xeb } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -345,6 +345,11 @@ public:
    */
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                      nsIScriptGlobalObject *aCurrentInner) = 0;
+
+  /**
+   * Given an outer object, updates this context with that outer object.
+   */
+  virtual nsresult SetOuterObject(void *aOuterObject) = 0;
 
   /**
    * Prepares this context for use with the current inner window for the

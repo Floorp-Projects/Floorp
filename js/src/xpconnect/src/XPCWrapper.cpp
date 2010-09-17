@@ -43,6 +43,7 @@
 #include "XPCWrapper.h"
 #include "XPCNativeWrapper.h"
 #include "nsPIDOMWindow.h"
+#include "jswrapper.h"
 
 namespace XPCWrapper {
 
@@ -61,6 +62,14 @@ const PRUint32 sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
 JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
+  if (wrapper->isProxy()) {
+    if (wrapper->getProxyHandler() != &JSCrossCompartmentWrapper::singleton) {
+      // XXX Security check!
+    }
+
+    return wrapper->unwrap();
+  }
+
   js::Class *clasp = wrapper->getClass();
   if (clasp == &XPCCrossOriginWrapper::XOWClass) {
     return UnwrapXOW(cx, wrapper);

@@ -657,6 +657,30 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
 //*****************************************************************************
+// nsOuterWindowProxy: Outer Window Proxy
+//*****************************************************************************
+
+JSString *
+nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
+{
+    JS_ASSERT(proxy->isProxy());
+
+    return JS_NewStringCopyZ(cx, "[object WindowProxy]");
+}
+
+nsOuterWindowProxy
+nsOuterWindowProxy::singleton;
+
+JSObject *
+NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
+{
+  JSObject *obj = JSWrapper::New(cx, parent, parent->getProto(), parent,
+                                 &nsOuterWindowProxy::singleton);
+  NS_ASSERTION(obj->getClass()->ext.innerObject, "bad class");
+  return obj;
+}
+
+//*****************************************************************************
 //***    nsGlobalWindow: Object Management
 //*****************************************************************************
 
@@ -740,6 +764,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Freeze();
 
     mObserver = nsnull;
+    SetIsProxy();
   }
 
   // We could have failed the first time through trying
@@ -1156,6 +1181,13 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     }                                                                         \
   } else
 
+#define OUTER_WINDOW_ONLY                                                     \
+  if (IsOuterWindow()) {
+
+#define END_OUTER_WINDOW_ONLY                                                 \
+    foundInterface = 0;                                                       \
+  } else
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
 DOMCI_DATA(Window, nsGlobalWindow)
@@ -1182,6 +1214,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   WINDOW_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
+  OUTER_WINDOW_ONLY
+    NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  END_OUTER_WINDOW_ONLY
 NS_INTERFACE_MAP_END
 
 
@@ -1898,39 +1933,41 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (!mJSObject) {
       mContext->CreateOuterObject(this, newInnerWindow);
       mContext->DidInitializeContext();
-      mJSObject = (JSObject *)mContext->GetNativeGlobal();
-    } else {
-      // XXX New global object and brain transplant!
-      rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
-                                           getter_AddRefs(wrapper));
-      NS_ENSURE_SUCCESS(rv, rv);
 
-      // Restore our object's prototype to its original value so we're sure to
-      // update it under ReparentWrappedNativeIfFound.
-      JSObject *proto;
-      wrapper->GetJSObjectPrototype(&proto);
-      if (!JS_SetPrototype(cx, mJSObject, proto)) {
-        NS_ERROR("Can't set prototype");
-        return NS_ERROR_UNEXPECTED;
+      mJSObject = (JSObject *)mContext->GetNativeGlobal();
+      SetWrapper(mJSObject);
+    } else {
+      JSObject *outerObject =
+        NS_NewOuterWindowProxy(cx, newInnerWindow->mJSObject);
+      if (!outerObject) {
+        NS_ERROR("out of memory");
+        return NS_ERROR_FAILURE;
       }
 
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      xpc->ReparentWrappedNativeIfFound(cx, currentInner->mJSObject,
-                                        newInnerWindow->mJSObject,
-                                        ToSupports(this),
-                                        getter_AddRefs(holder));
+      outerObject = JS_TransplantWrapper(cx, mJSObject, outerObject);
+      if (!outerObject) {
+        NS_ERROR("unable to transplant wrappers, probably OOM");
+        return NS_ERROR_FAILURE;
+      }
 
-      if (aState) {
-        if (nsIXPConnectJSObjectHolder *holder = wsh->GetOuterRealProto()) {
-          holder->GetJSObject(&proto);
-        } else {
-          proto = nsnull;
-        }
+      mJSObject = outerObject;
+      SetWrapper(mJSObject);
 
-        if (!JS_SetPrototype(cx, mJSObject, proto)) {
-          NS_ERROR("can't set prototype");
-          return NS_ERROR_FAILURE;
-        }
+      mContext->SetOuterObject(mJSObject);
+    }
+
+    // XXX Not sure if this is needed.
+    if (aState) {
+      JSObject *proto;
+      if (nsIXPConnectJSObjectHolder *holder = wsh->GetOuterRealProto()) {
+        holder->GetJSObject(&proto);
+      } else {
+        proto = nsnull;
+      }
+
+      if (!JS_SetPrototype(cx, mJSObject, proto)) {
+        NS_ERROR("can't set prototype");
+        return NS_ERROR_FAILURE;
       }
     }
   }
@@ -2049,16 +2086,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   mContext->GC();
   mContext->DidInitializeContext();
-
-  if (!wrapper) {
-    rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
-                                         getter_AddRefs(wrapper));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = xpc->UpdateXOWs((JSContext *)GetContextInternal()->GetNativeContext(),
-                       wrapper, nsIXPConnect::XPC_XOW_NAVIGATED);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aState && !reUseInnerWindow) {
     nsContentUtils::AddScriptRunner(
