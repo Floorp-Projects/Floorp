@@ -64,13 +64,22 @@ document.body.appendChild(s);
 
 <!-- Test cancel using beforescriptexecute -->
 <script onbeforescriptexecute="return false;"
-        onafterescriptexecute="window.firedAfterScriptExecuteForCancel = true;"
-        onload="window.firedLoadForCancel = true;">
+        onafterescriptexecute="window.firedAfterScriptExecuteForCancel = true;">
 ok(false, "should have been canceled");
 </script>
 <script>
 isnot(window.firedAfterScriptExecuteForCancel, true, "onafterscriptexecute executed");
-isnot(window.firedLoadForCancel, true, "onload executed");
+</script>
+
+<!-- Test cancel using beforescriptexecute for external -->
+<script onbeforescriptexecute="return false;"
+        onafterescriptexecute="window.extFiredAfterScriptExecuteForCancel = true;"
+        onload="window.extFiredLoadForCancel = true;"
+        src="data:text/plain,ok(false, 'should have been canceled');">
+</script>
+<script>
+isnot(window.extFiredAfterScriptExecuteForCancel, true, "onafterscriptexecute executed");
+is(extFiredLoadForCancel, true, "onload executed");
 </script>
 
 <!-- Test that all events fire -->
