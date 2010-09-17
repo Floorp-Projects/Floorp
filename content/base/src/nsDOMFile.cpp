@@ -178,22 +178,6 @@ nsDOMFile::GetInternalStream(nsIInputStream **aStream)
 }
 
 NS_IMETHODIMP
-nsDOMFile::GetUrl(nsAString& aURL)
-{
-  if (mURL.IsEmpty()) {
-    GetInternalUrl(mURL);
-
-    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mRelatedDoc);
-    NS_LossyConvertUTF16toASCII shortURL(mURL);
-    doc->RegisterFileDataUri(shortURL);
-  }
-
-  aURL = mURL;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMFile::GetInternalUrl(nsAString& aURL)
 {
   nsresult rv;
