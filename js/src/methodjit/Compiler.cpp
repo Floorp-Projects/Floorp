@@ -2041,8 +2041,8 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
                              FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
             stubcc.masm.fixScriptStack(frame.frameDepth());
             stubcc.masm.setupVMFrame();
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-            /* Need to stay 16-byte aligned on x86/x64. */
+#if defined(JS_CPU_X86)
+            /* Need to stay 16-byte aligned on x86. */
             stubcc.masm.subPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
 #endif
             stubcc.masm.push(dataReg);
@@ -2051,7 +2051,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
             stubcc.masm.wrapCall(pfun);
             stubcc.masm.pop(t0);
             stubcc.masm.pop(dataReg);
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86)
             stubcc.masm.addPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
 #endif
         }
