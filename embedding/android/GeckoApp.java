@@ -400,6 +400,8 @@ abstract public class GeckoApp
             Log.i("GeckoAppJava", e.toString());
             return;
         }
+
+        outFile.setLastModified(fileEntry.getTime());
     }
     
     public String getEnvString() {
