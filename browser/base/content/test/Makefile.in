@@ -185,6 +185,8 @@ _BROWSER_FILES = \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
                  browser_tab_dragdrop.js \
+                 browser_tab_dragdrop2.js \
+                 browser_tab_dragdrop2_frame1.xul \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
                  browser_visibleTabs.js \
