@@ -72,6 +72,8 @@ public:
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
 
   // nsIFormControl
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
@@ -100,6 +102,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
 
 nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
+  , mElements(nsnull)
 {
   // <fieldset> is always barred from constraint validation.
   SetBarredFromConstraintValidation(PR_TRUE);
@@ -150,11 +153,33 @@ nsHTMLFieldSetElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled.
   aVisitor.mCanHandle = PR_FALSE;
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+  if (IsDisabled()) {
     return NS_OK;
   }
 
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
+}
+
+nsresult
+nsHTMLFieldSetElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    const nsAString* aValue, PRBool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled &&
+      nsINode::GetFirstChild()) {
+    if (!mElements) {
+      mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull,
+                                    PR_TRUE);
+    }
+
+    PRUint32 length = mElements->Length(PR_TRUE);
+    for (PRUint32 i=0; i<length; ++i) {
+      static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
+        ->OnFieldSetDisabledChanged(0);
+    }
+  }
+
+  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
+                                                aValue, aNotify);
 }
 
 // nsIDOMHTMLFieldSetElement
@@ -185,11 +210,11 @@ NS_IMETHODIMP
 nsHTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
 {
   if (!mElements) {
-    mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull, PR_TRUE);
+    mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull,
+                                  PR_TRUE);
   }
 
   NS_ADDREF(*aElements = mElements);
-
   return NS_OK;
 }
 
