@@ -1219,23 +1219,6 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
 
-/* Feed icon */
-#feed-button,
-#feed-button > .button-box,
-#feed-button:hover:active > .button-box {
-  padding: 0px;
-  margin: 0px;
-  border: 0px; 
-  background-color: transparent;
-}
-
-#feed-button {
-  -moz-appearance: none; 
-  min-width: 0px; 
-  margin-right: 1px !important;
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-}
-
 #treecolAutoCompleteImage {
   max-width : 36px; 
 }
