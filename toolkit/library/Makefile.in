@@ -237,7 +237,11 @@ EXTRA_DSO_LDOPTS += -lbe -ltracker
 endif
 
 ifeq ($(OS_ARCH),SunOS)
+ifdef GNU_CC
+EXTRA_DSO_LDOPTS += -lelf
+else
 EXTRA_DSO_LDOPTS += -lelf -ldemangle
+endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
