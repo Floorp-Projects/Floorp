@@ -10,6 +10,8 @@ function test() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   let browser = gBrowser.getBrowserForTab(tab);
   browser.addEventListener("load", function() {
+      browser.removeEventListener("load", arguments.callee, true);
+
       ok(true, "about:rights loaded");
       executeSoon(function() { check_about_rights(tab); });
     }, true);
