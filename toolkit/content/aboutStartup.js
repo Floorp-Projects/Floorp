@@ -14,7 +14,7 @@ function appVersion(version, build) formatStr("appVersion",
 //                                              [branding.getStringFromName("brandShortName"),
                                               ["Firefox",
                                                version, build]);
-function formatExtension(str, id, version) formatStr(str, [id, version]);
+function formatExtension(str, id, version) formatStr("extension"+str, [id, version]);
 
 function msFromµs(µs) µs / 1000;
 function formatstamp(µs) new Date(msFromµs(µs));
@@ -24,12 +24,14 @@ function formatms(ms) formatStr("milliseconds", [ms]);
 function point(stamp, µs, v, b) [msFromµs(stamp), msFromµs(µs), { appVersion: v, appBuild: b }];
 function range(a, b) ({ from: msFromµs(a), to: msFromµs(b || a) });
 function mark(x, y) { var r = {}; x && (r.xaxis = x); y && (r.yaxis = y); return r };
-function major(r) { r.color = "#444"; return r; }
-function minor(r) { r.color = "#AAA"; return r; }
-function label(r, l) { r.label = l; return r; }
+function label(r, l) $.extend(r, { label: l });
+function color(r, c) $.extend(r, { color: c });
+function major(r) color(r, "#444");
+function minor(r) color(r, "#AAA");
+function green(r) color(r, "#00F");
 function majorMark(x, l) label(major(mark(range(x))), l);
 function minorMark(x, l) label(minor(mark(range(x))), l);
-function extensionMark(x, l) label(mark(range(x)), l);
+function extensionMark(x, l) label(green(mark(range(x))), l);
 
 ///// First, display the timings from the current startup
 let launched, startup, restored;
@@ -199,7 +201,7 @@ function populateMeasurements()
 
 function populateEvents()
 {
-  var query = db.createStatement("SELECT timestamp, extensionID, extensionVersion, action FROM events");
+  var query = db.createStatement("SELECT timestamp, id, name, version, action FROM events");
   let lastver, lastbuild;
   let hasresults;
 
@@ -211,18 +213,18 @@ function populateEvents()
       {
         hasresults = true;
         let stamp = row.getResultByName("timestamp"),
-            id = row.getResultByName("extensionID"),
-            name = id,
-            version = row.getResultByName("extensionVersion"),
+            id = row.getResultByName("id"),
+            name = row.getResultByName("name"),
+            version = row.getResultByName("version"),
             action = row.getResultByName("action");
 
         options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
 
         table.appendChild(tr(td(formatstamp(stamp)),
-                             td(id),
+                             td(action),
                              td(name),
-                             td(version),
-                             td(action)));
+                             td(id),
+                             td(version)));
       }
       if (hasresults)
         $("#events-table > .empty").hide();

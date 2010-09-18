@@ -38,5 +38,7 @@ ready to use. -->
 <!ENTITY about.startup.version "Version">
 <!ENTITY about.startup.table "Show Table">
 <!ENTITY about.startup.graph "Show Graph">
-<!ENTITY about.startup.eventdesc "Event Description">
+<!ENTITY about.startup.extension "Extension">
+<!ENTITY about.startup.extensionID "ID">
+<!ENTITY about.startup.action "Action">
 <!ENTITY about.startup.noevents "No Events Recorded">
