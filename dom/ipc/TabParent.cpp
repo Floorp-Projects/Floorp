@@ -58,7 +58,6 @@
 #include "TabChild.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIWebProgressListener2.h"
 #include "nsFrameLoader.h"
 #include "nsNetUtil.h"
 #include "jsarray.h"
@@ -88,10 +87,10 @@ using namespace mozilla::layout;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS5(TabParent, nsITabParent, nsIWebProgress, nsIAuthPromptProvider, nsISSLStatusProvider, nsISecureBrowserUI)
+NS_IMPL_ISUPPORTS4(TabParent, nsITabParent, nsIAuthPromptProvider, nsISSLStatusProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
-  : mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
+  : mSecurityState(0)
 {
 }
 
@@ -133,269 +132,6 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 
   PRBool dummy;
   target->DispatchEvent(event, &dummy);
-  return true;
-}
-
-bool
-TabParent::RecvNotifyProgressChange(const PRInt64& aProgress,
-                                    const PRInt64& aProgressMax,
-                                    const PRInt64& aTotalProgress,
-                                    const PRInt64& aMaxTotalProgress)
-{
-  /*
-   * First notify any listeners of the new progress info...
-   *
-   * Operate the elements from back to front so that if items get
-   * get removed from the list it won't affect our iteration
-   */
-  nsCOMPtr<nsIWebProgressListener> listener;
-  PRUint32 count = mListenerInfoList.Length();
-
-  while (count-- > 0) {
-    TabParentListenerInfo *info = &mListenerInfoList[count];
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_PROGRESS)) {
-      continue;
-    }
-
-    listener = do_QueryReferent(info->mWeakListener);
-    if (!listener) {
-      // the listener went away. gracefully pull it out of the list.
-      mListenerInfoList.RemoveElementAt(count);
-      continue;
-    }
-
-    nsCOMPtr<nsIWebProgressListener2> listener2 =
-      do_QueryReferent(info->mWeakListener);
-    if (listener2) {
-      listener2->OnProgressChange64(this, nsnull, aProgress, aProgressMax,
-                                    aTotalProgress, aMaxTotalProgress);
-    } else {
-      listener->OnProgressChange(this, nsnull, PRInt32(aProgress),
-                                 PRInt32(aProgressMax),
-                                 PRInt32(aTotalProgress), 
-                                 PRInt32(aMaxTotalProgress));
-    }
-  }
-
-  return true;
-}
-
-bool
-TabParent::RecvNotifyStateChange(const PRUint32& aStateFlags,
-                                 const nsresult& aStatus)
-{
-  /*                                                                           
-   * First notify any listeners of the new state info...
-   *
-   * Operate the elements from back to front so that if items get
-   * get removed from the list it won't affect our iteration
-   */
-  nsCOMPtr<nsIWebProgressListener> listener;
-  PRUint32 count = mListenerInfoList.Length();
-  
-  while (count-- > 0) {
-    TabParentListenerInfo *info = &mListenerInfoList[count];
-
-    // The flags used in listener registration are shifted over
-    // 16 bits from the ones sent in the notification, so we shift
-    // to see if the listener is interested in this change.
-    // Note that the flags are not changed in the notification we
-    // send along. Flags are defined in  nsIWebProgressListener and 
-    // nsIWebProgress.
-    // See nsDocLoader for another example of this.
-    if (!(info->mNotifyMask & (aStateFlags >> NOTIFY_FLAG_SHIFT))) {
-        continue;
-    }
-    
-    listener = do_QueryReferent(info->mWeakListener);
-    if (!listener) {
-      // the listener went away. gracefully pull it out of the list.
-      mListenerInfoList.RemoveElementAt(count);
-      continue;
-    }
-    
-    listener->OnStateChange(this, nsnull, aStateFlags, aStatus); 
-  }   
-
-  return true;
- }
-
-bool
-TabParent::RecvNotifyLocationChange(const nsCString& aUri)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  /*                                                                           
-   * First notify any listeners of the new state info...
-   *
-   * Operate the elements from back to front so that if items get
-   * get removed from the list it won't affect our iteration
-   */
-  nsCOMPtr<nsIWebProgressListener> listener;
-  PRUint32 count = mListenerInfoList.Length();
-
-  while (count-- > 0) {
-    TabParentListenerInfo *info = &mListenerInfoList[count];
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_LOCATION)) {
-      continue;
-    }
-    
-    listener = do_QueryReferent(info->mWeakListener);
-    if (!listener) {
-      // the listener went away. gracefully pull it out of the list.
-      mListenerInfoList.RemoveElementAt(count);
-      continue;
-    }
-    
-    listener->OnLocationChange(this, nsnull, uri);
-  }
-
-  return true;
-}
-
-bool
-TabParent::RecvNotifyStatusChange(const nsresult& status,
-                                  const nsString& message)
-{
-  /*                                                                           
-   * First notify any listeners of the new state info...
-   *
-   * Operate the elements from back to front so that if items get
-   * get removed from the list it won't affect our iteration
-   */
-  nsCOMPtr<nsIWebProgressListener> listener;
-  PRUint32 count = mListenerInfoList.Length();
-
-  while (count-- > 0) {
-    TabParentListenerInfo *info = &mListenerInfoList[count];
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_STATUS)) {
-      continue;
-    }
-
-    listener = do_QueryReferent(info->mWeakListener);
-    if (!listener) {
-      // the listener went away. gracefully pull it out of the list.
-      mListenerInfoList.RemoveElementAt(count);
-      continue;
-    }
-
-    listener->OnStatusChange(this, nsnull, status, message.BeginReading());
-  }
-
-  return true;
-}
-
-bool
-TabParent::RecvNotifySecurityChange(const PRUint32& aState,
-                                    const PRBool& aUseSSLStatusObject,
-                                    const nsString& aTooltip,
-                                    const nsCString& aSecInfoAsString)
-{
-  /*                                                                           
-   * First notify any listeners of the new state info...
-   *
-   * Operate the elements from back to front so that if items get
-   * get removed from the list it won't affect our iteration
-   */
-
-  mSecurityState = aState;
-  mSecurityTooltipText = aTooltip;
-
-  if (!aSecInfoAsString.IsEmpty()) {
-    nsCOMPtr<nsISupports> secInfoSupports;
-    nsresult rv = NS_DeserializeObject(aSecInfoAsString, getter_AddRefs(secInfoSupports));
-
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIIdentityInfo> idInfo = do_QueryInterface(secInfoSupports);
-      if (idInfo) {
-        PRBool isEV;
-        if (NS_SUCCEEDED(idInfo->GetIsExtendedValidation(&isEV)) && isEV)
-          mSecurityState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
-      }
-    }
-
-    mSecurityStatusObject = nsnull;
-    if (aUseSSLStatusObject)
-    {
-      nsCOMPtr<nsISSLStatusProvider> sslStatusProvider =
-        do_QueryInterface(secInfoSupports);
-      if (sslStatusProvider)
-        sslStatusProvider->GetSSLStatus(getter_AddRefs(mSecurityStatusObject));
-    }
-  }
-
-  nsCOMPtr<nsIWebProgressListener> listener;
-  PRUint32 count = mListenerInfoList.Length();
-
-  while (count-- > 0) {
-    TabParentListenerInfo *info = &mListenerInfoList[count];
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_SECURITY)) {
-      continue;
-    }
-
-    listener = do_QueryReferent(info->mWeakListener);
-    if (!listener) {
-      // the listener went away. gracefully pull it out of the list.
-      mListenerInfoList.RemoveElementAt(count);
-      continue;
-    }
-
-    listener->OnSecurityChange(this, nsnull, mSecurityState);
-  }
-
-  return true;
-}
-
-bool
-TabParent::RecvRefreshAttempted(const nsCString& aURI, const PRInt32& aMillis, 
-                                const bool& aSameURI, bool* refreshAllowed)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  /*                                                                           
-   * First notify any listeners of the new state info...
-   *
-   * Operate the elements from back to front so that if items get
-   * get removed from the list it won't affect our iteration
-   */
-
-  nsCOMPtr<nsIWebProgressListener> listener;
-  PRUint32 count = mListenerInfoList.Length();
-
-  *refreshAllowed = true;
-  while (count-- > 0) {
-    TabParentListenerInfo *info = &mListenerInfoList[count];
-    if (!(info->mNotifyMask & nsIWebProgress::NOTIFY_REFRESH)) {
-      continue;
-    }
-
-    listener = do_QueryReferent(info->mWeakListener);
-    if (!listener) {
-      // the listener went away. gracefully pull it out of the list.
-      mListenerInfoList.RemoveElementAt(count);
-      continue;
-    }
-
-    nsCOMPtr<nsIWebProgressListener2> listener2 =
-      do_QueryReferent(info->mWeakListener);
-    if (!listener2) {
-      continue;
-    }
-
-    // some listeners don't seem to set this at all...
-    PRBool allowed = true;
-    listener2->OnRefreshAttempted(this, uri, 
-                                  aMillis, aSameURI, &allowed);
-    *refreshAllowed = allowed && *refreshAllowed;
-  }
-
   return true;
 }
 
@@ -464,6 +200,7 @@ NS_IMETHODIMP
 TabParent::GetState(PRUint32 *aState)
 {
   NS_ENSURE_ARG(aState);
+  NS_WARNING("SecurityState not valid here");
   *aState = mSecurityState;
   return NS_OK;
 }
@@ -632,71 +369,6 @@ TabParent::ReceiveMessage(const nsString& aMessage,
                             aJSONRetVal);
   }
   return true;
-}
-
-// nsIWebProgress
-nsresult
-TabParent::AddProgressListener(nsIWebProgressListener* aListener,
-                               PRUint32 aNotifyMask)
-{
-  if (GetListenerInfo(aListener)) {
-    // The listener is already registered!
-    return NS_ERROR_FAILURE;
-  }
-
-  nsWeakPtr listener = do_GetWeakReference(aListener);
-  if (!listener) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  TabParentListenerInfo info(listener, aNotifyMask);
-
-  if (!mListenerInfoList.AppendElement(info))
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::RemoveProgressListener(nsIWebProgressListener *aListener)
-{
-  nsAutoPtr<TabParentListenerInfo> info(GetListenerInfo(aListener));
-  
-  return info && mListenerInfoList.RemoveElement(*info) ?
-    NS_OK : NS_ERROR_FAILURE;
-}
-
-TabParentListenerInfo * 
-TabParent::GetListenerInfo(nsIWebProgressListener *aListener)
-{
-  PRUint32 i, count;
-  TabParentListenerInfo *info;
-
-  nsCOMPtr<nsISupports> listener1 = do_QueryInterface(aListener);
-  count = mListenerInfoList.Length();
-  for (i = 0; i < count; ++i) {
-    info = &mListenerInfoList[i];
-
-    if (info) {
-      nsCOMPtr<nsISupports> listener2 = do_QueryReferent(info->mWeakListener);
-      if (listener1 == listener2) {
-        return info;
-      }
-    }
-  }
-  return nsnull;
-}
-
-NS_IMETHODIMP
-TabParent::GetDOMWindow(nsIDOMWindow **aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TabParent::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIAuthPromptProvider
