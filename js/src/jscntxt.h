@@ -1949,10 +1949,23 @@ static const uint32 HAS_XML =     0x1000; /* flag induced by XML option */
 static const uint32 ANONFUNFIX =  0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
 }
 
+static inline JSVersion
+VersionNumber(JSVersion version)
+{
+    return JSVersion(uint32(version) & VersionFlags::MASK);
+}
+
 static inline bool
 VersionHasXML(JSVersion version)
 {
     return !!(version & VersionFlags::HAS_XML);
+}
+
+/* @warning This is a distinct condition from having the XML flag set. */
+static inline bool
+VersionShouldParseXML(JSVersion version)
+{
+    return VersionHasXML(version) || VersionNumber(version) >= JSVERSION_1_6;
 }
 
 static inline bool
@@ -1989,12 +2002,6 @@ static inline bool
 VersionHasFlags(JSVersion version)
 {
     return !!VersionExtractFlags(version);
-}
-
-static inline JSVersion
-VersionNumber(JSVersion version)
-{
-    return JSVersion(uint32(version) & VersionFlags::MASK);
 }
 
 static inline bool
