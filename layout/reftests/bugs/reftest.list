@@ -1433,6 +1433,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 552334-1.html 552334-1-ref.html
 random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
+== 557087.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
 == 559284-1.html 559284-1-ref.html
 == 560455-1.xul 560455-1-ref.xul
