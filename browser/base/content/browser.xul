@@ -1160,9 +1160,9 @@
       </toolbarbutton>
 
       <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabViewButton2.label;"
+                     label="&tabGroupsButton.label;"
                      command="Browser:ToggleTabView"
-                     tooltiptext="&tabViewButton2.tooltip;"
+                     tooltiptext="&tabGroupsButton.tooltip;"
                      removable="true"
                      observes="tabviewGroupsNumber"/>
 
