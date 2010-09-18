@@ -1284,7 +1284,7 @@ private:
                    css::Declaration *aDeclaration);
 public:
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   virtual nsCSSSelectorList* Selector(void);
 
@@ -1327,8 +1327,8 @@ private:
   // These are not supported and are not implemented!
   CSSStyleRuleImpl& operator=(const CSSStyleRuleImpl& aCopy);
 
-protected:
-  virtual ~CSSStyleRuleImpl(void);
+private:
+  ~CSSStyleRuleImpl();
 
 protected:
   nsCSSSelectorList*      mSelector; // null for style attribute
@@ -1393,7 +1393,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
   }
 }
 
-CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
+CSSStyleRuleImpl::~CSSStyleRuleImpl()
 {
   delete mSelector;
   delete mDeclaration;
@@ -1412,8 +1412,8 @@ NS_INTERFACE_MAP_BEGIN(CSSStyleRuleImpl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSStyleRule)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(CSSStyleRuleImpl, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(CSSStyleRuleImpl, nsCSSRule)
+NS_IMPL_ADDREF(CSSStyleRuleImpl)
+NS_IMPL_RELEASE(CSSStyleRuleImpl)
 
 nsCSSSelectorList* CSSStyleRuleImpl::Selector(void)
 {
