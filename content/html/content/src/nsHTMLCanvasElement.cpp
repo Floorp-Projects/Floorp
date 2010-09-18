@@ -354,8 +354,7 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
 
   // The DOMFile takes ownership of the buffer
   nsRefPtr<nsDOMMemoryFile> file =
-    new nsDOMMemoryFile((void*)imgData, imgSize, aName, type,
-                        GetDocument());
+    new nsDOMMemoryFile((void*)imgData, imgSize, aName, type);
 
   return CallQueryInterface(file, aResult);
 }
