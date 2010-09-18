@@ -1270,8 +1270,8 @@ DOMCSSStyleRuleImpl::GetCSSStyleRule(nsICSSStyleRule **aResult)
 
 // -- nsCSSStyleRule -------------------------------
 
-class CSSStyleRuleImpl : public nsCSSRule,
-                         public nsICSSStyleRule
+class NS_FINAL_CLASS CSSStyleRuleImpl : public nsCSSRule,
+                                        public nsICSSStyleRule
 {
 public:
   CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
