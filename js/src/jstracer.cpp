@@ -7783,8 +7783,6 @@ FinishJIT(TraceMonitor *tm)
 JS_REQUIRES_STACK void
 PurgeScriptFragments(JSContext* cx, JSScript* script)
 {
-    if (!TRACING_ENABLED(cx))
-        return;
     debug_only_printf(LC_TMTracer,
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
