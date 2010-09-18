@@ -662,7 +662,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
     }
   }
 
-  nsIView* view = frame->CreateViewAndWidget(contentType);
+  nsIView* view = frame->EnsureInnerView();
   if (!view)
     return PR_FALSE;
 
