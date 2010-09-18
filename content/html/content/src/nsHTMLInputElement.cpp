@@ -406,7 +406,7 @@ AsyncClickHandler::Run()
         rv = localFile->GetPath(unicodePath);
         if (!unicodePath.IsEmpty()) {
           nsCOMPtr<nsIDOMFile> domFile =
-            do_QueryObject(new nsDOMFile(localFile, doc));
+            do_QueryObject(new nsDOMFile(localFile));
           newFiles.AppendObject(domFile);
         }
         if (!prefSaved) {
@@ -427,7 +427,7 @@ AsyncClickHandler::Run()
       rv = localFile->GetPath(unicodePath);
       if (!unicodePath.IsEmpty()) {
         nsCOMPtr<nsIDOMFile> domFile=
-          do_QueryObject(new nsDOMFile(localFile, doc));
+          do_QueryObject(new nsDOMFile(localFile));
         newFiles.AppendObject(domFile);
       }
       // Store the last used directory using the content pref service
@@ -1186,7 +1186,7 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
     }
 
     if (file) {
-      nsCOMPtr<nsIDOMFile> domFile = new nsDOMFile(file, GetOwnerDoc());
+      nsCOMPtr<nsIDOMFile> domFile = new nsDOMFile(file);
       files.AppendObject(domFile);
     } else {
       continue; // Not much we can do if the file doesn't exist

@@ -3066,7 +3066,7 @@ nsGlobalWindow::CreateBlobURL(nsIDOMFile* aFile, nsAString& aURL)
 
   NS_ENSURE_STATE(mDoc);
 
-  nsresult rv = aFile->GetInternalUrl(aURL);
+  nsresult rv = aFile->GetInternalUrl(mDoc->NodePrincipal(), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDoc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));
