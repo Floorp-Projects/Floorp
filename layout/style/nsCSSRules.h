@@ -74,7 +74,7 @@ class nsCSSGroupRule : public nsCSSRule, public nsICSSGroupRule
 protected:
   nsCSSGroupRule();
   nsCSSGroupRule(const nsCSSGroupRule& aCopy);
-  ~nsCSSGroupRule();
+  virtual ~nsCSSGroupRule();
 
   // Implement part of nsISupports.
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -121,8 +121,8 @@ protected:
   CSSGroupRuleRuleListImpl* mRuleCollection;
 };
 
-class nsCSSMediaRule : public nsCSSGroupRule,
-                       public nsIDOMCSSMediaRule
+class NS_FINAL_CLASS nsCSSMediaRule : public nsCSSGroupRule,
+                                      public nsIDOMCSSMediaRule
 {
 public:
   nsCSSMediaRule();
@@ -163,8 +163,8 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
 };
 
-class nsCSSDocumentRule : public nsCSSGroupRule,
-                          public nsIDOMCSSMozDocumentRule
+class NS_FINAL_CLASS nsCSSDocumentRule : public nsCSSGroupRule,
+                                         public nsIDOMCSSMozDocumentRule
 {
 public:
   nsCSSDocumentRule(void);
@@ -257,9 +257,9 @@ private:
   void* operator new(size_t size) CPP_THROW_NEW;
 };
 
-class nsCSSFontFaceRule : public nsCSSRule,
-                          public nsICSSRule,
-                          public nsIDOMCSSFontFaceRule
+class NS_FINAL_CLASS nsCSSFontFaceRule : public nsCSSRule,
+                                         public nsICSSRule,
+                                         public nsIDOMCSSFontFaceRule
 {
 public:
   NS_DECL_ISUPPORTS

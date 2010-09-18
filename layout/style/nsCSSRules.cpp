@@ -186,9 +186,9 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 // -------------------------------------------
 // CharsetRule
 //
-class CSSCharsetRuleImpl : public nsCSSRule,
-                           public nsICSSRule,
-                           public nsIDOMCSSCharsetRule
+class NS_FINAL_CLASS CSSCharsetRuleImpl : public nsCSSRule,
+                                          public nsICSSRule,
+                                          public nsIDOMCSSCharsetRule
 {
 public:
   CSSCharsetRuleImpl(const nsAString& aEncoding);
@@ -353,9 +353,9 @@ CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 // -------------------------------------------
 // nsICSSImportRule
 //
-class CSSImportRuleImpl : public nsCSSRule,
-                          public nsICSSImportRule,
-                          public nsIDOMCSSImportRule
+class NS_FINAL_CLASS CSSImportRuleImpl : public nsCSSRule,
+                                         public nsICSSImportRule,
+                                         public nsIDOMCSSImportRule
 {
 public:
   CSSImportRuleImpl(nsMediaList* aMedia);
@@ -1231,9 +1231,9 @@ nsCSSDocumentRule::URL::~URL()
 // -------------------------------------------
 // nsICSSNameSpaceRule
 //
-class CSSNameSpaceRuleImpl : public nsCSSRule,
-                             public nsICSSNameSpaceRule,
-                             public nsIDOMCSSRule
+class NS_FINAL_CLASS CSSNameSpaceRuleImpl : public nsCSSRule,
+                                            public nsICSSNameSpaceRule,
+                                            public nsIDOMCSSRule
 {
 public:
   CSSNameSpaceRuleImpl(void);
