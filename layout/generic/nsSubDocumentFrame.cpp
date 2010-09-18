@@ -58,7 +58,7 @@ using mozilla::layout::RenderFrameParent;
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
-#include "nsIMarkupDocumentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIComponentManager.h"
@@ -937,6 +937,31 @@ static PRBool
 EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
 {
   NS_PRECONDITION(aDocument, "");
+
+  // Our docshell and view trees have been updated for the new hierarchy.
+  // Now also update all nsThebesDeviceContext::mWidget to that of the
+  // container view in the new hierarchy.
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShell> ds = do_QueryInterface(container);
+  if (ds) {
+    nsCOMPtr<nsIContentViewer> cv;
+    ds->GetContentViewer(getter_AddRefs(cv));
+    while (cv) {
+      nsCOMPtr<nsIDocumentViewer> dv = do_QueryInterface(cv);
+      if (dv) {
+        nsCOMPtr<nsPresContext> pc;
+        dv->GetPresContext(getter_AddRefs(pc));
+        nsIDeviceContext* dc = pc ? pc->DeviceContext() : nsnull;
+        if (dc) {
+          nsIView* v = dv->FindContainerView();
+          dc->Init(v ? v->GetNearestWidget(nsnull) : nsnull);
+        }
+      }
+      nsCOMPtr<nsIContentViewer> prev;
+      cv->GetPreviousViewer(getter_AddRefs(prev));
+      cv = prev;
+    }
+  }
 
   aDocument->EnumerateFreezableElements(
     nsObjectFrame::EndSwapDocShells, nsnull);
