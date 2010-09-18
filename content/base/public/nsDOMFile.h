@@ -66,7 +66,8 @@ public:
   NS_DECL_NSIDOMFILE
   NS_DECL_NSIXHRSENDABLE
 
-  nsDOMFile(nsIFile *aFile, nsIDocument* aRelatedDoc, nsAString& aContentType)
+  nsDOMFile(nsIFile *aFile, nsIDocument* aRelatedDoc,
+            const nsAString& aContentType)
     : mFile(aFile),
       mRelatedDoc(do_GetWeakReference(aRelatedDoc)),
       mContentType(aContentType)
@@ -77,7 +78,7 @@ public:
       mRelatedDoc(do_GetWeakReference(aRelatedDoc))
   {}
 
-  ~nsDOMFile() {}
+  virtual ~nsDOMFile() {}
 
   // from nsICharsetDetectionObserver
   NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
@@ -100,23 +101,25 @@ class nsDOMMemoryFile : public nsDOMFile
 public:
   nsDOMMemoryFile(void *aMemoryBuffer,
                   PRUint64 aLength,
-                  nsAString& aContentType,
+                  const nsAString& aName,
+                  const nsAString& aContentType,
                   nsIDocument *aRelatedDoc)
     : nsDOMFile(nsnull, aRelatedDoc, aContentType),
-      mInternalData(aMemoryBuffer), mLength(aLength)
+      mInternalData(aMemoryBuffer), mLength(aLength), mName(aName)
   { }
 
-  ~nsDOMMemoryFile()
-  { free(mInternalData); }
+  ~nsDOMMemoryFile();
 
   NS_IMETHOD GetName(nsAString&);
   NS_IMETHOD GetSize(PRUint64*);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
+  NS_IMETHOD GetMozFullPath(nsAString&);
   NS_IMETHOD GetMozFullPathInternal(nsAString&);
 
 protected:
   void* mInternalData;
   PRUint64 mLength;
+  nsString mName;
 };
 
 class nsDOMFileList : public nsIDOMFileList
