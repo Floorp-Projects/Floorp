@@ -233,15 +233,6 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
   display: none;
 }
 
-#feed-button > .button-box > .box-inherit > .button-text,
-#feed-button > .button-box > .button-menu-dropmarker {
-  display: none;
-}
-
-#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
-  direction: rtl;
-}
-
 #urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
 #urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button,
