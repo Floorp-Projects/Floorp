@@ -209,8 +209,8 @@
                   accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
                 <menuitem id="menu_tabview"
-                          label="&showTabView2.label;"
-                          accesskey="&showTabView2.accesskey;"
+                          label="&viewTabGroups.label;"
+                          accesskey="&viewTabGroups.accesskey;"
                           command="Browser:ToggleTabView"/>
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
