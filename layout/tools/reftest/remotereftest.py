@@ -347,6 +347,7 @@ def main():
 
     automation.setAppName(options.app)
     automation.setRemoteProfile(options.remoteProfile)
+    automation.setRemoteLog(options.remoteLogFile)
     reftest = RemoteReftest(automation, dm, options, SCRIPT_DIRECTORY)
 
     # Start the webserver
