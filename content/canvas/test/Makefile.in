@@ -72,6 +72,7 @@ _TEST_FILES_0 = \
 	test_2d.composite.uncovered.image.destination-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
 	test_2d.composite.uncovered.image.destination-atop.html \
+	test_mozGetAsFile.html \
 	$(NULL)
 
 # xor and lighter aren't well handled by cairo; they mostly work, but we don't want

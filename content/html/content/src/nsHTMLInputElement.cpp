@@ -1147,7 +1147,7 @@ nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNam
   
   for (PRUint32 i = 0; i <  mFiles.Count(); i++) {
     nsString str;
-    mFiles[i]->GetMozFullPath(str);
+    mFiles[i]->GetMozFullPathInternal(str);
     ret[i] = NS_strdup(str.get());
   }
 
@@ -1332,7 +1332,7 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
   aValue.Truncate();
   for (PRUint32 i = 0; i < (PRUint32)mFiles.Count(); ++i) {
     nsString str;
-    mFiles[i]->GetMozFullPath(str);
+    mFiles[i]->GetMozFullPathInternal(str);
     if (i == 0) {
       aValue.Append(str);
     }
