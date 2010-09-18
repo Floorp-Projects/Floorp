@@ -57,6 +57,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_netlogging.js \
 	browser_webconsole_bug_593003_iframe_wrong_hud.js \
 	browser_webconsole_bug_581231_close_button.js \
+	browser_webconsole_bug_595350_multiple_windows_and_tabs.js \
 	browser_webconsole_consoleonpage.js \
 	browser_webconsole_bug_587617_output_copy.js \
 	browser_webconsole_bug_588342_document_focus.js \
