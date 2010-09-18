@@ -185,6 +185,19 @@ public:
 
   ImageContainer* GetImageContainer();
 
+  /**
+   * If aContent has a nsObjectFrame, then prepare it for a DocShell swap.
+   * @see nsSubDocumentFrame::BeginSwapDocShells.
+   * There will be a call to EndSwapDocShells after we were moved to the
+   * new view tree.
+   */
+  static void BeginSwapDocShells(nsIContent* aContent, void*);
+  /**
+   * If aContent has a nsObjectFrame, then set it up after a DocShell swap.
+   * @see nsSubDocumentFrame::EndSwapDocShells.
+   */
+  static void EndSwapDocShells(nsIContent* aContent, void*);
+
 protected:
   nsObjectFrame(nsStyleContext* aContext);
   virtual ~nsObjectFrame();

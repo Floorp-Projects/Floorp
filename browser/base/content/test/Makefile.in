@@ -184,6 +184,7 @@ _BROWSER_FILES = \
                  browser_sanitizeDialog.js \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
+                 browser_tab_dragdrop.js \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
                  browser_visibleTabs.js \
