@@ -1145,7 +1145,7 @@ nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNam
   PRUnichar **ret =
     static_cast<PRUnichar **>(NS_Alloc(mFiles.Count() * sizeof(PRUnichar*)));
   
-  for (PRUint32 i = 0; i <  mFiles.Count(); i++) {
+  for (PRInt32 i = 0; i <  mFiles.Count(); i++) {
     nsString str;
     mFiles[i]->GetMozFullPathInternal(str);
     ret[i] = NS_strdup(str.get());
