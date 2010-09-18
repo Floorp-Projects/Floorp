@@ -1696,7 +1696,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 PRBool
 FrameLayerBuilder::CheckDOMModified()
 {
-  if (mRootPresContext &&
+  if (!mRootPresContext ||
       mInitialDOMGeneration == mRootPresContext->GetDOMGeneration())
     return PR_FALSE;
   if (mDetectedDOMModification) {
