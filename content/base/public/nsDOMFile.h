@@ -48,12 +48,8 @@
 #include "nsCOMPtr.h"
 #include "mozilla/AutoRestore.h"
 #include "nsString.h"
-#include "nsIWeakReference.h"
-#include "nsIWeakReferenceUtils.h"
-#include "nsIDocument.h"
 #include "nsIXMLHttpRequest.h"
 
-class nsIDOMDocument;
 class nsIFile;
 class nsIInputStream;
 
@@ -66,16 +62,13 @@ public:
   NS_DECL_NSIDOMFILE
   NS_DECL_NSIXHRSENDABLE
 
-  nsDOMFile(nsIFile *aFile, nsIDocument* aRelatedDoc,
-            const nsAString& aContentType)
+  nsDOMFile(nsIFile *aFile, const nsAString& aContentType)
     : mFile(aFile),
-      mRelatedDoc(do_GetWeakReference(aRelatedDoc)),
       mContentType(aContentType)
   {}
 
-  nsDOMFile(nsIFile *aFile, nsIDocument* aRelatedDoc)
-    : mFile(aFile),
-      mRelatedDoc(do_GetWeakReference(aRelatedDoc))
+  nsDOMFile(nsIFile *aFile)
+    : mFile(aFile)
   {}
 
   virtual ~nsDOMFile() {}
@@ -85,9 +78,7 @@ public:
 
 private:
   nsCOMPtr<nsIFile> mFile;
-  nsWeakPtr mRelatedDoc;
   nsString mContentType;
-  nsString mURL;
   nsCString mCharset;
 
   nsresult GuessCharset(nsIInputStream *aStream,
@@ -102,9 +93,8 @@ public:
   nsDOMMemoryFile(void *aMemoryBuffer,
                   PRUint64 aLength,
                   const nsAString& aName,
-                  const nsAString& aContentType,
-                  nsIDocument *aRelatedDoc)
-    : nsDOMFile(nsnull, aRelatedDoc, aContentType),
+                  const nsAString& aContentType)
+    : nsDOMFile(nsnull, aContentType),
       mInternalData(aMemoryBuffer), mLength(aLength), mName(aName)
   { }
 
@@ -173,7 +163,8 @@ private:
 
 class NS_STACK_CLASS nsDOMFileInternalUrlHolder {
 public:
-  nsDOMFileInternalUrlHolder(nsIDOMFile* aFile MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM);
+  nsDOMFileInternalUrlHolder(nsIDOMFile* aFile, nsIPrincipal* aPrincipal
+                             MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM);
   ~nsDOMFileInternalUrlHolder();
   nsAutoString mUrl;
 private:
