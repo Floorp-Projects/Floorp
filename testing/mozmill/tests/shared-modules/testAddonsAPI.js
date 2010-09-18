@@ -43,7 +43,7 @@
 var MODULE_NAME = 'AddonsAPI';
 
 const RELATIVE_ROOT = '.';
-const MODULE_REQUIRES = ['PrefsAPI'];
+const MODULE_REQUIRES = ['PrefsAPI', 'UtilsAPI'];
 
 const gTimeout = 5000;
 
@@ -75,6 +75,7 @@ const AMO_PREFERENCES = [
 function addonsManager()
 {
   this._controller = null;
+  this._utilsAPI = collector.getModule('UtilsAPI');
 }
 
 /**
@@ -128,7 +129,8 @@ addonsManager.prototype = {
     this.paneId = 'search';
 
     var searchInput = this.getElement({type: "search_fieldInput"});
-    this._controller.keypress(searchInput, 'a', {accelKey: true});
+    var cmdKey = UtilsAPI.getEntity(this.getDtds(), "selectAllCmd.key");
+    this._controller.keypress(searchInput, cmdKey, {accelKey: true});
     this._controller.keypress(searchInput, 'VK_DELETE', {});
   },
 
@@ -142,17 +144,30 @@ addonsManager.prototype = {
     var windowCount = mozmill.utils.getWindows().length;
 
     if (this._controller) {
-      // Check if we should force the closing of the DM window
+      // Check if we should force the closing of the AM window
       if (force) {
         this._controller.window.close();
       } else {
-        this._controller.keypress(null, 'w', {accelKey: true});
+        var cmdKey = UtilsAPI.getEntity(this.getDtds(), "closeCmd.key");
+        this._controller.keypress(null, cmdKey, {accelKey: true});
       }
 
       this._controller.waitForEval("subject.getWindows().length == " + (windowCount - 1),
                                    gTimeout, 100, mozmill.utils);
       this._controller = null;
     }
+  },
+
+  /**
+   * Gets all the needed external DTD urls as an array
+   *
+   * @returns Array of external DTD urls
+   * @type [string]
+   */
+  getDtds : function downloadManager_getDtds() {
+    var dtds = ["chrome://mozapps/locale/extensions/extensions.dtd",
+                "chrome://browser/locale/browser.dtd"];
+    return dtds;
   },
 
   /**
@@ -363,13 +378,8 @@ addonsManager.prototype = {
    *        MozMillController of the window to operate on
    */
   waitForOpened : function addonsManager_waitforOpened(controller) {
-    controller.sleep(500);
-    controller.waitForEval("subject.getMostRecentWindow('Extension:Manager') != null",
-                           gTimeout, 100, mozmill.wm);
-    var window = mozmill.wm.getMostRecentWindow('Extension:Manager');
-    controller.sleep(500);
-  
-    this._controller = new mozmill.controller.MozMillController(window);
+    this._controller = this._utilsAPI.handleWindow("type", "Extension:Manager",
+                                                   null, true);
   }
 };
 
