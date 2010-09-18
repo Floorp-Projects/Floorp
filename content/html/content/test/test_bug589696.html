@@ -78,84 +78,94 @@ function checkFormNoValidateAttribute(aElementName)
 checkFormNoValidateAttribute('input');
 checkFormNoValidateAttribute('button');
 
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var os = Components.classes['@mozilla.org/observer-service;1']
+                   .getService(Components.interfaces.nsIObserverService);
+var observers = os.enumerateObservers("invalidformsubmit");
+
 /**
  * formnovalidate should prevent form validation if set on the submit control
  * used to submit the form.
  *
- * NOTE: if there is no invalidformsubmit observer, the form submission will
- * never be blocked and this test might be a false-positive but that should not
- * be a problem.
+ * The following test should not be done if there is no observer for
+ * "invalidformsubmit" because the form submission will not be canceled in that
+ * case.
  */
-document.getElementById('av').addEventListener("invalid", function(aEvent) {
-  aEvent.target.removeAttribute("invalid", arguments.callee, false);
-  ok(true, "formnovalidate should not apply on if not set on the submit " +
-           "control used for the submission");
-  document.getElementById('b').click();
-}, false);
 
-document.getElementById('bv').addEventListener("invalid", function(aEvent) {
-  aEvent.target.removeAttribute("invalid", arguments.callee, false);
-  ok(true, "formnovalidate should not apply on if not set on the submit " +
-           "control used for the submission");
-  var c = document.getElementById('c');
-  c.focus(); synthesizeKey("VK_RETURN", {type: "keypress"});
-}, false);
+if (observers.hasMoreElements()) {
 
-document.getElementById('c').addEventListener("invalid", function(aEvent) {
-  aEvent.target.removeAttribute("invalid", arguments.callee, false);
-  ok(true, "formnovalidate should only apply on submit controls");
-  document.getElementById('d').click();
-}, false);
+  document.getElementById('av').addEventListener("invalid", function(aEvent) {
+    aEvent.target.removeAttribute("invalid", arguments.callee, false);
+    ok(true, "formnovalidate should not apply on if not set on the submit " +
+             "control used for the submission");
+    document.getElementById('b').click();
+  }, false);
 
-document.forms[3].addEventListener("submit", function(aEvent) {
-  aEvent.target.removeAttribute("submit", arguments.callee, false);
-  ok(true, "formnovalidate applies if set on the submit control used for the submission");
-  document.getElementById('e').click();
-}, false);
+  document.getElementById('bv').addEventListener("invalid", function(aEvent) {
+    aEvent.target.removeAttribute("invalid", arguments.callee, false);
+    ok(true, "formnovalidate should not apply on if not set on the submit " +
+             "control used for the submission");
+    var c = document.getElementById('c');
+    c.focus(); synthesizeKey("VK_RETURN", {type: "keypress"});
+  }, false);
 
-document.forms[4].addEventListener("submit", function(aEvent) {
-  aEvent.target.removeAttribute("submit", arguments.callee, false);
-  ok(true, "formnovalidate applies if set on the submit control used for the submission");
-  SimpleTest.executeSoon(SimpleTest.finish);
-}, false);
+  document.getElementById('c').addEventListener("invalid", function(aEvent) {
+    aEvent.target.removeAttribute("invalid", arguments.callee, false);
+    ok(true, "formnovalidate should only apply on submit controls");
+    document.getElementById('d').click();
+  }, false);
 
-/**
- * We have to be sure invalid events behave as expected.
- * They should be sent before the submit event so we can just create a test
- * failure if we got one when unexpected. All of them should be catched if sent.
- * At worst, we got random green which isn't harmful.
- * If expected, they will be part of the chain reaction.
- */
-function unexpectedInvalid(aEvent)
-{
-  aEvent.target.removeAttribute("invalid", unexpectedInvalid, false);
-  ok(false, "invalid event should not be sent");
+  document.forms[3].addEventListener("submit", function(aEvent) {
+    aEvent.target.removeAttribute("submit", arguments.callee, false);
+    ok(true, "formnovalidate applies if set on the submit control used for the submission");
+    document.getElementById('e').click();
+  }, false);
+
+  document.forms[4].addEventListener("submit", function(aEvent) {
+    aEvent.target.removeAttribute("submit", arguments.callee, false);
+    ok(true, "formnovalidate applies if set on the submit control used for the submission");
+    SimpleTest.executeSoon(SimpleTest.finish);
+  }, false);
+
+  /**
+   * We have to be sure invalid events behave as expected.
+   * They should be sent before the submit event so we can just create a test
+   * failure if we got one when unexpected. All of them should be caught if
+   * sent.
+   * At worst, we got random green which isn't harmful.
+   * If expected, they will be part of the chain reaction.
+   */
+  function unexpectedInvalid(aEvent)
+  {
+    aEvent.target.removeAttribute("invalid", unexpectedInvalid, false);
+    ok(false, "invalid event should not be sent");
+  }
+
+  document.getElementById('dv').addEventListener("invalid", unexpectedInvalid, false);
+  document.getElementById('ev').addEventListener("invalid", unexpectedInvalid, false);
+
+  /**
+   * Some submission have to be canceled. In that case, the submit events should
+   * not be sent.
+   * Same behavior as unexpected invalid events.
+   */
+  function unexpectedSubmit(aEvent)
+  {
+    aEvent.target.removeAttribute("submit", unexpectedSubmit, false);
+    ok(false, "submit event should not be sent");
+  }
+
+  document.forms[0].addEventListener("submit", unexpectedSubmit, false);
+  document.forms[1].addEventListener("submit", unexpectedSubmit, false);
+  document.forms[2].addEventListener("submit", unexpectedSubmit, false);
+
+  SimpleTest.waitForExplicitFinish();
+
+  // This is going to call all the tests (with a chain reaction).
+  SimpleTest.waitForFocus(function() {
+    document.getElementById('a').click();
+  });
 }
-
-document.getElementById('dv').addEventListener("invalid", unexpectedInvalid, false);
-document.getElementById('ev').addEventListener("invalid", unexpectedInvalid, false);
-
-/**
- * Some submission have to be canceled. In that case, the submit events should
- * not be sent.
- * Same behavior as unexpected invalid events.
- */
-function unexpectedSubmit(aEvent)
-{
-  aEvent.target.removeAttribute("submit", unexpectedSubmit, false);
-  ok(false, "submit event should not be sent");
-}
-
-document.forms[0].addEventListener("submit", unexpectedSubmit, false);
-document.forms[1].addEventListener("submit", unexpectedSubmit, false);
-document.forms[2].addEventListener("submit", unexpectedSubmit, false);
-
-SimpleTest.waitForExplicitFinish();
-
-// This is going to call all the tests (with a chain reaction).
-SimpleTest.waitForFocus(function() {
-  document.getElementById('a').click();
-});
 
 </script>
 </pre>
