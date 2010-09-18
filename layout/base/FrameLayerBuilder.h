@@ -271,6 +271,14 @@ public:
                                   ThebesLayer* aLayer, const nsRect& aRect);
 
   /**
+   * Destroy any stored DisplayItemDataProperty for aFrame.
+   */
+  static void DestroyDisplayItemDataFor(nsIFrame* aFrame)
+  {
+    aFrame->Properties().Delete(DisplayItemDataProperty());
+  }
+
+  /**
    * Clip represents the intersection of an optional rectangle with a
    * list of rounded rectangles.
    */

@@ -21,7 +21,7 @@
  * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -890,7 +890,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
             SetWidgetForHierarchy(mGdkWindow, oldContainer, newContainer);
         }
 
-        gdk_window_reparent(mGdkWindow, newParentWindow, 0, 0);
+        gdk_window_reparent(mGdkWindow, newParentWindow, mBounds.x, mBounds.y);
     }
 
     PRBool parentHasMappedToplevel =

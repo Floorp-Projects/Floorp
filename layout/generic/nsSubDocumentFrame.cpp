@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  *   HÂkan Waara <hwaara@chello.se>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -92,6 +93,8 @@ using mozilla::layout::RenderFrameParent;
 #include "nsIScrollableFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
+#include "FrameLayerBuilder.h"
+#include "nsObjectFrame.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -102,6 +105,18 @@ using mozilla::layout::RenderFrameParent;
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
+
+using namespace mozilla;
+
+static nsIDocument*
+GetDocumentFromView(nsIView* aView)
+{
+  NS_PRECONDITION(aView, "");
+
+  nsIFrame* f = static_cast<nsIFrame*>(aView->GetClientData());
+  nsIPresShell* ps =  f ? f->PresContext()->PresShell() : nsnull;
+  return ps ? ps->GetDocument() : nsnull;
+}
 
 class AsyncFrameInit;
 
@@ -823,6 +838,75 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   return mFrameLoader->GetDocShell(aDocShell);
 }
 
+static void
+DestroyDisplayItemDataForFrames(nsIFrame* aFrame)
+{
+  FrameLayerBuilder::DestroyDisplayItemDataFor(aFrame);
+
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+  do {
+    nsIFrame* child = aFrame->GetFirstChild(childList);
+    while (child) {
+      DestroyDisplayItemDataForFrames(child);
+      child = child->GetNextSibling();
+    }
+    childList = aFrame->GetAdditionalChildListName(listIndex++);
+  } while (childList);
+}
+
+static PRBool
+BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*)
+{
+  NS_PRECONDITION(aDocument, "");
+
+  nsIPresShell* shell = aDocument->GetShell();
+  nsIFrame* rootFrame = shell ? shell->GetRootFrame() : nsnull;
+  if (rootFrame) {
+    ::DestroyDisplayItemDataForFrames(rootFrame);
+  }
+  aDocument->EnumerateFreezableElements(
+    nsObjectFrame::BeginSwapDocShells, nsnull);
+  aDocument->EnumerateSubDocuments(BeginSwapDocShellsForDocument, nsnull);
+  return PR_TRUE;
+}
+
+static nsIView*
+BeginSwapDocShellsForViews(nsIView* aSibling)
+{
+  // Collect the removed sibling views in reverse order in 'removedViews'.
+  nsIView* removedViews = nsnull;
+  while (aSibling) {
+    nsIDocument* doc = ::GetDocumentFromView(aSibling);
+    if (doc) {
+      ::BeginSwapDocShellsForDocument(doc, nsnull);
+    }
+    nsIView* next = aSibling->GetNextSibling();
+    aSibling->GetViewManager()->RemoveChild(aSibling);
+    aSibling->SetNextSibling(removedViews);
+    removedViews = aSibling;
+    aSibling = next;
+  }
+  return removedViews;
+}
+
+static void
+InsertViewsInReverseOrder(nsIView* aSibling, nsIView* aParent)
+{
+  NS_PRECONDITION(aParent, "");
+  NS_PRECONDITION(!aParent->GetFirstChild(), "inserting into non-empty list");
+
+  nsIViewManager* vm = aParent->GetViewManager();
+  while (aSibling) {
+    nsIView* next = aSibling->GetNextSibling();
+    aSibling->SetNextSibling(nsnull);
+    // PR_TRUE means 'after' in document order which is 'before' in view order,
+    // so this call prepends the child, thus reversing the siblings as we go.
+    vm->InsertChild(aParent, aSibling, nsnull, PR_TRUE);
+    aSibling = next;
+  }
+}
+
 nsresult
 nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
 {
@@ -836,11 +920,39 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  HideViewer();
-  other->HideViewer();
+  if (mInnerView && other->mInnerView) {
+    nsIView* ourSubdocViews = mInnerView->GetFirstChild();
+    nsIView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
+    nsIView* otherSubdocViews = other->mInnerView->GetFirstChild();
+    nsIView* otherRemovedViews = ::BeginSwapDocShellsForViews(otherSubdocViews);
 
+    ::InsertViewsInReverseOrder(ourRemovedViews, other->mInnerView);
+    ::InsertViewsInReverseOrder(otherRemovedViews, mInnerView);
+  }
   mFrameLoader.swap(other->mFrameLoader);
   return NS_OK;
+}
+
+static PRBool
+EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
+{
+  NS_PRECONDITION(aDocument, "");
+
+  aDocument->EnumerateFreezableElements(
+    nsObjectFrame::EndSwapDocShells, nsnull);
+  aDocument->EnumerateSubDocuments(EndSwapDocShellsForDocument, nsnull);
+  return PR_TRUE;
+}
+
+static void
+EndSwapDocShellsForViews(nsIView* aSibling)
+{
+  for ( ; aSibling; aSibling = aSibling->GetNextSibling()) {
+    nsIDocument* doc = ::GetDocumentFromView(aSibling);
+    if (doc) {
+      ::EndSwapDocShellsForDocument(doc, nsnull);
+    }
+  }
 }
 
 void
@@ -849,8 +961,13 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
   nsSubDocumentFrame* other = static_cast<nsSubDocumentFrame*>(aOther);
   nsWeakFrame weakThis(this);
   nsWeakFrame weakOther(aOther);
-  ShowViewer();
-  other->ShowViewer();
+
+  if (mInnerView) {
+    ::EndSwapDocShellsForViews(mInnerView->GetFirstChild());
+  }
+  if (other->mInnerView) {
+    ::EndSwapDocShellsForViews(other->mInnerView->GetFirstChild());
+  }
 
   // Now make sure we reflow both frames, in case their contents
   // determine their size.
