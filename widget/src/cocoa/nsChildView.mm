@@ -24,7 +24,7 @@
  *   Mark Mentovai <mark@moxienet.com>
  *   Håkan Waara <hwaara@gmail.com>
  *   Stuart Morgan <stuart.morgan@alumni.case.edu>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Thomas K. Dyas <tdyas@zecador.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -926,9 +926,6 @@ nsChildView::SetParent(nsIWidget* aNewParent)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG(aNewParent);
-  NSView<mozView>* newParentView =
-   (NSView*)aNewParent->GetNativeData(NS_NATIVE_WIDGET); 
-  NS_ENSURE_TRUE(newParentView, NS_ERROR_FAILURE);
 
   if (mOnDestroyCalled)
     return NS_OK;
@@ -939,16 +936,38 @@ nsChildView::SetParent(nsIWidget* aNewParent)
   // remove us from our existing parent
   if (mParentWidget)
     mParentWidget->RemoveChild(this);
+
+  nsresult rv = ReparentNativeWidget(aNewParent);
+  if (NS_SUCCEEDED(rv))
+    mParentWidget = aNewParent;
+
+  // add us to the new parent
+  mParentWidget->AddChild(this);
+  return NS_OK;
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NS_PRECONDITION(aNewParent, "");
+
+  if (mOnDestroyCalled)
+    return NS_OK;
+
+  NSView<mozView>* newParentView =
+   (NSView*)aNewParent->GetNativeData(NS_NATIVE_WIDGET); 
+  NS_ENSURE_TRUE(newParentView, NS_ERROR_FAILURE);
+
   // we hold a ref to mView, so this is safe
   [mView removeFromSuperview];
-  
-  // add us to the new parent
-  aNewParent->AddChild(this);
-  mParentWidget = aNewParent;
   mParentView   = newParentView;
   [mParentView addSubview:mView];
   return NS_OK;
-  
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 

@@ -163,6 +163,7 @@ public:
     LayerManager* GetLayerManager();
     gfxASurface* GetThebesSurface();
 
+    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();

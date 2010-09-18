@@ -842,6 +842,8 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
+    NS_ASSERTION(!mTransientParent, "child widget with transient parent");
+
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
     mParent->RemoveChild(this);
 
@@ -856,50 +858,104 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         return NS_OK;
     }
 
-    NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(mGdkWindow)->destroyed,
-                      "destroyed GdkWindow with widget");
-
-    nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
-    GdkWindow* newParentWindow = NULL;
-    GtkWidget* newContainer = NULL;
     if (aNewParent) {
         aNewParent->AddChild(this);
-        newParentWindow = newParent->mGdkWindow;
-        if (newParentWindow) {
-            newContainer = get_gtk_widget_for_gdk_window(newParentWindow);
-        }
+        ReparentNativeWidget(aNewParent);
     } else {
         // aNewParent is NULL, but reparent to a hidden window to avoid
         // destroying the GdkWindow and its descendants.
         // An invisible container widget is needed to hold descendant
         // GtkWidgets.
-        newContainer = EnsureInvisibleContainer();
-        newParentWindow = newContainer->window;
+        GtkWidget* newContainer = EnsureInvisibleContainer();
+        GdkWindow* newParentWindow = newContainer->window;
+        ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
+                                     oldContainer);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+    NS_PRECONDITION(aNewParent, "");
+    NS_ASSERTION(!mIsDestroyed, "");
+    NS_ASSERTION(!static_cast<nsWindow*>(aNewParent)->mIsDestroyed, "");
+
+    GtkWidget* oldContainer = GetMozContainerWidget();
+    if (!oldContainer) {
+        // The GdkWindows have been destroyed so there is nothing else to
+        // reparent.
+        NS_ABORT_IF_FALSE(GDK_WINDOW_OBJECT(mGdkWindow)->destroyed,
+                          "live GdkWindow with no widget");
+        return NS_OK;
+    }
+    NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(mGdkWindow)->destroyed,
+                      "destroyed GdkWindow with widget");
+    
+    nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
+    GdkWindow* newParentWindow = newParent->mGdkWindow;
+    GtkWidget* newContainer = NULL;
+    if (newParentWindow) {
+        newContainer = get_gtk_widget_for_gdk_window(newParentWindow);
     }
 
-    if (!newContainer) {
+    if (mTransientParent) {
+      GtkWindow* topLevelParent =
+          GTK_WINDOW(gtk_widget_get_toplevel(newContainer));
+      gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+      mTransientParent = topLevelParent;
+      if (mWindowGroup) {
+          g_object_unref(G_OBJECT(mWindowGroup));
+          mWindowGroup = NULL;
+      }
+      if (mTransientParent->group) {
+          gtk_window_group_add_window(mTransientParent->group,
+                                      GTK_WINDOW(mShell));
+          mWindowGroup = mTransientParent->group;
+          g_object_ref(G_OBJECT(mWindowGroup));
+      }
+      else if (GTK_WINDOW(mShell)->group) {
+          gtk_window_group_remove_window(GTK_WINDOW(mShell)->group,
+                                         GTK_WINDOW(mShell));
+      }
+    }
+
+    ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
+                                 oldContainer);
+    return NS_OK;
+}
+
+void
+nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
+                                       GtkWidget* aNewContainer,
+                                       GdkWindow* aNewParentWindow,
+                                       GtkWidget* aOldContainer)
+{
+    if (!aNewContainer) {
         // The new parent GdkWindow has been destroyed.
-        NS_ABORT_IF_FALSE(!newParentWindow ||
-                          GDK_WINDOW_OBJECT(newParentWindow)->destroyed,
+        NS_ABORT_IF_FALSE(!aNewParentWindow ||
+                          GDK_WINDOW_OBJECT(aNewParentWindow)->destroyed,
                           "live GdkWindow with no widget");
         Destroy();
     } else {
-        if (newContainer != oldContainer) {
-            NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(newParentWindow)->destroyed,
+        if (aNewContainer != aOldContainer) {
+            NS_ABORT_IF_FALSE(!GDK_WINDOW_OBJECT(aNewParentWindow)->destroyed,
                               "destroyed GdkWindow with widget");
-            SetWidgetForHierarchy(mGdkWindow, oldContainer, newContainer);
+            SetWidgetForHierarchy(mGdkWindow, aOldContainer, aNewContainer);
         }
 
-        gdk_window_reparent(mGdkWindow, newParentWindow, mBounds.x, mBounds.y);
+        if (!mIsTopLevel) {
+            gdk_window_reparent(mGdkWindow, aNewParentWindow, mBounds.x,
+                                mBounds.y);
+        }
     }
 
+    nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
     PRBool parentHasMappedToplevel =
         newParent && newParent->mHasMappedToplevel;
     if (mHasMappedToplevel != parentHasMappedToplevel) {
         SetHasMappedToplevel(parentHasMappedToplevel);
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
