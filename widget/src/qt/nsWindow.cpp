@@ -21,7 +21,7 @@
  * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Romashin Oleg <romaxa@gmail.com>
  *   Vladimir Vukicevic <vladimir@pobox.com>
@@ -391,35 +391,32 @@ NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
     NS_ENSURE_ARG_POINTER(aNewParent);
+    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+    nsIWidget* parent = GetParent();
+    if (parent) {
+        parent->RemoveChild(this);
+    }
     if (aNewParent) {
-        nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-        nsIWidget* parent = GetParent();
-        if (parent) {
-            parent->RemoveChild(this);
-        }
-
-        MozQWidget* newParent = static_cast<MozQWidget*>(aNewParent->GetNativeData(NS_NATIVE_WINDOW));
-        NS_ASSERTION(newParent, "Parent widget has a null native window handle");
-        if (mWidget) {
-            mWidget->setParentItem(newParent);
-        }
-
+        ReparentNativeWidget(aNewParent);
         aNewParent->AddChild(this);
-
         return NS_OK;
     }
-
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-    nsIWidget* parent = GetParent();
-
-    if (parent)
-        parent->RemoveChild(this);
-
-    if (mWidget)
+    if (mWidget) {
         mWidget->setParentItem(0);
+    }
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsWindow::ReparentNativeWidget(nsIWidget *aNewParent)
+{
+    NS_PRECONDITION(aNewParent, "");
+
+    MozQWidget* newParent = static_cast<MozQWidget*>(aNewParent->GetNativeData(NS_NATIVE_WINDOW));
+    NS_ASSERTION(newParent, "Parent widget has a null native window handle");
+    if (mWidget) {
+        mWidget->setParentItem(newParent);
+    }
     return NS_OK;
 }
 

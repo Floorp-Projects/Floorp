@@ -1100,6 +1100,8 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent)
 
 void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
 {
+  NS_PRECONDITION(aNewWidget, "");
+
   if (aView->HasWidget()) {
     // Check to see if the parent widget is the
     // same as the new parent. If not then reparent
@@ -1107,13 +1109,18 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
     // to do for the view and its descendants
     nsIWidget* widget = aView->GetWidget();
     nsIWidget* parentWidget = widget->GetParent();
-    // Toplevel widgets should not be reparented!
-    if (parentWidget && parentWidget != aNewWidget) {
+    if (parentWidget) {
+      // Child widget
+      if (parentWidget != aNewWidget) {
 #ifdef DEBUG
-      nsresult rv =
+        nsresult rv =
 #endif
-        widget->SetParent(aNewWidget);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
+          widget->SetParent(aNewWidget);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
+      }
+    } else {
+      // Toplevel widget (popup, dialog, etc)
+      widget->ReparentNativeWidget(aNewWidget);
     }
     return;
   }
