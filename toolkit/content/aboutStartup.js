@@ -5,16 +5,14 @@ let stringsvc = Components.classes["@mozilla.org/intl/stringbundle;1"]
                           .getService(Components.interfaces.nsIStringBundleService);
 let strings = stringsvc.createBundle("chrome://global/locale/aboutStartup.properties");
 let branding = stringsvc.createBundle("chrome://branding/locale/brand.properties");
+let brandShortName = branding.GetStringFromName("brandShortName");
 
 function displayTimestamp(id, µs) document.getElementById(id).textContent = formatstamp(µs);
 function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatms(msFromµs(µs));
 
 function formatStr(str, args) strings.formatStringFromName("about.startup."+ str, args, args.length);
-function appVersion(version, build) formatStr("appVersion",
-                                              [branding.getStringFromName("brandShortName"),
-//                                              ["Firefox",
-                                               version, build]);
-function formatExtension(str, id, version) formatStr("extension"+str, [id, version]);
+function appVersion(version, build) formatStr("appVersion", [brandShortName, version, build]);
+function formatExtension(str, name, version) formatStr("extension"+str, [name, version]);
 
 function msFromµs(µs) µs / 1000;
 function formatstamp(µs) new Date(msFromµs(µs));
@@ -208,26 +206,30 @@ function populateEvents()
   query.executeAsync({
     handleResult: function(results)
     {
-      let table = document.getElementById("events-table");
-      for (let row = results.getNextRow(); row; row = results.getNextRow())
+      Application.getExtensions(function (extensions)
       {
-        hasresults = true;
-        let stamp = row.getResultByName("timestamp"),
-            id = row.getResultByName("id"),
-            name = row.getResultByName("name"),
-            version = row.getResultByName("version"),
-            action = row.getResultByName("action");
+        let table = document.getElementById("events-table");
+        for (let row = results.getNextRow(); row; row = results.getNextRow())
+        {
+          hasresults = true;
+          let stamp = row.getResultByName("timestamp"),
+              id = row.getResultByName("id"),
+              extension = extensions.get(id),
+              name = extension ? extension.name : row.getResultByName("name"),
+              version = row.getResultByName("version"),
+              action = row.getResultByName("action");
+          alert([id, name, row.getResultByName("name")].toSource());
+          options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
 
-        options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
-
-        table.appendChild(tr(td(formatstamp(stamp)),
-                             td(action),
-                             td(name),
-                             td(id),
-                             td(version)));
-      }
-      if (hasresults)
-        $("#events-table > .empty").hide();
+          table.appendChild(tr(td(formatstamp(stamp)),
+                               td(action),
+                               td(name),
+                               td(id),
+                               td(version)));
+        }
+        if (hasresults)
+          $("#events-table > .empty").hide();
+      });
     },
     handleError: function(error)
     {
