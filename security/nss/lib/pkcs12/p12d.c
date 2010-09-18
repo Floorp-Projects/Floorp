@@ -130,10 +130,32 @@ struct SEC_PKCS12DecoderContextStr {
     sec_PKCS12MacData		macData;
 
     /* routines for reading back the data to be hmac'd */
+    /* They are called as follows.
+     *
+     * Stage 1: decode the aSafes cinfo into a buffer in dArg,
+     * which p12d.c sometimes refers to as the "temp file".
+     * This occurs during SEC_PKCS12DecoderUpdate calls.
+     *
+     * dOpen(dArg, PR_FALSE)
+     * dWrite(dArg, buf, len)
+     * ...
+     * dWrite(dArg, buf, len)
+     * dClose(dArg, PR_FALSE)
+     *
+     * Stage 2: verify MAC
+     * This occurs SEC_PKCS12DecoderVerify.
+     *
+     * dOpen(dArg, PR_TRUE)
+     * dRead(dArg, buf, IN_BUF_LEN)
+     * ...
+     * dRead(dArg, buf, IN_BUF_LEN)
+     * dClose(dArg, PR_TRUE)
+     */
     digestOpenFn 		dOpen;
     digestCloseFn 		dClose;
     digestIOFn 			dRead, dWrite;
     void 			*dArg;
+    PRBool			dIsOpen;  /* is the temp file created? */
 
     /* helper functions */
     SECKEYGetPasswordKey 	pwfn;
@@ -915,6 +937,8 @@ sec_pkcs12_decode_start_asafes_cinfo(SEC_PKCS12DecoderContext *p12dcx)
 	p12dcx->errorValue = PORT_GetError();
 	goto loser;
     }
+    /* dOpen(dArg, PR_FALSE) creates the temp file */
+    p12dcx->dIsOpen = PR_TRUE;
 
     return SECSuccess;
 
@@ -1161,8 +1185,8 @@ p12u_DigestWrite(void *arg, unsigned char *buf, unsigned long len)
  *	slot - the slot to import the dataa into should multiple slots 
  *		 be supported based on key type and cert type?
  *	dOpen, dClose, dRead, dWrite - digest routines for writing data
- *		 to a file so it could be read back and the hmack recomputed
- *		 and verified.  doesn't seem to be away for both encoding
+ *		 to a file so it could be read back and the hmac recomputed
+ *		 and verified.  doesn't seem to be a way for both encoding
  *		 and decoding to be single pass, thus the need for these
  *		 routines.
  *	dArg - the argument for dOpen, etc.
@@ -1235,6 +1259,7 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
     p12dcx->dClose = dClose;
     p12dcx->dRead = dRead;
     p12dcx->dArg = dArg;
+    p12dcx->dIsOpen = PR_FALSE;
     
     p12dcx->keyList = NULL;
     p12dcx->decitem.type = 0;
@@ -1431,6 +1456,7 @@ loser:
     /* close the file and remove it */
     if(p12dcx->dClose) {
 	(*p12dcx->dClose)(p12dcx->dArg, PR_TRUE);
+	p12dcx->dIsOpen = PR_FALSE;
     }
 
     if(pk11cx) {
@@ -1578,6 +1604,11 @@ SEC_PKCS12DecoderFinish(SEC_PKCS12DecoderContext *p12dcx)
     if(p12dcx->slot) {
 	PK11_FreeSlot(p12dcx->slot);
 	p12dcx->slot = NULL;
+    }
+
+    if(p12dcx->dIsOpen && p12dcx->dClose) {
+	(*p12dcx->dClose)(p12dcx->dArg, PR_TRUE);
+	p12dcx->dIsOpen = PR_FALSE;
     }
 
     if(p12dcx->arena) {

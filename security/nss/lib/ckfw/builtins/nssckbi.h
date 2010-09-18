@@ -77,8 +77,8 @@
  * of the comment in the CK_VERSION type definition.
  */
 #define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 79
-#define NSS_BUILTINS_LIBRARY_VERSION "1.79"
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 80
+#define NSS_BUILTINS_LIBRARY_VERSION "1.80"
 
 /* These version numbers detail the semantic changes to the ckfw engine. */
 #define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
