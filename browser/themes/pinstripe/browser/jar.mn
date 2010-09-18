@@ -12,7 +12,6 @@ browser.jar:
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
-  skin/classic/browser/feed-icons.png
   skin/classic/browser/fullscreen-video.css
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png

@@ -1810,32 +1810,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-margin-end: 4px;
 }
 
-/* Feed icon */
-#feed-button,
-#feed-button > .button-box,
-#feed-button:hover:active > .button-box {
-  padding: 0px;
-  margin: 0px;
-  border: 0px; 
-  background-color: transparent;
-}
-
-#feed-button {
-  -moz-appearance: none; 
-  min-width: 0px; 
-  list-style-image: url("chrome://browser/skin/feeds/feed-icons-16.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-#feed-button:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-#feed-button[open="true"],
-#feed-button:hover:active {
-  -moz-image-region: rect(0px 48px 16px 32px);
-}
-
 /* ::::: About Popup Blocking dialog ::::: */
 #pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;

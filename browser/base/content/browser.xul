@@ -932,19 +932,6 @@
           </box>
           <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
           <hbox id="urlbar-icons">
-            <button type="menu"
-                    style="-moz-user-focus: none"
-                    class="plain urlbar-icon"
-                    id="feed-button"
-                    collapsed="true"
-                    tooltiptext="&feedButton.tooltip;"
-                    onclick="return FeedHandler.onFeedButtonClick(event);">
-              <menupopup position="after_end"
-                         id="feed-menu"
-                         onpopupshowing="return FeedHandler.buildFeedList(this);"
-                         oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                         onclick="checkForMiddleClick(this, event);"/>
-            </button>
             <image id="star-button"
                    class="urlbar-icon"
                    onclick="PlacesStarButton.onClick(event);"/>
@@ -1007,6 +994,19 @@
                                      if (!this.parentNode._placesView)
                                        new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                      tooltip="bhTooltip" popupsinherittooltip="true">
+            <menuitem id="BMB_subscribeToPageMenuitem"
+                      label="&subscribeToPageMenuitem.label;"
+                      oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                      onclick="checkForMiddleClick(this, event);"
+                      observes="singleFeedMenuitemState"/>
+            <menu id="BMB_subscribeToPageMenupopup"
+                  label="&subscribeToPageMenupopup.label;"
+                  observes="multipleFeedsMenuState">
+              <menupopup id="BMB_subscribeToPageSubmenuMenupopup"
+                         onpopupshowing="return FeedHandler.buildFeedList(event.target);"
+                         oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                         onclick="checkForMiddleClick(this, event);"/>
+            </menu>
             <menuitem id="BMB_bookmarkAllTabs"
                       label="&addCurPagesCmd.label;"
                       command="Browser:BookmarkAllTabs"

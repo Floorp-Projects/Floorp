@@ -1525,24 +1525,6 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
   padding: 0px 3px 0px 3px;
 }
 
-/* ----- FEED CONTENT DISPLAY ---- */
-
-#feed-button {
-  -moz-appearance: none; 
-  min-width: 0;
-  min-height: 0;
-  -moz-padding-start: 4px !important;
-  list-style-image: url("chrome://browser/skin/feed-icons.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-#feed-button:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-#feed-button[open="true"],
-#feed-button:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
 /* ----- THROBBER ----- */
 
 #navigator-throbber {
