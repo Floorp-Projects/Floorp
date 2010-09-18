@@ -40,6 +40,7 @@
 interface nsIDOMFileError;
 interface nsIInputStream;
 interface nsIURI;
+interface nsIPrincipal;
 
 [scriptable, uuid(414e5d40-c831-4b28-acdc-8ff02d1a317d)]
 interface nsIDOMFile : nsISupports
@@ -60,7 +61,7 @@ interface nsIDOMFile : nsISupports
   [noscript] readonly attribute nsIInputStream internalStream;
   // The caller is responsible for releasing the internalUrl from the
   // moz-filedata: protocol handler
-  [noscript] readonly attribute DOMString internalUrl;
+  [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
 };
