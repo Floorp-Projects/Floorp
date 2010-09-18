@@ -1156,6 +1156,11 @@ function HUD_SERVICE()
   this.defaultFilterPrefs = this.storage.defaultDisplayPrefs;
   this.defaultGlobalConsolePrefs = this.storage.defaultGlobalConsolePrefs;
 
+  // These methods access the "this" object, but they're registered as
+  // event listeners. So we hammer in the "this" binding.
+  this.onTabClose = this.onTabClose.bind(this);
+  this.onWindowUnload = this.onWindowUnload.bind(this);
+
   // load stylesheet with StyleSheetService
   var uri = Services.io.newURI(HUD_STYLESHEET_URI, null, null);
   sss.loadAndRegisterSheet(uri, sss.AGENT_SHEET);
@@ -1358,13 +1363,18 @@ HUD_SERVICE.prototype =
   /**
    * Clear the specified HeadsUpDisplay
    *
-   * @param string aId
+   * @param string|nsIDOMNode aHUD
+   *        Either the ID of a HUD or the DOM node corresponding to an outer
+   *        HUD box.
    * @returns void
    */
-  clearDisplay: function HS_clearDisplay(aId)
+  clearDisplay: function HS_clearDisplay(aHUD)
   {
-    var displayNode = this.getOutputNodeById(aId);
-    var outputNode = displayNode.querySelectorAll(".hud-output-node")[0];
+    if (typeof(aHUD) === "string") {
+      aHUD = this.getOutputNodeById(aHUD);
+    }
+
+    var outputNode = aHUD.querySelector(".hud-output-node");
 
     while (outputNode.firstChild) {
       outputNode.removeChild(outputNode.firstChild);
@@ -1686,19 +1696,30 @@ HUD_SERVICE.prototype =
   /**
    * When a display is being destroyed, unregister it first
    *
-   * @param string aId
+   * @param string|nsIDOMNode aHUD
+   *        Either the ID of a HUD or the DOM node corresponding to an outer
+   *        HUD box.
    * @returns void
    */
-  unregisterDisplay: function HS_unregisterDisplay(aId)
+  unregisterDisplay: function HS_unregisterDisplay(aHUD)
   {
     // Remove children from the output. If the output is not cleared, there can
     // be leaks as some nodes has node.onclick = function; set and GC can't
     // remove the nodes then.
-    HUDService.clearDisplay(aId);
+    HUDService.clearDisplay(aHUD);
+
+    var id, outputNode;
+    if (typeof(aHUD) === "string") {
+      id = aHUD;
+      outputNode = this.mixins.getOutputNodeById(aHUD);
+    }
+    else {
+      id = aHUD.getAttribute("id");
+      outputNode = aHUD;
+    }
 
     // remove HUD DOM node and
     // remove display references from local registries get the outputNode
-    var outputNode = this.mixins.getOutputNodeById(aId);
     var parent = outputNode.parentNode;
     var splitters = parent.querySelectorAll("splitter");
     var len = splitters.length;
@@ -1711,33 +1732,33 @@ HUD_SERVICE.prototype =
     // remove the DOM Nodes
     parent.removeChild(outputNode);
 
-    this.windowRegistry[aId].forEach(function(aContentWindow) {
+    this.windowRegistry[id].forEach(function(aContentWindow) {
       if (aContentWindow.wrappedJSObject.console instanceof HUDConsole) {
         delete aContentWindow.wrappedJSObject.console;
       }
     });
 
     // remove our record of the DOM Nodes from the registry
-    delete this._headsUpDisplays[aId];
+    delete this._headsUpDisplays[id];
     // remove the HeadsUpDisplay object from memory
-    this.deleteHeadsUpDisplay(aId);
+    this.deleteHeadsUpDisplay(id);
     // remove the related storage object
-    this.storage.removeDisplay(aId);
+    this.storage.removeDisplay(id);
     // remove the related window objects
-    delete this.windowRegistry[aId];
+    delete this.windowRegistry[id];
 
     let displays = this.displays();
 
-    var uri  = this.displayRegistry[aId];
+    var uri  = this.displayRegistry[id];
     var specHudArr = this.uriRegistry[uri];
 
     for (var i = 0; i < specHudArr.length; i++) {
-      if (specHudArr[i] == aId) {
+      if (specHudArr[i] == id) {
         specHudArr.splice(i, 1);
       }
     }
-    delete displays[aId];
-    delete this.displayRegistry[aId];
+    delete displays[id];
+    delete this.displayRegistry[id];
   },
 
   /**
@@ -1752,17 +1773,6 @@ HUD_SERVICE.prototype =
     }
     // delete the storage as it holds onto channels
     delete this.storage;
-
-     var xulWindow = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-       .getInterface(Ci.nsIWebNavigation)
-       .QueryInterface(Ci.nsIDocShellTreeItem)
-       .rootTreeItem
-       .QueryInterface(Ci.nsIInterfaceRequestor)
-       .getInterface(Ci.nsIDOMWindow);
-
-    xulWindow = XPCNativeWrapper.unwrap(xulWindow);
-    var gBrowser = xulWindow.gBrowser;
-    gBrowser.tabContainer.removeEventListener("TabClose", this.onTabClose, false);
   },
 
   /**
@@ -2646,6 +2656,27 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Closes the Console, if any, that resides on the given tab.
+   *
+   * @param nsIDOMNode aTab
+   *        The tab on which to close the console.
+   * @returns void
+   */
+  closeConsoleOnTab: function HS_closeConsoleOnTab(aTab)
+  {
+    let xulDocument = aTab.ownerDocument;
+    let xulWindow = xulDocument.defaultView;
+    let gBrowser = xulWindow.gBrowser;
+    let linkedBrowser = aTab.linkedBrowser;
+    let notificationBox = gBrowser.getNotificationBox(linkedBrowser);
+    let hudId = "hud_" + notificationBox.getAttribute("id");
+    let outputNode = xulDocument.getElementById(hudId);
+    if (outputNode != null) {
+      this.unregisterDisplay(outputNode);
+    }
+  },
+
+  /**
    * onTabClose event handler function
    *
    * @param aEvent
@@ -2653,10 +2684,27 @@ HUD_SERVICE.prototype =
    */
   onTabClose: function HS_onTabClose(aEvent)
   {
-    var browser = aEvent.target;
-    var tabId = gBrowser.getNotificationBox(browser).getAttribute("id");
-    var hudId = "hud_" + tabId;
-    this.unregisterDisplay(hudId);
+    this.closeConsoleOnTab(aEvent.target);
+  },
+
+  /**
+   * Called whenever a browser window closes. Cleans up any consoles still
+   * around.
+   *
+   * @param nsIDOMEvent aEvent
+   *        The dispatched event.
+   * @returns void
+   */
+  onWindowUnload: function HS_onWindowUnload(aEvent)
+  {
+    let gBrowser = aEvent.target.defaultView.gBrowser;
+    let tabContainer = gBrowser.tabContainer;
+
+    let tab = tabContainer.firstChild;
+    while (tab != null) {
+      this.closeConsoleOnTab(tab);
+      tab = tab.nextSibling;
+    }
   },
 
   /**
@@ -2688,6 +2736,8 @@ HUD_SERVICE.prototype =
       // see bug 568661
       return;
     }
+
+    xulWindow.addEventListener("unload", this.onWindowUnload, false);
 
     let gBrowser = xulWindow.gBrowser;
 
