@@ -117,7 +117,7 @@ public:
   nsresult GetDocShell(nsIDocShell **aDocShell);
   nsresult BeginSwapDocShells(nsIFrame* aOther);
   void EndSwapDocShells(nsIFrame* aOther);
-  nsIView* CreateViewAndWidget(nsContentType aContentType);
+  nsIView* EnsureInnerView();
   nsIFrame* GetSubdocumentRootFrame();
 
   // nsIReflowCallback

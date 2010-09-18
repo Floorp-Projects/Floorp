@@ -69,8 +69,6 @@ using mozilla::layout::RenderFrameParent;
 #include "nsIDocument.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsWidgetsCID.h"
-#include "nsViewsCID.h"
 #include "nsGkAtoms.h"
 #include "nsStyleCoord.h"
 #include "nsStyleContext.h"
@@ -221,8 +219,8 @@ nsSubDocumentFrame::ShowViewer()
 
   if (!PresContext()->IsDynamic()) {
     // We let the printing code take care of loading the document; just
-    // create a widget for it to use
-    (void) CreateViewAndWidget(eContentTypeContent);
+    // create the inner view for it to use.
+    (void) EnsureInnerView();
   } else {
     nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
@@ -1011,10 +1009,9 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
 }
 
 nsIView*
-nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
+nsSubDocumentFrame::EnsureInnerView()
 {
   if (mInnerView) {
-    // Nothing to do here
     return mInnerView;
   }
 
