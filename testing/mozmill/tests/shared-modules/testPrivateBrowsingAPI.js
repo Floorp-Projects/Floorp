@@ -44,7 +44,7 @@
 const MODULE_NAME = 'PrivateBrowsingAPI';
 
 const RELATIVE_ROOT = '.';
-const MODULE_REQUIRES = ['ModalDialogAPI', 'PrefsAPI'];
+const MODULE_REQUIRES = ['ModalDialogAPI', 'PrefsAPI', 'UtilsAPI'];
 
 // Preference for confirmation dialog when entering Private Browsing mode
 const PB_NO_PROMPT_PREF = 'browser.privatebrowsing.dont_prompt_on_enter';
@@ -60,16 +60,8 @@ const gTimeout = 5000;
  */
 function privateBrowsing(controller)
 {
-  /**
-   * Instance of the preference API
-   * @private
-   */
   this._prefs = collector.getModule('PrefsAPI').preferences;
-
-  /**
-   * The MozMillController to operate on
-   * @private
-   */
+  this._utilsApi = collector.getModule('UtilsAPI');
   this._controller = controller;
 
   /**
@@ -147,6 +139,19 @@ privateBrowsing.prototype = {
   },
 
   /**
+   * Gets all the needed external DTD urls as an array
+   *
+   * @returns Array of external DTD urls
+   * @type [string]
+   */
+  getDtds : function downloadManager_getDtds() {
+    var dtds = ["chrome://branding/locale/brand.dtd",
+                "chrome://browser/locale/browser.dtd",
+                "chrome://browser/locale/aboutPrivateBrowsing.dtd"];
+    return dtds;
+  },
+
+  /**
    * Turn off Private Browsing mode and reset all changes
    */
   reset : function privateBrowsing_reset() {
@@ -182,7 +187,8 @@ privateBrowsing.prototype = {
     }
 
     if (useShortcut) {
-      this._controller.keypress(null, 'p', {accelKey: true, shiftKey: true});
+      var cmdKey = this._utilsApi.getEntity(this.getDtds(), "privateBrowsingCmd.commandkey");
+      this._controller.keypress(null, cmdKey, {accelKey: true, shiftKey: true});
     } else {
       this._controller.click(this._pbMenuItem);
     }
@@ -202,7 +208,8 @@ privateBrowsing.prototype = {
       return;
 
     if (useShortcut) {
-      this._controller.keypress(null, 'p', {accelKey: true, shiftKey: true});
+      var privateBrowsingCmdKey = this._utilsApi.getEntity(this.getDtds(), "privateBrowsingCmd.commandkey");
+      this._controller.keypress(null, privateBrowsingCmdKey, {accelKey: true, shiftKey: true});
     } else {
       this._controller.click(this._pbMenuItem);
     }

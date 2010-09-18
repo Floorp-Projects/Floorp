@@ -36,78 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Include necessary modules
-const RELATIVE_ROOT = '../../shared-modules';
-const MODULE_REQUIRES = ['PrefsAPI', 'TabbedBrowsingAPI', 'ToolbarAPI'];
+const TIMEOUT = 5000;
 
 const LOCAL_TEST_FOLDER = collector.addHttpResource('../test-files/');
 const LOCAL_TEST_PAGES = [
-  {url: LOCAL_TEST_FOLDER + 'layout/mozilla.html'},
-  {url: LOCAL_TEST_FOLDER + 'layout/mozilla_mission.html'}
+  {url: LOCAL_TEST_FOLDER + 'layout/mozilla.html', id: 'community'},
+  {url: LOCAL_TEST_FOLDER + 'layout/mozilla_mission.html', id: 'mission_statement'},
+  {url: LOCAL_TEST_FOLDER + 'layout/mozilla_grants.html', id: 'accessibility'} 
 ];
 
 var setupModule = function() {
   controller = mozmill.getBrowserController();
-  locationBar = new ToolbarAPI.locationBar(controller);
-
-  TabbedBrowsingAPI.closeAllTabs(controller);
-}
-
-var teardownModule = function(module) {
-  PrefsAPI.preferences.clearUserPref("browser.startup.homepage");
 }
 
 /**
- * Set homepage to current page
+ * Test the back and forward buttons
  */
-var testSetHomePage = function() {
-  // Go to the first local page and verify the correct page has loaded
-  controller.open(LOCAL_TEST_PAGES[0].url);
-  controller.waitForPageLoad();
+var testBackAndForward = function() {
+  // Open up the list of local pages statically assigned in the array
+  for each(var localPage in LOCAL_TEST_PAGES) {
+    controller.open(localPage.url);
+    controller.waitForPageLoad();
+   
+    var element = new elementslib.ID(controller.tabs.activeTab, localPage.id);
+    controller.waitForElement(element, TIMEOUT);
+  }
 
-  var link = new elementslib.Link(controller.tabs.activeTab, "Community");
-  controller.assertNode(link);
+  // Click on the Back button for the number of local pages visited
+  for (var i = LOCAL_TEST_PAGES.length - 2; i >= 0; i--) {
+    controller.goBack();
+    controller.waitForPageLoad();
 
-  // Call Prefs Dialog and set Home Page
-  PrefsAPI.openPreferencesDialog(prefDialogHomePageCallback);
-}
+    var element = new elementslib.ID(controller.tabs.activeTab, LOCAL_TEST_PAGES[i].id);
+    controller.waitForElement(element, TIMEOUT);
+  }
 
-/**
- * Test the home button
- */
-var testHomeButton = function()
-{
-  // Open another local page before going to the home page
-  controller.open(LOCAL_TEST_PAGES[1].url);
-  controller.waitForPageLoad();
+  // Click on the Forward button for the number of websites visited
+  for (var j = 1; j < LOCAL_TEST_PAGES.length; j++) {
+    controller.goForward();
+    controller.waitForPageLoad();
 
-  // Go to the saved home page and verify it's the correct page
-  controller.click(new elementslib.ID(controller.window.document, "home-button"));
-  controller.waitForPageLoad();
-
-  // Verify location bar with the saved home page
-  controller.assertValue(locationBar.urlbar, LOCAL_TEST_PAGES[0].url);
-}
-
-/**
- * Set the current page as home page
- *
- * @param {MozMillController} controller
- *        MozMillController of the window to operate on
- */
-var prefDialogHomePageCallback = function(controller) {
-  var prefDialog = new PrefsAPI.preferencesDialog(controller);
-  prefDialog.paneId = 'paneMain';
-
-  // Set Home Page to the current page
-  var useCurrent = new elementslib.ID(controller.window.document, "useCurrent");
-  controller.click(useCurrent);
-
-  prefDialog.close(true);
+    var element = new elementslib.ID(controller.tabs.activeTab, LOCAL_TEST_PAGES[j].id);
+    controller.waitForElement(element, TIMEOUT);
+  }
 }
 
 /**
  * Map test functions to litmus tests
  */
-// testSetHomePage.meta = {litmusids : [7964]};
-// testHomeButton.meta = {litmusids : [8031]};
+// testBackAndForward.meta = {litmusids : [8032]};
