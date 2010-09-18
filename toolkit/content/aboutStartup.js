@@ -11,8 +11,8 @@ function displayDuration(id, µs) document.getElementById(id).nextSibling.textCo
 
 function formatStr(str, args) strings.formatStringFromName("about.startup."+ str, args, args.length);
 function appVersion(version, build) formatStr("appVersion",
-//                                              [branding.getStringFromName("brandShortName"),
-                                              ["Firefox",
+                                              [branding.getStringFromName("brandShortName"),
+//                                              ["Firefox",
                                                version, build]);
 function formatExtension(str, id, version) formatStr("extension"+str, [id, version]);
 

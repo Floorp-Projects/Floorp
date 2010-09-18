@@ -830,13 +830,20 @@ var AddonManagerInternal = {
     });
   },
 
+  /**
+   * Adds an AddonListener that uses the observer service to notify
+   * native code of the extension events.
+   *
+   * Currently only handles that subset of the events and data that
+   * the about:startup page requires.
+   *
+   */
   _addNotificationListeners: function()
   {
     const svc = Cc["@mozilla.org/observer-service;1"]
                   .getService(Ci.nsIObserverService);
     function notify(msg, extension)
     {
-      WARN("notifying observers of extension"+ msg);
       let bag = Cc["@mozilla.org/hash-property-bag;1"]
                   .createInstance(Ci.nsIWritablePropertyBag2);
       bag.setPropertyAsAString("id", extension.id);
