@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557087
+-->
+<head>
+  <title>Test for Bug 557087</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557087">Mozilla Bug 557087</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 557087 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var elementsPreventingClick = [ "input", "button", "select", "textarea", "fieldset" ];
+var elementsWithClick = [ "option", "optgroup", "output", "label", "object" ];
+var gHandled = 0;
+
+function clickShouldNotHappenHandler(aEvent)
+{
+  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler, false);
+  ok(false, "click event should be prevented! (test1)");
+  if (++gHandled >= elementsWithClick.length) {
+    test2();
+  }
+}
+
+function clickShouldNotHappenHandler2(aEvent)
+{
+  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler3, false);
+  ok(false, "click event should be prevented! (test3)");
+  if (++gHandled >= elementsWithClick.length) {
+    test3();
+  }
+}
+
+function clickShouldHappenHandler(aEvent)
+{
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler, false);
+  ok(true, "click event has been correctly received (test1)");
+  if (++gHandled >= elementsWithClick.length) {
+    test2();
+  }
+}
+
+function clickShouldHappenHandler2(aEvent)
+{
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler2, false);
+  ok(true, "click event has been correctly received (test2)");
+  if (++gHandled >= elementsWithClick.length) {
+    test3();
+  }
+}
+
+function clickShouldHappenHandler3(aEvent)
+{
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler3, false);
+  ok(true, "click event has been correctly received (test3)");
+  if (++gHandled >= (elementsWithClick.length +
+                     elementsPreventingClick.length)) {
+    SimpleTest.finish();
+  }
+}
+
+var fieldset1 = document.createElement("fieldset");
+var fieldset2 = document.createElement("fieldset");
+var content  = document.getElementById('content');
+fieldset1.disabled = true;
+content.appendChild(fieldset1);
+fieldset1.appendChild(fieldset2);
+
+function test1()
+{
+  gHandled = 0;
+
+  // Initialize children without click expected.
+  for each(var name in elementsPreventingClick) {
+    var element = document.createElement(name);
+    fieldset2.appendChild(element);
+    element.addEventListener("click", clickShouldNotHappenHandler, false);
+    sendMouseEvent({type:'click'}, element);
+  }
+
+  // Initialize children with click expected.
+  for each(var name in elementsWithClick) {
+    var element = document.createElement(name);
+    element.innerHTML = "foo";
+    fieldset2.appendChild(element);
+    element.addEventListener("click", clickShouldHappenHandler, false);
+    sendMouseEvent({type:'click'}, element);
+  }
+}
+
+function test2()
+{
+  gHandled = 0;
+  fieldset1.disabled = false;
+  fieldset2.disabled = true;
+
+  // Initialize children without click expected.
+  for each(var name in elementsPreventingClick) {
+    var element = document.createElement(name);
+    fieldset2.appendChild(element);
+    element.addEventListener("click", clickShouldNotHappenHandler2, false);
+    sendMouseEvent({type:'click'}, element);
+  }
+
+  // Initialize children with click expected.
+  for each(var name in elementsWithClick) {
+    var element = document.createElement(name);
+    element.innerHTML = "foo";
+    fieldset2.appendChild(element);
+    element.addEventListener("click", clickShouldHappenHandler2, false);
+    sendMouseEvent({type:'click'}, element);
+  }
+}
+
+function test3()
+{
+  gHandled = 0;
+  fieldset1.disabled = false;
+  fieldset2.disabled = false;
+
+  // All elements should accept the click.
+  for each(var name in elementsPreventingClick) {
+    var element = document.createElement(name);
+    fieldset2.appendChild(element);
+    element.addEventListener("click", clickShouldHappenHandler3, false);
+    sendMouseEvent({type:'click'}, element);
+  }
+
+  // Initialize children with click expected.
+  for each(var name in elementsWithClick) {
+    var element = document.createElement(name);
+    element.innerHTML = "foo";
+    fieldset2.appendChild(element);
+    element.addEventListener("click", clickShouldHappenHandler3, false);
+    sendMouseEvent({type:'click'}, element);
+  }
+}
+
+test1();
+
+</script>
+</pre>
+</body>
+</html>

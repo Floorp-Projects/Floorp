@@ -2312,15 +2312,16 @@ nsGenericHTMLElement::GetIsContentEditable(PRBool* aContentEditable)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLFrameElement, TabIndex, tabindex, 0)
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    mForm(nsnull)
+  : nsGenericHTMLElement(aNodeInfo)
+  , mForm(nsnull)
+  , mFieldSet(nsnull)
 {
 }
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
   // Check that this element doesn't know anything about its form at this point.
-  NS_ASSERTION(!mForm, "How did we get here?");
+  NS_ASSERTION(!mForm, "mForm should be null at this point!");
 }
 
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
@@ -2494,6 +2495,9 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
     UpdateFormOwner(true, nsnull);
   }
 
+  // Set parent fieldset which should be used for the disabled state.
+  UpdateFieldSet();
+
   return NS_OK;
 }
 
@@ -2527,6 +2531,9 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  // The element might not have a fieldset anymore.
+  UpdateFieldSet();
 }
 
 nsresult
@@ -2759,9 +2766,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
 
   if (CanBeDisabled()) {
     // :enabled/:disabled
-    PRBool disabled;
-    GetBoolAttr(nsGkAtoms::disabled, &disabled);
-    if (disabled) {
+    if (IsDisabled()) {
       state |= NS_EVENT_STATE_DISABLED;
       state &= ~NS_EVENT_STATE_ENABLED;
     } else {
@@ -2789,7 +2794,7 @@ nsGenericHTMLFormElement::FocusState()
     return eUnfocusable;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+  if (IsDisabled()) {
     return eUnfocusable;
   }
 
@@ -2943,6 +2948,33 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     if (!idVal.IsEmpty()) {
       mForm->AddElementToTable(this, idVal);
     }
+  }
+}
+
+void
+nsGenericHTMLFormElement::UpdateFieldSet()
+{
+  for (nsIContent* parent = GetParent(); parent; parent = parent->GetParent()) {
+    if (parent->IsHTML(nsGkAtoms::fieldset)) {
+      mFieldSet = static_cast<nsGenericHTMLFormElement*>(parent);
+      return;
+    }
+  }
+
+  // No fieldset found.
+  mFieldSet = nsnull;
+}
+
+void
+nsGenericHTMLFormElement::OnFieldSetDisabledChanged(PRInt32 aStates)
+{
+  aStates |= NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
+
+  nsIDocument* doc = GetCurrentDoc();
+  // TODO: should we use aNotify ?!
+  if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+    doc->ContentStatesChanged(this, nsnull, aStates);
   }
 }
 
@@ -3227,7 +3259,7 @@ nsGenericHTMLElement::IsHTMLFocusable(PRBool aWithMouse,
     override = PR_FALSE;
 
     // Just check for disabled attribute on form controls
-    disabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    disabled = IsDisabled();
     if (disabled) {
       tabIndex = -1;
     }
