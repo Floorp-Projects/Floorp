@@ -406,6 +406,7 @@ public:
 
   void PaintQD();
 
+  NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
 
   PRBool            ReportDestroyEvent();

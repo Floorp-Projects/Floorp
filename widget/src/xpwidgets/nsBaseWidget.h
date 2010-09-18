@@ -185,6 +185,7 @@ public:
             mBorderStyle & eBorderStyle_title);
   }
 
+  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) = 0;
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's

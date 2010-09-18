@@ -1018,38 +1018,37 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
   mParent = aNewParent;
 
-  if (aNewParent) {
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-    nsIWidget* parent = GetParent();
-    if (parent) {
-      parent->RemoveChild(this);
-    }
-
-    HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
-    NS_ASSERTION(newParent, "Parent widget has a null native window handle");
-    if (newParent && mWnd) {
-      ::SetParent(mWnd, newParent);
-    }
-
-    aNewParent->AddChild(this);
-
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
   nsIWidget* parent = GetParent();
-
   if (parent) {
     parent->RemoveChild(this);
   }
-
+  if (aNewParent) {
+    ReparentNativeWidget(aNewParent);
+    aNewParent->AddChild(this);
+    return NS_OK;
+  }
   if (mWnd) {
     // If we have no parent, SetParent should return the desktop.
     VERIFY(::SetParent(mWnd, nsnull));
   }
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+  NS_PRECONDITION(aNewParent, "");
+
+  mParent = aNewParent;
+  if (mWindowType == eWindowType_popup) {
+    return NS_OK;
+  }
+  HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
+  NS_ASSERTION(newParent, "Parent widget has a null native window handle");
+  if (newParent && mWnd) {
+    ::SetParent(mWnd, newParent);
+  }
   return NS_OK;
 }
 
