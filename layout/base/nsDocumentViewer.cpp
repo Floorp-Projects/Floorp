@@ -63,6 +63,7 @@
 #include "nsIStyleSheet.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIFrame.h"
+#include "nsSubDocumentFrame.h"
 
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
@@ -79,7 +80,6 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsViewsCID.h"
-#include "nsWidgetsCID.h"
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
@@ -2416,10 +2416,9 @@ DocumentViewerImpl::FindContainerView()
           // cases. Treat that as display:none, the document is not
           // displayed.
           if (subdocFrame->GetType() == nsGkAtoms::subDocumentFrame) {
-            nsIView* subdocFrameView = subdocFrame->GetView();
-            NS_ASSERTION(subdocFrameView, "Subdoc frames must have views");
-            nsIView* innerView = subdocFrameView->GetFirstChild();
-            NS_ASSERTION(innerView, "Subdoc frames must have an inner view too");
+            NS_ASSERTION(subdocFrame->GetView(), "Subdoc frames must have views");
+            nsIView* innerView =
+              static_cast<nsSubDocumentFrame*>(subdocFrame)->EnsureInnerView();
             containerView = innerView;
           } else {
             NS_WARNING("Subdocument container has non-subdocument frame");
