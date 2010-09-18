@@ -1335,8 +1335,9 @@ protected:
   css::Declaration*       mDeclaration;
   CSSImportantRule*       mImportantRule; // initialized by RuleMatched
   DOMCSSStyleRuleImpl*    mDOMRule;
-  PRUint32                mLineNumber;
-  PRPackedBool            mWasMatched;
+  // Keep the same type so that MSVC packs them.
+  PRUint32                mLineNumber : 31;
+  PRUint32                mWasMatched : 1;
 };
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
