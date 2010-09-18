@@ -1306,7 +1306,6 @@ GestureModule.prototype = {
       return;
 
     this._owner.grab(this);
-    this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
     // hide element highlight
     // XXX ugh, this is awful. None of this code should be in InputHandler.
@@ -1318,6 +1317,7 @@ GestureModule.prototype = {
 
     // start from current zoom level
     this._pinchStartScale = this._pinchScale = getBrowser().scale;
+    this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
     // cache gesture limit values
     this._maxGrowth = Services.prefs.getIntPref("browser.ui.pinch.maxGrowth");
@@ -1336,7 +1336,6 @@ GestureModule.prototype = {
     // decrease the pinchDelta min/max values to limit zooming out/in speed
     let delta = Util.clamp(aEvent.delta, -this._maxShrink, this._maxGrowth);
 
-    let startScale = this._pinchStartScale;
     let oldScale = this._pinchScale;
     let newScale = Browser.selectedTab.clampZoomLevel(oldScale * (1 + delta / this._scalingFactor));
 
@@ -1345,12 +1344,13 @@ GestureModule.prototype = {
 
     // Calculate the new zoom rect.
     let rect = this._pinchZoomRect.clone();
-    rect.translate(this._pinchClientX - cX + startScale * (1-scaleRatio) * cX * rect.width / window.innerWidth,
-                   this._pinchClientY - cY + startScale * (1-scaleRatio) * cY * rect.height / window.innerHeight);
+    rect.translate(this._pinchClientX - cX + (1-scaleRatio) * cX * rect.width / window.innerWidth,
+                   this._pinchClientY - cY + (1-scaleRatio) * cY * rect.height / window.innerHeight);
 
     rect.width *= scaleRatio;
     rect.height *= scaleRatio;
 
+    let startScale = this._pinchStartScale;
     rect.translateInside(new Rect(0, 0, getBrowser().contentDocumentWidth * startScale,
                                         getBrowser().contentDocumentHeight * startScale));
 
