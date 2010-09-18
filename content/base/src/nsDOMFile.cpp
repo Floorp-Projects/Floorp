@@ -483,10 +483,15 @@ nsDOMFile::ConvertStream(nsIInputStream *aStream,
 }
 
 // nsDOMMemoryFile Implementation
+nsDOMMemoryFile::~nsDOMMemoryFile()
+{
+  PR_Free(mInternalData);
+}
+
 NS_IMETHODIMP
 nsDOMMemoryFile::GetName(nsAString &aFileName)
 {
-  aFileName.Truncate();
+  aFileName = mName;
   return NS_OK;
 }
 
@@ -509,10 +514,16 @@ nsDOMMemoryFile::GetInternalStream(nsIInputStream **aStream)
 }
 
 NS_IMETHODIMP
+nsDOMMemoryFile::GetMozFullPath(nsAString &aFileName)
+{
+  aFileName.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMMemoryFile::GetMozFullPathInternal(nsAString &aFilename)
 {
-  aFilename.Truncate();
-  return NS_OK;
+  return GetName(aFilename);
 }
 
 // nsDOMFileList implementation
