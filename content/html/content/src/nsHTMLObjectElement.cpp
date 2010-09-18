@@ -111,6 +111,8 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission *aFormSubmission);
 
+  virtual bool IsDisabled() const { return PR_FALSE; }
+
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
