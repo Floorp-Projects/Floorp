@@ -2327,56 +2327,6 @@ function BrowserPageInfo(doc, initialTab, imageElement) {
                     "chrome,toolbar,dialog=no,resizable", args);
 }
 
-#ifdef DEBUG
-// Initialize the LeakDetector class.
-function LeakDetector(verbose)
-{
-  this.verbose = verbose;
-}
-
-const NS_LEAKDETECTOR_CONTRACTID = "@mozilla.org/xpcom/leakdetector;1";
-
-if (NS_LEAKDETECTOR_CONTRACTID in Components.classes) {
-  try {
-    LeakDetector.prototype = Components.classes[NS_LEAKDETECTOR_CONTRACTID]
-                                       .createInstance(Components.interfaces.nsILeakDetector);
-  } catch (err) {
-    LeakDetector.prototype = Object.prototype;
-  }
-} else {
-  LeakDetector.prototype = Object.prototype;
-}
-
-var leakDetector = new LeakDetector(false);
-
-// Dumps current set of memory leaks.
-function dumpMemoryLeaks()
-{
-  leakDetector.dumpLeaks();
-}
-
-// Traces all objects reachable from the chrome document.
-function traceChrome()
-{
-  leakDetector.traceObject(document, leakDetector.verbose);
-}
-
-// Traces all objects reachable from the content document.
-function traceDocument()
-{
-  // keep the chrome document out of the dump.
-  leakDetector.markObject(document, true);
-  leakDetector.traceObject(content, leakDetector.verbose);
-  leakDetector.markObject(document, false);
-}
-
-// Controls whether or not we do verbose tracing.
-function traceVerbose(verbose)
-{
-  leakDetector.verbose = (verbose == "true");
-}
-#endif
-
 function URLBarSetURI(aURI) {
   var value = gBrowser.userTypedValue;
   var valid = false;

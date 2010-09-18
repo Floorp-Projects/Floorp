@@ -1,9 +1,3 @@
-function dumpLeaks()
-{
-    var leakDetector = Components.classes["@mozilla.org/xpcom/leakdetector;1"].getService(Components.interfaces.nsILeakDetector);
-    leakDetector.dumpLeaks();
-}
-
 function getCacheService()
 {
     var nsCacheService = Components.classes["@mozilla.org/network/cache-service;1"];
