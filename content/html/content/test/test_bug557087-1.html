@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557087
+-->
+<head>
+  <title>Test for Bug 557087</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557087">Mozilla Bug 557087</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 557087 **/
+
+function checkDisabledAttribute(aFieldset)
+{
+  ok('disabled' in aFieldset,
+     "fieldset elements should have the disabled attribute");
+
+  ok(!aFieldset.disabled,
+     "fieldset elements disabled attribute should be disabled");
+  is(aFieldset.getAttribute('disabled'), null,
+    "fieldset elements disabled attribute should be disabled");
+
+  aFieldset.disabled = true;
+  ok(aFieldset.disabled,
+     "fieldset elements disabled attribute should be enabled");
+  isnot(aFieldset.getAttribute('disabled'), null,
+    "fieldset elements disabled attribute should be enabled");
+
+  aFieldset.removeAttribute('disabled');
+  aFieldset.setAttribute('disabled', '');
+  ok(aFieldset.disabled,
+     "fieldset elements disabled attribute should be enabled");
+  isnot(aFieldset.getAttribute('disabled'), null,
+    "fieldset elements disabled attribute should be enabled");
+
+  aFieldset.removeAttribute('disabled');
+  ok(!aFieldset.disabled,
+     "fieldset elements disabled attribute should be disabled");
+  is(aFieldset.getAttribute('disabled'), null,
+    "fieldset elements disabled attribute should be disabled");
+}
+
+function checkDisabledPseudoClass(aFieldset)
+{
+  is(document.querySelector(":disabled"), null,
+     "no elements should have :disabled applied to them");
+
+  aFieldset.disabled = true;
+  is(document.querySelector(":disabled"), aFieldset,
+     ":disabled should apply to fieldset elements");
+
+  aFieldset.disabled = false;
+  is(document.querySelector(":disabled"), null,
+     "no elements should have :disabled applied to them");
+}
+
+function checkEnabledPseudoClass(aFieldset)
+{
+  is(document.querySelector(":enabled"), aFieldset,
+     ":enabled should apply to fieldset elements");
+
+  aFieldset.disabled = true;
+  is(document.querySelector(":enabled"), null,
+     "no elements should have :enabled applied to them");
+
+  aFieldset.disabled = false;
+  is(document.querySelector(":enabled"), aFieldset,
+     ":enabled should apply to fieldset elements");
+}
+
+function checkFocus(aFieldset)
+{
+  aFieldset.disabled = true;
+  aFieldset.setAttribute('tabindex', 1);
+
+  aFieldset.focus();
+
+  isnot(document.activeElement, aFieldset,
+        "fieldset can't be focused when disabled");
+  aFieldset.removeAttribute('tabindex');
+  aFieldset.disabled = false;
+}
+
+function checkClickEvent(aFieldset)
+{
+  var clickHandled = false;
+
+  aFieldset.disabled = true;
+
+  aFieldset.addEventListener("click", function(aEvent) {
+    aEvent.target.removeEventListener("click", arguments.callee, false);
+    clickHandled = true;
+  }, false);
+
+  sendMouseEvent({type:'click'}, aFieldset);
+  SimpleTest.executeSoon(function() {
+    ok(!clickHandled, "When disabled, fieldset should prevent click events");
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var fieldset = document.createElement("fieldset");
+var content  = document.getElementById('content');
+content.appendChild(fieldset);
+
+checkDisabledAttribute(fieldset);
+checkDisabledPseudoClass(fieldset);
+checkEnabledPseudoClass(fieldset);
+checkFocus(fieldset);
+checkClickEvent(fieldset);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,16 @@
+fieldset.disabled {
+  background-color: red;
+}
+
+fieldset:disabled.disabled,
+fieldset.ref {
+  background-color: green;
+}
+
+fieldset.enabled {
+  background-color: green;
+}
+
+fieldset:disabled.enabled {
+  background-color: red;
+}
