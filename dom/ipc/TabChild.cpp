@@ -133,10 +133,6 @@ TabChild::Init()
   }
 
   webBrowser->SetContainerWindow(this);
-  nsCOMPtr<nsIWeakReference> weak =
-    do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
-  webBrowser->AddWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
-
   mWebNav = do_QueryInterface(webBrowser);
   NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
 
@@ -146,7 +142,6 @@ TabChild::Init()
 }
 
 NS_INTERFACE_MAP_BEGIN(TabChild)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener2)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
@@ -154,11 +149,9 @@ NS_INTERFACE_MAP_BEGIN(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener2)
-  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITabChild)
   NS_INTERFACE_MAP_ENTRY(nsIDialogCreator)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(TabChild)
@@ -443,10 +436,6 @@ TabChild::ActorDestroy(ActorDestroyReason why)
 TabChild::~TabChild()
 {
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
-    nsCOMPtr<nsIWeakReference> weak =
-      do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
-    webBrowser->RemoveWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
-
     if (webBrowser) {
       webBrowser->SetContainerWindow(nsnull);
     }
@@ -459,141 +448,6 @@ TabChild::~TabChild()
       elm->Disconnect();
     }
     mTabChildGlobal->mTabChild = nsnull;
-}
-
-NS_IMETHODIMP
-TabChild::OnStateChange(nsIWebProgress *aWebProgress,
-                        nsIRequest *aRequest,
-                        PRUint32 aStateFlags,
-                        nsresult aStatus)
-{
-  SendNotifyStateChange(aStateFlags, aStatus);
-  return NS_OK;
-}
-
-// Only one of OnProgressChange / OnProgressChange64 will be called.
-// According to interface, it should be OnProgressChange64, but looks
-// like docLoader only sends the former.
-NS_IMETHODIMP
-TabChild::OnProgressChange(nsIWebProgress *aWebProgress,
-                           nsIRequest *aRequest,
-                           PRInt32 aCurSelfProgress,
-                           PRInt32 aMaxSelfProgress,
-                           PRInt32 aCurTotalProgress,
-                           PRInt32 aMaxTotalProgress)
-{
-  SendNotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
-                           aCurTotalProgress, aMaxTotalProgress);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnStatusChange(nsIWebProgress *aWebProgress,
-                         nsIRequest *aRequest,
-                         nsresult aStatus,
-                         const PRUnichar* aMessage)
-{
-  nsDependentString message(aMessage);
-  SendNotifyStatusChange(aStatus, message);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnSecurityChange(nsIWebProgress *aWebProgress,
-                           nsIRequest *aRequest,
-                           PRUint32 aState)
-{
-  nsCString secInfoAsString;
-  if (aState & nsIWebProgressListener::STATE_IS_SECURE) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-    if (channel) {
-      nsCOMPtr<nsISupports> secInfoSupports;
-      channel->GetSecurityInfo(getter_AddRefs(secInfoSupports));
-
-      nsCOMPtr<nsISerializable> secInfoSerializable =
-          do_QueryInterface(secInfoSupports);
-      NS_SerializeToString(secInfoSerializable, secInfoAsString);
-    }
-  }
-
-  PRBool useSSLStatusObject = PR_FALSE;
-  nsAutoString securityTooltip;
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aWebProgress);
-  if (docShell) {
-    nsCOMPtr<nsISecureBrowserUI> secureUI;
-    docShell->GetSecurityUI(getter_AddRefs(secureUI));
-    if (secureUI) {
-      secureUI->GetTooltipText(securityTooltip);
-      nsCOMPtr<nsISupports> supports;
-      nsCOMPtr<nsISSLStatusProvider> provider = do_QueryInterface(secureUI);
-      nsresult rv = provider->GetSSLStatus(getter_AddRefs(supports));
-      if (NS_SUCCEEDED(rv) && supports) {
-        /*
-         * useSSLStatusObject: Security UI internally holds 4 states: secure, mixed,
-         * broken, no security.  In cases of secure, mixed and broken it holds reference
-         * to a valid SSL status object.  But, in case of the 'broken' state it doesn't
-         * return the SSL status object (returns null), in contrary to the 'mixed' state
-         * for which it returns.
-         * 
-         * However, mixed and broken states are both reported to the upper level
-         * as nsIWebProgressListener::STATE_IS_BROKEN, i.e. states are merged,
-         * so we cannot determine, if to return the status object or not.
-         *
-         * TabParent is extracting the SSL status object from the security info
-         * serialization (string). SSL status object is always present there
-         * even security UI implementation doesn't present it.  This argument 
-         * tells the parent if the SSL status object is being presented by 
-         * the security UI here, on the child process, and so if it has to be
-         * presented also on the parent process.
-         */
-        useSSLStatusObject = PR_TRUE;
-      }
-    }
-  }
-
-  SendNotifySecurityChange(aState, useSSLStatusObject, securityTooltip,
-                           secInfoAsString);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnLocationChange(nsIWebProgress *aWebProgress,
-                           nsIRequest *aRequest,
-                           nsIURI *aLocation)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-  nsCString uri;
-  aLocation->GetSpec(uri);
-  SendNotifyLocationChange(uri);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnProgressChange64(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest,
-                             PRInt64 aCurSelfProgress,
-                             PRInt64 aMaxSelfProgress,
-                             PRInt64 aCurTotalProgress,
-                             PRInt64 aMaxTotalProgress)
-{
-  SendNotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
-                           aCurTotalProgress, aMaxTotalProgress);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnRefreshAttempted(nsIWebProgress *aWebProgress,
-                             nsIURI *aURI, PRInt32 aMillis,
-                             PRBool aSameURL, PRBool *aRefreshAllowed)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  nsCString uri;
-  aURI->GetSpec(uri);
-  bool sameURL = aSameURL;
-  bool refreshAllowed;
-  SendRefreshAttempted(uri, aMillis, sameURL, &refreshAllowed);
-  *aRefreshAllowed = refreshAllowed;
-  return NS_OK;
 }
 
 bool
