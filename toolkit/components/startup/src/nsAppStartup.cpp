@@ -75,6 +75,7 @@
 #include "nsIXULRuntime.h"
 #include "nsIXULAppInfo.h"
 #include "nsXPCOMCIDInternal.h"
+#include "nsIPropertyBag2.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -99,6 +100,7 @@ public:
 nsresult RecordStartupDuration();
 nsresult OpenStartupDatabase(mozIStorageConnection **db);
 nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table, const nsACString &schema);
+nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details);
 
 //
 // nsAppStartup
@@ -135,6 +137,7 @@ nsAppStartup::Init()
   os->AddObserver(this, "quit-application-forced", PR_TRUE);
   os->AddObserver(this, "sessionstore-browser-state-restored", PR_TRUE);
   os->AddObserver(this, "sessionstore-windows-restored", PR_TRUE);
+  os->AddObserver(this, "AddonManager-event", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);
   os->AddObserver(this, "xul-window-registered", PR_TRUE);
   os->AddObserver(this, "xul-window-destroyed", PR_TRUE);
@@ -521,6 +524,8 @@ nsAppStartup::Observe(nsISupports *aSubject,
   } else if ((!strcmp(aTopic, "sessionstore-browser-state-restored")) ||
              (!strcmp(aTopic, "sessionstore-windows-restored"))) {
     RecordStartupDuration();
+  } else if (!strcmp(aTopic, "AddonManager-event")) {
+    RecordAddonEvent(aData, aSubject);
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
@@ -538,15 +543,7 @@ nsresult RecordStartupDuration()
   rv = OpenStartupDatabase(getter_AddRefs(db));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = EnsureTable(db,
-                   NS_LITERAL_CSTRING("duration"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER, launch INTEGER, startup INTEGER, appVersion TEXT, appBuild TEXT, platformVersion TEXT, platformBuild TEXT"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = EnsureTable(db,
-                   NS_LITERAL_CSTRING("events"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER, extensionID TEXT, extensionVersion TEXT, action TEXT"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  
   nsCOMPtr<mozIStorageStatement> statement;
   rv = db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO duration VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"),
                            getter_AddRefs(statement));
@@ -579,7 +576,46 @@ nsresult RecordStartupDuration()
   rv = statement->BindStringParameter(6, NS_ConvertUTF8toUTF16(platformBuild));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  statement->Execute();
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details)
+{
+  PRTime now = PR_Now();
+  nsresult rv;
+
+  nsCOMPtr<mozIStorageConnection> db;
+  rv = OpenStartupDatabase(getter_AddRefs(db));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO events VALUES (?1, ?2, ?3, ?4, ?5)"),
+                           getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(details);
+  nsAutoString id, name, version;
+  bag->GetPropertyAsAString(NS_LITERAL_STRING("id"), id);
+  bag->GetPropertyAsAString(NS_LITERAL_STRING("name"), name);
+  bag->GetPropertyAsAString(NS_LITERAL_STRING("version"), version);
+
+  rv = statement->BindInt64Parameter(0, now);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(1, id);
+  NS_ENSURE_SUCCESS(rv, rv); 
+  rv = statement->BindStringParameter(2, name);
+  NS_ENSURE_SUCCESS(rv, rv); 
+  rv = statement->BindStringParameter(3, version);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(4, nsDependentString(event));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -602,6 +638,16 @@ nsresult OpenStartupDatabase(mozIStorageConnection **db)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = EnsureTable(*db,
+                   NS_LITERAL_CSTRING("duration"),
+                   NS_LITERAL_CSTRING("timestamp INTEGER, launch INTEGER, startup INTEGER, appVersion TEXT, appBuild TEXT, platformVersion TEXT, platformBuild TEXT"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = EnsureTable(*db,
+                   NS_LITERAL_CSTRING("events"),
+                   NS_LITERAL_CSTRING("timestamp INTEGER, id TEXT, name TEXT, version TEXT, action TEXT"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
