@@ -842,7 +842,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    // nsBaseWidget::SetZIndex adds child widgets to the parent's list.
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
     mParent->RemoveChild(this);
 
@@ -864,6 +863,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     GdkWindow* newParentWindow = NULL;
     GtkWidget* newContainer = NULL;
     if (aNewParent) {
+        aNewParent->AddChild(this);
         newParentWindow = newParent->mGdkWindow;
         if (newParentWindow) {
             newContainer = get_gtk_widget_for_gdk_window(newParentWindow);
