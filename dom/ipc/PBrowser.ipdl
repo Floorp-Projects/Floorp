@@ -85,27 +85,6 @@ parent:
 
     Event(RemoteDOMEvent aEvent);
 
-    NotifyStateChange(PRUint32 stateFlags, nsresult status);
-
-    NotifyProgressChange(PRInt64 curSelfProgress,
-                         PRInt64 maxSelfProgress,
-                         PRInt64 curTotalProgress,
-                         PRInt64 maxTotalProgress);
-
-    NotifyLocationChange(nsCString uri);
-
-    NotifyStatusChange(nsresult status,
-                       nsString message);
-
-    NotifySecurityChange(PRUint32 aState,
-                         PRBool aUseSSLStatusObject,
-                         nsString aTooltip,
-                         nsCString aSecInfoAsString);
-
-    sync RefreshAttempted(nsCString uri, PRInt32 millis,
-                          bool sameURI) returns (bool retval);
-
-
     rpc CreateWindow() returns (PBrowser window);
 
     sync SyncMessage(nsString aMessage, nsString aJSON)

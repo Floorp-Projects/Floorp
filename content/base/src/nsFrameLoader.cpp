@@ -412,34 +412,6 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetWebProgress(nsIWebProgress **aWebProgress)
-{
-  nsresult rv;
-  *aWebProgress = nsnull;
-#ifdef MOZ_IPC
-  if (mRemoteFrame) {
-    if (!mRemoteBrowser) {
-      TryRemoteBrowser();
-    }
-    if (!mRemoteBrowser) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    *aWebProgress = mRemoteBrowser;
-    NS_ADDREF(*aWebProgress);
-    return NS_OK;
-  }
-#endif
-
-  nsCOMPtr<nsIDocShell> shell;
-  rv = GetDocShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(shell));
-    progress.swap(*aWebProgress);
-  }
-  return rv;
-}
-
 void
 nsFrameLoader::Finalize()
 {
