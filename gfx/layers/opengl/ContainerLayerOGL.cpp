@@ -146,7 +146,7 @@ ContainerLayerOGL::GetFirstChildOGL()
 
 static inline GLint GetYCoordOfRectStartingFromBottom(GLint y, GLint height, GLint viewportHeight)
 {
-#ifdef XP_MAC
+#ifdef XP_MACOSX
     (void) height;
     (void) viewportHeight;
     return y;
