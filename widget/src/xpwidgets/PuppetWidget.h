@@ -140,6 +140,8 @@ public:
   // PuppetWidgets don't have native data, as they're purely nonnative.
   virtual void* GetNativeData(PRUint32 aDataType)
   { return nsnull; }
+  NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent)
+  { return NS_ERROR_UNEXPECTED; }
 
   // PuppetWidgets don't have any concept of titles. 
   NS_IMETHOD SetTitle(const nsAString& aTitle)
