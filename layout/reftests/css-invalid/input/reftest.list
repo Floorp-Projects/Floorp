@@ -22,4 +22,5 @@
 == input-type-invalid.html input-ref.html
 == input-disabled-fieldset-1.html input-fieldset-ref.html
 == input-disabled-fieldset-2.html input-fieldset-ref.html
+== input-fieldset-legend.html input-fieldset-legend-ref.html
 # input type='hidden' shouldn't show

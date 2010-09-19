@@ -112,6 +112,7 @@
 #include "nsHtml5Module.h"
 #include "nsITextControlElement.h"
 #include "mozilla/dom/Element.h"
+#include "nsHTMLFieldSetElement.h"
 
 using namespace mozilla::dom;
 
@@ -2954,10 +2955,19 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 void
 nsGenericHTMLFormElement::UpdateFieldSet()
 {
-  for (nsIContent* parent = GetParent(); parent; parent = parent->GetParent()) {
+  nsIContent* parent = nsnull;
+  nsIContent* prev = nsnull;
+
+  for (parent = GetParent(); parent;
+       prev = parent, parent = parent->GetParent()) {
     if (parent->IsHTML(nsGkAtoms::fieldset)) {
-      mFieldSet = static_cast<nsGenericHTMLFormElement*>(parent);
-      return;
+      nsHTMLFieldSetElement* fieldset =
+        static_cast<nsHTMLFieldSetElement*>(parent);
+
+      if (!prev || fieldset->GetFirstLegend() != prev) {
+        mFieldSet = fieldset;
+        return;
+      }
     }
   }
 
@@ -2966,7 +2976,7 @@ nsGenericHTMLFormElement::UpdateFieldSet()
 }
 
 void
-nsGenericHTMLFormElement::OnFieldSetDisabledChanged(PRInt32 aStates)
+nsGenericHTMLFormElement::FieldSetDisabledChanged(PRInt32 aStates)
 {
   aStates |= NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
 
