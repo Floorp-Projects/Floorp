@@ -24,6 +24,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Benjamin Smedberg <bsmedberg@covad.net>
+ *   Daniel Brooks <db48x@db48x.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
