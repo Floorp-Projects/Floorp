@@ -42,6 +42,7 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsRelUtils.h"
+#include "nsWinUtils.h"
 
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleEvent.h"
@@ -193,58 +194,23 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
 {
 __try {
   *ppdispParent = NULL;
-  if (!mWeakShell)
-    return E_FAIL;  // We've been shut down
 
-  nsIFrame *frame = GetFrame();
-  HWND hwnd = 0;
-  if (frame) {
-    nsIView *view = frame->GetViewExternal();
-    if (view) {
-      // This code is essentially our implementation of WindowFromAccessibleObject,
-      // because MSAA iterates get_accParent() until it sees an object of ROLE_WINDOW
-      // to know where the window for a given accessible is. We must expose the native
-      // window accessible that MSAA creates for us. This must be done for the document
-      // object as well as any layout that creates its own window (e.g. via overflow: scroll)
-      nsIWidget *widget = view->GetWidget();
-      if (widget) {
-        hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
-        NS_ASSERTION(hwnd, "No window handle for window");
+  if (IsDefunct())
+    return E_FAIL;
 
-        nsIViewManager* viewManager = view->GetViewManager();
-        if (!viewManager)
-          return E_UNEXPECTED;
-
-        nsIView *rootView;
-        viewManager->GetRootView(rootView);
-        if (rootView == view) {
-          // If the client accessible (OBJID_CLIENT) has a window but its window
-          // was created by an outer window then we want the native accessible
-          // for that outer window. If the accessible was created for outer
-          // window (if the outer window has inner windows then they share the
-          // same client accessible with it) then return native accessible for
-          // the outer window.
-          HWND parenthwnd = ::GetParent(hwnd);
-          if (parenthwnd)
-            hwnd = parenthwnd;
-
-          NS_ASSERTION(hwnd, "No window handle for window");
-        }
+  nsRefPtr<nsDocAccessible> doc(do_QueryObject(this));
+  if (doc) {
+    // Return window system accessible object for root document and tab document
+    // accessibles.
+    if (!doc->ParentDocument() ||
+        nsWinUtils::IsWindowEmulationEnabled() &&
+        nsWinUtils::IsTabDocument(doc->GetDocumentNode())) {
+      HWND hwnd = static_cast<HWND>(doc->GetNativeWindow());
+      if (hwnd && SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_WINDOW,
+                                                       IID_IAccessible,
+                                                       (void**)ppdispParent))) {
+        return S_OK;
       }
-      else {
-        // If a frame is a scrollable frame, then it has one window for the client area,
-        // not an extra parent window for just the scrollbars
-        nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
-        if (scrollFrame) {
-          hwnd = (HWND)scrollFrame->GetScrolledFrame()->GetNearestWidget()->GetNativeData(NS_NATIVE_WINDOW);
-          NS_ASSERTION(hwnd, "No window handle for window");
-        }
-      }
-    }
-
-    if (hwnd && SUCCEEDED(AccessibleObjectFromWindow(hwnd, OBJID_WINDOW, IID_IAccessible,
-                                              (void**)ppdispParent))) {
-      return S_OK;
     }
   }
 
@@ -386,6 +352,9 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
 {
 __try {
   VariantInit(pvarRole);
+
+  if (IsDefunct())
+    return E_FAIL;
 
   nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
@@ -1187,6 +1156,9 @@ nsAccessibleWrap::role(long *aRole)
 __try {
   *aRole = 0;
 
+  if (IsDefunct())
+    return E_FAIL;
+
   NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
@@ -1662,45 +1634,11 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 HWND
 nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
-  HWND hWnd = 0;
   if (!aAccessible)
-    return hWnd;
+    return 0;
 
-  nsIFrame *frame = aAccessible->GetFrame();
-  if (frame) {
-    nsIWidget *window = frame->GetNearestWidget();
-    PRBool isVisible;
-    window->IsVisible(isVisible);
-    if (isVisible) {
-      // Short explanation:
-      // If HWND for frame is inside a hidden window, fire the event on the
-      // containing document's visible window.
-      //
-      // Long explanation:
-      // This is really just to fix combo boxes with JAWS. Window-Eyes already
-      // worked with combo boxes because they use the value change event in
-      // the closed combo box case. JAWS will only pay attention to the focus
-      // events on the list items. The JAWS developers haven't fixed that, so
-      // we'll use the focus events to make JAWS work. However, JAWS is
-      // ignoring events on a hidden window. So, in order to fix the bug where
-      // JAWS doesn't echo the current option as it changes in a closed
-      // combo box, we need to use an ensure that we never fire an event with
-      // an HWND for a hidden window.
-      hWnd = (HWND)frame->GetNearestWidget()->GetNativeData(NS_NATIVE_WINDOW);
-    }
-  }
-
-  if (!hWnd) {
-    void* handle = nsnull;
-    nsDocAccessible *accessibleDoc = aAccessible->GetDocAccessible();
-    if (!accessibleDoc)
-      return 0;
-
-    accessibleDoc->GetWindowHandle(&handle);
-    hWnd = (HWND)handle;
-  }
-
-  return hWnd;
+  nsDocAccessible* document = aAccessible->GetDocAccessible();
+  return document ? static_cast<HWND>(document->GetNativeWindow()) : 0;
 }
 
 HRESULT

@@ -50,6 +50,7 @@ const CoR = Components.results;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const PREF_APP_UPDATE_BACKGROUNDERRORS   = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
 const PREF_APP_UPDATE_CERT_ERRORS        = "app.update.cert.errors";
 const PREF_APP_UPDATE_ENABLED            = "app.update.enabled";
@@ -75,6 +76,7 @@ const SRCEVT_BACKGROUND       = 2;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
+const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
 
 var gLogEnabled = false;
 var gUpdatesFoundPageId;
@@ -404,8 +406,9 @@ var gUpdates = {
         // their permission to install, and it's ready for download.
         this.setUpdate(arg0);
         if (this.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-            this.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
-          aCallback("errorcertcheck");
+            this.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE ||
+            this.update.errorCode == BACKGROUNDCHECK_MULTIPLE_FAILURES) {
+          aCallback("errorextra");
           return;
         }
 
@@ -591,6 +594,11 @@ var gCheckingPage = {
     // notifications will never happen.
     Services.prefs.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
 
+    // The user will be notified if there is an error so clear the background
+    // check error count.
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
+
     this._checker = CoC["@mozilla.org/updates/update-checker;1"].
                     createInstance(CoI.nsIUpdateChecker);
     this._checker.checkForUpdates(this.updateListener, true);
@@ -666,8 +674,8 @@ var gCheckingPage = {
       gUpdates.setUpdate(update);
       if (update.errorCode &&
           (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-           update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE )) {
-        gUpdates.wiz.goTo("errorcertcheck");
+           update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE)) {
+        gUpdates.wiz.goTo("errorextra");
       }
       else {
         gUpdates.wiz.goTo("errors");
@@ -1610,9 +1618,10 @@ var gErrorsPage = {
 };
 
 /**
- * The page shown when there is a certificate attribute check error.
+ * The page shown when there is a background check or a certificate attribute
+ * error.
  */
-var gErrorCertCheckPage = {
+var gErrorExtraPage = {
   /**
    * Initialize
    */
@@ -1623,13 +1632,19 @@ var gErrorCertCheckPage = {
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS))
       Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
 
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
+
     if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
       document.getElementById("errorCertAttrHasUpdateLabel").hidden = false;
     }
     else {
-      document.getElementById("errorCertCheckNoUpdateLabel").hidden = false;
+      if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE)
+        document.getElementById("errorCertCheckNoUpdateLabel").hidden = false;
+      else
+        document.getElementById("genericBackgroundErrorLabel").hidden = false;
       var manualURL = Services.urlFormatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
-      var errorLinkLabel = document.getElementById("errorCertAttrLinkLabel");
+      var errorLinkLabel = document.getElementById("errorExtraLinkLabel");
       errorLinkLabel.value = manualURL;
       errorLinkLabel.setAttribute("url", manualURL);
       errorLinkLabel.hidden = false;

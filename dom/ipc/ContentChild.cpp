@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_GTK2
+#include <gtk/gtk.h>
+#endif
+
 #include "ContentChild.h"
 #include "TabChild.h"
 
@@ -44,6 +48,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
+#include "mozilla/dom/ExternalHelperAppChild.h"
 
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
@@ -176,6 +181,41 @@ private:
     PrefObserver& operator=(const PrefObserver&);
 };
 
+class AlertObserver
+{
+public:
+
+    AlertObserver(nsIObserver *aObserver, const nsString& aData)
+        : mData(aData)
+        , mObserver(aObserver)
+    {
+    }
+
+    ~AlertObserver() {}
+
+    bool ShouldRemoveFrom(nsIObserver* aObserver,
+                          const nsString& aData) const
+    {
+        return (mObserver == aObserver &&
+                mData == aData);
+    }
+
+    bool Observes(const nsString& aData) const
+    {
+        return mData.Equals(aData);
+    }
+
+    bool Notify(const nsCString& aType) const
+    {
+        mObserver->Observe(nsnull, aType.get(), mData.get());
+        return true;
+    }
+
+private:
+    nsCOMPtr<nsIObserver> mObserver;
+    nsString mData;
+};
+
 
 ContentChild* ContentChild::sSingleton;
 
@@ -193,6 +233,16 @@ ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessHandle aParentHandle,
                    IPC::Channel* aChannel)
 {
+#ifdef MOZ_WIDGET_GTK2
+    // sigh
+    gtk_init(NULL, NULL);
+#endif
+
+#ifdef MOZ_X11
+    // Do this after initializing GDK, or GDK will install its own handler.
+    XRE_InstallX11ErrorHandler();
+#endif
+
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
   
     Open(aChannel, aParentHandle, aIOLoop);
@@ -204,8 +254,8 @@ ContentChild::Init(MessageLoop* aIOLoop,
 PBrowserChild*
 ContentChild::AllocPBrowser(const PRUint32& aChromeFlags)
 {
-  nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
-  return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags);
+    return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 
 bool
@@ -249,6 +299,26 @@ ContentChild::DeallocPNecko(PNeckoChild* necko)
     return true;
 }
 
+PExternalHelperAppChild*
+ContentChild::AllocPExternalHelperApp(const IPC::URI& uri,
+                                      const nsCString& aMimeContentType,
+                                      const nsCString& aContentDisposition,
+                                      const bool& aForceSave,
+                                      const PRInt64& aContentLength)
+{
+    ExternalHelperAppChild *child = new ExternalHelperAppChild();
+    child->AddRef();
+    return child;
+}
+
+bool
+ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
+{
+    ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
+    child->Release();
+    return true;
+}
+
 bool
 ContentChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
                                  const nsTArray<ResourceMapping>& resources,
@@ -275,8 +345,17 @@ ContentChild::RecvSetOffline(const PRBool& offline)
 void
 ContentChild::ActorDestroy(ActorDestroyReason why)
 {
-    if (AbnormalShutdown == why)
-        NS_WARNING("shutting down because of crash!");
+    if (AbnormalShutdown == why) {
+        NS_WARNING("shutting down early because of crash!");
+        QuickExit();
+    }
+
+#ifndef DEBUG
+    // In release builds, there's no point in the content process
+    // going through the full XPCOM shutdown path, because it doesn't
+    // keep persistent state.
+    QuickExit();
+#endif
 
     // We might be holding the last ref to some of the observers in
     // mPrefObserverArray.  Some of them try to unregister themselves
@@ -286,8 +365,35 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     // |if (mDead)| special case below and we're safe.
     mDead = true;
     mPrefObservers.Clear();
-
+    mAlertObservers.Clear();
     XRE_ShutdownChildProcess();
+}
+
+void
+ContentChild::ProcessingError(Result what)
+{
+    switch (what) {
+    case MsgDropped:
+        QuickExit();
+
+    case MsgNotKnown:
+    case MsgNotAllowed:
+    case MsgPayloadError:
+    case MsgProcessingError:
+    case MsgRouteError:
+    case MsgValueError:
+        NS_RUNTIMEABORT("aborting because of fatal error");
+
+    default:
+        NS_RUNTIMEABORT("not reached");
+    }
+}
+
+void
+ContentChild::QuickExit()
+{
+    NS_WARNING("content process _exit()ing");
+    _exit(0);
 }
 
 nsresult
@@ -331,6 +437,15 @@ ContentChild::RemoveRemotePrefObserver(const nsCString& aDomain,
     return NS_ERROR_UNEXPECTED;
 }
 
+nsresult
+ContentChild::AddRemoteAlertObserver(const nsString& aData,
+                                     nsIObserver* aObserver)
+{
+    NS_ASSERTION(aObserver, "Adding a null observer?");
+    mAlertObservers.AppendElement(new AlertObserver(aObserver, aData));
+    return NS_OK;
+}
+
 bool
 ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aPref)
 {
@@ -343,6 +458,27 @@ ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aPref)
             // longer cares about pref changes
             mPrefObservers.RemoveElementAt(i);
             continue;
+        }
+        ++i;
+    }
+    return true;
+}
+
+bool
+ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData)
+{
+    printf("ContentChild::RecvNotifyAlertsObserver %s\n", aType.get() );
+
+    for (PRUint32 i = 0; i < mAlertObservers.Length();
+         /*we mutate the array during the loop; ++i iff no mutation*/) {
+        AlertObserver* observer = mAlertObservers[i];
+        if (observer->Observes(aData) && observer->Notify(aType)) {
+            // if aType == alertfinished, this alert is done.  we can
+            // remove the observer.
+            if (aType.Equals(nsDependentCString("alertfinished"))) {
+                mAlertObservers.RemoveElementAt(i);
+                continue;
+            }
         }
         ++i;
     }

@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=61098
+-->
+<head>
+  <title>Test for Bug 61098</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/mozprefs.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runtests();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=61098">Mozilla Bug 61098</a>
+<p id="display">
+</p>
+<div id="content" style="display: none"> 
+</div>
+<pre id="test">
+</pre>
+<script class="testbody" type="text/javascript">
+/** Test for Bug 61098 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var mockPromptServiceRegisterer;
+
+var promptState;
+
+function registerMockPromptService()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+  // Override the prompt service with our own so that we can test
+  // modal dialogs
+
+  function MockPromptService()
+  {
+  }
+
+  MockPromptService.prototype = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
+
+    alert: function(aParent, aDialogTitle, aText)
+    {
+      promptState = {method: "alert",
+                     parent: aParent,
+                     title: aDialogTitle,
+                     msg: aText
+      };
+    },
+
+    alertCheck: function(aParent, aDialogTitle, aText, aCheckMsg, aCheckState)
+    {
+      promptState = {method: "alertCheck",
+                     parent: aParent,
+                     title: aDialogTitle,
+                     msg: aText,
+                     checkMsg: aCheckMsg,
+                     checkState: aCheckState
+      };
+
+      aCheckState.value = true;
+    },
+
+    confirm: function(aParent, aDialogTitle, aText)
+    {
+      promptState = {method: "confirm",
+                     parent: aParent,
+                     title: aDialogTitle,
+                     msg: aText
+      };
+
+      return true;
+    },
+
+    confirmCheck: function(aParent, aDialogTitle, aText, aCheckMsg,
+                           aCheckState)
+    {
+      promptState = {method: "confirmCheck",
+                     parent: aParent,
+                     title: aDialogTitle,
+                     msg: aText,
+                     checkMsg: aCheckMsg,
+                     checkState: aCheckState
+      };
+
+      aCheckState.value = true;
+
+      return true;
+    },
+
+    confirmEx: function(aParent, aDialogTitle, aText, aButtonFlags,
+                        aButton0Title, aButton1Title, aButton2Title,
+                        aCheckMsg, aCheckState)
+    {
+      promptState = {method: "confirmCheck",
+                     parent: aParent,
+                     title: aDialogTitle,
+                     msg: aText,
+                     checkMsg: aCheckMsg,
+                     checkState: aCheckState
+      };
+
+      if (aCheckMsg != null)
+        aCheckState.value = true;
+
+      return 0;
+    },
+
+    prompt: function(aParent, aDialogTitle, aText, aValue, aCheckMsg,
+                     aCheckState)
+    {
+      promptState = {method: "prompt",
+                     parent: aParent,
+                     title: aDialogTitle,
+                     msg: aText,
+                     checkMsg: aCheckMsg,
+                     checkState: aCheckState
+      };
+
+      if (aCheckMsg != null)
+        aCheckState.value = true;
+
+      return true;
+    },
+  };
+
+  mockPromptServiceRegisterer =
+    new MockObjectRegisterer("@mozilla.org/embedcomp/prompt-service;1",
+                             MockPromptService);
+
+  mockPromptServiceRegisterer.register();
+};
+
+function enableDialogLoopBlocking()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch);
+
+  prefs.setIntPref("dom.successive_dialog_time_limit", 3);
+}
+
+function resetDialogLoopBlocking()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch);
+
+  prefs.setIntPref("dom.successive_dialog_time_limit", 0);
+}
+
+var expectedState;
+
+function runtests()
+{
+  registerMockPromptService();
+  enableDialogLoopBlocking();
+
+  // Test that alert() works normally and then gets blocked on the
+  // second call.
+  w = window.open();
+  w.alert("alert message 1");
+  is (promptState.method, "alert", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong alert parent");
+  is (promptState.msg, "alert message 1", "Wrong alert message");
+  promptState = void(0);
+
+  w.alert("alert message 2");
+  is (promptState.method, "alertCheck", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong alert parent");
+  is (promptState.msg, "alert message 2", "Wrong alert message");
+  promptState = void(0);
+
+  try {
+    w.alert("alert message 3");
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+
+  is (promptState, void(0), "Wrong prompt state after blocked alert()");
+
+  w.close();
+
+  // Test that confirm() works normally and then gets blocked on the
+  // second call.
+  w = window.open();
+  w.confirm("confirm message 1");
+  is (promptState.method, "confirm", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong confirm parent");
+  is (promptState.msg, "confirm message 1", "Wrong confirm message");
+  promptState = void(0);
+
+  w.confirm("confirm message 2");
+  is (promptState.method, "confirmCheck", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong confirm parent");
+  is (promptState.msg, "confirm message 2", "Wrong confirm message");
+  promptState = void(0);
+
+  try {
+    w.confirm("confirm message 3");
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+
+  is (promptState, void(0), "Wrong prompt state after blocked confirm()");
+
+  w.close();
+
+  // Test that prompt() works normally and then gets blocked on the
+  // second call.
+  w = window.open();
+  w.prompt("prompt message 1");
+  is (promptState.method, "prompt", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong prompt parent");
+  is (promptState.msg, "prompt message 1", "Wrong prompt message");
+  is (promptState.checkMsg, null, "Wrong dialog value");
+  promptState = void(0);
+
+  w.prompt("prompt message 2");
+  is (promptState.method, "prompt", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong prompt parent");
+  is (promptState.msg, "prompt message 2", "Wrong prompt message");
+  is (promptState.checkMsg, "Prevent this page from creating additional dialogs", "Wrong dialog value");
+  promptState = void(0);
+
+  try {
+    w.prompt("prompt message 3");
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+
+  is (promptState, void(0), "Wrong prompt state after blocked prompt()");
+
+  w.close();
+
+  // Test that showModalDialog() works normally and then gets blocked
+  // on the second call.
+  w = window.open();
+  w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
+  is (promptState, void(0), "Wrong prompt state");
+
+  // Test that showModalDialog() works normally and then gets blocked
+  // on the second call.
+  try {
+    w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+  is (promptState.method, "confirm", "Wrong prompt method called");
+  is (promptState.parent, w, "Wrong confirm parent");
+  is (promptState.msg, "Prevent this page from creating additional dialogs",
+      "Wrong confirm message");
+  promptState = void(0);
+
+  w.close();
+
+  resetDialogLoopBlocking();
+  mockPromptServiceRegisterer.unregister();
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

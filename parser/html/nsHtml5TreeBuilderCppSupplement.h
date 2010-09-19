@@ -257,7 +257,7 @@ nsHtml5TreeBuilder::appendElement(nsIContent** aChild, nsIContent** aParent)
 {
   NS_PRECONDITION(aChild, "Null child");
   NS_PRECONDITION(aParent, "Null parent");
-  if (mDeepTreeSurrogateParent) {
+  if (deepTreeSurrogateParent) {
     return;
   }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -315,7 +315,7 @@ nsHtml5TreeBuilder::appendCharacters(nsIContent** aParent, PRUnichar* aBuffer, P
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(eTreeOpAppendText, bufferCopy, aLength,
-      mDeepTreeSurrogateParent ? mDeepTreeSurrogateParent : aParent);
+      deepTreeSurrogateParent ? deepTreeSurrogateParent : aParent);
 }
 
 void
@@ -333,7 +333,7 @@ nsHtml5TreeBuilder::appendComment(nsIContent** aParent, PRUnichar* aBuffer, PRIn
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
-  if (mDeepTreeSurrogateParent) {
+  if (deepTreeSurrogateParent) {
     return;
   }
 
@@ -386,7 +386,7 @@ void
 nsHtml5TreeBuilder::start(PRBool fragment)
 {
   mCurrentHtmlScriptIsAsyncOrDefer = PR_FALSE;
-  mDeepTreeSurrogateParent = nsnull;
+  deepTreeSurrogateParent = nsnull;
 #ifdef DEBUG
   mActive = PR_TRUE;
 #endif
@@ -438,7 +438,7 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
    * table elements shouldn't be used as surrogate parents for user experience
    * reasons.
    */
-  if (!mDeepTreeSurrogateParent && currentPtr >= NS_HTML5_TREE_DEPTH_LIMIT &&
+  if (!deepTreeSurrogateParent && currentPtr >= NS_HTML5_TREE_DEPTH_LIMIT &&
       !(aName == nsHtml5Atoms::script ||
         aName == nsHtml5Atoms::table ||
         aName == nsHtml5Atoms::thead ||
@@ -447,7 +447,7 @@ nsHtml5TreeBuilder::elementPushed(PRInt32 aNamespace, nsIAtom* aName, nsIContent
         aName == nsHtml5Atoms::tr ||
         aName == nsHtml5Atoms::colgroup ||
         aName == nsHtml5Atoms::style)) {
-    mDeepTreeSurrogateParent = aElement;
+    deepTreeSurrogateParent = aElement;
   }
   if (aNamespace != kNameSpaceID_XHTML) {
     return;
@@ -466,8 +466,8 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
   NS_ASSERTION(aElement, "No element!");
-  if (mDeepTreeSurrogateParent && currentPtr <= NS_HTML5_TREE_DEPTH_LIMIT) {
-    mDeepTreeSurrogateParent = nsnull;
+  if (deepTreeSurrogateParent && currentPtr <= NS_HTML5_TREE_DEPTH_LIMIT) {
+    deepTreeSurrogateParent = nsnull;
   }
   if (aNamespace == kNameSpaceID_MathML) {
     return;

@@ -19,6 +19,8 @@
  *
  * Contributor(s):
  *   Henrik Skupin <hskupin@mozilla.com>
+ *   Aaron Train <atrain@mozilla.com>
+ *   Anthony Hughes <ahughes@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,21 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var RELATIVE_ROOT = '../../shared-modules';
-var MODULE_REQUIRES = ['PrivateBrowsingAPI', 'TabbedBrowsingAPI', 'UtilsAPI'];
+// Include necessary modules
+const RELATIVE_ROOT = '../../shared-modules';
+const MODULE_REQUIRES = ['PrivateBrowsingAPI', 'TabbedBrowsingAPI', 'UtilsAPI'];
 
-const gDelay = 0;
-const gTimeout = 5000;
+const TIMEOUT = 5000;
 
-const websites = [
-                  {url: 'http://www.mozilla.org', id: 'q'},
-                  {url: 'about:', id: 'aboutPageList'}
-                 ];
+const LOCAL_TEST_FOLDER = collector.addHttpResource('../test-files/');
+const LOCAL_TEST_PAGES = [
+  {url: LOCAL_TEST_FOLDER + 'layout/mozilla.html', id: 'community'},
+  {url: 'about:', id: 'aboutPageList'}
+];
 
-var setupModule = function(module) {
+var setupModule = function() {
   controller = mozmill.getBrowserController();
-  modifier = controller.window.document.documentElement
-                       .getAttribute("titlemodifier_privatebrowsing");
+  modifier = controller.window.document.documentElement.
+             getAttribute("titlemodifier_privatebrowsing");
 
   // Create Private Browsing instance and set handler
   pb = new PrivateBrowsingAPI.privateBrowsing(controller);
@@ -57,57 +60,58 @@ var setupModule = function(module) {
   TabbedBrowsingAPI.closeAllTabs(controller);
 }
 
-var teardownModule = function(module)
-{
+var teardownModule = function() {
   pb.reset();
 }
 
 /**
  * Enable Private Browsing Mode
  */
-var testEnablePrivateBrowsingMode = function()
-{
+var testEnablePrivateBrowsingMode = function() {
   // Make sure we are not in PB mode and show a prompt
   pb.enabled = false;
   pb.showPrompt = true;
 
   // Open websites in separate tabs
   var newTab = new elementslib.Elem(controller.menus['file-menu'].menu_newNavigatorTab);
-  for (var ii = 0; ii < websites.length; ii++) {
-    controller.open(websites[ii].url);
-    controller.click(newTab);
+  
+  for each (var page in LOCAL_TEST_PAGES) {
+   controller.open(page.url);
+   controller.click(newTab);
   }
 
   // Wait until all tabs have been finished loading
-  for (var ii = 0; ii < websites.length; ii++) {
-    var elem = new elementslib.ID(controller.tabs.getTab(ii), websites[ii].id);
-    controller.waitForElement(elem, gTimeout);
+  for (var i = 0; i < LOCAL_TEST_PAGES.length; i++) {
+   var elem = new elementslib.ID(controller.tabs.getTab(i), LOCAL_TEST_PAGES[i].id);
+   controller.waitForElement(elem, TIMEOUT);
   }
 
   // Start the Private Browsing mode
   pb.start();
 
   // Check that only one tab is open
-  controller.assertJS("subject.tabs.length == 1", controller);
+  controller.assertJS("subject.isOnlyOneTab == true", 
+                      {isOnlyOneTab: controller.tabs.length == 1});
 
   // Title modifier should have been set
-  controller.assertJS("subject.title.indexOf('" + modifier + "') != -1",
-                      controller.window.document);
+  controller.assertJS("subject.hasTitleModifier == true",
+                      {hasTitleModifier: controller.window.document.
+                                         title.indexOf(modifier) != -1});
 
   // Check descriptions on the about:privatebrowsing page
-  // XXX: Bug 504635 needs to be implemented so we can get the entities from the DTD
-  var longDescElem = new elementslib.ID(controller.tabs.activeTab, "errorLongDescText")
+  var description = UtilsAPI.getEntity(pb.getDtds(), "privatebrowsingpage.description");
+  var learnMore = UtilsAPI.getEntity(pb.getDtds(), "privatebrowsingpage.learnMore");
+  var longDescElem = new elementslib.ID(controller.tabs.activeTab, "errorLongDescText");
   var moreInfoElem = new elementslib.ID(controller.tabs.activeTab, "moreInfoLink");
-
-  controller.waitForElement(longDescElem, gTimeout);
-  controller.waitForElement(moreInfoElem, gTimeout);
+  controller.waitForElement(longDescElem, TIMEOUT);  
+  controller.assertText(longDescElem, description);
+  controller.assertText(moreInfoElem, learnMore);
 }
 
 /**
  * Stop the Private Browsing mode
  */
-var testStopPrivateBrowsingMode = function()
-{
+var testStopPrivateBrowsingMode = function() {
   // Force enable Private Browsing mode
   pb.enabled = true;
 
@@ -115,24 +119,24 @@ var testStopPrivateBrowsingMode = function()
   pb.stop();
 
   // All tabs should be restored
-  controller.assertJS("subject.tabs.length == " + (websites.length + 1),
-                      controller);
+  controller.assertJS("subject.allTabsRestored == true",
+                      {allTabsRestored: controller.tabs.length == LOCAL_TEST_PAGES.length + 1});
 
-  for (var ii = 0; ii < websites.length; ii++) {
-    var elem = new elementslib.ID(controller.tabs.getTab(ii), websites[ii].id);
-    controller.waitForElement(elem, gTimeout);
+  for (var i = 0; i < LOCAL_TEST_PAGES.length; i++) {
+    var elem = new elementslib.ID(controller.tabs.getTab(i), LOCAL_TEST_PAGES[i].id);
+    controller.waitForElement(elem, TIMEOUT);
   }
 
   // No title modifier should have been set
-  controller.assertJS("subject.title.indexOf('" + modifier + "') == -1",
-                      controller.window.document);
+  controller.assertJS("subject.noTitleModifier == true",
+                      {noTitleModifier: controller.window.document.
+                                        title.indexOf(modifier) == -1});
 }
 
 /**
  * Verify Ctrl/Cmd+Shift+P keyboard shortcut for Private Browsing mode
  */
-var testKeyboardShortcut = function()
-{
+var testKeyboardShortcut = function() {
   // Make sure we are not in PB mode and show a prompt
   pb.enabled = false;
   pb.showPrompt = true;
@@ -150,13 +154,15 @@ var testKeyboardShortcut = function()
  * @param {MozMillController} controller
  *        MozMillController of the window to operate on
  */
-var pbStartHandler = function(controller)
-{
+var pbStartHandler = function(controller) {
   // Check to not ask anymore for entering Private Browsing mode
   var checkbox = new elementslib.ID(controller.window.document, 'checkbox');
-  controller.waitThenClick(checkbox, gTimeout);
+  controller.waitThenClick(checkbox, TIMEOUT);
 
-  var okButton = new elementslib.Lookup(controller.window.document, '/id("commonDialog")/anon({"anonid":"buttons"})/{"dlgtype":"accept"}');
+  var okButton = new elementslib.Lookup(controller.window.document, 
+                                        '/id("commonDialog")' +
+                                        '/anon({"anonid":"buttons"})' +
+                                        '/{"dlgtype":"accept"}');
   controller.click(okButton);
 }
 

@@ -66,6 +66,7 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
     nsIContent** formPointer;
     nsIContent** headPointer;
+    nsIContent** deepTreeSurrogateParent;
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
@@ -73,11 +74,12 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     PRBool needToDropLF;
     PRBool quirks;
   public:
-    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRBool inForeign, PRBool needToDropLF, PRBool quirks);
+    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRBool inForeign, PRBool needToDropLF, PRBool quirks);
     jArray<nsHtml5StackNode*,PRInt32> getStack();
     jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements();
     nsIContent** getFormPointer();
     nsIContent** getHeadPointer();
+    nsIContent** getDeepTreeSurrogateParent();
     PRInt32 getMode();
     PRInt32 getOriginalMode();
     PRBool isFramesetOk();

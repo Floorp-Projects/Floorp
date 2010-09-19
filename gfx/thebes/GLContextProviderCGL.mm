@@ -154,7 +154,7 @@ public:
         }
     }
 
-    PRBool MakeCurrent()
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
     {
         if (mContext) {
             [mContext makeCurrentContext];
@@ -278,7 +278,7 @@ protected:
     CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
     {
         mUpdateFormat = aFmt;
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
+        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
     }
 
     virtual already_AddRefed<gfxImageSurface>

@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>Open link in a new tab</title>
+<script type="text/javascript">
+  function show() {
+    var re = new RegExp("[0-9]+$");
+    var id = re.exec(window.document.location);
+
+    document.title = id;
+
+    var node = document.createElement("span");
+    node.id = "id";
+    node.innerHTML = id;
+
+    var result = document.getElementById("result");
+    result.appendChild(node);
+  }
+</script>
+</head>
+
+<body onload="show();">
+  <p id="result">Loaded link with id=</p>
+</body>
+</html>

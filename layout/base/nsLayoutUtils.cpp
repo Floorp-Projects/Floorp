@@ -1232,12 +1232,20 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
 
+  PRBool ignoreViewportScrolling = presShell->IgnoringViewportScrolling();
   nsRegion visibleRegion;
-  if ((aFlags & PAINT_WIDGET_LAYERS) &&
-      !(aFlags & PAINT_IGNORE_VIEWPORT_SCROLLING)) {
+  if (aFlags & PAINT_WIDGET_LAYERS) {
     // This layer tree will be reused, so we'll need to calculate it
-    // for the whole visible area of the window
-    visibleRegion = aFrame->GetOverflowRectRelativeToSelf();
+    // for the whole "visible" area of the window
+    // 
+    // |ignoreViewportScrolling| and |usingDisplayPort| are persistent
+    // document-rendering state.  We rely on PresShell to flush
+    // retained layers as needed when that persistent state changes.
+    if (!presShell->UsingDisplayPort()) {
+      visibleRegion = aFrame->GetOverflowRectRelativeToSelf();
+    } else {
+      visibleRegion = presShell->GetDisplayPort();
+    }
   } else {
     visibleRegion = aDirtyRegion;
   }
@@ -1245,8 +1253,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   // If we're going to display something different from what we'd normally
   // paint in a window then we will flush out any retained layer trees before
   // *and after* we draw.
-  PRBool willFlushLayers = aFlags & (PAINT_IGNORE_VIEWPORT_SCROLLING |
-                                     PAINT_HIDE_CARET);
+  PRBool willFlushRetainedLayers = (aFlags & PAINT_HIDE_CARET) != 0;
 
   nsDisplayListBuilder builder(aFrame, PR_FALSE, !(aFlags & PAINT_HIDE_CARET));
   nsDisplayList list;
@@ -1263,17 +1270,21 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     builder.IgnorePaintSuppression();
   }
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
-  if (aFlags & PAINT_IGNORE_VIEWPORT_SCROLLING) {
+  if (ignoreViewportScrolling) {
     NS_ASSERTION(!aFrame->GetParent(), "must have root frame");
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame) {
       nsIScrollableFrame* rootScrollableFrame =
         presShell->GetRootScrollFrameAsScrollable();
-      // Make visibleRegion and aRenderingContext relative to the
-      // scrolled frame instead of the root frame.
-      nsPoint pos = rootScrollableFrame->GetScrollPosition();
-      visibleRegion.MoveBy(-pos);
-      aRenderingContext->Translate(pos.x, pos.y);
+      if (aFlags & PAINT_DOCUMENT_RELATIVE) {
+        // Make visibleRegion and aRenderingContext relative to the
+        // scrolled frame instead of the root frame.
+        nsPoint pos = rootScrollableFrame->GetScrollPosition();
+        visibleRegion.MoveBy(-pos);
+        if (aRenderingContext) {
+          aRenderingContext->Translate(pos.x, pos.y);
+        }
+      }
       builder.SetIgnoreScrollFrame(rootScrollFrame);
 
       nsCanvasFrame* canvasFrame =
@@ -1352,7 +1363,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
     // If the passed in backstop color makes us draw something different from
     // normal, we need to flush layers.
-    if ((aFlags & PAINT_WIDGET_LAYERS) && !willFlushLayers) {
+    if ((aFlags & PAINT_WIDGET_LAYERS) && !willFlushRetainedLayers) {
       nsIView* view = aFrame->GetView();
       if (view) {
         nscolor backstop = presShell->ComputeBackstopColor(view);
@@ -1361,7 +1372,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
         nscolor canvasColor = presShell->GetCanvasBackground();
         if (NS_ComposeColors(aBackstop, canvasColor) !=
             NS_ComposeColors(backstop, canvasColor)) {
-          willFlushLayers = PR_TRUE;
+          willFlushRetainedLayers = PR_TRUE;
         }
       }
     }
@@ -1371,7 +1382,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (builder.GetHadToIgnorePaintSuppression()) {
-    willFlushLayers = PR_TRUE;
+    willFlushRetainedLayers = PR_TRUE;
   }
 
 #ifdef DEBUG
@@ -1399,12 +1410,16 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
     nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
-    if (willFlushLayers) {
-      // We're going to display something different from what we'd normally
-      // paint in a window, so make sure we flush out any retained layer
-      // trees before *and after* we draw
+    if (willFlushRetainedLayers) {
+      // The caller wanted to paint from retained layers, but set up
+      // the paint in such a way that we can't use them.  We're going
+      // to display something different from what we'd normally paint
+      // in a window, so make sure we flush out any retained layer
+      // trees before *and after* we draw.  Callers should be fixed to
+      // not do this.
+      NS_WARNING("Flushing retained layers!");
       flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
-    } else if (widget) {
+    } else if (widget && !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
       // XXX we should simplify this API now that dirtyWindowRegion always
       // covers the entire window
       widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
@@ -3534,7 +3549,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
       if (wantImageSurface) {
         surf = new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
       } else {
-        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ImageFormatARGB32);
+        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::CONTENT_COLOR_ALPHA);
       }
 
       nsRefPtr<gfxContext> ctx = new gfxContext(surf);
@@ -3680,7 +3695,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
       gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
     } else {
       gfxsurf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(imgWidth, imgHeight),
-                                                                   gfxASurface::ImageFormatARGB32);
+                                                                   gfxASurface::CONTENT_COLOR_ALPHA);
     }
 
     nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);

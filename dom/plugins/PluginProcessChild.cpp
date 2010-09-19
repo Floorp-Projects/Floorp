@@ -90,6 +90,11 @@ PluginProcessChild::Init()
 #  error Sorry
 #endif
 
+    if (NS_FAILED(nsRegion::InitStatic())) {
+      NS_ERROR("Could not initialize nsRegion");
+      return false;
+    }
+
     mPlugin.Init(pluginFilename, ParentHandle(),
                  IOThreadChild::message_loop(),
                  IOThreadChild::channel());
@@ -103,6 +108,7 @@ PluginProcessChild::CleanUp()
 #ifdef XP_WIN
     ::OleUninitialize();
 #endif
+    nsRegion::ShutdownStatic();
 }
 
 /* static */

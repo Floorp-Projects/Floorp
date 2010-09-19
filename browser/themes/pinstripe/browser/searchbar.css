@@ -11,14 +11,6 @@
   min-width: 0;
 }
 
-.searchbar-engine-button[addengines="true"] {
-  background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
-}
-
-.searchbar-engine-button[addengines="true"]:-moz-locale-dir(rtl) {
-  background-position: left center;
-}
-
 .searchbar-popup {
   margin-top: 4px;
   -moz-margin-start: 3px;

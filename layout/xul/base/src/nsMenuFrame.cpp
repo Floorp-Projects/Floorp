@@ -1368,6 +1368,13 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
         return PR_FALSE;
       tmpSize = mPopupFrame->GetPrefSize(aState);
       aSize.width = tmpSize.width;
+
+      // if there is a scroll frame, add the desired width of the scrollbar as well
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(mPopupFrame->GetFirstChild(nsnull));
+      if (scrollFrame) {
+        aSize.width += scrollFrame->GetDesiredScrollbarSizes(&aState).LeftRight();
+      }
+
       return PR_TRUE;
     }
   }

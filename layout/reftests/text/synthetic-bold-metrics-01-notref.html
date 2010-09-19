@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+@font-face {
+  font-family: dvsm;
+  src: url(../fonts/DejaVuSansMono.woff);
+}
+
+p {
+  font-family: dvsm; /* family with only a single weight */
+}
+
+.test {
+  color: white; /* hide the text, we're only comparing metrics */
+}
+</style>
+</head>
+<body>
+<p>AbcdefghijklmnopqrstuvwxyZ</p>
+<p>A<span class="test">bcdefghijklmnopqrstuvwxy</span>Z</p>
+</body>
+</html>

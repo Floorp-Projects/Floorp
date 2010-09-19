@@ -47,16 +47,18 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(48db9517-3a85-4f6d-af5f-106ce6aadd7d)]
+[scriptable, uuid(653dc482-d6db-4e85-bdd9-151fd110e7b1)]
 interface nsIDOMHTMLFormElement : nsIDOMHTMLElement
 {
            attribute DOMString            name;
+
            attribute DOMString            acceptCharset;
            attribute DOMString            action;
+           attribute DOMString            autocomplete;
            attribute DOMString            enctype;
            attribute DOMString            method;
-           attribute DOMString            target;
            attribute boolean              noValidate;
+           attribute DOMString            target;
 
   readonly attribute nsIDOMHTMLCollection elements;
   readonly attribute long                 length;

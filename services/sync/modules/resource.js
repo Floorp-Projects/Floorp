@@ -248,9 +248,15 @@ Resource.prototype = {
       if (this._log.level <= Log4Moz.Level.Trace)
         this._log.trace(action + " body: " + this._data);
 
-      // this is a server-side safety valve to allow slowing down clients without hurting performance
+      // This is a server-side safety valve to allow slowing down
+      // clients without hurting performance.
       if (headers["x-weave-backoff"])
-        Observers.notify("weave:service:backoff:interval", parseInt(headers["x-weave-backoff"], 10))
+        Observers.notify("weave:service:backoff:interval",
+                         parseInt(headers["x-weave-backoff"], 10));
+
+      if (success && headers["x-weave-quota-remaining"])
+        Observers.notify("weave:service:quota:remaining",
+                         parseInt(headers["x-weave-quota-remaining"], 10));
     }
     // Got a response but no header; must be cached (use default values)
     catch(ex) {

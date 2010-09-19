@@ -35,14 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PBrowser;
+include protocol PContent;
 
 namespace mozilla {
 namespace dom {
 
 protocol PExternalHelperApp
 {
-  manager PBrowser;
+  manager PContent;
 
 parent:
   OnStartRequest(nsCString entityID);

@@ -87,55 +87,82 @@ var supported_properties = {
     "border-top-color": [ test_color_transition,
                           test_border_color_transition ],
     "border-top-width": [ test_length_transition ],
-    "bottom": [ test_length_transition, test_percent_transition ],
+    "bottom": [ test_length_transition, test_percent_transition,
+                test_length_percent_calc_transition ],
     "clip": [ test_rect_transition ],
     "color": [ test_color_transition ],
     "fill": [ test_color_transition ],
     "fill-opacity" : [ test_float_zeroToOne_transition ],
     "flood-color": [ test_color_transition ],
     "flood-opacity" : [ test_float_zeroToOne_transition ],
-    "font-size": [ test_length_transition, test_percent_transition ],
+    "font-size": [ test_length_transition, test_percent_transition,
+                   test_length_percent_calc_transition ],
     "font-size-adjust": [ test_float_zeroToOne_transition,
                           test_float_aboveOne_transition ],
     "font-stretch": [ test_font_stretch ],
     "font-weight": [ test_font_weight ],
-    "height": [ test_length_transition, test_percent_transition ],
-    "left": [ test_length_transition, test_percent_transition ],
+    "height": [ test_length_transition, test_percent_transition,
+                test_length_percent_calc_transition ],
+    "left": [ test_length_transition, test_percent_transition,
+              test_length_percent_calc_transition ],
     "letter-spacing": [ test_length_transition ],
     "lighting-color": [ test_color_transition ],
+    // NOTE: when calc() is supported on 'line-height', we should add
+    // test_length_percent_calc_transition.
     "line-height": [ test_length_transition, test_percent_transition ],
-    "margin-bottom": [ test_length_transition, test_percent_transition ],
-    "margin-left": [ test_length_transition, test_percent_transition ],
-    "margin-right": [ test_length_transition, test_percent_transition ],
-    "margin-top": [ test_length_transition, test_percent_transition ],
+    "margin-bottom": [ test_length_transition, test_percent_transition,
+                       test_length_percent_calc_transition ],
+    "margin-left": [ test_length_transition, test_percent_transition,
+                     test_length_percent_calc_transition ],
+    "margin-right": [ test_length_transition, test_percent_transition,
+                      test_length_percent_calc_transition ],
+    "margin-top": [ test_length_transition, test_percent_transition,
+                    test_length_percent_calc_transition ],
     "marker-offset": [ test_length_transition ],
-    "max-height": [ test_length_transition, test_percent_transition ],
-    "max-width": [ test_length_transition, test_percent_transition ],
-    "min-height": [ test_length_transition, test_percent_transition ],
-    "min-width": [ test_length_transition, test_percent_transition ],
+    "max-height": [ test_length_transition, test_percent_transition,
+                    test_length_percent_calc_transition ],
+    "max-width": [ test_length_transition, test_percent_transition,
+                   test_length_percent_calc_transition ],
+    "min-height": [ test_length_transition, test_percent_transition,
+                    test_length_percent_calc_transition ],
+    "min-width": [ test_length_transition, test_percent_transition,
+                   test_length_percent_calc_transition ],
     "opacity" : [ test_float_zeroToOne_transition ],
     "outline-color": [ test_color_transition ],
     "outline-offset": [ test_length_transition ],
     "outline-width": [ test_length_transition ],
-    "padding-bottom": [ test_length_transition, test_percent_transition ],
-    "padding-left": [ test_length_transition, test_percent_transition ],
-    "padding-right": [ test_length_transition, test_percent_transition ],
-    "padding-top": [ test_length_transition, test_percent_transition ],
-    "right": [ test_length_transition, test_percent_transition ],
+    "padding-bottom": [ test_length_transition, test_percent_transition,
+                        test_length_percent_calc_transition ],
+    "padding-left": [ test_length_transition, test_percent_transition,
+                      test_length_percent_calc_transition ],
+    "padding-right": [ test_length_transition, test_percent_transition,
+                       test_length_percent_calc_transition ],
+    "padding-top": [ test_length_transition, test_percent_transition,
+                     test_length_percent_calc_transition ],
+    "right": [ test_length_transition, test_percent_transition,
+               test_length_percent_calc_transition ],
     "stop-color": [ test_color_transition ],
     "stop-opacity" : [ test_float_zeroToOne_transition ],
     "stroke": [ test_color_transition ],
     "stroke-dasharray": [ test_dasharray_transition ],
+    // NOTE: when calc() is supported on 'stroke-dashoffset', we should
+    // add test_length_percent_calc_transition.
     "stroke-dashoffset": [ test_length_transition, test_percent_transition ],
     "stroke-miterlimit": [ test_float_aboveOne_transition ],
     "stroke-opacity" : [ test_float_zeroToOne_transition ],
+    // NOTE: when calc() is supported on 'stroke-width', we should add
+    // test_length_percent_calc_transition.
     "stroke-width": [ test_length_transition, test_percent_transition ],
-    "text-indent": [ test_length_transition, test_percent_transition ],
+    "text-indent": [ test_length_transition, test_percent_transition,
+                     test_length_percent_calc_transition ],
     "text-shadow": [ test_shadow_transition ],
-    "top": [ test_length_transition, test_percent_transition ],
-    "vertical-align": [ test_length_transition, test_percent_transition ],
+    "top": [ test_length_transition, test_percent_transition,
+             test_length_percent_calc_transition ],
+    "vertical-align": [ test_length_transition, test_percent_transition,
+                        test_length_percent_calc_transition ],
     "visibility": [ test_visibility_transition ],
-    "width": [ test_length_transition, test_percent_transition ],
+    "width": [ test_length_transition, test_percent_transition,
+               test_length_percent_calc_transition ],
     "word-spacing": [ test_length_transition ],
     "z-index": [ test_zindex_transition, test_pos_integer_or_auto_transition ],
 };
@@ -302,6 +329,58 @@ function test_percent_transition(prop) {
      "percent-valued property " + prop + ": percent computes to number");
 }
 
+function test_length_percent_calc_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0%", "");
+  var av = cs.getPropertyValue(prop);
+  var a = any_unit_to_num(av);
+  div.style.setProperty(prop, "100%", "");
+  var bv = cs.getPropertyValue(prop);
+  var b = any_unit_to_num(bv);
+  div.style.setProperty(prop, "100px", "");
+  var cv = cs.getPropertyValue(prop);
+  var c = any_unit_to_num(cv);
+  isnot(b, a, "different percentages (" + av + " and " + bv +
+              ") should be different for " + prop);
+
+  div.style.setProperty(prop, "50%", "");
+  var v1v = cs.getPropertyValue(prop);
+  is(any_unit_to_num(v1v) * 2, a + b,
+     "computed value before transition for " + prop + ": '" +
+     v1v + "' should be halfway " +
+     "between '" + av + "' + and '" + bv + "'.");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "200px", "");
+  var v2v = cs.getPropertyValue(prop);
+  is(any_unit_to_num(v2v) * 8, 5*a + 3*b + 4*c,
+     "interpolation between length and percent for " + prop + ": '"
+     + v2v + "'");
+
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "-moz-calc(100% + 200px)", "");
+  v1v = cs.getPropertyValue(prop);
+  is(any_unit_to_num(v1v), b + 2*c,
+     "computed value before transition for " + prop + ": '" + v1v + "'");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "300%", "");
+  v2v = cs.getPropertyValue(prop);
+  is(any_unit_to_num(v2v) * 2, -1*a + 3*b + 3*c,
+     "interpolation between calc() and percent for " + prop + ": '" +
+     v2v + "'");
+
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "400px", "");
+  v1v = cs.getPropertyValue(prop);
+  is(any_unit_to_num(v1v), 4*c,
+     "computed value before transition for " + prop + ": '" + v1v + "'");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "-moz-calc(200% + 200px)", "");
+  v2v = cs.getPropertyValue(prop);
+  is(any_unit_to_num(v2v) * 2, a + b + 7*c,
+     "interpolation between length and calc() for " + prop + ": '" +
+     v2v + "'");
+}
+
 function test_color_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "rgb(255, 28, 0)", "");
@@ -437,24 +516,40 @@ function test_radius_transition(prop) {
   div.style.setProperty(prop, "15px", "");
   is(cs.getPropertyValue(prop), "6px",
      "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "5%", "");
   is(cs.getPropertyValue(prop), "10px",
-     "radius-valued property " + prop + ": non-interpolability of unit change");
+     "radius-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
   is(cs.getPropertyValue(prop), "20px",
      "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "3px 8px", "");
   is(cs.getPropertyValue(prop), "3px 8px",
-     "radius-valued property " + prop + ": non-interpolability of unit change");
+     "radius-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "15px 12px", "");
   is(cs.getPropertyValue(prop), "6px 9px",
      "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "5% 15%", "");
   is(cs.getPropertyValue(prop), "10px 30px",
-     "radius-valued property " + prop + ": non-interpolability of unit change");
+     "radius-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
   is(cs.getPropertyValue(prop), "20px 35px",
      "radius-valued property " + prop + ": interpolation of radius");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "8% 12%", "");
+  is(cs.getPropertyValue(prop), "16px 24px",
+     "radius-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "40px 20px", "");
+  is(cs.getPropertyValue(prop), "22px 23px",
+     "radius-valued property " + prop + ": interpolation of radius with mixed units");
+
+  test_length_percent_calc_transition(prop);
 
   div.style.removeProperty("width");
   div.style.removeProperty("height");
@@ -627,9 +722,11 @@ function test_background_position_transition(prop) {
 }
 
 function test_background_position_size_common(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "10px 40px", "");
   is(cs.getPropertyValue(prop), "10px 40px",
      "property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "50px 0", "");
   is(cs.getPropertyValue(prop), "20px 30px",
      "property " + prop + ": interpolation of lengths");
@@ -639,12 +736,24 @@ function test_background_position_size_common(prop) {
   div.style.setProperty(prop, "50px 20px, 70px 50px, 30px 40px", "");
   is(cs.getPropertyValue(prop), "20px 35px, 55px 50px, 30px 25px",
      "property " + prop + ": interpolation of lists of lengths");
-  div.style.setProperty(prop, "10px 40%, 50% 50px, 30% 20%", "");
-  is(cs.getPropertyValue(prop), "10px 40%, 50% 50px, 30% 20%",
+  div.style.setProperty(prop, "10px 40%, 50% 50px, 30% 20%, 5px 10px", "");
+  is(cs.getPropertyValue(prop), "10px 40%, 50% 50px, 30% 20%, 5px 10px",
      "property " + prop + ": computed value before transition");
-  div.style.setProperty(prop, "50px 20%, 70% 50px, 30% 40%", "");
-  is(cs.getPropertyValue(prop), "20px 35%, 55% 50px, 30% 25%",
+  div.style.setProperty(prop, "50px 20%, 70% 50px, 30% 40%, 25px 50px", "");
+  is(cs.getPropertyValue(prop), "20px 35%, 55% 50px, 30% 25%, 10px 20px",
      "property " + prop + ": interpolation of lists of lengths and percents");
+  div.style.setProperty(prop, "20% 40%, 8px 12px", "");
+  is(cs.getPropertyValue(prop), "20% 40%, 8px 12px",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty(prop, "12px 20px, 40% 16%", "");
+  is(cs.getPropertyValue(prop), "-moz-calc(3px + 15%) -moz-calc(5px + 30%), -moz-calc(6px + 10%) -moz-calc(9px + 4%)",
+     "property " + prop + ": interpolation that computes to calc()");
+  div.style.setProperty(prop, "-moz-calc(20% + 40px) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)", "");
+  is(cs.getPropertyValue(prop), "-moz-calc(40px + 20%) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty(prop, "12px 20%, -moz-calc(20%) -moz-calc(16px + 60%), -moz-calc(8px + 20%) -moz-calc(40px + 16%)", "");
+  is(cs.getPropertyValue(prop), "-moz-calc(33px + 15%) -moz-calc(30px + 35%), -moz-calc(6px + 5%) -moz-calc(4px + 24%), -moz-calc(17px + 14%) -moz-calc(28px + 10%)",
+     "property " + prop + ": interpolation that computes to calc()");
 }
 
 function test_transform_transition(prop) {

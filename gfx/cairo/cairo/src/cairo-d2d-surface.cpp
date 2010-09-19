@@ -380,6 +380,13 @@ cairo_d2d_finish_device(cairo_device_t *device)
     }
 }
 
+ID3D10Device1*
+cairo_d2d_device_get_device(cairo_device_t *device)
+{
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
+    return d2d_device->mD3D10Device;  
+}
+
 static void
 _cairo_d2d_setup_for_blend(cairo_d2d_device_t *device)
 {

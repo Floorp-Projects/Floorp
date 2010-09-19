@@ -43,6 +43,8 @@
 #ifndef nsGlobalWindow_h___
 #define nsGlobalWindow_h___
 
+#include "mozilla/XPCOM.h" // for TimeStamp/TimeDuration
+
 // Local Includes
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -108,6 +110,14 @@
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
+
+// Amount of time allowed between alert/prompt/confirm before enabling
+// the stop dialog checkbox.
+#define SUCCESSIVE_DIALOG_TIME_LIMIT 3 // 3 sec
+
+// During click or mousedown events (and others, see nsDOMEvent) we allow modal
+// dialogs up to this limit, even if they were disabled.
+#define MAX_DIALOG_COUNT 10
 
 class nsIDOMBarProp;
 class nsIDocument;
@@ -244,6 +254,9 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public PRCListStr
 {
 public:
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+
   // public methods
   nsPIDOMWindow* GetPrivateParent();
   // callback for close event
@@ -348,7 +361,8 @@ public:
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
-                                              nsISupports *aState);
+                                              nsISupports *aState,
+                                              PRBool aForceReuseInnerWindow);
   void DispatchDOMWindowCreated();
   virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener,
                                            PRBool aOriginalOpener);
@@ -393,6 +407,32 @@ public:
   {
     return FromSupports(wrapper->Native());
   }
+
+  inline nsGlobalWindow *GetTop()
+  {
+    nsCOMPtr<nsIDOMWindow> top;
+    GetTop(getter_AddRefs(top));
+    if (top)
+      return static_cast<nsGlobalWindow *>(static_cast<nsIDOMWindow *>(top.get()));
+    return nsnull;
+  }
+
+  // Call this when a modal dialog is about to be opened.  Returns
+  // true if we've reached the state in this top level window where we
+  // ask the user if further dialogs should be blocked.
+  bool DialogOpenAttempted();
+
+  // Returns true if dialogs have already been blocked for this
+  // window.
+  bool AreDialogsBlocked();
+
+  // Ask the user if further dialogs should be blocked. This is used
+  // in the cases where we have no modifiable UI to show, in that case
+  // we show a separate dialog when asking this question.
+  bool ConfirmDialogAllowed();
+
+  // Prevent further dialogs in this (top level) window
+  void PreventFurtherDialogs();
 
   nsIScriptContext *GetContextInternal()
   {
@@ -863,6 +903,18 @@ protected:
   // this window.
   PRUint64 mWindowID;
 
+  // In the case of a "trusted" dialog (@see PopupControlState), we
+  // set this counter to ensure a max of MAX_DIALOG_LIMIT
+  PRUint32                      mDialogAbuseCount;
+
+  // This holds the time when the last modal dialog was shown, if two
+  // dialogs are shown within CONCURRENT_DIALOG_TIME_LIMIT the
+  // checkbox is shown. In the case of ShowModalDialog another Confirm
+  // dialog will be shown, the result of the checkbox/confirm dialog
+  // will be stored in mDialogDisabled variable.
+  TimeStamp                     mLastDialogQuitTime;
+  PRPackedBool                  mDialogDisabled;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
@@ -917,7 +969,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
 
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
-                                              nsISupports *aState);
+                                              nsISupports *aState,
+                                              PRBool aForceReuseInnerWindow);
 
 protected:
   nsCOMPtr<nsIVariant> mReturnValue;

@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=590363
+-->
+<head>
+  <title>Test for Bug 590363</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590363">Mozilla Bug 590363</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 590363 **/
+
+var testData = [
+  /* type to test | is the value reset when changing to file then reverting */
+  [ "button", false ],
+  [ "checkbox", false ],
+  [ "hidden", false ],
+  [ "reset", false ],
+  [ "image", false ],
+  [ "radio", false ],
+  [ "submit", false ],
+  [ "tel", true ],
+  [ "text", true ],
+  [ "url", true ],
+  [ "email", true ],
+  [ "search", true ],
+  [ "password", true ],
+];
+
+var length = testData.length;
+for (var i=0; i<length; ++i) {
+  for (var j=0; j<length; ++j) {
+    var e = document.createElement('input');
+    e.type = testData[i][0];
+    e.value = "foo";
+    e.type = testData[j][0];
+    is(e.value, "foo", ".value should still return the same value after " +
+       "changing type from " + testData[i][0] + " to " + testData[j][0]);
+  }
+}
+
+// For type='file' .value doesn't behave the same way.
+// We are just going to check that we do not loose the value.
+for each (var data in testData) {
+  var e = document.createElement('input');
+  e.type = data[0];
+  e.value = 'foo';
+  e.type = 'file';
+  e.type = data[0];
+
+  if (data[1]) {
+    is(e.value, '', ".value should have been reset to the empty string after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  } else {
+    is(e.value, 'foo', ".value should still return the same value after " +
+       "changing type from " + data[0] + " to 'file' then reverting to " + data[0]);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

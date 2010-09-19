@@ -72,7 +72,7 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 
 /* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
 
-static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
+static const nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
 {
   HKEY key;
   DWORD dwcbData;
@@ -93,7 +93,7 @@ static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAS
       result = RegQueryValueExW(key, keyName, NULL, &resultType, (LPBYTE)&dValue, &dwcbData);
       if (result == ERROR_SUCCESS && resultType == REG_DWORD) {
         dValue = dValue / 1024 / 1024;
-        destString.AppendInt(static_cast<PRInt32>(dValue));
+        destString.AppendInt(PRInt32(dValue));
       } else {
         retval = NS_ERROR_FAILURE;
       }
@@ -142,7 +142,7 @@ static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAS
 // The driver ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD, possibly
 // followed by &REV_XXXX.  We uppercase the string, and strip the &REV_ part
 // from it, if found.
-static void normalizeDriverId(nsString& driverid) {
+static const void normalizeDriverId(nsString& driverid) {
   ToUpperCase(driverid);
   PRInt32 rev = driverid.Find(NS_LITERAL_CSTRING("&REV_"));
   if (rev != -1) {
@@ -358,10 +358,13 @@ enum VersionComparisonOp {
   DRIVER_BETWEEN_INCLUSIVE_START // driver >= version && driver < versionMax
 };
 
+typedef const PRUint32 *GfxDeviceFamily;
 
 struct GfxDriverInfo {
+  PRUint32 windowsVersion;
+
   PRUint32 vendor;
-  PRUint32 device;
+  GfxDeviceFamily devices;
 
   PRInt32 feature;
   PRInt32 featureStatus;
@@ -373,25 +376,13 @@ struct GfxDriverInfo {
   PRUint64 versionMax;
 };
 
-#define ALL_FEATURES -1
-#define ANY_DEVICE PRUint32(-1)
-#define ALL_VERSIONS 0xffffffffffffffffULL
+static const PRUint32 allWindowsVersions = 0xffffffff;
+static const PRInt32  allFeatures = -1;
+static const PRUint32 *allDevices = (PRUint32*) nsnull;
+static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
 
 /* Intel vendor and device IDs */
-#define VENDOR_INTEL 0x8086
-
-#define DEVICE_INTEL_GM965_0 0x2A02
-#define DEVICE_INTEL_GM965_1 0x2A03
-#define DEVICE_INTEL_G965_0 0x29A2
-#define DEVICE_INTEL_G965_1 0x29A3
-#define DEVICE_INTEL_945GM_0 0x27A2
-#define DEVICE_INTEL_945GM_1 0x27A6
-#define DEVICE_INTEL_945G_0 0x2772
-#define DEVICE_INTEL_945G_1 0x2776
-#define DEVICE_INTEL_915GM_0 0x2592
-#define DEVICE_INTEL_915GM_1 0x2792
-#define DEVICE_INTEL_915G_0 0x2582
-#define DEVICE_INTEL_915G_1 0x2782
+static const PRUint32 vendorIntel = 0x8086;
 
 /* NVIDIA vendor and device IDs */
 
@@ -399,22 +390,130 @@ struct GfxDriverInfo {
 
 #define V(a,b,c,d)   ((PRUint64(a)<<48) | (PRUint64(b)<<32) | (PRUint64(c)<<16) | PRUint64(d))
 
-static GfxDriverInfo driverInfo[] = {
+static const PRUint32 deviceFamilyIntelGMA500[] = {
+    0x8108, /* IntelGMA500_1 */
+    0x8109, /* IntelGMA500_2 */
+    0
+};
+
+static const PRUint32 deviceFamilyIntelGMA900[] = {
+    0x2582, /* IntelGMA900_1 */
+    0x2782, /* IntelGMA900_2 */
+    0x2592, /* IntelGMA900_3 */
+    0x2792, /* IntelGMA900_4 */
+    0
+};
+
+static const PRUint32 deviceFamilyIntelGMA950[] = {
+    0x2772, /* Intel945G_1 */
+    0x2776, /* Intel945G_2 */
+    0x27A2, /* Intel945_1 */
+    0x27A6, /* Intel945_2 */
+    0x27AE, /* Intel945_3 */
+    0
+};
+
+static const PRUint32 deviceFamilyIntelGMA3150[] = {
+    0xA001, /* IntelGMA3150_Nettop_1 */
+    0xA002, /* IntelGMA3150_Nettop_2 */
+    0xA011, /* IntelGMA3150_Netbook_1 */
+    0xA012, /* IntelGMA3150_Netbook_2 */
+    0
+};
+
+static const PRUint32 deviceFamilyIntelGMAX3000[] = {
+    0x2972, /* Intel946GZ_1 */
+    0x2973, /* Intel946GZ_2 */
+    0x2982, /* IntelG35_1 */
+    0x2983, /* IntelG35_2 */
+    0x2992, /* IntelQ965_1 */
+    0x2993, /* IntelQ965_2 */
+    0x29A2, /* IntelG965_1 */
+    0x29A3, /* IntelG965_2 */
+    0x29B2, /* IntelQ35_1 */
+    0x29B3, /* IntelQ35_2 */
+    0x29C2, /* IntelG33_1 */
+    0x29C3, /* IntelG33_2 */
+    0x29D2, /* IntelQ33_1 */
+    0x29D3, /* IntelQ33_2 */
+    0x2A02, /* IntelGL960_1 */
+    0x2A03, /* IntelGL960_2 */
+    0x2A12, /* IntelGM965_1 */
+    0x2A13, /* IntelGM965_2 */
+    0
+};
+
+static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
+    0x2A42, /* IntelGMA4500MHD_1 */
+    0x2A43, /* IntelGMA4500MHD_2 */
+    0x2E42, /* IntelB43_1 */
+    0x2E43, /* IntelB43_2 */
+    0x2E92, /* IntelB43_3 */
+    0x2E93, /* IntelB43_4 */
+    0x2E32, /* IntelG41_1 */
+    0x2E33, /* IntelG41_2 */
+    0x2E22, /* IntelG45_1 */
+    0x2E23, /* IntelG45_2 */
+    0x2E12, /* IntelQ45_1 */
+    0x2E13, /* IntelQ45_2 */
+    0x0042, /* IntelHDGraphics */
+    0x0046, /* IntelMobileHDGraphics */
+    0x0102, /* IntelSandyBridge_1 */
+    0x0106, /* IntelSandyBridge_2 */
+    0x0112, /* IntelSandyBridge_3 */
+    0x0116, /* IntelSandyBridge_4 */
+    0x0122, /* IntelSandyBridge_5 */
+    0x0126, /* IntelSandyBridge_6 */
+    0x010A, /* IntelSandyBridge_7 */
+    0x0080, /* IntelIvyBridge */
+    0
+};
+
+static const GfxDriverInfo driverInfo[] = {
   /*
    * Intel entries
    */
-  /* Don't allow D2D on any drivers before this, as there's a crash when a MS Hotfix is installed */
-  { VENDOR_INTEL, ANY_DEVICE,
-    nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED,
-    DRIVER_LESS_THAN, V(15,17,9,2182) },
+
+  /* implement the blocklist from bug 594877
+   * Don't allow D2D on any drivers before this, as there's a crash when a MS Hotfix is installed.
+   * For safety, don't allow any other features on the buggy drivers.
+   */
+#define IMPLEMENT_INTEL_DRIVER_BLOCKLIST(winVer, devFamily, driverVer) \
+  { winVer,                                                            \
+    vendorIntel, devFamily,                                            \
+    allFeatures, nsIGfxInfo::FEATURE_BLOCKED,                          \
+    DRIVER_LESS_THAN, driverVer },
+
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA900,   V(6,14,10,4764))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA950,   V(6,14,10,4926))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA3150,  V(6,14,10,5260))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMAX3000, V(6,14,10,5218))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMAX4500HD, V(6,14,10,5284))
+
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA500,   V(7,14,10,1006))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA900,   allDriverVersions)
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA950,   V(7,14,10,1504))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA3150,  V(7,14,10,2124))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMAX3000, V(7,15,10,1666))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMAX4500HD, V(8,15,10,2182))
+
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA500,   V(5,0,0,2026))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA900,   allDriverVersions)
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA950,   V(8,15,10,1930))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA3150,  V(8,14,10,2117))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMAX3000, V(8,15,10,1930))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMAX4500HD, V(8,15,10,2182))
 
   /* OpenGL on any Intel hardware is not suggested */
-  { VENDOR_INTEL, ANY_DEVICE,
+  { allWindowsVersions,
+    vendorIntel, allDevices,
     nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_NOT_SUGGESTED,
-    DRIVER_LESS_THAN, ALL_VERSIONS },  
-  { VENDOR_INTEL, ANY_DEVICE,
+    DRIVER_LESS_THAN, allDriverVersions },
+  { allWindowsVersions,
+    vendorIntel, allDevices,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_NOT_SUGGESTED,
-    DRIVER_LESS_THAN, ALL_VERSIONS },  
+    DRIVER_LESS_THAN, allDriverVersions },
 
   /*
    * NVIDIA entries
@@ -424,7 +523,7 @@ static GfxDriverInfo driverInfo[] = {
    * AMD entries
    */
 
-  { 0 }
+  { 0, 0, allDevices, 0 }
 };
 
 static bool
@@ -464,16 +563,37 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
     return NS_ERROR_FAILURE;
   }
 
-  GfxDriverInfo *info = &driverInfo[0];
-  while (info->vendor && info->device) {
-    bool match = false;
+  const GfxDriverInfo *info = &driverInfo[0];
+  while (info->windowsVersion) {
 
-    if (info->vendor != adapterVendor ||
-        (info->device != ANY_DEVICE && info->device != adapterDeviceID))
+    if (info->windowsVersion != allWindowsVersions &&
+        info->windowsVersion != gfxWindowsPlatform::WindowsOSVersion())
     {
       info++;
       continue;
     }
+
+    if (info->vendor != adapterVendor) {
+      info++;
+      continue;
+    }
+
+    if (info->devices != allDevices) {
+        bool deviceMatches = false;
+        for (const PRUint32 *devices = info->devices; *devices; ++devices) {
+            if (*devices == adapterDeviceID) {
+                deviceMatches = true;
+                break;
+            }
+        }
+
+        if (!deviceMatches) {
+            info++;
+            continue;
+        }
+    }
+
+    bool match = false;
 
     switch (info->op) {
     case DRIVER_LESS_THAN:
@@ -509,7 +629,7 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
     }
 
     if (match) {
-      if (info->feature == ALL_FEATURES ||
+      if (info->feature == allFeatures ||
           info->feature == aFeature)
       {
         status = info->featureStatus;
@@ -523,3 +643,4 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
   *aStatus = status;
   return NS_OK;
 }
+
