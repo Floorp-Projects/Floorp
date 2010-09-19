@@ -1,4 +1,4 @@
-/* 
+/*
 # ***** BEGIN LICENSE BLOCK *****
 # * Version: MPL 1.1/GPL 2.0/LGPL 2.1
 # *
@@ -34,33 +34,33 @@
 # * the provisions above, a recipient may use your version of this file under
 # * the terms of any one of the MPL, the GPL or the LGPL.
 # *
-# * ***** END LICENSE BLOCK ***** 
+# * ***** END LICENSE BLOCK *****
 */
 
 /**
 # * Session Storage and Restoration
-# * 
+# *
 # * Overview
-# * This service reads user's session file at startup, and makes a determination 
-# * as to whether the session should be restored. It will restore the session 
+# * This service reads user's session file at startup, and makes a determination
+# * as to whether the session should be restored. It will restore the session
 # * under the circumstances described below.  If the auto-start Private Browsing
 # * mode is active, however, the session is never restored.
-# * 
+# *
 # * Crash Detection
-# * The session file stores a session.state property, that 
-# * indicates whether the browser is currently running. When the browser shuts 
+# * The session file stores a session.state property, that
+# * indicates whether the browser is currently running. When the browser shuts
 # * down, the field is changed to "stopped". At startup, this field is read, and
 # * if its value is "running", then it's assumed that the browser had previously
 # * crashed, or at the very least that something bad happened, and that we should
 # * restore the session.
-# * 
+# *
 # * Forced Restarts
 # * In the event that a restart is required due to application update or extension
 # * installation, set the browser.sessionstore.resume_session_once pref to true,
 # * and the session will be restored the next time the browser starts.
-# * 
+# *
 # * Always Resume
-# * This service will always resume the session if the integer pref 
+# * This service will always resume the session if the integer pref
 # * browser.startup.page is set to 3.
 */
 
@@ -91,7 +91,6 @@ SessionStartup.prototype = {
   // the state to restore at startup
   _iniString: null,
   _sessionType: Ci.nsISessionStartup.NO_SESSION,
-  _restoredTimestamp: 0,
 
 /* ........ Global Event Handlers .............. */
 
@@ -113,15 +112,15 @@ SessionStartup.prototype = {
                      getService(Ci.nsIProperties);
     let sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
     sessionFile.append("sessionstore.js");
-    
+
     let doResumeSession = prefBranch.getBoolPref("sessionstore.resume_session_once") ||
                           prefBranch.getIntPref("startup.page") == 3;
-    
+
     // only read the session file if config allows possibility of restoring
     var resumeFromCrash = prefBranch.getBoolPref("sessionstore.resume_from_crash");
     if (!resumeFromCrash && !doResumeSession || !sessionFile.exists())
       return;
-    
+
     // get string containing session state
     this._iniString = this._readStateFile(sessionFile);
     if (!this._iniString)
@@ -147,7 +146,7 @@ SessionStartup.prototype = {
     let lastSessionCrashed =
       initialState && initialState.session && initialState.session.state &&
       initialState.session.state == STATE_RUNNING_STR;
-    
+
     // set the startup type
     if (lastSessionCrashed && resumeFromCrash)
       this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
@@ -155,9 +154,6 @@ SessionStartup.prototype = {
       this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
     else
       this._iniString = null; // reset the state string
-
-    Services.obs.addObserver(this, "sessionstore-browser-state-restored", true);
-    Services.obs.addObserver(this, "sessionstore-windows-restored", true);
 
     if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
@@ -178,11 +174,11 @@ SessionStartup.prototype = {
    */
   observe: function sss_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-    case "app-startup": 
+    case "app-startup":
       Services.obs.addObserver(this, "final-ui-startup", true);
       Services.obs.addObserver(this, "quit-application", true);
       break;
-    case "final-ui-startup": 
+    case "final-ui-startup":
       Services.obs.removeObserver(this, "final-ui-startup");
       Services.obs.removeObserver(this, "quit-application");
       this.init();
@@ -199,12 +195,6 @@ SessionStartup.prototype = {
         self._onWindowOpened(window);
         window.removeEventListener("load", arguments.callee, false);
       }, false);
-      break;
-    case "sessionstore-browser-state-restored":
-    case "sessionstore-windows-restored":
-      this._restoredTimestamp = new Date() * 1000;
-      Services.obs.removeObserver(this, "sessionstore-browser-state-restored");
-      Services.obs.removeObserver(this, "sessionstore-windows-restored");
       break;
     case "browser:purge-session-history":
       // reset all state on sanitization
@@ -224,7 +214,7 @@ SessionStartup.prototype = {
     var wType = aWindow.document.documentElement.getAttribute("windowtype");
     if (wType != "navigator:browser")
       return;
-    
+
     /**
      * Note: this relies on the fact that nsBrowserContentHandler will return
      * a different value the first time its getter is called after an update,
@@ -270,10 +260,6 @@ SessionStartup.prototype = {
    */
   get sessionType() {
     return this._sessionType;
-  },
-
-  get restoredTimestamp() {
-    return this._restoredTimestamp;
   },
 
 /* ........ Storage API .............. */
