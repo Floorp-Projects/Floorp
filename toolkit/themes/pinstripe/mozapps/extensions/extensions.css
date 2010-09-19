@@ -618,6 +618,7 @@
   /* This is necessary to fix layout issues with multi-line descriptions, see
      bug 592712*/
   outline: solid transparent;
+  white-space: pre-wrap;
 }
 
 #detail-contributions {

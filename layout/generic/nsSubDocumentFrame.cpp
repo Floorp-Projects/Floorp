@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  *   HÂkan Waara <hwaara@chello.se>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,6 +43,11 @@
  * as <frame>, <iframe>, and some <object>s
  */
 
+#ifdef MOZ_IPC
+#include "mozilla/layout/RenderFrameParent.h"
+using mozilla::layout::RenderFrameParent;
+#endif
+
 #include "nsSubDocumentFrame.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
@@ -52,7 +58,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
-#include "nsIMarkupDocumentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIComponentManager.h"
@@ -63,8 +69,6 @@
 #include "nsIDocument.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsWidgetsCID.h"
-#include "nsViewsCID.h"
 #include "nsGkAtoms.h"
 #include "nsStyleCoord.h"
 #include "nsStyleContext.h"
@@ -87,6 +91,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
+#include "FrameLayerBuilder.h"
+#include "nsObjectFrame.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -97,6 +103,18 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
+
+using namespace mozilla;
+
+static nsIDocument*
+GetDocumentFromView(nsIView* aView)
+{
+  NS_PRECONDITION(aView, "");
+
+  nsIFrame* f = static_cast<nsIFrame*>(aView->GetClientData());
+  nsIPresShell* ps =  f ? f->PresContext()->PresShell() : nsnull;
+  return ps ? ps->GetDocument() : nsnull;
+}
 
 class AsyncFrameInit;
 
@@ -166,7 +184,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
     rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  nsIView* view = GetView();
 
   // Set the primary frame now so that
   // DocumentViewerImpl::FindContainerView called by ShowViewer below
@@ -202,8 +219,8 @@ nsSubDocumentFrame::ShowViewer()
 
   if (!PresContext()->IsDynamic()) {
     // We let the printing code take care of loading the document; just
-    // create a widget for it to use
-    (void) CreateViewAndWidget(eContentTypeContent);
+    // create the inner view for it to use.
+    (void) EnsureInnerView();
   } else {
     nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
@@ -256,9 +273,32 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (!mInnerView)
     return NS_OK;
+
+#ifdef MOZ_IPC
+  nsFrameLoader* frameLoader = FrameLoader();
+  if (frameLoader) {
+    RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
+    if (rfp) {
+      // We're the subdoc for <browser remote="true"> and it has
+      // painted content.  Display its shadow layer tree.
+      nsDisplayList shadowTree;
+      shadowTree.AppendToTop(
+        new (aBuilder) nsDisplayRemote(aBuilder, this, rfp));
+
+      // Clip the shadow layers to subdoc bounds
+      nsPoint offset = GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
+      nsRect bounds = mInnerView->GetBounds() + offset;
+
+      return aLists.Content()->AppendNewToTop(
+        new (aBuilder) nsDisplayClip(aBuilder, this, &shadowTree,
+                                     bounds));
+    }
+  }
+#endif
+
   nsIView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
     return NS_OK;
@@ -796,6 +836,75 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   return mFrameLoader->GetDocShell(aDocShell);
 }
 
+static void
+DestroyDisplayItemDataForFrames(nsIFrame* aFrame)
+{
+  FrameLayerBuilder::DestroyDisplayItemDataFor(aFrame);
+
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+  do {
+    nsIFrame* child = aFrame->GetFirstChild(childList);
+    while (child) {
+      DestroyDisplayItemDataForFrames(child);
+      child = child->GetNextSibling();
+    }
+    childList = aFrame->GetAdditionalChildListName(listIndex++);
+  } while (childList);
+}
+
+static PRBool
+BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*)
+{
+  NS_PRECONDITION(aDocument, "");
+
+  nsIPresShell* shell = aDocument->GetShell();
+  nsIFrame* rootFrame = shell ? shell->GetRootFrame() : nsnull;
+  if (rootFrame) {
+    ::DestroyDisplayItemDataForFrames(rootFrame);
+  }
+  aDocument->EnumerateFreezableElements(
+    nsObjectFrame::BeginSwapDocShells, nsnull);
+  aDocument->EnumerateSubDocuments(BeginSwapDocShellsForDocument, nsnull);
+  return PR_TRUE;
+}
+
+static nsIView*
+BeginSwapDocShellsForViews(nsIView* aSibling)
+{
+  // Collect the removed sibling views in reverse order in 'removedViews'.
+  nsIView* removedViews = nsnull;
+  while (aSibling) {
+    nsIDocument* doc = ::GetDocumentFromView(aSibling);
+    if (doc) {
+      ::BeginSwapDocShellsForDocument(doc, nsnull);
+    }
+    nsIView* next = aSibling->GetNextSibling();
+    aSibling->GetViewManager()->RemoveChild(aSibling);
+    aSibling->SetNextSibling(removedViews);
+    removedViews = aSibling;
+    aSibling = next;
+  }
+  return removedViews;
+}
+
+static void
+InsertViewsInReverseOrder(nsIView* aSibling, nsIView* aParent)
+{
+  NS_PRECONDITION(aParent, "");
+  NS_PRECONDITION(!aParent->GetFirstChild(), "inserting into non-empty list");
+
+  nsIViewManager* vm = aParent->GetViewManager();
+  while (aSibling) {
+    nsIView* next = aSibling->GetNextSibling();
+    aSibling->SetNextSibling(nsnull);
+    // PR_TRUE means 'after' in document order which is 'before' in view order,
+    // so this call prepends the child, thus reversing the siblings as we go.
+    vm->InsertChild(aParent, aSibling, nsnull, PR_TRUE);
+    aSibling = next;
+  }
+}
+
 nsresult
 nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
 {
@@ -809,11 +918,64 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  HideViewer();
-  other->HideViewer();
+  if (mInnerView && other->mInnerView) {
+    nsIView* ourSubdocViews = mInnerView->GetFirstChild();
+    nsIView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
+    nsIView* otherSubdocViews = other->mInnerView->GetFirstChild();
+    nsIView* otherRemovedViews = ::BeginSwapDocShellsForViews(otherSubdocViews);
 
+    ::InsertViewsInReverseOrder(ourRemovedViews, other->mInnerView);
+    ::InsertViewsInReverseOrder(otherRemovedViews, mInnerView);
+  }
   mFrameLoader.swap(other->mFrameLoader);
   return NS_OK;
+}
+
+static PRBool
+EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
+{
+  NS_PRECONDITION(aDocument, "");
+
+  // Our docshell and view trees have been updated for the new hierarchy.
+  // Now also update all nsThebesDeviceContext::mWidget to that of the
+  // container view in the new hierarchy.
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShell> ds = do_QueryInterface(container);
+  if (ds) {
+    nsCOMPtr<nsIContentViewer> cv;
+    ds->GetContentViewer(getter_AddRefs(cv));
+    while (cv) {
+      nsCOMPtr<nsIDocumentViewer> dv = do_QueryInterface(cv);
+      if (dv) {
+        nsCOMPtr<nsPresContext> pc;
+        dv->GetPresContext(getter_AddRefs(pc));
+        nsIDeviceContext* dc = pc ? pc->DeviceContext() : nsnull;
+        if (dc) {
+          nsIView* v = dv->FindContainerView();
+          dc->Init(v ? v->GetNearestWidget(nsnull) : nsnull);
+        }
+      }
+      nsCOMPtr<nsIContentViewer> prev;
+      cv->GetPreviousViewer(getter_AddRefs(prev));
+      cv = prev;
+    }
+  }
+
+  aDocument->EnumerateFreezableElements(
+    nsObjectFrame::EndSwapDocShells, nsnull);
+  aDocument->EnumerateSubDocuments(EndSwapDocShellsForDocument, nsnull);
+  return PR_TRUE;
+}
+
+static void
+EndSwapDocShellsForViews(nsIView* aSibling)
+{
+  for ( ; aSibling; aSibling = aSibling->GetNextSibling()) {
+    nsIDocument* doc = ::GetDocumentFromView(aSibling);
+    if (doc) {
+      ::EndSwapDocShellsForDocument(doc, nsnull);
+    }
+  }
 }
 
 void
@@ -822,8 +984,13 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
   nsSubDocumentFrame* other = static_cast<nsSubDocumentFrame*>(aOther);
   nsWeakFrame weakThis(this);
   nsWeakFrame weakOther(aOther);
-  ShowViewer();
-  other->ShowViewer();
+
+  if (mInnerView) {
+    ::EndSwapDocShellsForViews(mInnerView->GetFirstChild());
+  }
+  if (other->mInnerView) {
+    ::EndSwapDocShellsForViews(other->mInnerView->GetFirstChild());
+  }
 
   // Now make sure we reflow both frames, in case their contents
   // determine their size.
@@ -842,10 +1009,9 @@ nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
 }
 
 nsIView*
-nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
+nsSubDocumentFrame::EnsureInnerView()
 {
   if (mInnerView) {
-    // Nothing to do here
     return mInnerView;
   }
 

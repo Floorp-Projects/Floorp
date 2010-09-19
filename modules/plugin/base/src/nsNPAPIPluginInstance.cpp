@@ -875,6 +875,23 @@ nsNPAPIPluginInstance::NotifyPainted(void)
   return library->NotifyPainted(&mNPP);
 }
 
+NS_IMETHODIMP
+nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
+{
+  if (RUNNING != mRunning)
+    return NS_OK;
+
+  PluginDestructionGuard guard(this);
+
+  if (!mPlugin)
+    return NS_ERROR_FAILURE;
+
+  PluginLibrary* library = mPlugin->GetLibrary();
+  if (!library)
+    return NS_ERROR_FAILURE;
+
+  return library->UseAsyncPainting(&mNPP, aIsAsync);
+}
 
 NS_IMETHODIMP
 nsNPAPIPluginInstance::IsTransparent(PRBool* isTransparent)

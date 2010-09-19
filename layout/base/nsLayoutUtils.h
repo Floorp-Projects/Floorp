@@ -517,7 +517,7 @@ public:
     PAINT_SYNC_DECODE_IMAGES = 0x02,
     PAINT_WIDGET_LAYERS = 0x04,
     PAINT_IGNORE_SUPPRESSION = 0x08,
-    PAINT_IGNORE_VIEWPORT_SCROLLING = 0x10,
+    PAINT_DOCUMENT_RELATIVE = 0x10,
     PAINT_HIDE_CARET = 0x20,
     PAINT_ALL_CONTINUATIONS = 0x40
   };
@@ -543,6 +543,9 @@ public:
    * even if aRenderingContext is non-null. This is useful if you want
    * to force rendering to use the widget's layer manager for testing
    * or speed. PAINT_WIDGET_LAYERS must be set if aRenderingContext is null.
+   * If PAINT_DOCUMENT_RELATIVE is used, the visible region is interpreted
+   * as being relative to the document.  (Normally it's relative to the CSS
+   * viewport.)
    *
    * So there are three possible behaviours:
    * 1) PAINT_WIDGET_LAYERS is set and aRenderingContext is null; we paint

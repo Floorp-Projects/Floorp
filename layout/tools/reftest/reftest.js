@@ -95,6 +95,19 @@ var gTestResults = {
 };
 var gTotalTests = 0;
 var gState;
+// Plugin layers are painting asynchronously, and to make sure that all
+// layer surfaces have right content, we should listen for async
+// paint-"begin"/"end" events ("MozPaintWait" and "MozPaintWaitFinished").
+// If plugin layer surface is dirty(just created) and layout
+// builder->ShouldSyncDecodeImages == true, then "MozPaintWait" event will be
+// fired and gExplicitPendingPaintCounter increased.
+// When plugin layer surface fully painted and "MozPaintWait" has been fired
+// before, then "MozPaintWaitFinished" fired and gExplicitPendingPaintCounter
+// decreased. Reftest snapshot can be taken only when gExplicitPendingPaintCounter == 0
+var gExplicitPendingPaintCounter = 0;
+var gTestContainsAsyncPaintObjects = false;
+var gRunningReftestWaitTest = false;
+var gAttrListenerFunc = null;
 var gCurrentURL;
 var gFailureTimeout = null;
 var gFailureReason;
@@ -161,6 +174,32 @@ function ReleaseCanvas(canvas)
     if (!gNoCanvasCache || gRecycledCanvases.length < 2)
         gRecycledCanvases.push(canvas);
 }
+
+function PaintWaitListener()
+{
+    // Increate paint wait counter
+    // prevent snapshots taking with not up to dated content
+    gExplicitPendingPaintCounter++;
+}
+
+function PaintWaitFinishedListener()
+{
+    gExplicitPendingPaintCounter--;
+    if (gExplicitPendingPaintCounter == 0) {
+        if (gRunningReftestWaitTest) {
+            // tests with reftest-wait class already waiting
+            // and we just need take snapshot and finish reftest
+            gAttrListenerFunc();
+        } else if (gTestContainsAsyncPaintObjects) {
+            gTestContainsAsyncPaintObjects = false;
+            // tests without reftest-wait class
+            // and with detected async rendering objects rendering
+            // need to do mini restart of the test
+            setTimeout(setTimeout, 0, DocumentLoaded, 0);
+        }
+    }
+}
+
 
 function OnRefTestLoad()
 {
@@ -233,6 +272,10 @@ function OnRefTestLoad()
 
     // Focus the content browser
     gBrowser.focus();
+
+    // Connect to async rendering notifications
+    gBrowser.addEventListener("MozPaintWait", PaintWaitListener, true);
+    gBrowser.addEventListener("MozPaintWaitFinished", PaintWaitFinishedListener, true);
 
     StartTests();
 }
@@ -853,6 +896,7 @@ function OnDocumentLoad(event)
     setupZoom(contentRootElement);
 
     if (shouldWait()) {
+        gRunningReftestWaitTest = true;
         // The testcase will let us know when the test snapshot should be made.
         // Register a mutation listener to know when the 'reftest-wait' class
         // gets removed.
@@ -903,7 +947,8 @@ function OnDocumentLoad(event)
             // When stopAfteraintReceived is set, we can stop --- but we should keep going as long
             // as there are paint events coming (there probably shouldn't be any, but it doesn't
             // hurt to process them)
-            if (stopAfterPaintReceived && !gWindowUtils.isMozAfterPaintPending) {
+            if (stopAfterPaintReceived && !gWindowUtils.isMozAfterPaintPending &&
+                !gExplicitPendingPaintCounter) {
                 FinishWaitingForTestEnd();
             }
         }
@@ -925,8 +970,14 @@ function OnDocumentLoad(event)
             // to complete and unsuppress painting before we check isMozAfterPaintPending.
             setTimeout(AttrModifiedListenerContinuation, 0);
         }
+        // Set global pointer to this function to be able call it from PaintWaitFinishedListener
+        gAttrListenerFunc = AttrModifiedListener;
 
         function AttrModifiedListenerContinuation() {
+            if (gExplicitPendingPaintCounter) {
+                return;
+            }
+
             if (doPrintMode())
                 setupPrintMode();
             FlushRendering();
@@ -973,6 +1024,7 @@ function OnDocumentLoad(event)
         // StartWaitingForTestEnd runs after that invalidation has been requested.
         setTimeout(StartWaitingForTestEnd, 0);
     } else {
+        gRunningReftestWaitTest = false;
         if (doPrintMode())
             setupPrintMode();
 
@@ -1189,6 +1241,14 @@ function DocumentLoaded()
         gCurrentCanvas = gURICanvases[gCurrentURL];
     } else if (gCurrentCanvas == null) {
         InitCurrentCanvasWithSnapshot();
+        if (gExplicitPendingPaintCounter) {
+            // reftest contain elements wich are waiting paint to be finished
+            // lets cancel this reftest run, and let "MozPaintWaitFinished"-listener
+            // know that we need to restart reftest when all paints are finished
+            gTestContainsAsyncPaintObjects = true;
+            gCurrentCanvas = null;
+            return;
+        }
     }
     if (gState == 1) {
         gCanvas1 = gCurrentCanvas;

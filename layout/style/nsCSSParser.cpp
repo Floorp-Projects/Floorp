@@ -1791,16 +1791,14 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
           expr->mValue.GetIntValue() > 1)
         rv = PR_FALSE;
       break;
+    case nsMediaFeature::eFloat:
+      rv = ParseNonNegativeVariant(expr->mValue, VARIANT_NUMBER, nsnull);
+      break;
     case nsMediaFeature::eIntRatio:
       {
         // Two integers separated by '/', with optional whitespace on
         // either side of the '/'.
         nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
-        if (!a) {
-          mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-          SkipUntil(')');
-          return PR_FALSE;
-        }
         expr->mValue.SetArrayValue(a, eCSSUnit_Array);
         // We don't bother with ParseNonNegativeVariant since we have to
         // check for != 0 as well; no need to worry about the UngetToken
@@ -4517,10 +4515,6 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
 
     nsRefPtr<nsCSSValue::Array> val =
       nsCSSValue::Array::Create(unit == eCSSUnit_Counter ? 2 : 3);
-    if (!val) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      break;
-    }
 
     val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_Ident);
 
@@ -4832,6 +4826,11 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, PRBool aIsRadial,
     break;
 
   case eCSSToken_Function:
+    if (id.LowerCaseEqualsLiteral("-moz-calc")) {
+      haveGradientLine = PR_TRUE;
+      break;
+    }
+    // fall through
   case eCSSToken_ID:
   case eCSSToken_Ref:
     // this is a color
@@ -6349,7 +6348,9 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
       }
     } else if (tt == eCSSToken_Dimension ||
                tt == eCSSToken_Number ||
-               tt == eCSSToken_Percentage) {
+               tt == eCSSToken_Percentage ||
+               (tt == eCSSToken_Function &&
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc"))) {
       if (havePosition)
         return PR_FALSE;
       havePosition = PR_TRUE;
@@ -6459,16 +6460,17 @@ PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
   // First try a percentage or a length value
   nsCSSValue &xValue = aOut.mXValue,
              &yValue = aOut.mYValue;
-  PRInt32 variantMask = aAcceptsInherit ? VARIANT_HLP : VARIANT_LP;
+  PRInt32 variantMask =
+    (aAcceptsInherit ? VARIANT_INHERIT : 0) | VARIANT_LP | VARIANT_CALC;
   if (ParseVariant(xValue, variantMask, nsnull)) {
     if (eCSSUnit_Inherit == xValue.GetUnit() ||
         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
       yValue = xValue;
       return PR_TRUE;
     }
-    // We have one percentage/length. Get the optional second
-    // percentage/length/keyword.
-    if (ParseVariant(yValue, VARIANT_LP, nsnull)) {
+    // We have one percentage/length/calc. Get the optional second
+    // percentage/length/calc/keyword.
+    if (ParseVariant(yValue, VARIANT_LP | VARIANT_CALC, nsnull)) {
       // We have two numbers
       return PR_TRUE;
     }
@@ -6508,8 +6510,8 @@ PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
       mask |= bit;
     }
     else {
-      // Only one keyword.  See if we have a length or percentage.
-      if (ParseVariant(yValue, VARIANT_LP, nsnull)) {
+      // Only one keyword.  See if we have a length, percentage, or calc.
+      if (ParseVariant(yValue, VARIANT_LP | VARIANT_CALC, nsnull)) {
         if (!(mask & BG_CLR)) {
           // The first keyword can only be 'center', 'left', or 'right'
           return PR_FALSE;
@@ -6581,16 +6583,17 @@ CSSParserImpl::ParseBackgroundSize()
  * @param aOut The nsCSSValuePair in which to place the result.
  * @return Whether or not the operation succeeded.
  */
+#define BG_SIZE_VARIANT (VARIANT_LP | VARIANT_AUTO | VARIANT_CALC)
 PRBool CSSParserImpl::ParseBackgroundSizeValues(nsCSSValuePair &aOut)
 {
   // First try a percentage or a length value
   nsCSSValue &xValue = aOut.mXValue,
              &yValue = aOut.mYValue;
-  if (ParseNonNegativeVariant(xValue, VARIANT_LP | VARIANT_AUTO, nsnull)) {
-    // We have one percentage/length/auto. Get the optional second
-    // percentage/length/keyword.
-    if (ParseNonNegativeVariant(yValue, VARIANT_LP | VARIANT_AUTO, nsnull)) {
-      // We have a second percentage/length/auto.
+  if (ParseNonNegativeVariant(xValue, BG_SIZE_VARIANT, nsnull)) {
+    // We have one percentage/length/calc/auto. Get the optional second
+    // percentage/length/calc/keyword.
+    if (ParseNonNegativeVariant(yValue, BG_SIZE_VARIANT, nsnull)) {
+      // We have a second percentage/length/calc/auto.
       return PR_TRUE;
     }
 
@@ -6606,6 +6609,7 @@ PRBool CSSParserImpl::ParseBackgroundSizeValues(nsCSSValuePair &aOut)
   yValue.Reset();
   return PR_TRUE;
 }
+#undef BG_SIZE_VARIANT
 
 PRBool
 CSSParserImpl::ParseBorderColor()
@@ -6635,10 +6639,6 @@ CSSParserImpl::ParseBorderImage()
   // <uri> [<number> | <percentage>]{1,4}
   //       [ / <border-width>{1,4} ]? [stretch | repeat | round]{0,2}
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(11);
-  if (!arr) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
 
   nsCSSValue& url = arr->Item(0);
   nsCSSValue& splitTop = arr->Item(1);
@@ -6922,10 +6922,6 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   do {
     // The toplevel of a calc() is always an nsCSSValue::Array of length 1.
     nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
-    if (!arr) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      break;
-    }
 
     if (!ParseCalcAdditiveExpression(arr->Item(0), aVariantMask))
       break;
@@ -6980,10 +6976,6 @@ CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
       return PR_FALSE;
 
     nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(2);
-    if (!arr) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      return PR_FALSE;
-    }
     arr->Item(0) = aValue;
     storage = &arr->Item(1);
     aValue.SetArrayValue(arr, unit);
@@ -7085,10 +7077,6 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
     }
 
     nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(2);
-    if (!arr) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      return PR_FALSE;
-    }
     arr->Item(0) = aValue;
     storage = &arr->Item(1);
     aValue.SetArrayValue(arr, unit);
@@ -7658,11 +7646,7 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
                           foundValues.Length() + 1 : MAX_ALLOWED_ELEMS);
   nsRefPtr<nsCSSValue::Array> convertedArray =
     nsCSSValue::Array::Create(numElements);
-  if (!convertedArray) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
-  
+
   /* Copy things over. */
   convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_Ident);
   for (PRUint16 index = 0; index + 1 < numElements; ++index)
@@ -7984,7 +7968,7 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
     return PR_FALSE;
 
   nsRefPtr<nsCSSValue::Array> srcVals
-    = nsCSSValue::Array::Create(values.Length());
+    = nsCSSValue::Array::Create(mozilla::fallible_t(), values.Length());
   if (!srcVals) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -8071,7 +8055,7 @@ CSSParserImpl::ParseFontRanges(nsCSSValue& aValue)
     return PR_FALSE;
 
   nsRefPtr<nsCSSValue::Array> srcVals
-    = nsCSSValue::Array::Create(ranges.Length());
+    = nsCSSValue::Array::Create(mozilla::fallible_t(), ranges.Length());
   if (!srcVals) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -8506,10 +8490,6 @@ CSSParserImpl::ParseTransitionTimingFunctionValues(nsCSSValue& aValue)
                "unexpected initial state");
 
   nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(4);
-  if (!val) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
 
   float x1, x2, y1, y2;
   if (!ParseTransitionTimingFunctionValueComponent(x1, ',', PR_TRUE) ||

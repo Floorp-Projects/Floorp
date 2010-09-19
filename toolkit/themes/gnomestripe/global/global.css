@@ -94,15 +94,6 @@ window.dialog {
 
 /* ::::: alert icons :::::*/
 
-.message-icon,
-.alert-icon,
-.error-icon,
-.question-icon,
-.authentication-icon {
-  width: 40px;
-  height: 40px;
-}
-
 .message-icon {
   list-style-image: url("moz-icon://stock/gtk-dialog-info?size=dialog");
 }

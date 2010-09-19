@@ -1,7 +1,5 @@
 <!ENTITY  brandShortName        "Mozilla Developer Preview">
 <!ENTITY  brandFullName         "Mozilla Developer Preview">
 <!ENTITY  vendorShortName       "mozilla.org">
-<!ENTITY  trademarkInfo         " ">
-
-<!-- LOCALIZATION NOTE (releaseBaseURL): The about: page appends __MOZ_APP_VERSION__.html, e.g. 2.0.html -->
-<!ENTITY  releaseBaseURL        "http://www.mozilla.org/projects/devpreview/releases/">
+<!ENTITY  trademarkInfo.part1   " ">
+<!ENTITY  trademarkInfo.part2   " ">

@@ -50,7 +50,7 @@ public:
   virtual ~nsHTMLDataListElement();
 
   // nsISupports
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
@@ -131,7 +131,7 @@ NS_IMETHODIMP
 nsHTMLDataListElement::GetOptions(nsIDOMHTMLCollection** aOptions)
 {
   if (!mOptions) {
-    mOptions = new nsContentList(this, MatchOptions, nsnull, nsnull, PR_FALSE);
+    mOptions = new nsContentList(this, MatchOptions, nsnull, nsnull, PR_TRUE);
   }
 
   NS_ADDREF(*aOptions = mOptions);

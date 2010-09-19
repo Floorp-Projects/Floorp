@@ -52,6 +52,7 @@
 #include "nsNativeWidget.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
+#include "nsXULAppAPI.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -111,9 +112,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
+// 36762512-d533-4884-9ac3-4ada8594146c
 #define NS_IWIDGET_IID \
-  { 0xe1dda370, 0xdf16, 0x4c92, \
-    { 0x9b, 0x86, 0x4b, 0xd9, 0xcf, 0xff, 0x4e, 0xb1 } }
+  { 0x36762512, 0xd533, 0x4884, \
+    { 0x9a, 0xc3, 0x4a, 0xda, 0x85, 0x94, 0x14, 0x6c } }
 
 /*
  * Window shadow styles
@@ -1238,9 +1240,39 @@ class nsIWidget : public nsISupports {
                                               PRBool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
 
-    
+#ifdef MOZ_IPC
+    /**
+     * Return true if this process shouldn't use platform widgets, and
+     * so should use PuppetWidgets instead.  If this returns true, the
+     * result of creating and using a platform widget is undefined,
+     * and likely to end in crashes or other buggy behavior.
+     */
+    static bool
+    UsePuppetWidgets()
+    { return XRE_GetProcessType() == GeckoProcessType_Content; }
 
+    /**
+     * Allocate and return a "puppet widget" that doesn't directly
+     * correlate to a platform widget; platform events and data must
+     * be fed to it.  Currently used in content processes.  NULL is
+     * returned if puppet widgets aren't supported in this build
+     * config, on this platform, or for this process type.
+     *
+     * This function is called "Create" to match CreateInstance().
+     * The returned widget must still be nsIWidget::Create()d.
+     */
+    static already_AddRefed<nsIWidget>
+    CreatePuppetWidget();
+#endif
+
+    /**
+     * Reparent this widget's native widget.
+     * @param aNewParent the native widget of aNewParent is the new native
+     *                   parent widget
+     */
+    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
 protected:
+
     // keep the list of children.  We also keep track of our siblings.
     // The ownership model is as follows: parent holds a strong ref to
     // the first element of the list, and each element holds a strong

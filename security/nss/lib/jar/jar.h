@@ -325,19 +325,6 @@ extern int
 JAR_digest_file(char *filename, JAR_Digest *dig);
 
 /*
- *  Get attribute from certificate:
- *
- *  Returns any special signed attribute associated with this cert
- *  or signature (passed in "data"). Attributes jarCert*. Most of the time
- *  this will return a zero terminated string.
- *
- */
-
-extern int PR_CALLBACK 
-JAR_cert_attribute(JAR *jar, jarCert attrib, long keylen, void *key,
-                   void **result, unsigned long *length);
-
-/*
  *  Meta information
  *
  *  Currently, since this call does not support passing of an owner

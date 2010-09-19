@@ -209,8 +209,8 @@
                   accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
                 <menuitem id="menu_tabview"
-                          label="&showTabView2.label;"
-                          accesskey="&showTabView2.accesskey;"
+                          label="&viewTabGroups.label;"
+                          accesskey="&viewTabGroups.accesskey;"
                           command="Browser:ToggleTabView"/>
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
@@ -513,29 +513,13 @@
               <menuitem id="sync-setup"
                         label="&syncSetup.label;"
                         accesskey="&syncSetup.accesskey;"
+                        observes="sync-setup-state"
                         oncommand="gSyncUI.openSetup()"/>
-              <menu id="sync-menu"
-                    label="&syncMenu.label;"
-                    accesskey="&syncMenu.accesskey;">
-                <menupopup id="sync-menu-popup"
-                           onpopupshowing="if (event.target == this) gSyncUI.doUpdateMenu(event);">
-                  <menuitem id="sync-loginitem"
-                            label="&syncLogInItem.label;"
-                            accesskey="&syncLogInItem.accesskey;"
-                            oncommand="gSyncUI.doLogin();"/>
-                  <menuitem id="sync-logoutitem"
-                            label="&syncLogOutItem.label;"
-                            accesskey="&syncLogOutItem.accesskey;"
-                            oncommand="gSyncUI.doLogout();"/>
-                  <menuitem id="sync-syncnowitem"
-                            label="&syncSyncNowItem.label;"
-                            accesskey="&syncSyncNowItem.accesskey;"
-                            oncommand="gSyncUI.doSync(event);"/>
-                  <menuseparator id="sync-lastsyncsep" hidden="true"/>
-                  <menuitem id="sync-lastsyncitem"
-                            disabled="true" hidden="true"/>
-                </menupopup>
-              </menu>
+              <menuitem id="sync-syncnowitem"
+                        label="&syncSyncNowItem.label;"
+                        accesskey="&syncSyncNowItem.accesskey;"
+                        observes="sync-syncnow-state"
+                        oncommand="gSyncUI.doSync(event);"/>
 #endif
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="menu_pageinspect"

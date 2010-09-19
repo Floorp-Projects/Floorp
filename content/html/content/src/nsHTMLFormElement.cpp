@@ -85,6 +85,17 @@
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
+static const PRUint8 NS_FORM_AUTOCOMPLETE_ON  = 1;
+static const PRUint8 NS_FORM_AUTOCOMPLETE_OFF = 0;
+
+static const nsAttrValue::EnumTable kFormAutocompleteTable[] = {
+  { "on",  NS_FORM_AUTOCOMPLETE_ON },
+  { "off", NS_FORM_AUTOCOMPLETE_OFF },
+  { 0 }
+};
+// Default autocomplete value is 'on'.
+static const nsAttrValue::EnumTable* kFormDefaultAutocomplete = &kFormAutocompleteTable[0];
+
 // nsHTMLFormElement
 
 PRBool nsHTMLFormElement::gFirstFormSubmitted = PR_FALSE;
@@ -365,6 +376,8 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Autocomplete, autocomplete,
+                                kFormDefaultAutocomplete->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
@@ -430,6 +443,9 @@ nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
     }
     if (aAttribute == nsGkAtoms::enctype) {
       return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
+    }
+    if (aAttribute == nsGkAtoms::autocomplete) {
+      return aResult.ParseEnumValue(aValue, kFormAutocompleteTable, PR_FALSE);
     }
   }
 
@@ -1560,19 +1576,6 @@ nsHTMLFormElement::SetEncoding(const nsAString& aEncoding)
   return SetEnctype(aEncoding);
 }
 
-NS_IMETHODIMP
-nsHTMLFormElement::GetFormData(nsIDOMFormData** aFormData)
-{
-  nsRefPtr<nsFormData> fd = new nsFormData();
-
-  nsresult rv = WalkFormElements(fd);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aFormData = fd.forget().get();
-
-  return NS_OK;
-}
- 
 NS_IMETHODIMP    
 nsHTMLFormElement::GetLength(PRInt32* aLength)
 {

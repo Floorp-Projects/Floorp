@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_tabs_TabChild_h
-#define mozilla_tabs_TabChild_h
+#ifndef mozilla_dom_TabChild_h
+#define mozilla_dom_TabChild_h
 
 #ifndef _IMPL_NS_LAYOUT
 #include "mozilla/dom/PBrowserChild.h"
@@ -48,8 +48,7 @@
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWebBrowserChromeFocus.h"
-#include "nsIWebProgressListener.h"
-#include "nsIWebProgressListener2.h"
+#include "nsIWidget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
@@ -79,6 +78,10 @@
 struct gfxMatrix;
 
 namespace mozilla {
+namespace layout {
+class RenderFrameChild;
+}
+
 namespace dom {
 
 class TabChild;
@@ -145,7 +148,6 @@ protected:
 
 class TabChild : public PBrowserChild,
                  public nsFrameScriptExecutor,
-                 public nsIWebProgressListener2,
                  public nsIWebBrowserChrome2,
                  public nsIEmbeddingSiteWindow2,
                  public nsIWebBrowserChromeFocus,
@@ -155,15 +157,14 @@ class TabChild : public PBrowserChild,
                  public nsIDialogCreator,
                  public nsITabChild
 {
+    typedef mozilla::layout::RenderFrameChild RenderFrameChild;
+
 public:
     TabChild(PRUint32 aChromeFlags);
     virtual ~TabChild();
-    bool DestroyWidget();
     nsresult Init();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSIWEBPROGRESSLISTENER2
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBBROWSERCHROME2
     NS_DECL_NSIEMBEDDINGSITEWINDOW
@@ -173,12 +174,9 @@ public:
     NS_DECL_NSIWINDOWPROVIDER
     NS_DECL_NSIDIALOGCREATOR
 
-    virtual bool RecvCreateWidget(const MagicWindowHandle& parentWidget);
     virtual bool RecvLoadURL(const nsCString& uri);
-    virtual bool RecvMove(const PRUint32& x,
-                          const PRUint32& y,
-                          const PRUint32& width,
-                          const PRUint32& height);
+    virtual bool RecvShow(const nsIntSize& size);
+    virtual bool RecvMove(const nsIntSize& size);
     virtual bool RecvActivate();
     virtual bool RecvMouseEvent(const nsString& aType,
                                 const float&    aX,
@@ -224,12 +222,6 @@ public:
                                                      const nsTArray<int>&,
                                                      const nsTArray<nsString>&);
     virtual bool DeallocPContentDialog(PContentDialogChild* aDialog);
-    virtual PExternalHelperAppChild *AllocPExternalHelperApp(
-            const IPC::URI& uri,
-            const nsCString& aMimeContentType,
-            const bool& aForceSave,
-            const PRInt64& aContentLength);
-    virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
     static void ParamsToArrays(nsIDialogParamBlock* aParams,
                                nsTArray<int>& aIntParams,
                                nsTArray<nsString>& aStringParams);
@@ -294,6 +286,10 @@ public:
 
 protected:
     NS_OVERRIDE
+    virtual PRenderFrameChild* AllocPRenderFrame();
+    NS_OVERRIDE
+    virtual bool DeallocPRenderFrame(PRenderFrameChild* aFrame);
+    NS_OVERRIDE
     virtual bool RecvDestroy();
 
     bool DispatchWidgetEvent(nsGUIEvent& event);
@@ -302,8 +298,12 @@ private:
     void ActorDestroy(ActorDestroyReason why);
 
     bool InitTabChildGlobal();
+    bool InitWidget(const nsIntSize& size);
+    void DestroyWindow();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;
+    nsCOMPtr<nsIWidget> mWidget;
+    RenderFrameChild* mRemoteFrame;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     PRUint32 mChromeFlags;
 
@@ -332,4 +332,4 @@ GetTabChildFrom(nsIPresShell* aPresShell)
 }
 }
 
-#endif // mozilla_tabs_TabChild_h
+#endif // mozilla_dom_TabChild_h

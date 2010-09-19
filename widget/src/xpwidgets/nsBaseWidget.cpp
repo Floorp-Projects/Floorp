@@ -761,34 +761,45 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   }
 }
 
+PRBool
+nsBaseWidget::GetShouldAccelerate()
+{
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  PRBool disableAcceleration = PR_FALSE;
+  PRBool accelerateByDefault = PR_TRUE;
+
+  if (prefs) {
+    prefs->GetBoolPref("layers.accelerate-all",
+                       &accelerateByDefault);
+    prefs->GetBoolPref("layers.accelerate-none",
+                       &disableAcceleration);
+  }
+
+  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+  accelerateByDefault = accelerateByDefault || 
+                        (acceleratedEnv && (*acceleratedEnv != '0'));
+
+  nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+  PRBool safeMode = PR_FALSE;
+  if (xr)
+    xr->GetInSafeMode(&safeMode);
+
+  if (disableAcceleration || safeMode)
+    return PR_FALSE;
+
+  if (accelerateByDefault)
+    return PR_TRUE;
+
+  return mUseAcceleratedRendering;
+}
+
 LayerManager* nsBaseWidget::GetLayerManager()
 {
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-    PRBool disableAcceleration = PR_FALSE;
-    PRBool accelerateByDefault = PR_TRUE;
-
-    if (prefs) {
-      prefs->GetBoolPref("layers.accelerate-all",
-                         &accelerateByDefault);
-      prefs->GetBoolPref("layers.accelerate-none",
-                         &disableAcceleration);
-    }
-
-    const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-    accelerateByDefault = accelerateByDefault || 
-                          (acceleratedEnv && (*acceleratedEnv != '0'));
-
-    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-    PRBool safeMode = PR_FALSE;
-    if (xr)
-      xr->GetInSafeMode(&safeMode);
-
-    if (disableAcceleration || safeMode)
-      mUseAcceleratedRendering = PR_FALSE;
-    else if (accelerateByDefault)
-      mUseAcceleratedRendering = PR_TRUE;
+    mUseAcceleratedRendering = GetShouldAccelerate();
 
     if (mUseAcceleratedRendering) {
       nsRefPtr<LayerManagerOGL> layerManager =
@@ -805,10 +816,19 @@ LayerManager* nsBaseWidget::GetLayerManager()
       }
     }
     if (!mLayerManager) {
-      mLayerManager = new BasicLayerManager(this);
+      mLayerManager = CreateBasicLayerManager();
     }
   }
   return mLayerManager;
+}
+
+BasicLayerManager* nsBaseWidget::CreateBasicLayerManager()
+{
+#if !defined(MOZ_IPC)
+      return new BasicLayerManager(this);
+#else
+      return new BasicShadowLayerManager(this);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1182,6 +1202,8 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_MOVE,"NS_MOVE");
     _ASSIGN_eventName(NS_LOAD,"NS_LOAD");
     _ASSIGN_eventName(NS_POPSTATE,"NS_POPSTATE");
+    _ASSIGN_eventName(NS_BEFORE_SCRIPT_EXECUTE,"NS_BEFORE_SCRIPT_EXECUTE");
+    _ASSIGN_eventName(NS_AFTER_SCRIPT_EXECUTE,"NS_AFTER_SCRIPT_EXECUTE");
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
     _ASSIGN_eventName(NS_HASHCHANGE,"NS_HASHCHANGE");
     _ASSIGN_eventName(NS_READYSTATECHANGE,"NS_READYSTATECHANGE");

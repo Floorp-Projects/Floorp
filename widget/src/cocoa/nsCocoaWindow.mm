@@ -307,6 +307,11 @@ static unsigned int WindowMaskForBorderStyle(nsBorderStyle aBorderStyle)
   return mask;
 }
 
+NS_IMETHODIMP nsCocoaWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // If aRectIsFrameRect, aRect specifies the frame rect of the new window.
 // Otherwise, aRect.x/y specify the position of the window's frame relative to
 // the bottom of the menubar and aRect.width/height specify the size of the

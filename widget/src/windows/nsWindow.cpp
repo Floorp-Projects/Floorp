@@ -1018,38 +1018,37 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
   mParent = aNewParent;
 
-  if (aNewParent) {
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-    nsIWidget* parent = GetParent();
-    if (parent) {
-      parent->RemoveChild(this);
-    }
-
-    HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
-    NS_ASSERTION(newParent, "Parent widget has a null native window handle");
-    if (newParent && mWnd) {
-      ::SetParent(mWnd, newParent);
-    }
-
-    aNewParent->AddChild(this);
-
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
   nsIWidget* parent = GetParent();
-
   if (parent) {
     parent->RemoveChild(this);
   }
-
+  if (aNewParent) {
+    ReparentNativeWidget(aNewParent);
+    aNewParent->AddChild(this);
+    return NS_OK;
+  }
   if (mWnd) {
     // If we have no parent, SetParent should return the desktop.
     VERIFY(::SetParent(mWnd, nsnull));
   }
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+  NS_PRECONDITION(aNewParent, "");
+
+  mParent = aNewParent;
+  if (mWindowType == eWindowType_popup) {
+    return NS_OK;
+  }
+  HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
+  NS_ASSERTION(newParent, "Parent widget has a null native window handle");
+  if (newParent && mWnd) {
+    ::SetParent(mWnd, newParent);
+  }
   return NS_OK;
 }
 
@@ -2746,10 +2745,22 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
   UpdateNonClientMargins();
 
+  // Prevent window updates during the transition.
+  DWORD style;
+  if (nsUXThemeData::CheckForCompositor()) {
+    style = GetWindowLong(mWnd, GWL_STYLE);
+    SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
+  }
+
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
   nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
+
+  if (nsUXThemeData::CheckForCompositor()) {
+    style = GetWindowLong(mWnd, GWL_STYLE);
+    SetWindowLong(mWnd, GWL_STYLE, style | WS_VISIBLE);
+  }
 
   // Let the dom know via web shell window
   nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
@@ -3244,7 +3255,7 @@ nsWindow::GetLayerManager()
 
     // Fall back to software if we couldn't use any hardware backends.
     if (!mLayerManager)
-      mLayerManager = new BasicLayerManager(this);
+      mLayerManager = CreateBasicLayerManager();
   }
 #endif
 
@@ -7606,39 +7617,16 @@ nsWindow::GetRootAccessible()
   }
 
   NS_LOG_WMGETOBJECT_THISWND
-
-  if (mContentType != eContentTypeInherit) {
-    // We're on a MozillaContentWindowClass or MozillaUIWindowClass window.
-    // Search for the correct visible child window to get an accessible 
-    // document from. Make sure to use an active child window. If this window
-    // doesn't have child windows then return an accessible for it.
-    HWND accessibleWnd = ::GetTopWindow(mWnd);
-    NS_LOG_WMGETOBJECT_WND("Top Window", accessibleWnd);
-    if (!accessibleWnd) {
-      NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
-      return DispatchAccessibleEvent(NS_GETACCESSIBLE);
-    }
-
-    nsWindow* accessibleWindow = nsnull;
-    while (accessibleWnd) {
-      // Loop through windows and find the first one with accessibility info
-      accessibleWindow = GetNSWindowPtr(accessibleWnd);
-      if (accessibleWindow) {
-        nsAccessible *rootAccessible =
-          accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE);
-        if (rootAccessible) {
-          // Success, one of the child windows was active.
-          return rootAccessible;
-        }
-      }
-      accessibleWnd = ::GetNextWindow(accessibleWnd, GW_HWNDNEXT);
-      NS_LOG_WMGETOBJECT_WND("Next Window", accessibleWnd);
-    }
-    return nsnull;
-  }
-
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
-  return DispatchAccessibleEvent(NS_GETACCESSIBLE);
+
+  nsAccessible* docAcc = DispatchAccessibleEvent(NS_GETACCESSIBLE);
+  if (!docAcc)
+    return nsnull;
+
+  nsCOMPtr<nsIAccessibleDocument> rootDocAcc;
+  docAcc->GetRootDocument(getter_AddRefs(rootDocAcc));
+  nsRefPtr<nsAccessible> rootAcc(do_QueryObject(rootDocAcc));
+  return rootAcc;
 }
 
 STDMETHODIMP_(LRESULT)

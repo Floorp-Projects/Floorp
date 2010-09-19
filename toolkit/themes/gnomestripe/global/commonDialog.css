@@ -1,0 +1,18 @@
+#filler {
+  -moz-margin-start: -8px;
+  -moz-margin-end: -10px;
+}
+
+#iconContainer {
+  -moz-box-pack: center;
+  min-height: 55px; /* maximum icon height + icon margin */
+  min-width: 58px; /* maximum icon width + icon margin */
+}
+
+#info\.icon {
+  max-width: 48px;
+  max-height: 48px;
+  /* The 'spaced' class does this already. It's repeated here to make it clearer
+     what margin values the #iconContainer's min-height and max-height depend on: */
+  margin: 3px 5px 4px;
+}

@@ -90,8 +90,8 @@
             <grid>
               <rows>
                 <row align="center">
-                  <label value="&currentUser.label;" control="currentUser"/>
-                  <textbox id="currentUser" readonly="true">
+                  <label value="&currentAccount.label;" control="currentAccount"/>
+                  <textbox id="currentAccount" readonly="true">
                     <image/>
                   </textbox>
                   <hbox align="center">
@@ -117,6 +117,9 @@
                 <row id="manageAccountControls" hidden="true">
                   <spacer/>
                     <vbox class="indent">
+                     <label class="text-link"
+                             onclick="gSyncPane.openQuotaDialog(); return false;"
+                             value="&viewQuota.label;"/>
                       <label class="text-link"
                              onclick="gSyncUtils.changePassword(); return false;"
                              value="&changePassword.label;"/>
@@ -128,7 +131,7 @@
                              value="&resetSync.label;"/>
                       <label class="text-link"
                              onclick="gSyncPane.startOver(true); return false;"
-                             value="&differentAccount.label;"/>
+                             value="&stopUsingAccount.label;"/>
                     </vbox>
                   <spacer/>
                 </row>
@@ -189,7 +192,7 @@
                    onclick="event.stopPropagation();gSyncUtils.openToS();"
                    value="&prefs.tosLink.label;"/>
             <label class="text-link"
-                   onclick="event.stopPropagation();gSyncUtils.openPP();"
+                   onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
                    value="&prefs.ppLink.label;"/>
           </hbox>
         </vbox>

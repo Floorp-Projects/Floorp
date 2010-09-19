@@ -82,10 +82,17 @@ EXPORTS		= \
 		nsLayoutStatics.h \
 		$(NULL)
 
+ifdef MOZ_IPC
+GKIPCLIB=../ipc/$(LIB_PREFIX)gkipc_s.$(LIB_SUFFIX)
+else
+GKIPCLIB=$(NULL)
+endif
+
 SHARED_LIBRARY_LIBS = \
 	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
-	../generic/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
 	../forms/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
+	../generic/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
+	$(GKIPCLIB) \
 	../style/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
 	../tables/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
 	../xul/base/src/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \

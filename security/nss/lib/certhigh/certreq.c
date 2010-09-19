@@ -94,35 +94,39 @@ CERT_CreateCertificate(unsigned long serialNumber,
 
     c = (CERTCertificate *)PORT_ArenaZAlloc(arena, sizeof(CERTCertificate));
     
-    if (c) {
-	c->referenceCount = 1;
-	c->arena = arena;
-
-	/*
-	 * Default is a plain version 1.
-	 * If extensions are added, it will get changed as appropriate.
-	 */
-	rv = DER_SetUInteger(arena, &c->version, SEC_CERTIFICATE_VERSION_1);
-	if (rv) goto loser;
-
-	rv = DER_SetUInteger(arena, &c->serialNumber, serialNumber);
-	if (rv) goto loser;
-
-	rv = CERT_CopyName(arena, &c->issuer, issuer);
-	if (rv) goto loser;
-
-	rv = CERT_CopyValidity(arena, &c->validity, validity);
-	if (rv) goto loser;
-
-	rv = CERT_CopyName(arena, &c->subject, &req->subject);
-	if (rv) goto loser;
-	rv = SECKEY_CopySubjectPublicKeyInfo(arena, &c->subjectPublicKeyInfo,
-					  &req->subjectPublicKeyInfo);
-	if (rv) goto loser;
+    if (!c) {
+	PORT_FreeArena(arena, PR_FALSE);
+	return 0;
     }
+
+    c->referenceCount = 1;
+    c->arena = arena;
+
+    /*
+     * Default is a plain version 1.
+     * If extensions are added, it will get changed as appropriate.
+     */
+    rv = DER_SetUInteger(arena, &c->version, SEC_CERTIFICATE_VERSION_1);
+    if (rv) goto loser;
+
+    rv = DER_SetUInteger(arena, &c->serialNumber, serialNumber);
+    if (rv) goto loser;
+
+    rv = CERT_CopyName(arena, &c->issuer, issuer);
+    if (rv) goto loser;
+
+    rv = CERT_CopyValidity(arena, &c->validity, validity);
+    if (rv) goto loser;
+
+    rv = CERT_CopyName(arena, &c->subject, &req->subject);
+    if (rv) goto loser;
+    rv = SECKEY_CopySubjectPublicKeyInfo(arena, &c->subjectPublicKeyInfo,
+					 &req->subjectPublicKeyInfo);
+    if (rv) goto loser;
+
     return c;
 
-  loser:
+ loser:
     CERT_DestroyCertificate(c);
     return 0;
 }

@@ -900,9 +900,6 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 /* YARR supports x86 & x86-64, and has been tested on Mac and Windows. */
 #if (WTF_CPU_X86 \
  || WTF_CPU_X86_64 \
- || WTF_CPU_ARM_THUMB2 \
- || WTF_CPU_ARM_TRADITIONAL \
- || WTF_CPU_ARM_TRADITIONAL \
  || WTF_CPU_X86)
 #define ENABLE_YARR_JIT 1
 #else

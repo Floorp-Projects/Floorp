@@ -70,6 +70,12 @@ CPPSRCS		= \
 		nsClipboardPrivacyHandler.cpp \
 		$(NULL)
 
+ifdef MOZ_IPC
+CPPSRCS		+= \
+		PuppetWidget.cpp \
+		$(NULL)
+endif
+
 ifneq (,$(filter beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
 endif
@@ -97,7 +103,9 @@ LOCAL_INCLUDES	+= \
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/config.mk
+ifdef MOZ_IPC
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
+endif
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(TK_CFLAGS)

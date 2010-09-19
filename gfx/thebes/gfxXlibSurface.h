@@ -85,6 +85,7 @@ public:
     virtual const gfxIntSize GetSize() const { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
+    Screen* XScreen();
     Drawable XDrawable() { return mDrawable; }
     XRenderPictFormat* XRenderFormat();
 
@@ -97,6 +98,15 @@ public:
     void TakePixmap() {
         NS_ASSERTION(!mPixmapTaken, "I already own the Pixmap!");
         mPixmapTaken = PR_TRUE;
+    }
+
+    // Release ownership of this surface's Pixmap.  This is only valid
+    // on gfxXlibSurfaces for which the user called TakePixmap(), or
+    // on those created by a Create() factory method.
+    Drawable ReleasePixmap() {
+        NS_ASSERTION(mPixmapTaken, "I don't own the Pixmap!");
+        mPixmapTaken = PR_FALSE;
+        return mDrawable;
     }
 
     // Find a visual and colormap pair suitable for rendering to this surface.
