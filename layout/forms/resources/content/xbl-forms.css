@@ -241,12 +241,12 @@ input > .anonymous-div {
   text-decoration: inherit;
 }
 
-input[disabled],
-textarea[disabled],
-option[disabled],
-optgroup[disabled],
-select[disabled],
-select[disabled]::-moz-display-comboboxcontrol-frame {
+input:disabled,
+textarea:disabled,
+option:disabled,
+optgroup:disabled,
+select:disabled,
+select:disabled::-moz-display-comboboxcontrol-frame {
   color: GrayText;
   cursor: inherit; 
 }
@@ -269,7 +269,7 @@ input[type="image"] {
   padding: 0;
 }
 
-input[type="image"][disabled] {
+input[type="image"]:disabled {
   cursor: inherit;
 }
 

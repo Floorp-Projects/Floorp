@@ -71,7 +71,7 @@ input[type="checkbox"]:focus {
 
 /* ..... disabled state ..... */
 
-input[type="checkbox"][disabled="true"] {
+input[type="checkbox"]:disabled {
   background-color: -moz-Dialog;
 }
 
@@ -81,7 +81,7 @@ input[type="checkbox"]:checked {
   list-style-image: url("chrome://forms/skin/cbox-check.gif");
 }
 
-input[type="checkbox"][disabled="true"]:checked {
+input[type="checkbox"]:disabled:checked {
   list-style-image: url("chrome://forms/skin/cbox-check-dis.gif") !important;
 }
 
