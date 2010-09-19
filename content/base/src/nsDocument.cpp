@@ -2399,6 +2399,44 @@ nsresult nsDocument::CheckFrameOptions()
     if (thisWindow == topWindow)
       return NS_OK;
 
+    // Find the top docshell in our parent chain that doesn't have the system
+    // principal and use it for the principal comparison.  Finding the top
+    // content-type docshell doesn't work because some chrome documents are
+    // loaded in content docshells (see bug 593387).
+    nsIPrincipal* thisPrincipal = NodePrincipal();
+    nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem,
+                                  curDocShellItem = thisDocShellItem;
+    nsCOMPtr<nsIDocument> topDoc;
+    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
+    if (!ssm)
+      return NS_ERROR_CONTENT_BLOCKED;
+
+    // Traverse up the parent chain to the top docshell that doesn't have
+    // a system principal
+    curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem));
+    while (parentDocShellItem) {
+      PRBool system = PR_FALSE;
+      topDoc = do_GetInterface(parentDocShellItem);
+      if (topDoc) {
+        if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),
+                                                &system)) && system) {
+          break;
+        }
+      }
+      else {
+        return NS_ERROR_CONTENT_BLOCKED;
+      }
+      curDocShellItem = parentDocShellItem;
+      curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem));
+    }
+
+    // If this document has the top non-SystemPrincipal docshell it is not being
+    // framed or it is being framed by a chrome document, which we allow.
+    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
+    if (curDocShellItem == thisDocShellItem)
+      return NS_OK;
+
     // If the value of the header is DENY, then the document
     // should never be permitted to load as a subdocument.
     if (xfoHeaderValue.LowerCaseEqualsLiteral("deny")) {
@@ -2411,11 +2449,10 @@ nsresult nsDocument::CheckFrameOptions()
       nsCOMPtr<nsIURI> uri = static_cast<nsIDocument*>(this)->GetDocumentURI();
       nsCOMPtr<nsIDOMDocument> topDOMDoc;
       topWindow->GetDocument(getter_AddRefs(topDOMDoc));
-      nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDOMDoc);
+      topDoc = do_QueryInterface(topDOMDoc);
       if (topDoc) {
         nsCOMPtr<nsIURI> topUri = topDoc->GetDocumentURI();
-        nsresult rv = nsContentUtils::GetSecurityManager()->
-          CheckSameOriginURI(uri, topUri, PR_TRUE);
+        nsresult rv = ssm->CheckSameOriginURI(uri, topUri, PR_TRUE);
 
         if (NS_FAILED(rv)) {
           framingAllowed = false;
