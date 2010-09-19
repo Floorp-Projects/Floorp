@@ -43,7 +43,8 @@ displayTimestamp("started", startup = runtime.startupTimestamp);
 if (launched)
   displayDuration("started", startup - launched);
 
-let ss = Cc["@mozilla.org/browser/sessionstartup;1"].getService(Ci.nsISessionStartup);
+let ss = Cc["@mozilla.org/browser/sessionstartup;1"]
+           .getService(Ci.nsISessionStartup);
 displayTimestamp("restored", restored = ss.restoredTimestamp);
 displayDuration("restored", restored - startup);
 
@@ -59,11 +60,13 @@ var db = svc.openDatabase(file);
 
 ///// set up the graph options
 var graph, overview;
-var options = { legend: { show: true, position: "ne", margin: 10, labelBoxBorderColor: "transparent" },
+var options = { legend: { show: true, position: "ne", margin: 10,
+                          labelBoxBorderColor: "transparent" },
                 xaxis: { mode: "time" },
                 yaxis: { min: 0, tickFormatter: formatms },
                 selection: { mode: "xy", color: "#00A" },
-                grid: { show: true, borderWidth: 0, markings: [], aboveData: true, tickColor: "white" },
+                grid: { show: true, borderWidth: 0, markings: [],
+                        aboveData: true, tickColor: "white" },
                 series: { lines: { show: true, fill: true },
                           points: { show: true, fill: true },
                         },
@@ -72,9 +75,11 @@ var options = { legend: { show: true, position: "ne", margin: 10, labelBoxBorder
 var overviewOpts = $.extend(true, {}, options,
                             { legend: { show: false },
                               xaxis: { ticks: [], mode: "time" },
-                              yaxis: { ticks: [], min: 0, autoscaleMargin: 0.1 },
+                              yaxis: { ticks: [], min: 0,
+                                       autoscaleMargin: 0.1 },
                               grid: { show: false },
-                              series: { lines: { show: true, fill: true, lineWidth: 1 },
+                              series: { lines: { show: true, fill: true,
+                                                 lineWidth: 1 },
                                         points: { show: false },
                                         shadowSize: 0
                                       },
@@ -132,7 +137,8 @@ go();
 
 function populateMeasurements()
 {
-  var query = db.createStatement("SELECT timestamp, launch, startup, appVersion, appBuild FROM duration");
+  let s = "SELECT timestamp, launch, startup, appVersion, appBuild FROM duration";
+  var query = db.createStatement(s);
   var lastver, lastbuild;
   query.executeAsync({
     handleResult: function(results)
@@ -147,11 +153,13 @@ function populateMeasurements()
         let build = row.getResultByName("appBuild");
         if (lastver != version)
         {
-          options.grid.markings.push(majorMark(stamp, appVersion(version, build)));
+          options.grid.markings.push(majorMark(stamp, appVersion(version,
+                                                                 build)));
         }
         else
           if (lastbuild != build)
-            options.grid.markings.push(minorMark(stamp, appVersion(version, build)));
+            options.grid.markings.push(minorMark(stamp, appVersion(version,
+                                                                   build)));
 
         lastver = version;
         lastbuild = build;
@@ -171,12 +179,15 @@ function populateMeasurements()
     },
     handleError: function(error)
     {
-      $("#duration-table").appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
+      $("#duration-table").appendChild(tr(td("Error: "+ error.message +" ("+
+                                             error.result +")")));
     },
     handleCompletion: function()
     {
       var table = $("table");
-      var height = $(window).height() - (table.offset().top + table.outerHeight(true)) - 110;
+      var height = $(window).height() - (table.offset().top +
+                                         table.outerHeight(true))
+                                      - 110;
       $("#graph").height(Math.max(350, height));
 
       options.xaxis.min = Date.now() - 604800000; // 7 days in milliseconds
@@ -199,7 +210,8 @@ function populateMeasurements()
 
 function populateEvents()
 {
-  var query = db.createStatement("SELECT timestamp, id, name, version, action FROM events");
+  let s = "SELECT timestamp, id, name, version, action FROM events";
+  var query = db.createStatement(s);
   let lastver, lastbuild;
   let hasresults;
 
@@ -219,7 +231,10 @@ function populateEvents()
               version = row.getResultByName("version"),
               action = row.getResultByName("action");
 
-          options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
+          options.grid.markings.push(extensionMark(stamp,
+                                                   formatExtension(action,
+                                                                   name,
+                                                                   version)));
           table.appendChild(tr(td(formatstamp(stamp)),
                                td(action),
                                td(name),
@@ -232,7 +247,8 @@ function populateEvents()
     },
     handleError: function(error)
     {
-      $("#events-table").appendChild(tr(td("Error: "+ error.message +" ("+ error.result +")")));
+      $("#events-table").appendChild(tr(td("Error: "+ error.message +" ("+
+                                           error.result +")")));
     },
     handleCompletion: function()
     {
