@@ -26,6 +26,7 @@
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *   Ben Turner <mozilla@songbirdnest.com>
  *   Sergei Dolgov <sergei_d@fi.tartu.ee>
+ *   Daniel Brooks <db48x@db48x.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
