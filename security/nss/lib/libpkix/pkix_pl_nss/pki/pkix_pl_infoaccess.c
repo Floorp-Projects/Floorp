@@ -575,7 +575,6 @@ pkix_pl_InfoAccess_ParseTokens(
 {
         PKIX_UInt32 len = 0;
         PKIX_UInt32 numFilters = 0;
-        PKIX_Int32 cmpResult = -1;
         char *endPos = NULL;
         char *p = NULL;
         char **filterP = NULL;
@@ -629,14 +628,12 @@ pkix_pl_InfoAccess_ParseTokens(
                     *filterP = p;
 
                     while (len) {
-                            if (**startPos == '%') {
+                            if (**startPos == '%' &&
+                                strncmp(*startPos, "%20", 3) == 0) {
                             /* replace %20 by blank */
-                                cmpResult = strncmp(*startPos, "%20", 3);
-                                if (cmpResult == 0) {
-                                    *p = ' ';
-                                    *startPos += 3;
-                                    len -= 3;
-                                }
+                                *p = ' ';
+                                *startPos += 3;
+                                len -= 3;
                             } else {
                                 *p = **startPos;
                                 (*startPos)++;

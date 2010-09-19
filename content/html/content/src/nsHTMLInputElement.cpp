@@ -169,6 +169,20 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 // Default type is 'text'.
 static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[12];
 
+static const PRUint8 NS_INPUT_AUTOCOMPLETE_OFF     = 0;
+static const PRUint8 NS_INPUT_AUTOCOMPLETE_ON      = 1;
+static const PRUint8 NS_INPUT_AUTOCOMPLETE_DEFAULT = 2;
+
+static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
+  { "", NS_INPUT_AUTOCOMPLETE_DEFAULT },
+  { "on", NS_INPUT_AUTOCOMPLETE_ON },
+  { "off", NS_INPUT_AUTOCOMPLETE_OFF },
+  { 0 }
+};
+
+// Default autocomplete value is "".
+static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocompleteTable[0];
+
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
   0xdc3b3d14,                                      \
@@ -291,10 +305,8 @@ AsyncClickHandler::Run()
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  nsFileControlFrame* frame = static_cast<nsFileControlFrame*>(mInput->GetPrimaryFrame());
-  nsTextControlFrame* textFrame = nsnull;
-  if (frame)
-    textFrame = static_cast<nsTextControlFrame*>(frame->GetTextFrame());
+  nsFileControlFrame* frame =
+    static_cast<nsFileControlFrame*>(mInput->GetPrimaryFrame());
 
   PRBool multi;
   rv = mInput->GetMultiple(&multi);
@@ -368,17 +380,14 @@ AsyncClickHandler::Run()
     filePicker->SetDisplayDirectory(localFile);
   }
 
-  // Tell our textframe to remember the currently focused value
-  if (textFrame)
-    textFrame->InitFocusedValue();
-
   // Open dialog
   PRInt16 mode;
   rv = filePicker->Show(&mode);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (mode == nsIFilePicker::returnCancel)
+  if (mode == nsIFilePicker::returnCancel) {
     return NS_OK;
-  
+  }
+
   // Collect new selected filenames
   nsCOMArray<nsIDOMFile> newFiles;
   if (multi) {
@@ -388,14 +397,16 @@ AsyncClickHandler::Run()
 
     nsCOMPtr<nsISupports> tmp;
     PRBool prefSaved = PR_FALSE;
-    while (NS_SUCCEEDED(iter->GetNext(getter_AddRefs(tmp)))) {
+    PRBool loop = PR_TRUE;
+    while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
+      iter->GetNext(getter_AddRefs(tmp));
       nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(tmp);
       if (localFile) {
         nsString unicodePath;
         rv = localFile->GetPath(unicodePath);
         if (!unicodePath.IsEmpty()) {
           nsCOMPtr<nsIDOMFile> domFile =
-            do_QueryObject(new nsDOMFile(localFile, doc));
+            do_QueryObject(new nsDOMFile(localFile));
           newFiles.AppendObject(domFile);
         }
         if (!prefSaved) {
@@ -416,7 +427,7 @@ AsyncClickHandler::Run()
       rv = localFile->GetPath(unicodePath);
       if (!unicodePath.IsEmpty()) {
         nsCOMPtr<nsIDOMFile> domFile=
-          do_QueryObject(new nsDOMFile(localFile, doc));
+          do_QueryObject(new nsDOMFile(localFile));
         newFiles.AppendObject(domFile);
       }
       // Store the last used directory using the content pref service
@@ -428,21 +439,14 @@ AsyncClickHandler::Run()
 
   // Set new selected files
   if (newFiles.Count()) {
-    // Tell mTextFrame that this update of the value is a user initiated
-    // change. Otherwise it'll think that the value is being set by a script
-    // and not fire onchange when it should.
-    PRBool oldState;
-    if (textFrame) {
-      oldState = textFrame->GetFireChangeEventState();
-      textFrame->SetFireChangeEventState(PR_TRUE);
-    }
-
+    // The text control frame (if there is one) isn't going to send a change
+    // event because it will think this is done by a script.
+    // So, we can safely send one by ourself.
     mInput->SetFiles(newFiles);
-    if (textFrame) {
-      textFrame->SetFireChangeEventState(oldState);
-      // May need to fire an onchange here
-      textFrame->CheckFireOnChange();
-    }
+    nsContentUtils::DispatchTrustedEvent(mInput->GetOwnerDoc(),
+                                         static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                         NS_LITERAL_STRING("change"), PR_FALSE,
+                                         PR_FALSE);
   }
 
   return NS_OK;
@@ -957,6 +961,8 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Autocomplete, autocomplete,
+                                kInputDefaultAutocomplete->tag)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Autofocus, autofocus)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
@@ -965,6 +971,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, FormMethod, formmethod,
                                 kFormDefaultMethod->tag)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, FormTarget, formtarget)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
@@ -1138,9 +1145,9 @@ nsHTMLInputElement::MozGetFileNameArray(PRUint32 *aLength, PRUnichar ***aFileNam
   PRUnichar **ret =
     static_cast<PRUnichar **>(NS_Alloc(mFiles.Count() * sizeof(PRUnichar*)));
   
-  for (PRUint32 i = 0; i <  mFiles.Count(); i++) {
+  for (PRInt32 i = 0; i <  mFiles.Count(); i++) {
     nsString str;
-    mFiles[i]->GetMozFullPath(str);
+    mFiles[i]->GetMozFullPathInternal(str);
     ret[i] = NS_strdup(str.get());
   }
 
@@ -1179,7 +1186,7 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
     }
 
     if (file) {
-      nsCOMPtr<nsIDOMFile> domFile = new nsDOMFile(file, GetOwnerDoc());
+      nsCOMPtr<nsIDOMFile> domFile = new nsDOMFile(file);
       files.AppendObject(domFile);
     } else {
       continue; // Not much we can do if the file doesn't exist
@@ -1325,7 +1332,7 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
   aValue.Truncate();
   for (PRUint32 i = 0; i < (PRUint32)mFiles.Count(); ++i) {
     nsString str;
-    mFiles[i]->GetMozFullPath(str);
+    mFiles[i]->GetMozFullPathInternal(str);
     if (i == 0) {
       aValue.Append(str);
     }
@@ -2434,6 +2441,9 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // form, see bug 592124.
             if (presShell && (event.message != NS_FORM_SUBMIT ||
                               mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+                              // We know the element is a submit control, if this check is moved,
+                              // make sure formnovalidate is used only if it's a submit control.
+                              HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
                               mForm->CheckValidFormSubmission())) {
               // Hold a strong ref while dispatching
               nsRefPtr<nsHTMLFormElement> form(mForm);
@@ -2530,6 +2540,10 @@ nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 void
 nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 {
+  ValueModeType aOldValueMode = GetValueMode();
+  nsAutoString aOldValue;
+  GetValue(aOldValue);
+
   // Only single line text inputs have a text editor state.
   PRBool isNewTypeSingleLine =
     IsSingleLineTextControlInternal(PR_FALSE, aNewType);
@@ -2545,15 +2559,40 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 
   mType = aNewType;
 
-  // We have to sanitize the value when the type changes.
-  // We could check that we are not changing to a type with the same
-  // sanitization algorithm than the current one but that would be bad for
-  // readability and not so helpful.
-  if (IsSingleLineTextControlInternal(PR_FALSE, mType)) {
-    nsAutoString value;
-    GetValue(value);
-    // SetValueInternal is going to sanitize the value.
-    SetValueInternal(value, PR_FALSE, PR_FALSE);
+  /**
+   * The following code is trying to reproduce the algorithm described here:
+   * http://www.whatwg.org/specs/web-apps/current-work/complete.html#input-type-change
+   */
+  switch (GetValueMode()) {
+    case VALUE_MODE_DEFAULT:
+    case VALUE_MODE_DEFAULT_ON:
+      // If the previous value mode was value, we need to set the value content
+      // attribute to the previous value.
+      // There is no value sanitizing algorithm for elements in this mode.
+      if (aOldValueMode == VALUE_MODE_VALUE && !aOldValue.IsEmpty()) {
+        SetAttr(kNameSpaceID_None, nsGkAtoms::value, aOldValue, PR_TRUE);
+      }
+      break;
+    case VALUE_MODE_VALUE:
+      // If the previous value mode wasn't value, we have to set the value to
+      // the value content attribute.
+      // SetValueInternal is going to sanitize the value.
+      {
+        nsAutoString value;
+        if (aOldValueMode != VALUE_MODE_VALUE) {
+          GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+        } else {
+          // We get the current value so we can sanitize it.
+          GetValue(value);
+        }
+        SetValueInternal(value, PR_FALSE, PR_FALSE);
+      }
+      break;
+    case VALUE_MODE_FILENAME:
+    default:
+      // We don't care about the value.
+      // There is no value sanitizing algorithm for elements in this mode.
+      break;
   }
 
   // Do not notify, it will be done after if needed.
@@ -2645,6 +2684,9 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
     }
     if (aAttribute == nsGkAtoms::formenctype) {
       return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
+    }
+    if (aAttribute == nsGkAtoms::autocomplete) {
+      return aResult.ParseEnumValue(aValue, kInputAutocompleteTable, PR_FALSE);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       // We have to call |ParseImageAttribute| unconditionally since we

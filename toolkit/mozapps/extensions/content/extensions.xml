@@ -859,7 +859,9 @@
         else
           this._description.hidden = true;
 
-        if (!this.mAddon.applyBackgroundUpdates) {
+        if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
+            (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
+             !AddonManager.autoUpdateDefault)) {
           var self = this;
           AddonManager.getAllInstalls(function(aInstallsList) {
             // This can return after the binding has been destroyed,
@@ -1400,11 +1402,15 @@
       <method name="onNewInstall">
         <parameter name="aInstall"/>
         <body><![CDATA[
-          if (!this.mAddon.applyBackgroundUpdates) {
-            this.mManualUpdate = aInstall;
-            this._showStatus("update-available");
-            this._updateUpgradeInfo();
-          }
+          if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_ENABLE)
+            return;
+          if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
+              AddonManager.autoUpdateDefault)
+            return;
+
+          this.mManualUpdate = aInstall;
+          this._showStatus("update-available");
+          this._updateUpgradeInfo();
         ]]></body>
       </method>
 

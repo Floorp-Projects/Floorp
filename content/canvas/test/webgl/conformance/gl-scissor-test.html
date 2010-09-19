@@ -45,10 +45,6 @@ if (!gl) {
 
   var b = new Uint8Array(2 * 2 * 4);
   gl.readPixels(0, 0, 2, 2, gl.RGBA, gl.UNSIGNED_BYTE, b);
-  checkPixel(b, 0, 0, [0, 1, 0, 1]);
-  checkPixel(b, 1, 0, [0, 0, 0, 0]);
-  checkPixel(b, 0, 1, [0, 0, 0, 0]);
-  checkPixel(b, 1, 1, [0, 0, 0, 0]);
 
   function checkPixel(b, x, y, color) {
     var offset = (y * 2 + x) * 4;
@@ -61,6 +57,11 @@ if (!gl) {
     }
     assertMsg(match, "pixel at " + x + ", " + y + " is expected value");
   }
+
+  checkPixel(b, 0, 0, [0, 1, 0, 1]);
+  checkPixel(b, 1, 0, [0, 0, 0, 0]);
+  checkPixel(b, 0, 1, [0, 0, 0, 0]);
+  checkPixel(b, 1, 1, [0, 0, 0, 0]);
 }
 
 debug("");

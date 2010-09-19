@@ -140,7 +140,7 @@
 #include "nsIPrivateBrowsingService.h"
 
 #ifdef MOZ_IPC
-#include "TabChild.h"
+#include "ContentChild.h"
 #include "nsXULAppAPI.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShellTreeOwner.h"
@@ -684,48 +684,41 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 #ifdef MOZ_IPC
   PRInt64 contentLength = GetContentLengthAsInt64(aRequest);
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // We need to get a hold of a TabChild so that we can begin forwarding
+    // We need to get a hold of a ContentChild so that we can begin forwarding
     // this data to the parent.  In the HTTP case, this is unfortunate, since
     // we're actually passing data from parent->child->parent wastefully, but
     // the Right Fix will eventually be to short-circuit those channels on the
     // parent side based on some sort of subscription concept.
-    nsCOMPtr<nsIDocShell> docshell(do_GetInterface(aWindowContext));
-    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
-    nsCOMPtr<nsIDocShellTreeOwner> owner;
-    item->GetTreeOwner(getter_AddRefs(owner));
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsITabChild> tabchild = do_GetInterface(owner);
-    if (!tabchild)
+    using mozilla::dom::ContentChild;
+    using mozilla::dom::ExternalHelperAppChild;
+    ContentChild *child = ContentChild::GetSingleton();
+    if (!child)
       return NS_ERROR_FAILURE;
+
+    nsCString disp;
+    if (channel)
+      ExtractDisposition(channel, disp);
 
     // Now we build a protocol for forwarding our data to the parent.  The
     // protocol will act as a listener on the child-side and create a "real"
     // helperAppService listener on the parent-side, via another call to
     // DoContent.
-    using mozilla::dom::TabChild;
-    using mozilla::dom::ExternalHelperAppChild;
-    TabChild *child = static_cast<TabChild*>(tabchild.get());
     mozilla::dom::PExternalHelperAppChild *pc;
     pc = child->SendPExternalHelperAppConstructor(IPC::URI(uri),
                                                   nsCString(aMimeContentType),
+                                                  disp,
                                                   aForceSave, contentLength);
     ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
     NS_ADDREF(*aStreamListener = childListener);
 
-    // FIXME:  Eventually we'll use this original listener to finish up client-side
-    // work, such as closing a no-longer-needed window.  (Bug 588255)
-    // nsExternalAppHandler * handler = new nsExternalAppHandler(nsnull,
-    //                                                           EmptyCString(),
-    //                                                           aWindowContext,
-    //                                                           fileName,
-    //                                                           reason,
-    //                                                           aForceSave);
-    // if (!handler)
-    //   return NS_ERROR_OUT_OF_MEMORY;
-    //
-    // childListener->SetHandler(handler);
+    nsRefPtr<nsExternalAppHandler> handler =
+      new nsExternalAppHandler(nsnull, EmptyCString(), aWindowContext, fileName,
+                               reason, aForceSave);
+    if (!handler)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    childListener->SetHandler(handler);
 
     return NS_OK;
   }
@@ -1573,21 +1566,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
-  rv = SetUpTempFile(aChannel);
-  if (NS_FAILED(rv)) {
-    mCanceled = PR_TRUE;
-    request->Cancel(rv);
-    nsAutoString path;
-    if (mTempFile)
-      mTempFile->GetPath(path);
-    SendStatusChange(kWriteError, rv, request, path);
-    return NS_OK;
-  }
-
-  // Extract mime type for later use below.
-  nsCAutoString MIMEType;
-  mMimeInfo->GetMIMEType(MIMEType);
-
   // retarget all load notifications to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
 
@@ -1608,6 +1586,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // and it was opened specifically for the download
   MaybeCloseWindow();
 
+  // In an IPC setting, we're allowing the child process, here, to make
+  // decisions about decoding the channel (e.g. decompression).  It will
+  // still forward the decoded (uncompressed) data back to the parent.
+  // Con: Uncompressed data means more IPC overhead.
+  // Pros: ExternalHelperAppParent doesn't need to implement nsIEncodedChannel.
+  //       Parent process doesn't need to expect CPU time on decompression.
   nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
   if (encChannel) 
   {
@@ -1643,6 +1627,24 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     }
 
     encChannel->SetApplyConversion( applyConversion );
+  }
+
+#ifdef MOZ_IPC
+  // At this point, the child process has done everything it can usefully do
+  // for OnStartRequest.
+  if (XRE_GetProcessType() == GeckoProcessType_Content)
+     return NS_OK;
+#endif
+
+  rv = SetUpTempFile(aChannel);
+  if (NS_FAILED(rv)) {
+    mCanceled = PR_TRUE;
+    request->Cancel(rv);
+    nsAutoString path;
+    if (mTempFile)
+      mTempFile->GetPath(path);
+    SendStatusChange(kWriteError, rv, request, path);
+    return NS_OK;
   }
 
   // Inform channel it is open on behalf of a download to prevent caching.
@@ -1682,6 +1684,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
       handlerSvc->Exists(mMimeInfo, &mimeTypeIsInDatastore);
     if (!handlerSvc || !mimeTypeIsInDatastore)
     {
+      nsCAutoString MIMEType;
+      mMimeInfo->GetMIMEType(MIMEType);
+
       if (!GetNeverAskFlagFromPref(NEVER_ASK_FOR_SAVE_TO_DISK_PREF, MIMEType.get()))
       {
         // Don't need to ask after all.
@@ -1871,6 +1876,9 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                 mWebProgressListener->OnStatusChange(nsnull, (type == kReadError) ? aRequest : nsnull, rv, msgText);
               }
               else
+#ifdef MOZ_IPC
+              if (XRE_GetProcessType() == GeckoProcessType_Default)
+#endif
               {
                 // We don't have a listener.  Simply show the alert ourselves.
                 nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mWindowContext));

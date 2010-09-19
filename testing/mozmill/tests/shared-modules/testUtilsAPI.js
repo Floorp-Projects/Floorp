@@ -13,13 +13,14 @@
  *
  * The Original Code is MozMill Test code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Henrik Skupin <hskupin@mozilla.com>
  *   Anthony Hughes <ahughes@mozilla.com>
+ *   M.-A. Darche <mozdev@cynode.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,8 @@
  */
 
 var MODULE_NAME = 'UtilsAPI';
+
+const gTimeout = 5000;
 
 /**
  * Get application specific informations
@@ -153,23 +156,27 @@ var appInfo = {
  *
  * @param {MozmillController} controller
  *        MozMillController of the window to operate on
- * @param {ElemBase} element
+ * @param {ElemBase} elem
  *        Element to check its visibility
- * @param {boolean} visibility
+ * @param {boolean} expectedVisibility
  *        Expected visibility state of the element
  */
-function assertElementVisible(controller, element, visibility)
-{
-  var style = controller.window.getComputedStyle(element.getNode(), "");
-  var state = style.getPropertyValue("visibility");
+function assertElementVisible(controller, elem, expectedVisibility) {
+  var element = elem.getNode();
+  var visible;
 
-  if (visibility) {
-    controller.assertJS("subject.visibilityState == 'visible'",
-                        {visibilityState: state});
-  } else {
-    controller.assertJS("subject.visibilityState != 'visible'",
-                        {visibilityState: state});
+  switch (element.nodeName) {
+    case 'panel':
+      visible = ['open', 'showing'].indexOf(element.state) >= 0;
+      break;
+    default:
+      var style = controller.window.getComputedStyle(element, '');
+      var state = style.getPropertyValue('visibility');
+      visible = (state == 'visible');
   }
+
+  controller.assertJS('subject.visible == subject.expectedVisibility',
+                      {visible: visible, expectedVisibility: expectedVisibility });
 }
 
 /**
@@ -184,14 +191,15 @@ function assertElementVisible(controller, element, visibility)
 function assertLoadedUrlEqual(controller, targetUrl)
 {
   var locationBar = new elementslib.ID(controller.window.document, "urlbar");
-  var currentUrl = locationBar.getNode().value;
+  var currentURL = locationBar.getNode().value;
 
   // Load the target URL
   controller.open(targetUrl);
   controller.waitForPageLoad();
 
   // Check the same web page has been opened
-  controller.assertValue(locationBar, currentUrl);
+  controller.waitForEval("subject.targetURL.value == subject.currentURL", gTimeout, 100,
+                         {targetURL: locationBar.getNode(),  currentURL: currentURL});
 }
 
 /**
@@ -252,6 +260,15 @@ function createURI(spec, originCharset, baseURI)
 }
 
 /**
+ * Empty the clipboard by assigning an empty string
+ */
+function emptyClipboard() {
+  var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                  getService(Ci.nsIClipboardHelper);
+  clipboard.copyString("");
+}
+
+/**
  * Format a URL by replacing all placeholders
  *
  * @param {string} prefName
@@ -268,7 +285,57 @@ function formatUrlPref(prefName)
 }
 
 /**
- * Called to get the value of an individual property.
+ * Returns the default home page
+ *
+ * @return The URL of the default homepage
+ * @type string
+ */
+function getDefaultHomepage() {
+  var prefs = collector.getModule('PrefsAPI').preferences;
+
+  var prefValue = prefs.getPref("browser.startup.homepage", "",
+                                true, Ci.nsIPrefLocalizedString);
+  return prefValue.data;
+}
+
+/**
+ * Returns the value of an individual entity in a DTD file.
+ *
+ * @param [string] urls
+ *        Array of DTD urls.
+ * @param {string} entityId
+ *        The ID of the entity to get the value of.
+ *
+ * @return The value of the requested entity
+ * @type string
+ */
+function getEntity(urls, entityId)
+{
+  // Add xhtml11.dtd to prevent missing entity errors with XHTML files
+  urls.push("resource:///res/dtd/xhtml11.dtd");
+
+  // Build a string of external entities
+  var extEntities = "";
+  for (i = 0; i < urls.length; i++) {
+    extEntities += '<!ENTITY % dtd' + i + ' SYSTEM "' +
+                   urls[i] + '">%dtd' + i + ';';
+  }
+
+  var parser = Cc["@mozilla.org/xmlextras/domparser;1"]
+                  .createInstance(Ci.nsIDOMParser);
+  var header = '<?xml version="1.0"?><!DOCTYPE elem [' + extEntities + ']>';
+  var elem = '<elem id="elementID">&' + entityId + ';</elem>';
+  var doc = parser.parseFromString(header + elem, 'text/xml');
+  var elemNode = doc.querySelector('elem[id="elementID"]');
+
+  if (elemNode == null)
+    throw new Error(arguments.callee.name + ": Unknown entity - " + entityId);
+
+  return elemNode.textContent;
+}
+
+/**
+ * Returns the value of an individual property.
  *
  * @param {string} url
  *        URL of the string bundle.
@@ -280,9 +347,72 @@ function formatUrlPref(prefName)
  */
 function getProperty(url, prefName)
 {
-  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"].
-                       getService(Components.interfaces.nsIStringBundleService);
+  var sbs = Cc["@mozilla.org/intl/stringbundle;1"]
+            .getService(Ci.nsIStringBundleService);
   var bundle = sbs.createBundle(url);
 
-  return bundle.GetStringFromName(prefName);
+  try {
+    return bundle.GetStringFromName(prefName);
+  } catch (ex) {
+    throw new Error(arguments.callee.name + ": Unknown property - " + prefName);
+  }
+}
+
+/**
+ * Function to handle non-modal windows
+ *
+ * @param {string} type
+ *        Specifies how to check for the new window (possible values: type or title)
+ * @param {string} text
+ *        The window type of title string to search for
+ * @param {function} callback (optional)
+ *        Callback function to call for window specific tests
+ * @param {boolean} dontClose (optional)
+ *        Doens't close the window after the return from the callback handler
+ * @returns The MozMillController of the window (if the window hasn't been closed)
+ */
+function handleWindow(type, text, callback, dontClose) {
+  var func_ptr = null;
+  var window = null;
+
+  if (dontClose === undefined)
+    dontClose = false;
+
+  // Set the window opener function to use depending on the type
+  switch (type) {
+    case "type":
+      func_ptr = mozmill.utils.getWindowByType;
+      break;
+    case "title":
+      func_ptr = mozmill.utils.getWindowByTitle;
+      break;
+    default:
+      throw new Error(arguments.callee.name + ": Unknown opener type - " + type);
+  }
+
+  try {
+    // Wait until the window has been opened
+    mozmill.controller.waitForEval("subject.getWindow(subject.text) != null", gTimeout, 100,
+                                   {getWindow: func_ptr, text: text});
+    window = func_ptr(text);
+
+    // XXX: We still have to find a reliable way to wait until the new window
+    // content has been finished loading. Let's wait for now.
+    var ctrl = new mozmill.controller.MozMillController(window);
+    ctrl.sleep(200);
+
+    if (callback)
+      callback(ctrl);
+  } finally {
+    // If a failure happened make sure we close the window if wanted
+    if (dontClose != true & window != null) {
+      window.close();
+      mozmill.controller.waitForEval("subject.getWindow(subject.text) != subject.window",
+                                     gTimeout, 100,
+                                     {getWindow: func_ptr, text: text, window: window});
+      return null;
+    }
+
+    return ctrl;
+  }
 }

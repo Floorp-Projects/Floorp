@@ -1,10 +1,3 @@
-(function() {
-  // For sendMouseEvent:
-  document.getElementsByTagName("head").item(0)
-    .appendChild(document.createElement("script")).src =
-      "/tests/SimpleTest/EventUtils.js";
-})();
-
 /**
  * Dispatches |handler| to |element|, as if fired in response to |event|.
  */

@@ -693,6 +693,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->fileBuf = NULL;
   instanceData->fileBufSize = 0;
   instanceData->throwOnNextInvoke = false;
+  instanceData->runScriptOnPaint = false;
   instanceData->testrange = NULL;
   instanceData->hasWidget = false;
   instanceData->npnNewStream = false;
@@ -743,7 +744,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
         requestWindow = true;
       }
     }
-	  if (strcmp(argn[i], "streammode") == 0) {
+    if (strcmp(argn[i], "streammode") == 0) {
       if (strcmp(argv[i], "normal") == 0) {
         instanceData->streamMode = NP_NORMAL;
       }
@@ -757,7 +758,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
       else if (strcmp(argv[i], "seek") == 0) {
         instanceData->streamMode = NP_SEEK;
       }
-	  }
+    }
     if (strcmp(argn[i], "streamchunksize") == 0) {
       instanceData->streamChunkSize = atoi(argv[i]);
     }
@@ -810,6 +811,9 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     }
     if (strcmp(argn[i], "newcrash") == 0) {
       IntentionalCrash();
+    }
+    if (strcmp(argn[i], "paintscript") == 0) {
+      instanceData->runScriptOnPaint = true;
     }
     // "cleanupwidget" is only used with nptest_gtk, defaulting to true.  It
     // indicates whether the plugin should destroy its window in response to
@@ -2389,6 +2393,33 @@ void notifyDidPaint(InstanceData* instanceData)
     r.right = instanceData->window.width;
     r.bottom = instanceData->window.height;
     NPN_InvalidateRect(instanceData->npp, &r);
+  }
+
+  if (instanceData->runScriptOnPaint) {
+    NPObject* o = NULL;
+    NPN_GetValue(instanceData->npp, NPNVPluginElementNPObject, &o);
+    if (o) {
+      NPVariant param;
+      STRINGZ_TO_NPVARIANT("paintscript", param);
+      NPVariant result;
+      NPN_Invoke(instanceData->npp, o, NPN_GetStringIdentifier("getAttribute"),
+                 &param, 1, &result);
+
+      if (NPVARIANT_IS_STRING(result)) {
+        NPObject* windowObject;
+        NPN_GetValue(instanceData->npp, NPNVWindowNPObject, &windowObject);
+        if (windowObject) {
+          NPVariant evalResult;
+          NPN_Evaluate(instanceData->npp, windowObject,
+                       (NPString*)&NPVARIANT_TO_STRING(result), &evalResult);
+          NPN_ReleaseVariantValue(&evalResult);
+          NPN_ReleaseObject(windowObject);
+        }
+      }
+
+      NPN_ReleaseVariantValue(&result);
+      NPN_ReleaseObject(o);
+    }
   }
 }
 

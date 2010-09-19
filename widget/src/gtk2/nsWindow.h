@@ -328,16 +328,21 @@ public:
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
-    virtual LayerManager*   GetLayerManager();
     gfxASurface       *GetThebesSurface();
 
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                                                   const nsIntSize& aSize);
+    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 
 #ifdef ACCESSIBILITY
     static PRBool      sAccessibilityEnabled;
 #endif
 protected:
+    // Helper for SetParent and ReparentNativeWidget.
+    void ReparentNativeWidgetInternal(nsIWidget* aNewParent,
+                                      GtkWidget* aNewContainer,
+                                      GdkWindow* aNewParentWindow,
+                                      GtkWidget* aOldContainer);
     nsCOMPtr<nsIWidget> mParent;
     // Is this a toplevel window?
     PRPackedBool        mIsTopLevel;

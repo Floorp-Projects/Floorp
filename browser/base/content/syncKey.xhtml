@@ -40,23 +40,44 @@
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
   %htmlDTD;
-  <!ENTITY % syncSetupDTD SYSTEM "chrome://browser/locale/syncSetup.dtd">
-  %syncSetupDTD;
+  <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+  %syncBrandDTD;
+  <!ENTITY % syncKeyDTD SYSTEM "chrome://browser/locale/syncKey.dtd">
+  %syncKeyDTD;
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>&page.syncKeyBackup.title;</title>
+  <title>&syncKey.page.title;</title>
   <style type="text/css">
     #synckey { font-size: 150% }
+    footer { font-size: 70% }
+# Bug 575675: Need to have an a:visited rule in a chrome document.
+    a:visited { color: purple; }
   </style>
 </head>
 
 <body>
-<h1>&page.syncKeyBackup.title;</h1>
+<h1>&syncKey.page.title;</h1>
 
 <p id="synckey">SYNCKEY</p>
 
-<p>&page.syncKeyBackup.descr;</p>
+<p>&syncKey.page.description;</p>
+
+<div id="column1">
+  <h2>&syncKey.keepItSecret.heading;</h2>
+  <p>&syncKey.keepItSecret.description;</p>
+</div>
+
+<div id="column2">
+  <h2>&syncKey.keepItSafe.heading;</h2>
+  <p><em>&syncKey.keepItSafe1.description;</em>&syncKey.keepItSafe2.description;<em>&syncKey.keepItSafe3.description;</em>&syncKey.keepItSafe4.description;</p>
+</div>
+
+<p>&syncKey.findOutMore1.label;<a href="https://services.mozilla.com">https://services.mozilla.com</a>&syncKey.findOutMore2.label;</p>
+
+<footer>
+ &syncKey.footer1.label;<a id="tosLink" href="termsURL">termsURL</a>&syncKey.footer2.label;<a id="ppLink" href="privacyURL">privacyURL</a>&syncKey.footer3.label;
+</footer>
 
 </body>
 </html>

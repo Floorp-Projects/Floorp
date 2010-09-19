@@ -186,16 +186,17 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 // -------------------------------------------
 // CharsetRule
 //
-class CSSCharsetRuleImpl : public nsCSSRule,
-                           public nsICSSRule,
-                           public nsIDOMCSSCharsetRule
+class NS_FINAL_CLASS CSSCharsetRuleImpl : public nsCSSRule,
+                                          public nsICSSRule,
+                                          public nsIDOMCSSCharsetRule
 {
 public:
   CSSCharsetRuleImpl(const nsAString& aEncoding);
   CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy);
-  virtual ~CSSCharsetRuleImpl(void);
-
-  NS_DECL_ISUPPORTS_INHERITED
+private:
+  ~CSSCharsetRuleImpl() {}
+public:
+  NS_DECL_ISUPPORTS
 
   DECL_STYLE_RULE_INHERIT
 
@@ -231,12 +232,8 @@ CSSCharsetRuleImpl::CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy)
 {
 }
 
-CSSCharsetRuleImpl::~CSSCharsetRuleImpl(void)
-{
-}
-
-NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule)
+NS_IMPL_ADDREF(CSSCharsetRuleImpl)
+NS_IMPL_RELEASE(CSSCharsetRuleImpl)
 
 DOMCI_DATA(CSSCharsetRule, CSSCharsetRuleImpl)
 
@@ -356,16 +353,18 @@ CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 // -------------------------------------------
 // nsICSSImportRule
 //
-class CSSImportRuleImpl : public nsCSSRule,
-                          public nsICSSImportRule,
-                          public nsIDOMCSSImportRule
+class NS_FINAL_CLASS CSSImportRuleImpl : public nsCSSRule,
+                                         public nsICSSImportRule,
+                                         public nsIDOMCSSImportRule
 {
 public:
   CSSImportRuleImpl(nsMediaList* aMedia);
   CSSImportRuleImpl(const CSSImportRuleImpl& aCopy);
-  virtual ~CSSImportRuleImpl(void);
+private:
+  ~CSSImportRuleImpl();
+public:
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   DECL_STYLE_RULE_INHERIT
 
@@ -421,15 +420,15 @@ CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
   // SetSheet sets mMedia appropriately
 }
 
-CSSImportRuleImpl::~CSSImportRuleImpl(void)
+CSSImportRuleImpl::~CSSImportRuleImpl()
 {
   if (mChildSheet) {
     mChildSheet->SetOwnerRule(nsnull);
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(CSSImportRuleImpl, nsCSSRule)
+NS_IMPL_ADDREF(CSSImportRuleImpl)
+NS_IMPL_RELEASE(CSSImportRuleImpl)
 
 DOMCI_DATA(CSSImportRule, CSSImportRuleImpl)
 
@@ -664,6 +663,9 @@ nsCSSGroupRule::~nsCSSGroupRule()
   }
 }
 
+NS_IMPL_ADDREF(nsCSSGroupRule)
+NS_IMPL_RELEASE(nsCSSGroupRule)
+
 IMPL_STYLE_RULE_INHERIT2(nsCSSGroupRule, nsCSSRule)
 
 static PRBool
@@ -887,8 +889,8 @@ nsCSSMediaRule::~nsCSSMediaRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSMediaRule, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSMediaRule, nsCSSRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSMediaRule, nsCSSGroupRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSMediaRule, nsCSSGroupRule)
 
 DOMCI_DATA(CSSMediaRule, nsCSSMediaRule)
 
@@ -1050,8 +1052,8 @@ nsCSSDocumentRule::~nsCSSDocumentRule(void)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSDocumentRule, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSDocumentRule, nsCSSRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSDocumentRule, nsCSSGroupRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSDocumentRule, nsCSSGroupRule)
 
 DOMCI_DATA(CSSMozDocumentRule, nsCSSDocumentRule)
 
@@ -1229,16 +1231,17 @@ nsCSSDocumentRule::URL::~URL()
 // -------------------------------------------
 // nsICSSNameSpaceRule
 //
-class CSSNameSpaceRuleImpl : public nsCSSRule,
-                             public nsICSSNameSpaceRule,
-                             public nsIDOMCSSRule
+class NS_FINAL_CLASS CSSNameSpaceRuleImpl : public nsCSSRule,
+                                            public nsICSSNameSpaceRule,
+                                            public nsIDOMCSSRule
 {
 public:
   CSSNameSpaceRuleImpl(void);
   CSSNameSpaceRuleImpl(const CSSNameSpaceRuleImpl& aCopy);
-  virtual ~CSSNameSpaceRuleImpl(void);
-
-  NS_DECL_ISUPPORTS_INHERITED
+private:
+  ~CSSNameSpaceRuleImpl();
+public:
+  NS_DECL_ISUPPORTS
 
   DECL_STYLE_RULE_INHERIT
 
@@ -1281,13 +1284,13 @@ CSSNameSpaceRuleImpl::CSSNameSpaceRuleImpl(const CSSNameSpaceRuleImpl& aCopy)
   NS_IF_ADDREF(mPrefix);
 }
 
-CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl(void)
+CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl()
 {
   NS_IF_RELEASE(mPrefix);
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule)
+NS_IMPL_ADDREF(CSSNameSpaceRuleImpl)
+NS_IMPL_RELEASE(CSSNameSpaceRuleImpl)
 
 DOMCI_DATA(CSSNameSpaceRule, CSSNameSpaceRuleImpl)
 
@@ -1773,8 +1776,8 @@ nsCSSFontFaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, nsCSSRule)
+NS_IMPL_ADDREF(nsCSSFontFaceRule)
+NS_IMPL_RELEASE(nsCSSFontFaceRule)
 
 DOMCI_DATA(CSSFontFaceRule, nsCSSFontFaceRule)
 

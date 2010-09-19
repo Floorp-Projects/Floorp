@@ -40,14 +40,14 @@
  */
 
 provider javascript {
- probe function__entry(char *, char *, char *);
- probe function__return(char *, char *, char *);
+ probe function__entry(const char *, const char *, const char *);
+ probe function__return(const char *, const char *, const char *);
  /* XXX must use unsigned longs here instead of uintptr_t for OS X 
     (Apple radar: 5194316 & 5565198) */
- probe object__create(char *, unsigned long);
- probe object__finalize(char *, char *, unsigned long);
- probe execute__start(char *, int);
- probe execute__done(char *, int);
+ probe object__create(const char *, unsigned long);
+ probe object__finalize(const char *, const char *, unsigned long);
+ probe execute__start(const char *, int);
+ probe execute__done(const char *, int);
 };
 
 /*

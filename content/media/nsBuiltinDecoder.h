@@ -295,7 +295,9 @@ public:
   virtual void UpdatePlaybackPosition(PRInt64 aTime) = 0;
 
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
-  
+
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
+
   // Causes the state machine to switch to buffering state, and to
   // immediately stop playback and buffer downloaded data. Must be called
   // with the decode monitor held. Called on the state machine thread and
@@ -434,6 +436,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // are buffered and playable.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) {
     return mDecoderStateMachine->GetBuffered(aBuffered);
+  }
+
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
+    return mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
   }
 
  public:

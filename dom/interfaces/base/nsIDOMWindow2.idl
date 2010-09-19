@@ -38,8 +38,9 @@
 #include "nsIDOMWindow.idl"
 
 interface nsIDOMOfflineResourceList;
+interface nsIDOMFile;
 
-[scriptable, uuid(73c5fa35-3add-4c87-a303-a850ccf4d65a)]
+[scriptable, uuid(63239526-27b0-44ff-be4e-ee1c8ee2212e)]
 interface nsIDOMWindow2 : nsIDOMWindow
 {
   /**
@@ -53,4 +54,11 @@ interface nsIDOMWindow2 : nsIDOMWindow
    * Get the application cache object for this window.
    */
   readonly attribute nsIDOMOfflineResourceList applicationCache;
+
+  /**
+   * Create and revoke blob urls. createBlobURL will always return a new URL
+   * with the lifetime of the current Document.
+   */
+  DOMString createBlobURL(in nsIDOMFile file);
+  void revokeBlobURL(in DOMString URL);
 };

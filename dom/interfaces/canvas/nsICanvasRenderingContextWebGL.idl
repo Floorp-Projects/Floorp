@@ -133,20 +133,6 @@ interface nsIWebGLUniformLocation : nsISupports
 interface nsICanvasRenderingContextWebGL : nsISupports
 {
   //
-  //  ARRAY CONSTRUCTORS
-  //
-
-  /*
-  nsIWebGLFloatArray createFloatArray();
-  nsIWebGLByteArray createByteArray();
-  nsIWebGLUnsignedByteArray createUnsignedByteArray();
-  nsIWebGLShortArray createShortArray();
-  nsIWebGLUnsignedShortArray createUnsignedShortArray();
-  nsIWebGLIntArray createIntArray();
-  nsIWebGLUnsignedIntArray createUnsignedIntArray();
-  */
-
-  //
   //  CONSTANTS
   //
 
@@ -163,16 +149,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   const unsigned long TRIANGLES                      = 0x0004;
   const unsigned long TRIANGLE_STRIP                 = 0x0005;
   const unsigned long TRIANGLE_FAN                   = 0x0006;
-
-  /* AlphaFunction (not supported in ES20) */
-  /*      GL_NEVER */
-  /*      GL_LESS */
-  /*      GL_EQUAL */
-  /*      GL_LEQUAL */
-  /*      GL_GREATER */
-  /*      GL_NOTEQUAL */
-  /*      GL_GEQUAL */
-  /*      GL_ALWAYS */
 
   /* BlendingFactorDest */
   const unsigned long ZERO                           = 0;
@@ -583,7 +559,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void present();
 
   void activeTexture(in WebGLenum texture);
-  void attachShader(in nsIWebGLProgram program, in nsIWebGLShader shader);
+  void attachShader([optional] in nsIWebGLProgram program, [optional] in nsIWebGLShader shader);
   void bindAttribLocation(in nsIWebGLProgram program, in WebGLuint index, in DOMString name);
   void bindBuffer(in WebGLenum target, in nsIWebGLBuffer buffer);
   void bindFramebuffer(in WebGLenum target, in nsIWebGLFramebuffer framebuffer);
@@ -611,7 +587,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void clearDepth(in WebGLclampf depth);
   void clearStencil(in WebGLint s);
   void colorMask(in WebGLboolean red, in WebGLboolean green, in WebGLboolean blue, in WebGLboolean alpha);
-  void compileShader(in nsIWebGLShader shader);
+  void compileShader([optional] in nsIWebGLShader shader);
 
   void copyTexImage2D(in WebGLenum target, in WebGLint level, in WebGLenum internalformat, 
                       in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height, in WebGLint border);
@@ -717,7 +693,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   WebGLboolean isEnabled(in WebGLenum cap);
   void lineWidth(in WebGLfloat width);
-  void linkProgram(in nsIWebGLProgram program);
+  void linkProgram([optional] in nsIWebGLProgram program);
   void pixelStorei(in WebGLenum pname, in WebGLint param);
   void polygonOffset(in WebGLfloat factor, in WebGLfloat units);
 
@@ -734,7 +710,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void scissor(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
 
   // Modified: void glShaderSource(WebGLuint shader, WebGLsizei count, const char** string, const WebGLint* length);
-  void shaderSource(in nsIWebGLShader shader, in DOMString source);
+  void shaderSource([optional] in nsIWebGLShader shader, [optional] in DOMString source);
 
   void stencilFunc(in WebGLenum func, in WebGLint ref, in WebGLuint mask);
   void stencilFuncSeparate(in WebGLenum face, in WebGLenum func, in WebGLint ref, in WebGLuint mask);

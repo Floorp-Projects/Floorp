@@ -1072,6 +1072,34 @@ JS_GetGlobalForScopeChain(JSContext *cx);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_InitCTypesClass(JSContext *cx, JSObject *global);
+
+/*
+ * Convert a unicode string 'source' of length 'slen' to the platform native
+ * charset, returning a null-terminated string allocated with JS_malloc. On
+ * failure, this function should report an error.
+ */
+typedef char *
+(* JSCTypesUnicodeToNativeFun)(JSContext *cx, const jschar *source, size_t slen);
+
+/*
+ * Set of function pointers that ctypes can use for various internal functions.
+ * See JS_SetCTypesCallbacks below. Providing NULL for a function is safe,
+ * and will result in the applicable ctypes functionality not being available.
+ */
+struct JSCTypesCallbacks {
+    JSCTypesUnicodeToNativeFun unicodeToNative;
+};
+
+typedef struct JSCTypesCallbacks JSCTypesCallbacks;
+
+/*
+ * Set the callbacks on the provided 'ctypesObj' object. 'callbacks' should be a
+ * pointer to static data that exists for the lifetime of 'ctypesObj', but it
+ * may safely be altered after calling this function and without having
+ * to call this function again.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_SetCTypesCallbacks(JSContext *cx, JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
 #endif
 
 /*

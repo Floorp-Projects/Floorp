@@ -402,3 +402,6 @@ ER3(SSL_ERROR_UNSAFE_NEGOTIATION,              (SSL_ERROR_BASE + 113),
 
 ER3(SSL_ERROR_RX_UNEXPECTED_UNCOMPRESSED_RECORD, (SSL_ERROR_BASE + 114),
 "SSL received an unexpected uncompressed record.")
+
+ER3(SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY,    (SSL_ERROR_BASE + 115),
+"SSL received a weak ephemeral Diffie-Hellman key in Server Key Exchange handshake message.")

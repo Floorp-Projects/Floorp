@@ -73,17 +73,8 @@ function ended(e) {
   return false;
 }
 
-// Only support for buffered is available for Ogg and WAV.
-// Eventually we'll support WebM as well.
-function supportsBuffered(type) {
-  var s = type.toLowerCase();
-  return /ogg$/.test(s) || /wav$/.test(s)
-}
-
 function startTest(test, token) {
   var v = document.createElement('video');
-  if (!supportsBuffered(test.type))
-    return;
   v.token = token;
   manager.started(token);
 

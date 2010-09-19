@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=499655
+-->
+<head>
+  <title>Test for Bug 499655</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=499655">Mozilla Bug 499655</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+div1 = document.createElementNS("http://www.w3.org/1999/xhtml","test");
+div2 = document.createElementNS("http://www.w3.org/1999/xhtml","TEst");
+div3 = document.createElementNS("test","test");
+div4 = document.createElementNS("test","TEst");
+div5 = document.createElement("test");
+div6 = document.createElement("TEst");
+
+content = document.getElementById("content");
+
+content.appendChild(div1);
+content.appendChild(div2);
+content.appendChild(div3);
+content.appendChild(div4);
+content.appendChild(div5);
+content.appendChild(div6);
+
+
+list = document.getElementsByTagName('test');
+is(list.length, 3, "Number of elements found");
+ok(list[0] == div1, "First element didn't match");
+ok(list[1] == div3, "Third element didn't match");
+ok(list[2] == div5, "Fifth element didn't match");
+
+list = document.getElementsByTagName('TEst');
+is(list.length, 3, "Number of elements found");
+ok(list[0] == div2, "Second element didn't match");
+ok(list[1] == div4, "Fourth element didn't match");
+ok(list[2] == div6, "Sixth element didn't match");
+
+list = document.getElementsByTagNameNS('test', 'test');
+is(list.length, 1, "Wrong number of elements found");
+ok(list[0] == div3, "Third element didn't match");
+
+]]>
+</script>
+</pre>
+</body>
+</html>

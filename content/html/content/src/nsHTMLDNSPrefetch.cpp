@@ -40,6 +40,7 @@
 #include "base/basictypes.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoChild.h"
+#include "nsURLHelper.h"
 #endif
 
 #include "nsHTMLDNSPrefetch.h"
@@ -64,6 +65,7 @@
 #include "mozilla/dom/Link.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::net;
 
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 PRBool sDisablePrefetchHTTPSPref;
@@ -107,8 +109,8 @@ nsHTMLDNSPrefetch::Initialize()
   if (NS_FAILED(rv)) return rv;
   
 #ifdef MOZ_IPC
-  if (mozilla::net::IsNeckoChild())
-    mozilla::net::NeckoChild::InitNeckoChild();
+  if (IsNeckoChild())
+    NeckoChild::InitNeckoChild();
 #endif
 
   sInitialized = PR_TRUE;
@@ -141,7 +143,7 @@ nsresult
 nsHTMLDNSPrefetch::Prefetch(Link *aElement, PRUint16 flags)
 {
 #ifdef MOZ_IPC
-  if (mozilla::net::IsNeckoChild()) {
+  if (IsNeckoChild()) {
     // Instead of transporting the Link object to the other process
     // we are using the hostname based function here, too. Compared to the 
     // IPC the performance hit should be negligible.
@@ -181,8 +183,13 @@ nsresult
 nsHTMLDNSPrefetch::Prefetch(nsAString &hostname, PRUint16 flags)
 {
 #ifdef MOZ_IPC
-  if (mozilla::net::IsNeckoChild()) {
-    mozilla::net::gNeckoChild->SendHTMLDNSPrefetch(nsAutoString(hostname), flags);
+  if (IsNeckoChild()) {
+    // We need to check IsEmpty() because net_IsValidHostName()
+    // considers empty strings to be valid hostnames
+    if (!hostname.IsEmpty() &&
+        net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
+      gNeckoChild->SendHTMLDNSPrefetch(nsAutoString(hostname), flags);
+    }
     return NS_OK;
   }
 #endif

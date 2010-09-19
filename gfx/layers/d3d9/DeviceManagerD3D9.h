@@ -48,7 +48,7 @@ namespace mozilla {
 namespace layers {
 
 class DeviceManagerD3D9;
-class ThebesLayerD3D9;
+class LayerD3D9;
 class Nv3DVUtils;
 
 /**
@@ -143,13 +143,18 @@ public:
   /** 
    * Return pointer to the Nv3DVUtils instance 
    */ 
-  Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; } 
+  Nv3DVUtils *GetNv3DVUtils()  { return mNv3DVUtils; }
 
   /**
-   * We keep a list of all thebes layers since we need their D3DPOOL_DEFAULT
-   * surfaces to be released when we want to reset the device.
+   * Returns true if this device was removed.
    */
-  nsTArray<ThebesLayerD3D9*> mThebesLayers;
+  bool DeviceWasRemoved() { return mDeviceWasRemoved; }
+
+  /**
+   * We keep a list of all layers here that may have hardware resource allocated
+   * so we can clean their resources on reset.
+   */
+  nsTArray<LayerD3D9*> mLayersWithResources;
 private:
   friend class SwapChainD3D9;
 
@@ -205,6 +210,9 @@ private:
 
   /* If this device supports dynamic textures */
   bool mHasDynamicTextures;
+
+  /* If this device was removed */
+  bool mDeviceWasRemoved;
 
   /* Nv3DVUtils instance */ 
   nsAutoPtr<Nv3DVUtils> mNv3DVUtils; 

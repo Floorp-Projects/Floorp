@@ -49,6 +49,7 @@ class nsDisplayListBuilder;
 class nsDisplayList;
 class nsDisplayItem;
 class gfxContext;
+class nsRootPresContext;
 
 namespace mozilla {
 
@@ -90,18 +91,22 @@ enum LayerState {
  */
 class FrameLayerBuilder {
 public:
+  typedef layers::ContainerLayer ContainerLayer; 
   typedef layers::Layer Layer; 
   typedef layers::ThebesLayer ThebesLayer;
   typedef layers::LayerManager LayerManager;
 
   FrameLayerBuilder() :
     mRetainingManager(nsnull),
+    mDetectedDOMModification(PR_FALSE),
     mInvalidateAllThebesContent(PR_FALSE),
     mInvalidateAllLayers(PR_FALSE)
   {
     mNewDisplayItemData.Init();
     mThebesLayerItems.Init();
   }
+
+  void Init(nsDisplayListBuilder* aBuilder);
 
   /**
    * Call this to notify that we are about to start a transaction on the
@@ -138,11 +143,12 @@ public:
    * caller's responsibility to add any clip rect and set the visible
    * region.
    */
-  already_AddRefed<Layer> BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
-                                                 LayerManager* aManager,
-                                                 nsIFrame* aContainerFrame,
-                                                 nsDisplayItem* aContainerItem,
-                                                 const nsDisplayList& aChildren);
+  already_AddRefed<ContainerLayer>
+  BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
+                         LayerManager* aManager,
+                         nsIFrame* aContainerFrame,
+                         nsDisplayItem* aContainerItem,
+                         const nsDisplayList& aChildren);
 
   /**
    * Get a retained layer for a display item that needs to create its own
@@ -263,6 +269,14 @@ public:
    */
   nscolor FindOpaqueColorCovering(nsDisplayListBuilder* aBuilder,
                                   ThebesLayer* aLayer, const nsRect& aRect);
+
+  /**
+   * Destroy any stored DisplayItemDataProperty for aFrame.
+   */
+  static void DestroyDisplayItemDataFor(nsIFrame* aFrame)
+  {
+    aFrame->Properties().Delete(DisplayItemDataProperty());
+  }
 
   /**
    * Clip represents the intersection of an optional rectangle with a
@@ -410,10 +424,21 @@ protected:
                                                  void* aUserArg);
 
   /**
+   * Returns true if the DOM has been modified since we started painting,
+   * in which case we should bail out and not paint anymore. This should
+   * never happen, but plugins can trigger it in some cases.
+   */
+  PRBool CheckDOMModified();
+
+  /**
    * The layer manager belonging to the widget that is being retained
    * across paints.
    */
   LayerManager*                       mRetainingManager;
+  /**
+   * The root prescontext for the display list builder reference frame
+   */
+  nsRootPresContext*                  mRootPresContext;
   /**
    * A map from frames to a list of (display item key, layer) pairs that
    * describes what layers various parts of the frame are assigned to.
@@ -424,6 +449,15 @@ protected:
    * clipping data) to be rendered in the layer.
    */
   nsTHashtable<ThebesLayerItemsEntry> mThebesLayerItems;
+  /**
+   * Saved generation counter so we can detect DOM changes.
+   */
+  PRUint32                            mInitialDOMGeneration;
+  /**
+   * Set to true if we have detected and reported DOM modification during
+   * the current paint.
+   */
+  PRPackedBool                        mDetectedDOMModification;
   /**
    * Indicates that the contents of all ThebesLayers should be rerendered
    * during this paint.

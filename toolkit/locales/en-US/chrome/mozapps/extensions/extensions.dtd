@@ -7,8 +7,9 @@
 <!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
-<!ENTITY installFromFile.label                "Install From File…">
-<!ENTITY installFromFile.accesskey            "I">
+<!ENTITY installAddonFromFile.label           "Install Add-on From File…">
+<!ENTITY installAddonFromFile.accesskey       "I">
+<!ENTITY toolsMenu.tooltip                    "Tools for all add-ons">
 
 <!ENTITY cmd.back.tooltip                     "Go back one page">
 <!ENTITY cmd.forward.tooltip                  "Go forward one page">
@@ -32,16 +33,18 @@
 <!ENTITY view.plugins.label                   "Plugins">
 <!ENTITY view.recentUpdates.label             "Recent Updates">
 <!ENTITY view.availableUpdates.label          "Available Updates">
-<!ENTITY view.utilites.preferences.tooltip    "Options for all add-ons">
-<!ENTITY view.utilites.preferencesUnix.tooltip "Preferences for all add-ons">
 
 <!-- addon updates -->
-<!ENTITY updates.updateAddonsNow.label        "Update Add-ons Now">
-<!ENTITY updates.updateAddonsNow.accesskey    "U">
+<!ENTITY updates.checkForUpdates.label        "Check for Updates">
+<!ENTITY updates.checkForUpdates.accesskey    "C">
 <!ENTITY updates.viewUpdates.label            "View Recent Updates">
 <!ENTITY updates.viewUpdates.accesskey        "V">
-<!ENTITY updates.backgroudUpdateCheck.label   "Check for Updates Automatically">
-<!ENTITY updates.backgroudUpdateCheck.accesskey "C">
+<!ENTITY updates.updateAddonsAutomatically.label     "Update Add-ons Automatically">
+<!ENTITY updates.updateAddonsAutomatically.accesskey "A">
+<!ENTITY updates.resetUpdatesToAutomatic.label       "Reset All Add-ons to Update Automatically">
+<!ENTITY updates.resetUpdatesToAutomatic.accesskey   "R">
+<!ENTITY updates.resetUpdatesToManual.label          "Reset All Add-ons to Update Manually">
+<!ENTITY updates.resetUpdatesToManual.accesskey      "R">
 <!ENTITY updates.updating.label               "Updating add-ons">
 <!ENTITY updates.installed.label              "Your add-ons have been updated.">
 <!ENTITY updates.downloaded.label             "Your add-on updates have been downloaded.">
@@ -98,6 +101,8 @@
 <!ENTITY detail.contributions.description     "The developer of this add-on asks that you help support its continued development by making a small contribution.">
 
 <!ENTITY detail.updateType                    "Automatic Updates">
+<!ENTITY detail.updateDefault.label           "Default">
+<!ENTITY detail.updateDefault.tooltip         "Automatically install updates only if that's the default">
 <!ENTITY detail.updateAutomatic.label         "On">
 <!ENTITY detail.updateAutomatic.tooltip       "Automatically install updates">
 <!ENTITY detail.updateManual.label            "Off">
@@ -132,6 +137,8 @@
 <!ENTITY sort.dateUpdated.tooltip             "Sort by date updated">
 <!ENTITY sort.relevance.label                 "Best match">
 <!ENTITY sort.relevance.tooltip               "Sort by relevance">
+<!ENTITY sort.price.label                     "Price">
+<!ENTITY sort.price.tooltip                   "Sort by price">
 
 <!ENTITY search.filter2.label                 "Search:">
 <!ENTITY search.filter2.installed.label       "My Add-ons">

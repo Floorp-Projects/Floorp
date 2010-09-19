@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=584480
+-->
+<head>
+  <title>Test for Bug 584480</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script> 
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=584480">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+var media = [];
+
+function checkComplete() {
+  complete = true;
+  for (var i=0; i<media.length; ++i) {
+    complete = media[i]._complete;
+  }
+
+  if (complete) {
+    SimpleTest.finish();
+  }
+}
+ 
+function loadError(evt) {
+  // Prevent mochitest's onerror handler catching the 'error' event on bubble.
+  evt.stopPropagation();
+  // If no referer is sent then the sjs returns an error
+  ok(false, "check referer is sent with media request");
+  evt.target._complete = true;
+  checkComplete();
+}
+
+function loadedMetadata(evt) {
+  // If a referer is sent then the sjs returns a valid media
+  ok(true, "check referer is sent with media request");
+  evt.target._complete = true;
+  checkComplete();
+}
+
+// Create all media objects.
+for (var i=0; i<gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  if (!v.canPlayType(test.type)) {
+    continue;
+  }
+  v._complete = false;
+  v.addEventListener("error", loadError, false);
+  v.addEventListener("loadedmetadata", loadedMetadata, false);
+  v.src = 'referer.sjs?name=' + test.name + '&type=' + test.type;
+  document.body.appendChild(v); // Will start load.
+  media.push(v);
+}
+
+if (media.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+</script>
+</pre>
+
+</body>
+</html>

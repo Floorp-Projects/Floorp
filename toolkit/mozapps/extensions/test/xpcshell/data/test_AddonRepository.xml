@@ -49,9 +49,10 @@
         <link>http://localhost:4444/developer2.html</link>
       </author>
     </authors>
-    <summary>Test Summary 2</summary>
-    <description>Test Description 2</description>
-    <developer_comments>Test Developer Comments 2</developer_comments>
+    <summary>&lt;h1&gt;Test Summary 2&lt;/h1&gt;&lt;p&gt;paragraph&lt;/p&gt;</summary>
+    <description>Test Description 2&lt;br&gt;newline</description>
+    <developer_comments>Test Developer
+                        Comments 2</developer_comments>
     <eula>Test EULA 2</eula>
     <icon>http://localhost:4444/icon2.png</icon>
     <status id="4">Public</status>
@@ -128,7 +129,7 @@
       </author>
     </authors>
     <summary>   Test Summary 3   </summary>
-    <description>   Test Description 3   </description>
+    <description>   Test Description 3&lt;br&gt;&lt;ul&gt;&lt;li&gt;List item 1&lt;li&gt;List item 2&lt;/ul&gt;   </description>
     <developer_comments>   Test Developer Comments 3   </developer_comments>
     <eula>   Test EULA 3   </eula>
     <icon>   http://localhost:4444/icon3.png   </icon>
