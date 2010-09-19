@@ -99,7 +99,8 @@ public:
 
 nsresult RecordStartupDuration();
 nsresult OpenStartupDatabase(mozIStorageConnection **db);
-nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table, const nsACString &schema);
+nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table,
+                     const nsACString &schema);
 nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details);
 
 //
@@ -633,7 +634,8 @@ nsresult OpenStartupDatabase(mozIStorageConnection **db)
   rv = svc->OpenDatabase(file, db);
   if (NS_ERROR_FILE_CORRUPTED == rv)
   {
-    svc->BackupDatabaseFile(file, NS_LITERAL_STRING("startup.sqlite.backup"), nsnull, nsnull);
+    svc->BackupDatabaseFile(file, NS_LITERAL_STRING("startup.sqlite.backup"),
+                            nsnull, nsnull);
     rv = svc->OpenDatabase(file, db);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -651,7 +653,8 @@ nsresult OpenStartupDatabase(mozIStorageConnection **db)
   return NS_OK;
 }
 
-nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table, const nsACString &schema)
+nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table,
+                     const nsACString &schema)
 {
   nsresult rv;
   PRBool exists = false;
