@@ -99,11 +99,11 @@ a:link:-moz-read-write {
 
 /* XXX Still need a better way of blocking other events to these widgets */
 select:-moz-read-write,
-*|*:-moz-read-write > input[disabled],
+*|*:-moz-read-write > input:disabled,
 *|*:-moz-read-write > input[type="checkbox"],
 *|*:-moz-read-write > input[type="radio"],
 *|*:-moz-read-write > input[type="file"],
-input[contenteditable="true"][disabled],
+input[contenteditable="true"]:disabled,
 input[contenteditable="true"][type="checkbox"],
 input[contenteditable="true"][type="radio"],
 input[contenteditable="true"][type="file"] {

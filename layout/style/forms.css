@@ -356,12 +356,12 @@ optgroup:before {
   border-left-width: 2px ! important;
 } 
 
-input[disabled],
-textarea[disabled],
-option[disabled],
-optgroup[disabled],
-select[disabled][disabled] /* Need the attr twice to have the specificity be at
-                              least the same as select[size][multiple] above */
+input:disabled,
+textarea:disabled,
+option:disabled,
+optgroup:disabled,
+select:disabled:disabled /* Need the pseudo-class twice to have the specificity
+                            be at least the same as select[size][multiple] above */
 {
   -moz-user-input: disabled;
   -moz-user-focus: ignore;
@@ -370,8 +370,8 @@ select[disabled][disabled] /* Need the attr twice to have the specificity be at
   cursor: inherit;
 }
 
-option[disabled],
-optgroup[disabled] {
+option:disabled,
+optgroup:disabled {
   background-color: transparent;
 }
 
@@ -398,7 +398,7 @@ input[type="image"] {
   -moz-binding: none;
 }
 
-input[type="image"][disabled] {
+input[type="image"]:disabled {
   cursor: inherit;
 }
 
@@ -469,14 +469,14 @@ input[type="checkbox"] {
   border: 2px inset ThreeDFace ! important;
 }
 
-input[type="radio"][disabled],
-input[type="radio"][disabled]:active,
-input[type="radio"][disabled]:hover,
-input[type="radio"][disabled]:hover:active,
-input[type="checkbox"][disabled],
-input[type="checkbox"][disabled]:active,
-input[type="checkbox"][disabled]:hover,
-input[type="checkbox"][disabled]:hover:active {
+input[type="radio"]:disabled,
+input[type="radio"]:disabled:active,
+input[type="radio"]:disabled:hover,
+input[type="radio"]:disabled:hover:active,
+input[type="checkbox"]:disabled,
+input[type="checkbox"]:disabled:active,
+input[type="checkbox"]:disabled:hover,
+input[type="checkbox"]:disabled:hover:active {
   padding: 1px;
   border: 1px inset ThreeDShadow ! important;
   /* same as above, but !important */
@@ -569,15 +569,15 @@ input[type="file"] > input[type="button"]:-moz-focusring::-moz-focus-inner {
   border-color: ButtonText;
 }
 
-button[disabled]:active, button[disabled],
-input[type="reset"][disabled]:active,
-input[type="reset"][disabled],
-input[type="button"][disabled]:active,
-input[type="button"][disabled],
-select[disabled] > input[type="button"],
-select[disabled] > input[type="button"]:active,
-input[type="submit"][disabled]:active,
-input[type="submit"][disabled] {
+button:disabled:active, button:disabled,
+input[type="reset"]:disabled:active,
+input[type="reset"]:disabled,
+input[type="button"]:disabled:active,
+input[type="button"]:disabled,
+select:disabled > input[type="button"],
+select:disabled > input[type="button"]:active,
+input[type="submit"]:disabled:active,
+input[type="submit"]:disabled {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here and for text inputs */
   padding: 0px 6px 0px 6px;
