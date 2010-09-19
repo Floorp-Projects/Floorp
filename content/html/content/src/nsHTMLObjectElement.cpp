@@ -62,6 +62,8 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
 #endif
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                       PRUint32 aFromParser = 0);
   virtual ~nsHTMLObjectElement();
