@@ -864,7 +864,15 @@ public:
    * @note Classes redefining this method should not call ContentStatesChanged
    * but they should pass aStates instead.
    */
-  virtual void OnFieldSetDisabledChanged(PRInt32 aStates);
+  virtual void FieldSetDisabledChanged(PRInt32 aStates);
+
+  void FieldSetFirstLegendChanged() {
+    UpdateFieldSet();
+
+    // The disabled state may have change because the element might not be in
+    // the first legend anymore.
+    FieldSetDisabledChanged(0);
+  }
 
   /**
    * Returns if the control can be disabled.

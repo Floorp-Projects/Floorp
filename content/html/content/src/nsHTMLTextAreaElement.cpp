@@ -131,7 +131,7 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void OnFieldSetDisabledChanged(PRInt32 aStates);
+  virtual void FieldSetDisabledChanged(PRInt32 aStates);
 
   virtual PRInt32 IntrinsicState() const;
 
@@ -1390,12 +1390,12 @@ nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
 }
 
 void
-nsHTMLTextAreaElement::OnFieldSetDisabledChanged(PRInt32 aStates)
+nsHTMLTextAreaElement::FieldSetDisabledChanged(PRInt32 aStates)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
-  nsGenericHTMLFormElement::OnFieldSetDisabledChanged(aStates);
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates);
 }
 

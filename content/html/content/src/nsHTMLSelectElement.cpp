@@ -2108,11 +2108,11 @@ nsHTMLSelectElement::UpdateBarredFromConstraintValidation()
 }
 
 void
-nsHTMLSelectElement::OnFieldSetDisabledChanged(PRInt32 aStates)
+nsHTMLSelectElement::FieldSetDisabledChanged(PRInt32 aStates)
 {
   UpdateBarredFromConstraintValidation();
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
-  nsGenericHTMLFormElement::OnFieldSetDisabledChanged(aStates);
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates);
 }
 

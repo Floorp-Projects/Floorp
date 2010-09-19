@@ -135,6 +135,8 @@ function checkElement(aElement, aDisabled)
 
 var fieldset1 = document.createElement("fieldset");
 var fieldset2 = document.createElement("fieldset");
+var legendA = document.createElement("legend");
+var legendB = document.createElement("legend");
 var content  = document.getElementById('content');
 content.appendChild(fieldset1);
 fieldset1.appendChild(fieldset2);
@@ -147,6 +149,7 @@ for each(var data in elements) {
     element.required = true;
   }
 
+  fieldset1.disabled = false;
   fieldset2.appendChild(element);
 
   checkElement(element, fieldset2.disabled);
@@ -168,9 +171,44 @@ for each(var data in elements) {
   fieldset2.disabled = false;
   checkElement(element, fieldset1.disabled);
 
+
+  /* legend tests */
+
+  // elements in the first legend of a disabled fieldset should not be disabled.
   fieldset2.disabled = true;
   fieldset1.disabled = false;
-  fieldset2.removeChild(element);
+  legendA.appendChild(element);
+  fieldset2.appendChild(legendA);
+  checkElement(element, false);
+
+  // elements in the second legend should be disabled
+  fieldset2.insertBefore(legendB, legendA);
+  checkElement(element, fieldset2.disabled);
+  fieldset2.removeChild(legendB);
+
+  // Elements in the first legend of a fieldset disabled by another fieldset
+  // should be disabled.
+  fieldset1.disabled = true;
+  checkElement(element, fieldset1.disabled);
+
+  // Elements inside a fieldset inside the first legend of a disabled fieldset
+  // should not be diasbled.
+  fieldset2.disabled = false;
+  fieldset1.appendChild(legendA);
+  legendA.appendChild(fieldset2);
+  fieldset2.appendChild(element);
+  checkElement(element, false);
+
+  // Elements inside the first legend of a disabled fieldset inside the first
+  // legend of a disabled fieldset should not be disabled.
+  fieldset2.disabled = false;
+  fieldset2.appendChild(legendB);
+  legendB.appendChild(element);
+  checkElement(element, false);
+  fieldset2.removeChild(legendB);
+  fieldset1.appendChild(fieldset2);
+
+  element.parentNode.removeChild(element);
 }
 
 </script>

@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557087
     <input type='radio' id='c'>
     <fieldset disabled>
       <fieldset>
-        <input type='submit'>
+        <input type='submit' id='s'>
       </fieldset>
     </fieldset>
   </form>
@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557087
 
 SimpleTest.waitForExplicitFinish();
 
-var gExpectedSubmits = 3;
+var gExpectedSubmits = 6;
 var gSubmitReceived = 0;
 var gEnd = false;
 
@@ -73,6 +73,15 @@ SimpleTest.waitForFocus(function() {
   fieldsets[1].disabled = false;
 
   gEnd = true;
+  doSubmit();
+
+  // Simple check that we can submit from inside a legend even if the fieldset
+  // is disabled.
+  var legend = document.createElement("legend");
+  fieldsets[0].appendChild(legend);
+  fieldsets[0].disabled = true;
+  legend.appendChild(document.getElementById('s'));
+
   doSubmit();
 });
 
