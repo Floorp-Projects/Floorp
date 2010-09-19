@@ -123,7 +123,7 @@ function go()
 {
   try {
     work.next();
-  } catch (x) {
+  } catch (x if x instanceof StopIteration) {
     // harmless
   }
 }
@@ -218,9 +218,8 @@ function populateEvents()
               name = extension ? extension.name : row.getResultByName("name"),
               version = row.getResultByName("version"),
               action = row.getResultByName("action");
-          alert([id, name, row.getResultByName("name")].toSource());
-          options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
 
+          options.grid.markings.push(extensionMark(stamp, formatExtension(action, name, version)));
           table.appendChild(tr(td(formatstamp(stamp)),
                                td(action),
                                td(name),
