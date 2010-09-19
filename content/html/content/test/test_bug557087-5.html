@@ -35,6 +35,7 @@ var testResults = [
   "data:text/html,?",
   "data:text/html,?",
   "data:text/html,?i=i&t=t&s=s",
+  "data:text/html,?i=i&t=t&s=s",
 ];
 var gTestCount = 0;
 
@@ -60,6 +61,19 @@ function runTest()
       case 2:
         fieldsets[0].disabled = false;
         fieldsets[1].disabled = false;
+        SimpleTest.executeSoon(function() {
+          form.submit()
+        });
+        break;
+      case 3:
+        // Elements inside the first legend of a disabled fieldset are submittable.
+        fieldsets[0].disabled = true;
+        fieldsets[1].disabled = true;
+        var legend = document.createElement("legend");
+        fieldsets[0].appendChild(legend);
+        while (fieldsets[1].firstChild) {
+          legend.appendChild(fieldsets[1].firstChild);
+        }
         SimpleTest.executeSoon(function() {
           form.submit()
         });
