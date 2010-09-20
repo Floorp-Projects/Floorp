@@ -330,8 +330,8 @@ ComputeThisFromArgv(JSContext *cx, Value *argv)
 
 #if JS_HAS_NO_SUCH_METHOD
 
-const uint32 JSSLOT_FOUND_FUNCTION  = 0;
-const uint32 JSSLOT_SAVED_ID        = 1;
+const uint32 JSSLOT_FOUND_FUNCTION  = JSSLOT_PRIVATE;
+const uint32 JSSLOT_SAVED_ID        = JSSLOT_PRIVATE + 1;
 
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
@@ -382,7 +382,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
                 vp[0] = IdToValue(id);
         }
 #endif
-        obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+        obj = js_NewGCObject(cx);
         if (!obj)
             return false;
 
@@ -393,9 +393,8 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
          * NoSuchMethod helper objects own no manually allocated resources.
          */
         obj->map = NULL;
-        obj->init(cx, &js_NoSuchMethodClass, NULL, NULL, NULL, false);
-        obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
-        obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
+        obj->init(&js_NoSuchMethodClass, NULL, NULL, tvr.value(), cx);
+        obj->fslots[JSSLOT_SAVED_ID] = vp[0];
         vp[0].setObject(*obj);
     }
     return true;
@@ -413,9 +412,9 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    args.callee() = obj->getSlot(JSSLOT_FOUND_FUNCTION);
+    args.callee() = obj->fslots[JSSLOT_FOUND_FUNCTION];
     args.thisv() = vp[1];
-    args[0] = obj->getSlot(JSSLOT_SAVED_ID);
+    args[0] = obj->fslots[JSSLOT_SAVED_ID];
     JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
@@ -5652,20 +5651,15 @@ END_CASE(JSOP_NEWARRAY)
 
 BEGIN_CASE(JSOP_NEWINIT)
 {
-    jsint i = GET_UINT16(regs.pc);
-    jsint count = GET_UINT16(regs.pc + UINT16_LEN);
-
+    jsint i = GET_INT8(regs.pc);
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
     JSObject *obj;
-
-    JSFinalizeGCThingKind kind = GuessObjectGCKind(count);
-
     if (i == JSProto_Array) {
-        obj = NewArrayWithKind(cx, kind);
+        obj = js_NewArrayObject(cx, 0, NULL);
         if (!obj)
             goto error;
     } else {
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
         if (!obj)
             goto error;
     }

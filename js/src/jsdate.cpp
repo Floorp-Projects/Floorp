@@ -2563,9 +2563,7 @@ JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass);
-    if (!obj || !obj->ensureSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
-        return NULL;
-    if (!SetUTCTime(cx, obj, msec_time))
+    if (!obj || !SetUTCTime(cx, obj, msec_time))
         return NULL;
     return obj;
 }

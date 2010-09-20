@@ -236,13 +236,7 @@ js_WaitForGC(JSRuntime *rt);
  * ordinary string to simplify js_GetExternalStringGCType.
  */
 enum JSFinalizeGCThingKind {
-    FINALIZE_OBJECT0,
-    FINALIZE_OBJECT2,
-    FINALIZE_OBJECT4,
-    FINALIZE_OBJECT8,
-    FINALIZE_OBJECT12,
-    FINALIZE_OBJECT16,
-    FINALIZE_OBJECT_LAST = FINALIZE_OBJECT16,
+    FINALIZE_OBJECT,
     FINALIZE_FUNCTION,
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
@@ -275,61 +269,12 @@ IsFinalizableStringKind(unsigned thingKind)
  * in the partially initialized thing.
  */
 extern void *
-js_NewFinalizableGCThing(JSContext *cx, JSFinalizeGCThingKind thingKind);
-
-/* Get the kind which was used when making a GC thing. */
-extern JSFinalizeGCThingKind
-js_KindFromGCThing(const void *thing);
-
-/* Maximum number of fixed slots for an object. */
-const size_t JSOBJECT_FIXED_SLOTS_LIMIT = 16;
-
-/* Capacity for js_GCObjectSlotsToThingKind */
-const size_t SLOTS_TO_THING_KIND_LIMIT = 33;
-
-/* Get the best kind to use when making an object with the given slot count. */
-static inline JSFinalizeGCThingKind
-js_GetGCObjectKind(size_t numSlots)
-{
-    extern JSFinalizeGCThingKind js_GCObjectSlotsToThingKind[];
-
-    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
-        return FINALIZE_OBJECT0;
-    return js_GCObjectSlotsToThingKind[numSlots];
-}
-
-/* Get the number of fixed slots and initial capacity associated with a kind. */
-static inline size_t
-js_GetGCKindSlots(JSFinalizeGCThingKind thingKind)
-{
-    /* Using a switch in hopes that thingKind will usually be a compile-time constant. */
-    switch (thingKind) {
-      case FINALIZE_OBJECT0:
-        return 0;
-      case FINALIZE_OBJECT2:
-        return 2;
-      case FINALIZE_OBJECT4:
-        return 4;
-      case FINALIZE_OBJECT8:
-        return 8;
-      case FINALIZE_OBJECT12:
-        return 12;
-      case FINALIZE_OBJECT16:
-        return 16;
-      default:
-        JS_NOT_REACHED("Bad object finalize kind");
-        return 0;
-    }
-}
+js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind);
 
 static inline JSObject *
-js_NewGCObject(JSContext *cx, JSFinalizeGCThingKind thingKind)
+js_NewGCObject(JSContext *cx)
 {
-    JS_ASSERT(thingKind >= FINALIZE_OBJECT0 && thingKind <= FINALIZE_OBJECT_LAST);
-    JSObject *obj = (JSObject *) js_NewFinalizableGCThing(cx, thingKind);
-    if (obj)
-        obj->capacity = js_GetGCKindSlots(thingKind);
-    return obj;
+    return (JSObject *) js_NewFinalizableGCThing(cx, FINALIZE_OBJECT);
 }
 
 static inline JSString *
@@ -351,7 +296,7 @@ js_NewGCExternalString(JSContext *cx, uintN type)
 {
     JS_ASSERT(type < JS_EXTERNAL_STRING_LIMIT);
     type += FINALIZE_EXTERNAL_STRING0;
-    return (JSString *) js_NewFinalizableGCThing(cx, JSFinalizeGCThingKind(type));
+    return (JSString *) js_NewFinalizableGCThing(cx, type);
 }
 
 static inline JSFunction *
@@ -359,13 +304,12 @@ js_NewGCFunction(JSContext *cx)
 {
     JSFunction* obj = (JSFunction *)js_NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
 
-    if (obj) {
-        obj->capacity = JSObject::FUN_CLASS_RESERVED_SLOTS;
 #ifdef DEBUG
+    if (obj) {
         memset((uint8 *) obj + sizeof(JSObject), JS_FREE_PATTERN,
                sizeof(JSFunction) - sizeof(JSObject));
-#endif
     }
+#endif
 
     return obj;
 }
@@ -472,13 +416,10 @@ class GCHelperThread {
     
     void freeLater(void *ptr) {
         JS_ASSERT(!sweeping);
-        js_free(ptr);
-        /*
         if (freeCursor != freeCursorEnd)
             *freeCursor++ = ptr;
         else
             replenishAndFreeLater(ptr);
-        */
     }
 };
 
