@@ -322,15 +322,15 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (gfxInfo) {
         PRInt32 status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
-                status != nsIGfxInfo::FEATURE_AVAILABLE)
+            if (status == nsIGfxInfo::FEATURE_BLOCKED ||
+                status == nsIGfxInfo::FEATURE_NOT_AVAILABLE)
             {
                 useOpenGL = PR_FALSE;
             }
         }
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
-                status != nsIGfxInfo::FEATURE_AVAILABLE)
+            if (status == nsIGfxInfo::FEATURE_BLOCKED ||
+                status == nsIGfxInfo::FEATURE_NOT_AVAILABLE)
             {
                 useANGLE = PR_FALSE;
             }
