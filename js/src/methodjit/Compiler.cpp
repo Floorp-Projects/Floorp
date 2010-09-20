@@ -361,7 +361,7 @@ mjit::Compiler::generatePrologue()
     if (isConstructing)
         constructThis();
 
-    if (debugMode)
+    if (debugMode || Probes::callTrackingActive(cx))
         stubCall(stubs::EnterScript);
 
     return Compile_Okay;
@@ -2199,7 +2199,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     /* Only the top of the stack can be returned. */
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
 
-    if (debugMode) {
+    if (debugMode || Probes::callTrackingActive(cx)) {
         prepareStubCall(Uses(0));
         stubCall(stubs::LeaveScript);
     }

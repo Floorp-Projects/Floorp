@@ -1347,10 +1347,10 @@ DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp)
     JS_ASSERT(vp[0].toObject().getFunctionPrivate() == evalfun);
     JS_ASSERT(IsBuiltinEvalFunction(evalfun));
 
-    AutoFunctionCallProbe callProbe(cx, evalfun);
-
     JSStackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
+    AutoFunctionCallProbe callProbe(cx, evalfun, caller->script());
+
     JSObject *scopeChain =
         GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
     if (!scopeChain || !EvalKernel(cx, argc, vp, DIRECT_EVAL, caller, scopeChain))
@@ -2214,7 +2214,8 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
     if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame())
         fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
 
-    Probes::enterJSFun(cx, fp->maybeFun());
+    if (!fp->isExecuteFrame())
+        Probes::enterJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
     return true;
 }
@@ -4751,9 +4752,9 @@ BEGIN_CASE(JSOP_FUNCALL)
             DO_OP();
         }
 
-        Probes::enterJSFun(cx, newfun);
+        Probes::enterJSFun(cx, newfun, script);
         JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
-        Probes::exitJSFun(cx, newfun);
+        Probes::exitJSFun(cx, newfun, script);
         regs.sp = vp + 1;
         if (!ok)
             goto error;
