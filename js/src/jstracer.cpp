@@ -4405,6 +4405,7 @@ TraceRecorder::snapshot(ExitType exitType)
                                            0;
     exit->exitType = exitType;
     exit->pc = pc;
+    exit->script = fp->maybeScript();
     exit->imacpc = fp->maybeImacropc();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
