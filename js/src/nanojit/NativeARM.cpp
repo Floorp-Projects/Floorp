@@ -1257,11 +1257,11 @@ Assembler::asm_restore(LIns* i, Register r)
         // memory.
         int d = findMemFor(i);
         if (ARM_VFP && IsFpReg(r)) {
-            if (isS8(d >> 2)) {
+            if (isU8(d/4) || isU8(-d/4)) {
                 FLDD(r, FP, d);
             } else {
-                FLDD(r, IP, 0);
-                asm_add_imm(IP, FP, d);
+                FLDD(r, IP, d%1024);
+                asm_add_imm(IP, FP, d-(d%1024));
             }
         } else {
             NIns merged;
@@ -1291,11 +1291,11 @@ Assembler::asm_spill(Register rr, int d, bool quad)
     NanoAssert(rr != IP);
     NanoAssert(rr != SP);
     if (ARM_VFP && IsFpReg(rr)) {
-        if (isS8(d >> 2)) {
+        if (isU8(d/4) || isU8(-d/4)) {
             FSTD(rr, FP, d);
         } else {
-            FSTD(rr, IP, 0);
-            asm_add_imm(IP, FP, d);
+            FSTD(rr, IP, d%1024);
+            asm_add_imm(IP, FP, d-(d%1024));
         }
     } else {
         NIns merged;
@@ -1342,7 +1342,7 @@ Assembler::asm_load64(LIns* ins)
                 FSTD(dd, FP, d);
             } else {
                 FSTD(dd, IP, d%1024);
-                asm_add_imm(IP, rn, d-(d%1024));
+                asm_add_imm(IP, FP, d-(d%1024));
             }
         }
 
