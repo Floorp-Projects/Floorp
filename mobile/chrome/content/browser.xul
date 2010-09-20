@@ -584,11 +584,6 @@
     </hbox>
   </stack>
 
-  <box>
-    <html:div style="position: relative; overflow: -moz-hidden-unscrollable; max-width: 0px; max-height: 0px; visibility: hidden;">
-    </html:div>
-  </box>
-
   <tooltip default="true" id="default-tooltip"/>
 
 </window>
