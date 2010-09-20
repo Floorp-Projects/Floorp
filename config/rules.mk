@@ -2020,6 +2020,7 @@ showbuild:
 	@echo "MKSHLIB            = $(MKSHLIB)"
 	@echo "MKCSHLIB           = $(MKCSHLIB)"
 	@echo "RC                 = $(RC)"
+	@echo "MC                 = $(MC)"
 	@echo "CFLAGS             = $(CFLAGS)"
 	@echo "OS_CFLAGS          = $(OS_CFLAGS)"
 	@echo "COMPILE_CFLAGS     = $(COMPILE_CFLAGS)"

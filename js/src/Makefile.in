@@ -783,6 +783,11 @@ EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
+ifdef MOZ_ETW
+# This will get the ETW provider resources into the library mozjs.dll
+RESFILE = ETWProvider.res
+endif
+
 # HP-UX does not require the extra linking of "-lm"
 ifeq (,$(filter HP-UX WINNT OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
@@ -998,6 +1003,22 @@ $(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 
 # Force auto-header generation before compiling any source that may use them
 $(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX))): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
+
+ifdef MOZ_ETW
+ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
+	$(MC) -um -mof $^
+
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): ETWProvider.h
+
+ETWProvider.res: ETWProvider.rc
+	$(RC) -r -i "$(SDKDIR)Include" $^
+
+export:: ETWProvider.res
+
+install:: ETWProvider.mof ETWProvider.man
+	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
+
+endif
 
 ifdef HAVE_DTRACE
 $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
