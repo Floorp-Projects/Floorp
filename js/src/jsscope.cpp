@@ -1128,6 +1128,22 @@ JSObject::removeProperty(JSContext *cx, jsid id)
          */
         JS_ASSERT(shape == lastProp);
         removeLastProperty();
+
+        /*
+         * Revert to fixed slots if this was the first dynamically allocated slot,
+         * preserving invariant that objects with the same shape use the fixed
+         * slots in the same way.
+         */
+        size_t fixed = numFixedSlots();
+        if (shape->slot == fixed) {
+            JS_ASSERT(hasSlotsArray());
+            JS_ASSERT_IF(!lastProp->isEmptyShape() && lastProp->hasSlot(),
+                         lastProp->slot == fixed - 1);
+            memcpy(fixedSlots, slots, fixed * sizeof(Value));
+            freeSlotsArray(cx);
+            slots = fixedSlots;
+            capacity = fixed;
+        }
     }
     updateShape(cx);
 

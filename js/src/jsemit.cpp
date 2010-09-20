@@ -235,7 +235,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
         JS_ASSERT(nuses == 0);
         blockObj = cg->objectList.lastbox->object;
         JS_ASSERT(blockObj->isStaticBlock());
-        JS_ASSERT(blockObj->fslots[JSSLOT_BLOCK_DEPTH].isUndefined());
+        JS_ASSERT(blockObj->getSlot(JSSLOT_BLOCK_DEPTH).isUndefined());
 
         OBJ_SET_BLOCK_DEPTH(cx, blockObj, cg->stackDepth);
         ndefs = OBJ_BLOCK_COUNT(cx, blockObj);
@@ -1599,9 +1599,8 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
             JS_ASSERT(shape->hasShortID());
 
             if (slotp) {
-                JS_ASSERT(obj->fslots[JSSLOT_BLOCK_DEPTH].isInt32());
-                *slotp = obj->fslots[JSSLOT_BLOCK_DEPTH].toInt32() +
-                         shape->shortid;
+                JS_ASSERT(obj->getSlot(JSSLOT_BLOCK_DEPTH).isInt32());
+                *slotp = obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32() + shape->shortid;
             }
             return stmt;
         }
@@ -1868,11 +1867,12 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     }
 
     /*
-     * Shrink slots to free blockObj->dslots and ensure a prompt safe crash if
-     * by accident some code tries to get a slot from a compiler-created Block
-     * prototype instead of from a clone.
+     * Clear blockObj->dslots and ensure a prompt safe crash if by accident
+     * some code tries to get a slot from a compiler-created Block prototype
+     * instead of from a clone.
      */
-    blockObj->shrinkSlots(cx, base);
+    if (blockObj->hasSlotsArray())
+        blockObj->removeSlotsArray(cx);
     return true;
 }
 
@@ -4353,8 +4353,17 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
 static bool
 EmitNewInit(JSContext *cx, JSCodeGenerator *cg, JSProtoKey key, JSParseNode *pn, int sharpnum)
 {
-    if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) key) < 0)
-        return false;
+    /*
+     * Watch for overflow on the initializer size.  This isn't problematic because
+     * (a) we'll be reporting an error for the initializer shortly, and (b)
+     * the count is only used as a hint for the interpreter and JITs, and does not
+     * need to be correct.
+     */
+    uint16 count = pn->pn_count;
+    if (count >= JS_BIT(16))
+        count = JS_BIT(16) - 1;
+
+    EMIT_UINT16PAIR_IMM_OP(JSOP_NEWINIT, (uint16) key, count);
 #if JS_HAS_SHARP_VARS
     if (cg->hasSharps()) {
         if (pn->pn_count != 0)

@@ -50,6 +50,7 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "FrameState-inl.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "InlineFrameAssembler.h"
 
@@ -1225,10 +1226,13 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_NEWINIT)
           {
-            jsint i = GET_INT8(PC);
+            jsint i = GET_UINT16(PC);
+            uint32 count = GET_UINT16(PC + UINT16_LEN);
+
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
             prepareStubCall(Uses(0));
+            masm.move(Imm32(count), Registers::ArgReg1);
             if (i == JSProto_Array)
                 stubCall(stubs::NewInitArray);
             else
@@ -1438,8 +1442,8 @@ mjit::Compiler::generateMethod()
             RegisterID reg = frame.allocReg();
             masm.loadPayload(Address(JSFrameReg, JSStackFrame::offsetOfCallee(fun)), reg);
             // obj->getFlatClosureUpvars()
-            Address upvarAddress(reg, offsetof(JSObject, fslots) + 
-                                      JSObject::JSSLOT_FLAT_CLOSURE_UPVARS * sizeof(Value));
+            masm.loadPtr(Address(reg, offsetof(JSObject, slots)), reg);
+            Address upvarAddress(reg, JSObject::JSSLOT_FLAT_CLOSURE_UPVARS * sizeof(Value));
             masm.loadPrivate(upvarAddress, reg);
             // push ((Value *) reg)[index]
             frame.freeReg(reg);
@@ -2402,7 +2406,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
 #elif defined JS_PUNBOX64
     Label dslotsLoadLabel = masm.label();
 #endif
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
@@ -2503,7 +2507,7 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
 #elif defined JS_PUNBOX64
     Label dslotsLoadLabel = masm.label();
 #endif
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
@@ -2635,7 +2639,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 #elif defined JS_PUNBOX64
     Label dslotsLoadLabel = masm.label();
 #endif
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
@@ -2793,7 +2797,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 #elif defined JS_PUNBOX64
     Label dslotsLoadLabel = masm.label();
 #endif
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
@@ -2962,7 +2966,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
 #elif defined JS_PUNBOX64
     Label dslotsLoadLabel = masm.label();
 #endif
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* Store RHS into object slot. */
     Address slot(objReg, 1 << 24);
@@ -3506,8 +3510,7 @@ mjit::Compiler::iter(uintN flags)
     stubcc.linkExit(nullIterator, Uses(1));
 
     /* Get NativeIterator from iter obj. :FIXME: X64, also most of this function */
-    Address privSlot(ioreg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-    masm.loadPtr(privSlot, nireg);
+    masm.loadPtr(Address(ioreg, offsetof(JSObject, privateData)), nireg);
 
     /* Test for active iterator. */
     Address flagsAddr(nireg, offsetof(NativeIterator, flags));
@@ -3691,8 +3694,7 @@ mjit::Compiler::iterEnd()
     stubcc.linkExit(notIterator, Uses(1));
 
     /* Get private from iter obj. :FIXME: X64 */
-    Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-    masm.loadPtr(privSlot, T1);
+    masm.loadPtr(Address(reg, offsetof(JSObject, privateData)), T1);
 
     RegisterID T2 = frame.allocReg();
 
@@ -3806,7 +3808,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     /* Garbage value. */
     uint32 slot = 1 << 24;
 
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
     Address address(objReg, slot);
     
     /*
@@ -3927,7 +3929,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
         v = fe->getValue();
     }
 
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
     Address address(objReg, slot);
 
     mic.load = masm.label();
