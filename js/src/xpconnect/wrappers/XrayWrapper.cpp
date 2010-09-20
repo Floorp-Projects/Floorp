@@ -52,7 +52,7 @@ namespace xpc {
 
 using namespace js;
 
-static const uint32 JSSLOT_WN_OBJ = JSSLOT_PRIVATE;
+static const uint32 JSSLOT_WN_OBJ = 0;
 
 static JSBool
 holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
