@@ -2283,6 +2283,9 @@ js_GetScriptedCaller(JSContext *cx, js::StackFrame *fp);
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
 
+extern JSScript *
+js_GetCurrentScript(JSContext* cx);
+
 extern bool
 js_CurrentPCIsInImacro(JSContext *cx);
 

@@ -70,6 +70,7 @@
 #include "jsonparser.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsprobes.h"
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -100,7 +101,6 @@
 #include "jsxdrapi.h"
 #endif
 
-#include "jsprobes.h"
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -3961,6 +3961,7 @@ bool
 JSObject::allocSlots(JSContext *cx, size_t newcap)
 {
     uint32 oldcap = numSlots();
+    size_t oldSize = slotsAndStructSize();
 
     JS_ASSERT(newcap >= oldcap && !hasSlotsArray());
 
@@ -3979,6 +3980,8 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
     /* Copy over anything from the inline buffer. */
     memcpy(slots, fixedSlots(), oldcap * sizeof(Value));
     ClearValueRange(slots + oldcap, newcap - oldcap, isDenseArray());
+    Probes::resizeObject(cx, this, oldSize, slotsAndStructSize());
+
     return true;
 }
 
@@ -4021,11 +4024,14 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     Value *tmpslots = (Value*) cx->realloc_(slots, oldcap * sizeof(Value), actualCapacity * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
+    size_t oldSize = slotsAndStructSize();
     slots = tmpslots;
     capacity = actualCapacity;
 
     /* Initialize the additional slots we added. */
     ClearValueRange(slots + oldcap, actualCapacity - oldcap, isDenseArray());
+    Probes::resizeObject(cx, this, oldSize, slotsAndStructSize());
+
     return true;
 }
 
@@ -4051,6 +4057,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     Value *tmpslots = (Value*) cx->realloc_(slots, newcap * sizeof(Value));
     if (!tmpslots)
         return;  /* Leave slots at its old size. */
+    size_t oldSize = slotsAndStructSize();
     slots = tmpslots;
     capacity = newcap;
 
@@ -4058,6 +4065,8 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
         /* Clear any excess holes if we tried to shrink below SLOT_CAPACITY_MIN. */
         ClearValueRange(slots + fill, newcap - fill, isDenseArray());
     }
+
+    Probes::resizeObject(cx, this, oldSize, slotsAndStructSize());
 }
 
 bool
