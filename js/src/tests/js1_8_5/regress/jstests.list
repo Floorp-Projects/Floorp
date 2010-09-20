@@ -30,6 +30,7 @@ script regress-583429.js
 script regress-584355.js
 script regress-588339.js
 script regress-yarr-regexp.js
+script regress-592217.js
 script regress-592556-c35.js
 script regress-593256.js
 fails-if(!xulRuntime.shell) script regress-595230-1.js
