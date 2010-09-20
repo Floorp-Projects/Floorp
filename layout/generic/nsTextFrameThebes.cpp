@@ -5473,6 +5473,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
     if (iter.GetSkippedOffset() <= PRUint32(trimmed.GetEnd()) &&
         !(iter.GetSkippedOffset() < PRUint32(trimmed.GetEnd()) &&
           GetStyleText()->NewlineIsSignificant() &&
+          iter.GetSkippedOffset() < mTextRun->GetLength() &&
           mTextRun->GetChar(iter.GetSkippedOffset()) == '\n')) {
       for (PRInt32 i = startOffset + 1; i <= trimmed.GetEnd(); ++i) {
         iter.SetOriginalOffset(i);
