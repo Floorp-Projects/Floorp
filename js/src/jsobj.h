@@ -954,6 +954,8 @@ struct JSObject : js::gc::Cell {
     inline js::JSProxyHandler *getProxyHandler() const;
     inline const js::Value &getProxyPrivate() const;
     inline void setProxyPrivate(const js::Value &priv);
+    inline const js::Value &getProxyExtra() const;
+    inline void setProxyExtra(const js::Value &extra);
 
     /*
      * With object-specific getters and setters.

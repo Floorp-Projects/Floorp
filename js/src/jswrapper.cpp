@@ -57,7 +57,13 @@
 using namespace js;
 using namespace js::gc;
 
-static int sWrapperFamily = 0;
+static int sWrapperFamily;
+
+void *
+JSWrapper::getWrapperFamily()
+{
+    return &sWrapperFamily;
+}
 
 bool
 JSObject::isWrapper() const
@@ -346,6 +352,10 @@ AutoCompartment::leave()
 
 /* Cross compartment wrappers. */
 
+JSCrossCompartmentWrapper::JSCrossCompartmentWrapper(void *family) : JSWrapper(0)
+{
+}
+
 JSCrossCompartmentWrapper::JSCrossCompartmentWrapper(uintN flags) : JSWrapper(flags)
 {
 }
@@ -624,4 +634,4 @@ JSCrossCompartmentWrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN 
     return str;
 }
 
-JSCrossCompartmentWrapper JSCrossCompartmentWrapper::singleton(0);
+JSCrossCompartmentWrapper JSCrossCompartmentWrapper::singleton(0u);

@@ -905,6 +905,7 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 
     obj->getProxyHandler()->trace(trc, obj);
     MarkValue(trc, obj->getProxyPrivate(), "private");
+    MarkValue(trc, obj->getProxyExtra(), "extra");
     if (obj->isFunctionProxy()) {
         MarkValue(trc, GetCall(obj), "call");
         MarkValue(trc, GetConstruct(obj), "construct");
@@ -921,7 +922,7 @@ proxy_Finalize(JSContext *cx, JSObject *obj)
 
 JS_FRIEND_API(Class) ObjectProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(2),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -957,7 +958,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
 
 JS_FRIEND_API(Class) OuterWindowProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(2),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -1025,7 +1026,7 @@ proxy_TypeOf_fun(JSContext *cx, JSObject *obj)
 
 JS_FRIEND_API(Class) FunctionProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(4),
+    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(5),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
