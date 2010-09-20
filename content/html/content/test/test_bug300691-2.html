@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="done();">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=300691">Mozilla Bug 300691</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -17,7 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 </div>
 <pre id="test">
 <script type="text/javascript">
-  SimpleTest.waitForExplicitFinish();
   // First, setup.  We'll be toggling these variables as we go.
   var test1Ran = false;
   var test2Ran = false;
@@ -113,7 +112,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
   is(test9Ran, true, "Should be 9!");
 </script>
 <script type="text/javascript">
-function done() {
   is(test1Ran, true, "Should have run!");
   is(test3Ran, false, "Already executed test3 script once");
   is(test4Ran, false,
@@ -132,8 +130,6 @@ function done() {
      "src attribute load should have started before the attribute got removed");
   is(test15bRan, false,
      "src attribute still got executed, so this shouldn't have been");
-  SimpleTest.finish();
-}
 </script>
 </pre>
 </body>
