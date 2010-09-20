@@ -2808,8 +2808,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
     case NS_NATIVE_TMP_WINDOW:
-      return (void*)::CreateWindowExW(WS_EX_NOACTIVATE |
-                                       mIsRTL ? WS_EX_LAYOUTRTL : 0,
+      return (void*)::CreateWindowExW(mIsRTL ? WS_EX_LAYOUTRTL : 0,
                                       WindowClass(),
                                       L"",
                                       WS_CHILD,
