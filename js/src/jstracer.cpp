@@ -16163,12 +16163,12 @@ StartTraceVis(const char* filename = "tracevis.dat")
 }
 
 JS_FRIEND_API(JSBool)
-StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+StartTraceVisNative(JSContext *cx, uintN argc, jsval *vp)
 {
     JSBool ok;
 
-    if (argc > 0 && argv[0].isString()) {
-        JSString *str = JSVAL_TO_STRING(argv[0]);
+    if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+        JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
         char *filename = js_DeflateString(cx, str->chars(), str->length());
         if (!filename)
             goto error;
@@ -16180,12 +16180,13 @@ StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value
 
     if (ok) {
         fprintf(stderr, "started TraceVis recording\n");
-        return JS_TRUE;
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return true;
     }
 
   error:
     JS_ReportError(cx, "failed to start TraceVis recording");
-    return JS_FALSE;
+    return false;
 }
 
 JS_FRIEND_API(bool)
@@ -16201,14 +16202,16 @@ StopTraceVis()
 }
 
 JS_FRIEND_API(JSBool)
-StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+StopTraceVisNative(JSContext *cx, uintN argc, jsval *vp)
 {
     JSBool ok = StopTraceVis();
 
-    if (ok)
+    if (ok) {
         fprintf(stderr, "stopped TraceVis recording\n");
-    else
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    } else {
         JS_ReportError(cx, "TraceVis isn't running");
+    }
 
     return ok;
 }
