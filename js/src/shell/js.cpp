@@ -1454,6 +1454,44 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     return countTracer.ok && JS_NewNumberValue(cx, (jsdouble) counter, vp);
 }
 
+static jsrefcount finalizeCount = 0;
+
+static void
+finalize_counter_finalize(JSContext *cx, JSObject *obj)
+{
+    JS_ATOMIC_INCREMENT(&finalizeCount);
+}
+
+static JSClass FinalizeCounterClass = {
+    "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
+    JS_PropertyStub,   /* addProperty */
+    JS_PropertyStub,   /* delProperty */
+    JS_PropertyStub,   /* getProperty */
+    JS_PropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    finalize_counter_finalize
+};
+
+static JSBool
+MakeFinalizeObserver(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, NULL,
+                                               JS_GetGlobalObject(cx));
+    if (!obj)
+        return false;
+    *vp = OBJECT_TO_JSVAL(obj);
+    return true;
+}
+
+static JSBool
+FinalizeCount(JSContext *cx, uintN argc, jsval *vp)
+{
+    *vp = INT_TO_JSVAL(finalizeCount);
+    return true;
+}
+
 static JSScript *
 ValueToScript(JSContext *cx, jsval v)
 {
@@ -4111,6 +4149,8 @@ static JSFunctionSpec shell_functions[] = {
 #endif
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
+    JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
+    JS_FN("finalizeCount",  FinalizeCount, 0,0),
 #ifdef JS_GC_ZEAL
     JS_FN("gczeal",         GCZeal,         1,0),
 #endif
@@ -4220,6 +4260,12 @@ static const char *const shell_help_messages[] = {
 "  start when it is given and is not null. kind is either 'all' (default) to\n"
 "  count all things or one of 'object', 'double', 'string', 'function',\n"
 "  'qname', 'namespace', 'xml' to count only things of that kind",
+"makeFinalizeObserver()\n"
+"  get a special object whose finalization increases the counter returned\n"
+"  by the finalizeCount function",
+"finalizeCount()\n"
+"  return the current value of the finalization counter that is incremented\n"
+"  each time an object returned by the makeFinalizeObserver is finalized",
 #ifdef JS_GC_ZEAL
 "gczeal(level)            How zealous the garbage collector should be",
 #endif
