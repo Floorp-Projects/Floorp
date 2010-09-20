@@ -888,6 +888,9 @@
       <method name="_tabAttrModified">
         <parameter name="aTab"/>
         <body><![CDATA[
+          if (this._removingTabs.indexOf(aTab) > -1)
+            return;
+
           // This event should be dispatched when any of these attributes change:
           // label, crop, busy, image, selected
           var event = document.createEvent("Events");
