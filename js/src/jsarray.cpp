@@ -3118,36 +3118,38 @@ js_NewSlowArrayObject(JSContext *cx)
     return obj;
 }
 
-#ifdef DEBUG_ARRAYS
+#ifdef DEBUG
 JSBool
-js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN i;
     JSObject *array;
 
     for (i = 0; i < argc; i++) {
-        char *bytes;
+        Value arg = Valueify(JS_ARGV(cx, vp)[i]);
 
-        bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[i], NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NULL);
         if (!bytes)
             return JS_FALSE;
-        if (JSVAL_IS_PRIMITIVE(argv[i]) ||
-            !(array = JSVAL_TO_OBJECT(argv[i]))->isArray()) {
+        if (arg.isPrimitive() ||
+            !(array = arg.toObjectOrNull())->isArray()) {
             fprintf(stderr, "%s: not array\n", bytes);
             cx->free(bytes);
             continue;
         }
-        fprintf(stderr, "%s: %s (len %lu", bytes,
-                array->isDenseArray()) ? "dense" : "sparse",
+        fprintf(stderr, "%s: %s (len %u", bytes,
+                array->isDenseArray() ? "dense" : "sparse",
                 array->getArrayLength());
         if (array->isDenseArray()) {
-            fprintf(stderr, ", capacity %lu",
+            fprintf(stderr, ", capacity %u",
                     array->getDenseArrayCapacity());
         }
         fputs(")\n", stderr);
         cx->free(bytes);
     }
-    return JS_TRUE;
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 #endif
 

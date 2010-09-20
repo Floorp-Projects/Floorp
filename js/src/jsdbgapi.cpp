@@ -2012,7 +2012,7 @@ js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     U32 status;
 
-    VTUNE_SAMPLING_PARAMS params =
+    VTUNE_SAMPLING_PARAMS params = {
         sizeof(VTUNE_SAMPLING_PARAMS),
         sizeof(VTUNE_EVENT),
         0, 0, /* Reserved fields */
@@ -2047,9 +2047,10 @@ js_StartVtune(JSContext *cx, uintN argc, jsval *vp)
         else
             JS_ReportError(cx, "Vtune setup error: %d",
                            status);
-        return JS_FALSE;
+        return false;
     }
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
@@ -2063,23 +2064,26 @@ js_StopVtune(JSContext *cx, uintN argc, jsval *vp)
         else
             JS_ReportError(cx, "Vtune shutdown error: %d",
                            status);
-        return JS_FALSE;
+        return false;
     }
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
 js_PauseVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTPause();
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
 js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
 {
     VTResume();
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 
 #endif /* MOZ_VTUNE */
@@ -2257,17 +2261,17 @@ static char jstv_empty[] = "<null>";
 inline char *
 jstv_Filename(JSStackFrame *fp)
 {
-    while (fp && fp->script == NULL)
-        fp = fp->prev;
-    return (fp && fp->script && fp->script->filename)
-           ? (char *)fp->script->filename
+    while (fp && !fp->isScriptFrame())
+        fp = fp->prev();
+    return (fp && fp->maybeScript() && fp->script()->filename)
+           ? (char *)fp->script()->filename
            : jstv_empty;
 }
 inline uintN
 jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 {
     while (fp && fp->pc(cx) == NULL)
-        fp = fp->prev;
+        fp = fp->prev();
     return (fp && fp->pc(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
 }
 
@@ -2315,17 +2319,21 @@ ethogram_construct(JSContext *cx, uintN argc, jsval *vp)
     gettimeofday(&tv, NULL);
     p->mStartSecond = tv.tv_sec;
 #endif
+    JSObject *obj;
+    if (JS_IsConstructing(cx, vp)) {
+        obj = JS_NewObject(cx, &ethogram_class, NULL, NULL);
+        if (!obj)
+            return JS_FALSE;
+    } else {
+        obj = JS_THIS_OBJECT(cx, vp);
+    }
+
     jsval filenames = OBJECT_TO_JSVAL(p->filenames());
     if (!JS_DefineProperty(cx, obj, "filenames", filenames,
                            NULL, NULL, JSPROP_READONLY|JSPROP_PERMANENT))
         return JS_FALSE;
 
-    if (!JS_IsConstructing(cx)) {
-        obj = JS_NewObject(cx, &ethogram_class, NULL, NULL);
-        if (!obj)
-            return JS_FALSE;
-        *JS_RVAL(cx, vp) = OBJECT_TO_JSVAL(obj);
-    }
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
     JS_SetPrivate(cx, obj, p);
     return JS_TRUE;
 }
@@ -2349,48 +2357,56 @@ ethogram_addScript(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     char *filename = NULL;
     jsval *argv = JS_ARGV(cx, vp);
-    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
-        str = JSVAL_TO_STRING(argv[0]);
-        filename = js_DeflateString(cx,
-                                    str->chars(),
-                                    str->length());
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return false;
+    if (argc < 1) {
+        /* silently ignore no args */
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return true;
     }
-
-    /* silently ignore no args */
-    if (!filename)
-        return JS_TRUE;
+    if (JSVAL_IS_STRING(argv[0])) {
+        str = JSVAL_TO_STRING(argv[0]);
+        filename = js_DeflateString(cx, str->chars(), str->length());
+        if (!filename)
+            return false;
+    }
 
     EthogramEventBuffer *p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
 
     p->addScript(cx, obj, filename, str);
-    jsval *rval = JS_RVAL(cx, vp);
-    JS_CallFunctionName(cx, p->filenames(), "push", 1, argv, rval);
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    jsval dummy;
+    JS_CallFunctionName(cx, p->filenames(), "push", 1, argv, &dummy);
+    return true;
 }
 
 static JSBool
 ethogram_getAllEvents(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
-
     jsval *argv = JS_ARGV(cx, vp);
+
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+
     p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
     if (!p)
         return JS_FALSE;
 
-    jsval *rval = JS_RVAL(cx, vp);
     if (p->isEmpty()) {
-        *rval = JSVAL_NULL;
+        JS_SET_RVAL(cx, vp, JSVAL_NULL);
         return JS_TRUE;
     }
 
     JSObject *rarray = JS_NewArrayObject(cx, 0, NULL);
     if (rarray == NULL) {
-        *rval = JSVAL_NULL;
+        JS_SET_RVAL(cx, vp, JSVAL_NULL);
         return JS_TRUE;
     }
 
-    *rval = OBJECT_TO_JSVAL(rarray);
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(rarray));
 
     for (int i = 0; !p->isEmpty(); i++) {
 
@@ -2433,8 +2449,12 @@ static JSBool
 ethogram_getNextEvent(JSContext *cx, uintN argc, jsval *vp)
 {
     EthogramEventBuffer *p;
-
     jsval *argv = JS_ARGV(cx, vp);
+
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+
     p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
     if (!p)
         return JS_FALSE;
@@ -2443,9 +2463,8 @@ ethogram_getNextEvent(JSContext *cx, uintN argc, jsval *vp)
     if (x == NULL)
         return JS_FALSE;
 
-    jsval *rval = JS_RVAL(cx, vp);
     if (p->isEmpty()) {
-        *rval = JSVAL_NULL;
+        JS_SET_RVAL(cx, vp, JSVAL_NULL);
         return JS_TRUE;
     }
 
@@ -2472,16 +2491,16 @@ ethogram_getNextEvent(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_SetProperty(cx, x, "lineno", &lineno))
         return JS_FALSE;
 
-    *rval = OBJECT_TO_JSVAL(x);
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(x));
 
     return JS_TRUE;
 }
 
 static JSFunctionSpec ethogram_methods[] = {
-    {"addScript",    ethogram_addScript,    1},
-    {"getAllEvents", ethogram_getAllEvents, 0},
-    {"getNextEvent", ethogram_getNextEvent, 0},
-    {0}
+    JS_FN("addScript",    ethogram_addScript,    1,0),
+    JS_FN("getAllEvents", ethogram_getAllEvents, 0,0),
+    JS_FN("getNextEvent", ethogram_getNextEvent, 0,0),
+    JS_FS_END
 };
 
 /*
@@ -2500,7 +2519,8 @@ js_InitEthogram(JSContext *cx, uintN argc, jsval *vp)
                  ethogram_construct, 0, NULL, ethogram_methods,
                  NULL, NULL);
 
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
@@ -2509,7 +2529,8 @@ js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp)
     if (traceVisScriptTable)
         JS_HashTableDestroy(traceVisScriptTable);
 
-    return JS_TRUE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 
 #endif /* MOZ_TRACEVIS */
