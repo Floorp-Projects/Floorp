@@ -80,9 +80,9 @@ displayTimestamp("started", startup = runtime.startupTimestamp);
 if (launched)
   displayDuration("started", startup - launched);
 
-let ss = Cc["@mozilla.org/browser/sessionstartup;1"]
-           .getService(Ci.nsISessionStartup);
-displayTimestamp("restored", restored = ss.restoredTimestamp);
+let app = Cc["@mozilla.org/toolkit/app-startup;1"]
+            .getService(Ci.nsIAppStartup2);
+displayTimestamp("restored", restored = app.restoredTimestamp);
 displayDuration("restored", restored - startup);
 
 ///// Next, load the database

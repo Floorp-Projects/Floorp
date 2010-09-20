@@ -121,6 +121,8 @@ interface nsIAppStartup2 : nsIAppStartup
      * True if the application is in the process of shutting down.
      */
     readonly attribute boolean shuttingDown;
+
+    readonly attribute PRUint64 restoredTimestamp;
 };
 
 %{C++
