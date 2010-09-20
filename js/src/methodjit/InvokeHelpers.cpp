@@ -608,12 +608,15 @@ stubs::EnterScript(VMFrame &f)
 {
     JSStackFrame *fp = f.fp();
     JSContext *cx = f.cx;
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame()) {
-        fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
+
+    if (fp->script()->debugMode) {
+        JSInterpreterHook hook = cx->debugHooks->callHook;
+        if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame()) {
+            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
+        }
     }
 
-    Probes::enterJSFun(cx, fp->maybeFun());
+    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
 }
 
 void JS_FASTCALL
@@ -621,14 +624,17 @@ stubs::LeaveScript(VMFrame &f)
 {
     JSStackFrame *fp = f.fp();
     JSContext *cx = f.cx;
-    Probes::exitJSFun(cx, fp->maybeFun());
-    JSInterpreterHook hook = cx->debugHooks->callHook;
+    Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
-    if (hook && fp->hasHookData() && !fp->isExecuteFrame()) {
-        JSBool ok = JS_TRUE;
-        hook(cx, fp, JS_FALSE, &ok, fp->hookData());
-        if (!ok)
-            THROW();
+    if (fp->script()->debugMode) {
+        JSInterpreterHook hook = cx->debugHooks->callHook;
+
+        if (hook && fp->hasHookData() && !fp->isExecuteFrame()) {
+            JSBool ok = JS_TRUE;
+            hook(cx, fp, JS_FALSE, &ok, fp->hookData());
+            if (!ok)
+                THROW();
+        }
     }
 }
 

@@ -3307,8 +3307,17 @@ JS_ClearContextThread(JSContext *cx);
 typedef void (*JSFunctionCallback)(const JSFunction *fun,
                                    const JSScript *scr,
                                    const JSContext *cx,
-                                   JSBool entering);
+                                   int entering);
 
+/*
+ * The callback is expected to be quick and noninvasive. It should not
+ * trigger interrupts, turn on debugging, or produce uncaught JS
+ * exceptions. The state of the stack and registers in the context
+ * cannot be relied upon, since this callback may be invoked directly
+ * from either JIT. The 'entering' field means we are entering a
+ * function if it is positive, leaving a function if it is zero or
+ * negative.
+ */
 extern JS_PUBLIC_API(void)
 JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
 
