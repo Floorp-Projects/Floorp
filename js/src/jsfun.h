@@ -134,8 +134,6 @@ enum JSLocalKind {
 
 struct JSFunction : public JSObject
 {
-    /* Functions always have two fixed slots (FUN_CLASS_RESERVED_SLOTS). */
-
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
@@ -271,7 +269,7 @@ struct JSFunction : public JSObject
   public:
     void setJoinable() {
         JS_ASSERT(FUN_INTERPRETED(this));
-        getSlotRef(METHOD_ATOM_SLOT).setNull();
+        fslots[METHOD_ATOM_SLOT].setNull();
         flags |= JSFUN_JOINABLE;
     }
 
@@ -281,14 +279,14 @@ struct JSFunction : public JSObject
      * flattened upvars.
      */
     JSAtom *methodAtom() const {
-        return (joinable() && getSlot(METHOD_ATOM_SLOT).isString())
-               ? STRING_TO_ATOM(getSlot(METHOD_ATOM_SLOT).toString())
+        return (joinable() && fslots[METHOD_ATOM_SLOT].isString())
+               ? STRING_TO_ATOM(fslots[METHOD_ATOM_SLOT].toString())
                : NULL;
     }
 
     void setMethodAtom(JSAtom *atom) {
         JS_ASSERT(joinable());
-        getSlotRef(METHOD_ATOM_SLOT).setString(ATOM_TO_STRING(atom));
+        fslots[METHOD_ATOM_SLOT].setString(ATOM_TO_STRING(atom));
     }
 
     js::Native maybeNative() const {
@@ -300,8 +298,9 @@ struct JSFunction : public JSObject
         return u.i.script;
     }
 
-    /* Number of extra fixed function object slots. */
+    /* Number of extra fixed function object slots besides JSSLOT_PRIVATE. */
     static const uint32 CLASS_RESERVED_SLOTS = JSObject::FUN_CLASS_RESERVED_SLOTS;
+    static const uint32 FIRST_FREE_SLOT = JSSLOT_PRIVATE + CLASS_RESERVED_SLOTS + 1;
 };
 
 JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);

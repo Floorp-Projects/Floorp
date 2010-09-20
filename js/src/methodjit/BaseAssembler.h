@@ -166,9 +166,14 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
      * Finds and returns the address of a known object and slot.
      */
     Address objSlotRef(JSObject *obj, RegisterID reg, uint32 slot) {
-        move(ImmPtr(&obj->slots), reg);
+        if (slot < JS_INITIAL_NSLOTS) {
+            void *vp = &obj->getSlotRef(slot);
+            move(ImmPtr(vp), reg);
+            return Address(reg, 0);
+        }
+        move(ImmPtr(&obj->dslots), reg);
         loadPtr(reg, reg);
-        return Address(reg, slot * sizeof(Value));
+        return Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
     }
 
 #ifdef JS_CPU_X86

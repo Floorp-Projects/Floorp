@@ -2610,17 +2610,15 @@ js_NewInstance(JSContext *cx, JSObject *callee)
 
 static JS_ALWAYS_INLINE JSObject*
 NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
-                        /*JSFinalizeGCThingKind*/ unsigned _kind)
+                        const Value &privateSlotValue)
 {
     JS_ASSERT(clasp->isNative());
-    JSFinalizeGCThingKind kind = JSFinalizeGCThingKind(_kind);
 
-    JSObject* obj = js_NewGCObject(cx, kind);
+    JSObject* obj = js_NewGCObject(cx);
     if (!obj)
         return NULL;
 
-    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), NULL, kind))
-        return NULL;
+    obj->initSharingEmptyShape(clasp, proto, proto->getParent(), privateSlotValue, cx);
     return obj;
 }
 
@@ -2628,7 +2626,8 @@ JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
-    return NewObjectWithClassProto(cx, &js_ObjectClass, proto, FINALIZE_OBJECT8);
+
+    return NewObjectWithClassProto(cx, &js_ObjectClass, proto, UndefinedValue());
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
@@ -2640,7 +2639,7 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
 
-    JSObject *obj = NewObjectWithClassProto(cx, &js_ObjectClass, proto, FINALIZE_OBJECT8);
+    JSObject *obj = NewObjectWithClassProto(cx, &js_ObjectClass, proto, UndefinedValue());
     return (obj && obj->ensureClassReservedSlotsForEmptyObject(cx)) ? obj : NULL;
 }
 
@@ -2651,11 +2650,7 @@ JSObject* FASTCALL
 js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject *obj = NewObjectWithClassProto(cx, &js_StringClass, proto, FINALIZE_OBJECT2);
-    if (!obj)
-        return NULL;
-    obj->setPrimitiveThis(StringValue(str));
-    return obj;
+    return NewObjectWithClassProto(cx, &js_StringClass, proto, StringValue(str));
 }
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -2930,13 +2925,11 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
-    obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    obj = js_NewGCObject(cx);
     if (!obj)
         return NULL;
 
-    JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
-
-    obj->init(cx, &js_WithClass, proto, parent, priv, false);
+    obj->init(&js_WithClass, proto, parent, js_FloatingFrameIfGenerator(cx, cx->fp()), cx);
     obj->setMap(cx->runtime->emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
@@ -2956,11 +2949,11 @@ js_NewBlockObject(JSContext *cx)
      * Null obj's proto slot so that Object.prototype.* does not pollute block
      * scopes and to give the block object its own scope.
      */
-    JSObject *blockObj = js_NewGCObject(cx, FINALIZE_OBJECT2);
+    JSObject *blockObj = js_NewGCObject(cx);
     if (!blockObj)
         return NULL;
 
-    blockObj->init(cx, &js_BlockClass, NULL, NULL, NULL, false);
+    blockObj->init(&js_BlockClass, NULL, NULL, NullValue(), cx);
     blockObj->setMap(cx->runtime->emptyBlockShape);
     return blockObj;
 }
@@ -2970,23 +2963,19 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
 {
     JS_ASSERT(proto->isStaticBlock());
 
-    size_t count = OBJ_BLOCK_COUNT(cx, proto);
-    JSFinalizeGCThingKind kind = js_GetGCObjectKind(count + 1);
-
-    JSObject *clone = js_NewGCObject(cx, kind);
+    JSObject *clone = js_NewGCObject(cx);
     if (!clone)
         return NULL;
 
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
 
     /* The caller sets parent on its own. */
-    clone->init(cx, &js_BlockClass, proto, NULL, priv, false);
+    clone->init(&js_BlockClass, proto, NULL, priv, cx);
+    clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
 
     clone->setMap(proto->map);
-    if (!clone->ensureInstanceReservedSlots(cx, count + 1))
+    if (!clone->ensureInstanceReservedSlots(cx, OBJ_BLOCK_COUNT(cx, proto)))
         return NULL;
-
-    clone->setSlot(JSSLOT_BLOCK_DEPTH, proto->getSlot(JSSLOT_BLOCK_DEPTH));
 
     JS_ASSERT(clone->isClonedBlock());
     return clone;
@@ -2995,6 +2984,9 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
 JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 {
+    /* Blocks have one fixed slot available for the first local.*/
+    JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
+
     JSStackFrame *const fp = cx->fp();
     JSObject *obj = &fp->scopeChain();
     JS_ASSERT(obj->isClonedBlock());
@@ -3002,7 +2994,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     /* Block objects should have all reserved slots allocated early. */
     uintN count = OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(obj->numSlots() >= JSSLOT_BLOCK_DEPTH + 1 + count);
+    JS_ASSERT(obj->numSlots() == JSSLOT_BLOCK_DEPTH + 1 + count);
 
     /* The block and its locals must be on the current stack for GC safety. */
     uintN depth = OBJ_BLOCK_DEPTH(cx, obj);
@@ -3014,8 +3006,15 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 
     if (normalUnwind) {
         uintN slot = JSSLOT_BLOCK_DEPTH + 1;
+        uintN flen = JS_MIN(count, JS_INITIAL_NSLOTS - slot);
+        uintN stop = slot + flen;
+
         depth += fp->numFixed();
-        memcpy(obj->getSlots() + slot, fp->slots() + depth, count * sizeof(Value));
+        while (slot < stop)
+            obj->fslots[slot++] = fp->slots()[depth++];
+        count -= flen;
+        if (count != 0)
+            memcpy(obj->dslots, fp->slots() + depth, count * sizeof(Value));
     }
 
     /* We must clear the private slot even with errors. */
@@ -3096,7 +3095,7 @@ GetObjectSize(JSObject *obj)
 {
     return (obj->isFunction() && !obj->getPrivate())
            ? sizeof(JSFunction)
-           : JSOBJECT_SIZE + obj->numFixedSlots() * sizeof(Value);
+           : sizeof(JSObject);
 }
 
 /*
@@ -3105,31 +3104,17 @@ GetObjectSize(JSObject *obj)
  * transitions are inherently not thread-safe. Don't perform a swap operation on objects
  * shared across threads or, or bad things will happen. You have been warned.
  */
-bool
-JSObject::swap(JSContext *cx, JSObject *other)
+void
+JSObject::swap(JSObject *other)
 {
     size_t size = GetObjectSize(this);
     JS_ASSERT(size == GetObjectSize(other));
 
-    bool thisInline = !hasSlotsArray();
-    bool otherInline = !other->hasSlotsArray();
-
-    char tmp[tl::Max<sizeof(JSFunction),
-                      JSOBJECT_SIZE + JSOBJECT_FIXED_SLOTS_LIMIT * sizeof(Value)>::result];
-    JS_ASSERT(size <= sizeof(tmp));
-
     /* Trade the guts of the objects. */
+    char tmp[tl::Max<sizeof(JSFunction), sizeof(JSObject)>::result];
     memcpy(tmp, this, size);
     memcpy(this, other, size);
     memcpy(other, tmp, size);
-
-    /* Fixup pointers for inline slots on the objects. */
-    if (thisInline)
-        other->slots = other->fixedSlots;
-    if (otherInline)
-        this->slots = this->fixedSlots;
-
-    return true;
 }
 
 #if JS_HAS_XDR
@@ -3315,12 +3300,13 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 
         const Shape *shape = obj->nativeLookup(id);
         if (!shape) {
-            uint32 slot = 2 * JSProto_LIMIT + key;
-            if (!js_SetReservedSlot(cx, obj, slot, v)) {
+            uint32 index = 2 * JSProto_LIMIT + key;
+            if (!js_SetReservedSlot(cx, obj, index, v)) {
                 JS_UNLOCK_OBJ(cx, obj);
                 return false;
             }
 
+            uint32 slot = JSSLOT_START(obj->getClass()) + index;
             shape = obj->addProperty(cx, id, PropertyStub, PropertyStub, slot, attrs, 0, 0);
 
             JS_UNLOCK_OBJ(cx, obj);
@@ -3486,7 +3472,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      */
     JS_ASSERT_IF(proto->clasp != clasp,
                  clasp == &js_ArrayClass && proto->clasp == &js_SlowArrayClass);
-    if (!proto->getEmptyShape(cx, proto->clasp, FINALIZE_OBJECT0))
+    if (!proto->getEmptyShape(cx, proto->clasp))
         goto bad;
 
     /* If this is a standard class, cache its prototype. */
@@ -3504,103 +3490,111 @@ bad:
 }
 
 bool
-JSObject::allocSlots(JSContext *cx, size_t newcap)
+JSObject::allocSlots(JSContext *cx, size_t nslots)
 {
-    uint32 oldcap = numSlots();
+    JS_ASSERT(!dslots);
+    JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
 
-    JS_ASSERT(newcap >= oldcap && !hasSlotsArray());
-
-    if (newcap > NSLOTS_LIMIT) {
-        if (!JS_ON_TRACE(cx))
-            js_ReportAllocationOverflow(cx);
+    size_t nwords = slotsToDynamicWords(nslots);
+    dslots = (Value*) cx->malloc(nwords * sizeof(Value));
+    if (!dslots)
         return false;
-    }
 
-    Value *tmpslots = (Value*) cx->malloc(newcap * sizeof(Value));
-    if (!tmpslots)
-        return false;  /* Leave slots at inline buffer. */
-    slots = tmpslots;
-    capacity = newcap;
-
-    /* Copy over anything from the inline buffer. */
-    memcpy(slots, fixedSlots, oldcap * sizeof(Value));
-    ClearValueRange(slots + oldcap, newcap - oldcap, isDenseArray());
+    dslots++;
+    dslots[-1].setPrivateUint32(nslots);
+    SetValueRangeToUndefined(dslots, nslots - JS_INITIAL_NSLOTS);
     return true;
 }
 
 bool
-JSObject::growSlots(JSContext *cx, size_t newcap)
+JSObject::growSlots(JSContext *cx, size_t nslots)
 {
     /*
-     * When an object with CAPACITY_DOUBLING_MAX or fewer slots needs to
-     * grow, double its capacity, to add N elements in amortized O(N) time.
-     *
-     * Above this limit, grow by 12.5% each time. Speed is still amortized
-     * O(N), with a higher constant factor, and we waste less space.
+     * Minimal number of dynamic slots to allocate.
      */
-    static const size_t CAPACITY_DOUBLING_MAX = 1024 * 1024;
-    static const size_t CAPACITY_CHUNK = CAPACITY_DOUBLING_MAX / sizeof(Value);
+    const size_t MIN_DYNAMIC_WORDS = 4;
 
-    uint32 oldcap = numSlots();
-    JS_ASSERT(oldcap < newcap);
+    /*
+     * The limit to switch to linear allocation strategy from the power of 2
+     * growth no to waste too much memory.
+     */
+    const size_t LINEAR_GROWTH_STEP = JS_BIT(16);
 
-    uint32 nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
-                    ? oldcap * 2
-                    : oldcap + (oldcap >> 3);
-
-    uint32 actualCapacity = JS_MAX(newcap, nextsize);
-    if (actualCapacity >= CAPACITY_CHUNK)
-        actualCapacity = JS_ROUNDUP(actualCapacity, CAPACITY_CHUNK);
-    else if (actualCapacity < SLOT_CAPACITY_MIN)
-        actualCapacity = SLOT_CAPACITY_MIN;
+    /* If we are allocating fslots, there is nothing to do. */
+    if (nslots <= JS_INITIAL_NSLOTS)
+        return true;
 
     /* Don't let nslots get close to wrapping around uint32. */
-    if (actualCapacity >= NSLOTS_LIMIT) {
+    if (nslots >= NSLOTS_LIMIT) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
 
-    /* If nothing was allocated yet, treat it as initial allocation. */
-    if (!hasSlotsArray())
-        return allocSlots(cx, actualCapacity);
+    size_t nwords = slotsToDynamicWords(nslots);
 
-    Value *tmpslots = (Value*) cx->realloc(slots, actualCapacity * sizeof(Value));
-    if (!tmpslots)
-        return false;    /* Leave dslots as its old size. */
-    slots = tmpslots;
-    capacity = actualCapacity;
+    /*
+     * Round up nslots so the number of bytes in dslots array is power
+     * of 2 to ensure exponential grouth.
+     */
+    uintN log;
+    if (nwords <= MIN_DYNAMIC_WORDS) {
+        nwords = MIN_DYNAMIC_WORDS;
+    } else if (nwords < LINEAR_GROWTH_STEP) {
+        JS_CEILING_LOG2(log, nwords);
+        nwords = JS_BIT(log);
+    } else {
+        nwords = JS_ROUNDUP(nwords, LINEAR_GROWTH_STEP);
+    }
+    nslots = dynamicWordsToSlots(nwords);
+
+    /*
+     * If nothing was allocated yet, treat it as initial allocation (but with
+     * the exponential growth algorithm applied).
+     */
+    if (!dslots)
+        return allocSlots(cx, nslots);
+
+    size_t oldnslots = dslots[-1].toPrivateUint32();
+
+    Value *tmpdslots = (Value*) cx->realloc(dslots - 1, nwords * sizeof(Value));
+    if (!tmpdslots)
+        return false;   /* leave dslots at its old size */
+
+    dslots = tmpdslots;
+    dslots++;
+    dslots[-1].setPrivateUint32(nslots);
 
     /* Initialize the additional slots we added. */
-    ClearValueRange(slots + oldcap, actualCapacity - oldcap, isDenseArray());
+    JS_ASSERT(nslots > oldnslots);
+    Value *beg = dslots + (oldnslots - JS_INITIAL_NSLOTS);
+    Value *end = dslots + (nslots - JS_INITIAL_NSLOTS);
+    SetValueRangeToUndefined(beg, end);
+
     return true;
 }
 
 void
-JSObject::shrinkSlots(JSContext *cx, size_t newcap)
+JSObject::shrinkSlots(JSContext *cx, size_t nslots)
 {
-    uint32 oldcap = numSlots();
-    JS_ASSERT(newcap <= oldcap);
-    JS_ASSERT(newcap >= slotSpan());
-
-    if (oldcap <= SLOT_CAPACITY_MIN || !hasSlotsArray()) {
-        /* We won't shrink the slots any more.  Clear excess holes. */
-        ClearValueRange(slots + newcap, oldcap - newcap, isDenseArray());
+    /* Nothing to shrink? */
+    if (!dslots)
         return;
-    }
 
-    uint32 fill = newcap;
-    if (newcap < SLOT_CAPACITY_MIN)
-        newcap = SLOT_CAPACITY_MIN;
+    JS_ASSERT(dslots[-1].toPrivateUint32() > JS_INITIAL_NSLOTS);
+    JS_ASSERT(nslots <= dslots[-1].toPrivateUint32());
 
-    Value *tmpslots = (Value*) cx->realloc(slots, newcap * sizeof(Value));
-    if (!tmpslots)
-        return;  /* Leave slots at its old size. */
-    slots = tmpslots;
-    capacity = newcap;
+    if (nslots <= JS_INITIAL_NSLOTS) {
+        freeSlotsArray(cx);
+        dslots = NULL;
+    } else {
+        size_t nwords = slotsToDynamicWords(nslots);
+        Value *tmpdslots = (Value*) cx->realloc(dslots - 1, nwords * sizeof(Value));
+        if (!tmpdslots)
+            return;     /* leave dslots at its old size */
 
-    if (fill < newcap) {
-        /* Clear any excess holes if we tried to shrink below SLOT_CAPACITY_MIN. */
-        ClearValueRange(slots + fill, newcap - fill, isDenseArray());
+        dslots = tmpdslots;
+        dslots++;
+        dslots[-1].setPrivateUint32(nslots);
     }
 }
 
@@ -4676,12 +4670,10 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, u
     JS_ASSERT(JS_IS_OBJ_LOCKED(cx, pobj));
 
     slot = shape->slot;
-    if (slot != SHAPE_INVALID_SLOT) {
+    if (slot != SHAPE_INVALID_SLOT)
         *vp = pobj->lockedGetSlot(slot);
-        JS_ASSERT(!vp->isMagic());
-    } else {
+    else
         vp->setUndefined();
-    }
     if (shape->hasDefaultGetter())
         return true;
 
@@ -5919,6 +5911,7 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 
     JSObject *obj = (JSObject *)trc->debugPrintArg;
     uint32 slot = (uint32)trc->debugPrintIndex;
+    JS_ASSERT(slot >= JSSLOT_START(obj->getClass()));
 
     const Shape *shape;
     if (obj->isNative()) {
@@ -5933,8 +5926,9 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         const char *slotname = NULL;
         Class *clasp = obj->getClass();
         if (clasp->flags & JSCLASS_IS_GLOBAL) {
+            uint32 key = slot - JSSLOT_START(clasp);
 #define JS_PROTO(name,code,init)                                              \
-    if ((code) == slot) { slotname = js_##name##_str; goto found; }
+    if ((code) == key) { slotname = js_##name##_str; goto found; }
 #include "jsproto.tbl"
 #undef JS_PROTO
         }
@@ -5962,7 +5956,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     JS_ASSERT(obj->isNative());
 
     JSContext *cx = trc->context;
-    if (obj->hasSlotsArray() && !obj->nativeEmpty() && IS_GC_MARKING_TRACER(trc)) {
+    if (!obj->nativeEmpty() && IS_GC_MARKING_TRACER(trc)) {
         /*
          * Trim overlong dslots allocations from the GC, to avoid thrashing in
          * case of delete-happy code that settles down at a given population.
@@ -6009,8 +6003,9 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     uint32 nslots = obj->numSlots();
     if (!obj->nativeEmpty() && obj->slotSpan() < nslots)
         nslots = obj->slotSpan();
+    JS_ASSERT(nslots >= JSSLOT_START(clasp));
 
-    for (uint32 i = 0; i != nslots; ++i) {
+    for (uint32 i = JSSLOT_START(clasp); i != nslots; ++i) {
         const Value &v = obj->getSlot(i);
         JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
         MarkValueRaw(trc, v);
@@ -6039,13 +6034,14 @@ js_ClearNative(JSContext *cx, JSObject *obj)
 }
 
 bool
-js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, Value *vp)
+js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, Value *vp)
 {
     if (!obj->isNative()) {
         vp->setUndefined();
         return true;
     }
 
+    uint32 slot = JSSLOT_START(obj->getClass()) + index;
     JS_LOCK_OBJ(cx, obj);
     if (slot < obj->numSlots())
         *vp = obj->getSlot(slot);
@@ -6056,12 +6052,13 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, Value *vp)
 }
 
 bool
-js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
+js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const Value &v)
 {
     if (!obj->isNative())
         return true;
 
     Class *clasp = obj->getClass();
+    uint32 slot = JSSLOT_START(clasp) + index;
 
     JS_LOCK_OBJ(cx, obj);
     if (slot >= obj->numSlots()) {
@@ -6371,8 +6368,11 @@ js_DumpObject(JSObject *obj)
     dumpValue(ObjectOrNullValue(obj->getParent()));
     fputc('\n', stderr);
 
-    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+    i = JSSLOT_PRIVATE;
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+        i = JSSLOT_PRIVATE + 1;
         fprintf(stderr, "private %p\n", obj->getPrivate());
+    }
 
     fprintf(stderr, "slots:\n");
     reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
