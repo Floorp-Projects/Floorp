@@ -98,11 +98,9 @@ public:
   }
 };
 
-nsresult RecordStartupDuration();
 nsresult OpenStartupDatabase(mozIStorageConnection **db);
 nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table,
                      const nsACString &schema);
-nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details);
 
 //
 // nsAppStartup
@@ -535,17 +533,16 @@ nsAppStartup::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-nsresult RecordStartupDuration()
+nsresult nsAppStartup::RecordStartupDuration()
 {
   nsresult rv;
-  PRTime launched, started, finished;
-  finished = PR_Now();
+  PRTime launched, started;
+  mRestoredTimestamp = PR_Now();
 
   nsCOMPtr<mozIStorageConnection> db;
   rv = OpenStartupDatabase(getter_AddRefs(db));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  
   nsCOMPtr<mozIStorageStatement> statement;
   rv = db->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO duration VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"),
                            getter_AddRefs(statement));
@@ -567,7 +564,7 @@ nsresult RecordStartupDuration()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindInt64Parameter(1, started - launched);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(2, finished - started);
+  rv = statement->BindInt64Parameter(2, mRestoredTimestamp - started);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(3, NS_ConvertUTF8toUTF16(appVersion));
   NS_ENSURE_SUCCESS(rv, rv); 
@@ -584,7 +581,7 @@ nsresult RecordStartupDuration()
   return NS_OK;
 }
 
-nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details)
+nsresult nsAppStartup::RecordAddonEvent(const PRUnichar *event, nsISupports *details)
 {
   PRTime now = PR_Now();
   nsresult rv;
@@ -665,5 +662,12 @@ nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table,
     rv = db->CreateTable(PromiseFlatCString(table).get(),
                          PromiseFlatCString(schema).get());
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetRestoredTimestamp(PRUint64 *aResult)
+{
+  *aResult = (PRTime)mRestoredTimestamp;
   return NS_OK;
 }
