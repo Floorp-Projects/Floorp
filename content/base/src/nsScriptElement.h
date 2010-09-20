@@ -59,11 +59,6 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
 
-  nsScriptElement(PRUint32 aFromParser)
-    : nsIScriptElement(aFromParser)
-  {
-  }
-
 protected:
   // Internal methods
 
