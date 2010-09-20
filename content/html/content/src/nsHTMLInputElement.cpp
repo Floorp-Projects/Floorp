@@ -1404,7 +1404,9 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     // Because we have to create a new string for that, we should prevent doing
     // it if it's useless.
     nsAutoString value(aValue);
-    SanitizeValue(value);
+    if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+      SanitizeValue(value);
+    }
 
     if (aSetValueChanged) {
       SetValueChanged(PR_TRUE);
@@ -2546,7 +2548,10 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 {
   ValueModeType aOldValueMode = GetValueMode();
   nsAutoString aOldValue;
-  GetValue(aOldValue);
+
+  if (aOldValueMode == VALUE_MODE_VALUE && !GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+    GetValue(aOldValue);
+  }
 
   // Only single line text inputs have a text editor state.
   PRBool isNewTypeSingleLine =
@@ -2563,40 +2568,42 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 
   mType = aNewType;
 
-  /**
-   * The following code is trying to reproduce the algorithm described here:
-   * http://www.whatwg.org/specs/web-apps/current-work/complete.html#input-type-change
-   */
-  switch (GetValueMode()) {
-    case VALUE_MODE_DEFAULT:
-    case VALUE_MODE_DEFAULT_ON:
-      // If the previous value mode was value, we need to set the value content
-      // attribute to the previous value.
-      // There is no value sanitizing algorithm for elements in this mode.
-      if (aOldValueMode == VALUE_MODE_VALUE && !aOldValue.IsEmpty()) {
-        SetAttr(kNameSpaceID_None, nsGkAtoms::value, aOldValue, PR_TRUE);
-      }
-      break;
-    case VALUE_MODE_VALUE:
-      // If the previous value mode wasn't value, we have to set the value to
-      // the value content attribute.
-      // SetValueInternal is going to sanitize the value.
-      {
-        nsAutoString value;
-        if (aOldValueMode != VALUE_MODE_VALUE) {
-          GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-        } else {
-          // We get the current value so we can sanitize it.
-          GetValue(value);
+  if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+    /**
+     * The following code is trying to reproduce the algorithm described here:
+     * http://www.whatwg.org/specs/web-apps/current-work/complete.html#input-type-change
+     */
+    switch (GetValueMode()) {
+      case VALUE_MODE_DEFAULT:
+      case VALUE_MODE_DEFAULT_ON:
+        // If the previous value mode was value, we need to set the value content
+        // attribute to the previous value.
+        // There is no value sanitizing algorithm for elements in this mode.
+        if (aOldValueMode == VALUE_MODE_VALUE && !aOldValue.IsEmpty()) {
+          SetAttr(kNameSpaceID_None, nsGkAtoms::value, aOldValue, PR_TRUE);
         }
-        SetValueInternal(value, PR_FALSE, PR_FALSE);
-      }
-      break;
-    case VALUE_MODE_FILENAME:
-    default:
-      // We don't care about the value.
-      // There is no value sanitizing algorithm for elements in this mode.
-      break;
+        break;
+      case VALUE_MODE_VALUE:
+        // If the previous value mode wasn't value, we have to set the value to
+        // the value content attribute.
+        // SetValueInternal is going to sanitize the value.
+        {
+          nsAutoString value;
+          if (aOldValueMode != VALUE_MODE_VALUE) {
+            GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+          } else {
+            // We get the current value so we can sanitize it.
+            GetValue(value);
+          }
+          SetValueInternal(value, PR_FALSE, PR_FALSE);
+        }
+        break;
+      case VALUE_MODE_FILENAME:
+      default:
+        // We don't care about the value.
+        // There is no value sanitizing algorithm for elements in this mode.
+        break;
+    }
   }
 
   // Do not notify, it will be done after if needed.
@@ -2606,6 +2613,9 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
 void
 nsHTMLInputElement::SanitizeValue(nsAString& aValue)
 {
+  NS_ASSERTION(!GET_BOOLBIT(mBitField, BF_PARSER_CREATING),
+               "The element parsing should be finished!");
+
   switch (mType) {
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_SEARCH:
@@ -3226,6 +3236,13 @@ nsHTMLInputElement::DoneCreatingElement()
     GetDefaultChecked(&resetVal);
     DoSetChecked(resetVal, PR_FALSE, PR_TRUE);
     DoSetCheckedChanged(PR_FALSE, PR_FALSE);
+  }
+
+  // Sanitize the value.
+  if (GetValueMode() == VALUE_MODE_VALUE) {
+    nsAutoString aValue;
+    GetValue(aValue);
+    SetValueInternal(aValue, PR_FALSE, PR_FALSE);
   }
 
   SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_FALSE);
@@ -4320,7 +4337,9 @@ nsHTMLInputElement::GetDefaultValueFromContent(nsAString& aValue)
     GetDefaultValue(aValue);
     // This is called by the frame to show the value.
     // We have to sanitize it when needed.
-    SanitizeValue(aValue);
+    if (!GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+      SanitizeValue(aValue);
+    }
   }
 }
 

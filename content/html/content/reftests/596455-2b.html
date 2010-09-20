@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <script>
+    function onLoadHandler()
+    {
+      document.getElementById('l').value = document.getElementById('i').value;
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onLoadHandler();">
+    <input style="display:none;" value='foo&#13;bar' type='text' id='i'>
+    <textarea id='l'></textarea>
+  </body>
+</html>
