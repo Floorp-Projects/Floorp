@@ -43,4 +43,18 @@ function run_test() {
   });
   do_check_eq(typeof num, "number");
   do_check_eq(num, 42);
+
+  _("Verify that things get logged");
+  let trace, debug;
+  Utils.jsonSave("str",
+                 {_log: {trace: function(msg) { trace = msg; }}},
+                 "hi");
+  do_check_true(!!trace);
+  trace = undefined;
+  Utils.jsonLoad("str",
+                 {_log: {trace: function(msg) { trace = msg; },
+                         debug: function(msg) { debug = msg; }}},
+                 function(val) { throw "exception"; });
+  do_check_true(!!trace);
+  do_check_true(!!debug);
 }
