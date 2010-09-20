@@ -2176,7 +2176,7 @@ struct JSContext
 
     void doFunctionCallback(const JSFunction *fun,
                             const JSScript *scr,
-                            JSBool entering) const
+                            int entering) const
     {
         if (functionCallback)
             functionCallback(fun, scr, this, entering);

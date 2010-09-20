@@ -592,7 +592,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     JSBool ok;
     {
         AutoPreserveEnumerators preserve(cx);
-        Probes::enterJSFun(cx, fp->fun());
+        Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
         AutoInterpPreparer prepareInterp(cx, script_);
         ok = mjit::EnterMethodJIT(cx, fp, code_, stackLimit_);
@@ -601,7 +601,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         cx->regs->pc = script_->code;
         ok = Interpret(cx, cx->fp());
 #endif
-        Probes::exitJSFun(cx, fp->fun());
+        Probes::exitJSFun(cx, fp->fun(), script_);
     }
 
     PutActivationObjects(cx, fp);
@@ -706,7 +706,9 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 static inline bool
 ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
 {
-    Probes::exitJSFun(cx, fp->maybeFun());
+    if (!fp->isExecuteFrame())
+        Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
+
     JSInterpreterHook hook = cx->debugHooks->callHook;
     if (hook && fp->hasHookData() && !fp->isExecuteFrame())
         hook(cx, fp, JS_FALSE, &ok, fp->hookData());
