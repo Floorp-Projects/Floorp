@@ -553,7 +553,6 @@ nsWindow::Create(nsIWidget *aParent,
   }
 
   mPopupType = aInitData->mPopupHint;
-  mContentType = aInitData->mContentType;
   mIsRTL = aInitData->mRTL;
 
   DWORD style = WindowStyle();
@@ -735,18 +734,6 @@ LPCWSTR nsWindow::WindowClass()
       ERROR_CLASS_ALREADY_EXISTS != GetLastError();
     nsWindow::sIsRegistered = succeeded;
 
-    wc.lpszClassName = kClassNameContentFrame;
-    if (!::RegisterClassW(&wc) && 
-      ERROR_CLASS_ALREADY_EXISTS != GetLastError()) {
-      nsWindow::sIsRegistered = FALSE;
-    }
-
-    wc.lpszClassName = kClassNameContent;
-    if (!::RegisterClassW(&wc) && 
-      ERROR_CLASS_ALREADY_EXISTS != GetLastError()) {
-      nsWindow::sIsRegistered = FALSE;
-    }
-
     wc.lpszClassName = kClassNameGeneral;
     ATOM generalClassAtom = ::RegisterClassW(&wc);
     if (!generalClassAtom && 
@@ -767,12 +754,6 @@ LPCWSTR nsWindow::WindowClass()
   }
   if (mWindowType == eWindowType_dialog) {
     return kClassNameDialog;
-  }
-  if (mContentType == eContentTypeContent) {
-    return kClassNameContent;
-  }
-  if (mContentType == eContentTypeContentFrame) {
-    return kClassNameContentFrame;
   }
   return kClassNameGeneral;
 }
@@ -7563,8 +7544,8 @@ nsWindow::OnIMESelectionChange(void)
 #define NS_LOG_WMGETOBJECT_THISWND                                             \
 {                                                                              \
   printf("\n*******Get Doc Accessible*******\nOrig Window: ");                 \
-  printf("\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p, content type: %d,\n",\
-         mWnd, ::GetParent(mWnd), this, mContentType);                         \
+  printf("\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p,\n",               \
+         mWnd, ::GetParent(mWnd), this);                                       \
   NS_LOG_WMGETOBJECT_WNDACC(this)                                              \
   printf("\n  }\n");                                                           \
 }
