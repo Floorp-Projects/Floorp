@@ -237,8 +237,7 @@ stubs::NewObject(VMFrame &f, uint32 argc)
         THROWV(JS_FALSE);
 
     JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent(),
-                                                     FINALIZE_OBJECT4);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, funobj->getParent());
     if (!obj)
         THROWV(JS_FALSE);
 

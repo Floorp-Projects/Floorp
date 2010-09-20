@@ -235,7 +235,7 @@ const size_t GC_MARK_BITMAP_WORDS = GC_CELLS_PER_ARENA / JS_BITS_PER_WORD;
 JS_STATIC_ASSERT(sizeof(jsbitmap) == sizeof(jsuword));
 
 JS_STATIC_ASSERT(sizeof(JSString) % GC_CELL_SIZE == 0);
-JS_STATIC_ASSERT(JSOBJECT_SIZE % GC_CELL_SIZE == 0);
+JS_STATIC_ASSERT(sizeof(JSObject) % GC_CELL_SIZE == 0);
 JS_STATIC_ASSERT(sizeof(JSFunction) % GC_CELL_SIZE == 0);
 #ifdef JSXML
 JS_STATIC_ASSERT(sizeof(JSXML) % GC_CELL_SIZE == 0);
@@ -771,15 +771,9 @@ static inline size_t
 GetFinalizableThingSize(unsigned thingKind)
 {
     JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
-    JS_STATIC_ASSERT(FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 == 5);
 
     static const uint8 map[FINALIZE_LIMIT] = {
-        JSOBJECT_SIZE,                      /* FINALIZE_OBJECT0 */
-        JSOBJECT_SIZE + 2 * sizeof(Value),  /* FINALIZE_OBJECT2 */
-        JSOBJECT_SIZE + 4 * sizeof(Value),  /* FINALIZE_OBJECT4 */
-        JSOBJECT_SIZE + 8 * sizeof(Value),  /* FINALIZE_OBJECT8 */
-        JSOBJECT_SIZE + 12 * sizeof(Value), /* FINALIZE_OBJECT12 */
-        JSOBJECT_SIZE + 16 * sizeof(Value), /* FINALIZE_OBJECT16 */
+        sizeof(JSObject),      /* FINALIZE_OBJECT */
         sizeof(JSFunction),    /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT
         sizeof(JSXML),         /* FINALIZE_XML */
@@ -806,12 +800,7 @@ GetFinalizableTraceKind(size_t thingKind)
     JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
 
     static const uint8 map[FINALIZE_LIMIT] = {
-        JSTRACE_OBJECT,     /* FINALIZE_OBJECT0 */
-        JSTRACE_OBJECT,     /* FINALIZE_OBJECT2 */
-        JSTRACE_OBJECT,     /* FINALIZE_OBJECT4 */
-        JSTRACE_OBJECT,     /* FINALIZE_OBJECT8 */
-        JSTRACE_OBJECT,     /* FINALIZE_OBJECT12 */
-        JSTRACE_OBJECT,     /* FINALIZE_OBJECT16 */
+        JSTRACE_OBJECT,     /* FINALIZE_OBJECT */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,
@@ -1560,22 +1549,8 @@ CheckGCFreeListLink(JSGCThing *thing)
     JS_ASSERT_IF(thing->link, thing < thing->link);
 }
 
-JSFinalizeGCThingKind js_GCObjectSlotsToThingKind[] = {
-    /* 0 */  FINALIZE_OBJECT0,  FINALIZE_OBJECT2,  FINALIZE_OBJECT2,  FINALIZE_OBJECT4,
-    /* 4 */  FINALIZE_OBJECT4,  FINALIZE_OBJECT8,  FINALIZE_OBJECT8,  FINALIZE_OBJECT8,
-    /* 8 */  FINALIZE_OBJECT8,  FINALIZE_OBJECT12, FINALIZE_OBJECT12, FINALIZE_OBJECT12,
-    /* 12 */ FINALIZE_OBJECT12, FINALIZE_OBJECT16, FINALIZE_OBJECT16, FINALIZE_OBJECT16,
-    /* 16 */ FINALIZE_OBJECT16, FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,
-    /* 20 */ FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,
-    /* 24 */ FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,
-    /* 28 */ FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,  FINALIZE_OBJECT0,
-    /* 32 */ FINALIZE_OBJECT0
-};
-
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_GCObjectSlotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT);
-
 void *
-js_NewFinalizableGCThing(JSContext *cx, JSFinalizeGCThingKind thingKind)
+js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 {
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
 #ifdef JS_THREADSAFE
@@ -1611,13 +1586,6 @@ js_NewFinalizableGCThing(JSContext *cx, JSFinalizeGCThingKind thingKind)
     CheckGCFreeListLink(thing);
 
     return thing;
-}
-
-JSFinalizeGCThingKind
-js_KindFromGCThing(const void *thing)
-{
-    JSGCArenaInfo *info = JSGCArenaInfo::fromGCThing((void*)thing);
-    return (JSFinalizeGCThingKind) info->list->thingKind;
 }
 
 JSBool
@@ -1676,14 +1644,8 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
             JS_CALL_OBJECT_TRACER(trc, proto, "proto");
         if (JSObject *parent = obj->getParent())
             JS_CALL_OBJECT_TRACER(trc, parent, "parent");
-
-        if (obj->emptyShapes) {
-            int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
-            for (int i = 0; i < count; i++) {
-                if (obj->emptyShapes[i])
-                    obj->emptyShapes[i]->trace(trc);
-            }
-        }
+        if (obj->emptyShape)
+            obj->emptyShape->trace(trc);
 
         /* Delegate to ops or the native marking op. */
         JSTraceOp op = obj->getOps()->trace;
@@ -2387,7 +2349,7 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
 inline void
 FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
 {
-    JS_ASSERT((thingKind >= FINALIZE_OBJECT0 && thingKind <= FINALIZE_OBJECT_LAST) ||
+    JS_ASSERT(thingKind == FINALIZE_OBJECT ||
               thingKind == FINALIZE_FUNCTION);
 
     /* Cope with stillborn objects that have no map. */
@@ -2526,14 +2488,14 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
     }
 }
 
-template<typename T, unsigned SIZE,
+template<typename T,
          void finalizer(JSContext *cx, T *thing, unsigned thingKind)>
 static void
 FinalizeArenaList(JSContext *cx, unsigned thingKind)
 {
-    JS_STATIC_ASSERT(!(SIZE & GC_CELL_MASK));
+    JS_STATIC_ASSERT(!(sizeof(T) & GC_CELL_MASK));
     JSGCArenaList *arenaList = &cx->runtime->gcArenaList[thingKind];
-    JS_ASSERT(SIZE == arenaList->thingSize);
+    JS_ASSERT(sizeof(T) == arenaList->thingSize);
 
     JSGCArena **ap = &arenaList->head;
     JSGCArena *a = *ap;
@@ -2554,8 +2516,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind)
         bool allClear = true;
 
         jsuword thing = a->toPageStart();
-        jsuword thingsEnd = thing + GC_ARENA_SIZE - (GC_ARENA_SIZE % SIZE);
-        JS_ASSERT((thingsEnd - thing) % SIZE == 0);
+        jsuword thingsEnd = thing + GC_ARENA_SIZE / sizeof(T) * sizeof(T);
 
         jsuword nextFree = reinterpret_cast<jsuword>(ainfo->freeList);
         if (!nextFree) {
@@ -2567,7 +2528,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind)
 
         jsuword gcCellIndex = 0;
         jsbitmap *bitmap = a->getMarkBitmap();
-        for (;; thing += SIZE, gcCellIndex += SIZE >> GC_CELL_SHIFT) {
+        for (;; thing += sizeof(T), gcCellIndex += sizeof(T) >> GC_CELL_SHIFT) {
             if (thing == nextFree) {
                 if (thing == thingsEnd)
                     break;
@@ -2587,7 +2548,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind)
                 T *t = reinterpret_cast<T *>(thing);
                 finalizer(cx, t, thingKind);
 #ifdef DEBUG
-                memset(t, JS_FREE_PATTERN, SIZE);
+                memset(t, JS_FREE_PATTERN, sizeof(T));
 #endif
             }
             JSGCThing *t = reinterpret_cast<JSGCThing *>(thing);
@@ -2615,12 +2576,12 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind)
              * Forget just assembled free list head for the arena and
              * add the arena itself to the destroy list.
              */
-            JS_ASSERT(nfree == ThingsPerArena(SIZE));
+            JS_ASSERT(nfree == ThingsPerArena(sizeof(T)));
             *ap = ainfo->prev;
             ReleaseGCArena(cx->runtime, a);
             METER(nkilledarenas++);
         } else {
-            JS_ASSERT(nfree < ThingsPerArena(SIZE));
+            JS_ASSERT(nfree < ThingsPerArena(sizeof(T)));
             *tailp = NULL;
             ainfo->freeList = freeList;
             ap = &ainfo->prev;
@@ -2923,21 +2884,10 @@ MarkAndSweep(JSContext *cx  GCTIMER_PARAM)
      * object's finalizer can access them even if they will be freed.
      */
     JS_ASSERT(!rt->gcEmptyArenaList);
-    FinalizeArenaList<JSObject, JSOBJECT_SIZE,
-                      FinalizeObject>(cx, FINALIZE_OBJECT0);
-    FinalizeArenaList<JSObject, JSOBJECT_SIZE + sizeof(Value) * 2,
-                      FinalizeObject>(cx, FINALIZE_OBJECT2);
-    FinalizeArenaList<JSObject, JSOBJECT_SIZE + sizeof(Value) * 4,
-                      FinalizeObject>(cx, FINALIZE_OBJECT4);
-    FinalizeArenaList<JSObject, JSOBJECT_SIZE + sizeof(Value) * 8,
-                      FinalizeObject>(cx, FINALIZE_OBJECT8);
-    FinalizeArenaList<JSObject, JSOBJECT_SIZE + sizeof(Value) * 12,
-                      FinalizeObject>(cx, FINALIZE_OBJECT12);
-    FinalizeArenaList<JSObject, JSOBJECT_SIZE + sizeof(Value) * 16,
-                      FinalizeObject>(cx, FINALIZE_OBJECT16);
-    FinalizeArenaList<JSFunction, sizeof(JSFunction), FinalizeFunction>(cx, FINALIZE_FUNCTION);
+    FinalizeArenaList<JSObject, FinalizeObject>(cx, FINALIZE_OBJECT);
+    FinalizeArenaList<JSFunction, FinalizeFunction>(cx, FINALIZE_FUNCTION);
 #if JS_HAS_XML_SUPPORT
-    FinalizeArenaList<JSXML, sizeof(JSXML), FinalizeXML>(cx, FINALIZE_XML);
+    FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML);
 #endif
     TIMESTAMP(sweepObjectEnd);
 
@@ -2947,13 +2897,12 @@ MarkAndSweep(JSContext *cx  GCTIMER_PARAM)
      */
     rt->deflatedStringCache->sweep(cx);
 
-    FinalizeArenaList<JSShortString, sizeof(JSShortString),
-                      FinalizeShortString>(cx, FINALIZE_SHORT_STRING);
-    FinalizeArenaList<JSString, sizeof(JSString), FinalizeString>(cx, FINALIZE_STRING);
+    FinalizeArenaList<JSShortString, FinalizeShortString>(cx, FINALIZE_SHORT_STRING);
+    FinalizeArenaList<JSString, FinalizeString>(cx, FINALIZE_STRING);
     for (unsigned i = FINALIZE_EXTERNAL_STRING0;
          i <= FINALIZE_EXTERNAL_STRING_LAST;
          ++i) {
-        FinalizeArenaList<JSString, sizeof(JSString), FinalizeExternalString>(cx, i);
+        FinalizeArenaList<JSString, FinalizeExternalString>(cx, i);
     }
 
     rt->gcNewArenaTriggerBytes = rt->gcBytes < GC_ARENA_ALLOCATION_TRIGGER ?
