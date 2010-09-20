@@ -2073,6 +2073,7 @@ Lirasm::Lirasm(bool verbose) :
 
     // XXX: could add more pointer-sized synonyms here
     mOpMap["paramp"] = mOpMap[PTR_SIZE("parami", "paramq")];
+    mOpMap["livep"]  = mOpMap[PTR_SIZE("livei", "liveq")];
 }
 
 Lirasm::~Lirasm()
