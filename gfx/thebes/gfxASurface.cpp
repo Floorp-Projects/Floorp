@@ -65,7 +65,7 @@
 #include "gfxDirectFBSurface.h"
 #endif
 
-#ifdef CAIRO_HAS_QT_SURFACE && defined(MOZ_WIDGET_QT)
+#ifdef CAIRO_HAS_QT_SURFACE
 #include "gfxQPainterSurface.h"
 #endif
 
@@ -191,7 +191,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
         result = new gfxDirectFBSurface(csurf);
     }
 #endif
-#ifdef CAIRO_HAS_QT_SURFACE && defined(MOZ_WIDGET_QT)
+#ifdef CAIRO_HAS_QT_SURFACE
     else if (stype == CAIRO_SURFACE_TYPE_QT) {
         result = new gfxQPainterSurface(csurf);
     }
