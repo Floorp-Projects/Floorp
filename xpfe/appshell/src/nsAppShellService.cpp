@@ -386,8 +386,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     widgetInitData.clipChildren = PR_TRUE;
 #endif
 
-  widgetInitData.mContentType = eContentTypeUI;                
-
   // note default chrome overrides other OS chrome settings, but
   // not internal chrome
   if (aChromeMask & nsIWebBrowserChrome::CHROME_DEFAULT)

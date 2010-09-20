@@ -479,7 +479,6 @@ protected:
   PRPackedBool          mIsRTL;
   PRPackedBool          mFullscreenMode;
   PRUint32              mBlurSuppressLevel;
-  nsContentType         mContentType;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
   HIMC                  mOldIMC;
