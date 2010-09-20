@@ -10450,7 +10450,7 @@ nsDocShell::ExtractLastVisit(nsIChannel* aChannel,
       );
 
       NS_WARN_IF_FALSE(
-          NS_FAILED(rv),
+          NS_SUCCEEDED(rv),
           "Could not fetch previous flags, URI will be treated like referrer"
       );
     }
