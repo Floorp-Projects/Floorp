@@ -68,13 +68,7 @@ Unwrap(JSContext *cx, JSObject *wrapper)
       // XXX Security check!
     }
 
-    JSObject *wrappedObj = wrapper->unwrap();
-    if (wrappedObj->getJSClass() == &xpc::HolderClass) {
-      typedef xpc::XrayWrapper<JSCrossCompartmentWrapper> Xray;
-      wrappedObj = Xray::unwrapHolder(cx, wrappedObj);
-    }
-
-    return wrappedObj;
+    return wrapper->unwrap();
   }
 
   js::Class *clasp = wrapper->getClass();
@@ -264,13 +258,7 @@ JSObject *
 UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj)
 {
   if (obj->isProxy()) {
-    JSObject *wrappedObj = obj->unwrap();
-    if (wrappedObj->getJSClass() == &xpc::HolderClass) {
-      typedef xpc::XrayWrapper<JSCrossCompartmentWrapper> Xray;
-      wrappedObj = Xray::unwrapHolder(cx, wrappedObj);
-    }
-
-    return wrappedObj;
+    return obj->unwrap();
   }
 
   if (IsSecurityWrapper(obj)) {

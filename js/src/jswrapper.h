@@ -105,10 +105,17 @@ class JSWrapper : public js::JSProxyHandler {
     static inline JSObject *wrappedObject(JSObject *wrapper) {
         return wrapper->getProxyPrivate().toObjectOrNull();
     }
+
+    static JS_FRIEND_API(void *) getWrapperFamily();
 };
 
 /* Base class for all cross compartment wrapper handlers. */
 class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
+  protected:
+    // XXX Hack to let Xray wrappers derive from either cross compartment
+    // wrappers or JSProxyHandlers.
+    JSCrossCompartmentWrapper(void *family);
+
   public:
     JSCrossCompartmentWrapper(uintN flags);
 
