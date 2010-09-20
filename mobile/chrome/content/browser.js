@@ -416,6 +416,12 @@ var Browser = {
   shutdown: function shutdown() {
     BrowserUI.uninit();
 
+    messageManager.removeMessageListener("Browser:ViewportMetadata", this);
+    messageManager.removeMessageListener("Browser:FormSubmit", this);
+    messageManager.removeMessageListener("Browser:KeyPress", this);
+    messageManager.removeMessageListener("Browser:ZoomToPoint:Return", this);
+    messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
+
     var os = Services.obs;
     os.removeObserver(gXPInstallObserver, "addon-install-blocked");
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
