@@ -67,6 +67,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsprobes.h"
 #include "jsregexp.h"
 #include "jsscope.h"
 #include "jsstaticcheck.h"
@@ -3223,7 +3224,9 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     if (!CheckStringLength(cx, length))
         return NULL;
 
-    return JSFixedString::new_(cx, chars, length);
+    JSFixedString *s = JSFixedString::new_(cx, chars, length);
+    Probes::createString(cx, s, length);
+    return s;
 }
 
 static JS_ALWAYS_INLINE JSFixedString *
@@ -3244,6 +3247,7 @@ NewShortString(JSContext *cx, const jschar *chars, size_t length)
     jschar *storage = str->init(length);
     PodCopy(storage, chars, length);
     storage[length] = 0;
+    Probes::createString(cx, str, length);
     return str;
 }
 
@@ -3274,6 +3278,7 @@ NewShortString(JSContext *cx, const char *chars, size_t length)
             *p++ = (unsigned char)*chars++;
         *p = 0;
     }
+    Probes::createString(cx, str, length);
     return str;
 }
 
@@ -3364,7 +3369,9 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
     if (JSLinearString *staticStr = JSAtom::lookupStatic(chars, length))
         return staticStr;
 
-    return JSDependentString::new_(cx, base, chars, length);
+    JSLinearString *s = JSDependentString::new_(cx, base, chars, length);
+    Probes::createString(cx, s, length);
+    return s;
 }
 
 JSFixedString *
