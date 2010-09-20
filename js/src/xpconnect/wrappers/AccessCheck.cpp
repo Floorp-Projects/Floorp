@@ -176,10 +176,9 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
 
     const char *name;
     js::Class *clasp = obj->getClass();
+    NS_ASSERTION(Jsvalify(clasp) != &HolderClass, "shouldn't have a holder here");
     if (clasp->ext.innerObject)
         name = "Window";
-    else if (Jsvalify(clasp) == &HolderClass)
-        name = XrayWrapper<JSCrossCompartmentWrapper>::unwrapHolder(cx, obj)->getClass()->name;
     else
         name = clasp->name;
 

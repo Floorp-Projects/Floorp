@@ -50,6 +50,7 @@
 #include "jstl.h"
 #include "nsINode.h"
 #include "xpcquickstubs.h"
+#include "jsproxy.h"
 
 /***************************************************************************/
 
