@@ -192,7 +192,12 @@ nsJAR::OpenInner(nsIZipReader *aZipReader, const char *aZipEntry)
   NS_ENSURE_ARG_POINTER(aZipEntry);
   if (mLock) return NS_ERROR_FAILURE; // Already open!
 
-  nsresult rv = aZipReader->GetFile(getter_AddRefs(mZipFile));
+  PRBool exist;
+  nsresult rv = aZipReader->HasEntry(nsDependentCString(aZipEntry), &exist);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(exist, NS_ERROR_FILE_NOT_FOUND);
+
+  rv = aZipReader->GetFile(getter_AddRefs(mZipFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mLock = PR_NewLock();
