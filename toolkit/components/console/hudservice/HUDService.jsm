@@ -1533,7 +1533,7 @@ HUD_SERVICE.prototype =
         result = 'concat("' + word.replace(/"/g, "\", '\"', \"") + '")';
       }
 
-      results.push("contains(., " + result + ")");
+      results.push("contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " + result.toLowerCase() + ")");
     }
 
     return (results.length === 0) ? "true()" : results.join(" and ");
