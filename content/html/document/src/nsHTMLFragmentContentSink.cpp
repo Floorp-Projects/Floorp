@@ -992,12 +992,13 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
     nsContentUtils::ASCIIToLower(aNode.GetKeyAt(i), k);
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
 
-    // not an allowed attribute
-    if (!sAllowedAttributes || !sAllowedAttributes->GetEntry(keyAtom)) {
-      // unless it's style, and we're allowing it
-      if (!mProcessStyle || keyAtom != nsGkAtoms::style) {
-        continue;
-      }
+    // Check if this is an allowed attribute, or a style attribute in case
+    // we've been asked to allow style attributes, or an HTML5 data-*
+    // attribute.
+    if ((!sAllowedAttributes || !sAllowedAttributes->GetEntry(keyAtom)) &&
+        (!mProcessStyle || keyAtom != nsGkAtoms::style) &&
+        !StringBeginsWith(k, NS_LITERAL_STRING("data-"))) {
+      continue;
     }
 
     // Get value and remove mandatory quotes
