@@ -816,8 +816,8 @@ const gFormSubmitObserver = {
     }
 
     // Don't show the popup if the current tab doesn't contain the invalid form.
-    if (gBrowser.selectedTab.linkedBrowser.contentDocument !=
-        aFormElement.ownerDocument) {
+    if (gBrowser.contentDocument !=
+        aFormElement.ownerDocument.defaultView.top.document) {
       return;
     }
 
