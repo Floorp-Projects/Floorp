@@ -310,109 +310,6 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
     return JS_TRUE;
 }
 
-bool
-JSObject::growDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap)
-{
-    JS_ASSERT(isDenseArray());
-    JS_ASSERT(newcap >= ARRAY_CAPACITY_MIN);
-    JS_ASSERT(newcap >= oldcap);
-
-    if (newcap > MAX_DSLOTS_LENGTH32) {
-        if (!JS_ON_TRACE(cx))
-            js_ReportAllocationOverflow(cx);
-        return JS_FALSE;
-    }
-
-    /* dslots can be NULL during array creation. */
-    Value *slots = dslots ? dslots - 1 : NULL;
-    Value *newslots = (Value *) cx->realloc(slots, (size_t(newcap) + 1) * sizeof(Value));
-    if (!newslots)
-        return false;
-
-    dslots = newslots + 1;
-    setDenseArrayCapacity(newcap);
-
-    Value *base = addressOfDenseArrayElement(0);
-    for (Value *vp = base + oldcap, *end = base + newcap; vp < end; ++vp)
-        vp->setMagic(JS_ARRAY_HOLE);
-
-    return true;
-}
-
-bool
-JSObject::ensureDenseArrayElements(JSContext *cx, uint32 newcap)
-{
-    /*
-     * When a dense array with CAPACITY_DOUBLING_MAX or fewer slots needs to
-     * grow, double its capacity, to push() N elements in amortized O(N) time.
-     *
-     * Above this limit, grow by 12.5% each time. Speed is still amortized
-     * O(N), with a higher constant factor, and we waste less space.
-     */
-    static const size_t CAPACITY_DOUBLING_MAX = 1024 * 1024;
-
-    /*
-     * Round up all large allocations to a multiple of this (1MB), so as not
-     * to waste space if malloc gives us 1MB-sized chunks (as jemalloc does).
-     */
-    static const size_t CAPACITY_CHUNK = 1024 * 1024 / sizeof(Value);
-
-    uint32 oldcap = getDenseArrayCapacity();
-
-    if (newcap > oldcap) {
-        /*
-         * If this overflows uint32, newcap is very large. nextsize will end
-         * up being less than newcap, the code below will thus disregard it,
-         * and resizeDenseArrayElements() will fail.
-         *
-         * The way we use dslots[-1] forces a few +1s and -1s here. For
-         * example, (oldcap * 2 + 1) produces the sequence 7, 15, 31, 63, ...
-         * which makes the total allocation size (with dslots[-1]) a power
-         * of two.
-         */
-        uint32 nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
-                          ? oldcap * 2 + 1
-                          : oldcap + (oldcap >> 3);
-
-        uint32 actualCapacity = JS_MAX(newcap, nextsize);
-        if (actualCapacity >= CAPACITY_CHUNK)
-            actualCapacity = JS_ROUNDUP(actualCapacity + 1, CAPACITY_CHUNK) - 1; /* -1 for dslots[-1] */
-        else if (actualCapacity < ARRAY_CAPACITY_MIN)
-            actualCapacity = ARRAY_CAPACITY_MIN;
-
-        if (!growDenseArrayElements(cx, oldcap, actualCapacity))
-            return false;
-    }
-    return true;
-}
-
-bool
-JSObject::shrinkDenseArrayElements(JSContext *cx, uint32 newcap)
-{
-    JS_ASSERT(isDenseArray());
-    JS_ASSERT(newcap < getDenseArrayCapacity());
-    JS_ASSERT(dslots);
-
-    uint32 fill = newcap;
-
-    if (newcap < ARRAY_CAPACITY_MIN)
-        newcap = ARRAY_CAPACITY_MIN;
-
-    Value *newslots = (Value *) cx->realloc(dslots - 1, (size_t(newcap) + 1) * sizeof(Value));
-    if (!newslots)
-        return false;
-
-    dslots = newslots + 1;
-    setDenseArrayCapacity(newcap);
-
-    /* we refuse to shrink below a minimum value, so we have to clear the excess space */
-    Value *base = addressOfDenseArrayElement(0);
-    while (fill < newcap)
-        base[fill++].setMagic(JS_ARRAY_HOLE);
-
-    return true;
-}
-
 static bool
 ReallyBigIndexToId(JSContext* cx, jsdouble index, jsid* idp)
 {
@@ -529,8 +426,8 @@ js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
         return true;
     if (INDEX_TOO_SPARSE(obj, u))
         return false;
-    return obj->ensureDenseArrayElements(cx, u + 1);    
 
+    return obj->ensureDenseArrayElements(cx, u + 1);
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -659,13 +556,13 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool str
     if (obj->isDenseArray()) {
         /*
          * Don't reallocate if we're not actually shrinking our slots. If we do
-         * shrink slots here, resizeDenseArrayElements will fill all slots to the
+         * shrink slots here, ensureDenseArrayElements will fill all slots to the
          * right of newlen with JS_ARRAY_HOLE. This permits us to disregard
          * length when reading from arrays as long we are within the capacity.
          */
         jsuint oldcap = obj->getDenseArrayCapacity();
-        if (oldcap > newlen && !obj->shrinkDenseArrayElements(cx, newlen))
-            return false;
+        if (oldcap > newlen)
+            obj->shrinkDenseArrayElements(cx, newlen);
         obj->setArrayLength(newlen);
     } else if (oldlen - newlen < (1 << 24)) {
         do {
@@ -974,18 +871,9 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 }
 
 static void
-array_finalize(JSContext *cx, JSObject *obj)
-{
-    obj->freeDenseArrayElements(cx);
-}
-
-static void
 array_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isDenseArray());
-
-    if (!obj->dslots)
-        return;
 
     size_t holes = 0;
     uint32 capacity = obj->getDenseArrayCapacity();
@@ -1006,7 +894,7 @@ array_trace(JSTracer *trc, JSObject *obj)
 Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_CLASS_RESERVED_SLOTS) |
+    JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -1015,7 +903,7 @@ Class js_ArrayClass = {
     EnumerateStub,
     ResolveStub,
     js_TryValueOf,
-    array_finalize,
+    NULL,
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
@@ -1099,26 +987,18 @@ JSObject::makeDenseArraySlow(JSContext *cx)
      * the same initial shape.
      */
     JSObject *arrayProto = getProto();
-    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, arrayProto))
+    if (!InitScopeForObject(cx, this, &js_SlowArrayClass, arrayProto, FINALIZE_OBJECT0))
         return false;
 
-    uint32 capacity;
+    uint32 capacity = getDenseArrayCapacity();
 
-    if (dslots) {
-        capacity = getDenseArrayCapacity();
-        dslots[-1].setPrivateUint32(JS_INITIAL_NSLOTS + capacity);
-    } else {
-        /*
-         * Array.prototype is constructed as a dense array, but is immediately slowified before
-         * we have time to set capacity.
-         */
-        capacity = 0;
-    }
-
-    /* Begin with the length property to share more of the property tree. */
+    /*
+     * Begin with the length property to share more of the property tree.
+     * The getter/setter here will directly access the object's private value.
+     */
     if (!addProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                      array_length_getter, NULL,
-                     JSSLOT_ARRAY_LENGTH, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0)) {
+                     SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0)) {
         setMap(oldMap);
         return false;
     }
@@ -1136,23 +1016,11 @@ JSObject::makeDenseArraySlow(JSContext *cx)
             continue;
         }
 
-        /* Assert that the length covering i fits in the alloted bits. */
-        JS_ASSERT(JS_INITIAL_NSLOTS + i + 1 < NSLOTS_LIMIT);
-
-        if (!addDataProperty(cx, id, JS_INITIAL_NSLOTS + i, JSPROP_ENUMERATE)) {
+        if (!addDataProperty(cx, id, i, JSPROP_ENUMERATE)) {
             setMap(oldMap);
             return false;
         }
     }
-
-    /*
-     * Render our formerly-reserved non-private properties GC-safe.  We do not
-     * need to make the length slot GC-safe because it is the private slot
-     * (this is statically asserted within JSObject) where the implementation
-     * can store an arbitrary value.
-     */
-    JS_ASSERT(js_SlowArrayClass.flags & JSCLASS_HAS_PRIVATE);
-    voidDenseOnlyArraySlots();
 
     /*
      * Finally, update class. If |this| is Array.prototype, then js_InitClass
@@ -1495,7 +1363,6 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
 
     JS_ASSERT(obj->isDenseArray());
     obj->setArrayLength(length);
-    obj->setDenseArrayCapacity(0);
     if (!vector || !length)
         return true;
     if (!obj->ensureDenseArrayElements(cx, length))
@@ -2454,10 +2321,8 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         /*
          * Clone aobj but pass the minimum of its length and capacity, to
          * handle a = [1,2,3]; a.length = 10000 "dense" cases efficiently. In
-         * such a case we'll pass 8 (not 3) due to ARRAY_CAPACITY_MIN, which
-         * will cause nobj to be over-allocated to 16. But in the normal case
-         * where length is <= capacity, nobj and aobj will have the same
-         * capacity.
+         * the normal case where length is <= capacity, nobj and aobj will have
+         * the same capacity.
          */
         length = aobj->getArrayLength();
         jsuint capacity = aobj->getDenseArrayCapacity();
@@ -2977,10 +2842,12 @@ static JSFunctionSpec array_static_methods[] = {
     JS_FS_END
 };
 
+/* The count here is a guess for the final capacity. */
 static inline JSObject *
-NewDenseArrayObject(JSContext *cx)
+NewDenseArrayObject(JSContext *cx, jsuint count)
 {
-    return NewNonFunction<WithProto::Class>(cx, &js_ArrayClass, NULL, NULL);
+    JSFinalizeGCThingKind kind = GuessObjectGCKind(count);
+    return NewNonFunction<WithProto::Class>(cx, &js_ArrayClass, NULL, NULL, kind);
 }
 
 JSBool
@@ -2988,12 +2855,6 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint length;
     const Value *vector;
-
-    /* Whether called with 'new' or not, use a new Array object. */
-    JSObject *obj = NewDenseArrayObject(cx);
-    if (!obj)
-        return JS_FALSE;
-    vp->setObject(*obj);
 
     if (argc == 0) {
         length = 0;
@@ -3011,6 +2872,12 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
         vector = NULL;
     }
 
+    /* Whether called with 'new' or not, use a new Array object. */
+    JSObject *obj = NewDenseArrayObject(cx, length);
+    if (!obj)
+        return JS_FALSE;
+    vp->setObject(*obj);
+
     return InitArrayObject(cx, obj, length, vector);
 }
 
@@ -3022,15 +2889,15 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto, int32 len)
 
     JS_ASSERT(proto->isArray());
 
-    JSObject* obj = js_NewGCObject(cx);
+    JSFinalizeGCThingKind kind = js_GetGCObjectKind(len);
+    JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
         return NULL;
 
-    /* Initialize all fields, calling init before setting obj->map. */
-    obj->init(&js_ArrayClass, proto, proto->getParent(), NullValue(), cx);
+    /* Initialize all fields of JSObject. */
+    obj->init(cx, &js_ArrayClass, proto, proto->getParent(),
+              (void*) len, true);
     obj->setSharedNonNativeMap();
-    obj->setArrayLength(len);
-    obj->setDenseArrayCapacity(0);
     return obj;
 }
 #ifdef JS_TRACER
@@ -3044,7 +2911,7 @@ js_NewPreallocatedArray(JSContext* cx, JSObject* proto, int32 len)
     JSObject *obj = js_NewEmptyArray(cx, proto, len);
     if (!obj)
         return NULL;
-    if (!obj->growDenseArrayElements(cx, 0, JS_MAX(len, ARRAY_CAPACITY_MIN)))
+    if (!obj->ensureDenseArrayElements(cx, len))
         return NULL;
     return obj;
 }
@@ -3065,7 +2932,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
      * Assert that js_InitClass used the correct (slow array, not dense array)
      * class for proto's emptyShape class.
      */
-    JS_ASSERT(proto->emptyShape->getClass() == proto->getClass());
+    JS_ASSERT(proto->emptyShapes && proto->emptyShapes[0]->getClass() == proto->getClass());
 
     proto->setArrayLength(0);
     return proto;
@@ -3074,7 +2941,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, const Value *vector)
 {
-    JSObject *obj = NewDenseArrayObject(cx);
+    JSObject *obj = NewDenseArrayObject(cx, length);
     if (!obj)
         return NULL;
 
@@ -3195,7 +3062,7 @@ js_IsDensePrimitiveArray(JSObject *obj)
 
     jsuint capacity = obj->getDenseArrayCapacity();
     for (jsuint i = 0; i < capacity; i++) {
-        if (obj->dslots[i].isObject())
+        if (obj->getDenseArrayElement(i).isObject())
             return JS_FALSE;
     }
 
@@ -3219,10 +3086,9 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
 
     /*
      * Must use the minimum of original array's length and capacity, to handle
-     * |a = [1,2,3]; a.length = 10000| "dense" cases efficiently. In such a case
-     * we would use ARRAY_CAPACITY_MIN (not 3), which will cause the clone to be
-     * over-allocated. In the normal case where length is <= capacity the
-     * clone and original array will have the same capacity.
+     * |a = [1,2,3]; a.length = 10000| "dense" cases efficiently. In the normal
+     * case where length is <= capacity, the clone and original array will have
+     * the same capacity.
      */
     jsuint jsvalCount = JS_MIN(obj->getDenseArrayCapacity(), length);
 
@@ -3231,7 +3097,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
         return JS_FALSE;
 
     for (jsuint i = 0; i < jsvalCount; i++) {
-        const Value &val = obj->dslots[i];
+        const Value &val = obj->getDenseArrayElement(i);
 
         if (val.isString()) {
             // Strings must be made immutable before being copied to a clone.

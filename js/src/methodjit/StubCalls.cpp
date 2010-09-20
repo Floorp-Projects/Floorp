@@ -1432,21 +1432,25 @@ stubs::Neg(VMFrame &f)
 }
 
 JSObject * JS_FASTCALL
-stubs::NewInitArray(VMFrame &f)
+stubs::NewInitArray(VMFrame &f, uint32 count)
 {
-    JSObject *obj = js_NewArrayObject(f.cx, 0, NULL);
-    if (!obj)
+    JSContext *cx = f.cx;
+    JSFinalizeGCThingKind kind = GuessObjectGCKind(count);
+
+    JSObject *obj = NewArrayWithKind(cx, kind);
+    if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
     return obj;
 }
 
 JSObject * JS_FASTCALL
-stubs::NewInitObject(VMFrame &f)
+stubs::NewInitObject(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
+    JSFinalizeGCThingKind kind = GuessObjectGCKind(count);
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass); 
-    if (!obj)
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+    if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
 
     return obj;

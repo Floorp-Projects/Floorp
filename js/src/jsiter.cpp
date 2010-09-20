@@ -288,7 +288,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 
     if (pobj->getArrayLength() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
-        Value *vp = pobj->dslots;
+        Value *vp = pobj->getDenseArrayElements();
         for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
@@ -455,10 +455,10 @@ NewIteratorObject(JSContext *cx, uintN flags)
          * helper objects) expect it to have a non-null map pointer, so we
          * share an empty Enumerator scope in the runtime.
          */
-        JSObject *obj = js_NewGCObject(cx);
+        JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
         if (!obj)
             return false;
-        obj->init(&js_IteratorClass, NULL, NULL, NullValue(), cx);
+        obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
         obj->setMap(cx->runtime->emptyEnumeratorShape);
         return obj;
     }

@@ -3031,8 +3031,6 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     /* Walk slots in obj and if any value is a non-null object, seal it. */
     for (uint32 i = 0, n = obj->slotSpan(); i != n; ++i) {
         const Value &v = obj->getSlot(i);
-        if (i == JSSLOT_PRIVATE && (obj->getClass()->flags & JSCLASS_HAS_PRIVATE))
-            continue;
         if (v.isPrimitive())
             continue;
         if (!JS_SealObject(cx, &v.toObject(), deep))
@@ -3831,8 +3829,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
  * + native case here uses a Shape *, but that iterates in reverse!
  * + so we make non-native match, by reverse-iterating after JS_Enumerating
  */
-const uint32 JSSLOT_ITER_INDEX = JSSLOT_PRIVATE + 1;
-JS_STATIC_ASSERT(JSSLOT_ITER_INDEX < JS_INITIAL_NSLOTS);
+const uint32 JSSLOT_ITER_INDEX = 0;
 
 static void
 prop_iter_finalize(JSContext *cx, JSObject *obj)
@@ -3841,7 +3838,7 @@ prop_iter_finalize(JSContext *cx, JSObject *obj)
     if (!pdata)
         return;
 
-    if (obj->fslots[JSSLOT_ITER_INDEX].toInt32() >= 0) {
+    if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() >= 0) {
         /* Non-native case: destroy the ida enumerated when obj was created. */
         JSIdArray *ida = (JSIdArray *) pdata;
         JS_DestroyIdArray(cx, ida);
@@ -3855,7 +3852,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     if (!pdata)
         return;
 
-    if (obj->fslots[JSSLOT_ITER_INDEX].toInt32() < 0) {
+    if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() < 0) {
         /* Native case: just mark the next property to visit. */
         ((Shape *) pdata)->trace(trc);
     } else {
@@ -3921,7 +3918,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     /* iterobj cannot escape to other threads here. */
     iterobj->setPrivate(const_cast<void *>(pdata));
-    iterobj->fslots[JSSLOT_ITER_INDEX].setInt32(index);
+    iterobj->getSlotRef(JSSLOT_ITER_INDEX).setInt32(index);
     return iterobj;
 }
 
@@ -3935,7 +3932,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, iterobj);
-    i = iterobj->fslots[JSSLOT_ITER_INDEX].toInt32();
+    i = iterobj->getSlot(JSSLOT_ITER_INDEX).toInt32();
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
         obj = iterobj->getParent();

@@ -4483,7 +4483,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_NEWINIT:
               {
-                i = GET_INT8(pc);
+                i = GET_UINT16(pc);
                 LOCAL_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
                 todo = ss->sprinter.offset;

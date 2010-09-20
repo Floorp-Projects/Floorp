@@ -1373,10 +1373,10 @@ DebugCheckWrapperClass(JSObject* obj)
 // Only use these macros if IS_WRAPPER_CLASS(obj->getClass()) is true.
 #define IS_WN_WRAPPER_OBJECT(obj)                                             \
     (DebugCheckWrapperClass(obj) &&                                           \
-     obj->getSlot(JSSLOT_START(obj->getClass())).isUndefined())
+     obj->getSlot(0).isUndefined())
 #define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
     (DebugCheckWrapperClass(obj) &&                                           \
-     !obj->getSlot(JSSLOT_START(obj->getClass())).isUndefined())
+     !obj->getSlot(0).isUndefined())
 
 // Use these macros if IS_WRAPPER_CLASS(obj->getClass()) might be false.
 // Avoid calling them if IS_WRAPPER_CLASS(obj->getClass()) can only be
@@ -2284,7 +2284,7 @@ extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
 static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
-  const js::Value &v = obj->getSlot(JSSLOT_START(obj->getClass()));
+  const js::Value &v = obj->getSlot(0);
   return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
 }
 
