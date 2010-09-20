@@ -703,10 +703,21 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   nsISelection *caretSelection = caret->GetCaretDOMSelection();
   const PRBool isFocusedRightNow = ourSel == caretSelection;
   if (!isFocusedRightNow) {
-    nsRefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
-    nsresult rv = NS_DispatchToCurrentThread(event);
-    if (NS_SUCCEEDED(rv)) {
-      mScrollEvent = event;
+    // Don't scroll the current selection if we've been focused using the mouse.
+    PRUint32 lastFocusMethod = 0;
+    nsIDocument* doc = GetContent()->GetCurrentDoc();
+    if (doc) {
+      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+      if (fm) {
+        fm->GetLastFocusMethod(doc->GetWindow(), &lastFocusMethod);
+      }
+    }
+    if (!(lastFocusMethod & nsIFocusManager::FLAG_BYMOUSE)) {
+      nsRefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
+      nsresult rv = NS_DispatchToCurrentThread(event);
+      if (NS_SUCCEEDED(rv)) {
+        mScrollEvent = event;
+      }
     }
   }
 
