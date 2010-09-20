@@ -80,11 +80,6 @@ class nsNativeTheme
 
   // Accessors to widget-specific state information
 
-  // all widgets:
-  PRBool IsDisabled(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::disabled);
-  }
-
   // RTL chrome direction
   PRBool IsFrameRTL(nsIFrame* aFrame);
 
