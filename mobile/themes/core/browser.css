@@ -562,6 +562,11 @@ richlistitem[isDisabled="true"] image {
 /* downloads panel UI   ---------------------------------------------------- */
 .download-retry-failed {
   color: red !important;
+  display: none;
+}
+
+.download-retry-failed[state="2"] {
+  display: -moz-box;
 }
 
 /* special "no downloads" items */
@@ -579,7 +584,6 @@ richlistitem[isDisabled="true"] image {
   text-align: center;
   color: grey;
 }
-
 
 /* console panel UI   ------------------------------------------------------ */
 @media (min-width: 500px) {

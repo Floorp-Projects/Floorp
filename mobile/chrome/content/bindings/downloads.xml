@@ -137,7 +137,7 @@
         </xul:hbox>
         <xul:hbox>
           <xul:label class="normal" xbl:inherits="value=status" crop="end" flex="1"/>
-          <xul:label class="hide-on-select download-retry-failed normal" value="&downloadFailed.label;"/>
+          <xul:label class="hide-on-select download-retry-failed normal" value="&downloadFailed.label;" xbl:inherits="state" />
           <xul:button class="show-on-select download-retry" label="&downloadRetry.label;"
                       oncommand="DownloadsView.retryDownload(document.getBindingParent(this));"/>
           <xul:button class="show-on-select download-remove" label="&downloadRemove.label;"
