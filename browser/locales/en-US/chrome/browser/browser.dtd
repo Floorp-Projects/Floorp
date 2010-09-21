@@ -281,9 +281,8 @@ can reach it easily. -->
 <!ENTITY appMenuSidebars.label "Sidebars">
 <!ENTITY appMenuFind.label "Find…">
 <!ENTITY appMenuUnsorted.label "Unsorted Bookmarks">
+<!ENTITY appMenuWebDeveloper.label "Web Developer">
 <!ENTITY appMenuGettingStarted.label "Getting Started">
-
-<!ENTITY developerMenu.label "Developer">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.placeholder           "Go to a Web Site">
