@@ -803,7 +803,7 @@ LoginManagerPrompter.prototype = {
     /*
      * _showSaveLoginNotification
      *
-     * Displays a notification bar or a popup notification, to allow the user 
+     * Displays a notification bar or a popup notification, to allow the user
      * to save the specified login. This allows the user to see the results of
      * their login, and only save a login which they know worked.
      *
@@ -853,7 +853,7 @@ LoginManagerPrompter.prototype = {
                     pwmgr.addLogin(aLogin);
                 }
             };
-    
+
             var secondaryActions = [
                 // "Never for this site" button
                 {
@@ -864,12 +864,12 @@ LoginManagerPrompter.prototype = {
                     }
                 }
             ];
-    
+
             var notifyWin = this._getNotifyWindow();
             var chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
             var browser = chromeWin.gBrowser.
                                     getBrowserForDocument(this._window.top.document);
-    
+
             aNotifyObj.show(browser, "password-save", notificationText,
                             "password-notification-icon", mainAction,
                             secondaryActions, { timeout: Date.now() + 20000 });
@@ -888,7 +888,7 @@ LoginManagerPrompter.prototype = {
                         pwmgr.addLogin(aLogin);
                     }
                 },
-    
+
                 // "Never for this site" button
                 {
                     label:     neverButtonText,
@@ -898,16 +898,16 @@ LoginManagerPrompter.prototype = {
                         pwmgr.setLoginSavingEnabled(aLogin.hostname, false);
                     }
                 },
-    
+
                 // "Not now" button
                 {
                     label:     notNowButtonText,
                     accessKey: notNowButtonAccessKey,
                     popup:     null,
-                    callback:  function() { /* NOP */ } 
+                    callback:  function() { /* NOP */ }
                 }
             ];
-    
+
             this._showLoginNotification(aNotifyObj, "password-save",
                                         notificationText, buttons);
         }
@@ -932,7 +932,7 @@ LoginManagerPrompter.prototype = {
                 this.log("Removing save-password notification bar.");
                 notifyBox.removeNotification(oldBar);
             }
-    
+
             oldBar = notifyBox.getNotificationWithValue("password-change");
             if (oldBar) {
                 this.log("Removing change-password notification bar.");
@@ -1060,15 +1060,15 @@ LoginManagerPrompter.prototype = {
                     self._updateLogin(aOldLogin, aNewPassword);
                 }
             };
-            
+
             var notifyWin = this._getNotifyWindow();
             var chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
             var browser = chromeWin.gBrowser.
                                     getBrowserForDocument(this._window.top.document);
-    
+
             aNotifyObj.show(browser, "password-change", notificationText,
                             "password-notification-icon", mainAction,
-                            null, { timeout: Date.now() + 20000 });    
+                            null, { timeout: Date.now() + 20000 });
         } else {
             var dontChangeButtonText =
                   this._getLocalizedString("notifyBarDontChangeButtonText");
@@ -1084,7 +1084,7 @@ LoginManagerPrompter.prototype = {
                         self._updateLogin(aOldLogin, aNewPassword);
                     }
                 },
-    
+
                 // "No" button
                 {
                     label:     dontChangeButtonText,
@@ -1095,7 +1095,7 @@ LoginManagerPrompter.prototype = {
                     }
                 }
             ];
-    
+
             this._showLoginNotification(aNotifyObj, "password-change",
                                         notificationText, buttons);
         }
@@ -1145,7 +1145,7 @@ LoginManagerPrompter.prototype = {
      * Note: The caller doesn't know the username for aNewLogin, so this
      *       function fills in .username and .usernameField with the values
      *       from the login selected by the user.
-     * 
+     *
      * Note; XPCOM stupidity: |count| is just |logins.length|.
      */
     promptToChangePasswordWithUsernames : function (logins, count, aNewLogin) {
@@ -1329,7 +1329,7 @@ LoginManagerPrompter.prototype = {
      * Returns the localized string for the specified key,
      * formatted if required.
      *
-     */ 
+     */
     _getLocalizedString : function (key, formatArgs) {
         if (formatArgs)
             return this._strBundle.formatStringFromName(
