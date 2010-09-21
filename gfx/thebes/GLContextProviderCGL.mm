@@ -121,10 +121,7 @@ public:
 
     ~GLContextCGL()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         if (mContext)
             [mContext release];

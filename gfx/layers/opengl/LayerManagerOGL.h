@@ -317,6 +317,10 @@ public:
    virtual const char* Name() const { return "OGL"; }
 #endif // MOZ_LAYERS_HAVE_LOG
 
+   const nsIntSize& GetWigetSize() {
+     return mWidgetSize;
+   }
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;

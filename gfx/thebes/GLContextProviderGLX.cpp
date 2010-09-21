@@ -226,10 +226,7 @@ TRY_AGAIN_NO_SHARING:
 
     ~GLContextGLX()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         sGLXLibrary.xDeleteContext(mDisplay, mContext);
 
