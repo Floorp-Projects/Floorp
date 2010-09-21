@@ -165,6 +165,13 @@ EXTRA_COMPONENTS = \
 		contentAreaDropListener.manifest \
 		$(NULL)
 
+ifdef MOZ_IPC
+EXTRA_COMPONENTS += \
+		messageWakeupService.js \
+		messageWakeupService.manifest \
+		$(NULL)
+endif
+
 EXTRA_JS_MODULES = \
 		CSPUtils.jsm \
 		$(NULL)
@@ -190,7 +197,5 @@ INCLUDES	+= \
 		-I$(topsrcdir)/js/src/xpconnect/src \
 		-I$(topsrcdir)/caps/include \
 		$(NULL)
-
-CXXFLAGS += $(TK_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT

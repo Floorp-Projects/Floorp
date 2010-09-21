@@ -184,6 +184,9 @@ static PRBool sKeyCausesActivation = PR_TRUE;
 static PRUint32 sESMInstanceCount = 0;
 static PRInt32 sChromeAccessModifier = 0, sContentAccessModifier = 0;
 PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
+PRBool nsEventStateManager::sNormalLMouseEventInProcess = PR_FALSE;
+nsEventStateManager* nsEventStateManager::sActiveESM = nsnull;
+nsIDocument* nsEventStateManager::sMouseOverDocument = nsnull;
 
 static PRUint32 gMouseOrKeyboardEventCounter = 0;
 static nsITimer* gUserInteractionTimer = nsnull;
@@ -778,7 +781,6 @@ nsEventStateManager::nsEventStateManager()
     mLClickCount(0),
     mMClickCount(0),
     mRClickCount(0),
-    mNormalLMouseEventInProcess(PR_FALSE),
     m_haveShutdown(PR_FALSE),
     mLastLineScrollConsumedX(PR_FALSE),
     mLastLineScrollConsumedY(PR_FALSE),
@@ -853,8 +855,14 @@ nsEventStateManager::Init()
 
 nsEventStateManager::~nsEventStateManager()
 {
+  if (sActiveESM == this) {
+    sActiveESM = nsnull;
+  }
   if (mClickHoldContextMenu)
     KillClickHoldTimer();
+
+  if (mDocument == sMouseOverDocument)
+    sMouseOverDocument = nsnull;
 
   --sESMInstanceCount;
   if(sESMInstanceCount == 0) {
@@ -1085,7 +1093,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #endif
       mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
       SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-      mNormalLMouseEventInProcess = PR_TRUE;
+      sNormalLMouseEventInProcess = PR_TRUE;
       break;
     case nsMouseEvent::eMiddleButton:
       mMClickCount = ((nsMouseEvent*)aEvent)->clickCount;
@@ -1109,7 +1117,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 #ifndef XP_OS2
         StopTrackingDragGesture();
 #endif
-        mNormalLMouseEventInProcess = PR_FALSE;
+        sNormalLMouseEventInProcess = PR_FALSE;
       case nsMouseEvent::eRightButton:
 #ifdef XP_OS2
         StopTrackingDragGesture();
@@ -2799,7 +2807,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_MOUSE_BUTTON_DOWN:
     {
       if (static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
-          !mNormalLMouseEventInProcess) {
+          !sNormalLMouseEventInProcess) {
         // We got a mouseup event while a mousedown event was being processed.
         // Make sure that the capturing content is cleared.
         nsIPresShell::SetCapturingContent(nsnull, 0);
@@ -2913,7 +2921,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             if (par)
               activeContent = par;
           }
-          SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
+          SetGlobalActiveContent(this, activeContent);
         }
       }
       else {
@@ -2925,7 +2933,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_MOUSE_BUTTON_UP:
     {
-      SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+      SetGlobalActiveContent(this, nsnull);
       if (IsMouseEventReal(aEvent)) {
         if (!mCurrentTarget) {
           nsIFrame* targ;
@@ -3406,6 +3414,10 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                                float aHotspotX, float aHotspotY,
                                nsIWidget* aWidget, PRBool aLockCursor)
 {
+  EnsureDocument(mPresContext);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  sMouseOverDocument = mDocument.get();
+
   nsCursor c;
 
   NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
@@ -3973,7 +3985,7 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastMiddleMouseDownContent == mouseContent ||
           mLastMiddleMouseDownContentParent == mouseContent ||
-          mLastLeftMouseDownContent == mouseContentParent) {
+          mLastMiddleMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mMClickCount;
         mMClickCount = 0;
       } else {
@@ -3991,7 +4003,7 @@ nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
     } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       if (mLastRightMouseDownContent == mouseContent ||
           mLastRightMouseDownContentParent == mouseContent ||
-          mLastLeftMouseDownContent == mouseContentParent) {
+          mLastRightMouseDownContent == mouseContentParent) {
         aEvent->clickCount = mRClickCount;
         mRClickCount = 0;
       } else {
@@ -4493,7 +4505,7 @@ nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK)
   *aOK = PR_TRUE;
   if (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
       static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
-    if (!mNormalLMouseEventInProcess) {
+    if (!sNormalLMouseEventInProcess) {
       *aOK = PR_FALSE;
     }
   }
@@ -4708,4 +4720,17 @@ nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
   // The caller may want synchronous scrolling.
   sf->ScrollBy(pt, scrollUnit, nsIScrollableFrame::INSTANT);
   return NS_OK;
+}
+
+void
+nsEventStateManager::SetGlobalActiveContent(nsEventStateManager* aNewESM,
+                                            nsIContent* aContent)
+{
+  if (sActiveESM && aNewESM != sActiveESM) {
+    sActiveESM->SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+  }
+  sActiveESM = aNewESM;
+  if (sActiveESM) {
+    sActiveESM->SetContentState(aContent, NS_EVENT_STATE_ACTIVE);
+  }
 }

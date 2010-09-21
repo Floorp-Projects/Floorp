@@ -43,7 +43,88 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+/**
+ * Remotes the service. All the remoting/electrolysis code is in here,
+ * so the regular service code below remains uncluttered and maintainable.
+ */
+function electrolify(service) {
+  // FIXME: For now, use the wrappedJSObject hack, until bug
+  //        593407 which will clean that up.
+  //        Note that we also use this in the xpcshell tests, separately.
+  service.wrappedJSObject = service;
+
+  var appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType ==
+      Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    // Parent process
+
+    // Setup listener for child messages. We don't need to call
+    // addMessageListener as the wakeup service will do that for us.
+    service.receiveMessage = function(aMessage) {
+      var json = aMessage.json;
+      // We have a whitelist for getting/setting. This is because
+      // there are potential privacy issues with a compromised
+      // content process checking the user's content preferences
+      // and using that to discover all the websites visited, etc.
+      // Also there are both potential race conditions (if two processes
+      // set more than one value in succession, and the values
+      // only make sense together), as well as security issues, if
+      // a compromised content process can send arbitrary setPref
+      // messages. The whitelist contains only those settings that
+      // are not at risk for either.
+      // We currently whitelist saving/reading the last directory of file
+      // uploads, which is so far the only need we have identified.
+      const NAME_WHITELIST = ["browser.upload.lastDir"];
+      if (NAME_WHITELIST.indexOf(json.name) == -1)
+        return { succeeded: false };
+
+      switch (aMessage.name) {
+        case "ContentPref:getPref":
+          return { succeeded: true,
+                   value: service.getPref(json.group, json.name, json.value) };
+
+        case "ContentPref:setPref":
+          service.setPref(json.group, json.name, json.value);
+          return { succeeded: true };
+      }
+    };
+  } else {
+    // Child process
+
+    service._dbInit = function(){}; // No local DB
+
+    service.messageManager = Cc["@mozilla.org/childprocessmessagemanager;1"].
+                             getService(Ci.nsISyncMessageSender);
+
+    // Child method remoting
+    [
+      ['getPref', ['group', 'name'], ['_parseGroupParam']],
+      ['setPref', ['group', 'name', 'value'], ['_parseGroupParam']],
+    ].forEach(function(data) {
+      var method = data[0];
+      var params = data[1];
+      var parsers = data[2];
+      service[method] = function __remoted__() {
+        var json = {};
+        for (var i = 0; i < params.length; i++) {
+          if (params[i]) {
+            json[params[i]] = arguments[i];
+            if (parsers[i])
+              json[params[i]] = this[parsers[i]](json[params[i]]);
+          }
+        }
+        var ret = service.messageManager.sendSyncMessage('ContentPref:' + method, json)[0];
+        if (!ret.succeeded)
+          throw "ContentPrefs remoting failed to pass whitelist";
+        return ret.value;
+      };
+    });
+  }
+}
+
 function ContentPrefService() {
+  electrolify(this);
+
   // If this throws an exception, it causes the getService call to fail,
   // but the next time a consumer tries to retrieve the service, we'll try
   // to initialize the database again, which might work if the failure
@@ -59,7 +140,8 @@ ContentPrefService.prototype = {
   // XPCOM Plumbing
 
   classID:          Components.ID("{e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentPrefService]),
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentPrefService,
+                                           Ci.nsIFrameMessageListener]),
 
 
   //**************************************************************************//
@@ -137,15 +219,10 @@ ContentPrefService.prototype = {
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
 
-    if (aGroup == null)
+    var group = this._parseGroupParam(aGroup);
+    if (group == null)
       return this._selectGlobalPref(aName, aCallback);
-    if (aGroup.constructor.name == "String")
-      return this._selectPref(aGroup.toString(), aName, aCallback);
-    if (aGroup instanceof Ci.nsIURI)
-      return this._selectPref(this.grouper.group(aGroup), aName, aCallback);
-
-    throw Components.Exception("aGroup is not a string, nsIURI or null",
-                               Cr.NS_ERROR_ILLEGAL_VALUE);
+    return this._selectPref(group, aName, aCallback);
   },
 
   setPref: function ContentPrefService_setPref(aGroup, aName, aValue) {
@@ -168,26 +245,15 @@ ContentPrefService.prototype = {
     }
 
     var settingID = this._selectSettingID(aName) || this._insertSetting(aName);
-    var group, groupID, prefID;
-    if (aGroup == null) {
-      group = null;
+    var group = this._parseGroupParam(aGroup);
+    var groupID, prefID;
+    if (group == null) {
       groupID = null;
       prefID = this._selectGlobalPrefID(settingID);
     }
-    else if (aGroup.constructor.name == "String") {
-      group = aGroup.toString();
-      groupID = this._selectGroupID(group) || this._insertGroup(group);
-      prefID = this._selectPrefID(groupID, settingID);
-    }
-    else if (aGroup instanceof Ci.nsIURI) {
-      group = this.grouper.group(aGroup);
-      groupID = this._selectGroupID(group) || this._insertGroup(group);
-      prefID = this._selectPrefID(groupID, settingID);
-    }
     else {
-      // Should never get here, due to earlier getPref call
-      throw Components.Exception("aGroup is not a string, nsIURI or null",
-                                 Cr.NS_ERROR_ILLEGAL_VALUE);
+      groupID = this._selectGroupID(group) || this._insertGroup(group);
+      prefID = this._selectPrefID(groupID, settingID);
     }
 
     // Update the existing record, if any, or create a new one.
@@ -217,27 +283,17 @@ ContentPrefService.prototype = {
     if (!this.hasPref(aGroup, aName))
       return;
 
+
     var settingID = this._selectSettingID(aName);
-    var group, groupID, prefID;
-    if (aGroup == null) {
-      group = null;
+    var group = this._parseGroupParam(aGroup);
+    var groupID, prefID;
+    if (group == null) {
       groupID = null;
       prefID = this._selectGlobalPrefID(settingID);
     }
-    else if (aGroup.constructor.name == "String") {
-      group = aGroup.toString();
-      groupID = this._selectGroupID(group);
-      prefID = this._selectPrefID(groupID, settingID);
-    }
-    else if (aGroup instanceof Ci.nsIURI) {
-      group = this.grouper.group(aGroup);
-      groupID = this._selectGroupID(group);
-      prefID = this._selectPrefID(groupID, settingID);
-    }
     else {
-      // Should never get here, due to earlier hasPref call
-      throw Components.Exception("aGroup is not a string, nsIURI or null",
-                                 Cr.NS_ERROR_ILLEGAL_VALUE);
+      groupID = this._selectGroupID(group);
+      prefID = this._selectPrefID(groupID, settingID);
     }
 
     this._deletePref(prefID);
@@ -312,18 +368,10 @@ ContentPrefService.prototype = {
   },
 
   getPrefs: function ContentPrefService_getPrefs(aGroup) {
-    if (aGroup == null)
+    var group = this._parseGroupParam(aGroup);
+    if (group == null)
       return this._selectGlobalPrefs();
-    if (aGroup.constructor.name == "String") {
-      group = aGroup.toString();
-      return this._selectPrefs(group);
-    }
-    if (aGroup instanceof Ci.nsIURI) {
-      var group = this.grouper.group(aGroup);
-      return this._selectPrefs(group);
-    }
-    throw Components.Exception("aGroup is not a string, nsIURI or null",
-                               Cr.NS_ERROR_ILLEGAL_VALUE);
+    return this._selectPrefs(group);
   },
 
   getPrefsByName: function ContentPrefService_getPrefsByName(aName) {
@@ -1011,8 +1059,19 @@ ContentPrefService.prototype = {
 
   _dbMigrate2To3: function ContentPrefService__dbMigrate2To3(aDBConnection) {
     this._dbCreateIndices(aDBConnection);
-  }
+  },
 
+  _parseGroupParam: function ContentPrefService__parseGroupParam(aGroup) {
+    if (aGroup == null)
+      return null;
+    if (aGroup.constructor.name == "String")
+      return aGroup.toString();
+    if (aGroup instanceof Ci.nsIURI)
+      return this.grouper.group(aGroup);
+
+    throw Components.Exception("aGroup is not a string, nsIURI or null",
+                               Cr.NS_ERROR_ILLEGAL_VALUE);
+  },
 };
 
 

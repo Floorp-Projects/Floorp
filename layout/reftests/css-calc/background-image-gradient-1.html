@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<title>Test for calc() on background-image gradients</title>
+<style>
+
+p {
+    height: 50px; width: 200px;
+    border: thin solid;
+}
+
+#one { background-image: -moz-radial-gradient(-moz-calc(50px + 50%) -moz-calc(100% - 30px), circle farthest-side, red, green); }
+#two { background-image: -moz-linear-gradient(-moz-calc(-12.5% + 3px) -moz-calc(-10px - 50%) -45deg, blue, yellow); }
+
+</style>
+<p id="one"></p>
+<p id="two"></p>

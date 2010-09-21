@@ -53,6 +53,7 @@ nsDOMNotifyAudioAvailableEvent::nsDOMNotifyAudioAvailableEvent(nsPresContext* aP
     mCachedArray(nsnull),
     mAllowAudioData(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsDOMNotifyAudioAvailableEvent);
   if (mEvent) {
     mEvent->message = aEventType;
   }
@@ -90,6 +91,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 nsDOMNotifyAudioAvailableEvent::~nsDOMNotifyAudioAvailableEvent()
 {
+  MOZ_COUNT_DTOR(nsDOMNotifyAudioAvailableEvent);
   if (mCachedArray) {
     NS_DROP_JS_OBJECTS(this, nsDOMNotifyAudioAvailableEvent);
     mCachedArray = nsnull;
@@ -142,10 +144,14 @@ nsDOMNotifyAudioAvailableEvent::InitAudioAvailableEvent(const nsAString& aType,
                                                         float aTime,
                                                         PRBool aAllowAudioData)
 {
+  // Auto manage the memory which stores the frame buffer. This ensures
+  // that if we exit due to some error, the memory will be freed. Otherwise,
+  // the framebuffer's memory will be freed when this event is destroyed.
+  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mFrameBuffer = aFrameBuffer;
+  mFrameBuffer = frameBuffer.forget();
   mFrameBufferLength = aFrameBufferLength;
   mTime = aTime;
   mAllowAudioData = aAllowAudioData;
@@ -163,9 +169,5 @@ nsresult NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aInstancePtrResult,
   nsDOMNotifyAudioAvailableEvent* it =
     new nsDOMNotifyAudioAvailableEvent(aPresContext, aEvent, aEventType,
                                        aFrameBuffer, aFrameBufferLength, aTime);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return CallQueryInterface(it, aInstancePtrResult);
 }

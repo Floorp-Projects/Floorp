@@ -312,6 +312,12 @@ function test()
     checkThrows(function() new Int32Array(Int32Array));
     checkThrows(function() new Int32Array(Float64Array));
 
+    check(function() Int32Array.BYTES_PER_ELEMENT == 4);
+    check(function() (new Int32Array(4)).BYTES_PER_ELEMENT == 4);
+    check(function() (new Int32Array()).BYTES_PER_ELEMENT == 4);
+    check(function() (new Int32Array(0)).BYTES_PER_ELEMENT == 4);
+    check(function() Int16Array.BYTES_PER_ELEMENT == Uint16Array.BYTES_PER_ELEMENT);
+
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");

@@ -119,27 +119,6 @@ function sync_httpd_setup(handlers) {
   return httpd_setup(handlers);
 }
 
-function createAndUploadKeypair() {
-  let storageURL = Svc.Prefs.get("clusterURL") + Svc.Prefs.get("storageAPI")
-                   + "/" + ID.get("WeaveID").username + "/storage/";
-
-  PubKeys.defaultKeyUri = storageURL + "keys/pubkey";
-  PrivKeys.defaultKeyUri = storageURL + "keys/privkey";
-  let keys = PubKeys.createKeypair(ID.get("WeaveCryptoID"),
-                                   PubKeys.defaultKeyUri,
-                                   PrivKeys.defaultKeyUri);
-  PubKeys.uploadKeypair(keys);
-}
-
-function createAndUploadSymKey(url) {
-  let symkey = Svc.Crypto.generateRandomKey();
-  let pubkey = PubKeys.getDefaultKey();
-  let meta = new CryptoMeta(url);
-  meta.addUnwrappedKey(pubkey, symkey);
-  let res = new Resource(meta.uri);
-  res.put(meta);
-}
-
 // Turn WBO cleartext into "encrypted" payload as it goes over the wire
 function encryptPayload(cleartext) {
   if (typeof cleartext == "object") {

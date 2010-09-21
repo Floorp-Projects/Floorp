@@ -202,6 +202,8 @@ pluginDraw(InstanceData* instanceData)
   HDC hdc = NULL;
   PAINTSTRUCT ps;
 
+  notifyDidPaint(instanceData);
+
   if (instanceData->hasWidget)
     hdc = ::BeginPaint((HWND)instanceData->window.window, &ps);
   else
@@ -227,8 +229,6 @@ pluginDraw(InstanceData* instanceData)
 
   if (instanceData->hasWidget)
     ::EndPaint((HWND)instanceData->window.window, &ps);
-
-  notifyDidPaint(instanceData);
 }
 
 /* script interface */

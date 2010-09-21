@@ -118,12 +118,10 @@ private:
     CPOW_Finalize(JSContext* cx, JSObject* obj);
 
     static JSBool
-    CPOW_Call(JSContext* cx, JSObject* obj, uintN argc, jsval* argv,
-              jsval* rval);
+    CPOW_Call(JSContext* cx, uintN argc, jsval* vp);
 
     static JSBool
-    CPOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval);
+    CPOW_Construct(JSContext *cx, uintN argc, jsval *vp);
     
     static JSBool
     CPOW_HasInstance(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);

@@ -1134,7 +1134,7 @@ done:
     if (NSS_Shutdown() != SECSuccess) {
 	pk12uErrno = 1;
     }
-    PR_Cleanup();
     PL_ArenaFinish();
+    PR_Cleanup();
     return pk12uErrno;
 }

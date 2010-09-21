@@ -34,9 +34,13 @@ function openNotification() {
                                   callback: null,
                                   popup: null
                                 }]);
-  nb.addEventListener("overflow", function() {
-    is(n.getBoundingClientRect().height, 27, "notification bar has wrong height");
-    SimpleTest.finish();
+  n.addEventListener("transitionend", function (event) {
+    if (event.propertyName == "margin-top") {
+      setTimeout(function () {
+        is(n.getBoundingClientRect().height, 27, "notification bar has wrong height");
+        SimpleTest.finish();
+      }, 0);
+    }
   }, false);
 }
 

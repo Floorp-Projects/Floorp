@@ -59,6 +59,7 @@ public:
       mNeedsYFlip(PR_FALSE)
   {
       mImplData = static_cast<LayerD3D9*>(this);
+      aManager->deviceManager()->mLayersWithResources.AppendElement(this);
   }
 
   ~CanvasLayerD3D9();
@@ -70,9 +71,16 @@ public:
   // LayerD3D9 implementation
   virtual Layer* GetLayer();
   virtual void RenderLayer();
+  virtual void CleanResources();
+  virtual void LayerManagerDestroyed();
+
+  void CreateTexture();
 
 protected:
   typedef mozilla::gl::GLContext GLContext;
+
+  // Indicates whether our texture was obtained through D2D interop.
+  bool mIsInteropTexture;
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;

@@ -38,6 +38,11 @@
 
 .hud-box {
     border-bottom: 1px solid #aaa;
+    text-shadow: none;
+}
+
+.hud-group label {
+    padding-left: 1em;
 }
 
 .hud-outer-wrapper {
@@ -60,6 +65,11 @@
     -moz-user-select: text;
     white-space: pre-wrap;
     -moz-user-focus: normal;
+}
+
+.hud-clickable {
+    cursor: pointer !important;
+    text-decoration: underline;
 }
 
 .hud-output-node .hud-network {
@@ -91,7 +101,7 @@
     margin-top: 0.3em; 
     margin-bottom: 0.3em; 
     padding-left: 0.3em;
-    border-bottom: 1px solid #eee;   
+    /* border-bottom: 1px solid #eee; */
 }
 
 .hud-output-node {
@@ -146,7 +156,6 @@
 }
 
 .jsterm-input-node {
-    width: 98%;
     font-family: monospace;
     font-size: 9pt;
     background: url("chrome://global/skin/icons/commandline.png") 4px 3px
@@ -167,4 +176,29 @@
 .hud-console-filter-toolbar {
     padding: 1px 0px;
     -moz-box-align: center;
+    -moz-appearance: none !important;
+    background-color: -moz-dialog;
+    border-top: none;
 }
+
+
+.jsterm-close-button {
+    background: none !important;
+    border: none !important;
+    list-style-image: url("chrome://global/skin/icons/close.png");
+    margin: 0px !important;
+    min-width: 0px !important;
+    padding: 1px 3px 1px 7px !important;
+    -moz-appearance: none !important;
+    -moz-image-region: rect(0, 16px, 16px, 0);
+    -moz-user-focus: ignore;
+}
+
+.jsterm-close-button:hover {
+    -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.jsterm-close-button:hover:active {
+    -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+

@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -329,13 +329,6 @@ void vp8_de_noise(YV12_BUFFER_CONFIG         *source,
         source->uv_width - 4, ppl);
 
 }
-
-
-//Notes: It is better to change CHAR to unsigned or signed to
-//avoid error on ARM platform.
-char vp8_an[8][64][3072];
-int vp8_cd[8][64];
-
 
 double vp8_gaussian(double sigma, double mu, double x)
 {

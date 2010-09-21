@@ -37,7 +37,7 @@
 #include "yarr/pcre/pcre.h"
 struct JSRegExp; // temporary, remove when fallback is removed.
 
-#if WTF_CPU_X86 && !WTF_COMPILER_MSVC
+#if WTF_CPU_X86 && !WTF_COMPILER_MSVC && !WTF_COMPILER_SUNPRO
 #define YARR_CALL __attribute__ ((regparm (3)))
 #else
 #define YARR_CALL
@@ -74,7 +74,7 @@ public:
 
     int execute(const UChar* input, unsigned start, unsigned length, int* output)
     {
-        return JS_EXTENSION(reinterpret_cast<RegexJITCode>(m_ref.m_code.executableAddress())(input, start, length, output));
+        return JS_EXTENSION((reinterpret_cast<RegexJITCode>(m_ref.m_code.executableAddress()))(input, start, length, output));
     }
 
 private:

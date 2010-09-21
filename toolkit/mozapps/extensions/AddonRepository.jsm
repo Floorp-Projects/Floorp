@@ -91,13 +91,18 @@ const PROP_MULTI = ["developers", "screenshots"]
 const STRING_KEY_MAP = {
   name:               "name",
   version:            "version",
-  summary:            "description",
-  description:        "fullDescription",
-  developer_comments: "developerComments",
-  eula:               "eula",
   icon:               "iconURL",
   homepage:           "homepageURL",
   support:            "supportURL"
+};
+
+// A map between XML keys to AddonSearchResult keys for string values
+// that require parsing from HTML
+const HTML_KEY_MAP = {
+  summary:            "description",
+  description:        "fullDescription",
+  developer_comments: "developerComments",
+  eula:               "eula"
 };
 
 // A map between XML keys to AddonSearchResult keys for integer values
@@ -108,6 +113,25 @@ const INTEGER_KEY_MAP = {
   daily_users:      "dailyUsers"
 };
 
+
+function convertHTMLToPlainText(html) {
+  if (!html)
+    return html;
+  var converter = Cc["@mozilla.org/widget/htmlformatconverter;1"].
+                  createInstance(Ci.nsIFormatConverter);
+
+  var input = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
+  input.data = html.replace("\n", "<br>", "g");
+
+  var output = {};
+  converter.convert("text/html", input, input.data.length, "text/unicode",
+                    output, {});
+
+  if (output.value instanceof Ci.nsISupportsString)
+    return output.value.data.replace("\r\n", "\n", "g");
+  return html;
+}
 
 function AddonSearchResult(aId) {
   this.id = aId;
@@ -784,6 +808,12 @@ var AddonRepository = {
       // Handle case where the wanted string value is located in text content
       if (localName in STRING_KEY_MAP) {
         addon[STRING_KEY_MAP[localName]] = this._getTextContent(node);
+        continue;
+      }
+
+      // Handle case where the wanted string value is html located in text content
+      if (localName in HTML_KEY_MAP) {
+        addon[HTML_KEY_MAP[localName]] = convertHTMLToPlainText(this._getTextContent(node));
         continue;
       }
 

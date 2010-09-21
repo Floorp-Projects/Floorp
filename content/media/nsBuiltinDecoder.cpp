@@ -145,6 +145,8 @@ void nsBuiltinDecoder::Shutdown()
 
   mShuttingDown = PR_TRUE;
 
+  StopTimeUpdate();
+
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
@@ -307,6 +309,10 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
                                       PRUint32 aFrameBufferLength,
                                       PRUint64 aTime)
 {
+  // Auto manage the frame buffer's memory. If we return due to an error
+  // here, this ensures we free the memory. Otherwise, we pass off ownership
+  // to HTMLMediaElement::NotifyAudioAvailable().
+  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown) {
     return;
@@ -316,7 +322,7 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
     return;
   }
 
-  mElement->NotifyAudioAvailable(aFrameBuffer, aFrameBufferLength, aTime);
+  mElement->NotifyAudioAvailable(frameBuffer.forget(), aFrameBufferLength, aTime);
 }
 
 void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
@@ -355,7 +361,7 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
   else if (mElement) {
     // Resource was loaded during metadata loading, when progress
     // events are being ignored. Fire the final progress event.
-    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
+    mElement->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   }
 
   // Only inform the element of FirstFrameLoaded if not doing a load() in order
@@ -383,6 +389,8 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
   if (resourceIsLoaded) {
     ResourceLoaded();
   }
+
+  StartTimeUpdate();
 }
 
 void nsBuiltinDecoder::ResourceLoaded()
@@ -769,7 +777,7 @@ void nsBuiltinDecoder::PlaybackPositionChanged()
   Invalidate();
 
   if (mElement && lastTime != mCurrentTime) {
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    FireTimeUpdate();
   }
 }
 
@@ -784,7 +792,7 @@ void nsBuiltinDecoder::DurationChanged()
 
   if (mElement && oldDuration != mDuration) {
     LOG(PR_LOG_DEBUG, ("%p duration changed to %lldms", this, mDuration));
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("durationchange"));
+    mElement->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
 

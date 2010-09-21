@@ -322,6 +322,7 @@ public:
   virtual nsIAtom* GetType() const;
 
   virtual nsMargin GetUsedBorder() const;
+  virtual PRBool GetBorderRadii(nscoord aRadii[8]) const;
 
   // Get the *inner half of the border only*, in twips.
   virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const;

@@ -43,8 +43,10 @@
 <!DOCTYPE overlay [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
   <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
+  <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
   %brandDTD;
   %mainDTD;
+  %aboutHomeDTD;
 ]>
 
 <overlay id="MainPaneOverlay"
@@ -77,6 +79,11 @@
                   name="pref.browser.homepage.disable_button.restore_default"
                   type="bool"/>
 
+      <preference id="browser.privatebrowsing.autostart"
+                  name="browser.privatebrowsing.autostart"
+                  type="bool"
+                  onchange="gMainPane.updateBrowserStartupLastSession();"/>
+
       <!-- Downloads -->
       <preference id="browser.download.manager.showWhenStarting"
                   name="browser.download.manager.showWhenStarting"
@@ -107,17 +114,20 @@
                control="browserStartupPage"/>
         <menulist id="browserStartupPage" preference="browser.startup.page">
           <menupopup>
-            <menuitem label="&startupHomePage.label;"     value="1"/>
-            <menuitem label="&startupBlankPage.label;"    value="0"/>
-            <menuitem label="&startupLastSession.label;"  value="3"/>
+            <menuitem label="&startupHomePage.label;"     value="1" id="browserStartupHomePage"/>
+            <menuitem label="&startupBlankPage.label;"    value="0" id="browserStartupBlank"/>
+            <menuitem label="&startupLastSession.label;"  value="3" id="browserStartupLastSession"/>
           </menupopup>
         </menulist>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">
-        <label value="&location.label;" accesskey="&location.accesskey;" control="browserHomePage"/>
+        <label value="&homepage.label;" accesskey="&homepage.accesskey;" control="browserHomePage"/>
         <textbox id="browserHomePage" class="padded uri-element" flex="1"
                  type="autocomplete" autocompletesearch="history"
+                 onsyncfrompreference="return gMainPane.syncFromHomePref();"
+                 onsynctopreference="return gMainPane.syncToHomePref(this.value);"
+                 placeholder="&abouthome.pageTitle;"
                  preference="browser.startup.homepage"/>
       </hbox>
       <hbox align="center" pack="end">

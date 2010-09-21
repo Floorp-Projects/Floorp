@@ -279,13 +279,19 @@ void
 nsTransitionManager::Disconnect()
 {
   // Content nodes might outlive the transition manager.
+  RemoveAllTransitions();
+
+  mPresContext = nsnull;
+}
+
+void
+nsTransitionManager::RemoveAllTransitions()
+{
   while (!PR_CLIST_IS_EMPTY(&mElementTransitions)) {
     ElementTransitions *head = static_cast<ElementTransitions*>(
                                  PR_LIST_HEAD(&mElementTransitions));
     head->Destroy();
   }
-
-  mPresContext = nsnull;
 }
 
 static PRBool
@@ -868,6 +874,14 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
   NS_ABORT_IF_FALSE(mPresContext,
                     "refresh driver should not notify additional observers "
                     "after pres context has been destroyed");
+  if (!mPresContext->GetPresShell()) {
+    // Someone might be keeping mPresContext alive past the point
+    // where it has been torn down; don't bother doing anything in
+    // this case.  But do get rid of all our transitions so we stop
+    // triggering refreshes.
+    RemoveAllTransitions();
+    return;
+  }
 
   nsTArray<TransitionEventInfo> events;
 

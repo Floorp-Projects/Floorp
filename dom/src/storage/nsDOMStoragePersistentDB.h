@@ -54,7 +54,7 @@ public:
   ~nsDOMStoragePersistentDB() {}
 
   nsresult
-  Init();
+  Init(const nsString& aDatabaseName);
 
   /**
    * Retrieve a list of all the keys associated with a particular domain.

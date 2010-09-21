@@ -39,9 +39,14 @@
 #include "nsString.h"
 #include "nsIDeviceContext.h"
 #include "prlog.h"
+#include <limits.h>
 
 // the mozilla::css::Side sequence must match the nsMargin nscoord sequence
 PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
+
+
+/* static */
+const nsIntRect nsIntRect::kMaxSizedIntRect(0, 0, INT_MAX, INT_MAX);
 
 // Containment
 PRBool nsRect::Contains(nscoord aX, nscoord aY) const
@@ -189,12 +194,12 @@ nsMargin nsRect::operator-(const nsRect& aRect) const
 }
 
 // scale the rect but round to smallest containing rect
-nsRect& nsRect::ScaleRoundOut(float aScale)
+nsRect& nsRect::ScaleRoundOut(float aXScale, float aYScale)
 {
-  nscoord right = NSToCoordCeil(float(XMost()) * aScale);
-  nscoord bottom = NSToCoordCeil(float(YMost()) * aScale);
-  x = NSToCoordFloor(float(x) * aScale);
-  y = NSToCoordFloor(float(y) * aScale);
+  nscoord right = NSToCoordCeil(float(XMost()) * aXScale);
+  nscoord bottom = NSToCoordCeil(float(YMost()) * aYScale);
+  x = NSToCoordFloor(float(x) * aXScale);
+  y = NSToCoordFloor(float(y) * aYScale);
   width = (right - x);
   height = (bottom - y);
   return *this;

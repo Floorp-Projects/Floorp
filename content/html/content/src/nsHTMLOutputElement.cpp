@@ -83,9 +83,6 @@ public:
   // has to be used to update the defaultValue attribute.
   void DescendantsChanged();
 
-  // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; }
-
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -116,6 +113,8 @@ nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo
   , mValueModeFlag(eModeDefault)
 {
   AddMutationObserver(this);
+  // <output> is always barred from constraint validation.
+  SetBarredFromConstraintValidation(PR_TRUE);
 }
 
 nsHTMLOutputElement::~nsHTMLOutputElement()

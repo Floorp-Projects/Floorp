@@ -5071,13 +5071,61 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     nsIFrame* aFindFrame, PRBool* aFoundValidLine)
   : mFrame(aFrame), mInOverflowLines(nsnull)
 {
-  mLine = aFrame->begin_lines();
-
   *aFoundValidLine = PR_FALSE;
 
   nsIFrame* child = FindChildContaining(aFrame, aFindFrame);
   if (!child)
     return;
+
+  // Try to use the cursor if it exists, otherwise fall back to the first line
+  nsLineBox* cursor = static_cast<nsLineBox*>
+    (aFrame->Properties().Get(LineCursorProperty()));
+  if (!cursor) {
+    line_iterator iter = aFrame->begin_lines();
+    if (iter != aFrame->end_lines()) {
+      cursor = iter;
+    }
+  }
+
+  if (cursor) {
+    // Perform a simultaneous forward and reverse search starting from the
+    // line cursor.
+    nsBlockFrame::line_iterator line = aFrame->line(cursor);
+    nsBlockFrame::reverse_line_iterator rline = aFrame->rline(cursor);
+    nsBlockFrame::line_iterator line_end = aFrame->end_lines();
+    nsBlockFrame::reverse_line_iterator rline_end = aFrame->rend_lines();
+    // rline is positioned on the line containing 'cursor', so it's not
+    // rline_end. So we can safely increment it (i.e. move it to one line
+    // earlier) to start searching there.
+    ++rline;
+    while (line != line_end || rline != rline_end) {
+      if (line != line_end) {
+        if (line->Contains(child)) {
+          *aFoundValidLine = PR_TRUE;
+          mLine = line;
+          return;
+        }
+        ++line;
+      }
+      if (rline != rline_end) {
+        if (rline->Contains(child)) {
+          *aFoundValidLine = PR_TRUE;
+          mLine = rline;
+          return;
+        }
+        ++rline;
+      }
+    }
+    // Didn't find the line
+  }
+
+  // If we reach here, it means that we have not been able to find the
+  // desired frame in our in-flow lines.  So we should start looking at
+  // our overflow lines. In order to do that, we set mLine to the end
+  // iterator so that FindValidLine starts to look at overflow lines,
+  // if any.
+
+  mLine = aFrame->end_lines();
 
   if (!FindValidLine())
     return;

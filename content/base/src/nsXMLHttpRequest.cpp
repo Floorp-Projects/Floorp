@@ -63,7 +63,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMFileInternal.h"
 #include "nsIDOMWindow.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
@@ -1743,18 +1742,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(getter_AddRefs(loadGroup));
 
-  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
-  // in turn keeps STOP button from becoming active.  If the consumer passed in
-  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
-  // necko won't generate any progress notifications
-  nsLoadFlags loadFlags;
-  if (HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)) ||
-      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
-      (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
-    loadFlags = nsIRequest::LOAD_NORMAL;
-  } else {
-    loadFlags = nsIRequest::LOAD_BACKGROUND;
-  }
   // get Content Security Policy from principal to pass into channel
   nsCOMPtr<nsIChannelPolicy> channelPolicy;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
@@ -1770,7 +1757,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
                      nsnull,                    // ioService
                      loadGroup,
                      nsnull,                    // callbacks
-                     loadFlags,
+                     nsIRequest::LOAD_BACKGROUND,
                      channelPolicy);
   if (NS_FAILED(rv)) return rv;
 
@@ -2328,29 +2315,6 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult,
       return NS_OK;
     }
 
-    // nsIDOMFile?
-    nsCOMPtr<nsIDOMFileInternal> file = do_QueryInterface(supports);
-    if (file) {
-      aCharset.Truncate();
-
-      nsCOMPtr<nsIFile> internalFile;
-      rv = file->GetInternalFile(getter_AddRefs(internalFile));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Get the mimetype
-      nsCOMPtr<nsIMIMEService> mimeService =
-          do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = mimeService->GetTypeFromFile(internalFile, aContentType);
-      if (NS_FAILED(rv)) {
-        aContentType.Truncate();
-      }
-
-      // Feed local file input stream into our upload channel
-      return NS_NewLocalFileInputStream(aResult, internalFile);
-    }
-
     // nsIXHRSendable?
     nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(supports);
     if (sendable) {
@@ -2391,6 +2355,21 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // Make sure we've been opened
   if (!mChannel || !(XML_HTTP_REQUEST_OPENED & mState)) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+
+  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
+  // in turn keeps STOP button from becoming active.  If the consumer passed in
+  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
+  // necko won't generate any progress notifications.
+  if (HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)) ||
+      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
+      (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
+    nsLoadFlags loadFlags;
+    mChannel->GetLoadFlags(&loadFlags);
+    loadFlags &= ~nsIRequest::LOAD_BACKGROUND;
+    loadFlags |= nsIRequest::LOAD_NORMAL;
+    mChannel->SetLoadFlags(loadFlags);
   }
 
   // XXX We should probably send a warning to the JS console
@@ -2654,12 +2633,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     return rv;
   }
 
-  // Now that we've successfully opened the channel, we can change state.  Note
-  // that this needs to come after the AsyncOpen() and rv check, because this
-  // can run script that would try to restart this request, and that could end
-  // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
-  ChangeState(XML_HTTP_REQUEST_SENT);
-
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
@@ -2682,6 +2655,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       }
     }
 
+    ChangeState(XML_HTTP_REQUEST_SENT);
+    // Note, calling ChangeState may have cleared
+    // XML_HTTP_REQUEST_SYNCLOOPING flag.
     nsIThread *thread = NS_GetCurrentThread();
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       if (!NS_ProcessNextEvent(thread)) {
@@ -2698,6 +2674,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       NS_DispatchToCurrentThread(resumeTimeoutRunnable);
     }
   } else {
+    // Now that we've successfully opened the channel, we can change state.  Note
+    // that this needs to come after the AsyncOpen() and rv check, because this
+    // can run script that would try to restart this request, and that could end
+    // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
+    ChangeState(XML_HTTP_REQUEST_SENT);
     if (!mUploadComplete &&
         HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
         (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
@@ -3014,9 +2995,11 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
     mProgressNotifier->Cancel();
   }
 
-  if ((mState & XML_HTTP_REQUEST_ASYNC) &&
-      (aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
-      aBroadcast) {
+  if ((aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
+      aBroadcast &&
+      (mState & XML_HTTP_REQUEST_ASYNC ||
+       aState & XML_HTTP_REQUEST_OPENED ||
+       aState & XML_HTTP_REQUEST_COMPLETED)) {
     nsCOMPtr<nsIDOMEvent> event;
     rv = CreateReadystatechangeEvent(getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);

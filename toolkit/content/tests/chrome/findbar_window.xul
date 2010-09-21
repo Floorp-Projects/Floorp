@@ -99,10 +99,15 @@
       var _delayedOnLoad = function() {
         gFindBar = document.getElementById("FindToolbar");
         gBrowser = document.getElementById("content");
-        gBrowser.addEventListener("pageshow", onPageShow, false);
+        gBrowser.addEventListener("pageshow", _delayedOnPageShow, false);
         gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT + "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" + SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>");
       }
       setTimeout(_delayedOnLoad, 1000);
+    }
+
+    function _delayedOnPageShow() {
+      // setTimeout to the test runs after painting suppression ends
+      setTimeout(onPageShow, 0);
     }
 
     function onPageShow() {

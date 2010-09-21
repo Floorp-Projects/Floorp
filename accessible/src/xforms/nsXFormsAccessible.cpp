@@ -244,11 +244,10 @@ nsXFormsContainerAccessible::
 {
 }
 
-nsresult
-nsXFormsContainerAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXFormsContainerAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_GROUPING;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_GROUPING;
 }
 
 PRBool

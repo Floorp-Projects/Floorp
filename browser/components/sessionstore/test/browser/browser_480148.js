@@ -93,9 +93,6 @@ function test() {
 
   function runTest(testNum, totalTabs, selectedTab, shownTabs, hiddenTabs, order) {
     let test = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
-                                             Ci.nsISupportsWeakReference]),
-
       state: buildTestState(totalTabs, selectedTab, hiddenTabs),
       numTabsToShow: shownTabs,
       expectedOrder: order,

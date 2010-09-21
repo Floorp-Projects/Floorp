@@ -47,16 +47,84 @@ using IPC::URI;
 namespace mozilla {
 namespace net {
 
+/**
+ * PCookieService
+ *
+ * Provides IPDL methods for setting and getting cookies. These are stored on
+ * and managed by the parent; the child process goes through the parent for
+ * all cookie operations. Lower-level programmatic operations (i.e. those
+ * provided by the nsICookieManager and nsICookieManager2 interfaces) are not
+ * currently implemented and requesting these interfaces in the child will fail.
+ *
+ * @see nsICookieService
+ * @see nsICookiePermission
+ */
+
 sync protocol PCookieService
 {
   manager PNecko;
 
 parent:
+
+  /*
+   * Get the complete cookie string associated with the URI. This is a sync
+   * call in order to avoid race conditions -- for instance, an HTTP response
+   * on the parent and script access on the child.
+   *
+   * @param host
+   *        Same as the 'aURI' argument to nsICookieService.getCookieString.
+   * @param originating
+   *        The originating URI associated with the request. This is used
+   *        to determine whether the request is first or third party, for
+   *        purposes of allowing access to cookies. This should be obtained
+   *        from nsICookiePermission.getOriginatingURI. This parameter may
+   *        be null; in this case, the request is assumed to be third party
+   *        and may be rejected depending on user preferences. In
+   *        nsICookieService.getCookieString, this argument is determined
+   *        from the aChannel argument.
+   * @param fromHttp
+   *        Whether the result is for an HTTP request header. This should be
+   *        true for nsICookieService.getCookieStringFromHttp calls, false
+   *        otherwise.
+   *
+   * @see nsICookieService.getCookieString
+   * @see nsICookieService.getCookieStringFromHttp
+   * @see nsICookiePermission.getOriginatingURI
+   *
+   * @return the resulting cookie string.
+   */
   sync GetCookieString(URI host,
                        URI originating,
                        bool fromHttp)
        returns (nsCString result);
 
+  /*
+   * Set a cookie string.
+   *
+   * @param host
+   *        Same as the 'aURI' argument to nsICookieService.setCookieString.
+   * @param originating
+   *        The originating URI associated with the request. This is used
+   *        to determine whether the request is first or third party, for
+   *        purposes of allowing access to cookies. This should be obtained
+   *        from nsICookiePermission.getOriginatingURI. This parameter may
+   *        be null; in this case, the request is assumed to be third party
+   *        and may be rejected depending on user preferences.
+   * @param cookieString
+   *        Same as the 'aCookie' argument to nsICookieService.setCookieString.
+   * @param serverTime
+   *        Same as the 'aServerTime' argument to
+   *        nsICookieService.setCookieStringFromHttp. If the string is empty or
+   *        null (e.g. for non-HTTP requests), the current local time is used.
+   * @param fromHttp
+   *        Whether the result is for an HTTP request header. This should be
+   *        true for nsICookieService.setCookieStringFromHttp calls, false
+   *        otherwise.
+   *
+   * @see nsICookieService.setCookieString
+   * @see nsICookieService.setCookieStringFromHttp
+   * @see nsICookiePermission.getOriginatingURI
+   */
   SetCookieString(URI host,
                   URI originating,
                   nsCString cookieString,

@@ -67,11 +67,26 @@ ShadowLayerParent::AsContainer() const
   return static_cast<ContainerLayer*>(AsLayer());
 }
 
-bool
-ShadowLayerParent::Recv__delete__()
+void
+ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
 {
+  switch (why) {
+  case AncestorDeletion:
+    NS_RUNTIMEABORT("shadow layer deleted out of order!");
+    return;                     // unreached
+
+  case Deletion:
+    mLayer->Disconnect();
+    break;
+
+  case AbnormalShutdown:
+  case NormalShutdown:
+    // let IPDL-generated code automatically clean up Shmems and so
+    // forth; our channel is disconnected anyway
+    break;
+  }
+
   mLayer = NULL;
-  return true;
 }
 
 } // namespace layers

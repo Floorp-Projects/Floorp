@@ -129,7 +129,7 @@
 #define SYSTEMPREF_MODULES
 #endif
 
-#if defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#ifdef ENABLE_LAYOUTDEBUG
 #define LAYOUT_DEBUG_MODULE MODULE(nsLayoutDebugModule)
 #else
 #define LAYOUT_DEBUG_MODULE

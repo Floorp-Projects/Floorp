@@ -43,6 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = mochitest
+DIRS = mochitest browser
 
 include $(topsrcdir)/config/rules.mk

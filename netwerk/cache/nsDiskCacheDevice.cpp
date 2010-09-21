@@ -368,7 +368,10 @@ nsDiskCacheDevice::Init()
 
     nsresult rv;
 
-    NS_ENSURE_TRUE(!Initialized(), NS_ERROR_FAILURE);
+    if (Initialized()) {
+        NS_ERROR("Disk cache already initialized!");
+        return NS_ERROR_UNEXPECTED;
+    }
        
     if (!mCacheDirectory)
         return NS_ERROR_FAILURE;
@@ -775,8 +778,8 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     PRUint32  newSizeK =  ((newSize + 0x3FF) >> 10);
 
     // If the new size is larger than max. file size or larger than
-    // half the cache capacity (which is in KiB's), doom the entry and abort
-    if ((newSize > kMaxDataFileSize) || (newSizeK > mCacheCapacity/2)) {
+    // 1/8 the cache capacity (which is in KiB's), doom the entry and abort
+    if (EntryIsTooBig(newSize)) {
 #ifdef DEBUG
         nsresult rv =
 #endif
@@ -859,6 +862,13 @@ nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
     return NS_OK;
 }
 
+// Max allowed size for an entry is currently MIN(5MB, 1/8 CacheCapacity)
+bool
+nsDiskCacheDevice::EntryIsTooBig(PRInt64 entrySize)
+{
+    return entrySize > kMaxDataFileSize
+           || entrySize > (static_cast<PRInt64>(mCacheCapacity) * 1024 / 8);
+}
 
 nsresult
 nsDiskCacheDevice::EvictEntries(const char * clientID)

@@ -71,10 +71,7 @@ class nsAccessibleWrap : public nsAccessible
     // should be instantied with.   used on runtime to determine the
     // right type for this accessible's associated native object.
     virtual objc_class* GetNativeType ();
-    
-    // returns a pointer to the native window for this accessible tree.
-    void GetNativeWindow (void **aOutNativeWindow);
-    
+
     virtual void Shutdown ();
     virtual void InvalidateChildren();
 

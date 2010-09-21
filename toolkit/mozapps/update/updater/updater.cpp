@@ -494,7 +494,8 @@ static int ensure_remove(const NS_tchar *path)
   ensure_write_permissions(path);
   int rv = NS_tremove(path);
   if (rv)
-    LOG(("remove failed: %d,%d (" LOG_S ")\n", rv, errno, path));
+    LOG(("ensure_remove: failed to remove file: " LOG_S ",%d,%d\n", path, rv,
+         errno));
   return rv;
 }
 
@@ -532,6 +533,8 @@ static int ensure_parent_dir(const NS_tchar *path)
       // If the directory already exists, then ignore the error. On WinCE rv
       // will equal 0 if the directory already exists.
       if (rv < 0 && errno != EEXIST) {
+        LOG(("ensure_parent_dir: failed to create directory: " LOG_S ",%d\n",
+             path, errno));
         rv = WRITE_ERROR;
       } else {
         rv = OK;
@@ -552,7 +555,8 @@ static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
 
   AutoFile sfile = NS_tfopen(spath, NS_T("rb"));
   if (sfile == NULL || fstat(fileno((FILE*)sfile), &ss)) {
-    LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile.get(), spath, errno));
+    LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile.get(),
+         spath, errno));
     return READ_ERROR;
   }
 
@@ -611,6 +615,8 @@ static int backup_restore(const NS_tchar *path)
 
   rv = ensure_remove(backup);
   if (rv) {
+    LOG(("backup_restore: failed to remove backup file: " LOG_S ",%d\n", backup,
+         errno));
     return WRITE_ERROR;
   }
 
@@ -906,11 +912,17 @@ PatchFile::LoadSourceFile(FILE* ofile)
 {
   struct stat os;
   int rv = fstat(fileno((FILE*)ofile), &os);
-  if (rv)
+  if (rv) {
+    LOG(("LoadSourceFile: unable to stat destination file: " LOG_S ",%d\n",
+         mDestFile, errno));
     return READ_ERROR;
+  }
 
-  if (PRUint32(os.st_size) != header.slen)
+  if (PRUint32(os.st_size) != header.slen) {
+    LOG(("LoadSourceFile: destination file size %d does not match expected size %d\n",
+         PRUint32(os.st_size), header.slen));
     return UNEXPECTED_ERROR;
+  }
 
   buf = (unsigned char*) malloc(header.slen);
   if (!buf)
@@ -920,14 +932,19 @@ PatchFile::LoadSourceFile(FILE* ofile)
   unsigned char *rb = buf;
   while (r) {
     int c = fread(rb, 1, r, ofile);
-    if (c < 0)
+    if (c < 0) {
+      LOG(("LoadSourceFile: error reading destination file: " LOG_S "\n",
+           mDestFile));
       return READ_ERROR;
+    }
 
     r -= c;
     rb += c;
 
-    if (c == 0 && r)
+    if (c == 0 && r) {
+      LOG(("LoadSourceFile: expected %d more bytes in destination file\n", r));
       return UNEXPECTED_ERROR;
+    }
   }
 
   // Verify that the contents of the source file correspond to what we expect.
@@ -1007,8 +1024,10 @@ PatchFile::Execute()
     return rv;
 
   FILE *origfile = NS_tfopen(mDestFile, NS_T("rb"));
-  if (!origfile)
+  if (!origfile) {
+    LOG(("unable to open destination file: " LOG_S ",%d\n", mDestFile, errno));
     return READ_ERROR;
+  }
 
   rv = LoadSourceFile(origfile);
   fclose(origfile);
@@ -1028,16 +1047,23 @@ PatchFile::Execute()
     return rv;
 
   rv = ensure_remove(mDestFile);
-  if (rv)
+  if (rv) {
+    LOG(("unable to remove original file: " LOG_S ",%d\n", mDestFile, errno));
     return WRITE_ERROR;
+  }
 
   AutoFile ofile = ensure_open(mDestFile, NS_T("wb+"), ss.st_mode);
-  if (ofile == NULL)
+  if (ofile == NULL) {
+    LOG(("unable to create new file: " LOG_S ",%d\n", mDestFile, errno));
     return WRITE_ERROR;
+  }
 
   rv = MBS_ApplyPatch(&header, pfile, buf, ofile);
 
   // Go ahead and do a bit of cleanup now to minimize runtime overhead.
+  // Set pfile to NULL to make AutoFile close the file so it can be deleted on
+  // Windows.
+  pfile = NULL;
   NS_tremove(spath);
   spath[0] = '\0';
   free(buf);
@@ -1540,11 +1566,16 @@ int NS_main(int argc, NS_tchar **argv)
   LogInit();
   LOG(("SOURCE DIRECTORY " LOG_S "\n", gSourcePath));
 
+  // The destination directory (the same as the working-dir argument) does not
+  // have to be specified when updating manually.
+  if (argc > argOffset - 1) {
+    LOG(("DESTINATION DIRECTORY " LOG_S "\n", argv[3]));
+  }
+
 #ifdef WINCE
   // This is the working directory to apply the update and is required on WinCE
   // since it doesn't have the concept of a working directory.
   gDestPath = argv[3];
-  LOG(("DESTINATION DIRECTORY " LOG_S "\n", gDestPath));
 #endif
 
 #ifdef XP_WIN
@@ -1786,22 +1817,30 @@ int DoUpdate()
 
   // extract the manifest
   FILE *fp = NS_tfopen(manifest, NS_T("wb"));
-  if (!fp)
+  if (!fp) {
+    LOG(("DoUpdate: error opening manifest file: " LOG_S "\n", manifest));
     return READ_ERROR;
+  }
 
   int rv = gArchiveReader.ExtractFileToStream("update.manifest", fp);
   fclose(fp);
-  if (rv)
+  if (rv) {
+    LOG(("DoUpdate: error extracting manifest file\n"));
     return rv;
+  }
 
   AutoFile mfile = NS_tfopen(manifest, NS_T("rb"));
-  if (mfile == NULL)
+  if (mfile == NULL) {
+    LOG(("DoUpdate: error opening manifest file: " LOG_S "\n", manifest));
     return READ_ERROR;
+  }
 
   struct stat ms;
   rv = fstat(fileno((FILE*)mfile), &ms);
-  if (rv)
+  if (rv) {
+    LOG(("DoUpdate: error stating manifest file: " LOG_S "\n", manifest));
     return READ_ERROR;
+  }
 
   char *mbuf = (char*) malloc(ms.st_size + 1);
   if (!mbuf)
@@ -1811,8 +1850,10 @@ int DoUpdate()
   char *rb = mbuf;
   while (r) {
     int c = fread(rb, 1, mmin(SSIZE_MAX,r), mfile);
-    if (c < 0)
+    if (c < 0) {
+      LOG(("DoUpdate: error reading manifest file: " LOG_S "\n", manifest));
       return READ_ERROR;
+    }
 
     r -= c;
     rb += c;
@@ -1832,8 +1873,10 @@ int DoUpdate()
       continue;
 
     char *token = mstrtok(kWhitespace, &line);
-    if (!token)
+    if (!token) {
+      LOG(("DoUpdate: token not found in manifest\n"));
       return PARSE_ERROR;
+    }
 
     Action *action = NULL;
     if (strcmp(token, "remove") == 0) {
@@ -1852,6 +1895,7 @@ int DoUpdate()
       action = new PatchIfFile();
     }
     else {
+      LOG(("DoUpdate: unknown token: %s\n", token));
       return PARSE_ERROR;
     }
 

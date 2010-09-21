@@ -57,6 +57,8 @@
 
 #include "Layers.h"
 
+class nsIDOMFile;
+
 class nsHTMLCanvasElement : public nsGenericHTMLElement,
                             public nsICanvasElementExternal,
                             public nsIDOMHTMLCanvasElement
@@ -168,9 +170,17 @@ protected:
   nsIntSize GetWidthHeight();
 
   nsresult UpdateContext();
+  nsresult ExtractData(const nsAString& aType,
+                       const nsAString& aOptions,
+                       char*& aData,
+                       PRUint32& aSize,
+                       bool& aFellBackToPNG);
   nsresult ToDataURLImpl(const nsAString& aMimeType,
                          const nsAString& aEncoderOptions,
                          nsAString& aDataURL);
+  nsresult MozGetAsFileImpl(const nsAString& aName,
+                            const nsAString& aType,
+                            nsIDOMFile** aResult);
   nsresult GetContextHelper(const nsAString& aContextId,
                             nsICanvasRenderingContextInternal **aContext);
 

@@ -43,6 +43,7 @@ const Cr = Components.results;
 
 const PREF_EM_UPDATE_ENABLED   = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
+const PREF_EM_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -349,6 +350,18 @@ var AddonManagerInternal = {
       }
 
       pendingUpdates += aAddons.length;
+      var autoUpdateDefault = AddonManager.autoUpdateDefault;
+
+      function shouldAutoUpdate(aAddon) {
+        if (!("applyBackgroundUpdates" in aAddon))
+          return false;
+        if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_ENABLE)
+          return true;
+        if (aAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE)
+          return false;
+        return autoUpdateDefault;
+      }
+
       aAddons.forEach(function BUC_forEachCallback(aAddon) {
         // Check all add-ons for updates so that any compatibility updates will
         // be applied
@@ -357,7 +370,7 @@ var AddonManagerInternal = {
             // Start installing updates when the add-on can be updated and
             // background updates should be applied.
             if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
-                aAddon.applyBackgroundUpdates) {
+                shouldAutoUpdate(aAddon)) {
               aInstall.install();
             }
           },
@@ -830,12 +843,19 @@ var AddonManagerInternal = {
     });
   },
 
+  get autoUpdateDefault() {
+    try {
+      return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
+    } catch(e) { }
+    return true;
+  },
+
   /**
    * Adds an AddonListener that uses the observer service to notify
    * native code of the extension events.
    *
    * Currently only handles that subset of the events and data that
-   * the about:startup page requires.
+     * the about:startup page requires.
    *
    */
   _addNotificationListeners: function()
@@ -1017,6 +1037,15 @@ var AddonManager = {
   SCOPE_SYSTEM: 8,
   // The combination of all scopes.
   SCOPE_ALL: 15,
+  
+  // Constants for Addon.applyBackgroundUpdates.
+  // Indicates that the Addon should not update automatically.
+  AUTOUPDATE_DISABLE: 0,
+  // Indicates that the Addon should update automatically only if
+  // that's the global default.
+  AUTOUPDATE_DEFAULT: 1,
+  // Indicates that the Addon should update automatically.
+  AUTOUPDATE_ENABLE: 2,
 
   getInstallForURL: function AM_getInstallForURL(aUrl, aCallback, aMimetype,
                                                  aHash, aName, aIconURL,
@@ -1085,5 +1114,9 @@ var AddonManager = {
 
   removeAddonListener: function AM_removeAddonListener(aListener) {
     AddonManagerInternal.removeAddonListener(aListener);
+  },
+  
+  get autoUpdateDefault() {
+    return AddonManagerInternal.autoUpdateDefault;
   }
 };

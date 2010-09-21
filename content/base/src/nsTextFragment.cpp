@@ -372,11 +372,11 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
 // To save time we only do this when we really want to know, not during
 // every allocation
 void
-nsTextFragment::SetBidiFlag()
+nsTextFragment::UpdateBidiFlag(const PRUnichar* aBuffer, PRUint32 aLength)
 {
   if (mState.mIs2b && !mState.mIsBidi) {
-    const PRUnichar* cp = m2b;
-    const PRUnichar* end = cp + mState.mLength;
+    const PRUnichar* cp = aBuffer;
+    const PRUnichar* end = cp + aLength;
     while (cp < end) {
       PRUnichar ch1 = *cp++;
       PRUint32 utf32Char = ch1;

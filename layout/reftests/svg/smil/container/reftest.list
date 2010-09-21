@@ -6,9 +6,9 @@ random == enveloped-tree-1.xhtml enveloped-tree-1-ref.xhtml  # bug 470868
 == promoted-tree-1.xhtml promoted-tree-1-ref.xhtml
 random == moved-tree-1.xhtml moved-tree-1-ref.xhtml  # bug 470868
 random-if(cocoaWidget||d2d) == deferred-anim-1.xhtml deferred-anim-1-ref.xhtml # bug 470868, bug 585484
-== deferred-tree-1.xhtml deferred-tree-1-ref.xhtml
-== deferred-tree-2a.xhtml deferred-tree-2-ref.xhtml
-== deferred-tree-2b.xhtml deferred-tree-2-ref.xhtml
+random-if(cocoaWidget&&layersGPUAccelerated) == deferred-tree-1.xhtml deferred-tree-1-ref.xhtml # bug 470868
+random-if(cocoaWidget&&layersGPUAccelerated) == deferred-tree-2a.xhtml deferred-tree-2-ref.xhtml # bug 470868
+random-if(cocoaWidget&&layersGPUAccelerated) == deferred-tree-2b.xhtml deferred-tree-2-ref.xhtml # bug 470868
 == deferred-tree-3a.xhtml deferred-tree-3-ref.xhtml
 == deferred-tree-3b.xhtml deferred-tree-3-ref.xhtml
 == deferred-tree-3c.xhtml deferred-tree-3-ref.xhtml

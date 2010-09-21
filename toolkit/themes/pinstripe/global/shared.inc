@@ -1,13 +1,13 @@
 %filter substitution
 
 %define loweredShadow 0 1px rgba(255, 255, 255, .4)
-%define focusRingShadow 0 0 1px -moz-mac-focusring inset, 0 0 4px 1px -moz-mac-focusring, 0 0 2px 1px -moz-mac-focusring
+%define focusRingShadow 0 0 1px -moz-mac-focusring inset, 0 0 4px 1px -moz-mac-focusring, 0 0 1.5px 1px -moz-mac-focusring
 
 %define roundButtonBorder 1px solid rgba(0, 0, 0, .4)
 %define roundButtonBackground -moz-linear-gradient(top, #FFF, #CACACA) repeat-x
 %define roundButtonShadow 0 1px rgba(255, 255, 255, .4)
 %define roundButtonPressedBackground #CCC
-%define roundButtonPressedShadow inset 0 1px 4px rgba(0, 0, 0, .2), 0 1px rgba(255, 255, 255, .4)
+%define roundButtonPressedShadow inset 0 1px 3px rgba(0, 0, 0, .2), 0 1px rgba(255, 255, 255, .4)
 
 %define scopeBarBackground -moz-linear-gradient(top, #E8E8E8, #D0D0D0) repeat-x
 %define scopeBarSeparatorBorder 1px solid #888
@@ -27,7 +27,7 @@
 %define toolbarbuttonBorderColor rgba(59, 59, 59, 0.9)
 %define toolbarbuttonCornerRadius 3px
 %define toolbarbuttonBackground -moz-linear-gradient(top, #FFF, #ADADAD) repeat-x
-%define toolbarbuttonPressedInnerShadow inset rgba(0, 0, 0, 0.3) 0 -6px 14px, inset #000 0 1px 4px, inset rgba(0, 0, 0, 0.2) 0 1px 4px
+%define toolbarbuttonPressedInnerShadow inset rgba(0, 0, 0, 0.3) 0 -6px 10px, inset #000 0 1px 3px, inset rgba(0, 0, 0, 0.2) 0 1px 3px
 %define toolbarbuttonPressedBackgroundColor #B5B5B5
 %define toolbarbuttonInactiveBorderColor rgba(146, 146, 146, 0.84)
 %define toolbarbuttonInactiveBackgroundImage -moz-linear-gradient(top, #FFF, #CCC)

@@ -39,8 +39,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jspropertycache.h"
-#include "jspropertycacheinlines.h"
 #include "jscntxt.h"
+#include "jsnum.h"
+#include "jsobjinlines.h"
+#include "jspropertycacheinlines.h"
 
 using namespace js;
 
@@ -48,10 +50,9 @@ JS_STATIC_ASSERT(sizeof(PCVal) == sizeof(jsuword));
 
 JS_REQUIRES_STACK PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoIndex,
-                    JSObject *pobj, JSScopeProperty *sprop, JSBool adding)
+                    JSObject *pobj, const Shape *shape, JSBool adding)
 {
     jsbytecode *pc;
-    JSScope *scope;
     jsuword kshape, vshape;
     JSOp op;
     const JSCodeSpec *cs;
@@ -67,12 +68,20 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
     }
 
     /*
-     * Check for fill from js_SetPropertyHelper where the setter removed sprop
-     * from pobj's scope (via unwatch or delete, e.g.).
+     * Check for fill from js_SetPropertyHelper where the setter removed shape
+     * from pobj (via unwatch or delete, e.g.).
      */
-    scope = pobj->scope();
-    if (!scope->hasProperty(sprop)) {
+    if (!pobj->nativeContains(*shape)) {
         PCMETER(oddfills++);
+        return JS_NO_PROP_CACHE_FILL;
+    }
+
+    /*
+     * Dictionary-mode objects have unique shapes, so there is no way to cache
+     * a prediction of the next shape when adding.
+     */
+    if (adding && obj->inDictionaryMode()) {
+        PCMETER(add2dictfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
 
@@ -81,7 +90,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after js_LookupPropertyWithFlags has returned the nominal protoIndex,
      * we have to validate protoIndex if it is non-zero. If it is zero, then
-     * we know thanks to the scope->hasProperty test above, combined with the
+     * we know thanks to the pobj->nativeContains test above, combined with the
      * fact that obj == pobj, that protoIndex is invariant.
      *
      * The scopeIndex can't be wrong. We require JS_SetParent calls to happen
@@ -127,7 +136,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
      * opcode format flags.
      */
     pc = cx->regs->pc;
-    op = js_GetOpcode(cx, cx->fp()->getScript(), pc);
+    op = js_GetOpcode(cx, cx->fp()->script(), pc);
     cs = &js_CodeSpec[op];
     kshape = 0;
 
@@ -138,37 +147,38 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
          * getter, so get of a function is idempotent.
          */
         if (cs->format & JOF_CALLOP) {
-            if (sprop->isMethod()) {
+            if (shape->isMethod()) {
                 /*
                  * A compiler-created function object, AKA a method, already
                  * memoized in the property tree.
                  */
-                JS_ASSERT(scope->hasMethodBarrier());
-                JSObject &funobj = sprop->methodObject();
-                JS_ASSERT(&funobj == &pobj->lockedGetSlot(sprop->slot).toObject());
+                JS_ASSERT(pobj->hasMethodBarrier());
+                JSObject &funobj = shape->methodObject();
+                JS_ASSERT(&funobj == &pobj->lockedGetSlot(shape->slot).toObject());
                 vword.setFunObj(funobj);
                 break;
             }
 
-            if (!scope->generic() &&
-                sprop->hasDefaultGetter() &&
-                SPROP_HAS_VALID_SLOT(sprop, scope)) {
-                const Value &v = pobj->lockedGetSlot(sprop->slot);
+            if (!pobj->generic() &&
+                shape->hasDefaultGetter() &&
+                pobj->containsSlot(shape->slot)) {
+                const Value &v = pobj->lockedGetSlot(shape->slot);
                 JSObject *funobj;
+
                 if (IsFunctionObject(v, &funobj)) {
                     /*
                      * Great, we have a function-valued prototype property
                      * where the getter is JS_PropertyStub. The type id in
-                     * pobj's scope does not evolve with changes to property
-                     * values, however.
+                     * pobj does not evolve with changes to property values,
+                     * however.
                      *
                      * So here, on first cache fill for this method, we brand
-                     * the scope with a new shape and set the JSScope::BRANDED
-                     * flag. Once this flag is set, any property assignment
-                     * that changes the value from or to a different function
-                     * object will result in shape being regenerated.
+                     * obj with a new shape and set the JSObject::BRANDED flag.
+                     * Once this flag is set, any property assignment that
+                     * changes the value from or to a different function object
+                     * will result in shape being regenerated.
                      */
-                    if (!scope->branded()) {
+                    if (!pobj->branded()) {
                         PCMETER(brandfills++);
 #ifdef DEBUG_notme
                         fprintf(stderr,
@@ -178,7 +188,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                                 JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
                                 obj->shape());
 #endif
-                        if (!scope->brand(cx, sprop->slot, v))
+                        if (!pobj->brand(cx, shape->slot, v))
                             return JS_NO_PROP_CACHE_FILL;
                     }
                     vword.setFunObj(*funobj);
@@ -192,24 +202,23 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
          * with stub getters and setters, we can cache the slot.
          */
         if (!(cs->format & (JOF_SET | JOF_FOR)) &&
-            (!(cs->format & JOF_INCDEC) || sprop->hasDefaultSetter()) &&
-            sprop->hasDefaultGetter() &&
-            SPROP_HAS_VALID_SLOT(sprop, scope)) {
-            /* Great, let's cache sprop's slot and use it on cache hit. */
-            vword.setSlot(sprop->slot);
+            (!(cs->format & JOF_INCDEC) || shape->hasDefaultSetter()) &&
+            shape->hasDefaultGetter() &&
+            pobj->containsSlot(shape->slot)) {
+            /* Great, let's cache shape's slot and use it on cache hit. */
+            vword.setSlot(shape->slot);
         } else {
-            /* Best we can do is to cache sprop (still a nice speedup). */
-            vword.setSprop(sprop);
+            /* Best we can do is to cache shape (still a nice speedup). */
+            vword.setShape(shape);
             if (adding &&
-                sprop == scope->lastProperty() &&
-                scope->shape == sprop->shape) {
+                pobj->shape() == shape->shape) {
                 /*
                  * Our caller added a new property. We also know that a setter
-                 * that js_NativeSet could have run has not mutated the scope,
-                 * so the added property is still the last one added, and the
-                 * scope is not branded.
+                 * that js_NativeSet might have run has not mutated pobj, so
+                 * the added property is still the last one added, and pobj is
+                 * not branded.
                  *
-                 * We want to cache under scope's shape before the property
+                 * We want to cache under pobj's shape before the property
                  * addition to bias for the case when the mutator opcode
                  * always adds the same property. This allows us to optimize
                  * periodic execution of object initializers or other explicit
@@ -230,26 +239,10 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                  * that on the third and subsequent iterations the cache will
                  * be hit because the shape is no longer updated.
                  */
-                JS_ASSERT(!scope->isSharedEmpty());
-                if (sprop->parent) {
-                    kshape = sprop->parent->shape;
-                } else {
-                    /*
-                     * If obj had its own empty scope before, with a unique
-                     * shape, that is lost. Here we only attempt to find a
-                     * matching empty scope. In unusual cases involving
-                     * __proto__ assignment we may not find one.
-                     */
-                    JSObject *proto = obj->getProto();
-                    if (!proto || !proto->isNative())
-                        return JS_NO_PROP_CACHE_FILL;
-                    JSScope *protoscope = proto->scope();
-                    if (!protoscope->emptyScope ||
-                        protoscope->emptyScope->clasp != obj->getClass()) {
-                        return JS_NO_PROP_CACHE_FILL;
-                    }
-                    kshape = protoscope->emptyScope->shape;
-                }
+                JS_ASSERT(shape == pobj->lastProperty());
+                JS_ASSERT(!pobj->nativeEmpty());
+
+                kshape = shape->previous()->shape;
 
                 /*
                  * When adding we predict no prototype object will later gain a
@@ -262,7 +255,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
 
     if (kshape == 0) {
         kshape = obj->shape();
-        vshape = scope->shape;
+        vshape = pobj->shape();
     }
     JS_ASSERT(kshape < SHAPE_OVERFLOW_BIT);
 
@@ -281,11 +274,10 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
              * Make sure that a later shadowing assignment will enter
              * PurgeProtoChain and invalidate this entry, bug 479198.
              *
-             * This is thread-safe even though obj is not locked. Only the
-             * DELEGATE bit of obj->classword can change at runtime, given that
-             * obj is native; and the bit is only set, never cleared. And on
-             * platforms where another CPU can fail to see this write, it's OK
-             * because the property cache and JIT cache are thread-local.
+             * This is not thread-safe but we are about to make all objects
+             * except multi-threaded wrappers (bug 566951) single-threaded.
+             * And multi-threaded wrappers are non-native Proxy instances, so
+             * they won't use the property cache.
              */
             obj->setDelegate();
         }
@@ -314,9 +306,14 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     if (op == JSOP_LENGTH)
         return cx->runtime->atomState.lengthAtom;
 
+    // The method JIT's implementation of instanceof contains an internal lookup
+    // of the prototype property.
+    if (op == JSOP_INSTANCEOF)
+        return cx->runtime->atomState.classPrototypeAtom;
+
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(cx->fp()->getScript(), pc, pcoff, atom);
+    GET_ATOM_FROM_BYTECODE(cx->fp()->script(), pc, pcoff, atom);
     return atom;
 }
 
@@ -330,10 +327,10 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     JSStackFrame *fp = cx->fp();
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(uintN((fp->hasIMacroPC() ? fp->getIMacroPC() : pc) - fp->getScript()->code)
-              < fp->getScript()->length);
+    JS_ASSERT(uintN((fp->hasImacropc() ? fp->imacropc() : pc) - fp->script()->code)
+              < fp->script()->length);
 
-    JSOp op = js_GetOpcode(cx, fp->getScript(), pc);
+    JSOp op = js_GetOpcode(cx, fp->script(), pc);
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
@@ -363,7 +360,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
         return atom;
     }
 
-    if (entry->kshape != obj->map->shape) {
+    if (entry->kshape != obj->shape()) {
         PCMETER(kshapemisses++);
         return GetAtomFromBytecode(cx, pc, op, cs);
     }
@@ -401,8 +398,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
         jsid id = ATOM_TO_JSID(atom);
 
         id = js_CheckForStringIndex(id);
-        JS_ASSERT(pobj->scope()->lookup(id));
-        JS_ASSERT_IF(pobj->scope()->object, pobj->scope()->object == pobj);
+        JS_ASSERT(pobj->nativeContains(id));
 #endif
         *pobjp = pobj;
         return NULL;
@@ -455,6 +451,7 @@ PropertyCache::purge(JSContext *cx)
         P(rofills);
         P(disfills);
         P(oddfills);
+        P(add2dictfills);
         P(modfills);
         P(brandfills);
         P(noprotos);

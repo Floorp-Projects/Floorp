@@ -51,6 +51,7 @@ EXPORTS		+= \
 		$(NULL)
 
 CPPSRCS		= \
+		nsWebMBufferedParser.cpp \
 		nsWebMDecoder.cpp \
 		nsWebMReader.cpp \
 		$(NULL)

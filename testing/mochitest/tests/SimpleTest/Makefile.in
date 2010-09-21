@@ -54,6 +54,7 @@ _SIMPLETEST_FILES =	MozillaFileLogger.js \
 			EventUtils.js \
 			WindowSnapshot.js \
 			PluginUtils.js \
+			$(DEPTH)/toolkit/content/tests/browser/common/mockObjects.js \
 			$(NULL)
 
 libs:: $(_SIMPLETEST_FILES)

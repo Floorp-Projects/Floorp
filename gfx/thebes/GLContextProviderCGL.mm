@@ -154,7 +154,7 @@ public:
         }
     }
 
-    PRBool MakeCurrent()
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
     {
         if (mContext) {
             [mContext makeCurrentContext];
@@ -278,7 +278,7 @@ protected:
     CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
     {
         mUpdateFormat = aFmt;
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
+        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
     }
 
     virtual already_AddRefed<gfxImageSurface>
@@ -515,7 +515,7 @@ GLContextProviderCGL::GetGlobalContext()
         gGlobalContext = CreateOffscreenFBOContext(gfxIntSize(16, 16),
                                                    ContextFormat(ContextFormat::BasicRGB24),
                                                    PR_FALSE);
-        if (gGlobalContext && !static_cast<GLContextCGL*>(gGlobalContext.get())->Init()) {
+        if (!gGlobalContext || !static_cast<GLContextCGL*>(gGlobalContext.get())->Init()) {
             NS_WARNING("Couldn't init gGlobalContext.");
             gGlobalContext = nsnull;
             return nsnull; 

@@ -239,7 +239,7 @@ public:
         mTopLevelWidget->setParentItem(this);
         mTopLevelWidget->installEventFilter(this);
         mStatusBar = new MStatusBar();
-        mStatusBar->appear();
+        mStatusBar->appear(scene());
         connect(mStatusBar, SIGNAL(appeared()), this, SLOT(CheckTopLevelSize()));
         connect(mStatusBar, SIGNAL(disappeared()), this, SLOT(CheckTopLevelSize()));
         MInputMethodState *inputMethodState = MInputMethodState::instance();

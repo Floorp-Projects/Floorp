@@ -63,11 +63,21 @@ EXPORTS_mozilla/ipc = \
   RPCChannel.h \
   SharedMemory.h \
   SharedMemoryBasic.h \
+  SharedMemoryBasic_chromium.h \
   SharedMemorySysV.h \
   Shmem.h \
   SyncChannel.h \
   ScopedXREEmbed.h \
   $(NULL)
+
+ifeq ($(OS_TARGET),Android)
+# Android has its own,
+# almost-but-not-quite-compatible-with-POSIX-or-/dev/shm shared memory
+# impl.
+EXPORTS_mozilla/ipc += SharedMemoryBasic_android.h
+else
+EXPORTS_mozilla/ipc += SharedMemoryBasic_chromium.h
+endif #}
 
 ENABLE_CXX_EXCEPTIONS = 1
 
@@ -90,8 +100,13 @@ CPPSRCS += \
   WindowsMessageLoop.cpp \
   $(NULL)
 else
+# This generic code works on android.
 CPPSRCS += SharedMemory_posix.cpp
 endif
+
+ifeq ($(OS_TARGET),Android)
+CPPSRCS += SharedMemoryBasic_android.cpp
+endif #}
 
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=\"$(MOZ_CHILD_PROCESS_NAME)\"

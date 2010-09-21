@@ -44,7 +44,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();
 
-      let cleanupFunc = registerManifestTemporarily("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/rtl.manifest");
+      let rootDir = getRootDirectory(window.location.href);
+      let manifest = rootDir + "rtlchrome/rtl.manifest";
+
+      //copy rtlchrome to profile/rtlchrome and generate .manifest
+      let filePath = chromeURIToFile(manifest);
+      let tempProfileDir = copyDirToTempProfile(filePath.path, 'rtlchrome');
+      if (tempProfileDir.path.lastIndexOf('\\') >= 0) {
+        manifest = "content rtlchrome /" + tempProfileDir.path.replace(/\\/g, '/') + "\n";
+      } else {
+        manifest = "content rtlchrome " + tempProfileDir.path + "\n";
+      }
+      manifest += "override chrome://global/locale/intl.css chrome://rtlchrome/content/rtlchrome/rtl.css\n";
+      manifest += "override chrome://global/locale/global.dtd chrome://rtlchrome/content/rtlchrome/rtl.dtd\n";
+
+      let cleanupFunc = createManifestTemporarily(tempProfileDir, manifest);
 
       // Load about:plugins in an iframe
       let frame = document.createElement("iframe");

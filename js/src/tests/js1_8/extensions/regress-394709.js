@@ -59,6 +59,10 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
+  // Ensure that we flush all values so that gc() collects all objects that
+  // the user cannot reach from JS.
+  eval();
+
   runtest();
   gc();
   var counter = countHeap();

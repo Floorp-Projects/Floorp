@@ -1,6 +1,6 @@
 /* Override default style */
 button:invalid {
-  -moz-box-shadow: none;
+  box-shadow: none;
 }
 
 button.notvalid {

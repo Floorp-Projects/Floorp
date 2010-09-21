@@ -37,7 +37,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.8 2007/05/15 23:14:25 julien.pierre.bugs%sun.com Exp $
+ * $Id: certhtml.c,v 1.8.66.1 2010/08/28 19:49:28 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"
@@ -126,6 +126,9 @@ char *CERT_FormatName (CERTName *name)
 	    tag = CERT_GetAVATag(ava);
 	    switch(tag) {
 	      case SEC_OID_AVA_COMMON_NAME:
+		if (cn) {
+			break;
+		}
 		cn = CERT_DecodeAVAValue(&ava->value);
 		if (!cn) {
  			goto loser;
@@ -133,6 +136,9 @@ char *CERT_FormatName (CERTName *name)
 		len += cn->len;
 		break;
 	      case SEC_OID_AVA_COUNTRY_NAME:
+		if (country) {
+			break;
+		}
 		country = CERT_DecodeAVAValue(&ava->value);
 		if (!country) {
  			goto loser;
@@ -140,6 +146,9 @@ char *CERT_FormatName (CERTName *name)
 		len += country->len;
 		break;
 	      case SEC_OID_AVA_LOCALITY:
+		if (loc) {
+			break;
+		}
 		loc = CERT_DecodeAVAValue(&ava->value);
 		if (!loc) {
  			goto loser;
@@ -147,6 +156,9 @@ char *CERT_FormatName (CERTName *name)
 		len += loc->len;
 		break;
 	      case SEC_OID_AVA_STATE_OR_PROVINCE:
+		if (state) {
+			break;
+		}
 		state = CERT_DecodeAVAValue(&ava->value);
 		if (!state) {
  			goto loser;
@@ -154,6 +166,9 @@ char *CERT_FormatName (CERTName *name)
 		len += state->len;
 		break;
 	      case SEC_OID_AVA_ORGANIZATION_NAME:
+		if (org) {
+			break;
+		}
 		org = CERT_DecodeAVAValue(&ava->value);
 		if (!org) {
  			goto loser;
@@ -161,6 +176,9 @@ char *CERT_FormatName (CERTName *name)
 		len += org->len;
 		break;
 	      case SEC_OID_AVA_DN_QUALIFIER:
+		if (dq) {
+			break;
+		}
 		dq = CERT_DecodeAVAValue(&ava->value);
 		if (!dq) {
  			goto loser;
@@ -187,6 +205,9 @@ char *CERT_FormatName (CERTName *name)
 		break;
 	      case SEC_OID_PKCS9_EMAIL_ADDRESS:
 	      case SEC_OID_RFC1274_MAIL:
+		if (email) {
+			break;
+		}
 		email = CERT_DecodeAVAValue(&ava->value);
 		if (!email) {
 			goto loser;
@@ -205,7 +226,7 @@ char *CERT_FormatName (CERTName *name)
     /* allocate buffer */
     buf = (char *)PORT_Alloc(len);
     if ( !buf ) {
-	return(0);
+	goto loser;
     }
 
     tmpbuf = buf;

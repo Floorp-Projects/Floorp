@@ -122,7 +122,7 @@ button[dlgtype="help"][disabled] {
 button[dlgtype="help"]:-moz-focusring {
   outline: 2px solid -moz-mac-focusring;
   outline-offset: -2px;
-  -moz-outline-radius: 100%;
+  -moz-outline-radius: 10000px;
 }
 
 button[dlgtype="help"] > .button-box > .button-icon {

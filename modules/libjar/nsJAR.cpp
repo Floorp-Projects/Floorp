@@ -47,6 +47,7 @@
 #include "nsIConsoleService.h"
 #include "nsICryptoHash.h"
 #include "prprf.h"
+#include "mozilla/Omnijar.h"
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
@@ -116,7 +117,8 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 }
 
 // The following initialization makes a guess of 10 entries per jarfile.
-nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
+nsJAR::nsJAR(): mZip(new nsZipArchive()),
+                mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mParsedManifest(PR_FALSE),
                 mGlobalStatus(JAR_MANIFEST_NOT_PARSED),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT), 
@@ -169,8 +171,42 @@ nsJAR::Open(nsIFile* zipFile)
 
   mLock = PR_NewLock();
   NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+  
+#ifdef MOZ_OMNIJAR
+  // The omnijar is special, it is opened early on and closed late
+  // this avoids reopening it
+  PRBool equals;
+  nsresult rv = zipFile->Equals(mozilla::OmnijarPath(), &equals);
+  if (NS_SUCCEEDED(rv) && equals) {
+    mZip = mozilla::OmnijarReader();
+    return NS_OK;
+  }
+#endif
+  return mZip->OpenArchive(zipFile);
+}
 
-  return mZip.OpenArchive(zipFile);
+NS_IMETHODIMP
+nsJAR::OpenInner(nsIZipReader *aZipReader, const char *aZipEntry)
+{
+  NS_ENSURE_ARG_POINTER(aZipReader);
+  NS_ENSURE_ARG_POINTER(aZipEntry);
+  if (mLock) return NS_ERROR_FAILURE; // Already open!
+
+  nsresult rv = aZipReader->GetFile(getter_AddRefs(mZipFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mLock = PR_NewLock();
+  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+
+  mOuterZipEntry.Assign(aZipEntry);
+
+  nsRefPtr<nsZipHandle> handle;
+  rv = nsZipHandle::Init(static_cast<nsJAR*>(aZipReader)->mZip.get(), aZipEntry,
+                         getter_AddRefs(handle));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mZip->OpenArchive(handle);
 }
 
 NS_IMETHODIMP
@@ -193,14 +229,22 @@ nsJAR::Close()
   mManifestData.Reset();
   mGlobalStatus = JAR_MANIFEST_NOT_PARSED;
   mTotalItemsInManifest = 0;
+  mOuterZipEntry.Truncate(0);
 
-  return mZip.CloseArchive();
+#ifdef MOZ_OMNIJAR
+  if (mZip == mozilla::OmnijarReader()) {
+    mZip.forget();
+    mZip = new nsZipArchive();
+    return NS_OK;
+  }
+#endif
+  return mZip->CloseArchive();
 }
 
 NS_IMETHODIMP
 nsJAR::Test(const char *aEntryName)
 {
-  return mZip.Test(aEntryName);
+  return mZip->Test(aEntryName);
 }
 
 NS_IMETHODIMP
@@ -214,7 +258,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsZipItem *item = mZip.GetItem(zipEntry);
+  nsZipItem *item = mZip->GetItem(zipEntry);
   NS_ENSURE_TRUE(item, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
   // Remove existing file or directory so we set permissions correctly.
@@ -249,7 +293,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
     rv = outFile->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mZip.ExtractFile(item, path.get(), fd);
+    rv = mZip->ExtractFile(item, path.get(), fd);
   }
   if (NS_FAILED(rv)) return rv;
 
@@ -263,7 +307,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 NS_IMETHODIMP    
 nsJAR::GetEntry(const char *aEntryName, nsIZipEntry* *result)
 {
-  nsZipItem* zipItem = mZip.GetItem(aEntryName);
+  nsZipItem* zipItem = mZip->GetItem(aEntryName);
   NS_ENSURE_TRUE(zipItem, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
   nsJARItem* jarItem = new nsJARItem(zipItem);
@@ -276,7 +320,7 @@ nsJAR::GetEntry(const char *aEntryName, nsIZipEntry* *result)
 NS_IMETHODIMP
 nsJAR::HasEntry(const nsACString &aEntryName, PRBool *result)
 {
-  *result = mZip.GetItem(PromiseFlatCString(aEntryName).get()) != nsnull;
+  *result = mZip->GetItem(PromiseFlatCString(aEntryName).get()) != nsnull;
   return NS_OK;
 }
 
@@ -286,7 +330,7 @@ nsJAR::FindEntries(const char *aPattern, nsIUTF8StringEnumerator **result)
   NS_ENSURE_ARG_POINTER(result);
 
   nsZipFind *find;
-  nsresult rv = mZip.FindInit(aPattern, &find);
+  nsresult rv = mZip->FindInit(aPattern, &find);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIUTF8StringEnumerator *zipEnum = new nsJAREnumerator(find);
@@ -316,7 +360,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   nsZipItem *item = nsnull;
   if (*aEntryName) {
     // First check if item exists in jar
-    item = mZip.GetItem(aEntryName);
+    item = mZip->GetItem(aEntryName);
     if (!item) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   }
   nsJARInputStream* jis = new nsJARInputStream();
@@ -1001,8 +1045,8 @@ nsJARItem::GetLastModifiedTime(PRTime* aLastModTime)
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsWeakReference)
 
 nsZipReaderCache::nsZipReaderCache()
-  : mLock(nsnull),
-    mZips(16)
+  : mLock(nsnull)
+  , mZips(16)
 #ifdef ZIP_CACHE_HIT_RATE
     ,
     mZipCacheLookups(0),
@@ -1025,6 +1069,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
   {
     os->AddObserver(this, "memory-pressure", PR_TRUE);
     os->AddObserver(this, "chrome-flush-caches", PR_TRUE);
+    os->AddObserver(this, "flush-cache-entry", PR_TRUE);
   }
 // ignore failure of the observer registration.
 
@@ -1066,11 +1111,13 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   mZipCacheLookups++;
 #endif
 
-  nsCAutoString path;
-  rv = zipFile->GetNativePath(path);
+  nsCAutoString uri;
+  rv = zipFile->GetNativePath(uri);
   if (NS_FAILED(rv)) return rv;
 
-  nsCStringKey key(path);
+  uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+
+  nsCStringKey key(uri);
   nsJAR* zip = static_cast<nsJAR*>(static_cast<nsIZipReader*>(mZips.Get(&key))); // AddRefs
   if (zip) {
 #ifdef ZIP_CACHE_HIT_RATE
@@ -1086,6 +1133,56 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
     zip->SetZipReaderCache(this);
 
     rv = zip->Open(zipFile);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(zip);
+      return rv;
+    }
+
+    PRBool collision = mZips.Put(&key, static_cast<nsIZipReader*>(zip)); // AddRefs to 2
+    NS_ASSERTION(!collision, "horked");
+  }
+  *result = zip;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const char *entry,
+                              nsIZipReader* *result)
+{
+  NS_ENSURE_ARG_POINTER(zipFile);
+
+  nsCOMPtr<nsIZipReader> outerZipReader;
+  nsresult rv = GetZip(zipFile, getter_AddRefs(outerZipReader));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef ZIP_CACHE_HIT_RATE
+  mZipCacheLookups++;
+#endif
+
+  nsCAutoString uri;
+  rv = zipFile->GetNativePath(uri);
+  if (NS_FAILED(rv)) return rv;
+
+  uri.Insert(NS_LITERAL_CSTRING("jar:"), 0);
+  uri.AppendLiteral("!/");
+  uri.Append(entry);
+
+  nsCStringKey key(uri);
+  nsJAR* zip = static_cast<nsJAR*>(static_cast<nsIZipReader*>(mZips.Get(&key))); // AddRefs
+  if (zip) {
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheHits++;
+#endif
+    zip->ClearReleaseTime();
+  }
+  else {
+    zip = new nsJAR();
+    if (zip == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(zip);
+    zip->SetZipReaderCache(this);
+
+    rv = zip->OpenInner(outerZipReader, entry);
     if (NS_FAILED(rv)) {
       NS_RELEASE(zip);
       return rv;
@@ -1181,12 +1278,22 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   oldest->SetZipReaderCache(nsnull);
 
   // remove from hashtable
-  nsCAutoString path;
-  rv = oldest->GetJarPath(path);
-  if (NS_FAILED(rv)) return rv;
+  nsCAutoString uri;
+  rv = oldest->GetJarPath(uri);
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsCStringKey key(path);
-  PRBool removed = mZips.Remove(&key);  // Releases
+  if (zip->mOuterZipEntry.IsEmpty()) {
+    uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+  } else {
+    uri.Insert(NS_LITERAL_CSTRING("jar:"), 0);
+    uri.AppendLiteral("!/");
+    uri.Append(zip->mOuterZipEntry);
+  }
+
+  nsCStringKey key(uri);
+  PRBool removed;
+  removed = mZips.Remove(&key);  // Releases
   NS_ASSERTION(removed, "botched");
 
   return NS_OK;
@@ -1229,6 +1336,32 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
   else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
     mZips.Enumerate(DropZipReaderCache, nsnull);
     mZips.Reset();
+  }
+  else if (strcmp(aTopic, "flush-cache-entry") == 0) {
+    nsCOMPtr<nsIFile> file = do_QueryInterface(aSubject);
+    if (!file)
+      return NS_OK;
+
+    nsCAutoString uri;
+    if (NS_FAILED(file->GetNativePath(uri)))
+      return NS_OK;
+
+    uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+    nsCStringKey key(uri);
+
+    nsAutoLock lock(mLock);    
+    nsJAR* zip = static_cast<nsJAR*>(static_cast<nsIZipReader*>(mZips.Get(&key)));
+    if (!zip)
+      return NS_OK;
+
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheFlushes++;
+#endif
+
+    zip->SetZipReaderCache(nsnull);
+
+    mZips.Remove(&key);
+    NS_RELEASE(zip);
   }
   return NS_OK;
 }

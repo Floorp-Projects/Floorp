@@ -46,6 +46,7 @@
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsDOMError.h"
+#include "nsIGfxInfo.h"
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
@@ -86,6 +87,7 @@ WebGLContext::WebGLContext()
     mGeneration = 0;
     mInvalidated = PR_FALSE;
     mResetLayer = PR_TRUE;
+    mVerbose = PR_FALSE;
 
     mActiveTexture = 0;
     mSynthesizedGLError = LOCAL_GL_NO_ERROR;
@@ -216,7 +218,9 @@ WebGLContext::DestroyResourcesAndContext()
 
     // We just got rid of everything, so the context had better
     // have been going away.
+#ifdef DEBUG
     printf_stderr("--- WebGL context destroyed: %p\n", gl.get());
+#endif
 
     gl = nsnull;
 }
@@ -302,10 +306,37 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
 
-    PRBool forceOSMesa;
+    PRBool verbose = PR_FALSE;
+    prefService->GetBoolPref("webgl.verbose", &verbose);
+    mVerbose = verbose;
+
+    PRBool forceOSMesa = PR_FALSE;
     prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
 
     if (!forceOSMesa) {
+
+    PRBool useOpenGL = PR_TRUE;
+    PRBool useANGLE = PR_TRUE;
+
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+        PRInt32 status;
+        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
+            if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+                status != nsIGfxInfo::FEATURE_AVAILABLE)
+            {
+                useOpenGL = PR_FALSE;
+            }
+        }
+        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
+            if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+                status != nsIGfxInfo::FEATURE_AVAILABLE)
+            {
+                useANGLE = PR_FALSE;
+            }
+        }
+    }
+
     #ifdef XP_WIN
         // On Windows, we may have a choice of backends, including straight
         // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
@@ -314,7 +345,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL") != nsnull;
 
         // if we want EGL, try it first
-        if (!gl && preferEGL) {
+        if (!gl && preferEGL && useANGLE) {
             gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
             if (gl && !InitAndValidateGL()) {
                 gl = nsnull;
@@ -322,7 +353,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
 
         // if it failed, then try the default provider, whatever that is
-        if (!gl) {
+        if (!gl && useOpenGL) {
             gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
             if (gl && !InitAndValidateGL()) {
                 gl = nsnull;
@@ -330,7 +361,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
 
         // if that failed, and we weren't already preferring EGL, try it now.
-        if (!gl && !preferEGL) {
+        if (!gl && !preferEGL && useANGLE) {
             gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
             if (gl && !InitAndValidateGL()) {
                 gl = nsnull;
@@ -338,7 +369,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     #else
         // other platforms just use whatever the default is
-        if (!gl) {
+        if (!gl && useOpenGL) {
             gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
             if (gl && !InitAndValidateGL()) {
                 gl = nsnull;
@@ -376,7 +407,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         return NS_ERROR_FAILURE;
     }
 
+#ifdef DEBUG
     printf_stderr ("--- WebGL context created: %p\n", gl.get());
+#endif
 
     mWidth = width;
     mHeight = height;

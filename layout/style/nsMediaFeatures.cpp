@@ -162,7 +162,6 @@ static nsresult
 MakeArray(const nsSize& aSize, nsCSSValue& aResult)
 {
     nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
-    NS_ENSURE_TRUE(a, NS_ERROR_OUT_OF_MEMORY);
 
     a->Item(0).SetIntValue(aSize.width, eCSSUnit_Integer);
     a->Item(1).SetIntValue(aSize.height, eCSSUnit_Integer);
@@ -184,7 +183,6 @@ GetDeviceAspectRatio(nsPresContext* aPresContext, const nsMediaFeature*,
 {
     return MakeArray(GetDeviceSize(aPresContext), aResult);
 }
-
 
 static nsresult
 GetColor(nsPresContext* aPresContext, const nsMediaFeature*,
@@ -259,6 +257,15 @@ GetGrid(nsPresContext* aPresContext, const nsMediaFeature*,
     // feature is always 0.
     aResult.SetIntValue(0, eCSSUnit_Integer);
     return NS_OK;
+}
+
+static nsresult
+GetDevicePixelRatio(nsPresContext* aPresContext, const nsMediaFeature*,
+                    nsCSSValue& aResult)
+{
+  float ratio = aPresContext->CSSPixelsToDevPixels(1.0f);
+  aResult.SetFloatValue(ratio, eCSSUnit_Number);
+  return NS_OK;
 }
 
 static nsresult
@@ -377,6 +384,13 @@ nsMediaFeatures::features[] = {
     },
 
     // Mozilla extensions
+    {
+        &nsGkAtoms::_moz_device_pixel_ratio,
+        nsMediaFeature::eMinMaxAllowed,
+        nsMediaFeature::eFloat,
+        { nsnull },
+        GetDevicePixelRatio
+    },
     {
         &nsGkAtoms::_moz_scrollbar_start_backward,
         nsMediaFeature::eMinMaxNotAllowed,

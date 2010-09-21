@@ -38,6 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentChild.h"
+#include "nsXULAppAPI.h"
+using mozilla::dom::ContentChild;
+#endif
+
 #include "nsAlertsService.h"
 
 #ifdef ANDROID
@@ -82,6 +88,23 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      nsIObserver * aAlertListener,
                                                      const nsAString & aAlertName)
 {
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    ContentChild* cpc = ContentChild::GetSingleton();
+
+    if (aAlertListener)
+      cpc->AddRemoteAlertObserver(nsDependentString(aAlertCookie), aAlertListener);
+
+    cpc->SendShowAlertNotification(nsAutoString(aImageUrl),
+                                   nsAutoString(aAlertTitle),
+                                   nsAutoString(aAlertText),
+                                   aAlertTextClickable,
+                                   nsAutoString(aAlertCookie),
+                                   nsAutoString(aAlertName));
+    return NS_OK;
+  }
+#endif
+
 #ifdef ANDROID
   mozilla::AndroidBridge::Bridge()->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertCookie,
                                                           aAlertListener, aAlertName);

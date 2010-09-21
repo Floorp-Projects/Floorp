@@ -10,15 +10,23 @@ const RELATIVE_DIR = "browser/toolkit/mozapps/extensions/test/browser/";
 
 const TESTROOT = "http://example.com/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/" + RELATIVE_DIR;
-const CHROMEROOT = "chrome://mochikit/content/" + RELATIVE_DIR;
 
 const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
+const CHROME_NAME = "mochikit";
+
+function getChromeRoot(path) {
+  if (path === undefined) {
+    return "chrome://" + CHROME_NAME + "/content/" + RELATIVE_DIR;
+  }
+  return getRootDirectory(path);
+}
 
 var gPendingTests = [];
 var gTestsRun = 0;
+var gTestStart = null;
 
 var gUseInContentUI = ("switchToTabHavingURI" in window);
 
@@ -40,35 +48,39 @@ function add_test(test) {
 }
 
 function run_next_test() {
+  if (gTestsRun > 0)
+    info("Test " + gTestsRun + " took " + (Date.now() - gTestStart) + "ms");
+
   if (gPendingTests.length == 0) {
     end_test();
     return;
   }
 
   gTestsRun++;
-  info("Running test " + gTestsRun);
+  var test = gPendingTests.shift();
+  if (test.name)
+    info("Running test " + gTestsRun + " (" + test.name + ")");
+  else
+    info("Running test " + gTestsRun);
 
-  gPendingTests.shift()();
+  gTestStart = Date.now();
+  test();
 }
 
 function get_addon_file_url(aFilename) {
-  var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                         .getService(Ci.mozIJSSubScriptLoader);
-  loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
-
-  var jar = getJar(CHROMEROOT + "addons/" + aFilename);
-
-  if (jar == null) {
+  var chromeroot = getChromeRoot(gTestPath);
+  try {
     var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
              getService(Ci.nsIChromeRegistry);
-    var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
+    var fileurl = cr.convertChromeURL(makeURI(chromeroot + "addons/" + aFilename));
     return fileurl.QueryInterface(Ci.nsIFileURL);
-  } else {
-    var ios = Cc["@mozilla.org/network/io-service;1"].  
-                getService(Ci.nsIIOService);
-
+  } catch(ex) {
+    var jar = getJar(chromeroot + "addons/" + aFilename);
     var tmpDir = extractJarToTmp(jar);
     tmpDir.append(aFilename);
+
+    var ios = Components.classes["@mozilla.org/network/io-service;1"].
+                getService(Components.interfaces.nsIIOService);
     return ios.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
   }
 }
@@ -104,7 +116,11 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
 function get_addon_element(aManager, aId) {
   var doc = aManager.document;
   var view = doc.getElementById("view-port").selectedPanel;
-  var listid = view.id == "search-view" ? "search-list" : "addon-list";
+  var listid = "addon-list";
+  if (view.id == "search-view")
+    listid = "search-list";
+  else if (view.id == "updates-view")
+    listid = "updates-list";
   var list = doc.getElementById(listid);
 
   var node = list.firstChild;
@@ -719,7 +735,7 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this.blocklistState = 0;
   this.appDisabled = false;
   this._userDisabled = false;
-  this._applyBackgroundUpdates = true;
+  this._applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
   this.scope = AddonManager.SCOPE_PROFILE;
   this.isActive = true;
   this.creator = "";
@@ -774,6 +790,11 @@ MockAddon.prototype = {
   },
   
   set applyBackgroundUpdates(val) {
+    if (val != AddonManager.AUTOUPDATE_DEFAULT &&
+        val != AddonManager.AUTOUPDATE_DISABLE &&
+        val != AddonManager.AUTOUPDATE_ENABLE) {
+      ok(false, "addon.applyBackgroundUpdates set to an invalid value: " + val);
+    }
     this._applyBackgroundUpdates = val;
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
   },

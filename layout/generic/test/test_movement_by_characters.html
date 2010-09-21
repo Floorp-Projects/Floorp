@@ -68,13 +68,13 @@ function test() {
   editor.innerHTML = "<pre>aa\nbb</pre>";
   sel.collapse(editor.firstChild.firstChild, 0);
   testRight(editor.firstChild.firstChild, 1);
-  // at the 'bb' but HINTLEFT so appears at the end of the first line
-  testRight(editor.firstChild.firstChild, 3);  
+  // at the end of the first line, before the \n
+  testRight(editor.firstChild.firstChild, 2);
   testRight(editor.firstChild.firstChild, 3);
   testRight(editor.firstChild.firstChild, 4);
   testLeft(editor.firstChild.firstChild, 3);
-  // at the 'bb' but HINTLEFT so appears at the end of the first line
-  testLeft(editor.firstChild.firstChild, 3);
+  // at the end of the first line, before the \n
+  testLeft(editor.firstChild.firstChild, 2);
   testLeft(editor.firstChild.firstChild, 1);
   testLeft(editor.firstChild.firstChild, 0);
 

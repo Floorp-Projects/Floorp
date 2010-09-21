@@ -91,6 +91,7 @@
 #include "nsSVGPathGeometryFrame.h"
 #include "prdtoa.h"
 #include "mozilla/dom/Element.h"
+#include "nsIDOMSVGNumberList.h"
 
 using namespace mozilla::dom;
 
@@ -1181,29 +1182,6 @@ nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect)
                 aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.YMost()) - NSToIntFloor(rect.Y())));
 }
 
-static PRInt32
-ClampToInt(double aVal)
-{
-  return NS_lround(NS_MAX(double(PR_INT32_MIN), NS_MIN(double(PR_INT32_MAX), aVal)));
-}
-
-gfxIntSize
-nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize, PRBool *aResultOverflows)
-{
-  gfxIntSize surfaceSize(ClampToInt(aSize.width), ClampToInt(aSize.height));
-
-  *aResultOverflows = surfaceSize.width != NS_round(aSize.width) ||
-      surfaceSize.height != NS_round(aSize.height);
-
-  if (!gfxASurface::CheckSurfaceSize(surfaceSize)) {
-    surfaceSize.width = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.width);
-    surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION, surfaceSize.height);
-    *aResultOverflows = PR_TRUE;
-  }
-
-  return surfaceSize;
-}
-
 gfxMatrix
 nsSVGUtils::ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix)
 {
@@ -1539,6 +1517,20 @@ nsSVGUtils::NumberFromString(const nsAString& aString, float* aValue,
   return PR_FALSE;
 }
 
+/* static */ float
+nsSVGUtils::GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex)
+{
+  if (!aList) {
+    return 0.0f;
+  }
+  nsCOMPtr<nsIDOMSVGNumber> number;
+  nsresult rv = aList->GetItem(aIndex, getter_AddRefs(number));
+  float value = 0.0f;
+  if (NS_SUCCEEDED(rv)) {
+    number->GetValue(&value);
+  }
+  return value;
+}
 
 // ----------------------------------------------------------------------
 

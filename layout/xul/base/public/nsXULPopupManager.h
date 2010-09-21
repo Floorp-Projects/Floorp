@@ -51,6 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
+#include "nsIReflowCallback.h"
 #include "nsThreadUtils.h"
 #include "nsStyleConsts.h"
 
@@ -208,26 +209,19 @@ class nsXULPopupShowingEvent : public nsRunnable
 {
 public:
   nsXULPopupShowingEvent(nsIContent *aPopup,
-                         nsIContent *aMenu,
-                         nsPopupType aPopupType,
                          PRBool aIsContextMenu,
                          PRBool aSelectFirstItem)
     : mPopup(aPopup),
-      mMenu(aMenu),
-      mPopupType(aPopupType),
       mIsContextMenu(aIsContextMenu),
       mSelectFirstItem(aSelectFirstItem)
   {
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupShowingEvent constructor");
-    NS_ASSERTION(aMenu, "null menu supplied to nsXULPopupShowingEvent constructor");
   }
 
   NS_IMETHOD Run();
 
 private:
   nsCOMPtr<nsIContent> mPopup;
-  nsCOMPtr<nsIContent> mMenu;
-  nsPopupType mPopupType;
   PRBool mIsContextMenu;
   PRBool mSelectFirstItem;
 };
@@ -432,6 +426,16 @@ public:
                          PRInt32 aXPos, PRInt32 aYPos,
                          PRBool aIsContextMenu,
                          nsIDOMEvent* aTriggerEvent);
+
+  /**
+   * Open a tooltip at a specific screen position specified by aXPos and aYPos,
+   * measured in CSS pixels.
+   *
+   * This fires the popupshowing event synchronously.
+   */
+  void ShowTooltipAtScreen(nsIContent* aPopup,
+                           nsIContent* aTriggerContent,
+                           PRInt32 aXPos, PRInt32 aYPos);
 
   /**
    * This method is provided only for compatibility with an older popup API.
@@ -659,22 +663,13 @@ protected:
                          PRBool aDeselectMenu);
 
   /**
-   * Fire a popupshowing event on the popup aPopup and then open the popup.
+   * Fire a popupshowing event on the popup and then open the popup.
    *
-   * The caller must keep a strong reference to aPopup.
-   *
-   * aPopup - the popup node to open
-   * aMenu - should be set to the parent menu if this is a popup associated
-   *         with a menu. Otherwise, should be null.
-   * aPresContext - the prescontext 
-   * aPopupType - the popup frame's PopupType
+   * aPopup - the popup to open
    * aIsContextMenu - true for context menus
    * aSelectFirstItem - true to select the first item in the menu
    */
   void FirePopupShowingEvent(nsIContent* aPopup,
-                             nsIContent* aMenu,
-                             nsPresContext* aPresContext,
-                             nsPopupType aPopupType,
                              PRBool aIsContextMenu,
                              PRBool aSelectFirstItem);
 

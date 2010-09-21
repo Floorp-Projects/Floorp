@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Henrik Skupin <hskupin@mozilla.com>
+ *   Geo Mealer <gmealer@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,8 @@
 
 var MODULE_NAME = 'PlacesAPI';
 
+const gTimeout = 5000;
+
 /**
  * Instance of the bookmark service to gain access to the bookmark API.
  *
@@ -67,6 +70,15 @@ var historyService = Cc["@mozilla.org/browser/nav-history-service;1"].
  */
 var livemarkService = Cc["@mozilla.org/browser/livemark-service;2"].
                       getService(Ci.nsILivemarkService);
+
+/**
+ * Instance of the browser history interface to gain access to
+ * browser-specific history API
+ *
+ * @see http://mxr.mozilla.org/mozilla-central (nsIBrowserHistory.idl)
+ */
+var browserHistory = Cc["@mozilla.org/browser/nav-history-service;1"].
+                     getService(Ci.nsIBrowserHistory);
 
 /**
  * Check if an URI is bookmarked within the specified folder
@@ -104,4 +116,32 @@ function restoreDefaultBookmarks() {
   let importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
                  getService(Ci.nsIPlacesImportExportService);
   importer.importHTMLFromFile(bookmarksFile, true);
+}
+
+/**
+ * Synchronous wrapper around browserHistory.removeAllPages()
+ * Removes history and blocks until done
+ */
+function removeAllHistory() {
+  const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
+
+  // Create flag visible to both the eval and the observer object
+  var finishedFlag = {
+    state: false
+  }
+
+  // Set up an observer so we get notified when remove completes
+  var observerService = Cc["@mozilla.org/observer-service;1"].
+                        getService(Ci.nsIObserverService);
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      observerService.removeObserver(this, TOPIC_EXPIRATION_FINISHED);    
+      finishedFlag.state = true;
+    }
+  }
+  observerService.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+
+  // Remove the pages, then block until we're done or until timeout is reached
+  browserHistory.removeAllPages();
+  mozmill.controller.waitForEval("subject.state == true", gTimeout, 100, finishedFlag);
 }

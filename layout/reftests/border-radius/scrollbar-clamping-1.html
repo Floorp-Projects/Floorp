@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<title>Test of reduction of border-radius for scrollbars (border drawing)</title>
+<style>
+
+.contain { height: 130px; position: relative }
+
+.test {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: medium solid blue;
+  border-width: 2px 4px 8px 10px;
+  height: 100px;
+  width: 200px;
+  border-radius: 12px / 15px;
+}
+
+.cover {
+  position: absolute;
+  width: 200px;
+  height: 100px;
+  top: 2px;
+  left: 10px;
+  background: blue;
+}
+
+#x, #xy { overflow-x: scroll }
+#y, #xy { overflow-y: scroll }
+
+</style>
+
+<div class="contain">
+  <div class="test" id="x"></div>
+  <div class="cover" style="border-top-right-radius: 5px"></div>
+</div>
+
+<div class="contain">
+  <div class="test" id="y"></div>
+  <div class="cover"></div>
+</div>
+
+<div class="contain">
+  <div class="test" id="xy"></div>
+  <div class="cover"></div>
+</div>

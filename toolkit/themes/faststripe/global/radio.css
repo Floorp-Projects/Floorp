@@ -91,7 +91,7 @@ radio[disabled="true"] {
 .radio-check-box1 {
   margin: 1px 0px;
   border: 1px solid #555555;
-  -moz-border-radius: 50%;
+  border-radius: 50%;
   width: 12px;
   height: 12px;
   background: -moz-Field no-repeat 50% 50%;
@@ -99,7 +99,7 @@ radio[disabled="true"] {
 
 .radio-check-box2 {
   border: 1px solid #555555;
-  -moz-border-radius: 50%;
+  border-radius: 50%;
   padding: 2px;
   width: 4px;
   height: 4px;

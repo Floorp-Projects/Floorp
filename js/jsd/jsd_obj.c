@@ -144,7 +144,7 @@ jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
 
     JSD_LOCK_OBJECTS(jsdc);
     jsdobj = jsd_GetJSDObjectForJSObject(jsdc, obj);
-    if( jsdobj && !jsdobj->ctorURL && !JS_IsNativeFrame(cx, fp) )
+    if( jsdobj && !jsdobj->ctorURL && JS_IsScriptFrame(cx, fp) )
     {
         script = JS_GetFrameScript(cx, fp);
         if( script )

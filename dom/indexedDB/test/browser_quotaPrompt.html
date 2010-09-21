@@ -1,0 +1,78 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Test</title>
+
+    <script type="text/javascript;version=1.7">
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
+      let db;
+
+      function onAddMore() {
+        let transaction = db.transaction("foo", READ_WRITE);
+
+        transaction.oncomplete = function(event) {
+          setTimeout(testFinishedCallback, 0, "complete");
+        }
+        transaction.onabort = function(event) {
+          setTimeout(testFinishedCallback, 0, "abort");
+        }
+
+        let objectStore = transaction.objectStore("foo");
+        let obj = {
+          foo: "                                                              ",
+          bar: "                                                              ",
+          baz: "                                                              "
+        };
+        for (let i = 0; i < 1000; i++) {
+          objectStore.add(obj).onerror = errorHandler;
+        }
+      }
+
+      function onDone() {
+        window.removeEventListener("indexedDB-addMore", onAddMore, true);
+        window.removeEventListener("indexedDB-done", onDone, true);
+        let request = db.removeObjectStore("foo");
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          testResult = "finished";
+          testException = undefined;
+          finishTest();
+        }
+      }
+
+      function testSteps()
+      {
+        const name = window.location.pathname;
+        const description = "My Test Database";
+
+        window.addEventListener("indexedDB-addMore", onAddMore, true);
+        window.addEventListener("indexedDB-done", onDone, true);
+
+        let request = moz_indexedDB.open(name, description);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        let event = yield;
+
+        db = event.result;
+
+        request = db.createObjectStore("foo", "", true);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        setTimeout(testFinishedCallback, 0, "ready");
+        yield;
+      }
+    </script>
+
+    <script type="text/javascript;version=1.7" src="browserHelpers.js"></script>
+
+  </head>
+
+  <body onload="runTest();" onunload="finishTestNow();"></body>
+
+</html>

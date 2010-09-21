@@ -16,8 +16,12 @@ static JSBool test_prop_get( JSContext *cx, JSObject *obj, jsid id, jsval *vp )
 }
 
 static JSBool
-PTest(JSContext* cx, JSObject* obj, uintN argc, jsval *argv, jsval* rval)
+PTest(JSContext* cx, uintN argc, jsval *vp)
 {
+    JSObject *obj = JS_NewObjectForConstructor(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
     return JS_TRUE;
 }
 
@@ -36,14 +40,14 @@ static JSClass ptestClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-static JSBool test_fn(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+static JSBool test_fn(JSContext *cx, uintN argc, jsval *vp)
 {
     called_test_fn++;
     return JS_TRUE;
 }
 
 static JSFunctionSpec ptestFunctions[] = {
-    JS_FS( "test_fn", test_fn, 0, 0, 0 ),
+    JS_FS( "test_fn", test_fn, 0, 0 ),
     JS_FS_END
 };
 

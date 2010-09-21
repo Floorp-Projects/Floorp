@@ -63,7 +63,7 @@ interface nsIAutoCompleteSearch : nsISupports
   void stopSearch();
 };
 
-[scriptable, uuid(18C36504-9A4C-4ac3-8494-BD05E00AE27F)]
+[scriptable, uuid(8bd1dbbc-dcce-4007-9afa-b551eb687b61)]
 interface nsIAutoCompleteObserver : nsISupports
 { 
   /*
@@ -73,4 +73,12 @@ interface nsIAutoCompleteObserver : nsISupports
    * @param result - The search result object
    */
   void onSearchResult(in nsIAutoCompleteSearch search, in nsIAutoCompleteResult result);
+
+  /*
+   * Called to update with new results
+   *
+   * @param search - The search object that processed this search
+   * @param result - The search result object
+   */
+  void onUpdateSearchResult(in nsIAutoCompleteSearch search, in nsIAutoCompleteResult result);
 };

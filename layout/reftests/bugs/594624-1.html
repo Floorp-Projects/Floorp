@@ -1,0 +1,41 @@
+﻿<html class="reftest-wait">
+<head>
+    <script>
+      function doTest() {
+        var x = document.getElementById('TB_overlay');
+        x.style.display = 'block';
+        document.documentElement.removeAttribute('class');
+      }
+      document.addEventListener("MozReftestInvalidate", doTest, false);
+    </script>
+    <style>
+        #TB_window
+        {
+            border: 1px solid red;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        
+        #TB_overlay {
+            height: 200px;
+            left: 10px;
+            position: fixed;
+            top: 80px;
+            width: 200px;
+            display: none;
+            
+            opacity: 0.1;
+
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    SOME CONTENT
+    <div id="TB_overlay">
+    </div>
+    <div id="TB_window"></div>
+
+</body>
+</html>

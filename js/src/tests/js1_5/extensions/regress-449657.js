@@ -71,7 +71,7 @@ function test()
     }
     reportCompare(expect, actual, summary + ': 1');
 
-    expect = 'Error: a.length is read-only';
+    expect = 'TypeError: a.length is read-only';
     actual = '';
     try
     {

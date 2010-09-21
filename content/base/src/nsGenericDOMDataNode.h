@@ -358,7 +358,7 @@ protected:
   nsTextFragment mText;
 
 private:
-  void SetBidiStatus();
+  void UpdateBidiStatus(const PRUnichar* aBuffer, PRUint32 aLength);
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
 };

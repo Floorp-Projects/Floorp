@@ -61,7 +61,7 @@ reportCompare(expect, actual, summary + ': join');
 
 // reverse
 value  = '123';
-expect = '123';
+expect = 'TypeError: Array.prototype.reverse.call(value) is read-only';
 try
 {
   actual = Array.prototype.reverse.call(value) + '';
@@ -74,7 +74,7 @@ reportCompare(expect, actual, summary + ': reverse');
 
 // sort
 value  = 'cba';
-expect = 'cba';
+expect = 'TypeError: Array.prototype.sort.call(value) is read-only';
 try
 {
   actual = Array.prototype.sort.call(value) + '';
@@ -101,7 +101,7 @@ reportCompare('abc', value, summary + ': push');
 
 // pop
 value  = 'abc';
-expect = 'c';
+expect = "TypeError: property 'Array.prototype.pop.call(value)' is non-configurable and cannot be deleted";
 try
 {
   actual = Array.prototype.pop.call(value);
@@ -115,7 +115,7 @@ reportCompare('abc', value, summary + ': pop');
 
 // unshift
 value  = 'def';
-expect = 6;
+expect = 'TypeError: Array.prototype.unshift.call(value, "a", "b", "c") is read-only';
 try
 {
   actual = Array.prototype.unshift.call(value, 'a', 'b', 'c');
@@ -129,7 +129,7 @@ reportCompare('def', value, summary + ': unshift');
 
 // shift
 value  = 'abc';
-expect = 'a';
+expect = 'TypeError: Array.prototype.shift.call(value) is read-only';
 try
 {
   actual = Array.prototype.shift.call(value);
@@ -143,7 +143,7 @@ reportCompare('abc', value, summary + ': shift');
 
 // splice
 value  = 'abc';
-expect = 'b';
+expect = 'TypeError: Array.prototype.splice.call(value, 1, 1) is read-only';
 try
 {
   actual = Array.prototype.splice.call(value, 1, 1) + '';

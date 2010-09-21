@@ -189,6 +189,11 @@ extern const char js_parseInt_str[];
 extern JSString * JS_FASTCALL
 js_IntToString(JSContext *cx, jsint i);
 
+/*
+ * When base == 10, this function implements ToString() as specified by
+ * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
+ * performance.  See also js::NumberToCString().
+ */
 extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
@@ -200,6 +205,35 @@ extern JSBool JS_FASTCALL
 js_NumberValueToCharBuffer(JSContext *cx, const js::Value &v, JSCharBuffer &cb);
 
 namespace js {
+
+/*
+ * Usually a small amount of static storage is enough, but sometimes we need
+ * to dynamically allocate much more.  This struct encapsulates that.
+ * Dynamically allocated memory will be freed when the object is destroyed.
+ */
+struct ToCStringBuf
+{
+    /*
+     * The longest possible result that would need to fit in sbuf is
+     * (-0x80000000).toString(2), which has length 33.  Longer cases are
+     * possible, but they'll go in dbuf.
+     */
+    static const size_t sbufSize = 34;
+    char sbuf[sbufSize];
+    char *dbuf;     /* must be allocated with js_malloc() */
+
+    ToCStringBuf();
+    ~ToCStringBuf();
+};
+
+/*
+ * Convert a number to a C string.  When base==10, this function implements
+ * ToString() as specified by ECMA-262-5 section 9.8.1.  It handles integral
+ * values cheaply.  Return NULL if we ran out of memory.  See also
+ * js_NumberToCString().
+ */
+extern char *
+NumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base = 10);
 
 /*
  * The largest positive integer such that all positive integers less than it

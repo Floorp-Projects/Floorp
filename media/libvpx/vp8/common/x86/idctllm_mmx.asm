@@ -1,10 +1,10 @@
 ;
 ;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
 ;
-;  Use of this source code is governed by a BSD-style license 
+;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
 ;  tree. An additional intellectual property rights grant can be found
-;  in the file PATENTS.  All contributing project authors may 
+;  in the file PATENTS.  All contributing project authors may
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
@@ -220,35 +220,61 @@ sym(vp8_short_idct4x4llm_1_mmx):
     pop         rbp
     ret
 
-;void dc_only_idct_mmx(short input_dc, short *output, int pitch)
-global sym(vp8_dc_only_idct_mmx)
-sym(vp8_dc_only_idct_mmx):
+;void vp8_dc_only_idct_add_mmx(short input_dc, unsigned char *pred_ptr, unsigned char *dst_ptr, int pitch, int stride)
+global sym(vp8_dc_only_idct_add_mmx)
+sym(vp8_dc_only_idct_add_mmx):
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 3
+    SHADOW_ARGS_TO_STACK 5
     GET_GOT     rbx
+    push        rsi
+    push        rdi
     ; end prolog
 
-        movd        mm0,            arg(0) ;input_dc
+        mov         rsi,            arg(1) ;s -- prediction
+        mov         rdi,            arg(2) ;d -- destination
+        movsxd      rax,            dword ptr arg(4) ;stride
+        movsxd      rdx,            dword ptr arg(3) ;pitch
+        pxor        mm0,            mm0
 
-        paddw       mm0,            [fours GLOBAL]
-        mov         rdx,            arg(1) ;output
+        movd        mm5,            arg(0) ;input_dc
 
-        psraw       mm0,            3
-        movsxd      rax,            dword ptr arg(2) ;pitch
+        paddw       mm5,            [fours GLOBAL]
 
-        punpcklwd   mm0,            mm0
-        punpckldq   mm0,            mm0
+        psraw       mm5,            3
 
-        movq        [rdx],          mm0
-        movq        [rdx+rax],      mm0
+        punpcklwd   mm5,            mm5
+        punpckldq   mm5,            mm5
 
-        movq        [rdx+rax*2],    mm0
-        add         rdx,            rax
+        movd        mm1,            [rsi]
+        punpcklbw   mm1,            mm0
+        paddsw      mm1,            mm5
+        packuswb    mm1,            mm0              ; pack and unpack to saturate
+        movd        [rdi],          mm1
 
-        movq        [rdx+rax*2],    mm0
+        movd        mm2,            [rsi+rdx]
+        punpcklbw   mm2,            mm0
+        paddsw      mm2,            mm5
+        packuswb    mm2,            mm0              ; pack and unpack to saturate
+        movd        [rdi+rax],      mm2
+
+        movd        mm3,            [rsi+2*rdx]
+        punpcklbw   mm3,            mm0
+        paddsw      mm3,            mm5
+        packuswb    mm3,            mm0              ; pack and unpack to saturate
+        movd        [rdi+2*rax],    mm3
+
+        add         rdi,            rax
+        add         rsi,            rdx
+        movd        mm4,            [rsi+2*rdx]
+        punpcklbw   mm4,            mm0
+        paddsw      mm4,            mm5
+        packuswb    mm4,            mm0              ; pack and unpack to saturate
+        movd        [rdi+2*rax],    mm4
 
     ; begin epilog
+    pop rdi
+    pop rsi
     RESTORE_GOT
     UNSHADOW_ARGS
     pop         rbp

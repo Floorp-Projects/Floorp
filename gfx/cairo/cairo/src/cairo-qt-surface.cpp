@@ -61,11 +61,6 @@
 
 #include <sys/time.h>
 
-
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 7, 0)) || defined(QT_GLYPHS_API_BACKPORT)
-extern void qt_draw_glyphs(QPainter *, const quint32 *glyphs, const QPointF *positions, int count);
-#endif
-
 /* Enable workaround slow regional Qt paths */
 #define ENABLE_FAST_FILL 0
 #define ENABLE_FAST_CLIP 0
@@ -1366,40 +1361,7 @@ _cairo_qt_surface_show_glyphs (void *abstract_surface,
 			       cairo_clip_t *clip,
 			       int *remaining_glyphs)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 7, 0)) || defined(QT_GLYPHS_API_BACKPORT)
-    cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
-
-    // pick out the colour to use from the cairo source
-    cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) source;
-    cairo_scaled_glyph_t* glyph;
-    // documentation says you have to freeze the cache, but I don't believe it
-    _cairo_scaled_font_freeze_cache(scaled_font);
-
-    QColor tempColour(solid->color.red * 255, solid->color.green * 255, solid->color.blue * 255);
-    QVarLengthArray<QPointF> positions(num_glyphs);
-    QVarLengthArray<unsigned int> glyphss(num_glyphs);
-    FT_Face face = cairo_ft_scaled_font_lock_face (scaled_font);
-    const FT_Size_Metrics& ftMetrics = face->size->metrics;
-    QFont font(face->family_name);
-    font.setStyleStrategy(QFont::NoFontMerging);
-    font.setBold(face->style_flags & FT_STYLE_FLAG_BOLD);
-    font.setItalic(face->style_flags & FT_STYLE_FLAG_ITALIC);
-    font.setKerning(face->face_flags & FT_FACE_FLAG_KERNING);
-    font.setPixelSize(ftMetrics.y_ppem);
-    cairo_ft_scaled_font_unlock_face(scaled_font);
-    qs->p->setFont(font);
-    qs->p->setPen(tempColour);
-    for (int currentGlyph = 0; currentGlyph < num_glyphs; currentGlyph++) {
-        positions[currentGlyph].setX(glyphs[currentGlyph].x);
-        positions[currentGlyph].setY(glyphs[currentGlyph].y);
-        glyphss[currentGlyph] = glyphs[currentGlyph].index;
-    }
-    qt_draw_glyphs(qs->p, glyphss.data(), positions.data(), num_glyphs);
-    _cairo_scaled_font_thaw_cache(scaled_font);
-    return CAIRO_INT_STATUS_SUCCESS;
-#else
     return CAIRO_INT_STATUS_UNSUPPORTED;
-#endif
 }
 
 static cairo_int_status_t

@@ -745,9 +745,19 @@ DDRAW_FAILED:
         break;
 #ifdef MOZ_ENABLE_D3D9_LAYER
       case LayerManager::LAYERS_D3D9:
-        static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager())->
-          SetClippingRegion(event.region);
-        result = DispatchWindowEvent(&event, eventStatus);
+        {
+          LayerManagerD3D9 *layerManagerD3D9 =
+            static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager());
+          layerManagerD3D9->SetClippingRegion(event.region);
+          result = DispatchWindowEvent(&event, eventStatus);
+          if (layerManagerD3D9->DeviceWasRemoved()) {
+            mLayerManager = nsnull;
+            // When our device was removed, we should have gfxWindowsPlatform
+            // check if its render mode is up to date!
+            gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
+            Invalidate(PR_FALSE);
+          }
+        }
         break;
 #endif
       default:
@@ -755,6 +765,23 @@ DDRAW_FAILED:
         break;
     }
   }
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  if(event.region.Intersects(mCaptionButtons)) {
+    // Temporary workaround to make the captions buttons visible for D3D9
+    const nsIntRect* r;
+    RECT rect;
+    HBRUSH blackBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    for (nsIntRegionRectIterator iter(mCaptionButtonsRoundedRegion);
+         (r = iter.Next()) != nsnull;) {
+      rect.top = r->y;
+      rect.left = r->x;
+      rect.right = r->XMost();
+      rect.bottom = r->YMost();
+      FillRect(hDC, &rect, blackBrush);
+    }
+  }
+#endif
 
   if (!aDC) {
     ::EndPaint(mWnd, &ps);

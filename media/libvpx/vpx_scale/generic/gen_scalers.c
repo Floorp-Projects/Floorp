@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -937,12 +937,13 @@ void vp8cx_vertical_band_2_1_scale_c(unsigned char *source, unsigned int src_pit
 
 void vp8cx_vertical_band_2_1_scale_i_c(unsigned char *source, unsigned int src_pitch, unsigned char *dest, unsigned int dest_pitch, unsigned int dest_width)
 {
-    unsigned int i;
+    int i;
     int temp;
+    int width = dest_width;
 
     (void) dest_pitch;
 
-    for (i = 0; i < dest_width; i++)
+    for (i = 0; i < width; i++)
     {
         temp = 8;
         temp += source[i-(int)src_pitch] * 3;

@@ -40,6 +40,11 @@
 
 .hud-box {
     border-bottom: 1px solid #aaa;
+    text-shadow: none;
+}
+
+.hud-group label {
+    padding-left: 1em;
 }
 
 .hud-outer-wrapper {
@@ -62,6 +67,11 @@
     -moz-user-select: text;
     white-space: pre-wrap;
     -moz-user-focus: normal;
+}
+
+.hud-clickable {
+    cursor: pointer !important;
+    text-decoration: underline;
 }
 
 .hud-output-node .hud-network {
@@ -88,12 +98,11 @@
     color: red; font-weight: bold;
 }
 
-.hud-msg-node {    
+.hud-msg-node {
     width: 100%;
-    margin-top: 0.3em; 
-    margin-bottom: 0.3em; 
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
     padding-left: 0.3em;
-    border-bottom: 1px solid #eee;   
 }
 
 .hud-output-node {
@@ -150,7 +159,6 @@
 }
 
 .jsterm-input-node {
-    width: 98%;
     font-family: monospace;
     font-size: 9pt;
     background: url("chrome://global/skin/icons/commandline.png") 4px 2px
@@ -170,8 +178,25 @@
 
 .hud-console-filter-toolbar {
     background: @scopeBarBackground@ !important;
-    border-bottom: @scopeBarSeparatorBorder@;
+    border-bottom: @scopeBarSeparatorBorder@ !important;
     padding: 0px 1px;
     -moz-appearance: none !important;
     -moz-box-align: center;
 }
+
+.hud-console-filter-toolbar:-moz-lwtheme {
+    border-top: @scopeBarSeparatorBorder@ !important;
+}
+
+.jsterm-close-button {
+    list-style-image: url("chrome://global/skin/icons/console-close.png");
+    margin: 0px !important;
+    min-width: 0px !important;
+    padding: 1px 3px 1px 7px !important;
+    -moz-appearance: none !important;
+}
+
+.jsterm-close-button:active {
+    background-color: rgb(175, 175, 175);
+}
+

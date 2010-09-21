@@ -1,0 +1,9 @@
+#mozmill-window {
+  /* bug 529589 -  Iframe inside a chrome window does not repaint until another window is focused */
+  background: white !important; 
+}
+
+#mozmill-window iframe {
+  border: none;
+  overflow: hidden;
+}

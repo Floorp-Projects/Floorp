@@ -65,13 +65,11 @@
   <body dir="&locale.dir;" onload="onLoad(event)">
     <div id="pageContainer">
       <div id="topSection">
-        <img id="brandLogo" src="chrome://branding/content/icon128.png"
-             title="&abouthome.brandLogo.title;"/>
         <div id="brandStart">
           &abouthome.brandStart;
         </div>
         <div id ="searchContainer">
-          <img id="searchEngineLogo" title="&abouthome.searchEngineLogo.title;"/>
+          <img id="searchEngineLogo"/>
           <form name="searchForm" onsubmit="onSearchSubmit(event)">
             <input type="text" name="searchText" value="" id="searchText" maxLength="256"/>
             <br/>
@@ -83,7 +81,11 @@
           </form>
         </div>
       </div>
-
+      <div id="defaultSnippets">
+        <span hidden="true">&abouthome.defaultSnippet1.v1;</span>
+        <span hidden="true">&abouthome.defaultSnippet2.v1;</span>
+      </div>
+      <div id="snippets" hidden="true"/>
       <div id="bottomSection">
         <div id="aboutMozilla">
           <a href="http://www.mozilla.com/about/">&abouthome.aboutMozilla;</a>

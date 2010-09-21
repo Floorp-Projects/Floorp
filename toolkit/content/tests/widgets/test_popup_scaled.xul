@@ -36,6 +36,7 @@ function runTests()
   setScale($("frame").contentWindow, 2);
 
   var anchor = $("frame").contentDocument.getElementById("two");
+  anchor.getBoundingClientRect(); // flush to update display after scale change
   $("popup").openPopup(anchor, "after_start");
 }
 

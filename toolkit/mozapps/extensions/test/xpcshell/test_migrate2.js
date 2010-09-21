@@ -77,24 +77,12 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir(addon1, dest);
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir(addon2, dest);
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir(addon3, dest);
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir(addon4, dest);
-  dest = profileDir.clone();
-  dest.append("addon5@tests.mozilla.org");
-  writeInstallRDFToDir(addon5, dest);
-  dest = profileDir.clone();
-  dest.append("addon6@tests.mozilla.org");
-  writeInstallRDFToDir(addon6, dest);
+  writeInstallRDFForExtension(addon1, profileDir);
+  writeInstallRDFForExtension(addon2, profileDir);
+  writeInstallRDFForExtension(addon3, profileDir);
+  writeInstallRDFForExtension(addon4, profileDir);
+  writeInstallRDFForExtension(addon5, profileDir);
+  writeInstallRDFForExtension(addon6, profileDir);
 
   // Write out a minimal database
   let dbfile = gProfD.clone();

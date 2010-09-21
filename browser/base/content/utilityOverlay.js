@@ -496,14 +496,12 @@ function checkForUpdates()
 }
 #endif
 
-function buildHelpMenu()
-{
-  // Enable/disable the "Report Web Forgery" menu item.  safebrowsing object
-  // may not exist in OSX
-  if (typeof safebrowsing != "undefined")
-    safebrowsing.setReportPhishingMenu();
-
 #ifdef MOZ_UPDATER
+/**
+ * Updates an element to reflect the state of available update services.
+ */
+function setupCheckForUpdates(checkForUpdates, aStringBundle)
+{
   var updates = 
       Components.classes["@mozilla.org/updates/update-service;1"].
       getService(Components.interfaces.nsIApplicationUpdateService);
@@ -513,23 +511,21 @@ function buildHelpMenu()
 
   // Disable the UI if the update enabled pref has been locked by the 
   // administrator or if we cannot update for some other reason
-  var checkForUpdates = document.getElementById("checkForUpdates");
   var canCheckForUpdates = updates.canCheckForUpdates;
   checkForUpdates.setAttribute("disabled", !canCheckForUpdates);
   if (!canCheckForUpdates)
     return; 
 
-  var strings = document.getElementById("bundle_browser");
   var activeUpdate = um.activeUpdate;
-  
+
   // If there's an active update, substitute its name into the label
   // we show for this item, otherwise display a generic label.
   function getStringWithUpdateName(key) {
     if (activeUpdate && activeUpdate.name)
-      return strings.getFormattedString(key, [activeUpdate.name]);
-    return strings.getString(key + "Fallback");
+      return aStringBundle.formatStringFromName(key, [activeUpdate.name], 1);
+    return aStringBundle.GetStringFromName(key + "Fallback");
   }
-  
+
   // By default, show "Check for Updates..."
   var key = "default";
   if (activeUpdate) {
@@ -548,11 +544,31 @@ function buildHelpMenu()
     }
   }
   checkForUpdates.label = getStringWithUpdateName("updatesItem_" + key);
-  checkForUpdates.accessKey = strings.getString("updatesItem_" + key + ".accesskey");
+  checkForUpdates.accessKey = aStringBundle.
+                              GetStringFromName("updatesItem_" + key + ".accesskey");
   if (um.activeUpdate && updates.isDownloading)
     checkForUpdates.setAttribute("loading", "true");
   else
     checkForUpdates.removeAttribute("loading");
+}
+#endif
+
+function buildHelpMenu()
+{
+  // Enable/disable the "Report Web Forgery" menu item.  safebrowsing object
+  // may not exist in OSX
+  if (typeof safebrowsing != "undefined")
+    safebrowsing.setReportPhishingMenu();
+
+#ifdef XP_MACOSX
+#ifdef MOZ_UPDATER
+  var checkForUpdates = document.getElementById("checkForUpdates");
+  var browserBundle = document.getElementById("bundle_browser").stringBundle;
+  setupCheckForUpdates(checkForUpdates, browserBundle);
+#else  
+  // Needed by safebrowsing for inserting its menuitem so just hide it
+  document.getElementById("updateSeparator").hidden = true;
+#endif
 #else
   // Needed by safebrowsing for inserting its menuitem so just hide it
   document.getElementById("updateSeparator").hidden = true;

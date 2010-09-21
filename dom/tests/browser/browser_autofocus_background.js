@@ -45,7 +45,7 @@ function test() {
     }
 
     // Cleaning up.
-    for (let i = 0; i < tabs.length; i++) {
+    for (let i = 1; i < tabs.length; i++) {
       gBrowser.removeTab(tabs[i]);
     }
     finish();

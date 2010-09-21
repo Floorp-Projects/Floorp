@@ -1,4 +1,7 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=79:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2009 University of Szeged
  * All rights reserved.
  *
@@ -22,7 +25,8 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * 
+ * ***** END LICENSE BLOCK ***** */
 
 #include "assembler/wtf/Platform.h"
 
@@ -271,8 +275,8 @@ void ARMAssembler::dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID bas
             add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
             dtr_u(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff));
         } else {
-            ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtr_ur(isLoad, srcDst, base, reg);
+            moveImm(offset, ARMRegisters::S0);
+            dtr_ur(isLoad, srcDst, base, ARMRegisters::S0);
         }
     } else {
         offset = -offset;
@@ -282,8 +286,8 @@ void ARMAssembler::dataTransfer32(bool isLoad, RegisterID srcDst, RegisterID bas
             sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
             dtr_d(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff));
         } else {
-            ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtr_dr(isLoad, srcDst, base, reg);
+            moveImm(offset, ARMRegisters::S0);
+            dtr_dr(isLoad, srcDst, base, ARMRegisters::S0);
         }
     }
 }
@@ -297,8 +301,8 @@ void ARMAssembler::dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base
             add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
             dtrb_u(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff));
         } else {
-            ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtrb_ur(isLoad, srcDst, base, reg);
+            moveImm(offset, ARMRegisters::S0);
+            dtrb_ur(isLoad, srcDst, base, ARMRegisters::S0);
         }
     } else {
         offset = -offset;
@@ -308,8 +312,8 @@ void ARMAssembler::dataTransfer8(bool isLoad, RegisterID srcDst, RegisterID base
             sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | (10 << 8));
             dtrb_d(isLoad, srcDst, ARMRegisters::S0, (offset & 0xfff));
         } else {
-            ARMWord reg = getImm(offset, ARMRegisters::S0);
-            dtrb_dr(isLoad, srcDst, base, reg);
+            moveImm(offset, ARMRegisters::S0);
+            dtrb_dr(isLoad, srcDst, base, ARMRegisters::S0);
         }
     }
 }
@@ -386,6 +390,10 @@ inline void ARMAssembler::fixUpOffsets(void * buffer)
         ARMWord* ldrAddr = reinterpret_cast<ARMWord*>(data + pos);
         ARMWord* addr = getLdrImmAddress(ldrAddr);
         if (*addr != InvalidBranchTarget) {
+// The following is disabled for JM because we patch some branches after
+// calling fixUpOffset, and the branch patcher doesn't know how to handle 'B'
+// instructions.
+#if 0
             if (!(*iter & 1)) {
                 int diff = reinterpret_cast<ARMWord*>(data + *addr) - (ldrAddr + DefaultPrefetching);
 
@@ -394,6 +402,7 @@ inline void ARMAssembler::fixUpOffsets(void * buffer)
                     continue;
                 }
             }
+#endif
             *addr = reinterpret_cast<ARMWord>(data + *addr);
         }
     }

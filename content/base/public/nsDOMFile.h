@@ -41,50 +41,75 @@
 
 #include "nsICharsetDetectionObserver.h"
 #include "nsIDOMFile.h"
-#include "nsIDOMFileInternal.h"
 #include "nsIDOMFileList.h"
 #include "nsIDOMFileError.h"
 #include "nsIInputStream.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "mozilla/AutoRestore.h"
 #include "nsString.h"
-#include "nsIWeakReference.h"
-#include "nsIWeakReferenceUtils.h"
-#include "nsIDocument.h"
+#include "nsIXMLHttpRequest.h"
 
-class nsIDOMDocument;
 class nsIFile;
 class nsIInputStream;
 
 class nsDOMFile : public nsIDOMFile,
-                  public nsIDOMFileInternal,
+                  public nsIXHRSendable,
                   public nsICharsetDetectionObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMFILE
-  NS_DECL_NSIDOMFILEINTERNAL
+  NS_DECL_NSIXHRSENDABLE
 
-  nsDOMFile(nsIFile *aFile, nsIDocument* aRelatedDoc)
+  nsDOMFile(nsIFile *aFile, const nsAString& aContentType)
     : mFile(aFile),
-      mRelatedDoc(do_GetWeakReference(aRelatedDoc))
+      mContentType(aContentType)
   {}
-  ~nsDOMFile() {}
+
+  nsDOMFile(nsIFile *aFile)
+    : mFile(aFile)
+  {}
+
+  virtual ~nsDOMFile() {}
 
   // from nsICharsetDetectionObserver
   NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
 
 private:
   nsCOMPtr<nsIFile> mFile;
-  nsWeakPtr mRelatedDoc;
   nsString mContentType;
-  nsString mURL;
   nsCString mCharset;
 
   nsresult GuessCharset(nsIInputStream *aStream,
                         nsACString &aCharset);
   nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
                          nsAString &aResult);
+};
+
+class nsDOMMemoryFile : public nsDOMFile
+{
+public:
+  nsDOMMemoryFile(void *aMemoryBuffer,
+                  PRUint64 aLength,
+                  const nsAString& aName,
+                  const nsAString& aContentType)
+    : nsDOMFile(nsnull, aContentType),
+      mInternalData(aMemoryBuffer), mLength(aLength), mName(aName)
+  { }
+
+  ~nsDOMMemoryFile();
+
+  NS_IMETHOD GetName(nsAString&);
+  NS_IMETHOD GetSize(PRUint64*);
+  NS_IMETHOD GetInternalStream(nsIInputStream**);
+  NS_IMETHOD GetMozFullPath(nsAString&);
+  NS_IMETHOD GetMozFullPathInternal(nsAString&);
+
+protected:
+  void* mInternalData;
+  PRUint64 mLength;
+  nsString mName;
 };
 
 class nsDOMFileList : public nsIDOMFileList
@@ -134,6 +159,16 @@ public:
 
 private:
   PRUint16 mCode;
+};
+
+class NS_STACK_CLASS nsDOMFileInternalUrlHolder {
+public:
+  nsDOMFileInternalUrlHolder(nsIDOMFile* aFile, nsIPrincipal* aPrincipal
+                             MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM);
+  ~nsDOMFileInternalUrlHolder();
+  nsAutoString mUrl;
+private:
+  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 #endif

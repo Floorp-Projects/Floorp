@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=583288
+-->
+<head>
+  <title>Test for Bug 583288</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload='runTests();'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=583288">Mozilla Bug 583288</a>
+<p id="display"></p>
+<style>
+  iframe { width: 70px; height: 40px;}
+</style>
+<!--<div id="content" style="display: none">-->
+<div id="content">
+  <iframe name='get' id='get'></iframe>
+  <iframe name='post' id='post'></iframe>
+  <iframe name='put' id='put'></iframe>
+  <iframe name='del' id='del'></iframe>
+
+  <form action="http://example.org:80/tests/content/html/content/test/583288_submit_server.sjs" target='get' method='get'>
+  </form>
+  <form action="http://example.org:80/tests/content/html/content/test/583288_submit_server.sjs" target='post' method='post'>
+  </form>
+  <form action="http://example.org:80/tests/content/html/content/test/583288_submit_server.sjs" target='put' method='put'>
+  </form>
+  <form action="http://example.org:80/tests/content/html/content/test/583288_submit_server.sjs" target='del' method='delete'>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 583288 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var gLoaded = 0;
+
+function runTests()
+{
+  // We add a load event for the frames which will be called when the forms
+  // will be submitted.
+  var frames = [ document.getElementById('get'),
+                 document.getElementById('post'),
+                 document.getElementById('put'),
+                 document.getElementById('del'),
+               ];
+
+  for (var i=0; i<2; ++i) {
+    frames[i].setAttribute('onload', "frameShouldLoad();");
+  }
+  for (var i=2; i<4; ++i) {
+    frames[i].setAttribute('onload', "frameShouldNotLoad();");
+  }
+
+  // The four forms can be submitted with .submit().
+  // Submitting those which should be blocked so we can considering if the the
+  // last ones are submitted, that means the firsts were blocked.
+  for (var i=3; i>=0; --i) {
+    document.forms[i].submit();
+  }
+
+  // After the two first succefull submissions, we are going to stop the test.
+  // The expected successfull submissions have been requested at the end so we
+  // expect them at the end. So if the two firsts ones didn't show up, we are
+  // assuming they have been blocked.
+  // Unfortunately, it doesn't sound like there is a better way to test that.
+  // The worst thing that can happen here is to have a random green (if the
+  // first two submissions were not blocked but came after the last two).
+}
+
+function frameShouldLoad() {
+  ok(true, "The form submission should succeed.");
+  if (++gLoaded == 2) {
+    finished();
+  }
+}
+
+function frameShouldNotLoad() {
+  ok(false, "The form submission should have been blocked");
+  if (++gLoaded == 2) {
+    finished();
+  }
+}
+
+function finished()
+{
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -167,6 +167,11 @@ NS_IMETHODIMP nsFileResult::GetValueAt(PRInt32 index, nsAString & aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFileResult::GetLabelAt(PRInt32 index, nsAString & aValue)
+{
+  return GetValueAt(index, aValue);
+}
+
 NS_IMETHODIMP nsFileResult::GetCommentAt(PRInt32 index, nsAString & aComment)
 {
   aComment.Truncate();

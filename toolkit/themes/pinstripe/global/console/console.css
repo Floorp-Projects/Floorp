@@ -169,10 +169,10 @@
   margin: 0 4px;
   padding: 1px 10px;
   -moz-appearance: none;
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
   border: @roundButtonBorder@;
   background: @roundButtonBackground@;
-  -moz-box-shadow: @roundButtonShadow@;
+  box-shadow: @roundButtonShadow@;
 }
 
 #ButtonEval > .toolbarbutton-text {
@@ -182,7 +182,7 @@
 #ButtonEval:hover:active {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
-  -moz-box-shadow: @roundButtonPressedShadow@;
+  box-shadow: @roundButtonPressedShadow@;
 }
 
 toolbarseparator {
@@ -208,8 +208,8 @@ toolbarseparator {
   margin: 4px 0 9px;
   padding: 0 4px;
   border: 1px solid @toolbarbuttonBorderColor@;
-  -moz-border-radius: @toolbarbuttonCornerRadius@;
-  -moz-box-shadow: @loweredShadow@;
+  border-radius: @toolbarbuttonCornerRadius@;
+  box-shadow: @loweredShadow@;
   background: @toolbarbuttonBackground@;
   background-origin: border-box;
 }
@@ -217,7 +217,7 @@ toolbarseparator {
 #Console\:clear:active:hover {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
-  -moz-box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
 #Console\:clear:-moz-window-inactive {

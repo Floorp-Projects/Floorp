@@ -253,7 +253,7 @@ DOMKeyCodeToQtKeyCode(int aKeysym)
 
     // keypad numbers
     if (aKeysym >= NS_VK_NUMPAD0 && aKeysym <= NS_VK_NUMPAD9) {
-      qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
+      NS_ERROR("keypad numbers conversion not implemented");
       //return aKeysym - NS_VK_NUMPAD0 + Qt::Key_KP_0;
       return 0;
     }

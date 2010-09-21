@@ -19,6 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=288789
 &#x05d0;a&#x05d1;
 
 </textarea>
+<textarea id="tb">
+
+abc
+
+</textarea>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -50,9 +55,59 @@ function test() {
 
   textarea.focus();
   collapse(0);
-  testLeft(1);
-  collapse(5);
-  testRight(4);
+  ok(true, "Testing forward movement in RTL mode");
+  for (var i = 0; i < textarea.textContent.length; ++i) {
+    if (i == 0) {
+      testRight(i);
+    }
+    if (textarea.textContent[i] == 'a') {
+      testLeft(i);
+    } else {
+      testLeft(i + 1);
+    }
+    if (i == textarea.textContent.length - 1) {
+      testLeft(i + 1);
+    }
+  }
+  ok(true, "Testing backward movement in RTL mode");
+  for (var i = textarea.textContent.length; i > 0; --i) {
+    if (i == textarea.textContent.length) {
+      testLeft(i);
+    }
+    if (i > 0 && textarea.textContent[i - 1] == 'a') {
+      testRight(i);
+    } else {
+      testRight(i - 1);
+    }
+    if (i == 1) {
+      testRight(i - 1);
+    }
+  }
+
+  textarea = $("tb");
+  textarea.focus();
+  collapse(0);
+  ok(true, "Testing forward movement in LTR mode");
+  for (var i = 0; i < textarea.textContent.length; ++i) {
+    if (i == 0) {
+      testLeft(i);
+    }
+    testRight(i + 1);
+    if (i == textarea.textContent.length - 1) {
+      testRight(i + 1);
+    }
+  }
+  ok(true, "Testing backward movement in LTR mode");
+  for (var i = textarea.textContent.length; i > 0; --i) {
+    if (i == textarea.textContent.length) {
+      testRight(i);
+    }
+    testLeft(i - 1);
+    if (i == 1) {
+      testLeft(i - 1);
+    }
+  }
+
   SimpleTest.finish();
 }
 

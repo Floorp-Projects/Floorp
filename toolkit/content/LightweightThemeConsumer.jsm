@@ -89,6 +89,7 @@ LightweightThemeConsumer.prototype = {
     _setImage(root, active, aData.headerURL);
     if (this._footerId) {
       let footer = this._doc.getElementById(this._footerId);
+      footer.style.backgroundColor = active ? aData.accentcolor || "white" : "";
       _setImage(footer, active, aData.footerURL);
       if (active && aData.footerURL)
         footer.setAttribute("lwthemefooter", "true");

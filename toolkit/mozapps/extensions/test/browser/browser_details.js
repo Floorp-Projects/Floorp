@@ -4,6 +4,7 @@
 
 // Tests various aspects of the details view
 
+const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault"
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 const SEARCH_URL = TESTROOT + "browser_details.xml";
 
@@ -38,6 +39,7 @@ function get(aId) {
 }
 
 function test() {
+  requestLongerTimeout(2);
   // Turn on searching for this test
   Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
   Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, SEARCH_URL);
@@ -55,14 +57,14 @@ function test() {
     type: "extension",
     iconURL: "chrome://foo/skin/icon.png",
     icon64URL: "chrome://foo/skin/icon64.png",
-    contributeURL: "http://foo.com",
+    contributionURL: "http://foo.com",
     contributionAmount: "$0.99",
     sourceURI: Services.io.newURI("http://example.com/foo", null, null),
     averageRating: 4,
     reviewCount: 5,
     reviewURL: "http://example.com/reviews",
     homepageURL: "http://example.com/addon1",
-    applyBackgroundUpdates: true
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE
   }, {
     id: "addon2@tests.mozilla.org",
     name: "Test add-on 2",
@@ -84,13 +86,17 @@ function test() {
     updateDate: gDate,
     reviewCount: 1,
     reviewURL: "http://example.com/reviews",
-    applyBackgroundUpdates: false,
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
     isActive: false,
     isCompatible: false,
     appDisabled: true,
     permissions: AddonManager.PERM_CAN_ENABLE |
                  AddonManager.PERM_CAN_DISABLE |
-                 AddonManager.PERM_CAN_UPGRADE
+                 AddonManager.PERM_CAN_UPGRADE,
+    screenshots: [{
+      url: "http://example.com/screenshot",
+      thumbnailURL: "http://example.com/thumbnail"
+    }],
   }, {
     id: "addon4@tests.mozilla.org",
     name: "Test add-on 4",
@@ -164,14 +170,15 @@ add_test(function() {
     is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
-    ok(get("detail-autoUpdate").firstChild.selected, "Updates ahould be automatic");
+    ok(get("detail-autoUpdate").childNodes[1].selected, "Updates ahould be automatic");
     is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
     EventUtils.synthesizeMouse(get("detail-autoUpdate").lastChild, 2, 2, {}, gManagerWindow);
     ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
     EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
     ok(get("detail-autoUpdate").firstChild.selected, "Updates should be automatic");
-    is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
+//XXX Disabled due to bug 596172
+//    is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");
@@ -243,7 +250,7 @@ add_test(function() {
     is_element_hidden(get("detail-creator")._creatorLink, "Creator link should be hidden");
 
     is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
-    ok(get("detail-screenshot").src, "http://example.com/screenshot");
+    is(get("detail-screenshot").src, "http://example.com/screenshot", "Should be showing the full sized screenshot");
     is(get("detail-desc").textContent, "Short description", "Description should be correct");
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
@@ -290,7 +297,8 @@ add_test(function() {
     is(get("detail-creator")._creatorLink.value, "Mozilla", "Creator link should be correct");
     is(get("detail-creator")._creatorLink.href, "http://www.mozilla.org", "Creator link href should be correct");
 
-    is_element_hidden(get("detail-screenshot"), "Screenshot should not be visible");
+    is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
+    is(get("detail-screenshot").src, "http://example.com/thumbnail", "Should be showing the thumbnail");
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
 
@@ -308,14 +316,32 @@ add_test(function() {
     is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
-    ok(get("detail-autoUpdate").lastChild.selected, "Updates ahould be manual");
+    ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
-    ok(get("detail-autoUpdate").firstChild.selected, "Updates ahould be automatic");
+    EventUtils.synthesizeMouse(get("detail-autoUpdate").childNodes[1], 2, 2, {}, gManagerWindow);
+    ok(get("detail-autoUpdate").childNodes[1].selected, "Updates should be automatic");
     is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
     EventUtils.synthesizeMouse(get("detail-autoUpdate").lastChild, 2, 2, {}, gManagerWindow);
-    ok(get("detail-autoUpdate").lastChild.selected, "Updates ahould be manual");
+    ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
+
+    info("Setting " + PREF_AUTOUPDATE_DEFAULT + " to true");
+    Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, true);
+    EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
+    ok(get("detail-autoUpdate").firstChild.selected, "Updates should be default");
+    is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
+
+    info("Setting " + PREF_AUTOUPDATE_DEFAULT + " to false");
+    Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, false);
+    ok(get("detail-autoUpdate").firstChild.selected, "Updates should be default");
+    is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
+    EventUtils.synthesizeMouse(get("detail-autoUpdate").childNodes[1], 2, 2, {}, gManagerWindow);
+    ok(get("detail-autoUpdate").childNodes[1].selected, "Updates should be automatic");
+    is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
+    EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
+    ok(get("detail-autoUpdate").firstChild.selected, "Updates should be default");
+    is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
+    Services.prefs.clearUserPref(PREF_AUTOUPDATE_DEFAULT);
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");

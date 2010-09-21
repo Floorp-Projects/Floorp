@@ -23,7 +23,7 @@
  *   Paul Ashford <arougthopher@lizardland.net>
  *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -394,6 +394,13 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 		event.refPoint.y = aPoint->y;
 	}
 	event.time = PR_IntervalNow();
+}
+
+NS_IMETHODIMP nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+	NS_PRECONDITION(aNewParent, "");
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------

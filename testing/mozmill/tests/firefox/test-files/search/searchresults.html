@@ -1,0 +1,16 @@
+<html>
+<head>
+  <title>Search Results</title>
+  <script type="text/javascript">
+    function show() {
+      var results = /\?q=(.+)$/.exec(window.document.location);
+      searchterm = decodeURIComponent(results[1].replace(/\+/g, " "))
+      document.getElementById("term").innerHTML = searchterm;
+    }
+  </script>
+</head>
+
+<body onload="show();">
+  <p>Search term was '<span id="term"></span>'.</p>
+</body>
+</html>

@@ -1,5 +1,5 @@
 Cu.import("resource://services-sync/base_records/keys.js");
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 
 function run_test() {
   initTestLogging("Debug");
