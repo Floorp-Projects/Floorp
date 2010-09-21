@@ -373,7 +373,17 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   prefFile.Cut(0, slashPos + 1);
   ToLowerCase(prefFile);
 
+#ifdef XP_MACOSX
+#if defined(__i386__)
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.i386.");
+#elif defined(__x86_64__)
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.x86_64.");
+#elif defined(__ppc__)
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.ppc.");
+#endif
+#else
   nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.");
+#endif
 
   PRUint32 prefCount;
   char** prefNames;
@@ -413,7 +423,17 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 
   if (!prefSet) {
     oopPluginsEnabled = PR_FALSE;
+#ifdef XP_MACOSX
+#if defined(__i386__)
+    prefs->GetBoolPref("dom.ipc.plugins.enabled.i386", &oopPluginsEnabled);
+#elif defined(__x86_64__)
+    prefs->GetBoolPref("dom.ipc.plugins.enabled.x86_64", &oopPluginsEnabled);
+#elif defined(__ppc__)
+    prefs->GetBoolPref("dom.ipc.plugins.enabled.ppc", &oopPluginsEnabled);
+#endif
+#else
     prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+#endif
   }
 
   return oopPluginsEnabled;
