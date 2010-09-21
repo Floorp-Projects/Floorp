@@ -961,8 +961,10 @@ var Browser = {
     if (aRect)
       zoomRect = this._getZoomRectForRect(aRect, cY);
 
-    if (!zoomRect && tab.isDefaultZoomLevel())
-      zoomRect = this._getZoomRectForPoint(cX, cY, getBrowser().scale * 2);
+    if (!zoomRect && tab.isDefaultZoomLevel()) {
+      let scale = tab.clampZoomLevel(tab.browser.scale * 2);
+      zoomRect = this._getZoomRectForPoint(cX, cY, scale);
+    }
 
     if (zoomRect)
       this.animatedZoomTo(zoomRect);
