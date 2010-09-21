@@ -2139,7 +2139,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
 #define TRACE_RECORDER(cx) (false)
 #endif
 
-#ifdef JS_METHODJIT
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
 # define LEAVE_ON_SAFE_POINT()                                                \
     do {                                                                      \
         JS_ASSERT_IF(leaveOnSafePoint, !TRACE_RECORDER(cx));                  \
@@ -2202,8 +2202,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
 
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
     bool leaveOnSafePoint = !!(interpFlags & JSINTERP_SAFEPOINT);
-#endif
-#ifdef JS_METHODJIT
 # define CLEAR_LEAVE_ON_TRACE_POINT() ((void) (leaveOnSafePoint = false))
 #else
 # define CLEAR_LEAVE_ON_TRACE_POINT() ((void) 0)
@@ -2344,8 +2342,10 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
                   case ARECORD_ABORTED:
                   case ARECORD_COMPLETED:
                   case ARECORD_STOP:
+#ifdef JS_METHODJIT
                     leaveOnSafePoint = true;
                     LEAVE_ON_SAFE_POINT();
+#endif
                     break;
                   default:
                     break;
@@ -2404,9 +2404,7 @@ ADD_EMPTY_CASE(JSOP_UNUSED180)
 END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_TRACE)
-#ifdef JS_METHODJIT
     LEAVE_ON_SAFE_POINT();
-#endif
 END_CASE(JSOP_TRACE)
 
 /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
@@ -2557,7 +2555,7 @@ BEGIN_CASE(JSOP_STOP)
         if (regs.fp->isConstructing() && regs.fp->returnValue().isPrimitive())
             regs.fp->setReturnValue(ObjectValue(regs.fp->constructorThis()));
 
-#ifdef JS_TRACER
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
         /* Hack: re-push rval so either JIT will read it properly. */
         regs.fp->setBailedAtReturn();
         if (TRACE_RECORDER(cx)) {
@@ -6734,7 +6732,7 @@ END_CASE(JSOP_ARRAYPUSH)
         goto error;
     }
 
-#ifdef JS_METHODJIT
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
   stop_recording:
 #endif
     JS_ASSERT(cx->regs == &regs);
