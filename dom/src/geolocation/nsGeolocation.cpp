@@ -741,11 +741,13 @@ nsGeolocationService::StartDevice()
   if (!sGeoEnabled)
     return NS_ERROR_NOT_AVAILABLE;
 
+#ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
     cpc->SendGeolocationStart();
     return NS_OK;
   }
+#endif
 
   // Start them up!
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -792,11 +794,13 @@ nsGeolocationService::StopDevice()
     mDisconnectTimer = nsnull;
   }
 
+#ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
     cpc->SendGeolocationStop();
     return; // bail early
   }
+#endif
 
   for (PRUint32 i = mProviders.Count() - 1; i != PRUint32(-1); --i) {
     mProviders[i]->Shutdown();
