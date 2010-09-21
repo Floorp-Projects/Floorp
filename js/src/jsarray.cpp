@@ -630,7 +630,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool str
     Value junk;
 
     /* Check for a sealed object first. */
-    if (obj->sealed()) {
+    if (!obj->isExtensible()) {
         return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_READ_ONLY,
                                         JSDVG_IGNORE_STACK, IdToValue(id), NULL,
                                         NULL, NULL);
@@ -1003,6 +1003,27 @@ array_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
+namespace {
+
+JSBool
+array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
+{
+    JS_ASSERT(obj->isDenseArray());
+
+    /*
+     * We must slowify dense arrays; otherwise, we'd need to detect assignments to holes,
+     * since that is effectively adding a new property to the array.
+     */
+    if (!obj->makeDenseArraySlow(cx) ||
+        !GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, props))
+        return false;
+
+    *success = true;
+    return true;
+}
+
+} // namespace
+
 Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
@@ -1035,6 +1056,7 @@ Class js_ArrayClass = {
         NULL,       /* enumerate      */
         array_typeOf,
         array_trace,
+        array_fix,
         NULL,       /* thisObject     */
         NULL,       /* clear          */
     }
