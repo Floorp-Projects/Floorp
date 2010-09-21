@@ -505,5 +505,11 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   return true;
 }
 
+bool
+ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
+{
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
