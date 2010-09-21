@@ -49,6 +49,8 @@ _TEST_FILES = \
 		test_selection_move_commands.xul \
 		test_bug514156.html \
 		test_bug567213.html \
+		file_bug586662.html \
+		test_bug586662.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
