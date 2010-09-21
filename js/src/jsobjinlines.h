@@ -1044,6 +1044,20 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
            : detail::NewObject<withProto, false>(cx, clasp, proto, parent);
 }
 
+class AutoPropertyDropper {
+    JSContext *cx;
+    JSObject *holder;
+    JSProperty *prop;
+
+  public:
+    AutoPropertyDropper(JSContext *cx, JSObject *obj, JSProperty *prop)
+      : cx(cx), holder(obj), prop(prop)
+    { JS_ASSERT(prop); }
+
+    ~AutoPropertyDropper()
+    { holder->dropProperty(cx, prop); }
+};
+
 } /* namespace js */
 
 #endif /* jsobjinlines_h___ */
