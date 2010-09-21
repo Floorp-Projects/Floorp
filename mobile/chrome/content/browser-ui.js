@@ -1595,14 +1595,12 @@ var FindHelperUI = {
   },
 
   show: function findHelperShow() {
-    BrowserUI.pushPopup(this, this._container);
     this._container.show(this);
     this.search("");
     this._textbox.focus();
   },
 
   hide: function findHelperHide() {
-    BrowserUI.popPopup();
     this._textbox.value = "";
     this._container.hide(this);
   },

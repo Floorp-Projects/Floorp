@@ -816,13 +816,6 @@ var FindHandler = {
     return this._fastFind;
   },
 
-  get _selectionController() {
-    delete this._selectionController;
-    return this._selectionController = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                               .getInterface(Ci.nsISelectionDisplay)
-                                               .QueryInterface(Ci.nsISelectionController);
-  },
-
   init: function findHandlerInit() {
     addMessageListener("FindAssist:Find", this);
     addMessageListener("FindAssist:Next", this);
@@ -851,24 +844,30 @@ var FindHandler = {
       return;
     }
 
-    let controller = this._selectionController.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
-    if (!controller.rangeCount) {
+    let selection = this._fastFind.currentWindow.getSelection();
+    if (!selection.rangeCount) {
       // The selection can be into an input or a textarea element
       let nodes = content.document.querySelectorAll("input[type='text'], textarea");
       for (let i = 0; i < nodes.length; i++) {
         let node = nodes[i];
         if (node instanceof Ci.nsIDOMNSEditableElement && node.editor) {
-          controller = node.editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
-          if (controller.rangeCount)
+          selection = node.editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+          if (selection.rangeCount)
             break;
         }
       }
     }
 
-    let range = controller.getRangeAt(0);
     let scroll = Util.getScrollOffset(content);
-    let rect = range.getBoundingClientRect();
-    rect = new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
+    for (let frame = this._fastFind.currentWindow; frame != content; frame = frame.parent) {
+      let rect = frame.frameElement.getBoundingClientRect();
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      scroll.add(rect.left + parseInt(left), rect.top + parseInt(top));
+    }
+
+    let rangeRect = selection.getRangeAt(0).getBoundingClientRect();
+    let rect = new Rect(scroll.x + rangeRect.left, scroll.y + rangeRect.top, rangeRect.width, rangeRect.height);
     sendAsyncMessage("FindAssist:Show", { rect: rect.isEmpty() ? null: rect , result: findResult });
   }
 };
