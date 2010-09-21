@@ -70,6 +70,8 @@
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "nsFrameMessageManager.h"
 
+#include "nsIGeolocationProvider.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -508,6 +510,12 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 bool
 ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
 {
+  nsCOMPtr<nsIGeolocationUpdate> gs = do_GetService("@mozilla.org/geolocation/service;1");
+  if (gs) {
+    return true;
+  }
+  nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
+  gs->Update(position);
   return true;
 }
 
