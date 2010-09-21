@@ -1648,6 +1648,12 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     return accessible;
   }
 
+  if (tag == nsAccessibilityAtoms::output) {
+    nsAccessible* accessible = new nsHTMLOutputAccessible(aContent, aWeakShell);
+    NS_IF_ADDREF(accessible);
+    return accessible;
+  }
+
   return nsnull;
  }
 
