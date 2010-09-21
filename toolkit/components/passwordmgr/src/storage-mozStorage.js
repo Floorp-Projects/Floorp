@@ -1418,7 +1418,6 @@ LoginManagerStorage_mozStorage.prototype = {
                 stmt.reset();
             }
         }
-        
     },
 
 
@@ -1499,7 +1498,7 @@ LoginManagerStorage_mozStorage.prototype = {
                        "timePasswordChanged, " +
                        "timesUsed " +
                     "FROM moz_logins";
-        try { 
+        try {
             let stmt = this._dbConnection.createStatement(query);
             // (no need to execute statement, if it compiled we're good)
             stmt.finalize();
@@ -1511,7 +1510,7 @@ LoginManagerStorage_mozStorage.prototype = {
                    "id, " +
                    "hostname " +
                 "FROM moz_disabledHosts";
-        try { 
+        try {
             let stmt = this._dbConnection.createStatement(query);
             // (no need to execute statement, if it compiled we're good)
             stmt.finalize();
