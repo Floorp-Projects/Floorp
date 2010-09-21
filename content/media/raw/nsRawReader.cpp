@@ -57,7 +57,7 @@ nsRawReader::~nsRawReader()
   MOZ_COUNT_DTOR(nsRawReader);
 }
 
-nsresult nsRawReader::Init()
+nsresult nsRawReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 {
   return NS_OK;
 }

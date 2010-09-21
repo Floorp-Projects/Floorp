@@ -123,7 +123,6 @@ nsWebMReader::nsWebMReader(nsBuiltinDecoder* aDecoder)
   mAudioTrack(0),
   mAudioStartMs(-1),
   mAudioSamples(0),
-  mTimecodeScale(1000000),
   mHasVideo(PR_FALSE),
   mHasAudio(PR_FALSE)
 {
@@ -147,7 +146,7 @@ nsWebMReader::~nsWebMReader()
   MOZ_COUNT_DTOR(nsWebMReader);
 }
 
-nsresult nsWebMReader::Init()
+nsresult nsWebMReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 {
   if (vpx_codec_dec_init(&mVP8, &vpx_codec_vp8_dx_algo, NULL, 0)) {
     return NS_ERROR_FAILURE;
@@ -157,6 +156,12 @@ nsresult nsWebMReader::Init()
   vorbis_comment_init(&mVorbisComment);
   memset(&mVorbisDsp, 0, sizeof(vorbis_dsp_state));
   memset(&mVorbisBlock, 0, sizeof(vorbis_block));
+
+  if (aCloneDonor) {
+    mBufferedState = static_cast<nsWebMReader*>(aCloneDonor)->mBufferedState;
+  } else {
+    mBufferedState = new nsWebMBufferedState;
+  }
 
   return NS_OK;
 }
@@ -210,12 +215,6 @@ nsresult nsWebMReader::ReadMetadata()
     MonitorAutoExit exitReaderMon(mMonitor);
     MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
     mDecoder->GetStateMachine()->SetDuration(duration / NS_PER_MS);
-  }
-
-  r = nestegg_tstamp_scale(mContext, &mTimecodeScale);
-  if (r == -1) {
-    Cleanup();
-    return NS_ERROR_FAILURE;
   }
 
   unsigned int ntracks = 0;
@@ -705,55 +704,20 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   return DecodeToTarget(aTarget);
 }
 
-void nsWebMReader::CalculateBufferedForRange(nsTimeRanges* aBuffered,
-                                             PRInt64 aStartOffset, PRInt64 aEndOffset)
-{
-  // Find the first nsWebMTimeDataOffset at or after aStartOffset.
-  PRUint32 start;
-  mTimeMapping.GreatestIndexLtEq(aStartOffset, start);
-  if (start == mTimeMapping.Length()) {
-    return;
-  }
-
-  // Find the first nsWebMTimeDataOffset at or before aEndOffset.
-  PRUint32 end;
-  if (!mTimeMapping.GreatestIndexLtEq(aEndOffset, end) && end > 0) {
-    // No exact match, so adjust end to be the first entry before
-    // aEndOffset.
-    end -= 1;
-  }
-
-  // Range is empty.
-  if (end <= start) {
-    return;
-  }
-
-  NS_ASSERTION(mTimeMapping[start].mOffset >= aStartOffset &&
-               mTimeMapping[end].mOffset <= aEndOffset,
-               "Computed time range must lie within data range.");
-  if (start > 0) {
-    NS_ASSERTION(mTimeMapping[start - 1].mOffset <= aStartOffset,
-                 "Must have found least nsWebMTimeDataOffset for start");
-  }
-  if (end < mTimeMapping.Length() - 1) {
-    NS_ASSERTION(mTimeMapping[end + 1].mOffset >= aEndOffset,
-                 "Must have found greatest nsWebMTimeDataOffset for end");
-  }
-
-  float startTime = mTimeMapping[start].mTimecode * mTimecodeScale / NS_PER_S;
-  float endTime = mTimeMapping[end].mTimecode * mTimecodeScale / NS_PER_S;
-  aBuffered->Add(startTime, endTime);
-}
-
 nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
+  PRUint64 timecodeScale;
+  if (!mContext || nestegg_tstamp_scale(mContext, &timecodeScale) == -1) {
+    return NS_OK;
+  }
+
   // Special case completely cached files.  This also handles local files.
   if (stream->IsDataCachedToEndOfStream(0)) {
     uint64_t duration = 0;
-    if (mContext && nestegg_duration(mContext, &duration) == 0) {
+    if (nestegg_duration(mContext, &duration) == 0) {
       aBuffered->Add(aStartTime / MS_PER_S, duration / NS_PER_S);
     }
   } else {
@@ -762,7 +726,7 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
       NS_ASSERTION(startOffset < endOffset, "Cached range invalid");
 
-      CalculateBufferedForRange(aBuffered, startOffset, endOffset);
+      mBufferedState->CalculateBufferedForRange(aBuffered, startOffset, endOffset, timecodeScale);
 
       // Advance to the next cached data range.
       startOffset = stream->GetNextCachedData(endOffset);
@@ -776,39 +740,5 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 
 void nsWebMReader::NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset)
 {
-  PRUint32 idx;
-  if (!mRangeParsers.GreatestIndexLtEq(aOffset, idx)) {
-    // If the incoming data overlaps an already parsed range, adjust the
-    // buffer so that we only reparse the new data.  It's also possible to
-    // have an overlap where the end of the incoming data is within an
-    // already parsed range, but we don't bother handling that other than by
-    // avoiding storing duplicate timecodes when the parser runs.
-    if (idx != mRangeParsers.Length() && mRangeParsers[idx].mStartOffset <= aOffset) {
-      // Complete overlap, skip parsing.
-      if (aOffset + aLength <= mRangeParsers[idx].mCurrentOffset) {
-        return;
-      }
-
-      // Partial overlap, adjust the buffer to parse only the new data.
-      PRInt64 adjust = mRangeParsers[idx].mCurrentOffset - aOffset;
-      NS_ASSERTION(adjust >= 0, "Overlap detection bug.");
-      aBuffer += adjust;
-      aLength -= PRUint32(adjust);
-    } else {
-      mRangeParsers.InsertElementAt(idx, nsWebMBufferedParser(aOffset));
-    }
-  }
-
-  mRangeParsers[idx].Append(reinterpret_cast<const unsigned char*>(aBuffer), aLength, mTimeMapping);
-
-  // Merge parsers with overlapping regions and clean up the remnants.
-  PRUint32 i = 0;
-  while (i + 1 < mRangeParsers.Length()) {
-    if (mRangeParsers[i].mCurrentOffset >= mRangeParsers[i + 1].mStartOffset) {
-      mRangeParsers[i + 1].mStartOffset = mRangeParsers[i].mStartOffset;
-      mRangeParsers.RemoveElementAt(i);
-    } else {
-      i += 1;
-    }
-  }
+  mBufferedState->NotifyDataArrived(aBuffer, aLength, aOffset);
 }
