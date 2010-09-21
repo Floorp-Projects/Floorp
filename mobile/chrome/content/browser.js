@@ -1109,6 +1109,7 @@ Browser.MainDragger.prototype = {
       x = Math.min(doffset.x, rect.left);
 
     let height = document.getElementById("content-viewport").getBoundingClientRect().height;
+    height -= document.getElementById("content-navigator").getBoundingClientRect().height;
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
     if (doffset.y < 0 && rect.bottom < height)
       y = Math.max(doffset.y, rect.bottom - height);
