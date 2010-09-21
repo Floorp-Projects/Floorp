@@ -213,7 +213,8 @@ BrowserCLH.prototype = {
 
     // Open any URIs into new tabs
     for (let i = 0; i < uris.length; i++)
-      win.browserDOMWindow.openURI(uris[i], null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB, null);
+      win.browserDOMWindow.openURI(uris[i], null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                                   Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
   },
 
   // QI
