@@ -366,9 +366,11 @@ let ContentScroll =  {
         if (displayport.isEmpty())
           break;
 
+        let scrollOffset = Util.getScrollOffset(content);
         let cwu = Util.getWindowUtils(content);
         cwu.setResolution(json.scale, json.scale);
-        cwu.setDisplayPort(displayport.x, displayport.y, displayport.width, displayport.height);
+        cwu.setDisplayPort(displayport.x - scrollOffset.x, displayport.y - scrollOffset.y,
+                           displayport.width, displayport.height);
         break;
       }
 
@@ -383,7 +385,8 @@ let ContentScroll =  {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "scroll":
-        Util.dumpLn("XXX stub");
+        let scrollOffset = Util.getScrollOffset(content);
+        sendAsyncMessage("scroll", scrollOffset);
         break;
 
       case "MozScrolledAreaChanged": {
