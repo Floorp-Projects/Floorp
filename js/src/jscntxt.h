@@ -1031,11 +1031,15 @@ struct TraceMonitor {
     FragStatsMap*           profTab;
 #endif
 
+    bool ontrace() const {
+        return !!tracecx;
+    }
+
     /* Flush the JIT cache. */
     void flush();
 
-    /* Mark all objects baked into native code in the code cache. */
-    void mark(JSTracer *trc);
+    /* Sweep any cache entry pointing to dead GC things. */
+    void sweep();
 
     bool outOfMemory() const;
 };
@@ -1048,9 +1052,9 @@ struct TraceMonitor {
  * executing.  cx must be a context on the current thread.
  */
 #ifdef JS_TRACER
-# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).tracecx != NULL)
+# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).ontrace())
 #else
-# define JS_ON_TRACE(cx)            JS_FALSE
+# define JS_ON_TRACE(cx)            false
 #endif
 
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
@@ -1343,7 +1347,6 @@ struct JSRuntime {
     uint32              gcTriggerFactor;
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
-    volatile JSBool     gcFlushCodeCaches;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new

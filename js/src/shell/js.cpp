@@ -5348,8 +5348,6 @@ main(int argc, char **argv, char **envp)
 
     result = shell(cx, argc, argv, envp);
 
-    JS_CommenceRuntimeShutDown(rt);
-
     DestroyContext(cx, true);
 
     KillWatchdog();

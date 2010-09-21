@@ -496,7 +496,6 @@ public:
                                           bool explainExpectedLiveGarbage);
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
-    virtual void CommenceShutdown();
     virtual void Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
