@@ -265,9 +265,6 @@
                   this._browser._searchEngines = [];
                 }
 
-                this._browser.scale = 1;
-                this._browser._updateCacheViewport();
-
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
                              args);
@@ -355,6 +352,7 @@
             // (as opposed to one of its iframes).
             if (this.feeds && aMessage.target == this)
               this.feeds = null;
+            this._browser.scale = 1;
          ]]>
         </body>
       </method>
@@ -736,9 +734,6 @@
                   this._browser._documentURI = json.documentURI;
                   this._browser._searchEngines = [];
                 }
-
-                this._browser._scale = 1;
-                this._browser._updateCacheViewport();
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
