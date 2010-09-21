@@ -93,7 +93,7 @@ public:
   nsRawReader(nsBuiltinDecoder* aDecoder);
   ~nsRawReader();
 
-  virtual nsresult Init();
+  virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
   virtual PRBool DecodeAudioData();
 

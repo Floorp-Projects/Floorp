@@ -38,7 +38,10 @@
 #if !defined(nsWebMBufferedParser_h_)
 #define nsWebMBufferedParser_h_
 
+#include "nsISupportsImpl.h"
 #include "nsTArray.h"
+
+class nsTimeRanges;
 
 // Stores a stream byte offset and the scaled timecode of the block at
 // that offset.  The timecode must be scaled by the stream's timecode
@@ -202,6 +205,33 @@ private:
   // Count of bytes left to skip before resuming parse at mNextState.
   // Mostly used to skip block payload data after reading a block timecode.
   PRUint32 mSkipBytes;
+};
+
+class nsWebMBufferedState
+{
+  NS_INLINE_DECL_REFCOUNTING(nsWebMBufferedState)
+
+public:
+  nsWebMBufferedState() {
+    MOZ_COUNT_CTOR(nsWebMBufferedState);
+  }
+
+  ~nsWebMBufferedState() {
+    MOZ_COUNT_DTOR(nsWebMBufferedState);
+  }
+
+  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset);
+  void CalculateBufferedForRange(nsTimeRanges* aBuffered,
+                                 PRInt64 aStartOffset, PRInt64 aEndOffset,
+                                 PRUint64 aTimecodeScale);
+
+private:
+  // Sorted (by offset) map of data offsets to timecodes.  Populated
+  // on the main thread as data is received and parsed by nsWebMBufferedParsers.
+  nsTArray<nsWebMTimeDataOffset> mTimeMapping;
+
+  // Sorted (by offset) live parser instances.  Main thread only.
+  nsTArray<nsWebMBufferedParser> mRangeParsers;
 };
 
 #endif
