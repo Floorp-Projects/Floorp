@@ -5453,48 +5453,47 @@ function BrowserSetForcedDetector(doReload)
     BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
-function UpdateCurrentCharset()
-{
+function charsetMenuGetElement(parent, id) {
+  return parent.getElementsByAttribute("id", id)[0];
+}
+
+function UpdateCurrentCharset(target) {
     // extract the charset from DOM
     var wnd = document.commandDispatcher.focusedWindow;
     if ((window == wnd) || (wnd == null)) wnd = window.content;
 
     // Uncheck previous item
     if (gPrevCharset) {
-        var pref_item = document.getElementById('charset.' + gPrevCharset);
+        var pref_item = charsetMenuGetElement(target, "charset." + gPrevCharset);
         if (pref_item)
           pref_item.setAttribute('checked', 'false');
     }
 
-    var menuitem = document.getElementById('charset.' + wnd.document.characterSet);
+    var menuitem = charsetMenuGetElement(target, "charset." + wnd.document.characterSet);
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
     }
 }
 
-function UpdateCharsetDetector() {
-  var prefvalue = "off";
+function UpdateCharsetDetector(target) {
+  var prefvalue;
 
   try {
     prefvalue = gPrefService.getComplexValue("intl.charset.detector", Ci.nsIPrefLocalizedString).data;
   }
   catch (ex) {}
+  
+  if (!prefvalue)
+    prefvalue = "off";
 
-  prefvalue = "chardet." + prefvalue;
-
-  var menuitem = document.getElementById(prefvalue);
+  var menuitem = charsetMenuGetElement(target, "chardet." + prefvalue);
   if (menuitem)
     menuitem.setAttribute("checked", "true");
 }
 
 function UpdateMenus(event) {
-  // use setTimeout workaround to delay checkmark the menu
-  // when onmenucomplete is ready then use it instead of oncreate
-  // see bug 78290 for the detail
-  UpdateCurrentCharset();
-  setTimeout(UpdateCurrentCharset, 0);
-  UpdateCharsetDetector();
-  setTimeout(UpdateCharsetDetector, 0);
+  UpdateCurrentCharset(event.target);
+  UpdateCharsetDetector(event.target);
 }
 
 function CreateMenu(node) {
