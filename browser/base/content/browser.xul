@@ -548,9 +548,9 @@
             </menu>
           </hbox>
           <menuseparator class="appmenu-menuseparator"/>
-          <menu id="appmenu_developer"
-                label="&developerMenu.label;">
-            <menupopup id="appmenu_developer_popup">
+          <menu id="appmenu_webDeveloper"
+                label="&appMenuWebDeveloper.label;">
+            <menupopup id="appmenu_webDeveloper_popup">
               <menuitem id="appmenu_webConsole"
                         label="&webConsoleCmd.label;"
                         type="checkbox"
