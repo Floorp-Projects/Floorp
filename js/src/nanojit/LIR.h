@@ -2177,6 +2177,78 @@ namespace nanojit
         LIns* read();
     };
 
+    // This type is used to perform a simple interval analysis of 32-bit
+    // add/sub/mul.  It lets us avoid overflow checks in some cases.
+    struct Interval
+    {
+        // The bounds are 64-bit integers so that any overflow from a 32-bit
+        // operation can be safely detected.
+        //
+        // If 'hasOverflowed' is false, 'lo' and 'hi' must be in the range
+        // I32_MIN..I32_MAX.  If 'hasOverflowed' is true, 'lo' and 'hi' should
+        // not be trusted (and in debug builds we set them both to a special
+        // value UNTRUSTWORTHY that is outside the I32_MIN..I32_MAX range to
+        // facilitate sanity checking).
+        //
+        int64_t lo;
+        int64_t hi;
+        bool hasOverflowed;
+
+        static const int64_t I32_MIN = int64_t(int32_t(0x80000000));
+        static const int64_t I32_MAX = int64_t(int32_t(0x7fffffff));
+
+#ifdef DEBUG
+        static const int64_t UNTRUSTWORTHY = int64_t(0xdeafdeadbeeffeedLL);
+
+        bool isSane() {
+            return (hasOverflowed && lo == UNTRUSTWORTHY && hi == UNTRUSTWORTHY) ||
+                   (!hasOverflowed && lo <= hi && I32_MIN <= lo && hi <= I32_MAX);
+        }
+#endif
+
+        Interval(int64_t lo_, int64_t hi_) {
+            if (lo_ < I32_MIN || I32_MAX < hi_) {
+                hasOverflowed = true;
+#ifdef DEBUG
+                lo = UNTRUSTWORTHY;
+                hi = UNTRUSTWORTHY;
+#endif
+            } else {
+                hasOverflowed = false;
+                lo = lo_;
+                hi = hi_;
+            }
+            NanoAssert(isSane());
+        }
+
+        static Interval OverflowInterval() {
+            Interval interval(0, 0);
+#ifdef DEBUG
+            interval.lo = UNTRUSTWORTHY;
+            interval.hi = UNTRUSTWORTHY;
+#endif
+            interval.hasOverflowed = true;
+            return interval;
+        }
+
+        static Interval of(LIns* ins, int32_t lim);
+
+        static Interval add(Interval x, Interval y);
+        static Interval sub(Interval x, Interval y);
+        static Interval mul(Interval x, Interval y);
+
+        bool canBeZero() {
+            NanoAssert(isSane());
+            return hasOverflowed || (lo <= 0 && 0 <= hi);
+        }
+
+        bool canBeNegative() {
+            NanoAssert(isSane());
+            return hasOverflowed || (lo < 0);
+        }
+    };
+
+#if NJ_SOFTFLOAT_SUPPORTED
     struct SoftFloatOps
     {
         const CallInfo* opmap[LIR_sentinel];
@@ -2202,7 +2274,7 @@ namespace nanojit
         LIns *ins2(LOpcode op, LIns *a, LIns *b);
         LIns *insCall(const CallInfo *ci, LIns* args[]);
     };
-
+#endif
 
 #ifdef DEBUG
     // This class does thorough checking of LIR.  It checks *implicit* LIR
