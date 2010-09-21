@@ -7932,6 +7932,9 @@ var TabContextMenu = {
     let unpinnedTabs = gBrowser.visibleTabs.length - gBrowser._numPinnedTabs;
     document.getElementById("context_closeOtherTabs").disabled = unpinnedTabs <= 1;
     document.getElementById("context_closeOtherTabs").hidden = this.contextTab.pinned;
+
+    // Disable "Move to Group" if it's a pinned tab.
+    document.getElementById("context_tabViewMenu").disabled = this.contextTab.pinned;
   }
 };
 
