@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body onload="
+    document.body.removeChild(document.getElementById('x'));
+    document.documentElement.removeAttribute('class');">
+
+    <div id="x">
+      <div id="a">
+        <form id="a">
+          <select></select>
+        </form>
+      </div>
+    </div>
+
+    <select form="a"></select>
+  </body>
+</html>
