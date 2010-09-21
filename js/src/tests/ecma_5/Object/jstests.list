@@ -14,6 +14,8 @@ skip-if(!xulRuntime.shell) script 15.2.3.6-redefinition-2-of-4.js # uses shell l
 skip-if(!xulRuntime.shell) script 15.2.3.6-redefinition-3-of-4.js # uses shell load() function
 skip-if(!xulRuntime.shell) script 15.2.3.6-redefinition-4-of-4.js # uses shell load() function
 script 15.2.3.7-01.js
+script 15.2.3.9.js
+script 15.2.3.12.js
 script extensibility-01.js
 script extensibility-02.js
 script 15.2.3.14-01.js # does not use reportCompare
