@@ -69,6 +69,7 @@ CPPSRCS = \
   testSeal.cpp \
   testXDR.cpp \
   testSetPropertyWithNativeGetterStubSetter.cpp \
+  testScriptObject.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API

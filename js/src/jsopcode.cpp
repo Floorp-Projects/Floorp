@@ -2098,6 +2098,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                           case JSOP_GETLOCALPROP:
                             op = JSOP_GETLOCAL;
                             break;
+                          case JSOP_SETXMLNAME:
+                            op = JSOp(JSOP_GETELEM2);
+                            break;
                           default:
                             LOCAL_ASSERT(0);
                         }

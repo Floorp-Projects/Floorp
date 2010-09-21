@@ -132,6 +132,17 @@ class Assembler : public BaseAssembler
         return l;
     }
 
+    Label loadValueAsComponents(BaseIndex address, RegisterID type, RegisterID payload) {
+        loadValue(address, type);
+        Label l = label();
+
+        move(Registers::PayloadMaskReg, payload);
+        andPtr(type, payload);
+        xorPtr(payload, type);
+
+        return l;
+    }
+
     void loadTypeTag(Address address, RegisterID reg) {
         loadValue(address, reg);
         convertValueToType(reg);

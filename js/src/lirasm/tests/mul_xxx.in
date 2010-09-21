@@ -1,13 +1,6 @@
 ; 46340 * 46340 < 2^31, and will not overflow.
 big = immi 46340
 
-; Because 'big' isn't used after mul, it _may_ get allocated to the same
-; register as 'res'. This is the case with the ARM back-end, and that is where
-; this test is important as rX=rX*rX isn't possible on ARMv5 without some
-; trickery.
-res = mulxovi big big    ; no overflow, so we don't exit here
+res = muli big big
 
-; Store 'res' so it isn't dead.
-m = allocp 4
-sti res m 0
-x                       ; we exit here
+reti res
