@@ -1768,7 +1768,7 @@ GetFirstArgumentAsObject(JSContext *cx, uintN argc, Value *vp, const char *metho
     }
 
     const Value &v = vp[2];
-    if (v.isPrimitive()) {
+    if (!v.isObject()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
             return false;
@@ -2592,6 +2592,51 @@ JSObject::sealOrFreeze(JSContext *cx, bool freeze)
     return true;
 }
 
+static JSBool
+obj_freeze(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.freeze", &obj))
+        return false;
+
+    vp->setObject(*obj);
+
+    return obj->freeze(cx);
+}
+
+static JSBool
+obj_isFrozen(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.preventExtensions", &obj))
+        return false;
+
+    vp->setBoolean(false);
+
+    if (obj->isExtensible())
+        return true; /* The JavaScript value returned is false. */
+
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+        return false;
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = props[i];
+
+        uintN attrs = 0;
+        if (!obj->getAttributes(cx, id, &attrs))
+            return false;
+
+        /* The property must be non-configurable and either read-only or an accessor. */
+        if (!(attrs & JSPROP_PERMANENT) ||
+            !(attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER)))
+            return true; /* The JavaScript value returned is false. */
+    }
+
+    vp->setBoolean(true);
+    return true;
+}
+
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
 const char js_unwatch_str[] = "unwatch";
@@ -2633,6 +2678,8 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
     JS_FN("isExtensible",              obj_isExtensible,            1,0),
     JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
+    JS_FN("freeze",                    obj_freeze,                  1,0),
+    JS_FN("isFrozen",                  obj_isFrozen,                1,0),
     JS_FS_END
 };
 
