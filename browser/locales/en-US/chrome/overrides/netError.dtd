@@ -53,9 +53,9 @@
 <!ENTITY netInterrupt.longDesc "&sharedLongDesc;">
 
 <!ENTITY netOffline.title "Offline mode">
-<!ENTITY netOffline.longDesc "
+<!ENTITY netOffline.longDesc2 "
 <ul>
-  <li>Uncheck &quot;Work Offline&quot; in the File menu, then try again.</li>
+  <li>Uncheck &quot;Work Offline&quot;, then try again.</li>
 </ul>
 ">
 
