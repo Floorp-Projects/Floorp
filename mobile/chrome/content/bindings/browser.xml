@@ -94,6 +94,8 @@
       <method name="receiveMessage">
         <parameter name="aMessage"/>
         <body><![CDATA[
+          let json = aMessage.json;
+
           switch (aMessage.name) {
             case "DOMPopupBlocked":
               this.onPopupBlocked(aMessage);
@@ -144,6 +146,16 @@
                   this._searchEngines.push({ title: link.title, href: link.href });
                   break;
               }
+              break;
+
+            case "scroll":
+              // Cache viewport coordinates are specified relative to CSS viewport, so we
+              // have to be sure we send the message.
+              this._pendingPixelsX = Number.MAX_VALUE;
+              this._pendingPixelsY = Number.MAX_VALUE;
+
+              // Use floor so that we always guarantee top-left corner of content is visible.
+              this.scrollTo(Math.floor(json.x * this.scale), Math.floor(json.y * this.scale));
               break;
 
             case "MozScrolledAreaChanged":
@@ -541,6 +553,7 @@
           this.messageManager.addMessageListener("pagehide", this);
           this.messageManager.addMessageListener("DOMPopupBlocked", this);
 
+          this.messageManager.addMessageListener("scroll", this);
           this.messageManager.addMessageListener("MozScrolledAreaChanged", this);
 
           this._webProgress._init();
