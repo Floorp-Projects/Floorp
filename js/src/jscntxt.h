@@ -1112,7 +1112,7 @@ struct JSThreadData {
      * as possible.  If the thread has an active request, this contributes
      * towards rt->interruptCounter.
      */
-    volatile jsword     interruptFlags;
+    volatile int32      interruptFlags;
 
     JSGCFreeLists       gcFreeLists;
 
@@ -1607,7 +1607,7 @@ struct JSRuntime {
 
 #ifdef JS_THREADSAFE
     /* Number of threads with active requests and unhandled interrupts. */
-    volatile jsword     interruptCounter;
+    volatile int32      interruptCounter;
 #else
     JSThreadData        threadData;
 
