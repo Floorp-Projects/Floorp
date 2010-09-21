@@ -1431,6 +1431,8 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptObject);
+  
+  NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI, mPrincipal,
@@ -1443,31 +1445,34 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 {
   *aReturn = NULL;
 
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = NS_NewHTMLDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLDocument> HTMLdoc = do_QueryInterface(doc);
-  HTMLdoc->SetCompatibilityMode(eCompatibility_FullStandards);
-
   nsCOMPtr<nsIDOMDocumentType> doctype;
   // Indicate that there is no internal subset (not just an empty one)
   nsAutoString voidString;
   voidString.SetIsVoid(true);
-  rv = NS_NewDOMDocumentType(getter_AddRefs(doctype),
-                             NULL, // aNodeInfoManager
-                             mPrincipal, // aPrincipal
-                             nsGkAtoms::html, // aName
-                             NULL, // aEntities
-                             NULL, // aNotations
-                             EmptyString(), // aPublicId
-                             EmptyString(), // aSystemId
-                             voidString); // aInternalSubset
+  nsresult rv = NS_NewDOMDocumentType(getter_AddRefs(doctype),
+                                      NULL, // aNodeInfoManager
+                                      mPrincipal, // aPrincipal
+                                      nsGkAtoms::html, // aName
+                                      NULL, // aEntities
+                                      NULL, // aNotations
+                                      EmptyString(), // aPublicId
+                                      EmptyString(), // aSystemId
+                                      voidString); // aInternalSubset
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> doctypeAsContent = do_QueryInterface(doctype);
-  rv = doc->AppendChildTo(doctypeAsContent, false);
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+
+  NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
+                                                       
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(),
+                                      doctype, mDocumentURI, mBaseURI,
+                                      mPrincipal, scriptHandlingObject,
+                                      getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
 
   nsCOMPtr<nsIContent> root;
   rv = doc->CreateElem(NS_LITERAL_STRING("html"), NULL, kNameSpaceID_XHTML,
@@ -1505,14 +1510,6 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   rv = root->AppendChildTo(body, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
-    do_QueryReferent(mScriptObject);
-  doc->SetScriptHandlingObject(scriptHandlingObject);
-
-  // created documents are immediately "complete" (ready to use)
-  doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
-
-  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(doc);
   document.forget(aReturn);
 
   return NS_OK;
