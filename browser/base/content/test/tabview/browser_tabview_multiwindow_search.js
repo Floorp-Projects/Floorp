@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Raymond Lee <raymond@appcoast.com>
+ * Ehsan Akhgari <ehsan@mozilla.com>
  * Sean Dunn <seanedunn@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,25 +37,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let newTabs = [];
+let newWindows = [];
 
 function test() {
   waitForExplicitFinish();
+  let windowOne = openDialog(location, "", "chrome,all,dialog=no", "data:text/html,");
+  let windowTwo;
 
-  let tabOne = gBrowser.addTab();
-  let tabTwo = gBrowser.addTab("http://mochi.test:8888/");
+  windowOne.addEventListener("load", function() {
+    windowOne.gBrowser.selectedBrowser.addEventListener("load", function() {
+      windowOne.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-  let browser = gBrowser.getBrowserForTab(tabTwo);
-  let onLoad = function() {
-    browser.removeEventListener("load", onLoad, true);
-    
-    // show the tab view
-    window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-    ok(!TabView.isVisible(), "Tab View is hidden");
-    TabView.toggle();
-  }
-  browser.addEventListener("load", onLoad, true);
-  newTabs = [ tabOne, tabTwo ];
+      windowTwo = openDialog(location, "", "chrome,all,dialog=no", "http://mochi.test:8888/");
+      windowTwo.addEventListener("load", function() {
+        windowTwo.gBrowser.selectedBrowser.addEventListener("load", function() {
+          windowTwo.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+
+          newWindows = [ windowOne, windowTwo ];
+
+          // show the tab view
+          window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
+          ok(!TabView.isVisible(), "Tab View is hidden");
+          TabView.toggle();
+        }, true);
+      }, false);
+    }, true);
+  }, false);
 }
 
 function onTabViewWindowLoaded() {
@@ -78,60 +86,99 @@ function onTabViewWindowLoaded() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, searchButton, contentWindow);
 }
 
+// conveniently combine local and other window tab results from a query
+function getMatchResults(contentWindow, query) {
+  let matcher = new contentWindow.TabMatcher(query);
+  let localMatchResults = matcher.matched();
+  let otherMatchResults = matcher.matchedTabsFromOtherWindows();
+  return localMatchResults.concat(otherMatchResults);
+}
+
 function searchTest(contentWindow) {
   let searchBox = contentWindow.document.getElementById("searchbox");
-
+  let matcher = null;
+  let matchResults = [];
+  
   // get the titles of tabs.
   let tabNames = [];
-  let tabItems = contentWindow.TabItems.getItems();
 
-  ok(tabItems.length == 3, "Have three tab items");
-  
+  let tabItems = contentWindow.TabItems.getItems();
+  is(tabItems.length, 1, "Have only one tab in the current window's tab items"); 
   tabItems.forEach(function(tab) {
     tabNames.push(tab.nameEl.innerHTML);
   });
+
+  newWindows.forEach(function(win) {
+      for(var i=0; i<win.gBrowser.tabs.length; ++i) {
+        tabNames.push(win.gBrowser.tabs[i].label);
+      }
+  });
+
   ok(tabNames[0] && tabNames[0].length > 2, 
      "The title of tab item is longer than 2 chars")
 
   // empty string
   searchBox.setAttribute("value", "");
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 0,
-     "Match nothing if it's an empty string");
+  matchResults = getMatchResults(contentWindow, searchBox.getAttribute("value"));
+  ok(matchResults.length == 0, "Match nothing if it's an empty string");
 
   // one char
   searchBox.setAttribute("value", tabNames[0].charAt(0));
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 0,
+  matchResults = getMatchResults(contentWindow, searchBox.getAttribute("value"));
+  ok(matchResults.length == 0,
      "Match nothing if the length of search term is less than 2");
 
   // the full title
   searchBox.setAttribute("value", tabNames[2]);
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 1,
-     "Match something when the whole title exists");
-  
+  matchResults = getMatchResults(contentWindow, searchBox.getAttribute("value"));
+  is(matchResults.length, 1,
+    "Match something when the whole title exists");
+
   // part of titled
   searchBox.setAttribute("value", tabNames[0].substr(1));
   contentWindow.performSearch();
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 2,
+  matchResults = getMatchResults(contentWindow, searchBox.getAttribute("value"));
+  is(matchResults.length, 1,
      "Match something when a part of title exists");
 
   cleanup(contentWindow);
 }
 
-function cleanup(contentWindow) {       
-  contentWindow.hideSearch(null);     
+function cleanup(contentWindow) {
+  contentWindow.hideSearch(null);
+
   let onTabViewHidden = function() {
-    window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-    ok(!TabView.isVisible(), "Tab View is hidden");
-
-    gBrowser.removeTab(newTabs[0]);
-    gBrowser.removeTab(newTabs[1]);
-
-    finish();
+      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+      ok(!TabView.isVisible(), "Tab View is hidden");
+      let numToClose = newWindows.length;
+      newWindows.forEach(function(win) {
+        whenWindowObservesOnce(win, "domwindowclosed", function() {
+          --numToClose;
+          if(numToClose==0) {
+            finish();
+          }
+        });
+        win.close();
+      });
   }
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
   EventUtils.synthesizeKey("VK_ENTER", {});
+}
+
+function whenWindowObservesOnce(win, topic, func) {
+    let windowWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+      .getService(Components.interfaces.nsIWindowWatcher);
+    let origWin = win;
+    let origTopic = topic;
+    let origFunc = func;        
+    function windowObserver(aSubject, aTopic, aData) {
+      let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      if (origWin && theWin != origWin)
+        return;
+      if(aTopic == origTopic) {
+          windowWatcher.unregisterNotification(windowObserver);
+          origFunc.apply(this, []);
+      }
+    }
+    windowWatcher.registerNotification(windowObserver);
 }
