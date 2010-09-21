@@ -270,7 +270,7 @@ namespace nanojit
     // Full AccSets don't fit into load and store instructions.  But
     // load/store AccSets almost always contain a single access region.  We
     // take advantage of this to create a compressed AccSet, MiniAccSet, that
-    // does fit.  
+    // does fit.
     //
     // The 32 single-region AccSets get compressed into a number in the range
     // 0..31 (according to the position of the set bit), and all other
@@ -303,7 +303,7 @@ namespace nanojit
         return (miniAccSet.val == MINI_ACCSET_MULTIPLE.val) ? ACCSET_ALL : (1 << miniAccSet.val);
     }
 
-    // The LoadQual affects how a load can be optimised:  
+    // The LoadQual affects how a load can be optimised:
     //
     // - CONST: These loads are guaranteed to always return the same value
     //   during a single execution of a fragment (but the value is allowed to
