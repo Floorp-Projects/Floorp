@@ -761,6 +761,10 @@
                             label="&appMenuGettingStarted.label;"
                             oncommand="gBrowser.loadOneTab('http://www.mozilla.com/firefox/central/', {inBackground: false});"
                             onclick="checkForMiddleClick(this, event);"/>
+                  <menuitem id="appmenu_troubleshootingInfo"
+                            label="&helpTroubleshootingInfo.label;"
+                            oncommand="openTroubleshootingPage()"
+                            onclick="checkForMiddleClick(this,event);"/>
                   <menuseparator/>
                   <menuitem id="appmenu_about"
                             label="&aboutProduct.label;"
