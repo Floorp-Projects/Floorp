@@ -1085,7 +1085,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
     nfixed = (cg->flags & TCF_IN_FUNCTION)
              ? cg->fun->u.i.nvars
-             : cg->ngvars + cg->sharpSlots();
+             : cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
