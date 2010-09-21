@@ -272,7 +272,6 @@ struct JSStmtInfo {
 
 struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see above */
-    uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
@@ -308,7 +307,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #endif
 
     JSTreeContext(js::Parser *prs)
-      : flags(0), ngvars(0), bodyid(0), blockidGen(0),
+      : flags(0), bodyid(0), blockidGen(0),
         topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
         parser(prs), scopeChain(NULL), parent(prs->tc), staticLevel(0),
         funbox(NULL), functionList(NULL), innermostWith(NULL), sharpSlotBase(-1)
@@ -569,7 +568,21 @@ struct JSCodeGenerator : public JSTreeContext
      */
     ~JSCodeGenerator();
 
-    bool addGlobalUse(JSAtom *atom, uint32 slot, js::UpvarCookie &cooke);
+    /*
+     * Adds a use of a variable that is statically known to exist on the
+     * global object. 
+     *
+     * The actual slot of the variable on the global object is not known
+     * until after compilation. Properties must be resolved before being
+     * added, to avoid aliasing properties that should be resolved. This makes
+     * slot prediction based on the global object's free slot impossible. So,
+     * we use the slot to index into cg->globalScope->defs, and perform a
+     * fixup of the script at the very end of compilation.
+     *
+     * If the global use can be cached, |cookie| will be set to |slot|.
+     * Otherwise, |cookie| is set to the free cookie value.
+     */
+    bool addGlobalUse(JSAtom *atom, uint32 slot, js::UpvarCookie *cookie);
 
     bool hasSharps() {
         bool rv = !!(flags & TCF_HAS_SHARPS);
