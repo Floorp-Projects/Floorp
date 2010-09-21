@@ -51,7 +51,6 @@
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
 
-
 class nsPopupBoxObject : public nsBoxObject,
                          public nsIPopupBoxObject
 {
@@ -271,6 +270,22 @@ nsPopupBoxObject::GetTriggerNode(nsIDOMNode** aTriggerNode)
   nsIContent* triggerContent = nsMenuPopupFrame::GetTriggerContent(GetMenuPopupFrame());
   if (triggerContent)
     CallQueryInterface(triggerContent, aTriggerNode);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::GetAnchorNode(nsIDOMElement** aAnchor)
+{
+  *aAnchor = nsnull;
+
+  nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
+  if (!menuPopupFrame)
+    return NS_OK;
+
+  nsIContent* anchor = menuPopupFrame->GetAnchor();
+  if (anchor)
+    CallQueryInterface(anchor, aAnchor);
 
   return NS_OK;
 }
