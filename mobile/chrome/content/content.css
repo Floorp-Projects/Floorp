@@ -83,6 +83,7 @@ select,
 textarea,
 button,
 * > input:not([type="image"]) {
+  -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
   -moz-border-radius: 3px;
 }
 
