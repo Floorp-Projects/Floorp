@@ -134,7 +134,6 @@ public:
 
   virtual nsresult        EvictEntries(const char * clientID);
 
-
   /* Entry ownership */
   nsresult                GetOwnerDomains(const char *        clientID,
                                           PRUint32 *          count,

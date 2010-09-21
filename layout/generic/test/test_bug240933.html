@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=240933
+-->
+
+<head>
+  <title>Test for Bug 240933</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=240933">
+    Mozilla Bug 240933
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 240933 **/
+
+      SimpleTest.waitForExplicitFinish();
+
+      SimpleTest.waitForFocus(function() {
+        var t = document.getElementById("t");
+        synthesizeMouse(t, t.clientWidth / 2, 5, {}, window);
+        is(t.selectionStart, 3, "The selection should be set before the newline");
+        is(t.selectionEnd,   3, "The selection should be set before the newline");
+
+        t = document.getElementById("ta");
+        t.focus();
+        var val = t.value;
+        synthesizeKey("VK_ENTER", {});
+        is(t.value, val + "\n", "Pressing enter right after focusing the textarea should work");
+
+        t = document.getElementById("tb");
+        t.focus();
+        synthesizeKey("VK_ENTER", {});
+        is(t.value, "\n", "Pressing enter for the first time should work");
+        synthesizeKey("VK_ENTER", {});
+        is(t.value, "\n\n", "Pressing enter for the second time should work");
+        synthesizeKey("VK_BACK_SPACE", {});
+        is(t.value, "\n", "Pressing backspace for the first time should work");
+        synthesizeKey("VK_BACK_SPACE", {});
+        is(t.value, "", "Pressing backspace for the second time should work");
+        SimpleTest.finish();
+      });
+
+    </script>
+  </pre>
+
+  <textarea id="t" rows="10" cols="10">abc
+</textarea>
+  <textarea id="ta" rows="10" cols="10">
+test
+
+</textarea>
+  <textarea id="tb" rows="10" cols="10"></textarea>
+
+</body>
+</html>

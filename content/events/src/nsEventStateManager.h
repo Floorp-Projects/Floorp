@@ -147,6 +147,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
                                            nsIEventStateManager)
 
+  static nsIDocument* sMouseOverDocument;
+
 protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
@@ -387,8 +389,6 @@ protected:
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
 
-  PRPackedBool mNormalLMouseEventInProcess;
-
   PRPackedBool m_haveShutdown;
 
   // Array for accesskey support
@@ -399,6 +399,13 @@ protected:
   PRPackedBool mLastLineScrollConsumedY;
 
   static PRInt32 sUserInputEventDepth;
+  
+  static PRBool sNormalLMouseEventInProcess;
+
+  static nsEventStateManager* sActiveESM;
+  
+  static void SetGlobalActiveContent(nsEventStateManager* aNewESM,
+                                     nsIContent* aContent);
 
   // Functions used for click hold context menus
   PRBool mClickHoldContextMenu;

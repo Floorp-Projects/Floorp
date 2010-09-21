@@ -380,6 +380,9 @@ protected:
   static jsid sOnratechange_id;
   static jsid sOndurationchange_id;
   static jsid sOnvolumechange_id;
+  static jsid sOnmessage_id;
+  static jsid sOnbeforescriptexecute_id;
+  static jsid sOnafterscriptexecute_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
@@ -999,8 +1002,7 @@ protected:
   {
   }
 
-  static JSBool DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
-                             jsval *argv, jsval *rval);
+  static JSBool DocumentOpen(JSContext *cx, uintN argc, jsval *vp);
   static JSBool GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
                                        nsDocument *doc,
                                        nsContentList **nodeList);
@@ -1011,8 +1013,7 @@ public:
   static JSBool DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
                                       uintN flags, JSObject **objp);
   static void ReleaseDocument(JSContext *cx, JSObject *obj);
-  static JSBool CallToGetPropMapper(JSContext *cx, JSObject *obj, uintN argc,
-                                    jsval *argv, jsval *rval);
+  static JSBool CallToGetPropMapper(JSContext *cx, uintN argc, jsval *vp);
   static JSBool DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
                                              jsid id, jsval *vp);
   static JSBool DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,

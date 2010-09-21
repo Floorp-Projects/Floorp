@@ -576,6 +576,8 @@ nsContentUtils::InitializeEventTable() {
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
     { nsGkAtoms::onerror,                       NS_LOAD_ERROR,
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
+    { nsGkAtoms::onbeforescriptexecute,         NS_BEFORE_SCRIPT_EXECUTE, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::onafterscriptexecute,          NS_AFTER_SCRIPT_EXECUTE, EventNameType_HTMLXUL, NS_EVENT },
 
     { nsGkAtoms::onDOMAttrModified,             NS_MUTATION_ATTRMODIFIED, EventNameType_HTMLXUL, NS_MUTATION_EVENT },
     { nsGkAtoms::onDOMCharacterDataModified,    NS_MUTATION_CHARACTERDATAMODIFIED, EventNameType_HTMLXUL, NS_MUTATION_EVENT },
@@ -1522,29 +1524,36 @@ nsContentUtils::GetDocShellFromCaller()
   return nsnull;
 }
 
-nsIDOMDocument *
-nsContentUtils::GetDocumentFromCaller()
+nsPIDOMWindow *
+nsContentUtils::GetWindowFromCaller()
 {
   JSContext *cx = nsnull;
   sThreadJSContextStack->Peek(&cx);
 
-  nsIDOMDocument *doc = nsnull;
-
   if (cx) {
-    JSObject *callee = nsnull;
-    JSStackFrame *fp = nsnull;
-    while (!callee && (fp = ::JS_FrameIterator(cx, &fp))) {
-      callee = ::JS_GetFrameCalleeObject(cx, fp);
-    }
-
     nsCOMPtr<nsPIDOMWindow> win =
-      do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, callee));
-    if (win) {
-      doc = win->GetExtantDocument();
-    }
+      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+    return win;
   }
 
-  return doc;
+  return nsnull;
+}
+
+nsIDOMDocument *
+nsContentUtils::GetDocumentFromCaller()
+{
+  JSContext *cx = nsnull;
+  JSObject *obj = nsnull;
+  sXPConnect->GetCaller(&cx, &obj);
+  NS_ASSERTION(cx && obj, "Caller ensures something is running");
+
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+  if (!win) {
+    return nsnull;
+  }
+
+  return win->GetExtantDocument();
 }
 
 nsIDOMDocument *
@@ -3896,7 +3905,9 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     }
     
     nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
-    if (contextAsContent) {
+    if (contextAsContent &&
+        !(nsGkAtoms::html == contextAsContent->Tag() &&
+          contextAsContent->IsHTML())) {
       parser->ParseFragment(aFragment, 
                             fragment, 
                             contextAsContent->Tag(), 
@@ -5423,7 +5434,7 @@ nsContentUtils::CanAccessNativeAnon()
     // Some code is running, we can't make the assumption, as above, but we
     // can't use a native frame, so clear fp.
     fp = nsnull;
-  } else if (!fp->hasScript()) {
+  } else if (!JS_IsScriptFrame(cx, fp)) {
     fp = nsnull;
   }
 
@@ -5438,8 +5449,8 @@ nsContentUtils::CanAccessNativeAnon()
   // if they've been cloned into less privileged contexts.
   static const char prefix[] = "chrome://global/";
   const char *filename;
-  if (fp && fp->hasScript() &&
-      (filename = fp->getScript()->filename) &&
+  if (fp && JS_IsScriptFrame(cx, fp) &&
+      (filename = JS_GetFrameScript(cx, fp)->filename) &&
       !strncmp(filename, prefix, NS_ARRAY_LENGTH(prefix) - 1)) {
     return PR_TRUE;
   }

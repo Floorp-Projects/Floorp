@@ -39,27 +39,31 @@
  * The SearchAPI adds support for search related functions like the search bar.
  */
 
-var MODULE_NAME = 'SearchAPI';
+const MODULE_NAME = 'SearchAPI';
 
 // Include necessary modules
-var RELATIVE_ROOT = '.';
-var MODULE_REQUIRES = ['ModalDialogAPI'];
+const RELATIVE_ROOT = '.';
+const MODULE_REQUIRES = ['ModalDialogAPI', 'UtilsAPI'];
 
-const gTimeout = 5000;
+const TIMEOUT = 5000;
 
 // Helper lookup constants for the engine manager elements
 const MANAGER_BUTTONS   = '/id("engineManager")/anon({"anonid":"buttons"})';
 
 // Helper lookup constants for the search bar elements
-const SEARCH_BAR          = '/id("main-window")/id("navigator-toolbox")/id("nav-bar")/id("search-container")/id("searchbar")';
+const NAV_BAR             = '/id("main-window")/id("tab-view-deck")/{"flex":"1"}' +
+                            '/id("navigator-toolbox")/id("nav-bar")';
+const SEARCH_BAR          = NAV_BAR + '/id("search-container")/id("searchbar")';
 const SEARCH_TEXTBOX      = SEARCH_BAR      + '/anon({"anonid":"searchbar-textbox"})';
-const SEARCH_DROPDOWN     = SEARCH_TEXTBOX  + '/anon({"anonid":"searchbar-engine-button"})';
+const SEARCH_DROPDOWN     = SEARCH_TEXTBOX  + '/[0]/anon({"anonid":"searchbar-engine-button"})';
 const SEARCH_POPUP        = SEARCH_DROPDOWN + '/anon({"anonid":"searchbar-popup"})';
 const SEARCH_INPUT        = SEARCH_TEXTBOX  + '/anon({"class":"autocomplete-textbox-container"})' +
-                                              '/anon({"anonid":"textbox-input-box"})/anon({"anonid":"input"})';
-const SEARCH_CONTEXT      = SEARCH_TEXTBOX  + '/anon({"class":"autocomplete-textbox-container"})' +
-                                              '/anon({"anonid":"textbox-input-box"})/anon({"anonid":"input-box-contextmenu"})';
-const SEARCH_GO_BUTTON    = SEARCH_TEXTBOX  + '/anon({"class":"search-go-container"})/anon({"class":"search-go-button"})';
+                                              '/anon({"anonid":"textbox-input-box"})' +
+                                              '/anon({"anonid":"input"})';
+const SEARCH_CONTEXT      = SEARCH_TEXTBOX  + '/anon({"anonid":"textbox-input-box"})' +
+                                              '/anon({"anonid":"input-box-contextmenu"})';
+const SEARCH_GO_BUTTON    = SEARCH_TEXTBOX  + '/anon({"class":"search-go-container"})' +
+                                              '/anon({"class":"search-go-button"})';
 const SEARCH_AUTOCOMPLETE =  '/id("main-window")/id("mainPopupSet")/id("PopupAutoComplete")';
 
 /**
@@ -113,7 +117,7 @@ engineManager.prototype = {
    * Gets the name of the selected search engine
    *
    * @returns Name of the selected search engine
-   * @type {string}
+   * @type string
    */
   get selectedEngine() {
     var treeNode = this.getElement({type: "engine_list"}).getNode();
@@ -147,7 +151,7 @@ engineManager.prototype = {
    * Gets the index of the selected search engine
    *
    * @returns Index of the selected search engine
-   * @type {number}
+   * @type number
    */
   get selectedIndex() {
     var tree = this.getElement({type: "engine_list"});
@@ -170,7 +174,7 @@ engineManager.prototype = {
       this._WidgetsAPI.clickTreeCell(this._controller, tree, index, 0, {});
     }
 
-    this._controller.waitForEval("subject.manager.selectedIndex == subject.newIndex", gTimeout, 100,
+    this._controller.waitForEval("subject.manager.selectedIndex == subject.newIndex", TIMEOUT, 100,
                                  {manager: this, newIndex: index});
   },
 
@@ -235,6 +239,17 @@ engineManager.prototype = {
   },
 
   /**
+   * Gets all the needed external DTD urls as an array
+   *
+   * @returns Array of external DTD urls
+   * @type [string]
+   */
+  getDtds : function engineManager_getDtds() {
+    var dtds = ["chrome://browser/locale/engineManager.dtd"];
+    return dtds;
+  },
+
+  /**
    * Retrieve an UI element based on the given spec
    *
    * @param {object} spec
@@ -243,7 +258,7 @@ engineManager.prototype = {
    *        subtype: Specific element or property
    *        value: Value of the element or property
    * @returns Element which has been created  
-   * @type {ElemBase}
+   * @type ElemBase
    */
   getElement : function engineManager_getElement(spec) {
     var elem = null;
@@ -310,7 +325,7 @@ engineManager.prototype = {
     var button = this.getElement({type: "engine_button", subtype: "down"});
     this._controller.click(button);
 
-    this._controller.waitForEval("subject.manager.selectedIndex == subject.oldIndex + 1", gTimeout, 100,
+    this._controller.waitForEval("subject.manager.selectedIndex == subject.oldIndex + 1", TIMEOUT, 100,
                                  {manager: this, oldIndex: index});
   },
 
@@ -327,7 +342,7 @@ engineManager.prototype = {
     var button = this.getElement({type: "engine_button", subtype: "up"});
     this._controller.click(button);
 
-    this._controller.waitForEval("subject.manager.selectedIndex == subject.oldIndex - 1", gTimeout, 100,
+    this._controller.waitForEval("subject.manager.selectedIndex == subject.oldIndex - 1", TIMEOUT, 100,
                                  {manager: this, oldIndex: index});
   },
 
@@ -343,7 +358,7 @@ engineManager.prototype = {
     var button = this.getElement({type: "engine_button", subtype: "remove"});
     this._controller.click(button);
 
-    this._controller.waitForEval("subject.manager.selectedEngine != subject.removedEngine", gTimeout, 100,
+    this._controller.waitForEval("subject.manager.selectedEngine != subject.removedEngine", TIMEOUT, 100,
                                  {manager: this, removedEngine: name});
   },
 
@@ -369,6 +384,7 @@ function searchBar(controller)
                  .getService(Ci.nsIBrowserSearchService);
 
   this._ModalDialogAPI = collector.getModule('ModalDialogAPI');
+  this._utilsAPI = collector.getModule('UtilsAPI');
 }
 
 /**
@@ -425,7 +441,7 @@ searchBar.prototype = {
       var button = this.getElement({type: "searchBar_dropDown"});
       this._controller.click(button);
 
-      this._controller.waitForEval("subject.searchBar.enginesDropDownOpen == subject.newState", gTimeout, 100,
+      this._controller.waitForEval("subject.searchBar.enginesDropDownOpen == subject.newState", TIMEOUT, 100,
                                    {searchBar: this, newState: newState });
       this._controller.sleep(0);
     }
@@ -456,7 +472,7 @@ searchBar.prototype = {
    * Returns the currently selected search engine
    *
    * @return Name of the currently selected engine
-   * @type {string}
+   * @type string
    */
   get selectedEngine()
   {
@@ -465,7 +481,7 @@ searchBar.prototype = {
     this.enginesDropDownOpen = true;
 
     var engine = this.getElement({type: "engine", subtype: "selected", value: "true"});
-    this._controller.waitForElement(engine, gTimeout);
+    this._controller.waitForElement(engine, TIMEOUT);
 
     this.enginesDropDownOpen = state;
 
@@ -483,13 +499,13 @@ searchBar.prototype = {
     this.enginesDropDownOpen = true;
 
     var engine = this.getElement({type: "engine", subtype: "id", value: name});
-    this._controller.waitThenClick(engine, gTimeout);
+    this._controller.waitThenClick(engine, TIMEOUT);
 
     // Wait until the drop down has been closed
-    this._controller.waitForEval("subject.searchBar.enginesDropDownOpen == false", gTimeout, 100,
+    this._controller.waitForEval("subject.searchBar.enginesDropDownOpen == false", TIMEOUT, 100,
                                  {searchBar: this});
 
-    this._controller.waitForEval("subject.searchBar.selectedEngine == subject.newEngine", gTimeout, 100,
+    this._controller.waitForEval("subject.searchBar.selectedEngine == subject.newEngine", TIMEOUT, 100,
                                  {searchBar: this, newEngine: name});
   },
 
@@ -509,7 +525,7 @@ searchBar.prototype = {
    */
   checkSearchResultPage : function searchBar_checkSearchResultPage(searchTerm) {
     // Retrieve the URL which is used for the currently selected search engine
-    var targetUrl = this._bss.currentEngine.getSubmission(searchTerm).uri;
+    var targetUrl = this._bss.currentEngine.getSubmission(searchTerm, null).uri;
     var currentUrl = this._controller.tabs.activeTabWindow.document.location.href;
 
     // Check if pure domain names are identical
@@ -532,7 +548,8 @@ searchBar.prototype = {
     var activeElement = this._controller.window.document.activeElement;
 
     var searchInput = this.getElement({type: "searchBar_input"});
-    this._controller.keypress(searchInput, 'a', {accelKey: true});
+    var cmdKey = this._utilsAPI.getEntity(this.getDtds(), "selectAllCmd.key");
+    this._controller.keypress(searchInput, cmdKey, {accelKey: true});
     this._controller.keypress(searchInput, 'VK_DELETE', {});
 
     if (activeElement)
@@ -554,7 +571,12 @@ searchBar.prototype = {
         this._controller.click(input);
         break;
       case "shortcut":
-        this._controller.keypress(null, 'k', {accelKey: true});
+        if (mozmill.isLinux) {
+          var cmdKey = this._utilsAPI.getEntity(this.getDtds(), "searchFocusUnix.commandkey");
+        } else {
+          var cmdKey = this._utilsAPI.getEntity(this.getDtds(), "searchFocus.commandkey");
+        }
+        this._controller.keypress(null, cmdKey, {accelKey: true});
         break;
       default:
         throw new Error(arguments.callee.name + ": Unknown element type - " + event.type);
@@ -567,6 +589,17 @@ searchBar.prototype = {
   },
 
   /**
+   * Gets all the needed external DTD urls as an array
+   *
+   * @returns Array of external DTD urls
+   * @type [string]
+   */
+  getDtds : function searchBar_getDtds() {
+    var dtds = ["chrome://browser/locale/browser.dtd"];
+    return dtds;
+  },
+
+  /**
    * Retrieve an UI element based on the given spec
    *
    * @param {object} spec
@@ -575,7 +608,7 @@ searchBar.prototype = {
    *        subtype: Specific element or property
    *        value: Value of the element or property
    * @returns Element which has been created  
-   * @type {ElemBase}
+   * @type ElemBase
    */
   getElement : function searchBar_getElement(spec) {
     var elem = null;
@@ -658,21 +691,22 @@ searchBar.prototype = {
 
     // Enter search term and wait for the popup
     this.type(searchTerm);
-    this._controller.waitForEval("subject.popup.state == 'open'", gTimeout, 100,
+
+    this._controller.waitForEval("subject.popup.state == 'open'", TIMEOUT, 100,
                                  {popup: popup.getNode()});
-    this._controller.waitForElement(treeElem, gTimeout);
+    this._controller.waitForElement(treeElem, TIMEOUT);
 
     // Get all suggestions
     var tree = treeElem.getNode();
-    this._controller.waitForEval("subject.tree.view != null", gTimeout, 100,
+    this._controller.waitForEval("subject.tree.view != null", TIMEOUT, 100,
                                  {tree: tree});
-    for (var ii = 0; ii < tree.view.rowCount; ii ++) {
-      suggestions.push(tree.view.getCellText(ii, tree.columns.getColumnAt(0)));
+    for (var i = 0; i < tree.view.rowCount; i ++) {
+      suggestions.push(tree.view.getCellText(i, tree.columns.getColumnAt(0)));
     }
 
     // Close auto-complete popup
     this._controller.keypress(popup, "VK_ESCAPE", {});
-    this._controller.waitForEval("subject.popup.state == 'closed'", gTimeout, 100,
+    this._controller.waitForEval("subject.popup.state == 'closed'", TIMEOUT, 100,
                                  {popup: popup.getNode()});
 
     return suggestions;
@@ -713,7 +747,7 @@ searchBar.prototype = {
     this._controller.click(engineManager);
 
     // Wait until the drop down has been closed
-    this._controller.waitForEval("subject.search.enginesDropDownOpen == false", gTimeout, 100,
+    this._controller.waitForEval("subject.search.enginesDropDownOpen == false", TIMEOUT, 100,
                                  {search: this});
 
     // XXX: We have to wait a bit more, so the modal dialog handler can kick in. Otherwise

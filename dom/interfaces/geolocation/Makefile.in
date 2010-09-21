@@ -56,7 +56,6 @@ XPIDLSRCS =                                    \
             nsIDOMGeoPositionErrorCallback.idl \
             nsIDOMGeoPositionOptions.idl       \
             nsIDOMNavigatorGeolocation.idl     \
-            nsIGeolocationPrompt.idl           \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk

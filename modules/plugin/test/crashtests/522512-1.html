@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+var doingTest = false;
+function onPaint() {
+  if (!doingTest)
+    return;
+
+  var d = document.getElementById("d");
+  if (d) {
+    document.body.removeChild(d);
+  }
+  document.documentElement.removeAttribute("class");
+}
+function runTest() {
+  doingTest = true;
+  // Force a repaint of the entire page
+  document.body.style.backgroundColor = "lime";
+}
+window.addEventListener("MozReftestInvalidate", runTest, false);
+</script>
+</head>
+<body>
+  <embed type="application/x-test" paintscript="onPaint()"
+         style="position:absolute; top:20px; left:20px; width:200px; height:200px;"></embed>
+  <div id="d" style="position:absolute; top:50px; left:50px; width:100px; height:100px">
+    Hello Kitty
+  </div>
+</body>
+</html>

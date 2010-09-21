@@ -48,7 +48,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(a6cf9074-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(03a6f574-99ec-42f8-9e6c-812a4a9bcbf7)]
 interface nsIDOMDOMImplementation : nsISupports
 {
   boolean                   hasFeature(in DOMString feature, 
@@ -63,4 +63,14 @@ interface nsIDOMDOMImplementation : nsISupports
                                            in DOMString qualifiedName,
                                            in nsIDOMDocumentType doctype)
                                   raises(DOMException);
+
+  /**
+   * Returns an HTML document with a basic DOM already constructed and with an
+   * appropriate title element.
+   *
+   * @param title the title of the Document
+   * @see <http://www.whatwg.org/html/#creating-documents>
+   */
+  nsIDOMDocument            createHTMLDocument([Null(Stringify)]
+                                               in DOMString title);
 };

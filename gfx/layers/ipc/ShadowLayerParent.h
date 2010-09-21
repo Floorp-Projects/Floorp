@@ -64,7 +64,8 @@ public:
   ContainerLayer* AsContainer() const;
 
 private:
-  NS_OVERRIDE virtual bool Recv__delete__();
+  NS_OVERRIDE
+  virtual void ActorDestroy(ActorDestroyReason why);
 
   nsRefPtr<Layer> mLayer;
 };

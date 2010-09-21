@@ -63,9 +63,36 @@ else
 	RC           = rc.exe
 	MT           = mt.exe
 	# Determine compiler version
+	CC_VERSION  := $(shell $(CC) 2>&1 | sed -ne \
+		's|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*|\1|p')
+	# Change the dots to spaces.
+	_CC_VERSION_WORDS := $(subst ., ,$(CC_VERSION))
+	_CC_VMAJOR  := $(word 1,$(_CC_VERSION_WORDS))
+	_CC_VMINOR  := $(word 2,$(_CC_VERSION_WORDS))
+	_CC_RELEASE := $(word 3,$(_CC_VERSION_WORDS))
+	_CC_BUILD   := $(word 4,$(_CC_VERSION_WORDS))
+	_MSC_VER     = $(_CC_VMAJOR)$(_CC_VMINOR)
 	_MSC_VER_6   = 1200
-	_MSC_VER    := $(shell $(CC) 2>&1 | sed -ne \
-                       's/.*[^0-9.]\([0-9]\{1,\}\)\.\([0-9]\{1,\}\).*/\1\2/p' )
+	ifeq ($(_CC_VMAJOR),14)
+	    # -DYNAMICBASE is only supported on VC8SP1 or newer,
+	    # so be very specific here!
+	    # VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762
+	    ifeq ($(_CC_RELEASE).$(_CC_BUILD),50727.42)
+		USE_DYNAMICBASE =
+	    else
+	    ifeq ($(_CC_RELEASE).$(_CC_BUILD),50727.762)
+		USE_DYNAMICBASE = 1
+	    else
+		_LOSER := $(error Unknown compiler version $(CC_VERSION))
+	    endif
+	    endif
+	endif
+	# if $(_CC_VMAJOR) >= 15
+	# NOTE: 'sort' sorts the words in lexical order, so this test works
+	# only if $(_CC_VMAJOR) is two digits.
+	ifeq ($(firstword $(sort $(_CC_VMAJOR) 15)),15)
+	    USE_DYNAMICBASE = 1
+	endif
 endif
 
 ifdef BUILD_TREE
@@ -123,6 +150,9 @@ else # !NS_USE_GCC
 	OS_DLLFLAGS += -PDB:NONE
     endif
     endif
+    ifdef USE_DYNAMICBASE
+	OS_DLLFLAGS += -DYNAMICBASE
+    endif
     ifdef BUILD_OPT
 	OS_CFLAGS  += -MD
 	ifeq (11,$(ALLOW_OPT_CODE_SIZE)$(OPT_CODE_SIZE))
@@ -131,7 +161,7 @@ else # !NS_USE_GCC
 		OPTIMIZER += -O2
 	endif
 	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
-	DLLFLAGS   += -DYNAMICBASE -OUT:"$@"
+	DLLFLAGS   += -OUT:"$@"
 	ifdef MOZ_DEBUG_SYMBOLS
 		ifdef MOZ_DEBUG_FLAGS
 			OPTIMIZER += $(MOZ_DEBUG_FLAGS) -Fd$(OBJDIR)/
@@ -147,7 +177,7 @@ else # !NS_USE_GCC
 	# (RTL) in the debug build
 	#
 	ifdef USE_DEBUG_RTL
-		OS_CFLAGS += -MDd -DUSE_DEBUG_RTL -D_CRTDBG_MAP_ALLOC
+		OS_CFLAGS += -MDd -D_CRTDBG_MAP_ALLOC
 	else
 		OS_CFLAGS += -MD
 	endif

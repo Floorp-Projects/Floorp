@@ -47,7 +47,9 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(56cee121-df62-49b6-b76d-71189441c98e)]
+interface nsIDOMFile;
+
+[scriptable, uuid(28945fd6-c4a0-44e3-8629-98358eab5d7b)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
@@ -70,6 +72,13 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   // the options string that it supports. Separate multiple options with
   // semicolons.
   [noscript] DOMString toDataURLAs(in DOMString mimeType, in DOMString encoderOptions);
+
+ 
+  // Valid calls are
+  // mozGetAsFile(name);              -- defaults to image/png
+  // mozGetAsFile(name, type);        -- uses given type
+  [optional_argc] nsIDOMFile mozGetAsFile(in DOMString name,
+                                          [optional] in DOMString type);
 
   // A Mozilla-only extension to get a canvas context backed by double-buffered
   // shared memory. Only privileged callers can call this.

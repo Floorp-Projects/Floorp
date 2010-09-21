@@ -64,7 +64,7 @@
   /* margin left/right: make bar 8px wide (control width = 28, minus 2 * 10 margin) */
   margin: 0 10px;
   background-color: rgba(255,255,255,.5);
-  -moz-border-radius: 4px 4px;
+  border-radius: 4px 4px;
 }
 
 
@@ -86,7 +86,7 @@
   /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
   margin: 10px 22px;
   background-color: rgba(255,255,255,.5);
-  -moz-border-radius: 4px;
+  border-radius: 4px;
 }
 
 .bufferBar,
@@ -109,13 +109,13 @@
    * compositing gives it a different visual appearance.
    */
   background-color: rgba(255,255,255,.5);
-  -moz-border-radius: 4px;
+  border-radius: 4px;
   -moz-appearance: none;
 }
 
 .progressBar .progress-bar {
   background-color: white;
-  -moz-border-radius: 4px 0 0 4px;
+  border-radius: 4px 0 0 4px;
   -moz-appearance: none;
 }
 

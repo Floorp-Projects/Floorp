@@ -36,6 +36,10 @@
 const ALLOW = nsIPermissionManager.ALLOW_ACTION;   // 1
 const BLOCK = nsIPermissionManager.DENY_ACTION;    // 2
 const SESSION = nsICookiePermission.ACCESS_SESSION;// 8
+
+const nsIIndexedDatabaseManager =
+  Components.interfaces.nsIIndexedDatabaseManager;
+
 var gPermURI;
 var gPrefs;
 
@@ -73,7 +77,11 @@ var gPermObj = {
   },
   geo: function getGeoDefaultPermissions()
   {
-      return BLOCK;
+    return BLOCK;
+  },
+  indexedDB: function getIndexedDBDefaultPermissions()
+  {
+    return BLOCK;
   }
 };
 
@@ -137,6 +145,10 @@ function initRow(aPartId)
     perm = gPermObj[aPartId]();
   }
   setRadioState(aPartId, perm);
+
+  if (aPartId == "indexedDB") {
+    initIndexedDBRow();
+  }
 }
 
 function onCheckboxClick(aPartId)
@@ -148,6 +160,9 @@ function onCheckboxClick(aPartId)
   var checkbox = document.getElementById(aPartId + "Def");
   if (checkbox.checked) {
     permissionManager.remove(gPermURI.host, aPartId);
+    if (aPartId == "indexedDB") {
+      permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
+    }
     command.setAttribute("disabled", "true");
     var perm = gPermObj[aPartId]();
     setRadioState(aPartId, perm);
@@ -167,10 +182,51 @@ function onRadioClick(aPartId)
   var id = radioGroup.selectedItem.id;
   var permission = id.split('#')[1];
   permissionManager.add(gPermURI, aPartId, permission);
+  if (aPartId == "indexedDB" && permission == BLOCK) {
+    permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
+  }
 }
 
 function setRadioState(aPartId, aValue)
 {
   var radio = document.getElementById(aPartId + "#" + aValue);
   radio.radioGroup.selectedItem = radio;
+}
+
+function initIndexedDBRow()
+{
+  var status = document.getElementById("indexedDBStatus");
+  var button = document.getElementById("indexedDBClear");
+
+  var usage = Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
+                        .getService(nsIIndexedDatabaseManager)
+                        .getUsageForURI(gPermURI);
+  if (usage) {
+    if (!("DownloadUtils" in window)) {
+      Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+    }
+    status.value =
+      gBundle.getFormattedString("indexedDBUsage",
+                                 DownloadUtils.convertByteUnits(usage));
+    status.removeAttribute("hidden");
+    button.removeAttribute("hidden");
+  }
+  else {
+    status.value = "";
+    status.setAttribute("hidden", "true");
+    button.setAttribute("hidden", "true");
+  }
+}
+
+function onIndexedDBClear()
+{
+  Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
+            .getService(nsIIndexedDatabaseManager)
+            .clearDatabasesForURI(gPermURI);
+
+  var permissionManager = Components.classes[PERMISSION_CONTRACTID]
+                                    .getService(nsIPermissionManager);
+  permissionManager.remove(gPermURI.host, "indexedDB");
+  permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
+  initIndexedDBRow();
 }

@@ -11,18 +11,6 @@
 <body>
   <p id="display"></p>
 
-  <iframe id="testframe1" name="testframe1" onload="frameLoaded(1)"></iframe>
-  <iframe id="testframe2" name="testframe2" onload="frameLoaded(2)"></iframe>
-
-  <embed src="loremipsum_nocache.txt" streammode="asfileonly"
-         frame="testframe1"
-         id="embedtest" style="width: 400px; height: 100px;"
-         type="application/x-test"></embed>
-  <embed src="loremipsum_nocache.txt" streammode="asfileonly"
-	 frame="testframe2"
-	 id="embedtest2" style="width: 400px; height: 100px;"
-	 type="application/x-test"></embed>
-
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
 
@@ -42,5 +30,15 @@
   }
   </script>
 
- </body>
- </html>
+  <iframe id="testframe1" name="testframe1" onload="frameLoaded(1)"></iframe>
+  <iframe id="testframe2" name="testframe2" onload="frameLoaded(2)"></iframe>
+
+  <embed src="loremipsum_nocache.txt" streammode="asfileonly"
+         frame="testframe1"
+         id="embedtest" style="width: 400px; height: 100px;"
+         type="application/x-test"></embed>
+  <embed src="loremipsum_nocache.txt" streammode="asfileonly"
+	 frame="testframe2"
+	 id="embedtest2" style="width: 400px; height: 100px;"
+	 type="application/x-test"></embed>
+

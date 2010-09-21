@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for panels
+  -->
+<window title="Titlebar" width="200" height="200"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<tree id="tree" seltype="single" width="100" height="100">
+  <treecols>
+    <treecol flex="1"/>
+    <treecol flex="1"/>
+  </treecols>
+  <treechildren id="treechildren">
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+    <treeitem><treerow><treecell label="One"/><treecell label="Two"/></treerow></treeitem>
+  </treechildren>
+</tree>
+
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var currentTest = null;
+
+var i = 0;
+var my_debug = false;
+function test_panels()
+{
+  checkTreeCoords();
+
+  addEventListener("popupshown", popupShown, false);
+  addEventListener("popuphidden", nextTest, false);
+  return nextTest();
+}
+
+function nextTest()
+{
+  ok(true,"popuphidden " + i)
+  if (i == tests.length) {
+    SimpleTest.finish();
+    return i;
+  }
+
+  currentTest = tests[i];
+  var panel = createPanel(currentTest.attrs);
+  currentTest.test(panel);
+  return i;
+}
+
+var waitSteps = 0;
+function popupShown(event)
+{
+  var panel = event.target;
+  if (waitSteps > 0 && navigator.platform.indexOf("Linux") >= 0 &&
+      panel.boxObject.screenY == 210) {
+    waitSteps--;
+    setTimeout(popupShown, 10, event);
+    return;
+  }
+  ++i;
+
+  currentTest.result(currentTest.testname + " ", panel);
+  panel.hidePopup();
+}
+
+function createPanel(attrs)
+{
+  var panel = document.createElement("panel");
+  for (var a in attrs) {
+    panel.setAttribute(a, attrs[a]);
+  }
+
+  var button = document.createElement("button");
+  panel.appendChild(button);
+  button.label = "OK";
+  button.width = 120;
+  button.height = 40;
+  button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  panel.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  return document.documentElement.appendChild(panel);
+}
+
+function checkTreeCoords()
+{
+  var tree = $("tree");
+  var treechildren = $("treechildren");
+  tree.currentIndex = 0;
+  tree.treeBoxObject.scrollToRow(0);
+  synthesizeMouse(treechildren, 10, tree.treeBoxObject.rowHeight + 2, { });
+
+  tree.treeBoxObject.scrollToRow(2);
+  synthesizeMouse(treechildren, 10, tree.treeBoxObject.rowHeight + 2, { });
+}
+
+var tests = [
+  {
+    testname: "normal panel",
+    attrs: { },
+    test: function(panel) {
+      panel.openPopupAtScreen(200, 210);
+    },
+    result: function(testname, panel) {
+      if (my_debug) alert(testname);
+      var panelrect = panel.getBoundingClientRect();
+    }
+  },
+  {
+    // only noautohide panels support titlebars, so one shouldn't be shown here
+    testname: "autohide panel with titlebar",
+    attrs: { titlebar: "normal" },
+    test: function(panel) {
+      panel.openPopupAtScreen(200, 210);
+    },
+    result: function(testname, panel) {
+      if (my_debug) alert(testname);
+      var panelrect = panel.getBoundingClientRect();
+    }
+  },
+  {
+    testname: "noautohide panel with titlebar",
+    attrs: { noautohide: true, titlebar: "normal" },
+    test: function(panel) {
+      waitSteps = 25;
+      panel.openPopupAtScreen(200, 210);
+    },
+    result: function(testname, panel) {
+      if (my_debug) alert(testname);
+      var panelrect = panel.getBoundingClientRect();
+
+      var gotMouseEvent = false;
+      function mouseMoved(event)
+      {
+        gotMouseEvent = true;
+      }
+
+      panel.addEventListener("mousemove", mouseMoved, true);
+      synthesizeMouse(panel, 10, 10, { type: "mousemove" });
+      panel.removeEventListener("mousemove", mouseMoved, true);
+
+      var tree = $("tree");
+      tree.currentIndex = 0;
+      panel.appendChild(tree);
+      checkTreeCoords();
+    }
+  }
+];
+
+SimpleTest.waitForFocus(test_panels);
+
+]]>
+</script>
+
+</window>

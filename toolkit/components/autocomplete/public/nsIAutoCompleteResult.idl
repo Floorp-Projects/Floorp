@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(d2fcba9a-3f5c-40fc-a9fc-4adc87dc61ef)]
+[scriptable, uuid(0f06dae4-0b87-4c16-a7bd-903461771478)]
 interface nsIAutoCompleteResult : nsISupports
 {
   /**
@@ -86,6 +86,11 @@ interface nsIAutoCompleteResult : nsISupports
    * Get the value of the result at the given index
    */
   AString getValueAt(in long index);
+
+  /**
+   * This returns the string that is displayed in the dropdown
+   */
+  AString getLabelAt(in long index);
 
   /**
    * Get the comment of the result at the given index

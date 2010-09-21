@@ -169,10 +169,11 @@ nsresult
 TableRowsCollection::Init()
 {
   mOrphanRows = new nsContentList(mParent,
-                                  nsGkAtoms::tr,
                                   mParent->NodeInfo()->NamespaceID(),
+                                  nsGkAtoms::tr,
+                                  nsGkAtoms::tr,
                                   PR_FALSE);
-  return mOrphanRows ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 // Macro that can be used to avoid copy/pasting code to iterate over the
@@ -599,11 +600,10 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
   if (!mTBodies) {
     // Not using NS_GetContentList because this should not be cached
     mTBodies = new nsContentList(this,
-                                 nsGkAtoms::tbody,
                                  mNodeInfo->NamespaceID(),
+                                 nsGkAtoms::tbody,
+                                 nsGkAtoms::tbody,
                                  PR_FALSE);
-
-    NS_ENSURE_TRUE(mTBodies, NS_ERROR_OUT_OF_MEMORY);
   }
 
   NS_ADDREF(*aValue = mTBodies);

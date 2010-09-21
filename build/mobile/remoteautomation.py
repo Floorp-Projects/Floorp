@@ -47,10 +47,12 @@ from devicemanager import DeviceManager
 class RemoteAutomation(Automation):
     _devicemanager = None
     
-    def __init__(self, deviceManager, appName = ''):
+    def __init__(self, deviceManager, appName = '', remoteLog = None):
         self._devicemanager = deviceManager
         self._appName = appName
         self._remoteProfile = None
+        self._remoteLog = remoteLog
+
         # Default our product to fennec
         self._product = "fennec"
         Automation.__init__(self)
@@ -66,6 +68,9 @@ class RemoteAutomation(Automation):
 
     def setProduct(self, product):
         self._product = product
+        
+    def setRemoteLog(self, logfile):
+        self._remoteLog = logfile
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsDir):
         # maxTime is used to override the default timeout, we should honor that
@@ -121,6 +126,9 @@ class RemoteAutomation(Automation):
         return ip
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
+        if stdout == None or stdout == -1:
+          stdout = self._remoteLog
+
         return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd)
 
     # be careful here as this inner class doesn't have access to outer class members    
@@ -129,8 +137,7 @@ class RemoteAutomation(Automation):
         dm = None
         def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
             self.dm = dm
-            print "going to launch process: " + str(self.dm.host)
-            self.proc = dm.launchProcess(cmd)
+            self.proc = dm.launchProcess(cmd, stdout)
             exepath = cmd[0]
             name = exepath.split('/')[-1]
             self.procName = name

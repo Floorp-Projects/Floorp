@@ -199,6 +199,8 @@ public:
     ContentType GetContentType() const { return mContentType; }
     virtual PRBool InUpdate() const = 0;
 
+    PRBool IsRGB() const { return mIsRGBFormat; }
+
 protected:
     /**
      * After the ctor, the TextureImage is invalid.  Implementations
@@ -206,15 +208,17 @@ protected:
      * TextureImage from GLContext::CreateTextureImage().  That is,
      * clients must not be given partially-constructed TextureImages.
      */
-    TextureImage(GLuint aTexture, const nsIntSize& aSize, ContentType aContentType)
+    TextureImage(GLuint aTexture, const nsIntSize& aSize, ContentType aContentType, PRBool aIsRGB = PR_FALSE)
         : mTexture(aTexture)
         , mSize(aSize)
         , mContentType(aContentType)
+        , mIsRGBFormat(aIsRGB)
     {}
 
     GLuint mTexture;
     nsIntSize mSize;
     ContentType mContentType;
+    PRPackedBool mIsRGBFormat;
 };
 
 /**
@@ -370,7 +374,7 @@ public:
     };
 
     virtual GLContextType GetContextType() { return ContextTypeUnknown; }
-    virtual PRBool MakeCurrent() = 0;
+    virtual PRBool MakeCurrent(PRBool aForce = PR_FALSE) = 0;
     virtual PRBool SetupLookupFunction() = 0;
 
     virtual void WindowDestroyed() {}
@@ -388,6 +392,11 @@ public:
     // Mark this context as destroyed.  This will NULL out all
     // the GL function pointers!
     void THEBES_API MarkDestroyed();
+
+    PRBool IsDestroyed() {
+        // MarkDestroyed will mark all these as null.
+        return fUseProgram == nsnull;
+    }
 
     enum NativeDataType {
       NativeGLContext,

@@ -51,13 +51,14 @@ class ShadowableLayer;
 class ShadowLayerChild : public PLayerChild
 {
 public:
-  ShadowLayerChild(ShadowableLayer* aLayer) : mLayer(aLayer)
-  { }
-
-  virtual ~ShadowLayerChild()
-  { }
+  ShadowLayerChild(ShadowableLayer* aLayer);
+  virtual ~ShadowLayerChild();
 
   ShadowableLayer* layer() const { return mLayer; }
+
+protected:
+  NS_OVERRIDE
+  virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
   ShadowableLayer* mLayer;

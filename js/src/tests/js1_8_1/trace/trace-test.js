@@ -5164,7 +5164,7 @@ function testSlowNativeBail() {
 	for (var i = 0; i < a.length; i++)
 	    new RegExp(a[i]);
     } catch (exc) {
-	assertEq(""+exc.stack.match(/^RegExp/), "RegExp");
+        assertEq(""+exc, "SyntaxError: invalid quantifier");
     }
 }
 test(testSlowNativeBail);

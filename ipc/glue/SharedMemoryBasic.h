@@ -6,7 +6,7 @@
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -14,7 +14,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla IPC.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation
@@ -22,6 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,96 +41,10 @@
 #ifndef mozilla_ipc_SharedMemoryBasic_h
 #define mozilla_ipc_SharedMemoryBasic_h
 
-#include "base/shared_memory.h"
-#include "SharedMemory.h"
-
-#include "nsDebug.h"
-
-//
-// This is a low-level wrapper around platform shared memory.  Don't
-// use it directly; use Shmem allocated through IPDL interfaces.
-//
-
-namespace mozilla {
-namespace ipc {
-
-class SharedMemoryBasic : public SharedMemory
-{
-public:
-  typedef base::SharedMemoryHandle Handle;
-
-  SharedMemoryBasic() :
-    mSize(0)
-  {
-  }
-
-  SharedMemoryBasic(const Handle& aHandle) :
-    mSharedMemory(aHandle, false),
-    mSize(0)
-  {
-  }
-
-  NS_OVERRIDE
-  virtual bool Create(size_t aNbytes)
-  {
-    return mSharedMemory.Create("", false, false, aNbytes);
-  }
-
-  NS_OVERRIDE
-  virtual bool Map(size_t nBytes)
-  {
-    bool ok = mSharedMemory.Map(nBytes);
-    if (ok)
-      mSize = nBytes;
-    return ok;
-  }
-
-  NS_OVERRIDE
-  virtual size_t Size() const
-  {
-    return mSize;
-  }
-
-  NS_OVERRIDE
-  virtual void* memory() const
-  {
-    return mSharedMemory.memory();
-  }
-
-  NS_OVERRIDE
-  virtual SharedMemoryType Type() const
-  {
-    return TYPE_BASIC;
-  }
-
-  static Handle NULLHandle()
-  {
-    return base::SharedMemory::NULLHandle();
-  }
-
-  static bool IsHandleValid(const Handle &aHandle)
-  {
-    return base::SharedMemory::IsHandleValid(aHandle);
-  }
-
-  bool ShareToProcess(base::ProcessHandle process,
-                      Handle* new_handle)
-  {
-    base::SharedMemoryHandle handle;
-    bool ret = mSharedMemory.ShareToProcess(process, &handle);
-    if (ret)
-      *new_handle = handle;
-    return ret;
-  }
-
-private:
-  base::SharedMemory mSharedMemory;
-  // NB: we have to track this because shared_memory_win.cc doesn't
-  size_t mSize;
-};
-
-} // namespace ipc
-} // namespace mozilla
-
+#ifdef ANDROID
+#  include "mozilla/ipc/SharedMemoryBasic_android.h"
+#else
+#  include "mozilla/ipc/SharedMemoryBasic_chromium.h"
+#endif
 
 #endif // ifndef mozilla_ipc_SharedMemoryBasic_h

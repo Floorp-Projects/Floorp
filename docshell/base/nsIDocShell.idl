@@ -71,7 +71,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(74470127-87eb-4f79-8293-1616fe9cb689)]
+[scriptable, uuid(0e1e1ee5-5baa-4e27-98af-3197d70d0304)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -155,6 +155,10 @@ interface nsIDocShell : nsISupports
    * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
    *                          in nsIWebNavigation.
    * @param aSHEntry        - Active Session History entry (if loading from SH)
+   * @param firstParty      - 
+   * @param aDocShell       - 
+   * @param aRequest        - 
+   * @param aHttpMethod     - Force the HTTP channel to use a specific HTTP method
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
@@ -168,7 +172,8 @@ interface nsIDocShell : nsISupports
                               in nsISHEntry aSHEntry,
                               in boolean firstParty,
                               out nsIDocShell aDocShell,
-                              out nsIRequest aRequest);
+                              out nsIRequest aRequest,
+                              in string aHttpMethod);
 
   /**
    * Do either a history.pushState() or history.replaceState() operation,

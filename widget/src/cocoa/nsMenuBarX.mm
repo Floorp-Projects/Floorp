@@ -71,9 +71,10 @@ BOOL gSomeMenuBarPainted = NO;
 // will be from the hidden window. We use these when the document for the current
 // window does not have a quit or pref item. We don't need strong refs here because
 // these items are always strong ref'd by their owning menu bar (instance variable).
-static nsIContent* sAboutItemContent = nsnull;
-static nsIContent* sPrefItemContent  = nsnull;
-static nsIContent* sQuitItemContent  = nsnull;
+static nsIContent* sAboutItemContent  = nsnull;
+static nsIContent* sUpdateItemContent = nsnull;
+static nsIContent* sPrefItemContent   = nsnull;
+static nsIContent* sQuitItemContent   = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsNativeMenuServiceX, nsINativeMenuService)
 
@@ -109,6 +110,8 @@ nsMenuBarX::~nsMenuBarX()
   // hidden window, thus we need to invalidate the weak references.
   if (sAboutItemContent == mAboutItemContent)
     sAboutItemContent = nsnull;
+  if (sUpdateItemContent == mUpdateItemContent)
+    sUpdateItemContent = nsnull;
   if (sQuitItemContent == mQuitItemContent)
     sQuitItemContent = nsnull;
   if (sPrefItemContent == mPrefItemContent)
@@ -469,6 +472,13 @@ void nsMenuBarX::AquifyMenuBar()
     if (!sAboutItemContent)
       sAboutItemContent = mAboutItemContent;
 
+    // Hide the software update menu item, since it belongs in the application
+    // menu on Mac OS X.
+    HideItem(domDoc, NS_LITERAL_STRING("updateSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("checkForUpdates"), getter_AddRefs(mUpdateItemContent));
+    if (!sUpdateItemContent)
+      sUpdateItemContent = mUpdateItemContent;
+
     // remove quit item and its separator
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
@@ -481,7 +491,7 @@ void nsMenuBarX::AquifyMenuBar()
     HideItem(domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent));
     if (!sPrefItemContent)
       sPrefItemContent = mPrefItemContent;
-    
+
     // hide items that we use for the Application menu
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nsnull);
@@ -578,21 +588,22 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
 /*
   We support the following menu items here:
 
-  Menu Item             DOM Node ID             Notes
+  Menu Item                DOM Node ID             Notes
   
-  ==================
-  = About This App = <- aboutName
-  ==================
-  = Preferences... = <- menu_preferences
-  ==================
-  = Services     > = <- menu_mac_services    <- (do not define key equivalent)
-  ==================
-  = Hide App       = <- menu_mac_hide_app
-  = Hide Others    = <- menu_mac_hide_others
-  = Show All       = <- menu_mac_show_all
-  ==================
-  = Quit           = <- menu_FileQuitItem
-  ==================
+  ========================
+  = About This App       = <- aboutName
+  = Check for Updates... = <- checkForUpdates
+  ========================
+  = Preferences...       = <- menu_preferences
+  ========================
+  = Services     >       = <- menu_mac_services    <- (do not define key equivalent)
+  ======================== 
+  = Hide App             = <- menu_mac_hide_app
+  = Hide Others          = <- menu_mac_hide_others
+  = Show All             = <- menu_mac_show_all
+  ======================== 
+  = Quit                 = <- menu_FileQuitItem
+  ======================== 
   
   If any of them are ommitted from the application's DOM, we just don't add
   them. We always add a "Quit" item, but if an app developer does not provide a
@@ -610,9 +621,10 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
 
   if (sApplicationMenu) {
     // This code reads attributes we are going to care about from the DOM elements
-    
+
     NSMenuItem *itemBeingAdded = nil;
-    
+    BOOL addAboutSeparator = FALSE;
+
     // Add the About menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("aboutName"), @selector(menuItemHit:),
                                              eCommand_ID_About, nsMenuBarX::sNativeEventTarget);
@@ -620,11 +632,25 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
       itemBeingAdded = nil;
-      
-      // Add separator after About menu
-      [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
+
+      addAboutSeparator = TRUE;
     }
-    
+
+    // Add the software update menu item
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("checkForUpdates"), @selector(menuItemHit:),
+                                             eCommand_ID_Update, nsMenuBarX::sNativeEventTarget);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      itemBeingAdded = nil;
+
+      addAboutSeparator = TRUE;
+    }
+
+    // Add separator if either the About item or software update item exists
+    if (addAboutSeparator)
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];
+
     // Add the Preferences menu item
     itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_preferences"), @selector(menuItemHit:),
                                              eCommand_ID_Prefs, nsMenuBarX::sNativeEventTarget);
@@ -632,9 +658,9 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
       itemBeingAdded = nil;
-      
+
       // Add separator after Preferences menu
-      [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];
     }
 
     // Add Services menu item
@@ -838,6 +864,12 @@ static BOOL gMenuItemsExecuteCommands = YES;
       mostSpecificContent = menuBar->mAboutItemContent;
     nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
     return;
+  }
+  else if (tag == eCommand_ID_Update) {
+    nsIContent* mostSpecificContent = sUpdateItemContent;
+    if (menuBar && menuBar->mUpdateItemContent)
+      mostSpecificContent = menuBar->mUpdateItemContent;
+    nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
   }
   else if (tag == eCommand_ID_Prefs) {
     nsIContent* mostSpecificContent = sPrefItemContent;

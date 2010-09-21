@@ -103,9 +103,18 @@ typedef enum JSDToStrMode {
 #define DTOSTR_VARIABLE_BUFFER_SIZE(precision) ((precision)+24 > DTOSTR_STANDARD_BUFFER_SIZE ? (precision)+24 : DTOSTR_STANDARD_BUFFER_SIZE)
 
 /*
- * Convert dval according to the given mode and return a pointer to the resulting ASCII string.
- * The result is held somewhere in buffer, but not necessarily at the beginning.  The size of
- * buffer is given in bufferSize, and must be at least as large as given by the above macros.
+ * DO NOT USE THIS FUNCTION IF YOU CAN AVOID IT.  js::NumberToCString() is a
+ * better function to use.  
+ *
+ * Convert dval according to the given mode and return a pointer to the
+ * resulting ASCII string.  If mode == DTOSTR_STANDARD and precision == 0 it's
+ * equivalent to ToString() as specified by ECMA-262-5 section 9.8.1, but it
+ * doesn't handle integers specially so should be avoided in that case (that's
+ * why js::NumberToCString() is better).
+ *
+ * The result is held somewhere in buffer, but not necessarily at the
+ * beginning.  The size of buffer is given in bufferSize, and must be at least
+ * as large as given by the above macros.
  *
  * Return NULL if out of memory.
  */
@@ -114,15 +123,22 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
           double dval);
 
 /*
- * Convert d to a string in the given base.  The integral part of d will be printed exactly
- * in that base, regardless of how large it is, because there is no exponential notation for non-base-ten
- * numbers.  The fractional part will be rounded to as few digits as possible while still preserving
- * the round-trip property (analogous to that of printing decimal numbers).  In other words, if one were
- * to read the resulting string in via a hypothetical base-number-reading routine that rounds to the nearest
- * IEEE double (and to an even significand if there are two equally near doubles), then the result would
- * equal d (except for -0.0, which converts to "0", and NaN, which is not equal to itself).
+ * DO NOT USE THIS FUNCTION IF YOU CAN AVOID IT.  js::NumberToCString() is a
+ * better function to use.  
  *
- * Return NULL if out of memory.  If the result is not NULL, it must be released via free().
+ * Convert d to a string in the given base.  The integral part of d will be
+ * printed exactly in that base, regardless of how large it is, because there
+ * is no exponential notation for non-base-ten numbers.  The fractional part
+ * will be rounded to as few digits as possible while still preserving the
+ * round-trip property (analogous to that of printing decimal numbers).  In
+ * other words, if one were to read the resulting string in via a hypothetical
+ * base-number-reading routine that rounds to the nearest IEEE double (and to
+ * an even significand if there are two equally near doubles), then the result
+ * would equal d (except for -0.0, which converts to "0", and NaN, which is
+ * not equal to itself).
+ *
+ * Return NULL if out of memory.  If the result is not NULL, it must be
+ * released via js_free().
  */
 char *
 js_dtobasestr(DtoaState *state, int base, double d);

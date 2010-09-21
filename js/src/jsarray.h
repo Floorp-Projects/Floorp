@@ -110,7 +110,7 @@ JSObject::isArray() const
 
 /*
  * Dense arrays are not native -- aobj->isNative() for a dense array aobj
- * results in false, meaning aobj->map does not point to a JSScope.
+ * results in false, meaning aobj->map does not point to a js::Shape.
  *
  * But Array methods are called via aobj.sort(), e.g., and the interpreter and
  * the trace recorder must consult the property cache in order to perform well.
@@ -249,8 +249,8 @@ js_Array(JSContext *cx, uintN argc, js::Value *vp);
  * parameter.  The caller promises to fill in the first |capacity| values
  * starting from that pointer immediately after this function returns and
  * without triggering GC (so this method is allowed to leave those
- * uninitialized) and to set them to non-JSVAL_HOLE values, so that the
- * resulting array has length and count both equal to |capacity|.
+ * uninitialized) and to set them to non-JS_ARRAY_HOLE-magic-why values, so
+ * that the resulting array has length and count both equal to |capacity|.
  *
  * FIXME: for some strange reason, when this file is included from
  * dom/ipc/TabParent.cpp in MSVC, jsuint resolves to a slightly different
@@ -279,5 +279,8 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone);
  */
 JS_FRIEND_API(JSBool)
 js_IsDensePrimitiveArray(JSObject *obj);
+
+extern JSBool JS_FASTCALL
+js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i);
 
 #endif /* jsarray_h___ */

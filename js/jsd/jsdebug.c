@@ -49,7 +49,7 @@ JSD_DebuggerOnForUser(JSRuntime*         jsrt,
                       JSD_UserCallbacks* callbacks,
                       void*              user)
 {
-    return jsd_DebuggerOnForUser(jsrt, callbacks, user);
+    return jsd_DebuggerOnForUser(jsrt, callbacks, user, NULL);
 }
 
 JSD_PUBLIC_API(JSDContext*)
@@ -748,15 +748,6 @@ JSD_GetNameForStackFrame(JSDContext* jsdc,
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetNameForStackFrame(jsdc, jsdthreadstate, jsdframe);
-}
-
-JSD_PUBLIC_API(JSBool)
-JSD_IsStackFrameNative(JSDContext* jsdc,
-                       JSDThreadState* jsdthreadstate,
-                       JSDStackFrameInfo* jsdframe)
-{
-    JSD_ASSERT_VALID_CONTEXT(jsdc);
-    return jsd_IsStackFrameNative(jsdc, jsdthreadstate, jsdframe);
 }
 
 JSD_PUBLIC_API(JSBool)

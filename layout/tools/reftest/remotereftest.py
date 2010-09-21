@@ -165,13 +165,14 @@ class ReftestServer:
         Bug 581257 has been filed to refactor this wrapper around httpd.js into
         it's own class and use it in both remote and non-remote testing. """
 
-    def __init__(self, automation, options):
+    def __init__(self, automation, options, scriptDir):
         self._automation = automation
         self._utilityPath = options.utilityPath
         self._xrePath = options.xrePath
         self._profileDir = options.serverProfilePath
         self.webServer = options.remoteWebServer
         self.httpPort = options.httpPort
+        self.scriptDir = scriptDir
         self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
 
     def start(self):
@@ -184,10 +185,10 @@ class ReftestServer:
 
         args = ["-g", self._xrePath,
                 "-v", "170",
-                "-f", "./" + "reftest/components/httpd.js",
+                "-f", os.path.join(self.scriptDir, "reftest/components/httpd.js"),
                 "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" % 
                        {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer },
-                "-f", "./" + "server.js"]
+                "-f", os.path.join(self.scriptDir, "server.js")]
 
         xpcshell = os.path.join(self._utilityPath,
                                 "xpcshell" + self._automation.BIN_SUFFIX)
@@ -277,7 +278,7 @@ class RemoteReftest(RefTest):
             sys.exit(1)
 
         options.serverProfilePath = tempfile.mkdtemp()
-        self.server = ReftestServer(localAutomation, options)
+        self.server = ReftestServer(localAutomation, options, self.scriptDir)
         self.server.start()
 
         self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
@@ -347,6 +348,7 @@ def main():
 
     automation.setAppName(options.app)
     automation.setRemoteProfile(options.remoteProfile)
+    automation.setRemoteLog(options.remoteLogFile)
     reftest = RemoteReftest(automation, dm, options, SCRIPT_DIRECTORY)
 
     # Start the webserver

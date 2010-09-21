@@ -998,51 +998,27 @@ nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
   if (!length || aNodeOffset < 0)
     return NS_OK;
 
-  PRInt32 i, textOffset = 0;
-  PRInt32 lastIndex = (PRInt32)length - 1;
+  NS_ASSERTION(length <= 2, "We should have one text node and one mozBR at most");
 
-  for (i = 0; i < (PRInt32)length; i++) {
-    if (rootNode == aNode && i == aNodeOffset) {
-      *aResult = textOffset;
-      return NS_OK;
-    }
+  nsCOMPtr<nsIDOMNode> firstNode;
+  rv = nodeList->Item(0, getter_AddRefs(firstNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(firstNode);
 
-    nsCOMPtr<nsIDOMNode> item;
-    rv = nodeList->Item(i, getter_AddRefs(item));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(item));
-
-    if (domText) {
-      PRUint32 textLength = 0;
-
-      rv = domText->GetLength(&textLength);
+  nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(aNode);
+  if (nodeAsText || (aNode == rootNode && aNodeOffset == 0)) {
+    // Selection is somewhere inside the text node; the offset is aNodeOffset
+    *aResult = aNodeOffset;
+  } else {
+    // Selection is on the mozBR node, so offset should be set to the length
+    // of the text node.
+    if (textNode) {
+      rv = textNode->GetLength(&length);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      if (item == aNode) {
-        NS_ASSERTION((aNodeOffset >= 0 && aNodeOffset <= (PRInt32)textLength),
-                     "Invalid aNodeOffset!");
-        *aResult = textOffset + aNodeOffset;
-        return NS_OK;
-      }
-
-      textOffset += textLength;
-    }
-    else {
-      // Must be a BR node. If it's not the last BR node
-      // under the root, count it as a newline.
-
-      if (i != lastIndex)
-        ++textOffset;
+      *aResult = PRInt32(length);
     }
   }
 
-  NS_ASSERTION((aNode == rootNode && aNodeOffset == (PRInt32)length),
-               "Invalid node offset!");
-
-  *aResult = textOffset;
-  
   return NS_OK;
 }
 
@@ -1074,71 +1050,25 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
   rv = nodeList->GetLength(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!length || aOffset < 0) {
+  NS_ASSERTION(length <= 2, "We should have one text node and one mozBR at most");
+
+  nsCOMPtr<nsIDOMNode> firstNode;
+  rv = nodeList->Item(0, getter_AddRefs(firstNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(firstNode);
+
+  if (length == 0 || aOffset < 0) {
+    NS_IF_ADDREF(*aResult = rootNode);
     *aPosition = 0;
-    *aResult = rootNode;
-    NS_ADDREF(*aResult);
-    return NS_OK;
+  } else if (textNode) {
+    NS_IF_ADDREF(*aResult = firstNode);
+    *aPosition = aOffset;
+  } else {
+    NS_IF_ADDREF(*aResult = rootNode);
+    *aPosition = 0;
   }
 
-  PRInt32 textOffset = 0;
-  PRUint32 lastIndex = length - 1;
-
-  for (PRUint32 i=0; i<length; i++) {
-    nsCOMPtr<nsIDOMNode> item;
-    rv = nodeList->Item(i, getter_AddRefs(item));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(item));
-
-    if (domText) {
-      PRUint32 textLength = 0;
-
-      rv = domText->GetLength(&textLength);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Check if aOffset falls within this range.
-      if (aOffset >= textOffset && aOffset <= textOffset+(PRInt32)textLength) {
-        *aPosition = aOffset - textOffset;
-        *aResult = item;
-        NS_ADDREF(*aResult);
-        return NS_OK;
-      }
-
-      textOffset += textLength;
-
-      // If there aren't any more siblings after this text node,
-      // return the point at the end of this text node!
-
-      if (i == lastIndex) {
-        *aPosition = textLength;
-        *aResult = item;
-        NS_ADDREF(*aResult);
-        return NS_OK;
-      }
-    }
-    else {
-      // Must be a BR node, count it as a newline.
-
-      if (aOffset == textOffset || i == lastIndex) {
-        // We've found the correct position, or aOffset takes us
-        // beyond the last child under rootNode, just return the point
-        // under rootNode that is in front of this br.
-
-        *aPosition = i;
-        *aResult = rootNode;
-        NS_ADDREF(*aResult);
-        return NS_OK;
-      }
-
-      ++textOffset;
-    }
-  }
-
-  NS_ERROR("We should never get here!");
-
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

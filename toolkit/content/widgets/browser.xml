@@ -318,7 +318,7 @@
       
       <property name="webProgress"
                 readonly="true"
-                onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.webProgress;"/>
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
 
       <field name="_contentWindow">null</field>
 

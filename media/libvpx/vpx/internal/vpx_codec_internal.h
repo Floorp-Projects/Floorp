@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -56,7 +56,7 @@
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures
  */
-#define VPX_CODEC_INTERNAL_ABI_VERSION (2) /**<\hideinitializer*/
+#define VPX_CODEC_INTERNAL_ABI_VERSION (3) /**<\hideinitializer*/
 
 typedef struct vpx_codec_alg_priv  vpx_codec_alg_priv_t;
 
@@ -138,7 +138,7 @@ typedef vpx_codec_err_t (*vpx_codec_get_si_fn_t)(vpx_codec_alg_priv_t    *ctx,
  * provide type safety for the exchanged data or assign meanings to the
  * control codes. Those details should be specified in the algorithm's
  * header file. In particular, the ctrl_id parameter is guaranteed to exist
- * in the algorithm's control mapping table, and the data paramter may be NULL.
+ * in the algorithm's control mapping table, and the data parameter may be NULL.
  *
  *
  * \param[in]     ctx              Pointer to this instance's context
@@ -340,7 +340,6 @@ struct vpx_codec_priv
     vpx_codec_iface_t              *iface;
     struct vpx_codec_alg_priv      *alg_priv;
     const char                     *err_detail;
-    unsigned int                    eval_counter;
     vpx_codec_flags_t               init_flags;
     struct
     {

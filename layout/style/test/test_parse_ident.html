@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSS identifier parsing</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var div = document.getElementById("content");
+
+function counter_increment_parses(i)
+{
+  div.style.counterIncrement = "";
+  div.style.counterIncrement = i;
+  return div.style.counterIncrement != "";
+}
+
+function is_valid_identifier(i)
+{
+  ok(counter_increment_parses(i),
+     "'" + i + "' is a valid CSS identifier");
+}
+
+function is_invalid_identifier(i)
+{
+  ok(!counter_increment_parses(i),
+     "'" + i + "' is not a valid CSS identifier");
+}
+
+for (var i = 0x7B; i < 0xA0; ++i) {
+  is_invalid_identifier(String.fromCharCode(i));
+  is_invalid_identifier("a" + String.fromCharCode(i));
+  is_invalid_identifier(String.fromCharCode(i) + "a");
+}
+
+for (var i = 0xA0; i < 0xFF; ++i) {
+  is_valid_identifier(String.fromCharCode(i));
+}
+
+is_valid_identifier(String.fromCharCode(0x100));
+is_valid_identifier(String.fromCharCode(0x375));
+is_valid_identifier(String.fromCharCode(0xFEFF));
+is_valid_identifier(String.fromCharCode(0xFFFD));
+is_valid_identifier(String.fromCharCode(0xFFFE));
+is_valid_identifier(String.fromCharCode(0xFFFF));
+
+</script>
+</pre>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <!-- Firefox tabbrowser -->
 <?xml-stylesheet href="chrome://browser/content/browser.css"
                  type="text/css"?>
-<!-- Seamonkey tabbrowser -->
+<!-- SeaMonkey tabbrowser -->
 <?xml-stylesheet href="chrome://navigator/content/navigator.css"
                  type="text/css"?>
 

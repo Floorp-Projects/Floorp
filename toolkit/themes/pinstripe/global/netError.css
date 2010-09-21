@@ -44,7 +44,7 @@ ul {
   max-width: 52em;
   margin: 4em auto;
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
   background: url("chrome://global/skin/icons/warning-large.png") left 0 no-repeat -moz-Field;
@@ -116,7 +116,7 @@ body[dir="rtl"] #brand {
 #securityOverrideContent {
   background-color: #FFF090; /* Pale yellow */
   padding: 10px;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
 }
 
 /* Custom styling for 'blacklist' error class */

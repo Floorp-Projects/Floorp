@@ -108,6 +108,7 @@ private:
     nsCOMPtr<nsIFile>               mJarFile;
     nsCOMPtr<nsIURI>                mJarBaseURI;
     nsCString                       mJarEntry;
+    nsCString                       mInnerJarEntry;
 };
 
 #endif // nsJARChannel_h__

@@ -40,10 +40,14 @@
 #include "nsIDOMFormData.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsFormSubmission.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsTArray.h"
+
+class nsIDOMFile;
 
 class nsFormData : public nsIDOMFormData,
                    public nsIXHRSendable,
+                   public nsIJSNativeInitializer,
                    public nsFormSubmission
 {
 public:
@@ -59,16 +63,16 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIFile* aFile);
+                                   nsIDOMFile* aFile);
 
-  
-
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
+                        PRUint32 aArgc, jsval* aArgv);
 private:
   struct FormDataTuple
   {
     nsString name;
     nsString stringValue;
-    nsCOMPtr<nsIFile> fileValue;
+    nsCOMPtr<nsIDOMFile> fileValue;
     PRBool valueIsFile;
   };
   

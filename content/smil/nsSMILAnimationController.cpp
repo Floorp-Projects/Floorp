@@ -67,13 +67,15 @@ GetRefreshDriverForDoc(nsIDocument* aDoc)
   return context ? context->RefreshDriver() : nsnull;
 }
 
-
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
 
 nsSMILAnimationController::nsSMILAnimationController()
   : mResampleNeeded(PR_FALSE),
     mDeferredStartSampling(PR_FALSE),
+#ifdef DEBUG
+    mRunningSample(PR_FALSE),
+#endif
     mDocument(nsnull)
 {
   mAnimationElementTable.Init();
@@ -110,6 +112,13 @@ nsSMILAnimationController::Init(nsIDocument* aDoc)
 
   // Keep track of document, so we can traverse its set of animation elements
   mDocument = aDoc;
+  nsRefreshDriver* refreshDriver = GetRefreshDriverForDoc(mDocument);
+  if (refreshDriver) {
+    mStartTime = refreshDriver->MostRecentRefresh();
+  } else {
+    mStartTime = mozilla::TimeStamp::Now();
+  }
+  mCurrentSampleTime = mStartTime;
 
   Begin();
 
@@ -149,8 +158,7 @@ nsSMILAnimationController::Resume(PRUint32 aType)
 nsSMILTime
 nsSMILAnimationController::GetParentTime() const
 {
-  // Our parent time is wallclock time
-  return PR_Now() / PR_USEC_PER_MSEC;
+  return (nsSMILTime)(mCurrentSampleTime - mStartTime).ToMilliseconds();
 }
 
 //----------------------------------------------------------------------
@@ -162,9 +170,13 @@ NS_IMPL_RELEASE(nsSMILAnimationController)
 void
 nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
 {
-  // XXXdholbert Eventually we should be sampling based on aTime. For now,
-  // though, we keep track of the time on our own, and we just use
-  // nsRefreshDriver for scheduling samples.
+  // Although we never expect aTime to go backwards, when we initialise the
+  // animation controller, if we can't get hold of a refresh driver we
+  // initialise mCurrentSampleTime to Now(). It may be possible that after
+  // doing so we get sampled by a refresh driver whose most recent refresh time
+  // predates when we were initialised, so to be safe we make sure to take the
+  // most recent time here.
+  mCurrentSampleTime = NS_MAX(mCurrentSampleTime, aTime);
   Sample();
 }
 
@@ -175,6 +187,7 @@ void
 nsSMILAnimationController::RegisterAnimationElement(
                                   nsISMILAnimationElement* aAnimationElement)
 {
+  NS_ASSERTION(!mRunningSample, "Registering content during sample.");
   mAnimationElementTable.PutEntry(aAnimationElement);
   if (mDeferredStartSampling) {
     // mAnimationElementTable was empty until we just inserted its first element
@@ -190,6 +203,7 @@ void
 nsSMILAnimationController::UnregisterAnimationElement(
                                   nsISMILAnimationElement* aAnimationElement)
 {
+  NS_ASSERTION(!mRunningSample, "Unregistering content during sample.");
   mAnimationElementTable.RemoveEntry(aAnimationElement);
 }
 
@@ -321,7 +335,15 @@ nsSMILAnimationController::DoSample()
 void
 nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 {
-  // Reset resample flag
+  // Reset resample flag -- do this before flushing styles since flushing styles
+  // will also flush animation resample requests
+  mResampleNeeded = PR_FALSE;
+  mDocument->FlushPendingNotifications(Flush_Style);
+#ifdef DEBUG
+  mRunningSample = PR_TRUE;
+#endif
+  // Reset resample flag again -- flushing styles may have set this flag but
+  // since we're about to do a sample now, reset it
   mResampleNeeded = PR_FALSE;
 
   // STEP 1: Bring model up to date
@@ -363,8 +385,6 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   // Create the compositor table
   nsAutoPtr<nsSMILCompositorTable>
     currentCompositorTable(new nsSMILCompositorTable());
-  if (!currentCompositorTable)
-    return;
   currentCompositorTable->Init(0);
 
   SampleAnimationParams saParams = { &activeContainers,
@@ -398,6 +418,9 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   // when the inherited value is *also* being animated, we really should be
   // traversing our animated nodes in an ancestors-first order (bug 501183)
   currentCompositorTable->EnumerateEntries(DoComposeAttribute, nsnull);
+#ifdef DEBUG
+  mRunningSample = PR_FALSE;
+#endif
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();

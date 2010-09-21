@@ -146,6 +146,7 @@ public:
   NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
   NS_IMETHOD              SetAcceleratedRendering(PRBool aEnabled);
   virtual PRBool          GetAcceleratedRendering();
+  virtual PRBool          GetShouldAccelerate();
   NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMEFocusChange(PRBool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd) { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -184,6 +185,7 @@ public:
             mBorderStyle & eBorderStyle_title);
   }
 
+  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) = 0;
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's
@@ -241,6 +243,8 @@ protected:
     nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
     return widget.forget();
   }
+
+  BasicLayerManager* CreateBasicLayerManager();
 
 protected: 
   void*             mClientData;

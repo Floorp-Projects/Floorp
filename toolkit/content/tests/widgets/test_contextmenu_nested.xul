@@ -42,7 +42,10 @@ var popupTests = [
   testname: "open outer popup",
   events: [ "popupshowing outermain", "popupshown outermain" ],
   test: function () synthesizeMouse($("popuparea"), 4, 4, {}),
-  result: function (testname) is($("outermain").triggerNode, $("popuparea"), testname)
+  result: function (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname);
+    is(document.popupNode, $("popuparea"), testname + " document.popupNode");
+  }
 },
 {
   testname: "open inner popup",
@@ -55,6 +58,7 @@ var popupTests = [
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
+    is(document.popupNode, $("popuparea"), testname + " document.popupNode");
   }
 },
 {
@@ -66,6 +70,7 @@ var popupTests = [
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
+    is(document.popupNode, $("innermenu"), testname + " document.popupNode");
   }
 },
 {
@@ -81,6 +86,7 @@ var popupTests = [
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
     is($("innercontext").triggerNode, $("innermenu"), testname + " inner context");
+    is(document.popupNode, $("innermenu"), testname + " document.popupNode");
   }
 },
 {
@@ -91,7 +97,14 @@ var popupTests = [
             "DOMMenuInactive innercontext",
             "DOMMenuItemInactive outercontextmenu", "DOMMenuItemInactive outercontextmenu",
             "DOMMenuInactive outercontext" ],
-  test: function () $("outercontext").hidePopup()
+  test: function () $("outercontext").hidePopup(),
+  result: function (testname) {
+    is($("outermain").triggerNode, $("popuparea"), testname + " outer");
+    is($("innermain").triggerNode, $("popuparea"), testname + " inner");
+    is($("outercontext").triggerNode, null, testname + " outer context");
+    is($("innercontext").triggerNode, null, testname + " inner context");
+    is(document.popupNode, $("popuparea"), testname + " document.popupNode");
+  }
 },
 {
   testname: "hide menus",
@@ -107,6 +120,7 @@ var popupTests = [
     is($("innermain").triggerNode, null, testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
     is($("innercontext").triggerNode, null, testname + " inner context");
+    is(document.popupNode, null, testname + " document.popupNode");
   }
 }
 ];

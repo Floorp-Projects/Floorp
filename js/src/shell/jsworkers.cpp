@@ -624,8 +624,7 @@ class Worker : public WorkerParent
         // is collected.  Therefore it's safe to stash a pointer (a weak
         // reference) to the C++ Worker object in the reserved slot.
         post = JS_GetFunctionObject(JS_DefineFunction(context, global, "postMessage",
-                                                      (JSNative) jsPostMessageToParent, 1,
-                                                      JSFUN_FAST_NATIVE));
+                                                      (JSNative) jsPostMessageToParent, 1, 0));
         if (!post || !JS_SetReservedSlot(context, post, 0, PRIVATE_TO_JSVAL(this)))
             goto bad;
 
@@ -685,9 +684,9 @@ class Worker : public WorkerParent
         return true;
     }
 
-    static JSBool jsPostMessageToParent(JSContext *cx, int argc, jsval *vp);
-    static JSBool jsPostMessageToChild(JSContext *cx, int argc, jsval *vp);
-    static JSBool jsTerminate(JSContext *cx, int argc, jsval *vp);
+    static JSBool jsPostMessageToParent(JSContext *cx, uintN argc, jsval *vp);
+    static JSBool jsPostMessageToChild(JSContext *cx, uintN argc, jsval *vp);
+    static JSBool jsTerminate(JSContext *cx, uintN argc, jsval *vp);
 
     bool checkTermination() {
         AutoLock hold(lock);
@@ -807,20 +806,20 @@ class Worker : public WorkerParent
         return true;
     }
 
-    static JSBool jsConstruct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
+    static JSBool jsConstruct(JSContext *cx, uintN argc, jsval *vp) {
         WorkerParent *parent;
-        if (!getWorkerParentFromConstructor(cx, JSVAL_TO_OBJECT(argv[-2]), &parent))
+        if (!getWorkerParentFromConstructor(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), &parent))
             return false;
 
-        JSString *scriptName = JS_ValueToString(cx, argv[0]);
+
+        JSString *scriptName = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
         if (!scriptName)
             return false;
-        argv[0] = STRING_TO_JSVAL(scriptName);
 
-        obj = JS_NewObject(cx, &jsWorkerClass, NULL, NULL);
+        JSObject *obj = JS_NewObject(cx, &jsWorkerClass, NULL, NULL);
         if (!obj || !create(cx, parent, scriptName, obj))
             return false;
-        *rval = OBJECT_TO_JSVAL(obj);
+        JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
         return true;
     }
 
@@ -1126,7 +1125,7 @@ Worker::processOneEvent()
 }
 
 JSBool
-Worker::jsPostMessageToParent(JSContext *cx, int argc, jsval *vp)
+Worker::jsPostMessageToParent(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval workerval;
     if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &workerval))
@@ -1150,11 +1149,12 @@ Worker::jsPostMessageToParent(JSContext *cx, int argc, jsval *vp)
         delete event;
         JS_ReportOutOfMemory(cx);
     }
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
 JSBool
-Worker::jsPostMessageToChild(JSContext *cx, int argc, jsval *vp)
+Worker::jsPostMessageToChild(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *workerobj = JS_THIS_OBJECT(cx, vp);
     if (!workerobj)
@@ -1177,12 +1177,15 @@ Worker::jsPostMessageToChild(JSContext *cx, int argc, jsval *vp)
         JS_ReportOutOfMemory(cx);
         return false;
     }
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
 JSBool
-Worker::jsTerminate(JSContext *cx, int argc, jsval *vp)
+Worker::jsTerminate(JSContext *cx, uintN argc, jsval *vp)
 {
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+
     JSObject *workerobj = JS_THIS_OBJECT(cx, vp);
     if (!workerobj)
         return false;

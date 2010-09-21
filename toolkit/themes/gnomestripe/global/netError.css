@@ -43,7 +43,7 @@ ul {
   max-width: 52em;
   margin: 4em auto;
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
   background: url("moz-icon://stock/gtk-dialog-warning?size=dialog") left 0 no-repeat -moz-Field;
@@ -116,7 +116,7 @@ body[dir="rtl"] #brand {
   background-color: InfoBackground;
   color: InfoText;
   padding: 10px;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
 }
 
 /* Custom styling for 'blacklist' error class */

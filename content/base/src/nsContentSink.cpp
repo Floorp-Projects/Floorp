@@ -366,8 +366,8 @@ nsContentSink::ScriptAvailable(nsresult aResult,
   PRUint32 count = mScriptElements.Count();
 
   // aElement will not be in mScriptElements if a <script> was added
-  // using the DOM during loading, or if the script was inline and thus
-  // never blocked.
+  // using the DOM during loading or if DoneAddingChildren did not return
+  // NS_ERROR_HTMLPARSER_BLOCK.
   NS_ASSERTION(count == 0 ||
                mScriptElements.IndexOf(aElement) == PRInt32(count - 1) ||
                mScriptElements.IndexOf(aElement) == -1,
@@ -1853,6 +1853,7 @@ nsIAtom** const kDefaultAllowedAttributes [] = {
   &nsGkAtoms::dir,
   &nsGkAtoms::disabled,
   &nsGkAtoms::enctype,
+  &nsGkAtoms::face,
   &nsGkAtoms::_for,
   &nsGkAtoms::frame,
   &nsGkAtoms::headers,

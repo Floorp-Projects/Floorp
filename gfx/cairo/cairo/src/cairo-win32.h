@@ -172,6 +172,12 @@ void
 cairo_d2d_finish_device(cairo_device_t *device);
 
 /**
+ * Gets the D3D10 device used by a certain cairo_device_t.
+ */
+struct ID3D10Device1*
+cairo_d2d_device_get_device(cairo_device_t *device);
+
+/**
  * Create a D2D surface for an HWND
  *
  * \param device Device used to create the surface

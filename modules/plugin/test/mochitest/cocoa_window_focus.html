@@ -46,7 +46,12 @@
       }
 
       // Send our window to the back and make sure plugins were properly notified.
-      window.blur();
+      // Calling window.blur() is not allowed.
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var fm = Components.classes["@mozilla.org/focus-manager;1"].
+                          getService(Components.interfaces.nsIFocusManager);
+      fm.focusedWindow = window.opener;
+
       expectedEventCount++;
 
       is(plugin1.getTopLevelWindowActivationState(), false, "Activation state should be: deactivated");

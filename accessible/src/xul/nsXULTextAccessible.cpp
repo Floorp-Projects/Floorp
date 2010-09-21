@@ -71,11 +71,10 @@ nsXULTextAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULTextAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULTextAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_LABEL;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_LABEL;
 }
 
 nsresult
@@ -103,11 +102,9 @@ nsXULTextAccessible::GetRelationByType(PRUint32 aRelationType,
     // Caption is the label for groupbox
     nsIContent *parent = mContent->GetParent();
     if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
-      nsCOMPtr<nsIAccessible> parentAccessible;
-      GetParent(getter_AddRefs(parentAccessible));
-      if (nsAccUtils::Role(parentAccessible) == nsIAccessibleRole::ROLE_GROUPING)
-        return nsRelUtils::
-          AddTarget(aRelationType, aRelation, parentAccessible);
+      nsAccessible* parent = GetParent();
+      if (parent && parent->Role() == nsIAccessibleRole::ROLE_GROUPING)
+        return nsRelUtils::AddTarget(aRelationType, aRelation, parent);
     }
   }
 
@@ -137,11 +134,10 @@ nsXULTooltipAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsresult
-nsXULTooltipAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULTooltipAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_TOOLTIP;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_TOOLTIP;
 }
 
 
@@ -184,11 +180,10 @@ nsXULLinkAccessible::GetNameInternal(nsAString& aName)
   return nsTextEquivUtils::GetNameFromSubtree(this, aName);
 }
 
-nsresult
-nsXULLinkAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULLinkAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_LINK;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_LINK;
 }
 
 

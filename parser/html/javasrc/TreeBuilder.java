@@ -163,7 +163,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int EMBED_OR_IMG = 48;
 
-    final static int AREA_OR_SPACER_OR_WBR = 49;
+    final static int AREA_OR_WBR = 49;
 
     final static int DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU = 50;
 
@@ -395,6 +395,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private T headPointer;
 
+    /**
+     * Used to work around Gecko limitations. Not used in Java.
+     */
+    private T deepTreeSurrogateParent;
+
     protected char[] charBuffer;
 
     protected int charBufferLen = 0;
@@ -507,6 +512,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         formPointer = null;
         Portability.releaseElement(headPointer);
         headPointer = null;
+        Portability.releaseElement(deepTreeSurrogateParent);
+        deepTreeSurrogateParent = null;
         // [NOCPP[
         html4 = false;
         idLocations.clear();
@@ -1391,6 +1398,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         formPointer = null;
         Portability.releaseElement(headPointer);
         headPointer = null;
+        Portability.releaseElement(deepTreeSurrogateParent);
+        deepTreeSurrogateParent = null;
         if (stack != null) {
             while (currentPtr > -1) {
                 stack[currentPtr].release();
@@ -1786,7 +1795,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case MARQUEE_OR_APPLET:
                         case OBJECT:
                         case TABLE:
-                        case AREA_OR_SPACER_OR_WBR:
+                        case AREA_OR_WBR:
                         case BR:
                         case EMBED_OR_IMG:
                         case INPUT:
@@ -2007,7 +2016,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break starttagloop;
                             case BR:
                             case EMBED_OR_IMG:
-                            case AREA_OR_SPACER_OR_WBR:
+                            case AREA_OR_WBR:
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE
                             case PARAM_OR_SOURCE:
@@ -3543,7 +3552,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     elementName,
                                     HtmlAttributes.EMPTY_ATTRIBUTES);
                             break endtagloop;
-                        case AREA_OR_SPACER_OR_WBR:
+                        case AREA_OR_WBR:
                         case PARAM_OR_SOURCE:
                         case EMBED_OR_IMG:
                         case IMAGE:
@@ -5357,7 +5366,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             }
         }
         Portability.retainElement(formPointer);
-        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
+        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
     }
 
     public boolean snapshotMatches(TreeBuilderState<T> snapshot) {
@@ -5370,6 +5379,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 || listLen != listPtr + 1
                 || formPointer != snapshot.getFormPointer()
                 || headPointer != snapshot.getHeadPointer()
+                || deepTreeSurrogateParent != snapshot.getDeepTreeSurrogateParent()
                 || mode != snapshot.getMode()
                 || originalMode != snapshot.getOriginalMode()
                 || framesetOk != snapshot.isFramesetOk()
@@ -5461,6 +5471,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         Portability.releaseElement(headPointer);
         headPointer = snapshot.getHeadPointer();
         Portability.retainElement(headPointer);
+        Portability.releaseElement(deepTreeSurrogateParent);
+        deepTreeSurrogateParent = snapshot.getDeepTreeSurrogateParent();
+        Portability.retainElement(deepTreeSurrogateParent);
         mode = snapshot.getMode();
         originalMode = snapshot.getOriginalMode();
         framesetOk = snapshot.isFramesetOk();
@@ -5494,6 +5507,15 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return headPointer;
     }
     
+    /**
+     * Returns the deepTreeSurrogateParent.
+     * 
+     * @return the deepTreeSurrogateParent
+     */
+    public T getDeepTreeSurrogateParent() {
+        return deepTreeSurrogateParent;
+    }
+
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElements()
      */

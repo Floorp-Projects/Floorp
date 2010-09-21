@@ -4,8 +4,8 @@ function test() {
   var tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
   tab.linkedBrowser.addEventListener("load", checkPageStyleMenu, true);
-  content.location =
-    "chrome://mochikit/content/browser/browser/base/content/test/page_style_sample.html";
+  let rootDir = getRootDirectory(gTestPath);
+  content.location = rootDir + "page_style_sample.html";
 }
 
 function checkPageStyleMenu() {

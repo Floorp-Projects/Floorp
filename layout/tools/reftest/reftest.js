@@ -95,6 +95,19 @@ var gTestResults = {
 };
 var gTotalTests = 0;
 var gState;
+// Plugin layers are painting asynchronously, and to make sure that all
+// layer surfaces have right content, we should listen for async
+// paint-"begin"/"end" events ("MozPaintWait" and "MozPaintWaitFinished").
+// If plugin layer surface is dirty(just created) and layout
+// builder->ShouldSyncDecodeImages == true, then "MozPaintWait" event will be
+// fired and gExplicitPendingPaintCounter increased.
+// When plugin layer surface fully painted and "MozPaintWait" has been fired
+// before, then "MozPaintWaitFinished" fired and gExplicitPendingPaintCounter
+// decreased. Reftest snapshot can be taken only when gExplicitPendingPaintCounter == 0
+var gExplicitPendingPaintCounter = 0;
+var gTestContainsAsyncPaintObjects = false;
+var gRunningReftestWaitTest = false;
+var gAttrListenerFunc = null;
 var gCurrentURL;
 var gFailureTimeout = null;
 var gFailureReason;
@@ -161,6 +174,32 @@ function ReleaseCanvas(canvas)
     if (!gNoCanvasCache || gRecycledCanvases.length < 2)
         gRecycledCanvases.push(canvas);
 }
+
+function PaintWaitListener()
+{
+    // Increate paint wait counter
+    // prevent snapshots taking with not up to dated content
+    gExplicitPendingPaintCounter++;
+}
+
+function PaintWaitFinishedListener()
+{
+    gExplicitPendingPaintCounter--;
+    if (gExplicitPendingPaintCounter == 0) {
+        if (gRunningReftestWaitTest) {
+            // tests with reftest-wait class already waiting
+            // and we just need take snapshot and finish reftest
+            gAttrListenerFunc();
+        } else if (gTestContainsAsyncPaintObjects) {
+            gTestContainsAsyncPaintObjects = false;
+            // tests without reftest-wait class
+            // and with detected async rendering objects rendering
+            // need to do mini restart of the test
+            setTimeout(setTimeout, 0, DocumentLoaded, 0);
+        }
+    }
+}
+
 
 function OnRefTestLoad()
 {
@@ -233,6 +272,10 @@ function OnRefTestLoad()
 
     // Focus the content browser
     gBrowser.focus();
+
+    // Connect to async rendering notifications
+    gBrowser.addEventListener("MozPaintWait", PaintWaitListener, true);
+    gBrowser.addEventListener("MozPaintWaitFinished", PaintWaitFinishedListener, true);
 
     StartTests();
 }
@@ -343,7 +386,7 @@ function BuildConditionSandbox(aURL) {
       sandbox.d2d = false;
     }
 
-    if (gWindowUtils && gWindowUtils.layerManagerType == "Basic")
+    if (gWindowUtils && gWindowUtils.layerManagerType != "Basic")
       sandbox.layersGPUAccelerated = true;
     else
       sandbox.layersGPUAccelerated = false;
@@ -853,6 +896,7 @@ function OnDocumentLoad(event)
     setupZoom(contentRootElement);
 
     if (shouldWait()) {
+        gRunningReftestWaitTest = true;
         // The testcase will let us know when the test snapshot should be made.
         // Register a mutation listener to know when the 'reftest-wait' class
         // gets removed.
@@ -880,21 +924,21 @@ function OnDocumentLoad(event)
         }
 
         function WhenMozAfterPaintFlushed(continuation) {
-            if (utils.isMozAfterPaintPending) {
+            if (gWindowUtils.isMozAfterPaintPending) {
                 function handler() {
-                    gBrowser.removeEventListener("MozAfterPaint", handler, false);
+                    window.removeEventListener("MozAfterPaint", handler, false);
                     continuation();
                 }
-                gBrowser.addEventListener("MozAfterPaint", handler, false);
+                window.addEventListener("MozAfterPaint", handler, false);
             } else {
                 continuation();
             }
         }
 
         function AfterPaintListener(event) {
-            if (event.target.document != currentDoc) {
+            if (event.target.document != document) {
                 // ignore paint events for subframes or old documents in the window.
-                // Invalidation in subframes will cause invalidation in the main document anyway.
+                // Invalidation in subframes will cause invalidation in the toplevel document anyway.
                 return;
             }
 
@@ -903,13 +947,14 @@ function OnDocumentLoad(event)
             // When stopAfteraintReceived is set, we can stop --- but we should keep going as long
             // as there are paint events coming (there probably shouldn't be any, but it doesn't
             // hurt to process them)
-            if (stopAfterPaintReceived && !utils.isMozAfterPaintPending) {
+            if (stopAfterPaintReceived && !gWindowUtils.isMozAfterPaintPending &&
+                !gExplicitPendingPaintCounter) {
                 FinishWaitingForTestEnd();
             }
         }
 
         function FinishWaitingForTestEnd() {
-            gBrowser.removeEventListener("MozAfterPaint", AfterPaintListener, false);
+            window.removeEventListener("MozAfterPaint", AfterPaintListener, false);
             setTimeout(DocumentLoaded, 0);
         }
 
@@ -925,13 +970,19 @@ function OnDocumentLoad(event)
             // to complete and unsuppress painting before we check isMozAfterPaintPending.
             setTimeout(AttrModifiedListenerContinuation, 0);
         }
+        // Set global pointer to this function to be able call it from PaintWaitFinishedListener
+        gAttrListenerFunc = AttrModifiedListener;
 
         function AttrModifiedListenerContinuation() {
+            if (gExplicitPendingPaintCounter) {
+                return;
+            }
+
             if (doPrintMode())
                 setupPrintMode();
             FlushRendering();
 
-            if (utils.isMozAfterPaintPending) {
+            if (gWindowUtils.isMozAfterPaintPending) {
                 // Wait for the last invalidation to have happened and been snapshotted before
                 // we stop the test
                 stopAfterPaintReceived = true;
@@ -945,7 +996,7 @@ function OnDocumentLoad(event)
             FlushRendering();
 
             function continuation() {
-                gBrowser.addEventListener("MozAfterPaint", AfterPaintListener, false);
+                window.addEventListener("MozAfterPaint", AfterPaintListener, false);
                 contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
 
                 // Take a snapshot of the window in its current state
@@ -973,6 +1024,7 @@ function OnDocumentLoad(event)
         // StartWaitingForTestEnd runs after that invalidation has been requested.
         setTimeout(StartWaitingForTestEnd, 0);
     } else {
+        gRunningReftestWaitTest = false;
         if (doPrintMode())
             setupPrintMode();
 
@@ -1000,34 +1052,43 @@ function UpdateCanvasCache(url, canvas)
     }
 }
 
-// Compute drawWindow flags lazily so the window is set up and can be
-// measured accurately
-function DoDrawWindow(ctx, win, x, y, w, h)
+// Recompute drawWindow flags for every drawWindow operation.
+// We have to do this every time since our window can be
+// asynchronously resized (e.g. by the window manager, to make
+// it fit on screen) at unpredictable times.
+// Fortunately this is pretty cheap.
+function DoDrawWindow(ctx, x, y, w, h)
 {
-    if (typeof gDrawWindowFlags == "undefined") {
-        gDrawWindowFlags = ctx.DRAWWINDOW_DRAW_CARET |
-                           ctx.DRAWWINDOW_DRAW_VIEW;
-        var flags = "DRAWWINDOW_DRAW_CARET | DRAWWINDOW_DRAW_VIEW";
-        var r = gBrowser.getBoundingClientRect();
-        if (window.innerWidth >= r.right && window.innerHeight >= r.bottom) {
-            // We can use the window's retained layers
-            // because the window is big enough to display the entire browser element
-            gDrawWindowFlags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-            flags += " | DRAWWINDOW_USE_WIDGET_LAYERS";
-        }
-        dump("REFTEST INFO | drawWindow flags = " + flags +
-             "; window.innerWidth/Height = " + window.innerWidth + "," +
-             window.innerHeight + "; browser.width/height = " +
-             r.width + "," + r.height + "\n");
+    var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW;
+    var testRect = gBrowser.getBoundingClientRect();
+    if (0 <= testRect.left &&
+        0 <= testRect.top &&
+        window.innerWidth >= testRect.right &&
+        window.innerHeight >= testRect.bottom) {
+        // We can use the window's retained layer manager
+        // because the window is big enough to display the entire
+        // browser element
+        flags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
     }
 
-    var scrollX = 0;
-    var scrollY = 0;
-    if (!(gDrawWindowFlags & ctx.DRAWWINDOW_DRAW_VIEW)) {
-        scrollX = win.scrollX;
-        scrollY = win.scrollY;
+    if (gDrawWindowFlags != flags) {
+        // Every time the flags change, dump the new state.
+        gDrawWindowFlags = flags;
+        var flagsStr = "DRAWWINDOW_DRAW_CARET | DRAWWINDOW_DRAW_VIEW";
+        if (flags & ctx.DRAWWINDOW_USE_WIDGET_LAYERS) {
+            flagsStr += " | DRAWWINDOW_USE_WIDGET_LAYERS";
+        } else {
+            // Output a special warning because we need to be able to detect
+            // this whenever it happens.
+            dump("REFTEST INFO | WARNING: USE_WIDGET_LAYERS disabled\n");
+        }
+        dump("REFTEST INFO | drawWindow flags = " + flagsStr +
+             "; window size = " + window.innerWidth + "," + window.innerHeight +
+             "; test browser size = " + testRect.width + "," + testRect.height +
+             "\n");
     }
-    ctx.drawWindow(win, scrollX + x, scrollY + y, w, h, "rgb(255,255,255)",
+
+    ctx.drawWindow(window, x, y, w, h, "rgb(255,255,255)",
                    gDrawWindowFlags);
 }
 
@@ -1040,21 +1101,8 @@ function InitCurrentCanvasWithSnapshot()
 
     gCurrentCanvas = AllocateCanvas();
 
-    /* XXX This needs to be rgb(255,255,255) because otherwise we get
-     * black bars at the bottom of every test that are different size
-     * for the first test and the rest (scrollbar-related??) */
-    var win = gBrowser.contentWindow;
     var ctx = gCurrentCanvas.getContext("2d");
-    var scale = gBrowser.markupDocumentViewer.fullZoom;
-    ctx.save();
-    // drawWindow always draws one canvas pixel for each CSS pixel in the source
-    // window, so scale the drawing to show the zoom (making each canvas pixel be one
-    // device pixel instead)
-    ctx.scale(scale, scale);
-    DoDrawWindow(ctx, win, 0, 0,
-                 Math.ceil(gCurrentCanvas.width / scale),
-                 Math.ceil(gCurrentCanvas.height / scale));
-    ctx.restore();
+    DoDrawWindow(ctx, 0, 0, gCurrentCanvas.width, gCurrentCanvas.height);
 }
 
 function roundTo(x, fraction)
@@ -1067,23 +1115,19 @@ function UpdateCurrentCanvasForEvent(event)
     if (!gCurrentCanvas)
         return;
 
-    var win = gBrowser.contentWindow;
     var ctx = gCurrentCanvas.getContext("2d");
-    var scale = gBrowser.markupDocumentViewer.fullZoom;
-
     var rectList = event.clientRects;
     for (var i = 0; i < rectList.length; ++i) {
         var r = rectList[i];
-        // Set left/top/right/bottom to "device pixel" boundaries
-        var left = Math.floor(roundTo(r.left*scale, 0.001))/scale;
-        var top = Math.floor(roundTo(r.top*scale, 0.001))/scale;
-        var right = Math.ceil(roundTo(r.right*scale, 0.001))/scale;
-        var bottom = Math.ceil(roundTo(r.bottom*scale, 0.001))/scale;
+        // Set left/top/right/bottom to pixel boundaries
+        var left = Math.floor(r.left);
+        var top = Math.floor(r.top);
+        var right = Math.ceil(r.right);
+        var bottom = Math.ceil(r.bottom);
 
         ctx.save();
-        ctx.scale(scale, scale);
         ctx.translate(left, top);
-        DoDrawWindow(ctx, win, left, top, right - left, bottom - top);
+        DoDrawWindow(ctx, left, top, right - left, bottom - top);
         ctx.restore();
     }
 }
@@ -1197,6 +1241,14 @@ function DocumentLoaded()
         gCurrentCanvas = gURICanvases[gCurrentURL];
     } else if (gCurrentCanvas == null) {
         InitCurrentCanvasWithSnapshot();
+        if (gExplicitPendingPaintCounter) {
+            // reftest contain elements wich are waiting paint to be finished
+            // lets cancel this reftest run, and let "MozPaintWaitFinished"-listener
+            // know that we need to restart reftest when all paints are finished
+            gTestContainsAsyncPaintObjects = true;
+            gCurrentCanvas = null;
+            return;
+        }
     }
     if (gState == 1) {
         gCanvas1 = gCurrentCanvas;

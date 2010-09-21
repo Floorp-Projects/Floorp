@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0x6af699da, 0x8bfe, 0x43c9, \
-    { 0xae, 0xc1, 0x76, 0x1b, 0x03, 0x62, 0x8d, 0x64 } }
+  { 0x4d467c73, 0xb6a9, 0x462a, \
+    { 0x90, 0x25, 0x80, 0xd9, 0x42, 0xbc, 0xcc, 0xb5 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -106,12 +106,6 @@ public:
    * @return error status
    */
   NS_IMETHOD ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight) = 0;
-
-  /**
-   * Hack to find out if the view observer is itself visible, in lieu
-   * of having the view trees linked.
-   */
-  NS_IMETHOD_(PRBool) IsVisible() = 0;
 
   /**
    * Returns true if the view observer wants to drop all invalidation right now

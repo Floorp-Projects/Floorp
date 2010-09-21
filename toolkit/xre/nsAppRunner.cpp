@@ -471,6 +471,8 @@ static void RemoveArg(char **argv)
 static ArgResult
 CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull, PRBool aRemArg = PR_TRUE)
 {
+  NS_ABORT_IF_FALSE(gArgv, "gArgv must be initialized before CheckArg()");
+
   char **curarg = gArgv + 1; // skip argv[0]
   ArgResult ar = ARG_NONE;
 
@@ -2203,7 +2205,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     PRBool exists;
     lf->Exists(&exists);
     if (!exists) {
-        rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0644);
+        rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0700);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -3338,7 +3340,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 1;
     }
 
-#if defined(MOZ_UPDATER)
+#if defined(MOZ_UPDATER) && !defined(ANDROID)
   // Check for and process any available updates
   nsCOMPtr<nsIFile> updRoot;
   PRBool persistent;
@@ -3422,7 +3424,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
      }
      flagFile = do_QueryInterface(fFlagFile);
      if (flagFile) {
-       flagFile->SetNativeLeafName(FILE_INVALIDATE_CACHES);
+       flagFile->AppendNative(FILE_INVALIDATE_CACHES);
      }
  #endif
     PRBool cachesOK;

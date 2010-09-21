@@ -39,6 +39,7 @@
 
 // Load DownloadUtils module for convertByteUnits
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -69,6 +70,7 @@ var gAdvancedPane = {
 #ifdef MOZ_CRASHREPORTER
     this.initSubmitCrashes();
 #endif
+    this.updateActualCacheSize();
   },
 
   /**
@@ -170,6 +172,17 @@ var gAdvancedPane = {
     } catch (e) { }
   },
 
+  /**
+   * When the user toggles the layers.accelerate-none pref,
+   * sync its new value to the gfx.direct2d.disabled pref too.
+   */
+  updateHardwareAcceleration: function()
+  {
+#ifdef XP_WIN
+    var pref = document.getElementById("layers.accelerate-none");
+    Services.prefs.setBoolPref("gfx.direct2d.disabled", !pref.value);
+#endif
+  },
 
   // NETWORK TAB
 
@@ -178,6 +191,8 @@ var gAdvancedPane = {
    *
    * browser.cache.disk.capacity
    * - the size of the browser cache in KB
+   * browser.cache.disk.smart_size.enabled
+   * - If disabled, disk.capacity is used
    */
 
   /**
@@ -188,7 +203,50 @@ var gAdvancedPane = {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/connection.xul",
                                            "", null);
   },
+ 
+  // Retrieves the amount of space currently used by disk cache
+  updateActualCacheSize: function ()
+  {
+    var visitor = {
+      visitDevice: function (deviceID, deviceInfo)
+      {
+        if (deviceID == "disk") {
+          var actualSizeLabel = document.getElementById("actualCacheSize");
+          var sizeStrings = DownloadUtils.convertByteUnits(deviceInfo.totalSize);
+          var prefStrBundle = document.getElementById("bundlePreferences");
+          var sizeStr = prefStrBundle.getFormattedString("actualCacheSize",
+                                                          sizeStrings);
+          actualSizeLabel.value = sizeStr;
+        }
+        // Do not enumerate entries
+        return false;
+      },
 
+      visitEntry: function (deviceID, entryInfo)
+      {
+        // Do not enumerate entries.
+        return false;
+      }
+    };
+    var cacheService =
+      Components.classes["@mozilla.org/network/cache-service;1"]
+                .getService(Components.interfaces.nsICacheService);
+    cacheService.visitEntries(visitor);
+  },
+
+  updateCacheSizeUI: function (smartSizeEnabled)
+  {
+    document.getElementById("useCacheBefore").disabled = smartSizeEnabled;
+    document.getElementById("cacheSize").disabled = smartSizeEnabled;
+    document.getElementById("useCacheAfter").disabled = smartSizeEnabled;
+  },
+
+  readSmartSizeEnabled: function ()
+  {
+    var enabled = document.getElementById("browser.cache.disk.smart_size.enabled").value;
+    this.updateCacheSizeUI(enabled);
+  },
+  
   /**
    * Converts the cache size from units of KB to units of MB and returns that
    * value.
@@ -220,6 +278,7 @@ var gAdvancedPane = {
     try {
       cacheService.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
     } catch(ex) {}
+    this.updateActualCacheSize();
   },
 
   readOfflineNotify: function()

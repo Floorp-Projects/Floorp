@@ -32,9 +32,7 @@ function run_test() {
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.start(4444);
 
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -44,11 +42,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -58,11 +54,9 @@ function run_test() {
       maxVersion: "0"
     }],
     name: "Test Addon 2",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -72,7 +66,7 @@ function run_test() {
       maxVersion: "5"
     }],
     name: "Test Addon 3",
-  }, dest);
+  }, profileDir);
 
   startupManager();
 
@@ -89,20 +83,20 @@ function run_test_1() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
-    do_check_true(a1.applyBackgroundUpdates);
+    do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_eq(a1.releaseNotesURI, null);
 
-    a1.applyBackgroundUpdates = true;
+    a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
     prepare_test({
       "addon1@tests.mozilla.org": [
         ["onPropertyChanged", ["applyBackgroundUpdates"]]
       ]
     });
-    a1.applyBackgroundUpdates = false;
+    a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
     check_test_completed();
 
-    a1.applyBackgroundUpdates = false;
+    a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
     prepare_test({}, [
       "onNewInstall",
@@ -110,28 +104,53 @@ function run_test_1() {
 
     a1.findUpdates({
       onNoCompatibilityUpdateAvailable: function(addon) {
-        do_throw("Should not have seen no compatibility update");
+        do_throw("Should not have seen onNoCompatibilityUpdateAvailable notification");
       },
 
       onUpdateAvailable: function(addon, install) {
         ensure_test_completed();
 
-        do_check_eq(addon, a1);
-        do_check_eq(install.name, addon.name);
-        do_check_eq(install.version, "2.0");
-        do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
-        do_check_eq(install.existingAddon, addon);
-        do_check_eq(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+        AddonManager.getAllInstalls(function(aInstalls) {
+          do_check_eq(aInstalls.length, 1);
+          do_check_eq(aInstalls[0], install);
 
-        prepare_test({}, [
-          "onDownloadStarted",
-          "onDownloadEnded",
-        ], check_test_1);
-        install.install();
+          do_check_eq(addon, a1);
+          do_check_eq(install.name, addon.name);
+          do_check_eq(install.version, "2.0");
+          do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+          do_check_eq(install.existingAddon, addon);
+          do_check_eq(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+
+          // Verify that another update check returns the same AddonInstall
+          a1.findUpdates({
+            onNoCompatibilityUpdateAvailable: function(addon) {
+              do_throw("Should not have seen onNoCompatibilityUpdateAvailable notification");
+            },
+
+            onUpdateAvailable: function(newAddon, newInstall) {
+              AddonManager.getAllInstalls(function(aInstalls) {
+                do_check_eq(aInstalls.length, 1);
+                do_check_eq(aInstalls[0], install);
+                do_check_eq(newAddon, addon);
+                do_check_eq(newInstall, install);
+
+                prepare_test({}, [
+                  "onDownloadStarted",
+                  "onDownloadEnded",
+                ], check_test_1);
+                install.install();
+              });
+            },
+
+            onNoUpdateAvailable: function(addon) {
+              do_throw("Should not have seen onNoUpdateAvailable notification");
+            }
+          }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+        });
       },
 
       onNoUpdateAvailable: function(addon) {
-        do_throw("Should have seen an update");
+        do_throw("Should not have seen onNoUpdateAvailable notification");
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   });
@@ -140,19 +159,39 @@ function run_test_1() {
 function check_test_1(install) {
   ensure_test_completed();
   do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
-  run_test_2();
+  run_test_2(install);
+  return false;
 }
 
 // Continue installing the update.
-function run_test_2() {
-  prepare_test({
-    "addon1@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onInstallStarted",
-    "onInstallEnded",
-  ], check_test_2);
+function run_test_2(install) {
+  // Verify that another update check returns no new update
+  install.existingAddon.findUpdates({
+    onNoCompatibilityUpdateAvailable: function(addon) {
+      do_throw("Should not have seen onNoCompatibilityUpdateAvailable notification");
+    },
+
+    onUpdateAvailable: function(addon, install) {
+      do_throw("Should find no available update when one is already downloading");
+    },
+
+    onNoUpdateAvailable: function(addon) {
+      AddonManager.getAllInstalls(function(aInstalls) {
+        do_check_eq(aInstalls.length, 1);
+        do_check_eq(aInstalls[0], install);
+
+        prepare_test({
+          "addon1@tests.mozilla.org": [
+            "onInstalling"
+          ]
+        }, [
+          "onInstallStarted",
+          "onInstallEnded",
+        ], check_test_2);
+        install.install();
+      });
+    }
+  }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 }
 
 function check_test_2() {
@@ -175,7 +214,7 @@ function check_test_2() {
       do_check_neq(a1, null);
       do_check_eq(a1.version, "2.0");
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
-      do_check_false(a1.applyBackgroundUpdates);
+      do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
       do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
       a1.uninstall();
@@ -313,9 +352,7 @@ function check_test_5() {
 
 // Test that background update checks work
 function run_test_6() {
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -325,7 +362,7 @@ function run_test_6() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
   restartManager();
 
   prepare_test({}, [
@@ -429,7 +466,7 @@ function run_test_7() {
     }, [
       "onExternalInstall"
     ], check_test_7);
-  
+
     // Fake a timer event to cause a background update and wait for the magic to
     // happen
     gInternalManager.notify(null);
@@ -457,9 +494,7 @@ function check_test_7() {
 
 // Verify the parameter escaping in update urls.
 function run_test_8() {
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "5.0",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -469,11 +504,9 @@ function run_test_8() {
       maxVersion: "2"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "67.0.5b1",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -483,11 +516,9 @@ function run_test_8() {
       maxVersion: "3"
     }],
     name: "Test Addon 2",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.3+",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -501,11 +532,9 @@ function run_test_8() {
       maxVersion: "3"
     }],
     name: "Test Addon 3",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "0.5ab6",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -515,11 +544,9 @@ function run_test_8() {
       maxVersion: "5"
     }],
     name: "Test Addon 4",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon5@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon5@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -529,11 +556,9 @@ function run_test_8() {
       maxVersion: "1"
     }],
     name: "Test Addon 5",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon6@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon6@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/param_test.rdf" + PARAMS,
@@ -543,7 +568,7 @@ function run_test_8() {
       maxVersion: "1"
     }],
     name: "Test Addon 6",
-  }, dest);
+  }, profileDir);
 
   restartManager();
 
@@ -669,9 +694,7 @@ function run_test_8() {
 // Tests that if an install.rdf claims compatibility then the add-on will be
 // seen as compatible regardless of what the update.rdf says.
 function run_test_9() {
-  var dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "5.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -681,7 +704,7 @@ function run_test_9() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
   restartManager();
 
@@ -741,9 +764,7 @@ function run_test_12() {
 // version of the app that the caller requested an update check for.
 function run_test_13() {
   // Not initially compatible but the update check will make it compatible
-  dest = profileDir.clone();
-  dest.append("addon7@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon7@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -753,7 +774,7 @@ function run_test_13() {
       maxVersion: "0"
     }],
     name: "Test Addon 7",
-  }, dest);
+  }, profileDir);
   restartManager();
 
   AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
@@ -800,9 +821,7 @@ function check_test_13() {
 // allowed to update automatically.
 function run_test_14() {
   // Have an add-on there that will be updated so we see some events from it
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -812,11 +831,9 @@ function run_test_14() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon8@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon8@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:4444/data/test_update.rdf",
@@ -826,11 +843,11 @@ function run_test_14() {
       maxVersion: "1"
     }],
     name: "Test Addon 8",
-  }, dest);
+  }, profileDir);
   restartManager();
 
   AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
-    a8.applyBackgroundUpdates = false;
+    a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
     // The background update check will find updates for both add-ons but only
     // proceed to install one of them.
@@ -874,7 +891,7 @@ function run_test_14() {
         do_throw("Should not have seen onInstallCancelled event");
       },
     });
-  
+
     // Fake a timer event
     gInternalManager.notify(null);
   });

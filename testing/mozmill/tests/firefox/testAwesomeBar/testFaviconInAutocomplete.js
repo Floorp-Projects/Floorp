@@ -20,6 +20,8 @@
  * Contributor(s):
  *   Tracy Walker <twalker@mozilla.com>
  *   Henrik Skupin <hskupin@mozilla.com>
+ *   Geo Mealer <gmealer@mozilla.com>
+ *   Aaron Train <atrain@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,63 +38,60 @@
  * ***** END LICENSE BLOCK *****/
 
 // Include necessary modules
-var RELATIVE_ROOT = '../../shared-modules';
-var MODULE_REQUIRES = ['PlacesAPI', 'PrefsAPI', 'ToolbarAPI'];
+const RELATIVE_ROOT = '../../shared-modules';
+const MODULE_REQUIRES = ['PlacesAPI', 'PrefsAPI', 'ToolbarAPI'];
 
-const gTimeout = 5000;
-const gDelay = 200;
+const LOCAL_TEST_FOLDER = collector.addHttpResource('../test-files/');
+const LOCAL_TEST_PAGE = { 
+  url: LOCAL_TEST_FOLDER + 'layout/mozilla.html',
+  string: "mozilla" 
+};
 
-const testSite = {url : 'http://www.google.com/', string: 'google'};
-
-var setupModule = function(module)
-{
-  module.controller = mozmill.getBrowserController();
-  module.locationBar =  new ToolbarAPI.locationBar(controller);
+var setupModule = function() {
+  controller = mozmill.getBrowserController();
+  locationBar =  new ToolbarAPI.locationBar(controller);
 
   // Clear complete history so we don't get interference from previous entries
-  try {
-    PlacesAPI.historyService.removeAllPages();
-  } catch (ex) {}
+  PlacesAPI.removeAllHistory();
 }
 
 /**
  * Check Favicon in autocomplete list
  *
  */
-var testFaviconInAutoComplete = function()
-{
+var testFaviconInAutoComplete = function() {
   // Use preferences dialog to select "When Using the location bar suggest:" "History"
   PrefsAPI.openPreferencesDialog(prefDialogSuggestsCallback);
 
-  // Open the test page
-  locationBar.loadURL(testSite.url);
+  // Open the local test page
+  locationBar.loadURL(LOCAL_TEST_PAGE.url);
   controller.waitForPageLoad();
 
-  // Get the location bar favicon element URL.
+  // Get the location bar Favicon element URL
   var locationBarFaviconUrl = locationBar.getElement({type:"favicon"}).getNode().getAttribute('src');
 
-  // wait for 4 seconds to work around Firefox LAZY ADD of items to the db
+  // Wait for 4 seconds to work around Firefox LAZY ADD of items to the DB
   controller.sleep(4000);
 
   // Focus the locationbar, delete any contents there
   locationBar.clear();
 
-  // Type in each letter of the test string to allow the autocomplete to populate with results.
-  for each (letter in testSite.string) {
+  // Type in each letter of the test string to allow the autocomplete to populate with results
+  for each (var letter in LOCAL_TEST_PAGE.string) {
     locationBar.type(letter);
-    controller.sleep(gDelay);
+    controller.sleep(200);
   }
 
-  // defines the path to the first auto-complete result
+  // Define the path to the first auto-complete result
   var richlistItem = locationBar.autoCompleteResults.getResult(0);
 
   // Ensure the autocomplete list is open
   controller.waitForEval('subject.isOpened == true', 3000, 100, locationBar.autoCompleteResults);
 
-  // Get url for the autocomplete favicon for the matched entry
+  // Get the URL for the autocomplete Favicon for the matched entry
   var listFaviconUrl = richlistItem.getNode().boxObject.firstChild.childNodes[0].getAttribute('src');
 
-  // Check that both favicons have the same URL
+  // Check that both Favicons have the same URL
   controller.assertJS("subject.isSameFavicon == true",
                       {isSameFavicon: richlistItem.getNode().image.indexOf(locationBarFaviconUrl) != -1});
 }
@@ -103,15 +102,14 @@ var testFaviconInAutoComplete = function()
  * @param {MozMillController} controller
  *        MozMillController of the window to operate on
  */
-var prefDialogSuggestsCallback = function(controller)
-{
+var prefDialogSuggestsCallback = function(controller) {
   var prefDialog = new PrefsAPI.preferencesDialog(controller);
   prefDialog.paneId = 'panePrivacy';
 
   var suggests = new elementslib.ID(controller.window.document, "locationBarSuggestion");
   controller.waitForElement(suggests);
   controller.select(suggests, null, null, 1);
-  controller.sleep(gDelay);
+  controller.sleep(200);
 
   prefDialog.close(true);
 }

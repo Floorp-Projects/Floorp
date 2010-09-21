@@ -65,9 +65,8 @@ class nsIWidget;
 //   ePopupShowing - during the period when the popupshowing event fires
 //   ePopupOpen - between the popupshowing event and being visible. Creation
 //                of the child frames, layout and reflow occurs in this state.
-//   ePopupOpenAndVisible - layout is done and AdjustView is called to make
-//                          the popup's widget visible. The popup is now
-//                          visible and the popupshown event fires.
+//   ePopupOpenAndVisible - layout is done and the popup's view and widget are
+//                          made visible. The popupshown event fires.
 // When closing a popup:
 //   ePopupHidden - during the period when the popuphiding event fires and
 //                  the popup is removed.
@@ -203,9 +202,6 @@ public:
   // layout, position and display the popup as needed
   void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, PRBool aSizedToPopup);
 
-  // AdjustView is called by LayoutPopup to position and show the popup's view.
-  void AdjustView();
-
   nsIView* GetRootViewForPopup(nsIFrame* aStartFrame);
 
   // set the position of the popup either relative to the anchor aAnchorFrame
@@ -239,8 +235,8 @@ public:
     return nsnull;
   }
 
-  nsIContent* GetTriggerContent() { return mTriggerContent; }
-  void SetTriggerContent(nsIContent* aTriggerContent) { mTriggerContent = aTriggerContent; }
+  static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
+  void ClearTriggerContent() { mTriggerContent = nsnull; }
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell
@@ -269,7 +265,7 @@ public:
                                       PRInt32 aXPos, PRInt32 aYPos);
 
   // indicate that the popup should be opened
-  PRBool ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem);
+  void ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem);
   // indicate that the popup should be hidden. The new state should either be
   // ePopupClosed or ePopupInvisible.
   void HidePopup(PRBool aDeselectMenu, nsPopupState aNewState);

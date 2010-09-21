@@ -257,17 +257,17 @@ nsLinkableAccessible::CacheActionContent()
   }
 
   while ((walkUpContent = walkUpContent->GetParent())) {
-    isOnclick = nsCoreUtils::HasClickListener(walkUpContent);
-    nsAccessible *walkUpAcc =
+    nsAccessible* walkUpAcc =
       GetAccService()->GetAccessibleInWeakShell(walkUpContent, mWeakShell);
 
-    if (nsAccUtils::Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
+    if (walkUpAcc && walkUpAcc->Role() == nsIAccessibleRole::ROLE_LINK &&
         nsAccUtils::State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED) {
       mIsLink = PR_TRUE;
       mActionContent = walkUpContent;
       return;
     }
 
+    isOnclick = nsCoreUtils::HasClickListener(walkUpContent);
     if (isOnclick) {
       mActionContent = walkUpContent;
       mIsOnclick = PR_TRUE;
@@ -302,9 +302,8 @@ nsEnumRoleAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, nsAccessible)
 
-nsresult
-nsEnumRoleAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsEnumRoleAccessible::NativeRole()
 {
-  *aRole = mRole;
-  return NS_OK;
+  return mRole;
 }

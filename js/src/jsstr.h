@@ -83,6 +83,11 @@ struct JSRopeBufferInfo {
     size_t capacity;
 };
 
+/* Forward declaration for friending. */
+namespace js { namespace mjit {
+    class Compiler;
+}}
+
 /*
  * The GC-thing "string" type.
  *
@@ -119,6 +124,7 @@ struct JSRopeBufferInfo {
  */
 struct JSString {
     friend class js::TraceRecorder;
+    friend class js::mjit::Compiler;
 
     friend JSAtom *
     js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
@@ -184,6 +190,7 @@ struct JSString {
                                 (1 << ROPE_TRAVERSAL_COUNT_SHIFT);
 
     static const size_t TYPE_MASK = JSSTRING_BITMASK(2);
+    static const size_t TYPE_FLAGS_MASK = JSSTRING_BITMASK(4);
 
     inline bool hasFlag(size_t flag) const {
         return (mLengthAndFlags & flag) != 0;
@@ -1029,9 +1036,9 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
 }
 
 /*
- * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
- * and return null on error, otherwise return the jschar or byte vector that
- * was JS_malloc'ed. length is updated with the length of the new string in jschars.
+ * Inflate bytes to JS chars and vice versa.  Report out of memory via cx and
+ * return null on error, otherwise return the jschar or byte vector that was
+ * JS_malloc'ed. length is updated to the length of the new string in jschars.
  */
 extern jschar *
 js_InflateString(JSContext *cx, const char *bytes, size_t *length);

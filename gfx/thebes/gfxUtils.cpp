@@ -245,7 +245,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 
     gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
     nsRefPtr<gfxASurface> temp =
-        gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, aFormat);
+        gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
     if (!temp || temp->CairoStatus())
         return nsnull;
 
@@ -419,6 +419,21 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     aContext->SetOperator(op);
 }
 
+/* static */ int
+gfxUtils::ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat)
+{
+    switch (aFormat) {
+        case gfxASurface::ImageFormatARGB32:
+            return 32;
+        case gfxASurface::ImageFormatRGB24:
+            return 24;
+        case gfxASurface::ImageFormatRGB16_565:
+            return 16;
+        default:
+            break;
+    }
+    return 0;
+}
 static void
 ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
                      PRBool aSnap)

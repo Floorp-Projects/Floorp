@@ -43,11 +43,11 @@ richlistitem[type="tab"] {
   padding: 2px 5px;
   margin-bottom: 4px;
   -moz-margin-start: 4em;
-  -moz-border-radius: 6px;
+  border-radius: 6px;
   background-color: menu;
   width: 44em;
   opacity: 0.9;
-  -moz-box-shadow:
+  box-shadow:
     inset rgba(255, 255, 255, 0.5) 0 1px 0px,
     inset rgba(0, 0, 0, 0.1) 0 -2px 0px,
     rgba(0, 0, 0, 0.1) 0px 1px 0px;
@@ -64,7 +64,7 @@ richlistitem[type="client"] {
   margin-top: 2px;
   margin-bottom: 3px;
   width: 42em;
-  -moz-border-radius: 6px;
+  border-radius: 6px;
   background-color: transparent;
   -moz-user-focus: ignore !important;
 }

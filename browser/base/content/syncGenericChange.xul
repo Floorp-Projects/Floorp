@@ -23,6 +23,7 @@
 #   Edward Lee <edilee@mozilla.com>
 #   Mike Connor <mconnor@mozilla.com>
 #   Paul O’Shannessy <paul@oshannessy.com>
+#   Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,14 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/syncCommon.css" type="text/css"?>
 
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+<!ENTITY % syncSetupDTD SYSTEM "chrome://browser/locale/syncSetup.dtd">
+%brandDTD;
+%syncBrandDTD;
+%syncSetupDTD;
+]>
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         id="change-dialog"
@@ -55,6 +64,8 @@
           src="chrome://browser/content/syncGenericChange.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/syncUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/printUtils.js"/>
 
   <hbox align="top">
     <image id="syncIcon"/>
@@ -69,19 +80,44 @@
     <grid>
       <columns>
         <column align="right"/>
-        <column/>
+        <column flex="3"/>
+        <column flex="1"/>
       </columns>
       <rows>
-        <row>
+        <row id="textBox1Row" align="center">
           <label id="textBox1Label" control="textBox1"/>
-          <textbox id="textBox1" type="password" oninput="Change.validate(event)"/>
+          <textbox id="textBox1" type="password" oninput="Change.validate()"/>
+          <spacer/>
         </row>
-        <row id="textBox2Row">
+        <row id="textBox2Row" align="center">
           <label id="textBox2Label" control="textBox2"/>
-          <textbox id="textBox2" type="password" oninput="Change.validate(event)"/>
+          <textbox id="textBox2" type="password" oninput="Change.validate()"/>
+          <spacer/>
+        </row>
+        <row id="passphraseRow" align="center">
+          <label id="passphraseLabel" control="passphraseBox"/>
+          <textbox id="passphraseBox"
+                   onfocus="this.select()"
+                   oninput="Change.validate()"/>
+          <label id="generatePassphraseButton"
+                 value="&syncKeyGenerate.label;"
+                 class="text-link inline-link"
+                 onclick="event.stopPropagation();
+                          Change.doGeneratePassphrase();"/>
         </row>
       </rows>
     </grid>
+    <hbox id="passphraseBackupButtons">
+      <button label="&button.syncKeyBackup.email.label;"
+              accesskey="&button.syncKeyBackup.email.accesskey;"
+              oncommand="gSyncUtils.passphraseEmail('passphraseBox');"/>
+      <button label="&button.syncKeyBackup.print.label;"
+              accesskey="&button.syncKeyBackup.print.accesskey;"
+              oncommand="gSyncUtils.passphrasePrint('passphraseBox');"/>
+      <button label="&button.syncKeyBackup.save.label;"
+              accesskey="&button.syncKeyBackup.save.accesskey;"
+              oncommand="gSyncUtils.passphraseSave('passphraseBox');"/>
+    </hbox>
 
     <description>
       <html:p class="data" id="warningText"/>

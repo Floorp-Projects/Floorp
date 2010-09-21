@@ -103,16 +103,27 @@ endif
 endif
 
 ifdef MOZ_IPC #{
-EXPORTS_NAMESPACES = mozilla/layers
+EXPORTS_NAMESPACES = IPC mozilla/layers
+EXPORTS_IPC = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
         ShadowLayers.h \
+        ShadowLayersChild.h \
+        ShadowLayersParent.h \
         $(NULL)
 
 CPPSRCS += \
         ShadowLayers.cpp \
+        ShadowLayerChild.cpp \
+        ShadowLayersChild.cpp \
         ShadowLayerParent.cpp \
         ShadowLayersParent.cpp \
         $(NULL)
+
+ifdef MOZ_X11 #{
+EXPORTS_mozilla/layers += ShadowLayerUtilsX11.h
+CPPSRCS += ShadowLayerUtilsX11.cpp
+endif #}
+
 endif #}
 
 # Enable GLES2.0 under maemo
@@ -128,7 +139,7 @@ ifdef MOZ_IPC
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 endif
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS)
 	$(PYTHON) $(srcdir)/opengl/genshaders.py $< $@
@@ -136,4 +147,3 @@ LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS
 LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h
 
 GARBAGE += LayerManagerOGLShaders.h
-

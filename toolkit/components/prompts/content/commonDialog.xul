@@ -51,7 +51,7 @@
 
     <rows>
       <row>
-        <hbox align="start">
+        <hbox id="iconContainer" align="start">
           <image id="info.icon" class="spaced"/>
         </hbox>
         <vbox id="infoContainer">

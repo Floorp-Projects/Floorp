@@ -78,16 +78,16 @@ tab
   -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-radius-topleft: 2px;
-  -moz-border-radius-topright: 2px;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
   padding: 1px 4px 2px 4px;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
 tab:-moz-locale-dir(rtl) {
-  -moz-border-radius-bottomleft: 1px;
-  -moz-border-radius-bottomright: 0px;
+  border-bottom-left-radius: 1px;
+  border-bottom-right-radius: 0px;
 }
 
 .tab-text {
@@ -108,13 +108,13 @@ tab:-moz-focusring > .tab-middle {
 tab[beforeselected="true"]:-moz-locale-dir(ltr),
 tab[selected="true"]:-moz-locale-dir(rtl) + tab {
   border-right: none;
-  -moz-border-radius-topright: 0;
+  border-top-right-radius: 0;
 }
 
 tab[selected="true"]:-moz-locale-dir(ltr) + tab,
 tab[beforeselected="true"]:-moz-locale-dir(rtl) {
   border-left: none;
-  -moz-border-radius-topleft: 0;
+  border-top-left-radius: 0;
 }
 
 tab:first-of-type[selected="true"] {
@@ -134,10 +134,10 @@ tab:first-of-type[selected="true"] {
   border-bottom: 2px solid;
   -moz-border-top-colors: ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow ThreeDLightShadow;
-  -moz-border-radius-topleft: 0;
-  -moz-border-radius-topright: 0;
-  -moz-border-radius-bottomright: 2px;
-  -moz-border-radius-bottomleft: 2px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 2px;
+  border-bottom-left-radius: 2px;
   padding: 2px 4px 1px 4px;
 }
 
@@ -149,12 +149,12 @@ tab:first-of-type[selected="true"] {
 
 .tab-bottom[beforeselected="true"]:-moz-locale-dir(ltr),
 .tab-bottom[selected="true"]:-moz-locale-dir(rtl) + .tab-bottom {
-  -moz-border-radius-bottomright: 0;
+  border-bottom-right-radius: 0;
 }
 
 .tab-bottom[selected="true"]:-moz-locale-dir(ltr) + .tab-bottom,
 .tab-bottom[beforeselected="true"]:-moz-locale-dir(rtl) {
-  -moz-border-radius-bottomleft: 0;
+  border-bottom-left-radius: 0;
 }
 
 /* ::::: tabs-bottom ::::: */

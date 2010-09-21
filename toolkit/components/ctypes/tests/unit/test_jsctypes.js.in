@@ -38,12 +38,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/ctypes.jsm");
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+try {
+  // We might be running without privileges, in which case it's up to the
+  // harness to give us the 'ctypes' object.
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+} catch(e) {
+}
 
 CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
+CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
 
 function getParent(obj, fun)
 {
@@ -59,8 +62,13 @@ function checkParentIsCTypes(o)
 
 function do_check_throws(f, type, stack)
 {
-  if (!stack)
-    stack = Components.stack.caller;
+  if (!stack) {
+    try {
+      // We might not have a 'Components' object.
+      stack = Components.stack.caller;
+    } catch (e) {
+    }
+  }
 
   try {
     f();
@@ -88,8 +96,8 @@ function run_test()
   run_abstract_class_tests();
 
   // open the library
-  let libfile = do_get_file(CTYPES_TEST_LIB).path;
-  let library = ctypes.open(libfile);
+  let libfile = do_get_file(CTYPES_TEST_LIB);
+  let library = ctypes.open(libfile.path);
 
   // Make sure we can call a function in the library.
   run_void_tests(library);
@@ -215,7 +223,7 @@ function run_test()
   }, Error);
 
   // test that library functions throw when bound to other objects
-  library = ctypes.open(libfile);
+  library = ctypes.open(libfile.path);
   let obj = {};
   obj.declare = library.declare;
   do_check_throws(function () { run_void_tests(obj); }, Error);
@@ -233,6 +241,19 @@ function run_test()
 
   // bug 522360
   do_check_eq(run_load_system_library(), true);
+
+  // Test loading a library with a unicode name (bug 589413). Note that nsIFile
+  // implementations are not available in some harnesses; if not, the harness
+  // should take care of the copy for us.
+  let unicodefile = do_get_file(CTYPES_UNICODE_LIB, true);
+  let copy = libfile.copyTo instanceof Function;
+  if (copy)
+    libfile.copyTo(null, unicodefile.leafName);
+  library = ctypes.open(unicodefile.path);
+  run_void_tests(library);
+  library.close();
+  if (copy)
+    unicodefile.remove(false);
 }
 
 function run_abstract_class_tests()

@@ -9,4 +9,19 @@ cp $1/halloc/src/macros.h src
 cp $1/LICENSE .
 cp $1/README .
 cp $1/AUTHORS .
-echo 'Remember to update README_MOZILLA with the version details.'
+if [ -d $1/.git ]; then
+  rev=$(cd $1 && git rev-parse --verify HEAD)
+  dirty=$(cd $1 && git diff-index --name-only HEAD)
+fi
+
+if [ -n "$rev" ]; then
+  version=$rev
+  if [ -n "$dirty" ]; then
+    version=$version-dirty
+    echo "WARNING: updating from a dirty git repository."
+  fi
+  sed -i "/The git commit ID used was/ s/[0-9a-f]\+\(-dirty\)\?\./$version./" README_MOZILLA
+else
+  echo "Remember to update README_MOZILLA with the version details."
+fi
+

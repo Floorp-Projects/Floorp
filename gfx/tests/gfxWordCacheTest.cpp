@@ -123,7 +123,9 @@ MakeContext ()
 
    nsRefPtr<gfxASurface> surface;
 
-   surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(size, size), gfxASurface::ImageFormatRGB24);
+   surface = gfxPlatform::GetPlatform()->
+       CreateOffscreenSurface(gfxIntSize(size, size),
+                              gfxASurface::ContentFromFormat(gfxASurface::ImageFormatRGB24));
    gfxContext *ctx = new gfxContext(surface);
    NS_IF_ADDREF(ctx);
    return ctx;

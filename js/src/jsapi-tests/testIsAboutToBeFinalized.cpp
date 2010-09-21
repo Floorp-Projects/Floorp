@@ -37,7 +37,7 @@ NativeFrameCleaner()
 {
     char buffer[1 << 16];
     memset(buffer, 0, sizeof buffer);
-    ptrSink = buffer; 
+    ptrSink = buffer;
 }
 
 BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
@@ -83,7 +83,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
      * Make sure to include unit and numeric strings to the set.
      */
     EVAL("var x = 1.1; "
-         "[''+x, 'a', '42', 'something'.substring(1), "
+         "[''+x, 'a', '123456789', 'something'.substring(1), "
          "{}, [], new Function('return 10;'), <xml/>];",
          root.addr());
 
@@ -117,6 +117,20 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
      */
     for (jsuint i = 0; i != checkPointersLength; ++i)
         CHECK(checkPointers[i]);
+
+    /*
+     * Overwrite the registers and stack with new GC things to avoid false
+     * positives with the finalization test.
+     */
+    EVAL("[]", root.addr());
+
+    array = JSVAL_TO_OBJECT(root.value());
+    JS_ASSERT(JS_IsArrayObject(cx, array));
+
+    jsuint tmp;
+    CHECK(JS_GetArrayLength(cx, array, &tmp));
+    CHECK(ok);
+
     return true;
 }
 

@@ -117,22 +117,13 @@ XPCNativeMember::NewFunctionObject(XPCCallContext& ccx,
 {
     NS_ASSERTION(!IsConstant(),
                  "Only call this if you're sure this is not a constant!");
-    if(!IsResolved() && !Resolve(ccx, iface))
-        return JS_FALSE;
 
-    AUTO_MARK_JSVAL(ccx, &mVal);
-    JSObject* funobj =
-        xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(mVal), parent);
-    if(!funobj)
-        return JS_FALSE;
-
-    *pval = OBJECT_TO_JSVAL(funobj);
-
-    return JS_TRUE;
+    return Resolve(ccx, iface, parent, pval);
 }
 
 JSBool
-XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
+XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
+                         JSObject *parent, jsval *vp)
 {
     if(IsConstant())
     {
@@ -154,11 +145,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
                                       nsnull, nsnull, nsnull))
             return JS_FALSE;
 
-        {   // scoped lock
-            XPCAutoLock lock(ccx.GetRuntime()->GetMapLock());
-            mVal = resultVal;
-            mFlags |= RESOLVED;
-        }
+        *vp = resultVal;
 
         return JS_TRUE;
     }
@@ -188,23 +175,9 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
         callback = XPC_WN_GetterSetter;
     }
 
-    // We need to use the safe context for this thread because we don't want
-    // to parent the new (and cached forever!) function object to the current
-    // JSContext's global object. That would be bad!
-
-    JSContext* cx = ccx.GetSafeJSContext();
-    if(!cx)
-        return JS_FALSE;
-
     const char *memberName = iface->GetMemberName(ccx, this);
 
-    JSFunction *fun;
-    // Switching contexts, suspend the old and enter the new request.
-    {
-        JSAutoRequest req(cx);
-        fun = JS_NewFunction(cx, callback, argc, 0, nsnull, memberName);
-    }
-
+    JSFunction *fun = JS_NewFunction(ccx, callback, argc, 0, parent, memberName);
     if(!fun)
         return JS_FALSE;
 
@@ -212,20 +185,11 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     if(!funobj)
         return JS_FALSE;
 
-    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
-
-    funobj->clearParent();
-    funobj->clearProto();
-
     if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(iface))||
        !JS_SetReservedSlot(ccx, funobj, 1, PRIVATE_TO_JSVAL(this)))
         return JS_FALSE;
 
-    {   // scoped lock
-        XPCAutoLock lock(ccx.GetRuntime()->GetMapLock());
-        mVal = OBJECT_TO_JSVAL(funobj);
-        mFlags |= RESOLVED;
-    }
+    *vp = OBJECT_TO_JSVAL(funobj);
 
     return JS_TRUE;
 }

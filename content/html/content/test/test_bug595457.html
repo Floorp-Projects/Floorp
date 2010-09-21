@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=595457
+-->
+<head>
+  <title>Test for Bug 595457</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=595457">Mozilla Bug 595457</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 595457 **/
+
+function checkDatalistOptions(aDatalist, aOptions)
+{
+  var datalistOptions = datalist.options;
+  var length = datalistOptions.length;
+
+  is(length, options.length, "datalist should have " + options.length + " options");
+
+  for (var i=0; i<length; ++i) {
+    is(datalistOptions[i], options[i], options[i] +
+                                       "should be in the datalist options");
+  }
+}
+
+var datalist = document.createElement("datalist");
+var select = document.createElement("select");
+var options = [ new Option("foo"), new Option("bar") ];
+
+datalist.appendChild(select);
+
+for each(option in options) {
+  select.appendChild(option);
+}
+
+checkDatalistOptions(datalist, options);
+
+var label = document.createElement("label");
+datalist.appendChild(label);
+
+options[2] = new Option("foobar");
+label.appendChild(options[2]);
+
+checkDatalistOptions(datalist, options);
+
+options[3] = new Option();
+datalist.appendChild(options[3]);
+
+checkDatalistOptions(datalist, options);
+
+</script>
+</pre>
+</body>
+</html>

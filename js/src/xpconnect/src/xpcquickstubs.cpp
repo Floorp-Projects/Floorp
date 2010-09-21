@@ -170,7 +170,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsval idval, uintN argc,
     // XPConnect to use. Use them to stick the necessary info here.
     JSFunction *fun =
         JS_NewFunction(cx, reinterpret_cast<JSNative>(PropertyOpForwarder),
-                       argc, JSFUN_FAST_NATIVE, obj, name);
+                       argc, 0, obj, name);
     if(!fun)
         return JS_FALSE;
 
@@ -342,8 +342,8 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    JSFastNative forward = wantGetter ? Jsvalify(js_obj_defineGetter)
-                                      : Jsvalify(js_obj_defineSetter);
+    JSNative forward = wantGetter ? Jsvalify(js_obj_defineGetter)
+                                  : Jsvalify(js_obj_defineSetter);
     jsval id = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     if(!JSVAL_IS_STRING(id))
         return forward(cx, argc, vp);
@@ -434,7 +434,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                         if(!JS_DefineFunction(
                                cx, proto, fs->name,
                                reinterpret_cast<JSNative>(fs->native),
-                               fs->arity, flags | JSFUN_FAST_NATIVE))
+                               fs->arity, flags))
                             return JS_FALSE;
                     }
                 }
@@ -446,8 +446,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                     {
                         if(!JS_DefineFunction(
                                cx, proto, ts->name, ts->native, ts->arity,
-                               flags | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS |
-                                       JSFUN_TRCINFO))
+                               flags | JSFUN_STUB_GSOPS | JSFUN_TRCINFO))
                             return JS_FALSE;
                     }
                 }
@@ -543,7 +542,7 @@ GetMethodInfo(JSContext *cx,
 {
     JSObject *funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
-                 "JSFastNative callee should be Function object");
+                 "JSNative callee should be Function object");
     JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
     jsid methodId = str ? INTERNED_STRING_TO_JSID(str) : JSID_VOID;
 

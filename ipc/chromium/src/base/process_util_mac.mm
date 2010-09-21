@@ -17,192 +17,149 @@
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
 #include "base/rand_util.h"
-#include "base/scoped_ptr.h"
 #include "base/string_util.h"
 #include "base/time.h"
-#include "chrome/common/mach_ipc_mac.h"
 
 namespace base {
 
-static std::string MachErrorCode(kern_return_t err) {
-  return StringPrintf("0x%x %s", err, mach_error_string(err));
-}
-
-// Forks the current process and returns the child's |task_t| in the parent
-// process.
-static pid_t fork_and_get_task(task_t* child_task) {
-  const int kTimeoutMs = 100;
-  kern_return_t err;
-
-  // Put a random number into the channel name, so that a compromised renderer
-  // can't pretend being the child that's forked off.
-  std::string mach_connection_name = StringPrintf(
-      "org.mozilla.samplingfork.%p.%d",
-      child_task, base::RandInt(0, std::numeric_limits<int>::max()));
-  ReceivePort parent_recv_port(mach_connection_name.c_str());
-
-  // Error handling philosophy: If Mach IPC fails, don't touch |child_task| but
-  // return a valid pid. If IPC fails in the child, the parent will have to wait
-  // until kTimeoutMs is over. This is not optimal, but I've never seen it
-  // happen, and stuff should still mostly work.
-  pid_t pid = fork();
-  switch (pid) {
-    case -1:
-      return pid;
-    case 0: {  // child
-      ReceivePort child_recv_port;
-
-      MachSendMessage child_message(/* id= */0);
-      if (!child_message.AddDescriptor(mach_task_self())) {
-        LOG(ERROR) << "child AddDescriptor(mach_task_self()) failed.";
-        return pid;
-      }
-      mach_port_t raw_child_recv_port = child_recv_port.GetPort();
-      if (!child_message.AddDescriptor(raw_child_recv_port)) {
-        LOG(ERROR) << "child AddDescriptor(" << raw_child_recv_port
-                   << ") failed.";
-        return pid;
-      }
-
-      MachPortSender child_sender(mach_connection_name.c_str());
-      err = child_sender.SendMessage(child_message, kTimeoutMs);
-      if (err != KERN_SUCCESS) {
-        LOG(ERROR) << "child SendMessage() failed: " << MachErrorCode(err);
-        return pid;
-      }
-
-      MachReceiveMessage parent_message;
-      err = child_recv_port.WaitForMessage(&parent_message, kTimeoutMs);
-      if (err != KERN_SUCCESS) {
-        LOG(ERROR) << "child WaitForMessage() failed: " << MachErrorCode(err);
-        return pid;
-      }
-
-      if (parent_message.GetTranslatedPort(0) == MACH_PORT_NULL) {
-        LOG(ERROR) << "child GetTranslatedPort(0) failed.";
-        return pid;
-      }
-      err = task_set_bootstrap_port(mach_task_self(),
-                                    parent_message.GetTranslatedPort(0));
-      if (err != KERN_SUCCESS) {
-        LOG(ERROR) << "child task_set_bootstrap_port() failed: "
-                   << MachErrorCode(err);
-        return pid;
-      }
-      break;
-    }
-    default: {  // parent
-      MachReceiveMessage child_message;
-      err = parent_recv_port.WaitForMessage(&child_message, kTimeoutMs);
-      if (err != KERN_SUCCESS) {
-        LOG(ERROR) << "parent WaitForMessage() failed: " << MachErrorCode(err);
-        return pid;
-      }
-
-      if (child_message.GetTranslatedPort(0) == MACH_PORT_NULL) {
-        LOG(ERROR) << "parent GetTranslatedPort(0) failed.";
-        return pid;
-      }
-      *child_task = child_message.GetTranslatedPort(0);
-
-      if (child_message.GetTranslatedPort(1) == MACH_PORT_NULL) {
-        LOG(ERROR) << "parent GetTranslatedPort(1) failed.";
-        return pid;
-      }
-      MachPortSender parent_sender(child_message.GetTranslatedPort(1));
-
-      MachSendMessage parent_message(/* id= */0);
-      if (!parent_message.AddDescriptor(bootstrap_port)) {
-        LOG(ERROR) << "parent AddDescriptor(" << bootstrap_port << ") failed.";
-        return pid;
-      }
-
-      err = parent_sender.SendMessage(parent_message, kTimeoutMs);
-      if (err != KERN_SUCCESS) {
-        LOG(ERROR) << "parent SendMessage() failed: " << MachErrorCode(err);
-        return pid;
-      }
-      break;
-    }
+void FreeEnvVarsArray(char* array[], int length)
+{
+  for (int i = 0; i < length; i++) {
+    free(array[i]);
   }
-  return pid;
+  delete[] array;
 }
 
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
-               bool wait, ProcessHandle* process_handle,
-               task_t* process_task) {
+               bool wait, ProcessHandle* process_handle) {
   return LaunchApp(argv, fds_to_remap, environment_map(),
-                   wait, process_handle, process_task);
+                   wait, process_handle);
 }
 
-bool LaunchApp(
-    const std::vector<std::string>& argv,
-    const file_handle_mapping_vector& fds_to_remap,
-    const environment_map& environ,
-    bool wait,
-    ProcessHandle* process_handle,
-    task_t* task_handle) {
-  pid_t pid;
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+               const environment_map& env_vars_to_set,
+               bool wait, ProcessHandle* process_handle,
+               ProcessArchitecture arch) {
+  bool retval = true;
 
-  if (task_handle == NULL) {
-    pid = fork();
-  } else {
-    // On OS X, the task_t for a process is needed for several reasons. Sadly,
-    // the function task_for_pid() requires privileges a normal user doesn't
-    // have. Instead, a short-lived Mach IPC connection is opened between parent
-    // and child, and the child sends its task_t to the parent at fork time.
-    *task_handle = MACH_PORT_NULL;
-    pid = fork_and_get_task(task_handle);
+  char* argv_copy[argv.size() + 1];
+  for (size_t i = 0; i < argv.size(); i++) {
+    argv_copy[i] = const_cast<char*>(argv[i].c_str());
+  }
+  argv_copy[argv.size()] = NULL;
+
+  // Make sure we don't leak any FDs to the child process by marking all FDs
+  // as close-on-exec.
+  SetAllFDsToCloseOnExec();
+
+  // Copy _NSGetEnviron() to a new char array and add the variables
+  // in env_vars_to_set.
+  // Existing variables are overwritten by env_vars_to_set.
+  int pos = 0;
+  environment_map combined_env_vars = env_vars_to_set;
+  while((*_NSGetEnviron())[pos] != NULL) {
+    std::string varString = (*_NSGetEnviron())[pos];
+    std::string varName = varString.substr(0, varString.find_first_of('='));
+    std::string varValue = varString.substr(varString.find_first_of('=') + 1);
+    if (combined_env_vars.find(varName) == combined_env_vars.end()) {
+      combined_env_vars[varName] = varValue;
+    }
+    pos++;
+  }
+  int varsLen = combined_env_vars.size() + 1;
+
+  char** vars = new char*[varsLen];
+  int i = 0;
+  for (environment_map::const_iterator it = combined_env_vars.begin();
+       it != combined_env_vars.end(); ++it) {
+    std::string entry(it->first);
+    entry += "=";
+    entry += it->second;
+    vars[i] = strdup(entry.c_str());
+    i++;
+  }
+  vars[i] = NULL;
+
+  posix_spawn_file_actions_t file_actions;
+  if (posix_spawn_file_actions_init(&file_actions) != 0) {
+    FreeEnvVarsArray(vars, varsLen);
+    return false;
   }
 
-  if (pid < 0)
-    return false;
+  // Turn fds_to_remap array into a set of dup2 calls.
+  for (file_handle_mapping_vector::const_iterator it = fds_to_remap.begin();
+       it != fds_to_remap.end();
+       ++it) {
+    int src_fd = it->first;
+    int dest_fd = it->second;
 
-  if (pid == 0) {
-    // Child process
-
-    InjectiveMultimap fd_shuffle;
-    for (file_handle_mapping_vector::const_iterator
-        it = fds_to_remap.begin(); it != fds_to_remap.end(); ++it) {
-      fd_shuffle.push_back(InjectionArc(it->first, it->second, false));
-    }
-
-    for (environment_map::const_iterator it = environ.begin();
-         it != environ.end(); ++it) {
-      if (it->first.empty())
-        continue;
-
-      if (it->second.empty()) {
-        unsetenv(it->first.c_str());
-      } else {
-        setenv(it->first.c_str(), it->second.c_str(), 1);
+    if (src_fd == dest_fd) {
+      int flags = fcntl(src_fd, F_GETFD);
+      if (flags != -1) {
+        fcntl(src_fd, F_SETFD, flags & ~FD_CLOEXEC);
+      }
+    } else {
+      if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
+        posix_spawn_file_actions_destroy(&file_actions);
+        FreeEnvVarsArray(vars, varsLen);
+        return false;
       }
     }
+  }
 
-    // Obscure fork() rule: in the child, if you don't end up doing exec*(),
-    // you call _exit() instead of exit(). This is because _exit() does not
-    // call any previously-registered (in the parent) exit handlers, which
-    // might do things like block waiting for threads that don't even exist
-    // in the child.
-    if (!ShuffleFileDescriptors(fd_shuffle))
-      _exit(127);
+  // Set up the CPU preference array.
+  cpu_type_t cpu_types[1];
+  switch (arch) {
+    case PROCESS_ARCH_I386:
+      cpu_types[0] = CPU_TYPE_X86;
+      break;
+    case PROCESS_ARCH_X86_64:
+      cpu_types[0] = CPU_TYPE_X86_64;
+      break;
+    case PROCESS_ARCH_PPC:
+      cpu_types[0] = CPU_TYPE_POWERPC;
+    default:
+      cpu_types[0] = CPU_TYPE_ANY;
+      break;
+  }
 
-    // If we are using the SUID sandbox, it sets a magic environment variable
-    // ("SBX_D"), so we remove that variable from the environment here on the
-    // off chance that it's already set.
-    unsetenv("SBX_D");
+  // Initialize spawn attributes.
+  posix_spawnattr_t spawnattr;
+  if (posix_spawnattr_init(&spawnattr) != 0) {
+    FreeEnvVarsArray(vars, varsLen);
+    return false;
+  }
 
-    CloseSuperfluousFds(fd_shuffle);
+  // Set spawn attributes.
+  size_t attr_count = 1;
+  size_t attr_ocount = 0;
+  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, cpu_types, &attr_ocount) != 0 ||
+      attr_ocount != attr_count) {
+    FreeEnvVarsArray(vars, varsLen);
+    posix_spawnattr_destroy(&spawnattr);
+    return false;
+  }
 
-    scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
-    for (size_t i = 0; i < argv.size(); i++)
-      argv_cstr[i] = const_cast<char*>(argv[i].c_str());
-    argv_cstr[argv.size()] = NULL;
-    execvp(argv_cstr[0], argv_cstr.get());
-    _exit(127);
+  int pid = 0;
+  int spawn_succeeded = (posix_spawnp(&pid,
+                                      argv_copy[0],
+                                      &file_actions,
+                                      &spawnattr,
+                                      argv_copy,
+                                      vars) == 0);
+
+  FreeEnvVarsArray(vars, varsLen);
+
+  posix_spawn_file_actions_destroy(&file_actions);
+
+  posix_spawnattr_destroy(&spawnattr);
+
+  bool process_handle_valid = pid > 0;
+  if (!spawn_succeeded || !process_handle_valid) {
+    retval = false;
   } else {
-    // Parent process
     if (wait)
       HANDLE_EINTR(waitpid(pid, 0, 0));
 
@@ -210,14 +167,14 @@ bool LaunchApp(
       *process_handle = pid;
   }
 
-  return true;
+  return retval;
 }
 
 bool LaunchApp(const CommandLine& cl,
                bool wait, bool start_hidden, ProcessHandle* process_handle) {
   // TODO(playmobil): Do we need to respect the start_hidden flag?
   file_handle_mapping_vector no_files;
-  return LaunchApp(cl.argv(), no_files, wait, process_handle, NULL);
+  return LaunchApp(cl.argv(), no_files, wait, process_handle);
 }
 
 NamedProcessIterator::NamedProcessIterator(const std::wstring& executable_name,

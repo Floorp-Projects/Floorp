@@ -1,16 +1,59 @@
-.wizard-header-icon {
-  list-style-image: url(chrome://browser/skin/sync-32.png);
-}
-
-wizard,
-.wizard-page-box,
-.wizard-header {
-  -moz-appearance: none !important;
-}
-
 wizard {
-  background-color: #FFF;
-  background: url(chrome://browser/skin/sync-bg.png) #FFF repeat-x center -80px;
+  -moz-appearance: none;
+  width: 55em;
+  height: 42em;
+  padding: 0;
+  background-color: Window;
+}
+
+.wizard-page-box {
+  -moz-appearance: none;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0;
+}
+
+wizardpage {
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  margin: 0;
+  padding: 0 8em;
+  background-color: Window;
+}
+
+.wizard-header {
+  -moz-appearance: none;
+  border: none;
+  padding: 2em 0 1em 0;
+  text-align: center;
+}
+.wizard-header-label {
+  font-size: 24pt;
+  font-weight: normal;
+}
+
+.wizard-buttons {
+  border-top: 2px solid #ccd9ea;
+  background-color: #f1f5fb;
+  padding: 1em;
+}
+
+.wizard-buttons-separator {
+  visibility: collapse;
+}
+
+.wizard-header-icon {
+  visibility: collapse;
+}
+
+.accountChoiceButton {
+  font: menu;
+}
+
+.confirm {
+  border: 1px solid black;
+  padding: 1em;
+  border-radius: 5px;
 }
 
 /* Override the text-link style from global.css */
@@ -22,33 +65,10 @@ wizard {
 }
 
 
-.accountChoiceButton,
-.mergeChoiceButton {
-  -moz-appearance: none;
-  border: #999999 1px solid !important;
-  padding: 2px 3px;
-  -moz-border-radius: 6px;
-  background-color: menu;
-  -moz-box-shadow:
-    inset rgba(255, 255, 255, 0.5) 0 1px 0px,
-    inset rgba(0, 0, 0, 0.1) 0 -2px 0px,
-    rgba(0, 0, 0, 0.1) 0px 1px 0px;
-}
-
-.accountChoiceButton:hover,
-.mergeChoiceButton[selected="true"] {
-  background-color: -moz-MenuHover;
-  color: -moz-MenuHoverText;
-}
-
-.mergeChoiceButtonBox {
-  padding: 0.2em;
-}
-
 .success,
 .error {
   padding: 2px;
-  -moz-border-radius: 2px;
+  border-radius: 2px;
 }
 
 .error {
@@ -75,24 +95,8 @@ wizard {
   font-size: 100%;
 }
 
-/* Buttons on first page of wizard */
-#newAccount,
-#existingAccount {
-  min-height: 5em;
-}
-#newAccount image {
-  list-style-image: url("chrome://browser/skin/sync-usedNever.png");
-}
-#existingAccount image {
-  list-style-image: url("chrome://browser/skin/sync-usedBefore.png");
-}
-
 .inputColumn {
   -moz-margin-end: 2px
-}
-
-#tosDesc {
-  width: 16em;
 }
 
 #connect-throbber image,
@@ -100,18 +104,7 @@ wizard {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-/* Merge choice images */
-#resetClient .mergeChoiceImage,
-#chosenActionMerge image {
-  list-style-image: url("chrome://browser/skin/sync-merge.png");
-}
-
-#wipeClient .mergeChoiceImage,
-#chosenActionWipeClient image {
-  list-style-image: url("chrome://browser/skin/sync-wipeClient.png");
-}
-
-#wipeRemote .mergeChoiceImage,
-#chosenActionWipeServer image {
-  list-style-image: url("chrome://browser/skin/sync-wipeServer.png");
+#successPageIcon {
+  /* TODO replace this with a 128px version (bug 591122) */
+  list-style-image: url("chrome://browser/skin/sync-32.png");
 }

@@ -87,3 +87,4 @@
     COMPONENT(SYSTEMINFO, nsSystemInfoConstructor)
     COMPONENT(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor)
     COMPONENT(IOUTIL, nsIOUtilConstructor)
+    COMPONENT(CYCLE_COLLECTOR_LOGGER, nsCycleCollectorLoggerConstructor)

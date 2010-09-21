@@ -160,6 +160,11 @@ protected:
    */
   PRBool EmbeddedByReference(nsIFrame **aEmbeddingFrame = nsnull);
 
+  /* Returns true if our content is the document element and our document is
+   * being used as an image.
+   */
+  PRBool IsRootOfImage();
+
   // A hash-set containing our nsSVGForeignObjectFrame descendants. Note we use
   // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
   // subtree if we were to use a list (see bug 381285 comment 20).

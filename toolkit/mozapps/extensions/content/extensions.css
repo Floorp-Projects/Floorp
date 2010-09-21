@@ -87,6 +87,17 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#detail-row");
 }
 
+#addonitem-popup > menuitem[disabled="true"] {
+  display: none;
+}
+
+#addonitem-popup[addontype="theme"] > #menuitem_enableItem,
+#addonitem-popup[addontype="theme"] > #menuitem_disableItem,
+#addonitem-popup:not([addontype="theme"]) > #menuitem_enableTheme,
+#addonitem-popup:not([addontype="theme"]) > #menuitem_disableTheme {
+  display: none;
+}
+
 #header-searching:not([active]) {
   visibility: hidden;
 }
@@ -115,10 +126,21 @@ xhtml|link {
 #detail-view:not([upgrade="true"]) .update-postfix,
 #detail-view[active="true"] .disabled-postfix,
 #detail-view[loading] > .detail-view-container,
-.detail-row:not([value]) {
+.detail-row:not([value]),
+#search-list[remote="false"] #search-allresults-link {
   display: none;
 }
 
-.view-pane:not(#updates-view) .addon .relnotes-toggle {
+.view-pane:not(#updates-view) .addon .relnotes-toggle,
+.view-pane:not(#updates-view) .addon .include-update,
+#updates-view:not([updatetype="available"]) .addon .include-update,
+#updates-view[updatetype="available"] .addon .update-available-notice {
+  display: none;
+}
+
+#addons-page:not([warning]) .global-warning,
+#addons-page:not([warning="safemode"]) .global-warning-safemode,
+#addons-page:not([warning="checkcompatibility"]) .global-warning-checkcompatibility,
+#addons-page:not([warning="updatesecurity"]) .global-warning-updatesecurity {
   display: none;
 }

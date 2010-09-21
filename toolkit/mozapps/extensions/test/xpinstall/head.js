@@ -2,11 +2,29 @@ const RELATIVE_DIR = "toolkit/mozapps/extensions/test/xpinstall/";
 
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/browser/" + RELATIVE_DIR;
-const CHROMEROOT = "chrome://mochikit/content/browser/" + RELATIVE_DIR;
 const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 const ADDONS_URL = "chrome://mozapps/content/extensions/extensions.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
+const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
+const CHROME_NAME = "mochikit";
+
+function getChromeRoot(path) {
+  if (path === undefined) {
+    return "chrome://" + CHROME_NAME + "/content/browser/" + RELATIVE_DIR
+  }
+  return getRootDirectory(path);
+}
+
+function extractChromeRoot(path) {
+  var path = getChromeRoot(path);
+  var jar = getJar(path);
+  if (jar) {
+    var tmpdir = extractJarToTmp(jar);
+    return "file://" + tmpdir.path + "/";
+  }
+  return path;
+}
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");

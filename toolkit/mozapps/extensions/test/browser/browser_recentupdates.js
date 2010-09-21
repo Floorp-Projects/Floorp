@@ -31,7 +31,7 @@ function test() {
     updateDate: new Date(Date.now() - (1000 * 60 * 60 * 25 * 30))
   }]);
   
-  open_manager(null, function(aWindow) {
+  open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     run_next_test();

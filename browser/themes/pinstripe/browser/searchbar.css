@@ -1,5 +1,5 @@
 .searchbar-textbox {
-  -moz-border-radius: 10000px;
+  border-radius: 10000px;
 }
 
 .searchbar-engine-button {
@@ -9,14 +9,6 @@
   -moz-margin-end: 2px;
   -moz-appearance: none;
   min-width: 0;
-}
-
-.searchbar-engine-button[addengines="true"] {
-  background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
-}
-
-.searchbar-engine-button[addengines="true"]:-moz-locale-dir(rtl) {
-  background-position: left center;
 }
 
 .searchbar-popup {
