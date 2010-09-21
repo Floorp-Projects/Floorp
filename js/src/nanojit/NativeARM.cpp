@@ -1327,7 +1327,7 @@ Assembler::asm_load64(LIns* ins)
         LIns*       base = ins->oprnd1();
         Register    rn = findRegFor(base, GpRegs);
         int         offset = ins->disp();
-        
+
         if (ins->isInReg()) {
             dd = prepareResultReg(ins, FpRegs);
         } else {
@@ -1371,7 +1371,7 @@ Assembler::asm_load64(LIns* ins)
     } else {
         NanoAssert(ins->isInAr());
         int         d = arDisp(ins);
-        
+
         LIns*       base = ins->oprnd1();
         Register    rn = findRegFor(base, GpRegs);
         int         offset = ins->disp();
@@ -2426,7 +2426,7 @@ Assembler::asm_cond(LIns* ins)
     }
 
     freeResourcesOf(ins);
-    
+
     asm_cmp(ins);
 }
 
@@ -2772,7 +2772,7 @@ Assembler::asm_qhi(LIns* ins)
     Register rd = prepareResultReg(ins, GpRegs);
     LIns *lhs = ins->oprnd1();
     int d = findMemFor(lhs);
-    
+
     LDR(rd, FP, d+4);
 
     freeResourcesOf(ins);
@@ -2784,7 +2784,7 @@ Assembler::asm_qlo(LIns* ins)
     Register rd = prepareResultReg(ins, GpRegs);
     LIns *lhs = ins->oprnd1();
     int d = findMemFor(lhs);
-    
+
     LDR(rd, FP, d);
 
     freeResourcesOf(ins);

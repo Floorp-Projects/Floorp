@@ -1611,7 +1611,7 @@ namespace nanojit
             char* b = buf->buf;
             b[0] = 0;
             // The AccSet may contain bits set for regions not used by the
-            // embedding, if any have been specified via 
+            // embedding, if any have been specified via
             // (ACCSET_ALL & ~ACCSET_XYZ).  So only print those that are
             // relevant.
             for (int i = 0; i < EMB_NUM_USED_ACCS; i++) {
@@ -1918,7 +1918,7 @@ namespace nanojit
                 const char* qualStr;
                 switch (i->loadQual()) {
                 case LOAD_CONST:        qualStr = "/c"; break;
-                case LOAD_NORMAL:       qualStr = "";   break; 
+                case LOAD_NORMAL:       qualStr = "";   break;
                 case LOAD_VOLATILE:     qualStr = "/v"; break;
                 default: NanoAssert(0); qualStr = "/?"; break;
                 }
@@ -2483,7 +2483,7 @@ namespace nanojit
             if (storesSinceLastLoad != ACCSET_NONE) {
                 // Clear all normal (excludes CONST and MULTIPLE) loads
                 // aliased by stores and calls since the last time we were in
-                // this function.  
+                // this function.
                 AccSet a = storesSinceLastLoad & ((1 << EMB_NUM_USED_ACCS) - 1);
                 while (a) {
                     int acc = msbSet32(a);
@@ -2687,7 +2687,7 @@ namespace nanojit
                     // non-negative because the top bit must be zero.
                     // Example:  rshui [0,hi], 16 --> [0, hi>>16]
                     return Interval(0, x.hi >> y);
-                } 
+                }
             }
             goto worst_non_overflow;
         }
@@ -3061,7 +3061,7 @@ namespace nanojit
     }
 
     ValidateWriter::ValidateWriter(LirWriter *out, LInsPrinter* printer, const char* where)
-        : LirWriter(out), printer(printer), whereInPipeline(where), 
+        : LirWriter(out), printer(printer), whereInPipeline(where),
           checkAccSetExtras(0)
     {}
 
