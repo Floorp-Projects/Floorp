@@ -136,7 +136,7 @@ public:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult NotifyPainted(NPP instance);
     virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
-    virtual nsresult UseAsyncPainting(NPP instance, PRBool* aIsAsync);
+    NS_OVERRIDE virtual bool UseAsyncPainting() { return false; }
 
 private:
     NP_InitializeFunc mNP_Initialize;

@@ -263,7 +263,6 @@ public:
     nsresult AsyncSetWindow(NPWindow* window);
     nsresult NotifyPainted(void);
     nsresult GetSurface(gfxASurface** aSurface);
-    nsresult UseAsyncPainting(PRBool* aIsAsync);
 
 private:
     // Quirks mode support for various plugin mime types
