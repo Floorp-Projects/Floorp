@@ -44,9 +44,12 @@
 #include "gfxImageSurface.h"
 #include "gfxQuartzSurface.h"
 #include "gfxPlatform.h"
+#include "prenv.h"
 
 namespace mozilla {
 namespace gl {
+
+static PRBool gUseDoubleBufferedWindows = PR_TRUE;
 
 class CGLLibrary
 {
@@ -69,7 +72,10 @@ public:
                 return PR_FALSE;
             }
         }
-        
+
+        const char* db = PR_GetEnv("MOZ_CGL_DB");
+        gUseDoubleBufferedWindows = (!db || *db != '0');
+
         mInitialized = PR_TRUE;
         return PR_TRUE;
     }
@@ -79,8 +85,13 @@ public:
         if (mPixelFormat == nsnull) {
             NSOpenGLPixelFormatAttribute attribs[] = {
                 NSOpenGLPFAAccelerated,
+                NSOpenGLPFADoubleBuffer,
                 (NSOpenGLPixelFormatAttribute)nil 
             };
+
+            if (!gUseDoubleBufferedWindows) {
+              attribs[1] = (NSOpenGLPixelFormatAttribute)nil;
+            }
 
             mPixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
         }
@@ -163,6 +174,17 @@ public:
     PRBool SetupLookupFunction()
     {
         return PR_FALSE;
+    }
+
+    PRBool IsDoubleBuffered() 
+    { 
+      return gUseDoubleBufferedWindows; 
+    }
+
+    PRBool SwapBuffers()
+    {
+      [mContext flushBuffer];
+      return PR_TRUE;
     }
 
     PRBool BindTex2DOffscreen(GLContext *aOffscreen);

@@ -2727,9 +2727,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
       [mGLContext retain];
     }
-    [mGLContext makeCurrentContext];
     mGeckoChild->DispatchWindowEvent(paintEvent);
-    [mGLContext flushBuffer];
     return;
   }
 
