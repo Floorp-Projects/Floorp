@@ -119,6 +119,8 @@ public:
 
     virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
 
+    virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere);
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
