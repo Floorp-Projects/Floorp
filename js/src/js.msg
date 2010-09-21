@@ -338,3 +338,4 @@ MSG_DEF(JSMSG_NOT_EXPECTED_TYPE,      255, 3, JSEXN_TYPEERR, "{0}: expected {1},
 MSG_DEF(JSMSG_CALLER_IS_STRICT,       256, 0, JSEXN_TYPEERR, "access to strict mode caller function is censored")
 MSG_DEF(JSMSG_NEED_DEBUG_MODE,        257, 0, JSEXN_ERR, "function can be called only in debug mode")
 MSG_DEF(JSMSG_STRICT_CODE_LET_EXPR_STMT, 258, 0, JSEXN_ERR, "strict mode code may not contain unparenthesized let expression statements")
+MSG_DEF(JSMSG_CANT_CHANGE_EXTENSIBILITY, 259, 0, JSEXN_TYPEERR, "can't change object's extensibility")

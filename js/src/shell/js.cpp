@@ -761,7 +761,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
 
-                if (!JS_SealObject(cx, obj, JS_TRUE))
+                if (!JS_DeepFreezeObject(cx, obj))
                     return JS_FALSE;
                 gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)
@@ -2565,20 +2565,6 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Seal(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSObject *target;
-    JSBool deep = JS_FALSE;
-
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "o/b", &target, &deep))
-        return JS_FALSE;
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    if (!target)
-        return JS_TRUE;
-    return JS_SealObject(cx, target, deep);
-}
-
-static JSBool
 GetPDA(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *vobj, *aobj, *pdobj;
@@ -3025,6 +3011,7 @@ static Class split_global_class = {
         NULL, /* enumerate      */
         NULL, /* typeOf         */
         NULL, /* trace          */
+        NULL, /* fix            */
         split_thisObject,
         NULL, /* clear          */
     },
@@ -4182,7 +4169,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("clear",          Clear,          0,0),
     JS_FN("intern",         Intern,         1,0),
     JS_FN("clone",          Clone,          1,0),
-    JS_FN("seal",           Seal,           1,0),
     JS_FN("getpda",         GetPDA,         1,0),
     JS_FN("getslx",         GetSLX,         1,0),
     JS_FN("toint32",        ToInt32,        1,0),
@@ -4300,7 +4286,6 @@ static const char *const shell_help_messages[] = {
 "clear([obj])             Clear properties of object",
 "intern(str)              Internalize str in the atom table",
 "clone(fun[, scope])      Clone function object",
-"seal(obj[, deep])        Seal object, or object graph if deep",
 "getpda(obj)              Get the property descriptors for obj",
 "getslx(obj)              Get script line extent",
 "toint32(n)               Testing hook for JS_ValueToInt32",

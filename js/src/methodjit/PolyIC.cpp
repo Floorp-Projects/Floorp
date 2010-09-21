@@ -559,8 +559,6 @@ class SetPropCompiler : public PICStubCompiler
             return disable("dense array");
         if (!obj->isNative())
             return disable("non-native");
-        if (obj->sealed())
-            return disable("sealed");
 
         Class *clasp = obj->getClass();
 
@@ -590,8 +588,6 @@ class SetPropCompiler : public PICStubCompiler
 
             if (!holder->isNative())
                 return disable("non-native holder");
-            if (holder->sealed())
-                return disable("sealed holder");
 
             if (!shape->writable())
                 return disable("readonly");

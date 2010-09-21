@@ -373,7 +373,7 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
   // change the pointer value.
   // XXX This will need to change when bug 541212 is fixed -- CData::ValueSetter
   // could be called on a sealed object.
-  if (isFunction && !JS_SealObject(cx, result, JS_FALSE))
+  if (isFunction && !JS_FreezeObject(cx, result))
     return JS_FALSE;
 
   return JS_TRUE;
