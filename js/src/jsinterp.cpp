@@ -4046,7 +4046,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
         JSObject *obj2;
         JSAtom *atom;
         if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
-            JS_ASSERT(!obj->sealed());
+            JS_ASSERT(obj->isExtensible());
 
             /*
              * Fast property cache hit, only partially confirmed by
@@ -4155,7 +4155,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
             if (obj == obj2) {
                 shape = entry->vword.toShape();
                 JS_ASSERT(shape->writable());
-                JS_ASSERT(!obj2->sealed());
+                JS_ASSERT(obj2->isExtensible());
                 NATIVE_SET(cx, obj, shape, entry, &rval);
             }
             if (shape)

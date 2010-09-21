@@ -786,9 +786,8 @@ class TypedArrayTemplate
             return false;
         }
 
-        makeFastWithPrivate(cx, obj, tarray);
         rval->setObject(*obj);
-        return true;
+        return makeFastWithPrivate(cx, obj, tarray);
     }
 
     static void
@@ -868,10 +867,8 @@ class TypedArrayTemplate
             return false;
         }
 
-        makeFastWithPrivate(cx, nobj, ntarray);
-
         vp->setObject(*nobj);
-        return true;
+        return makeFastWithPrivate(cx, nobj, ntarray);
     }
 
     /* set(array[, offset]) */
@@ -962,13 +959,16 @@ class TypedArrayTemplate
     }
 
     // helper used by both the constructor and Slice()
-    static void
+    static bool
     makeFastWithPrivate(JSContext *cx, JSObject *obj, ThisTypeArray *tarray)
     {
         JS_ASSERT(obj->getClass() == slowClass());
         obj->setSharedNonNativeMap();
         obj->clasp = fastClass();
         obj->setPrivate(tarray);
+
+        AutoIdVector props(cx);
+        return obj->preventExtensions(cx, &props);
     }
 
   public:

@@ -720,17 +720,6 @@ JSObject::addProperty(JSContext *cx, jsid id,
 {
     JS_ASSERT(!JSID_IS_VOID(id));
 
-    /*
-     * You can't add properties to a sealed object. But note well that you can
-     * change property attributes in a sealed object, even though that replaces
-     * a Shape * in the scope's hash table -- but no id is added, so the object
-     * remains sealed.
-     */
-    if (sealed()) {
-        reportReadOnlyScope(cx);
-        return NULL;
-    }
-
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
     /* Search for id with adding = true in order to claim its entry. */
@@ -746,6 +735,15 @@ JSObject::addPropertyCommon(JSContext *cx, jsid id,
                             uintN flags, intN shortid,
                             Shape **spp)
 {
+    /*
+     * You can't add properties to a non-extensible object, but you can change
+     * attributes of properties in such objects.
+     */
+    if (!isExtensible()) {
+        reportReadOnlyScope(cx);
+        return NULL;
+    }
+
     PropertyTable *table = NULL;
     if (!inDictionaryMode()) {
         if (lastProp->entryCount() >= PropertyTree::MAX_HEIGHT) {
@@ -827,11 +825,6 @@ JSObject::putProperty(JSContext *cx, jsid id,
     Shape **spp, *shape, *overwriting;
 
     JS_ASSERT(!JSID_IS_VOID(id));
-
-    if (sealed()) {
-        reportReadOnlyScope(cx);
-        return NULL;
-    }
 
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
@@ -1041,11 +1034,6 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
 bool
 JSObject::removeProperty(JSContext *cx, jsid id)
 {
-    if (sealed()) {
-        reportReadOnlyScope(cx);
-        return false;
-    }
-
     Shape **spp = nativeSearch(id);
     Shape *shape = SHAPE_FETCH(spp);
     if (!shape) {

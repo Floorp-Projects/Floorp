@@ -134,7 +134,7 @@ PropertyCache::testForInit(JSRuntime *rt, jsbytecode *pc, JSObject *obj,
                            const js::Shape **shapep, PropertyCacheEntry **entryp)
 {
     JS_ASSERT(obj->slotSpan() >= JSSLOT_FREE(obj->getClass()));
-    JS_ASSERT(!obj->sealed());
+    JS_ASSERT(obj->isExtensible());
     uint32 kshape = obj->shape();
     PropertyCacheEntry *entry = &table[hash(pc, kshape)];
     *entryp = entry;
