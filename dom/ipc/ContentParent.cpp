@@ -616,7 +616,6 @@ ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
   return true;
 }
 
-
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 {
@@ -627,6 +626,18 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   }
   return true;
 }
-    
+
+bool
+ContentParent::RecvGeolocationStart()
+{
+  return true;
+}
+
+bool
+ContentParent::RecvGeolocationStop()
+{
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla

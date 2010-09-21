@@ -178,6 +178,9 @@ private:
                                  nsTArray<nsString>* aRetvals);
     virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
 
+    virtual bool RecvGeolocationStart();
+    virtual bool RecvGeolocationStop();
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
