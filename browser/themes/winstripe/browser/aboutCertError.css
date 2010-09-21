@@ -67,7 +67,7 @@ h2 {
   max-width: 52em;
   margin: 4em auto;
   border: 1px solid #FFBD09; /* pale yellow extracted from yellow passport icon */
-  -moz-border-radius: 10px;
+  border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
   background: url("chrome://global/skin/icons/sslWarning.png") left 0 no-repeat -moz-Field;

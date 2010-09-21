@@ -41,4 +41,5 @@ IPDLSRCS = \
   PDocumentRenderer.ipdl \
   PDocumentRendererNativeID.ipdl \
   PDocumentRendererShmem.ipdl \
+  PContentPermissionRequest.ipdl \
   $(NULL)

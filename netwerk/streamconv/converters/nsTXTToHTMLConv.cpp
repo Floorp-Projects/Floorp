@@ -37,6 +37,7 @@
 
 #include "nsTXTToHTMLConv.h"
 #include "nsNetUtil.h"
+#include "nsEscape.h"
 #include "nsStringStream.h"
 #include "nsAutoPtr.h"
 
@@ -309,11 +310,24 @@ nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back)
         nsString linkText;
         // href is implied
         mBuffer.Mid(linkText, front, back-front);
+
         mBuffer.Insert(NS_LITERAL_STRING("<a href=\""), front);
         cursor += front+9;
-        if (modLen)
+        if (modLen) {
             mBuffer.Insert(mToken->modText, cursor);
-        cursor += modLen-front+back;
+            cursor += modLen;
+        }
+
+        NS_ConvertUTF16toUTF8 linkTextUTF8(linkText);
+        nsCString escaped;
+        if (NS_EscapeURL(linkTextUTF8.Data(), linkTextUTF8.Length(), esc_Minimal, escaped)) {
+            mBuffer.Cut(cursor, back - front);
+            CopyUTF8toUTF16(escaped, linkText);
+            mBuffer.Insert(linkText, cursor);
+            back = front + linkText.Length();
+        }
+
+        cursor += back-front;
         mBuffer.Insert(NS_LITERAL_STRING("\">"), cursor);
         cursor += 2;
         mBuffer.Insert(linkText, cursor);

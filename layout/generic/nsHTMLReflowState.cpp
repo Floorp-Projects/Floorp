@@ -783,7 +783,7 @@ static PRBool
 GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
 {
   // See if it is an image frame
-  PRBool    result = PR_FALSE;
+  PRBool success = PR_FALSE;
 
   // Currently the only type of replaced frame that we can get the intrinsic
   // size for is an image frame
@@ -792,10 +792,11 @@ GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
   if (aFrame->GetType() == nsGkAtoms::imageFrame) {
     nsImageFrame* imageFrame = (nsImageFrame*)aFrame;
 
-    imageFrame->GetIntrinsicImageSize(aIntrinsicSize);
-    result = (aIntrinsicSize != nsSize(0, 0));
+    if (NS_SUCCEEDED(imageFrame->GetIntrinsicImageSize(aIntrinsicSize))) {
+      success = (aIntrinsicSize != nsSize(0, 0));
+    }
   }
-  return result;
+  return success;
 }
 
 /**
@@ -2186,21 +2187,22 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth)
   const nsStylePadding *stylePadding = frame->GetStylePadding();
   if (!stylePadding->GetPadding(mComputedPadding)) {
     // We have to compute the value
-    mComputedPadding.left = nsLayoutUtils::
+    // clamp negative calc() results to 0
+    mComputedPadding.left = NS_MAX(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetLeft());
-    mComputedPadding.right = nsLayoutUtils::
+                                 stylePadding->mPadding.GetLeft()));
+    mComputedPadding.right = NS_MAX(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetRight());
+                                 stylePadding->mPadding.GetRight()));
 
     // According to the CSS2 spec, percentages are calculated with respect to
     // containing block width for padding-top and padding-bottom
-    mComputedPadding.top = nsLayoutUtils::
+    mComputedPadding.top = NS_MAX(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetTop());
-    mComputedPadding.bottom = nsLayoutUtils::
+                                 stylePadding->mPadding.GetTop()));
+    mComputedPadding.bottom = NS_MAX(0, nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
-                                 stylePadding->mPadding.GetBottom());
+                                 stylePadding->mPadding.GetBottom()));
 
     frame->Properties().Set(nsIFrame::UsedPaddingProperty(),
                             new nsMargin(mComputedPadding));

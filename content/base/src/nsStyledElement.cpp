@@ -131,23 +131,28 @@ nsresult
 nsStyledElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                            PRBool aNotify)
 {
-  PRBool isId = PR_FALSE;
   if (aAttribute == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
     // Have to do this before clearing flag. See RemoveFromIdTable
     RemoveFromIdTable();
-    isId = PR_TRUE;
   }
 
-  nsMutationGuard guard;
-  
-  nsresult rv = nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+  return nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
+}
 
-  if (isId &&
-      (!guard.Mutated(0) || !HasAttr(kNameSpaceID_None, nsGkAtoms::id))) {
+nsresult
+nsStyledElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+                              const nsAString* aValue, PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && !aValue &&
+      aAttribute == nsGkAtoms::id) {
+    // The id has been removed when calling UnsetAttr but we kept it because
+    // the id is used for some layout stuff between UnsetAttr and AfterSetAttr.
+    // Now. the id is really removed so it would not be safe to keep this flag.
     UnsetFlags(NODE_HAS_ID);
   }
 
-  return rv;
+  return nsGenericElement::AfterSetAttr(aNamespaceID, aAttribute, aValue,
+                                        aNotify);
 }
 
 NS_IMETHODIMP

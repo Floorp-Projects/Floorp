@@ -50,7 +50,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(c8db3d5b-8e11-4219-84ea-d72b565ec738)]
+[scriptable, uuid(abedfd52-9821-4311-b50c-7ef229b43abf)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        azimuth;
@@ -140,7 +140,25 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        borderWidth;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        borderRadius;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderTopLeftRadius;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderTopRightRadius;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderBottomLeftRadius;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        borderBottomRightRadius;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        bottom;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        boxShadow;
                                         // raises(DOMException) on setting
 
            attribute DOMString        captionSide;
@@ -540,21 +558,6 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozBorderTopColors;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderRadius;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozBorderRadiusTopleft;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozBorderRadiusTopright;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozBorderRadiusBottomleft;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozBorderRadiusBottomright;
-                                        // raises(DOMException) on setting
-
            attribute DOMString        MozBoxAlign;
                                         // raises(DOMException) on setting
 
@@ -699,9 +702,6 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozStackSizing;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        MozBoxShadow;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBorderImage;

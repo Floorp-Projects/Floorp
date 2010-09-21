@@ -79,6 +79,8 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   formPointer = nsnull;
   ;
   headPointer = nsnull;
+  ;
+  deepTreeSurrogateParent = nsnull;
   start(fragment);
   charBufferLen = 0;
   charBuffer = jArray<PRUnichar,PRInt32>(1024);
@@ -532,6 +534,8 @@ nsHtml5TreeBuilder::endTokenization()
   formPointer = nsnull;
   ;
   headPointer = nsnull;
+  ;
+  deepTreeSurrogateParent = nsnull;
   if (stack) {
     while (currentPtr > -1) {
       stack[currentPtr]->release();
@@ -875,7 +879,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET:
           case NS_HTML5TREE_BUILDER_OBJECT:
           case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR:
+          case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
           case NS_HTML5TREE_BUILDER_BR:
           case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
           case NS_HTML5TREE_BUILDER_INPUT:
@@ -1071,7 +1075,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             case NS_HTML5TREE_BUILDER_BR:
             case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
-            case NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR: {
+            case NS_HTML5TREE_BUILDER_AREA_OR_WBR: {
               reconstructTheActiveFormattingElements();
             }
             case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE: {
@@ -2388,7 +2392,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             appendVoidElementToCurrentMayFoster(kNameSpaceID_XHTML, elementName, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR:
+          case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
           case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE:
           case NS_HTML5TREE_BUILDER_EMBED_OR_IMG:
           case NS_HTML5TREE_BUILDER_IMAGE:
@@ -3811,7 +3815,7 @@ nsHtml5TreeBuilder::newSnapshot()
     }
   }
   ;
-  return new nsHtml5StateSnapshot(stackCopy, listCopy, formPointer, headPointer, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
+  return new nsHtml5StateSnapshot(stackCopy, listCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
 }
 
 PRBool 
@@ -3821,7 +3825,7 @@ nsHtml5TreeBuilder::snapshotMatches(nsAHtml5TreeBuilderState* snapshot)
   PRInt32 stackLen = snapshot->getStackLength();
   jArray<nsHtml5StackNode*,PRInt32> listCopy = snapshot->getListOfActiveFormattingElements();
   PRInt32 listLen = snapshot->getListOfActiveFormattingElementsLength();
-  if (stackLen != currentPtr + 1 || listLen != listPtr + 1 || formPointer != snapshot->getFormPointer() || headPointer != snapshot->getHeadPointer() || mode != snapshot->getMode() || originalMode != snapshot->getOriginalMode() || framesetOk != snapshot->isFramesetOk() || inForeign != snapshot->isInForeign() || needToDropLF != snapshot->isNeedToDropLF() || quirks != snapshot->isQuirks()) {
+  if (stackLen != currentPtr + 1 || listLen != listPtr + 1 || formPointer != snapshot->getFormPointer() || headPointer != snapshot->getHeadPointer() || deepTreeSurrogateParent != snapshot->getDeepTreeSurrogateParent() || mode != snapshot->getMode() || originalMode != snapshot->getOriginalMode() || framesetOk != snapshot->isFramesetOk() || inForeign != snapshot->isInForeign() || needToDropLF != snapshot->isNeedToDropLF() || quirks != snapshot->isQuirks()) {
     return PR_FALSE;
   }
   for (PRInt32 i = listLen - 1; i >= 0; i--) {
@@ -3893,6 +3897,9 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
   ;
   headPointer = snapshot->getHeadPointer();
   ;
+  ;
+  deepTreeSurrogateParent = snapshot->getDeepTreeSurrogateParent();
+  ;
   mode = snapshot->getMode();
   originalMode = snapshot->getOriginalMode();
   framesetOk = snapshot->isFramesetOk();
@@ -3922,6 +3929,12 @@ nsIContent**
 nsHtml5TreeBuilder::getHeadPointer()
 {
   return headPointer;
+}
+
+nsIContent** 
+nsHtml5TreeBuilder::getDeepTreeSurrogateParent()
+{
+  return deepTreeSurrogateParent;
 }
 
 jArray<nsHtml5StackNode*,PRInt32> 

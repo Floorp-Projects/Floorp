@@ -44,6 +44,9 @@
 struct nsIntPoint;
 class nsIPluginInstanceOwner;
 
+/**
+ * This is used by Mac only.
+ */
 class NS_NO_VTABLE nsIPluginWidget : public nsISupports
 {
  public: 
@@ -61,6 +64,8 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
   NS_IMETHOD SetPluginEventModel(int inEventModel) = 0;
 
   NS_IMETHOD GetPluginEventModel(int* outEventModel) = 0;
+
+  NS_IMETHOD SetPluginDrawingModel(int inDrawingModel) = 0;
 
   NS_IMETHOD StartComplexTextInputForCurrentEvent() = 0;
 };

@@ -58,6 +58,11 @@ public:
     mFrameBufferLength(aFrameBufferLength),
     mTime(aTime)
   {
+    MOZ_COUNT_CTOR(nsAudioAvailableEventRunner);
+  }
+
+  ~nsAudioAvailableEventRunner() {
+    MOZ_COUNT_DTOR(nsAudioAvailableEventRunner);
   }
 
   NS_IMETHOD Run()
@@ -78,6 +83,12 @@ nsAudioAvailableEventManager::nsAudioAvailableEventManager(nsBuiltinDecoder* aDe
   mSignalBufferPosition(0),
   mMonitor("media.audioavailableeventmanager")
 {
+  MOZ_COUNT_CTOR(nsAudioAvailableEventManager);
+}
+
+nsAudioAvailableEventManager::~nsAudioAvailableEventManager()
+{
+  MOZ_COUNT_DTOR(nsAudioAvailableEventManager);
 }
 
 void nsAudioAvailableEventManager::Init(PRUint32 aChannels, PRUint32 aRate)

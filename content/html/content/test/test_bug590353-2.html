@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=590353
+-->
+<head>
+  <title>Test for Bug 590353</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590353">Mozilla Bug 590353</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 590353 **/
+
+var testData = [
+  [ "text", "foo", "" ],
+  [ "email", "foo@bar.com", "" ],
+  [ "url", "http:///foo.com", "" ],
+  [ "tel", "555 555 555 555", "" ],
+  [ "search", "foo", "" ],
+  [ "password", "secret", "" ],
+  [ "hidden", "foo", "foo" ],
+  [ "button", "foo", "foo" ],
+  [ "reset", "foo", "foo" ],
+  [ "submit", "foo", "foo" ],
+  [ "checkbox", true, false ],
+  [ "radio", true, false ],
+  [ "file", "590353_file", "" ],
+];
+
+function createFileWithData(fileName, fileData) {
+  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
+  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+  testFile.append(fileName);
+  var outStream = Components.
+                  classes["@mozilla.org/network/file-output-stream;1"].
+                  createInstance(Components.interfaces.nsIFileOutputStream);
+  outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                 0666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
+
+  return testFile;
+}
+
+var content = document.getElementById('content');
+var form = document.createElement('form');
+content.appendChild(form);
+
+for each (var data in testData) {
+  var e = document.createElement('input');
+  e.type = data[0];
+
+  if (data[0] == 'checkbox' || data[0] == 'radio') {
+    e.checked = data[1];
+  } else if (data[0] == 'file') {
+    // Need privileges to set a filename with .value and create a file.
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var file = createFileWithData(data[1], "file content");
+    e.value = file.path;
+  } else {
+    e.value = data[1];
+  }
+
+  form.appendChild(e);
+}
+
+form.reset();
+
+var size = form.elements.length;
+for (var i=0; i<size; ++i) {
+  var e = form.elements[i];
+
+  if (e.type == 'radio' || e.type == 'checkbox') {
+    is(e.checked, testData[i][2],
+       "the element checked value should be " + testData[i][2]);
+  } else {
+    is(e.value, testData[i][2],
+       "the element value should be " + testData[i][2]);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

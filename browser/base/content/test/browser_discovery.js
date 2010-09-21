@@ -19,7 +19,8 @@ function test() {
     event.currentTarget.removeEventListener("load", arguments.callee, true);
     iconDiscovery();
   }, true);
-  content.location = "chrome://mochikit/content/browser/browser/base/content/test/discovery.html";
+  var rootDir = getRootDirectory(gTestPath);
+  content.location = rootDir + "discovery.html";
 }
 
 var iconDiscoveryTests = [
@@ -36,7 +37,7 @@ var iconDiscoveryTests = [
 function runIconDiscoveryTest() {
   var test = iconDiscoveryTests[0];
   var head = doc().getElementById("linkparent");
-  var hasSrc = gProxyFavIcon.hasAttribute("src");
+  var hasSrc = gBrowser.getIcon() != null;
   if (test.pass)
     ok(hasSrc, test.text);
   else
@@ -50,14 +51,15 @@ function runIconDiscoveryTest() {
 function iconDiscovery() {
   setHandlerFunc(runIconDiscoveryTest);
   if (iconDiscoveryTests.length) {
-    gProxyFavIcon.removeAttribute("src");
+    gBrowser.setIcon(gBrowser.selectedTab, null);
 
     var test = iconDiscoveryTests[0];
     var head = doc().getElementById("linkparent");
     var link = doc().createElement("link");
 
+    var rootDir = getRootDirectory(gTestPath);
     var rel = test.rel || "icon";
-    var href = test.href || "chrome://mochikit/content/browser/browser/base/content/test/moz.png";
+    var href = test.href || rootDir + "/moz.png";
     var type = test.type || "image/png";
     if (test.pass == undefined)
       test.pass = true;

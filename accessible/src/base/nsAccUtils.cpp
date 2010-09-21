@@ -103,14 +103,14 @@ nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 PRInt32
 nsAccUtils::GetDefaultLevel(nsAccessible *aAccessible)
 {
-  PRUint32 role = nsAccUtils::Role(aAccessible);
+  PRUint32 role = aAccessible->Role();
 
   if (role == nsIAccessibleRole::ROLE_OUTLINEITEM)
     return 1;
 
   if (role == nsIAccessibleRole::ROLE_ROW) {
     nsAccessible *parent = aAccessible->GetParent();
-    if (Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+    if (parent && parent->Role() == nsIAccessibleRole::ROLE_TREE_TABLE) {
       // It is a row inside flatten treegrid. Group level is always 1 until it
       // is overriden by aria-level attribute.
       return 1;
@@ -357,7 +357,7 @@ nsAccUtils::GetAncestorWithRole(nsAccessible *aDescendant, PRUint32 aRole)
   nsAccessible *document = aDescendant->GetDocAccessible();
   nsAccessible *parent = aDescendant;
   while ((parent = parent->GetParent())) {
-    PRUint32 testRole = nsAccUtils::Role(parent);
+    PRUint32 testRole = parent->Role();
     if (testRole == aRole)
       return parent;
 
@@ -576,23 +576,6 @@ nsAccUtils::GetRoleMapEntry(nsINode *aNode)
   // Always use some entry if there is a non-empty role string
   // To ensure an accessible object is created
   return &nsARIAMap::gLandmarkRoleMap;
-}
-
-PRUint32
-nsAccUtils::RoleInternal(nsIAccessible *aAcc)
-{
-  PRUint32 role = nsIAccessibleRole::ROLE_NOTHING;
-  if (aAcc) {
-    nsAccessible* accessible = nsnull;
-    CallQueryInterface(aAcc, &accessible);
-
-    if (accessible) {
-      accessible->GetRoleInternal(&role);
-      NS_RELEASE(accessible);
-    }
-  }
-
-  return role;
 }
 
 PRUint8

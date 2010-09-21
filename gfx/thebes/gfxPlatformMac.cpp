@@ -76,11 +76,11 @@ gfxPlatformMac::CreatePlatformFontList()
 
 already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
-                                       gfxASurface::gfxImageFormat imageFormat)
+                                       gfxASurface::gfxContentType contentType)
 {
     gfxASurface *newSurface = nsnull;
 
-    newSurface = new gfxQuartzSurface(size, imageFormat);
+    newSurface = new gfxQuartzSurface(size, gfxASurface::FormatFromContent(contentType));
 
     NS_IF_ADDREF(newSurface);
     return newSurface;

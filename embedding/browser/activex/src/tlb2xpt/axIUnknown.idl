@@ -1,7 +1,0 @@
-#include "nsISupports.idl"
-
-// By happy coincidence, nsISupports implements the same methods as IUnknown
-// and the same UUID too!
-
-#define axIUnknown nsISupports
-

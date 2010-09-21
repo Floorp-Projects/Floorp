@@ -83,18 +83,16 @@ public:
    */
   static const PRUint16 OK = PR_UINT16_MAX;
 
-  /**
-   * Return this code from DoDatabaseWork to prevent the helper from firing a
-   * response to the main thread. Note that you must hold an additional
-   * reference to the helper somewhere if further processing is needed or else
-   * the helper will be deleted after returning from DoDatabaseWork.
-   */
-  static const PRUint16 NOREPLY = OK - 1;
-
   nsresult Dispatch(nsIEventTarget* aDatabaseThread);
 
   // Only for transactions!
   nsresult DispatchToTransactionPool();
+
+  void SetError(PRUint16 aErrorCode)
+  {
+    mError = true;
+    mErrorCode = aErrorCode;
+  }
 
 protected:
   AsyncConnectionHelper(IDBDatabase* aDatabase,
@@ -152,6 +150,13 @@ protected:
    * GetSuccessResult function will trigger the OnError callback.
    */
   virtual PRUint16 GetSuccessResult(nsIWritableVariant* aVariant);
+
+  /**
+   * Gives the subclass a chance to release any objects that must be released
+   * on the main thread, regardless of success or failure. Subclasses that
+   * implement this method *MUST* call the base class implementation as well.
+   */
+  virtual void ReleaseMainThreadObjects();
 
 protected:
   nsRefPtr<IDBDatabase> mDatabase;

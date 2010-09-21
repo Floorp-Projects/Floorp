@@ -44,7 +44,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout_debug
-DIRS		= src ui
+DIRS		= src ui tests
 
 # If we have a XULRunner-enabled tree, then build as a standalone XUL app.
 ifdef MOZ_XULRUNNER

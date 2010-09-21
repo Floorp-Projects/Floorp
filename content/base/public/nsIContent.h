@@ -304,6 +304,10 @@ public:
     return IsInNamespace(kNameSpaceID_XHTML);
   }
 
+  inline PRBool IsHTML(nsIAtom* aTag) const {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_XHTML);
+  }
+
   inline PRBool IsSVG() const {
     /* Some things in the SVG namespace are not in fact SVG elements */
     return IsNodeOfType(eSVG);

@@ -50,10 +50,14 @@ static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
 // Constructor and destructor
 
 static JSBool
-pm_construct(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval)
+pm_construct(JSContext* cx, uintN argc, jsval* vp)
 {
     uint32 mask;
-    if (!JS_ConvertArguments(cx, argc, argv, "u", &mask))
+    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
+        return JS_FALSE;
+
+    JSObject *obj = JS_NewObjectForConstructor(cx, vp);
+    if (!obj)
         return JS_FALSE;
 
     if (!JS_SealObject(cx, obj, JS_FALSE))
@@ -66,6 +70,7 @@ pm_construct(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval)
     }
 
     JS_SetPrivate(cx, obj, p);
+    *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
 

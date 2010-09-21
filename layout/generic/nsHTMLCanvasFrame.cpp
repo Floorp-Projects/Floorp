@@ -283,12 +283,19 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aLists.Content()->AppendNewToTop(
+  nsDisplayList replacedContent;
+
+  rv = replacedContent.AppendNewToTop(
       new (aBuilder) nsDisplayCanvas(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DisplaySelectionOverlay(aBuilder, aLists,
-                                 nsISelectionDisplay::DISPLAY_IMAGES);
+  rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
+                               nsISelectionDisplay::DISPLAY_IMAGES);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
 }
 
 nsIAtom*

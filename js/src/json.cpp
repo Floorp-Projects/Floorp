@@ -46,7 +46,6 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsdtoa.h"
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsiter.h"
@@ -527,21 +526,11 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, 
                 return js_AppendLiteral(scx->cb, "null");
         }
 
-        char numBuf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr;
-        jsdouble d = vp->isInt32() ? jsdouble(vp->toInt32()) : vp->toDouble();
-        numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, numBuf, sizeof numBuf,
-                           DTOSTR_STANDARD, 0, d);
-        if (!numStr) {
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-
-        jschar dstr[DTOSTR_STANDARD_BUFFER_SIZE];
-        size_t dbufSize = DTOSTR_STANDARD_BUFFER_SIZE;
-        if (!js_InflateStringToBuffer(cx, numStr, strlen(numStr), dstr, &dbufSize))
+        JSCharBuffer cb(cx);
+        if (!js_NumberValueToCharBuffer(cx, *vp, cb))
             return JS_FALSE;
 
-        return scx->cb.append(dstr, dbufSize);
+        return scx->cb.append(cb.begin(), cb.length());
     }
 
     if (vp->isObject() && !IsFunctionObject(*vp) && !IsXML(*vp)) {
@@ -627,7 +616,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
                 if (!Walk(cx, idName, obj, reviver, propValue.addr()))
                     return false;
                 if (propValue.value().isUndefined()) {
-                    if (!js_DeleteProperty(cx, obj, idName, propValue.addr()))
+                    if (!js_DeleteProperty(cx, obj, idName, propValue.addr(), false))
                         return false;
                 } else {
                     if (!obj->defineProperty(cx, idName, propValue.value(), NULL, NULL,
@@ -988,37 +977,30 @@ HandleData(JSContext *cx, JSONParser *jp, JSONDataType type)
 }
 
 JSBool
-js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len)
+js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len,
+                   DecodingMode decodingMode)
 {
-    uint32 i;
+    CHECK_REQUEST(cx);
 
     if (*jp->statep == JSON_PARSE_STATE_INIT) {
         PushState(cx, jp, JSON_PARSE_STATE_VALUE);
     }
 
-    for (i = 0; i < len; i++) {
+    for (uint32 i = 0; i < len; i++) {
         jschar c = data[i];
         switch (*jp->statep) {
-          case JSON_PARSE_STATE_VALUE:
+          case JSON_PARSE_STATE_ARRAY_INITIAL_VALUE:
             if (c == ']') {
-                // empty array
                 if (!PopState(cx, jp))
                     return JS_FALSE;
-
-                if (*jp->statep != JSON_PARSE_STATE_ARRAY)
-                    return JSONParseError(jp, cx);
-
+                JS_ASSERT(*jp->statep == JSON_PARSE_STATE_ARRAY_AFTER_ELEMENT);
                 if (!CloseArray(cx, jp) || !PopState(cx, jp))
                     return JS_FALSE;
-
                 break;
             }
+            // fall through if non-empty array or whitespace
 
-            if (c == '}') {
-                // we should only find these in OBJECT_KEY state
-                return JSONParseError(jp, cx);
-            }
-
+          case JSON_PARSE_STATE_VALUE:
             if (c == '"') {
                 *jp->statep = JSON_PARSE_STATE_STRING;
                 break;
@@ -1038,44 +1020,61 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 break;
             }
 
-          // fall through in case the value is an object or array
-          case JSON_PARSE_STATE_OBJECT_VALUE:
             if (c == '{') {
-                *jp->statep = JSON_PARSE_STATE_OBJECT;
-                if (!OpenObject(cx, jp) || !PushState(cx, jp, JSON_PARSE_STATE_OBJECT_PAIR))
+                *jp->statep = JSON_PARSE_STATE_OBJECT_AFTER_PAIR;
+                if (!OpenObject(cx, jp) || !PushState(cx, jp, JSON_PARSE_STATE_OBJECT_INITIAL_PAIR))
                     return JS_FALSE;
             } else if (c == '[') {
-                *jp->statep = JSON_PARSE_STATE_ARRAY;
-                if (!OpenArray(cx, jp) || !PushState(cx, jp, JSON_PARSE_STATE_VALUE))
+                *jp->statep = JSON_PARSE_STATE_ARRAY_AFTER_ELEMENT;
+                if (!OpenArray(cx, jp) || !PushState(cx, jp, JSON_PARSE_STATE_ARRAY_INITIAL_VALUE))
                     return JS_FALSE;
-            } else if (!JS_ISXMLSPACE(c)) {
-                return JSONParseError(jp, cx);
-            }
-            break;
-
-          case JSON_PARSE_STATE_OBJECT:
-            if (c == '}') {
-                if (!CloseObject(cx, jp) || !PopState(cx, jp))
+            } else if (JS_ISXMLSPACE(c)) {
+                // nothing to do
+            } else if (decodingMode == LEGACY && c == ']') {
+                if (!PopState(cx, jp))
                     return JS_FALSE;
-            } else if (c == ',') {
-                if (!PushState(cx, jp, JSON_PARSE_STATE_OBJECT_PAIR))
-                    return JS_FALSE;
-            } else if (c == ']' || !JS_ISXMLSPACE(c)) {
-                return JSONParseError(jp, cx);
-            }
-            break;
-
-          case JSON_PARSE_STATE_ARRAY:
-            if (c == ']') {
+                JS_ASSERT(*jp->statep == JSON_PARSE_STATE_ARRAY_AFTER_ELEMENT);
                 if (!CloseArray(cx, jp) || !PopState(cx, jp))
                     return JS_FALSE;
-            } else if (c == ',') {
+            } else {
+                return JSONParseError(jp, cx);
+            }
+            break;
+
+          case JSON_PARSE_STATE_ARRAY_AFTER_ELEMENT:
+            if (c == ',') {
                 if (!PushState(cx, jp, JSON_PARSE_STATE_VALUE))
+                    return JS_FALSE;
+            } else if (c == ']') {
+                if (!CloseArray(cx, jp) || !PopState(cx, jp))
                     return JS_FALSE;
             } else if (!JS_ISXMLSPACE(c)) {
                 return JSONParseError(jp, cx);
             }
             break;
+
+          case JSON_PARSE_STATE_OBJECT_AFTER_PAIR:
+            if (c == ',') {
+                if (!PushState(cx, jp, JSON_PARSE_STATE_OBJECT_PAIR))
+                    return JS_FALSE;
+            } else if (c == '}') {
+                if (!CloseObject(cx, jp) || !PopState(cx, jp))
+                    return JS_FALSE;
+            } else if (!JS_ISXMLSPACE(c)) {
+                return JSONParseError(jp, cx);
+            }
+            break;
+
+          case JSON_PARSE_STATE_OBJECT_INITIAL_PAIR:
+            if (c == '}') {
+                if (!PopState(cx, jp))
+                    return JS_FALSE;
+                JS_ASSERT(*jp->statep == JSON_PARSE_STATE_OBJECT_AFTER_PAIR);
+                if (!CloseObject(cx, jp) || !PopState(cx, jp))
+                    return JS_FALSE;
+                break;
+            }
+            // fall through if non-empty object or whitespace
 
           case JSON_PARSE_STATE_OBJECT_PAIR:
             if (c == '"') {
@@ -1083,11 +1082,15 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 *jp->statep = JSON_PARSE_STATE_OBJECT_IN_PAIR;
                 if (!PushState(cx, jp, JSON_PARSE_STATE_STRING))
                     return JS_FALSE;
-            } else if (c == '}') {
-                // pop off the object pair state and the object state
-                if (!CloseObject(cx, jp) || !PopState(cx, jp) || !PopState(cx, jp))
+            } else if (JS_ISXMLSPACE(c)) {
+                // nothing to do
+            } else if (decodingMode == LEGACY && c == '}') {
+                if (!PopState(cx, jp))
                     return JS_FALSE;
-            } else if (c == ']' || !JS_ISXMLSPACE(c)) {
+                JS_ASSERT(*jp->statep == JSON_PARSE_STATE_OBJECT_AFTER_PAIR);
+                if (!CloseObject(cx, jp) || !PopState(cx, jp))
+                    return JS_FALSE;
+            } else {
                 return JSONParseError(jp, cx);
             }
             break;
@@ -1114,7 +1117,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     return JS_FALSE;
             } else if (c == '\\') {
                 *jp->statep = JSON_PARSE_STATE_STRING_ESCAPE;
-            } else if (c < 31) {
+            } else if (c <= 0x1F) {
                 // The JSON lexical grammer does not allow a JSONStringCharacter to be
                 // any of the Unicode characters U+0000 thru U+001F (control characters).
                 return JSONParseError(jp, cx);

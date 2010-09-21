@@ -2797,6 +2797,14 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
 //-----------------------------------------------------------------------------
 
+NS_IMETHODIMP nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+  NS_PRECONDITION(aNewParent, "");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-----------------------------------------------------------------------------
+
 PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
   nsEventStatus status;

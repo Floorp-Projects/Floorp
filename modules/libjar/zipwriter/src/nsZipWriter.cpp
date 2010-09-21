@@ -301,7 +301,7 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, PRInt32 aIoFlags)
         return rv;
     }
 
-    rv = NS_NewBufferedOutputStream(getter_AddRefs(mStream), stream, 0x800);
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(mStream), stream, 3 * 1024 * 1024);
     if (NS_FAILED(rv)) {
         stream->Close();
         mHeaders.Clear();
@@ -710,6 +710,24 @@ NS_IMETHODIMP nsZipWriter::Close()
         if (NS_FAILED(rv)) {
             Cleanup();
             return rv;
+        }
+
+        // Go back and rewrite the file headers
+        for (PRInt32 i = 0; i < mHeaders.Count(); i++) {
+            nsZipHeader *header = mHeaders[i];
+            if (!header->mWriteOnClose)
+              continue;
+
+            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, header->mOffset);
+            if (NS_FAILED(rv)) {
+               Cleanup();
+               return rv;
+            }
+            rv = header->WriteFileHeader(mStream);
+            if (NS_FAILED(rv)) {
+               Cleanup();
+               return rv;
+            }
         }
     }
 

@@ -71,7 +71,7 @@ var mdObserver = {
       try {
         var window = mozmill.wm.getMostRecentWindow("");
         this.handler(new mozmill.controller.MozMillController(window));
-      } catch(ex) {
+      } catch (ex) {
           window.close();
           frame.events.fail({'function':ex});
       }

@@ -459,8 +459,10 @@ FindPrevNode(nsIDOMNode* aNode, nsIDOMNode* aRoot)
 /**
  * Check if there's a DOM word separator before aBeforeOffset in this node.
  * Always returns PR_TRUE if it's a BR element.
- * aSeparatorOffset is set to the index of the last separator if any is found
- * (0 for BR elements).
+ * aSeparatorOffset is set to the index of the first character in the last
+ * separator if any is found (0 for BR elements).
+ *
+ * This function does not modify aSeparatorOffset when it returns false.
  */
 static PRBool
 ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
@@ -480,6 +482,14 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
   NS_ASSERTION(textFragment, "Where is our text?");
   for (PRInt32 i = NS_MIN(aBeforeOffset, PRInt32(textFragment->GetLength())) - 1; i >= 0; --i) {
     if (IsDOMWordSeparator(textFragment->CharAt(i))) {
+      // Be greedy, find as many separators as we can
+      for (PRInt32 j = i - 1; j >= 0; --j) {
+        if (IsDOMWordSeparator(textFragment->CharAt(j))) {
+          i = j;
+        } else {
+          break;
+        }
+      }
       *aSeparatorOffset = i;
       return PR_TRUE;
     }
@@ -560,8 +570,25 @@ mozInlineSpellWordUtil::BuildSoftText()
   PRInt32 firstOffsetInNode = 0;
   PRInt32 checkBeforeOffset = mSoftBegin.mOffset;
   while (node) {
-    if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode))
+    if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode)) {
+      if (node == mSoftBegin.mNode) {
+        // If we find a word separator on the first node, look at the preceding
+        // word on the text node as well.
+        PRInt32 newOffset = 0;
+        if (firstOffsetInNode > 0) {
+          // Try to find the previous word boundary.  We ignore the return value
+          // of ContainsDOMWordSeparator here because there might be no preceding
+          // word separator (such as when we're at the end of the first word in
+          // the text node), in which case we just set the found offsets to 0.
+          // Otherwise, ContainsDOMWordSeparator finds us the correct word
+          // boundary so that we can avoid looking at too many words.
+          ContainsDOMWordSeparator(node, firstOffsetInNode - 1, &newOffset);
+        }
+        firstOffsetInNode = newOffset;
+        mSoftBegin.mOffset = newOffset;
+      }
       break;
+    }
     checkBeforeOffset = PR_INT32_MAX;
     if (IsBreakElement(mCSSView, node)) {
       // Since FindPrevNode follows tree *preorder*, we're about to traverse

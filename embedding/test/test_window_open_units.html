@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 594140</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=594140">Mozilla Bug 594140</a>
+<p id="display"></p>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var viewer =
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIWebNavigation)
+               .QueryInterface(Components.interfaces.nsIDocShell)
+               .contentViewer
+               .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+viewer.fullZoom = 2;
+
+var w = window.open("about:blank", "", "width=200,height=100");
+is(w.innerWidth, 400, "wrong width");
+is(w.innerHeight, 200, "wrong height");
+w.close();
+
+viewer.fullZoom = 1;
+
+</script>
+</pre>
+</body>
+</html>

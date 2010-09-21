@@ -517,7 +517,7 @@ public:
     PAINT_SYNC_DECODE_IMAGES = 0x02,
     PAINT_WIDGET_LAYERS = 0x04,
     PAINT_IGNORE_SUPPRESSION = 0x08,
-    PAINT_IGNORE_VIEWPORT_SCROLLING = 0x10,
+    PAINT_DOCUMENT_RELATIVE = 0x10,
     PAINT_HIDE_CARET = 0x20,
     PAINT_ALL_CONTINUATIONS = 0x40
   };
@@ -543,6 +543,9 @@ public:
    * even if aRenderingContext is non-null. This is useful if you want
    * to force rendering to use the widget's layer manager for testing
    * or speed. PAINT_WIDGET_LAYERS must be set if aRenderingContext is null.
+   * If PAINT_DOCUMENT_RELATIVE is used, the visible region is interpreted
+   * as being relative to the document.  (Normally it's relative to the CSS
+   * viewport.)
    *
    * So there are three possible behaviours:
    * 1) PAINT_WIDGET_LAYERS is set and aRenderingContext is null; we paint
@@ -805,6 +808,18 @@ public:
            (aCoord.GetUnit() == eStyleUnit_Percent &&
             aCoord.GetPercentValue() == 0.0) ||
            (aCoord.IsCalcUnit() &&
+            // clamp negative calc() to 0
+            nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) <= 0 &&
+            nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) <= 0);
+  }
+
+  static PRBool IsMarginZero(const nsStyleCoord &aCoord)
+  {
+    return (aCoord.GetUnit() == eStyleUnit_Coord &&
+            aCoord.GetCoordValue() == 0) ||
+           (aCoord.GetUnit() == eStyleUnit_Percent &&
+            aCoord.GetPercentValue() == 0.0) ||
+           (aCoord.IsCalcUnit() &&
             nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
             nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
   }
@@ -943,6 +958,12 @@ public:
                             PRUint32             aImageFlags);
 
   /**
+   * Convert an nsRect to a gfxRect.
+   */
+  static gfxRect RectToGfxRect(const nsRect& aRect,
+                               PRInt32 aAppUnitsPerDevPixel);
+
+  /**
    * Draw a drawable using the pixel snapping algorithm.
    * See https://wiki.mozilla.org/Gecko:Image_Snapping_and_Rendering
    *   @param aRenderingContext Where to draw the image, set up with an
@@ -1009,6 +1030,25 @@ public:
                                   const nsRect&        aDirty,
                                   PRUint32             aImageFlags,
                                   const nsRect*        aSourceArea = nsnull);
+
+  /**
+   * Given an imgIContainer, this method attempts to obtain an intrinsic
+   * px-valued height & width for it.  If the imgIContainer has a non-pixel
+   * value for either height or width, this method tries to generate a pixel
+   * value for that dimension using the intrinsic ratio (if available).
+   *
+   * This method will always set aGotWidth and aGotHeight to indicate whether
+   * we were able to successfully obtain (or compute) a value for each
+   * dimension.
+   *
+   * NOTE: This method is similar to ComputeSizeWithIntrinsicDimensions.  The
+   * difference is that this one is simpler and is suited to places where we
+   * have less information about the frame tree.
+   */
+  static void ComputeSizeForDrawing(imgIContainer* aImage,
+                                    nsIntSize&     aImageSize,
+                                    PRBool&        aGotWidth,
+                                    PRBool&        aGotHeight);
 
   /**
    * Given a source area of an image (in appunits) and a destination area

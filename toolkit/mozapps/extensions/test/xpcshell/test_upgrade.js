@@ -22,9 +22,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Will be enabled in the first version and disabled in subsequent versions
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -37,12 +35,10 @@ function run_test() {
       "XPCShell",
       "WINNT_x86",
     ]
-  }, dest);
+  }, profileDir);
 
   // Works in all tested versions
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -54,12 +50,10 @@ function run_test() {
     targetPlatforms: [
       "XPCShell_noarch-spidermonkey"
     ]
-  }, dest);
+  }, profileDir);
 
   // Will be disabled in the first version and enabled in the second.
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -68,12 +62,10 @@ function run_test() {
       maxVersion: "2"
     }],
     name: "Test Addon 3",
-  }, dest);
+  }, profileDir);
 
   // Will be enabled in both versions but will change version in between
-  dest = globalDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -82,7 +74,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 4",
-  }, dest);
+  }, globalDir);
   dest.lastModifiedTime = gInstallTime;
 
   do_test_pending();
@@ -95,7 +87,7 @@ function end_test() {
     globalDir.remove(true);
   }
   else {
-    globalDir.append("addon4@tests.mozilla.org");
+    globalDir.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
     globalDir.remove(true);
   }
   do_test_finished();
@@ -131,9 +123,7 @@ function run_test_1() {
 // Test that upgrading the application disables now incompatible add-ons
 function run_test_2() {
   // Upgrade the extension
-  dest = globalDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "2.0",
     targetApplications: [{
@@ -142,7 +132,7 @@ function run_test_2() {
       maxVersion: "2"
     }],
     name: "Test Addon 4",
-  }, dest);
+  }, globalDir);
   dest.lastModifiedTime = gInstallTime;
 
   restartManager("2");
@@ -172,9 +162,7 @@ function run_test_2() {
 // Test that nothing changes when only the build ID changes.
 function run_test_3() {
   // Upgrade the extension
-  dest = globalDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "3.0",
     targetApplications: [{
@@ -183,7 +171,7 @@ function run_test_3() {
       maxVersion: "3"
     }],
     name: "Test Addon 4",
-  }, dest);
+  }, globalDir);
   dest.lastModifiedTime = gInstallTime;
 
   // Simulates a simple Build ID change, the platform deletes extensions.ini

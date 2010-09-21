@@ -221,15 +221,13 @@ amManager.prototype = {
             },
           };
         }
-        var window;
+        var window = null;
         try {
           // Normal approach for single-process mode
-          window = aMessage.target.docShell
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindow).content;
+          window = aMessage.target.contentWindow;
         } catch (e) {
-          // Fallback for multiprocess (e10s) mode. Appears to work but has
-          // not had a full suite of automated tests run on it.
+          // Fallback for multiprocess (e10s) mode. Should reimplement this
+          // properly with Window IDs when possible, see bug 596109.
           window = aMessage.target.ownerDocument.defaultView;
         }
         return this.installAddonsFromWebpage(payload.mimetype,

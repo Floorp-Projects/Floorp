@@ -39,7 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
-interface nsIURI;
+interface nsIDOMFile;
 
 [scriptable, uuid(a4e2b2de-5712-4f80-aabb-7de3a747f227)]
 interface nsICapturePicker : nsISupports
@@ -88,7 +88,7 @@ interface nsICapturePicker : nsISupports
    * Get the captured image/video/audio.  This may be a data URI, file URI,
    * or a moz-filedata reference URI.
    */
-  readonly attribute nsIURI uri;
+  readonly attribute nsIDOMFile file;
 
   // The MIME type of the captured content.  Cannot be set after calling show()
   attribute AString type;

@@ -80,6 +80,7 @@ public:
    */
   virtual nsresult Init(imgIDecoderObserver* aObserver,
                         const char* aMimeType,
+                        const char* aURIString,
                         PRUint32 aFlags) = 0;
 
   /**
@@ -106,12 +107,35 @@ public:
   };
   static eDecoderType GetDecoderType(const char *aMimeType);
 
+  void IncrementAnimationConsumers();
+  void DecrementAnimationConsumers();
+#ifdef DEBUG
+  PRUint32 GetAnimationConsumers() { return mAnimationConsumers; }
+#endif
+
 protected:
   Image(imgStatusTracker* aStatusTracker);
 
+  /**
+   * Decides whether animation should or should not be happening,
+   * and makes sure the right thing is being done.
+   */
+  virtual void EvaluateAnimation();
+
+  virtual nsresult StartAnimation() = 0;
+  virtual nsresult StopAnimation() = 0;
+
   // Member data shared by all implementations of this abstract class
   nsAutoPtr<imgStatusTracker> mStatusTracker;
+  PRUint32                    mAnimationConsumers;
   PRPackedBool                mInitialized;   // Have we been initalized?
+  PRPackedBool                mAnimating;
+
+  /**
+   * Extended by child classes, if they have additional
+   * conditions for being able to animate
+   */
+  virtual PRBool ShouldAnimate() { return mAnimationConsumers > 0; }
 };
 
 } // namespace imagelib

@@ -4,8 +4,18 @@
 
 const TESTROOT = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const TESTROOT2 = "http://example.org/browser/toolkit/mozapps/extensions/test/xpinstall/";
-const CHROMEROOT = "chrome://mochikit/content/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
+
+var rootDir = getRootDirectory(gTestPath);
+var path = rootDir.split('/');
+var chromeName = path[0] + '//' + path[2];
+var croot = chromeName + "/content/browser/toolkit/mozapps/extensions/test/xpinstall/";
+var jar = getJar(croot);
+if (jar) {
+  var tmpdir = extractJarToTmp(jar);
+  croot = 'file://' + tmpdir.path + '/';
+}
+const CHROMEROOT = croot;
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
@@ -313,8 +323,11 @@ function test_url() {
 function test_localfile() {
   var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Components.interfaces.nsIChromeRegistry);
-  var path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;
-
+  try {
+    var path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;
+  } catch (ex) {
+    var path = CHROMEROOT + "corrupt.xpi";
+  }
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(path);
 
@@ -433,7 +446,19 @@ function test_theme() {
 
       gBrowser.removeTab(gBrowser.selectedTab);
       Services.perms.remove("example.com", "install");
-      runNextTest();
+
+      AddonManager.getAddonByID("{972ce4c6-7e08-4474-a285-3208198ce6fd}", function(aAddon) {
+        ok(aAddon.userDisabled, "Should be switching away from the default theme.");
+        // Undo the pending theme switch
+        aAddon.userDisabled = false;
+
+        AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
+          isnot(aAddon, null, "Test theme will have been installed");
+          aAddon.uninstall();
+
+          runNextTest();
+        });
+      });
     });
   });
 },

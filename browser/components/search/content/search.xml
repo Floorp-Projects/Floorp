@@ -121,7 +121,7 @@
                Components.classes["@mozilla.org/observer-service;1"]
                          .getService(Components.interfaces.nsIObserverService);
           os.addObserver(this, "browser-search-engine-modified", false);
-          
+
           this._addedObserver = true;
         ]]></body>
       </method>
@@ -275,7 +275,6 @@
               }
             }
           }
-          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
@@ -303,7 +302,6 @@
               }
             }
           }
-          BrowserSearch.updateSearchButton();
         ]]></body>
       </method>
 
@@ -581,15 +579,30 @@
           var cxmenu = document.getAnonymousElementByAttribute(textBox,
                                             "anonid", "input-box-contextmenu");
 
-          var element = document.createElementNS(kXULNS, "menuseparator");
+          var element, label, akey;
+
+          element = document.createElementNS(kXULNS, "menuseparator");
           cxmenu.appendChild(element);
+
+          var insertLocation = cxmenu.firstChild;
+          while (insertLocation.nextSibling &&
+                 insertLocation.getAttribute("cmd") != "cmd_paste")
+            insertLocation = insertLocation.nextSibling;
+          if (insertLocation) {
+            element = document.createElementNS(kXULNS, "menuitem");
+            label = this._stringBundle.getString("cmd_pasteAndSearch");
+            element.setAttribute("label", label);
+            element.setAttribute("cmd", "cmd_paste");
+            element.setAttribute("oncommand", "goDoCommand('cmd_paste'); document.getElementById('searchbar').handleSearchCommand();");
+            cxmenu.insertBefore(element, insertLocation.nextSibling);
+          }
+
           element = document.createElementNS(kXULNS, "menuitem");
-          var label = this._stringBundle.getString("cmd_clearHistory");
-          var akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
+          label = this._stringBundle.getString("cmd_clearHistory");
+          akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
           element.setAttribute("label", label);
           element.setAttribute("accesskey", akey);
           element.setAttribute("cmd", "cmd_clearhistory");
-
           cxmenu.appendChild(element);
 
           element = document.createElementNS(kXULNS, "menuitem");
@@ -602,7 +615,6 @@
           element.setAttribute("type", "checkbox");
           element.setAttribute("checked", this._suggestEnabled);
           element.setAttribute("autocheck", "false");
-
           this._suggestMenuItem = element;
           cxmenu.appendChild(element);
 
@@ -631,7 +643,7 @@
             popup.mInput = this;
             popup.view = this.controller.QueryInterface(Components.interfaces.nsITreeView);
             popup.invalidate();
-            
+
             popup.showCommentColumn = this.showCommentColumn;
             popup.showImageColumn = this.showImageColumn;
 

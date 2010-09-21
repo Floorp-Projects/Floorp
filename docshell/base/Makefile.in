@@ -48,6 +48,9 @@ LIBRARY_NAME	= basedocshell_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
+ifdef MOZ_TOOLKIT_SEARCH
+DEFINES += -DMOZ_TOOLKIT_SEARCH
+endif
 
 SDK_XPIDLSRCS = \
 		nsIGlobalHistory.idl \

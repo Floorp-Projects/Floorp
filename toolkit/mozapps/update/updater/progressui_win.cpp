@@ -335,12 +335,12 @@ InitProgressUI(int *argc, NS_tchar ***argv)
 int
 ShowProgressUI()
 {
-  // Only show the Progress UI if the process is taking significant time.
-  // Here we measure significant time as taking more than one second.
+  // Only show the Progress UI if the process is taking significant time. We
+  // measure significant time as sProgress being more than 60 out of 100.
 
   Sleep(500);
 
-  if (sQuit || sProgress > 50.0f)
+  if (sQuit || sProgress > 60.0f)
     return 0;
 
   // If we do not have updater.ini, then we should not bother showing UI.

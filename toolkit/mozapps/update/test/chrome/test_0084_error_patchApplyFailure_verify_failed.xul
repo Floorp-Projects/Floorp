@@ -40,10 +40,13 @@ function runTest() {
   let patches = getLocalPatchString("partial", null, null, null, null, null,
                                     STATE_PENDING) +
                 getLocalPatchString("complete", slowDownloadURL, "MD5",
-                                    "1234cd43a1c77e30191c53a329a3f99d");
+                                    "1234cd43a1c77e30191c53a329a3f99d", null,
+                                    "false");
   let updates = getLocalUpdateString(patches, null, null, null,
                                      Services.appinfo.version,
-                                     Services.appinfo.platformVersion);
+                                     Services.appinfo.platformVersion, null,
+                                     null, null, null, null, null, null,
+                                     "false");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 

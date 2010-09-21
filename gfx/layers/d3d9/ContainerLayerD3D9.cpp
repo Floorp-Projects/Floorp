@@ -158,6 +158,7 @@ ContainerLayerD3D9::RenderLayer()
     nsRefPtr<IDirect3DSurface9> renderSurface;
     renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
     device()->SetRenderTarget(0, renderSurface);
+    device()->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
     device()->GetVertexShaderConstantF(12, previousRenderTargetOffset, 1);
     renderTargetOffset[0] = (float)visibleRect.x;
     renderTargetOffset[1] = (float)visibleRect.y;
@@ -261,6 +262,15 @@ ContainerLayerD3D9::RenderLayer()
 
     device()->SetTexture(0, renderTexture);
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  }
+}
+
+void
+ContainerLayerD3D9::LayerManagerDestroyed()
+{
+  while (mFirstChild) {
+    GetFirstChildD3D9()->LayerManagerDestroyed();
+    RemoveChild(mFirstChild);
   }
 }
 

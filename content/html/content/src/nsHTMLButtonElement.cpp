@@ -63,6 +63,7 @@
 #include "nsFocusManager.h"
 #include "nsHTMLFormElement.h"
 #include "nsIConstraintValidation.h"
+#include "mozAutoDocUpdate.h"
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
 #define NS_OUTER_ACTIVATE_EVENT (1 << 1)
@@ -136,7 +137,7 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const;
+  void UpdateBarredFromConstraintValidation();
 
 protected:
   virtual PRBool AcceptAutofocus() const
@@ -217,6 +218,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormMethod, formmethod,
                                 kFormDefaultMethod->tag)
+NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormTarget, formtarget)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, TabIndex, tabindex, 0)
@@ -505,7 +507,14 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         //
         // Using presShell to dispatch the event. It makes sure that
         // event is not handled if the window is being destroyed.
-        if (presShell) {
+        if (presShell && (event.message != NS_FORM_SUBMIT ||
+                          mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
+                          // We know the element is a submit control, if this check is moved,
+                          // make sure formnovalidate is used only if it's a submit control.
+                          HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
+                          mForm->CheckValidFormSubmission())) {
+          // TODO: removing this code and have the submit event sent by the form
+          // see bug 592124.
           // Hold a strong ref while dispatching
           nsRefPtr<nsHTMLFormElement> form(mForm);
           presShell->HandleDOMEventWithTarget(mForm, &event, &status);
@@ -614,17 +623,27 @@ nsresult
 nsHTMLButtonElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify)
 {
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::type) {
-    if (!aValue) {
-      mType = kButtonDefaultType->value;
+  PRInt32 states = 0;
+
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::type) {
+      if (!aValue) {
+        mType = kButtonDefaultType->value;
+      }
+
+      UpdateBarredFromConstraintValidation();
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_MOZ_SUBMITINVALID;
+    } else if (aName == nsGkAtoms::disabled) {
+      UpdateBarredFromConstraintValidation();
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
     }
 
-    if (aNotify) {
+    if (aNotify && states) {
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
-        doc->ContentStatesChanged(this, nsnull,
-                                  NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        doc->ContentStatesChanged(this, nsnull, states);
       }
     }
   }
@@ -670,6 +689,10 @@ nsHTMLButtonElement::IntrinsicState() const
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 
+  if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
+    state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
+  }
+
   return state | NS_EVENT_STATE_OPTIONAL;
 }
 
@@ -682,6 +705,7 @@ nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
 
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID);
   }
@@ -689,10 +713,12 @@ nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
   return NS_OK;
 }
 
-PRBool
-nsHTMLButtonElement::IsBarredFromConstraintValidation() const
+void
+nsHTMLButtonElement::UpdateBarredFromConstraintValidation()
 {
-  return (mType == NS_FORM_BUTTON_BUTTON ||
-          mType == NS_FORM_BUTTON_RESET);
+  SetBarredFromConstraintValidation(mType == NS_FORM_BUTTON_BUTTON ||
+                                    mType == NS_FORM_BUTTON_RESET ||
+                                    HasAttr(kNameSpaceID_None,
+                                            nsGkAtoms::disabled));
 }
 

@@ -39,7 +39,7 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 

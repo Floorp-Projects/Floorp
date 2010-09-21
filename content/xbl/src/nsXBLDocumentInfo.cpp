@@ -55,6 +55,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
 #include "mozilla/Services.h"
+#include "xpcpublic.h"
  
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -324,9 +325,15 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   // we must apparently override that with our own (although it isn't clear 
   // why - see bug 339647)
   JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
-  mJSObject = ::JS_NewGlobalObject(cx, &gSharedGlobalClass);
-  if (!mJSObject)
-    return nsnull;
+
+  nsIPrincipal *principal = GetPrincipal();
+  nsCString origin;
+  JSCompartment *compartment;
+
+  principal->GetOrigin(getter_Copies(origin));
+  rv = xpc_CreateGlobalObject(cx, &gSharedGlobalClass, origin, principal,
+                              &mJSObject, &compartment);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   ::JS_SetGlobalObject(cx, mJSObject);
 

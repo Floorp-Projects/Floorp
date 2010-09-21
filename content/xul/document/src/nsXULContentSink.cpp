@@ -1058,7 +1058,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               // our implementation knowledge to reuse JSVERSION_HAS_XML as a
               // safe version flag. This is still OK if version is
               // JSVERSION_UNKNOWN (-1),
-              version |= JSVERSION_HAS_XML;
+              version |= js::VersionFlags::HAS_XML;
 
               nsAutoString value;
               rv = parser.GetParameter("e4x", value);
@@ -1067,7 +1067,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                       return rv;
               } else {
                   if (value.Length() == 1 && value[0] == '0')
-                    version &= ~JSVERSION_HAS_XML;
+                    version &= ~js::VersionFlags::HAS_XML;
               }
           }
       }
@@ -1081,7 +1081,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
 
               // Even when JS version < 1.6 is specified, E4X is
               // turned on in XUL.
-              version |= JSVERSION_HAS_XML;
+              version |= js::VersionFlags::HAS_XML;
           }
       }
       aAttributes += 2;

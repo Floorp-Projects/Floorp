@@ -1,10 +1,10 @@
 /*
  *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
  *
- *  Use of this source code is governed by a BSD-style license 
+ *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may 
+ *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
@@ -80,7 +80,6 @@ void vp8_kfread_modes(VP8D_COMP *pbi)
         {
             MB_PREDICTION_MODE y_mode;
 
-            vp8dx_bool_decoder_fill(bc);
             // Read the Macroblock segmentation map if it is being updated explicitly this frame (reset to 0 above by default)
             // By default on a key frame reset all MBs to segment 0
             m->mbmi.segment_id = 0;

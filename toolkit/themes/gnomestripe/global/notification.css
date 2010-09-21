@@ -36,15 +36,15 @@ notification[type="critical"] {
 /* Default icons for notifications */
 
 notification[type="info"] .messageImage {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
 }
 
 notification[type="warning"] .messageImage {
-  list-style-image: url("chrome://global/skin/icons/warning-16.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
 }
 
 notification[type="critical"] .messageImage {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 .messageCloseButton {

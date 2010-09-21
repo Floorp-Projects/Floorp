@@ -1,0 +1,6 @@
+# Tests related to SVG being used as an image, with zooming
+
+# Simple <img> tests
+== img-zoomIn-1.html   squaredCircle-150x150-ref.html
+
+== img-zoomOut-1.html  squaredCircle-50x50-ref.html

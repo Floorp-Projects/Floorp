@@ -56,8 +56,9 @@ function test()
     for ( var a in [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]) { }
   }
 
-  if (typeof trap == 'function')
+  if (typeof trap == 'function' && typeof setDebug == 'function')
   {
+    setDebug(true);
     "" + f;
     trap(f, 0, "");
     "" + f;

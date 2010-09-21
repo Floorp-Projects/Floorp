@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=587931
+-->
+<head>
+  <title>Test for Bug 587931</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=587931">Mozilla Bug 587931</a>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 587931 **/
+SimpleTest.waitForExplicitFinish();
+var afterCount = 0;
+var lastBeforeExecute = null;
+var expectedCurrentScriptInAfterScriptExecute = null;
+function verifyScript(n) {
+  var curr = document.currentScript;
+  is(curr, document.getElementById(n), "correct script (" + n + ")");
+  is(lastBeforeExecute, curr, "correct beforescript (" + n + ")");
+  document.addEventListener("afterscriptexecute", function(event) {
+    afterCount++;
+    lastBeforeExecute = null;
+    is(event.target, curr, "correct afterscript (" + n + ")");
+    is(document.currentScript, expectedCurrentScriptInAfterScriptExecute,
+       "document.currentScript in afterscriptexecute(" + n + ")");
+    document.removeEventListener("afterscriptexecute", arguments.callee, false);
+  }, false);
+}
+document.onbeforescriptexecute = function(event) {
+  lastBeforeExecute = event.target;
+};
+
+window.addEventListener("load", function() {
+  is(afterCount, 4, "correct number of afterscriptexecute");
+  SimpleTest.finish();
+}, false);
+</script>
+</pre>
+<!-- Test parser inserted scripts -->
+<script id="parse-inline">
+verifyScript("parse-inline");
+</script>
+<script id="parse-ext" src="data:text/plain,verifyScript('parse-ext');"></script>
+
+<!-- Test DOM inserted scripts -->
+<script>
+var s = document.createElement("script");
+s.textContent = "verifyScript('dom-inline');";
+s.id = "dom-inline";
+expectedCurrentScriptInAfterScriptExecute = document.currentScript;
+document.body.appendChild(s);
+expectedCurrentScriptInAfterScriptExecute = null;
+
+s = document.createElement("script");
+s.src = "data:text/plain,verifyScript('dom-ext');";
+s.id = "dom-ext";
+document.body.appendChild(s);
+</script>
+
+<!-- Test cancel using beforescriptexecute -->
+<script onbeforescriptexecute="return false;"
+        onafterescriptexecute="window.firedAfterScriptExecuteForCancel = true;">
+ok(false, "should have been canceled");
+</script>
+<script>
+isnot(window.firedAfterScriptExecuteForCancel, true, "onafterscriptexecute executed");
+</script>
+
+<!-- Test cancel using beforescriptexecute for external -->
+<script onbeforescriptexecute="return false;"
+        onafterescriptexecute="window.extFiredAfterScriptExecuteForCancel = true;"
+        onload="window.extFiredLoadForCancel = true;"
+        src="data:text/plain,ok(false, 'should have been canceled');">
+</script>
+<script>
+isnot(window.extFiredAfterScriptExecuteForCancel, true, "onafterscriptexecute executed");
+is(extFiredLoadForCancel, true, "onload executed");
+</script>
+
+<!-- Test that all events fire -->
+<script onbeforescriptexecute="window.beforeDidExecute = true;"
+        onafterscriptexecute="window.afterDidExecute = true;"
+        onload="window.loadDidExecute = true"
+        onerror="window.errorDidExecute = true"
+        src="data:text/plain,
+is(window.beforeDidExecute, true, 'onbeforescriptexecute executed');
+isnot(window.afterDidExecute, true, 'onafterscriptexecute executed');
+isnot(window.loadDidExecute, true, 'onload executed');
+isnot(window.errorDidExecute, true, 'onerror executed');
+">
+</script>
+<script>
+is(afterDidExecute, true, "onafterscriptexecute executed");
+is(loadDidExecute, true, "onload executed");
+isnot(window.errorDidExecute, true, "onerror executed");
+</script>
+</body>
+</html>

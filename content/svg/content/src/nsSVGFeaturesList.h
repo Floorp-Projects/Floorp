@@ -75,7 +75,7 @@ SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Animation")
 // Dynamic features
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#DocumentEventsAttribute")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#GraphicalEventsAttribute")
-SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#AnimationEventsAttribute")
+SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#AnimationEventsAttribute")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Cursor")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Hyperlinking")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#XlinkAttribute")

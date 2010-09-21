@@ -45,6 +45,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
     browser_bug410900.js \
+    browser_bug567487.js \
     privacypane_tests.js \
     browser_privacypane_1.js \
     browser_privacypane_2.js \

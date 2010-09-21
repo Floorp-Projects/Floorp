@@ -1,10 +1,2 @@
 This directory contains patches that were added locally
 on top of the NSS release.
-
-File: msvc-aslr.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=567134
-Use the -DYNAMICBASE linker option to enable ASLR on Windows.
-
-File: maemo-rpath-link.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=585247
-Add the -rpath-link linker flag required for Maemo/Scratchbox.

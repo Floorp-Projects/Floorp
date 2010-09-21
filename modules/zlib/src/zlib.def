@@ -13,12 +13,18 @@ EXPORTS
     MOZ_Z_deflateCopy
     MOZ_Z_deflateReset
     MOZ_Z_deflateParams
+    MOZ_Z_deflateTune
     MOZ_Z_deflateBound
     MOZ_Z_deflatePrime
+    MOZ_Z_deflateSetHeader
     MOZ_Z_inflateSetDictionary
     MOZ_Z_inflateSync
     MOZ_Z_inflateCopy
     MOZ_Z_inflateReset
+    MOZ_Z_inflateReset2
+    MOZ_Z_inflatePrime
+    MOZ_Z_inflateMark
+    MOZ_Z_inflateGetHeader
     MOZ_Z_inflateBack
     MOZ_Z_inflateBackEnd
     MOZ_Z_zlibCompileFlags
@@ -29,6 +35,7 @@ EXPORTS
     MOZ_Z_uncompress
     MOZ_Z_gzopen
     MOZ_Z_gzdopen
+    MOZ_Z_gzbuffer
     MOZ_Z_gzsetparams
     MOZ_Z_gzread
     MOZ_Z_gzwrite
@@ -42,27 +49,26 @@ EXPORTS
     MOZ_Z_gzseek
     MOZ_Z_gzrewind
     MOZ_Z_gztell
+    MOZ_Z_gzoffset
     MOZ_Z_gzeof
+    MOZ_Z_gzdirect
     MOZ_Z_gzclose
+    MOZ_Z_gzclose_r
+    MOZ_Z_gzclose_w
     MOZ_Z_gzerror
     MOZ_Z_gzclearerr
 ; checksum functions
     MOZ_Z_adler32
     MOZ_Z_crc32
+    MOZ_Z_adler32_combine
+    MOZ_Z_crc32_combine
 ; various hacks, don't look :)
     MOZ_Z_deflateInit_
     MOZ_Z_deflateInit2_
     MOZ_Z_inflateInit_
     MOZ_Z_inflateInit2_
     MOZ_Z_inflateBackInit_
+    MOZ_Z_zError
     MOZ_Z_inflateSyncPoint
     MOZ_Z_get_crc_table
-    MOZ_Z_zError
-; new in zlib-1.2.3
-    MOZ_Z_adler32_combine
-    MOZ_Z_crc32_combine
-    MOZ_Z_deflateSetHeader
-    MOZ_Z_deflateTune
-    MOZ_Z_gzdirect
-    MOZ_Z_inflatePrime
-    MOZ_Z_inflateGetHeader
+    MOZ_Z_inflateUndermine

@@ -2,12 +2,16 @@ Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/identity.js");
 
 function run_test() {
   let baseUri = "http://fakebase/";
   let pubUri = baseUri + "pubkey";
   let privUri = baseUri + "privkey";
   let cryptoUri = baseUri + "crypto";
+
+  let passphrase = ID.set("WeaveCryptoID", new Identity());
+  passphrase.password = "passphrase";
 
   _("Setting up fake pub/priv keypair and symkey for encrypt/decrypt");
   PubKeys.defaultKeyUri = baseUri + "pubkey";

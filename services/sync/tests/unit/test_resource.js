@@ -99,6 +99,19 @@ function server_backoff(metadata, response) {
   response.bodyOutputStream.write(body, body.length);  
 }
 
+function server_quota_notice(request, response) {
+  let body = "You're approaching quota.";
+  response.setHeader("X-Weave-Quota-Remaining", '1048576', false);
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.bodyOutputStream.write(body, body.length);  
+}
+
+function server_quota_error(request, response) {
+  let body = "14";
+  response.setHeader("X-Weave-Quota-Remaining", '-1024', false);
+  response.setStatusLine(request.httpVersion, 400, "OK");
+  response.bodyOutputStream.write(body, body.length);  
+}
 
 function server_headers(metadata, response) {
   let ignore_headers = ["host", "user-agent", "accept", "accept-language",
@@ -131,17 +144,19 @@ function run_test() {
   logger = Log4Moz.repository.getLogger('Test');
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
-  let server = new nsHttpServer();
-  server.registerPathHandler("/open", server_open);
-  server.registerPathHandler("/protected", server_protected);
-  server.registerPathHandler("/404", server_404);
-  server.registerPathHandler("/upload", server_upload);
-  server.registerPathHandler("/delete", server_delete);
-  server.registerPathHandler("/json", server_json);
-  server.registerPathHandler("/timestamp", server_timestamp);
-  server.registerPathHandler("/headers", server_headers);
-  server.registerPathHandler("/backoff", server_backoff);
-  server.start(8080);
+  let server = httpd_setup({
+    "/open": server_open,
+    "/protected": server_protected,
+    "/404": server_404,
+    "/upload": server_upload,
+    "/delete": server_delete,
+    "/json": server_json,
+    "/timestamp": server_timestamp,
+    "/headers": server_headers,
+    "/backoff": server_backoff,
+    "/quota-notice": server_quota_notice,
+    "/quota-error": server_quota_error
+  });
 
   Utils.prefs.setIntPref("network.numRetries", 1); // speed up test
 
@@ -181,7 +196,7 @@ function run_test() {
   let res2 = new Resource("http://localhost:8080/protected");
   content = res2.get();
   do_check_true(did401);
-  do_check_eq(content, "This path exists and is protected - failed")
+  do_check_eq(content, "This path exists and is protected - failed");
   do_check_eq(content.status, 401);
   do_check_false(content.success);
 
@@ -335,6 +350,25 @@ function run_test() {
   content = res10.get();
   do_check_eq(backoffInterval, 600);
 
+
+  _("X-Weave-Quota-Remaining header notifies observer on successful requests.");
+  let quotaValue;
+  function onQuota(subject, data) {
+    quotaValue = subject;
+  }
+  Observers.add("weave:service:quota:remaining", onQuota);
+
+  res10 = new Resource("http://localhost:8080/quota-error");
+  content = res10.get();
+  do_check_eq(content.status, 400);
+  do_check_eq(quotaValue, undefined); // HTTP 400, so no observer notification.
+
+  res10 = new Resource("http://localhost:8080/quota-notice");
+  content = res10.get();
+  do_check_eq(content.status, 200);
+  do_check_eq(quotaValue, 1048576);
+
+
   _("Error handling in _request() preserves exception information");
   let error;
   let res11 = new Resource("http://localhost:12345/does/not/exist");
@@ -363,7 +397,7 @@ function run_test() {
   do_check_true(content.success);
   do_check_eq(res.data, content);
   do_check_true(did401);
-  do_check_eq(redirRequest.response, "This path exists and is protected - failed")
+  do_check_eq(redirRequest.response, "This path exists and is protected - failed");
   do_check_eq(redirRequest.response.status, 401);
   do_check_false(redirRequest.response.success);
 
@@ -374,7 +408,7 @@ function run_test() {
   let res13 = new Resource("http://localhost:8080/protected");
   content = res13.get();
   do_check_true(did401);
-  do_check_eq(content, "This path exists and is protected - failed")
+  do_check_eq(content, "This path exists and is protected - failed");
   do_check_eq(content.status, 401);
   do_check_false(content.success);
 

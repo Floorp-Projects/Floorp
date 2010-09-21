@@ -39,6 +39,9 @@
 #include "nsDocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
+#include "nsRootAccessible.h"
+#include "nsWinUtils.h"
+
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIFrame.h"
@@ -60,7 +63,7 @@
 nsDocAccessibleWrap::
   nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
                       nsIWeakReference *aShell) :
-  nsDocAccessible(aDocument, aRootContent, aShell)
+  nsDocAccessible(aDocument, aRootContent, aShell), mHWND(NULL)
 {
 }
 
@@ -103,39 +106,13 @@ nsDocAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   // accessible through whole accessible subtree including subdocuments.
   // Otherwise we treat lVal as index in parent.
 
-  if (aVarChild.lVal < 0)
-    return IsDefunct() ? nsnull : GetXPAccessibleForChildID(aVarChild);
-
-  return nsAccessibleWrap::GetXPAccessibleFor(aVarChild);
-}
-
-STDMETHODIMP
-nsDocAccessibleWrap::get_accChild(VARIANT varChild,
-                                  IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
-{
-__try {
-  *ppdispChild = NULL;
-
-  if (varChild.vt == VT_I4 && varChild.lVal < 0) {
-    // IAccessible::accChild can be used to get an accessible by child ID.
-    // It is used by AccessibleObjectFromEvent() called by AT when AT handles
-    // our MSAA event.
-
-    nsAccessible *xpAccessible = GetXPAccessibleForChildID(varChild);
-    if (!xpAccessible)
-      return E_FAIL;
-
-    IAccessible *msaaAccessible = NULL;
-    xpAccessible->GetNativeInterface((void**)&msaaAccessible);
-    *ppdispChild = static_cast<IDispatch*>(msaaAccessible);
-
-    return S_OK;
+  if (aVarChild.vt == VT_I4 && aVarChild.lVal < 0) {
+    // Convert child ID to unique ID.
+    void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
+    return GetCachedAccessibleInSubtree(uniqueID);
   }
 
-  // Otherwise, the normal get_accChild() will do
-  return nsAccessibleWrap::get_accChild(varChild, ppdispChild);
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_FAIL;
+  return nsAccessibleWrap::GetXPAccessibleFor(aVarChild);
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
@@ -262,7 +239,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
   if (FAILED(hr) || *pszValue || varChild.lVal != CHILDID_SELF)
     return hr;
   // If document is being used to create a widget, don't use the URL hack
-  PRUint32 role = nsAccUtils::Role(this);
+  PRUint32 role = Role();
   if (role != nsIAccessibleRole::ROLE_DOCUMENT &&
       role != nsIAccessibleRole::ROLE_APPLICATION &&
       role != nsIAccessibleRole::ROLE_DIALOG &&
@@ -272,13 +249,52 @@ STDMETHODIMP nsDocAccessibleWrap::get_accValue(
   return get_URL(pszValue);
 }
 
-nsAccessible*
-nsDocAccessibleWrap::GetXPAccessibleForChildID(const VARIANT& aVarChild)
-{
-  NS_PRECONDITION(aVarChild.vt == VT_I4 && aVarChild.lVal < 0,
-                  "Variant doesn't point to child ID!");
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessNode
 
-  // Convert child ID to unique ID.
-  void *uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
-  return GetAccService()->FindAccessibleInCache(uniqueID);
+PRBool
+nsDocAccessibleWrap::Init()
+{
+  if (nsWinUtils::IsWindowEmulationEnabled()) {
+    // Create window for tab document.
+    if (nsWinUtils::IsTabDocument(mDocument)) {
+      nsRefPtr<nsRootAccessible> root = GetRootAccessible();
+      mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
+                                             static_cast<HWND>(root->GetNativeWindow()));
+
+      nsAccessibleWrap::sHWNDCache.Put(mHWND, this);
+
+    } else {
+      nsDocAccessible* parentDocument = ParentDocument();
+      if (parentDocument)
+        mHWND = parentDocument->GetNativeWindow();
+    }
+  }
+
+  return nsDocAccessible::Init();
+}
+
+void
+nsDocAccessibleWrap::Shutdown()
+{
+  if (nsWinUtils::IsWindowEmulationEnabled()) {
+    // Destroy window created for root document.
+    if (nsWinUtils::IsTabDocument(mDocument)) {
+      nsAccessibleWrap::sHWNDCache.Remove(mHWND);
+      ::DestroyWindow(static_cast<HWND>(mHWND));
+    }
+
+    mHWND = nsnull;
+  }
+
+  nsDocAccessible::Shutdown();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsDocAccessible
+
+void*
+nsDocAccessibleWrap::GetNativeWindow() const
+{
+  return mHWND ? mHWND : nsDocAccessible::GetNativeWindow();
 }

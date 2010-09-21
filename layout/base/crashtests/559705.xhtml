@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="foo">
+      <content>
+        <iframe xmlns="http://www.w3.org/1999/xhtml" src="javascript:void 0"><children xmlns="http://www.mozilla.org/xbl"/></iframe>
+      </content>
+    </binding>
+  </bindings>
+</head>
+<body>
+  <span style="-moz-binding: url(#foo)"></span>
+</body>
+</html>

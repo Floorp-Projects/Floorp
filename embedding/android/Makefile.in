@@ -184,6 +184,9 @@ dist: FORCE
 	rm -rf dist/defaults/*
 	@(for f in $(DIST)/bin/defaults/* ; do $(NSINSTALL) $$f dist/defaults ; done )
 	@(for f in $(DIST_LINK_FILES) ; do if [ -e $(DIST)/bin/$$f ] ; then echo $$f ; ln -sf ../$(DIST)/bin/$$f dist ; fi ; done)
+ifdef MOZ_UPDATER
+	$(NSINSTALL) $(DIST)/bin/update.locale dist
+endif
 
 gecko-unsigned-unaligned.apk: gecko.ap_ classes.dex dist $(FULL_LIBS)
 	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z gecko.ap_ -f classes.dex -nf `pwd`/libs -rf dist

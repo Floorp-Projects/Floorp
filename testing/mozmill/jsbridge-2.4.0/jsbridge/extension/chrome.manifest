@@ -1,0 +1,14 @@
+resource jsbridge resource/
+
+content jsbridge chrome/content/
+
+overlay chrome://browser/content/browser.xul chrome://jsbridge/content/overlay.xul
+overlay chrome://messenger/content/mailWindowOverlay.xul chrome://jsbridge/content/overlay.xul
+
+overlay chrome://calendar/content/calendar.xul chrome://jsbridge/content/overlay.xul
+
+overlay windowtype:Songbird:Main chrome://jsbridge/content/overlay.xul
+
+component {2872d428-14f6-11de-ac86-001f5bd9235c} components/cmdarg.js
+contract @mozilla.org/commandlinehandler/general-startup;1?type=jsbridge {2872d428-14f6-11de-ac86-001f5bd9235c}
+category command-line-handler jsbridge @mozilla.org/commandlinehandler/general-startup;1?type=jsbridge

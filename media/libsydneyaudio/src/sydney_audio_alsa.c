@@ -45,6 +45,7 @@ pthread_mutex_t sa_alsa_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct sa_stream {
   snd_pcm_t*        output_unit;
   int64_t           bytes_written;
+  int64_t           last_position;
 
   /* audio format info */
   unsigned int      rate;
@@ -107,6 +108,7 @@ sa_stream_create_pcm(
 
   s->output_unit  = NULL;
   s->bytes_written = 0;
+  s->last_position = 0;
   s->rate         = rate;
   s->n_channels   = n_channels;
 
@@ -273,12 +275,13 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
     state = snd_pcm_state(s->output_unit);
   }
 
-  if (state == SND_PCM_STATE_RUNNING) {
-    if (snd_pcm_delay(s->output_unit, &delay) != 0) {
-      return SA_ERROR_SYSTEM;
-    }
-  } else {
-    delay = 0;
+  if (state != SND_PCM_STATE_RUNNING) {
+    *pos = s->last_position;
+    return SA_SUCCESS;
+  }
+
+  if (snd_pcm_delay(s->output_unit, &delay) != 0) {
+    return SA_ERROR_SYSTEM;
   }
 
   /* delay means audio is 'x' frames behind what we've written. We need to
@@ -292,6 +295,7 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
   } else {
     *pos = 0;
   }
+  s->last_position = *pos;
 
   return SA_SUCCESS;
 }

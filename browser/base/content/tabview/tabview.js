@@ -2,9 +2,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/tabview/AllTabs.jsm");
-Cu.import("resource://gre/modules/tabview/groups.jsm");
-Cu.import("resource://gre/modules/tabview/utils.jsm");
+Cu.import("resource:///modules/tabview/AllTabs.jsm");
+Cu.import("resource:///modules/tabview/groups.jsm");
+Cu.import("resource:///modules/tabview/utils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -25,6 +25,13 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
   return gWindow.document.getElementById("tab-view");
 });
 
+XPCOMUtils.defineLazyGetter(this, "tabviewBundle", function() {
+  return Services.strings.
+    createBundle("chrome://browser/locale/tabview.properties");
+});
+
+function tabviewString(name) tabviewBundle.GetStringFromName('tabview.' + name);
+
 # NB: Certain files need to evaluate before others
 
 #include iq.js
@@ -36,3 +43,6 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
 #include trench.js
 #include infoitems.js
 #include ui.js
+#include search.js
+
+

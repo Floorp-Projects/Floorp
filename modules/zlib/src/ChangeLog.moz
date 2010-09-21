@@ -42,3 +42,8 @@ Mozilla.org changes:
 
 - 13 September 2009
   Don't enable zlib's debug output when the Mozilla build is in debug mode (bug 431950)
+
+- 18 September 2010
+  Sync'ed with 1.2.5 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #573137

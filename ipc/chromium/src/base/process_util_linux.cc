@@ -46,7 +46,8 @@ bool LaunchApp(const std::vector<std::string>& argv,
 #if defined(CHROMIUM_MOZILLA_BUILD)
                const environment_map& env_vars_to_set,
 #endif
-               bool wait, ProcessHandle* process_handle) {
+               bool wait, ProcessHandle* process_handle,
+               ProcessArchitecture arch) {
   pid_t pid = fork();
   if (pid < 0)
     return false;

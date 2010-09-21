@@ -120,7 +120,7 @@ protected:
   nsresult ReadFileContent(nsIDOMFile *aFile, const nsAString &aCharset, eDataFormat aDataFormat); 
   nsresult GetAsText(const nsAString &aCharset,
                      const char *aFileData, PRUint32 aDataLen, nsAString &aResult);
-  nsresult GetAsDataURL(nsIFile *aFile, const char *aFileData, PRUint32 aDataLen, nsAString &aResult); 
+  nsresult GetAsDataURL(nsIDOMFile *aFile, const char *aFileData, PRUint32 aDataLen, nsAString &aResult); 
   nsresult GuessCharset(const char *aFileData, PRUint32 aDataLen, nsACString &aCharset); 
   nsresult ConvertStream(const char *aFileData, PRUint32 aDataLen, const char *aCharset, nsAString &aResult); 
   void DispatchError(nsresult rv);
@@ -133,7 +133,7 @@ protected:
   }
 
   char *mFileData;
-  nsCOMPtr<nsIFile> mFile;
+  nsCOMPtr<nsIDOMFile> mFile;
   nsString mCharset;
   PRUint32 mDataLen;
 
@@ -150,7 +150,7 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
 
-  PRInt64 mReadTotal;
+  PRUint64 mReadTotal;
   PRUint64 mReadTransferred;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadEndListener;

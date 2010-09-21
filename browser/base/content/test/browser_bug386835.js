@@ -72,13 +72,14 @@ function imageZoomSwitch() {
         finishTest();
       });
       gBrowser.selectedTab = gTab2;
-
-      finishTest();
     });
   });
 }
 
+var finishTestStarted  = false;
 function finishTest() {
+  ok(!finishTestStarted, "finishTest called more than once");
+  finishTestStarted = true;
   gBrowser.selectedTab = gTab1;
   FullZoom.reset();
   gBrowser.removeTab(gTab1);
@@ -94,7 +95,8 @@ function zoomTest(tab, val, msg) {
 }
 
 function load(tab, url, cb) {
-  let didLoad = didZoom = false;
+  let didLoad = false;
+  let didZoom = false;
   tab.linkedBrowser.addEventListener("load", function (event) {
     event.currentTarget.removeEventListener("load", arguments.callee, true);
     didLoad = true;
@@ -112,7 +114,8 @@ function load(tab, url, cb) {
 }
 
 function navigate(direction, cb) {
-  let didPs = didZoom = false;
+  let didPs = false;
+  let didZoom = false;
   gBrowser.addEventListener("pageshow", function (event) {
     gBrowser.removeEventListener("pageshow", arguments.callee, true);
     didPs = true;

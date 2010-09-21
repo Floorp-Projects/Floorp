@@ -89,7 +89,15 @@ public:
         SurfaceTypeQuartzImage,
         SurfaceTypeScript,
         SurfaceTypeQPainter,
+        SurfaceTypeRecording,
+        SurfaceTypeVG,
+        SurfaceTypeGL,
+        SurfaceTypeDRM,
+        SurfaceTypeTee,
+        SurfaceTypeXML,
+        SurfaceTypeSkia,
         SurfaceTypeDDraw,
+        SurfaceTypeD2D,
         SurfaceTypeMax
     } gfxSurfaceType;
 
@@ -204,6 +212,7 @@ public:
     virtual PRInt32 GetDefaultContextFlags() const { return 0; }
 
     static gfxContentType ContentFromFormat(gfxImageFormat format);
+    static gfxImageFormat FormatFromContent(gfxContentType format);
 
     /**
      * Record number of bytes for given surface type.  Use positive bytes
@@ -224,6 +233,8 @@ public:
     PRInt32 KnownMemoryUsed() { return mBytesRecorded; }
 
     static PRInt32 BytePerPixelFromFormat(gfxImageFormat format);
+
+    virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0), mSurfaceValid(PR_FALSE)

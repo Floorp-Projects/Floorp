@@ -13,7 +13,7 @@ html {
 
 #feedHeader {
   border: 1px solid ThreeDShadow;
-  -moz-border-radius: 10px;
+  border-radius: 10px;
   padding-top: 4em;
   padding-bottom: .3em;
   -moz-padding-start: .3em;

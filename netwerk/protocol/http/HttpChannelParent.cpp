@@ -133,7 +133,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
     return SendCancelEarly(rv);
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-  httpChan->SetRemoteChannel(true);
+  httpChan->SetServicingRemoteChannel(PR_TRUE);
 
   if (doResumeAt)
     httpChan->ResumeAt(startPos, entityID);
@@ -291,6 +291,10 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   chan->GetCacheTokenExpirationTime(&expirationTime);
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);
+
+  nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
+  if (encodedChannel)
+    encodedChannel->SetApplyConversion(PR_FALSE);
 
   // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
   // It could be already released by nsHttpChannel at that time.

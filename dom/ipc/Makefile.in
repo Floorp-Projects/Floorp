@@ -47,13 +47,9 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
-EXPORTS = TabMessageUtils.h
+EXPORTS = TabMessageUtils.h PCOMContentPermissionRequestChild.h
 
-EXPORTS_NAMESPACES = mozilla mozilla/dom
-
-EXPORTS_mozilla = \
-  TabTypes.h \
-  $(NULL)
+EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
   ContentChild.h \
@@ -80,12 +76,12 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/events/src \
 		-I$(srcdir)/../../toolkit/components/places/src \
-		-I$(srcdir)/../src/geolocation \
 		-I$(topsrcdir)/chrome/src \
 		-I$(topsrcdir)/uriloader/exthandler \
 		-I$(srcdir)/../../netwerk/base/src \
+		-I$(srcdir)/../src/base \
 		$(NULL)
 
-CXXFLAGS += $(TK_CFLAGS)
-
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
+
+CXXFLAGS += $(TK_CFLAGS)

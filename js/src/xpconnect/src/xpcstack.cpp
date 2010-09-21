@@ -141,16 +141,16 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
     {
         NS_ADDREF(self);
 
-        if(fp->down)
+        if(fp->prev())
         {
-            if(NS_FAILED(CreateStack(cx, fp->down,
+            if(NS_FAILED(CreateStack(cx, fp->prev(),
                          (XPCJSStackFrame**) &self->mCaller)))
                 failed = JS_TRUE;
         }
 
         if(!failed)
         {
-            if (JS_IsNativeFrame(cx, fp))
+            if (!JS_IsScriptFrame(cx, fp))
                 self->mLanguage = nsIProgrammingLanguage::CPLUSPLUS;
             else
                 self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;

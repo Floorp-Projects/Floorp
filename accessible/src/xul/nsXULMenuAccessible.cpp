@@ -329,8 +329,7 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
   }
 
   // Combo box listitem
-  PRBool isComboboxOption =
-    (nsAccUtils::Role(this) == nsIAccessibleRole::ROLE_COMBOBOX_OPTION);
+  PRBool isComboboxOption = (Role() == nsIAccessibleRole::ROLE_COMBOBOX_OPTION);
   if (isComboboxOption) {
     // Is selected?
     PRBool isSelected = PR_FALSE;
@@ -353,7 +352,7 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
         // Set selected option offscreen/invisible according to combobox state
         nsAccessible* grandParentAcc = parentAcc->GetParent();
         NS_ENSURE_TRUE(grandParentAcc, NS_ERROR_FAILURE);
-        NS_ASSERTION(nsAccUtils::Role(grandParentAcc) == nsIAccessibleRole::ROLE_COMBOBOX,
+        NS_ASSERTION(grandParentAcc->Role() == nsIAccessibleRole::ROLE_COMBOBOX,
                      "grandparent of combobox listitem is not combobox");
         PRUint32 grandParentState, grandParentExtState;
         grandParentAcc->GetState(&grandParentState, &grandParentExtState);
@@ -428,7 +427,7 @@ nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 
   nsAccessible* parentAcc = GetParent();
   if (parentAcc) {
-    if (nsAccUtils::RoleInternal(parentAcc) == nsIAccessibleRole::ROLE_MENUBAR) {
+    if (parentAcc->NativeRole() == nsIAccessibleRole::ROLE_MENUBAR) {
       // If top level menu item, add Alt+ or whatever modifier text to string
       // No need to cache pref service, this happens rarely
       if (gMenuAccesskeyModifier == -1) {
@@ -479,34 +478,28 @@ nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
   return NS_OK;
 }
 
-nsresult
-nsXULMenuitemAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenuitemAccessible::NativeRole()
 {
   nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mContent));
-  if (xulContainer) {
-    *aRole = nsIAccessibleRole::ROLE_PARENT_MENUITEM;
-    return NS_OK;
-  }
+  if (xulContainer)
+    return nsIAccessibleRole::ROLE_PARENT_MENUITEM;
 
-  if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
-    return NS_OK;
-  }
+  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
 
   if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                             nsAccessibilityAtoms::radio, eCaseMatters)) {
-    *aRole = nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
-
-  } else if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                                   nsAccessibilityAtoms::checkbox,
-                                   eCaseMatters)) {
-    *aRole = nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
-
-  } else {
-    *aRole = nsIAccessibleRole::ROLE_MENUITEM;
+    return nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
   }
 
-  return NS_OK;
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                            nsAccessibilityAtoms::checkbox,
+                            eCaseMatters)) {
+    return nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
+  }
+
+  return nsIAccessibleRole::ROLE_MENUITEM;
 }
 
 PRInt32
@@ -587,11 +580,10 @@ nsXULMenuSeparatorAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULMenuSeparatorAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenuSeparatorAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_SEPARATOR;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_SEPARATOR;
 }
 
 NS_IMETHODIMP nsXULMenuSeparatorAccessible::DoAction(PRUint8 index)
@@ -667,29 +659,28 @@ nsXULMenupopupAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenupopupAccessible::NativeRole()
 {
-  nsAccessible *parent = GetParent();
-  if (parent) {
-    PRUint32 role = nsAccUtils::Role(parent);
+  // If accessible is not bound to the tree (this happens while children are
+  // cached) return general role.
+  if (mParent) {
+    PRUint32 role = mParent->Role();
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
         role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-      *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      return NS_OK;
+      return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+    }
 
-    } else if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+    if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
-      nsAccessible *grandParent = parent->GetParent();
-      if (nsAccUtils::Role(grandParent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
-        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-        return NS_OK;
-      }
+      nsAccessible* grandParent = mParent->GetParent();
+      if (grandParent &&
+          grandParent->Role() == nsIAccessibleRole::ROLE_AUTOCOMPLETE)
+        return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
     }
   }
 
-  *aRole = nsIAccessibleRole::ROLE_MENUPOPUP;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_MENUPOPUP;
 }
 
 
@@ -723,10 +714,9 @@ nsXULMenubarAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-nsresult
-nsXULMenubarAccessible::GetRoleInternal(PRUint32 *aRole)
+PRUint32
+nsXULMenubarAccessible::NativeRole()
 {
-  *aRole = nsIAccessibleRole::ROLE_MENUBAR;
-  return NS_OK;
+  return nsIAccessibleRole::ROLE_MENUBAR;
 }
 

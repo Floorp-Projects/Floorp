@@ -57,7 +57,7 @@ input[type="radio"] {
   border-right: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDHighlight;
   border-left: 1px solid ThreeDShadow;
-  -moz-border-radius: 50%;
+  border-radius: 50%;
   width: 12px;
   height: 12px;
   background-color: -moz-Field;
@@ -68,7 +68,7 @@ xul|*.input-radio-check-box2 {
   border-right: 1px solid ThreeDLightShadow;
   border-bottom: 1px solid ThreeDLightShadow;
   border-left: 1px solid ThreeDDarkShadow;
-  -moz-border-radius: 50%;
+  border-radius: 50%;
   padding: 2px;
   width: 4px;
   height: 4px;

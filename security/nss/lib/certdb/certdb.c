@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.104 2010/04/25 00:44:55 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.104.2.2 2010/09/02 00:52:02 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -1415,6 +1415,15 @@ sec_lower_string(char *s)
     return;
 }
 
+static PRBool
+cert_IsIPAddr(const char *hn)
+{
+    PRBool            isIPaddr       = PR_FALSE;
+    PRNetAddr         netAddr;
+    isIPaddr = (PR_SUCCESS == PR_StringToNetAddr(hn, &netAddr));
+    return isIPaddr;
+}
+
 /*
 ** Add a domain name to the list of names that the user has explicitly
 ** allowed (despite cert name mismatches) for use with a server cert.
@@ -1880,7 +1889,17 @@ CERT_VerifyCertName(CERTCertificate *cert, const char *hn)
 
     cn = CERT_GetCommonName(&cert->subject);
     if ( cn ) {
-	rv = cert_TestHostName(cn, hn);
+        PRBool isIPaddr = cert_IsIPAddr(hn);
+        if (isIPaddr) {
+            if (PORT_Strcasecmp(hn, cn) == 0) {
+                rv =  SECSuccess;
+            } else {
+                PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
+                rv = SECFailure;
+            }
+        } else {
+            rv = cert_TestHostName(cn, hn);
+        }
 	PORT_Free(cn);
     } else 
 	PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
@@ -2110,7 +2129,7 @@ loser:
 	PORT_Free(nickname);
     }
 
-    nickname = "";
+    nickname = NULL;
     
 done:
     if ( firstname ) {

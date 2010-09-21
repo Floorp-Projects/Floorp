@@ -45,6 +45,13 @@
  * getInterface on a DOMWindow.
  */
 
+%{C++
+#include "nsColor.h"
+#include "nsRect.h"
+#include "gfxContext.h"
+%}
+
+interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
 interface nsIDOMElement;
@@ -53,7 +60,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(8430e730-a085-421e-bb72-39fcf73fe57b)]
+[scriptable, uuid(8707ed93-3277-42a5-a235-533aa661a263)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -83,6 +90,12 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean docCharsetIsForced;
 
   /**
+   * Get current cursor type from this window
+   * @return the current value of nsCursor
+   */
+  short getCursorType();
+
+  /**
    * Function to get metadata associated with the window's current document
    * @param aName the name of the metadata.  This should be all lowercase.
    * @return the value of the metadata, or the empty string if it's not set
@@ -99,6 +112,71 @@ interface nsIDOMWindowUtils : nsISupports {
    * or is 0, it is taken to be 1.
    */
   unsigned long redraw([optional] in unsigned long aCount);
+
+  /**
+   * Set the CSS viewport to be |widthPx| x |heightPx| in units of CSS
+   * pixels, regardless of the size of the enclosing widget/view.
+   * This will trigger reflow.
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
+   */
+  void setCSSViewport(in float aWidthPx, in float aHeightPx);
+
+  /**
+   * Set the "displayport" to be <xPx, yPx, widthPx, heightPx> in
+   * units of CSS pixels, regardless of the size of the enclosing
+   * widget/view.  This will *not* trigger reflow.
+   *
+   * <x, y> is relative to the top-left of the CSS viewport.  This
+   * means that the pixels rendered to the displayport take scrolling
+   * into account, for example.
+   *
+   * The displayport will be used as the window's visible region for
+   * the purposes of invalidation and painting.  The displayport can
+   * approximately be thought of as a "persistent" drawWindow()
+   * (albeit with coordinates relative to the CSS viewport): the
+   * bounds are remembered by the platform, and layer pixels are
+   * retained and updated inside the viewport bounds.
+   *
+   * It's legal to set a displayport that extends beyond the CSS
+   * viewport in any direction (left/right/top/bottom).
+   * 
+   * It's also legal to set a displayport that extends beyond the
+   * document's bounds.  The value of the pixels rendered outside the
+   * document bounds is not yet defined.
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
+   */
+  void setDisplayPort(in float aXPx, in float aYPx,
+                      in float aWidthPx, in float aHeightPx);
+
+  /**
+   * Get/set the resolution at which rescalable web content is drawn.
+   * Currently this is only (some) thebes content.
+   *
+   * Setting a new resolution does *not* trigger reflow.  This API is
+   * entirely separate from textZoom and fullZoom; a resolution scale
+   * can be applied together with both textZoom and fullZoom.
+   *
+   * The effect of is API for gfx code to allocate more or fewer
+   * pixels for rescalable content by a factor of |resolution| in
+   * either or both dimensions.  setResolution() together with
+   * setDisplayport() can be used to implement a non-reflowing
+   * scale-zoom in concert with another entity that can draw with a
+   * scale.  For example, to scale a content |window| inside a
+   * <browser> by a factor of 2.0
+   *
+   *   window.setDisplayport(x, y, oldW / 2.0, oldH / 2.0);
+   *   window.setResolution(2.0, 2.0);
+   *   // elsewhere
+   *   browser.setViewportScale(2.0, 2.0);
+   *
+   * The caller of this method must have UniversalXPConnect
+   * privileges.
+   */
+  void setResolution(in float aXResolution, in float aYResolution);
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
@@ -267,13 +345,16 @@ interface nsIDOMWindowUtils : nsISupports {
   void focus(in nsIDOMElement aElement);
 
   /**
-   * Force a garbage collection. This will run the cycle-collector twice to
-   * make sure all garbage is collected.
+   * Force a garbage collection followed by a cycle collection.
    *
    * Will throw a DOM security error if called without UniversalXPConnect
    * privileges in non-debug builds. Available to all callers in debug builds.
+   *
+   * @param aListener listener that receives information about the CC graph
+   *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
+   *                   component)
    */
-  void garbageCollect();
+  void garbageCollect([optional] in nsICycleCollectorListener aListener);
 
   /**
    * Force processing of any queued paints
@@ -718,4 +799,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * error if there is no widget associated with this window.
    */
   readonly attribute AString layerManagerType;
+
+%{C++
+  virtual nsresult RenderDocument(const nsRect& aRect,
+                                  PRUint32 aFlags,
+                                  nscolor aBackgroundColor,
+                                  gfxContext* aThebesContext) = 0;
+%}
 };

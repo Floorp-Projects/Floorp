@@ -185,13 +185,14 @@ public:
   gfxASurface* GetPrintSurface() { return mPrintSurface; }
 
   // Dispatch events
-  nsresult DispatchSimpleEvent(const nsAString& aName);
-  nsresult DispatchProgressEvent(const nsAString& aName);
-  nsresult DispatchAsyncSimpleEvent(const nsAString& aName);
-  nsresult DispatchAsyncProgressEvent(const nsAString& aName);
+  nsresult DispatchEvent(const nsAString& aName);
+  nsresult DispatchAsyncEvent(const nsAString& aName);
   nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,
                                        PRUint32 aFrameBufferLength,
                                        PRUint64 aTime);
+
+  // Dispatch events that were raised while in the bfcache
+  nsresult DispatchPendingMediaEvents();
 
   // Called by the decoder when some data has been downloaded or
   // buffering/seeking has ended. aNextFrameAvailable is true when
@@ -331,6 +332,12 @@ public:
    * video or audio MIME types.
    */
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) = 0;
+
+  /**
+   * Sets the required request headers on the HTTP channel for
+   * video or audio requests.
+   */
+  void SetRequestHeaders(nsIHttpChannel* aChannel);
 
 protected:
   class MediaLoadListener;
@@ -533,6 +540,10 @@ protected:
   // Points to the document whose load we're blocking. This is the document
   // we're bound to when loading starts.
   nsCOMPtr<nsIDocument> mLoadBlockedDoc;
+
+  // Contains names of events that have been raised while in the bfcache.
+  // These events get re-dispatched when the bfcache is exited.
+  nsTArray<nsString> mPendingEvents;
 
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Henrik Skupin <hskupin@mozilla.com>
+ *   Anthony Hughes <ahughes@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,35 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var RELATIVE_ROOT = '../../shared-modules';
-var MODULE_REQUIRES = ['PrivateBrowsingAPI', 'TabbedBrowsingAPI', 'UtilsAPI'];
+// Include necessary modules
+const RELATIVE_ROOT = '../../shared-modules';
+const MODULE_REQUIRES = ['PrivateBrowsingAPI', 'TabbedBrowsingAPI', 'UtilsAPI'];
 
-const gDelay = 0;
-const gTimeout = 5000;
+const TIMEOUT = 5000;
 
-var websites = [
-                {url: 'https://addons.mozilla.org/', id: 'search-query'},
-                {url: 'https://bugzilla.mozilla.org', id: 'quicksearch_top'}
-               ];
+const LOCAL_TEST_FOLDER = collector.addHttpResource('../test-files/');
+const LOCAL_TEST_PAGES = [
+  {url: LOCAL_TEST_FOLDER + 'layout/mozilla_contribute.html', id: 'localization'},
+  {url: LOCAL_TEST_FOLDER + 'layout/mozilla_community.html', id: 'history'}
+];
 
-var setupModule = function(module)
-{
+var setupModule = function(module) {
   controller = mozmill.getBrowserController();
   pb = new PrivateBrowsingAPI.privateBrowsing(controller);
 
   TabbedBrowsingAPI.closeAllTabs(controller);
 }
 
-var teardownModule = function(module)
-{
+var teardownModule = function(module) {
   pb.reset();
 }
 
 /**
  * Test that the content of all tabs (https) is reloaded when leaving PB mode
  */
-var testTabRestoration = function()
-{
+var testTabRestoration = function() {
   // Make sure we are not in PB mode and don't show a prompt
   pb.enabled = false;
   pb.showPrompt = false;
@@ -70,15 +69,15 @@ var testTabRestoration = function()
   // Open websites in separate tabs after closing existing tabs
   var newTab = new elementslib.Elem(controller.menus['file-menu'].menu_newNavigatorTab);
 
-  for (var ii = 0; ii < websites.length; ii++) {
-    controller.open(websites[ii].url);
+  for each (var page in LOCAL_TEST_PAGES) {
+    controller.open(page.url);
     controller.click(newTab);
   }
 
   // Wait until all tabs have been finished loading
-  for (var ii = 0; ii < websites.length; ii++) {
-    var elem = new elementslib.ID(controller.tabs.getTab(ii), websites[ii].id);
-    controller.waitForElement(elem, gTimeout);
+  for (var i = 0; i < LOCAL_TEST_PAGES.length; i++) {
+    var elem = new elementslib.ID(controller.tabs.getTab(i), LOCAL_TEST_PAGES[i].id);
+    controller.waitForElement(elem, TIMEOUT);
   }
 
   // Start Private Browsing
@@ -86,16 +85,16 @@ var testTabRestoration = function()
 
   // Stop Private Browsing
   pb.stop();
-  controller.waitForPageLoad();
 
   // All tabs should be restored
-  controller.assertJS("subject.tabs.length == " + (websites.length + 1),
-                      controller);
+  controller.assertJS("subject.tabCountActual == subject.tabCountExpected",
+                      {tabCountActual: controller.tabs.length,
+                       tabCountExpected: LOCAL_TEST_PAGES.length + 1});
 
   // Check if all pages were re-loaded and show their content
-  for (var ii = 0; ii < websites.length; ii++) {
-    var elem = new elementslib.ID(controller.tabs.getTab(ii), websites[ii].id);
-    controller.waitForElement(elem, gTimeout);
+  for (var i = 0; i < LOCAL_TEST_PAGES.length; i++) {
+    var elem = new elementslib.ID(controller.tabs.getTab(i), LOCAL_TEST_PAGES[i].id);
+    controller.waitForElement(elem, TIMEOUT);
   }
 }
 

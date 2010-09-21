@@ -68,12 +68,22 @@
 // Number of milliseconds of no data before a stall event is fired as defined by spec
 #define STALL_MS 3000
 
+// Number of milliseconds between timeupdate events as defined by spec
+#define TIMEUPDATE_MS 250
+
+// Number of estimated seconds worth of data we need to have buffered 
+// ahead of the current playback position before we allow the media decoder
+// to report that it can play through the entire media without the decode
+// catching up with the download. Having this margin make the
+// nsMediaDecoder::CanPlayThrough() calculation more stable in the case of
+// fluctuating bitrates.
+#define CAN_PLAY_THROUGH_MARGIN 20
+
 nsMediaDecoder::nsMediaDecoder() :
   mElement(0),
   mRGBWidth(-1),
   mRGBHeight(-1),
-  mProgressTime(),
-  mDataTime(),
+  mLastCurrentTime(0.0),
   mVideoUpdateLock(nsnull),
   mPixelAspectRatio(1.0),
   mFrameBufferLength(0),
@@ -200,7 +210,7 @@ void nsMediaDecoder::Progress(PRBool aTimer)
        now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
       !mDataTime.IsNull() &&
       now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
-    mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
+    mElement->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
     mProgressTime = now;
   }
 
@@ -231,6 +241,54 @@ nsresult nsMediaDecoder::StopProgress()
 
   nsresult rv = mProgressTimer->Cancel();
   mProgressTimer = nsnull;
+
+  return rv;
+}
+
+static void TimeUpdateCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsMediaDecoder* decoder = static_cast<nsMediaDecoder*>(aClosure);
+  decoder->FireTimeUpdate();
+}
+
+void nsMediaDecoder::FireTimeUpdate()
+{
+  if (!mElement)
+    return;
+
+  TimeStamp now = TimeStamp::Now();
+  float time = GetCurrentTime();
+
+  // If TIMEUPDATE_MS has passed since the last timeupdate event fired and the time
+  // has changed, fire a timeupdate event.
+  if ((mTimeUpdateTime.IsNull() ||
+       now - mTimeUpdateTime >= TimeDuration::FromMilliseconds(TIMEUPDATE_MS)) &&
+       mLastCurrentTime != time) {
+    mElement->DispatchEvent(NS_LITERAL_STRING("timeupdate"));
+    mTimeUpdateTime = now;
+    mLastCurrentTime = time;
+  }
+}
+
+nsresult nsMediaDecoder::StartTimeUpdate()
+{
+  if (mTimeUpdateTimer)
+    return NS_OK;
+
+  mTimeUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
+  return mTimeUpdateTimer->InitWithFuncCallback(TimeUpdateCallback,
+                                                this,
+                                                TIMEUPDATE_MS,
+                                                nsITimer::TYPE_REPEATING_SLACK);
+}
+
+nsresult nsMediaDecoder::StopTimeUpdate()
+{
+  if (!mTimeUpdateTimer)
+    return NS_OK;
+
+  nsresult rv = mTimeUpdateTimer->Cancel();
+  mTimeUpdateTimer = nsnull;
 
   return rv;
 }
@@ -289,5 +347,21 @@ PRBool nsMediaDecoder::CanPlayThrough()
   double timeToDownload =
     (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
   double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
-  return timeToDownload <= timeToPlay;
+
+  if (timeToDownload > timeToPlay) {
+    // Estimated time to download is greater than the estimated time to play.
+    // We probably can't play through without having to stop to buffer.
+    return PR_FALSE;
+  }
+
+  // Estimated time to download is less than the estimated time to play.
+  // We can probably play through without having to buffer, but ensure that
+  // we've got a reasonable amount of data buffered after the current
+  // playback position, so that if the bitrate of the media fluctuates, or if
+  // our download rate or decode rate estimation is otherwise inaccurate,
+  // we don't suddenly discover that we need to buffer. This is particularly
+  // required near the start of the media, when not much data is downloaded.
+  PRInt64 readAheadMargin = stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN;
+  return stats.mTotalBytes == stats.mDownloadPosition ||
+         stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }

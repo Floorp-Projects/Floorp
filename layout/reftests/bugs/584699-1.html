@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+function doTest() {
+  var c = document.getElementById("c");
+  c.style.top = "20px";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+<body>
+<canvas id="c" style="position: absolute; top:0; opacity:0.5; border:1px solid black; width:200px; height:200px;"></canvas>
+</body>
+</html>

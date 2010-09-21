@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<title>Test for z-index relationship to border-radius clipping of overflow</title>
+<style>
+
+#one { position: absolute; background: blue;
+       top: 50px; left: 50px; width: 100px; height: 100px }
+
+#two { position: absolute; border-radius: 15px; background: fuchsia;
+       top: 25px; left: 75px; width: 100px; height: 100px }
+
+#three { position: absolute; background: yellow;
+         top: 75px; left: 100px; width: 100px; height: 100px }
+
+</style>
+
+<div id="three"></div>
+<div id="two"></div>
+<div id="one"></div>

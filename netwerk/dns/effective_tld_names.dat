@@ -23,6 +23,7 @@
 //   Gervase Markham <gerv@gerv.net>
 //   Pamela Greene <pamg.bugs@gmail.com>
 //   David Triendl <david@triendl.name>
+//   Jothan Frakes <jothan@gmail.com>
 //   The kind representatives of many TLD registries
 // 
 // Alternatively, the contents of this file may be used under the terms of
@@ -708,6 +709,10 @@ za.com
 // Requested by Yngve Pettersen <yngve@opera.com> 2009-11-26
 operaunite.com
 
+// Requested by Eduardo Vela <evn@google.com> 2010-09-06
+appspot.com
+blogspot.com
+
 // coop : http://en.wikipedia.org/wiki/.coop
 coop
 
@@ -931,6 +936,7 @@ edu.gi
 org.gi
 
 // gl : http://en.wikipedia.org/wiki/.gl
+// http://nic.gl
 gl
 
 // gm : http://www.nic.gm/htmlpages%5Cgm-policy.htm
@@ -1088,7 +1094,16 @@ utazas.hu
 video.hu
 
 // id : http://en.wikipedia.org/wiki/.id
-*.id
+// see also: https://register.pandi.or.id/
+id
+ac.id
+co.id
+go.id
+mil.id
+net.id
+or.id
+sch.id
+web.id
 
 // ie : http://en.wikipedia.org/wiki/.ie
 ie
@@ -1178,7 +1193,11 @@ int.is
 it
 gov.it
 edu.it
-// geo-names found at http://www.nic.it/RA/en/domini/regole/nomi-riservati.pdf
+// list of reserved geo-names : 
+// http://www.nic.it/documenti/regolamenti-e-linee-guida/regolamento-assegnazione-versione-6.0.pdf
+// (There is also a list of reserved geo-names corresponding to Italian 
+// municipalities : http://www.nic.it/documenti/appendice-c.pdf , but it is
+// not included here.)
 agrigento.it
 ag.it
 alessandria.it
@@ -1199,8 +1218,17 @@ avellino.it
 av.it
 bari.it
 ba.it
-barlettaandriatrani.it
-barletta-andria-trani.it
+andria-barletta-trani.it
+andriabarlettatrani.it
+trani-barletta-andria.it
+tranibarlettaandria.it
+barletta-trani-andria.it
+barlettatraniandria.it
+andria-trani-barletta.it
+andriatranibarletta.it
+trani-andria-barletta.it
+traniandriabarletta.it
+bt.it
 belluno.it
 bl.it
 benevento.it
@@ -1228,6 +1256,11 @@ caltanissetta.it
 cl.it
 campobasso.it
 cb.it
+carboniaiglesias.it
+carbonia-iglesias.it
+iglesias-carbonia.it
+iglesiascarbonia.it
+ci.it
 caserta.it
 ce.it
 catania.it
@@ -1246,11 +1279,16 @@ crotone.it
 kr.it
 cuneo.it
 cn.it
+dell-ogliastra.it
+dellogliastra.it
+ogliastra.it
+og.it
 enna.it
 en.it
-fermo.it
 ferrara.it
 fe.it
+fermo.it
+fm.it
 firenze.it
 florence.it
 fi.it
@@ -1258,6 +1296,8 @@ foggia.it
 fg.it
 forli-cesena.it
 forlicesena.it
+cesena-forli.it
+cesenaforli.it
 fc.it
 frosinone.it
 fr.it
@@ -1296,9 +1336,16 @@ mantova.it
 mn.it
 massa-carrara.it
 massacarrara.it
+carrara-massa.it
+carraramassa.it
 ms.it
 matera.it
 mt.it
+medio-campidano.it
+mediocampidano.it
+campidano-medio.it
+campidanomedio.it
+vs.it
 messina.it
 me.it
 milano.it
@@ -1307,6 +1354,12 @@ mi.it
 modena.it
 mo.it
 monza.it
+monza-brianza.it
+monzabrianza.it
+monzaebrianza.it
+monzaedellabrianza.it
+monza-e-della-brianza.it
+mb.it
 napoli.it
 naples.it
 na.it
@@ -1331,6 +1384,8 @@ pescara.it
 pe.it
 pesaro-urbino.it
 pesarourbino.it
+urbino-pesaro.it
+urbinopesaro.it
 pu.it
 piacenza.it
 pc.it
@@ -1377,6 +1432,11 @@ sondrio.it
 so.it
 taranto.it
 ta.it
+tempio-olbia.it
+tempioolbia.it
+olbia-tempio.it
+olbiatempio.it
+ot.it
 teramo.it
 te.it
 terni.it
@@ -1629,6 +1689,14 @@ net.kn
 org.kn
 edu.kn
 gov.kn
+
+// kp : http://www.kcce.kp/en_index.php
+com.kp
+edu.kp
+gov.kp
+org.kp
+rep.kp
+tra.kp
 
 // kr : http://en.wikipedia.org/wiki/.kr
 // see also: http://domain.nida.or.kr/eng/registration.jsp
@@ -3370,6 +3438,16 @@ nu
 
 // om : http://en.wikipedia.org/wiki/.om
 *.om
+!mediaphone.om
+!nawrastelecom.om
+!nawras.om
+!omanmobile.om
+!omanpost.om
+!omantel.om
+!rakpetroleum.om
+!siemens.om
+!songfest.om
+!statecouncil.om
 
 // org : http://en.wikipedia.org/wiki/.org
 org
@@ -3634,6 +3712,9 @@ krakow.pl
 poznan.pl
 wroc.pl
 zakopane.pl
+
+// co.pl : Mainseek Sp. z o.o. http://www.co.pl
+co.pl
 
 // pn : http://www.government.pn/PnRegistry/policies.htm
 pn
@@ -4017,6 +4098,12 @@ org.sn
 perso.sn
 univ.sn
 
+// so : http://www.soregistry.com/
+so
+com.so
+net.so
+org.so
+
 // sr : http://en.wikipedia.org/wiki/.sr
 sr
 
@@ -4152,6 +4239,7 @@ mil.to
 
 // tr : http://en.wikipedia.org/wiki/.tr
 *.tr
+!nic.tr
 // Used by government in the TRNC
 // http://en.wikipedia.org/wiki/.nc.tr
 gov.nc.tr
@@ -4352,7 +4440,184 @@ wy.us
 // The registrar notes several more specific domains available in each state,
 // such as state.*.us, dst.*.us, etc., but resolution of these is somewhat
 // haphazard; in some states these domains resolve as addresses, while in others
-// only subdomains are avilable, or even nothing at all.
+// only subdomains are available, or even nothing at all. We include the
+// most common ones where it's clear that different sites are different
+// entities.
+k12.ak.us
+k12.al.us
+k12.ar.us
+k12.as.us
+k12.az.us
+k12.ca.us
+k12.co.us
+k12.ct.us
+k12.dc.us
+k12.de.us
+k12.fl.us
+k12.ga.us
+k12.gu.us
+k12.hi.us
+k12.ia.us
+k12.id.us
+k12.il.us
+k12.in.us
+k12.ks.us
+k12.ky.us
+k12.la.us
+k12.ma.us
+k12.md.us
+k12.me.us
+k12.mi.us
+k12.mn.us
+k12.mo.us
+k12.ms.us
+k12.mt.us
+k12.nc.us
+k12.nd.us
+k12.ne.us
+k12.nh.us
+k12.nj.us
+k12.nm.us
+k12.nv.us
+k12.ny.us
+k12.oh.us
+k12.ok.us
+k12.or.us
+k12.pa.us
+k12.pr.us
+k12.ri.us
+k12.sc.us
+k12.sd.us
+k12.tn.us
+k12.tx.us
+k12.ut.us
+k12.vi.us
+k12.vt.us
+k12.va.us
+k12.wa.us
+k12.wi.us
+k12.wv.us
+k12.wy.us
+
+cc.ak.us
+cc.al.us
+cc.ar.us
+cc.as.us
+cc.az.us
+cc.ca.us
+cc.co.us
+cc.ct.us
+cc.dc.us
+cc.de.us
+cc.fl.us
+cc.ga.us
+cc.gu.us
+cc.hi.us
+cc.ia.us
+cc.id.us
+cc.il.us
+cc.in.us
+cc.ks.us
+cc.ky.us
+cc.la.us
+cc.ma.us
+cc.md.us
+cc.me.us
+cc.mi.us
+cc.mn.us
+cc.mo.us
+cc.ms.us
+cc.mt.us
+cc.nc.us
+cc.nd.us
+cc.ne.us
+cc.nh.us
+cc.nj.us
+cc.nm.us
+cc.nv.us
+cc.ny.us
+cc.oh.us
+cc.ok.us
+cc.or.us
+cc.pa.us
+cc.pr.us
+cc.ri.us
+cc.sc.us
+cc.sd.us
+cc.tn.us
+cc.tx.us
+cc.ut.us
+cc.vi.us
+cc.vt.us
+cc.va.us
+cc.wa.us
+cc.wi.us
+cc.wv.us
+cc.wy.us
+
+lib.ak.us
+lib.al.us
+lib.ar.us
+lib.as.us
+lib.az.us
+lib.ca.us
+lib.co.us
+lib.ct.us
+lib.dc.us
+lib.de.us
+lib.fl.us
+lib.ga.us
+lib.gu.us
+lib.hi.us
+lib.ia.us
+lib.id.us
+lib.il.us
+lib.in.us
+lib.ks.us
+lib.ky.us
+lib.la.us
+lib.ma.us
+lib.md.us
+lib.me.us
+lib.mi.us
+lib.mn.us
+lib.mo.us
+lib.ms.us
+lib.mt.us
+lib.nc.us
+lib.nd.us
+lib.ne.us
+lib.nh.us
+lib.nj.us
+lib.nm.us
+lib.nv.us
+lib.ny.us
+lib.oh.us
+lib.ok.us
+lib.or.us
+lib.pa.us
+lib.pr.us
+lib.ri.us
+lib.sc.us
+lib.sd.us
+lib.tn.us
+lib.tx.us
+lib.ut.us
+lib.vi.us
+lib.vt.us
+lib.va.us
+lib.wa.us
+lib.wi.us
+lib.wv.us
+lib.wy.us
+
+// k12.ma.us contains school districts in Massachusetts. The 4LDs are 
+//  managed indepedently except for private (PVT), charter (CHTR) and
+//  parochial (PAROCH) schools.  Those are delegated dorectly to the 
+//  5LD operators.   <k12-ma-hostmaster _ at _ rsuc.gweep.net>
+pvt.k12.ma.us
+chtr.k12.ma.us
+paroch.k12.ma.us
 
 // uy : http://www.antel.com.uy/
 *.uy
@@ -4421,17 +4686,86 @@ org.ws
 gov.ws
 edu.ws
 
-// xn--mgbaam7a8h (UAE) : http://nic.ae/english/arabicdomain/rules.jsp
+// IDN ccTLDs
+// Please sort by ISO 3166 ccTLD, then punicode string
+// when submitting patches and follow this format:
+// <Punicode> ("<english word>" <language>) : <ISO 3166 ccTLD>
+// [optional sponsoring org]
+// <URL>
+
+// xn--mgbaam7a8h ("Emerat" Arabic) : AE
+//http://nic.ae/english/arabicdomain/rules.jsp
 امارات
 
-// xn--mgberp4a5d4ar (Saudi Arabia) : http://www.nic.net.sa/
-السعودية
+// xn--fiqs8s ("China" Chinese-Han-Simplified <.Zhonggou>) : CN 
+// CNNIC
+// http://cnnic.cn/html/Dir/2005/10/11/3218.htm
+中国
 
-// xn--p1ai (Russia) : http://www.cctld.ru/en/docs/rulesrf.php
+// xn--fiqz9s ("China" Chinese-Han-Traditional <.Zhonggou>) : CN
+// CNNIC
+// http://cnnic.cn/html/Dir/2005/10/11/3218.htm
+中國
+
+// xn--wgbh1c ("Egypt" Arabic .masr) : EG
+// http://www.dotmasr.eg/
+مصر
+
+// xn--j6w193g ("Hong Kong" Chinese-Han) : HK
+// https://www2.hkirc.hk/register/rules.jsp
+香港
+
+//xn--mgbayh7gpa ("al-Ordon" Arabic) JO
+//National Information Technology Center (NITC) 
+//Royal Scientific Society, Al-Jubeiha
+الاردن
+
+// xn--fzc2c9e2c ("Lanka" Sinhalese-Sinhala) : LK
+// http://nic.lk
+ලංකා
+
+// xn--xkc2al3hye2a ("Ilangai" Tamil) : LK
+// http://nic.lk
+இலங்கை
+
+// xn--ygbi2ammx ("Falasteen" Arabic) : PS
+// The Palestinian National Internet Naming Authority (PNINA)
+// http://www.pnina.ps
+فلسطين
+
+// xn--p1ai ("rf" Russian-Cyrillic) : RU
+// http://www.cctld.ru/en/docs/rulesrf.php
 рф
 
-// xn--wgbh1c (Egypt) : http://www.dotmasr.eg/
-مصر
+// xn--wgbl6a ("Qatar" Arabic) : QA
+// http://www.ict.gov.qa/
+قطر 
+
+// xn--mgberp4a5d4ar ("AlSaudiah" Arabic) : SA
+// http://www.nic.net.sa/
+السعودية
+
+// xn--yfro4i67o Singapore ("Singapore" Chinese-Han) : SG
+新加坡
+
+// xn--clchc0ea0b2g2a9gcd ("Singapore" Tamil) : SG
+சிங்கப்பூர்
+
+// xn--o3cw4h ("Thai" Thai) : TH
+// http://www.thnic.co.th
+ไทย
+
+// xn--pgbs0dh ("Tunis") : TN
+// http://nic.tn
+تونس
+
+// xn--kpry57d ("Taiwan" Chinese-Han-Traditional) : TW
+// http://www.twnic.net/english/dn/dn_07a.htm
+台灣
+
+// xn--kprw13d ("Taiwan" Chinese-Han-Simplified) : TW
+// http://www.twnic.net/english/dn/dn_07a.htm
+台湾
 
 // ye : http://www.y.net.ye/services/domain_name.htm
 *.ye

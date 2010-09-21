@@ -49,10 +49,15 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(eb1c3ff1-e81f-4ade-8ec8-4e8acc592edf)]
+[scriptable, uuid(b38efb33-ec68-487a-bf9b-2920425fa408)]
 interface nsIDOMHTMLFieldSetElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement  form;
+           attribute DOMString              name;
+
+  readonly attribute DOMString              type;
+
+  readonly attribute nsIDOMHTMLCollection   elements;
 
   // The following lines are parte of the constraint validation API, see:
   // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api

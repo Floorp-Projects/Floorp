@@ -413,7 +413,7 @@ imgFrame::SurfaceForDrawing(PRBool             aDoPadding,
     // transparent pixels in the padding or undecoded area
     gfxImageSurface::gfxImageFormat format = gfxASurface::ImageFormatARGB32;
     nsRefPtr<gfxASurface> surface =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, format);
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxImageSurface::ContentFromFormat(format));
     if (!surface || surface->CairoStatus())
       return SurfaceWithFormat();
 
