@@ -2664,7 +2664,7 @@ ASTSerializer::functionArgsAndBody(JSParseNode *pn, NodeVector &args, Value *bod
         LOCAL_ASSERT(head && PN_TYPE(head) == TOK_SEMI);
 
         pndestruct = head->pn_kid;
-        LOCAL_ASSERT(pndestruct && PN_TYPE(pndestruct) == TOK_VAR);
+        LOCAL_ASSERT(pndestruct && PN_TYPE(pndestruct) == TOK_COMMA);
     } else {
         pndestruct = NULL;
     }
