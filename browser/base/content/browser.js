@@ -5484,7 +5484,7 @@ var BrowserOffline = {
   init: function ()
   {
     if (!this._uiElement)
-      this._uiElement = document.getElementById("goOfflineMenuitem");
+      this._uiElement = document.getElementById("workOfflineMenuitemState");
 
     Services.obs.addObserver(this, "network:offline-status-changed", false);
 
