@@ -1168,7 +1168,8 @@ nsBrowserAccess.prototype = {
       // since newWindow.Browser doesn't exist yet, just return null
       return null;
     } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
-      browser = Browser.addTab("about:blank", true, Browser.selectedTab).browser;
+      let owner = isExternal ? null : Browser.selectedTab;
+      browser = Browser.addTab("about:blank", true, owner).browser;
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = Browser.selectedBrowser;
     }
