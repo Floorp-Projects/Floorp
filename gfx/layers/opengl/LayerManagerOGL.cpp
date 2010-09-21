@@ -872,5 +872,19 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
   DEBUG_GL_ERROR_CHECK(gl());
 }
 
+void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
+{
+  if (aFilter == gfxPattern::FILTER_NEAREST) {
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+  } else {
+    if (aFilter != gfxPattern::FILTER_GOOD) {
+      NS_WARNING("Unsupported filter type!");
+    }
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  }
+}
+
 } /* layers */
 } /* mozilla */
