@@ -196,6 +196,7 @@
     <broadcaster id="sync-setup-state"/>
     <broadcaster id="sync-syncnow-state"/>
 #endif
+    <broadcaster id="workOfflineMenuitemState"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
