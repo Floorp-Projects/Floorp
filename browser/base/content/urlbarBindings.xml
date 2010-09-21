@@ -129,18 +129,30 @@
                                                 "anonid", "textbox-input-box");
         var cxmenu = document.getAnonymousElementByAttribute(textBox,
                                             "anonid", "input-box-contextmenu");
+        var pasteAndGo;
+        cxmenu.addEventListener("popupshowing", function() {
+          if (!pasteAndGo)
+            return;
+          var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
+          var enabled = controller.isCommandEnabled("cmd_paste");
+          if (enabled)
+            pasteAndGo.removeAttribute("disabled");
+          else
+            pasteAndGo.setAttribute("disabled", "true");
+        }, false);
+
         var insertLocation = cxmenu.firstChild;
         while (insertLocation.nextSibling &&
                insertLocation.getAttribute("cmd") != "cmd_paste")
           insertLocation = insertLocation.nextSibling;
         if (insertLocation) {
-          let element = document.createElement("menuitem");
+          pasteAndGo = document.createElement("menuitem");
           let label = Services.strings.createBundle("chrome://browser/locale/browser.properties").
                                    GetStringFromName("pasteAndGo.label");
-          element.setAttribute("label", label);
-          element.setAttribute("cmd", "cmd_paste");
-          element.setAttribute("oncommand", "goDoCommand('cmd_paste'); gURLBar.handleCommand();");
-          cxmenu.insertBefore(element, insertLocation.nextSibling);
+          pasteAndGo.setAttribute("label", label);
+          pasteAndGo.setAttribute("anonid", "paste-and-go");
+          pasteAndGo.setAttribute("oncommand", "goDoCommand('cmd_paste'); gURLBar.handleCommand();");
+          cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
         }
       ]]></constructor>
 
