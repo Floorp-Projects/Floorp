@@ -717,8 +717,8 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2);
 extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
-extern JS_PUBLIC_API(void)
-JS_CommenceRuntimeShutDown(JSRuntime *rt);
+/* Deprecated. */
+#define JS_CommenceRuntimeShutDown(rt) ((void) 0) 
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);

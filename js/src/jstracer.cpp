@@ -2298,7 +2298,7 @@ FlushJITCache(JSContext *cx)
 }
 
 static void
-TrashTree(JSContext* cx, TreeFragment* f);
+TrashTree(TreeFragment* f);
 
 template <class T>
 static T&
@@ -2537,10 +2537,10 @@ TraceRecorder::~TraceRecorder()
     JS_ASSERT(traceMonitor->recorder != this);
 
     if (trashSelf)
-        TrashTree(cx, fragment->root);
+        TrashTree(fragment->root);
 
     for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
-        TrashTree(cx, whichTreesToTrash[i]);
+        TrashTree(whichTreesToTrash[i]);
 
     /* Purge the tempAlloc used during recording. */
     tempAlloc().reset();
@@ -2615,7 +2615,7 @@ TraceRecorder::finishAbort(const char* reason)
      * Otherwise, we may be throwing away another recorder's valid side exits.
      */
     if (fragment->root == fragment) {
-        TrashTree(cx, fragment->toTreeFragment());
+        TrashTree(fragment->toTreeFragment());
     } else {
         JS_ASSERT(numSideExitsBefore <= fragment->root->sideExits.length());
         fragment->root->sideExits.setLength(numSideExitsBefore);
@@ -2921,46 +2921,67 @@ TraceMonitor::flush()
     needFlush = JS_FALSE;
 }
 
-static inline void
-MarkTree(JSTracer* trc, TreeFragment *f)
+inline bool
+HasUnreachableGCThings(TreeFragment *f)
 {
+    /*
+     * We do not check here for dead scripts as JSScript is not a GC thing.
+     * Instead PurgeScriptFragments is used to remove dead script fragments.
+     * See bug 584860.
+     */
+    if (IsAboutToBeFinalized(f->globalObj))
+        return true;
     Value* vp = f->gcthings.data();
-    unsigned len = f->gcthings.length();
-    while (len--) {
+    for (unsigned len = f->gcthings.length(); len; --len) {
         Value &v = *vp++;
-        JS_SET_TRACING_NAME(trc, "jitgcthing");
         JS_ASSERT(v.isMarkable());
-        MarkGCThing(trc, v.toGCThing(), v.gcKind());
+        if (IsAboutToBeFinalized(v.toGCThing()))
+            return true;
     }
     const Shape** shapep = f->shapes.data();
-    len = f->shapes.length();
-    while (len--) {
+    for (unsigned len = f->shapes.length(); len; --len) {
         const Shape* shape = *shapep++;
-        shape->trace(trc);
+        if (!shape->marked())
+            return true;
     }
+    return false;
 }
 
 void
-TraceMonitor::mark(JSTracer* trc)
+TraceMonitor::sweep()
 {
-    if (!trc->context->runtime->gcFlushCodeCaches) {
-        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            TreeFragment* f = vmfragments[i];
-            while (f) {
-                if (f->code())
-                    MarkTree(trc, f);
-                TreeFragment* peer = f->peer;
-                while (peer) {
-                    if (peer->code())
-                        MarkTree(trc, peer);
-                    peer = peer->peer;
-                }
-                f = f->next;
+    JS_ASSERT(!ontrace());
+    debug_only_print0(LC_TMTracer, "Purging fragments with dead things");
+
+    for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+        TreeFragment** fragp = &vmfragments[i];
+        while (TreeFragment* frag = *fragp) {
+            TreeFragment* peer = frag;
+            do {
+                if (HasUnreachableGCThings(peer))
+                    break;
+                peer = peer->peer;
+            } while (peer);
+            if (peer) {
+                debug_only_printf(LC_TMTracer,
+                                  "TreeFragment peer %p has dead gc thing."
+                                  "Disconnecting tree %p with ip %p\n",
+                                  (void *) peer, (void *) frag, frag->ip);
+                JS_ASSERT(frag->root == frag);
+                *fragp = frag->next;
+                do {
+                    verbose_only( FragProfiling_FragFinalizer(frag, this); )
+                    TrashTree(frag);
+                    frag = frag->peer;
+                } while (frag);
+            } else {
+                fragp = &frag->next;
             }
         }
-        if (recorder)
-            MarkTree(trc, recorder->getTree());
     }
+
+    if (recorder && HasUnreachableGCThings(recorder->getTree()))
+        recorder->finishAbort("dead GC things");
 }
 
 /*
@@ -5672,7 +5693,7 @@ TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
 }
 
 static void
-TrashTree(JSContext* cx, TreeFragment* f)
+TrashTree(TreeFragment* f)
 {
     JS_ASSERT(f == f->root);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", (void*)f);
@@ -5685,11 +5706,11 @@ TrashTree(JSContext* cx, TreeFragment* f)
     TreeFragment** data = f->dependentTrees.data();
     unsigned length = f->dependentTrees.length();
     for (unsigned n = 0; n < length; ++n)
-        TrashTree(cx, data[n]);
+        TrashTree(data[n]);
     data = f->linkedTrees.data();
     length = f->linkedTrees.length();
     for (unsigned n = 0; n < length; ++n)
-        TrashTree(cx, data[n]);
+        TrashTree(data[n]);
 }
 
 static void
@@ -5901,7 +5922,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         return false;
     } else if (consensus == TypeConsensus_Undemotes) {
         /* The original tree is unconnectable, so trash it. */
-        TrashTree(cx, peer);
+        TrashTree(peer);
         return false;
     }
 
@@ -7813,6 +7834,11 @@ PurgeScriptFragments(JSContext* cx, JSScript* script)
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
+    /* A recorder script is being evaluated and can not be destroyed or GC-ed. */
+    JS_ASSERT_IF(tm->recorder, 
+                 JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
+
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &tm->vmfragments[i];
         while (TreeFragment* frag = *fragp) {
@@ -7828,7 +7854,7 @@ PurgeScriptFragments(JSContext* cx, JSScript* script)
                 *fragp = frag->next;
                 do {
                     verbose_only( FragProfiling_FragFinalizer(frag, tm); )
-                    TrashTree(cx, frag);
+                    TrashTree(frag);
                 } while ((frag = frag->peer) != NULL);
                 continue;
             }

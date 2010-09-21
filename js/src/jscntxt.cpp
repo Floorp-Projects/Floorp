@@ -529,9 +529,6 @@ void
 JSThreadData::mark(JSTracer *trc)
 {
     stackSpace.mark(trc);
-#ifdef JS_TRACER
-    traceMonitor.mark(trc);
-#endif
 }
 
 void
