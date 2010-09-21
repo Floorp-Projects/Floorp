@@ -719,6 +719,13 @@ XPC_NW_Construct(JSContext *cx, uintN argc, jsval *vp)
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
+  XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, JSID_VOID,
+                     argc, JS_ARGV(cx, vp), vp);
+  if(!ccx.IsValid())
+      return JS_FALSE;
+
+  JS_ASSERT(obj == ccx.GetFlattenedJSObject());
+
   nsresult rv = wrappedNative->GetScriptableInfo()->
     GetCallback()->Construct(wrappedNative, cx, obj, argc, JS_ARGV(cx, vp), vp,
                              &retval);
