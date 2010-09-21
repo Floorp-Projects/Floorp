@@ -568,7 +568,7 @@
                         command="View:PageSource"
                         key="key_viewSource"/>
               <menuseparator/>
-#define ID_PREFIX appmenu_
+#define ID_PREFIX appmenu_developer_
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
               <menuseparator/>
@@ -579,6 +579,9 @@
             </menupopup>
           </menu>
           <menuseparator class="appmenu-menuseparator"/>
+#define ID_PREFIX appmenu_
+#include browser-charsetmenu.inc
+#undef ID_PREFIX
           <menuitem id="appmenu_fullScreen"
                     class="menuitem-tooltip"
                     label="&fullScreenCmd.label;"

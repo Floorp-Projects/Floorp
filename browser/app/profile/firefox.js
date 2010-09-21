@@ -1048,3 +1048,8 @@ pref("devtools.errorconsole.enabled", false);
 
 // disable the Inspector
 pref("devtools.inspector.enabled", false);
+
+// Whether the character encoding menu is under the main Firefox button. This
+// preference is a string so that localizers can alter it.
+pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
+
