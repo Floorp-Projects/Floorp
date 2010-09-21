@@ -885,6 +885,38 @@ mjit::Compiler::generateMethod()
             jsop_pos();
           END_CASE(JSOP_POS)
 
+          BEGIN_CASE(JSOP_DELNAME)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            prepareStubCall(Uses(0));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::DelName);
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_DELNAME)
+
+          BEGIN_CASE(JSOP_DELPROP)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            prepareStubCall(Uses(1));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(STRICT_VARIANT(stubs::DelProp));
+            frame.pop();
+            frame.pushSynced();
+          }
+          END_CASE(JSOP_DELPROP) 
+
+          BEGIN_CASE(JSOP_DELELEM)
+            prepareStubCall(Uses(2));
+            stubCall(STRICT_VARIANT(stubs::DelElem));
+            frame.popn(2);
+            frame.pushSynced();
+          END_CASE(JSOP_DELELEM)
+
           BEGIN_CASE(JSOP_TYPEOF)
           BEGIN_CASE(JSOP_TYPEOFEXPR)
             jsop_typeof();
@@ -1289,6 +1321,14 @@ mjit::Compiler::generateMethod()
             frame.pop();
           END_CASE(JSOP_THROW)
 
+          BEGIN_CASE(JSOP_IN)
+            prepareStubCall(Uses(2));
+            stubCall(stubs::In);
+            frame.popn(2);
+            frame.takeReg(Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
+          END_CASE(JSOP_IN)
+
           BEGIN_CASE(JSOP_INSTANCEOF)
             jsop_instanceof();
           END_CASE(JSOP_INSTANCEOF)
@@ -1309,6 +1349,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
 
+          BEGIN_CASE(JSOP_CONDSWITCH)
+            /* No-op for the decompiler. */
+          END_CASE(JSOP_CONDSWITCH)
+
           BEGIN_CASE(JSOP_DEFFUN)
           {
             uint32 index = fullAtomIndex(PC);
@@ -1325,6 +1369,17 @@ mjit::Compiler::generateMethod()
             stubCall(STRICT_VARIANT(stubs::DefFun));
           }
           END_CASE(JSOP_DEFFUN)
+
+          BEGIN_CASE(JSOP_DEFVAR)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            prepareStubCall(Uses(0));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            stubCall(stubs::DefVar);
+          }
+          END_CASE(JSOP_DEFVAR)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
@@ -1538,6 +1593,10 @@ mjit::Compiler::generateMethod()
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
           END_CASE(JSOP_NEWARRAY)
+
+          BEGIN_CASE(JSOP_HOLE)
+            frame.push(MagicValue(JS_ARRAY_HOLE));
+          END_CASE(JSOP_HOLE)
 
           BEGIN_CASE(JSOP_LAMBDA_FC)
           {
@@ -1788,8 +1847,7 @@ mjit::Compiler::emitReturn()
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
 
     Address rval(JSFrameReg, JSStackFrame::offsetOfReturnValue());
-    masm.loadPayload(rval, JSReturnReg_Data);
-    masm.loadTypeTag(rval, JSReturnReg_Type);
+    masm.loadValueAsComponents(rval, JSReturnReg_Type, JSReturnReg_Data);
     masm.restoreReturnAddress();
     masm.move(Registers::ReturnReg, JSFrameReg);
 #ifdef DEBUG
@@ -1819,23 +1877,54 @@ mjit::Compiler::stubCall(void *ptr)
 void
 mjit::Compiler::interruptCheckHelper()
 {
-    RegisterID cxreg = frame.allocReg();
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxreg);
+    RegisterID reg = frame.allocReg();
+
+    /*
+     * Bake in and test the address of the interrupt counter for the runtime.
+     * This is faster than doing two additional loads for the context's
+     * thread data, but will cause this thread to run slower if there are
+     * pending interrupts on some other thread.  For non-JS_THREADSAFE builds
+     * we can skip this, as there is only one flag to poll.
+     */
 #ifdef JS_THREADSAFE
-    masm.loadPtr(Address(cxreg, offsetof(JSContext, thread)), cxreg);
-    Address flag(cxreg, offsetof(JSThread, data.interruptFlags));
+    void *interrupt = (void*) &cx->runtime->interruptCounter;
 #else
-    masm.loadPtr(Address(cxreg, offsetof(JSContext, runtime)), cxreg);
-    Address flag(cxreg, offsetof(JSRuntime, threadData.interruptFlags));
+    void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
 #endif
-    Jump jump = masm.branchTest32(Assembler::NonZero, flag);
-    frame.freeReg(cxreg);
-    stubcc.linkExit(jump, Uses(0));
-    stubcc.leave();
+
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+    Jump jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
+#else
+    /* Handle processors that can't load from absolute addresses. */
+    masm.move(ImmPtr(interrupt), reg);
+    Jump jump = masm.branchTest32(Assembler::NonZero, Address(reg, 0));
+#endif
+
+    stubcc.linkExitDirect(jump, stubcc.masm.label());
+
+#ifdef JS_THREADSAFE
+    /*
+     * Do a slightly slower check for an interrupt on this thread.
+     * We don't want this thread to slow down excessively if the pending
+     * interrupt is on another thread.
+     */
+    stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), reg);
+    stubcc.masm.loadPtr(Address(reg, offsetof(JSContext, thread)), reg);
+    Address flag(reg, offsetof(JSThread, data.interruptFlags));
+    Jump noInterrupt = stubcc.masm.branchTest32(Assembler::Zero, flag);
+#endif
+
+    frame.sync(stubcc.masm, Uses(0));
     stubcc.masm.move(ImmPtr(PC), Registers::ArgReg1);
     stubcc.call(stubs::Interrupt);
     ADD_CALLSITE(true);
     stubcc.rejoin(Changes(0));
+
+#ifdef JS_THREADSAFE
+    stubcc.linkRejoin(noInterrupt);
+#endif
+
+    frame.freeReg(reg);
 }
 
 void
@@ -1845,8 +1934,7 @@ mjit::Compiler::emitPrimitiveTestForNew(uint32 argc)
     stubcc.linkExitDirect(primitive, stubcc.masm.label());
     FrameEntry *fe = frame.peek(-int(argc + 1));
     Address thisv(frame.addressOf(fe));
-    stubcc.masm.loadTypeTag(thisv, JSReturnReg_Type);
-    stubcc.masm.loadPayload(thisv, JSReturnReg_Data);
+    stubcc.masm.loadValueAsComponents(thisv, JSReturnReg_Type, JSReturnReg_Data);
     Jump primFix = stubcc.masm.jump();
     stubcc.crossJump(primFix, masm.label());
 }
@@ -1984,8 +2072,8 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
                              FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
             stubcc.masm.fixScriptStack(frame.frameDepth());
             stubcc.masm.setupVMFrame();
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-            /* Need to stay 16-byte aligned on x86/x64. */
+#if defined(JS_CPU_X86)
+            /* Need to stay 16-byte aligned on x86. */
             stubcc.masm.subPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
 #endif
             stubcc.masm.push(dataReg);
@@ -1994,7 +2082,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
             stubcc.masm.wrapCall(pfun);
             stubcc.masm.pop(t0);
             stubcc.masm.pop(dataReg);
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86)
             stubcc.masm.addPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
 #endif
         }
@@ -3992,10 +4080,19 @@ mjit::Compiler::jsop_instanceof()
         RegisterID reg = frame.tempRegForData(rhs);
         j = masm.testFunction(Assembler::NotEqual, reg);
         stubcc.linkExit(j, Uses(2));
+    }
+
+    /* Test for bound functions. */
+    RegisterID obj = frame.tempRegForData(rhs);
+    Jump isBound = masm.branchTest32(Assembler::NonZero, Address(obj, offsetof(JSObject, flags)),
+                                     Imm32(JSObject::BOUND_FUNCTION));
+    {
+        stubcc.linkExit(isBound, Uses(2));
         stubcc.leave();
         stubcc.call(stubs::InstanceOf);
         firstSlow = stubcc.masm.jump();
     }
+    
 
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
@@ -4008,7 +4105,7 @@ mjit::Compiler::jsop_instanceof()
     stubcc.linkExit(j, Uses(3));
 
     /* Allocate registers up front, because of branchiness. */
-    RegisterID obj = frame.copyDataIntoReg(lhs);
+    obj = frame.copyDataIntoReg(lhs);
     RegisterID proto = frame.copyDataIntoReg(rhs);
     RegisterID temp = frame.allocReg();
 

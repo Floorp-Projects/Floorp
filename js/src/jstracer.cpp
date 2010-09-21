@@ -2035,7 +2035,7 @@ CountStackAndArgs(JSStackFrame *next, Value *stack)
     if (JS_LIKELY(!next->hasOverflowArgs()))
         return (Value *)next - stack;
     size_t nvals = (next->formalArgs() - 2 /* callee, this */) - stack;
-    JS_ASSERT(nvals == ((next->actualArgs() - 2) - stack) + (2 + next->numActualArgs()));
+    JS_ASSERT(nvals == unsigned((next->actualArgs() - 2) - stack) + (2 + next->numActualArgs()));
     return nvals;
 }
 
@@ -7783,8 +7783,6 @@ FinishJIT(TraceMonitor *tm)
 JS_REQUIRES_STACK void
 PurgeScriptFragments(JSContext* cx, JSScript* script)
 {
-    if (!TRACING_ENABLED(cx))
-        return;
     debug_only_printf(LC_TMTracer,
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
@@ -9389,7 +9387,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // enough to share mutable objects on the scope or proto chain, but we
     // don't care about such insane embeddings. Anyway, the (scope, proto)
     // entry->vcap coordinates must reach obj2 from aobj at this point.
-    JS_ASSERT(cx->thread->requestDepth);
+    JS_ASSERT(cx->thread->data.requestDepth);
 #endif
 
     return InjectStatus(guardPropertyCacheHit(obj_ins, aobj, obj2, entry, pcval));

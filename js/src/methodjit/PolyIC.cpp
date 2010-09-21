@@ -1799,8 +1799,9 @@ class ScopeNameCompiler : public PICStubCompiler
             if (kind == VAR)
                 slot += fun->nargs;
             Address dslot(pic.objReg, slot * sizeof(Value));
-            masm.loadTypeTag(dslot, pic.shapeReg);
-            masm.loadPayload(dslot, pic.objReg);
+
+            /* Safe because type is loaded first. */
+            masm.loadValueAsComponents(dslot, pic.shapeReg, pic.objReg);
         }
 
         skipOver.linkTo(masm.label(), &masm);

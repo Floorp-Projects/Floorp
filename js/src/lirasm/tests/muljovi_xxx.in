@@ -1,0 +1,11 @@
+        ; 46340 * 46340 < 2^31, and will not overflow.
+        big = immi 46340
+        
+        res = muljovi big big err
+        
+        reti res
+        
+; ---- Exit route for the error handler.
+
+err:    e = immi -1
+        reti e

@@ -2540,13 +2540,14 @@ namespace nanojit
             }
 
         } else {
-            const int disp = -8;
-            const Register base = SP;
+            // Use space just below ESP and use PUSH to avoid writing
+            // past the end of the stack, see bug 590553.
             Register ra = findRegFor(lhs, GpRegs);
             NanoAssert(rr == FST0);
-            FILDQ(disp, base);
-            STi(base, disp+4, 0);   // high 32 bits = 0
-            ST(base, disp, ra);     // low 32 bits = unsigned value
+            ADDi(SP, 8);       // fix up the stack
+            FILDQ(0, SP);      // convert int64 to double
+            PUSHr(ra);         // low 32 bits = unsigned value
+            PUSHi(0);          // high 32 bits = 0
         }
 
         freeResourcesOf(ins);
