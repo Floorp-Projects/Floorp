@@ -672,9 +672,10 @@ class FrameState
     void shift(int32 n);
 
     /*
-     * Notifies the frame of a slot that can escape.
+     * Notifies the frame of a slot that can escape. Returns whether or not
+     * the slot was added.
      */
-    inline void setClosedVar(uint32 slot);
+    inline bool addEscaping(uint32 local);
 
     inline void setInTryBlock(bool inTryBlock) {
         this->inTryBlock = inTryBlock;
@@ -729,8 +730,6 @@ class FrameState
         return uint32(fe - entries);
     }
 
-    inline bool isClosedVar(uint32 slot);
-
   private:
     JSContext *cx;
     JSScript *script;
@@ -769,7 +768,7 @@ class FrameState
 
     mutable ImmutableSync reifier;
 
-    JSPackedBool *closedVars;
+    uint32 *escaping;
     bool eval;
     bool inTryBlock;
 };
