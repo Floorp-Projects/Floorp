@@ -3007,6 +3007,12 @@ JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_IsExtensible(JSObject *obj)
+{
+    return obj->isExtensible();
+}
+
+JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);

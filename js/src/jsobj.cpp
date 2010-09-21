@@ -2633,6 +2633,52 @@ obj_isFrozen(JSContext *cx, uintN argc, Value *vp)
             return true; /* The JavaScript value returned is false. */
     }
 
+    /* It really was sealed, so return true. */
+    vp->setBoolean(true);
+    return true;
+}
+
+static JSBool
+obj_seal(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.seal", &obj))
+        return false;
+
+    vp->setObject(*obj);
+
+    return obj->seal(cx);
+}
+
+static JSBool
+obj_isSealed(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.isSealed", &obj))
+        return false;
+
+    /* Assume not sealed until proven otherwise. */
+    vp->setBoolean(false);
+
+    if (obj->isExtensible())
+        return true; /* The JavaScript value returned is false. */
+
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+        return false;
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = props[i];
+
+        uintN attrs;
+        if (!obj->getAttributes(cx, id, &attrs))
+            return false;
+
+        if (!(attrs & JSPROP_PERMANENT))
+            return true; /* The JavaScript value returned is false. */
+    }
+
+    /* It really was sealed, so return true. */
     vp->setBoolean(true);
     return true;
 }
@@ -2680,6 +2726,8 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
     JS_FN("freeze",                    obj_freeze,                  1,0),
     JS_FN("isFrozen",                  obj_isFrozen,                1,0),
+    JS_FN("seal",                      obj_seal,                    1,0),
+    JS_FN("isSealed",                  obj_isSealed,                1,0),
     JS_FS_END
 };
 
