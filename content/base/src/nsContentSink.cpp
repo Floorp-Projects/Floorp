@@ -1916,9 +1916,7 @@ nsIAtom** const kDefaultAllowedAttributes [] = {
   &nsGkAtoms::media,
   &nsGkAtoms::method,
   &nsGkAtoms::min,
-#ifdef MOZ_MAIL_NEWS
   &nsGkAtoms::mozdonotsend,
-#endif
   &nsGkAtoms::multiple,
   &nsGkAtoms::name,
   &nsGkAtoms::nohref,
