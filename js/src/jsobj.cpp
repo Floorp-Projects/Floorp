@@ -1796,7 +1796,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props))
         return JS_FALSE;
 
     AutoValueVector vals(cx);
@@ -2490,7 +2490,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     AutoIdVector keys(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, keys))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
         return false;
 
     AutoValueVector vals(cx);

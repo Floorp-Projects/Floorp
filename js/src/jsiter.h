@@ -138,7 +138,7 @@ bool
 VectorToIdArray(JSContext *cx, js::AutoIdVector &props, JSIdArray **idap);
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props);
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector *props);
 
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, js::Value *vp);
