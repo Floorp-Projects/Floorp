@@ -1138,8 +1138,3 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
   NS_DispatchToMainThread(ev);
 }
 
-#if !defined(WINCE_WINDOWS_MOBILE) && !defined(MOZ_MAEMO_LIBLOCATION) && !defined(ANDROID)
-DOMCI_DATA(GeoPositionCoords, void)
-DOMCI_DATA(GeoPosition, void)
-#endif
-
