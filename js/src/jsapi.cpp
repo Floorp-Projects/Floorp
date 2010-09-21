@@ -3831,7 +3831,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 
     AutoIdVector props(cx);
     JSIdArray *ida;
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props) || !VectorToIdArray(cx, props, &ida))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
         return false;
     for (size_t n = 0; n < size_t(ida->length); ++n)
         JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
