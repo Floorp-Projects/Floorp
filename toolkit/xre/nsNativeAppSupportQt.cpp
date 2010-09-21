@@ -107,6 +107,13 @@ nsNativeAppSupportQt::Stop(PRBool* aResult)
   NS_ENSURE_ARG(aResult);
   *aResult = PR_TRUE;
 
+#if (MOZ_PLATFORM_MAEMO == 5)
+  if (m_osso_context) {
+    osso_deinitialize(m_osso_context);
+    m_osso_context = nsnull;
+  }
+#endif
+
   return NS_OK;
 }
 
