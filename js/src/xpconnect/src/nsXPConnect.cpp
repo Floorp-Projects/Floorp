@@ -512,17 +512,6 @@ nsXPConnect::ToParticipant(void *p)
     return this;
 }
 
-void
-nsXPConnect::CommenceShutdown()
-{
-#ifdef DEBUG
-    fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
-#endif
-    // Tell the JS engine that we are about to destroy the runtime.
-    JSRuntime* rt = mRuntime->GetJSRuntime();
-    JS_CommenceRuntimeShutDown(rt);
-}
-
 NS_IMETHODIMP
 nsXPConnect::RootAndUnlinkJSObjects(void *p)
 {
