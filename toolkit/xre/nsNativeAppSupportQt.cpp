@@ -69,7 +69,7 @@ nsNativeAppSupportQt::Start(PRBool* aRetVal)
   g_type_init();
 #endif
 
-#ifdef MOZ_PLATFORM_MAEMO
+#if (MOZ_PLATFORM_MAEMO == 5)
   /* Initialize maemo application
 
      The initalization name will be of the form "Vendor.Name".
