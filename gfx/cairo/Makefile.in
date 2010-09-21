@@ -42,7 +42,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = libpixman/src cairo/src
+DIRS = cairo/src
+
+ifdef MOZ_TREE_PIXMAN
+DIRS += libpixman/src
+endif
 
 include $(topsrcdir)/config/rules.mk
 
