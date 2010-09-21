@@ -72,25 +72,6 @@ typedef JSC::MacroAssembler::Address Address;
 typedef JSC::ReturnAddressPtr ReturnAddressPtr;
 typedef JSC::MacroAssemblerCodePtr MacroAssemblerCodePtr;
 
-class AutoPropertyDropper
-{
-    JSContext *cx;
-    JSObject *holder;
-    JSProperty *prop;
-
-  public:
-    AutoPropertyDropper(JSContext *cx, JSObject *obj, JSProperty *prop)
-      : cx(cx), holder(obj), prop(prop)
-    {
-        JS_ASSERT(prop);
-    }
-
-    ~AutoPropertyDropper()
-    {
-        holder->dropProperty(cx, prop);
-    }
-};
-
 class PICStubCompiler
 {
   protected:

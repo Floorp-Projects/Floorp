@@ -2171,7 +2171,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             uint32 slot = globalCg->globalUses[cookie.asInteger()].slot;
 
             /* Fall back to NAME if we can't add a slot. */
-            if (!cg->addGlobalUse(atom, slot, cookie))
+            if (!cg->addGlobalUse(atom, slot, &cookie))
                 return JS_FALSE;
 
             if (cookie.isFree())
@@ -2409,17 +2409,17 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 }
 
 bool
-JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie &cookie)
+JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
 {
     JSAtomListElement *ale = globalMap.lookup(atom);
     if (ale) {
-        cookie.set(0, uint16(ALE_INDEX(ale)));
+        cookie->set(0, uint16(ALE_INDEX(ale)));
         return true;
     }
 
     /* Don't bother encoding indexes >= uint16 */
     if (globalUses.length() >= UINT16_LIMIT) {
-        cookie.makeFree();
+        cookie->makeFree();
         return true;
     }
 
@@ -2428,7 +2428,7 @@ JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie &cookie)
     if (!ale)
         return false;
 
-    cookie.set(0, globalUses.length());
+    cookie->set(0, globalUses.length());
 
     GlobalSlotArray::Entry entry = { ALE_INDEX(ale), slot };
     if (!globalUses.append(entry))
@@ -2438,7 +2438,7 @@ JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie &cookie)
     if (!ale)
         return false;
 
-    ALE_SET_INDEX(ale, cookie.asInteger());
+    ALE_SET_INDEX(ale, cookie->asInteger());
     return true;
 }
 
@@ -7405,8 +7405,8 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * hand out one of the slots that should be given to a regexp clone.
  *
  * If the code being compiled is global code, the cloned regexp are stored in
- * fp->vars slot after cg->ngvars and to protect regexp slots from GC we set
- * fp->nvars to ngvars + nregexps.
+ * fp->vars slot and to protect regexp slots from GC we set fp->nvars to
+ * nregexps.
  *
  * The slots initially contain undefined or null. We populate them lazily when
  * JSOP_REGEXP is executed for the first time.
