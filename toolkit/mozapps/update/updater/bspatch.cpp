@@ -62,7 +62,7 @@
 int
 MBS_ReadHeader(FILE* file, MBSPatchHeader *header)
 {
-  int s = fread(header, 1, sizeof(MBSPatchHeader), file);
+  size_t s = fread(header, 1, sizeof(MBSPatchHeader), file);
   if (s != sizeof(MBSPatchHeader))
     return READ_ERROR;
 
@@ -104,10 +104,10 @@ MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
 
   int rv = OK;
 
-  int r = header->cblen + header->difflen + header->extralen;
+  size_t r = header->cblen + header->difflen + header->extralen;
   unsigned char *wb = buf;
   while (r) {
-    int c = fread(wb, 1, (r > SSIZE_MAX) ? SSIZE_MAX : r, patchFile);
+    size_t c = fread(wb, 1, (r > SSIZE_MAX) ? SSIZE_MAX : r, patchFile);
     if (c < 0) {
       rv = READ_ERROR;
       goto end;
