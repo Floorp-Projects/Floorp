@@ -63,19 +63,13 @@ JaegerTrampoline:
     /* No fastcall for sunstudio. */
     pushl %esp
     call SetVMFrameRegs
-    popl  %edx
-    pushl %esp
     call PushActiveVMFrame
     popl  %edx
     call  *16(%ebp)
     pushl %esp
     call PopActiveVMFrame
-    popl %ecx
-    pushl %esp
-    call UnsetVMFrameRegs
-    popl %ecx
 
-    addl $0x2C, %esp
+    addl $0x30, %esp
     popl %ebx
     popl %edi
     popl %esi
@@ -109,7 +103,7 @@ throwpoline_exit:
     pushl %esp
     call PopActiveVMFrame
     popl %ebx
-    addl $0x2c, %esp
+    addl $0x2C, %esp
     popl %ebx
     popl %edi
     popl %esi
@@ -123,7 +117,7 @@ throwpoline_exit:
 InjectJaegerReturn:
     movl 0x18(%ebx), %edx                        /* fp->rval_ data */
     movl 0x1C(%ebx), %ecx                        /* fp->rval_ type */
-    movl 0x2c(%ebx), %eax                        /* fp->ncode_ */
+    movl 0x2C(%ebx), %eax                        /* fp->ncode_ */
     /* For Sun Studio there is no fast call. */
     /* We add the stack by 8 before. */
     addl $0x8, %esp
@@ -141,6 +135,6 @@ InjectJaegerReturn:
 .type   SafePointTrampoline, @function
 SafePointTrampoline:
     popl %eax
-    movl %eax, 0x2c(%ebx)
+    movl %eax, 0x2C(%ebx)
     jmp  *24(%ebp)
 .size   SafePointTrampoline, . - SafePointTrampoline
