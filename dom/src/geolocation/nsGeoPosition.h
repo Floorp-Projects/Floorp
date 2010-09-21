@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Doug Turner <dougt@meer.net>  (Original Author)
  *  Nino D'Aversa <ninodaversa@gmail.com>
+ *  Mike Kristoffersen <moz@mikek.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,8 +43,43 @@
 #include "nsAutoPtr.h"
 #include "nsIClassInfo.h"
 #include "nsDOMClassInfoID.h"
+#include "nsIDOMGeoPositionAddress.h"
 #include "nsIDOMGeoPositionCoords.h"
 #include "nsIDOMGeoPosition.h"
+#include "nsString.h"
+
+////////////////////////////////////////////////////
+// nsGeoPositionAddress
+////////////////////////////////////////////////////
+
+class nsGeoPositionAddress : public nsIDOMGeoPositionAddress
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMGEOPOSITIONADDRESS
+
+  nsGeoPositionAddress( const nsAString &aStreetNumber,
+                        const nsAString &aStreet,
+                        const nsAString &aPremises,
+                        const nsAString &aCity,
+                        const nsAString &aCounty,
+                        const nsAString &aRegion,
+                        const nsAString &aCountry,
+                        const nsAString &aCountryCode,
+                        const nsAString &aPostalCode);
+
+  private:
+    ~nsGeoPositionAddress();
+    const nsString mStreetNumber;
+    const nsString mStreet;
+    const nsString mPremises;
+    const nsString mCity;
+    const nsString mCounty;
+    const nsString mRegion;
+    const nsString mCountry;
+    const nsString mCountryCode;
+    const nsString mPostalCode;
+};
 
 ////////////////////////////////////////////////////
 // nsGeoPositionCoords
@@ -58,13 +94,16 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITIONCOORDS
   
-  nsGeoPositionCoords(double aLat, double aLong,
-                      double aAlt, double aHError,
-                      double aVError, double aHeading,
-                      double aSpeed);
+  nsGeoPositionCoords(const double aLat,
+                      const double aLong,
+                      const double aAlt,
+                      const double aHError,
+                      const double aVError,
+                      const double aHeading,
+                      const double aSpeed);
 private:
   ~nsGeoPositionCoords();
-  double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
+  const double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
 };
 
 
@@ -83,10 +122,19 @@ public:
                 double aVError, double aHeading,
                 double aSpeed, long long aTimestamp);
   
+
+  nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
+                long long aTimestamp);
+
+  nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
+                nsIDOMGeoPositionAddress *aAddress,
+                DOMTimeStamp aTimestamp);
+
 private:
   ~nsGeoPosition();
   long long mTimestamp;
-  nsRefPtr<nsGeoPositionCoords> mCoords;
+  nsRefPtr<nsIDOMGeoPositionCoords> mCoords;
+  nsRefPtr<nsIDOMGeoPositionAddress> mAddress;
 };
 
 #endif /* nsGeoPosition_h */
