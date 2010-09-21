@@ -2730,6 +2730,23 @@ namespace nanojit
             goto overflow;
         }
 
+        case LIR_eqi:   CASE64(LIR_eqq:)
+        case LIR_lti:   CASE64(LIR_ltq:)
+        case LIR_lei:   CASE64(LIR_leq:)
+        case LIR_gti:   CASE64(LIR_gtq:)
+        case LIR_gei:   CASE64(LIR_geq:)
+        case LIR_ltui:  CASE64(LIR_ltuq:)
+        case LIR_leui:  CASE64(LIR_leuq:)
+        case LIR_gtui:  CASE64(LIR_gtuq:)
+        case LIR_geui:  CASE64(LIR_geuq:)
+        case LIR_eqd:
+        case LIR_ltd:
+        case LIR_led:
+        case LIR_gtd:
+        case LIR_ged:
+            return Interval(0, 1);
+
+        CASE32(LIR_paramp:)
         case LIR_ldi:
         case LIR_noti:
         case LIR_ori:
@@ -2746,15 +2763,15 @@ namespace nanojit
             goto worst_non_overflow;
 
         default:
-            NanoAssert(0);
+            NanoAssertMsgf(0, "%s", lirNames[ins->opcode()]);
         }
+
+      overflow:
+        return OverflowInterval();
 
       worst_non_overflow:
         // Only cases that cannot overflow should reach here, ie. not add/sub/mul.
         return Interval(I32_MIN, I32_MAX);
-
-      overflow:
-        return OverflowInterval();
     }
 
     Interval Interval::add(Interval x, Interval y) {
