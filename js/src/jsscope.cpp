@@ -556,7 +556,7 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
     *childp = NULL;
 
     while (shape) {
-        JS_ASSERT(!shape->inDictionary());
+        JS_ASSERT_IF(!shape->frozen(), !shape->inDictionary());
 
         Shape *dprop = Shape::newDictionaryShape(cx, *shape, childp);
         if (!dprop) {

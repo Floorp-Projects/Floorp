@@ -1915,7 +1915,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 
 namespace js {
 
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN interpFlags)
 {
 #ifdef MOZ_TRACEVIS
@@ -5102,11 +5102,6 @@ BEGIN_CASE(JSOP_DEFVAR)
     uint32 index = GET_INDEX(regs.pc);
     JSAtom *atom = atoms[index];
 
-    /*
-     * index is relative to atoms at this point but for global var
-     * code below we need the absolute value.
-     */
-    index += atoms - script->atomMap.vector;
     JSObject *obj = &regs.fp->varobj(cx);
     JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;

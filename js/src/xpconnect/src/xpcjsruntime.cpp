@@ -803,7 +803,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
         JSContext* cx = nsnull;
         while((cx = js_NextActiveContext(self->mJSRuntime, cx)))
         {
-            JS_TriggerOperationCallback(cx);
+            js::TriggerOperationCallback(cx);
         }
     }
 

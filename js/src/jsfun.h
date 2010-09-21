@@ -172,8 +172,6 @@ struct JSFunction : public JSObject
 
     inline bool inStrictMode() const;
 
-    bool isBound() const;
-
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return u.i.nvars;

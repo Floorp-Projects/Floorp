@@ -452,17 +452,12 @@ FrameState::merge(Assembler &masm, Changes changes) const
             continue;
         }
 
-#if defined JS_PUNBOX64
-        if (fe->data.inRegister() && fe->type.inRegister()) {
+        if (fe->data.inRegister() && fe->type.inRegister())
             masm.loadValueAsComponents(addressOf(fe), fe->type.reg(), fe->data.reg());
-        } else
-#endif
-        {
-            if (fe->data.inRegister())
-                masm.loadPayload(addressOf(fe), fe->data.reg());
-            if (fe->type.inRegister())
-                masm.loadTypeTag(addressOf(fe), fe->type.reg());
-        }
+        else if (fe->data.inRegister())
+            masm.loadPayload(addressOf(fe), fe->data.reg());
+        else if (fe->type.inRegister())
+            masm.loadTypeTag(addressOf(fe), fe->type.reg());
     }
 }
 

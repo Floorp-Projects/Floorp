@@ -150,7 +150,8 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet ac
 #endif
 
 typedef int32_t (FASTCALL *RetInt)();
-typedef double (FASTCALL *RetFloat)();
+typedef int64_t (FASTCALL *RetQuad)();
+typedef double (FASTCALL *RetDouble)();
 typedef GuardRecord* (FASTCALL *RetGuard)();
 
 struct Function {
@@ -159,9 +160,12 @@ struct Function {
 };
 
 enum ReturnType {
-    RT_INT32 = 1,
-    RT_FLOAT = 2,
-    RT_GUARD = 4
+    RT_INT = 1,
+#ifdef NANOJIT_64BIT
+    RT_QUAD = 2,
+#endif
+    RT_DOUBLE = 4,
+    RT_GUARD = 8
 };
 
 #ifdef DEBUG
@@ -262,8 +266,11 @@ private:
 class LirasmFragment {
 public:
     union {
-        RetFloat rfloat;
         RetInt rint;
+#ifdef NANOJIT_64BIT
+        RetQuad rquad;
+#endif
+        RetDouble rdouble;
         RetGuard rguard;
     };
     ReturnType mReturnType;
@@ -368,11 +375,17 @@ double sinFn(double d) {
 }
 #define sin sinFn
 
+double calld1(double x, double i, double y, double l, double x1, double i1, double y1, double l1) { 
+    return x + i * y - l + x1 / i1 - y1 * l1; 
+}
+
 Function functions[] = {
     FN(puts,   CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_P)),
     FN(sin,    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)),
     FN(malloc, CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P)),
     FN(free,   CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_P)),
+    FN(calld1, CallInfo::typeSig8(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
+                                  ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)),
 };
 
 template<typename out, typename in> out
@@ -811,9 +824,14 @@ FragmentAssembler::endFragment()
     if (mReturnTypeBits == 0) {
         cerr << "warning: no return type in fragment '"
              << mFragName << "'" << endl;
-    }
-    if (mReturnTypeBits != RT_INT32 && mReturnTypeBits != RT_FLOAT &&
-        mReturnTypeBits != RT_GUARD) {
+
+    } else if (mReturnTypeBits != RT_INT && 
+#ifdef NANOJIT_64BIT
+               mReturnTypeBits != RT_QUAD &&
+#endif
+               mReturnTypeBits != RT_DOUBLE &&
+               mReturnTypeBits != RT_GUARD)
+    {
         cerr << "warning: multiple return types in fragment '"
              << mFragName << "'" << endl;
     }
@@ -841,17 +859,26 @@ FragmentAssembler::endFragment()
     f = &mParent.mFragments[mFragName];
 
     switch (mReturnTypeBits) {
+    case RT_INT:
+        f->rint = (RetInt)((uintptr_t)mFragment->code());
+        f->mReturnType = RT_INT;
+        break;
+#ifdef NANOJIT_64BIT
+    case RT_QUAD:
+        f->rquad = (RetQuad)((uintptr_t)mFragment->code());
+        f->mReturnType = RT_QUAD;
+        break;
+#endif
+    case RT_DOUBLE:
+        f->rdouble = (RetDouble)((uintptr_t)mFragment->code());
+        f->mReturnType = RT_DOUBLE;
+        break;
     case RT_GUARD:
         f->rguard = (RetGuard)((uintptr_t)mFragment->code());
         f->mReturnType = RT_GUARD;
         break;
-    case RT_FLOAT:
-        f->rfloat = (RetFloat)((uintptr_t)mFragment->code());
-        f->mReturnType = RT_FLOAT;
-        break;
     default:
-        f->rint = (RetInt)((uintptr_t)mFragment->code());
-        f->mReturnType = RT_INT32;
+        NanoAssert(0);
         break;
     }
 
@@ -1152,11 +1179,17 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_reti:
-            ins = assemble_ret(RT_INT32);
+            ins = assemble_ret(RT_INT);
             break;
 
+#ifdef NANOJIT_64BIT
+          case LIR_retq:
+            ins = assemble_ret(RT_QUAD);
+            break;
+#endif
+
           case LIR_retd:
-            ins = assemble_ret(RT_FLOAT);
+            ins = assemble_ret(RT_DOUBLE);
             break;
 
           case LIR_label:
@@ -1170,7 +1203,6 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_line:
           case LIR_xtbl:
           case LIR_jtbl:
-          CASE64(LIR_retq:)
             nyi(op);
             break;
 
@@ -1445,15 +1477,32 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
     vector<LOpcode> D_I_ops;
+#if !NJ_SOFTFLOAT_SUPPORTED
+    // Don't emit LIR_{ui,i}2d for soft-float platforms because the soft-float filter removes them.
     D_I_ops.push_back(LIR_i2d);
     D_I_ops.push_back(LIR_ui2d);
+#elif defined(NANOJIT_ARM)
+    // The ARM back-end can detect FP support at run-time.
+    if (avmplus::AvmCore::config.arm_vfp) {
+        D_I_ops.push_back(LIR_i2d);
+        D_I_ops.push_back(LIR_ui2d);
+    }
+#endif
 
     vector<LOpcode> I_D_ops;
 #if NJ_SOFTFLOAT_SUPPORTED
     I_D_ops.push_back(LIR_dlo2i);
     I_D_ops.push_back(LIR_dhi2i);
 #endif
+#if !NJ_SOFTFLOAT_SUPPORTED
+    // Don't emit LIR_d2i for soft-float platforms because the soft-float filter removes it.
     I_D_ops.push_back(LIR_d2i);
+#elif defined(NANOJIT_ARM)
+    // The ARM back-end can detect FP support at run-time.
+    if (avmplus::AvmCore::config.arm_vfp) {
+        I_D_ops.push_back(LIR_d2i);
+    }
+#endif
 
 #ifdef NANOJIT_64BIT
     vector<LOpcode> Q_D_ops;
@@ -1794,7 +1843,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
         case LOP_D_I:
-            if (!Is.empty()) {
+            if (!Is.empty() && !D_I_ops.empty()) {
                 ins = mLir->ins1(rndPick(D_I_ops), rndPick(Is));
                 addOrReplace(Ds, ins);
                 n++;
@@ -1996,7 +2045,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     delete[] classGenerator;
 
     // Return 0.
-    mReturnTypeBits |= RT_INT32;
+    mReturnTypeBits |= RT_INT;
     mLir->ins1(LIR_reti, mLir->insImmI(0));
 
     endFragment();
@@ -2024,6 +2073,7 @@ Lirasm::Lirasm(bool verbose) :
 
     // XXX: could add more pointer-sized synonyms here
     mOpMap["paramp"] = mOpMap[PTR_SIZE("parami", "paramq")];
+    mOpMap["livep"]  = mOpMap[PTR_SIZE("livei", "liveq")];
 }
 
 Lirasm::~Lirasm()
@@ -2049,8 +2099,8 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
     Fragments::const_iterator func = mFragments.find(name);
     if (func != mFragments.end()) {
         // The ABI, arg types and ret type will be overridden by the caller.
-        if (func->second.mReturnType == RT_FLOAT) {
-            CallInfo target = {(uintptr_t) func->second.rfloat,
+        if (func->second.mReturnType == RT_DOUBLE) {
+            CallInfo target = {(uintptr_t) func->second.rdouble,
                                0, ABI_FASTCALL, /*isPure*/0, ACCSET_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
@@ -2247,7 +2297,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
             arm_arch = strtoul(argv[i+1], &endptr, 10);
             // Check that the argument was a number.
             if ('\0' == *endptr) {
-                if ((arm_arch < 5) || (arm_arch > 7)) {
+                if ((arm_arch < 4) || (arm_arch > 7)) {
                     errMsgAndQuit(opts.progname, "Unsupported argument to --arm-arch.\n");
                 }
             } else {
@@ -2316,20 +2366,24 @@ main(int argc, char **argv)
         if (i == lasm.mFragments.end())
             errMsgAndQuit(opts.progname, "error: at least one fragment must be named 'main'");
         switch (i->second.mReturnType) {
-          case RT_FLOAT:
-          {
-            double res = i->second.rfloat();
-            cout << "Output is: " << res << endl;
-            break;
-          }
-          case RT_INT32:
-          {
+          case RT_INT: {
             int res = i->second.rint();
             cout << "Output is: " << res << endl;
             break;
           }
-          case RT_GUARD:
-          {
+#ifdef NANOJIT_64BIT
+          case RT_QUAD: {
+            int res = i->second.rquad();
+            cout << "Output is: " << res << endl;
+            break;
+          }
+#endif
+          case RT_DOUBLE: {
+            double res = i->second.rdouble();
+            cout << "Output is: " << res << endl;
+            break;
+          }
+          case RT_GUARD: {
             LasmSideExit *ls = (LasmSideExit*) i->second.rguard()->exit;
             cout << "Exited block on line: " << ls->line << endl;
             break;
