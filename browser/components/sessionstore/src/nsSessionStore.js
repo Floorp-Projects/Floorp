@@ -2378,8 +2378,15 @@ SessionStoreService.prototype = {
       browser.userTypedValue = activePageData ? activePageData.url || null : null;
 
       // If the page has a title, set it.
-      if (activePageData && activePageData.title)
-        tab.label = activePageData.title;
+      if (activePageData) {
+        if (activePageData.title) {
+          tab.label = activePageData.title;
+          tab.crop = "end";
+        } else if (activePageData.url != "about:blank") {
+          tab.label = activePageData.url;
+          tab.crop = "center";
+        }
+      }
     }
 
     if (!this._isWindowLoaded(aWindow)) {
