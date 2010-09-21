@@ -1829,7 +1829,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
-  nsresult rv = decoder->Load(stream, nsnull);
+  nsresult rv = decoder->Load(stream, nsnull, aOriginal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1856,7 +1856,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   if (!stream)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = decoder->Load(stream, aListener);
+  nsresult rv = decoder->Load(stream, aListener, nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }

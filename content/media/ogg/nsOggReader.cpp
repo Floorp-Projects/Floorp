@@ -115,7 +115,7 @@ nsOggReader::~nsOggReader()
   MOZ_COUNT_DTOR(nsOggReader);
 }
 
-nsresult nsOggReader::Init() {
+nsresult nsOggReader::Init(nsBuiltinDecoderReader* aCloneDonor) {
   PRBool init = mCodecStates.Init();
   NS_ASSERTION(init, "Failed to initialize mCodecStates");
   if (!init) {

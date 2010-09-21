@@ -567,9 +567,13 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset
 }
 
 
-nsresult nsBuiltinDecoderStateMachine::Init()
+nsresult nsBuiltinDecoderStateMachine::Init(nsDecoderStateMachine* aCloneDonor)
 {
-  return mReader->Init();
+  nsBuiltinDecoderReader* cloneReader = nsnull;
+  if (aCloneDonor) {
+    cloneReader = static_cast<nsBuiltinDecoderStateMachine*>(aCloneDonor)->mReader;
+  }
+  return mReader->Init(cloneReader);
 }
 
 void nsBuiltinDecoderStateMachine::StopPlayback(eStopMode aMode)
