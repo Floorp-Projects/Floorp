@@ -117,6 +117,9 @@ _BROWSER_TEST_FILES = \
 	browser_579879.js \
 	browser_580512.js \
 	browser_586147.js \
+#ifndef XP_MACOSX
+	browser_597071.js \
+#endif
 	browser_586068-cascaded_restore.js \
 	$(NULL)
 
