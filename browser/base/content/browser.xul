@@ -35,6 +35,7 @@
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Rob Campbell <rcampbell@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
+#   David Dahl <ddahl@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -769,6 +770,11 @@
                             label="&helpTroubleshootingInfo.label;"
                             oncommand="openTroubleshootingPage()"
                             onclick="checkForMiddleClick(this,event);"/>
+                  <menuseparator/>
+                  <menuitem id="appmenu_safeMode"
+                            accesskey="&appMenuSafeMode.accesskey;"
+                            label="&appMenuSafeMode.label;"
+                            oncommand="safeModeRestart();"/>
                   <menuseparator/>
                   <menuitem id="appmenu_about"
                             label="&aboutProduct.label;"
