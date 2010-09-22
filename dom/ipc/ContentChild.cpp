@@ -511,7 +511,7 @@ bool
 ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
 {
   nsCOMPtr<nsIGeolocationUpdate> gs = do_GetService("@mozilla.org/geolocation/service;1");
-  if (gs) {
+  if (!gs) {
     return true;
   }
   nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
