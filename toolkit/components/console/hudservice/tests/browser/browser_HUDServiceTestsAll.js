@@ -253,7 +253,7 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
       return;
     }
   }
-  throw new Error(aSuccessErrObj.err);
+  ok(false, aSuccessErrObj.err);
 }
 
 // test network logging
