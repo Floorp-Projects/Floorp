@@ -82,16 +82,12 @@ function InputHandler(browserViewContainer) {
   this._modules = [];
 
   /* these handle key strokes in the browser view (where page content appears) */
-  browserViewContainer.addEventListener("keypress", this, false);
-  browserViewContainer.addEventListener("keyup", this, false);
-  browserViewContainer.addEventListener("keydown", this, false);
   browserViewContainer.addEventListener("DOMMouseScroll", this, true);
   browserViewContainer.addEventListener("MozMousePixelScroll", this, true);
 
   new MouseModule();
   new GestureModule();
 
-  this.addModule(new KeyModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
 }
 
@@ -925,31 +921,6 @@ KineticController.prototype = {
 
     this.momentumBuffer.push({'t': now, 'dx' : dx, 'dy' : dy});
   }
-};
-
-
-/**
- * Input module for basic key input.
- */
-function KeyModule(owner, browserViewContainer) {
-  this._owner = owner;
-  this._browserViewContainer = browserViewContainer;
-}
-
-KeyModule.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    if (aEvent.type == "keydown" || aEvent.type == "keyup" || aEvent.type == "keypress") {
-      let keyer = this._browserViewContainer.customKeySender;
-      if (keyer) {
-        keyer.dispatchKeyEvent(aEvent);
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
-      }
-    }
-  },
-
-  /* We don't have much state to reset if we lose event focus */
-  cancelPending: function cancelPending() {}
 };
 
 
