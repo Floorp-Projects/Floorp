@@ -634,6 +634,7 @@ function testNetworkPanel()
     var httpActivity = {
       url: "http://www.testpage.com",
       method: "GET",
+      body: null,
 
       panels: [],
       request: {
