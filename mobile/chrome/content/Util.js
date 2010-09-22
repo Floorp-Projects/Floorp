@@ -218,7 +218,7 @@ Util.Timeout.prototype = {
 
   /** Clear any pending timeouts. */
   clear: function clear() {
-    if (this._type !== null) {
+    if (this.isPending()) {
       this._timer.cancel();
       this._type = null;
     }
@@ -227,7 +227,7 @@ Util.Timeout.prototype = {
 
   /** If there is a pending timeout, call it and cancel the timeout. */
   flush: function flush() {
-    if (this._type) {
+    if (this.isPending()) {
       this.notify();
       this.clear();
     }
@@ -236,7 +236,7 @@ Util.Timeout.prototype = {
 
   /** Return true iff we are waiting for a callback. */
   isPending: function isPending() {
-    return !!this._type;
+    return this._type !== null;
   }
 };
 
