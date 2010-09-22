@@ -363,14 +363,8 @@ MouseModule.prototype = {
         this._onMouseUp(aEvent);
         break;
       case "contextmenu":
-        if (ContextHelper.popupState && this._dragData.dragging)
-          this._doDragStop();
-        break;
-      case "MozMagnifyGestureStart":
-      case "MozMagnifyGesture":
-        // disallow kinetic panning after gesture
-        if (this._dragData.dragging)
-          this._doDragStop();
+        if (ContextHelper.popupState)
+          this.cancelPending();
         break;
       case "MozBeforePaint":
         this._waitingForPaint = false;
@@ -385,10 +379,6 @@ MouseModule.prototype = {
     if (aMessage.name != "Browser:ContextMenu" || !ContextHelper.popupState)
       return;
 
-    if (this._clicker)
-      this._clicker.panBegin();
-    if (this._dragger)
-      this._dragger.dragStop(0, 0, this._targetScrollInterface);
     this.cancelPending();
   },
 
@@ -444,6 +434,7 @@ MouseModule.prototype = {
     this._targetScrollInterface = targetScrollInterface;
     this._dragger = dragger;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
+    this._target = aEvent.target;
 
     if (this._clicker)
       this._clicker.mouseDown(aEvent.clientX, aEvent.clientY);
