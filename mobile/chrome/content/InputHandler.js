@@ -117,23 +117,6 @@ function InputHandler(browserViewContainer) {
 
   /* which module, if any, has all events directed to it */
   this._grabber = null;
-  this._grabDepth = 0;
-
-  /* when true, don't process any events */
-  this._ignoreEvents = false;
-
-  /* when set to true, next click won't be dispatched */
-  this._suppressNextClick = false;
-
-  /* these handle dragging of both chrome elements and content */
-  window.addEventListener("mousedown", this, true);
-  window.addEventListener("mouseup", this, true);
-  window.addEventListener("mousemove", this, true);
-  window.addEventListener("click", this, true);
-  window.addEventListener("MozSwipeGesture", this, true);
-  window.addEventListener("MozMagnifyGestureStart", this, true);
-  window.addEventListener("MozMagnifyGestureUpdate", this, true);
-  window.addEventListener("MozMagnifyGesture", this, true);
 
   /* these handle key strokes in the browser view (where page content appears) */
   browserViewContainer.addEventListener("keypress", this, false);
@@ -142,9 +125,10 @@ function InputHandler(browserViewContainer) {
   browserViewContainer.addEventListener("DOMMouseScroll", this, true);
   browserViewContainer.addEventListener("MozMousePixelScroll", this, true);
 
-  this.addModule(new MouseModule(this, browserViewContainer));
+  new MouseModule();
+  new GestureModule();
+
   this.addModule(new KeyModule(this, browserViewContainer));
-  this.addModule(new GestureModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
 }
 
@@ -156,20 +140,6 @@ InputHandler.prototype = {
    */
   addModule: function addModule(m) {
     this._modules.push(m);
-  },
-
-  /**
-   * Have the InputHandler begin/resume listening for events.
-   */
-  startListening: function startListening() {
-    this._ignoreEvents = false;
-  },
-
-  /**
-   * Stop/pause the InputHandler from listening for events.
-   */
-  stopListening: function stopListening() {
-    this._ignoreEvents = true;
   },
 
   /**
@@ -210,18 +180,6 @@ InputHandler.prototype = {
     }
   },
 
-  /**
-   * Sometimes a module will swallow a mousedown and mouseup, which (when found
-   * in sequence) should be followed by a click.  Ideally, this module would
-   * listen for the click as well, and ignore it, but this is a convenience method
-   * for the module to do so via the InputHandler.  Hopefully the module is doing
-   * this under grab (that is, hopefully the module was grabbing while the mousedown
-   * and mouseup events came in, *not* just grabbing for making this call).
-   */
-  suppressNextClick: function suppressNextClick() {
-    this._suppressNextClick = true;
-  },
-
   /** Cancels all pending input sequences */
   cancelPending: function cancelPending() {
     let mods = this._modules;
@@ -231,30 +189,11 @@ InputHandler.prototype = {
   },
 
   /**
-   * Undoes any suppression caused by calling suppressNextClick(), unless the click
-   * already happened.
-   */
-  allowClicks: function allowClicks() {
-    this._suppressNextClick = false;
-  },
-
-  /**
    * InputHandler's DOM event handler.
    */
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
-
-    // ignore all events that belong to other windows or documents (e.g. content events)
-    if (aEvent.target.localName == "browser")
-      return;
-
-    if (this._suppressNextClick && aEvent.type == "click") {
-      this._suppressNextClick = false;
-      aEvent.stopPropagation();
-      aEvent.preventDefault();
-      return;
-    }
 
     aEvent.time = Date.now();
     this._passToModules(aEvent);
@@ -283,25 +222,13 @@ InputHandler.prototype = {
 /**
  * MouseModule
  *
- * Input handler module that handles all mouse-related input such as dragging and
- * clicking.
+ * Handles all touch-related input such as dragging and tapping.
  *
  * The Fennec chrome DOM tree has elements that are augmented dynamically with
  * custom JS properties that tell the MouseModule they have custom support for
  * either dragging or clicking.  These JS properties are JS objects that expose
  * an interface supporting dragging or clicking (though currently we only look
  * to drag scrollable elements).
- *
- * The MouseModule grabs event focus of the input handler on mousedown, at which
- * point it will attempt to find such custom draggers by walking up the
- * DOM tree from the event target.  It ungrabs event focus on mouseup.  It
- * redispatches the swallowed mousedown, mouseup events back to chrome, so that
- * chrome elements still get their events.
- *
- * The mousedown and mouseup events happening in the main context are
- * redispatched as soon as they get caught, contrary to events happening on web
- * content which are swallowed before being redispatched as a triple at the end
- * of the mouseup handling.
  *
  * A custom dragger is a JS property that lives on a scrollable DOM element,
  * accessible as myElement.customDragger.  The customDragger must support the
@@ -319,12 +246,6 @@ InputHandler.prototype = {
  *   dragMove(dx, dy, scroller)
  *     Signals an input attempt to drag by dx, dy.
  *
- * Between mousedown and mouseup, MouseModule incrementally drags and updates
- * the dragger accordingly, and also determines whether a [double-]click occured
- * (based on whether the input moves have moved outside of a certain drag disk
- * centered at the mousedown position). Custom touch events are dispatched
- * accordingly.
- *
  * There is a default dragger in case a scrollable element is dragged --- see
  * the defaultDragger prototype property.
  */
@@ -338,39 +259,54 @@ function MouseModule(owner, browserViewContainer) {
   this._downUpEvents = [];
   this._targetScrollInterface = null;
 
-  var self = this;
   this._kinetic = new KineticController(this._dragBy.bind(this),
                                         this._kineticStop.bind(this));
 
   this._singleClickTimeout = new Util.Timeout(this._doSingleClick.bind(this));
   this._longClickTimeout = new Util.Timeout(this._doLongClick.bind(this));
+
+  window.addEventListener("mousedown", this, true);
+  window.addEventListener("mouseup", this, true);
+  window.addEventListener("mousemove", this, true);
+  window.addEventListener("CancelTouchSequence", this, true);
 }
 
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    if (aEvent.button !== 0 && aEvent.type != "MozMagnifyGestureStart" && aEvent.type != "MozBeforePaint")
-      return;
-
     switch (aEvent.type) {
-      case "mousedown":
-        this._onMouseDown(aEvent);
-        break;
-      case "mousemove":
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
-        this._onMouseMove(aEvent);
-        break;
-      case "mouseup":
-        this._onMouseUp(aEvent);
-        break;
-      case "MozMagnifyGestureStart":
-        this.cancelPending();
-        break;
       case "MozBeforePaint":
         this._waitingForPaint = false;
         removeEventListener("MozBeforePaint", this, false);
         break;
+      case "CancelTouchSequence":
+        this.cancelPending();
+        break;
+
+      default: {
+        // Filter out mouse events that aren't first button
+        if (aEvent.button !== 0)
+          break;
+
+        switch (aEvent.type) {
+          case "mousedown":
+            this._onMouseDown(aEvent);
+            break;
+          case "mousemove":
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
+            this._onMouseMove(aEvent);
+            break;
+          case "mouseup":
+            this._onMouseUp(aEvent);
+            break;
+          case "click":
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
+            aEvent.target.removeEventListener("click", this, true);
+            break;
+        }
+      }
     }
   },
 
@@ -393,8 +329,6 @@ MouseModule.prototype = {
 
   /** Begin possible pan and send tap down event. */
   _onMouseDown: function _onMouseDown(aEvent) {
-    this._owner.allowClicks();
-
     let dragData = this._dragData;
     if (dragData.dragging) {
       // Somehow a mouse up was missed.
@@ -472,14 +406,10 @@ MouseModule.prototype = {
     // Do pan
     if (dragData.isPan()) {
       // User was panning around, do not allow click
-      // XXX Instead of having suppressNextClick, we could grab until click is seen
-      // and THEN ungrab so that owner does not need to know anything about clicking.
       let generatesClick = aEvent.detail;
       if (generatesClick)
-        this._owner.suppressNextClick();
+        aEvent.target.addEventListener("click", this, true);
     }
-
-    this._owner.ungrab(this);
   },
 
   /**
@@ -503,8 +433,6 @@ MouseModule.prototype = {
           let event = document.createEvent("Events");
           event.initEvent("PanBegin", true, false);
           aEvent.target.dispatchEvent(event);
-
-          this._owner.grab(this);
         }
       }
     }
@@ -1163,9 +1091,12 @@ ScrollwheelModule.prototype = {
 // chrome-only, we must listen for the simple gesture events during
 // the capturing phase and call stopPropagation on every event.
 
-function GestureModule(owner, browserViewContainer) {
-  this._owner = owner;
-  this._browserViewContainer = browserViewContainer;
+function GestureModule() {
+  window.addEventListener("MozSwipeGesture", this, true);
+  window.addEventListener("MozMagnifyGestureStart", this, true);
+  window.addEventListener("MozMagnifyGestureUpdate", this, true);
+  window.addEventListener("MozMagnifyGesture", this, true);
+  window.addEventListener("CancelTouchSequence", this, true);
 }
 
 GestureModule.prototype = {
@@ -1215,6 +1146,10 @@ GestureModule.prototype = {
           consume = true;
           this._pinchEnd(aEvent);
           break;
+
+        case "CancelTouchSequence":
+          this.cancelPending();
+          break;
       }
       if (consume) {
         // prevent sending of event to content
@@ -1241,13 +1176,15 @@ GestureModule.prototype = {
     if (this._pinchZoom)
       return;
 
-    // grab events during pinch, stopping other mouse events in their tracks
-    this._owner.grab(this);
+    // Cancel other touch sequence events, and be courteous by allowing them
+    // to say no.
+    let event = document.createEvent("Events");
+    event.initEvent("CancelTouchSequence", true, true);
+    let success = aEvent.target.dispatchEvent(event);
 
-    if ((aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom) {
-      this._owner.ungrab(this);
+    if (!success || (aEvent.target instanceof XULElement) ||
+        !Browser.selectedTab.allowZoom)
       return;
-    }
 
     // create the AnimatedZoom object for fast arbitrary zooming
     this._pinchZoom = AnimatedZoom;
@@ -1302,9 +1239,6 @@ GestureModule.prototype = {
   },
 
   _pinchEnd: function _pinchEnd(aEvent) {
-    // release grab
-    this._owner.ungrab(this);
-
     // stop ongoing animated zoom
     if (this._pinchZoom) {
       // zoom to current level for real
