@@ -234,9 +234,11 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
       if (!uriObj.schemeIs("javascript") &&
           w.gBrowser.currentURI.host != uriObj.host) {
         where = "tab";
+        loadInBackground = false;
       }
     } catch (err) {
       where = "tab";
+      loadInBackground = false;
     }
   }
 
