@@ -147,31 +147,6 @@ let gSyncUtils = {
   },
 
   /**
-   * Trigger the mailto protocol handler to send a passphrase backup email.
-   * 
-   * @param elid : ID of the form element containing the passphrase.
-   */
-  passphraseEmail: function(elid) {
-    let pp = document.getElementById(elid).value;
-    let subject = this.bundle.GetStringFromName("email.syncKey.subject");
-    let label = this.bundle.formatStringFromName("email.syncKey.label", [pp], 1);
-    let body = "&body=" + label + "%0A%0A" +
-               this.bundle.GetStringFromName("email.syncKey.description")
-               + "%0A%0A" +
-               this.bundle.GetStringFromName("email.keepItSecret.label") +
-               this.bundle.GetStringFromName("email.keepItSecret.description")
-               + "%0A%0A" +
-               this.bundle.GetStringFromName("email.keepItSafe.label") +
-               this.bundle.GetStringFromName("email.keepItSafe.description")
-               + "%0A%0A" +
-               this.bundle.GetStringFromName("email.findOutMore.label");
-    let uri = Weave.Utils.makeURI("mailto:?subject=" + subject + body);
-    let protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                     .getService(Ci.nsIExternalProtocolService);
-    protoSvc.loadURI(uri);
-  },
-
-  /**
    * Prepare an invisible iframe with the passphrase backup document.
    * Used by both the print and saving methods.
    *
