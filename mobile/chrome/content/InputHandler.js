@@ -77,18 +77,13 @@ const kStateActive = 0x00000001;
  *     Entry point by which InputHandler passes Fennec chrome window events
  *     to the module.
  */
-function InputHandler(browserViewContainer) {
+function InputHandler(container) {
   /* the list of modules that will handle input */
   this._modules = [];
 
-  /* these handle key strokes in the browser view (where page content appears) */
-  browserViewContainer.addEventListener("DOMMouseScroll", this, true);
-  browserViewContainer.addEventListener("MozMousePixelScroll", this, true);
-
   new MouseModule();
   new GestureModule();
-
-  this.addModule(new ScrollwheelModule(this, browserViewContainer));
+  new ScrollwheelModule(container);
 }
 
 
@@ -928,9 +923,9 @@ KineticController.prototype = {
  * Input module for basic scrollwheel input.  Currently just zooms the browser
  * view accordingly.
  */
-function ScrollwheelModule(owner, browserViewContainer) {
-  this._owner = owner;
-  this._browserViewContainer = browserViewContainer;
+function ScrollwheelModule(container) {
+  container.addEventListener("DOMMouseScroll", this, true);
+  container.addEventListener("MozMousePixelScroll", this, true);
 }
 
 ScrollwheelModule.prototype = {
