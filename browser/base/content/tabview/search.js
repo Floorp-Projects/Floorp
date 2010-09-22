@@ -334,7 +334,7 @@ function hideSearch(event){
   iQ("#searchbox").val("");
   iQ("#search").hide();
   
-  iQ("#searchbutton").css({top: 0, left: 0, opacity:.8});
+  iQ("#searchbutton").css({ opacity:.8 });
   
   var mainWindow = gWindow.document.getElementById("main-window");    
   mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
@@ -350,6 +350,10 @@ function hideSearch(event){
   let newEvent = document.createEvent("Events");
   newEvent.initEvent("tabviewsearchdisabled", false, false);
   dispatchEvent(newEvent);
+
+  // Return focus to the tab window
+  UI.blurAll();
+  gTabViewFrame.contentWindow.focus();
 }
 
 function performSearch() {
@@ -360,7 +364,7 @@ function performSearch() {
 function ensureSearchShown(event){
   var $search = iQ("#search");
   var $searchbox = iQ("#searchbox");
-  iQ("#searchbutton").css({top: -78, left: -300, opacity: 1});
+  iQ("#searchbutton").css({ opacity: 1 });
   
   
   if ($search.css("display") == "none") {

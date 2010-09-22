@@ -390,64 +390,46 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   }
   // End Sanity Checks
 
-  double fTime = double(mSampleTime);
-  double fDur = double(dur);
-
   // Get the normalised progress through the simple duration
-  double simpleProgress = (fDur > 0.0) ? fTime / fDur : 0.0;
+  const double simpleProgress = dur > 0.0 ? (double)mSampleTime / dur : 0.0;
 
-  // Handle bad keytimes (where first != 0 and/or last != 1)
-  // See http://brian.sol1.net/svg/range-for-keytimes for more info.
-  if (HasAttr(nsGkAtoms::keyTimes) &&
-      GetCalcMode() != CALC_PACED) {
-    double first = mKeyTimes[0];
-    if (first > 0.0 && simpleProgress < first) {
-      if (!IsToAnimation())
-        aResult = aValues[0];
-      return rv;
-    }
-    double last = mKeyTimes[mKeyTimes.Length() - 1];
-    if (last < 1.0 && simpleProgress >= last) {
-      if (IsToAnimation())
-        aResult = aValues[0];
-      else
-        aResult = aValues[aValues.Length() - 1];
-      return rv;
-    }
-  }
-
-  if (GetCalcMode() != CALC_DISCRETE) {
+  nsSMILCalcMode calcMode = GetCalcMode();
+  if (calcMode != CALC_DISCRETE) {
     // Get the normalised progress between adjacent values
     const nsSMILValue* from = nsnull;
     const nsSMILValue* to = nsnull;
-    double intervalProgress;
+    // Init to -1 to make sure that if we ever forget to set this, the
+    // NS_ABORT_IF_FALSE that tests that intervalProgress is in range will fail.
+    double intervalProgress = -1.f;
     if (IsToAnimation()) {
       from = &aBaseValue;
       to = &aValues[0];
-      if (GetCalcMode() == CALC_PACED) {
+      if (calcMode == CALC_PACED) {
         // Note: key[Times/Splines/Points] are ignored for calcMode="paced"
         intervalProgress = simpleProgress;
       } else {
-        ScaleSimpleProgress(simpleProgress);
-        intervalProgress = simpleProgress;
-        ScaleIntervalProgress(intervalProgress, 0, 1);
+        double scaledSimpleProgress =
+          ScaleSimpleProgress(simpleProgress, calcMode);
+        intervalProgress = ScaleIntervalProgress(scaledSimpleProgress, 0);
       }
     } else {
-      if (GetCalcMode() == CALC_PACED) {
+      if (calcMode == CALC_PACED) {
         rv = ComputePacedPosition(aValues, simpleProgress,
                                   intervalProgress, from, to);
         // Note: If the above call fails, we'll skip the "from->Interpolate"
         // call below, and we'll drop into the CALC_DISCRETE section
         // instead. (as the spec says we should, because our failure was
         // presumably due to the values being non-additive)
-      } else { // GetCalcMode() == CALC_LINEAR or GetCalcMode() == CALC_SPLINE
-        ScaleSimpleProgress(simpleProgress);
-        PRUint32 index = (PRUint32)floor(simpleProgress *
+      } else { // calcMode == CALC_LINEAR or calcMode == CALC_SPLINE
+        double scaledSimpleProgress =
+          ScaleSimpleProgress(simpleProgress, calcMode);
+        PRUint32 index = (PRUint32)floor(scaledSimpleProgress *
                                          (aValues.Length() - 1));
         from = &aValues[index];
         to = &aValues[index + 1];
-        intervalProgress = simpleProgress * (aValues.Length() - 1) - index;
-        ScaleIntervalProgress(intervalProgress, index, aValues.Length() - 1);
+        intervalProgress =
+          scaledSimpleProgress * (aValues.Length() - 1) - index;
+        intervalProgress = ScaleIntervalProgress(intervalProgress, index);
       }
     }
     if (NS_SUCCEEDED(rv)) {
@@ -462,13 +444,15 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   // Discrete-CalcMode case
   // Note: If interpolation failed (isn't supported for this type), the SVG
   // spec says to force discrete mode.
-  if (GetCalcMode() == CALC_DISCRETE || NS_FAILED(rv)) {
+  if (calcMode == CALC_DISCRETE || NS_FAILED(rv)) {
     if (IsToAnimation()) {
       // SMIL 3, 12.6.4: Since a to animation has only 1 value, a discrete to
       // animation will simply set the to value for the simple duration.
       aResult = aValues[0];
     } else {
-      PRUint32 index = (PRUint32) floor(simpleProgress * (aValues.Length()));
+      double scaledSimpleProgress =
+        ScaleSimpleProgress(simpleProgress, CALC_DISCRETE);
+      PRUint32 index = (PRUint32)floor(scaledSimpleProgress * aValues.Length());
       aResult = aValues[index];
     }
     rv = NS_OK;
@@ -613,61 +597,61 @@ nsSMILAnimationFunction::ComputePacedTotalDistance(
   return totalDistance;
 }
 
-/*
- * Scale the simple progress, taking into account any keyTimes.
- */
-void
-nsSMILAnimationFunction::ScaleSimpleProgress(double& aProgress)
+double
+nsSMILAnimationFunction::ScaleSimpleProgress(double aProgress,
+                                             nsSMILCalcMode aCalcMode)
 {
   if (!HasAttr(nsGkAtoms::keyTimes))
-    return;
+    return aProgress;
 
   PRUint32 numTimes = mKeyTimes.Length();
 
   if (numTimes < 2)
-    return;
+    return aProgress;
 
   PRUint32 i = 0;
   for (; i < numTimes - 2 && aProgress >= mKeyTimes[i+1]; ++i);
+
+  if (aCalcMode == CALC_DISCRETE) {
+    // discrete calcMode behaviour differs in that each keyTime defines the time
+    // from when the corresponding value is set, and therefore the last value
+    // needn't be 1. So check if we're in the last 'interval', that is, the
+    // space between the final value and 1.0.
+    if (aProgress >= mKeyTimes[i+1]) {
+      NS_ABORT_IF_FALSE(i == numTimes - 2,
+          "aProgress is not in range of the current interval, yet the current"
+          " interval is not the last bounded interval either.");
+      ++i;
+    }
+    return (double)i / numTimes;
+  }
 
   double& intervalStart = mKeyTimes[i];
   double& intervalEnd   = mKeyTimes[i+1];
 
   double intervalLength = intervalEnd - intervalStart;
-  if (intervalLength <= 0.0) {
-    aProgress = intervalStart;
-    return;
-  }
+  if (intervalLength <= 0.0)
+    return intervalStart;
 
-  aProgress = (i + (aProgress - intervalStart) / intervalLength) *
-         1.0 / double(numTimes - 1);
+  return (i + (aProgress - intervalStart) / intervalLength) /
+         double(numTimes - 1);
 }
 
-/*
- * Scale the interval progress, taking into account any keySplines
- * or discrete methods.
- */
-void
-nsSMILAnimationFunction::ScaleIntervalProgress(double& aProgress,
-                                               PRUint32   aIntervalIndex,
-                                               PRUint32   aNumIntervals)
+double
+nsSMILAnimationFunction::ScaleIntervalProgress(double aProgress,
+                                               PRUint32 aIntervalIndex)
 {
   if (GetCalcMode() != CALC_SPLINE)
-    return;
+    return aProgress;
 
   if (!HasAttr(nsGkAtoms::keySplines))
-    return;
+    return aProgress;
 
-  NS_ASSERTION(aIntervalIndex < (PRUint32)mKeySplines.Length(),
-               "Invalid interval index");
-  NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals");
-
-  if (aIntervalIndex >= (PRUint32)mKeySplines.Length() ||
-      aNumIntervals < 1)
-    return;
+  NS_ABORT_IF_FALSE(aIntervalIndex < mKeySplines.Length(),
+                    "Invalid interval index");
 
   nsSMILKeySpline const &spline = mKeySplines[aIntervalIndex];
-  aProgress = spline.GetSplineValue(aProgress);
+  return spline.GetSplineValue(aProgress);
 }
 
 PRBool
@@ -832,37 +816,44 @@ nsSMILAnimationFunction::CheckKeyTimes(PRUint32 aNumValues)
   if (!HasAttr(nsGkAtoms::keyTimes))
     return;
 
+  nsSMILCalcMode calcMode = GetCalcMode();
+
   // attribute is ignored for calcMode = paced
-  if (GetCalcMode() == CALC_PACED) {
+  if (calcMode == CALC_PACED) {
     SetKeyTimesErrorFlag(PR_FALSE);
     return;
   }
 
-  if (mKeyTimes.Length() < 1) {
+  PRUint32 numKeyTimes = mKeyTimes.Length();
+  if (numKeyTimes < 1) {
     // keyTimes isn't set or failed preliminary checks
     SetKeyTimesErrorFlag(PR_TRUE);
     return;
   }
 
   // no. keyTimes == no. values
-  if ((mKeyTimes.Length() != aNumValues && !IsToAnimation()) ||
-      (IsToAnimation() && mKeyTimes.Length() != 2)) {
+  // For to-animation the number of values is considered to be 2 unless it's
+  // discrete to-animation in which case either 1 or 2 is acceptable.
+  PRBool matchingNumOfValues = IsToAnimation() ?
+      calcMode == CALC_DISCRETE ? numKeyTimes <= 2 : numKeyTimes == 2 :
+      numKeyTimes == aNumValues;
+  if (!matchingNumOfValues) {
     SetKeyTimesErrorFlag(PR_TRUE);
     return;
   }
 
-  // special handling if there is only one keyTime. The spec doesn't say what to
-  // do in this case so we allow the keyTime to be either 0 or 1.
-  if (mKeyTimes.Length() == 1) {
-    double time = mKeyTimes[0];
-    SetKeyTimesErrorFlag(!(time == 0.0 || time == 1.0));
+  // first value must be 0
+  if (mKeyTimes[0] != 0.0) {
+    SetKeyTimesErrorFlag(PR_TRUE);
     return;
   }
 
-  // According to the spec, the first value should be 0 and for linear or spline
-  // calcMode's the last value should be 1, but then an example is give with
-  // a spline calcMode and keyTimes "0.0; 0.7". So we don't bother checking
-  // the end-values here but just allow bad specs.
+  // last value must be 1 for linear or spline calcModes
+  if (calcMode != CALC_DISCRETE && numKeyTimes > 1 &&
+      mKeyTimes[numKeyTimes - 1] != 1.0) {
+    SetKeyTimesErrorFlag(PR_TRUE);
+    return;
+  }
 
   SetKeyTimesErrorFlag(PR_FALSE);
 }

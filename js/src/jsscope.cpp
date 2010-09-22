@@ -86,7 +86,7 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
          */
         rt->shapeGen = SHAPE_OVERFLOW_BIT;
         shape = SHAPE_OVERFLOW_BIT;
-        
+
 #ifdef JS_THREADSAFE
         Conditionally<AutoLockGC> lockIf(!gcLocked, rt);
 #endif
@@ -556,7 +556,7 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
     *childp = NULL;
 
     while (shape) {
-        JS_ASSERT(!shape->inDictionary());
+        JS_ASSERT_IF(!shape->frozen(), !shape->inDictionary());
 
         Shape *dprop = Shape::newDictionaryShape(cx, *shape, childp);
         if (!dprop) {
@@ -720,17 +720,6 @@ JSObject::addProperty(JSContext *cx, jsid id,
 {
     JS_ASSERT(!JSID_IS_VOID(id));
 
-    /*
-     * You can't add properties to a sealed object. But note well that you can
-     * change property attributes in a sealed object, even though that replaces
-     * a Shape * in the scope's hash table -- but no id is added, so the object
-     * remains sealed.
-     */
-    if (sealed()) {
-        reportReadOnlyScope(cx);
-        return NULL;
-    }
-
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
     /* Search for id with adding = true in order to claim its entry. */
@@ -746,6 +735,15 @@ JSObject::addPropertyCommon(JSContext *cx, jsid id,
                             uintN flags, intN shortid,
                             Shape **spp)
 {
+    /*
+     * You can't add properties to a non-extensible object, but you can change
+     * attributes of properties in such objects.
+     */
+    if (!isExtensible()) {
+        reportReadOnlyScope(cx);
+        return NULL;
+    }
+
     PropertyTable *table = NULL;
     if (!inDictionaryMode()) {
         if (lastProp->entryCount() >= PropertyTree::MAX_HEIGHT) {
@@ -828,11 +826,6 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     JS_ASSERT(!JSID_IS_VOID(id));
 
-    if (sealed()) {
-        reportReadOnlyScope(cx);
-        return NULL;
-    }
-
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
     /* Search for id in order to claim its entry if table has been allocated. */
@@ -851,8 +844,10 @@ JSObject::putProperty(JSContext *cx, jsid id,
      * care which slot, copy shape->slot into slot so we can match shape,
      * if all other members match.
      */
-    if (!(attrs & JSPROP_SHARED) && slot == SHAPE_INVALID_SLOT && containsSlot(shape->slot))
-        slot = shape->slot;
+    bool hadSlot = !shape->isAlias() && containsSlot(shape->slot);
+    uint32 oldSlot = shape->slot;
+    if (!(attrs & JSPROP_SHARED) && slot == SHAPE_INVALID_SLOT && hadSlot)
+        slot = oldSlot;
     if (shape->matchesParamsAfterId(getter, setter, slot, attrs, flags, shortid)) {
         METER(redundantPuts);
         return shape;
@@ -927,6 +922,17 @@ JSObject::putProperty(JSContext *cx, jsid id,
         if (!lastProp->table) {
             /* See comment in JSObject::addPropertyCommon about ignoring OOM here. */
             lastProp->maybeHash(cx);
+        }
+
+        /*
+         * Can't fail now, so free the previous incarnation's slot if the new
+         * shape has no slot. But we do not need to free oldSlot (and must not,
+         * as trying to will botch an assertion in JSObject::freeSlot) if the
+         * new lastProp (shape here) has a slotSpan that does not cover it.
+         */
+        if (hadSlot && !shape->hasSlot() && oldSlot < shape->slotSpan) {
+            freeSlot(cx, oldSlot);
+            JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
         }
 
         CHECK_SHAPE_CONSISTENCY(this);
@@ -1028,11 +1034,6 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
 bool
 JSObject::removeProperty(JSContext *cx, jsid id)
 {
-    if (sealed()) {
-        reportReadOnlyScope(cx);
-        return false;
-    }
-
     Shape **spp = nativeSearch(id);
     Shape *shape = SHAPE_FETCH(spp);
     if (!shape) {

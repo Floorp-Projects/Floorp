@@ -1,0 +1,22 @@
+--- mozmill/mozmill/extension/resource/modules/utils.js
++++ mozmill/mozmill/extension/resource/modules/utils.js
+@@ -42,19 +42,16 @@
+                         "runFile", "getWindowByTitle", "getWindowByType", "tempfile", 
+                         "getMethodInWindows", "getPreference", "setPreference",
+                         "sleep"];
+ 
+ var hwindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
+               .getService(Components.interfaces.nsIAppShellService)
+               .hiddenDOMWindow;
+ 
+-
+-// var jstest = {}; 
+-// Components.utils.import('resource://mozmill/modules/jstest.js', jstest);
+ var uuidgen = Components.classes["@mozilla.org/uuid-generator;1"]
+     .getService(Components.interfaces.nsIUUIDGenerator);
+ 
+ function Copy (obj) {
+   for (n in obj) {
+     this[n] = obj[n];
+   }
+ }

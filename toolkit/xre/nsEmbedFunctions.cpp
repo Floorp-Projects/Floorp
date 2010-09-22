@@ -566,7 +566,9 @@ XRE_InitParentProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
-  int rv = XRE_InitCommandLine(aArgc, aArgv);
+  gArgc = aArgc;
+  gArgv = aArgv;
+  int rv = XRE_InitCommandLine(gArgc, gArgv);
   if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 

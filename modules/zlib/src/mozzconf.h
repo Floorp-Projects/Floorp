@@ -118,7 +118,7 @@
 #define in_func MOZ_Z_in_func
 #define out_func MOZ_Z_out_func
 
-/* New as of libpng-1.2.3 */
+/* New as of zlib-1.2.3 */
 #define adler32_combine MOZ_Z_adler32_combine
 #define crc32_combine MOZ_Z_crc32_combine
 #define deflateSetHeader MOZ_Z_deflateSetHeader
@@ -126,5 +126,23 @@
 #define gzdirect MOZ_Z_gzdirect
 #define inflatePrime MOZ_Z_inflatePrime
 #define inflateGetHeader MOZ_Z_inflateGetHeader
+
+/* New as of zlib-1.2.4 */
+#define adler32_combine64 MOZ_Z_adler32_combine64
+#define crc32_combine64 MOZ_Z_crc32_combine64
+#define gz_error MOZ_Z_gz_error
+#define gz_intmax MOZ_Z_gz_intmax
+#define gz_strwinerror MOZ_Z_gz_strwinerror
+#define gzbuffer MOZ_Z_gzbuffer
+#define gzclose_r MOZ_Z_gzclose_r
+#define gzclose_w MOZ_Z_gzclose_w
+#define gzoffset MOZ_Z_gzoffset
+#define gzoffset64 MOZ_Z_gzoffset64
+#define gzopen64 MOZ_Z_gzopen64
+#define gzseek64 MOZ_Z_gzseek64
+#define gztell64 MOZ_Z_gztell64
+#define inflateMark MOZ_Z_inflateMark
+#define inflateReset2 MOZ_Z_inflateReset2
+#define inflateUndermine MOZ_Z_inflateUndermine
 
 #endif

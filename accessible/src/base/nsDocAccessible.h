@@ -142,6 +142,11 @@ public:
   void MarkAsLoaded() { mIsLoaded = PR_TRUE; }
 
   /**
+   * Return a native window handler or pointer depending on platform.
+   */
+  virtual void* GetNativeWindow() const;
+
+  /**
    * Return the parent document.
    */
   nsDocAccessible* ParentDocument() const
@@ -363,7 +368,6 @@ protected:
    */
   nsAccessibleHashtable mAccessibleCache;
 
-    void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events

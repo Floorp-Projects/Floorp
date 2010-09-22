@@ -107,9 +107,9 @@ var SEARCH_RESULTS = [{
                             name: "Test Developer 2",
                             url:  BASE_URL + "/developer2.html"
                           }],
-  description:            "Test Summary 2",
-  fullDescription:        "Test Description 2",
-  developerComments:      "Test Developer Comments 2",
+  description:            "Test Summary 2\n\nparagraph",
+  fullDescription:        "Test Description 2\nnewline",
+  developerComments:      "Test Developer\nComments 2",
   eula:                   "Test EULA 2",
   iconURL:                BASE_URL + "/icon2.png",
   screenshots:            [{
@@ -142,7 +142,7 @@ var SEARCH_RESULTS = [{
                             url:  BASE_URL + "/developer2-3.html"
                           }],
   description:            "Test Summary 3",
-  fullDescription:        "Test Description 3",
+  fullDescription:        "Test Description 3\n\n    List item 1\n    List item 2",
   developerComments:      "Test Developer Comments 3",
   eula:                   "Test EULA 3",
   iconURL:                BASE_URL + "/icon3.png",

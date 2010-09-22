@@ -27,6 +27,7 @@
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
  *   Dão Gottwald (dao@mozilla.com)
+ *   Drew Willcoxon (adw@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -687,6 +688,14 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar");
 }
 
+#sync-button {
+  -moz-image-region: rect(0px 144px 24px 120px);
+}
+#sync-button[status="active"] {
+  list-style-image: url("chrome://browser/skin/sync-24-throbber.png");
+  -moz-image-region: rect(0px 24px 24px 0px);
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
@@ -823,6 +832,14 @@ toolbar[iconsize="small"] #zoom-in-button {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
 }
 
+toolbar[iconsize="small"] #sync-button {
+  -moz-image-region: rect(0px 96px 16px 80px);
+}
+toolbar[iconsize="small"] #sync-button[status="active"] {
+  list-style-image: url("chrome://browser/skin/sync-16-throbber.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
 /* Fullscreen window controls */
 #window-controls {
   -moz-box-align: start;
@@ -849,13 +866,13 @@ toolbar[iconsize="small"] #zoom-in-button {
   padding: 0;
 }
 
-#urlbar > .autocomplete-textbox-container {
+.urlbar-frontcap-and-textbox {
   -moz-appearance: none;
   /* keep the URL bar content LTR */
   direction: ltr;
 }
 
-#urlbar > .autocomplete-history-dropmarker {
+.urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
 }
 
@@ -884,10 +901,6 @@ toolbar[iconsize="small"] #zoom-in-button {
   -moz-margin-start: 0;
 }
 
-#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
 #urlbar-display {
   margin-top: -2px;
   margin-bottom: -2px;
@@ -910,6 +923,89 @@ toolbar[iconsize="small"] #zoom-in-button {
 
 #PopupAutoComplete .autocomplete-treebody {
   direction: ltr;
+}
+
+/* over-link in location bar */
+
+.urlbar-over-link-layer {
+  margin: -2px 0;
+  -moz-margin-start: 0;
+}
+
+.urlbar-origin-label {
+  padding: 0 0 0 4px;
+  margin: 0;
+}
+
+.urlbar-over-link-box {
+  position: relative;
+  right: 0;
+  color: GrayText;
+  padding: 0 5px 0 18px;
+  min-height: 22px;
+  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
+}
+
+.urlbar-over-link-host-label,
+.urlbar-over-link-path-label {
+  padding: 0;
+  margin: 0;
+}
+
+/* urlbar progress */
+
+.tab-progress,
+#urlbar-progress {
+  -moz-appearance: none;
+  min-height: 0px;
+  height: 3px;
+  border: 0;
+  margin: -2px 0 -1px;
+  background-color: transparent;
+}
+
+.tab-progress[busy][stalled][value="0"],
+#urlbar-progress[busy][stalled][value="0"] {
+  /* TODO: add connecting state (bug 596812) */
+}
+
+.tab-progress > .progress-bar,
+#urlbar-progress > .progress-bar {
+  -moz-appearance: none;
+  min-width: 3px;
+  border-top: 1px solid rgba(100,100,100,.1);
+  border-bottom: 1px solid rgba(0,0,0,.2);
+  background-color: Highlight;
+  background-image: -moz-linear-gradient(left, rgba(255,255,255,.1) 50%,
+                                               rgba(255,255,255,.4) 90%,
+                                               rgba(255,255,255,.8));
+}
+
+.tab-progress > .progress-bar:-moz-locale-dir(rtl),
+#urlbar-progress > .progress-bar:-moz-locale-dir(rtl) {
+  background-image: -moz-linear-gradient(right, rgba(255,255,255,.1) 50%,
+                                                rgba(255,255,255,.4) 90%,
+                                                rgba(255,255,255,.8));
+}
+
+.tab-progress > .progress-remainder,
+#urlbar-progress > .progress-remainder {
+  border-top: 1px solid rgba(100,100,100,.1);
+  border-bottom: 1px solid rgba(0,0,0,.2);
+  background-image: -moz-linear-gradient(right, ThreeDShadow 80%, ThreeDLightShadow);
+}
+
+.tab-progress > .progress-remainder:-moz-locale-dir(rtl),
+#urlbar-progress > .progress-remainder:-moz-locale-dir(rtl) {
+  background-image: -moz-linear-gradient(left, ThreeDShadow 80%, ThreeDLightShadow);
+}
+
+.urlbar-contents {
+  -moz-margin-end: -2px;
+}
+
+.urlbar-history-dropmarker {
+  -moz-margin-end: 2px;
 }
 
 /* Favicon */
@@ -944,11 +1040,11 @@ toolbar[iconsize="small"] #zoom-in-button {
   background-color: rgb(95%,95%,95%);
   background-image: -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
   color: #444;
-  -moz-border-end: 1px solid ThreeDShadow;
+  -moz-border-end: 1px solid rgba(0,0,0,.1);
 }
 
 #identity-box:-moz-locale-dir(rtl) {
-  -moz-border-start: 1px solid ThreeDShadow;
+  -moz-border-start: 1px solid rgba(0,0,0,.1);
 }
 
 #identity-box:-moz-focusring {
@@ -1123,23 +1219,6 @@ toolbar[iconsize="small"] #zoom-in-button {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
 
-/* Feed icon */
-#feed-button,
-#feed-button > .button-box,
-#feed-button:hover:active > .button-box {
-  padding: 0px;
-  margin: 0px;
-  border: 0px; 
-  background-color: transparent;
-}
-
-#feed-button {
-  -moz-appearance: none; 
-  min-width: 0px; 
-  margin-right: 1px !important;
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-}
-
 #treecolAutoCompleteImage {
   max-width : 36px; 
 }
@@ -1211,7 +1290,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  margin: -1px;
+  margin: -2px;
   -moz-margin-start: 0;
   padding: 0 3px;
   background-origin: border-box;
@@ -1225,14 +1304,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding-left: 4px;
   border-left: none;
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
-                   0 0 2px rgba(0,0,0,.4) inset;
+              0 0 2px rgba(0,0,0,.4) inset;
 }
 
 #urlbar-go-button {
   -moz-image-region: rect(0px, 56px, 14px, 42px);
   background-image: -moz-linear-gradient(rgb(143,219,69), rgb(115,177,57));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 0 rgba(255,255,255,.2) inset;
+              -1px -1px 0 rgba(255,255,255,.2) inset;
 }
 
 #urlbar-go-button:hover {
@@ -1247,14 +1326,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(137,183,233), rgb(79,130,195));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 0 rgba(255,255,255,.2) inset;
+              -1px -1px 0 rgba(255,255,255,.2) inset;
 }
 
 #urlbar-stop-button {
   -moz-image-region: rect(0px, 42px, 14px, 28px);
   background-image: -moz-linear-gradient(rgb(226,99,99), rgb(199,68,68));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-                   -1px -1px 0 rgba(255,255,255,.2) inset;
+              -1px -1px 0 rgba(255,255,255,.2) inset;
 }
 
 #urlbar-stop-button:hover {
@@ -1432,16 +1511,7 @@ statusbarpanel#statusbar-display {
   min-height: 18px; /* corresponds to the max. height of non-textual tab contents, i.e. the tab close button */
 }
 
-.tabbrowser-tab > .tab-text {
-  border: 1px dotted transparent;
-  margin: -1px !important; /* let the border not consume any space, like outline */
-}
-
-.tabbrowser-tab:focus > .tab-text {
-  border: 1px dotted -moz-DialogText;
-}
-
-.tabbrowser-tab[pinned]:focus > .tab-icon-image {
+.tabbrowser-tab:focus > .tab-stack {
   outline: 1px dotted;
 }
 
@@ -1453,42 +1523,10 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-.tabbrowser-tab[pinned] > .tab-icon-image,
+.tab-icon-image[pinned],
 .tabs-newtab-button > .toolbarbutton-icon {
   -moz-margin-start: 2px;
   -moz-margin-end: 2px;
-}
-
-.tabbrowser-tab[busy] > .tab-icon-image {
-  list-style-image: url("chrome://browser/skin/tabbrowser/progress.png") !important;
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-.tabbrowser-tab[busy][stalled] > .tab-icon-image {
-  list-style-image: url("chrome://browser/skin/tabbrowser/progress-pulsing.png") !important;
-}
-.tabbrowser-tab[busy][progress="1"] > .tab-icon-image {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-.tabbrowser-tab[busy][progress="2"] > .tab-icon-image {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-.tabbrowser-tab[busy][progress="3"] > .tab-icon-image {
-  -moz-image-region: rect(0, 64px, 16px, 48px);
-}
-.tabbrowser-tab[busy][progress="4"] > .tab-icon-image {
-  -moz-image-region: rect(0, 80px, 16px, 64px);
-}
-.tabbrowser-tab[busy][progress="5"] > .tab-icon-image {
-  -moz-image-region: rect(0, 96px, 16px, 80px);
-}
-.tabbrowser-tab[busy][progress="6"] > .tab-icon-image {
-  -moz-image-region: rect(0, 112px, 16px, 96px);
-}
-.tabbrowser-tab[busy][progress="7"] > .tab-icon-image {
-  -moz-image-region: rect(0, 128px, 16px, 112px);
-}
-.tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
-  -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
 #context_reloadTab {
@@ -1531,29 +1569,12 @@ statusbarpanel#statusbar-display {
   -moz-margin-end: -1px;
 }
 
-.tabbrowser-tab[selected="true"] > .tab-close-button {
-  /* Make this button focusable so clicking on it will not focus the tab while
-     it's getting closed */
-  -moz-user-focus: normal;
-}
-
 /* Tabstrip new tab button */
 .tabs-newtab-button,
 #TabsToolbar > #new-tab-button ,
 #TabsToolbar > #wrapper-new-tab-button > #new-tab-button {
   list-style-image: url("moz-icon://stock/gtk-add?size=menu");
   -moz-image-region: auto;
-}
-
-#TabsToolbar > #new-tab-button,
-#TabsToolbar > #wrapper-new-tab-button > #new-tab-button {
-  margin-bottom: 1px;
-}
-
-#TabsToolbar > #new-tab-button > .toolbarbutton-icon,
-#TabsToolbar > #wrapper-new-tab-button > #new-tab-button > .toolbarbutton-icon {
-  margin-top: -2px;
-  margin-bottom: -2px;
 }
 
 /* Tabstrip close button */
@@ -1583,6 +1604,18 @@ statusbarpanel#statusbar-display {
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
   box-shadow: 0 0 5px 5px Highlight inset;
   -moz-transition: none;
+}
+
+#TabsToolbar > toolbarbutton > .toolbarbutton-icon,
+#TabsToolbar > toolbarbutton > .toolbarbutton-menu-dropmarker,
+#TabsToolbar > toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
+#TabsToolbar > toolbarpaletteitem > toolbarbutton > .toolbarbutton-menu-dropmarker,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-icon,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-menu-dropmarker,
+#TabsToolbar > toolbarpaletteitem > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-icon,
+#TabsToolbar > toolbarpaletteitem > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-menu-dropmarker {
+  margin-top: -2px;
+  margin-bottom: -2px;
 }
 
 #alltabs-button > .toolbarbutton-icon {
@@ -1647,10 +1680,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 /* Popup blocking dialog */
 #pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;
-}
-
-#checkForUpdates[loading="true"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 #download-monitor {

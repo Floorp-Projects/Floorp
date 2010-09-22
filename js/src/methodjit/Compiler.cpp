@@ -1877,23 +1877,54 @@ mjit::Compiler::stubCall(void *ptr)
 void
 mjit::Compiler::interruptCheckHelper()
 {
-    RegisterID cxreg = frame.allocReg();
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxreg);
+    RegisterID reg = frame.allocReg();
+
+    /*
+     * Bake in and test the address of the interrupt counter for the runtime.
+     * This is faster than doing two additional loads for the context's
+     * thread data, but will cause this thread to run slower if there are
+     * pending interrupts on some other thread.  For non-JS_THREADSAFE builds
+     * we can skip this, as there is only one flag to poll.
+     */
 #ifdef JS_THREADSAFE
-    masm.loadPtr(Address(cxreg, offsetof(JSContext, thread)), cxreg);
-    Address flag(cxreg, offsetof(JSThread, data.interruptFlags));
+    void *interrupt = (void*) &cx->runtime->interruptCounter;
 #else
-    masm.loadPtr(Address(cxreg, offsetof(JSContext, runtime)), cxreg);
-    Address flag(cxreg, offsetof(JSRuntime, threadData.interruptFlags));
+    void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
 #endif
-    Jump jump = masm.branchTest32(Assembler::NonZero, flag);
-    frame.freeReg(cxreg);
-    stubcc.linkExit(jump, Uses(0));
-    stubcc.leave();
+
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+    Jump jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
+#else
+    /* Handle processors that can't load from absolute addresses. */
+    masm.move(ImmPtr(interrupt), reg);
+    Jump jump = masm.branchTest32(Assembler::NonZero, Address(reg, 0));
+#endif
+
+    stubcc.linkExitDirect(jump, stubcc.masm.label());
+
+#ifdef JS_THREADSAFE
+    /*
+     * Do a slightly slower check for an interrupt on this thread.
+     * We don't want this thread to slow down excessively if the pending
+     * interrupt is on another thread.
+     */
+    stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), reg);
+    stubcc.masm.loadPtr(Address(reg, offsetof(JSContext, thread)), reg);
+    Address flag(reg, offsetof(JSThread, data.interruptFlags));
+    Jump noInterrupt = stubcc.masm.branchTest32(Assembler::Zero, flag);
+#endif
+
+    frame.sync(stubcc.masm, Uses(0));
     stubcc.masm.move(ImmPtr(PC), Registers::ArgReg1);
     stubcc.call(stubs::Interrupt);
     ADD_CALLSITE(true);
     stubcc.rejoin(Changes(0));
+
+#ifdef JS_THREADSAFE
+    stubcc.linkRejoin(noInterrupt);
+#endif
+
+    frame.freeReg(reg);
 }
 
 void
@@ -2041,8 +2072,8 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
                              FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
             stubcc.masm.fixScriptStack(frame.frameDepth());
             stubcc.masm.setupVMFrame();
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-            /* Need to stay 16-byte aligned on x86/x64. */
+#if defined(JS_CPU_X86)
+            /* Need to stay 16-byte aligned on x86. */
             stubcc.masm.subPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
 #endif
             stubcc.masm.push(dataReg);
@@ -2051,7 +2082,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
             stubcc.masm.wrapCall(pfun);
             stubcc.masm.pop(t0);
             stubcc.masm.pop(dataReg);
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86)
             stubcc.masm.addPtr(Imm32(8), JSC::MacroAssembler::stackPointerRegister);
 #endif
         }

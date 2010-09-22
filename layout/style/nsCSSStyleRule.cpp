@@ -1270,8 +1270,8 @@ DOMCSSStyleRuleImpl::GetCSSStyleRule(nsICSSStyleRule **aResult)
 
 // -- nsCSSStyleRule -------------------------------
 
-class CSSStyleRuleImpl : public nsCSSRule,
-                         public nsICSSStyleRule
+class NS_FINAL_CLASS CSSStyleRuleImpl : public nsCSSRule,
+                                        public nsICSSStyleRule
 {
 public:
   CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
@@ -1284,7 +1284,7 @@ private:
                    css::Declaration *aDeclaration);
 public:
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   virtual nsCSSSelectorList* Selector(void);
 
@@ -1327,16 +1327,17 @@ private:
   // These are not supported and are not implemented!
   CSSStyleRuleImpl& operator=(const CSSStyleRuleImpl& aCopy);
 
-protected:
-  virtual ~CSSStyleRuleImpl(void);
+private:
+  ~CSSStyleRuleImpl();
 
 protected:
   nsCSSSelectorList*      mSelector; // null for style attribute
   css::Declaration*       mDeclaration;
   CSSImportantRule*       mImportantRule; // initialized by RuleMatched
   DOMCSSStyleRuleImpl*    mDOMRule;
-  PRUint32                mLineNumber;
-  PRPackedBool            mWasMatched;
+  // Keep the same type so that MSVC packs them.
+  PRUint32                mLineNumber : 31;
+  PRUint32                mWasMatched : 1;
 };
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
@@ -1392,7 +1393,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
   }
 }
 
-CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
+CSSStyleRuleImpl::~CSSStyleRuleImpl()
 {
   delete mSelector;
   delete mDeclaration;
@@ -1411,8 +1412,8 @@ NS_INTERFACE_MAP_BEGIN(CSSStyleRuleImpl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSStyleRule)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(CSSStyleRuleImpl, nsCSSRule)
-NS_IMPL_RELEASE_INHERITED(CSSStyleRuleImpl, nsCSSRule)
+NS_IMPL_ADDREF(CSSStyleRuleImpl)
+NS_IMPL_RELEASE(CSSStyleRuleImpl)
 
 nsCSSSelectorList* CSSStyleRuleImpl::Selector(void)
 {

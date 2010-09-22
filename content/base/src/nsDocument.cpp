@@ -1774,7 +1774,40 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
+static const char* kNSURIs[] = {
+  " ([none])",
+  " (xmlns)",
+  " (xml)",
+  " (xhtml)",
+  " (XLink)",
+  " (XSLT)",
+  " (XBL)",
+  " (MathML)",
+  " (RDF)",
+  " (XUL)"
+};
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
+  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+    char name[72];
+    PRUint32 nsid = tmp->GetDefaultNamespaceID();
+    nsCAutoString uri;
+    if (tmp->mDocumentURI)
+      tmp->mDocumentURI->GetSpec(uri);
+    if (nsid < NS_ARRAY_LENGTH(kNSURIs)) {
+      PR_snprintf(name, sizeof(name), "nsDocument%s %s", kNSURIs[nsid],
+                  uri.get());
+    }
+    else {
+      PR_snprintf(name, sizeof(name), "nsDocument %s", uri.get());
+    }
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsDocument), name);
+  }
+  else {
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(nsDocument),
+                    "nsDocument");
+  }
+
   // Always need to traverse script objects, so do that before we check
   // if we're uncollectable.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -2778,6 +2811,19 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 
   // If we couldn't get a BODY, return the root element.
   return GetDocumentElement(aElement);
+}
+
+NS_IMETHODIMP
+nsDocument::GetCurrentScript(nsIDOMElement **aElement)
+{
+  nsIScriptElement* script = mScriptLoader->GetCurrentScript();
+  if (script) {
+    return CallQueryInterface(script, aElement);
+  }
+  
+  *aElement = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4374,7 +4420,9 @@ nsDocument::CreateElement(const nsAString& aTagName,
     ToLowerCase(aTagName, lcTagName);
   }
 
-  rv = CreateElem(needsLowercase ? lcTagName : aTagName, nsnull,
+  rv = CreateElem(needsLowercase ? static_cast<const nsAString&>(lcTagName)
+                                 : aTagName,
+                  nsnull,
                   IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
                   PR_TRUE, aReturn);
   return rv;
@@ -4561,18 +4609,12 @@ nsDocument::CreateEntityReference(const nsAString& aName,
 already_AddRefed<nsContentList>
 nsDocument::GetElementsByTagName(const nsAString& aTagname)
 {
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
-  if (IsHTML()) {
-    nsAutoString tmp(aTagname);
-    ToLowerCase(tmp); // HTML elements are lower case internally.
-    nameAtom = do_GetAtom(tmp);
-  }
-  else {
-    nameAtom = do_GetAtom(aTagname);
-  }
-  NS_ENSURE_TRUE(nameAtom, nsnull);
+  nsAutoString lowercaseName;
+  nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
+  nsCOMPtr<nsIAtom> xmlAtom = do_GetAtom(aTagname);
+  nsCOMPtr<nsIAtom> htmlAtom = do_GetAtom(lowercaseName);
 
-  return NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown);
+  return NS_GetContentList(this, kNameSpaceID_Unknown, htmlAtom, xmlAtom);
 }
 
 NS_IMETHODIMP
@@ -4601,9 +4643,8 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   }
 
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
-  NS_ENSURE_TRUE(nameAtom, nsnull);
 
-  return NS_GetContentList(this, nameAtom, nameSpaceId);
+  return NS_GetContentList(this, nameSpaceId, nameAtom);
 }
 
 NS_IMETHODIMP
@@ -5170,9 +5211,7 @@ nsDocument::GetTitleContent(PRUint32 aNamespace)
     return nsnull;
 
   nsRefPtr<nsContentList> list =
-    NS_GetContentList(this, nsGkAtoms::title, aNamespace);
-  if (!list)
-    return nsnull;
+    NS_GetContentList(this, aNamespace, nsGkAtoms::title);
 
   return list->Item(0, PR_FALSE);
 }
@@ -5813,7 +5852,7 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  for (PRInt32 i = 0; i < mChildren.ChildCount(); ++i) {
+  for (PRUint32 i = 0; i < mChildren.ChildCount(); ++i) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren.ChildAt(i)));
     node->Normalize();
   }
@@ -7373,16 +7412,14 @@ nsDocument::OnPageShow(PRBool aPersisted,
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      nsGkAtoms::link,
-                                                      kNameSpaceID_Unknown);
+                                                      kNameSpaceID_Unknown,
+                                                      nsGkAtoms::link);
 
-    if (links) {
-      PRUint32 linkCount = links->Length(PR_TRUE);
-      for (PRUint32 i = 0; i < linkCount; ++i) {
-        nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, PR_FALSE));
-        if (link) {
-          link->LinkAdded();
-        }
+    PRUint32 linkCount = links->Length(PR_TRUE);
+    for (PRUint32 i = 0; i < linkCount; ++i) {
+      nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, PR_FALSE));
+      if (link) {
+        link->LinkAdded();
       }
     }
   }
@@ -7427,16 +7464,14 @@ nsDocument::OnPageHide(PRBool aPersisted,
   Element* root = GetRootElement();
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      nsGkAtoms::link,
-                                                      kNameSpaceID_Unknown);
+                                                      kNameSpaceID_Unknown,
+                                                      nsGkAtoms::link);
 
-    if (links) {
-      PRUint32 linkCount = links->Length(PR_TRUE);
-      for (PRUint32 i = 0; i < linkCount; ++i) {
-        nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, PR_FALSE));
-        if (link) {
-          link->LinkRemoved();
-        }
+    PRUint32 linkCount = links->Length(PR_TRUE);
+    for (PRUint32 i = 0; i < linkCount; ++i) {
+      nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, PR_FALSE));
+      if (link) {
+        link->LinkRemoved();
       }
     }
   }
@@ -7888,9 +7923,15 @@ nsDocument::GetCurrentContentSink()
 }
 
 void
-nsDocument::RegisterFileDataUri(nsACString& aUri)
+nsDocument::RegisterFileDataUri(const nsACString& aUri)
 {
   mFileDataUris.AppendElement(aUri);
+}
+
+void
+nsDocument::UnregisterFileDataUri(const nsACString& aUri)
+{
+  mFileDataUris.RemoveElement(aUri);
 }
 
 void

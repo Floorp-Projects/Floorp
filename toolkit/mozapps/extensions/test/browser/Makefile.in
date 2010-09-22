@@ -65,6 +65,7 @@ _TEST_FILES = \
   browser_bug591465.js \
   browser_bug591465.xml \
   browser_details.js \
+  browser_discovery.js \
   browser_dragdrop.js \
   browser_list.js \
   browser_searching.js \
@@ -75,13 +76,14 @@ _TEST_FILES = \
   browser_updatessl.js \
   browser_updatessl.rdf \
   browser_installssl.js \
-  browser_backgroundupdate_menuitem.js \
   browser_recentupdates.js \
   browser_manualupdates.js \
   browser_globalwarnings.js \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)
+
+# Disabled browser_bug586574.js due to bug 596174
 
 include $(topsrcdir)/config/rules.mk
 

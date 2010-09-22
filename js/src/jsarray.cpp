@@ -630,7 +630,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool str
     Value junk;
 
     /* Check for a sealed object first. */
-    if (obj->sealed()) {
+    if (!obj->isExtensible()) {
         return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_READ_ONLY,
                                         JSDVG_IGNORE_STACK, IdToValue(id), NULL,
                                         NULL, NULL);
@@ -1003,6 +1003,27 @@ array_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
+namespace {
+
+JSBool
+array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
+{
+    JS_ASSERT(obj->isDenseArray());
+
+    /*
+     * We must slowify dense arrays; otherwise, we'd need to detect assignments to holes,
+     * since that is effectively adding a new property to the array.
+     */
+    if (!obj->makeDenseArraySlow(cx) ||
+        !GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, props))
+        return false;
+
+    *success = true;
+    return true;
+}
+
+} // namespace
+
 Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
@@ -1035,6 +1056,7 @@ Class js_ArrayClass = {
         NULL,       /* enumerate      */
         array_typeOf,
         array_trace,
+        array_fix,
         NULL,       /* thisObject     */
         NULL,       /* clear          */
     }
@@ -3096,36 +3118,38 @@ js_NewSlowArrayObject(JSContext *cx)
     return obj;
 }
 
-#ifdef DEBUG_ARRAYS
+#ifdef DEBUG
 JSBool
-js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN i;
     JSObject *array;
 
     for (i = 0; i < argc; i++) {
-        char *bytes;
+        Value arg = Valueify(JS_ARGV(cx, vp)[i]);
 
-        bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, argv[i], NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NULL);
         if (!bytes)
             return JS_FALSE;
-        if (JSVAL_IS_PRIMITIVE(argv[i]) ||
-            !(array = JSVAL_TO_OBJECT(argv[i]))->isArray()) {
+        if (arg.isPrimitive() ||
+            !(array = arg.toObjectOrNull())->isArray()) {
             fprintf(stderr, "%s: not array\n", bytes);
             cx->free(bytes);
             continue;
         }
-        fprintf(stderr, "%s: %s (len %lu", bytes,
-                array->isDenseArray()) ? "dense" : "sparse",
+        fprintf(stderr, "%s: %s (len %u", bytes,
+                array->isDenseArray() ? "dense" : "sparse",
                 array->getArrayLength());
         if (array->isDenseArray()) {
-            fprintf(stderr, ", capacity %lu",
+            fprintf(stderr, ", capacity %u",
                     array->getDenseArrayCapacity());
         }
         fputs(")\n", stderr);
         cx->free(bytes);
     }
-    return JS_TRUE;
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
 }
 #endif
 

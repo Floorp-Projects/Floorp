@@ -1073,12 +1073,11 @@ namespace nanojit
                     return 0; // no jump needed
                 } else {
 #ifdef JS_TRACER
-                    // We're emitting a guard that will always fail. Any code
-                    // between here and the target is dead (if it's a forward
-                    // jump).  But it won't be optimized away, and it could
-                    // indicate a performance problem or other bug, so assert
+                    // We're emitting a branch that will always be taken.  This may
+                    // result in dead code that will not be optimized away, and
+                    // could indicate a performance problem or other bug, so assert
                     // in debug builds.
-                    NanoAssertMsg(0, "Constantly false branch detected");
+                    NanoAssertMsg(0, "Constantly taken branch detected");
 #endif
                     return out->insBranch(LIR_j, NULL, t);
                 }
@@ -1612,7 +1611,7 @@ namespace nanojit
             char* b = buf->buf;
             b[0] = 0;
             // The AccSet may contain bits set for regions not used by the
-            // embedding, if any have been specified via 
+            // embedding, if any have been specified via
             // (ACCSET_ALL & ~ACCSET_XYZ).  So only print those that are
             // relevant.
             for (int i = 0; i < EMB_NUM_USED_ACCS; i++) {
@@ -1919,7 +1918,7 @@ namespace nanojit
                 const char* qualStr;
                 switch (i->loadQual()) {
                 case LOAD_CONST:        qualStr = "/c"; break;
-                case LOAD_NORMAL:       qualStr = "";   break; 
+                case LOAD_NORMAL:       qualStr = "";   break;
                 case LOAD_VOLATILE:     qualStr = "/v"; break;
                 default: NanoAssert(0); qualStr = "/?"; break;
                 }
@@ -2484,7 +2483,7 @@ namespace nanojit
             if (storesSinceLastLoad != ACCSET_NONE) {
                 // Clear all normal (excludes CONST and MULTIPLE) loads
                 // aliased by stores and calls since the last time we were in
-                // this function.  
+                // this function.
                 AccSet a = storesSinceLastLoad & ((1 << EMB_NUM_USED_ACCS) - 1);
                 while (a) {
                     int acc = msbSet32(a);
@@ -2617,10 +2616,203 @@ namespace nanojit
         return ins;
     }
 
+    // Interval analysis can be done much more accurately than we do here.
+    // For speed and simplicity in a number of cases (eg. LIR_andi, LIR_rshi)
+    // we just look for easy-to-handle (but common!) cases such as when the
+    // RHS is a constant;  in practice this gives good results.  It also cuts
+    // down the amount of backwards traversals we have to do, which is good.
+    //
+    // 'lim' also limits the number of backwards traversals;  it's decremented
+    // on each recursive call and we give up when it reaches zero.  This
+    // prevents possible time blow-ups in long expression chains.  We don't
+    // check 'lim' at the top of this function, as you might expect, because
+    // the behaviour when the limit is reached depends on the opcode.
+    //
+    Interval Interval::of(LIns* ins, int lim)
+    {
+        switch (ins->opcode()) {
+        case LIR_immi: {
+            int32_t i = ins->immI();
+            return Interval(i, i);
+        }
+
+        case LIR_ldc2i:   return Interval(  -128,   127);
+        case LIR_lduc2ui: return Interval(     0,   255);
+        case LIR_lds2i:   return Interval(-32768, 32767);
+        case LIR_ldus2ui: return Interval(     0, 65535);
+
+        case LIR_addi:
+        case LIR_addxovi:
+        case LIR_addjovi:
+            if (lim > 0)
+                return add(of(ins->oprnd1(), lim-1), of(ins->oprnd2(), lim-1));
+            goto overflow;
+
+        case LIR_subi:
+        case LIR_subxovi:
+        case LIR_subjovi:
+            if (lim > 0)
+                return sub(of(ins->oprnd1(), lim-1), of(ins->oprnd2(), lim-1));
+            goto overflow;
+
+        case LIR_negi:
+            if (lim > 0)
+                return sub(Interval(0, 0), of(ins->oprnd2(), lim-1));
+            goto overflow;
+
+        case LIR_muli:
+        case LIR_mulxovi:
+        case LIR_muljovi:
+            if (lim > 0)
+                return mul(of(ins->oprnd1(), lim), of(ins->oprnd2(), lim));
+            goto overflow;
+
+        case LIR_andi: {
+            // Only handle one common case accurately, for speed and simplicity.
+            if (ins->oprnd2()->isImmI() && ins->oprnd2()->immI() > 0) {
+                // Example:  andi [lo,hi], 0xffff --> [0, 0xffff]
+                return Interval(0, ins->oprnd2()->immI());
+            }
+            goto worst_non_overflow;
+        }
+
+        case LIR_rshui: {
+            // Only handle one common case accurately, for speed and simplicity.
+            if (ins->oprnd2()->isImmI() && lim > 0) {
+                Interval x = of(ins->oprnd1(), lim-1);
+                int32_t y = ins->oprnd2()->immI() & 0x1f;   // we only use the bottom 5 bits
+                NanoAssert(x.isSane());
+                if (!x.hasOverflowed && (x.lo >= 0 || y > 0)) {
+                    // If LHS is non-negative or RHS is positive, the result is
+                    // non-negative because the top bit must be zero.
+                    // Example:  rshui [0,hi], 16 --> [0, hi>>16]
+                    return Interval(0, x.hi >> y);
+                }
+            }
+            goto worst_non_overflow;
+        }
+
+        case LIR_rshi: {
+            // Only handle one common case accurately, for speed and simplicity.
+            if (ins->oprnd2()->isImmI()) {
+                // Example:  rshi [lo,hi], 16 --> [32768, 32767]
+                int32_t y = ins->oprnd2()->immI() & 0x1f;   // we only use the bottom 5 bits
+                return Interval(-(1 << (31 - y)),
+                                 (1 << (31 - y)) - 1);
+            }
+            goto worst_non_overflow;
+        }
+
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+        case LIR_modi: {
+            NanoAssert(ins->oprnd1()->isop(LIR_divi));
+            LIns* op2 = ins->oprnd1()->oprnd2();
+            // Only handle one common case accurately, for speed and simplicity.
+            if (op2->isImmI() && op2->immI() != 0) {
+                int32_t y = op2->immI();
+                int32_t absy = (y >= 0) ? y : -y;
+                // The result must smaller in magnitude than 'y'.
+                // Example:  modi [lo,hi], 5 --> [-4, 4]
+                return Interval(-absy + 1, absy - 1);
+            }
+            goto worst_non_overflow;
+        }
+#endif
+
+        case LIR_cmovi: {
+            if (lim > 0) {
+                Interval x = of(ins->oprnd2(), lim-1);
+                Interval y = of(ins->oprnd3(), lim-1);
+                NanoAssert(x.isSane() && y.isSane());
+                if (!x.hasOverflowed && !y.hasOverflowed)
+                    return Interval(NJ_MIN(x.lo, y.lo), NJ_MAX(x.hi, y.hi));
+            }
+            goto overflow;
+        }
+
+        case LIR_eqi:   CASE64(LIR_eqq:)
+        case LIR_lti:   CASE64(LIR_ltq:)
+        case LIR_lei:   CASE64(LIR_leq:)
+        case LIR_gti:   CASE64(LIR_gtq:)
+        case LIR_gei:   CASE64(LIR_geq:)
+        case LIR_ltui:  CASE64(LIR_ltuq:)
+        case LIR_leui:  CASE64(LIR_leuq:)
+        case LIR_gtui:  CASE64(LIR_gtuq:)
+        case LIR_geui:  CASE64(LIR_geuq:)
+        case LIR_eqd:
+        case LIR_ltd:
+        case LIR_led:
+        case LIR_gtd:
+        case LIR_ged:
+            return Interval(0, 1);
+
+        CASE32(LIR_paramp:)
+        case LIR_ldi:
+        case LIR_noti:
+        case LIR_ori:
+        case LIR_xori:
+        case LIR_lshi:
+        CASE86(LIR_divi:)
+        case LIR_calli:
+        case LIR_reti:
+        CASE64(LIR_q2i:)
+        case LIR_d2i:
+        CASESF(LIR_dlo2i:)
+        CASESF(LIR_dhi2i:)
+        CASESF(LIR_hcalli:)
+            goto worst_non_overflow;
+
+        default:
+            NanoAssertMsgf(0, "%s", lirNames[ins->opcode()]);
+        }
+
+      overflow:
+        return OverflowInterval();
+
+      worst_non_overflow:
+        // Only cases that cannot overflow should reach here, ie. not add/sub/mul.
+        return Interval(I32_MIN, I32_MAX);
+    }
+
+    Interval Interval::add(Interval x, Interval y) {
+        NanoAssert(x.isSane() && y.isSane());
+
+        if (x.hasOverflowed || y.hasOverflowed)
+            return OverflowInterval();
+
+        // Nb: the bounds in x and y are known to fit in 32 bits (isSane()
+        // checks that) so x.lo+y.lo and x.hi+y.hi are guaranteed to fit
+        // in 64 bits.  This also holds for the other cases below such as
+        // sub() and mul().
+        return Interval(x.lo + y.lo, x.hi + y.hi);
+    }
+
+    Interval Interval::sub(Interval x, Interval y) {
+        NanoAssert(x.isSane() && y.isSane());
+
+        if (x.hasOverflowed || y.hasOverflowed)
+            return OverflowInterval();
+
+        return Interval(x.lo - y.hi, x.hi - y.lo);
+    }
+
+    Interval Interval::mul(Interval x, Interval y) {
+        NanoAssert(x.isSane() && y.isSane());
+
+        if (x.hasOverflowed || y.hasOverflowed)
+            return OverflowInterval();
+
+        int64_t a = x.lo * y.lo;
+        int64_t b = x.lo * y.hi;
+        int64_t c = x.hi * y.lo;
+        int64_t d = x.hi * y.hi;
+        return Interval(NJ_MIN(NJ_MIN(a, b), NJ_MIN(c, d)),
+                        NJ_MAX(NJ_MAX(a, b), NJ_MAX(c, d)));
+    }
 
 #if NJ_SOFTFLOAT_SUPPORTED
     static double FASTCALL i2d(int32_t i)           { return i; }
-    static double FASTCALL ui2d(uint32_t u)          { return u; }
+    static double FASTCALL ui2d(uint32_t u)         { return u; }
     static double FASTCALL negd(double a)           { return -a; }
     static double FASTCALL addd(double a, double b) { return a + b; }
     static double FASTCALL subd(double a, double b) { return a - b; }
@@ -2804,12 +2996,12 @@ namespace nanojit
     const char* ValidateWriter::type2string(LTy type)
     {
         switch (type) {
-        case LTy_V:                  return "void";
-        case LTy_I:                   return "int32";
+        case LTy_V:                     return "void";
+        case LTy_I:                     return "int32";
 #ifdef NANOJIT_64BIT
-        case LTy_Q:                   return "int64";
+        case LTy_Q:                     return "int64";
 #endif
-        case LTy_D:                   return "float64";
+        case LTy_D:                     return "float64";
         default:       NanoAssert(0);   return "???";
         }
     }
@@ -2886,7 +3078,7 @@ namespace nanojit
     }
 
     ValidateWriter::ValidateWriter(LirWriter *out, LInsPrinter* printer, const char* where)
-        : LirWriter(out), printer(printer), whereInPipeline(where), 
+        : LirWriter(out), printer(printer), whereInPipeline(where),
           checkAccSetExtras(0)
     {}
 

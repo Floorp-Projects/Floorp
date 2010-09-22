@@ -1,0 +1,4 @@
+toolkit.jar:
+        content/global/test-ipcbrowser.xul (test-ipcbrowser.xul)
+        content/global/test-ipcbrowser-chrome.js (test-ipcbrowser-chrome.js)
+        content/global/test-ipcbrowser-content.js (test-ipcbrowser-content.js)

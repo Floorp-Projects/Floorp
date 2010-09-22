@@ -46,6 +46,16 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "mozilla/unused.h"
+#include "gfxASurface.h"
+#include "gfxContext.h"
+#include "gfxPlatform.h"
+#include "gfxSharedImageSurface.h"
+#ifdef MOZ_X11
+#include "gfxXlibSurface.h"
+#endif
+#include "gfxContext.h"
+#include "gfxColor.h"
+#include "gfxUtils.h"
 
 #if defined(OS_WIN)
 #include <windowsx.h>
@@ -88,6 +98,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mDrawingModel(NPDrawingModelCoreGraphics)
     , mIOSurface(nsnull)
 #endif
+    , mSentPaintNotification(PR_FALSE)
 {
     InitQuirksModes(aMimeType);
 }
@@ -460,22 +471,109 @@ PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
     return true;
 }
 
+bool
+PluginInstanceParent::RecvShow(const NPRect& updatedRect,
+                               const SurfaceDescriptor& newSurface,
+                               SurfaceDescriptor* prevSurface)
+{
+    nsRefPtr<gfxASurface> surface;
+    if (newSurface.type() == SurfaceDescriptor::TShmem) {
+        if (!newSurface.get_Shmem().IsReadable()) {
+            NS_WARNING("back surface not readable");
+            return false;
+        }
+        surface = new gfxSharedImageSurface(newSurface.get_Shmem());
+    }
+#ifdef MOZ_X11
+    else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
+        SurfaceDescriptorX11 xdesc = newSurface.get_SurfaceDescriptorX11();
+        XRenderPictFormat pf;
+        pf.id = xdesc.xrenderPictID();
+        XRenderPictFormat *incFormat =
+            XRenderFindFormat(DefaultXDisplay(), PictFormatID, &pf, 0);
+        surface =
+            new gfxXlibSurface(DefaultScreenOfDisplay(DefaultXDisplay()),
+                               xdesc.XID(), incFormat, xdesc.size());
+    }
+#endif
+
+    mSentPaintNotification = PR_FALSE;
+    if (mFrontSurface) {
+#ifdef MOZ_X11
+        if (mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+            gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mFrontSurface.get());
+            *prevSurface =
+                SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
+                                    mFrontSurface->GetSize());
+        } else
+#endif
+        if (gfxSharedImageSurface::IsSharedImage(mFrontSurface)) {
+            *prevSurface = static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
+        } else {
+            *prevSurface = null_t();
+        }
+    } else {
+        *prevSurface = null_t();
+    }
+    mFrontSurface = surface;
+    RecvNPN_InvalidateRect(updatedRect);
+#ifdef MOZ_X11
+    // Sync prevSurface before sending to child
+    if (prevSurface->type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
+        XSync(DefaultXDisplay(), False);
+    }
+#endif
+
+    return true;
+}
+
 nsresult
 PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NPRemoteWindow window;
+    mWindowType = aWindow->type;
+    window.window = reinterpret_cast<unsigned long>(aWindow->window);
+    window.x = aWindow->x;
+    window.y = aWindow->y;
+    window.width = aWindow->width;
+    window.height = aWindow->height;
+    window.clipRect = aWindow->clipRect;
+    window.type = aWindow->type;
+    mSentPaintNotification = PR_FALSE;
+    if (!SendAsyncSetWindow(gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType(),
+                            window))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
 }
 
 nsresult
 PluginInstanceParent::NotifyPainted(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    bool rv = true;
+    if (!mSentPaintNotification) {
+        rv = SendPaintFinished();
+        mSentPaintNotification = rv;
+    }
+    return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginInstanceParent::GetSurface(gfxASurface** aSurface)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mFrontSurface) {
+      NS_ADDREF(*aSurface = mFrontSurface);
+      return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
+nsresult
+PluginInstanceParent::UseAsyncPainting(PRBool* aIsAsync)
+{
+    NS_ENSURE_ARG_POINTER(aIsAsync);
+    *aIsAsync = PR_TRUE;
+    return NS_OK;
 }
 
 NPError

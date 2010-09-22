@@ -3,6 +3,7 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/ os!=WINNT
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
+        skin/classic/browser/urlbar-over-link-arrow.png
         skin/classic/browser/sanitizeDialog.css                      (sanitizeDialog.css)
 *       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
@@ -39,7 +40,6 @@ browser.jar:
         skin/classic/browser/Toolbar.png                             (Toolbar.png)
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
-        skin/classic/browser/Search-addengines.png
         skin/classic/browser/section_collapsed.png
         skin/classic/browser/section_collapsed-rtl.png
         skin/classic/browser/section_expanded.png
@@ -49,7 +49,6 @@ browser.jar:
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
         skin/classic/browser/urlbar-favicon-glow.png
-        skin/classic/browser/feeds/feed-icons-16.png                 (feeds/feed-icons-16.png)
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
         skin/classic/browser/feeds/audioFeedIcon.png                 (feeds/audioFeedIcon.png)
@@ -90,34 +89,33 @@ browser.jar:
         skin/classic/browser/preferences/applications.css            (preferences/applications.css)
         skin/classic/browser/tabbrowser/alltabs.png                             (tabbrowser/alltabs.png)
         skin/classic/browser/tabbrowser/newtab.png                              (tabbrowser/newtab.png)
-        skin/classic/browser/tabbrowser/progress.png                            (tabbrowser/progress.png)
-        skin/classic/browser/tabbrowser/progress-pulsing.png                    (tabbrowser/progress-pulsing.png)
         skin/classic/browser/tabbrowser/tab.png                                 (tabbrowser/tab.png)
         skin/classic/browser/tabbrowser/tab-arrow-left.png                      (tabbrowser/tab-arrow-left.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png                    (tabbrowser/tabDragIndicator.png)
         skin/classic/browser/tabview/edit-light.png                 (tabview/edit-light.png)
         skin/classic/browser/tabview/edit.png                       (tabview/edit.png)
+        skin/classic/browser/tabview/grain.png                      (tabview/grain.png)
         skin/classic/browser/tabview/new-tab.png                    (tabview/new-tab.png)
-        skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
+        skin/classic/browser/tabview/search.png                     (tabview/search.png)
         skin/classic/browser/tabview/stack-expander.png             (tabview/stack-expander.png)
         skin/classic/browser/tabview/tabview.png                    (tabview/tabview.png)
-        skin/classic/browser/tabview/search.png                     (tabview/search.png)
+        skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
-        skin/classic/browser/sync-16-throbber.png
+        skin/classic/browser/sync-throbber.png
         skin/classic/browser/sync-16.png
         skin/classic/browser/sync-32.png
         skin/classic/browser/sync-bg.png
         skin/classic/browser/sync-desktopIcon.png
         skin/classic/browser/sync-mobileIcon.png
-        skin/classic/browser/sync-usedBefore.png
-        skin/classic/browser/sync-usedNever.png
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
+        skin/classic/browser/syncQuota.css
 #endif
 
 #ifdef XP_WIN
 browser.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
+        skin/classic/aero/browser/urlbar-over-link-arrow.png
         skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
 *       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
@@ -154,7 +152,6 @@ browser.jar:
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
-        skin/classic/aero/browser/Search-addengines.png
         skin/classic/aero/browser/section_collapsed.png
         skin/classic/aero/browser/section_collapsed-rtl.png
         skin/classic/aero/browser/section_expanded.png
@@ -164,7 +161,6 @@ browser.jar:
         skin/classic/aero/browser/monitor.png
         skin/classic/aero/browser/monitor_16-10.png
         skin/classic/aero/browser/urlbar-favicon-glow.png
-        skin/classic/aero/browser/feeds/feed-icons-16.png            (feeds/feed-icons-16-aero.png)
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
         skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/feeds/audioFeedIcon.png            (feeds/audioFeedIcon-aero.png)
@@ -206,27 +202,26 @@ browser.jar:
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
         skin/classic/aero/browser/tabbrowser/alltabs.png                        (tabbrowser/alltabs.png)
         skin/classic/aero/browser/tabbrowser/newtab.png                         (tabbrowser/newtab.png)
-        skin/classic/aero/browser/tabbrowser/progress.png                       (tabbrowser/progress.png)
-        skin/classic/aero/browser/tabbrowser/progress-pulsing.png               (tabbrowser/progress-pulsing.png)
         skin/classic/aero/browser/tabbrowser/tab.png                            (tabbrowser/tab.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left.png)
         skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
         skin/classic/aero/browser/tabview/edit-light.png             (tabview/edit-light.png)
         skin/classic/aero/browser/tabview/edit.png                   (tabview/edit.png)
+        skin/classic/aero/browser/tabview/grain.png                  (tabview/grain.png)
         skin/classic/aero/browser/tabview/new-tab.png                (tabview/new-tab.png)
-        skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
+        skin/classic/aero/browser/tabview/search.png                 (tabview/search.png)
         skin/classic/aero/browser/tabview/stack-expander.png         (tabview/stack-expander.png)
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
+        skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
-        skin/classic/aero/browser/sync-16-throbber.png
+        skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png
         skin/classic/aero/browser/sync-32.png
         skin/classic/aero/browser/sync-bg.png
         skin/classic/aero/browser/sync-desktopIcon.png
         skin/classic/aero/browser/sync-mobileIcon.png
-        skin/classic/aero/browser/sync-usedBefore.png
-        skin/classic/aero/browser/sync-usedNever.png
         skin/classic/aero/browser/syncSetup.css
         skin/classic/aero/browser/syncCommon.css
+        skin/classic/aero/browser/syncQuota.css
 #endif
 #endif

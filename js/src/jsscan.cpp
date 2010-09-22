@@ -1438,7 +1438,7 @@ TokenStream::getTokenInternal()
          * The check for this is in jsparse.cpp, Compiler::compileScript.
          */
         if ((flags & TSF_OPERAND) &&
-            (VersionHasXML(version) || peekChar() != '!')) {
+            (VersionShouldParseXML(version) || peekChar() != '!')) {
             /* Check for XML comment or CDATA section. */
             if (matchChar('!')) {
                 tokenbuf.clear();

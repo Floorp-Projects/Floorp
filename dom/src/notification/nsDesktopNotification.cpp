@@ -36,6 +36,16 @@
 
 #include "nsDesktopNotification.h"
 
+#ifdef MOZ_IPC
+#include "nsContentPermissionHelper.h"
+#include "nsXULAppAPI.h"
+
+#include "mozilla/dom/PBrowserChild.h"
+#include "TabChild.h"
+
+using namespace mozilla::dom;
+#endif
+
 class nsDesktopNotification;
 
 /* ------------------------------------------------------------------------ */
@@ -171,14 +181,45 @@ nsDOMDesktopNotification::HandleAlertServiceNotification(const char *aTopic)
 NS_IMETHODIMP
 nsDOMDesktopNotification::Show()
 {
-  nsCOMPtr<nsIRunnable> request;
+  // If we are in testing mode (running mochitests, for example)
+  // and we are suppose to allow requests, then just post an allow event.
   if (nsContentUtils::GetBoolPref("notification.prompt.testing", PR_FALSE) &&
       nsContentUtils::GetBoolPref("notification.prompt.testing.allow", PR_TRUE)) {
-    request  = new NotificationRequestAllowEvent(this);
-  } else {
-    request = new nsDesktopNotificationRequest(this);
+    nsCOMPtr<nsIRunnable> request = new NotificationRequestAllowEvent(this);
+    NS_DispatchToMainThread(request);
+    return NS_OK;
   }
 
+  // otherwise, create a normal request.
+  nsRefPtr<nsDesktopNotificationRequest> request = new nsDesktopNotificationRequest(this);
+
+  // if we are in the content process, then remote it to the parent.
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+
+    // if for some reason mOwner is null, just silently
+    // bail.  The user will not see a notification, and that
+    // is fine.
+    if (!mOwner)
+      return NS_OK;
+
+    // because owner implements nsITabChild, we can assume that it is
+    // the one and only TabChild for this docshell.
+    TabChild* child = GetTabChildFrom(mOwner->GetDocShell());
+    
+    // Retain a reference so the object isn't deleted without IPDL's knowledge.
+    // Corresponding release occurs in DeallocPContentPermissionRequest.
+    request->AddRef();
+
+    nsCString type = NS_LITERAL_CSTRING("desktop-notification");
+    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
+    
+    request->Sendprompt();
+    return NS_OK;
+  }
+#endif
+
+  // otherwise, dispatch it
   NS_DispatchToMainThread(request);
   return NS_OK;
 }
@@ -246,11 +287,11 @@ nsDesktopNotificationCenter::CreateNotification(const nsAString & title,
 /* ------------------------------------------------------------------------ */
 
 NS_IMPL_ISUPPORTS2(nsDesktopNotificationRequest,
-                   nsIDOMDesktopNotificationRequest,
+                   nsIContentPermissionRequest,
                    nsIRunnable)
 
 NS_IMETHODIMP
-nsDesktopNotificationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
+nsDesktopNotificationRequest::GetUri(nsIURI * *aRequestingURI)
 {
   if (!mDesktopNotification)
     return NS_ERROR_NOT_INITIALIZED;
@@ -260,7 +301,7 @@ nsDesktopNotificationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
 }
 
 NS_IMETHODIMP
-nsDesktopNotificationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
+nsDesktopNotificationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
 {
   if (!mDesktopNotification)
     return NS_ERROR_NOT_INITIALIZED;
@@ -268,6 +309,12 @@ nsDesktopNotificationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWin
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mDesktopNotification->mOwner);
   NS_IF_ADDREF(*aRequestingWindow = window);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDesktopNotificationRequest::GetElement(nsIDOMElement * *aElement)
+{
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -282,6 +329,13 @@ nsDesktopNotificationRequest::Allow()
 {
   mDesktopNotification->PostDesktopNotification();
   mDesktopNotification = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDesktopNotificationRequest::GetType(nsACString & aType)
+{
+  aType = "desktop-notification";
   return NS_OK;
 }
 

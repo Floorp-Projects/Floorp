@@ -110,7 +110,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == nested-viewBox-01.svg pass.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
-fails-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
+random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
 == objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
@@ -165,6 +165,28 @@ random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fai
 == text-style-01d.svg text-style-01-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 == thin-stroke-01.svg pass.svg
+== tspan-dxdy-01.svg tspan-dxdy-ref.svg
+== tspan-dxdy-02.svg tspan-dxdy-ref.svg
+== tspan-dxdy-03.svg tspan-dxdy-ref.svg
+== tspan-dxdy-04.svg tspan-dxdy-ref.svg
+== tspan-dxdy-05.svg tspan-dxdy-ref.svg
+== tspan-dxdy-06.svg tspan-dxdy-ref.svg
+== tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
+== tspan-rotate-01.svg tspan-rotate-ref.svg
+== tspan-rotate-02.svg tspan-rotate-ref.svg
+== tspan-rotate-03.svg tspan-rotate-ref.svg
+== tspan-rotate-04.svg tspan-rotate-ref.svg
+== tspan-rotate-05.svg tspan-rotate-ref.svg
+== tspan-rotate-06.svg tspan-rotate-ref.svg
+== tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
+== tspan-xy-01.svg tspan-xy-ref.svg
+== tspan-xy-02.svg tspan-xy-ref.svg
+== tspan-xy-03.svg tspan-xy-ref.svg
+== tspan-xy-04.svg tspan-xy-ref.svg
+== tspan-xy-05.svg tspan-xy-ref.svg
+== tspan-xy-06.svg tspan-xy-ref.svg
+== tspan-xy-anchor-middle-01.svg tspan-xy-anchor-middle-ref.svg
+== tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-invalid-01.svg pass.svg

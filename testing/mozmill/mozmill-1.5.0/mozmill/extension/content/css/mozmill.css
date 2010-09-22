@@ -1,0 +1,108 @@
+body{ font: 11px Corbel, Verdana, Helvetica, arial, sans-serif; background-color: window; margin: 0; padding: 0;}
+
+#tabs { position: relative;}
+
+.tab {
+  font-size: 12px;
+}
+
+.bespin {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#fileMenuButton {
+  float: left;
+  cursor: pointer;
+}
+
+#openTabs {
+  position: relative;
+  top: -4px;
+  margin-left: 16%;
+}
+
+
+#editor-tab-select {
+  min-width: 70px;
+  padding-left: 8px;
+  padding-right: 10px;
+}
+
+.menu {
+  font-size: 12px;
+  padding-top: 3px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 3px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  -moz-border-radius: 1px;
+}
+
+.menu:hover {
+  background-color: #ccc;
+}
+
+.menu:active {
+  background-color: #bbb;
+}
+
+.menuitem { cursor: pointer; padding-top: 2px; font-size: 12px; padding-bottom: 2px;}
+
+.menuitem a { width: 100%}
+
+.menuitem:hover { background-color: #E7E7E7;}
+
+#dxContainer {margin-top: 16px; height: 160px;}
+
+#inspectOptions {margin-right: 10px;}
+
+#outClear {margin-left: 20px;}
+
+#elementStr { margin-bottom: 8px;}
+
+#recordToggle { margin-left: 4px;}
+
+#outClear { position: relative; top: -3px;}
+
+#shellInput {
+  width: 99%;
+  height: 50px;
+}
+
+#shellOutput {
+  overflow: auto;
+  width: 99%;
+  border: 1px solid #aaa;
+}
+
+.log,
+.logger,
+.pass,
+.fail,
+.test {
+  width:98%;
+}
+.log:hover,
+.logger:hover,
+.pass:hover,
+.fail:hover,
+.test:hover {}
+.pass {
+  background:lightgreen;
+}
+.fail {
+  background:lightpink;
+}
+.test {
+  background:lightyellow;
+}
+.log {
+  background:lightyellow;
+}
+.logger {
+  background:lightyellow;
+}

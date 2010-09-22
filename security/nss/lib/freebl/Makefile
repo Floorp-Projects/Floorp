@@ -76,6 +76,11 @@ endif
 
 ifeq ($(FREEBL_NO_DEPEND),1)
 	DEFINES += -DFREEBL_NO_DEPEND
+	LOWHASH_SRCS = stubs.c nsslowhash.c
+	LOWHASH_EXPORTS = nsslowhash.h
+	MAPFILE_SOURCE = freebl_hash.def
+else
+	MAPFILE_SOURCE = freebl.def
 endif
 # NSS_X86 means the target is a 32-bits x86 CPU architecture
 # NSS_X64 means the target is a 64-bits x64 CPU architecture

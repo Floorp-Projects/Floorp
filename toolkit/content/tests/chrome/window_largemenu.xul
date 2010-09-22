@@ -147,6 +147,10 @@ function moveWindowTo(x, y, callback, arg)
     oldx = window.screenX;
     oldy = window.screenY;
     window.moveTo(x, y);
+
+    waitSteps++;
+    setTimeout(moveWindowTo, 100, x, y, callback, arg);
+    return;
   }
 
   if (window.screenX == oldx && window.screenY == oldy) {

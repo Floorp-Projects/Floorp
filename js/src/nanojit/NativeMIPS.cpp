@@ -1148,7 +1148,7 @@ namespace nanojit
                 // [xor  $t,$rr,$t]     if (rr==ra)
                 // and   $at,$at,$t
                 // srl   $at,$at,31
-                
+
                 if (ra == rb) {
                     // special case for (ra == rb) which can't overflow
                     MOVE(AT, ZERO);

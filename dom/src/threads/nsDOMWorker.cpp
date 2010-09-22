@@ -58,6 +58,7 @@
 #include "nsJSUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
@@ -425,6 +426,29 @@ nsDOMWorkerFunctions::MakeNewWorker(JSContext* aCx,
 }
 
 #ifdef BUILD_CTYPES
+static char*
+UnicodeToNative(JSContext *cx, const jschar *source, size_t slen)
+{
+  nsCAutoString native;
+  nsDependentString unicode(reinterpret_cast<const PRUnichar*>(source), slen);
+  nsresult rv = NS_CopyUnicodeToNative(unicode, native);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "could not convert string to native charset");
+    return NULL;
+  }
+
+  char* result = static_cast<char*>(JS_malloc(cx, native.Length() + 1));
+  if (!result)
+    return NULL;
+
+  memcpy(result, native.get(), native.Length() + 1);
+  return result;
+}
+
+static JSCTypesCallbacks sCallbacks = {
+  UnicodeToNative
+};
+
 JSBool
 nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
                                        JSObject* aObj,
@@ -447,8 +471,11 @@ nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
     return JS_FALSE;
   }
 
+  jsval ctypes;
   return JS_DeletePropertyById(aCx, aObj, aId) &&
          JS_InitCTypesClass(aCx, aObj) &&
+         JS_GetProperty(aCx, aObj, "ctypes", &ctypes) &&
+         JS_SetCTypesCallbacks(aCx, JSVAL_TO_OBJECT(ctypes), &sCallbacks) &&
          JS_GetPropertyById(aCx, aObj, aId, aVp);
 }
 #endif

@@ -55,7 +55,8 @@ html {
 #brandStart {
   background: -moz-linear-gradient(top, #42607C, #1E4262 30%, #1E4262 80%, #143552 98%, #244665);
   border-radius: 5.6px;
-  padding-bottom: 0.2em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
   -moz-padding-start: 0.5em;
   font-size: 250%;
   font-weight: bold;

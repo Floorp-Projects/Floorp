@@ -643,6 +643,16 @@ PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
     return i->GetSurface(aSurface);
 }
 
+nsresult
+PluginModuleParent::UseAsyncPainting(NPP instance, PRBool* aIsAsync)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->UseAsyncPainting(aIsAsync);
+}
+
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult

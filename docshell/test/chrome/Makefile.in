@@ -53,6 +53,8 @@ _HTTP_FILES =	\
 		215405_nocache.html \
 		215405_nocache.html^headers^ \
 		582176_dummy.html \
+		582176_xml.xml \
+		582176_xslt.xsl \
 		$(NULL)
 
 _TEST_FILES =	\

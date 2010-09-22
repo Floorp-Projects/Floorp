@@ -150,6 +150,12 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 static JSBool
 obj_setProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
+    /* ECMAScript 5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
+    if (!obj->isExtensible()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OBJECT_NOT_EXTENSIBLE);
+        return false;
+    }
+
     if (!vp->isObjectOrNull())
         return JS_TRUE;
 
@@ -1762,7 +1768,7 @@ GetFirstArgumentAsObject(JSContext *cx, uintN argc, Value *vp, const char *metho
     }
 
     const Value &v = vp[2];
-    if (v.isPrimitive()) {
+    if (!v.isObject()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
             return false;
@@ -1796,7 +1802,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props))
         return JS_FALSE;
 
     AutoValueVector vals(cx);
@@ -1999,7 +2005,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
     /* 8.12.9 steps 2-4. */
     if (!current) {
-        if (obj->sealed())
+        if (!obj->isExtensible())
             return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
 
         *rval = true;
@@ -2490,7 +2496,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     AutoIdVector keys(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, keys))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
         return false;
 
     AutoValueVector vals(cx);
@@ -2519,6 +2525,163 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static JSBool
+obj_isExtensible(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.isExtensible", &obj))
+        return false;
+
+    vp->setBoolean(obj->isExtensible());
+    return true;
+}
+
+static JSBool
+obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.preventExtensions", &obj))
+        return false;
+
+    vp->setObject(*obj);
+
+    AutoIdVector props(cx);
+    return obj->preventExtensions(cx, &props);
+}
+
+bool
+JSObject::sealOrFreeze(JSContext *cx, bool freeze)
+{
+    assertSameCompartment(cx, this);
+
+    AutoIdVector props(cx);
+    if (isExtensible()) {
+        if (!preventExtensions(cx, &props))
+            return false;
+    } else {
+        if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+            return false;
+    }
+
+    /* preventExtensions must slowify dense arrays, so we can assign to holes without checks. */
+    JS_ASSERT(!isDenseArray());
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = props[i];
+
+        uintN attrs;
+        if (!getAttributes(cx, id, &attrs))
+            return false;
+
+        /* Make all attributes permanent; if freezing, make data attributes read-only. */
+        uintN new_attrs;
+        if (freeze && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+            new_attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+        else
+            new_attrs = JSPROP_PERMANENT;
+
+        /* If we already have the attributes we need, skip the setAttributes call. */
+        if ((attrs | new_attrs) == attrs)
+            continue;
+
+        attrs |= new_attrs;
+        if (!setAttributes(cx, id, &attrs))
+            return false;
+    }
+
+    return true;
+}
+
+static JSBool
+obj_freeze(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.freeze", &obj))
+        return false;
+
+    vp->setObject(*obj);
+
+    return obj->freeze(cx);
+}
+
+static JSBool
+obj_isFrozen(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.preventExtensions", &obj))
+        return false;
+
+    vp->setBoolean(false);
+
+    if (obj->isExtensible())
+        return true; /* The JavaScript value returned is false. */
+
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+        return false;
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = props[i];
+
+        uintN attrs = 0;
+        if (!obj->getAttributes(cx, id, &attrs))
+            return false;
+
+        /* The property must be non-configurable and either read-only or an accessor. */
+        if (!(attrs & JSPROP_PERMANENT) ||
+            !(attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER)))
+            return true; /* The JavaScript value returned is false. */
+    }
+
+    /* It really was sealed, so return true. */
+    vp->setBoolean(true);
+    return true;
+}
+
+static JSBool
+obj_seal(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.seal", &obj))
+        return false;
+
+    vp->setObject(*obj);
+
+    return obj->seal(cx);
+}
+
+static JSBool
+obj_isSealed(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.isSealed", &obj))
+        return false;
+
+    /* Assume not sealed until proven otherwise. */
+    vp->setBoolean(false);
+
+    if (obj->isExtensible())
+        return true; /* The JavaScript value returned is false. */
+
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+        return false;
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = props[i];
+
+        uintN attrs;
+        if (!obj->getAttributes(cx, id, &attrs))
+            return false;
+
+        if (!(attrs & JSPROP_PERMANENT))
+            return true; /* The JavaScript value returned is false. */
+    }
+
+    /* It really was sealed, so return true. */
+    vp->setBoolean(true);
+    return true;
+}
 
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
@@ -2559,6 +2722,12 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("defineProperties",          obj_defineProperties,        2,0),
     JS_FN("create",                    obj_create,                  2,0),
     JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
+    JS_FN("isExtensible",              obj_isExtensible,            1,0),
+    JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
+    JS_FN("freeze",                    obj_freeze,                  1,0),
+    JS_FN("isFrozen",                  obj_isFrozen,                1,0),
+    JS_FN("seal",                      obj_seal,                    1,0),
+    JS_FN("isSealed",                  obj_isSealed,                1,0),
     JS_FS_END
 };
 
@@ -2914,9 +3083,10 @@ Class js_WithClass = {
         with_DeleteProperty,
         with_Enumerate,
         with_TypeOf,
-        NULL,       /* trace          */
+        NULL,       /* trace */
+        NULL,       /* fix   */
         with_ThisObject,
-        NULL,       /* clear          */
+        NULL,       /* clear */
     }
 };
 
@@ -3631,6 +3801,7 @@ bool
 SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
 {
     JS_ASSERT_IF(!checkForCycles, obj != proto);
+    JS_ASSERT(obj->isExtensible());
 
     if (obj->isNative()) {
         JS_LOCK_OBJ(cx, obj);
@@ -3920,11 +4091,11 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
 
         /*
          * Freeing a slot other than the last one mapped by this object's
-         * shape: push the slot onto the dictionary table's freelist. We want
-         * to let the last slot be freed by shrinking the dslots vector; see
-         * js_TraceObject.
+         * shape (and not a reserved slot; see bug 595230): push the slot onto
+         * the dictionary property table's freelist. We want to let the last
+         * slot be freed by shrinking the dslots vector; see js_TraceObject.
          */
-        if (slot + 1 < limit) {
+        if (JSSLOT_FREE(clasp) <= slot && slot + 1 < limit) {
             JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
             vref.setPrivateUint32(last);
             last = slot;
@@ -4948,6 +5119,13 @@ ReportNotConfigurable(JSContext* cx, jsid id, uintN flags)
                                     NULL, NULL);
 }
 
+JSBool
+ReportNotExtensible(JSContext* cx, uintN flags)
+{
+    return JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage, NULL,
+                                        JSMSG_OBJECT_NOT_EXTENSIBLE);
+}
+
 }
 
 /*
@@ -4976,10 +5154,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
-
-    /* Check for a sealed object first (now that id has been normalized). */
-    if (obj->sealed())
-        return ReportReadOnly(cx, id, JSREPORT_ERROR);
 
     protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
                                             &pobj, &prop);
@@ -5048,10 +5222,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 return JS_FALSE;
 #endif
             }
-        }
-        if (pobj->sealed() && !shape->hasSlot()) {
-            JS_UNLOCK_OBJ(cx, pobj);
-            return ReportReadOnly(cx, id, JSREPORT_ERROR);
         }
 
         attrs = shape->attributes();
@@ -5127,6 +5297,16 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
     added = false;
     if (!shape) {
+        if (!obj->isExtensible()) {
+            /* Error in strict mode code, warn with strict option, otherwise do nothing. */
+            if (strict)
+                return ReportNotExtensible(cx, 0);
+            if (JS_HAS_STRICT_OPTION(cx))
+                return ReportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
+            else
+                return JS_TRUE;
+        }
+
         /*
          * Purge the property cache of now-shadowed id in obj's scope chain.
          * Do this early, before locking obj to avoid nesting locks.
@@ -6315,12 +6495,13 @@ js_DumpObject(JSObject *obj)
     uint32 flags = obj->flags;
     if (flags & JSObject::DELEGATE) fprintf(stderr, " delegate");
     if (flags & JSObject::SYSTEM) fprintf(stderr, " system");
-    if (flags & JSObject::SEALED) fprintf(stderr, " sealed");
+    if (flags & JSObject::NOT_EXTENSIBLE) fprintf(stderr, " not extensible");
     if (flags & JSObject::BRANDED) fprintf(stderr, " branded");
     if (flags & JSObject::GENERIC) fprintf(stderr, " generic");
     if (flags & JSObject::METHOD_BARRIER) fprintf(stderr, " method_barrier");
     if (flags & JSObject::INDEXED) fprintf(stderr, " indexed");
     if (flags & JSObject::OWN_SHAPE) fprintf(stderr, " own_shape");
+
     bool anyFlags = flags != 0;
     if (obj->isNative()) {
         if (obj->inDictionaryMode()) {
@@ -6349,9 +6530,6 @@ js_DumpObject(JSObject *obj)
     }
 
     if (obj->isNative()) {
-        if (obj->sealed())
-            fprintf(stderr, "sealed\n");
-
         fprintf(stderr, "properties:\n");
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront())
             DumpShape(r.front());

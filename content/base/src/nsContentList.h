@@ -144,16 +144,20 @@ class nsContentListKey
 {
 public:
   nsContentListKey(nsINode* aRootNode,
-                   nsIAtom* aMatchAtom, 
+                   nsIAtom* aHTMLMatchAtom,
+                   nsIAtom* aXMLMatchAtom,
                    PRInt32 aMatchNameSpaceId)
-    : mMatchAtom(aMatchAtom),
+    : mHTMLMatchAtom(aHTMLMatchAtom),
+      mXMLMatchAtom(aXMLMatchAtom),
       mMatchNameSpaceId(aMatchNameSpaceId),
       mRootNode(aRootNode)
   {
+    NS_ASSERTION(!aXMLMatchAtom == !aHTMLMatchAtom, "Either neither or both atoms should be null");
   }
   
   nsContentListKey(const nsContentListKey& aContentListKey)
-    : mMatchAtom(aContentListKey.mMatchAtom),
+    : mHTMLMatchAtom(aContentListKey.mHTMLMatchAtom),
+      mXMLMatchAtom(aContentListKey.mXMLMatchAtom),
       mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
       mRootNode(aContentListKey.mRootNode)
   {
@@ -161,21 +165,26 @@ public:
 
   PRBool Equals(const nsContentListKey& aContentListKey) const
   {
+    NS_ASSERTION(mHTMLMatchAtom == aContentListKey.mHTMLMatchAtom 
+                 || mXMLMatchAtom != aContentListKey.mXMLMatchAtom, "HTML atoms should match if XML atoms match");
+
     return
-      mMatchAtom == aContentListKey.mMatchAtom &&
+      mXMLMatchAtom == aContentListKey.mXMLMatchAtom &&
       mMatchNameSpaceId == aContentListKey.mMatchNameSpaceId &&
       mRootNode == aContentListKey.mRootNode;
   }
+
   inline PRUint32 GetHash(void) const
   {
     return
-      NS_PTR_TO_INT32(mMatchAtom.get()) ^
+      NS_PTR_TO_INT32(mXMLMatchAtom.get()) ^
       (NS_PTR_TO_INT32(mRootNode) << 12) ^
       (mMatchNameSpaceId << 24);
   }
   
 protected:
-  nsCOMPtr<nsIAtom> mMatchAtom;
+  nsCOMPtr<nsIAtom> mHTMLMatchAtom;
+  nsCOMPtr<nsIAtom> mXMLMatchAtom;
   PRInt32 mMatchNameSpaceId;
   nsINode* mRootNode; // Weak ref
 };
@@ -230,8 +239,9 @@ public:
    *              our root.
    */  
   nsContentList(nsINode* aRootNode,
-                nsIAtom* aMatchAtom, 
                 PRInt32 aMatchNameSpaceId,
+                nsIAtom* aHTMLMatchAtom,
+                nsIAtom* aXMLMatchAtom,
                 PRBool aDeep = PR_TRUE);
 
   /**
@@ -485,8 +495,10 @@ protected:
 };
 
 already_AddRefed<nsContentList>
-NS_GetContentList(nsINode* aRootNode, nsIAtom* aMatchAtom,
-                  PRInt32 aMatchNameSpaceId);
+NS_GetContentList(nsINode* aRootNode,
+                  PRInt32 aMatchNameSpaceId,
+                  nsIAtom* aHTMLMatchAtom,
+                  nsIAtom* aXMLMatchAtom = nsnull);
 
 already_AddRefed<nsContentList>
 NS_GetFuncStringContentList(nsINode* aRootNode,

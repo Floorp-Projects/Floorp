@@ -761,7 +761,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
 
-                if (!JS_SealObject(cx, obj, JS_TRUE))
+                if (!JS_DeepFreezeObject(cx, obj))
                     return JS_FALSE;
                 gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)
@@ -1452,6 +1452,44 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     JS_DHashTableFinish(&countTracer.visited);
 
     return countTracer.ok && JS_NewNumberValue(cx, (jsdouble) counter, vp);
+}
+
+static jsrefcount finalizeCount = 0;
+
+static void
+finalize_counter_finalize(JSContext *cx, JSObject *obj)
+{
+    JS_ATOMIC_INCREMENT(&finalizeCount);
+}
+
+static JSClass FinalizeCounterClass = {
+    "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
+    JS_PropertyStub,   /* addProperty */
+    JS_PropertyStub,   /* delProperty */
+    JS_PropertyStub,   /* getProperty */
+    JS_PropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    finalize_counter_finalize
+};
+
+static JSBool
+MakeFinalizeObserver(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, NULL,
+                                               JS_GetGlobalObject(cx));
+    if (!obj)
+        return false;
+    *vp = OBJECT_TO_JSVAL(obj);
+    return true;
+}
+
+static JSBool
+FinalizeCount(JSContext *cx, uintN argc, jsval *vp)
+{
+    *vp = INT_TO_JSVAL(finalizeCount);
+    return true;
 }
 
 static JSScript *
@@ -2527,20 +2565,6 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Seal(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSObject *target;
-    JSBool deep = JS_FALSE;
-
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "o/b", &target, &deep))
-        return JS_FALSE;
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    if (!target)
-        return JS_TRUE;
-    return JS_SealObject(cx, target, deep);
-}
-
-static JSBool
 GetPDA(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *vobj, *aobj, *pdobj;
@@ -2987,6 +3011,7 @@ static Class split_global_class = {
         NULL, /* enumerate      */
         NULL, /* typeOf         */
         NULL, /* trace          */
+        NULL, /* fix            */
         split_thisObject,
         NULL, /* clear          */
     },
@@ -4111,6 +4136,8 @@ static JSFunctionSpec shell_functions[] = {
 #endif
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
+    JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
+    JS_FN("finalizeCount",  FinalizeCount, 0,0),
 #ifdef JS_GC_ZEAL
     JS_FN("gczeal",         GCZeal,         1,0),
 #endif
@@ -4142,7 +4169,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("clear",          Clear,          0,0),
     JS_FN("intern",         Intern,         1,0),
     JS_FN("clone",          Clone,          1,0),
-    JS_FN("seal",           Seal,           1,0),
     JS_FN("getpda",         GetPDA,         1,0),
     JS_FN("getslx",         GetSLX,         1,0),
     JS_FN("toint32",        ToInt32,        1,0),
@@ -4220,6 +4246,12 @@ static const char *const shell_help_messages[] = {
 "  start when it is given and is not null. kind is either 'all' (default) to\n"
 "  count all things or one of 'object', 'double', 'string', 'function',\n"
 "  'qname', 'namespace', 'xml' to count only things of that kind",
+"makeFinalizeObserver()\n"
+"  get a special object whose finalization increases the counter returned\n"
+"  by the finalizeCount function",
+"finalizeCount()\n"
+"  return the current value of the finalization counter that is incremented\n"
+"  each time an object returned by the makeFinalizeObserver is finalized",
 #ifdef JS_GC_ZEAL
 "gczeal(level)            How zealous the garbage collector should be",
 #endif
@@ -4254,7 +4286,6 @@ static const char *const shell_help_messages[] = {
 "clear([obj])             Clear properties of object",
 "intern(str)              Internalize str in the atom table",
 "clone(fun[, scope])      Clone function object",
-"seal(obj[, deep])        Seal object, or object graph if deep",
 "getpda(obj)              Get the property descriptors for obj",
 "getslx(obj)              Get script line extent",
 "toint32(n)               Testing hook for JS_ValueToInt32",

@@ -68,13 +68,29 @@ JSObject::dropProperty(JSContext *cx, JSProperty *prop)
         JS_UNLOCK_OBJ(cx, this);
 }
 
-inline void
-JSObject::seal(JSContext *cx)
+inline bool
+JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 {
-    JS_ASSERT(!sealed());
+    JS_ASSERT(isExtensible());
+
+    if (js::FixOp fix = getOps()->fix) {
+        bool success;
+        if (!fix(cx, this, &success, props))
+            return false;
+        if (!success) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+            return false;
+        }
+    } else {
+        if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, props))
+            return false;
+    }
+
     if (isNative())
-        generateOwnShape(cx);
-    flags |= SEALED;
+        extensibleShapeChange(cx);
+
+    flags |= NOT_EXTENSIBLE;
+    return true;
 }
 
 inline bool
@@ -1027,6 +1043,20 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
            ? detail::NewObject<withProto, true>(cx, clasp, proto, parent)
            : detail::NewObject<withProto, false>(cx, clasp, proto, parent);
 }
+
+class AutoPropertyDropper {
+    JSContext *cx;
+    JSObject *holder;
+    JSProperty *prop;
+
+  public:
+    AutoPropertyDropper(JSContext *cx, JSObject *obj, JSProperty *prop)
+      : cx(cx), holder(obj), prop(prop)
+    { JS_ASSERT(prop); }
+
+    ~AutoPropertyDropper()
+    { holder->dropProperty(cx, prop); }
+};
 
 } /* namespace js */
 

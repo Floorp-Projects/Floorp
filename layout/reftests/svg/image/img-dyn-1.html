@@ -1,0 +1,18 @@
+<!-- This test makes sure that we resize SVG content correctly after the
+     container width is dynamically modified. -->
+<html class="reftest-wait">
+<head>
+  <script>
+    function go() {
+      document.getElementById("wrapper").style.width = "200px";
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</head>
+<body onload="go()">
+  <div id="wrapper"
+       style="width: 100px; height: 200px; border: 2px dashed green">
+    <img src="squaredCircle-viewBox-noSize.svg">
+  </div>
+</body>
+</html>

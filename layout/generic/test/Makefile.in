@@ -58,6 +58,7 @@ _TEST_FILES = \
 		plugin_clipping_lib.js \
 		plugin_focus_helper.html \
 		test_backspace_delete.xul \
+		test_bug240933.html \
 		test_bug263683.html \
 		test_bug288789.html \
 		test_bug290397.html \

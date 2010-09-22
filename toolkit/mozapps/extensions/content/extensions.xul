@@ -112,12 +112,13 @@
     <command id="cmd_goToDiscoverPane"/>
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
-    <command id="cmd_toggleBackgroundUpdateCheck"/>
     <command id="cmd_installFromFile"/>
     <command id="cmd_back"/>
     <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
     <command id="cmd_enableUpdateSecurity"/>
+    <command id="cmd_toggleAutoUpdateDefault"/>
+    <command id="cmd_resetAddonAutoUpdate"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -162,16 +163,11 @@
               label="&updates.restart.label;"
               command="cmd_restartApp"/>
     </hbox>
-    <button id="header-utils-btn" type="menu"
-#ifdef XP_WIN
-            tooltiptext="&view.utilites.preferences.tooltip;">
-#else
-            tooltiptext="&view.utilites.preferencesUnix.tooltip;">
-#endif
+    <button id="header-utils-btn" type="menu" tooltiptext="&toolsMenu.tooltip;">
       <menupopup id="utils-menu">
         <menuitem id="utils-updateNow"
-                  label="&updates.updateAddonsNow.label;"
-                  accesskey="&updates.updateAddonsNow.accesskey;"
+                  label="&updates.checkForUpdates.label;"
+                  accesskey="&updates.checkForUpdates.accesskey;"
                   command="cmd_findAllUpdates"/>
         <menuitem id="utils-viewUpdates"
                   label="&updates.viewUpdates.label;"
@@ -179,15 +175,23 @@
                   command="cmd_goToRecentUpdates"/>
         <menuseparator id="utils-installFromFile-separator"/>
         <menuitem id="utils-installFromFile"
-                  label="&installFromFile.label;"
-                  accesskey="&installFromFile.accesskey;"
+                  label="&installAddonFromFile.label;"
+                  accesskey="&installAddonFromFile.accesskey;"
                   command="cmd_installFromFile"/>
         <menuseparator/>
-        <menuitem id="utils-backgroudUpdateCheck"
-                  label="&updates.backgroudUpdateCheck.label;"
-                  accesskey="&updates.backgroudUpdateCheck.accesskey;"
+        <menuitem id="utils-autoUpdateDefault"
+                  label="&updates.updateAddonsAutomatically.label;"
+                  accesskey="&updates.updateAddonsAutomatically.accesskey;"
                   type="checkbox" autocheck="false"
-                  command="cmd_toggleBackgroundUpdateCheck"/>
+                  command="cmd_toggleAutoUpdateDefault"/>
+        <menuitem id="utils-resetAddonUpdatesToAutomatic"
+                  label="&updates.resetUpdatesToAutomatic.label;"
+                  accesskey="&updates.resetUpdatesToAutomatic.accesskey;"
+                  command="cmd_resetAddonAutoUpdate"/>
+        <menuitem id="utils-resetAddonUpdatesToManual"
+                  label="&updates.resetUpdatesToManual.label;"
+                  accesskey="&updates.resetUpdatesToManual.accesskey;"
+                  command="cmd_resetAddonAutoUpdate"/>
       </menupopup>
     </button>
     <textbox id="header-search" type="search" searchbutton="true"
@@ -237,7 +241,7 @@
         <!-- discover view -->
         <vbox id="discover-view" flex="1" class="view-pane">
           <browser id="discover-browser" type="content" flex="1"
-                   disablehistory="true"/>
+                   disablehistory="true" homepage="about:blank"/>
         </vbox>
 
         <!-- search view -->
@@ -254,24 +258,28 @@
                      tooltiptext="&search.filter2.available.tooltip;"/>
             </radiogroup>
           </hbox>
-          <hbox class="view-header global-warning-container">
+          <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
-            <hbox class="global-warning">
+            <hbox class="global-warning" flex="1">
               <image class="warning-icon"/>
-              <label class="global-warning-safemode"
-                     value="&warning.safemode.label;"/>
-              <label class="global-warning-checkcompatibility"
-                     value="&warning.checkcompatibility.label;"/>
+              <label class="global-warning-safemode" flex="1">
+                &warning.safemode.label;
+              </label>
+              <label class="global-warning-checkcompatibility" flex="1">
+                &warning.checkcompatibility.label;
+              </label>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity"
-                     value="&warning.updatesecurity.label;"/>
+              <label class="global-warning-updatesecurity" flex="1">
+                &warning.updatesecurity.label;
+              </label>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
                       command="cmd_enableUpdateSecurity"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
             <hbox id="search-sorters" class="sort-controls"
@@ -294,24 +302,28 @@
 
         <!-- list view -->
         <vbox id="list-view" flex="1" class="view-pane">
-          <hbox class="view-header global-warning-container">
+          <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
-            <hbox class="global-warning">
+            <hbox class="global-warning" flex="1">
               <image class="warning-icon"/>
-              <label class="global-warning-safemode"
-                     value="&warning.safemode.label;"/>
-              <label class="global-warning-checkcompatibility"
-                     value="&warning.checkcompatibility.label;"/>
+              <label class="global-warning-safemode" flex="1">
+                &warning.safemode.label;
+              </label>
+              <label class="global-warning-checkcompatibility" flex="1">
+                &warning.checkcompatibility.label;
+              </label>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity"
-                     value="&warning.updatesecurity.label;"/>
+              <label class="global-warning-updatesecurity" flex="1">
+                &warning.updatesecurity.label;
+              </label>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
                       command="cmd_enableUpdateSecurity"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
             <hbox id="list-sorters" class="sort-controls" sortby="name"
@@ -330,24 +342,28 @@
 
         <!-- updates view -->
         <vbox id="updates-view" flex="1" class="view-pane">
-          <hbox class="view-header global-warning-container">
+          <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
-            <hbox class="global-warning">
+            <hbox class="global-warning" flex="1">
               <image class="warning-icon"/>
-              <label class="global-warning-safemode"
-                     value="&warning.safemode.label;"/>
-              <label class="global-warning-checkcompatibility"
-                     value="&warning.checkcompatibility.label;"/>
+              <label class="global-warning-safemode" flex="1">
+                &warning.safemode.label;
+              </label>
+              <label class="global-warning-checkcompatibility" flex="1">
+                &warning.checkcompatibility.label;
+              </label>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity"
-                     value="&warning.updatesecurity.label;"/>
+              <label class="global-warning-updatesecurity" flex="1">
+                &warning.updatesecurity.label;
+              </label>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
                       command="cmd_enableUpdateSecurity"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
             <hbox id="updates-sorters" class="sort-controls" sortby="dateUpdated"
@@ -373,22 +389,26 @@
         <!-- detail view -->
         <vbox id="detail-view" flex="1" class="view-pane">
           <!-- global warnings -->
-          <hbox class="global-warning-container global-warning" pack="start">
+          <hbox class="global-warning-container global-warning">
             <image class="warning-icon"/>
-            <label class="global-warning-safemode"
-                   value="&warning.safemode.label;"/>
-            <label class="global-warning-checkcompatibility"
-                   value="&warning.checkcompatibility.label;"/>
+            <label class="global-warning-safemode" flex="1">
+              &warning.safemode.label;
+            </label>
+            <label class="global-warning-checkcompatibility" flex="1">
+              &warning.checkcompatibility.label;
+            </label>
             <button class="button-link global-warning-checkcompatibility"
                     label="&warning.checkcompatibility.enable.label;"
                     tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                     command="cmd_enableCheckCompatibility"/>
-            <label class="global-warning-updatesecurity"
-                   value="&warning.updatesecurity.label;"/>
+            <label class="global-warning-updatesecurity" flex="1">
+              &warning.updatesecurity.label;
+            </label>
             <button class="button-link global-warning-updatesecurity"
                     label="&warning.updatesecurity.enable.label;"
                     tooltiptext="&warning.updatesecurity.enable.tooltip;"
                     command="cmd_enableUpdateSecurity"/>
+            <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
           </hbox>
           <scrollbox  flex="1" class="addon-view" orient="horizontal" pack="stretch" align="start">
             <spacer flex="1"/>
@@ -466,12 +486,17 @@
                         <label class="detail-row-label" value="&detail.updateType;"/>
                         <hbox align="center">
                           <radiogroup id="detail-autoUpdate" orient="horizontal">
+                            <!-- The values here need to match the values of
+                                 AddonManager.AUTOUPDATE_* -->
+                            <radio label="&detail.updateDefault.label;"
+                                   tooltiptext="&detail.updateDefault.tooltip;"
+                                   value="1"/>
                             <radio label="&detail.updateAutomatic.label;"
                                    tooltiptext="&detail.updateAutomatic.tooltip;"
-                                   value="true"/>
+                                   value="2"/>
                             <radio label="&detail.updateManual.label;"
-                                   tooltiptext="&detail.updateAutomatic.tooltip;"
-                                   value="false"/>
+                                   tooltiptext="&detail.updateManual.tooltip;"
+                                   value="0"/>
                           </radiogroup>
                           <button id="detail-findUpdates" class="button-link"
                                   label="&detail.checkForUpdates.label;"
