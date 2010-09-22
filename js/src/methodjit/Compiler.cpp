@@ -1964,7 +1964,6 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     ADD_CALLSITE(false);
 
     Jump notCompiled = masm.branchTestPtr(Assembler::Zero, r0, r0);
-    stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
 
     masm.call(r0);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
@@ -1980,6 +1979,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
+    stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(0));
 }
 

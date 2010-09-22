@@ -558,7 +558,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCij] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
+    fprintf(gErrFile, "usage: js [-zKPswWxCijmd] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
@@ -834,6 +834,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
             /* Set maximum stack size. */
             gMaxStackSize = atoi(argv[i]);
+            break;
+
+        case 'd':
+            js_SetDebugMode(cx, JS_TRUE);
             break;
 
         case 'z':
