@@ -175,6 +175,8 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug421602.html \
 		test_bug422537.html \
 		test_bug424359-1.html \
+		test_bug499656.html \
+		test_bug499656.xhtml \
 		file_htmlserializer_1.html \
 		file_htmlserializer_1_bodyonly.html \
 		file_htmlserializer_1_format.html \
@@ -257,6 +259,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug454326.html \
 		test_bug505783.html \
 		test_bug457746.html \
+		test_bug587931.html \
 		test_bug518104.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
@@ -307,6 +310,8 @@ _TEST_FILES2 = \
 		file_xhtmlserializer_2_latin1.xhtml \
 		test_bug500937.html \
 		test_htmlcopyencoder.html \
+		test_bug313646.html \
+		bug313646.txt \
 		test_htmlcopyencoder.xhtml \
 		test_bug270145.xhtml \
 		test_elementTraversal.html \

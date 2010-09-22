@@ -127,7 +127,7 @@ const PAGEID_LICENSE          = "license";               // Done
 const PAGEID_INCOMPAT_LIST    = "incompatibleList";      // Done
 const PAGEID_DOWNLOADING      = "downloading";           // Done
 const PAGEID_ERRORS           = "errors";                // Done
-const PAGEID_ERROR_CERT_CHECK = "errorcertcheck";        // Done
+const PAGEID_ERROR_EXTRA      = "errorextra";            // Done
 const PAGEID_ERROR_PATCHING   = "errorpatching";         // Done
 const PAGEID_FINISHED         = "finished";              // Done
 const PAGEID_FINISHED_BKGRD   = "finishedBackground";    // Done
@@ -140,8 +140,6 @@ const URL_PATH   = "chrome/toolkit/mozapps/update/test/chrome";
 const URL_UPDATE = URL_HOST + URL_PATH + "/update.sjs";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
-
-const CRC_ERROR = 4;
 
 const ADDON_ID_SUFFIX = "@appupdatetest.mozilla.org";
 const ADDON_PREP_DIR = "appupdateprep";
@@ -456,7 +454,7 @@ function getExpectedButtonStates() {
     case PAGEID_NO_UPDATES_FOUND:
     case PAGEID_MANUAL_UPDATE:
     case PAGEID_ERRORS:
-    case PAGEID_ERROR_CERT_CHECK:
+    case PAGEID_ERROR_EXTRA:
     case PAGEID_INSTALLED:
       return { finish: { disabled: false, hidden: false } };
     case PAGEID_ERROR_PATCHING:
@@ -611,9 +609,10 @@ function checkPrefHasUserValue(aPrefHasValue) {
 }
 
 /**
- * Checks whether the link is hidden (certificate attribute check error with an
- * update) or not (certificate attribute check error without an update) on the
- * errorcertcheck page and that the app.update.cert.errors preference does note
+ * Checks whether the link is hidden (general background update check error or
+ * a certificate attribute check error with an update) or not (certificate
+ * attribute check error without an update) on the errorextra page and that the
+ * app.update.cert.errors and app.update.backgroundErrors preferences do not
  & have a user value.
  *
  * @param  aShouldBeHidden (optional)
@@ -621,15 +620,22 @@ function checkPrefHasUserValue(aPrefHasValue) {
  *         aShouldBeHidden is undefined the value of the current test's
  *         shouldBeHidden property will be used.
  */
-function checkCertErrorPage(aShouldBeHidden) {
+function checkErrorExtraPage(aShouldBeHidden) {
   let shouldBeHidden = aShouldBeHidden === undefined ? gTest.shouldBeHidden
                                                      : aShouldBeHidden;
-  is(gWin.document.getElementById("errorCertAttrLinkLabel").hidden, shouldBeHidden,
-     "Checking errorCertAttrLinkLabel hidden attribute equals " +
+  is(gWin.document.getElementById("errorExtraLinkLabel").hidden, shouldBeHidden,
+     "Checking errorExtraLinkLabel hidden attribute equals " +
      (shouldBeHidden ? "true" : "false"));
+
+  is(gWin.document.getElementById(gTest.displayedTextElem).hidden, false,
+     "Checking " + gTest.displayedTextElem + " should not be hidden");
 
   ok(!Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS),
      "Preference " + PREF_APP_UPDATE_CERT_ERRORS + " should not have a " +
+     "user value");
+
+  ok(!Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS),
+     "Preference " + PREF_APP_UPDATE_BACKGROUNDERRORS + " should not have a " +
      "user value");
 }
 
@@ -788,8 +794,20 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_LOG);
   }
 
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
+  }
+
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_MAXERRORS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_MAXERRORS);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDMAXERRORS)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDMAXERRORS);
   }
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME)) {
@@ -1107,35 +1125,45 @@ function getUpdateWindow() {
 }
 
 /**
- * Helper for certificate attribute check errors.
+ * Helper for background check errors.
  */
-var certErrorsPrefObserver = {
+var errorsPrefObserver = {
+  observedPref: null,
+  maxErrorPref: null,
+
   /**
-   * Sets up the app.update.cert.errors preference observer and sets the
-   * app.update.cert.maxErrors preference.
+   * Sets up a preference observer and sets the associated maximum errors
+   * preference used for background notification.
    *
-   * @param  aMaxErrors
+   * @param  aObservePref
+   *         The preference to observe.
+   * @param  aMaxErrorPref
+   *         The maximum errors preference.
+   * @param  aMaxErrorCount
    *         The value to set the app.update.cert.maxErrors preference to.
    */
-  init: function(aMaxErrors) {
-    let maxErrors = aMaxErrors ? aMaxErrors : 5;
-    Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_MAXERRORS, maxErrors);
-    Services.prefs.addObserver(PREF_APP_UPDATE_CERT_ERRORS, this, false);
+  init: function(aObservePref, aMaxErrorPref, aMaxErrorCount) {
+    this.observedPref = aObservePref;
+    this.maxErrorPref = aMaxErrorPref;
+
+    let maxErrors = aMaxErrorCount ? aMaxErrorCount : 5;
+    Services.prefs.setIntPref(aMaxErrorPref, maxErrors);
+    Services.prefs.addObserver(aObservePref, this, false);
   },
 
   /**
    * Preference observer for the app.update.cert.errors preference.
    */
   observe: function XPI_observe(aSubject, aTopic, aData) {
-    if (aData == PREF_APP_UPDATE_CERT_ERRORS) {
-      let errCount = Services.prefs.getIntPref(PREF_APP_UPDATE_CERT_ERRORS);
-      let errMax = Services.prefs.getIntPref(PREF_APP_UPDATE_CERT_MAXERRORS);
+    if (aData == this.observedPref) {
+      let errCount = Services.prefs.getIntPref(this.observedPref);
+      let errMax = Services.prefs.getIntPref(this.maxErrorPref);
       if (errCount >= errMax) {
-        debugDump("prefObserver - removing pref observer");
-        Services.prefs.removeObserver(PREF_APP_UPDATE_CERT_ERRORS, this);
+        debugDump("errorsPrefObserver - removing pref observer");
+        Services.prefs.removeObserver(this.observedPref, this);
       }
       else {
-        debugDump("prefObserver - notifying AUS");
+        debugDump("errorsPrefObserver - notifying AUS");
         SimpleTest.executeSoon(function() {
           gAUS.notify(null);
         });

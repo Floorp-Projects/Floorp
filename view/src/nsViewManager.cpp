@@ -514,20 +514,6 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
   return UpdateView(view, dims, aUpdateFlags);
 }
 
-static PRBool
-IsWidgetDrawnByPlugin(nsIWidget* aWidget, nsIView* aView)
-{
-  if (aView->GetWidget() == aWidget)
-    return PR_FALSE;
-  nsCOMPtr<nsIPluginWidget> pw = do_QueryInterface(aWidget);
-  if (pw) {
-    // It's a plugin widget, but one that we are responsible for painting
-    // (i.e., a Mac widget)
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
 /**
  * @param aWidget the widget for aWidgetView; in some cases the widget
  * is being managed directly by the frame system, so aWidgetView->GetWidget()
@@ -611,33 +597,29 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
       childWidget->IsVisible(visible);
       nsWindowType type;
       childWidget->GetWindowType(type);
-      if (view && visible && !IsWidgetDrawnByPlugin(childWidget, view) &&
-          type != eWindowType_popup) {
-        // Don't mess with views that are in completely different view
-        // manager trees
+      if (view && visible && type != eWindowType_popup) {
+        NS_ASSERTION(type == eWindowType_plugin,
+                     "Only plugin or popup widgets can be children!");
         nsViewManager* viewManager = view->GetViewManager();
-        if (viewManager->RootViewManager() == RootViewManager()) {
-          // get the damage region into view's coordinate system and appunits
-          nsRegion damage =
-            ConvertRegionBetweenViews(intersection, aWidgetView, view);
 
-          // Update the child and it's children
-          viewManager->
-            UpdateWidgetArea(view, childWidget, damage, aIgnoreWidgetView);
+        // We do not need to invalidate in plugin widgets, but we should
+        // exclude them from the invalidation region IF we're not on
+        // Mac. On Mac we need to draw under plugin widgets, because
+        // plugin widgets are basically invisible
+#ifndef XP_MACOSX
+        // GetBounds should compensate for chrome on a toplevel widget
+        nsIntRect bounds;
+        childWidget->GetBounds(bounds);
 
-          // GetBounds should compensate for chrome on a toplevel widget
-          nsIntRect bounds;
-          childWidget->GetBounds(bounds);
-
-          nsTArray<nsIntRect> clipRects;
-          childWidget->GetWindowClipRegion(&clipRects);
-          for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
-            nsRect rr = (clipRects[i] + bounds.TopLeft()).
-              ToAppUnits(AppUnitsPerDevPixel());
-            children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
-            children.SimplifyInward(20);
-          }
+        nsTArray<nsIntRect> clipRects;
+        childWidget->GetWindowClipRegion(&clipRects);
+        for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+          nsRect rr = (clipRects[i] + bounds.TopLeft()).
+            ToAppUnits(AppUnitsPerDevPixel());
+          children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
+          children.SimplifyInward(20);
         }
+#endif
       }
     }
   }
@@ -1118,6 +1100,8 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent)
 
 void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
 {
+  NS_PRECONDITION(aNewWidget, "");
+
   if (aView->HasWidget()) {
     // Check to see if the parent widget is the
     // same as the new parent. If not then reparent
@@ -1125,13 +1109,18 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
     // to do for the view and its descendants
     nsIWidget* widget = aView->GetWidget();
     nsIWidget* parentWidget = widget->GetParent();
-    // Toplevel widgets should not be reparented!
-    if (parentWidget && parentWidget != aNewWidget) {
+    if (parentWidget) {
+      // Child widget
+      if (parentWidget != aNewWidget) {
 #ifdef DEBUG
-      nsresult rv =
+        nsresult rv =
 #endif
-        widget->SetParent(aNewWidget);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
+          widget->SetParent(aNewWidget);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
+      }
+    } else {
+      // Toplevel widget (popup, dialog, etc)
+      widget->ReparentNativeWidget(aNewWidget);
     }
     return;
   }

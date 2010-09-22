@@ -76,6 +76,7 @@
 #include "nsIDOM3Node.h"
 #include "nsContentPolicyUtils.h"
 #include "nsTArray.h"
+#include "nsContentErrors.h"
 
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
@@ -1107,7 +1108,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                               gAllowDataURIs,
                               nsIContentPolicy::TYPE_XBL,
                               aBoundDocument);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_XBL_BLOCKED);
 
     if (!IsSystemOrChromeURLPrincipal(aOriginPrincipal)) {
       // Also make sure that we're same-origin with the bound document
@@ -1116,12 +1117,12 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
           !SchemeIs(aBindingURI, "chrome")) {
         rv = aBoundDocument->NodePrincipal()->CheckMayLoad(aBindingURI,
                                                            PR_TRUE);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_XBL_BLOCKED);
       }
 
       // Finally check if this document is allowed to use XBL at all.
       NS_ENSURE_TRUE(aBoundDocument->AllowXULXBL(),
-                     NS_ERROR_NOT_AVAILABLE);
+                     NS_ERROR_XBL_BLOCKED);
     }
   }
 

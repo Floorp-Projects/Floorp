@@ -37,29 +37,23 @@ tabbrowser {
   min-width: 1px;
 }
 
-.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-text,
-.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-icon-image,
-.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-close-button {
+.tab-progress:not([fadein]):not([pinned]),
+.tab-label:not([fadein]):not([pinned]),
+.tab-icon-image:not([fadein]):not([pinned]),
+.tab-close-button:not([fadein]):not([pinned]) {
   opacity: 0 !important;
 }
 
-.tabbrowser-tab > .tab-text,
-.tabbrowser-tab > .tab-icon-image,
-.tabbrowser-tab > .tab-close-button {
+.tab-progress,
+.tab-label,
+.tab-icon-image,
+.tab-close-button {
   -moz-transition: opacity .25s;
 }
 
 .tabbrowser-tab[pinned] {
   position: fixed;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
-}
-
-.tabbrowser-tab[pinned] > .tab-text {
-  display: none;
-}
-
-.tabbrowser-tab[pinned] > .tab-icon-image {
-  vertical-align: middle;
 }
 
 #alltabs-popup {
@@ -148,14 +142,67 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
+#urlbar-progress {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
+}
+
 /* Some child nodes want to be ordered based on the locale's direction, while
    everything else should be ltr. */
-#urlbar:-moz-locale-dir(rtl) > .autocomplete-textbox-container > .textbox-input-box {
+.urlbar-input-box:-moz-locale-dir(rtl) {
   direction: rtl;
 }
 
-#urlbar html|*.autocomplete-textbox {
+html|*.urlbar-input {
   direction: ltr;
+}
+
+/* over-link in location bar */
+
+.urlbar-over-link-layer[overlinkstate="fade-in"],
+.urlbar-textbox-container:not([overlinkstate]) {
+  -moz-transition-property: color;
+  -moz-transition-duration: 150ms;
+  -moz-transition-delay: 50ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
+}
+
+.urlbar-textbox-container[overlinkstate="fade-in"],
+.urlbar-over-link-layer:not([overlinkstate]) {
+  -moz-transition-property: color;
+  -moz-transition-duration: 150ms;
+  -moz-transition-delay: 50ms;
+  -moz-transition-timing-function: linear;
+  color: transparent;
+}
+
+.urlbar-over-link-box[overlinkstate="fade-in"],
+.urlbar-textbox-container-children:not([overlinkstate]) {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  -moz-transition-delay: 50ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
+  opacity: 1;
+}
+
+.urlbar-textbox-container-children[overlinkstate="fade-in"],
+.urlbar-over-link-box:not([overlinkstate]) {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  -moz-transition-delay: 50ms;
+  -moz-transition-timing-function: linear;
+  opacity: 0;
+}
+
+.urlbar-textbox-container[overlinkstate="showing"] {
+  color: transparent;
+}
+
+.urlbar-over-link-box[overlinkstate="showing"] {
+  opacity: 1;
+}
+
+.urlbar-textbox-container-children[overlinkstate="showing"] {
+  opacity: 0;
 }
 
 /* For results that are actions, their description text is shown instead of
@@ -184,15 +231,6 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
 #urlbar-throbber:not([busy="true"]),
 #urlbar-throbber[busy="true"] + #page-proxy-favicon {
   display: none;
-}
-
-#feed-button > .button-box > .box-inherit > .button-text,
-#feed-button > .button-box > .button-menu-dropmarker {
-  display: none;
-}
-
-#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
-  direction: rtl;
 }
 
 #urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,

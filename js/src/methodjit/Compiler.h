@@ -60,6 +60,7 @@ class Compiler
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
     typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::AbsoluteAddress AbsoluteAddress;
     typedef JSC::MacroAssembler::BaseIndex BaseIndex;
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::JumpList JumpList;

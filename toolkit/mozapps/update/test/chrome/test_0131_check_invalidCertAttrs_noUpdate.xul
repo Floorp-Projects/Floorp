@@ -24,9 +24,10 @@
 const TESTS = [ {
   pageid: PAGEID_CHECKING
 }, {
-  pageid: PAGEID_ERROR_CERT_CHECK,
-  extraDelayedCheckFunction: checkCertErrorPage,
+  pageid: PAGEID_ERROR_EXTRA,
+  extraDelayedCheckFunction: checkErrorExtraPage,
   shouldBeHidden: false,
+  displayedTextElem: "errorCertCheckNoUpdateLabel",
   buttonClick: "finish"
 } ];
 

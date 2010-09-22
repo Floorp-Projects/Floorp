@@ -109,7 +109,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
 {
     if (nsnull == aTransferable)
     {
-        qDebug("nsClipboard::SetNativeClipboardData(): no transferable!");
+        NS_WARNING("nsClipboard::SetNativeClipboardData(): no transferable!");
         return NS_ERROR_FAILURE;
     }
 
@@ -120,7 +120,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
 
     if (NS_FAILED(rv))
     {
-        qDebug("nsClipboard::SetNativeClipboardData(): no FlavorsTransferable !");
+        NS_WARNING("nsClipboard::SetNativeClipboardData(): no FlavorsTransferable !");
         return NS_ERROR_FAILURE;
     }
 
@@ -264,7 +264,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
 {
     if (nsnull == aTransferable)
     {
-        qDebug("  GetNativeClipboardData: Transferable is null!");
+        NS_WARNING("GetNativeClipboardData: Transferable is null!");
         return NS_ERROR_FAILURE;
     }
 
@@ -276,8 +276,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
 
     if (NS_FAILED(errCode))
     {
-        qDebug("nsClipboard::GetNativeClipboardData(): no FlavorsTransferable %i !",
-               errCode);
+        NS_WARNING("nsClipboard::GetNativeClipboardData(): no FlavorsTransferable!");
         return NS_ERROR_FAILURE;
     }
 
@@ -539,7 +538,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
     }
     else
     {
-        qDebug("  nsClipboard::GetData(), aTransferable is NULL.");
+        NS_WARNING("nsClipboard::GetData(), aTransferable is NULL.");
     }
     return NS_ERROR_FAILURE;
 }

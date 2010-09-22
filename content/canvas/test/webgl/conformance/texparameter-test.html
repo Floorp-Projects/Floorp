@@ -11,7 +11,6 @@ found in the LICENSE file.
     <link rel="stylesheet" href="../resources/js-test-style.css"/>
     <script src="../resources/js-test-pre.js"></script>
     <script src="resources/webgl-test.js"> </script>
-    <script src="../../debug/webgl-debug.js"> </script>
 </head>
 <body>
 <canvas id="example" width="24" height="24"></canvas>
@@ -57,7 +56,6 @@ function init()
 
   gl = initWebGL("example", "vshader", "fshader", [ "vPosition", "texCoord0"],
                  [ 0, 0, 0, 1 ], 1);
-  gl = WebGLDebugUtils.makeDebugContext(gl);
 
   gl.disable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);

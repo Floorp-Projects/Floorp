@@ -719,6 +719,13 @@ XPC_NW_Construct(JSContext *cx, uintN argc, jsval *vp)
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
+  XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, JSID_VOID,
+                     argc, JS_ARGV(cx, vp), vp);
+  if(!ccx.IsValid())
+      return JS_FALSE;
+
+  JS_ASSERT(obj == ccx.GetFlattenedJSObject());
+
   nsresult rv = wrappedNative->GetScriptableInfo()->
     GetCallback()->Construct(wrappedNative, cx, obj, argc, JS_ARGV(cx, vp), vp,
                              &retval);
@@ -1028,7 +1035,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
   // Make sure our prototype chain is empty and that people can't mess
   // with XPCNativeWrapper.prototype.
   ::JS_SetPrototype(ccx, class_obj, nsnull);
-  if (!::JS_SealObject(ccx, class_obj, JS_FALSE)) {
+  if (!::JS_FreezeObject(ccx, class_obj)) {
     NS_WARNING("Failed to seal XPCNativeWrapper.prototype");
     return PR_FALSE;
   }

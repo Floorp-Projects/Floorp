@@ -434,12 +434,17 @@ function PropertyPanel(aParent, aDocument, aTitle, aObject, aButtons)
   });
 
   // Create the tree.
-  let tree = this.tree = createElement(aDocument, "tree", { flex: 1 });
+  let tree = this.tree = createElement(aDocument, "tree", {
+    flex: 1,
+    hidecolumnpicker: "true"
+  });
 
   let treecols = aDocument.createElement("treecols");
   appendChild(aDocument, treecols, "treecol", {
     primary: "true",
-    flex: 1
+    flex: 1,
+    hideheader: "true",
+    ignoreincolumnpicker: "true"
   });
   tree.appendChild(treecols);
 

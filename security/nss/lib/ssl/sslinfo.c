@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.23 2010/01/15 01:49:33 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslinfo.c,v 1.23.2.1 2010/09/02 01:13:46 wtc%google.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -60,6 +60,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     sslSocket *      ss;
     SSLChannelInfo   inf;
     sslSessionID *   sid;
+    PRBool           enoughFirstHsDone = PR_FALSE;
 
     if (!info || len < sizeof inf.length) { 
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -76,7 +77,14 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     memset(&inf, 0, sizeof inf);
     inf.length = PR_MIN(sizeof inf, len);
 
-    if (ss->opt.useSecurity && ss->firstHsDone) {
+    if (ss->firstHsDone) {
+	enoughFirstHsDone = PR_TRUE;
+    } else if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
+	       ssl3_CanFalseStart(ss)) {
+	enoughFirstHsDone = PR_TRUE;
+    }
+
+    if (ss->opt.useSecurity && enoughFirstHsDone) {
         sid = ss->sec.ci.sid;
 	inf.protocolVersion  = ss->version;
 	inf.authKeyBits      = ss->sec.authKeyBits;

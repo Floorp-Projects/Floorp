@@ -41,6 +41,9 @@
 #define mozilla_FileUtils_h
 namespace mozilla {
 
+/**
+ * AutoFDClose is a RAII wrapper for PRFileDesc.
+ **/
 class AutoFDClose
 {
 public:
@@ -59,6 +62,17 @@ public:
 private:
   PRFileDesc *mFD;
 };
+
+/**
+ * Fallocate efficiently and continuously allocates files via fallocate-type APIs.
+ * This is useful for avoiding fragmentation.
+ * On sucess the file be padded with zeros to grow to aLength.
+ *
+ * @param aFD file descriptor.
+ * @param aLength length of file to grow to.
+ * @return true on success.
+ */
+NS_COM_GLUE bool fallocate(PRFileDesc *aFD, PRInt64 aLength);
 
 } // namespace mozilla
 #endif

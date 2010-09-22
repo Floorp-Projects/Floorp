@@ -510,17 +510,28 @@ let Utils = {
 
     let data = converter.convertToByteArray(message, {});
     hasher.update(data, data.length);
-
-    // Convert each hashed byte into 2-hex strings then combine them
-    return [("0" + byte.charCodeAt().toString(16)).slice(-2) for each (byte in
-      hasher.finish(false))].join("");
+    return hasher.finish(false);
   },
 
-  sha1: function sha1(message) {
+  bytesAsHex: function bytesAsHex(bytes) {
+    // Convert each hashed byte into 2-hex strings then combine them
+    return [("0" + byte.charCodeAt().toString(16)).slice(-2)
+            for each (byte in bytes)].join("");
+  },
+
+  _sha1: function _sha1(message) {
     let hasher = Cc["@mozilla.org/security/hash;1"].
       createInstance(Ci.nsICryptoHash);
     hasher.init(hasher.SHA1);
     return Utils.digest(message, hasher);
+  },
+
+  sha1: function sha1(message) {
+    return Utils.bytesAsHex(Utils._sha1(message));
+  },
+
+  sha1Base32: function sha1Base32(message) {
+    return Utils.encodeBase32(Utils._sha1(message));
   },
 
   /**
@@ -530,7 +541,51 @@ let Utils = {
     let hasher = Cc["@mozilla.org/security/hmac;1"].
       createInstance(Ci.nsICryptoHMAC);
     hasher.init(hasher.SHA256, key);
-    return Utils.digest(message, hasher);
+    return Utils.bytesAsHex(Utils.digest(message, hasher));
+  },
+
+  /**
+   * Base32 encode (RFC 4648) a string
+   */
+  encodeBase32: function encodeBase32(bytes) {
+    const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    let quanta = Math.floor(bytes.length / 5);
+    let leftover = bytes.length % 5;
+
+    // Pad the last quantum with zeros so the length is a multiple of 5.
+    if (leftover) {
+      quanta += 1;
+      for (let i = leftover; i < 5; i++)
+        bytes += "\0";
+    }
+
+    // Chop the string into quanta of 5 bytes (40 bits). Each quantum
+    // is turned into 8 characters from the 32 character base.
+    let ret = "";
+    for (let i = 0; i < bytes.length; i += 5) {
+      let c = [byte.charCodeAt() for each (byte in bytes.slice(i, i + 5))];
+      ret += key[c[0] >> 3]
+           + key[((c[0] << 2) & 0x1f) | (c[1] >> 6)]
+           + key[(c[1] >> 1) & 0x1f]
+           + key[((c[1] << 4) & 0x1f) | (c[2] >> 4)]
+           + key[((c[2] << 1) & 0x1f) | (c[3] >> 7)]
+           + key[(c[3] >> 2) & 0x1f]
+           + key[((c[3] << 3) & 0x1f) | (c[4] >> 5)]
+           + key[c[4] & 0x1f];
+    }
+
+    switch (leftover) {
+      case 1:
+        return ret.slice(0, -6) + "======";
+      case 2:
+        return ret.slice(0, -4) + "====";
+      case 3:
+        return ret.slice(0, -3) + "===";
+      case 4:
+        return ret.slice(0, -1) + "=";
+      default:
+        return ret;
+    }
   },
 
   makeURI: function Weave_makeURI(URIString) {

@@ -1541,13 +1541,13 @@ extern JS_FRIEND_API(bool)
 StartTraceVis(const char* filename);
 
 extern JS_FRIEND_API(JSBool)
-StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);
+StartTraceVisNative(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(bool)
 StopTraceVis();
 
 extern JS_FRIEND_API(JSBool)
-StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);
+StopTraceVisNative(JSContext *cx, uintN argc, jsval *vp);
 
 /* Must contain no more than 16 items. */
 enum TraceVisState {

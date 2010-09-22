@@ -1,0 +1,5 @@
+i = immi -1
+d = ui2d i
+
+retd d
+

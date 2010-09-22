@@ -197,10 +197,7 @@ menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
   border: 1px solid transparent;
-  -moz-padding-end: 30px;
-  -moz-padding-start: 5px;
-  padding-top: 0;
-  padding-bottom: 0;
+  padding: 1px 5px;
   max-width: none;
   font: message-box;
   color: -moz-FieldText;

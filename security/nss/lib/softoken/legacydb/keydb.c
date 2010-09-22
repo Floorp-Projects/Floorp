@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.11 2009/02/03 05:34:44 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: keydb.c,v 1.11.22.1 2010/08/07 05:49:16 wtc%google.com Exp $ */
 
 #include "lowkeyi.h"
 #include "secasn1.h"
@@ -1245,10 +1245,6 @@ const SEC_ASN1Template lg_EncryptedDataInfoTemplate[] = {
         offsetof(LGEncryptedDataInfo,encryptedData) },
     { 0 }
 };
-static const unsigned char def_iter_data[] = { SEC_ASN1_INTEGER, 0x01, 0x01 };
-static const SECItem def_iter = { siBuffer , 
-				(unsigned char *)def_iter_data, 
-				sizeof(def_iter_data) };
 
 static SECItem *
 nsslowkey_EncodePW(SECOidTag alg, const SECItem *salt, SECItem *data)
@@ -1262,6 +1258,7 @@ nsslowkey_EncodePW(SECOidTag alg, const SECItem *salt, SECItem *data)
     SECStatus rv;
 
     param.salt = *salt;
+    param.iter.type = siBuffer;  /* encode as signed integer */
     param.iter.data = &one;
     param.iter.len = 1;
     edi.encryptedData = *data;
@@ -1297,6 +1294,7 @@ nsslowkey_DecodePW(const SECItem *derData, SECOidTag *alg, SECItem *salt)
     SECStatus rv;
 
     salt->data = NULL;
+    param.iter.type = siBuffer;  /* decode as signed integer */
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1312,9 +1310,6 @@ nsslowkey_DecodePW(const SECItem *derData, SECOidTag *alg, SECItem *salt)
     rv = SEC_QuickDERDecodeItem(arena, &param, NSSLOWPasswordParamTemplate,
 						&edi.algorithm.parameters);
     if (rv != SECSuccess) {
-	goto loser;
-    }
-    if (SECITEM_ItemsAreEqual(&param.iter, &def_iter) ) {
 	goto loser;
     }
     rv = SECITEM_CopyItem(NULL, salt, &param.salt);

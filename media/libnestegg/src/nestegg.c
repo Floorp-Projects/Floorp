@@ -1514,6 +1514,13 @@ nestegg_duration(nestegg * ctx, uint64_t * duration)
 }
 
 int
+nestegg_tstamp_scale(nestegg * ctx, uint64_t * scale)
+{
+  *scale = get_timecode_scale(ctx);
+  return 0;
+}
+
+int
 nestegg_track_count(nestegg * ctx, unsigned int * tracks)
 {
   *tracks = ctx->track_count;

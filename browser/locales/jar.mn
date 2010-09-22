@@ -11,7 +11,6 @@
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
 #endif
-    locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
@@ -76,6 +75,9 @@
     locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
     locale/browser/syncGenericChange.properties         (%chrome/browser/syncGenericChange.properties)
+    locale/browser/syncKey.dtd                  (%chrome/browser/syncKey.dtd)
+    locale/browser/syncQuota.dtd                (%chrome/browser/syncQuota.dtd)
+    locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 #endif
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)

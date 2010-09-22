@@ -45,6 +45,12 @@ function test() {
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
 
+  // clear the history of closed windows (that other tests have created)
+  // to avoid the issue in bug 596592
+  // XXX remove this when bug 597071 is fixed
+  while (ss.getClosedWindowCount())
+    ss.forgetClosedWindow(0);
+
   // backup our state
   let stateBackup = ss.getWindowState(window);
 

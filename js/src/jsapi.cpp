@@ -821,8 +821,8 @@ StartRequest(JSContext *cx)
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
    
-    if (t->requestDepth) {
-        t->requestDepth++;
+    if (t->data.requestDepth) {
+        t->data.requestDepth++;
     } else {
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
@@ -835,7 +835,14 @@ StartRequest(JSContext *cx)
 
         /* Indicate that a request is running. */
         rt->requestCount++;
-        t->requestDepth = 1;
+        t->data.requestDepth = 1;
+
+        /*
+         * Adjust rt->interruptCounter to reflect any interrupts added while the
+         * thread was suspended.
+         */
+        if (t->data.interruptFlags)
+            JS_ATOMIC_INCREMENT(&rt->interruptCounter);
 
         if (rt->requestCount == 1 && rt->activityCallback)
             rt->activityCallback(rt->activityCallbackArg, true);
@@ -847,9 +854,9 @@ StopRequest(JSContext *cx)
 {
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
-    JS_ASSERT(t->requestDepth != 0);
-    if (t->requestDepth != 1) {
-        t->requestDepth--;
+    JS_ASSERT(t->data.requestDepth != 0);
+    if (t->data.requestDepth != 1) {
+        t->data.requestDepth--;
     } else {
         LeaveTrace(cx);  /* for GC safety */
 
@@ -859,7 +866,14 @@ StopRequest(JSContext *cx)
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
 
-        t->requestDepth = 0;
+        t->data.requestDepth = 0;
+
+        /*
+         * Adjust rt->interruptCounter to reflect any interrupts added while the
+         * thread still had active requests.
+         */
+        if (t->data.interruptFlags)
+            JS_ATOMIC_DECREMENT(&rt->interruptCounter);
 
         js_ShareWaitingTitles(cx);
 
@@ -911,12 +925,12 @@ JS_SuspendRequest(JSContext *cx)
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
-    jsrefcount saveDepth = t->requestDepth;
+    jsrefcount saveDepth = t->data.requestDepth;
     if (!saveDepth)
         return 0;
 
     t->suspendCount++;
-    t->requestDepth = 1;
+    t->data.requestDepth = 1;
     StopRequest(cx);
     return saveDepth;
 #else
@@ -933,10 +947,10 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
     if (saveDepth == 0)
         return;
     JS_ASSERT(saveDepth >= 1);
-    JS_ASSERT(!t->requestDepth);
+    JS_ASSERT(!t->data.requestDepth);
     JS_ASSERT(t->suspendCount);
     StartRequest(cx);
-    t->requestDepth = saveDepth;
+    t->data.requestDepth = saveDepth;
     t->suspendCount--;
 #endif
 }
@@ -2993,51 +3007,44 @@ JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
+JS_IsExtensible(JSObject *obj)
+{
+    return obj->isExtensible();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_FreezeObject(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    /* Nothing to do if obj is already sealed. */
-    if (obj->sealed())
+    return obj->freeze(cx);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DeepFreezeObject(JSContext *cx, JSObject *obj)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    /* Assume that non-extensible objects are already deep-frozen, to avoid divergence. */
+    if (obj->isExtensible())
         return true;
 
-    if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
+    if (!obj->freeze(cx))
         return false;
-
-    if (!obj->isNative()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_CANT_SEAL_OBJECT,
-                             obj->getClass()->name);
-        return false;
-    }
-
-#ifdef JS_THREADSAFE
-    /* Insist on scope being used exclusively by cx's thread. */
-    JS_ASSERT(obj->title.ownercx == cx);
-#endif
-
-    /* XXX Enumerate lazy properties now, as they can't be added later. */
-    JSIdArray *ida = JS_Enumerate(cx, obj);
-    if (!ida)
-        return false;
-    JS_DestroyIdArray(cx, ida);
-
-    /* If not sealing an entire object graph, we're done after sealing obj. */
-    obj->seal(cx);
-    if (!deep)
-        return true;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
-    for (uint32 i = 0, n = obj->slotSpan(); i != n; ++i) {
+    for (uint32 i = 0, n = obj->slotSpan(); i < n; ++i) {
         const Value &v = obj->getSlot(i);
         if (i == JSSLOT_PRIVATE && (obj->getClass()->flags & JSCLASS_HAS_PRIVATE))
             continue;
         if (v.isPrimitive())
             continue;
-        if (!JS_SealObject(cx, &v.toObject(), deep))
+        if (!JS_DeepFreezeObject(cx, &v.toObject()))
             return false;
     }
+
     return true;
 }
 
@@ -3817,7 +3824,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 
     AutoIdVector props(cx);
     JSIdArray *ida;
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props) || !VectorToIdArray(cx, props, &ida))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
         return false;
     for (size_t n = 0; n < size_t(ida->length); ++n)
         JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
@@ -4896,22 +4903,10 @@ JS_GetOperationCallback(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx)
 {
-    /*
-     * We allow for cx to come from another thread. Thus we must deal with
-     * possible JS_ClearContextThread calls when accessing cx->thread. But we
-     * assume that the calling thread is in a request so JSThread cannot be
-     * GC-ed.
-     */
-    JSThreadData *td;
 #ifdef JS_THREADSAFE
-    JSThread *thread = cx->thread;
-    if (!thread)
-        return;
-    td = &thread->data;
-#else
-    td = JS_THREAD_DATA(cx);
+    AutoLockGC lock(cx->runtime);
 #endif
-    td->triggerOperationCallback();
+    TriggerOperationCallback(cx);
 }
 
 JS_PUBLIC_API(void)
@@ -5689,7 +5684,7 @@ JS_ClearContextThread(JSContext *cx)
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
-    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->requestDepth);
+    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->data.requestDepth);
    
     /*
      * We can access t->id as long as the GC lock is held and we cannot race

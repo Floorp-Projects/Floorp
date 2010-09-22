@@ -83,6 +83,12 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_ENABLE_MEEGOTOUCH
+# Meegotouch does not make sense without Qt,
+# so there's no need to check MOZ_WIDGET_TOOLKIT
+CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(MOZ_MEEGOTOUCH_CFLAGS)
+endif
+
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
 

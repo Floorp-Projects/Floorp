@@ -1,0 +1,53 @@
+; A few utility constants .
+sh0 = immi 0
+sh1 = immi 1
+sh2 = immi 2
+sh3 = immi 3
+sh4 = immi 4
+sh5 = immi 5
+sh6 = immi 6
+sh7 = immi 7
+sh8 = immi 8
+
+i0 = immi 0
+i1 = immi 1
+i2 = immi -1
+
+; ----------------------------------------------------------------------------
+; Combinations of 'geui'.
+ge0 = geui i0 i0 ; 1
+ge1 = geui i0 i1 ; 0
+ge2 = geui i0 i2 ; 0
+ge3 = geui i1 i0 ; 1
+ge4 = geui i1 i1 ; 1
+ge5 = geui i1 i2 ; 0
+ge6 = geui i2 i0 ; 1
+ge7 = geui i2 i1 ; 1
+ge8 = geui i2 i2 ; 1
+
+; Aggregate the results.
+ge0sh = lshi ge0 sh0
+ge1sh = lshi ge1 sh1
+ge2sh = lshi ge2 sh2
+ge3sh = lshi ge3 sh3
+ge4sh = lshi ge4 sh4
+ge5sh = lshi ge5 sh5
+ge6sh = lshi ge6 sh6
+ge7sh = lshi ge7 sh7
+ge8sh = lshi ge8 sh8
+
+ge0_1 = ori ge0sh ge1sh
+ge2_3 = ori ge2sh ge3sh
+ge4_5 = ori ge4sh ge5sh
+ge6_7 = ori ge6sh ge7sh
+
+ge0_3 = ori ge0_1 ge2_3
+ge4_7 = ori ge4_5 ge6_7
+
+ge0_7 = ori ge0_3 ge4_7
+
+ge = ori ge0_7 ge8sh
+
+; The result should be {0001,1101,1001}, 0x1d9, or 473.
+
+reti ge

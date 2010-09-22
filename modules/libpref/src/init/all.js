@@ -60,6 +60,11 @@ pref("general.warnOnAboutConfig", true);
 pref("browser.bookmarks.max_backups",       5);
 
 pref("browser.cache.disk.enable",           true);
+// Is this the first-time smartsizing has been introduced?
+pref("browser.cache.disk.smart_size.first_run", true);
+// Does the user want smart-sizing?
+pref("browser.cache.disk.smart_size.enabled", true);
+// Size explicitly set by the user. Used when smart_size.enabled == false
 #ifndef WINCE
 pref("browser.cache.disk.capacity",         256000);
 #else
@@ -798,12 +803,23 @@ pref("network.IDN.whitelist.vn", true);
 // IDN ccTLDs
 // ae, UAE, .<Emarat>
 pref("network.IDN.whitelist.xn--mgbaam7a8h", true); 
-// sa, Saudi Arabia, .<al-Saudiah>
-pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
-// ru, Russian Federation, .<RF>
-pref("network.IDN.whitelist.xn--p1ai", true);
+// cn, China, .<China> with variants
+pref("network.IDN.whitelist.xn--fiqz9s", true); // Traditional
+pref("network.IDN.whitelist.xn--fiqs8s", true); // Simplified
+// hk, Hong Kong, .<Hong Kong>
+pref("network.IDN.whitelist.xn--j6w193g", true);
 // jo, Jordan, .<Al-Ordon>
 pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+// ru, Russian Federation, .<RF>
+pref("network.IDN.whitelist.xn--p1ai", true);
+// sa, Saudi Arabia, .<al-Saudiah> with variants
+pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
+pref("network.IDN.whitelist.xn--mgberp4a5d4a87g", true);
+pref("network.IDN.whitelist.xn--mgbqly7c0a67fbc", true);
+pref("network.IDN.whitelist.xn--mgbqly7cvafr", true);
+// tw, Taiwan, <.Taiwan> with variants
+pref("network.IDN.whitelist.xn--kpry57d", true);  // Traditional
+pref("network.IDN.whitelist.xn--kprw13d", true);  // Simplified
 
 // gTLDs
 pref("network.IDN.whitelist.biz", true);
@@ -3167,11 +3183,22 @@ pref("image.mem.max_ms_before_yield", 400);
 pref("image.mem.max_bytes_for_sync_decode", 150000);
 
 // WebGL prefs
+// keep disabled on linux-x64 until bug 578877 is fixed
+#ifdef _AMD64_
+#ifdef MOZ_X11
+// MOZ_X11 && AMD64
 pref("webgl.enabled_for_all_sites", false);
+#else
+pref("webgl.enabled_for_all_sites", true);
+#endif
+#else
+pref("webgl.enabled_for_all_sites", true);
+#endif
 pref("webgl.shader_validator", true);
 pref("webgl.force_osmesa", false);
 pref("webgl.mochitest_native_gl", false);
 pref("webgl.osmesalib", "");
+pref("webgl.verbose", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
@@ -3184,9 +3211,6 @@ pref("network.tcp.sendbuffer", 131072);
 pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
-
-// Initialize default render-mode.
-pref("mozilla.widget.render-mode", -1);
 
 // Default value of acceleration for all widgets.
 #ifdef XP_WIN
@@ -3202,6 +3226,9 @@ pref("layers.accelerate-none", false);
 #ifndef WINCE
 // Whether to disable the automatic detection and use of direct2d.
 pref("gfx.direct2d.disabled", false);
+// Whether to attempt to enable Direct2D regardless of automatic detection or
+// blacklisting
+pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
 #endif

@@ -210,7 +210,7 @@ template <class EnumPolicy>
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
           bool enumerable, bool sharedPermanent, uintN flags, IdSet& ht,
-          typename EnumPolicy::ResultVector &props)
+          typename EnumPolicy::ResultVector *props)
 {
     IdSet::AddPtr p = ht.lookupForAdd(id);
     JS_ASSERT_IF(obj == pobj && !obj->isProxy(), !p);
@@ -243,7 +243,7 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
     }
 
     if (enumerable || (flags & JSITER_HIDDEN))
-        return EnumPolicy::append(cx, props, obj, id, flags);
+        return EnumPolicy::append(cx, *props, obj, id, flags);
 
     return true;
 }
@@ -251,11 +251,11 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 template <class EnumPolicy>
 static bool
 EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags, IdSet &ht,
-                          typename EnumPolicy::ResultVector &props)
+                          typename EnumPolicy::ResultVector *props)
 {
     JS_LOCK_OBJ(cx, pobj);
 
-    size_t initialLength = props.length();
+    size_t initialLength = props->length();
 
     /* Collect all unique properties from this object's scope. */
     for (Shape::Range r = pobj->lastProperty()->all(); !r.empty(); r.popFront()) {
@@ -270,7 +270,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
         }
     }
 
-    Reverse(props.begin() + initialLength, props.end());
+    Reverse(props->begin() + initialLength, props->end());
 
     JS_UNLOCK_OBJ(cx, pobj);
     return true;
@@ -279,7 +279,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
 template <class EnumPolicy>
 static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
-                              IdSet &ht, typename EnumPolicy::ResultVector &props)
+                              IdSet &ht, typename EnumPolicy::ResultVector *props)
 {
     if (!Enumerate<EnumPolicy>(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
                                flags, ht, props)) {
@@ -303,7 +303,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 
 template <class EnumPolicy>
 static bool
-Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultVector &props)
+Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultVector *props)
 {
     /*
      * FIXME: Bug 575997 - We won't need to initialize this hash table if
@@ -389,7 +389,7 @@ VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 }
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props)
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
     return Snapshot<KeyEnumeration>(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
 }
@@ -697,14 +697,14 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 
     if (flags & JSITER_FOREACH) {
         AutoValueVector vals(cx);
-        if (JS_LIKELY(obj != NULL) && !Snapshot<ValueEnumeration>(cx, obj, flags, vals))
+        if (JS_LIKELY(obj != NULL) && !Snapshot<ValueEnumeration>(cx, obj, flags, &vals))
             return false;
         JS_ASSERT(shapes.empty());
         if (!VectorToValueIterator(cx, obj, flags, vals, vp))
             return false;
     } else {
         AutoIdVector keys(cx);
-        if (JS_LIKELY(obj != NULL) && !Snapshot<KeyEnumeration>(cx, obj, flags, keys))
+        if (JS_LIKELY(obj != NULL) && !Snapshot<KeyEnumeration>(cx, obj, flags, &keys))
             return false;
         if (!VectorToKeyIterator(cx, obj, flags, keys, shapes.length(), key, vp))
             return false;

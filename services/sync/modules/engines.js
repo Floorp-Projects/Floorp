@@ -406,8 +406,7 @@ SyncEngine.prototype = {
 
     // Delete any existing data and reupload on bad version or missing meta
     if (meta == null) {
-      new Resource(this.engineURL).delete();
-      this._resetClient();
+      this.wipeServer(true);
 
       // Generate a new crypto record
       let symkey = Svc.Crypto.generateRandomKey();
@@ -783,5 +782,12 @@ SyncEngine.prototype = {
   _resetClient: function SyncEngine__resetClient() {
     this.resetLastSync();
     this.toFetch = [];
+  },
+
+  wipeServer: function wipeServer(ignoreCrypto) {
+    new Resource(this.engineURL).delete();
+    if (!ignoreCrypto)
+      new Resource(this.cryptoMetaURL).delete();
+    this._resetClient();
   }
 };
