@@ -245,6 +245,7 @@ MouseModule.prototype = {
       }
     }
 
+    this._longClickTimeout.clear();
     this._target = null;
 
     // Do pan
