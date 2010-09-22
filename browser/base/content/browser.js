@@ -7486,6 +7486,7 @@ let gPrivateBrowsingUI = {
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
+    let docElement = document.documentElement;
     if (this._privateBrowsingService.autoStarted) {
       // Disable the menu item in auto-start mode
       document.getElementById("privateBrowsingItem")
@@ -7496,15 +7497,16 @@ let gPrivateBrowsingUI = {
 #endif
       document.getElementById("Tools:PrivateBrowsing")
               .setAttribute("disabled", "true");
+      if (window.location.href == getBrowserURL())
+        docElement.setAttribute("privatebrowsingmode", "permanent");
     }
     else if (window.location.href == getBrowserURL()) {
       // Adjust the window's title
-      let docElement = document.documentElement;
       docElement.setAttribute("title",
         docElement.getAttribute("title_privatebrowsing"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing"));
-      docElement.setAttribute("browsingmode", "private");
+      docElement.setAttribute("privatebrowsingmode", "temporary");
       gBrowser.updateTitlebar();
     }
 
@@ -7551,7 +7553,7 @@ let gPrivateBrowsingUI = {
         docElement.getAttribute("title_normal"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_normal"));
-      docElement.setAttribute("browsingmode", "normal");
+      docElement.removeAttribute("privatebrowsingmode");
     }
 
     // Enable the menu item in after exiting the auto-start mode
