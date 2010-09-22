@@ -315,7 +315,6 @@ function Content() {
   this._progressController.start();
 
   this._formAssistant = new FormAssistant();
-  this._contextTimeout = new Util.Timeout();
 }
 
 Content.prototype = {
@@ -375,9 +374,7 @@ Content.prototype = {
         }
         break;
 
-      case "Browser:MouseDown":
-        this._contextTimeout.clear();
-
+      case "Browser:MouseDown": {
         let element = elementFromPoint(x, y);
         if (!element)
           return;
@@ -387,12 +384,11 @@ Content.prototype = {
           sendAsyncMessage("Browser:Highlight", { rects: rects });
         }
 
-        this._contextTimeout.once(500, function() {
-          let event = content.document.createEvent("PopupEvents");
-          event.initEvent("contextmenu", true, true);
-          element.dispatchEvent(event);
-        });
+        let event = content.document.createEvent("PopupEvents");
+        event.initEvent("contextmenu", true, true);
+        element.dispatchEvent(event);
         break;
+      }
 
       case "Browser:MouseUp": {
         let element = elementFromPoint(x, y);
@@ -410,7 +406,6 @@ Content.prototype = {
       }
 
       case "Browser:MouseCancel":
-        this._contextTimeout.clear();
         break;
 
       case "Browser:SaveAs":
@@ -497,7 +492,6 @@ Content.prototype = {
   },
 
   startLoading: function startLoading() {
-    this._contextTimeout.clear();
     this._loading = true;
   },
 
