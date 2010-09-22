@@ -573,6 +573,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
+
+    env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
     return env
 
   if IS_WIN32:
