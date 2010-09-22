@@ -145,8 +145,6 @@ function onDebugKeyPress(ev) {
   }
 }
 
-var ih = null;
-
 var Browser = {
   _tabs : [],
   _selectedTab : null,
@@ -175,8 +173,12 @@ var Browser = {
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
     let inputHandlerOverlay = document.getElementById("inputhandler-overlay");
-    let keySender = new ContentCustomKeySender(inputHandlerOverlay);
     inputHandlerOverlay.customDragger = new Browser.MainDragger();
+
+    let keySender = new ContentCustomKeySender(inputHandlerOverlay);
+    let mouseModule = new MouseModule();
+    let gestureModule = new GestureModule();
+    let scrollWheelModule = new ScrollwheelModule(inputHandlerOverlay);
 
     ContentTouchHandler.init();
 
@@ -281,9 +283,6 @@ var Browser = {
     notifications.addEventListener("AlertClose", notificationHandler, false);
 
     BrowserUI.init();
-
-    // initialize input handling
-    ih = new InputHandler(inputHandlerOverlay);
 
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
