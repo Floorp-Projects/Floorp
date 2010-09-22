@@ -88,6 +88,7 @@
  
       <preference id="browser.cache.disk.smart_size.enabled"
                   name="browser.cache.disk.smart_size.enabled"
+                  inverted="true"
                   type="bool"/>
  
      <!-- Update tab -->
@@ -243,16 +244,18 @@
             <checkbox preference="browser.cache.disk.smart_size.enabled"
                       id="allowSmartSize" flex="1"
                       onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
-                      label="&smartSizeCache.label;" accesskey="&smartSizeCache.accesskey;"/>
+                      label="&overrideSmartCacheSize.label;" 
+                      accesskey="&overrideSmartCacheSize.accesskey;"/>
             <hbox align="center" class="indent">
               <label id="useCacheBefore" control="cacheSize"
-                     accesskey="&useCacheBefore.accesskey;" value="&useCacheBefore.label;"/>
+                     accesskey="&limitCacheSizeBefore.accesskey;" 
+                     value="&limitCacheSizeBefore.label;"/>
               <textbox id="cacheSize" type="number" size="4" max="1024"
                        preference="browser.cache.disk.capacity"
                        onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                        onsynctopreference="return gAdvancedPane.writeCacheSize();"
                        aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
-              <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
+              <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
             </hbox>
             <hbox align="center">
               <checkbox id="offlineNotify" flex="1"
