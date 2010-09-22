@@ -404,6 +404,11 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/settings-open-rtl-64.png");
 }
 
+/* browsers ---------------------------------------------------------------- */
+#tile-stack > div:-moz-focusring {
+  outline: 0 !important;
+}
+
 /* browser tools panel UI   ------------------------------------------------ */
 @media (min-width: 500px) {
   #panel-container {
