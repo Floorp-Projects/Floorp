@@ -364,13 +364,13 @@ MouseModule.prototype = {
         break;
       case "contextmenu":
         if (ContextHelper.popupState && this._dragData.dragging)
-          this._doDragStop(0, 0, true);
+          this._doDragStop();
         break;
       case "MozMagnifyGestureStart":
       case "MozMagnifyGesture":
         // disallow kinetic panning after gesture
         if (this._dragData.dragging)
-          this._doDragStop(0, 0, true);
+          this._doDragStop();
         break;
       case "MozBeforePaint":
         this._waitingForPaint = false;
@@ -426,7 +426,7 @@ MouseModule.prototype = {
     if (dragData.dragging) {
       // Somehow a mouse up was missed.
       let [sX, sY] = dragData.panPosition();
-      this._doDragStop(sX, sY, !dragData.isPan());
+      this._doDragStop();
     }
     dragData.reset();
 
@@ -487,7 +487,7 @@ MouseModule.prototype = {
     if (dragData.dragging) {
       dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
       let [sX, sY] = dragData.panPosition();
-      this._doDragStop(sX, sY, !dragData.isPan());
+      this._doDragStop();
     }
 
     if (this._targetIsContent(aEvent)) {
@@ -538,7 +538,7 @@ MouseModule.prototype = {
         this._owner.grab(this);
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
         let [sX, sY] = dragData.panPosition();
-        this._doDragMove(sX, sY);
+        this._doDragMove();
 
         // Let clicker know when mousemove begins a pan
         let clicker = this._clicker;
@@ -567,38 +567,30 @@ MouseModule.prototype = {
       this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
   },
 
-  /**
-   * Finish a drag.  The third parameter is a secret one used to distinguish
-   * between the supposed end of drag caused by a mouseup and the real end
-   * of drag which happens when KineticController::end() is called.
-   */
-  _doDragStop: function _doDragStop(sX, sY, kineticStop) {
-    let dragData = this._dragData;
-    dragData.endDrag();
+  /** Finish a drag. */
+  _doDragStop: function _doDragStop() {
+    this._dragData.endDrag();
 
-    if (!kineticStop) {
-      // we're not really done, since now it is kinetic's turn to scroll about
+    let dragData = this._dragData;
+    if (!dragData.isPan()) {
+      // There was no pan, so just stop dragger.
+      this._dragger.dragStop(0, 0, this._targetScrollInterface);
+    } else {
+      // Start kinetic pan.
+      let [sX, sY] = dragData.panPosition();
       let dX = dragData.prevPanX - sX;
       let dY = dragData.prevPanY - sY;
       this._kinetic.addData(-dX, -dY);
       this._kinetic.start();
-    } else {
-      // now we're done, says our secret 3rd argument
-      this._dragger.dragStop(0, 0, this._targetScrollInterface);
-
-      if (dragData.isPan()) {
-        let event = document.createEvent("Events");
-        event.initEvent("PanFinished", true, false);
-        this._browserViewContainer.dispatchEvent(event);
-      }
     }
   },
 
   /**
    * Update kinetic with new data and drag.
    */
-  _doDragMove: function _doDragMove(sX, sY) {
+  _doDragMove: function _doDragMove() {
     let dragData = this._dragData;
+    let [sX, sY] = dragData.panPosition();
     let dX = dragData.prevPanX - sX;
     let dY = dragData.prevPanY - sY;
     this._kinetic.addData(-dX, -dY);
@@ -624,9 +616,14 @@ MouseModule.prototype = {
 
   /** Callback for kinetic scroller. */
   _kineticStop: function _kineticStop() {
-    let dragData = this._dragData;
-    if (!dragData.dragging)
-      this._doDragStop(0, 0, true);
+    // Kinetic panning could finish while user is panning, so don't finish
+    // the pan just yet.
+    if (!dragData.dragging && !dragData.isPan()) {
+      this._dragger.dragStop(0, 0, this._targetScrollInterface);
+      let event = document.createEvent("Events");
+      event.initEvent("PanFinished", true, false);
+      document.dispatchEvent(event);
+    }
   },
 
   /**
@@ -1121,9 +1118,11 @@ KineticController.prototype = {
   },
 
   end: function end() {
-    if (this._beforeEnd)
-      this._beforeEnd();
-    this._reset();
+    if (this.isActive()) {
+      if (this._beforeEnd)
+        this._beforeEnd();
+      this._reset();
+    }
   },
 
   addData: function addData(dx, dy) {
@@ -1300,11 +1299,16 @@ GestureModule.prototype = {
   },
 
   _pinchStart: function _pinchStart(aEvent) {
-    // start gesture if it's not taking place already, or over a XUL element
-    if (this._pinchZoom || (aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom)
+    if (this._pinchZoom)
       return;
 
+    // grab events during pinch, stopping other mouse events in their tracks
     this._owner.grab(this);
+
+    if ((aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom) {
+      this._owner.ungrab(this);
+      return;
+    }
 
     // hide element highlight
     // XXX ugh, this is awful. None of this code should be in InputHandler.
