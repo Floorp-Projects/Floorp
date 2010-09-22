@@ -52,6 +52,7 @@
 #   Gavin Sharp <gavin@gavinsharp.com>
 #   Justin Dolske <dolske@mozilla.com>
 #   Rob Campbell <rcampbell@mozilla.com>
+#   David Dahl <ddahl@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -7993,7 +7994,21 @@ XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
   }
 });
 
-/* duplicateTabIn duplicates tab in a place specified by the parameter |where|.
+// Prompt user to restart the browser in safe mode 
+function safeModeRestart()
+{
+  // prompt the user to confirm 
+  let promptTitle = gNavigatorBundle.getString("safeModeRestartPromptTitle");
+  let promptMessage = 
+    gNavigatorBundle.getString("safeModeRestartPromptMessage");
+  let rv = Services.prompt.confirm(window, promptTitle, promptMessage);
+  if (rv) {
+    let environment = Components.classes["@mozilla.org/process/environment;1"].
+      getService(Components.interfaces.nsIEnvironment);
+    environment.set("MOZ_SAFE_MODE_RESTART", "1");
+    Application.restart();
+  }
+}/* duplicateTabIn duplicates tab in a place specified by the parameter |where|.
  *
  * |where| can be:
  *  "tab"         new tab
