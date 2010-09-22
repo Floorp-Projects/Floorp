@@ -46,7 +46,7 @@
 const kDoubleClickInterval = 400;
 
 // Amount of time to wait before tap becomes long tap
-const kLongTapWait = 700;
+const kLongTapWait = 500;
 
 // If a tap lasts longer than this duration in ms, treat it as a single-tap
 // immediately instead of waiting for a possible double tap.
@@ -581,7 +581,7 @@ MouseModule.prototype = {
     let ev = this._downUpEvents[0];
 
     let event = document.createEvent("Events");
-    event.initEvent("LongTap", true, false);
+    event.initEvent("TapLong", true, false);
     event.clientX = ev.clientX;
     event.clientY = ev.clientY;
     ev.target.dispatchEvent(event);

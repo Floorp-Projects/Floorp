@@ -417,7 +417,6 @@ var BrowserUI = {
 
     messageManager.addMessageListener("Browser:Highlight", this);
     messageManager.addMessageListener("Browser:OpenURI", this);
-    messageManager.addMessageListener("Browser:ContextMenu", ContextHelper);
     messageManager.addMessageListener("Browser:SaveAs:Return", this);
 
     // listening mousedown for automatically dismiss some popups (e.g. larry)
@@ -2369,11 +2368,7 @@ var ContextHelper = {
     return this._popup = document.getElementById("context-popup");
   },
 
-  showPopup: function ch_showPopup(aData) {
-    this.receiveMessage(aData);
-  },
-
-  receiveMessage: function ch_receiveMessage(aMessage) {
+  showPopup: function ch_showPopup(aMessage) {
     this.popupState = aMessage.json;
     this.popupState.target = aMessage.target;
 
@@ -2398,7 +2393,7 @@ var ContextHelper = {
 
     if (!first) {
       this.popupState = null;
-      return;
+      return false;
     }
 
     // Allow the first and last *non-hidden* elements to be selected in CSS.
@@ -2413,6 +2408,7 @@ var ContextHelper = {
 
     this.sizeToContent();
     BrowserUI.pushPopup(this, [this._popup]);
+    return true;
   },
 
   hide: function ch_hide() {
