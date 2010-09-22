@@ -283,7 +283,7 @@ InputHandler.prototype = {
  * to drag scrollable elements).
  *
  * The MouseModule grabs event focus of the input handler on mousedown, at which
- * point it will attempt to find such custom draggers/clickers by walking up the
+ * point it will attempt to find such custom draggers by walking up the
  * DOM tree from the event target.  It ungrabs event focus on mouseup.  It
  * redispatches the swallowed mousedown, mouseup events back to chrome, so that
  * chrome elements still get their events.
@@ -312,21 +312,11 @@ InputHandler.prototype = {
  * Between mousedown and mouseup, MouseModule incrementally drags and updates
  * the dragger accordingly, and also determines whether a [double-]click occured
  * (based on whether the input moves have moved outside of a certain drag disk
- * centered at the mousedown position).  If a [double-]click happened, any
- * customClicker will be notified.  The customClicker must support the following
- * interface:
- *
- *   singleClick(cx, cy, modifiers)
- *     Signals a single (as opposed to double) click occured at client
- *     coordinates cx, cy.  Specify optional modifiers to include
- *     shift-keys with click.
- *
- *   doubleClick(cx1, cy1, cx2, cy2)
- *     Signals a doubleclick occured, with the first click at client coordinates
- *     cx1, cy1, and second click at client coordinates cx2, cy2.
+ * centered at the mousedown position). Custom touch events are dispatched
+ * accordingly.
  *
  * There is a default dragger in case a scrollable element is dragged --- see
- * the defaultDragger prototype property.  There is no default clicker.
+ * the defaultDragger prototype property.
  */
 function MouseModule(owner, browserViewContainer) {
   this._owner = owner;
@@ -334,7 +324,6 @@ function MouseModule(owner, browserViewContainer) {
   this._dragData = new DragData(kTapRadius);
 
   this._dragger = null;
-  this._clicker = null;
 
   this._downUpEvents = [];
   this._targetScrollInterface = null;
@@ -399,15 +388,7 @@ MouseModule.prototype = {
     this._cleanClickBuffer();
   },
 
-  /**
-   * Handle a mousedown by stopping any lingering kinetic drag, walking DOM tree
-   * in search of a scrollable element (and its custom dragger if available) and
-   * a clicker, and initiating a drag if we have said scrollable element.  The
-   * mousedown event is entirely swallowed but is saved for later redispatching,
-   * once we know right and proper what the input is trying to do to us.
-   *
-   * We grab() in here.
-   */
+  /** Begin possible pan and send tap down event. */
   _onMouseDown: function _onMouseDown(aEvent) {
     this._owner.allowClicks();
 
@@ -428,46 +409,31 @@ MouseModule.prototype = {
     if (this._kinetic.isActive() && this._dragger != dragger)
       this._kinetic.end();
 
-    let targetClicker = this.getClickerFromElement(aEvent.target);
-
     this._targetScrollInterface = targetScrollInterface;
     this._dragger = dragger;
-    this._clicker = (targetClicker) ? targetClicker.customClicker : null;
     this._target = aEvent.target;
 
-    if (this._clicker)
-      this._clicker.mouseDown(aEvent.clientX, aEvent.clientY);
+    if (this._targetIsContent(aEvent)) {
+      let event = document.createEvent("Events");
+      event.initEvent("TapDown", true, false);
+      event.clientX = aEvent.clientX;
+      event.clientY = aEvent.clientY;
+      aEvent.target.dispatchEvent(event);
+
+      this._recordEvent(aEvent);
+    } else {
+      // cancel all pending content clicks
+      this._cleanClickBuffer();
+    }
 
     if (this._dragger) {
       let draggable = this._dragger.isDraggable(targetScrollbox, targetScrollInterface);
       if (draggable.x || draggable.y)
         this._doDragStart(aEvent);
     }
-
-    if (this._targetIsContent(aEvent)) {
-      this._recordEvent(aEvent);
-    }
-    else {
-      // cancel all pending content clicks
-      this._cleanClickBuffer();
-
-      if (this._dragger) {
-        // do not allow axis locking if panning is only possible in one direction
-        let draggable = this._dragger.isDraggable(targetScrollbox, targetScrollInterface);
-        dragData.locked = !draggable.x || !draggable.y;
-      }
-    }
   },
 
-  /**
-   * Handle a mouseup by swallowing the event (just as we did the mousedown) as
-   * well as the possible DOM click event that follows, making one last drag
-   * (which, do note, might just be the beginning of a kinetic drag that will
-   * linger long after we are gone), and recording the mousedown for later
-   * redispatching.
-   *
-   * We ungrab() in here.
-   */
+  /** Send tap up event and any necessary full taps. */
   _onMouseUp: function _onMouseUp(aEvent) {
     let dragData = this._dragData;
     let oldIsPan = dragData.isPan();
@@ -478,16 +444,22 @@ MouseModule.prototype = {
     }
 
     if (this._targetIsContent(aEvent)) {
+      if (this._dragger) {
+        let event = document.createEvent("Events");
+        event.initEvent("TapUp", true, false);
+        event.clientX = aEvent.clientX
+        event.clientY = aEvent.clientY;
+        aEvent.target.dispatchEvent(event);
+      }
+
       // User possibly clicked on something in content
       this._recordEvent(aEvent);
-      let commitToClicker = this._clicker && dragData.isClick() && (this._downUpEvents.length > 1);
+      let commitToClicker = dragData.isClick() && (this._downUpEvents.length > 1);
       if (commitToClicker)
         // commit this click to the doubleclick timewait buffer
         this._commitAnotherClick();
       else
-        // clean the click buffer ourselves, since there was no clicker
-        // to commit to.  when there is one, the path taken through
-        // _commitAnotherClick takes care of this.
+        // clean the click buffer ourselves
         this._cleanClickBuffer();
     }
     else if (dragData.isPan()) {
@@ -497,14 +469,13 @@ MouseModule.prototype = {
       let generatesClick = aEvent.detail;
       if (generatesClick)
         this._owner.suppressNextClick();
-    }
 
-    let clicker = this._clicker;
-    if (clicker) {
-      // Let clicker know when mousemove begins a pan
-      if (!oldIsPan && dragData.isPan())
-        clicker.panBegin();
-      clicker.mouseUp(aEvent.clientX, aEvent.clientY);
+      // Pan has begun
+      if (!oldIsPan) {
+        let event = document.createEvent("Events");
+        event.initEvent("PanBegin", true, false);
+        document.dispatchEvent(event);
+      }
     }
 
     this._owner.ungrab(this);
@@ -527,10 +498,12 @@ MouseModule.prototype = {
         let [sX, sY] = dragData.panPosition();
         this._doDragMove();
 
-        // Let clicker know when mousemove begins a pan
-        let clicker = this._clicker;
-        if (!oldIsPan && clicker)
-          clicker.panBegin();
+        // Let everyone know when mousemove begins a pan
+        if (!oldIsPan && dragData.isPan()) {
+          let event = document.createEvent("Events");
+          event.initEvent("PanBegin", true, false);
+          aEvent.target.dispatchEvent(event);
+        }
       }
     }
   },
@@ -616,9 +589,8 @@ MouseModule.prototype = {
   /**
    * Commit another click event to our click buffer.  The `click buffer' is a
    * timeout initiated by the first click.  If the timeout is still alive when
-   * another click is committed, then the click buffer forms a double click, and
-   * the timeout is cancelled.  Otherwise, the timeout issues a single click to
-   * the clicker.
+   * another click is committed, then the click buffer forms a double tap, and
+   * the timeout is cancelled.  Otherwise, the timeout issues a single tap.
    */
   _commitAnotherClick: function _commitAnotherClick() {
     if (this._singleClickTimeout.isPending()) {   // we're waiting for a second click for double
@@ -629,9 +601,7 @@ MouseModule.prototype = {
     }
   },
 
-  /**
-   * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
-   */
+  /** Endpoint of _commitAnotherClick().  Finalize a single tap.  */
   _doSingleClick: function _doSingleClick() {
     let ev = this._downUpEvents[1];
     this._cleanClickBuffer();
@@ -642,19 +612,29 @@ MouseModule.prototype = {
       (ev.ctrlKey  ? Ci.nsIDOMNSEvent.CONTROL_MASK : 0) |
       (ev.shiftKey ? Ci.nsIDOMNSEvent.SHIFT_MASK   : 0) |
       (ev.metaKey  ? Ci.nsIDOMNSEvent.META_MASK    : 0);
-    this._clicker.singleClick(ev.clientX, ev.clientY, modifiers);
+
+    let event = document.createEvent("Events");
+    event.initEvent("TapSingle", true, false);
+    event.clientX = ev.clientX;
+    event.clientY = ev.clientY;
+    event.modifiers = modifiers;
+    ev.target.dispatchEvent(event);
   },
 
-  /**
-   * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
-   */
+  /** Endpoint of _commitAnotherClick().  Finalize a double tap.  */
   _doDoubleClick: function _doDoubleClick() {
     let mouseUp1 = this._downUpEvents[1];
     // sometimes the second press event is not dispatched at all
     let mouseUp2 = this._downUpEvents[Math.min(3, this._downUpEvents.length - 1)];
     this._cleanClickBuffer();
-    this._clicker.doubleClick(mouseUp1.clientX, mouseUp1.clientY,
-                              mouseUp2.clientX, mouseUp2.clientY);
+
+    let event = document.createEvent("Events");
+    event.initEvent("TapDouble", true, false);
+    event.clientX1 = mouseUp1.clientX;
+    event.clientY1 = mouseUp1.clientY;
+    event.clientX2 = mouseUp1.clientX;
+    event.clientY2 = mouseUp1.clientY;
+    mouseUp1.target.dispatchEvent(event);
   },
 
   /**
@@ -759,23 +739,10 @@ MouseModule.prototype = {
     return [scrollbox, qinterface, (scrollbox ? (scrollbox.customDragger || this._defaultDragger) : null)];
   },
 
-  /**
-   * Walk up (parentward) the DOM tree from elem in search of an element with
-   * a customClicker.  Return the element if found, null elsewise.
-   */
-  getClickerFromElement: function getClickerFromElement(elem) {
-    for (; elem; elem = elem.parentNode)
-      if (elem.customClicker)
-        break;
-
-    return (elem) ? elem : null;
-  },
-
   toString: function toString() {
     return '[MouseModule] {'
       + '\n\tdragData=' + this._dragData + ', '
       + 'dragger=' + this._dragger + ', '
-      + 'clicker=' + this._clicker + ', '
       + '\n\tdownUpEvents=' + this._downUpEvents + ', '
       + 'length=' + this._downUpEvents.length + ', '
       + '\n\ttargetScroller=' + this._targetScrollInterface + ', '
@@ -1128,13 +1095,6 @@ function KeyModule(owner, browserViewContainer) {
 }
 
 KeyModule.prototype = {
-  getClickerFromElement: function getClickerFromElement(elem) {
-    for (; elem; elem = elem.parentNode)
-      if (elem.customKeySender)
-        break;
-    return (elem) ? elem : null;
-  },
-
   handleEvent: function handleEvent(aEvent) {
     if (aEvent.type == "keydown" || aEvent.type == "keyup" || aEvent.type == "keypress") {
       let keyer = this._browserViewContainer.customKeySender;
@@ -1288,10 +1248,6 @@ GestureModule.prototype = {
       this._owner.ungrab(this);
       return;
     }
-
-    // hide element highlight
-    // XXX ugh, this is awful. None of this code should be in InputHandler.
-    document.getElementById("inputhandler-overlay").customClicker.panBegin();
 
     // create the AnimatedZoom object for fast arbitrary zooming
     this._pinchZoom = AnimatedZoom;
