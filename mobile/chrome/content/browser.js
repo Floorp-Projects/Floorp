@@ -1273,6 +1273,12 @@ const ContentTouchHandler = {
   },
 
   handleEvent: function handleEvent(ev) {
+    if (!this._targetIsContent(ev)) {
+      TapHighlightHelper.hide();
+      this._dispatchMouseEvent("Browser:MouseCancel");
+      return;
+    }
+
     switch (ev.type) {
       case "TapDown":
         this.tapDown(ev.clientX, ev.clientY);
@@ -1290,6 +1296,14 @@ const ContentTouchHandler = {
         this.panBegin();
         break;
     }
+  },
+
+  /**
+   * Check if the event concern the browser content
+   */
+  _targetIsContent: function _targetIsContent(aEvent) {
+    let target = aEvent.target;
+    return target && target.id == "inputhandler-overlay";
   },
 
   _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
@@ -1319,7 +1333,6 @@ const ContentTouchHandler = {
 
   panBegin: function panBegin() {
     TapHighlightHelper.hide(0);
-
     this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
