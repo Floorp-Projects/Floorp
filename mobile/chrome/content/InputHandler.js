@@ -331,7 +331,7 @@ InputHandler.prototype = {
 function MouseModule(owner, browserViewContainer) {
   this._owner = owner;
   this._browserViewContainer = browserViewContainer;
-  this._dragData = new DragData(this, kTapRadius);
+  this._dragData = new DragData(kTapRadius);
 
   this._dragger = null;
   this._clicker = null;
@@ -811,8 +811,7 @@ MouseModule.prototype = {
  * DragData handles processing drags on the screen, handling both
  * locking of movement on one axis, and click detection.
  */
-function DragData(owner, dragRadius) {
-  this._owner = owner;
+function DragData(dragRadius) {
   this._dragRadius = dragRadius;
   this._domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
   this.reset();
