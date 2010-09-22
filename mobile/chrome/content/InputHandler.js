@@ -62,63 +62,6 @@ const kAxisLockRevertThreshold = 200;
 const kStateActive = 0x00000001;
 
 /**
- * InputHandler
- *
- * The input handler is an arbiter between the Fennec chrome window inputs and any
- * registered input modules.  It keeps an array of input module objects.  Incoming
- * input events are wrapped in an EventInfo object and passed down to the input modules
- * in the order of the modules array.  Every registed module thus gets called with
- * an EventInfo for each event that the InputHandler is registered to listen for.
- * Currently, the InputHandler listens for the following events by default.
- *
- * Input modules must provide the following interface:
- *
- *   handleEvent(nsIDOMEvent)
- *     Entry point by which InputHandler passes Fennec chrome window events
- *     to the module.
- */
-function InputHandler(container) {
-  /* the list of modules that will handle input */
-  this._modules = [];
-
-  new MouseModule();
-  new GestureModule();
-  new ScrollwheelModule(container);
-}
-
-
-InputHandler.prototype = {
-  /**
-   * Add a module.  Module priority is first come, first served, so modules
-   * added later have lower priority.
-   */
-  addModule: function addModule(m) {
-    this._modules.push(m);
-  },
-
-  /**
-   * InputHandler's DOM event handler.
-   */
-  handleEvent: function handleEvent(aEvent) {
-    aEvent.time = Date.now();
-    this._passToModules(aEvent);
-  },
-
-  /**
-   * Utility method for passing an EventInfo to the handlers of all modules beginning
-   * with the module at index skipToIndex and increasing (==> decreasing in priority).
-   */
-  _passToModules: function _passToModules(aEvent, aSkipToIndex) {
-    let mods = this._modules;
-    let i = aSkipToIndex || 0;
-
-    for (let len = mods.length; i < len; ++i) {
-      mods[i].handleEvent(aEvent);
-    }
-  }
-};
-
-/**
  * MouseModule
  *
  * Handles all touch-related input such as dragging and tapping.
