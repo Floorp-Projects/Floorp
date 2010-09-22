@@ -83,7 +83,7 @@
   <script type="application/javascript" src="chrome://browser/content/downloads.js"/>
   <script type="application/javascript" src="chrome://browser/content/console.js"/>
   <script type="application/javascript" src="chrome://browser/content/Util.js"/>
-  <script type="application/javascript" src="chrome://browser/content/InputHandler.js"/>
+  <script type="application/javascript" src="chrome://browser/content/input.js"/>
   <script type="application/javascript" src="chrome://browser/content/AnimatedZoom.js"/>
 #ifdef MOZ_SERVICES_SYNC
   <script type="application/javascript" src="chrome://browser/content/sync.js"/>
