@@ -1288,6 +1288,10 @@ const ContentTouchHandler = {
   },
 
   handleEvent: function handleEvent(ev) {
+    // ignore content events we generate
+    if (ev.target.localName == "browser")
+      return;
+
     if (!this._targetIsContent(ev)) {
       TapHighlightHelper.hide();
       this._dispatchMouseEvent("Browser:MouseCancel");
@@ -1395,10 +1399,12 @@ const ContentTouchHandler = {
 
   tapLong: function tapLong() {
     if (this._contextMenu) {
-      TapHighlightHelper.hide();
-      if (ContextHelper.showPopup(this._contextMenu))
+      if (ContextHelper.showPopup(this._contextMenu)) {
         // Stop all input sequences
-        ih.cancelPending();
+        let event = document.createEvent("Events");
+        event.initEvent("CancelTouchSequence", true, false);
+        document.dispatchEvent(event);
+      }
       this._contextMenu = null;
     }
   },
