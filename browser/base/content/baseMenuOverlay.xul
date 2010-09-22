@@ -108,6 +108,11 @@
                   label="&helpFeedbackPage.label;"
                   oncommand="openFeedbackPage()"
                   onclick="checkForMiddleClick(this, event);"/>
+        <menuitem id="helpSafeMode"
+                  accesskey="&helpSafeMode.accesskey;"
+                  label="&helpSafeMode.label;"
+                  oncommand="safeModeRestart();"/>
+        <menuseparator/>
         <menuseparator id="updateSeparator"/>
 #ifdef XP_MACOSX
 #ifdef MOZ_UPDATER
