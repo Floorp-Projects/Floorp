@@ -163,18 +163,22 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
   }
 
-  nsIntRect quadRect = mLayer->GetVisibleRegion().GetBounds();
-  program->Activate();
-  program->SetLayerQuadRect(quadRect);
-  program->SetLayerOpacity(mLayer->GetOpacity());
-  program->SetLayerTransform(mLayer->GetTransform());
-  program->SetRenderOffset(aOffset);
-  program->SetTextureUnit(0);
-  DEBUG_GL_ERROR_CHECK(gl());
+  nsIntRegionRectIterator iter(mLayer->GetVisibleRegion());
+  const nsIntRect *iterRect;
+  while (iterRect = iter.Next()) {
+    nsIntRect quadRect = *iterRect;
+    program->Activate();
+    program->SetLayerQuadRect(quadRect);
+    program->SetLayerOpacity(mLayer->GetOpacity());
+    program->SetLayerTransform(mLayer->GetTransform());
+    program->SetRenderOffset(aOffset);
+    program->SetTextureUnit(0);
+    DEBUG_GL_ERROR_CHECK(gl());
 
-  quadRect.MoveBy(-GetOriginOffset());
-  BindAndDrawQuadWithTextureRect(program, quadRect, mTexImage->GetSize(), gl());
-  DEBUG_GL_ERROR_CHECK(gl());
+    quadRect.MoveBy(-GetOriginOffset());
+    BindAndDrawQuadWithTextureRect(program, quadRect, mTexImage->GetSize(), gl());
+    DEBUG_GL_ERROR_CHECK(gl());
+  }
 }
 
 
