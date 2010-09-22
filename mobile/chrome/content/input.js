@@ -245,6 +245,8 @@ MouseModule.prototype = {
       }
     }
 
+    this._target = null;
+
     // Do pan
     if (dragData.isPan()) {
       // User was panning around, do not allow click

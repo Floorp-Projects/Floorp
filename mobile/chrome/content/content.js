@@ -381,8 +381,10 @@ Content.prototype = {
 
         if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
           let rects = getContentClientRects(element);
-          sendAsyncMessage("Browser:Highlight", { rects: rects });
+          sendAsyncMessage("Browser:Highlight", { rects: rects, messageId: json.messageId });
         }
+
+        ContextHandler.messageId = json.messageId;
 
         let event = content.document.createEvent("PopupEvents");
         event.initEvent("contextmenu", true, true);
@@ -706,6 +708,8 @@ var ContextHandler = {
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))
         state.types.push(this._types[i].name);
+
+    state.messageId = this.messageId;
 
     sendAsyncMessage("Browser:ContextMenu", state);
   },

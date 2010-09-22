@@ -415,7 +415,6 @@ var BrowserUI = {
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMWindowClose", this);
 
-    messageManager.addMessageListener("Browser:Highlight", this);
     messageManager.addMessageListener("Browser:OpenURI", this);
     messageManager.addMessageListener("Browser:SaveAs:Return", this);
 
@@ -787,6 +786,7 @@ var BrowserUI = {
         this.doCommand("cmd_openLocation");
         break;
       case "mousedown":
+        Util.dumpLn('HIDE');
         if (!this._isEventInsidePopup(aEvent))
           this._hidePopup();
 
@@ -855,17 +855,9 @@ var BrowserUI = {
         Services.obs.notifyObservers(download, "dl-done", null);
         break;
 
-      case "Browser:Highlight":
-        let rects = [];
-        for (let i = 0; i < json.rects.length; i++) {
-          let rect = json.rects[i];
-          rects.push(new Rect(rect.left, rect.top, rect.width, rect.height));
-        }
-        TapHighlightHelper.show(rects);
-        break;
-
       case "Browser:OpenURI":
         Browser.addTab(json.uri, json.bringFront, Browser.selectedTab);
+        break;
     }
   },
 
