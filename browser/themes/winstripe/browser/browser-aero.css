@@ -33,6 +33,12 @@
                 0 0 2px 1px rgba(255,255,255,.25) inset;
   }
 
+  #main-window[privatebrowsingmode=temporary] #appmenu-button:not(:-moz-window-inactive) {
+    -moz-border-left-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
+    -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
+    -moz-border-right-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
+  }
+
   #appmenu-button:-moz-window-inactive {
     -moz-border-left-colors: rgba(255,255,255,.4) rgba(0,0,0,.5);
     -moz-border-bottom-colors: rgba(255,255,255,.4) rgba(0,0,0,.5);
