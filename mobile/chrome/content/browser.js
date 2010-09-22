@@ -175,9 +175,10 @@ var Browser = {
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
     let inputHandlerOverlay = document.getElementById("inputhandler-overlay");
-    inputHandlerOverlay.customClicker = new ContentCustomClicker();
     inputHandlerOverlay.customKeySender = new ContentCustomKeySender();
     inputHandlerOverlay.customDragger = new Browser.MainDragger();
+
+    ContentTouchHandler.init();
 
     // Warning, total hack ahead. All of the real-browser related scrolling code
     // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
@@ -1262,10 +1263,35 @@ const BrowserSearch = {
 
 
 /** Watches for mouse events in chrome and sends them to content. */
-function ContentCustomClicker() {
-}
+const ContentTouchHandler = {
+  init: function init() {
+    document.addEventListener("TapDown", this, false);
+    document.addEventListener("TapUp", this, false);
+    document.addEventListener("TapSingle", this, false);
+    document.addEventListener("TapDouble", this, false);
+    document.addEventListener("PanBegin", this, false);
+  },
 
-ContentCustomClicker.prototype = {
+  handleEvent: function handleEvent(ev) {
+    switch (ev.type) {
+      case "TapDown":
+        this.tapDown(ev.clientX, ev.clientY);
+        break;
+      case "TapUp":
+        thisTapSingletapUp(ev.clientX, ev.clientY);
+        break;
+      case "TapSingle":
+        this.tapSingle(ev.clientX, ev.clientY, ev.modifiers);
+        break;
+      case "TapDouble":
+        this.tapDouble(ev.clientX1, ev.clientY1, ev.clientX2, ev.clientY2);
+        break;
+      case "PanBegin":
+        this.panBegin();
+        break;
+    }
+  },
+
   _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
     let aX = aX || 0;
     let aY = aY || 0;
@@ -1275,7 +1301,7 @@ ContentCustomClicker.prototype = {
     browser.messageManager.sendAsyncMessage(aName, { x: x, y: y, modifiers: aModifiers });
   },
 
-  mouseDown: function mouseDown(aX, aY) {
+  tapDown: function tapDown(aX, aY) {
     // Ensure that the content process has gets an activate event
     let browser = getBrowser();
     let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
@@ -1287,7 +1313,7 @@ ContentCustomClicker.prototype = {
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
 
-  mouseUp: function mouseUp(aX, aY) {
+  tapUp: function tapUp(aX, aY) {
     TapHighlightHelper.hide(200);
   },
 
@@ -1297,7 +1323,7 @@ ContentCustomClicker.prototype = {
     this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
-  singleClick: function singleClick(aX, aY, aModifiers) {
+  tapSingle: function tapSingle(aX, aY, aModifiers) {
     TapHighlightHelper.hide(200);
 
     // Cancel the mouse click if we are showing a context menu
@@ -1306,7 +1332,7 @@ ContentCustomClicker.prototype = {
     this._dispatchMouseEvent("Browser:MouseCancel");
   },
 
-  doubleClick: function doubleClick(aX1, aY1, aX2, aY2) {
+  tapDouble: function tapDouble(aX1, aY1, aX2, aY2) {
     TapHighlightHelper.hide();
 
     this._dispatchMouseEvent("Browser:MouseCancel");
@@ -1322,7 +1348,7 @@ ContentCustomClicker.prototype = {
   },
 
   toString: function toString() {
-    return "[ContentCustomClicker] { }";
+    return "[ContentTouchHandler] { }";
   }
 };
 
