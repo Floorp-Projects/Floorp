@@ -2272,21 +2272,8 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
     if (aScrollToAnchor)
       region = nsISelectionController::SELECTION_ANCHOR_REGION;
 
-    PRBool syncScroll = PR_TRUE;
-    PRUint32 flags = 0;
-
-    if (NS_SUCCEEDED(GetFlags(&flags)))
-    {
-      // If the editor is relying on asynchronous reflows, we have
-      // to use asynchronous requests to scroll, so that the scrolling happens
-      // after reflow requests are processed.
-      syncScroll = !(flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
-    }
-
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                    region, syncScroll);
+                                    region, PR_FALSE);
   }
 
   return NS_OK;
