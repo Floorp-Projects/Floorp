@@ -99,16 +99,27 @@ function initLogins() {
 
 function finishTest() {
   ok(true, "finishTest removing testing logins...");
+ok(true, "currently have " + pwmgr.getAllLogins().length + " logins.");
   pwmgr.removeLogin(login1);
+ok(true, "removing login 2A...");
   pwmgr.removeLogin(login2A);
+ok(true, "removing login 2B...");
   pwmgr.removeLogin(login2B);
+ok(true, "removing login 2C...");
   pwmgr.removeLogin(login2C);
+ok(true, "removing login 2D...");
   pwmgr.removeLogin(login2D);
+ok(true, "removing login 2E...");
   pwmgr.removeLogin(login2E);
+ok(true, "removing login 3A...");
   pwmgr.removeLogin(login3A);
+ok(true, "removing login 3B...");
   pwmgr.removeLogin(login3B);
+ok(true, "removing login 4...");
   pwmgr.removeLogin(login4);
+ok(true, "removing proxyLogin...");
   pwmgr.removeLogin(proxyLogin);
+ok(true, "whee, done!");
 
   SimpleTest.finish();
 }
