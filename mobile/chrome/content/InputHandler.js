@@ -343,6 +343,8 @@ function MouseModule(owner, browserViewContainer) {
   this._kinetic = new KineticController(this._dragBy.bind(this),
                                         this._kineticStop.bind(this));
 
+  this._singleClickTimeout = new Util.Timeout(this._doSingleClick.bind(this));
+
   messageManager.addMessageListener("Browser:ContextMenu", this);
 }
 
@@ -393,9 +395,6 @@ MouseModule.prototype = {
 
     this._dragData.reset();
     this._targetScrollInterface = null;
-
-    if (this._clickTimeout)
-      window.clearTimeout(this._clickTimeout);
 
     this._cleanClickBuffer();
   },
@@ -449,11 +448,8 @@ MouseModule.prototype = {
       this._recordEvent(aEvent);
     }
     else {
-      if (this._clickTimeout) {
-        // cancel all pending content clicks
-        window.clearTimeout(this._clickTimeout);
-        this._cleanClickBuffer();
-      }
+      // cancel all pending content clicks
+      this._cleanClickBuffer();
 
       if (this._dragger) {
         // do not allow axis locking if panning is only possible in one direction
@@ -625,12 +621,11 @@ MouseModule.prototype = {
    * the clicker.
    */
   _commitAnotherClick: function _commitAnotherClick() {
-    if (this._clickTimeout) {   // we're waiting for a second click for double
-      window.clearTimeout(this._clickTimeout);
+    if (this._singleClickTimeout.isPending()) {   // we're waiting for a second click for double
+      this._singleClickTimeout.clear();
       this._doDoubleClick();
     } else {
-      this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); },
-                                             kDoubleClickInterval, this);
+      this._singleClickTimeout.once(kDoubleClickInterval);
     }
   },
 
@@ -639,7 +634,7 @@ MouseModule.prototype = {
    */
   _doSingleClick: function _doSingleClick() {
     let ev = this._downUpEvents[1];
-    this._cleanClickBuffer(2);
+    this._cleanClickBuffer();
 
     // borrowed from nsIDOMNSEvent.idl
     let modifiers =
@@ -657,7 +652,7 @@ MouseModule.prototype = {
     let mouseUp1 = this._downUpEvents[1];
     // sometimes the second press event is not dispatched at all
     let mouseUp2 = this._downUpEvents[Math.min(3, this._downUpEvents.length - 1)];
-    this._cleanClickBuffer(4);
+    this._cleanClickBuffer();
     this._clicker.doubleClick(mouseUp1.clientX, mouseUp1.clientY,
                               mouseUp2.clientX, mouseUp2.clientY);
   },
@@ -674,17 +669,10 @@ MouseModule.prototype = {
    * Clean out the click buffer.  Should be called after a single, double, or
    * non-click has been processed and all relevant (re)dispatches of events in
    * the recorded down/up event queue have been issued out.
-   *
-   * @param [optional] the number of events to remove from the front of the
-   * recorded events queue.
    */
-  _cleanClickBuffer: function _cleanClickBuffer(howMany) {
-    delete this._clickTimeout;
-
-    if (howMany == undefined)
-      howMany = this._downUpEvents.length;
-
-    this._downUpEvents.splice(0, howMany);
+  _cleanClickBuffer: function _cleanClickBuffer() {
+    this._singleClickTimeout.clear();
+    this._downUpEvents.splice(0);
   },
 
   /**
