@@ -71,52 +71,15 @@ const kStateActive = 0x00000001;
  * an EventInfo for each event that the InputHandler is registered to listen for.
  * Currently, the InputHandler listens for the following events by default.
  *
- * On the Fennec global chrome window:
- *   mousedown
- *   mouseup
- *   mousemove
- *   click
- *
- * On the browserViewContainer:
- *   keydown
- *   keyup
- *   DOMMouseScroll
- *
- *
- * When one of the handlers decides it wants to handle the event, it should call
- * grab() on its owner which will cause it to receive all of the events until it
- * calls ungrab().  Calling grab will notify the other handlers via a
- * cancelPending() notification.  This tells them to stop what they're doing and
- * give up hope for being the one to process the events.
- *
  * Input modules must provide the following interface:
  *
  *   handleEvent(nsIDOMEvent)
  *     Entry point by which InputHandler passes Fennec chrome window events
  *     to the module.
- *
- *   cancelPending()
- *     Called by the InputHandler as a hint to the module that it may wish to reset
- *     whatever state it might have entered by processing events thus far.  For
- *     instance, a module may have grabbed (cf grab()) focus, in which case the
- *     InputHandler will call cancelPending() on all remaining modules.
- *
- * How grabbing works:
- *   An input module may wish to grab event focus of the InputHandler, which means that it
- * wants to process all incoming events for a while.  When the InputHandler is grabbed
- * by one of its modules, only that module will receive incoming events until it ungrabs
- * the InputHandler.  No other modules' handleEvent() function will be called while the
- * InputHandler is grabbed.  Grabs and ungrabs of the InputHandler require an object reference
- * corresponding to the grabbing object.  That is, a module must call inputHandler.grab(this)
- * and .ungrab(this) in order for the calls to succeed.  The object given as the argument
- * will be that which is given event focus.
  */
 function InputHandler(browserViewContainer) {
   /* the list of modules that will handle input */
   this._modules = [];
-
-  /* which module, if any, has all events directed to it */
-  this._grabber = null;
 
   /* these handle key strokes in the browser view (where page content appears) */
   browserViewContainer.addEventListener("keypress", this, false);
@@ -143,58 +106,9 @@ InputHandler.prototype = {
   },
 
   /**
-   * A module calls grab(this) to grab event focus from the input
-   * handler.  In grabbed state, the input handler forwards all events
-   * directly to the grabber module, and not to any other modules.
-   * The this reference passed is essentially a ceritificate to the
-   * input handler --- collateral for the grab.
-   *
-   * Other modules cannot grab a grabbed input handler, and only the
-   * grabber module can ungrab the input handler.
-   */
-  grab: function grab(grabber) {
-    if (!this._grabber || this._grabber == grabber) {
-      if (!this._grabber) {
-        // call cancel on all modules
-        let mods = this._modules;
-        for (let i = 0, len = mods.length; i < len; ++i)
-          if (mods[i] != grabber)
-            mods[i].cancelPending();
-      }
-      this._grabber = grabber;
-      return true;
-    }
-    return false;
-  },
-
-  /**
-   * A grabber module should ungrab the input handler by calling ungrab(this).
-   * Of course, a module other than the original grabber may spoof the ungrab
-   * if it has our reference to that module.
-   *
-   * @param grabber The grabber's object reference, as grabber proof.
-   */
-  ungrab: function ungrab(grabber) {
-    if (this._grabber == grabber) {  // only grabber can ungrab
-      this._grabber = null;
-    }
-  },
-
-  /** Cancels all pending input sequences */
-  cancelPending: function cancelPending() {
-    let mods = this._modules;
-    for (let i = 0, len = mods.length; i < len; ++i)
-      if (mods[i])
-        mods[i].cancelPending();
-  },
-
-  /**
    * InputHandler's DOM event handler.
    */
   handleEvent: function handleEvent(aEvent) {
-    if (this._ignoreEvents)
-      return;
-
     aEvent.time = Date.now();
     this._passToModules(aEvent);
   },
@@ -204,17 +118,11 @@ InputHandler.prototype = {
    * with the module at index skipToIndex and increasing (==> decreasing in priority).
    */
   _passToModules: function _passToModules(aEvent, aSkipToIndex) {
-    if (this._grabber) {
-      this._grabber.handleEvent(aEvent);
-    } else {
-      let mods = this._modules;
-      let i = aSkipToIndex || 0;
+    let mods = this._modules;
+    let i = aSkipToIndex || 0;
 
-      for (let len = mods.length; i < len; ++i) {
-        mods[i].handleEvent(aEvent);  // event focus could get grabbed in this invocation
-        if (this._grabber)            // so don't pass the event to the rest of modules
-          break;
-      }
+    for (let len = mods.length; i < len; ++i) {
+      mods[i].handleEvent(aEvent);
     }
   }
 };
