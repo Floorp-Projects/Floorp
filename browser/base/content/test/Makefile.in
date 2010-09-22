@@ -152,6 +152,7 @@ _BROWSER_FILES = \
                  browser_bug581947.js \
                  browser_bug585830.js \
                  browser_bug592338.js \
+                 browser_bug594131.js \
                  browser_bug595507.js \
                  browser_bug596687.js \
                  browser_contextSearchTabPosition.js \
