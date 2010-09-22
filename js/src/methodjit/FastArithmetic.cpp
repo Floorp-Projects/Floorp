@@ -978,7 +978,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
     }
 
     if (target) {
-        Value rval;
+        Value rval = UndefinedValue();  /* quiet gcc warning */
         bool rhsConst = false;
         if (rhs->isConstant()) {
             rhsConst = true;
