@@ -77,8 +77,8 @@ NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionAddress)
 NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPositionAddress)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsGeoPositionAddress)
-NS_IMPL_RELEASE(nsGeoPositionAddress)
+NS_IMPL_THREADSAFE_ADDREF(nsGeoPositionAddress)
+NS_IMPL_THREADSAFE_RELEASE(nsGeoPositionAddress)
 
 NS_IMETHODIMP
 nsGeoPositionAddress::GetStreetNumber(nsAString & aStreetNumber)
@@ -172,8 +172,8 @@ NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCoords)
 NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPositionCoords)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsGeoPositionCoords)
-NS_IMPL_RELEASE(nsGeoPositionCoords)
+NS_IMPL_THREADSAFE_ADDREF(nsGeoPositionCoords)
+NS_IMPL_THREADSAFE_RELEASE(nsGeoPositionCoords)
 
 NS_IMETHODIMP
 nsGeoPositionCoords::GetLatitude(double *aLatitude)
@@ -269,8 +269,8 @@ NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPosition)
 NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPosition)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsGeoPosition)
-NS_IMPL_RELEASE(nsGeoPosition)
+NS_IMPL_THREADSAFE_ADDREF(nsGeoPosition)
+NS_IMPL_THREADSAFE_RELEASE(nsGeoPosition)
 
 NS_IMETHODIMP
 nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp)
