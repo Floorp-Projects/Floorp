@@ -315,7 +315,7 @@ Tester.prototype = {
   }
 };
 
-function testResult(aCondition, aName, aDiag, aIsTodo) {
+function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
   this.msg = aName || "";
 
   this.info = false;
@@ -334,6 +334,14 @@ function testResult(aCondition, aName, aDiag, aIsTodo) {
         this.msg += " at " + aDiag.fileName + ":" + aDiag.lineNumber;
       }
       this.msg += " - " + aDiag;
+    }
+    if (aStack) {
+      this.msg += "\nStack trace:\n";
+      var frame = aStack;
+      while (frame) {
+        this.msg += "    " + frame + "\n";
+        frame = frame.caller;
+      }
     }
     if (aIsTodo)
       this.result = "TEST-UNEXPECTED-PASS";
@@ -355,23 +363,29 @@ function testScope(aTester, aTest) {
   this.__browserTest = aTest;
 
   var self = this;
-  this.ok = function test_ok(condition, name, diag) {
-    self.__browserTest.addResult(new testResult(condition, name, diag, false));
+  this.ok = function test_ok(condition, name, diag, stack) {
+    self.__browserTest.addResult(new testResult(condition, name, diag, false,
+                                                stack ? stack : Components.stack.caller));
   };
   this.is = function test_is(a, b, name) {
-    self.ok(a == b, name, "Got " + a + ", expected " + b);
+    self.ok(a == b, name, "Got " + a + ", expected " + b, false,
+            Components.stack.caller);
   };
   this.isnot = function test_isnot(a, b, name) {
-    self.ok(a != b, name, "Didn't expect " + a + ", but got it");
+    self.ok(a != b, name, "Didn't expect " + a + ", but got it", false,
+            Components.stack.caller);
   };
-  this.todo = function test_todo(condition, name, diag) {
-    self.__browserTest.addResult(new testResult(!condition, name, diag, true));
+  this.todo = function test_todo(condition, name, diag, stack) {
+    self.__browserTest.addResult(new testResult(!condition, name, diag, true,
+                                                stack ? stack : Components.stack.caller));
   };
   this.todo_is = function test_todo_is(a, b, name) {
-    self.todo(a == b, name, "Got " + a + ", expected " + b);
+    self.todo(a == b, name, "Got " + a + ", expected " + b,
+              Components.stack.caller);
   };
   this.todo_isnot = function test_todo_isnot(a, b, name) {
-    self.todo(a != b, name, "Didn't expect " + a + ", but got it");
+    self.todo(a != b, name, "Didn't expect " + a + ", but got it",
+              Components.stack.caller);
   };
   this.info = function test_info(name) {
     self.__browserTest.addResult(new testMessage(name));
