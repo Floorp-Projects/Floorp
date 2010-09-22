@@ -229,10 +229,6 @@
     <groupbox align="center">
       <description>&syncKeyBackup.description;</description>
       <hbox>
-        <button label="&button.syncKeyBackup.email.label;"
-                accesskey="&button.syncKeyBackup.email.accesskey;"
-                oncommand="gSyncUtils.passphraseEmail('weavePassphrase');
-                           gSyncSetup.afterBackup();"/>
         <button label="&button.syncKeyBackup.print.label;"
                 accesskey="&button.syncKeyBackup.print.accesskey;"
                 oncommand="gSyncUtils.passphrasePrint('weavePassphrase');

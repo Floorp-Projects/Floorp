@@ -108,9 +108,6 @@
       </rows>
     </grid>
     <hbox id="passphraseBackupButtons">
-      <button label="&button.syncKeyBackup.email.label;"
-              accesskey="&button.syncKeyBackup.email.accesskey;"
-              oncommand="gSyncUtils.passphraseEmail('passphraseBox');"/>
       <button label="&button.syncKeyBackup.print.label;"
               accesskey="&button.syncKeyBackup.print.accesskey;"
               oncommand="gSyncUtils.passphrasePrint('passphraseBox');"/>
