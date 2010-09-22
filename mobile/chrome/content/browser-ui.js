@@ -786,7 +786,6 @@ var BrowserUI = {
         this.doCommand("cmd_openLocation");
         break;
       case "mousedown":
-        Util.dumpLn('HIDE');
         if (!this._isEventInsidePopup(aEvent))
           this._hidePopup();
 
