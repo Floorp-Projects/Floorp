@@ -349,7 +349,7 @@ function MouseModule(owner, browserViewContainer) {
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    if (aEvent.button !== 0 && aEvent.type != "contextmenu" && aEvent.type != "MozBeforePaint")
+    if (aEvent.button !== 0 && aEvent.type != "MozMagnifyGestureStart" && aEvent.type != "MozBeforePaint")
       return;
 
     switch (aEvent.type) {
@@ -364,6 +364,9 @@ MouseModule.prototype = {
       case "mouseup":
         this._onMouseUp(aEvent);
         break;
+      case "MozMagnifyGestureStart":
+        this.cancelPending();
+        break;
       case "MozBeforePaint":
         this._waitingForPaint = false;
         removeEventListener("MozBeforePaint", this, false);
@@ -377,10 +380,12 @@ MouseModule.prototype = {
    * in its current form.
    */
   cancelPending: function cancelPending() {
-    if (this._kinetic.isActive())
-      this._kinetic.end();
+    this._doDragStop();
 
-    this._dragData.reset();
+    // Kinetic panning may have already been active or drag stop above may have
+    // made kinetic panning active.
+    this._kinetic.end();
+
     this._targetScrollInterface = null;
 
     this._cleanClickBuffer();
@@ -433,8 +438,6 @@ MouseModule.prototype = {
         this._doDragStart(aEvent);
       }
     }
-
-    this._owner.grab(this);
   },
 
   /** Send tap up event and any necessary full taps. */
@@ -500,6 +503,8 @@ MouseModule.prototype = {
           let event = document.createEvent("Events");
           event.initEvent("PanBegin", true, false);
           aEvent.target.dispatchEvent(event);
+
+          this._owner.grab(this);
         }
       }
     }
