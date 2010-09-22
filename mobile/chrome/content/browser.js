@@ -175,7 +175,7 @@ var Browser = {
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
     let inputHandlerOverlay = document.getElementById("inputhandler-overlay");
-    inputHandlerOverlay.customKeySender = new ContentCustomKeySender();
+    let keySender = new ContentCustomKeySender(inputHandlerOverlay);
     inputHandlerOverlay.customDragger = new Browser.MainDragger();
 
     ContentTouchHandler.init();
@@ -1416,12 +1416,17 @@ const ContentTouchHandler = {
 
 
 /** Watches for mouse events in chrome and sends them to content. */
-function ContentCustomKeySender() {
+function ContentCustomKeySender(container) {
+  container.addEventListener("keypress", this, false);
+  container.addEventListener("keyup", this, false);
+  container.addEventListener("keydown", this, false);
 }
 
 ContentCustomKeySender.prototype = {
-  /** Dispatch a mouse event with chrome client coordinates. */
-  dispatchKeyEvent: function _dispatchKeyEvent(aEvent) {
+  handleEvent: function handleEvent(aEvent) {
+    aEvent.stopPropagation();
+    aEvent.preventDefault();
+
     let browser = getBrowser();
     if (browser) {
       browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
