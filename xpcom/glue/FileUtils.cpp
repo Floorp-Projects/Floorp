@@ -47,10 +47,12 @@
 #include "nscore.h"
 #include "private/pprio.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/FunctionTimer.h"
 
 bool 
 mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength) 
 {
+  NS_TIME_FUNCTION;
 #if defined(HAVE_POSIX_FALLOCATE)
   return posix_fallocate(PR_FileDesc2NativeHandle(aFD), 0, aLength) == 0;
 #elif defined(XP_WIN)
