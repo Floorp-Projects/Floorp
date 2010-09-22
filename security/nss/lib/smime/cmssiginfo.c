@@ -38,7 +38,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.32 2010/04/25 23:37:38 nelson%bolyard.com Exp $
+ * $Id: cmssiginfo.c,v 1.32.2.1 2010/08/28 19:51:44 nelson%bolyard.com Exp $
  */
 
 #include "cmslocal.h"
@@ -174,7 +174,7 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
     SECOidTag pubkAlgTag;
     SECItem signature = { 0 };
     SECStatus rv;
-    PLArenaPool *poolp, *tmppoolp;
+    PLArenaPool *poolp, *tmppoolp = NULL;
     SECAlgorithmID *algID, freeAlgID;
     CERTSubjectPublicKeyInfo *spki;
 
@@ -298,6 +298,8 @@ loser:
 	SECITEM_FreeItem (&signature, PR_FALSE);
     if (privkey)
 	SECKEY_DestroyPrivateKey(privkey);
+    if (tmppoolp)
+	PORT_FreeArena(tmppoolp, PR_FALSE);
     return SECFailure;
 }
 

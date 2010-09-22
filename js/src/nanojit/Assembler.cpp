@@ -1057,7 +1057,7 @@ namespace nanojit
                 if (target->isop(LIR_jtbl)) {
                     // Need to patch up a whole jump table, 'where' is the table.
                     LIns *jtbl = target;
-                    NIns** native_table = (NIns**) where;
+                    NIns** native_table = (NIns**) (void *) where;
                     for (uint32_t i = 0, n = jtbl->getTableSize(); i < n; i++) {
                         LabelState* lstate = _labels.get(jtbl->getTarget(i));
                         NIns* ntarget = lstate->addr;
@@ -1229,9 +1229,19 @@ namespace nanojit
         // this jump.  So clear it out.  We will pick up register
         // state from the jump target, if we have seen that label.
         releaseRegisters();
+#ifdef NANOJIT_IA32
+        // Unreachable, so assume correct stack depth.
+        debug_only( _fpuStkDepth = 0; )
+#endif
         if (label && label->addr) {
             // Forward jump - pick up register state from target.
             unionRegisterState(label->regs);
+#ifdef NANOJIT_IA32
+            // Set stack depth according to the register state we just loaded,
+            // negating the effect of any unreachable x87 stack pop that might
+            // have been emitted by unionRegisterState().
+            debug_only( _fpuStkDepth = (_allocator.getActive(FST0) ? -1 : 0); )
+#endif
             JMP(label->addr);
         }
         else {
@@ -1243,6 +1253,9 @@ namespace nanojit
             }
             else {
                 intersectRegisterState(label->regs);
+#ifdef NANOJIT_IA32
+                debug_only( _fpuStkDepth = (_allocator.getActive(FST0) ? -1 : 0); )
+#endif
             }
             JMP(0);
             _patches.put(_nIns, to);

@@ -1726,24 +1726,45 @@ isPromote(LIns* ins)
  * Determine whether this operand is guaranteed to not overflow the specified
  * integer operation.
  */
-static bool
-IsOverflowSafe(LOpcode op, LIns* i)
+static void
+ChecksRequired(LOpcode op, LIns* op1, LIns* op2,
+               bool* needsOverflowCheck, bool* needsNegZeroCheck)
 {
-    LIns* c;
+    Interval x = Interval::of(op1, 3);
+    Interval y = Interval::of(op2, 3);
+    Interval z(0, 0);
+
     switch (op) {
       case LIR_addi:
+        z = Interval::add(x, y);
+        *needsNegZeroCheck = false;
+        break;
+
       case LIR_subi:
-          return (i->isop(LIR_andi) && ((c = i->oprnd2())->isImmI()) &&
-                  ((c->immI() & 0xc0000000) == 0)) ||
-                 (i->isop(LIR_rshi) && ((c = i->oprnd2())->isImmI()) &&
-                  ((c->immI() > 0)));
-    default:
-        JS_ASSERT(op == LIR_muli);
+        z = Interval::sub(x, y);
+        *needsNegZeroCheck = false;
+        break;
+        
+      case LIR_muli: {
+        z = Interval::mul(x, y);
+        // A would-be negative zero result can only occur if we have 
+        // mul(0, -n) or mul(-n, 0), where n != 0.  In particular, a multiply
+        // where one operand is a positive immediate cannot result in negative
+        // zero.
+        //
+        // This assumes that -0 cannot be an operand;  if one had occurred we
+        // would have already exited the trace in order to promote the
+        // computation back to doubles.
+        *needsNegZeroCheck = (x.canBeZero() && y.canBeNegative()) ||
+                             (y.canBeZero() && x.canBeNegative());
+        break;
+      }
+
+      default:
+        JS_NOT_REACHED("needsOverflowCheck");
     }
-    return (i->isop(LIR_andi) && ((c = i->oprnd2())->isImmI()) &&
-            ((c->immI() & 0xffff0000) == 0)) ||
-           (i->isop(LIR_rshui) && ((c = i->oprnd2())->isImmI()) &&
-            ((c->immI() >= 16)));
+
+    *needsOverflowCheck = z.hasOverflowed;
 }
 
 class FuncFilter: public LirWriter
@@ -2484,6 +2505,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          * the trace runs too few iterations to be worthwhile. Do this only if the methodjit
          * is on--otherwise we must try to trace as much as possible.
          */
+#ifdef JS_METHODJIT
         if (cx->methodJitEnabled) {
             LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
             LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
@@ -2493,6 +2515,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
             lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
             branch->setTarget(lir->ins0(LIR_label));
         }
+#endif
     }
 
     /*
@@ -4476,7 +4499,7 @@ ProhibitFlush(JSContext* cx)
 static void
 ResetJITImpl(JSContext* cx)
 {
-    if (!(cx->traceJitEnabled || cx->methodJitEnabled))
+    if (!cx->traceJitEnabled)
         return;
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     debug_only_print0(LC_TMTracer, "Flushing cache.\n");
@@ -6632,6 +6655,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
     JS_ASSERT_IF(cx->throwing, !ok);
 
+#ifdef JS_METHODJIT
     if (cx->methodJitEnabled) {
         if (lr->exitType == LOOP_EXIT && JS_THREAD_DATA(cx)->iterationCounter < MIN_LOOP_ITERS) {
             debug_only_printf(LC_TMTracer, "tree %p executed only %d iterations, blacklisting\n",
@@ -6639,6 +6663,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
             Blacklist((jsbytecode *)f->ip);
         }
     }
+#endif
     return ok;
 }
 
@@ -7783,8 +7808,6 @@ FinishJIT(TraceMonitor *tm)
 JS_REQUIRES_STACK void
 PurgeScriptFragments(JSContext* cx, JSScript* script)
 {
-    if (!TRACING_ENABLED(cx))
-        return;
     debug_only_printf(LC_TMTracer,
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
@@ -8310,7 +8333,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
      * Speculatively emit an integer operation, betting that at runtime we
      * will get integer results again.
      */
-    VMSideExit* exit;
+    VMSideExit* exit = NULL;
     LIns* result;
     switch (v) {
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
@@ -8380,13 +8403,20 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * that will inform the oracle and cause a non-demoted trace to be
          * attached that uses floating-point math for this operation.
          */
-        if (!IsOverflowSafe(v, d0) || !IsOverflowSafe(v, d1)) {
+        bool needsOverflowCheck = true, needsNegZeroCheck = true;
+        ChecksRequired(v, d0, d1, &needsOverflowCheck, &needsNegZeroCheck);
+        if (needsOverflowCheck) {
             exit = snapshot(OVERFLOW_EXIT);
             result = guard_xov(v, d0, d1, exit);
-            if (v == LIR_muli) // make sure we don't lose a -0
-                guard(false, lir->insEqI_0(result), exit);
         } else {
             result = lir->ins2(v, d0, d1);
+        }
+        if (needsNegZeroCheck) {
+            // make sure we don't lose a -0
+            JS_ASSERT(v == LIR_muli);
+            if (!exit)
+                exit = snapshot(OVERFLOW_EXIT);
+            guard(false, lir->insEqI_0(result), exit);
         }
         break;
     }
@@ -9389,7 +9419,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // enough to share mutable objects on the scope or proto chain, but we
     // don't care about such insane embeddings. Anyway, the (scope, proto)
     // entry->vcap coordinates must reach obj2 from aobj at this point.
-    JS_ASSERT(cx->thread->requestDepth);
+    JS_ASSERT(cx->thread->data.requestDepth);
 #endif
 
     return InjectStatus(guardPropertyCacheHit(obj_ins, aobj, obj2, entry, pcval));
@@ -16133,12 +16163,12 @@ StartTraceVis(const char* filename = "tracevis.dat")
 }
 
 JS_FRIEND_API(JSBool)
-StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+StartTraceVisNative(JSContext *cx, uintN argc, jsval *vp)
 {
     JSBool ok;
 
-    if (argc > 0 && argv[0].isString()) {
-        JSString *str = JSVAL_TO_STRING(argv[0]);
+    if (argc > 0 && JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+        JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
         char *filename = js_DeflateString(cx, str->chars(), str->length());
         if (!filename)
             goto error;
@@ -16150,12 +16180,13 @@ StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value
 
     if (ok) {
         fprintf(stderr, "started TraceVis recording\n");
-        return JS_TRUE;
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return true;
     }
 
   error:
     JS_ReportError(cx, "failed to start TraceVis recording");
-    return JS_FALSE;
+    return false;
 }
 
 JS_FRIEND_API(bool)
@@ -16171,14 +16202,16 @@ StopTraceVis()
 }
 
 JS_FRIEND_API(JSBool)
-StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+StopTraceVisNative(JSContext *cx, uintN argc, jsval *vp)
 {
     JSBool ok = StopTraceVis();
 
-    if (ok)
+    if (ok) {
         fprintf(stderr, "stopped TraceVis recording\n");
-    else
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    } else {
         JS_ReportError(cx, "TraceVis isn't running");
+    }
 
     return ok;
 }

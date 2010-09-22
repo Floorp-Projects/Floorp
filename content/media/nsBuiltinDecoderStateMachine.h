@@ -240,7 +240,23 @@ public:
     return mReader->GetBuffered(aBuffered, mStartTime);
   }
 
+  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
+  }
+
 protected:
+
+  // Returns the number of unplayed ms of audio we've got decoded and/or
+  // pushed to the hardware waiting to play. This is how much audio we can
+  // play without having to run the audio decoder.
+  PRInt64 AudioDecodedMs() const;
+
+  // Returns PR_TRUE if we're running low on decoded data.
+  PRBool HasLowDecodedData() const;
+
+  // Returns PR_TRUE if we've got plenty of decoded data.
+  PRBool HasAmpleDecodedData() const;
 
   // Returns PR_TRUE when there's decoded audio waiting to play.
   // The decoder monitor must be held.
@@ -337,6 +353,16 @@ protected:
   // Returns PR_TRUE if we're currently playing. The decoder monitor must
   // be held.
   PRBool IsPlaying();
+
+  // Returns the "media time". This is the absolute time which the media
+  // playback has reached. i.e. this returns values in the range
+  // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
+  // not start at 0. Note this is different to the value returned
+  // by GetCurrentTime(), which is in the range [0,duration].
+  PRInt64 GetMediaTime() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    return mStartTime + mCurrentFrameTime;
+  }
 
   // Monitor on mAudioStream. This monitor must be held in order to delete
   // or use the audio stream. This stops us destroying the audio stream

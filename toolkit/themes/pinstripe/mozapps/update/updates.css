@@ -78,13 +78,6 @@ wizardpage {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
 }
 
-#updates[currentpageid="updatesfoundbasic"] .wizard-button[dlgtype="next"],
-#updates[currentpageid="updatesfoundbillboard"] .wizard-button[dlgtype="next"],
-#updates[currentpageid="finished"] .wizard-button[dlgtype="finish"],
-#updates[currentpageid="finishedBackground"] .wizard-button[dlgtype="finish"] {
-  font-weight: bold !important;
-}
-
 #incompatibleListbox, #finishedBackgroundMore, #acceptDeclineLicense {
   margin-bottom: 6px;
 }

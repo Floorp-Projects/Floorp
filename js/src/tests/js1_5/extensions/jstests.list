@@ -189,7 +189,6 @@ skip script regress-437288-01.js # obsolete test
 script regress-44009.js
 script regress-443569.js
 script regress-446386.js
-script regress-449657.js
 script regress-452168.js
 script regress-452178.js
 script regress-452329.js

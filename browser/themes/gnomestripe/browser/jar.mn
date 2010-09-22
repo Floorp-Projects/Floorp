@@ -1,6 +1,7 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
+  skin/classic/browser/urlbar-over-link-arrow.png
   skin/classic/browser/sanitizeDialog.css             (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
@@ -72,26 +73,24 @@ browser.jar:
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
-  skin/classic/browser/tabbrowser/progress.png         (tabbrowser/progress.png)
-  skin/classic/browser/tabbrowser/progress-pulsing.png (tabbrowser/progress-pulsing.png)
   skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
   skin/classic/browser/tabview/edit.png               (tabview/edit.png)
   skin/classic/browser/tabview/new-tab.png            (tabview/new-tab.png)
-  skin/classic/browser/tabview/tabview.css            (tabview/tabview.css)
+  skin/classic/browser/tabview/search.png             (tabview/search.png)  
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png            (tabview/tabview.png)
-  skin/classic/browser/tabview/search.png             (tabview/search.png)  
+  skin/classic/browser/tabview/tabview.css            (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png
+  skin/classic/browser/sync-24-throbber.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.png
   skin/classic/browser/sync-mobileIcon.png
-  skin/classic/browser/sync-usedBefore.png
-  skin/classic/browser/sync-usedNever.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
+  skin/classic/browser/syncQuota.css
 #endif

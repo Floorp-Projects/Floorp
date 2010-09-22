@@ -241,4 +241,9 @@ interface nsIPluginInstance : nsISupports
      * This should return a valid gfxASurface pointer, or null if there is nothing to render yet.
      */
     void getSurface(out gfxASurfacePtr aSurface);
+
+    /**
+     * @return true if plugin module supports async rendering
+     */
+    PRBool useAsyncPainting();
 };

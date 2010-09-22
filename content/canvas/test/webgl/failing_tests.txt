@@ -1,7 +1,6 @@
 conformance/array-buffer-crash.html
 conformance/array-buffer-view-crash.html
 conformance/array-unit-tests.html
-conformance/bad-arguments-test.html
 conformance/canvas-test.html
 conformance/constants.html
 conformance/context-attributes-alpha-depth-stencil-antialias.html
@@ -14,16 +13,12 @@ conformance/gl-enum-tests.html
 conformance/gl-get-active-attribute.html
 conformance/gl-get-calls.html
 conformance/gl-object-get-calls.html
-conformance/gl-scissor-test.html
 conformance/gl-teximage.html
-conformance/gl-uniform-arrays.html
 conformance/gl-unknown-uniform.html
 conformance/glsl-2types-of-textures-on-same-unit.html
 conformance/glsl-conformance.html
 conformance/invalid-passed-params.html
 conformance/methods.html
-conformance/null-object-behaviour.html
-conformance/null-uniform-location.html
 conformance/point-size.html
 conformance/program-test.html
 conformance/read-pixels-pack-alignment.html
@@ -33,10 +28,6 @@ conformance/tex-image-and-sub-image-2d-with-video.html
 conformance/tex-image-with-format-and-type.html
 conformance/tex-image-with-invalid-data.html
 conformance/tex-input-validation.html
-conformance/texparameter-test.html
-conformance/texture-active-bind-2.html
-conformance/texture-formats-test.html
-conformance/uniform-samplers-test.html
 conformance/viewport-unchanged-upon-resize.html
 more/conformance/constants.html
 more/conformance/getContext.html

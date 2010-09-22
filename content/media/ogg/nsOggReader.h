@@ -152,11 +152,11 @@ private:
 
   // Decodes one packet of Vorbis data, storing the resulting chunks of
   // PCM samples in aChunks.
-  nsresult DecodeVorbis(nsTArray<SoundData*>& aChunks,
+  nsresult DecodeVorbis(nsTArray<nsAutoPtr<SoundData> >& aChunks,
                         ogg_packet* aPacket);
 
   // May return NS_ERROR_OUT_OF_MEMORY.
-  nsresult DecodeTheora(nsTArray<VideoData*>& aFrames,
+  nsresult DecodeTheora(nsTArray<nsAutoPtr<VideoData> >& aFrames,
                         ogg_packet* aPacket);
 
   // Read a page of data from the Ogg file. Returns the offset of the start

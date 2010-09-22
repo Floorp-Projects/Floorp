@@ -103,6 +103,11 @@
 #define NS_MEMORY_REPORTER_MANAGER_CONTRACTID "@mozilla.org/memory-reporter-manager;1"
 
 /**
+ * Cycle collector logger contract id
+ */
+#define NS_CYCLE_COLLECTOR_LOGGER_CONTRACTID "@mozilla.org/cycle-collector-logger;1"
+
+/**
  * The following are the CIDs and Contract IDs of the nsISupports wrappers for 
  * primative types.  
  */

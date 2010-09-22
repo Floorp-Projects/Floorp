@@ -431,7 +431,7 @@ WillDeadlock(JSContext *ownercx, JSThread *thread)
 
      for (;;) {
         JS_ASSERT(ownercx->thread);
-        JS_ASSERT(ownercx->thread->requestDepth);
+        JS_ASSERT(ownercx->thread->data.requestDepth);
         JSTitle *title = ownercx->thread->titleToShare;
         if (!title || !title->ownercx) {
             /*
@@ -539,7 +539,7 @@ static JSBool
 ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT_IF(!cx->thread->requestDepth, cx->thread == rt->gcThread && rt->gcRunning);
+    JS_ASSERT_IF(!cx->thread->data.requestDepth, cx->thread == rt->gcThread && rt->gcRunning);
 
     JS_RUNTIME_METER(rt, claimAttempts);
     AutoLockGC lock(rt);
@@ -566,13 +566,13 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         bool canClaim;
         if (title->u.link) {
             JS_ASSERT(js_ValidContextPointer(rt, ownercx));
-            JS_ASSERT(ownercx->thread->requestDepth);
+            JS_ASSERT(ownercx->thread->data.requestDepth);
             JS_ASSERT(!rt->gcRunning);
             canClaim = (ownercx->thread == cx->thread);
         } else {
             canClaim = (!js_ValidContextPointer(rt, ownercx) ||
                         !ownercx->thread ||
-                        !ownercx->thread->requestDepth ||
+                        !ownercx->thread->data.requestDepth ||
                         cx->thread == ownercx->thread  ||
                         cx->thread == rt->gcThread ||
                         ownercx->thread->gcWaiting);
@@ -618,7 +618,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * But before waiting, we force the operation callback for that other
          * thread so it can quickly suspend.
          */
-        JS_THREAD_DATA(ownercx)->triggerOperationCallback();
+        JS_THREAD_DATA(ownercx)->triggerOperationCallback(rt);
 
         JS_ASSERT(!cx->thread->titleToShare);
         cx->thread->titleToShare = title;
@@ -676,13 +676,13 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     JS_ASSERT(obj->containsSlot(slot));
 
     /*
-     * Avoid locking if called from the GC.  Also avoid locking a sealed
+     * Avoid locking if called from the GC.  Also avoid locking a non-extensible
      * object.  If neither of those special cases applies, try to claim obj's
      * flyweight lock from whatever context may have had it in an earlier
      * request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        obj->sealed() ||
+        !obj->isExtensible() ||
         (obj->title.ownercx && ClaimTitle(&obj->title, cx))) {
         return Jsvalify(obj->getSlot(slot));
     }
@@ -754,13 +754,13 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(obj->containsSlot(slot));
 
     /*
-     * Avoid locking if called from the GC.  Also avoid locking a sealed
+     * Avoid locking if called from the GC.  Also avoid locking a non-extensible
      * object.  If neither of those special cases applies, try to claim obj's
      * flyweight lock from whatever context may have had it in an earlier
      * request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        obj->sealed() ||
+        !obj->isExtensible() ||
         (obj->title.ownercx && ClaimTitle(&obj->title, cx))) {
         obj->lockedSetSlot(slot, Valueify(v));
         return;
@@ -1245,7 +1245,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
 
-    if (obj->sealed() && !cx->thread->lockedSealedTitle) {
+    if (!obj->isExtensible() && !cx->thread->lockedSealedTitle) {
         cx->thread->lockedSealedTitle = &obj->title;
         return;
     }
@@ -1311,7 +1311,7 @@ js_IsTitleLocked(JSContext *cx, JSTitle *title)
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return JS_TRUE;
 
-    /* Special case: locked object is sealed (ES5 frozen) -- see js_LockObj. */
+    /* Special case: locked object is not extensible -- see js_LockObj. */
     if (cx->thread->lockedSealedTitle == title)
         return JS_TRUE;
 

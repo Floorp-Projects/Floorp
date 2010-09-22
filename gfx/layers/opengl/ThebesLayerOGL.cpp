@@ -189,7 +189,7 @@ public:
   virtual PaintState BeginPaint(ContentType aContentType)
   {
     // Let ThebesLayerBuffer do all the hard work for us! :D
-    return ThebesLayerBuffer::BeginPaint(mLayer, aContentType);
+    return ThebesLayerBuffer::BeginPaint(mLayer, aContentType, 1.0, 1.0);
   }
 
   // ThebesLayerBuffer interface

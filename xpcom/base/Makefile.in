@@ -126,6 +126,7 @@ XPIDLSRCS	= \
 		nsIConsoleListener.idl \
 		nsIConsoleMessage.idl \
 		nsIConsoleService.idl \
+		nsICycleCollectorListener.idl \
 		nsIDebug2.idl \
 		nsIErrorService.idl \
 		nsIException.idl \

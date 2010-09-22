@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=591198
+-->
+<head>
+  <title>Test for Bug 591198</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body onload="gen.next();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=591198">Mozilla Bug 591198</a>
+<iframe id=iframe></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+
+gen = runTest();
+
+function runTest() {
+  let iframe = $('iframe');
+  window.addEventListener("message", function(e) {
+    gen.send(JSON.parse(e.data));
+  }, false);
+  
+  iframe.src = "file_bug591198_inner.html";
+  let res = (yield);
+  is(res.widths[0], res.widths[2], "binding was rendered");
+  isnot(res.widths[0], res.widths[1], "binding was rendered");
+  is(res.anonChildCount, 2, "correct number of anon children");
+
+  iframe.src = "http://noxul.example.com/tests/content/xbl/test/file_bug591198_inner.html";
+  let res = (yield);
+  is(res.widths[0], res.widths[1], "binding was not rendered");
+  isnot(res.widths[0], res.widths[2], "binding was not rendered");
+  is("anonChildCount" in res, false, "no anon children");
+
+  SimpleTest.finish();
+  yield;
+}
+
+</script>
+</pre>
+</body>
+</html>

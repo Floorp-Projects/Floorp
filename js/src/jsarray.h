@@ -199,9 +199,9 @@ extern JSBool
 array_sort(JSContext *cx, uintN argc, js::Value *vp);
 }
 
-#ifdef DEBUG_ARRAYS
+#ifdef DEBUG
 extern JSBool
-js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
+js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp);
 #endif
 
 extern JSBool

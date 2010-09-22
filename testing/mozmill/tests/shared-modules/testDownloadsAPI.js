@@ -45,6 +45,9 @@
 
 var MODULE_NAME = 'DownloadsAPI';
 
+const RELATIVE_ROOT = '.';
+const MODULE_REQUIRES = ['UtilsAPI'];
+
 const gTimeout = 5000;
 
 /**
@@ -67,13 +70,13 @@ const downloadState = {
 /**
  * Constructor
  */
-function downloadManager()
-{
+function downloadManager() {
   this._controller = null;
-  this._dms = Cc["@mozilla.org/download-manager;1"]
-                 .getService(Ci.nsIDownloadManager);
-
+  this._utilsAPI = collector.getModule('UtilsAPI');
   this.downloadState = downloadState;
+
+  this._dms = Cc["@mozilla.org/download-manager;1"].
+              getService(Ci.nsIDownloadManager);
 }
 
 /**
@@ -125,14 +128,21 @@ downloadManager.prototype = {
   /**
    * Cancel any active downloads, remove the files, and clean
    * up the Download Manager database
+   *
+   * @param {Array of download} downloads
+   *        Downloaded files which should be deleted (optional)
    */
-  cleanAll : function downloadManager_cleanAll()
-  {
+  cleanAll : function downloadManager_cleanAll(downloads) {
     // Cancel any active downloads
     this.cancelActiveDownloads();
 
+    // If no downloads have been specified retrieve the list from the database
+    if (downloads === undefined || downloads.length == 0)
+      downloads = this.getAllDownloads();
+    else
+      downloads = downloads.concat(this.getAllDownloads());
+
     // Delete all files referred to in the Download Manager
-    var downloads = this.getAllDownloads();
     this.deleteDownloadedFiles(downloads);
 
     // Clean any entries from the Download Manager database
@@ -145,8 +155,7 @@ downloadManager.prototype = {
    * @param {boolean} force
    *        Force the closing of the DM window
    */
-  close : function downloadManager_close(force)
-  {
+  close : function downloadManager_close(force) {
     var windowCount = mozmill.utils.getWindows().length;
 
     if (this._controller) {
@@ -154,7 +163,8 @@ downloadManager.prototype = {
       if (force) {
         this._controller.window.close();
       } else {
-        this._controller.keypress(null, 'w', {accelKey: true});
+        var cmdKey = this._utilsAPI.getEntity(this.getDtds(), "cmd.close.commandKey");
+        this._controller.keypress(null, cmdKey, {accelKey: true});
       }
 
       this._controller.waitForEval("subject.getWindows().length == " + (windowCount - 1),
@@ -169,8 +179,7 @@ downloadManager.prototype = {
    * @param {download} downloads
    *        List of downloaded files
    */
-  deleteDownloadedFiles : function downloadManager_deleteDownloadedFiles(downloads)
-  {
+  deleteDownloadedFiles : function downloadManager_deleteDownloadedFiles(downloads) {
     downloads.forEach(function(download) {
       try {
         var file = getLocalFileFromNativePathOrUrl(download.target);
@@ -186,8 +195,7 @@ downloadManager.prototype = {
    * @returns List of downloads
    * @type {Array of download}
    */
-  getAllDownloads : function downloadManager_getAllDownloads()
-  {
+  getAllDownloads : function downloadManager_getAllDownloads() {
     var dbConn = this._dms.DBConnection;
     var stmt = null;
 
@@ -222,6 +230,18 @@ downloadManager.prototype = {
    */
   getDownloadState : function downloadManager_getDownloadState(download) {
     return download.getNode().getAttribute('state');
+  },
+
+  /**
+   * Gets all the needed external DTD urls as an array
+   *
+   * @returns Array of external DTD urls
+   * @type [string]
+   */
+  getDtds : function downloadManager_getDtds() {
+    var dtds = ["chrome://browser/locale/browser.dtd",
+                "chrome://mozapps/locale/downloads/downloads.dtd"];
+    return dtds;
   },
 
   /**
@@ -284,11 +304,13 @@ downloadManager.prototype = {
    */
   open : function downloadManager_open(controller, shortcut) {
     if (shortcut) {
-      // XXX: Cannot extract commandKeys from DTD until bug 504635 is fixed
-      if (mozmill.isLinux)
-        controller.keypress(null, "y", {ctrlKey: true, shiftKey: true});
-      else
-        controller.keypress(null, "j", {accelKey: true});
+      if (mozmill.isLinux) {
+        var cmdKey = this._utilsAPI.getEntity(this.getDtds(), "downloadsUnix.commandkey");
+        controller.keypress(null, cmdKey, {ctrlKey: true, shiftKey: true});
+      } else {
+        var cmdKey = this._utilsAPI.getEntity(this.getDtds(), "downloads.commandkey");
+        controller.keypress(null, cmdKey, {accelKey: true});
+      }
     } else {
       controller.click(new elementslib.Elem(controller.menus["tools-menu"].menu_openDownloads));
     }
@@ -319,11 +341,8 @@ downloadManager.prototype = {
    *        MozMillController of the window to operate on
    */
   waitForOpened : function downloadManager_waitForOpened(controller) {
-    controller.waitForEval("subject.getMostRecentWindow('Download:Manager') != null",
-                           gTimeout, 100, mozmill.wm);
-
-    var window = mozmill.wm.getMostRecentWindow('Download:Manager');
-    this._controller = new mozmill.controller.MozMillController(window);
+    this._controller = this._utilsAPI.handleWindow("type", "Download:Manager",
+                                                   null, true);
   }
 };
 
@@ -336,34 +355,30 @@ downloadManager.prototype = {
  * @param {string} url
  *        URL of the file which has to be downloaded
  */
-var downloadFileOfUnknownType = function(controller, url)
-{
+var downloadFileOfUnknownType = function(controller, url) {
+  var utilsAPI = collector.getModule('UtilsAPI');
+
   controller.open(url);
 
   // Wait until the unknown content type dialog has been opened
   controller.waitForEval("subject.getMostRecentWindow('').document.documentElement.id == 'unknownContentType'",
                          gTimeout, 100, mozmill.wm);
 
-  var window = mozmill.wm.getMostRecentWindow('');
-  var utController = new mozmill.controller.MozMillController(window);
-  utController.sleep(500);
-
-  // Select to save the file directly
-  var saveFile = new elementslib.ID(utController.window.document, "save");
-  utController.waitThenClick(saveFile, gTimeout);
-  utController.waitForEval("subject.selected == true", gTimeout, 100,
-                         saveFile.getNode());
-
-  // Wait until the OK button has been enabled and click on it
-  var button = new elementslib.Lookup(utController.window.document,
-                                      '/id("unknownContentType")/anon({"anonid":"buttons"})/{"dlgtype":"accept"}');
-  utController.waitForElement(button, gTimeout);
-  utController.waitForEval("subject.okButton.hasAttribute('disabled') == false", gTimeout, 100,
+  utilsAPI.handleWindow("type", "", function (controller) {
+    // Select to save the file directly
+    var saveFile = new elementslib.ID(controller.window.document, "save");
+    controller.waitThenClick(saveFile, gTimeout);
+    controller.waitForEval("subject.selected == true", gTimeout, 100,
+                           saveFile.getNode());
+  
+    // Wait until the OK button has been enabled and click on it
+    var button = new elementslib.Lookup(controller.window.document,
+                                        '/id("unknownContentType")/anon({"anonid":"buttons"})/{"dlgtype":"accept"}');
+    controller.waitForElement(button, gTimeout);
+    controller.waitForEval("subject.okButton.hasAttribute('disabled') == false", gTimeout, 100,
                            {okButton: button.getNode()});
-  utController.click(button);
-
-  utController.waitForEval("subject.getMostRecentWindow('') != this.window", gTimeout, 100,
-                           mozmill.wm);
+    controller.click(button);
+  });
 }
 
 /**
@@ -373,8 +388,7 @@ var downloadFileOfUnknownType = function(controller, url)
  *        Native path or URL of the file
  * @see http://mxr.mozilla.org/mozilla-central/source/toolkit/mozapps/downloads/content/downloads.js#1309
  */
-function getLocalFileFromNativePathOrUrl(aPathOrUrl)
-{
+function getLocalFileFromNativePathOrUrl(aPathOrUrl) {
   if (aPathOrUrl.substring(0,7) == "file://") {
     // if this is a URL, get the file from that
     let ioSvc = Cc["@mozilla.org/network/io-service;1"]

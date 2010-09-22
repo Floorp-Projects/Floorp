@@ -70,7 +70,7 @@ namespace nanojit
         // fills in reasonable default values for all fields.
         Config();
 
-        // ARM architecture to assume when generate instructions for (currently, 5 <= arm_arch <= 7)
+        // ARM architecture to assume when generate instructions for (currently, 4 <= arm_arch <= 7)
         uint8_t arm_arch;
 
         // If true, use CSE.

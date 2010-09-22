@@ -72,25 +72,6 @@ typedef JSC::MacroAssembler::Address Address;
 typedef JSC::ReturnAddressPtr ReturnAddressPtr;
 typedef JSC::MacroAssemblerCodePtr MacroAssemblerCodePtr;
 
-class AutoPropertyDropper
-{
-    JSContext *cx;
-    JSObject *holder;
-    JSProperty *prop;
-
-  public:
-    AutoPropertyDropper(JSContext *cx, JSObject *obj, JSProperty *prop)
-      : cx(cx), holder(obj), prop(prop)
-    {
-        JS_ASSERT(prop);
-    }
-
-    ~AutoPropertyDropper()
-    {
-        holder->dropProperty(cx, prop);
-    }
-};
-
 class PICStubCompiler
 {
   protected:
@@ -559,8 +540,6 @@ class SetPropCompiler : public PICStubCompiler
             return disable("dense array");
         if (!obj->isNative())
             return disable("non-native");
-        if (obj->sealed())
-            return disable("sealed");
 
         Class *clasp = obj->getClass();
 
@@ -590,8 +569,6 @@ class SetPropCompiler : public PICStubCompiler
 
             if (!holder->isNative())
                 return disable("non-native holder");
-            if (holder->sealed())
-                return disable("sealed holder");
 
             if (!shape->writable())
                 return disable("readonly");

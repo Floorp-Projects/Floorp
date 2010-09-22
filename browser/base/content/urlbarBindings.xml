@@ -22,7 +22,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-# Dão Gottwald <dao@design-noir.de>
+#   Dão Gottwald <dao@design-noir.de>
+#   Drew Willcoxon <adw@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,10 +40,68 @@
 # ***** END LICENSE BLOCK *****
 
 <bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
+
+    <content sizetopopup="pref">
+      <xul:vbox class="urlbar-contents" flex="1">
+        <xul:hbox class="urlbar-frontcap-and-textbox" flex="1">
+          <xul:hbox class="urlbar-frontcap">
+            <children includes="image|deck|stack|box">
+              <xul:image class="autocomplete-icon" allowevents="true"/>
+            </children>
+          </xul:hbox>
+          <xul:stack anonid="stack" class="urlbar-stack" flex="1">
+            <xul:scrollbox class="urlbar-over-link-layer" flex="1"
+                           xbl:inherits="overlinkstate" align="center">
+              <xul:label anonid="origin-label" class="urlbar-origin-label" flex="1"
+                         crop="end"/>
+              <xul:hbox anonid="over-link-box" class="urlbar-over-link-box"
+                        xbl:inherits="overlinkstate" align="center">
+                <xul:label anonid="over-link-host-label"
+                           class="urlbar-over-link-host-label"/>
+                <xul:label anonid="over-link-path-label"
+                           class="urlbar-over-link-path-label" flex="1"/>
+              </xul:hbox>
+            </xul:scrollbox>
+            <xul:hbox anonid="textbox-container"
+                      class="autocomplete-textbox-container urlbar-textbox-container"
+                      flex="1" xbl:inherits="focused,overlinkstate">
+              <xul:hbox anonid="textbox-input-box"
+                        class="textbox-input-box urlbar-input-box"
+                        flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
+                <xul:hbox class="urlbar-textbox-container-children"
+                          xbl:inherits="overlinkstate">
+                  <children/>
+                </xul:hbox>
+                <html:input anonid="input"
+                            class="autocomplete-textbox urlbar-input textbox-input"
+                            flex="1" allowevents="true"
+                            xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+              </xul:hbox>
+              <xul:hbox class="urlbar-textbox-container-children"
+                        xbl:inherits="overlinkstate">
+                <children includes="hbox"/>
+              </xul:hbox>
+            </xul:hbox>
+          </xul:stack>
+          <xul:dropmarker anonid="historydropmarker"
+                          class="autocomplete-history-dropmarker urlbar-history-dropmarker"
+                          allowevents="true"
+                          xbl:inherits="open,enablehistory,parentfocused=focused"/>
+          <xul:popupset anonid="popupset"
+                        class="autocomplete-result-popupset"/>
+        </xul:hbox>
+        <xul:vbox class="urlbar-progress-container" flex="1" pack="end">
+          <children includes="progressmeter"/>
+        </xul:vbox>
+      </xul:vbox>
+      <children includes="toolbarbutton"/>
+    </content>
+
     <implementation implements="nsIObserver, nsIDOMEventListener">
       <constructor><![CDATA[
         this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -64,6 +123,26 @@
         this.inputField.addEventListener("mouseout", this, false);
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
+        this._overLinkBox.addEventListener("transitionend", this, false);
+
+        const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        var textBox = document.getAnonymousElementByAttribute(this,
+                                                "anonid", "textbox-input-box");
+        var cxmenu = document.getAnonymousElementByAttribute(textBox,
+                                            "anonid", "input-box-contextmenu");
+        var insertLocation = cxmenu.firstChild;
+        while (insertLocation.nextSibling &&
+               insertLocation.getAttribute("cmd") != "cmd_paste")
+          insertLocation = insertLocation.nextSibling;
+        if (insertLocation) {
+          let element = document.createElement("menuitem");
+          let label = Services.strings.createBundle("chrome://browser/locale/browser.properties").
+                                   GetStringFromName("pasteAndGo.label");
+          element.setAttribute("label", label);
+          element.setAttribute("cmd", "cmd_paste");
+          element.setAttribute("oncommand", "goDoCommand('cmd_paste'); gURLBar.handleCommand();");
+          cxmenu.insertBefore(element, insertLocation.nextSibling);
+        }
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -75,6 +154,7 @@
         this.inputField.removeEventListener("mouseout", this, false);
         this.inputField.removeEventListener("overflow", this, false);
         this.inputField.removeEventListener("underflow", this, false);
+        this._overLinkBox.removeEventListener("transitionend", this, false);
       ]]></destructor>
 
       <field name="_value"></field>
@@ -238,7 +318,7 @@
               // Tack www. and suffix on.  If user has appended directories, insert
               // suffix before them (bug 279035).  Be careful not to get two slashes.
               // Also, don't add the suffix if it's in the original url (bug 233853).
-      
+
               let firstSlash = url.indexOf("/");
               let existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
 
@@ -248,7 +328,7 @@
               // Yes slash, no suffix: Insert suffix (mozilla/stuff)
               // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
               // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
-      
+
               if (firstSlash >= 0) {
                 if (existingSuffix == -1 || existingSuffix > firstSlash)
                   url = url.substring(0, firstSlash) + suffix +
@@ -444,6 +524,12 @@
               this._contentIsCropped = false;
               this._hideURLTooltip();
               break;
+            case "transitionend":
+              if (aEvent.target == this._overLinkBox &&
+                  aEvent.propertyName == "opacity") {
+                this._overLinkTransitioning = false;
+              }
+              break;
           }
         ]]></body>
       </method>
@@ -481,6 +567,100 @@
           return {type: action, param: param};
         ]]></body>
       </method>
+
+      <field name="_stack" readonly="true"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid", "stack");
+      ]]></field>
+
+      <field name="_originLabel" readonly="true"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid", "origin-label");
+      ]]></field>
+
+      <field name="_overLinkBox" readonly="true"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "over-link-box");
+      ]]></field>
+
+      <field name="_overLinkHostLabel" readonly="true"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "over-link-host-label");
+      ]]></field>
+
+      <field name="_overLinkPathLabel" readonly="true"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "over-link-path-label");
+      ]]></field>
+
+      <field name="_textboxContainer" readonly="true"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "textbox-container");
+      ]]></field>
+
+      <method name="setOverLink">
+        <parameter name="aURL"/>
+        <body><![CDATA[
+          // Hide the over-link if aURL is falsey or if the URL bar is focused.
+          if (!aURL || this.focused) {
+            if (this.hasAttribute("overlinkstate")) {
+              this.removeAttribute("overlinkstate");
+              this._overLinkTransitioning = true;
+            }
+            return;
+          }
+
+          // Get the width of the bar before we go modifying it.
+          var barWidth = this._stack.boxObject.width;
+
+          // Determine the pre-path and path of the over-link.  Include the
+          // path's leading slash in the pre-path so that if the path is
+          // truncated its leading slash is visible.
+          var re = new RegExp("([a-z0-9+.-]+://[^/]+/)(.*)");
+          var match = re.exec(aURL);
+          var host = match ? match[1] : "";
+          var path = match ? match[2] : aURL;
+
+          var overLink = this._overLinkBox;
+          var overLinkHost = this._overLinkHostLabel;
+          var overLinkPath = this._overLinkPathLabel;
+
+          overLinkHost.value = host;
+          overLinkPath.value = path;
+
+          // Remove restrictions on the over-link's width.
+          overLinkHost.flex = 0;
+          overLinkHost.crop = "none";
+          overLinkPath.crop = "none";
+          overLink.style.minWidth = "";
+          overLink.style.maxWidth = "";
+
+          // Cap the width of the over-link to 2/3 of the location bar's.
+          var maxWidth = barWidth * 0.67;
+          var overLinkWidth = overLinkHost.boxObject.width +
+                              overLinkPath.boxObject.width;
+          if (overLinkWidth > maxWidth) {
+            // If the host is wider than the cap and therefore the path is not
+            // visible at all, crop the host at the end.
+            if (overLinkHost.boxObject.width > maxWidth) {
+              overLinkHost.flex = 1;
+              overLinkHost.crop = "end";
+            }
+            overLinkPath.crop = host ? "start" : "end";
+            overLink.style.minWidth = maxWidth + "px";
+            overLink.style.maxWidth = maxWidth + "px";
+          }
+
+          this._originLabel.value = this.value;
+
+          // Finally, show the over-link.  If its animation is currently in
+          // transition, show it immediately rather than animating it again.
+          if (this._overLinkTransitioning)
+            this.setAttribute("overlinkstate", "showing");
+          else {
+            this.setAttribute("overlinkstate", "fade-in");
+            this._overLinkTransitioning = true;
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -513,7 +693,12 @@
         dt.effectAllowed = "copyLink";
         event.stopPropagation();
       ]]></handler>
-      <handler event="focus" phase="capturing" action="this._hideURLTooltip();"/>
+
+      <handler event="focus" phase="capturing"><![CDATA[
+        this._hideURLTooltip();
+        this.setOverLink(null);
+      ]]></handler>
+
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>
       <handler event="drop" phase="capturing" action="this.onDrop(event, this);"/>
       <handler event="select"><![CDATA[
@@ -572,7 +757,7 @@
           if (searchBar && searchBar.textbox == this.mInput) {
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
-  
+
             // close the autocomplete popup and revert the entered search term
             this.closePopup();
             controller.handleEscape();

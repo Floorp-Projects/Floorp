@@ -79,6 +79,37 @@ class ImageContainer;
 class CanvasLayer;
 class SpecificLayerAttributes;
 
+/**
+ * The viewport and displayport metrics for the painted frame at the
+ * time of a layer-tree transaction.  These metrics are especially
+ * useful for shadow layers, because the metrics values are updated
+ * atomically with new pixels.
+ */
+struct FrameMetrics {
+  FrameMetrics()
+    : mViewportSize(0, 0)
+    , mViewportScrollOffset(0, 0)
+  {}
+
+  // Default copy ctor and operator= are fine
+
+  PRBool operator==(const FrameMetrics& aOther) const
+  {
+    return (mViewportSize == aOther.mViewportSize &&
+            mViewportScrollOffset == aOther.mViewportScrollOffset &&
+            mDisplayPort == aOther.mDisplayPort);
+  }
+
+  PRBool IsDefault() const
+  {
+    return (FrameMetrics() == *this);
+  }
+
+  nsIntSize mViewportSize;
+  nsIntPoint mViewportScrollOffset;
+  nsIntRect mDisplayPort;
+};
+
 #define MOZ_LAYER_DECL_NAME(n, e)                           \
   virtual const char* Name() const { return n; }            \
   virtual LayerType GetType() const { return e; }
@@ -464,10 +495,16 @@ public:
   }
   /**
    * CONSTRUCTION PHASE ONLY
-   * Tell this layer which region will be visible. It is the responsibility
-   * of the caller to ensure that content outside this region does not
-   * contribute to the final visible window. This can be an
-   * overapproximation to the true visible region.
+   * Tell this layer which region will be visible. The visible region
+   * is a region which contains all the contents of the layer that can
+   * actually affect the rendering of the window. It can exclude areas
+   * that are covered by opaque contents of other layers, and it can
+   * exclude areas where this layer simply contains no content at all.
+   * (This can be an overapproximation to the "true" visible region.)
+   * 
+   * There is no general guarantee that drawing outside the bounds of the
+   * visible region will be ignored. So if a layer draws outside the bounds
+   * of its visible region, it needs to ensure that what it draws is valid.
    */
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
@@ -589,6 +626,17 @@ public:
   { return mUserData.Get(aKey); }
 
   /**
+   * |Disconnect()| is used by layers hooked up over IPC.  It may be
+   * called at any time, and may not be called at all.  Using an
+   * IPC-enabled layer after Destroy() (drawing etc.) results in a
+   * safe no-op; no crashy or uaf etc.
+   *
+   * XXX: this interface is essentially LayerManager::Destroy, but at
+   * Layer granularity.  It might be beneficial to unify them.
+   */
+  virtual void Disconnect() {}
+
+  /**
    * Dynamic downcast to a Thebes layer. Returns null if this is not
    * a ThebesLayer.
    */
@@ -694,7 +742,9 @@ public:
   /**
    * Can be used anytime
    */
-  const nsIntRegion& GetValidRegion() { return mValidRegion; }
+  const nsIntRegion& GetValidRegion() const { return mValidRegion; }
+  float GetXResolution() const { return mXResolution; }
+  float GetYResolution() const { return mYResolution; }
 
   virtual ThebesLayer* AsThebesLayer() { return this; }
 
@@ -702,11 +752,30 @@ public:
 
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData) {}
+    : Layer(aManager, aImplData)
+    , mValidRegion()
+    , mXResolution(1.0)
+    , mYResolution(1.0)
+  {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   nsIntRegion mValidRegion;
+  // Resolution values tell this to paint its content scaled by
+  // <aXResolution, aYResolution>, into a backing buffer with
+  // dimensions scaled the same.  A non-1.0 resolution also tells this
+  // to set scaling factors that compensate for the re-paint
+  // resolution when rendering itself to render targets
+  //
+  // Resolution doesn't affect the visible region, valid region, or
+  // re-painted regions at all.  It only affects how scalable thebes
+  // content is rasterized to device pixels.
+  //
+  // Setting the resolution isn't part of the public ThebesLayer API
+  // because it's backend-specific, and it doesn't necessarily make
+  // sense for all backends to fully support it.
+  float mXResolution;
+  float mYResolution;
 };
 
 /**
@@ -730,8 +799,20 @@ public:
    */
   virtual void RemoveChild(Layer* aChild) = 0;
 
-  // This getter can be used anytime.
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the (sub)document metrics used to render the Layer subtree
+   * rooted at this.
+   */
+  void SetFrameMetrics(const FrameMetrics& aFrameMetrics)
+  {
+    mFrameMetrics = aFrameMetrics;
+  }
+
+  // These getters can be used anytime.
+
   virtual Layer* GetFirstChild() { return mFirstChild; }
+  const FrameMetrics& GetFrameMetrics() { return mFrameMetrics; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
@@ -741,7 +822,10 @@ protected:
       mFirstChild(nsnull)
   {}
 
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
   Layer* mFirstChild;
+  FrameMetrics mFrameMetrics;
 };
 
 /**

@@ -1,0 +1,15 @@
+        ; 46340 * 46340 < 2^31, and will not overflow.
+        big = immi 46340
+        
+        res = muljovi big big err
+        
+        ; Ensure that 'big' gets its own register and isn't shared with 'res'.
+        m = allocp 8
+        sti big m 0
+        
+        reti res
+
+; ---- Exit route for the error handler.
+
+err:    e = immi -1
+        reti e

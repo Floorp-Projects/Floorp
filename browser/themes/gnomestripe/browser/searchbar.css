@@ -30,11 +30,9 @@
   -moz-appearance: none;
   min-width: 0;
   margin: 0;
-  -moz-margin-end: 2px;
   border: 0;
   -moz-box-align: center;
-  background: rgb(95%,95%,95%) -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
-  -moz-border-end: 1px solid ThreeDShadow;
+  background-color: transparent;
 }
 
 .searchbar-engine-button > .button-box {
@@ -44,20 +42,10 @@
   border: 0;
 }
 
-.searchbar-engine-button:hover:active,
-.searchbar-engine-button[open="true"] {
-  background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
-}
-
-.searchbar-engine-button[addengines="true"] {
-  box-shadow: 0 -5px 14px Highlight inset;
-}
-
 .searchbar-dropmarker-image {
   -moz-appearance: toolbarbutton-dropdown !important;
   width: 12px;
   height: 12px;
-  -moz-margin-start: 1px;
 }
 
 /* Search go button */

@@ -372,13 +372,8 @@
                 return;
 
               if (this.mTotalProgress) {
-                const STATES = 8;
-                let state = Math.ceil(STATES * this.mTotalProgress);
-                if (state != this.mTab.getAttribute("progress")) {
-                  this.mTab.setAttribute("progress", state);
-                  this.mTab.removeAttribute("stalled");
-                  this._startStalledTimer();
-                }
+                let value = Math.ceil(this.mTotalProgress * 100);
+                this.mTab.setAttribute("progresspercent", value);
               }
 
               this._callProgressListeners("onProgressChange",
@@ -435,6 +430,7 @@
                 if (!this.mBlank) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
+                    this.mTab.setAttribute("progresspercent", "0");
                     this._startStalledTimer();
                     this.mTabBrowser.updateIcon(this.mTab);
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
@@ -462,7 +458,7 @@
                   this.mBlank = false;
 
                 this.mTab.removeAttribute("busy");
-                this.mTab.removeAttribute("progress");
+                this.mTab.removeAttribute("progresspercent");
                 this.mTab.removeAttribute("stalled");
                 this._cancelStalledTimer();
                 this.mTabBrowser.updateIcon(this.mTab);
@@ -733,6 +729,12 @@
               }
             } catch (e) {}
 
+            if (window.TabView) {
+              let groupName = TabView.getActiveGroupName();
+              if (groupName)
+                newTitle = groupName + sep + newTitle;
+            }
+
             return newTitle;
           ]]>
         </body>
@@ -745,7 +747,8 @@
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.windowTitle;
-            } else {
+            }
+            else {
               this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
             }
           ]]>
@@ -3322,17 +3325,26 @@
     </resources>
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
-      <xul:image xbl:inherits="validate,src=image"
-                 class="tab-icon-image"
-                 role="presentation"/>
-      <xul:label flex="1"
-                 xbl:inherits="value=label,crop,accesskey"
-                 class="tab-text"
-                 role="presentation"/>
-      <xul:toolbarbutton anonid="close-button"
-                         tabindex="-1"
-                         clickthrough="never"
-                         class="tab-close-button"/>
+      <xul:stack class="tab-stack" flex="1">
+        <xul:vbox class="tab-progress-container">
+          <xul:progressmeter class="tab-progress" mode="normal"
+                             xbl:inherits="value=progresspercent,busy,stalled,fadein,selected"/>
+        </xul:vbox>
+        <xul:hbox class="tab-content" align="center">
+          <xul:image xbl:inherits="validate,src=image,fadein,pinned,busy,stalled,selected"
+                     class="tab-icon-image"
+                     role="presentation"/>
+          <xul:label flex="1"
+                     xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected"
+                     class="tab-text tab-label"
+                     role="presentation"/>
+          <xul:toolbarbutton anonid="close-button"
+                             xbl:inherits="fadein,pinned,selected"
+                             tabindex="-1"
+                             clickthrough="never"
+                             class="tab-close-button"/>
+        </xul:hbox>
+      </xul:stack>
     </content>
 
     <implementation>

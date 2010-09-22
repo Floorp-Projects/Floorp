@@ -96,6 +96,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     }
   }
 
+  LayerBuilder()->Init(this);
+
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
 }
 
@@ -403,14 +405,46 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     layerManager->BeginTransaction();
   }
 
-  nsRefPtr<Layer> root = aBuilder->LayerBuilder()->
+  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this);
   if (!root)
     return;
 
-  nsIntRect visible =
-    mVisibleRect.ToNearestPixels(aForFrame->PresContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = aForFrame->PresContext();
+  nsIPresShell* presShell = presContext->GetPresShell();
+
+  nsIntRect visible = mVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
   root->SetVisibleRegion(nsIntRegion(visible));
+
+  // Collect frame metrics with which to stamp the root layer.
+  FrameMetrics metrics;
+
+  PRInt32 auPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
+  metrics.mViewportSize =
+    presContext->GetVisibleArea().ToNearestPixels(auPerCSSPixel).Size();
+  if (presShell->UsingDisplayPort()) {
+    metrics.mDisplayPort =
+      presShell->GetDisplayPort().ToNearestPixels(auPerCSSPixel);
+  }
+
+  nsIScrollableFrame* rootScrollableFrame =
+    presShell->GetRootScrollFrameAsScrollable();
+  if (rootScrollableFrame) {
+    metrics.mViewportScrollOffset =
+      rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerCSSPixel);
+  }
+
+  root->SetFrameMetrics(metrics);
+
+  // If the layer manager supports resolution scaling, set that up
+  if (LayerManager::LAYERS_BASIC == layerManager->GetBackendType()) {
+    BasicLayerManager* basicManager =
+      static_cast<BasicLayerManager*>(layerManager.get());
+    // This is free if both resolutions are 1.0, or neither resolution
+    // has changed since the last transaction
+    basicManager->SetResolution(presShell->GetXResolution(),
+                                presShell->GetYResolution());
+  }
 
   layerManager->SetRoot(root);
   aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
@@ -1586,16 +1620,19 @@ gfxPoint GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
     /* If the -moz-transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
-    if (display->mTransformOrigin[index].GetUnit() == eStyleUnit_Percent)
+    const nsStyleCoord &coord = display->mTransformOrigin[index];
+    if (coord.GetUnit() == eStyleUnit_Calc) {
+      const nsStyleCoord::Calc *calc = coord.GetCalcValue();
       *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
-        display->mTransformOrigin[index].GetPercentValue();
-    
-    /* Otherwise, it's a length. */
-    else
-      *coords[index] =
-        NSAppUnitsToFloatPixels(display->
-                                mTransformOrigin[index].GetCoordValue(),
-                                aFactor);
+                         calc->mPercent +
+                       NSAppUnitsToFloatPixels(calc->mLength, aFactor);
+    } else if (coord.GetUnit() == eStyleUnit_Percent) {
+      *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
+        coord.GetPercentValue();
+    } else {
+      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      *coords[index] = NSAppUnitsToFloatPixels(coord.GetCoordValue(), aFactor);
+    }
   }
   
   /* Adjust based on the origin of the rectangle. */

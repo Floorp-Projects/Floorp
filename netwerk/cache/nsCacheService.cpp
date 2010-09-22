@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -75,6 +76,10 @@
 
 #include "mozilla/FunctionTimer.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/net/NeckoCommon.h"
+#endif
+
 /******************************************************************************
  * nsCacheProfilePrefObserver
  *****************************************************************************/
@@ -84,6 +89,11 @@
 
 #define DISK_CACHE_ENABLE_PREF      "browser.cache.disk.enable"
 #define DISK_CACHE_DIR_PREF         "browser.cache.disk.parent_directory"
+#define DISK_CACHE_SMART_SIZE_FIRST_RUN_PREF\
+    "browser.cache.disk.smart_size.first_run"
+#define DISK_CACHE_SMART_SIZE_ENABLED_PREF \
+    "browser.cache.disk.smart_size.enabled"
+#define DISK_CACHE_SMART_SIZE_PREF "browser.cache.disk.smart_size_cached_value"
 #define DISK_CACHE_CAPACITY_PREF    "browser.cache.disk.capacity"
 #define DISK_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.disk.max_entry_size"
 #define DISK_CACHE_CAPACITY         256000
@@ -99,13 +109,14 @@
 
 static const char * observerList[] = { 
     "profile-before-change",
-    "profile-after-change",
+    "profile-do-change",
     NS_XPCOM_SHUTDOWN_OBSERVER_ID,
     NS_PRIVATE_BROWSING_SWITCH_TOPIC
 };
 static const char * prefList[] = { 
 #ifdef NECKO_DISK_CACHE
     DISK_CACHE_ENABLE_PREF,
+    DISK_CACHE_SMART_SIZE_ENABLED_PREF,
     DISK_CACHE_CAPACITY_PREF,
     DISK_CACHE_DIR_PREF,
 #endif
@@ -117,6 +128,12 @@ static const char * prefList[] = {
     MEMORY_CACHE_ENABLE_PREF,
     MEMORY_CACHE_CAPACITY_PREF
 };
+
+// Let our base line be 250MB. 
+const PRInt32 BASE_LINE = 250 * 1024 * 1024;
+const PRInt32 MIN_SIZE = 50 * 1024 * 1024;
+const PRInt32 MAX_SIZE = 1024 * 1024 * 1024;
+
 
 class nsCacheProfilePrefObserver : public nsIObserver
 {
@@ -144,6 +161,7 @@ public:
     
     PRBool          DiskCacheEnabled();
     PRInt32         DiskCacheCapacity()         { return mDiskCacheCapacity; }
+    void            SetDiskCacheCapacity(PRInt32);
     nsILocalFile *  DiskCacheParentDirectory()  { return mDiskCacheParentDirectory; }
 
     PRBool          OfflineCacheEnabled();
@@ -153,7 +171,10 @@ public:
     PRBool          MemoryCacheEnabled();
     PRInt32         MemoryCacheCapacity();
 
+    static PRUint32 GetSmartCacheSize(void);
+
 private:
+    bool                    PermittedToSmartSize(nsIPrefBranch*, PRBool firstRun);
     PRBool                  mHaveProfile;
     
     PRBool                  mDiskCacheEnabled;
@@ -170,7 +191,75 @@ private:
     PRBool                  mInPrivateBrowsing;
 };
 
-NS_IMPL_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
+
+// Runnable sent to main thread after the cache IO thread calculates available
+// disk space, so that there is no race in setting mDiskCacheCapacity.
+class nsSetSmartSizeEvent: public nsRunnable 
+{
+public:
+    nsSetSmartSizeEvent(bool firstRun, PRInt32 smartSize) 
+        : mFirstRun(firstRun) , mSmartSize(smartSize) {}
+
+    NS_IMETHOD Run() 
+    {
+        nsresult rv;
+        NS_ASSERTION(NS_IsMainThread(), 
+                     "Setting smart size data off the main thread");
+
+        // Main thread may have already called nsCacheService::Shutdown
+        if (!nsCacheService::gService || !nsCacheService::gService->mObserver)
+            return NS_ERROR_NOT_AVAILABLE;
+    
+        PRBool smartSizeEnabled;
+        nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (!branch) {
+            NS_WARNING("Failed to get pref service!");
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+        // ensure smart sizing wasn't switched off while event was pending
+        rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
+                                 &smartSizeEnabled);
+        if (NS_FAILED(rv)) 
+            smartSizeEnabled = PR_FALSE;
+        if (smartSizeEnabled) {
+            nsCacheService::SetDiskCacheCapacity(mSmartSize);
+            // also set on observer, in case mDiskDevice not init'd yet.
+            nsCacheService::gService->mObserver->SetDiskCacheCapacity(mSmartSize);
+            rv = branch->SetIntPref(DISK_CACHE_SMART_SIZE_PREF, mSmartSize);
+            if (NS_FAILED(rv)) 
+                NS_WARNING("Failed to set smart size pref");
+        }
+        return rv;
+    }
+
+private: 
+    bool mFirstRun;
+    PRInt32 mSmartSize;
+};
+
+
+// Runnable sent from main thread to cacheIO thread
+class nsGetSmartSizeEvent: public nsRunnable
+{
+public:
+    nsGetSmartSizeEvent(bool firstRun) : mFirstRun(firstRun) , mSmartSize(0) {}
+   
+    // Calculates user's disk space available on a background thread and
+    // dispatches this value back to the main thread.
+    NS_IMETHOD Run()
+    {
+        mSmartSize = nsCacheProfilePrefObserver::GetSmartCacheSize() / 1024;
+        nsCOMPtr<nsIRunnable> event = new nsSetSmartSizeEvent(mFirstRun,
+                                                              mSmartSize);
+        NS_DispatchToMainThread(event);
+        return NS_OK;
+    }
+
+private: 
+    bool mFirstRun;
+    PRInt32 mSmartSize;
+};
 
 
 nsresult
@@ -246,6 +335,12 @@ nsCacheProfilePrefObserver::Remove()
         prefs->RemoveObserver(prefList[i], this); // remove cache pref observers
 }
 
+void
+nsCacheProfilePrefObserver::SetDiskCacheCapacity(PRInt32 capacity)
+{
+    mDiskCacheCapacity = PR_MAX(0, capacity);
+}
+
 
 NS_IMETHODIMP
 nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
@@ -269,7 +364,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         nsCacheService::OnProfileShutdown(!strcmp("shutdown-cleanse",
                                                   data.get()));
         
-    } else if (!strcmp("profile-after-change", topic)) {
+    } else if (!strcmp("profile-do-change", topic)) {
         // profile after change
         mHaveProfile = PR_TRUE;
         nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -302,6 +397,30 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             if (NS_FAILED(rv))  return rv;
             mDiskCacheCapacity = PR_MAX(0, capacity);
             nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
+       
+        // Update the cache capacity when smart sizing is turned on/off 
+        } else if (!strcmp(DISK_CACHE_SMART_SIZE_ENABLED_PREF, data.get())) {
+            // Is the update because smartsizing was turned on, or off?
+            PRBool smartSizeEnabled;
+            rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
+                                     &smartSizeEnabled);
+            if (NS_FAILED(rv)) return rv;
+            PRInt32 newCapacity = 0;
+            if (smartSizeEnabled) {
+                // Smart sizing switched on: recalculate the capacity.
+                nsCOMPtr<nsIRunnable> event = new nsGetSmartSizeEvent(false);
+                rv = nsCacheService::DispatchToCacheIOThread(event);
+                // If the dispatch failed, just use our base line for the size
+                if (NS_FAILED(rv)) mDiskCacheCapacity = BASE_LINE;
+            } else {
+                // Smart sizing switched off: use user specified size
+                rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &newCapacity);
+                if (NS_FAILED(rv)) return rv;
+                mDiskCacheCapacity = PR_MAX(0, newCapacity);
+                nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
+            } 
+            
+               
 #if 0            
         } else if (!strcmp(DISK_CACHE_DIR_PREF, data.get())) {
             // XXX We probaby don't want to respond to this pref except after
@@ -397,6 +516,108 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
     
     return NS_OK;
 }
+ 
+ 
+
+ /* Computes our best guess for the default size of the user's disk cache, 
+  * based on the amount of space they have free on their hard drive. 
+  * We use a tiered scheme: the more space available, 
+  * the larger the disk cache will be. However, we do not want
+  * to enable the disk cache to grow to an unbounded size, so the larger the
+  * user's available space is, the smaller of a percentage we take. We set a
+  * lower bound of 50MB and an upper bound of 1GB.  
+  *
+  *@param:  None.
+  *@return: The size that the user's disk cache should default to, in bytes.
+  */
+PRUint32
+nsCacheProfilePrefObserver::GetSmartCacheSize(void) {
+  // Get a handle to disk where cache lives, so we can check for free space
+  nsresult rv;
+  nsCOMPtr<nsIFile> profileDirectory;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(profileDirectory));
+  if (NS_FAILED(rv)) { 
+    return BASE_LINE;
+  }
+  nsCOMPtr<nsILocalFile> diskHandle = do_QueryInterface(profileDirectory);
+  PRInt64 bytesAvailable;
+  diskHandle->GetDiskSpaceAvailable(&bytesAvailable);
+  
+  /* 0MB <= Available < 500MB
+   * Use between 50MB  and 200MB
+   */ 
+  if (bytesAvailable < BASE_LINE * 2) {
+    return PR_MAX(MIN_SIZE, bytesAvailable * 4 / 10);
+  }
+  
+  /* 500MB <= Available < 2500MB
+   * Use 250MB 
+   */
+  if (bytesAvailable < static_cast<PRInt64>(BASE_LINE) * 10) {
+    return BASE_LINE;
+  }
+
+  /* 2500MB <= Available < 5000MB 
+   * Use between 250MB and 500MB
+   */
+  if (bytesAvailable < static_cast<PRInt64>(BASE_LINE) * 20) {
+    return bytesAvailable / 10;
+  }
+
+  /* 5000MB <= Available < 50000MB 
+   * Use 625MB
+   */
+  if (bytesAvailable < static_cast<PRInt64>(BASE_LINE) * 200 ) {
+    return BASE_LINE * 5 / 2;
+  }
+
+  /* 50000MB <= Available < 75000MB
+   * Use 800MB
+   */
+  if (bytesAvailable < static_cast<PRInt64>(BASE_LINE) * 300) {
+    return BASE_LINE / 5 * 16;  
+  }
+  
+  /* We have come within range of the ceiling
+   * Use 1GB
+   */
+  return MAX_SIZE;
+}
+
+/* Determine if we are permitted to dynamically size the user's disk cache based
+ * on their disk space available. We may do this so long as the pref 
+ * smart_size.enabled is true.
+ */
+bool
+nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, PRBool
+                                                 firstRun)
+{
+    nsresult rv;
+    // If user has explicitly set cache size to be smaller than previous default
+    // of 250MB, then smart sizing is off by default. Otherwise, smart sizing is
+    // on by default.
+    if (firstRun) {
+        // check if user has set cache size in the past
+        PRBool userSet;
+        rv = branch->PrefHasUserValue(DISK_CACHE_CAPACITY_PREF, &userSet);
+        if (NS_FAILED(rv)) userSet = PR_TRUE;
+        if (userSet) {
+            PRInt32 oldCapacity;
+            rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
+            if (oldCapacity < BASE_LINE / 1024) {
+                branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF, 
+                                    PR_FALSE);
+                return false;
+            }
+        }
+    }
+    PRBool smartSizeEnabled; 
+    rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
+                             &smartSizeEnabled);
+    if (NS_FAILED(rv)) return false;
+    return !!smartSizeEnabled;
+}
 
 
 nsresult
@@ -456,6 +677,37 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
         if (directory)
             mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
     }
+    if (mDiskCacheParentDirectory) {
+        PRBool firstSmartSizeRun;
+        rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_FIRST_RUN_PREF, 
+                                 &firstSmartSizeRun); 
+        if (NS_FAILED(rv)) firstSmartSizeRun = PR_FALSE;
+        if (PermittedToSmartSize(branch, firstSmartSizeRun)) {
+            // Prevent unnecessary eviction before smart size event returns 
+            if (!firstSmartSizeRun) {
+                PRInt32 oldSmartSize;
+                rv = branch->GetIntPref(DISK_CACHE_SMART_SIZE_PREF,
+                                        &oldSmartSize);
+                mDiskCacheCapacity = oldSmartSize;
+            } else {
+                rv = branch->SetIntPref(DISK_CACHE_CAPACITY_PREF, 
+                                        MAX_SIZE / 1024);
+                if (NS_FAILED(rv)) NS_WARNING("Failed setting capacity pref");
+            }
+            nsCOMPtr<nsIRunnable> event = 
+                new nsGetSmartSizeEvent(!!firstSmartSizeRun);
+            rv = nsCacheService::DispatchToCacheIOThread(event);
+            if (NS_FAILED(rv)) mDiskCacheCapacity = BASE_LINE;
+        }
+
+        if (firstSmartSizeRun) {
+            // It is no longer our first run
+            rv = branch->SetBoolPref(DISK_CACHE_SMART_SIZE_FIRST_RUN_PREF, 
+                                     PR_FALSE);
+            if (NS_FAILED(rv)) 
+                NS_WARNING("Failed setting first_run pref in ReadPrefs.");
+        }
+    }
 #endif // !NECKO_DISK_CACHE
 
 #ifdef NECKO_OFFLINE_CACHE
@@ -513,10 +765,25 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     return rv;
 }
 
+nsresult
+nsCacheService::DispatchToCacheIOThread(nsIRunnable* event)
+{
+    if (!gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
+    return gService->mCacheIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
+}
+
 
 PRBool
 nsCacheProfilePrefObserver::DiskCacheEnabled()
 {
+#ifdef MOZ_IPC
+    // Bad Things (tm) are likely to happen if child and parent both write to
+    // disk cache.  
+    // - TODO: remove once we turn off caching entirely in child (bug 559714)
+    if (mozilla::net::IsNeckoChild())
+        return PR_FALSE;
+#endif
+
     if ((mDiskCacheCapacity == 0) || (!mDiskCacheParentDirectory))  return PR_FALSE;
     return mDiskCacheEnabled;
 }
@@ -574,6 +841,13 @@ nsCacheProfilePrefObserver::MemoryCacheEnabled()
 PRInt32
 nsCacheProfilePrefObserver::MemoryCacheCapacity()
 {
+#ifdef MOZ_IPC
+    // For now use small memory cache (1 MB) on child, just for FTP/wyciwyg
+    // - TODO: remove once we turn off caching entirely in child (bug 559714)
+    if (mozilla::net::IsNeckoChild())
+        return 1024; 
+#endif
+
     PRInt32 capacity = mMemoryCacheCapacity;
     if (capacity >= 0) {
         CACHE_LOG_DEBUG(("Memory cache capacity forced to %d\n", capacity));
@@ -1298,7 +1572,6 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
     CACHE_LOG_DEBUG(("Created request %p\n", request));
 
-#if 0 // Disabled because of bug 589296
     // Process the request on the background thread if we are on the main thread
     // and the the request is asynchronous
     if (NS_IsMainThread() && listener && gService->mCacheIOThread) {
@@ -1314,9 +1587,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
         if (NS_FAILED(rv))
             delete request;
     }
-    else 
-#endif
-    {
+    else {
         rv = gService->ProcessRequest(request, PR_TRUE, result);
 
         // delete requests that have completed
@@ -1718,7 +1989,8 @@ nsCacheService::SetDiskCacheCapacity(PRInt32  capacity)
     }
 #endif // !NECKO_DISK_CACHE
     
-    gService->mEnableDiskDevice = gService->mObserver->DiskCacheEnabled();
+    if (gService->mObserver)
+        gService->mEnableDiskDevice = gService->mObserver->DiskCacheEnabled();
 }
 
 void

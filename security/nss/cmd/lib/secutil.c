@@ -4163,3 +4163,39 @@ SECU_SECItemHexStringToBinary(SECItem* srcdest)
     return SECSuccess;
 }
 
+CERTCertificate*
+SECU_FindCertByNicknameOrFilename(CERTCertDBHandle *handle,
+                                  char *name, PRBool ascii,
+                                  void *pwarg)
+{
+    CERTCertificate *the_cert;
+    the_cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
+    if (the_cert) {
+        return the_cert;
+    }
+    the_cert = PK11_FindCertFromNickname(name, pwarg);
+    if (!the_cert) {
+        /* Don't have a cert with name "name" in the DB. Try to
+         * open a file with such name and get the cert from there.*/
+        SECStatus rv;
+        SECItem item = {0, NULL, 0};
+        PRFileDesc* fd = PR_Open(name, PR_RDONLY, 0777); 
+        if (!fd) {
+            return NULL;
+        }
+        rv = SECU_ReadDERFromFile(&item, fd, ascii);
+        PR_Close(fd);
+        if (rv != SECSuccess || !item.len) {
+            PORT_Free(item.data);
+            return NULL;
+        }
+        the_cert = CERT_NewTempCertificate(handle, &item, 
+                                           NULL     /* nickname */, 
+                                           PR_FALSE /* isPerm */, 
+                                           PR_TRUE  /* copyDER */);
+        PORT_Free(item.data);
+    }
+    return the_cert;
+}
+
+

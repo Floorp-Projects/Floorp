@@ -71,16 +71,15 @@ gfxBeOSPlatform::~gfxBeOSPlatform()
 already_AddRefed<gfxASurface>
 gfxBeOSPlatform::CreateOffscreenSurface (PRUint32 width,
                                          PRUint32 height,
-                                         gfxASurface::gfxImageFormat imageFormat)
+                                         gfxASurface::gfxContentType contentType)
 {
     gfxASurface *newSurface = nsnull;
 
-    if (imageFormat == gfxASurface::ImageFormatA1 ||
-        imageFormat == gfxASurface::ImageFormatA8) {
+    if (contentType == gfxASurface::CONTENT_ALPHA) {
         newSurface = new gfxImageSurface(imageFormat, width, height);
     } else {
         newSurface = new gfxBeOSSurface(width, height,
-                                        imageFormat == gfxASurface::ImageFormatARGB32 ? B_RGBA32 : B_RGB32);
+                                        contentType == gfxASurface::CONTENT_COLOR_ALPHA ? B_RGBA32 : B_RGB32);
     }
 
     NS_ADDREF(newSurface);

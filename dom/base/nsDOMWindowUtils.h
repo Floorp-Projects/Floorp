@@ -41,6 +41,7 @@
 #include "nsIDOMWindowUtils.h"
 
 class nsGlobalWindow;
+class nsIPresShell;
 
 class nsDOMWindowUtils : public nsIDOMWindowUtils,
                          public nsSupportsWeakReference
@@ -61,6 +62,7 @@ protected:
   nsIWidget* GetWidget(nsPoint* aOffset = nsnull);
   nsIWidget* GetWidgetForElement(nsIDOMElement* aElement);
 
+  nsIPresShell* GetPresShell();
   nsPresContext* GetPresContext();
 
   NS_IMETHOD SendMouseEventCommon(const nsAString& aType,
@@ -71,4 +73,9 @@ protected:
                                   PRInt32 aModifiers,
                                   PRBool aIgnoreRootScrollFrame,
                                   PRBool aToWindow);
+
+  nsresult RenderDocument(const nsRect& aRect,
+                          PRUint32 aFlags,
+                          nscolor aBackgroundColor,
+                          gfxContext* aThebesContext);
 };
