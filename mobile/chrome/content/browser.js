@@ -2198,6 +2198,7 @@ function Tab(aURI, aParams) {
   this._listener = null;
   this._loading = false;
   this._chromeTab = null;
+  this._metadata = null;
   this.owner = null;
 
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
@@ -2218,13 +2219,13 @@ Tab.prototype = {
     return this._chromeTab;
   },
 
-  /** Update browser styles when the viewport metadata changes. */
-  updateViewportMetadata: function updateViewportMetadata(metaData) {
-    let browser = this._browser;
-    if (!browser)
-      return;
+  get metadata() {
+    return this._metadata || kDefaultMetadata;
+  },
 
-    this.metaData = metaData;
+  /** Update browser styles when the viewport metadata changes. */
+  updateViewportMetadata: function updateViewportMetadata(aMetadata) {
+    this._metadata = aMetadata;
     this.updateViewportSize();
   },
 
@@ -2234,15 +2235,15 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    let metaData = this.metaData || kDefaultMetadata;
-    if (!metaData.autoSize) {
+    let metadata = this.metadata;
+    if (!metadata.autoSize) {
       let screenW = window.innerWidth;
       let screenH = window.innerHeight;
-      let viewportW = metaData.width;
-      let viewportH = metaData.height;
+      let viewportW = metadata.width;
+      let viewportH = metadata.height;
 
       // If (scale * width) < device-width, increase the width (bug 561413).
-      let maxInitialZoom = metaData.defaultZoom || metaData.maxZoom;
+      let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
       if (maxInitialZoom && viewportW)
         viewportW = Math.max(viewportW, screenW / maxInitialZoom);
 
@@ -2264,7 +2265,7 @@ Tab.prototype = {
       let browserBCR = browser.getBoundingClientRect();
       let w = browserBCR.width;
       let h = browserBCR.height;
-      if (metaData.defaultZoom != 1.0) {
+      if (metadata.defaultZoom != 1.0) {
         let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
         w /= dpiScale;
         h /= dpiScale;
@@ -2360,7 +2361,7 @@ Tab.prototype = {
     let browser = this._browser;
     let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
 
-    let md = this.metaData;
+    let md = this.metadata;
     if (md && md.minZoom)
       bounded = Math.max(bounded, md.minZoom);
     if (md && md.maxZoom)
@@ -2394,7 +2395,7 @@ Tab.prototype = {
   },
 
   getDefaultZoomLevel: function getDefaultZoomLevel() {
-    let md = this.metaData;
+    let md = this.metadata;
     if (md && md.defaultZoom)
       return this.clampZoomLevel(md.defaultZoom);
 
@@ -2415,7 +2416,7 @@ Tab.prototype = {
   },
 
   get allowZoom() {
-    return this.metaData.allowZoom;
+    return this.metadata.allowZoom;
   },
 
   updateThumbnail: function updateThumbnail() {
