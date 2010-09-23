@@ -161,11 +161,10 @@ OP_UN(32)
 //---------------------------------------------------------------------------
 // Calls
 //---------------------------------------------------------------------------
-OP___(calli,    33, C,    I,   -1)  // call subroutine that returns an int
-OP_64(callq,    34, C,    Q,   -1)  // call subroutine that returns a quad
-OP___(calld,    35, C,    D,   -1)  // call subroutine that returns a double
-
-OP_UN(36)
+OP___(callv,    33, C,    V,   -1)  // call subroutine that returns void
+OP___(calli,    34, C,    I,   -1)  // call subroutine that returns an int
+OP_64(callq,    35, C,    Q,   -1)  // call subroutine that returns a quad
+OP___(calld,    36, C,    D,   -1)  // call subroutine that returns a double
 
 //---------------------------------------------------------------------------
 // Branches and labels

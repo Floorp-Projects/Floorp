@@ -39,6 +39,8 @@
 
 #include "nanojit.h"
 
+#if defined FEATURE_NANOJIT && defined NANOJIT_SH4
+
 namespace nanojit
 {
     const int      Assembler::NumArgRegs  = 4;
@@ -2034,14 +2036,16 @@ namespace nanojit
     }
 
     void Assembler::asm_call(LIns *inst) {
-        Register result_reg = inst->isop(LIR_calld) ? retDregs[0] : retRegs[0];
+        if (!inst->isop(LIR_callv)) {
+            Register result_reg = inst->isop(LIR_calld) ? retDregs[0] : retRegs[0];
+            prepareResultReg(inst, rmask(result_reg));
 
-        prepareResultReg(inst, rmask(result_reg));
-
-        // Do this after we've handled the call result, so we don't
-        // force the call result to be spilled unnecessarily.
-        evictScratchRegsExcept(rmask(result_reg));
-
+            // Do this after we've handled the call result, so we don't
+            // force the call result to be spilled unnecessarily.
+            evictScratchRegsExcept(rmask(result_reg));
+        } else {
+            evictScratchRegsExcept(0);
+        }
         ArgType types[MAXARGS];
         const CallInfo* call = inst->callInfo();
         uint32_t argc = call->getArgTypes(types);
@@ -3231,3 +3235,4 @@ namespace nanojit
         }
     }
 }
+#endif // FEATURE_NANOJIT && FEATURE_SH4
