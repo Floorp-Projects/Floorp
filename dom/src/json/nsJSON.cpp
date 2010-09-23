@@ -202,6 +202,13 @@ nsJSON::EncodeFromJSVal(jsval *value, JSContext *cx, nsAString &result)
   // Begin a new request
   JSAutoRequest ar(cx);
 
+  JSAutoEnterCompartment ac;
+  JSObject *obj;
+  if (JSVAL_IS_OBJECT(*value) && (obj = JSVAL_TO_OBJECT(*value)) &&
+      !ac.enter(cx, obj)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsJSONWriter writer;
   JSBool ok = JS_Stringify(cx, value, NULL, JSVAL_NULL,
                            WriteCallback, &writer);

@@ -652,7 +652,7 @@ struct JSObject : js::gc::Cell {
         parent = newParent;
     }
 
-    JSObject *getGlobal() const;
+    JS_FRIEND_API(JSObject *) getGlobal() const;
 
     bool isGlobal() const {
         return !!(getClass()->flags & JSCLASS_IS_GLOBAL);

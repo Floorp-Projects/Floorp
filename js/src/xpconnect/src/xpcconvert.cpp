@@ -1384,6 +1384,15 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
 
     JSContext* cx = ccx.GetJSContext();
 
+    JSAutoEnterCompartment ac;
+
+    if(!ac.enter(cx, src))
+    {
+       if(pErr)
+           *pErr = NS_ERROR_UNEXPECTED;
+       return PR_FALSE;
+    }
+
     *dest = nsnull;
      if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
