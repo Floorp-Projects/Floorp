@@ -337,7 +337,7 @@ SyncEngine.prototype = {
 
   // Create a new record using the store and add in crypto fields
   _createRecord: function SyncEngine__createRecord(id) {
-    let record = this._store.createRecord(id);
+    let record = this._store.createRecord(id, this.engineURL + "/" + id);
     record.id = id;
     record.encryption = this.cryptoMetaURL;
     return record;
