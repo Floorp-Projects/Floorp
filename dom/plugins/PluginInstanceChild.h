@@ -482,6 +482,11 @@ private:
     // Used with windowless flash plugin only, see bug 574583
     PRPackedBool          mFlash10Quirks;
 #endif
+#if (MOZ_PLATFORM_MAEMO == 5)
+    // Maemo5 Flash does not remember WindowlessLocal state
+    // we should listen for NPP values negotiation and remember it
+    PRPackedBool          mMaemoImageRendering;
+#endif
 };
 
 } // namespace plugins
