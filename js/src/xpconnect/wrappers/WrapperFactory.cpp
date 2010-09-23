@@ -71,7 +71,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
 {
     NS_ASSERTION(!obj->isWrapper() || obj->getClass()->ext.innerObject,
                  "wrapped object passed to rewrap");
-    NS_ASSERTION(JS_GET_CLASS(cx, obj) != &HolderClass, "trying to wrap a holder");
+    NS_ASSERTION(JS_GET_CLASS(cx, obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
 
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return nsnull;
@@ -142,6 +142,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     if (!wrapperObj || !xrayHolder)
         return wrapperObj;
     wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
+    xrayHolder->setSlot(XrayUtils::JSSLOT_PROXY_OBJ, js::ObjectValue(*wrapperObj));
     return wrapperObj;
 }
 
