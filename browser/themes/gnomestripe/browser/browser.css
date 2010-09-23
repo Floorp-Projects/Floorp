@@ -1482,7 +1482,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-linear-gradient(rgba(255,0,0,.5), rgba(255,0,0,.5)) !important;
+  background-image: -moz-radial-gradient(40% 3px, circle farthest-corner, rgba(233,242,252,1) 2%, rgba(172,206,255,.75) 25%, rgba(87,151,201,.5) 40%, rgba(87,151,201,0) 80%);
+}
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]):hover {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.6) 2px, hsla(0,0%,75%,.2) 50%),
+                    -moz-radial-gradient(40% 3px, circle farthest-corner, rgba(233,242,252,1) 2%, rgba(172,206,255,.75) 25%, rgba(87,151,201,.5) 40%, rgba(87,151,201,0) 80%);
 }
 
 .tabbrowser-tab[pinned] {
