@@ -1928,6 +1928,9 @@ nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
   }
 #endif
 
+  if (obj->isWrapper())
+    return PR_TRUE;
+
   JSPropertyOp op = obj->getJSClass()->getProperty;
   return !!op && (op == sXPCNativeWrapperGetPropertyOp ||
                   op == sXrayWrapperPropertyHolderGetPropertyOp);

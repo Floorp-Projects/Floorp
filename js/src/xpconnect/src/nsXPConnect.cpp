@@ -2712,7 +2712,7 @@ nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
 NS_IMETHODIMP_(void)
 nsXPConnect::GetXrayWrapperPropertyHolderGetPropertyOp(JSPropertyOp *getPropertyPtr)
 {
-    *getPropertyPtr = xpc::HolderClass.getProperty;
+    *getPropertyPtr = xpc::XrayUtils::HolderClass.getProperty;
 }
 
 NS_IMETHODIMP_(void)

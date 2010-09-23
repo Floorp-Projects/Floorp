@@ -53,6 +53,51 @@ namespace xpc {
 using namespace js;
 
 static const uint32 JSSLOT_WN_OBJ = JSSLOT_PRIVATE;
+static const uint32 JSSLOT_RESOLVING = JSSLOT_PRIVATE + 1;
+
+namespace XrayUtils {
+
+const uint32 JSSLOT_PROXY_OBJ = JSSLOT_PRIVATE + 2;
+
+}
+
+class ResolvingId
+{
+  public:
+    ResolvingId(JSObject *holder, jsid id)
+      : mId(id),
+        mPrev(getResolvingId(holder)),
+        mHolder(holder)
+    {
+        holder->setSlot(JSSLOT_RESOLVING, PrivateValue(this));
+    }
+
+    ~ResolvingId() {
+        NS_ASSERTION(getResolvingId(mHolder) == this, "unbalanced ResolvingIds");
+        mHolder->setSlot(JSSLOT_RESOLVING, PrivateValue(mPrev));
+    }
+
+    static ResolvingId *getResolvingId(JSObject *holder) {
+        return (ResolvingId *)holder->getSlot(JSSLOT_RESOLVING).toPrivate();
+    }
+
+    jsid mId;
+    ResolvingId *mPrev;
+
+  private:
+    JSObject *mHolder;
+};
+
+static bool
+IsResolving(JSObject *holder, jsid id)
+{
+    for (ResolvingId *cur = ResolvingId::getResolvingId(holder); cur; cur = cur->mPrev) {
+        if (cur->mId == id)
+            return true;
+    }
+
+    return false;
+}
 
 static JSBool
 holder_get(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
@@ -63,14 +108,26 @@ holder_set(JSContext *cx, JSObject *holder, jsid id, jsval *vp);
 static JSBool
 holder_enumerate(JSContext *cx, JSObject *holder);
 
+namespace XrayUtils {
+
 JSClass HolderClass = {
     "NativePropertyHolder",
-    JSCLASS_HAS_RESERVED_SLOTS(1),
+    JSCLASS_HAS_RESERVED_SLOTS(3),
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
     holder_enumerate,       JS_ResolveStub,  JS_ConvertStub,  NULL,
     NULL,                   NULL,            NULL,            NULL,
     NULL,                   NULL,            NULL,            NULL
 };
+
+}
+
+using namespace XrayUtils;
+
+static JSObject *
+GetHolder(JSObject *obj)
+{
+    return &obj->getProxyExtra().toObject();
+}
 
 static XPCWrappedNative *
 GetWrappedNative(JSObject *obj)
@@ -92,20 +149,19 @@ GetWrappedNativeObjectFromHolder(JSContext *cx, JSObject *holder)
 // getter/setter and rely on the class getter/setter. We install a
 // class getter/setter on the holder object to trigger them.
 static JSBool
-holder_get(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 {
-    if (obj->isWrapper())
-        obj = &obj->getProxyExtra().toObject();
+    NS_ASSERTION(wrapper->isProxy(), "bad this object in get");
+    JSObject *holder = GetHolder(wrapper);
 
-    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, obj);
+    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
     if (NATIVE_HAS_FLAG(wn, WantGetProperty)) {
         JSBool retval = true;
-        nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, obj, id, vp, &retval);
+        nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv)) {
-            if (retval) {
+            if (retval)
                 XPCThrower::Throw(rv, cx);
-            }
             return false;
         }
     }
@@ -113,17 +169,19 @@ holder_get(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-holder_set(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+holder_set(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 {
-    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, obj);
+    NS_ASSERTION(wrapper->isProxy(), "bad this object in set");
+    JSObject *holder = GetHolder(wrapper);
+    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
     if (NATIVE_HAS_FLAG(wn, WantSetProperty)) {
         JSBool retval = true;
-        nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, obj, id, vp, &retval);
+        nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv)) {
-            if (retval) {
+            if (retval)
                 XPCThrower::Throw(rv, cx);
-            }
             return false;
         }
     }
@@ -131,7 +189,7 @@ holder_set(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static bool
-ResolveNativeProperty(JSContext *cx, JSObject *holder, jsid id, bool set,
+ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id, bool set,
                       JSPropertyDescriptor *desc)
 {
     desc->obj = NULL;
@@ -152,8 +210,8 @@ ResolveNativeProperty(JSContext *cx, JSObject *holder, jsid id, bool set,
         JSBool retval = true;
         JSObject *pobj = NULL;
         uintN flags = cx->resolveFlags | (set ? JSRESOLVE_ASSIGNING : 0);
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, holder, id, flags,
-                                                                         &pobj, &retval);
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
+                                                                         flags, &pobj, &retval);
         if (NS_FAILED(rv)) {
             if (retval) {
                 XPCThrower::Throw(rv, cx);
@@ -161,9 +219,8 @@ ResolveNativeProperty(JSContext *cx, JSObject *holder, jsid id, bool set,
             return false;
         }
 
-        if (pobj) {
+        if (pobj)
             return JS_GetPropertyDescriptorById(cx, pobj, id, cx->resolveFlags, desc);
-        }
     }
 
     // There are no native numeric properties, so we can shortcut here. We will not
@@ -249,12 +306,14 @@ holder_enumerate(JSContext *cx, JSObject *holder)
     if (!ida)
         return false;
 
+    JSObject *wrapper = &holder->getSlot(JSSLOT_PROXY_OBJ).toObject();
+
     // Resolve the underlying native properties onto the holder object
     jsid *idp = ida->vector;
     size_t length = ida->length;
     while (length-- > 0) {
         JSPropertyDescriptor dummy;
-        if (!ResolveNativeProperty(cx, holder, *idp++, false, &dummy))
+        if (!ResolveNativeProperty(cx, wrapper, holder, *idp++, false, &dummy))
             return false;
     }
     return true;
@@ -266,7 +325,7 @@ static JSBool
 wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
 {
     if (holder->isWrapper())
-        holder = &holder->getProxyExtra().toObject();
+        holder = GetHolder(holder);
 
     // If the caller intentionally waives the X-ray wrapper we usually
     // apply for wrapped natives, use a special wrapper to make sure the
@@ -312,17 +371,26 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
+    JSObject *holder = GetHolder(wrapper);
+    if (IsResolving(holder, id)) {
+        desc->obj = NULL;
+        return true;
+    }
+
+    ResolvingId resolving(holder, id);
+
     void *priv;
     if (!Policy::enter(cx, wrapper, &id, set ? JSWrapper::SET : JSWrapper::GET, &priv))
         return false;
 
-    JSObject *holder = &wrapper->getProxyExtra().toObject();
-    bool ok = ResolveNativeProperty(cx, holder, id, false, desc);
-
-    // TODO expandos
-
+    bool ok = ResolveNativeProperty(cx, wrapper, holder, id, false, desc);
     Policy::leave(cx, wrapper, priv);
-    return ok;
+    if (!ok || desc->obj)
+        return ok;
+
+    return JS_GetPropertyDescriptorById(cx, holder, id,
+                                        (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                        desc);
 }
 
 template <typename Base, typename Policy>
@@ -338,8 +406,24 @@ bool
 XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                           js::PropertyDescriptor *desc)
 {
-    // XXX When am I called? Implement me!
-    return true;
+    JSObject *holder = GetHolder(wrapper);
+    PropertyDescriptor existing_desc;
+    if (!getOwnPropertyDescriptor(cx, wrapper, id, true, &existing_desc))
+        return false;
+
+    if (existing_desc.attrs & JSPROP_PERMANENT)
+        return true; // XXX throw?
+
+    JSPropertyDescriptor *jsdesc = Jsvalify(desc);
+    if (!(jsdesc->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+        if (!desc->getter)
+            jsdesc->getter = holder_get;
+        if (!desc->setter)
+            jsdesc->setter = holder_set;
+    }
+
+    return JS_DefinePropertyById(cx, holder, id, jsdesc->value, jsdesc->getter, jsdesc->setter,
+                                 jsdesc->attrs);
 }
 
 template <typename Base, typename Policy>
@@ -434,6 +518,7 @@ XrayWrapper<Base, Policy>::createHolder(JSContext *cx, JSObject *wrappedNative, 
         return nsnull;
 
     holder->setSlot(JSSLOT_WN_OBJ, ObjectValue(*wrappedNative));
+    holder->setSlot(JSSLOT_RESOLVING, PrivateValue(NULL));
     return holder;
 }
 
