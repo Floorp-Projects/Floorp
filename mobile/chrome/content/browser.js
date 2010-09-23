@@ -1339,7 +1339,7 @@ const ContentTouchHandler = {
             this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
             break;
           case "TapDouble":
-            this.tapDouble(aEvent.clientX1, aEvent.clientY1, aEvent.clientX2, aEvent.clientY2);
+            this.tapDouble(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
             break;
           case "TapLong":
             this.tapLong();
@@ -1423,17 +1423,9 @@ const ContentTouchHandler = {
       this._dispatchMouseEvent("Browser:MouseUp", aX, aY, aModifiers);
   },
 
-  tapDouble: function tapDouble(aX1, aY1, aX2, aY2) {
+  tapDouble: function tapDouble(aX, aY, aModifiers) {
     this._clearPendingMessages();
-
-    const kDoubleClickRadius = 100;
-
-    let maxRadius = kDoubleClickRadius * getBrowser().scale;
-    let dx = aX2 - aX1;
-    let dy = aY1 - aY2;
-
-    if (dx*dx + dy*dy < maxRadius*maxRadius)
-      this._dispatchMouseEvent("Browser:ZoomToPoint", aX1, aY1);
+    this._dispatchMouseEvent("Browser:ZoomToPoint", aX, aY);
   },
 
   tapLong: function tapLong() {
