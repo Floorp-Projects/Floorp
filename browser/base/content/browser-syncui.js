@@ -96,8 +96,7 @@ let gSyncUI = {
     notificationbox.setAttribute("flex", "1");
 
     let bottombox = document.getElementById("browser-bottombox");
-    let statusbar = document.getElementById("status-bar");
-    bottombox.insertBefore(notificationbox, statusbar);
+    bottombox.insertBefore(notificationbox, bottombox.firstChild);
 
     // Force a style flush to ensure that our binding is attached.
     notificationbox.clientTop;
