@@ -227,17 +227,15 @@ var Browser = {
       if (e.target != window)
         return;
 
-      // XXX is this code right here actually needed?
       let w = window.innerWidth;
       let h = window.innerHeight;
+
+      // XXX is this code right here actually needed?
       let maximize = (document.documentElement.getAttribute("sizemode") == "maximized");
       if (maximize && w > screen.width)
         return;
 
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
-      let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
-      let scaledScreenH = (window.screen.width * (h / w));
-      let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
 
       Browser.styles["window-width"].width = w + "px";
       Browser.styles["window-height"].height = h + "px";
@@ -249,8 +247,11 @@ var Browser = {
       // XXX this should really only happen on browser startup, not every resize
       Browser.hideSidebars();
 
+      let oldWidth = window.cachedWidth || w;
+      window.cachedWidth = w;
+
       for (let i = Browser.tabs.length - 1; i >= 0; i--)
-        Browser.tabs[i].updateViewportSize();
+        Browser.tabs[i].updateViewportSize(w / oldWidth);
 
       // XXX page scrollbox jumps to a strange value on resize. Scrolling it will
       // bound it to a sane place, but not where we were when the resize began :(
@@ -2360,16 +2361,20 @@ Tab.prototype = {
     this.updateViewportSize();
   },
 
-  /** Update browser size when the metadata or the window size changes. */
-  updateViewportSize: function updateViewportSize() {
+  /**
+   * Update browser size when the metadata or the window size changes.
+   * If the window size changes, aRatio = (new width / old width).
+   */
+  updateViewportSize: function updateViewportSize(aRatio) {
     let browser = this._browser;
     if (!browser)
       return;
 
+    let screenW = window.innerWidth;
+    let screenH = window.innerHeight;
+
     let metadata = this.metadata;
     if (!metadata.autoSize) {
-      let screenW = window.innerWidth;
-      let screenH = window.innerHeight;
       let viewportW = metadata.width;
       let viewportH = metadata.height;
 
@@ -2391,11 +2396,22 @@ Tab.prototype = {
       }
 
       browser.setWindowSize(viewportW, viewportH);
-    }
-    else {
-      let browserBCR = browser.getBoundingClientRect();
-      let w = browserBCR.width;
-      let h = browserBCR.height;
+
+      if (aRatio) {
+        let pos = browser.getPosition();
+
+        // zoom to keep the same portion of the document visible
+        let oldScale = browser.scale;
+        let newScale = this.clampZoomLevel(oldScale * aRatio);
+        browser.scale = newScale;
+
+        // ...and keep the same top-left corner of the visible rect
+        let scaleRatio = newScale / oldScale;
+        browser.scrollTo(pos.x * scaleRatio, pos.y * scaleRatio);
+      }
+    } else {
+      let w = screenW;
+      let h = screenH;
       if (metadata.defaultZoom != 1.0) {
         let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
         w /= dpiScale;
