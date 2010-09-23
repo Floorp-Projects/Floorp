@@ -342,6 +342,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:FormSubmit", this);
     messageManager.addMessageListener("Browser:KeyPress", this);
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
+    messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     // broadcast a UIReady message so add-ons know we are finished with startup
@@ -1014,9 +1015,11 @@ var Browser = {
 
   receiveMessage: function receiveMessage(aMessage) {
     let json = aMessage.json;
+    let browser = aMessage.target;
+
     switch (aMessage.name) {
       case "Browser:ViewportMetadata":
-        let tab = Browser.getTabForBrowser(aMessage.target);
+        let tab = Browser.getTabForBrowser(browser);
         // Some browser such as iframes loaded dynamically into the chrome UI
         // does not have any assigned tab
         if (tab)
@@ -1024,7 +1027,6 @@ var Browser = {
         break;
 
       case "Browser:FormSubmit":
-        let browser = aMessage.target;
         browser.lastLocation = null;
         break;
 
@@ -1041,6 +1043,13 @@ var Browser = {
         let rect = Rect.fromRect(json.rect);
         if (!Browser.zoomToPoint(json.x, json.y, rect))
           Browser.zoomFromPoint(json.x, json.y);
+        break;
+
+      case "scroll":
+        if (browser == this.selectedBrowser) {
+          Browser.hideTitlebar();
+          Browser.hideSidebars();
+        }
         break;
     }
   }
