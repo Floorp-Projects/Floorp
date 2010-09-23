@@ -2813,7 +2813,6 @@ MarkAndSweep(JSContext *cx  GCTIMER_PARAM)
     /*
      * Mark phase.
      */
-    TIMESTAMP(startMark);
     GCMarker gcmarker(cx);
     JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
@@ -3175,6 +3174,7 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
         AutoUnlockGC unlock(rt);
         if (firstRun) {
             PreGCCleanup(cx, gckind);
+            TIMESTAMP(startMark);
             firstRun = false;
         }
         MarkAndSweep(cx  GCTIMER_ARG);
