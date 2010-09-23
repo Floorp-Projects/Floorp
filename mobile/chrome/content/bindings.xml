@@ -76,7 +76,7 @@
       </handler>
     </handlers>
     <content orient="vertical">
-      <xul:hbox class="autocomplete-item-container" align="top" xbl:inherits="favorite" mousethrough="always">
+      <xul:hbox class="autocomplete-item-container" align="top" xbl:inherits="favorite,remote" mousethrough="always">
         <xul:image xbl:inherits="src"/>
         <xul:vbox flex="1">
           <xul:label class="autocomplete-item-label" crop="center" xbl:inherits="value"/>
@@ -288,6 +288,7 @@
             if (item._empty || item.getAttribute("url") != url) {
               item.setAttribute("url", url);
               item.removeAttribute("badge");
+              item.removeAttribute("remote");
             }
 
             let isBookmark = ((type == "bookmark") || (type == "tag"));
@@ -320,6 +321,7 @@
             noResultsItem.removeAttribute("src");
             noResultsItem.removeAttribute("tags");
             noResultsItem.removeAttribute("badge");
+            noResultsItem.removeAttribute("remote");
           }
         ]]></body>
       </method>
@@ -386,6 +388,10 @@
           window.clearTimeout(this._badgesTimeout);
 
           this._badgesTimeout = window.setTimeout(function(self) {
+#ifdef MOZ_SERVICES_SYNC
+            let remoteItems = RemoteTabsList.panel._getRemoteTabs();
+#endif
+
             for (let i = 0; i < self._items.childNodes.length; i++) {
               let item = self._items.childNodes[i];
               if (!item.hasAttribute("url"))
@@ -413,6 +419,22 @@
                   break;
                 }
               }
+
+#ifdef MOZ_SERVICES_SYNC
+              // once we have check badges, check if the tab is in the remote list
+              if (!Weave.Service.isLoggedIn)
+                return;
+
+              for (let i = 0; i < remoteItems.length; i++) {
+                let remoteURI = remoteItems[i].uri;
+                if (remoteURI) {
+                  let itemHost = Services.io.newURI(currentURL, null, null);
+                  let remoteHost = Services.io.newURI(remoteURI, null, null);
+                  if (itemHost.equals(remoteHost))
+                    item.setAttribute("remote", "true");
+                }
+              }
+#endif
             }
           }, 300, this);
         ]]></body>
