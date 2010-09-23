@@ -2451,6 +2451,7 @@ Tab.prototype = {
 
     // Append the browser to the document, which should start the page load
     document.getElementById("browsers").appendChild(browser);
+    browser.style.display = "none";
 
     // stop about:blank from loading
     browser.stop();
