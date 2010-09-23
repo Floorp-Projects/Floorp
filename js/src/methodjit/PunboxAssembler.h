@@ -42,6 +42,7 @@
 
 #include "methodjit/BaseAssembler.h"
 #include "methodjit/MachineRegs.h"
+#include "methodjit/RematInfo.h"
 
 namespace js {
 namespace mjit {
@@ -143,6 +144,30 @@ class Assembler : public BaseAssembler
         return l;
     }
 
+    void storeValueFromComponents(RegisterID type, RegisterID payload, Address address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        storeValue(Registers::ValueReg, address);
+    }
+
+    void storeValueFromComponents(RegisterID type, RegisterID payload, BaseIndex address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        storeValue(Registers::ValueReg, address);
+    }
+
+    void storeValueFromComponents(ImmShiftedTag type, RegisterID payload, Address address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        storeValue(Registers::ValueReg, address);
+    }
+
+    void storeValueFromComponents(ImmShiftedTag type, RegisterID payload, BaseIndex address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        storeValue(Registers::ValueReg, address);
+    }
+
     void loadTypeTag(Address address, RegisterID reg) {
         loadValue(address, reg);
         convertValueToType(reg);
@@ -214,6 +239,14 @@ class Assembler : public BaseAssembler
         storePtr(imm, valueOf(address));
     }
 
+    void storeValue(RegisterID reg, Address address) {
+        storePtr(reg, valueOf(address));
+    }
+
+    void storeValue(RegisterID reg, BaseIndex address) {
+        storePtr(reg, valueOf(address));
+    }
+
     void storeValue(const Value &v, Address address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
@@ -228,16 +261,13 @@ class Assembler : public BaseAssembler
         storePtr(Imm64(jv.asBits), valueOf(address));        
     }
 
-    /*
-     * Only does one store. Returns label after store.
-     * This is useless, but matches NunboxAssembler's interface.
-     */
-    Label storeValueForIC(const Value &v, Address address) {
-        jsval_layout jv;
-        jv.asBits = JSVAL_BITS(Jsvalify(v));
-
-        storePtr(Imm64(jv.asBits), valueOf(address));
-        return label();
+    void storeValue(const ValueRemat &vr, Address address) {
+        if (vr.isConstant)
+            storeValue(Valueify(vr.u.v), address);
+        else if (vr.u.s.isTypeKnown)
+            storeValueFromComponents(ImmType(vr.u.s.type.knownType), vr.u.s.data, address);
+        else
+            storeValueFromComponents(vr.u.s.type.reg, vr.u.s.data, address);
     }
 
     void loadPrivate(Address privAddr, RegisterID to) {

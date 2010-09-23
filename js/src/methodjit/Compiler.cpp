@@ -2630,8 +2630,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     uint32 thisvSlot = frame.frameDepth();
     Address thisv = Address(JSFrameReg, sizeof(JSStackFrame) + thisvSlot * sizeof(Value));
 #if defined JS_NUNBOX32
-    masm.storeTypeTag(pic.typeReg, thisv);
-    masm.storePayload(pic.objReg, thisv);
+    masm.storeValueFromComponents(pic.typeReg, pic.objReg, thisv);
 #elif defined JS_PUNBOX64
     masm.orPtr(pic.objReg, pic.typeReg);
     masm.storePtr(pic.typeReg, thisv);
@@ -2998,36 +2997,11 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     /* Store RHS into object slot. */
     Address slot(objReg, 1 << 24);
 #if defined JS_NUNBOX32
-    Label dbgInlineStoreType;
-    DBGLABEL(dbgInlineStoreData);
-
-    if (vr.isConstant) {
-        dbgInlineStoreType = masm.storeValueForIC(Valueify(vr.u.v), slot);
-        DBGLABEL_ASSIGN(dbgInlineStoreData);
-    } else {
-        if (vr.u.s.isTypeKnown) {
-            masm.storeTypeTag(ImmType(vr.u.s.type.knownType), slot);
-            DBGLABEL_ASSIGN(dbgInlineStoreType);
-        } else {
-            masm.storeTypeTag(vr.u.s.type.reg, slot);
-            DBGLABEL_ASSIGN(dbgInlineStoreType);
-        }
-        masm.storePayload(vr.u.s.data, slot);
-        DBGLABEL_ASSIGN(dbgInlineStoreData);
-    }
+    Label dbgInlineStoreType = masm.storeValue(vr, slot);
 #elif defined JS_PUNBOX64
-    if (vr.isConstant) {
-        masm.storeValueForIC(Valueify(vr.u.v), slot);
-    } else {
-        if (vr.u.s.isTypeKnown)
-            masm.move(ImmType(vr.u.s.type.knownType), Registers::ValueReg);
-        else
-            masm.move(vr.u.s.type.reg, Registers::ValueReg);
-        masm.orPtr(vr.u.s.data, Registers::ValueReg);
-        masm.storePtr(Registers::ValueReg, slot);
-    }
-    DBGLABEL(dbgInlineStoreValue);
+    masm.storeValue(vr, slot);
 #endif
+    DBGLABEL(dbgAfterValueStore);
     pic.storeBack = masm.label();
 
     frame.freeReg(objReg);
@@ -3047,22 +3021,22 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     pic.labels.setprop.dslotsLoadOffset = masm.differenceBetween(pic.storeBack, dslotsLoadLabel);
     pic.labels.setprop.inlineShapeOffset = masm.differenceBetween(pic.shapeGuard, inlineShapeOffsetLabel);
     JS_ASSERT(masm.differenceBetween(inlineShapeOffsetLabel, dbgInlineShapeJump) == SETPROP_INLINE_SHAPE_JUMP);
-    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreValue) == SETPROP_INLINE_STORE_VALUE);
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgAfterValueStore) == SETPROP_INLINE_STORE_VALUE);
 #elif defined JS_NUNBOX32
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, inlineShapeOffsetLabel) == SETPROP_INLINE_SHAPE_OFFSET);
     JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == SETPROP_INLINE_SHAPE_JUMP);
     if (vr.isConstant) {
         /* Constants are offset inside the opcode by 4. */
         JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreType)-4 == SETPROP_INLINE_STORE_CONST_TYPE);
-        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreData)-4 == SETPROP_INLINE_STORE_CONST_DATA);
+        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgAfterValueStore)-4 == SETPROP_INLINE_STORE_CONST_DATA);
         JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslots) == SETPROP_DSLOTS_BEFORE_CONSTANT);
     } else if (vr.u.s.isTypeKnown) {
         JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreType)-4 == SETPROP_INLINE_STORE_KTYPE_TYPE);
-        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreData) == SETPROP_INLINE_STORE_KTYPE_DATA);
+        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgAfterValueStore) == SETPROP_INLINE_STORE_KTYPE_DATA);
         JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslots) == SETPROP_DSLOTS_BEFORE_KTYPE);
     } else {
         JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreType) == SETPROP_INLINE_STORE_DYN_TYPE);
-        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreData) == SETPROP_INLINE_STORE_DYN_DATA);
+        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgAfterValueStore) == SETPROP_INLINE_STORE_DYN_DATA);
         JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslots) == SETPROP_DSLOTS_BEFORE_DYNAMIC);
     }
 #endif
@@ -3963,8 +3937,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
 
     mic.load = masm.label();
 
-#if defined JS_NUNBOX32
-# if defined JS_CPU_ARM
+#if defined JS_CPU_ARM
     DataLabel32 offsetAddress;
     if (mic.u.name.dataConst) {
         offsetAddress = masm.moveWithPatch(Imm32(address.offset), JSC::ARMRegisters::S0);
@@ -3978,30 +3951,17 @@ mjit::Compiler::jsop_setgname(uint32 index)
         }
     }
     JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
-# else
+#else
     if (mic.u.name.dataConst) {
         masm.storeValue(v, address);
+    } else if (mic.u.name.typeConst) {
+        masm.storeValueFromComponents(ImmType(typeTag), dataReg, address);
     } else {
-        if (mic.u.name.typeConst)
-            masm.storeTypeTag(ImmType(typeTag), address);
-        else
-            masm.storeTypeTag(typeReg, address);
-        masm.storePayload(dataReg, address);
+        masm.storeValueFromComponents(typeReg, dataReg, address);
     }
-# endif
-#elif defined JS_PUNBOX64
-    if (mic.u.name.dataConst) {
-        /* Emits a single move. No code length variation. */
-        masm.storeValue(v, address);
-    } else {
-        if (mic.u.name.typeConst)
-            masm.move(ImmType(typeTag), Registers::ValueReg);
-        else
-            masm.move(typeReg, Registers::ValueReg);
-        masm.orPtr(dataReg, Registers::ValueReg);
-        masm.storePtr(Registers::ValueReg, address);
-    }
+#endif
 
+#if defined JS_PUNBOX64
     /* 
      * Instructions on x86_64 can vary in size based on registers
      * used. Since we only need to patch the last instruction in
