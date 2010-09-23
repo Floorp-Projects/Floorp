@@ -2,7 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from previous versions of the database
+// Checks that we migrate data from previous versions of the database. This
+// matches test_migrate1.js however it runs with a lightweight theme selected
+// so the themes should appear disabled.
+
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 var addon1 = {
   id: "addon1@tests.mozilla.org",
@@ -100,6 +104,22 @@ function run_test() {
   writeInstallRDFForExtension(theme1, profileDir);
   writeInstallRDFForExtension(theme2, profileDir);
 
+  // Cannot use the LightweightThemeManager before AddonManager has been started
+  // so inject the correct prefs
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify([{
+    id: "1",
+    version: "1",
+    name: "Test LW Theme",
+    description: "A test theme",
+    author: "Mozilla",
+    homepageURL: "http://localhost:4444/data/index.html",
+    headerURL: "http://localhost:4444/data/header.png",
+    footerURL: "http://localhost:4444/data/footer.png",
+    previewURL: "http://localhost:4444/data/preview.png",
+    iconURL: "http://localhost:4444/data/icon.png"
+  }]));
+  Services.prefs.setBoolPref("lightweightThemes.isThemeSelected", true);
+
   let old = do_get_file("data/test_migrate.rdf");
   old.copyTo(gProfD, "extensions.rdf");
 
@@ -142,12 +162,12 @@ function run_test() {
     do_check_true(a5.userDisabled);
     do_check_true(a5.appDisabled);
 
-    // Theme 1 was previously enabled
+    // Theme 1 was previously disabled
     do_check_neq(t1, null);
-    do_check_false(t1.userDisabled);
+    do_check_true(t1.userDisabled);
     do_check_false(t1.appDisabled);
-    do_check_true(t1.isActive);
-    do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_false(t1.isActive);
+    do_check_true(hasFlag(t1.permissions, AddonManager.PERM_CAN_ENABLE));
 
     // Theme 2 was previously disabled
     do_check_neq(t1, null);
