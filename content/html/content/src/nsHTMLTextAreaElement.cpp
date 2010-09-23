@@ -1245,9 +1245,9 @@ nsHTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
         strMaxLength.AppendInt(maxLength);
         strTextLength.AppendInt(textLength);
 
-        const PRUnichar* params[] = { strTextLength.get(), strMaxLength.get() };
+        const PRUnichar* params[] = { strMaxLength.get(), strTextLength.get() };
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                   "ElementSuffersFromBeingTooLong",
+                                                   "FormValidationTextTooLong",
                                                    params, 2, message);
         aValidationMessage = message;
       }
@@ -1256,7 +1256,7 @@ nsHTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
       {
         nsXPIDLString message;
         rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                "TextElementSuffersFromBeingMissing",
+                                                "FormValidationValueMissing",
                                                 message);
         aValidationMessage = message;
       }
