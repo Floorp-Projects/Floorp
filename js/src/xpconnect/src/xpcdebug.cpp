@@ -88,6 +88,9 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     jsbytecode* pc = JS_GetFramePC(cx, fp);
 
     JSAutoRequest ar(cx);
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(cx, JS_GetFrameScopeChain(cx, fp)))
+        return buf;
 
     if(script && pc)
     {

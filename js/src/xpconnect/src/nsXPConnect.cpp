@@ -946,10 +946,9 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
-    SaveFrame sf(aJSContext);
 
     JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, aGlobalJSObj))
+    if(!ac.enter(ccx, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     xpc_InitJSxIDClassObjects();
@@ -1059,8 +1058,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     else
         origin = aOrigin;
 
-    SaveFrame sf(ccx);
-
     JSCompartment* compartment;
     JSObject* tempGlobal;
 
@@ -1069,7 +1066,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, tempGlobal))
+    if(!ac.enter(ccx, tempGlobal))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
@@ -1253,8 +1250,11 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    nsresult rv;
-    if(!XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
+    JSAutoEnterCompartment aec;
+
+    nsresult rv = NS_ERROR_UNEXPECTED;
+    if(!aec.enter(ccx, aJSObj) ||
+       !XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
                                              &aIID, nsnull, &rv))
         return rv;
     return NS_OK;

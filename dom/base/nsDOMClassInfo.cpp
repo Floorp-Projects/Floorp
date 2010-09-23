@@ -1880,6 +1880,14 @@ CreateExceptionFromResult(JSContext *cx, nsresult aResult)
     return NS_ERROR_FAILURE;
   }
 
+  JSAutoEnterCompartment ac;
+
+  if (JSVAL_IS_OBJECT(jv)) {
+    if (!ac.enter(cx, JSVAL_TO_OBJECT(jv))) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
   JS_SetPendingException(cx, jv);
   return NS_OK;
 }
@@ -6490,15 +6498,23 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JSBool did_resolve = JS_FALSE;
   JSContext *my_cx;
 
-  if (!my_context) {
-    my_cx = cx;
-  } else {
-    my_cx = (JSContext *)my_context->GetNativeContext();
-  }
-
   JSBool ok = JS_TRUE;
   jsval exn = JSVAL_VOID;
   if (win->IsInnerWindow()) {
+    JSAutoEnterCompartment ac;
+
+    if (!my_context) {
+      my_cx = cx;
+    } else {
+      my_cx = (JSContext *)my_context->GetNativeContext();
+
+      if (my_cx != cx) {
+        if (!ac.enter(my_cx, obj)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
+    }
+
     JSAutoRequest transfer(my_cx);
 
     JSObject *realObj;

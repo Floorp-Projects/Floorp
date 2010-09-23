@@ -149,6 +149,12 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
   if (mJSMethodObject && targetClassObject) {
     nsDependentString name(mName);
     JSAutoRequest ar(cx);
+    JSAutoEnterCompartment ac;
+
+    if (!ac.enter(cx, mJSMethodObject)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     JSObject * method = ::JS_CloneFunctionObject(cx, mJSMethodObject, globalObject);
     if (!method) {
       return NS_ERROR_OUT_OF_MEMORY;

@@ -447,6 +447,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
                      "Parent should never be an XPCNativeWrapper here");
 
+        if(!ac.enter(ccx, parent))
+            return NS_ERROR_FAILURE;
+
         if(parent != plannedParent)
         {
             XPCWrappedNativeScope* betterScope =
@@ -457,9 +460,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
             newParentVal = OBJECT_TO_JSVAL(parent);
         }
-
-        if(!ac.enter(ccx, parent))
-            return NS_ERROR_FAILURE;
 
         // Take the performance hit of checking the hashtable again in case
         // the preCreate call caused the wrapper to get created through some
@@ -760,8 +760,9 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
     NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(existingJSObject
                                                     ->getParent()),
                  "XPCNativeWrapper being used to parent XPCWrappedNative?");
-    
-    if(!wrapper->Init(ccx, existingJSObject))
+
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject))
     {
         NS_RELEASE(wrapper);
         return NS_ERROR_FAILURE;
@@ -3181,9 +3182,13 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     if(!GetFlatJSObject())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, GetFlatJSObject()))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
     AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
     AutoMarkingWrappedNativeProtoPtr newProto(ccx);
-    
+
     oldProto = GetProto();
 
     XPCNativeScriptableInfo *info = oldProto->GetScriptableInfo();
@@ -3903,6 +3908,14 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     if(rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS)
     {
         SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
+
+        return JS_FALSE;
+    }
+
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, parent))
+    {
+        SLIM_LOG_NOT_CREATED(ccx, identityObj, "unable to enter compartment");
 
         return JS_FALSE;
     }

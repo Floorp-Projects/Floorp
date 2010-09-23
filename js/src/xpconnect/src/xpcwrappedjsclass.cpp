@@ -247,8 +247,8 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     JSBool success = JS_FALSE;
     jsid funid;
     jsval fun;
-
     JSAutoEnterCompartment ac;
+
     if(!ac.enter(cx, jsobj))
         return nsnull;
 
@@ -566,6 +566,10 @@ GetContextFromObject(JSObject *obj)
     // In order to get a context, we need a context.
     XPCCallContext ccx(NATIVE_CALLER);
     if(!ccx.IsValid())
+        return nsnull;
+
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, obj))
         return nsnull;
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj);
@@ -1312,7 +1316,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     obj = thisObj = wrapper->GetJSObject();
 
     JSAutoEnterCompartment ac;
-    if(!ac.enter(ccx, obj))
+    if (!ac.enter(ccx, obj))
         goto pre_call_clean_up;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.

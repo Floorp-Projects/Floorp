@@ -3077,21 +3077,6 @@ SandboxImport(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    JSFunction *fun;
-    {
-        // NB: funobj must only be used to get the JSFunction out.
-        JSObject *funobj = JSVAL_TO_OBJECT(argv[0]);
-        if (funobj->isProxy()) {
-            funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, funobj);
-        }
-
-        fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
-        if (!fun) {
-            XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
-            return JS_FALSE;
-        }
-    }
-
     JSString *funname;
     if (argc > 1) {
         // Use the second parameter as the function name.
@@ -3100,6 +3085,23 @@ SandboxImport(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         argv[1] = STRING_TO_JSVAL(funname);
     } else {
+        // NB: funobj must only be used to get the JSFunction out.
+        JSObject *funobj = JSVAL_TO_OBJECT(argv[0]);
+        if (funobj->isProxy()) {
+            funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, funobj);
+        }
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, funobj)) {
+            return JS_FALSE;
+        }
+
+        JSFunction *fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
+        if (!fun) {
+            XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
+            return JS_FALSE;
+        }
+
         // Use the actual function name as the name.
         funname = JS_GetFunctionId(fun);
         if (!funname) {
