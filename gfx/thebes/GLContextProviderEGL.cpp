@@ -197,7 +197,8 @@ static class EGLLibrary
 {
 public:
     EGLLibrary() 
-        : mInitialized(PR_FALSE)
+        : mInitialized(PR_FALSE),
+          mEGLLibrary(nsnull)
     {
         mHave_EGL_KHR_image_base = PR_FALSE;
         mHave_EGL_KHR_image_pixmap = PR_FALSE;
