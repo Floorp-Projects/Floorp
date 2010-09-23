@@ -441,30 +441,6 @@ function BuildConditionSandbox(aURL) {
       getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
       getIntPref:  function(p) { return this._prefs.getIntPref(p); }
     }
-    
-    sandbox.areOOPPenabled = function () {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-        var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(CI.nsIPrefBranch);
-
-        var pref = false;
-
-        if (navigator.platform.indexOf("Mac") == 0) {
-            var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                                       .getService(CI.nsIXULAppInfo)
-                                       .QueryInterface(CI.nsIXULRuntime);
-            if (xulRuntime.XPCOMABI.match(/x86-/)) {
-                pref = prefservice.getBoolPref("dom.ipc.plugins.enabled.i386");
-            }
-            else if (xulRuntime.XPCOMABI.match(/x86_64-/)) {
-                pref = prefservice.getBoolPref("dom.ipc.plugins.enabled.x86_64");
-            }
-        }
-        else {
-            pref = prefservice.getBoolPref("dom.ipc.plugins.enabled");
-        }
-        return pref;
-    };
 
     dump("REFTEST INFO | Dumping JSON representation of sandbox \n");
     dump("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");
