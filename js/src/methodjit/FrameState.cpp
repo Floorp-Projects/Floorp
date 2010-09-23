@@ -213,14 +213,63 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     /* Cannot clobber the address's register. */
     JS_ASSERT(!freeRegs.hasReg(address.base));
 
+    /* If loading from memory, ensure destination differs. */
+    JS_ASSERT_IF((fe->type.inMemory() || fe->data.inMemory()),
+                 addressOf(fe).base != address.base ||
+                 addressOf(fe).offset != address.offset);
+
+#if defined JS_PUNBOX64
+    if (fe->type.inMemory() && fe->data.inMemory()) {
+        /* Future optimization: track that the Value is in a register. */
+        RegisterID vreg = Registers::ValueReg;
+        masm.loadPtr(addressOf(fe), vreg);
+        masm.storePtr(vreg, address);
+        return;
+    }
+
+    /* Get a register for the payload. */
+    bool wasInRegister = fe->data.inRegister();
+    MaybeRegisterID dreg;
+
+    if (fe->data.inRegister()) {
+        dreg = fe->data.reg();
+    } else {
+        JS_ASSERT(fe->data.inMemory());
+        dreg = popped ? allocReg() : allocReg(fe, RematInfo::DATA);
+        masm.loadPayload(addressOf(fe), dreg.reg());
+        if (!popped)
+            fe->data.setRegister(dreg.reg());
+    }
+    
+    /* Store the Value. */
+    if (fe->type.inRegister()) {
+        masm.storeValueFromComponents(fe->type.reg(), dreg.reg(), address);
+    } else if (fe->isTypeKnown()) {
+        masm.storeValueFromComponents(ImmType(fe->getKnownType()), dreg.reg(), address);
+    } else {
+        pinReg(dreg.reg());
+        JS_ASSERT(fe->type.inMemory());
+        RegisterID treg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE);
+        masm.loadTypeTag(addressOf(fe), treg);
+        masm.storeValueFromComponents(treg, dreg.reg(), address);
+        if (popped)
+            freeReg(treg);
+        else
+            fe->type.setRegister(treg);
+        unpinReg(dreg.reg());
+    }
+
+    /* If register is untracked, free it. */
+    if (!wasInRegister && popped)
+        freeReg(dreg.reg());
+
+#elif defined JS_NUNBOX32
+
     if (fe->data.inRegister()) {
         masm.storePayload(fe->data.reg(), address);
     } else {
         JS_ASSERT(fe->data.inMemory());
         RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::DATA);
-
-        JS_ASSERT(addressOf(fe).base != address.base ||
-                  addressOf(fe).offset != address.offset);
         masm.loadPayload(addressOf(fe), reg);
         masm.storePayload(reg, address);
         if (popped)
@@ -235,8 +284,6 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         masm.storeTypeTag(fe->type.reg(), address);
     } else {
         JS_ASSERT(fe->type.inMemory());
-        JS_ASSERT(addressOf(fe).base != address.base ||
-                  addressOf(fe).offset != address.offset);
         RegisterID reg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE);
         masm.loadTypeTag(addressOf(fe), reg);
         masm.storeTypeTag(reg, address);
@@ -245,6 +292,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         else
             fe->type.setRegister(reg);
     }
+#endif
 }
 
 #ifdef DEBUG
@@ -1063,6 +1111,10 @@ FrameState::unpinEntry(const ValueRemat &vr)
 void
 FrameState::syncEntry(Assembler &masm, FrameEntry *fe, const ValueRemat &vr)
 {
+#if defined JS_PUNBOX64
+    if (!vr.isDataSynced || !vr.isTypeSynced)
+        masm.storeValue(vr, addressOf(fe));
+#elif defined JS_NUNBOX32
     if (vr.isConstant) {
         if (!vr.isDataSynced || !vr.isTypeSynced)
             masm.storeValue(Valueify(vr.u.v), addressOf(fe));
@@ -1076,6 +1128,7 @@ FrameState::syncEntry(Assembler &masm, FrameEntry *fe, const ValueRemat &vr)
                 masm.storeTypeTag(vr.u.s.type.reg, addressOf(fe));
         }
     }
+#endif
 }
 
 static inline bool
