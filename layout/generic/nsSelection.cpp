@@ -3554,8 +3554,15 @@ CompareToRangeStart(nsINode* aCompareNode, PRInt32 aCompareOffset,
 {
   nsINode* start = aRange->GetStartParent();
   NS_ENSURE_STATE(aCompareNode && start);
-  *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
-                                        start, aRange->StartOffset());
+  // If the nodes that we're comparing are not in the same document,
+  // assume that aCompareNode will fall at the end of the ranges.
+  if (aCompareNode->GetCurrentDoc() != start->GetCurrentDoc() ||
+      !start->GetCurrentDoc()) {
+    *aCmp = 1;
+  } else {
+    *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
+                                          start, aRange->StartOffset());
+  }
   return NS_OK;
 }
 
@@ -3565,8 +3572,15 @@ CompareToRangeEnd(nsINode* aCompareNode, PRInt32 aCompareOffset,
 {
   nsINode* end = aRange->GetEndParent();
   NS_ENSURE_STATE(aCompareNode && end);
-  *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
-                                        end, aRange->EndOffset());
+  // If the nodes that we're comparing are not in the same document,
+  // assume that aCompareNode will fall at the end of the ranges.
+  if (aCompareNode->GetCurrentDoc() != end->GetCurrentDoc() ||
+      !end->GetCurrentDoc()) {
+    *aCmp = 1;
+  } else {
+    *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
+                                          end, aRange->EndOffset());
+  }
   return NS_OK;
 }
 
