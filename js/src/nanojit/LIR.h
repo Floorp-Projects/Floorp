@@ -1963,6 +1963,12 @@ namespace nanojit
 
         Allocator& alloc;
 
+        // If true, we will not add new instructions to the CSE tables, but we
+        // will continue to CSE instructions that match existing table
+        // entries.  Load instructions will still be removed if aliasing
+        // stores are encountered.
+        bool suspended;
+
         CseAcc miniAccSetToCseAcc(MiniAccSet miniAccSet, LoadQual loadQual) {
             NanoAssert(miniAccSet.val < NUM_ACCS || miniAccSet.val == MINI_ACCSET_MULTIPLE.val);
             return (loadQual == LOAD_CONST) ? CSE_ACC_CONST :
@@ -2038,6 +2044,14 @@ namespace nanojit
         LIns* insCall(const CallInfo *call, LIns* args[]);
         LIns* insGuard(LOpcode op, LIns* cond, GuardRecord *gr);
         LIns* insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord *gr);
+
+        // These functions provide control over CSE in the face of control
+        // flow.  A suspend()/resume() pair may be put around a synthetic
+        // control flow diamond, preventing the inserted label from resetting
+        // the CSE state.  A suspend() call must be dominated by a resume()
+        // call, else incorrect code could result.
+        void suspend() { suspended = true; }
+        void resume() { suspended = false; }
     };
 
     class LirBuffer
