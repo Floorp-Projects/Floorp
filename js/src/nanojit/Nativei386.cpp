@@ -966,11 +966,13 @@ namespace nanojit
 
     void Assembler::asm_call(LIns* ins)
     {
-        Register rr = ( ins->isop(LIR_calld) ? FST0 : retRegs[0] );
-        prepareResultReg(ins, rmask(rr));
-
-        evictScratchRegsExcept(rmask(rr));
-
+        if (!ins->isop(LIR_callv)) {
+            Register rr = ( ins->isop(LIR_calld) ? FST0 : retRegs[0] );
+            prepareResultReg(ins, rmask(rr));
+            evictScratchRegsExcept(rmask(rr));
+        } else {
+            evictScratchRegsExcept(0);
+        }
         const CallInfo* call = ins->callInfo();
         // must be signed, not unsigned
         uint32_t iargs = call->count_int32_args();
@@ -1021,7 +1023,7 @@ namespace nanojit
             }
         }
 
-        NanoAssert(ins->isop(LIR_callp) || ins->isop(LIR_calld));
+        NanoAssert(ins->isop(LIR_callv) || ins->isop(LIR_callp) || ins->isop(LIR_calld));
         if (!indirect) {
             CALL(call);
         }
