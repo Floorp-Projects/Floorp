@@ -54,6 +54,9 @@ let gSyncUtils = {
       openUILinkIn(url, "window");
     else if (thisDocEl.id == "BrowserPreferences" && !thisDocEl.instantApply)
       openUILinkIn(url, "window");
+    else if (document.documentElement.id == "change-dialog")
+      Weave.Svc.WinMediator.getMostRecentWindow("navigator:browser")
+        .openUILinkIn(url, "tab");
     else
       openUILinkIn(url, "tab");
   },
@@ -100,6 +103,10 @@ let gSyncUtils = {
 
   openPrivacyPolicy: function () {
     this._openLink(Weave.Svc.Prefs.get("privacyURL"));
+  },
+
+  openSyncKeyHelp: function () {
+    this._openLink(Weave.Svc.Prefs.get("syncKeyHelpURL"));
   },
 
   // xxxmpc - fix domain before 1.3 final (bug 583652)

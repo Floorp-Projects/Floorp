@@ -107,7 +107,34 @@
         </row>
       </rows>
     </grid>
-    <hbox id="passphraseBackupButtons">
+
+    <vbox id="feedback" pack="center">
+      <hbox id="statusRow" align="center">
+        <image id="statusIcon" class="statusIcon"/>
+        <label id="status" class="status" value=" "/>
+      </hbox>
+
+      <vbox id="passphraseStrengthRow" hidden="true" pack="end">
+        <hbox>
+          <label id="passphraseStrengthLabel"
+                 control="passphraseStrength"
+                 value="&syncKeyStrength.label;"/>
+          <progressmeter id="passphraseStrength"
+                         aria-labelledby="passphraseStrengthLabel"
+                         max="128"
+                         value="0"
+                         flex="1"/>
+        </hbox>
+        <hbox align="right" flex="1">
+          <label class="text-link inline-link"
+                 onclick="event.stopPropagation();
+                          gSyncUtils.openSyncKeyHelp();"
+                 value="&syncKeyHelp.label;"/>
+        </hbox>
+      </vbox>
+    </vbox>
+
+    <hbox id="passphraseBackupButtons" pack="center">
       <button label="&button.syncKeyBackup.print.label;"
               accesskey="&button.syncKeyBackup.print.accesskey;"
               oncommand="gSyncUtils.passphrasePrint('passphraseBox');"/>
@@ -119,10 +146,5 @@
     <description>
       <html:p class="data" id="warningText"/>
     </description>
-
-    <hbox align="center">
-      <image id="statusIcon" class="statusIcon"/>
-      <label id="status" class="status" value=" "/>
-    </hbox>
   </vbox>
 </dialog>
