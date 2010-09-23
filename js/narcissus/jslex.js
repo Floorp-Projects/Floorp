@@ -94,8 +94,10 @@ Narcissus.lexer = (function() {
         },
 
         mustMatch: function (tt) {
-            if (!this.match(tt))
-                throw this.newSyntaxError("Missing " + tokens[tt].toLowerCase());
+            if (!this.match(tt)) {
+                throw this.newSyntaxError("Missing " +
+                                          definitions.tokens[tt].toLowerCase());
+            }
             return this.token;
         },
 
@@ -466,4 +468,3 @@ Narcissus.lexer = (function() {
     return { Tokenizer: Tokenizer };
 
 }());
-
