@@ -356,7 +356,21 @@ let gSyncUI = {
       let priority = Weave.Notifications.PRIORITY_WARNING;
       let buttons = [];
 
-      if (Weave.Status.sync == Weave.OVER_QUOTA) {
+      // Check if the client is outdated in some way
+      let outdated = Weave.Status.sync == Weave.VERSION_OUT_OF_DATE;
+      for (let [engine, reason] in Iterator(Weave.Status.engines))
+        outdated = outdated || reason == Weave.VERSION_OUT_OF_DATE;
+
+      if (outdated) {
+        description = this._stringBundle.GetStringFromName(
+          "error.sync.needUpdate.description");
+        buttons.push(new Weave.NotificationButton(
+          this._stringBundle.GetStringFromName("error.sync.needUpdate.label"),
+          this._stringBundle.GetStringFromName("error.sync.needUpdate.accesskey"),
+          function() { window.openUILinkIn("https://services.mozilla.com/update/", "tab"); return true; }
+        ));
+      }
+      else if (Weave.Status.sync == Weave.OVER_QUOTA) {
         description = this._stringBundle.GetStringFromName(
           "error.sync.quota.description");
         buttons.push(new Weave.NotificationButton(
