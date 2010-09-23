@@ -121,7 +121,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
-#if defined(OS_MACOSX)  
+#if defined(OS_MACOSX)
+#if defined(__i386__)
+    , mEventModel(NPEventModelCarbon)
+#endif
     , mShColorSpace(nsnull)
     , mShContext(nsnull)
     , mDrawingModel(NPDrawingModelCoreGraphics)
@@ -463,6 +466,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
         if (!CallNPN_SetValue_NPPVpluginEventModel(eventModel, &rv))
             return NPERR_GENERIC_ERROR;
+#if defined(__i386__)
+        mEventModel = static_cast<NPEventModel>(eventModel);
+#endif
 
         return rv;
     }
