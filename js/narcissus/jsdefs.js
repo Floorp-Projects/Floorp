@@ -112,6 +112,9 @@ Narcissus.definitions = (function() {
         // Terminals.
         "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
 
+        // SSA fiction.
+        "PHI", "INTERVENED",
+
         // Keywords.
         "break",
         "case", "catch", "const", "continue",
