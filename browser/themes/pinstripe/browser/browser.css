@@ -1610,8 +1610,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-color: -moz-mac-chrome-inactive;
 }
 
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  background-image: -moz-radial-gradient(center 2px, circle cover, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
+}
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-color: rgba(255,0,0,.5) !important;
+  background-image: -moz-radial-gradient(center 99%, circle cover, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
 }
 
 #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"] {
