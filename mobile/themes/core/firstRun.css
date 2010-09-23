@@ -190,6 +190,13 @@ img {
 #firstrun ul#recommended li span {
   display: block;
   padding: 0 10px;
+  min-height: 150px;
+}
+
+@media (max-width: 499px) {
+  #firstrun ul#recommended li span {
+    min-height: 180px;
+  }
 }
 
 #firstrun ul#recommended li#sync b {
@@ -201,15 +208,15 @@ img {
 }
 
 #firstrun ul#recommended li#home b {
-  background-position: 50% -300px;
+  background-position: 50% -280px;
 }
 
-#firstrun #relNotes {
+#firstrun #features {
   clear: both;
   text-align: center;
 }
 
-#firstrun #relNotes a {
+#firstrun #features a {
   display: inline-block;
   padding: 5px 35px 5px 0;
   background: url("chrome://browser/content/firstrun/nav-arrow.png") right center no-repeat;

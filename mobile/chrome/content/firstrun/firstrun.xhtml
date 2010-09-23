@@ -73,17 +73,21 @@
     <div id="content">
       <h2></h2>
       <ul id="recommended">
-        <li id="sync"><a href="javascript:loadSync();"><b>&firstrun.sync.title;</b> <span>&firstrun.sync.description;</span></a></li>
-        <li id="addons"><a href="javascript:loadAddons();"><b>&firstrun.addons.title;</b> <span>&firstrun.addons.description;</span></a></li>
-        <li id="home"><a href="about:home"><b>&firstrun.home.title;</b> <span>&firstrun.home.description;</span></a></li>
+        <li id="sync"><a href="javascript:loadSync();"><b>&firstrun.sync2.title;</b> <span>&firstrun.sync2.description;</span></a></li>
+        <li id="addons"><a href="javascript:loadAddons();"><b>&firstrun.addons2.title;</b> <span>&firstrun.addons2.description;</span></a></li>
+        <li id="home"><a href="about:home"><b>&firstrun.home2.title;</b> <span>&firstrun.home2.description;</span></a></li>
       </ul>
 
-      <p id="relNotes"><a id="releaseNotesURL">&firstrun.relNotes.label;</a></p>
+      <p id="features"><a id="featuresURL">&firstrun.features;</a></p>
       <script type="application/javascript;version=1.8"><![CDATA[
         let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
         let gChromeWin = null;
+
         let links = [
           {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
+          {id: "featuresURL", pref: "app.featuresURL"},
+          {id: "faqURL", pref: "app.faqURL"},
+          {id: "privacyURL", pref: "app.privacyURL"}
         ];
 
         function getChromeWin() {
@@ -121,12 +125,13 @@
 
         function setupLinks() {
           try {
-            let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                                      .getService(Ci.nsIURLFormatter);
-            links.forEach(function (link) {
-              let url = formatter.formatURLPref(link.pref);
+            let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+            links.forEach(function(link) {
               let element = document.getElementById(link.id);
-              element.setAttribute("href", url);
+              if (element) {
+                let url = formatter.formatURLPref(link.pref);
+                element.setAttribute("href", url);
+              }
             });
           } catch (ex) {}
         }
@@ -138,10 +143,8 @@
     <div id="footer">
 
       <ul class="nav">
-        <!--
-        <li><a href="http://mozilla.com/m/faq">&firstrun.faq;</a></li>
-        <li><a href="http://mozilla.com/m/privacy">&firstrun.privacy;</a></li>
-        -->
+        <li><a id="faqURL">&firstrun.faq;</a></li>
+        <li><a id="privacyURL">&firstrun.privacy;</a></li>
       </ul>
 
       <div id="follow">
