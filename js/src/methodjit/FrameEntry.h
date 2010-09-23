@@ -128,7 +128,6 @@ class FrameEntry
     void track(uint32 index) {
         clear();
         index_ = index;
-        tracked = true;
     }
 
     void clear() {
@@ -211,14 +210,6 @@ class FrameEntry
         copy = fe;
     }
 
-    inline bool isTracked() const {
-        return tracked;
-    }
-
-    inline void untrack() {
-        tracked = false;
-    }
-
   private:
     JSValueType knownType;
     jsval_layout v_;
@@ -228,8 +219,7 @@ class FrameEntry
     FrameEntry *copy;
     bool       copied;
     bool       isNumber;
-    bool       tracked;
-    char       padding[1];
+    char       padding[2];
 };
 
 } /* namespace mjit */
