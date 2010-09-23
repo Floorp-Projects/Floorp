@@ -366,6 +366,9 @@ private:
 #endif // defined(OS_WIN)
 #if defined(OS_MACOSX)
 private:
+#if defined(__i386__)
+    NPEventModel          mEventModel;
+#endif
     CGColorSpaceRef       mShColorSpace;
     CGContextRef          mShContext;
     int16_t               mDrawingModel;
@@ -375,6 +378,10 @@ public:
     const NPCocoaEvent* getCurrentEvent() {
         return mCurrentEvent;
     }
+
+#if defined(__i386__)
+    NPEventModel EventModel() { return mEventModel; }
+#endif
 
 private:
     const NPCocoaEvent   *mCurrentEvent;
