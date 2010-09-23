@@ -165,17 +165,40 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
 }
 
 // nsIAccessibilityService
-nsresult
+void
 nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
-                                            nsIAccessible *aTarget)
+                                            nsAccessible* aTarget)
 {
-  nsRefPtr<nsAccessible> accessible(do_QueryObject(aTarget));
-  nsEventShell::FireEvent(aEvent, accessible);
-  return NS_OK;
+  nsEventShell::FireEvent(aEvent, aTarget);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibilityService
+
+nsAccessible*
+nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
+                                                  PRBool aCanCreate)
+{
+  nsIDocument* documentNode = aPresShell->GetDocument();
+  if (documentNode) {
+    nsCOMPtr<nsISupports> container = documentNode->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+    if (treeItem) {
+      nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+      treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+      if (treeItem != rootTreeItem) {
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootTreeItem));
+        nsCOMPtr<nsIPresShell> presShell;
+        docShell->GetPresShell(getter_AddRefs(presShell));
+        documentNode = presShell->GetDocument();
+      }
+
+      return aCanCreate ?
+        GetDocAccessible(documentNode) : GetDocAccessibleFromCache(documentNode);
+    }
+  }
+  return nsnull;
+}
 
 already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateOuterDocAccessible(nsIContent* aContent,

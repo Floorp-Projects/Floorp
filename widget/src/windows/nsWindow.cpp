@@ -7599,14 +7599,7 @@ nsWindow::GetRootAccessible()
   NS_LOG_WMGETOBJECT_THISWND
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
 
-  nsAccessible* docAcc = DispatchAccessibleEvent(NS_GETACCESSIBLE);
-  if (!docAcc)
-    return nsnull;
-
-  nsCOMPtr<nsIAccessibleDocument> rootDocAcc;
-  docAcc->GetRootDocument(getter_AddRefs(rootDocAcc));
-  nsRefPtr<nsAccessible> rootAcc(do_QueryObject(rootDocAcc));
-  return rootAcc;
+  return DispatchAccessibleEvent(NS_GETACCESSIBLE);
 }
 
 STDMETHODIMP_(LRESULT)
