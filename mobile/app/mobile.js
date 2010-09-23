@@ -400,9 +400,15 @@ pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 //pref("app.support.baseURL", "http://support.mozilla.com/1/mobile/%VERSION%/%OS%/%LOCALE%/");
 pref("app.support.baseURL", "http://mobile.support.mozilla.com/");
-pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
-pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/legal/privacy/firefox/mobile/");
+pref("app.privacyURL", "https://www.mozilla.com/%LOCALE%/legal/privacy/firefox/mobile/");
 pref("app.creditsURL", "http://www.mozilla.com/%LOCALE%/mobile/credits/");
+#if MOZ_UPDATE_CHANNEL == beta
+pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
+pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
+#else
+pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/features/");
+pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
+#endif
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
