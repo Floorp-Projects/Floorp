@@ -379,6 +379,21 @@ double calld1(double x, double i, double y, double l, double x1, double i1, doub
     return x + i * y - l + x1 / i1 - y1 * l1; 
 }
 
+// The calling tests with mixed argument types are sensible for all platforms, but they highlight
+// the differences between the supported ABIs on ARM.
+
+double callid1(int i, double x, double y, int j, int k, double z) {
+    return (x + y + z) / (double)(i + j + k);
+}
+
+double callid2(int i, int j, int k, double x) {
+    return x / (double)(i + j + k);
+}
+
+double callid3(int i, int j, double x, int k, double y, double z) {
+    return (x + y + z) / (double)(i + j + k);
+}
+
 Function functions[] = {
     FN(puts,   CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_P)),
     FN(sin,    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)),
@@ -386,6 +401,11 @@ Function functions[] = {
     FN(free,   CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_P)),
     FN(calld1, CallInfo::typeSig8(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
                                   ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)),
+    FN(callid1, CallInfo::typeSig6(ARGTYPE_D, ARGTYPE_I, ARGTYPE_D, ARGTYPE_D,
+                                   ARGTYPE_I, ARGTYPE_I, ARGTYPE_D)),
+    FN(callid2, CallInfo::typeSig4(ARGTYPE_D, ARGTYPE_I, ARGTYPE_I, ARGTYPE_I, ARGTYPE_D)),
+    FN(callid3, CallInfo::typeSig6(ARGTYPE_D, ARGTYPE_I, ARGTYPE_I, ARGTYPE_D,
+                                   ARGTYPE_I, ARGTYPE_D, ARGTYPE_D)),
 };
 
 template<typename out, typename in> out
