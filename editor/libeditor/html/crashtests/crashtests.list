@@ -8,7 +8,7 @@ load 428489-1.html
 load 431086-1.xhtml
 load 448329-1.html
 load 448329-2.html
-asserts(8-20) load 448329-3.html
+load 448329-3.html
 load 456727-1.html
 load 456727-2.html
 asserts(1) load 467647-1.html # bug 382210
