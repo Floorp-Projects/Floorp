@@ -193,3 +193,23 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
   }
   return PR_TRUE;
 }
+
+static void NudgeToInteger(double *aVal)
+{
+    float f = float(*aVal);
+    float r = NS_roundf(f);
+    if (f == r) {
+        *aVal = r;
+    }
+}
+
+void
+gfxMatrix::NudgeToIntegers(void)
+{
+    NudgeToInteger(&xx);
+    NudgeToInteger(&xy);
+    NudgeToInteger(&yx);
+    NudgeToInteger(&yy);
+    NudgeToInteger(&x0);
+    NudgeToInteger(&y0);
+}
