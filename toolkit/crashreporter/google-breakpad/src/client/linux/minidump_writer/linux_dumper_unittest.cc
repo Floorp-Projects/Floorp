@@ -35,7 +35,7 @@
 #include "breakpad_googletest_includes.h"
 #include "client/linux/minidump_writer/linux_dumper.h"
 #include "common/linux/file_id.h"
-#include "common/linux/memory.h"
+#include "common/memory.h"
 
 using namespace google_breakpad;
 
