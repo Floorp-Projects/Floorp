@@ -8008,7 +8008,9 @@ function safeModeRestart()
     environment.set("MOZ_SAFE_MODE_RESTART", "1");
     Application.restart();
   }
-}/* duplicateTabIn duplicates tab in a place specified by the parameter |where|.
+}
+
+/* duplicateTabIn duplicates tab in a place specified by the parameter |where|.
  *
  * |where| can be:
  *  "tab"         new tab
