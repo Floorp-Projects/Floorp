@@ -903,10 +903,13 @@ namespace nanojit
     }
 
     void Assembler::asm_call(LIns *ins) {
-        Register rr = ( ins->isop(LIR_calld) ? XMM0 : retRegs[0] );
-        prepareResultReg(ins, rmask(rr));
-
-        evictScratchRegsExcept(rmask(rr));
+        if (!ins->isop(LIR_callv)) {
+            Register rr = ( ins->isop(LIR_calld) ? XMM0 : retRegs[0] );
+            prepareResultReg(ins, rmask(rr));
+            evictScratchRegsExcept(rmask(rr));
+        } else {
+            evictScratchRegsExcept(0);
+        }
 
         const CallInfo *call = ins->callInfo();
         ArgType argTypes[MAXARGS];

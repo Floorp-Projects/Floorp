@@ -394,18 +394,24 @@ double callid3(int i, int j, double x, int k, double y, double z) {
     return (x + y + z) / (double)(i + j + k);
 }
 
+// Simple print function for testing void calls.
+void printi(int x) {
+    cout << x << endl;
+}
+
 Function functions[] = {
-    FN(puts,   CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_P)),
-    FN(sin,    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)),
-    FN(malloc, CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P)),
-    FN(free,   CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_P)),
-    FN(calld1, CallInfo::typeSig8(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
-                                  ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)),
+    FN(puts,    CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_P)),
+    FN(sin,     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)),
+    FN(malloc,  CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P)),
+    FN(free,    CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_P)),
+    FN(calld1,  CallInfo::typeSig8(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
+                                   ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)),
     FN(callid1, CallInfo::typeSig6(ARGTYPE_D, ARGTYPE_I, ARGTYPE_D, ARGTYPE_D,
                                    ARGTYPE_I, ARGTYPE_I, ARGTYPE_D)),
     FN(callid2, CallInfo::typeSig4(ARGTYPE_D, ARGTYPE_I, ARGTYPE_I, ARGTYPE_I, ARGTYPE_D)),
     FN(callid3, CallInfo::typeSig6(ARGTYPE_D, ARGTYPE_I, ARGTYPE_I, ARGTYPE_D,
                                    ARGTYPE_I, ARGTYPE_D, ARGTYPE_D)),
+    FN(printi,  CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_I)),
 };
 
 template<typename out, typename in> out
@@ -739,12 +745,13 @@ FragmentAssembler::assemble_call(const string &op)
         }
 
         // Select return type from opcode.
-        ArgType retType = ARGTYPE_V;
-        if      (mOpcode == LIR_calli) retType = ARGTYPE_I;
-        else if (mOpcode == LIR_calld) retType = ARGTYPE_D;
+        ArgType retType = ARGTYPE_P;
+        if      (mOpcode == LIR_callv) retType = ARGTYPE_V;
+        else if (mOpcode == LIR_calli) retType = ARGTYPE_I;
 #ifdef NANOJIT_64BIT
         else if (mOpcode == LIR_callq) retType = ARGTYPE_Q;
 #endif
+        else if (mOpcode == LIR_calld) retType = ARGTYPE_D;
         else                           nyi("callh");
         ci->_typesig = CallInfo::typeSigN(retType, argc, argTypes);
     }
@@ -1191,10 +1198,11 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             ins = assemble_jump_jov();
             break;
 
+          case LIR_callv:
           case LIR_calli:
           CASESF(LIR_hcalli:)
-          case LIR_calld:
           CASE64(LIR_callq:)
+          case LIR_calld:
             ins = assemble_call(op);
             break;
 
