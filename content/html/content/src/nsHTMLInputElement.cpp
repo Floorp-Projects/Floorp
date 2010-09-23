@@ -3899,9 +3899,9 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       strMaxLength.AppendInt(maxLength);
       strTextLength.AppendInt(textLength);
 
-      const PRUnichar* params[] = { strTextLength.get(), strMaxLength.get() };
+      const PRUnichar* params[] = { strMaxLength.get(), strTextLength.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                 "ElementSuffersFromBeingTooLong",
+                                                 "FormValidationTextTooLong",
                                                  params, 2, message);
       aValidationMessage = message;
       break;
@@ -3913,16 +3913,16 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       switch (mType)
       {
         case NS_FORM_INPUT_FILE:
-          key.Assign("FileElementSuffersFromBeingMissing");
+          key.Assign("FormValidationFileMissing");
           break;
         case NS_FORM_INPUT_CHECKBOX:
-          key.Assign("CheckboxElementSuffersFromBeingMissing");
+          key.Assign("FormValidationCheckboxMissing");
           break;
         case NS_FORM_INPUT_RADIO:
-          key.Assign("RadioElementSuffersFromBeingMissing");
+          key.Assign("FormValidationRadioMissing");
           break;
         default:
-          key.Assign("TextElementSuffersFromBeingMissing");
+          key.Assign("FormValidationValueMissing");
       }
       rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                               key.get(), message);
@@ -3934,9 +3934,9 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       nsXPIDLString message;
       nsCAutoString key;
       if (mType == NS_FORM_INPUT_EMAIL) {
-        key.AssignLiteral("ElementSuffersFromInvalidEmail");
+        key.AssignLiteral("FormValidationInvalidEmail");
       } else if (mType == NS_FORM_INPUT_URL) {
-        key.AssignLiteral("ElementSuffersFromInvalidURL");
+        key.AssignLiteral("FormValidationInvalidURL");
       } else {
         return NS_ERROR_UNEXPECTED;
       }
@@ -3952,12 +3952,12 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
       if (title.IsEmpty()) {
         rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                "ElementSuffersFromPatternMismatch",
+                                                "FormValidationPatternMismatch",
                                                 message);
       } else {
         const PRUnichar* params[] = { title.get() };
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                   "ElementSuffersFromPatternMismatchWithTitle",
+                                                   "FormValidationPatternMismatchWithTitle",
                                                    params, 1, message);
       }
       aValidationMessage = message;
