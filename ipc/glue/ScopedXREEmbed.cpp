@@ -86,6 +86,29 @@ ScopedXREEmbed::Start()
   localFile = do_QueryInterface(parent);
   NS_ENSURE_TRUE(localFile,);
 
+#ifdef OS_MACOSX
+  rv = localFile->GetParent(getter_AddRefs(parent));
+  if (NS_FAILED(rv))
+    return;
+
+  localFile = do_QueryInterface(parent);
+  NS_ENSURE_TRUE(localFile,);
+
+  rv = localFile->GetParent(getter_AddRefs(parent));
+  if (NS_FAILED(rv))
+    return;
+
+  localFile = do_QueryInterface(parent);
+  NS_ENSURE_TRUE(localFile,);
+
+  rv = localFile->GetParent(getter_AddRefs(parent));
+  if (NS_FAILED(rv))
+    return;
+
+  localFile = do_QueryInterface(parent);
+  NS_ENSURE_TRUE(localFile,);
+#endif
+
   rv = XRE_InitEmbedding2(localFile, localFile, nsnull);
   if (NS_FAILED(rv))
     return;
