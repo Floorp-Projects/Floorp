@@ -60,6 +60,8 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsobj.h"
+#include "jsscript.h"
+#include "jscntxt.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -233,6 +235,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     JSStackFrame* frame = nsnull;
     JSScript* script = nsnull;
+    JSVersion version;
 
     // Figure out who's calling us
     do
@@ -348,8 +351,12 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
      * exceptions, including the source/line number */
     er = JS_SetErrorReporter (cx, mozJSLoaderErrorReporter);
 
-    ok = JS_EvaluateScriptForPrincipals (cx, target_obj, jsPrincipals,
-                                         buf, len, uriStr.get(), 1, rval);        
+    version = script->getVersion();
+    version = JSVersion((version & js::VersionFlags::MASK)
+                        | (version & js::VersionFlags::HAS_XML));
+    ok = JS_EvaluateScriptForPrincipalsVersion(cx, target_obj, jsPrincipals,
+                                               buf, len, uriStr.get(), 1,
+                                               rval, version);
     /* repent for our evil deeds */
     JS_SetErrorReporter (cx, er);
 
