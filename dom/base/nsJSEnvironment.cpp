@@ -3882,12 +3882,12 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
      * to use jsmalloc() and the other is to use GC-owned memory
      * (e.g. js_NewGCThing()).
      *
-     * In the browser, we don't cap the amount of GC-owned memory.
+     * In the browser, we limit the amount of GC-owned memory to 512MB.
      */
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
                       64L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
-                      0xffffffff);
+                      512L * 1024L * 1024L);
   } else {
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
                       highwatermark * 1024L * 1024L);

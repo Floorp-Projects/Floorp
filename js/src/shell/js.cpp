@@ -5333,7 +5333,7 @@ main(int argc, char **argv, char **envp)
     CALIBRATION_DELAY_COUNT = 0;
 #endif
 
-    rt = JS_NewRuntime(128L * 1024L * 1024L);
+    rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)
         return 1;
 
@@ -5345,6 +5345,7 @@ main(int argc, char **argv, char **envp)
         return 1;
 
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+    JS_SetGCParameter(rt, JSGC_MAX_BYTES, 512L * 1024L * 1024L);
 
     result = shell(cx, argc, argv, envp);
 
