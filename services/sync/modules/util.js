@@ -861,6 +861,38 @@ let Utils = {
     return pp;
   },
 
+  /*
+   * Calculate the strength of a passphrase provided by the user
+   * according to the NIST algorithm (NIST 800-63 Appendix A.1).
+   */
+  passphraseStrength: function passphraseStrength(value) {
+    let bits = 0;
+
+    // The entropy of the first character is taken to be 4 bits.
+    if (value.length)
+      bits = 4;
+
+    // The entropy of the next 7 characters are 2 bits per character.
+    if (value.length > 1)
+      bits += Math.min(value.length - 1, 7) * 2;
+
+    // For the 9th through the 20th character the entropy is taken to
+    // be 1.5 bits per character.
+    if (value.length > 8)
+      bits += Math.min(value.length - 8, 12) * 1.5;
+
+    // For characters 21 and above the entropy is taken to be 1 bit per character.
+    if (value.length > 20)
+      bits += value.length - 20;
+
+    // Bonus of 6 bits if we find non-alphabetic characters
+    if ([char.charCodeAt() for each (char in value.toLowerCase())]
+        .some(function(chr) chr < 97 || chr > 122))
+      bits += 6;
+      
+    return bits;
+  },
+
   /**
    * Create an array like the first but without elements of the second
    */
