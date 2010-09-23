@@ -40,19 +40,24 @@ let WeaveGlue = {
 
     this._addListeners();
 
-    // Initialize the UI now
-    this._updateOptions();
-
     // Generating keypairs is expensive on mobile, so disable it
     Weave.Service.keyGenEnabled = false;
+
+    // Load the values for the string inputs
+    this.loadInputs();
   },
 
   connect: function connect() {
-    if (this._settings.user.value != Weave.Service.username)
+    // Cause the Sync system to reset internals if we seem to be switching accounts
+    if (this._settings.account.value != Weave.Service.account)
       Weave.Service.startOver();
 
-    Weave.Service.login(this._settings.user.value, this._settings.pass.value,
-      this._settings.secret.value);
+    // Remove any leftover connection string
+    this._settings.connect.removeAttribute("desc");
+
+    // Sync will use the account value and munge it into a username, as needed
+    Weave.Service.account = this._settings.account.value;
+    Weave.Service.login(Weave.Service.username, this._settings.pass.value, this.normalizePassphrase(this._settings.secret.value));
     Weave.Service.persistLogin();
   },
 
@@ -70,13 +75,17 @@ let WeaveGlue = {
       "weave:service:login:finish", "weave:service:login:error",
       "weave:service:logout:finish"];
 
-    // For each topic, add or remove _updateOptions as the observer
-    let addRem = function(add) topics.forEach(function(topic) Weave.Svc.
-      Obs[add ? "add" : "remove"](topic, WeaveGlue._updateOptions, WeaveGlue));
+    // For each topic, add WeaveGlue the observer
+    topics.forEach(function(topic) {
+      Services.obs.addObserver(WeaveGlue, topic, false);
+    });
 
-    // Add the listeners now, and remove them on unload
-    addRem(true);
-    addEventListener("unload", function() addRem(false), false);
+    // Remove them on unload
+    addEventListener("unload", function() {
+      topics.forEach(function(topic) {
+        Services.obs.removeObserver(WeaveGlue, topic, false);
+      });
+    }, false);
   },
 
   get _settings() {
@@ -87,7 +96,7 @@ let WeaveGlue = {
 
     // Get all the setting nodes from the add-ons display
     let settings = {};
-    let ids = ["user", "pass", "secret", "device", "connect", "disconnect", "sync"];
+    let ids = ["account", "pass", "secret", "device", "connect", "disconnect", "sync"];
     ids.forEach(function(id) {
       settings[id] = document.getElementById("sync-" + id);
     });
@@ -97,7 +106,7 @@ let WeaveGlue = {
     return this._settings = settings;
   },
 
-  _updateOptions: function _updateOptions() {
+  observe: function observe(aSubject, aTopic, aData) {
     let loggedIn = Weave.Service.isLoggedIn;
     document.getElementById("cmd_remoteTabs").setAttribute("disabled", !loggedIn);
 
@@ -109,7 +118,7 @@ let WeaveGlue = {
       return;
 
     // Make some aliases
-    let user = this._settings.user;
+    let account = this._settings.account;
     let pass = this._settings.pass;
     let secret = this._settings.secret;
     let connect = this._settings.connect;
@@ -119,7 +128,7 @@ let WeaveGlue = {
     let syncStr = Weave.Str.sync;
 
     // Make sure the options are in the right state
-    user.collapsed = loggedIn;
+    account.collapsed = loggedIn;
     pass.collapsed = loggedIn;
     secret.collapsed = loggedIn;
     connect.collapsed = loggedIn;
@@ -133,8 +142,12 @@ let WeaveGlue = {
       if (Weave.Service.locked) {
         connect.firstChild.disabled = true;
         sync.firstChild.disabled = true;
-        connect.setAttribute("title", syncStr.get("connecting.label"));
-        sync.setAttribute("title", syncStr.get("lastSyncInProgress.label"));
+
+        if (aTopic == "weave:service:login:start")
+          connect.setAttribute("title", syncStr.get("connecting.label"));
+
+        if (aTopic == "weave:service:sync:start")
+          sync.setAttribute("title", syncStr.get("lastSyncInProgress.label"));
       } else {
         connect.firstChild.disabled = false;
         sync.firstChild.disabled = false;
@@ -150,7 +163,7 @@ let WeaveGlue = {
     parent.appendChild(sync);
 
     // Dynamically generate some strings
-    let connectedStr = syncStr.get("connected.label", [Weave.Service.username]);
+    let connectedStr = syncStr.get("connected.label", [Weave.Service.account]);
     disconnect.setAttribute("title", connectedStr);
 
     // Show the day-of-week and time (HH:MM) of last sync
@@ -162,22 +175,43 @@ let WeaveGlue = {
     }
 
     // Show what went wrong with login if necessary
-    let login = Weave.Status.login;
-    if (login == Weave.LOGIN_SUCCEEDED)
+    if (aTopic == "weave:service:login:error")
+      connect.setAttribute("desc", Weave.Utils.getErrorString(Weave.Status.login));
+    else
       connect.removeAttribute("desc");
-    else if (login != null)
-      connect.setAttribute("desc", Weave.Utils.getErrorString(login));
 
     // Load the values for the string inputs
-    user.value = Weave.Service.username || "";
-    pass.value = Weave.Service.password || "";
-    secret.value = Weave.Service.passphrase || "";
-    device.value = Weave.Clients.localName || "";
+    this.loadInputs();
   },
 
-  changeName: function changeName(input) {
+  loadInputs: function loadInputs() {
+    this._settings.account.value = Weave.Service.account || "";
+    this._settings.pass.value = Weave.Service.password || "";
+    let pp = Weave.Service.passphrase || "";
+    if (pp.length == 20)
+      pp = this.hyphenatePassphrase(pp);
+    this._settings.secret.value = pp;
+    this._settings.device.value = Weave.Clients.localName || "";
+  },
+
+  changeName: function changeName(aInput) {
     // Make sure to update to a modified name, e.g., empty-string -> default
-    Weave.Clients.localName = input.value;
-    input.value = Weave.Clients.localName;
+    Weave.Clients.localName = aInput.value;
+    aInput.value = Weave.Clients.localName;
+  },
+
+  hyphenatePassphrase: function(passphrase) {
+    // Hyphenate a 20 character passphrase in 4 groups of 5
+    return passphrase.slice(0, 5) + '-'
+         + passphrase.slice(5, 10) + '-'
+         + passphrase.slice(10, 15) + '-'
+         + passphrase.slice(15, 20);
+  },
+
+  normalizePassphrase: function(pp) {
+    // Remove hyphens as inserted by hyphenatePassphrase()
+    if (pp.length == 23 && pp[5] == '-' && pp[11] == '-' && pp[17] == '-')
+      return pp.slice(0, 5) + pp.slice(6, 11) + pp.slice(12, 17) + pp.slice(18, 23);
+    return pp;
   }
 };
