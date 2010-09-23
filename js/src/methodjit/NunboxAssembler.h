@@ -173,20 +173,24 @@ class Assembler : public BaseAssembler
     /*
      * Stores type first, then payload.
      */
-    void storeValue(const Value &v, Address address) {
+    Label storeValue(const Value &v, Address address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         store32(ImmTag(jv.s.tag), tagOf(address));
+        Label l = label();
         store32(Imm32(jv.s.payload.u32), payloadOf(address));
+        return l;
     }
 
-    void storeValue(const Value &v, BaseIndex address) {
+    Label storeValue(const Value &v, BaseIndex address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         store32(ImmTag(jv.s.tag), tagOf(address));
+        Label l = label();
         store32(Imm32(jv.s.payload.u32), payloadOf(address));
+        return l;
     }
 
     void storeValueFromComponents(RegisterID type, RegisterID payload, Address address) {
@@ -211,11 +215,7 @@ class Assembler : public BaseAssembler
 
     Label storeValue(const ValueRemat &vr, Address address) {
         if (vr.isConstant) {
-            /* Reimplement storeValue() to get Label. */
-            store32(ImmTag(vr.u.v.s.tag), tagOf(address));
-            Label l = label();
-            store32(Imm32(vr.u.v.s.payload.u32), payloadOf(address));
-            return l;
+            return storeValue(Valueify(vr.u.v), address);
         } else {
             if (vr.u.s.isTypeKnown)
                 storeTypeTag(ImmType(vr.u.s.type.knownType), address);
