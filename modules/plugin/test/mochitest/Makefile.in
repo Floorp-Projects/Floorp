@@ -84,7 +84,6 @@ _MOCHITEST_FILES = \
   test_streamatclose.html \
   neverending.sjs \
   test_newstreamondestroy.html \
-  test_crashing.html \
   $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
   test_hanging.html \
   crashing_subpage.html \
@@ -119,6 +118,13 @@ _MOCHICHROME_FILES += \
   test_crash_submit.xul \
   $(NULL)
 endif
+endif
+
+# Temporarily disable this test on Mac OS X.
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+_MOCHITEST_FILES += \
+  test_crashing.html \
+  $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
