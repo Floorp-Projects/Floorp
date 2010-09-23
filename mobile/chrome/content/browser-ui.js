@@ -906,10 +906,15 @@ var BrowserUI = {
   },
 
   isCommandEnabled : function(cmd) {
+    let elem = document.getElementById(cmd);
+    if (elem && (elem.getAttribute("disabled") == "true"))
+      return false;
     return true;
   },
 
   doCommand : function(cmd) {
+    if (!this.isCommandEnabled(cmd))
+      return;
     let browser = getBrowser();
     switch (cmd) {
       case "cmd_back":
