@@ -169,8 +169,8 @@ PasswordStore.prototype = {
     return false;
   },
 
-  createRecord: function createRecord(guid) {
-    let record = new LoginRec();
+  createRecord: function createRecord(guid, uri) {
+    let record = new LoginRec(uri);
     let login = this._getLoginFromGUID(guid);
 
     if (login) {
