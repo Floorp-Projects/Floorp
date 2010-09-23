@@ -45,12 +45,11 @@
 // Maximum delay in ms between the two taps of a double-tap
 const kDoubleClickInterval = 400;
 
+// Maximum distance in screen pixels between the taps of a double-tap
+const kDoubleClickRadius = 100;
+
 // Amount of time to wait before tap becomes long tap
 const kLongTapWait = 500;
-
-// If a tap lasts longer than this duration in ms, treat it as a single-tap
-// immediately instead of waiting for a possible double tap.
-const kDoubleClickThreshold = 200;
 
 // threshold in pixels for sensing a tap as opposed to a pan
 const kTapRadius = Services.prefs.getIntPref("ui.dragThresholdX");
@@ -389,22 +388,9 @@ MouseModule.prototype = {
 
   /** Endpoint of _commitAnotherClick().  Finalize a single tap.  */
   _doSingleClick: function _doSingleClick() {
-    let ev = this._downUpEvents[1];
+    let mouseUp = this._downUpEvents[1];
     this._cleanClickBuffer();
-
-    // borrowed from nsIDOMNSEvent.idl
-    let modifiers =
-      (ev.altKey   ? Ci.nsIDOMNSEvent.ALT_MASK     : 0) |
-      (ev.ctrlKey  ? Ci.nsIDOMNSEvent.CONTROL_MASK : 0) |
-      (ev.shiftKey ? Ci.nsIDOMNSEvent.SHIFT_MASK   : 0) |
-      (ev.metaKey  ? Ci.nsIDOMNSEvent.META_MASK    : 0);
-
-    let event = document.createEvent("Events");
-    event.initEvent("TapSingle", true, false);
-    event.clientX = ev.clientX;
-    event.clientY = ev.clientY;
-    event.modifiers = modifiers;
-    ev.target.dispatchEvent(event);
+    this._dispatchTap("TapSingle", mouseUp);
   },
 
   /** Endpoint of _commitAnotherClick().  Finalize a double tap.  */
@@ -414,13 +400,31 @@ MouseModule.prototype = {
     let mouseUp2 = this._downUpEvents[Math.min(3, this._downUpEvents.length - 1)];
     this._cleanClickBuffer();
 
+    let dx = mouseUp1.clientX - mouseUp2.clientX;
+    let dy = mouseUp1.clientY - mouseUp2.clientY;
+
+    if (dx*dx + dy*dy < kDoubleClickRadius*kDoubleClickRadius) {
+      this._dispatchTap("TapDouble", mouseUp1);
+    } else {
+      this._dispatchTap("TapSingle", mouseUp1);
+      this._dispatchTap("TapSingle", mouseUp2);
+    }
+  },
+
+  _dispatchTap: function _dispatchTap(aType, aMouseUpEvent) {
+    // borrowed from nsIDOMNSEvent.idl
+    let modifiers =
+      (aMouseUpEvent.altKey   ? Ci.nsIDOMNSEvent.ALT_MASK     : 0) |
+      (aMouseUpEvent.ctrlKey  ? Ci.nsIDOMNSEvent.CONTROL_MASK : 0) |
+      (aMouseUpEvent.shiftKey ? Ci.nsIDOMNSEvent.SHIFT_MASK   : 0) |
+      (aMouseUpEvent.metaKey  ? Ci.nsIDOMNSEvent.META_MASK    : 0);
+
     let event = document.createEvent("Events");
-    event.initEvent("TapDouble", true, false);
-    event.clientX1 = mouseUp1.clientX;
-    event.clientY1 = mouseUp1.clientY;
-    event.clientX2 = mouseUp1.clientX;
-    event.clientY2 = mouseUp1.clientY;
-    mouseUp1.target.dispatchEvent(event);
+    event.initEvent(aType, true, false);
+    event.clientX = aMouseUpEvent.clientX;
+    event.clientY = aMouseUpEvent.clientY;
+    event.modifiers = modifiers;
+    aMouseUpEvent.target.dispatchEvent(event);
   },
 
   /**
