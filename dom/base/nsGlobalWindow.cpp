@@ -674,6 +674,11 @@ nsOuterWindowProxy::singleton;
 JSObject *
 NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
 {
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, parent)) {
+    return nsnull;
+  }
+
   JSObject *obj = JSWrapper::New(cx, parent, parent->getProto(), parent,
                                  &nsOuterWindowProxy::singleton);
   NS_ASSERTION(obj->getClass()->ext.innerObject, "bad class");

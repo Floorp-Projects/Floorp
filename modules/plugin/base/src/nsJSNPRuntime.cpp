@@ -1983,7 +1983,10 @@ NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
       PR_Free(npobj);
     }
 
-    ::JS_SetPrivate(nppcx->cx, entry->mJSObj, nsnull);
+    JSAutoEnterCompartment ac;
+    if (ac.enter(nppcx->cx, entry->mJSObj)) {
+      ::JS_SetPrivate(nppcx->cx, entry->mJSObj, nsnull);
+    }
 
     table->ops = ops;    
 
@@ -2082,6 +2085,13 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   }
 
   JSObject *proto;
+
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, obj)) {
+    // Failure to enter compartment, nothing more we can do then.
+    return;
+  }
 
   // Loop over the DOM element's JS object prototype chain and remove
   // all JS objects of the class sNPObjectJSWrapperClass (there should

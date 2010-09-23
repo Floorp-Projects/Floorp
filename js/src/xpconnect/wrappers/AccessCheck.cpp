@@ -283,7 +283,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
     jsid exposedPropsId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS);
 
     JSBool found = JS_FALSE;
-    if (!JS_HasPropertyById(cx, holder, exposedPropsId, &found))
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, holder) || !JS_HasPropertyById(cx, holder, exposedPropsId, &found))
         return false;
     if (!found) {
         perm = PermitObjectAccess;

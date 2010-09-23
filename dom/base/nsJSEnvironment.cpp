@@ -2189,11 +2189,25 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *funobj = (JSObject*) aHandler;
-
   JSAutoRequest ar(mContext);
 
-  NS_ASSERTION(JS_TypeOfValue(mContext, OBJECT_TO_JSVAL(funobj)) == JSTYPE_FUNCTION,
-               "Event handler object not a function");
+#ifdef DEBUG
+  {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mContext, funobj)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    NS_ASSERTION(JS_TypeOfValue(mContext,
+                                OBJECT_TO_JSVAL(funobj)) == JSTYPE_FUNCTION,
+                 "Event handler object not a function");
+  }
+#endif
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(mContext, target)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Push our JSContext on our thread's context stack, in case native code
   // called from JS calls back into JS via XPConnect.
@@ -2243,6 +2257,11 @@ nsJSContext::GetBoundEventHandler(nsISupports* aTarget, void *aScope,
     JSAutoRequest ar(mContext);
     rv = JSObjectFromInterface(aTarget, aScope, &obj);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mContext, obj)) {
+      return NS_ERROR_FAILURE;
+    }
 
     jsval funval;
     if (!JS_LookupProperty(mContext, obj,
@@ -2418,6 +2437,12 @@ nsJSContext::GetGlobalObject()
                             JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
     return nsnull;
   }
+
+  JSAutoEnterCompartment ac;
+
+  // NB: This AutoCrossCompartmentCall is only here to silence a warning. If
+  // it fails, nothing bad will happen.
+  ac.enterAndIgnoreErrors(mContext, global);
 
   nsCOMPtr<nsIScriptGlobalObject> sgo;
   nsISupports *priv =
@@ -3344,6 +3369,10 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
   if (aGlobalObj) {
     JSObject *obj = (JSObject *)aGlobalObj;
     JSAutoRequest ar(mContext);
+
+    JSAutoEnterCompartment ac;
+    ac.enterAndIgnoreErrors(mContext, obj);
+
     JS_ClearScope(mContext, obj);
     if (!obj->getParent()) {
       JS_ClearRegExpStatics(mContext, obj);
