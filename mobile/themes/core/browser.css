@@ -760,8 +760,24 @@ placeitem[src=""] .bookmark-item-container > image {
   background: url(images/star-24.png) no-repeat 100% 2px;
 }
 
+.autocomplete-item-container[remote="true"] {
+  background: url(images/remotetabs-24.png) no-repeat 100% 2px;
+}
+
+.autocomplete-item-container[favorite="true"][remote="true"] {
+  background: url(images/remotetabs-24.png) no-repeat 100% 2px, url(images/star-24.png) no-repeat 96% 2px;
+}
+
 .autocomplete-item-container[favorite="true"]:-moz-locale-dir(rtl) {
   background: url(images/star-24.png) no-repeat left 2px;
+}
+
+.autocomplete-item-container[remote="true"]:-moz-locale-dir(rtl) {
+  background: url(images/remotetabs-24.png) no-repeat left 2px;
+}
+
+.autocomplete-item-container[favorite="true"][remote="true"]:-moz-locale-dir(rtl) {
+  background: url(images/remotetabs-24.png) no-repeat left 2px, url(images/star-24.png) no-repeat 4% 2px;
 }
 
 .autocomplete-item-url,
@@ -771,8 +787,13 @@ placeitem[src=""] .bookmark-item-container > image {
   -moz-margin-end: 24px;
 }
 
-.autocomplete-item-container[favorite="true"] .autocomplete-item-label {
+.autocomplete-item-container[favorite="true"] .autocomplete-item-label,
+.autocomplete-item-container[remote="true"] .autocomplete-item-label {
   -moz-padding-end: 30px;
+}
+
+.autocomplete-item-container[favorite="true"][remote="true"] {
+  -moz-padding-end: 48px;
 }
 
 .autocomplete-item-tags,

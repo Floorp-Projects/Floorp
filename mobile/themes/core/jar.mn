@@ -72,6 +72,7 @@ chrome.jar:
   skin/images/console-active-64.png         (images/console-active-64.png)
   skin/images/newtab-default-64.png         (images/newtab-default-64.png)
   skin/images/newtab-active-64.png          (images/newtab-active-64.png)
+  skin/images/remotetabs-24.png             (images/remotetabs-24.png)
   skin/images/remotetabs-32.png             (images/remotetabs-32.png)
   skin/images/remotetabs-48.png             (images/remotetabs-48.png)
   skin/images/tab-32.png                    (images/tab-32.png)

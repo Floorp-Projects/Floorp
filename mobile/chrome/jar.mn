@@ -21,7 +21,7 @@ chrome.jar:
 * content/browser-ui.js                (content/browser-ui.js)
   content/content.js                   (content/content.js)
   content/commandUtil.js               (content/commandUtil.js)
-  content/bindings.xml                 (content/bindings.xml)
+* content/bindings.xml                 (content/bindings.xml)
   content/tabs.xml                     (content/tabs.xml)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
   content/bindings/browser.xml         (content/bindings/browser.xml)
