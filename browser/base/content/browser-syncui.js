@@ -192,7 +192,13 @@ let gSyncUI = {
     // basically, we want to just inform users that stuff is going to take a while
     let title = this._stringBundle.GetStringFromName("error.sync.no_node_found.title");
     let description = this._stringBundle.GetStringFromName("error.sync.no_node_found");
-    let notification = new Weave.Notification(title, description, null, Weave.Notifications.PRIORITY_INFO);
+    let buttons = [new Weave.NotificationButton(
+      this._stringBundle.GetStringFromName("error.sync.serverStatusButton.label"),
+      this._stringBundle.GetStringFromName("error.sync.serverStatusButton.accesskey"),
+      function() { gWeaveWin.openServerStatus(); return true; }
+    )];
+    let notification = new Weave.Notification(
+      title, description, null, Weave.Notifications.PRIORITY_INFO, buttons);
     Weave.Notifications.replaceTitle(notification);
     this._wasDelayed = true;
   },
@@ -254,6 +260,11 @@ let gSyncUI = {
     let notification = new Weave.Notification(
       title, description, null, Weave.Notifications.PRIORITY_WARNING, buttons);
     Weave.Notifications.replaceTitle(notification);
+  },
+
+  openServerStatus: function () {
+    let statusURL = Services.prefs.getCharPref("services.sync.statusURL");
+    window.openUILinkIn(statusURL, "tab");
   },
 
   // Commands
@@ -356,7 +367,15 @@ let gSyncUI = {
           function() { gSyncUI.openQuotaDialog(); return true; } )
         );
       }
-      else if (!Weave.Status.enforceBackoff) {
+      else if (Weave.Status.enforceBackoff) {
+        priority = Weave.Notifications.PRIORITY_INFO;
+        buttons.push(new Weave.NotificationButton(
+          this._stringBundle.GetStringFromName("error.sync.serverStatusButton.label"),
+          this._stringBundle.GetStringFromName("error.sync.serverStatusButton.accesskey"),
+          function() { gSyncUI.openServerStatus(); return true; }
+        ));
+      }
+      else {
         priority = Weave.Notifications.PRIORITY_INFO;
         buttons.push(new Weave.NotificationButton(
           this._stringBundle.GetStringFromName("error.sync.tryAgainButton.label"),
