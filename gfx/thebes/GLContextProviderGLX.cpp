@@ -706,10 +706,6 @@ GLContextProviderGLX::CreateForNativePixmapSurface(gfxASurface *aSurface)
                                                                      NULL,
                                                                      PR_FALSE,
                                                                      xs);
-    
-    if (!glContext->Init()) {
-        return nsnull;
-    }
 
     return glContext.forget();
 }
