@@ -110,6 +110,7 @@ function MouseModule(owner, browserViewContainer) {
   window.addEventListener("mousedown", this, true);
   window.addEventListener("mouseup", this, true);
   window.addEventListener("mousemove", this, true);
+  window.addEventListener("contextmenu", this, false);
   window.addEventListener("CancelTouchSequence", this, true);
 }
 
@@ -120,6 +121,12 @@ MouseModule.prototype = {
       case "MozBeforePaint":
         this._waitingForPaint = false;
         removeEventListener("MozBeforePaint", this, false);
+        break;
+      case "contextmenu":
+        // bug 598965 - chrome UI should should stop to be pannable once the
+        // context menu has appeared
+        if (ContextHelper.popupState)
+          this.cancelPending();
         break;
       case "CancelTouchSequence":
         this.cancelPending();
