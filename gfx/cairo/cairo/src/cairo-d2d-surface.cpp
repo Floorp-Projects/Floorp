@@ -2641,26 +2641,88 @@ _cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
     return rv;
 }
 
+static cairo_int_status_t
+_cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
+			 cairo_d2d_surface_t *src,
+		 	 const cairo_matrix_t *transform,
+			 cairo_box_t *box,
+			 cairo_clip_t *clip,
+			 float opacity)
+{
+    if (dst == src) {
+	// We cannot do self-blend.
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    cairo_int_status_t rv = CAIRO_INT_STATUS_SUCCESS;
+
+    _begin_draw_state(dst);
+    _cairo_d2d_set_clip(dst, clip);
+    _cairo_d2d_flush(src);
+    D2D1_SIZE_U sourceSize = src->surfaceBitmap->GetPixelSize();
+
+
+    double x1, x2, y1, y2;
+    if (box) {
+	_cairo_box_to_doubles(box, &x1, &y1, &x2, &y2);
+    } else {
+	x1 = y1 = 0;
+	x2 = dst->rt->GetSize().width;
+	y2 = dst->rt->GetSize().height;
+    }
+
+    if (clip) {
+	const cairo_rectangle_int_t *clipExtent = _cairo_clip_get_extents(clip);
+	x1 = MAX(x1, clipExtent->x);
+	x2 = MIN(x2, clipExtent->x + clipExtent->width);
+	y1 = MAX(y1, clipExtent->y);
+	y2 = MIN(y2, clipExtent->y + clipExtent->height);
+    }
+
+    // We should be in drawing state for this.
+    _begin_draw_state(dst);
+    _cairo_d2d_set_clip (dst, clip);
+    D2D1_RECT_F rectSrc;
+    rectSrc.left = (float)(x1 * transform->xx + transform->x0);
+    rectSrc.top = (float)(y1 * transform->yy + transform->y0);
+    rectSrc.right = (float)(x2 * transform->xx + transform->x0);
+    rectSrc.bottom = (float)(y2 * transform->yy + transform->y0);
+
+    if (rectSrc.left < 0 || rectSrc.top < 0 ||
+	rectSrc.right > sourceSize.width || rectSrc.bottom > sourceSize.height) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    D2D1_RECT_F rectDst;
+    rectDst.left = (float)x1;
+    rectDst.top = (float)y1;
+    rectDst.right = (float)x2;
+    rectDst.bottom = (float)y2;
+
+    dst->rt->DrawBitmap(src->surfaceBitmap,
+			rectDst,
+			opacity,
+			D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+			rectSrc);
+
+    return rv;
+}
 /**
  * This function will text if we can use GPU mem cpy to execute an operation with
  * a surface pattern. If box is NULL it will operate on the entire dst surface.
  */
 static cairo_int_status_t
-_cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
-		    cairo_surface_t *src,
-		    cairo_box_t *box,
-		    const cairo_matrix_t *matrix,
-		    cairo_clip_t *clip,
-		    cairo_operator_t op)
+_cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
+		        cairo_surface_t *src,
+		        cairo_box_t *box,
+		        const cairo_matrix_t *matrix,
+		        cairo_clip_t *clip,
+		        cairo_operator_t op,
+			float opacity = 1.0f)
 {
-    if (op != CAIRO_OPERATOR_SOURCE &&
-	!(op == CAIRO_OPERATOR_OVER && src->content == CAIRO_CONTENT_COLOR)) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (op == CAIRO_OPERATOR_OVER && src->content == CAIRO_CONTENT_COLOR) {
+	op = CAIRO_OPERATOR_SOURCE;
     }
-
-    cairo_point_int_t translation;
-    if ((box && !box_is_integer(box)) ||
-	!_cairo_matrix_is_integer_translation(matrix, &translation.x, &translation.y)) {
+    if (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -2668,7 +2730,24 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
     if (src->type != CAIRO_SURFACE_TYPE_D2D) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
+    cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
+    if (op == CAIRO_OPERATOR_OVER && matrix->xy == 0 && matrix->yx == 0) {
+	return _cairo_d2d_blend_surface(dst, d2dsrc, matrix, box, clip, opacity);
+    }
     
+    if (op == CAIRO_OPERATOR_OVER || opacity != 1.0f) {
+	// Past this point we will never get into a situation where we can
+	// support OVER.
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    
+    cairo_point_int_t translation;
+    if ((box && !box_is_integer(box)) ||
+	!_cairo_matrix_is_integer_translation(matrix, &translation.x, &translation.y)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     cairo_rectangle_int_t rect;
     if (box) {
 	_cairo_box_round_to_rectangle(box, &rect);
@@ -2678,8 +2757,6 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
 	rect.height = dst->rt->GetPixelSize().height;
     }
     
-    cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
-
     if (d2dsrc->device != dst->device) {
 	// This doesn't work between different devices.
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2712,7 +2789,7 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
     }
 
     cairo_int_status_t rv = _cairo_d2d_copy_surface(dst, d2dsrc, &translation, region);
-    
+
     cairo_region_destroy(region);
     
     return rv;
@@ -2926,8 +3003,8 @@ _cairo_d2d_paint(void			*surface,
 	const cairo_surface_pattern_t *surf_pattern = 
 	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
 
-	status = _cairo_d2d_try_copy(d2dsurf, surf_pattern->surface,
-				     NULL, &source->matrix, clip, op);
+	status = _cairo_d2d_try_fastblit(d2dsurf, surf_pattern->surface,
+				         NULL, &source->matrix, clip, op);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    return status;
@@ -3171,8 +3248,8 @@ _cairo_d2d_fill(void			*surface,
     if (is_box && source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	const cairo_surface_pattern_t *surf_pattern = 
 	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
-	cairo_int_status_t rv = _cairo_d2d_try_copy(d2dsurf, surf_pattern->surface,
-						    &box, &source->matrix, clip, op);
+	cairo_int_status_t rv = _cairo_d2d_try_fastblit(d2dsurf, surf_pattern->surface,
+						        &box, &source->matrix, clip, op);
 
 	if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    return rv;
