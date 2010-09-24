@@ -82,10 +82,13 @@ using namespace mozilla::layout;
 namespace mozilla {
 namespace dom {
 
+TabParent *TabParent::mIMETabParent = nsnull;
+
 NS_IMPL_ISUPPORTS4(TabParent, nsITabParent, nsIAuthPromptProvider, nsISSLStatusProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
   : mSecurityState(0)
+  , mIMECompositionEnding(PR_FALSE)
 {
 }
 
@@ -319,6 +322,9 @@ TabParent::RecvNotifyIMEFocus(const PRBool& aFocus,
   if (!widget)
     return true;
 
+  mIMETabParent = aFocus ? this : nsnull;
+  mIMESelectionAnchor = 0;
+  mIMESelectionFocus = 0;
   nsresult rv = widget->OnIMEFocusChange(aFocus);
 
   if (aFocus) {
@@ -355,6 +361,8 @@ TabParent::RecvNotifyIMESelection(const PRUint32& aAnchor,
   if (!widget)
     return true;
 
+  mIMESelectionAnchor = aAnchor;
+  mIMESelectionFocus = aFocus;
   widget->OnIMESelectionChange();
   return true;
 }
@@ -367,6 +375,90 @@ TabParent::RecvNotifyIMETextHint(const nsString& aText)
   return true;
 }
 
+/**
+ * Try to answer query event using cached text.
+ *
+ * For NS_QUERY_SELECTED_TEXT, fail if the cache doesn't contain the whole
+ *  selected range. (This shouldn't happen because PuppetWidget should have
+ *  already sent the whole selection.)
+ *
+ * For NS_QUERY_TEXT_CONTENT, fail only if the cache doesn't overlap with
+ *  the queried range. Note the difference from above. We use
+ *  this behavior because a normal NS_QUERY_TEXT_CONTENT event is allowed to
+ *  have out-of-bounds offsets, so that widget can request content without
+ *  knowing the exact length of text. It's up to widget to handle cases when
+ *  the returned offset/length are different from the queried offset/length.
+ */
+bool
+TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
+{
+  aEvent.mSucceeded = PR_FALSE;
+  aEvent.mWasAsync = PR_FALSE;
+  aEvent.mReply.mFocusedWidget = nsCOMPtr<nsIWidget>(GetWidget()).get();
+
+  switch (aEvent.message)
+  {
+  case NS_QUERY_SELECTED_TEXT:
+    {
+      aEvent.mReply.mOffset = PR_MIN(mIMESelectionAnchor, mIMESelectionFocus);
+      if (mIMESelectionAnchor == mIMESelectionFocus) {
+        aEvent.mReply.mString.Truncate(0);
+      } else {
+        if (mIMESelectionAnchor > mIMECacheText.Length() ||
+            mIMESelectionFocus > mIMECacheText.Length()) {
+          break;
+        }
+        PRUint32 selLen = mIMESelectionAnchor > mIMESelectionFocus ?
+                          mIMESelectionAnchor - mIMESelectionFocus :
+                          mIMESelectionFocus - mIMESelectionAnchor;
+        aEvent.mReply.mString = Substring(mIMECacheText,
+                                          aEvent.mReply.mOffset,
+                                          selLen);
+      }
+      aEvent.mReply.mReversed = mIMESelectionFocus < mIMESelectionAnchor;
+      aEvent.mReply.mHasSelection = PR_TRUE;
+      aEvent.mSucceeded = PR_TRUE;
+    }
+    break;
+  case NS_QUERY_TEXT_CONTENT:
+    {
+      PRUint32 inputOffset = aEvent.mInput.mOffset,
+               inputEnd = inputOffset + aEvent.mInput.mLength;
+
+      if (inputEnd > mIMECacheText.Length()) {
+        inputEnd = mIMECacheText.Length();
+      }
+      if (inputEnd < inputOffset) {
+        break;
+      }
+      aEvent.mReply.mOffset = inputOffset;
+      aEvent.mReply.mString = Substring(mIMECacheText,
+                                        inputOffset,
+                                        inputEnd - inputOffset);
+      aEvent.mSucceeded = PR_TRUE;
+    }
+    break;
+  }
+  return true;
+}
+
+/**
+ * During ResetInputState or CancelComposition, widget usually sends a
+ * NS_TEXT_TEXT event to finalize or clear the composition, respectively
+ *
+ * Because the event will not reach content in time, we intercept it
+ * here and pass the text as the EndIMEComposition return value
+ */
+bool
+TabParent::SendTextEvent(const nsTextEvent& event)
+{
+  if (mIMECompositionEnding) {
+    mIMECompositionText = event.theText;
+    return true;
+  }
+  return PBrowserParent::SendTextEvent(event);
+}
+
 bool
 TabParent::RecvEndIMEComposition(const PRBool& aCancel,
                                  nsString* aComposition)
@@ -375,11 +467,17 @@ TabParent::RecvEndIMEComposition(const PRBool& aCancel,
   if (!widget)
     return true;
 
+  mIMECompositionEnding = PR_TRUE;
+
   if (aCancel) {
     widget->CancelIMEComposition();
   } else {
     widget->ResetInputState();
   }
+
+  mIMECompositionEnding = PR_FALSE;
+  *aComposition = mIMECompositionText;
+  mIMECompositionText.Truncate(0);  
   return true;
 }
 
