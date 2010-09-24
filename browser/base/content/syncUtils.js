@@ -54,6 +54,9 @@ let gSyncUtils = {
       openUILinkIn(url, "window");
     else if (thisDocEl.id == "BrowserPreferences" && !thisDocEl.instantApply)
       openUILinkIn(url, "window");
+    else if (document.documentElement.id == "change-dialog")
+      Weave.Svc.WinMediator.getMostRecentWindow("navigator:browser")
+        .openUILinkIn(url, "tab");
     else
       openUILinkIn(url, "tab");
   },
@@ -102,6 +105,10 @@ let gSyncUtils = {
     this._openLink(Weave.Svc.Prefs.get("privacyURL"));
   },
 
+  openSyncKeyHelp: function () {
+    this._openLink(Weave.Svc.Prefs.get("syncKeyHelpURL"));
+  },
+
   // xxxmpc - fix domain before 1.3 final (bug 583652)
   _baseURL: "http://www.mozilla.com/firefox/sync/",
 
@@ -144,31 +151,6 @@ let gSyncUtils = {
       return pp.slice(0, 5) + pp.slice(6, 11)
            + pp.slice(12, 17) + pp.slice(18, 23);
     return pp;
-  },
-
-  /**
-   * Trigger the mailto protocol handler to send a passphrase backup email.
-   * 
-   * @param elid : ID of the form element containing the passphrase.
-   */
-  passphraseEmail: function(elid) {
-    let pp = document.getElementById(elid).value;
-    let subject = this.bundle.GetStringFromName("email.syncKey.subject");
-    let label = this.bundle.formatStringFromName("email.syncKey.label", [pp], 1);
-    let body = "&body=" + label + "%0A%0A" +
-               this.bundle.GetStringFromName("email.syncKey.description")
-               + "%0A%0A" +
-               this.bundle.GetStringFromName("email.keepItSecret.label") +
-               this.bundle.GetStringFromName("email.keepItSecret.description")
-               + "%0A%0A" +
-               this.bundle.GetStringFromName("email.keepItSafe.label") +
-               this.bundle.GetStringFromName("email.keepItSafe.description")
-               + "%0A%0A" +
-               this.bundle.GetStringFromName("email.findOutMore.label");
-    let uri = Weave.Utils.makeURI("mailto:?subject=" + subject + body);
-    let protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                     .getService(Ci.nsIExternalProtocolService);
-    protoSvc.loadURI(uri);
   },
 
   /**

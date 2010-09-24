@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592802
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -27,16 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592802
 SimpleTest.waitForExplicitFinish();
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-const Cu = Components.utils;
-const Cr = Components.results;
-
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript("chrome://mochikit/content/browser/toolkit/content/tests/browser/common/mockObjects.js", this);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 

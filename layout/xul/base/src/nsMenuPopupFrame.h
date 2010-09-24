@@ -325,6 +325,9 @@ public:
   // Return true if the popup is positioned relative to an anchor.
   PRBool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
 
+  // Return the anchor if there is one.
+  nsIContent* GetAnchor() const { return mAnchorContent; }
+
   // Return the screen coordinates of the popup, or (-1, -1) if anchored.
   nsIntPoint ScreenPosition() const { return nsIntPoint(mScreenXPos, mScreenYPos); }
 

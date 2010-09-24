@@ -112,36 +112,36 @@ function testCopyPaste () {
   testPasteText("This is a draggable bit of text.");
 
   copyChildrenToClipboard("alist");
-  testSelectionToString("bla\n\n    foo\n    bar\n\n");
-  testClipboardValue("text/unicode", " bla\n\n    foo\n    bar\n\n");
+  testSelectionToString(" bla\n\n    foo\n    bar\n\n");
+  testClipboardValue("text/unicode", "bla\n\n    foo\n    bar\n\n");
   testClipboardValue("text/html", "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
-  testPasteText(" bla\n\n    foo\n    bar\n\n");
+  testPasteText("bla\n\n    foo\n    bar\n\n");
 
   copyChildrenToClipboard("blist");
-  testSelectionToString("mozilla\n\n    foo\n    bar\n\n");
-  testClipboardValue("text/unicode", " mozilla\n\n    foo\n    bar\n\n");
+  testSelectionToString(" mozilla\n\n    foo\n    bar\n\n");
+  testClipboardValue("text/unicode", "mozilla\n\n    foo\n    bar\n\n");
   testClipboardValue("text/html", "<div id=\"blist\">\n    mozilla\n    <ol>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ol>\n  </div>");
-  testPasteText(" mozilla\n\n    foo\n    bar\n\n");
+  testPasteText("mozilla\n\n    foo\n    bar\n\n");
 
   copyChildrenToClipboard("clist");
-  testSelectionToString("mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
-  testClipboardValue("text/unicode", " mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
+  testSelectionToString(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
+  testClipboardValue("text/unicode", "mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
   testClipboardValue("text/html", "<div id=\"clist\">\n    mzla\n    <ul>\n      <li>foo<ul>\n        <li>bazzinga!</li>\n      </ul></li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
-  testPasteText(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
+  testPasteText("mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
 
   copyChildrenToClipboard("div4");
-  testSelectionToString("Tt t t ");
-  testClipboardValue("text/unicode", " Tt t t ");
+  testSelectionToString(" Tt t t ");
+  testClipboardValue("text/unicode", "Tt t t ");
   testClipboardValue("text/html", "<div id=\"div4\">\n  T<textarea>t t t</textarea>\n</div>");
   testInnerHTML("div4", "\n  T<textarea>t t t</textarea>\n");
-  testPasteText(" Tt t t ");
+  testPasteText("Tt t t ");
 
   copyChildrenToClipboard("div5");
-  testSelectionToString("T ");
-  testClipboardValue("text/unicode", " T ");
+  testSelectionToString(" T ");
+  testClipboardValue("text/unicode", "T ");
   testClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea>     </textarea>\n</div>");
   testInnerHTML("div5", "\n  T<textarea>     </textarea>\n");
-  testPasteText(" T ");
+  testPasteText("T ");
 
   copyRangeToClipboard($("div6").childNodes[0],0, $("div6").childNodes[1],1);
   testSelectionToString("");

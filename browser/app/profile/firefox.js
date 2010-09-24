@@ -70,7 +70,7 @@ pref("extensions.blocklist.interval", 86400);
 // Controls what level the blocklist switches from warning about items to forcibly
 // blocking them.
 pref("extensions.blocklist.level", 2);
-pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
+pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/");
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
 
 pref("extensions.update.autoUpdateDefault", true);
@@ -415,15 +415,12 @@ pref("general.warnOnAboutConfig",                 false);
 pref("dom.max_script_run_time",                   20);
 #endif
 
-// Make the status bar reliably present and unaffected by pages
-pref("dom.disable_window_open_feature.status",    true);
 // This is the pref to control the location bar, change this to true to 
-// force this instead of or in addition to the status bar - this makes 
-// the origin of popup windows more obvious to avoid spoofing. We would 
-// rather not do it by default because it affects UE for web applications, but
-// without it there isn't a really good way to prevent chrome spoofing, see bug 337344
+// force this - this makes the origin of popup windows more obvious to avoid
+// spoofing. We would rather not do it by default because it affects UE for web
+// applications, but without it there isn't a really good way to prevent chrome
+// spoofing, see bug 337344
 pref("dom.disable_window_open_feature.location",  true);
-pref("dom.disable_window_status_change",          true);
 // allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize",            false);
 // prevent JS from monkeying with window focus, etc
@@ -998,8 +995,6 @@ pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);
 pref("services.sync.prefs.sync.dom.disable_open_during_load", true);
 pref("services.sync.prefs.sync.dom.disable_window_flip", true);
 pref("services.sync.prefs.sync.dom.disable_window_move_resize", true);
-pref("services.sync.prefs.sync.dom.disable_window_open_feature.status", true);
-pref("services.sync.prefs.sync.dom.disable_window_status_change", true);
 pref("services.sync.prefs.sync.dom.event.contextmenu.enabled", true);
 pref("services.sync.prefs.sync.extensions.personas.current", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);
@@ -1048,3 +1043,8 @@ pref("devtools.errorconsole.enabled", false);
 
 // disable the Inspector
 pref("devtools.inspector.enabled", false);
+
+// Whether the character encoding menu is under the main Firefox button. This
+// preference is a string so that localizers can alter it.
+pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
+

@@ -58,6 +58,7 @@
 #include "nsFrameMessageManager.h"
 #include "nsIAlertsService.h"
 #include "nsToolkitCompsCID.h"
+#include "nsIDOMGeoGeolocation.h"
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 
@@ -152,6 +153,7 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 
 ContentParent::ContentParent()
     : mMonitor("ContentParent::mMonitor")
+    , mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
@@ -321,9 +323,10 @@ ContentParent::EnsurePermissionService()
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(ContentParent,
+NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
                               nsIObserver,
-                              nsIThreadObserver)
+                              nsIThreadObserver,
+                              nsIDOMGeoPositionCallback)
 
 namespace {
 void
@@ -348,6 +351,8 @@ ContentParent::Observe(nsISupports* aSubject,
             }
         }
 
+        RecvGeolocationStop();
+            
         Close();
         XRE_GetIOMessageLoop()->PostTask(
             FROM_HERE,
@@ -616,7 +621,6 @@ ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
   return true;
 }
 
-
 bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 {
@@ -627,6 +631,35 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   }
   return true;
 }
-    
+
+bool
+ContentParent::RecvGeolocationStart()
+{
+  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+  if (!geo) {
+    return true;
+  }
+  geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
+  return true;
+}
+
+bool
+ContentParent::RecvGeolocationStop()
+{
+  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+  if (!geo) {
+    return true;
+  }
+  geo->ClearWatch(mGeolocationWatchID);
+  return true;
+}
+
+NS_IMETHODIMP
+ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
+{
+  SendGeolocationUpdate(GeoPosition(postion));
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla

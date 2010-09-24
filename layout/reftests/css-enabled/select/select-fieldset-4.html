@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function onloadHandler()
+    {
+      var fieldsets = document.getElementsByTagName('fieldset');
+      fieldsets[0].disabled = false;
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onloadHandler();">
+    <fieldset disabled class="enabled">
+      <fieldset class="enabled">
+        <select class="enabled"></select>
+      </fieldset>
+    </fieldset>
+  </body>
+</html>

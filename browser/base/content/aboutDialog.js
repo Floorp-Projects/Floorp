@@ -77,24 +77,12 @@ function init(aEvent)
 
 #ifdef MOZ_UPDATER
 /**
- * Creates "Last Updated" message and sets up "Check for Updates..." button.
+ * Sets up "Check for Updates..." button.
  */
 function initUpdates()
 {
-  var um = Components.classes["@mozilla.org/updates/update-manager;1"].
-           getService(Components.interfaces.nsIUpdateManager);
   var browserBundle = Services.strings.
                       createBundle("chrome://browser/locale/browser.properties");
-
-  if (um.updateCount) {
-    let buildID = um.getUpdateAt(0).buildID;
-    let released = browserBundle.formatStringFromName("aboutdialog.released", 
-                                                      [buildID.substring(0, 4), 
-                                                       buildID.substring(4, 6), 
-                                                       buildID.substring(6, 8)], 3);
-    document.getElementById("released").setAttribute("value", released);
-  }
-
   var checkForUpdates = document.getElementById("checkForUpdatesButton");
   setupCheckForUpdates(checkForUpdates, browserBundle);
 }

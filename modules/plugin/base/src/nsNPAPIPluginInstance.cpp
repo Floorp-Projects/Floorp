@@ -878,9 +878,6 @@ nsNPAPIPluginInstance::NotifyPainted(void)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
 {
-  if (RUNNING != mRunning)
-    return NS_OK;
-
   PluginDestructionGuard guard(this);
 
   if (!mPlugin)

@@ -39,3 +39,27 @@ image#syncIcon {
 #introText {
   margin-top: 2px;
 }
+
+#feedback,
+#passphraseFeedback {
+  height: 4em;
+}
+
+#passphraseStrength {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
+  -moz-appearance: none;
+  height: 10px;
+  margin: 4px 0;
+}
+
+#passphraseStrength > .progress-bar {
+  background-color: #ff0000;
+}
+
+#passphraseStrength.medium > .progress-bar {
+  background-color: #ffcc33;
+}
+
+#passphraseStrength.strong > .progress-bar {
+  background-color: #00ff00;
+}

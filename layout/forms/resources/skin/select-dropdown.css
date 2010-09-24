@@ -72,7 +72,7 @@ xul|*.select-dropmarker {
 }
 
 xul|*.select-dropmarker,
-select[disabled="true"]:hover:active > xul|*.select-dropmarker {
+select:disabled:hover:active > xul|*.select-dropmarker {
   -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
@@ -119,12 +119,12 @@ xul|*.select-menuitem > xul|*.menu-text {
 
 /* ..... disabled state ..... */
  
-select[disabled="true"] {
+select:disabled {
   background-color: -moz-Dialog;
   color: GrayText;
 }
 
-select[disabled="true"] > xul|*.select-dropmarker {
+select:disabled > xul|*.select-dropmarker {
   list-style-image: url("chrome://forms/skin/arrow-dn-dis.gif");
 }
 

@@ -439,8 +439,15 @@ endif
 #		test_bug503473.html \
 #		file_bug503473-frame.sjs \
 
+_BROWSER_TEST_FILES = \
+		browser_bug593387.js \
+		$(NULL)
+
 libs:: $(_TEST_FILES1)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_TEST_FILES2)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

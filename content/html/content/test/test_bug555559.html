@@ -59,7 +59,7 @@ function checkInvalidEmailAddress(element)
   ok(!element.validity.valid, "Element should not be valid");
   ok(!element.checkValidity(), "Element should not be valid");
   ok(gInvalid, "The invalid event should have been thrown");
-  is(element.validationMessage, "The entered email address is not valid.",
+  is(element.validationMessage, "Please enter an email address.",
      "Validation message is not valid");
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
      "rgb(255, 0, 0)", ":invalid pseudo-class should apply");

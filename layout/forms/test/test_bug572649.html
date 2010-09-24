@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=572649
+-->
+<head>
+  <title>Test for Bug 572649</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=572649">Mozilla Bug 572649</a>
+<p id="display">
+  <textarea id="area" rows="5">
+  Here
+  is
+  some
+  very
+  long
+  text
+  that
+  we're
+  using
+  for
+  testing
+  purposes
+  </textarea>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 572649 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var area = document.getElementById("area");
+
+  is(area.scrollTop, 0, "The textarea should not be scrolled initially");
+  area.addEventListener("focus", function() {
+    area.removeEventListener("focus", arguments.callee, false);
+    setTimeout(function() {
+      is(area.scrollTop, 0, "The textarea's insertion point should not be scrolled into view");
+
+      SimpleTest.finish();
+    }, 0);
+  }, false);
+  setTimeout(function() {
+    var rect = area.getBoundingClientRect();
+    synthesizeMouse(area, rect.width - 5, 5, {});
+  }, 0);
+});
+
+</script>
+</pre>
+</body>
+</html>

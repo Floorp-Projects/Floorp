@@ -284,6 +284,7 @@ GetKernValueFmt0(const void* aSubtable,
 
     const KernPair *lo = reinterpret_cast<const KernPair*>(hdr + 1);
     const KernPair *hi = lo + PRUint16(hdr->nPairs);
+    const KernPair *limit = hi;
 
     if (reinterpret_cast<const char*>(aSubtable) + aSubtableLen <
         reinterpret_cast<const char*>(hi)) {
@@ -304,7 +305,7 @@ GetKernValueFmt0(const void* aSubtable,
         }
     }
 
-    if (KERN_PAIR_KEY(lo->left, lo->right) == key) {
+    if (lo < limit && KERN_PAIR_KEY(lo->left, lo->right) == key) {
         if (aIsOverride) {
             aValue = PRInt16(lo->value);
         } else if (aIsMinimum) {

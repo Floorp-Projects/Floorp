@@ -107,10 +107,6 @@
   -moz-appearance: toolbox;
 }
 
-statusbarpanel#statusbar-display {
-  -moz-padding-start: 0;
-}
-
 /* ::::: app menu button ::::: */
 
 #appmenu-button {
@@ -1456,24 +1452,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-padding-start: 0px;
 }
 
-#status-bar {
-  border-top: none;
-}
-
-#security-button[level="high"],
-#security-button[level="low"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-
-#security-button[level="broken"] {
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-#page-report-button {
-  width: 20px;
-  list-style-image: url("chrome://browser/skin/Info.png");
-}
-
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
@@ -1575,7 +1553,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-linear-gradient(rgba(255,0,0,.5), rgba(255,0,0,.5)) !important;
+  background-image: -moz-radial-gradient(40% 3px, circle cover, rgba(255,255,255,1) 2%, rgba(186,221,251,.75) 25%, rgba(127,179,255,.5) 50%, rgba(127,179,255,.25));
+}
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]):hover {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%),
+                    -moz-radial-gradient(40% 3px, circle cover, rgba(255,255,255,1) 2%, rgba(186,221,251,.75) 25%, rgba(127,179,255,.5) 50%, rgba(127,179,255,.25));
 }
 
 .tab-icon-image {
@@ -1808,11 +1790,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
   -moz-margin-end: 4px;
-}
-
-/* ::::: About Popup Blocking dialog ::::: */
-#pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
-  visibility: collapse;
 }
 
 /* Bookmarks toolbar */
@@ -2185,4 +2162,27 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
+}
+
+/* Remove the resizer from the statusbar compatibility shim */
+#status-bar .statusbar-resizerpanel {
+  display: none;
+}
+
+/* Vertically-center the statusbar compatibility shim, because
+   toolbars, even in small-icon mode, are a bit taller than
+   statusbars. Also turn off the statusbar border. On Windows
+   we have to disable borders on statusbar *and* child statusbar
+   elements. */
+#status-bar {
+  margin-top: .3em;
+  border-width: 0;
+  -moz-appearance: none;
+}
+
+/* Remove all borders from statusbarpanel children of
+   the statusbar. */
+#status-bar > statusbarpanel {
+  border-width: 0;
+  -moz-appearance: none;
 }

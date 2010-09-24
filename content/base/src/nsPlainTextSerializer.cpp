@@ -119,7 +119,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
 
   // Flow
   mEmptyLines = 1; // The start of the document is an "empty line" in itself,
-  mInWhitespace = PR_TRUE;
+  mInWhitespace = PR_FALSE;
   mPreFormatted = PR_FALSE;
   mStartedOutput = PR_FALSE;
 
@@ -638,6 +638,8 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
       }
     } 
     else {
+      /* See comment at end of function. */
+      mInWhitespace = PR_TRUE;
       mPreFormatted = PR_FALSE;
     }
 
@@ -806,6 +808,13 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   else if (type == eHTMLTag_u && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
   }
+
+  /* Container elements are always block elements, so we shouldn't
+     output any whitespace immediately after the container tag even if
+     there's extra whitespace there because the HTML is pretty-printed
+     or something. To ensure that happens, tell the serializer we're
+     already in whitespace so it won't output more. */
+  mInWhitespace = PR_TRUE;
 
   return NS_OK;
 }
@@ -1073,36 +1082,24 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
       EnsureVerticalSpace(mEmptyLines+1);
     }
   }
-  else if (type == eHTMLTag_whitespace) {
+  else if (type == eHTMLTag_whitespace || type == eHTMLTag_newline) {
     // The only times we want to pass along whitespace from the original
     // html source are if we're forced into preformatted mode via flags,
     // or if we're prettyprinting and we're inside a <pre>.
     // Otherwise, either we're collapsing to minimal text, or we're
     // prettyprinting to mimic the html format, and in neither case
     // does the formatting of the html source help us.
-    // One exception: at the very beginning of a selection,
-    // we want to preserve whitespace.
     if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
         (mPreFormatted && !mWrapColumn) ||
         IsInPre()) {
-      Write(aText);
+      if (type == eHTMLTag_newline)
+        EnsureVerticalSpace(mEmptyLines+1);
+      else  
+        Write(aText);
     }
-    else if(!mInWhitespace ||
-            (!mStartedOutput
-             && mFlags | nsIDocumentEncoder::OutputSelectionOnly)) {
-      mInWhitespace = PR_FALSE;
+    else if(!mInWhitespace) {
       Write(kSpace);
       mInWhitespace = PR_TRUE;
-    }
-  }
-  else if (type == eHTMLTag_newline) {
-    if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
-        (mPreFormatted && !mWrapColumn) ||
-        IsInPre()) {
-      EnsureVerticalSpace(mEmptyLines+1);
-    }
-    else {
-      Write(kSpace);
     }
   }
   else if (type == eHTMLTag_hr &&
@@ -1161,10 +1158,12 @@ nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
   // realize that we should start a new line.
   if(noOfRows >= 0 && !mInIndentString.IsEmpty()) {
     EndLine(PR_FALSE);
+    mInWhitespace = PR_TRUE;
   }
 
   while(mEmptyLines < noOfRows) {
     EndLine(PR_FALSE);
+    mInWhitespace = PR_TRUE;
   }
   mLineBreakDue = PR_FALSE;
   mFloatingLines = -1;

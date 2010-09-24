@@ -46,6 +46,7 @@ var EXPORTED_SYMBOLS = [];
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
@@ -514,11 +515,16 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.targetPlatforms.push(platform);
   });
 
-  // Themes are disabled by default unless they are currently selected
-  if (addon.type == "theme")
-    addon.userDisabled = addon.internalName != XPIProvider.selectedSkin;
-  else
+  // A theme's userDisabled value is true if the theme is not the selected skin
+  // or if there is an active lightweight theme. We ignore whether softblocking
+  // is in effect since it would change the active theme.
+  if (addon.type == "theme") {
+    addon.userDisabled = !!LightweightThemeManager.currentTheme ||
+                         addon.internalName != XPIProvider.selectedSkin;
+  }
+  else {
     addon.userDisabled = addon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
+  }
 
   addon.appDisabled = !isUsableAddon(addon);
 

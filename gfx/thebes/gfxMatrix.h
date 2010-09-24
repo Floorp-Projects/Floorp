@@ -258,6 +258,13 @@ public:
         return gfxSize(minor, major);
     }
 
+    /**
+     * Snap matrix components that are close to integers
+     * to integers. In particular, components that are integral when
+     * converted to single precision are set to those integers.
+     */
+    void NudgeToIntegers(void);
+
 private:
     static PRBool FuzzyEqual(gfxFloat aV1, gfxFloat aV2) {
         return fabs(aV2 - aV1) < 1e-6;

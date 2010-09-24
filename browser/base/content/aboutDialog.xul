@@ -71,9 +71,7 @@
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
       <vbox id="rightBox" flex="1">
-        <description id="version">
-#expand <label class="version-label" value="__MOZ_APP_VERSION__"/> <label class="version-label" id="released"/>
-        </description>
+#expand <label id="version" value="__MOZ_APP_VERSION__"/>
         <label id="distribution" class="text-blurb"/>
         <label id="distributionId" class="text-blurb"/>
 #ifdef MOZ_UPDATER

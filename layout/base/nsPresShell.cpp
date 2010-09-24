@@ -6315,21 +6315,26 @@ PresShell::HandleEvent(nsIView         *aView,
 {
   NS_ASSERTION(aView, "null view");
 
-  if (mIsDestroying || !nsContentUtils::IsSafeToRunScript() ||
+  if (mIsDestroying ||
       (sDisableNonTestMouseEvents && NS_IS_MOUSE_EVENT(aEvent) &&
        !(aEvent->flags & NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT))) {
     return NS_OK;
   }
 
-  NS_TIME_FUNCTION_MIN(1.0);
-
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT) {
+    NS_TIME_FUNCTION_MIN(1.0);
+
     // Accessibility events come through OS requests and not from scripts,
     // so it is safe to handle here
     return HandleEventInternal(aEvent, aView, aEventStatus);
   }
 #endif
+
+  if (!nsContentUtils::IsSafeToRunScript())
+    return NS_OK;
+
+  NS_TIME_FUNCTION_MIN(1.0);
 
   nsIContent* capturingContent =
     NS_IS_MOUSE_EVENT(aEvent) ? GetCapturingContent() : nsnull;
@@ -6817,7 +6822,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         return NS_OK;
       }
 
-      accEvent->mAccessible = accService->GetAccessibleInShell(mDocument, this);
+      // Accessible creation might be not safe so we make sure it's not created
+      // at unsafe times.
+      accEvent->mAccessible =
+        accService->GetRootDocumentAccessible(this, nsContentUtils::IsSafeToRunScript());
 
       // Ensure this is set in case a11y was activated before any
       // nsPresShells existed to observe "a11y-init-or-shutdown" topic

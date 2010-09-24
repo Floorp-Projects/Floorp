@@ -320,7 +320,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   }
 
   aView->CreateWidgetForPopup(&widgetData, parentWidget,
-                              PR_TRUE, PR_TRUE, eContentTypeUI);
+                              PR_TRUE, PR_TRUE);
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);

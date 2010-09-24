@@ -4,8 +4,6 @@
 # (when it's implemented)
 
 # 'color' property, from/to/by with named colors & hex values
-# XXXdholbert all 'color' tests currently fail because
-# nsStyleCoord/nsStyleAnimation don't support colors yet.
 == anim-css-color-1-by-ident-hex.svg         anim-css-fill-1-ref.svg
 == anim-css-color-1-from-by-hex-hex.svg      anim-css-fill-1-ref.svg
 == anim-css-color-1-from-by-ident-hex.svg    anim-css-fill-1-ref.svg
@@ -105,8 +103,9 @@ fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
 == anim-css-strokewidth-1-to-px-px.svg        anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, from/by/to with percent values
-# XXXdholbert the mixed pct + px tests fail right now, because nsStyleAnimation
-# doesn't support combining pct-values with coord-values yet (Bug 520234)
+# XXXdholbert the mixed pct + px tests fail right now, because we need calc()
+# in order to interpolate between pct and non-pct values, and we don't yet
+# support calc() for stroke-width & other SVG-specific properties (Bug 594933).
 == anim-css-strokewidth-1-by-pct-pct.svg      anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-by-pct-px.svg       anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-by-px-pct.svg       anim-css-strokewidth-1-ref.svg
