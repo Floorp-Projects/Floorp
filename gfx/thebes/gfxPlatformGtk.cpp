@@ -164,6 +164,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface = nsnull;
+    PRBool needsClear = PR_TRUE;
     gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(contentType);
 #ifdef MOZ_X11
     // XXX we really need a different interface here, something that passes
@@ -171,19 +172,27 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     // we should try to match
     GdkScreen *gdkScreen = gdk_screen_get_default();
     if (gdkScreen) {
-
         // try to optimize it for 16bpp default screen
         if (gfxASurface::CONTENT_COLOR == contentType
             && 16 == gdk_visual_get_system()->depth)
             imageFormat = gfxASurface::ImageFormatRGB16_565;
 
-        Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
-        XRenderPictFormat* xrenderFormat =
-            gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
-                                             imageFormat);
+        if (UseClientSideRendering()) {
+            // We're not going to use XRender, so we don't need to
+            // search for a render format
+            newSurface = new gfxImageSurface(size, imageFormat);
+            // The gfxImageSurface ctor zeroes this for us, no need to
+            // waste time clearing again
+            needsClear = PR_FALSE;
+        } else {
+            Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
+            XRenderPictFormat* xrenderFormat =
+                gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
+                                                 imageFormat);
 
-        if (xrenderFormat) {
-            newSurface = gfxXlibSurface::Create(screen, xrenderFormat, size);
+            if (xrenderFormat) {
+                newSurface = gfxXlibSurface::Create(screen, xrenderFormat, size);
+            }
         }
     }
 #endif
@@ -199,10 +208,10 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         // We couldn't create a native surface for whatever reason;
         // e.g., no display, no RENDER, bad size, etc.
         // Fall back to image surface for the data.
-        newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
+        newSurface = new gfxImageSurface(size, imageFormat);
     }
 
-    if (newSurface) {
+    if (newSurface && needsClear) {
         gfxContext tmpCtx(newSurface);
         tmpCtx.SetOperator(gfxContext::OPERATOR_CLEAR);
         tmpCtx.Paint();
