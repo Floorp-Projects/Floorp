@@ -11,10 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=446483
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=446483">Mozilla Bug 446483</a>
-<p id="display">
-<iframe src="bug446483-iframe.html"></iframe>
-<iframe src="bug446483-iframe.html"></iframe>
-</p>
+<p id="display"></p>
 <div id="content" style="display: none">
   
 </div>
@@ -31,8 +28,17 @@ function gc() {
 }
 
 function runTest() {
+  document.getElementById('display').innerHTML =
+    '<iframe src="bug446483-iframe.html"><\/iframe>\n' +
+    '<iframe src="bug446483-iframe.html"><\/iframe>\n';
+
   setInterval(gc, 1000);
-  setTimeout(function(){document.getElementById('display').innerHTML='';ok(true,''); SimpleTest.finish();}, 4000);
+
+  setTimeout(function() {
+    document.getElementById('display').innerHTML = '';
+    ok(true, '');
+    SimpleTest.finish();
+  }, 4000);
 }
 
 SimpleTest.waitForExplicitFinish();
