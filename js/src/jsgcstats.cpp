@@ -50,7 +50,7 @@ using namespace js::gc;
 #define UL(x)       ((unsigned long)(x))
 #define PERCENT(x,y)  (100.0 * (double) (x) / (double) (y))
 
-namespace js {    
+namespace js {
 namespace gc {
 
 #if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
@@ -233,9 +233,9 @@ void
 DumpCompartmentStats(JSCompartment *comp, FILE *fp)
 {
     if (comp->rt->defaultCompartment == comp)
-        fprintf(fp, "\n**** DefaultCompartment Allocation Statistics: %p ****\n\n", comp);
+        fprintf(fp, "\n**** DefaultCompartment Allocation Statistics: %p ****\n\n", (void *) comp);
     else
-        fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", comp);
+        fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", (void *) comp);
 
     DumpArenaStats(&comp->compartmentStats[0], fp);
 }
