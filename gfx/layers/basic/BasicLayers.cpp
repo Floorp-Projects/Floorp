@@ -1803,7 +1803,7 @@ public:
     mOldYResolution = 1.0;
 
     if (IsSurfaceDescriptorValid(mFrontBufferDescriptor)) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontBufferDescriptor);
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontBufferDescriptor, mAllocator);
     }
   }
 
@@ -1919,7 +1919,7 @@ public:
   virtual void DestroyFrontBuffer()
   {
     if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface, mAllocator);
     }
     mFrontSurface = nsnull;
   }
@@ -2003,7 +2003,7 @@ public:
   virtual void DestroyFrontBuffer()
   {
     if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface, mAllocator);
     }
     mFrontSurface = nsnull;
   }
