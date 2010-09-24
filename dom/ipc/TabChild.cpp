@@ -582,28 +582,12 @@ TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
 bool
 TabChild::DispatchWidgetEvent(nsGUIEvent& event)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
-  NS_ENSURE_TRUE(window, false);
-
-  nsIDocShell *docShell = window->GetDocShell();
-  NS_ENSURE_TRUE(docShell, false);
-
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, false);
-
-  nsIFrame *frame = presShell->GetRootFrame();
-  NS_ENSURE_TRUE(frame, false);
-
-  nsIView *view = frame->GetView();
-  NS_ENSURE_TRUE(view, false);
-
-  nsCOMPtr<nsIWidget> widget = view->GetNearestWidget(nsnull);
-  NS_ENSURE_TRUE(widget, false);
+  if (!mWidget)
+    return false;
 
   nsEventStatus status;
-  event.widget = widget;
-  NS_ENSURE_SUCCESS(widget->DispatchEvent(&event, status), false);
+  event.widget = mWidget;
+  NS_ENSURE_SUCCESS(mWidget->DispatchEvent(&event, status), false);
   return true;
 }
 

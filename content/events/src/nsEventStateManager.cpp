@@ -45,9 +45,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
-#ifdef ANDROID
-#include "mozilla/dom/PBrowserParent.h"
-#endif
+#include "mozilla/dom/TabParent.h"
 #endif
 
 #include "nsCOMPtr.h"
@@ -163,6 +161,10 @@
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
+#endif
+
+#ifdef MOZ_IPC
+using namespace mozilla::dom;
 #endif
 
 //#define DEBUG_DOCSHELL_FOCUS
@@ -1315,54 +1317,78 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_QUERY_SELECTED_TEXT:
     {
+#ifdef MOZ_IPC
+      if (RemoteQueryContentEvent(aEvent))
+        break;
+#endif
       nsContentEventHandler handler(mPresContext);
       handler.OnQuerySelectedText((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
+#ifdef MOZ_IPC
+      if (RemoteQueryContentEvent(aEvent))
+        break;
+#endif
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryTextContent((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_CARET_RECT:
     {
+      // XXX remote event
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryCaretRect((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_TEXT_RECT:
     {
+      // XXX remote event
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryTextRect((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_EDITOR_RECT:
     {
+      // XXX remote event
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryEditorRect((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_CONTENT_STATE:
     {
+      // XXX remote event
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryContentState(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_SELECTION_AS_TRANSFERABLE:
     {
+      // XXX remote event
       nsContentEventHandler handler(mPresContext);
       handler.OnQuerySelectionAsTransferable(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_CHARACTER_AT_POINT:
     {
+      // XXX remote event
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryCharacterAtPoint(static_cast<nsQueryContentEvent*>(aEvent));
     }
     break;
   case NS_SELECTION_SET:
     {
+#ifdef MOZ_IPC
+      nsSelectionEvent *selectionEvent =
+          static_cast<nsSelectionEvent*>(aEvent);
+      if (IsTargetCrossProcess(selectionEvent)) {
+        // Will not be handled locally, remote the event
+        if (GetCrossProcessTarget()->SendSelectionEvent(*selectionEvent))
+          selectionEvent->mSucceeded = PR_TRUE;
+        break;
+      }
+#endif
       nsContentEventHandler handler(mPresContext);
       handler.OnSelectionEvent((nsSelectionEvent*)aEvent);
     }
@@ -1384,17 +1410,14 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
 #ifdef MOZ_IPC
-#ifdef ANDROID
   case NS_TEXT_TEXT:
     {
       nsTextEvent *textEvent = static_cast<nsTextEvent*>(aEvent);
       if (IsTargetCrossProcess(textEvent)) {
         // Will not be handled locally, remote the event
-        mozilla::dom::PBrowserParent *remoteBrowser = GetCrossProcessTarget();
-        if (remoteBrowser &&
-            remoteBrowser->SendTextEvent(*textEvent)) {
+        if (GetCrossProcessTarget()->SendTextEvent(*textEvent)) {
           // Cancel local dispatching
-          *aStatus = nsEventStatus_eConsumeNoDefault;
+          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
         }
       }
     }
@@ -1406,17 +1429,14 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           static_cast<nsCompositionEvent*>(aEvent);
       if (IsTargetCrossProcess(compositionEvent)) {
         // Will not be handled locally, remote the event
-        mozilla::dom::PBrowserParent *remoteBrowser = GetCrossProcessTarget();
-        if (remoteBrowser &&
-            remoteBrowser->SendCompositionEvent(*compositionEvent)) {
+        if (GetCrossProcessTarget()->SendCompositionEvent(*compositionEvent)) {
           // Cancel local dispatching
-          *aStatus = nsEventStatus_eConsumeNoDefault;
+          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
         }
       }
     }
     break;
-#endif
-#endif
+#endif // MOZ_IPC
   }
   return NS_OK;
 }
@@ -3249,25 +3269,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     }
     break;
 #endif
-
-#ifdef MOZ_IPC
-#ifdef ANDROID
-  case NS_SELECTION_SET:
-    {
-      nsSelectionEvent *selectionEvent =
-          static_cast<nsSelectionEvent*>(aEvent);
-      // If local handler failed, try remoting the event
-      if (selectionEvent->mSucceeded)
-        break;
-
-      mozilla::dom::PBrowserParent *remoteBrowser = GetCrossProcessTarget();
-      if (remoteBrowser &&
-          remoteBrowser->SendSelectionEvent(*selectionEvent))
-        selectionEvent->mSucceeded = PR_TRUE;
-    }
-    break;
-#endif // ANDROID
-#endif // MOZ_IPC
   }
 
   //Reset target frame to null to avoid mistargeting after reentrant event
@@ -3278,19 +3279,30 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 }
 
 #ifdef MOZ_IPC
-#ifdef ANDROID
-mozilla::dom::PBrowserParent*
+PRBool
+nsEventStateManager::RemoteQueryContentEvent(nsEvent *aEvent)
+{
+  nsQueryContentEvent *queryEvent =
+      static_cast<nsQueryContentEvent*>(aEvent);
+  if (!IsTargetCrossProcess(queryEvent)) {
+    return PR_FALSE;
+  }
+  // Will not be handled locally, remote the event
+  GetCrossProcessTarget()->HandleQueryContentEvent(*queryEvent);
+  return PR_TRUE;
+}
+
+TabParent*
 nsEventStateManager::GetCrossProcessTarget()
 {
-  return nsnull;
+  return TabParent::GetIMETabParent();
 }
 
 PRBool
 nsEventStateManager::IsTargetCrossProcess(nsGUIEvent *aEvent)
 {
-  return PR_FALSE;
+  return TabParent::GetIMETabParent() != nsnull;
 }
-#endif
 #endif
 
 NS_IMETHODIMP

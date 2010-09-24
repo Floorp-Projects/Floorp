@@ -62,6 +62,12 @@ class nsIDocShellTreeItem;
 class imgIContainer;
 class nsDOMDataTransfer;
 
+namespace mozilla {
+namespace dom {
+class TabParent;
+}
+}
+
 /*
  * Event listener manager
  */
@@ -334,10 +340,9 @@ protected:
   nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
 
 #ifdef MOZ_IPC
-#ifdef ANDROID
-  mozilla::dom::PBrowserParent *GetCrossProcessTarget();
+  PRBool RemoteQueryContentEvent(nsEvent *aEvent);
+  mozilla::dom::TabParent *GetCrossProcessTarget();
   PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
-#endif
 #endif
 
   PRInt32     mLockCursor;
