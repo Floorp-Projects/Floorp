@@ -1692,3 +1692,9 @@ nsWindow::OnIMESelectionChange(void)
     return NS_OK;
 }
 
+nsIMEUpdatePreference
+nsWindow::GetIMEUpdatePreference()
+{
+    return nsIMEUpdatePreference(PR_TRUE, PR_TRUE);
+}
+
