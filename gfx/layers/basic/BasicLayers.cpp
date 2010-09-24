@@ -515,7 +515,10 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
       IsClippingCheap(aTarget, aLayer->GetVisibleRegion())) {
     // We don't want to draw invalid stuff, so we need to clip. Might as
     // well clip to the smallest area possible --- the visible region.
-    gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+    // Bug 599189 if there is a non-integer-translation transform in aTarget,
+    // we might sample pixels outside GetVisibleRegion(), which is wrong
+    // and may cause gray lines.
+    gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetVisibleRegion());
   }
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
