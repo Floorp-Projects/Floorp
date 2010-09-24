@@ -572,16 +572,6 @@ TabChild::RecvTextEvent(const nsTextEvent& event)
 }
 
 bool
-TabChild::RecvQueryContentEvent(const nsQueryContentEvent& event)
-{
-  nsQueryContentEvent localEvent(event);
-  DispatchWidgetEvent(localEvent);
-  // Send result back even if query failed
-  SendQueryContentResult(localEvent);
-  return true;
-}
-
-bool
 TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
 {
   nsSelectionEvent localEvent(event);
