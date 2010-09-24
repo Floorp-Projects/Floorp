@@ -91,6 +91,20 @@ public:
                                  nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const nsString& aJSON);
+    virtual bool RecvNotifyIMEFocus(const PRBool& aFocus,
+                                    nsIMEUpdatePreference* aPreference);
+    virtual bool RecvNotifyIMETextChange(const PRUint32& aStart,
+                                         const PRUint32& aEnd,
+                                         const PRUint32& aNewEnd);
+    virtual bool RecvNotifyIMESelection(const PRUint32& aAnchor,
+                                        const PRUint32& aFocus);
+    virtual bool RecvNotifyIMETextHint(const nsString& aText);
+    virtual bool RecvEndIMEComposition(const PRBool& aCancel,
+                                       nsString* aComposition);
+    virtual bool RecvGetIMEEnabled(PRUint32* aValue);
+    virtual bool RecvSetIMEEnabled(const PRUint32& aValue);
+    virtual bool RecvGetIMEOpenState(PRBool* aValue);
+    virtual bool RecvSetIMEOpenState(const PRBool& aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
@@ -201,8 +215,12 @@ protected:
     nsString mSecurityTooltipText;
     nsCOMPtr<nsISupports> mSecurityStatusObject;
 
+    // IME
+    nsString mIMECacheText;
+
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
+    already_AddRefed<nsIWidget> GetWidget() const;
 };
 
 } // namespace dom
