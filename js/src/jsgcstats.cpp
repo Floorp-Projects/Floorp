@@ -42,8 +42,16 @@
 #include "jsgc.h"
 #include "jsxml.h"
 #include "jsbuiltins.h"
+#include "jscompartment.h"
 
 using namespace js;
+using namespace js::gc;
+
+#define UL(x)       ((unsigned long)(x))
+#define PERCENT(x,y)  (100.0 * (double) (x) / (double) (y))
+
+namespace js {    
+namespace gc {
 
 #if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
 
@@ -67,6 +75,209 @@ ConservativeGCStats::dump(FILE *fp)
 #undef ULSTAT
 }
 #endif
+
+#ifdef JS_GCMETER
+void
+UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearenas,
+                       uint32 nkilledArenas, uint32 nthings)
+{
+    size_t narenas = 0;
+    JSGCArenaStats *compSt = &comp->compartmentStats[thingKind];
+    JSGCArenaStats *globSt = &comp->rt->globalArenaStats[thingKind];
+    narenas = nlivearenas + nkilledArenas;
+    JS_ASSERT(narenas >= compSt->livearenas);
+
+    compSt->newarenas     = narenas - compSt->livearenas;
+    compSt->narenas       = narenas;
+    compSt->livearenas    = nlivearenas;
+    if (compSt->maxarenas < narenas)
+        compSt->maxarenas = narenas;
+    compSt->totalarenas  += narenas;
+
+    compSt->nthings       = nthings;
+    if (compSt->maxthings < nthings)
+        compSt->maxthings = nthings;
+    compSt->totalthings  += nthings;
+    globSt->newarenas    += compSt->newarenas;
+    globSt->narenas      += narenas;
+    globSt->livearenas   += compSt->livearenas;
+    globSt->totalarenas  += compSt->totalarenas;
+    globSt->nthings      += compSt->nthings;
+    globSt->totalthings  += compSt->totalthings;
+    if (globSt->maxarenas < compSt->maxarenas)
+        globSt->maxarenas = compSt->maxarenas;
+    if (globSt->maxthings < compSt->maxthings)
+        globSt->maxthings = compSt->maxthings;
+}
+
+static const char *const GC_ARENA_NAMES[] = {
+    "object",
+    "function",
+#if JS_HAS_XML_SUPPORT
+    "xml",
+#endif
+    "short string",
+    "string",
+    "external_string_0",
+    "external_string_1",
+    "external_string_2",
+    "external_string_3",
+    "external_string_4",
+    "external_string_5",
+    "external_string_6",
+    "external_string_7",
+};
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(GC_ARENA_NAMES) == FINALIZE_LIMIT);
+
+void GetSizeAndThingsPerArena(int thingKind, size_t &thingSize, size_t &thingsPerArena)
+{
+    switch (thingKind) {
+        case FINALIZE_OBJECT:
+            thingSize = sizeof(JSObject);
+            thingsPerArena = Arena<JSObject>::ThingsPerArena;
+            break;
+        case FINALIZE_STRING:
+        case FINALIZE_EXTERNAL_STRING0:
+        case FINALIZE_EXTERNAL_STRING1:
+        case FINALIZE_EXTERNAL_STRING2:
+        case FINALIZE_EXTERNAL_STRING3:
+        case FINALIZE_EXTERNAL_STRING4:
+        case FINALIZE_EXTERNAL_STRING5:
+        case FINALIZE_EXTERNAL_STRING6:
+        case FINALIZE_EXTERNAL_STRING7:
+            thingSize = sizeof(JSString);
+             thingsPerArena = Arena<JSString>::ThingsPerArena;
+            break;
+        case FINALIZE_SHORT_STRING:
+            thingSize = sizeof(JSShortString);
+            thingsPerArena = Arena<JSShortString>::ThingsPerArena;
+            break;
+        case FINALIZE_FUNCTION:
+            thingSize = sizeof(JSFunction);
+            thingsPerArena = Arena<JSFunction>::ThingsPerArena;
+            break;
+#if JS_HAS_XML_SUPPORT
+        case FINALIZE_XML:
+            thingSize = sizeof(JSXML);
+            thingsPerArena = Arena<JSXML>::ThingsPerArena;
+            break;
+#endif
+        default:
+            JS_ASSERT(false);
+    }
+}
+
+void
+DumpArenaStats(JSGCArenaStats *stp, FILE *fp)
+{
+    size_t sumArenas = 0, sumTotalArenas = 0, sumThings =0,  sumMaxThings = 0;
+    size_t sumThingSize = 0, sumTotalThingSize = 0, sumArenaCapacity = 0;
+    size_t sumTotalArenaCapacity = 0, sumAlloc = 0, sumLocalAlloc = 0;
+
+    for (int i = 0; i < (int) FINALIZE_LIMIT; i++) {
+        JSGCArenaStats *st = &stp[i];
+        if (st->maxarenas == 0)
+            continue;
+        size_t thingSize = 0, thingsPerArena = 0;
+        GetSizeAndThingsPerArena(i, thingSize, thingsPerArena);
+
+        fprintf(fp, "%s arenas (thing size %lu, %lu things per arena):\n",
+                GC_ARENA_NAMES[i], UL(thingSize), UL(thingsPerArena));
+        fprintf(fp, "           arenas before GC: %lu\n", UL(st->narenas));
+        fprintf(fp, "            arenas after GC: %lu (%.1f%%)\n",
+                UL(st->livearenas), PERCENT(st->livearenas, st->narenas));
+        fprintf(fp, "                 max arenas: %lu\n", UL(st->maxarenas));
+        fprintf(fp, "                     things: %lu\n", UL(st->nthings));
+        fprintf(fp, "        GC cell utilization: %.1f%%\n",
+                PERCENT(st->nthings, thingsPerArena * st->narenas));
+        fprintf(fp, "   average cell utilization: %.1f%%\n",
+                PERCENT(st->totalthings, thingsPerArena * st->totalarenas));
+        fprintf(fp, "                 max things: %lu\n", UL(st->maxthings));
+        fprintf(fp, "             alloc attempts: %lu\n", UL(st->alloc));
+        fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
+                UL(st->localalloc), PERCENT(st->localalloc, st->alloc));
+        sumArenas += st->narenas;
+        sumTotalArenas += st->totalarenas;
+        sumThings += st->nthings;
+        sumMaxThings += st->maxthings;
+        sumThingSize += thingSize * st->nthings;
+        sumTotalThingSize += size_t(thingSize * st->totalthings);
+        sumArenaCapacity += thingSize * thingsPerArena * st->narenas;
+        sumTotalArenaCapacity += thingSize * thingsPerArena * st->totalarenas;
+        sumAlloc += st->alloc;
+        sumLocalAlloc += st->localalloc;
+        putc('\n', fp);
+    }
+
+    fputs("Never used arenas:\n", fp);
+    for (int i = 0; i < (int) FINALIZE_LIMIT; i++) {
+        JSGCArenaStats *st = &stp[i];
+        if (st->maxarenas != 0)
+            continue;
+        fprintf(fp, "%s\n", GC_ARENA_NAMES[i]);
+    }
+    fprintf(fp, "\nTOTAL STATS:\n");
+    fprintf(fp, "            total GC arenas: %lu\n", UL(sumArenas));
+    fprintf(fp, "            total GC things: %lu\n", UL(sumThings));
+    fprintf(fp, "        max total GC things: %lu\n", UL(sumMaxThings));
+    fprintf(fp, "        GC cell utilization: %.1f%%\n",
+            PERCENT(sumThingSize, sumArenaCapacity));
+    fprintf(fp, "   average cell utilization: %.1f%%\n",
+            PERCENT(sumTotalThingSize, sumTotalArenaCapacity));
+    fprintf(fp, "             alloc attempts: %lu\n", UL(sumAlloc));
+    fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
+            UL(sumLocalAlloc), PERCENT(sumLocalAlloc, sumAlloc));
+}
+
+void
+DumpCompartmentStats(JSCompartment *comp, FILE *fp)
+{
+    if (comp->rt->defaultCompartment == comp)
+        fprintf(fp, "\n**** DefaultCompartment Allocation Statistics: %p ****\n\n", comp);
+    else
+        fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", comp);
+
+    DumpArenaStats(&comp->compartmentStats[0], fp);
+}
+
+#endif
+
+} //gc
+} //js
+
+#ifdef JS_GCMETER
+
+JS_FRIEND_API(void)
+js_DumpGCStats(JSRuntime *rt, FILE *fp)
+{
+#define ULSTAT(x)   UL(rt->gcStats.x)
+    if (JS_WANT_GC_METER_PRINT) {
+        fprintf(fp, "\n**** Global Arena Allocation Statistics: ****\n");
+        DumpArenaStats(&rt->globalArenaStats[0], fp);
+        fprintf(fp, "            bytes allocated: %lu\n", UL(rt->gcBytes));
+        fprintf(fp, "        allocation failures: %lu\n", ULSTAT(fail));
+        fprintf(fp, "allocation retries after GC: %lu\n", ULSTAT(retry));
+        fprintf(fp, "           valid lock calls: %lu\n", ULSTAT(lock));
+        fprintf(fp, "         valid unlock calls: %lu\n", ULSTAT(unlock));
+        fprintf(fp, "      delayed tracing calls: %lu\n", ULSTAT(unmarked));
+#ifdef DEBUG
+        fprintf(fp, "      max trace later count: %lu\n", ULSTAT(maxunmarked));
+#endif
+        fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
+        fprintf(fp, "  thing arenas freed so far: %lu\n\n", ULSTAT(afree));
+    }
+
+    if (JS_WANT_GC_PER_COMPARTMENT_PRINT)
+        for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+            DumpCompartmentStats(*c, fp);
+    PodZero(&rt->globalArenaStats);
+    if (JS_WANT_CONSERVATIVE_GC_PRINT)
+        rt->gcStats.conservative.dump(fp);
+#undef ULSTAT
+}
+#endif
+
+namespace js {
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
 void
@@ -126,159 +337,7 @@ GCMarker::dumpConservativeRoots()
 }
 #endif /* JS_DUMP_CONSERVATIVE_GC_ROOTS */
 
-#ifdef JS_GCMETER
-
-void
-UpdateArenaStats(JSGCArenaStats *st, uint32 nlivearenas, uint32 nkilledArenas,
-                 uint32 nthings)
-{
-    size_t narenas;
-
-    narenas = nlivearenas + nkilledArenas;
-    JS_ASSERT(narenas >= st->livearenas);
-
-    st->newarenas = narenas - st->livearenas;
-    st->narenas = narenas;
-    st->livearenas = nlivearenas;
-    if (st->maxarenas < narenas)
-        st->maxarenas = narenas;
-    st->totalarenas += narenas;
-
-    st->nthings = nthings;
-    if (st->maxthings < nthings)
-        st->maxthings = nthings;
-    st->totalthings += nthings;
-}
-
-JS_FRIEND_API(void)
-js_DumpGCStats(JSRuntime *rt, FILE *fp)
-{
-    static const char *const GC_ARENA_NAMES[] = {
-        "object",
-        "function",
-#if JS_HAS_XML_SUPPORT
-        "xml",
-#endif
-        "short string",
-        "string",
-        "external_string_0",
-        "external_string_1",
-        "external_string_2",
-        "external_string_3",
-        "external_string_4",
-        "external_string_5",
-        "external_string_6",
-        "external_string_7",
-    };
-
-    fprintf(fp, "\nGC allocation statistics:\n\n");
-
-#define UL(x)       ((unsigned long)(x))
-#define ULSTAT(x)   UL(rt->gcStats.x)
-#define PERCENT(x,y)  (100.0 * (double) (x) / (double) (y))
-
-    size_t sumArenas = 0;
-    size_t sumTotalArenas = 0;
-    size_t sumThings = 0;
-    size_t sumMaxThings = 0;
-    size_t sumThingSize = 0;
-    size_t sumTotalThingSize = 0;
-    size_t sumArenaCapacity = 0;
-    size_t sumTotalArenaCapacity = 0;
-    size_t sumAlloc = 0;
-    size_t sumLocalAlloc = 0;
-    size_t sumFail = 0;
-    size_t sumRetry = 0;
-    for (int i = 0; i < (int) FINALIZE_LIMIT; i++) {
-        size_t thingSize, thingsPerArena;
-        JSGCArenaStats *st;
-        thingSize = rt->gcArenaList[i].thingSize;
-        thingsPerArena = ThingsPerArena(thingSize);
-        st = &rt->gcArenaStats[i];
-        if (st->maxarenas == 0)
-            continue;
-        fprintf(fp,
-                "%s arenas (thing size %lu, %lu things per arena):",
-                GC_ARENA_NAMES[i], UL(thingSize), UL(thingsPerArena));
-        putc('\n', fp);
-        fprintf(fp, "           arenas before GC: %lu\n", UL(st->narenas));
-        fprintf(fp, "       new arenas before GC: %lu (%.1f%%)\n",
-                UL(st->newarenas), PERCENT(st->newarenas, st->narenas));
-        fprintf(fp, "            arenas after GC: %lu (%.1f%%)\n",
-                UL(st->livearenas), PERCENT(st->livearenas, st->narenas));
-        fprintf(fp, "                 max arenas: %lu\n", UL(st->maxarenas));
-        fprintf(fp, "                     things: %lu\n", UL(st->nthings));
-        fprintf(fp, "        GC cell utilization: %.1f%%\n",
-                PERCENT(st->nthings, thingsPerArena * st->narenas));
-        fprintf(fp, "   average cell utilization: %.1f%%\n",
-                PERCENT(st->totalthings, thingsPerArena * st->totalarenas));
-        fprintf(fp, "                 max things: %lu\n", UL(st->maxthings));
-        fprintf(fp, "             alloc attempts: %lu\n", UL(st->alloc));
-        fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
-                UL(st->localalloc), PERCENT(st->localalloc, st->alloc));
-        sumArenas += st->narenas;
-        sumTotalArenas += st->totalarenas;
-        sumThings += st->nthings;
-        sumMaxThings += st->maxthings;
-        sumThingSize += thingSize * st->nthings;
-        sumTotalThingSize += size_t(thingSize * st->totalthings);
-        sumArenaCapacity += thingSize * thingsPerArena * st->narenas;
-        sumTotalArenaCapacity += thingSize * thingsPerArena * st->totalarenas;
-        sumAlloc += st->alloc;
-        sumLocalAlloc += st->localalloc;
-        sumFail += st->fail;
-        sumRetry += st->retry;
-        putc('\n', fp);
-    }
-
-    fputs("Never used arenas:\n", fp);
-    for (int i = 0; i < (int) FINALIZE_LIMIT; i++) {
-        size_t thingSize, thingsPerArena;
-        JSGCArenaStats *st;
-        thingSize = rt->gcArenaList[i].thingSize;
-        thingsPerArena = ThingsPerArena(thingSize);
-        st = &rt->gcArenaStats[i];
-        if (st->maxarenas != 0)
-            continue;
-        fprintf(fp,
-                "%s (thing size %lu, %lu things per arena)\n",
-                GC_ARENA_NAMES[i], UL(thingSize), UL(thingsPerArena));
-    }
-    fprintf(fp, "\nTOTAL STATS:\n");
-    fprintf(fp, "            bytes allocated: %lu\n", UL(rt->gcBytes));
-    fprintf(fp, "            total GC arenas: %lu\n", UL(sumArenas));
-    fprintf(fp, "       max allocated arenas: %lu\n", ULSTAT(maxnallarenas));
-    fprintf(fp, "       max allocated chunks: %lu\n", ULSTAT(maxnchunks));
-    fprintf(fp, "            total GC things: %lu\n", UL(sumThings));
-    fprintf(fp, "        max total GC things: %lu\n", UL(sumMaxThings));
-    fprintf(fp, "        GC cell utilization: %.1f%%\n",
-            PERCENT(sumThingSize, sumArenaCapacity));
-    fprintf(fp, "   average cell utilization: %.1f%%\n",
-            PERCENT(sumTotalThingSize, sumTotalArenaCapacity));
-    fprintf(fp, "allocation retries after GC: %lu\n", UL(sumRetry));
-    fprintf(fp, "             alloc attempts: %lu\n", UL(sumAlloc));
-    fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
-            UL(sumLocalAlloc), PERCENT(sumLocalAlloc, sumAlloc));
-    fprintf(fp, "        allocation failures: %lu\n", UL(sumFail));
-    fprintf(fp, "           valid lock calls: %lu\n", ULSTAT(lock));
-    fprintf(fp, "         valid unlock calls: %lu\n", ULSTAT(unlock));
-    fprintf(fp, "      delayed tracing calls: %lu\n", ULSTAT(unmarked));
-#ifdef DEBUG
-    fprintf(fp, "      max trace later count: %lu\n", ULSTAT(maxunmarked));
-#endif
-    fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
-    fprintf(fp, "  thing arenas freed so far: %lu\n", ULSTAT(afree));
-    rt->gcStats.conservative.dump(fp);
-
-#undef UL
-#undef ULSTAT
-#undef PERCENT
-}
-#endif
-
 #ifdef MOZ_GCTIMER
-
-namespace js {
 
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;
@@ -289,13 +348,13 @@ GCTimer::GCTimer() {
     enter = rdtsc();
 }
 
-uint64 
+uint64
 GCTimer::getFirstEnter() {
     static uint64 firstEnter = rdtsc();
     return firstEnter;
 }
 
-void 
+void
 GCTimer::finish(bool lastGC) {
     end = rdtsc();
 
@@ -309,7 +368,7 @@ GCTimer::finish(bool lastGC) {
             static FILE *gcFile;
 
             if (!gcFile) {
-                gcFile = fopen("gcTimer.dat", "w");
+                gcFile = fopen("gcTimer.dat", "a");
 
                 fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
                 fprintf(gcFile, " FinStr,  Destroy,  newChunks, destoyChunks\n");
@@ -337,39 +396,9 @@ GCTimer::finish(bool lastGC) {
     destroyChunkCount = 0;
 }
 
-#ifdef JS_SCOPE_DEPTH_METER
-void
-DumpScopeDepthMeter(JSRuntime *rt)
-{
-    static FILE *fp;
-    if (!fp)
-        fp = fopen("/tmp/scopedepth.stats", "w");
-
-    if (fp) {
-        JS_DumpBasicStats(&rt->protoLookupDepthStats, "proto-lookup depth", fp);
-        JS_DumpBasicStats(&rt->scopeSearchDepthStats, "scope-search depth", fp);
-        JS_DumpBasicStats(&rt->hostenvScopeDepthStats, "hostenv scope depth", fp);
-        JS_DumpBasicStats(&rt->lexicalScopeDepthStats, "lexical scope depth", fp);
-
-        putc('\n', fp);
-        fflush(fp);
-    }
-}
 #endif
 
-#ifdef JS_DUMP_LOOP_STATS
-void
-DumpLoopStats(JSRuntime *rt)
-{
-    static FILE *lsfp;
-    if (!lsfp)
-        lsfp = fopen("/tmp/loopstats", "w");
-    if (lsfp) {
-        JS_DumpBasicStats(&rt->loopStats, "loops", lsfp);
-        fflush(lsfp);
-    }
-}
-#endif
+} //js
 
-} /* namespace js */
-#endif
+#undef UL
+#undef PERCENT

@@ -474,12 +474,6 @@ FrameRegsIter::operator++()
     return *this;
 }
 
-void
-AutoIdArray::trace(JSTracer *trc) {
-    JS_ASSERT(tag == IDARRAY);
-    MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
-}
-
 class AutoNamespaceArray : protected AutoGCRooter {
   public:
     AutoNamespaceArray(JSContext *cx) : AutoGCRooter(cx, NAMESPACES) {

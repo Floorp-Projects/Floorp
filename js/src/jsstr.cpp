@@ -83,9 +83,15 @@
 #include "jscntxtinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
 JS_STATIC_ASSERT(JSString::MAX_LENGTH <= JSVAL_INT_MAX);
+
+JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
+JSStringFinalizeOp str_finalizers[JS_EXTERNAL_STRING_LIMIT] = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
 
 const jschar *
 js_GetStringChars(JSContext *cx, JSString *str)
@@ -4212,7 +4218,7 @@ DeflatedStringCache::sweep(JSContext *cx)
 
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         JSString *str = e.front().key;
-        if (js_IsAboutToBeFinalized(str)) {
+        if (IsAboutToBeFinalized(str)) {
             char *bytes = e.front().value;
             e.removeFront();
 
@@ -4351,7 +4357,7 @@ js_GetStringBytes(JSContext *cx, JSString *str)
         rt = cx->runtime;
     } else {
         /* JS_GetStringBytes calls us with null cx. */
-        rt = js_GetGCThingRuntime(str);
+        rt = GetGCThingRuntime(str);
     }
 
     return rt->deflatedStringCache->getBytes(cx, str);

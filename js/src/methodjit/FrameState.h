@@ -45,6 +45,7 @@
 #include "methodjit/FrameEntry.h"
 #include "CodeGenIncludes.h"
 #include "ImmutableSync.h"
+#include "jscompartment.h"
 
 namespace js {
 namespace mjit {

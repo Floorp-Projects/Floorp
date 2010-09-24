@@ -55,6 +55,7 @@
 #include "jslock.h"
 #include "jsvalue.h"
 #include "jsvector.h"
+#include "jscell.h"
 
 namespace js {
 
@@ -278,7 +279,7 @@ struct JSFunction;
  * of Values for reserved and dynamic slots. If dslots is not null, dslots[-1]
  * records the number of available slots.
  */
-struct JSObject {
+struct JSObject : js::gc::Cell {
     /*
      * TraceRecorder must be a friend because it generates code that
      * manipulates JSObjects, which requires peeking under any encapsulation.
@@ -979,6 +980,7 @@ struct JSObject {
                      const js::Value &privateSlotValue, JSContext *cx);
 
     inline void finish(JSContext *cx);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thindKind);
 
     /*
      * Like init, but also initializes map. The catch: proto must be the result
@@ -1161,7 +1163,6 @@ struct JSObject {
 };
 
 JS_STATIC_ASSERT(offsetof(JSObject, fslots) % sizeof(js::Value) == 0);
-JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
