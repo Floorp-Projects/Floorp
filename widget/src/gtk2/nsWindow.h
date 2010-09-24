@@ -97,6 +97,7 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 
 #endif /* MOZ_LOGGING */
 
+class nsShmImage;
 
 class nsWindow : public nsBaseWidget, public nsSupportsWeakReference
 {
@@ -402,6 +403,10 @@ private:
     PRInt32             mTransparencyBitmapWidth;
     PRInt32             mTransparencyBitmapHeight;
 
+#ifdef MOZ_X11
+    // If we're using xshm rendering, mThebesSurface wraps mShmImage
+    nsRefPtr<nsShmImage>  mShmImage;
+#endif
     nsRefPtr<gfxASurface> mThebesSurface;
 
 #ifdef MOZ_DFB
