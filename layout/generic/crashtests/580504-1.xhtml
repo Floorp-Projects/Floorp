@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="-moz-column-width: 1px">
+<head>
+
+<script>
+<![CDATA[
+
+function boom()
+{
+  document.getElementById("d").focus();
+  document.execCommand("inserthtml", false, "<i><font><html><form>a</form></font>");
+  document.execCommand("justifyright", false, "#ffddff");
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+</head>
+
+<div style="position: relative;"><div style="float: left; padding: 10px 20px 0pt;"><div contenteditable="true" style="position: absolute;" id="d"></div></div><div style="clear: both; padding: 20px 20px 15px;"></div></div>
+</html>
