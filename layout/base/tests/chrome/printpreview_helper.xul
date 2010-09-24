@@ -218,6 +218,17 @@ function runTest4() {
 function runTest4end() {
   printpreview();
   exitprintpreview();
+
+  runTest5();
+}
+
+// This is a crash test for bug 595337
+function runTest5() {
+  window.frames[0].document.body.innerHTML =
+    '<iframe style="position: fixed; visibility: hidden; bottom: 10em;"></iframe>' +
+    '<input contenteditable="true" style="display: table; page-break-before: left; width: 10000px;">';
+  printpreview();
+  exitprintpreview();
   SimpleTest.finish();
   window.close();
 }
