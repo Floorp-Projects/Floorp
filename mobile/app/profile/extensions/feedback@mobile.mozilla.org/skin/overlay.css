@@ -1,11 +1,14 @@
 #tool-feedback {
   list-style-image: url("chrome://feedback/skin/beta-32.png");
+  background: url(chrome://browser/skin/images/toolbarbutton-default-64.png) no-repeat !important;
+  width: 64px;
+  height: 64px;
 }
 
+#tool-feedback:not([disabled="true"]):hover:active,
 #tool-feedback[checked="true"] {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 10 repeat repeat;
+  background: url(chrome://browser/skin/images/toolbarbutton-active-64.png) no-repeat !important;
 }
-
 
 #feedback-feedback-happy {
   list-style-image: url("chrome://feedback/skin/happy-32.png");
