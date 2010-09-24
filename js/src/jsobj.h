@@ -321,12 +321,12 @@ struct JSObject {
     inline bool nativeContains(const js::Shape &shape);
 
     enum {
-        DELEGATE        =  0x01,
-        SYSTEM          =  0x02,
-        SEALED          =  0x04,
-        BRANDED         =  0x08,
-        GENERIC         =  0x10,
-        METHOD_BARRIER  =  0x20,
+        DELEGATE        = 0x01,
+        SYSTEM          = 0x02,
+        NOT_EXTENSIBLE  = 0x04,
+        BRANDED         = 0x08,
+        GENERIC         = 0x10,
+        METHOD_BARRIER  = 0x20,
         INDEXED         =  0x40,
         OWN_SHAPE       =  0x80,
         BOUND_FUNCTION  = 0x100
@@ -400,14 +400,6 @@ struct JSObject {
     void setSystem()            { flags |= SYSTEM; }
 
     /*
-     * Don't define clearSealed, as it can't be done safely because JS_LOCK_OBJ
-     * will avoid taking the lock if the object owns its scope and the scope is
-     * sealed.
-     */
-    bool sealed()               { return !!(flags & SEALED); }
-    void seal(JSContext *cx);
-
-    /*
      * A branded object contains plain old methods (function-valued properties
      * without magic getters and setters), and its shape evolves whenever a
      * function value changes.
@@ -447,6 +439,11 @@ struct JSObject {
     void protoShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, const js::Shape &shape);
     bool globalObjectOwnShapeChange(JSContext *cx);
+
+    void extensibleShapeChange(JSContext *cx) {
+        /* This will do for now. */
+        generateOwnShape(cx);
+    }
 
     /*
      * A scope has a method barrier when some compiler-created "null closure"
@@ -673,6 +670,29 @@ struct JSObject {
         *(void **)&fslots[JSSLOT_PRIVATE] = data;
     }
 
+
+    /*
+     * ES5 meta-object properties and operations.
+     */
+
+  private:
+    /*
+     * The guts of Object.seal (ES5 15.2.3.8) and Object.freeze (ES5 15.2.3.9): mark the
+     * object as non-extensible, and adjust each property's attributes appropriately: each
+     * property becomes non-configurable, and if |freeze|, data properties become
+     * read-only as well.
+     */
+    bool sealOrFreeze(JSContext *cx, bool freeze = false);
+
+  public:
+    bool isExtensible() const { return !(flags & NOT_EXTENSIBLE); }
+    bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
+    
+    /* ES5 15.2.3.8: non-extensible, all props non-configurable */
+    inline bool seal(JSContext *cx) { return sealOrFreeze(cx); }
+    /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
+    bool freeze(JSContext *cx) { return sealOrFreeze(cx, true); }
+        
     /*
      * Primitive-specific getters and setters.
      */
@@ -985,16 +1005,25 @@ struct JSObject {
     bool allocSlot(JSContext *cx, uint32 *slotp);
     void freeSlot(JSContext *cx, uint32 slot);
 
-  private:
-    void reportReadOnlyScope(JSContext *cx);
+    bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
+    bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
+    bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);
 
+  private:
     js::Shape *getChildProperty(JSContext *cx, js::Shape *parent, js::Shape &child);
 
-    const js::Shape *addPropertyCommon(JSContext *cx, jsid id,
-                                       js::PropertyOp getter, js::PropertyOp setter,
-                                       uint32 slot, uintN attrs,
-                                       uintN flags, intN shortid,
-                                       js::Shape **spp);
+    /*
+     * Internal helper that adds a shape not yet mapped by this object.
+     *
+     * Notes:
+     * 1. getter and setter must be normalized based on flags (see jsscope.cpp).
+     * 2. !isExtensible() checking must be done by callers.
+     */
+    const js::Shape *addPropertyInternal(JSContext *cx, jsid id,
+                                         js::PropertyOp getter, js::PropertyOp setter,
+                                         uint32 slot, uintN attrs,
+                                         uintN flags, intN shortid,
+                                         js::Shape **spp);
 
     bool toDictionaryMode(JSContext *cx);
 
@@ -1021,7 +1050,7 @@ struct JSObject {
     const js::Shape *changeProperty(JSContext *cx, const js::Shape *shape, uintN attrs, uintN mask,
                                     js::PropertyOp getter, js::PropertyOp setter);
 
-    /* Remove id from this object. */
+    /* Remove the property named by id from this object. */
     bool removeProperty(JSContext *cx, jsid id);
 
     /* Clear the scope, making it empty. */

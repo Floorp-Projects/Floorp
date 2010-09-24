@@ -502,7 +502,7 @@ class FrameState
      * Fully stores a FrameEntry at an arbitrary address. popHint specifies
      * how hard the register allocator should try to keep the FE in registers.
      */
-    void storeTo(FrameEntry *fe, Address address, bool popHint);
+    void storeTo(FrameEntry *fe, Address address, bool popHint = false);
 
     /*
      * Stores the top stack slot back to a local variable.

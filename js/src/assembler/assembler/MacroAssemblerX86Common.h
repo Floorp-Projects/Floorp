@@ -1112,8 +1112,8 @@ private:
     {
         // Default the flags value to zero; if the compiler is
         // not MSVC or GCC we will read this as SSE2 not present.
-        int flags_edx = 0;
-        int flags_ecx = 0;
+        volatile int flags_edx = 0;
+        volatile int flags_ecx = 0;
 #if WTF_COMPILER_MSVC
 #if WTF_CPU_X86_64
         extern void __cpuid(int a[4], int b);
@@ -1140,6 +1140,18 @@ private:
              "movl %%edx, %1;"
              : "=g" (flags_ecx), "=g" (flags_edx)
              :
+             : "%eax", "%ecx", "%edx"
+             );
+#elif WTF_COMPILER_SUNPRO
+        asm (
+             "movl $0x1, %eax;"
+             "pushl %ebx;"
+             "cpuid;"
+             "popl %ebx;"
+             "movl %ecx, (%esi);"
+             "movl %edx, (%edi);"
+             :
+             : "S" (&flags_ecx), "D" (&flags_edx)
              : "%eax", "%ecx", "%edx"
              );
 #endif

@@ -1035,7 +1035,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
   // Make sure our prototype chain is empty and that people can't mess
   // with XPCNativeWrapper.prototype.
   ::JS_SetPrototype(ccx, class_obj, nsnull);
-  if (!::JS_SealObject(ccx, class_obj, JS_FALSE)) {
+  if (!::JS_FreezeObject(ccx, class_obj)) {
     NS_WARNING("Failed to seal XPCNativeWrapper.prototype");
     return PR_FALSE;
   }

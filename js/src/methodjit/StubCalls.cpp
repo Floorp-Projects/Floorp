@@ -141,7 +141,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
         JSObject *obj2;
         JSAtom *atom;
         if (cache->testForSet(cx, f.regs.pc, obj, &entry, &obj2, &atom)) {
-            JS_ASSERT(!obj->sealed());
+            JS_ASSERT(obj->isExtensible());
 
             /*
              * Fast property cache hit, only partially confirmed by
@@ -248,7 +248,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             if (obj == obj2) {
                 shape = entry->vword.toShape();
                 JS_ASSERT(shape->writable());
-                JS_ASSERT(!obj2->sealed());
+                JS_ASSERT(obj2->isExtensible());
                 NATIVE_SET(cx, obj, shape, entry, &rval);
             }
             if (shape)

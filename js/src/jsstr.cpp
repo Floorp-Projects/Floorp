@@ -1689,6 +1689,26 @@ class RegExpGuard
      */
     static const size_t MAX_FLAT_PAT_LEN = 256;
 
+    static JSString *flattenPattern(JSContext *cx, JSString *patstr) {
+        JSCharBuffer cb(cx);
+        if (!cb.reserve(patstr->length()))
+            return NULL;
+
+        static const jschar ESCAPE_CHAR = '\\';
+        const jschar *chars = patstr->chars();
+        size_t len = patstr->length();
+        for (const jschar *it = chars; it != chars + len; ++it) {
+            if (RegExp::isMetaChar(*it)) {
+                if (!cb.append(ESCAPE_CHAR) || !cb.append(*it))
+                    return NULL;
+            } else {
+                if (!cb.append(*it))
+                    return NULL;
+            }
+        }
+        return js_NewStringFromCharBuffer(cx, cb);
+    }
+
   public:
     explicit RegExpGuard(JSContext *cx) : cx(cx), rep(NULL) {}
 
@@ -1768,7 +1788,17 @@ class RegExpGuard
             opt = NULL;
         }
 
-        rep.re_ = RegExp::createFlagged(cx, fm.patstr, opt);
+        JSString *patstr;
+        if (flat) {
+            patstr = flattenPattern(cx, fm.patstr);
+            if (!patstr)
+                return false;
+        } else {
+            patstr = fm.patstr;
+        }
+        JS_ASSERT(patstr);
+
+        rep.re_ = RegExp::createFlagged(cx, patstr, opt);
         if (!rep.re_)
             return NULL;
         rep.reobj_ = NULL;
@@ -2417,9 +2447,10 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 {
     ReplaceData rdata(cx);
     NORMALIZE_THIS(cx, vp, rdata.str);
+    static const uint32 optarg = 2;
 
     /* Extract replacement string/function. */
-    if (argc >= 2 && js_IsCallable(vp[3])) {
+    if (argc >= optarg && js_IsCallable(vp[3])) {
         rdata.lambda = &vp[3].toObject();
         rdata.repstr = NULL;
         rdata.dollar = rdata.dollarEnd = NULL;
@@ -2450,9 +2481,9 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
      * |RegExp| statics.
      */
 
-    const FlatMatch *fm = rdata.g.tryFlatMatch(rdata.str, 2, argc, false);
+    const FlatMatch *fm = rdata.g.tryFlatMatch(rdata.str, optarg, argc, false);
     if (!fm) {
-        JS_ASSERT_IF(!rdata.g.hasRegExpPair(), argc > 2);
+        JS_ASSERT_IF(!rdata.g.hasRegExpPair(), argc > optarg);
         return str_replace_regexp(cx, argc, vp, rdata);
     }
 

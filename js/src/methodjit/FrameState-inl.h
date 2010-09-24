@@ -517,7 +517,14 @@ FrameState::syncData(const FrameEntry *fe, Address to, Assembler &masm) const
 inline void
 FrameState::forgetType(FrameEntry *fe)
 {
-    JS_ASSERT(fe->isTypeKnown() && !fe->type.synced());
+    /*
+     * The type may have been forgotten with an intervening storeLocal in the
+     * presence of eval or closed variables. For defense in depth and to make
+     * callers' lives simpler, bail out if the type is not known.
+     */
+    if (!fe->isTypeKnown())
+        return;
+
     syncType(fe, addressOf(fe), masm);
     fe->type.setMemory();
 }
