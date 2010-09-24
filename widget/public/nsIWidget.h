@@ -73,6 +73,11 @@ namespace mozilla {
 namespace layers {
 class LayerManager;
 }
+#ifdef MOZ_IPC
+namespace dom {
+class PBrowserChild;
+}
+#endif
 }
 
 /**
@@ -189,6 +194,10 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  * all basic and necessary functionality.
  */
 class nsIWidget : public nsISupports {
+#ifdef MOZ_IPC
+  protected:
+    typedef mozilla::dom::PBrowserChild PBrowserChild;
+#endif
 
   public:
     typedef mozilla::layers::LayerManager LayerManager;
@@ -1262,7 +1271,7 @@ class nsIWidget : public nsISupports {
      * The returned widget must still be nsIWidget::Create()d.
      */
     static already_AddRefed<nsIWidget>
-    CreatePuppetWidget();
+    CreatePuppetWidget(PBrowserChild *aTabChild);
 #endif
 
     /**

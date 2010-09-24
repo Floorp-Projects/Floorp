@@ -991,7 +991,7 @@ TabChild::InitWidget(const nsIntSize& size)
 {
     NS_ABORT_IF_FALSE(!mWidget && !mRemoteFrame, "CreateWidget twice?");
 
-    mWidget = nsIWidget::CreatePuppetWidget();
+    mWidget = nsIWidget::CreatePuppetWidget(this);
     if (!mWidget) {
         NS_ERROR("couldn't create fake widget");
         return false;

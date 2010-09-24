@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/PBrowserChild.h"
 #include "BasicLayers.h"
 
 #include "gfxPlatform.h"
@@ -45,6 +46,7 @@
 
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+using namespace mozilla::dom;
 
 static void
 InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
@@ -56,12 +58,12 @@ InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
 }
 
 /*static*/ already_AddRefed<nsIWidget>
-nsIWidget::CreatePuppetWidget()
+nsIWidget::CreatePuppetWidget(PBrowserChild *aTabChild)
 {
   NS_ABORT_IF_FALSE(nsIWidget::UsePuppetWidgets(),
                     "PuppetWidgets not allowed in this configuration");
 
-  nsCOMPtr<nsIWidget> widget = new PuppetWidget();
+  nsCOMPtr<nsIWidget> widget = new PuppetWidget(aTabChild);
   return widget.forget();
 }
 
@@ -74,7 +76,8 @@ const size_t PuppetWidget::kMaxDimension = 4000;
 NS_IMPL_ISUPPORTS_INHERITED1(PuppetWidget, nsBaseWidget,
                              nsISupportsWeakReference)
 
-PuppetWidget::PuppetWidget()
+PuppetWidget::PuppetWidget(PBrowserChild *aTabChild)
+  : mTabChild(aTabChild)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 }
@@ -130,7 +133,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
 {
   bool isPopup = aInitData && aInitData->mWindowType == eWindowType_popup;
 
-  nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget();
+  nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);
   return ((widget &&
            NS_SUCCEEDED(widget->Create(isPopup ? nsnull: this, nsnull, aRect,
                                        aHandleEventFunction,
@@ -146,6 +149,7 @@ PuppetWidget::Destroy()
   mPaintTask.Revoke();
   mChild = nsnull;
   mLayerManager = nsnull;
+  mTabChild = nsnull;
   return NS_OK;
 }
 
@@ -243,6 +247,21 @@ PuppetWidget::Update()
   return DispatchPaintEvent();
 }
 
+void
+PuppetWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+{
+  if (nsnull == aPoint) {
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
+  }
+  else {
+    // use the point override if provided
+    event.refPoint.x = aPoint->x;
+    event.refPoint.y = aPoint->y;
+  }
+  event.time = PR_Now() / 1000;
+}
+
 NS_IMETHODIMP
 PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -254,9 +273,8 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   aStatus = nsEventStatus_eIgnore;
   if (mEventCallback) {
     aStatus = (*mEventCallback)(event);
-  }
-
-  if (mChild) {
+  } else if (mChild) {
+    event->widget = mChild;
     mChild->DispatchEvent(event, aStatus);
   }
 
