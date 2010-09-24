@@ -671,13 +671,17 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value 
      * Native constructors must return non-primitive values on success.
      * Although it is legal, if a constructor returns the callee, there is a
      * 99.9999% chance it is a bug. If any valid code actually wants the
-     * constructor to return the callee, this can be removed.
+     * constructor to return the callee, the assertion can be removed or
+     * (another) conjunct can be added to the antecedent.
      *
      * Proxies are exceptions to both rules: they can return primitives and
      * they allow content to return the callee.
+     *
+     * (new Object(Object)) returns the callee.
      */
     extern JSBool proxy_Construct(JSContext *, uintN, Value *);
-    JS_ASSERT_IF(native != proxy_Construct,
+    JS_ASSERT_IF(native != proxy_Construct &&
+                 callee->getFunctionPrivate()->u.n.clasp != &js_ObjectClass,
                  !vp->isPrimitive() && callee != &vp[0].toObject());
 
     return true;
