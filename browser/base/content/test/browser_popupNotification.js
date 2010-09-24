@@ -355,7 +355,7 @@ var tests = [
       },
       // The removal triggers another popuphidden event.
       function (popup) {}
-    ],
+    ]
   },
   // Test optional params
   { // Test #10
@@ -414,7 +414,7 @@ var tests = [
       loadURI("http://example.org/", function() {
         loadURI("http://example.com/", function() {
 
-          // Next load will hide the notification
+          // Next load will remove the notification
           self.complete = true;
 
           loadURI("http://example.org/");
@@ -423,7 +423,7 @@ var tests = [
     },
     onHidden: function (popup) {
       ok(this.complete, "Should only have hidden the notification after 3 page loads");
-      this.notification.remove();
+      ok(this.notifyObj.removedCallbackTriggered, "removal callback triggered");
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
     }
