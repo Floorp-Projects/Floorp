@@ -89,6 +89,7 @@ NS_IMPL_ISUPPORTS4(TabParent, nsITabParent, nsIAuthPromptProvider, nsISSLStatusP
 TabParent::TabParent()
   : mSecurityState(0)
   , mIMECompositionEnding(PR_FALSE)
+  , mIMEComposing(PR_FALSE)
 {
 }
 
@@ -442,6 +443,16 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
   return true;
 }
 
+bool
+TabParent::SendCompositionEvent(const nsCompositionEvent& event)
+{
+  mIMEComposing = event.message == NS_COMPOSITION_START;
+  mIMECompositionStart = PR_MIN(mIMESelectionAnchor, mIMESelectionFocus);
+  if (mIMECompositionEnding)
+    return true;
+  return PBrowserParent::SendCompositionEvent(event);
+}
+
 /**
  * During ResetInputState or CancelComposition, widget usually sends a
  * NS_TEXT_TEXT event to finalize or clear the composition, respectively
@@ -456,7 +467,24 @@ TabParent::SendTextEvent(const nsTextEvent& event)
     mIMECompositionText = event.theText;
     return true;
   }
+
+  // We must be able to simulate the selection because
+  // we might not receive selection updates in time
+  if (!mIMEComposing) {
+    mIMECompositionStart = PR_MIN(mIMESelectionAnchor, mIMESelectionFocus);
+  }
+  mIMESelectionAnchor = mIMESelectionFocus =
+      mIMECompositionStart + event.theText.Length();
+
   return PBrowserParent::SendTextEvent(event);
+}
+
+bool
+TabParent::SendSelectionEvent(const nsSelectionEvent& event)
+{
+  mIMESelectionAnchor = event.mOffset + (event.mReversed ? event.mLength : 0);
+  mIMESelectionFocus = event.mOffset + (!event.mReversed ? event.mLength : 0);
+  return PBrowserParent::SendSelectionEvent(event);
 }
 
 bool
