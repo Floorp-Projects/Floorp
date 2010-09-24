@@ -938,14 +938,12 @@ pref("toolbar.customization.usesheet", false);
 // The default for this pref reflects whether the build is capable of IPC.
 // (Turning it on in a no-IPC build will have no effect.)
 #ifdef XP_MACOSX
-// OSX still has only partial support for IPC.  Note that the PowerPC
-// and x86 builds must generate identical copies of this file, so we
-// can't make the prefs indicate that IPC is not available at all in
-// PowerPC builds.
-pref("dom.ipc.plugins.enabled", false);
-// These plug-ins will run OOP by default
-pref("dom.ipc.plugins.enabled.flash player.plugin", true);
-pref("dom.ipc.plugins.enabled.javaplugin2_npapi.plugin", true);
+// i386 ipc preferences
+pref("dom.ipc.plugins.enabled.i386", false);
+pref("dom.ipc.plugins.enabled.i386.flash player.plugin", true);
+pref("dom.ipc.plugins.enabled.i386.javaplugin2_npapi.plugin", true);
+// x86_64 ipc preferences
+pref("dom.ipc.plugins.enabled.x86_64", true);
 #elifdef MOZ_IPC
 pref("dom.ipc.plugins.enabled", true);
 #else
