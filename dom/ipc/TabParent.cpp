@@ -312,6 +312,114 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 }
 
 bool
+TabParent::RecvNotifyIMEFocus(const PRBool& aFocus,
+                              nsIMEUpdatePreference* aPreference)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return true;
+
+  nsresult rv = widget->OnIMEFocusChange(aFocus);
+
+  if (aFocus) {
+    if (NS_SUCCEEDED(rv) && rv != NS_SUCCESS_IME_NO_UPDATES) {
+      *aPreference = widget->GetIMEUpdatePreference();
+    } else {
+      aPreference->mWantUpdates = PR_FALSE;
+      aPreference->mWantHints = PR_FALSE;
+    }
+  } else {
+    mIMECacheText.Truncate(0);
+  }
+  return true;
+}
+
+bool
+TabParent::RecvNotifyIMETextChange(const PRUint32& aStart,
+                                   const PRUint32& aEnd,
+                                   const PRUint32& aNewEnd)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return true;
+
+  widget->OnIMETextChange(aStart, aEnd, aNewEnd);
+  return true;
+}
+
+bool
+TabParent::RecvNotifyIMESelection(const PRUint32& aAnchor,
+                                  const PRUint32& aFocus)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return true;
+
+  widget->OnIMESelectionChange();
+  return true;
+}
+
+bool
+TabParent::RecvNotifyIMETextHint(const nsString& aText)
+{
+  // Replace our cache with new text
+  mIMECacheText = aText;
+  return true;
+}
+
+bool
+TabParent::RecvEndIMEComposition(const PRBool& aCancel,
+                                 nsString* aComposition)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return true;
+
+  if (aCancel) {
+    widget->CancelIMEComposition();
+  } else {
+    widget->ResetInputState();
+  }
+  return true;
+}
+
+bool
+TabParent::RecvGetIMEEnabled(PRUint32* aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget)
+    widget->GetIMEEnabled(aValue);
+  return true;
+}
+
+bool
+TabParent::RecvSetIMEEnabled(const PRUint32& aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget)
+    widget->SetIMEEnabled(aValue);
+  return true;
+}
+
+bool
+TabParent::RecvGetIMEOpenState(PRBool* aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget)
+    widget->GetIMEOpenState(aValue);
+  return true;
+}
+
+bool
+TabParent::RecvSetIMEOpenState(const PRBool& aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget)
+    widget->SetIMEOpenState(aValue);
+  return true;
+}
+
+bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           PRBool aSync,
                           const nsString& aJSON,
@@ -467,6 +575,20 @@ TabParent::GetFrameLoader() const
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nsnull;
+}
+
+already_AddRefed<nsIWidget>
+TabParent::GetWidget() const
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  if (!content)
+    return nsnull;
+
+  nsIFrame *frame = content->GetPrimaryFrame();
+  if (!frame)
+    return nsnull;
+
+  return nsCOMPtr<nsIWidget>(frame->GetNearestWidget()).forget();
 }
 
 } // namespace tabs

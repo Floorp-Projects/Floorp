@@ -168,11 +168,24 @@ public:
 //  virtual nsIDeviceContext* GetDeviceContext();
   virtual gfxASurface*      GetThebesSurface();
 
+  NS_IMETHOD ResetInputState();
+  NS_IMETHOD SetIMEOpenState(PRBool aState);
+  NS_IMETHOD GetIMEOpenState(PRBool *aState);
+  NS_IMETHOD SetIMEEnabled(PRUint32 aState);
+  NS_IMETHOD GetIMEEnabled(PRUint32 *aState);
+  NS_IMETHOD CancelComposition();
+  NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
+  NS_IMETHOD OnIMETextChange(PRUint32 aOffset, PRUint32 aEnd,
+                             PRUint32 aNewEnd);
+  NS_IMETHOD OnIMESelectionChange(void);
+
 private:
   nsresult DispatchPaintEvent();
   nsresult DispatchResizeEvent();
 
   void SetChild(PuppetWidget* aChild);
+
+  nsresult IMEEndComposition(PRBool aCancel);
 
   class PaintTask : public nsRunnable {
   public:
@@ -200,6 +213,9 @@ private:
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
   nsRefPtr<gfxASurface> mSurface;
+  // IME
+  nsIMEUpdatePreference mIMEPreference;
+  PRPackedBool mIMEComposing;
 };
 
 }  // namespace widget
