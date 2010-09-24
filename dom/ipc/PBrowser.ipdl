@@ -90,8 +90,6 @@ parent:
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
 
-    QueryContentResult(nsQueryContentEvent event);
-
     PContentPermissionRequest(nsCString aType, URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
@@ -149,8 +147,6 @@ child:
     CompositionEvent(nsCompositionEvent event);
 
     TextEvent(nsTextEvent event);
-
-    QueryContentEvent(nsQueryContentEvent event);
 
     SelectionEvent(nsSelectionEvent event);
 

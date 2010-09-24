@@ -91,7 +91,6 @@ public:
                                  nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const nsString& aJSON);
-    virtual bool RecvQueryContentResult(const nsQueryContentEvent& event);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,

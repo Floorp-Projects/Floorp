@@ -165,12 +165,6 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
-#ifdef MOZ_IPC
-#ifdef ANDROID
-#include "nsFrameLoader.h"
-#endif
-#endif
-
 //#define DEBUG_DOCSHELL_FOCUS
 
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
@@ -3258,30 +3252,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
 #ifdef MOZ_IPC
 #ifdef ANDROID
-  case NS_QUERY_SELECTED_TEXT:
-  case NS_QUERY_TEXT_CONTENT:
-  case NS_QUERY_CARET_RECT:
-  case NS_QUERY_TEXT_RECT:
-  case NS_QUERY_EDITOR_RECT:
-  case NS_QUERY_CONTENT_STATE:
-  // We don't remote nsITransferable yet
-  //case NS_QUERY_SELECTION_AS_TRANSFERABLE:
-  case NS_QUERY_CHARACTER_AT_POINT:
-    {
-      nsQueryContentEvent *queryEvent =
-          static_cast<nsQueryContentEvent*>(aEvent);
-      // If local query failed, try remote query
-      if (queryEvent->mSucceeded)
-        break;
-
-      mozilla::dom::PBrowserParent *remoteBrowser = GetCrossProcessTarget();
-      if (remoteBrowser &&
-          remoteBrowser->SendQueryContentEvent(*queryEvent)) {
-        queryEvent->mWasAsync = PR_TRUE;
-        queryEvent->mSucceeded = PR_TRUE;
-      }
-    }
-    break;
   case NS_SELECTION_SET:
     {
       nsSelectionEvent *selectionEvent =
@@ -3312,18 +3282,13 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 mozilla::dom::PBrowserParent*
 nsEventStateManager::GetCrossProcessTarget()
 {
-  nsCOMPtr<nsFrameLoader> fl = nsContentUtils::GetActiveFrameLoader();
-  NS_ENSURE_TRUE(fl, nsnull);
-  return fl->GetRemoteBrowser();
+  return nsnull;
 }
 
 PRBool
 nsEventStateManager::IsTargetCrossProcess(nsGUIEvent *aEvent)
 {
-  nsQueryContentEvent stateEvent(PR_TRUE, NS_QUERY_CONTENT_STATE, aEvent->widget);
-  nsContentEventHandler handler(mPresContext);
-  handler.OnQueryContentState(&stateEvent);
-  return !stateEvent.mSucceeded;
+  return PR_FALSE;
 }
 #endif
 #endif

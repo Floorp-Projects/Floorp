@@ -71,11 +71,6 @@
 #include "nsIContent.h"
 #include "mozilla/unused.h"
 
-#ifdef ANDROID
-#include "AndroidBridge.h"
-using namespace mozilla;
-#endif
-
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
@@ -314,32 +309,6 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const nsString& aJSON)
 {
   return ReceiveMessage(aMessage, PR_FALSE, aJSON, nsnull);
-}
-
-bool
-TabParent::RecvQueryContentResult(const nsQueryContentEvent& event)
-{
-#ifdef ANDROID
-  if (!event.mSucceeded) {
-    AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
-    return true;
-  }
-
-  switch (event.message) {
-  case NS_QUERY_TEXT_CONTENT:
-    AndroidBridge::Bridge()->ReturnIMEQueryResult(
-        event.mReply.mString.get(), event.mReply.mString.Length(), 0, 0);
-    break;
-  case NS_QUERY_SELECTED_TEXT:
-    AndroidBridge::Bridge()->ReturnIMEQueryResult(
-        event.mReply.mString.get(),
-        event.mReply.mString.Length(),
-        event.GetSelectionStart(),
-        event.GetSelectionEnd() - event.GetSelectionStart());
-    break;
-  }
-#endif
-  return true;
 }
 
 bool
