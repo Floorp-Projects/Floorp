@@ -43,10 +43,6 @@
 #define MAEMO_CHANGES
 #endif
 
-#ifdef MOZ_IPC
-#  include "mozilla/ipc/SharedMemorySysV.h"
-#endif
-
 #include "prlink.h"
 
 #include "nsWindow.h"
@@ -393,8 +389,7 @@ protected:
 };
 
 
-#if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
-#  define MOZ_HAVE_SHMIMAGE
+#ifdef MOZ_HAVE_SHMIMAGE
 
 using mozilla::ipc::SharedMemorySysV;
 
