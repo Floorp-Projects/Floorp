@@ -137,6 +137,10 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 
+#appmenu_offlineModeRecovery:not([checked=true]) {
+  display: none;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
