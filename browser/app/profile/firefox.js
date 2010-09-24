@@ -88,6 +88,11 @@ pref("app.update.timer", 600000);
 // The interval to check for updates (app.update.interval) is defined in
 // firefox-branding.js
 
+// Alternative windowtype for an application update user interface window. When
+// a window with this windowtype is open the application update service won't
+// open the normal application update user interface window.
+pref("app.update.altwindowtype", "Browser:About");
+
 // Enables some extra Application Update Logging (can reduce performance)
 pref("app.update.log", false);
 
