@@ -111,6 +111,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
   mIMEComposing = PR_FALSE;
+  mIMESuppressNotifySel = PR_FALSE;
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
@@ -276,11 +277,15 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   if (mEventCallback) {
     if (event->message == NS_COMPOSITION_START) {
       mIMEComposing = PR_TRUE;
+    } else if (event->message == NS_SELECTION_SET) {
+      mIMESuppressNotifySel = PR_TRUE;
     }
     aStatus = (*mEventCallback)(event);
 
     if (event->message == NS_COMPOSITION_END) {
       mIMEComposing = PR_FALSE;
+    } else if (event->message == NS_SELECTION_SET) {
+      mIMESuppressNotifySel = PR_FALSE;
     }
   } else if (mChild) {
     event->widget = mChild;
@@ -438,6 +443,13 @@ PuppetWidget::OnIMESelectionChange(void)
 {
   if (!mTabChild)
     return NS_ERROR_FAILURE;
+
+  // When we send selection notifications during a composition or during a
+  // set selection event, there is a race condition where the notification
+  // arrives at chrome too late, which leads to chrome thinking the
+  // selection was elsewhere. Suppress notifications here to avoid that.
+  if (mIMEComposing || mIMESuppressNotifySel)
+    return NS_OK;
 
   if (mIMEPreference.mWantUpdates) {
     nsEventStatus status;
