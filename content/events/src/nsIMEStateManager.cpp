@@ -341,12 +341,17 @@ nsTextStateManager::Init(nsIWidget* aWidget,
 
   nsCOMPtr<nsIDOMRange> selDomRange;
   rv = sel->GetRangeAt(0, getter_AddRefs(selDomRange));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIRange> selRange(do_QueryInterface(selDomRange));
-  NS_ENSURE_TRUE(selRange && selRange->GetStartParent(), NS_ERROR_UNEXPECTED);
 
-  mRootContent = selRange->GetStartParent()->
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIRange> selRange(do_QueryInterface(selDomRange));
+    NS_ENSURE_TRUE(selRange && selRange->GetStartParent(),
+                   NS_ERROR_UNEXPECTED);
+
+    mRootContent = selRange->GetStartParent()->
                      GetSelectionRootContent(presShell);
+  } else {
+    mRootContent = aNode->GetSelectionRootContent(presShell);
+  }
   if (!mRootContent && aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
     // The document node is editable, but there are no contents, this document
     // is not editable.
