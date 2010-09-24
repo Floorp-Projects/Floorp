@@ -2371,8 +2371,6 @@ SessionStoreService.prototype = {
 
       browser.stop(); // in case about:blank isn't done yet
 
-      tabbrowser.updateIcon(tab);
-
       // wall-paper fix for bug 439675: make sure that the URL to be loaded
       // is always visible in the address bar
       let activeIndex = (tabData.index || tabData.entries.length) - 1;
