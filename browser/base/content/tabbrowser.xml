@@ -434,7 +434,6 @@
                     this.mTab.setAttribute("busy", "true");
                     this.mTab.setAttribute("progresspercent", "0");
                     this._startStalledTimer();
-                    this.mTabBrowser.updateIcon(this.mTab);
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
 
@@ -463,7 +462,6 @@
                 this.mTab.removeAttribute("progresspercent");
                 this.mTab.removeAttribute("stalled");
                 this._cancelStalledTimer();
-                this.mTabBrowser.updateIcon(this.mTab);
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -602,7 +600,13 @@
                                                             aURI, false);
             }
 
-            this.updateIcon(aTab);
+            if ((browser.mIconURL || "") != aTab.getAttribute("image")) {
+              if (browser.mIconURL)
+                aTab.setAttribute("image", browser.mIconURL);
+              else
+                aTab.removeAttribute("image");
+              this._tabAttrModified(aTab);
+            }
 
             this._callProgressListeners(browser, "onLinkIconAvailable", [browser.mIconURL]);
           ]]>
@@ -615,20 +619,6 @@
           <![CDATA[
             let browser = aTab ? this.getBrowserForTab(aTab) : this.selectedBrowser;
             return browser.mIconURL;
-          ]]>
-        </body>
-      </method>
-
-      <method name="updateIcon">
-        <parameter name="aTab"/>
-        <body>
-          <![CDATA[
-            var browser = this.getBrowserForTab(aTab);
-            if (!aTab.hasAttribute("busy") && browser.mIconURL)
-              aTab.setAttribute("image", browser.mIconURL);
-            else
-              aTab.removeAttribute("image");
-            this._tabAttrModified(aTab);
           ]]>
         </body>
       </method>
@@ -650,31 +640,29 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            var docURIObject = browser.contentDocument.documentURIObject; 
+            var docURIObject = browser.contentDocument.documentURIObject;
+            var icon = null;
             if (browser.contentDocument instanceof ImageDocument) {
               if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
+                let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
                 try {
-                  let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
-                  if (!sz)
-                    return;
-
-                  var req = browser.contentDocument.imageRequest;
-                  if (!req || !req.image ||
-                      req.image.width > sz ||
-                      req.image.height > sz)
-                    return;
-
-                  this.setIcon(aTab, browser.currentURI);
+                  let req = browser.contentDocument.imageRequest;
+                  if (req &&
+                      req.image &&
+                      req.image.width <= sz &&
+                      req.image.height <= sz)
+                    icon = browser.currentURI;
                 } catch (e) { }
               }
             }
             // Use documentURIObject in the check for shouldLoadFavIcon so that we
             // do the right thing with about:-style error pages.  Bug 453442
             else if (this.shouldLoadFavIcon(docURIObject)) {
-              var url = docURIObject.prePath + "/favicon.ico";
+              let url = docURIObject.prePath + "/favicon.ico";
               if (!this.isFailedIcon(url))
-                this.setIcon(aTab, url);
+                icon = url;
             }
+            this.setIcon(aTab, icon);
           ]]>
         </body>
       </method>
@@ -974,7 +962,6 @@
               this.mCurrentTab.setAttribute("busy", "true");
               this.mIsBusy = true;
               this.setTabTitleLoading(this.mCurrentTab);
-              this.updateIcon(this.mCurrentTab);
             } else {
               this.setIcon(this.mCurrentTab, this.mCurrentBrowser.mIconURL);
             }
@@ -1725,7 +1712,6 @@
               this.setTabTitleLoading(aOurTab);
             else
               this.setTabTitle(aOurTab);
-            this.updateIcon(aOurTab);
 
             // If the tab was already selected (this happpens in the scenario
             // of replaceTabWithWindow), notify onLocationChange, etc.
