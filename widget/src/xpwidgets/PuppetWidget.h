@@ -65,7 +65,7 @@ class PuppetWidget : public nsBaseWidget, public nsSupportsWeakReference
   static const size_t kMaxDimension;
 
 public:
-  PuppetWidget();
+  PuppetWidget(PBrowserChild *aTabChild);
   virtual ~PuppetWidget();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -151,6 +151,8 @@ public:
   virtual nsIntPoint WidgetToScreenOffset()
   { return nsIntPoint(0, 0); }
 
+  void InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = nsnull);
+
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus);
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener, nsIMenuRollup* aMenuRollup,
@@ -181,6 +183,13 @@ private:
     PuppetWidget* mWidget;
   };
 
+  // TabChild normally holds a strong reference to this PuppetWidget
+  // or its root ancestor, but each PuppetWidget also needs a reference
+  // back to TabChild (e.g. to delegate nsIWidget IME calls to chrome)
+  // So we hold a weak reference to TabChild (PBrowserChild) here.
+  // Since it's possible for TabChild to outlive the PuppetWidget,
+  // we clear this weak reference in Destroy()
+  PBrowserChild *mTabChild;
   // The "widget" to which we delegate events if we don't have an
   // event handler.
   nsRefPtr<PuppetWidget> mChild;
