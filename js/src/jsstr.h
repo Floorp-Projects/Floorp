@@ -276,6 +276,7 @@ struct JSString {
     /* Specific flat string initializer and accessor methods. */
     JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
@@ -284,6 +285,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = cap;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
@@ -334,6 +336,7 @@ struct JSString {
      */
     inline void flatSetAtomized() {
         JS_ASSERT(isFlat());
+        JS_ASSERT(!isStatic(this));
         JS_ATOMIC_SET_MASK((jsword *)&mLengthAndFlags, ATOMIZED);
     }
 
@@ -345,7 +348,13 @@ struct JSString {
 
     inline void flatClearMutable() {
         JS_ASSERT(isFlat());
-        mLengthAndFlags &= ~MUTABLE;
+
+        /*
+         * We cannot eliminate the flag check before writing to mLengthAndFlags as
+         * static strings may reside in write-protected memory. See bug 599481.
+         */
+        if (mLengthAndFlags & MUTABLE)
+            mLengthAndFlags &= ~MUTABLE;
     }
 
     /*
@@ -354,6 +363,7 @@ struct JSString {
      */
     inline void initDependent(JSString *bstr, jschar *chars, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         e.mParent = NULL;
         mChars = chars;
         mLengthAndFlags = DEPENDENT | (len << FLAGS_LENGTH_SHIFT);
@@ -378,6 +388,7 @@ struct JSString {
     inline void initTopNode(JSString *left, JSString *right, size_t len,
                             JSRopeBufferInfo *buf) {
         JS_ASSERT(left->length() + right->length() <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         mLengthAndFlags = TOP_NODE | (len << FLAGS_LENGTH_SHIFT);
         mLeft = left;
         e.mRight = right;
@@ -517,16 +528,16 @@ struct JSString {
 
     static const SmallChar INVALID_SMALL_CHAR = -1;
 
-    static jschar fromSmallChar[];
-    static SmallChar toSmallChar[];
-    static JSString unitStringTable[];
-    static JSString length2StringTable[];
-    static JSString hundredStringTable[];
+    static const jschar fromSmallChar[];
+    static const SmallChar toSmallChar[];
+    static const JSString unitStringTable[];
+    static const JSString length2StringTable[];
+    static const JSString hundredStringTable[];
     /*
      * Since int strings can be unit strings, length-2 strings, or hundred
      * strings, we keep a table to map from integer to the correct string.
      */
-    static JSString *intStringTable[];
+    static const JSString *const intStringTable[];
     static const char deflatedIntStringTable[];
     static const char deflatedUnitStringTable[];
     static const char deflatedLength2StringTable[];

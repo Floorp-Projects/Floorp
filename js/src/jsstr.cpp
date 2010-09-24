@@ -3126,7 +3126,7 @@ static JSFunctionSpec string_methods[] = {
 #pragma pack(push, 8)
 #endif
 
-JSString JSString::unitStringTable[]
+const JSString JSString::unitStringTable[]
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -3152,7 +3152,7 @@ __attribute__ ((aligned (8)))
 
 #define R TO_SMALL_CHAR
 
-JSString::SmallChar JSString::toSmallChar[] = { R7(0) };
+const JSString::SmallChar JSString::toSmallChar[] = { R7(0) };
 
 #undef R
 
@@ -3165,7 +3165,7 @@ JSString::SmallChar JSString::toSmallChar[] = { R7(0) };
                                    'A' - 36))
 #define R FROM_SMALL_CHAR
 
-jschar JSString::fromSmallChar[] = { R6(0) };
+const jschar JSString::fromSmallChar[] = { R6(0) };
 
 #undef R
 
@@ -3186,7 +3186,7 @@ jschar JSString::fromSmallChar[] = { R6(0) };
 #pragma pack(push, 8)
 #endif
 
-JSString JSString::length2StringTable[]
+const JSString JSString::length2StringTable[]
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -3228,7 +3228,7 @@ JS_STATIC_ASSERT(100 + (1 << 7) + (1 << 4) + (1 << 3) + (1 << 2) == 256);
 #pragma pack(push, 8)
 #endif
 
-JSString JSString::hundredStringTable[]
+const JSString JSString::hundredStringTable[]
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -3246,7 +3246,7 @@ __attribute__ ((aligned (8)))
               TO_SMALL_CHAR(((c) % 10) + '0') :                               \
               JSString::hundredStringTable + ((c) - 100))
 
-JSString *JSString::intStringTable[] = { R8(0) };
+const JSString *const JSString::intStringTable[] = { R8(0) };
 
 #undef R
 
@@ -3491,7 +3491,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
     jschar *chars = base->chars() + start;
 
     if (length == 1 && *chars < UNIT_STRING_LIMIT)
-        return &JSString::unitStringTable[*chars];
+        return const_cast<JSString *>(&JSString::unitStringTable[*chars]);
 
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())

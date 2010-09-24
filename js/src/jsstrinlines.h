@@ -46,7 +46,7 @@ inline JSString *
 JSString::unitString(jschar c)
 {
     JS_ASSERT(c < UNIT_STRING_LIMIT);
-    return &unitStringTable[c];
+    return const_cast<JSString *>(&unitStringTable[c]);
 }
 
 inline JSString *
@@ -64,7 +64,8 @@ JSString::length2String(jschar c1, jschar c2)
 {
     JS_ASSERT(fitsInSmallChar(c1));
     JS_ASSERT(fitsInSmallChar(c2));
-    return &length2StringTable[(((size_t)toSmallChar[c1]) << 6) + toSmallChar[c2]];
+    return const_cast<JSString *>
+           (&length2StringTable[(((size_t)toSmallChar[c1]) << 6) + toSmallChar[c2]]);
 }
 
 inline JSString *
@@ -72,7 +73,7 @@ JSString::intString(jsint i)
 {
     jsuint u = jsuint(i);
     JS_ASSERT(u < INT_STRING_LIMIT);
-    return JSString::intStringTable[u];
+    return const_cast<JSString *>(JSString::intStringTable[u]);
 }
 
 inline void
