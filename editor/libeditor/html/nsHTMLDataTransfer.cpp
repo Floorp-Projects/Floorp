@@ -949,10 +949,8 @@ nsHTMLEditor::RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeLis
   nsCOMPtr<nsIDocument> destDoc = do_QueryInterface(domDoc);
   NS_ENSURE_TRUE(destDoc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIURL> destURL = do_QueryInterface(destDoc->GetDocumentURI());
+  nsCOMPtr<nsIURL> destURL = do_QueryInterface(destDoc->GetDocBaseURI());
   NS_ENSURE_TRUE(destURL, NS_ERROR_FAILURE);
-
-  // brade: eventually should look for a base url in the document if present
 
   nsresult rv;
   nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(domDoc, &rv);
