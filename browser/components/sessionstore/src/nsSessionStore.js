@@ -2371,7 +2371,6 @@ SessionStoreService.prototype = {
 
       browser.stop(); // in case about:blank isn't done yet
 
-      tab.setAttribute("busy", "true");
       tabbrowser.updateIcon(tab);
 
       // wall-paper fix for bug 439675: make sure that the URL to be loaded
