@@ -307,7 +307,7 @@ Narcissus.interpreter = (function() {
                  : new TypeError(message);
     }
 
-    function valuatePhis(n, v) {
+    function evaluatePhis(n, v) {
         var ps = n.phiUses;
         if (!ps)
             return;
@@ -319,7 +319,7 @@ Narcissus.interpreter = (function() {
             if (ps[i].v === v)
                 break;
             ps[i].v = v;
-            valuatePhis(ps[i], v);
+            evaluatePhis(ps[i], v);
         }
     }
 
@@ -869,7 +869,7 @@ Narcissus.interpreter = (function() {
         if (n.backwards) {
             n.v = v;
         }
-        valuatePhis(n, v);
+        evaluatePhis(n, v);
 
         return v;
     }
