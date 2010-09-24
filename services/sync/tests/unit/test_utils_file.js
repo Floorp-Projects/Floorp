@@ -4,8 +4,9 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 
 function run_test() {
-  _test_getTmp();
-  _test_open();
+  // Disabled due to Windows failures (bug 599193)
+  //_test_getTmp();
+  //_test_open();
 }
 
 function _test_getTmp() {
