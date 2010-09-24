@@ -71,6 +71,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 
@@ -1286,7 +1287,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
             --i;
             if (objarray->vector[i]) {
                 JS_SET_TRACING_INDEX(trc, "objects", i);
-                Mark(trc, objarray->vector[i], JSTRACE_OBJECT);
+                Mark(trc, objarray->vector[i]);
             }
         } while (i != 0);
     }
@@ -1298,7 +1299,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
             --i;
             if (objarray->vector[i]) {
                 JS_SET_TRACING_INDEX(trc, "regexps", i);
-                Mark(trc, objarray->vector[i], JSTRACE_OBJECT);
+                Mark(trc, objarray->vector[i]);
             }
         } while (i != 0);
     }
@@ -1310,7 +1311,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
 
     if (script->u.object) {
         JS_SET_TRACING_NAME(trc, "object");
-        Mark(trc, script->u.object, JSTRACE_OBJECT);
+        Mark(trc, script->u.object);
     }
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)

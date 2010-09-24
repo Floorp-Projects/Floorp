@@ -45,6 +45,10 @@
 #include "PolyIC.h"
 #include "TrampolineCompiler.h"
 #include "jscntxtinlines.h"
+#include "jscompartment.h"
+#include "jsscope.h"
+
+#include "jsgcinlines.h"
 
 using namespace js;
 using namespace js::mjit;

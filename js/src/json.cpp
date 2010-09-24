@@ -66,6 +66,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 #ifdef _MSC_VER
 #pragma warning(push)

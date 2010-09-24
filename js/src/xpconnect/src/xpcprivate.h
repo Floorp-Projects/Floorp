@@ -58,6 +58,7 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsgc.h"
+#include "jscompartment.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"

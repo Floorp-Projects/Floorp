@@ -80,6 +80,7 @@
 #endif
 
 #include "jscntxtinlines.h"
+#include "jscompartment.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
@@ -101,6 +102,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 static const size_t ARENA_HEADER_SIZE_HACK = 40;
 static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
@@ -505,8 +507,6 @@ void
 JSThreadData::finish()
 {
 #ifdef DEBUG
-    /* All GC-related things must be already removed at this point. */
-    JS_ASSERT(gcFreeLists.isEmpty());
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
         JS_ASSERT(!scriptsToGC[i]);
 #endif
@@ -537,8 +537,6 @@ JSThreadData::mark(JSTracer *trc)
 void
 JSThreadData::purge(JSContext *cx)
 {
-    gcFreeLists.purge();
-
     js_PurgeGSNCache(&gsnCache);
 
     /* FIXME: bug 506341. */
@@ -714,11 +712,6 @@ js_PurgeThreads(JSContext *cx)
             JS_ASSERT(cx->thread != thread);
             js_DestroyScriptsToGC(cx, &thread->data);
 
-            /*
-             * The following is potentially suboptimal as it also zeros the
-             * caches in data, but the code simplicity wins here.
-             */
-            thread->data.gcFreeLists.purge();
             DestroyThread(thread);
             e.removeFront();
         } else {

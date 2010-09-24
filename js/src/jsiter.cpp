@@ -81,6 +81,7 @@
 #include "jsstrinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 static void iterator_finalize(JSContext *cx, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);

@@ -103,6 +103,7 @@
 #include "jsautooplen.h"
 
 using namespace js;
+using namespace js::gc;
 
 JS_FRIEND_DATA(const JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
 
@@ -434,8 +435,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
 static intN
 gc_sharp_table_entry_marker(JSHashEntry *he, intN i, void *arg)
 {
-    JS_CALL_OBJECT_TRACER((JSTracer *)arg, (JSObject *)he->key,
-                          "sharp table entry");
+    MarkObject((JSTracer *)arg, *(JSObject *)he->key, "sharp table entry");
     return JS_DHASH_NEXT;
 }
 
