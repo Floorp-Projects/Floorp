@@ -519,8 +519,6 @@
 
       <!-- Get position of viewport in device pixels. -->
       <method name="getPosition">
-        <parameter name="scrollX"/>
-        <parameter name="scrollY"/>
         <body>
           <![CDATA[
             let scrollX = {}, scrollY = {};

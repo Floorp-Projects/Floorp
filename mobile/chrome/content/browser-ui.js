@@ -1968,26 +1968,27 @@ var FormHelperUI = {
       let x = (marginLeft + marginRight + margin + aCaretRect.x - aElementRect.x) < viewAreaWidth
                ? aElementRect.x - margin - marginLeft
                : aCaretRect.x - viewAreaWidth + margin + marginRight;
-      // use the adjustet Caret Y minus a margin four our visible rect
+      // Use the adjusted Caret Y minus a margin for our visible rect
       let y = harmonizedCaretY - margin;
       x *= browser.scale;
       y *= browser.scale;
 
-      let scroll = browser.getPosition(scrollX, scrollY);
-      let vis = new Rect(scroll.x, scroll.y, window.innerWidth, window.innerHeight);
+      let scroll = browser.getPosition();
 
       // from here on play with zoomed values
       // if we want to have it animated, build up zoom rect and animate.
       if (enableZoom && browser.scale != zoomLevel) {
         // don't use browser functions they are bogus for this case
         let zoomRatio = zoomLevel / browser.scale;
-        let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
+
+        let visW = window.innerWidth, visH = window.innerHeight;
+        let newVisW = visW / zoomRatio, newVisH = visH / zoomRatio;
         let zoomRect = new Rect(x, y, newVisW, newVisH);
 
         Browser.animatedZoomTo(zoomRect);
       }
       else { // no zooming at all
-        browser.scrollBy(x - vis.x, y - vis.y);
+        browser.scrollTo(x, y);
       }
     }
   },

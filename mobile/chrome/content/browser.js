@@ -262,7 +262,7 @@ var Browser = {
       getBrowser().style.display = "block";
 
       let curEl = document.activeElement;
-      if (curEl && curEl.scrollIntoView)
+      if (curEl && curEl.id != "inputhandler-overlay" && curEl.scrollIntoView)
         curEl.scrollIntoView(false);
     }
     window.addEventListener("resize", resizeHandler, false);
