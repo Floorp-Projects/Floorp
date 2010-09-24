@@ -342,7 +342,6 @@ let ContentScroll =  {
   init: function() {
     addMessageListener("Content:ScrollTo", this);
     addMessageListener("Content:ScrollBy", this);
-    addMessageListener("Content:SetResolution", this);
     addMessageListener("Content:SetCacheViewport", this);
     addMessageListener("Content:SetWindowSize", this);
 

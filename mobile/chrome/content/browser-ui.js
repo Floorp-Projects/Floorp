@@ -1662,6 +1662,7 @@ var FormHelperUI = {
     this._autofillContainer = document.getElementById("form-helper-autofill");
     this._cmdPrevious = document.getElementById(this.commands.previous);
     this._cmdNext = document.getElementById(this.commands.next);
+    this._visibleScreenArea = new Rect(0, 0, 0, 0);
 
     // Listen for form assistant messages from content
     messageManager.addMessageListener("FormAssist:Show", this);
@@ -1780,13 +1781,13 @@ var FormHelperUI = {
         break;
     }
   },
-  
+
   observe: function formHelperObserve(aSubject, aTopic, aData) {
     let rect = Rect.fromRect(JSON.parse(aData));
     rect.height = rect.bottom - rect.top;
     rect.width  = rect.right - rect.left;
 
-    Browser._browserView._visibleScreenArea = rect;
+    this._visibleScreenArea = rect;
     BrowserUI.sizeControls(rect.width, rect.height);
     this._zoom(this._currentElementRect, this._currentCaretRect);
   },
@@ -1902,7 +1903,7 @@ var FormHelperUI = {
     if (aElementRect && aCaretRect && this._open) {
       this._currentCaretRect = aCaretRect;
 
-      let visibleScreenArea = new Rect(0, 0, window.innerWidth, window.innerHeight);
+      let visibleScreenArea = !this._visibleScreenArea.isEmpty() ? this._visibleScreenArea : new Rect(0, 0, window.innerWidth, window.innerHeight);
 
       // respect the helper container in setting the correct viewAreaHeight
       let viewAreaHeight = visibleScreenArea.height - this._container.getBoundingClientRect().height;
@@ -1997,7 +1998,7 @@ var FormHelperUI = {
       return;
 
     this._restore = {
-      zoom: Browser._browserView.getZoomLevel(),
+      scale: getBrowser().scale,
       contentScrollOffset: Browser.getScrollboxPosition(Browser.contentScrollboxScroller),
       pageScrollOffset: Browser.getScrollboxPosition(Browser.pageScrollboxScroller)
     };
@@ -2009,7 +2010,7 @@ var FormHelperUI = {
       return;
 
     let restore = this._restore;
-    Browser._browserView.setZoomLevel(restore.zoom);
+    getBrowser().scale = restore.scale;
     Browser.contentScrollboxScroller.scrollTo(restore.contentScrollOffset.x, restore.contentScrollOffset.y);
     Browser.pageScrollboxScroller.scrollTo(restore.pageScrollOffset.x, restore.pageScrollOffset.y);
   },
