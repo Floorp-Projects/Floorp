@@ -391,6 +391,9 @@ PuppetWidget::OnIMEFocusChange(PRBool aFocus)
     if (queryEvent.mSucceeded) {
       mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
     }
+  } else {
+    // ResetInputState might not have been called yet
+    ResetInputState();
   }
 
   mIMEPreference.mWantUpdates = PR_FALSE;

@@ -176,6 +176,10 @@ public:
     NS_DECL_NSISSLSTATUSPROVIDER
 
     void HandleDelayedDialogs();
+
+    static TabParent *GetIMETabParent() { return mIMETabParent; }
+    bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
+    bool SendTextEvent(const nsTextEvent& event);
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         PRBool aSync,
@@ -216,7 +220,14 @@ protected:
     nsCOMPtr<nsISupports> mSecurityStatusObject;
 
     // IME
+    static TabParent *mIMETabParent;
     nsString mIMECacheText;
+    PRUint32 mIMESelectionAnchor;
+    PRUint32 mIMESelectionFocus;
+    PRPackedBool mIMECompositionEnding;
+    // Buffer to store composition text during ResetInputState
+    // Compositions in almost all cases are small enough for nsAutoString
+    nsAutoString mIMECompositionText;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
