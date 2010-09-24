@@ -27,6 +27,9 @@
       <property name="triggerNode" readonly="true"
                 onget="return this.popupBoxObject.triggerNode"/>
 
+      <property name="anchorNode" readonly="true"
+                onget="return this.popupBoxObject.anchorNode"/>
+
       <method name="openPopup">
         <parameter name="aAnchorElement"/>
         <parameter name="aPosition"/>

@@ -1,0 +1,12 @@
+label {
+  background-color: green;
+}
+
+label:disabled {
+  background-color: red;
+}
+
+/* ref should always be green! */
+.ref:disabled {
+  background-color: green;
+}

@@ -197,7 +197,8 @@ static class EGLLibrary
 {
 public:
     EGLLibrary() 
-        : mInitialized(PR_FALSE)
+        : mInitialized(PR_FALSE),
+          mEGLLibrary(nsnull)
     {
         mHave_EGL_KHR_image_base = PR_FALSE;
         mHave_EGL_KHR_image_pixmap = PR_FALSE;
@@ -523,10 +524,7 @@ public:
 
     ~GLContextEGL()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         // If mGLWidget is non-null, then we've been given it by the GL context provider,
         // and it's managed by the widget implementation. In this case, We can't destroy
@@ -652,6 +650,11 @@ public:
     PRBool SwapBuffers()
     {
         return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
+    }
+
+    virtual PRBool TextureImageSupportsGetBackingSurface()
+    {
+        return PR_TRUE;
     }
 
     virtual already_AddRefed<TextureImage>

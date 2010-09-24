@@ -110,8 +110,13 @@ public:
   NS_IMETHOD SaveState();
   PRBool RestoreState(nsPresState* aState);
 
+  virtual void FieldSetDisabledChanged(PRInt32 aStates);
+
   PRInt32 IntrinsicState() const;
 
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                               nsIContent* aBindingParent,
+                               PRBool aCompileEventHandlers);
   /**
    * Called when an attribute is about to be changed
    */
@@ -284,7 +289,7 @@ nsHTMLButtonElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PR
 #ifdef XP_MACOSX
     (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
 #endif
-    !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    !IsDisabled();
 
   return PR_FALSE;
 }
@@ -326,10 +331,8 @@ nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = PR_FALSE;
-  PRBool bDisabled;
-  nsresult rv = GetDisabled(&bDisabled);
-  if (NS_FAILED(rv) || bDisabled) {
-    return rv;
+  if (IsDisabled()) {
+    return NS_OK;
   }
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
@@ -564,13 +567,9 @@ nsHTMLButtonElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     return NS_OK;
   }
 
-  //
   // Disabled elements don't submit
-  //
-  PRBool disabled;
-  rv = GetDisabled(&disabled);
-  if (NS_FAILED(rv) || disabled) {
-    return rv;
+  if (IsDisabled()) {
+    return NS_OK;
   }
 
   //
@@ -604,6 +603,23 @@ nsHTMLButtonElement::DoneCreatingElement()
 {
   // Restore state as needed.
   RestoreFormControlState(this, this);
+}
+
+nsresult
+nsHTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
+                                                     aBindingParent,
+                                                     aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there is a disabled fieldset in the parent chain, the element is now
+  // barred from constraint validation.
+  UpdateBarredFromConstraintValidation();
+
+  return rv;
 }
 
 nsresult
@@ -662,9 +678,9 @@ nsHTMLButtonElement::SaveState()
   nsPresState *state = nsnull;
   nsresult rv = GetPrimaryPresState(this, &state);
   if (state) {
-    PRBool disabled;
-    GetDisabled(&disabled);
-    state->SetDisabled(disabled);
+    // We do not want to save the real disabled state but the disabled
+    // attribute.
+    state->SetDisabled(HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
   }
 
   return rv;
@@ -718,7 +734,15 @@ nsHTMLButtonElement::UpdateBarredFromConstraintValidation()
 {
   SetBarredFromConstraintValidation(mType == NS_FORM_BUTTON_BUTTON ||
                                     mType == NS_FORM_BUTTON_RESET ||
-                                    HasAttr(kNameSpaceID_None,
-                                            nsGkAtoms::disabled));
+                                    IsDisabled());
+}
+
+void
+nsHTMLButtonElement::FieldSetDisabledChanged(PRInt32 aStates)
+{
+  UpdateBarredFromConstraintValidation();
+
+  aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates);
 }
 

@@ -121,7 +121,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
-#if defined(OS_MACOSX)  
+#if defined(OS_MACOSX)
+#if defined(__i386__)
+    , mEventModel(NPEventModelCarbon)
+#endif
     , mShColorSpace(nsnull)
     , mShContext(nsnull)
     , mDrawingModel(NPDrawingModelCoreGraphics)
@@ -138,6 +141,9 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mSurfaceDifferenceRect(0,0,0,0)
 #ifdef MOZ_X11
     , mFlash10Quirks(PR_FALSE)
+#endif
+#if (MOZ_PLATFORM_MAEMO == 5)
+    , mMaemoImageRendering(PR_FALSE)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -297,6 +303,18 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 #endif
         return NPERR_NO_ERROR;
 
+#if (MOZ_PLATFORM_MAEMO == 5)
+    case NPNVSupportsWindowlessLocal: {
+#ifdef MOZ_WIDGET_QT
+        const char *graphicsSystem = PR_GetEnv("MOZ_QT_GRAPHICSSYSTEM");
+        // we should set local rendering to false in order to render X-Plugin
+        // there is no possibility to change it later on maemo5 platform
+        mMaemoImageRendering = (!(graphicsSystem && !strcmp(graphicsSystem, "native")));
+#endif
+        *((NPBool*)aValue) = mMaemoImageRendering;
+        return NPERR_NO_ERROR;
+    }
+#endif
 #if defined(OS_LINUX)
     case NPNVSupportsXEmbedBool:
         *((NPBool*)aValue) = true;
@@ -463,6 +481,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
         if (!CallNPN_SetValue_NPPVpluginEventModel(eventModel, &rv))
             return NPERR_GENERIC_ERROR;
+#if defined(__i386__)
+        mEventModel = static_cast<NPEventModel>(eventModel);
+#endif
 
         return rv;
     }
@@ -2031,6 +2052,17 @@ PluginInstanceChild::CreateOptSurface(void)
         mIsTransparent ? gfxASurface::ImageFormatARGB32 :
                          gfxASurface::ImageFormatRGB24;
 
+#if (MOZ_PLATFORM_MAEMO == 5)
+    // On Maemo 5, we must send the Visibility event to activate the plugin
+    if (mMaemoImageRendering) {
+        NPEvent pluginEvent;
+        XVisibilityEvent& visibilityEvent = pluginEvent.xvisibility;
+        visibilityEvent.type = VisibilityNotify;
+        visibilityEvent.display = 0;
+        visibilityEvent.state = VisibilityUnobscured;
+        mPluginIface->event(&mData, reinterpret_cast<void*>(&pluginEvent));
+    }
+#endif
 #ifdef MOZ_X11
     Display* dpy = mWsInfo.display;
     Screen* screen = DefaultScreenOfDisplay(dpy);
@@ -2096,6 +2128,14 @@ PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
             mDoAlphaExtraction = mIsTransparent;
         }
     } else if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+#if (MOZ_PLATFORM_MAEMO == 5)
+        if (mMaemoImageRendering) {
+            // No helper surface needed, when mMaemoImageRendering is TRUE.
+            // we can rendering directly into image memory
+            // with NPImageExpose Maemo5 NPAPI
+            return PR_TRUE;
+        }
+#endif
         // For image layer surface we should always create helper surface
         createHelperSurface = PR_TRUE;
         // Check if we can create helper surface with non-default visual
@@ -2166,6 +2206,22 @@ PluginInstanceChild::UpdateWindowAttributes(PRBool aForceSetWindow)
             needWindowUpdate = PR_TRUE;
         }
     }
+#if (MOZ_PLATFORM_MAEMO == 5)
+    else if (curSurface && curSurface->GetType() == gfxASurface::SurfaceTypeImage
+             && mMaemoImageRendering) {
+        // For maemo5 we need to setup window/colormap to 0
+        // and specify depth of image surface
+        gfxImageSurface* img = static_cast<gfxImageSurface*>(curSurface.get());
+        if (mWindow.window ||
+            mWsInfo.depth != gfxUtils::ImageFormatToDepth(img->Format()) ||
+            mWsInfo.colormap) {
+            mWindow.window = nsnull;
+            mWsInfo.depth = gfxUtils::ImageFormatToDepth(img->Format());
+            mWsInfo.colormap = 0;
+            needWindowUpdate = PR_TRUE;
+        }
+    }
+#endif
 #endif
     if (!needWindowUpdate) {
         return;
@@ -2198,6 +2254,47 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
 {
     UpdateWindowAttributes();
 #ifdef MOZ_X11
+#if (MOZ_PLATFORM_MAEMO == 5)
+    // On maemo5 we do support Image rendering NPAPI
+    if (mMaemoImageRendering &&
+        aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        mPendingPluginCall = PR_TRUE;
+        gfxImageSurface* image = static_cast<gfxImageSurface*>(aSurface);
+        NPImageExpose imgExp;
+        imgExp.depth = gfxUtils::ImageFormatToDepth(image->Format());
+        imgExp.x = aRect.x;
+        imgExp.y = aRect.y;
+        imgExp.width = aRect.width;
+        imgExp.height = aRect.height;
+        imgExp.stride = image->Stride();
+        imgExp.data = (char *)image->Data();
+        imgExp.dataSize.width = image->Width();
+        imgExp.dataSize.height = image->Height();
+        imgExp.translateX = 0;
+        imgExp.translateY = 0;
+        imgExp.scaleX = 1;
+        imgExp.scaleY = 1;
+        NPEvent pluginEvent;
+        XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
+        exposeEvent.type = GraphicsExpose;
+        exposeEvent.display = 0;
+        // Store imageExpose structure pointer as drawable member
+        exposeEvent.drawable = (Drawable)&imgExp;
+        exposeEvent.x = imgExp.x;
+        exposeEvent.y = imgExp.y;
+        exposeEvent.width = imgExp.width;
+        exposeEvent.height = imgExp.height;
+        exposeEvent.count = 0;
+        // information not set:
+        exposeEvent.serial = 0;
+        exposeEvent.send_event = False;
+        exposeEvent.major_code = 0;
+        exposeEvent.minor_code = 0;
+        mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
+        mPendingPluginCall = PR_FALSE;
+        return;
+    }
+#endif
     NS_ASSERTION(aSurface->GetType() == gfxASurface::SurfaceTypeXlib,
                  "Non supported platform surface type");
 
@@ -2240,6 +2337,11 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
     }
     if (renderSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
         // On X11 we can paint to non Xlib surface only with HelperSurface
+#if (MOZ_PLATFORM_MAEMO == 5)
+        // Don't use mHelperSurface if surface is image and mMaemoImageRendering is TRUE
+        if (!mMaemoImageRendering ||
+            renderSurface->GetType() != gfxASurface::SurfaceTypeImage)
+#endif
         renderSurface = mHelperSurface;
     }
 #endif

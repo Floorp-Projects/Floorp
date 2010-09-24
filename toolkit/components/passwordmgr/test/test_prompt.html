@@ -99,16 +99,27 @@ function initLogins() {
 
 function finishTest() {
   ok(true, "finishTest removing testing logins...");
+ok(true, "currently have " + pwmgr.getAllLogins().length + " logins.");
   pwmgr.removeLogin(login1);
+ok(true, "removing login 2A...");
   pwmgr.removeLogin(login2A);
+ok(true, "removing login 2B...");
   pwmgr.removeLogin(login2B);
+ok(true, "removing login 2C...");
   pwmgr.removeLogin(login2C);
+ok(true, "removing login 2D...");
   pwmgr.removeLogin(login2D);
+ok(true, "removing login 2E...");
   pwmgr.removeLogin(login2E);
+ok(true, "removing login 3A...");
   pwmgr.removeLogin(login3A);
+ok(true, "removing login 3B...");
   pwmgr.removeLogin(login3B);
+ok(true, "removing login 4...");
   pwmgr.removeLogin(login4);
+ok(true, "removing proxyLogin...");
   pwmgr.removeLogin(proxyLogin);
+ok(true, "whee, done!");
 
   SimpleTest.finish();
 }
@@ -438,9 +449,14 @@ function handleLoad() {
 
         // Housekeeping: change it back to the original login4. Actually,
         // just delete it and we'll re-add it as the next test.
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                      "mochiuser3", "mochipass3-new", "", "");
-        pwmgr.removeLogin(tmpLogin);
+        function clearIt() {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+            tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                          "mochiuser3", "mochipass3-new", "", "");
+            pwmgr.removeLogin(tmpLogin);
+        }
+        setTimeout(clearIt, 0);
+
         // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
         var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
                       getService(Ci.nsIHttpAuthManager);
@@ -463,7 +479,11 @@ function handleLoad() {
         clickPopupButton(popup, kRememberButton);
         popup.remove();
         
-        finishTest();
+        function finishIt() {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+            finishTest();
+        }
+        setTimeout(finishIt, 0);
         break;
 
     default:

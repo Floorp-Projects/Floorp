@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  var pageInfo, atTest = 0;
+  var pageInfo;
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function () {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
@@ -15,22 +15,7 @@ function test() {
     if (topic != "page-info-dialog-loaded")
       return;
 
-    switch (atTest) {
-      case 0:
-        atTest++;
-        handlePageInfo();
-        break;
-      case 1:
-        atTest++;
-        pageInfo = win;
-        testLockClick();
-        break;
-      case 2:
-        atTest++;
-        Services.obs.removeObserver(observer, "page-info-dialog-loaded");
-        testLockDoubleClick();
-        break;
-    }
+    handlePageInfo();
   }
 
   function $(aId) { return pageInfo.document.getElementById(aId) };
@@ -53,35 +38,7 @@ function test() {
          "Name given: " + feedItem.getAttribute("name") + ", should be " + (i+1));
     }
 
-    pageInfo.addEventListener("unload", function() {
-      pageInfo.removeEventListener("unload", arguments.callee, false);
-      var lockIcon = document.getElementById("security-button");
-      EventUtils.synthesizeMouse(lockIcon, 0, 0, {clickCount: 1});
-    }, false);
     pageInfo.close();
-  }
-
-  function testLockClick() {
-    var deck = $("mainDeck");
-    is(deck.selectedPanel.id, "securityPanel", "The security tab should open when the lock icon is clicked");
-    pageInfo.addEventListener("unload", function() {
-      pageInfo.removeEventListener("unload", arguments.callee, false);
-      var lockIcon = document.getElementById("security-button");
-      EventUtils.synthesizeMouse(lockIcon, 0, 0, {clickCount: 1});
-      EventUtils.synthesizeMouse(lockIcon, 0, 0, {clickCount: 2});
-    }, false);
-    pageInfo.close();
-  }
-
-  function testLockDoubleClick() {
-    var pageInfoDialogs = Services.wm.getEnumerator("Browser:page-info");
-    var i = 0;
-    while (pageInfoDialogs.hasMoreElements()) {
-      i++;
-      pageInfo = pageInfoDialogs.getNext();
-      pageInfo.close();
-    }
-    is(i, 1, "When the lock is clicked twice there should be only one page info dialog");
     gBrowser.removeCurrentTab();
     finish();
   }

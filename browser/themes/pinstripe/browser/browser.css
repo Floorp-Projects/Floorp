@@ -877,15 +877,6 @@ toolbar[mode="icons"] #zoom-in-button {
   margin-top: 2px;
 }
 
-statusbarpanel#statusbar-display {
-  -moz-padding-start: 0;
-}
-
-.statusbarpanel-text {
-  margin-top: 2px;
-  margin-bottom: 0;
-}
-
 /* over-link in location bar */
 
 .urlbar-origin-label {
@@ -1507,24 +1498,6 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 }
 
 
-/* ----- SECURITY DISPLAY ----- */
-
-#security-button[level="high"] ,
-#security-button[level="low"] {
-  list-style-image: url("chrome://browser/skin/Secure-statusbar.png");
-}
-
-#security-button[level="broken"] {
-  list-style-image: url("chrome://browser/skin/Secure-statusbar-broken.png");
-}
-
-/* ----- PAGE REPORT DISPLAY ----- */
-
-#page-report-button {
-  list-style-image: url("chrome://browser/skin/Popup-blocked.png");
-  padding: 0px 3px 0px 3px;
-}
-
 /* ----- THROBBER ----- */
 
 #navigator-throbber {
@@ -1637,8 +1610,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-color: -moz-mac-chrome-inactive;
 }
 
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
+  background-image: -moz-radial-gradient(center 2px, circle cover, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
+}
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-color: rgba(255,0,0,.5) !important;
+  background-image: -moz-radial-gradient(center 99%, circle cover, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
 }
 
 #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"] {
@@ -2284,4 +2260,26 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
+}
+
+/* Remove the resizer from the statusbar compatibility shim */
+#status-bar .statusbar-resizerpanel {
+  display: none;
+}
+
+/* Vertically-center the statusbar compatibility shim, because
+   toolbars, even in small-icon mode, are a bit taller than
+   statusbars. Also turn off the statusbar border. On Windows
+   we have to disable borders on statusbar *and* child statusbar
+   elements. */
+#status-bar {
+  margin-top: 0.3em;
+  -moz-appearance: none;
+}
+
+/* Remove all borders from statusbarpanel children of
+   the statusbar. */
+#status-bar > statusbarpanel {
+  border-width: 0;
+  -moz-appearance: none;
 }

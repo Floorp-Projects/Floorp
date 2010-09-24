@@ -121,10 +121,7 @@ public:
 
     ~GLContextCGL()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         if (mContext)
             [mContext release];
@@ -345,7 +342,11 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
     NSView *childView = (NSView *)aWidget->GetNativeData(NS_NATIVE_WIDGET);
     [context setView:childView];
 
-    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(ContextFormat(ContextFormat::BasicRGB24),
+    // make the context transparent
+    GLint opaque = 0;
+    [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
+
+    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(ContextFormat(ContextFormat::BasicRGBA32),
                                                         shareContext,
                                                         context);
     if (!glContext->Init()) {

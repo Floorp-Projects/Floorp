@@ -44,6 +44,8 @@
 #include "gfxPlatform.h"
 #include "gfxWindowsSurface.h"
 
+#include "prenv.h"
+
 namespace mozilla {
 namespace gl {
 
@@ -53,6 +55,8 @@ static HWND gSharedWindow = 0;
 static HDC gSharedWindowDC = 0;
 static HGLRC gSharedWindowGLContext = 0;
 static int gSharedWindowPixelFormat = 0;
+
+static PRBool gUseDoubleBufferedWindows = PR_FALSE;
 
 static HWND
 CreateDummyWindow(HDC *aWindowDC = nsnull)
@@ -85,6 +89,8 @@ CreateDummyWindow(HDC *aWindowDC = nsnull)
         pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
         pfd.nVersion = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+        if (gUseDoubleBufferedWindows)
+            pfd.dwFlags |= PFD_DOUBLEBUFFER;
         pfd.iPixelType = PFD_TYPE_RGBA;
         pfd.cColorBits = 24;
         pfd.cRedBits = 8;
@@ -123,6 +129,8 @@ WGLLibrary::EnsureInitialized()
             return PR_FALSE;
         }
     }
+
+    gUseDoubleBufferedWindows = PR_GetEnv("MOZ_WGL_DB") != nsnull;
 
     LibrarySymbolLoader::SymLoadStruct earlySymbols[] = {
         { (PRFuncPtr*) &fCreateContext, { "wglCreateContext", NULL } },
@@ -242,10 +250,7 @@ public:
 
     ~GLContextWGL()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         sWGLLibrary.fDeleteContext(mContext);
 
@@ -532,6 +537,8 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
     if (!glContext->Init()) {
         return nsnull;
     }
+
+    glContext->SetIsDoubleBuffered(gUseDoubleBufferedWindows);
 
     return glContext.forget();
 }

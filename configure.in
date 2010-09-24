@@ -8364,6 +8364,12 @@ MOZ_ARG_ENABLE_BOOL(system-cairo,
 MOZ_TREE_CAIRO=,
 MOZ_TREE_CAIRO=1 )
 
+MOZ_TREE_PIXMAN=1
+MOZ_ARG_ENABLE_BOOL(system-pixman,
+[ --enable-system-pixman Use system pixman (located with pkgconfig)],
+MOZ_TREE_PIXMAN=,
+MOZ_TREE_PIXMAN=1 )
+
 # Check for headers defining standard int types.
 AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
 
@@ -8495,7 +8501,16 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)
 
-    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src) $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'" $CAIRO_FT_LIBS"
+    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
+
+    if test "$MOZ_TREE_PIXMAN"; then
+        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
+    else
+        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.17.3)
+        MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
+        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
+    fi
+
     if test "$MOZ_X11"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
@@ -8517,6 +8532,7 @@ fi
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
+AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
 dnl qcms
@@ -8709,6 +8725,10 @@ fi
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
+fi
+
+if test "$MOZ_APP_COMPONENT_INCLUDE"; then
+  AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_INCLUDE, "$MOZ_APP_COMPONENT_INCLUDE")
 fi
 
 dnl ========================================================
@@ -8971,6 +8991,8 @@ AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(MOZ_NSS_PATCH)
+AC_SUBST(MOZ_APP_COMPONENT_LIBS)
+AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_MEDIA)
 AC_SUBST(MOZ_SYDNEYAUDIO)

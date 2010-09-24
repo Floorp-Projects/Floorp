@@ -171,6 +171,9 @@ sa_stream_open(sa_stream_t *s) {
   }
 
   JNIEnv *jenv = GetJNIForThread();
+  if (!jenv)
+    return SA_ERROR_NO_DEVICE;
+
   if ((*jenv)->PushLocalFrame(jenv, 4)) {
     return SA_ERROR_OOM;
   }
@@ -208,6 +211,9 @@ sa_stream_destroy(sa_stream_t *s) {
   }
 
   JNIEnv *jenv = GetJNIForThread();
+  if (!jenv)
+    return SA_SUCCESS;
+
   (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
   (*jenv)->DeleteGlobalRef(jenv, s->at_class);
   free(s);

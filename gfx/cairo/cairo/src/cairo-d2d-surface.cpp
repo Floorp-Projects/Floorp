@@ -3637,6 +3637,7 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 
     newSurf->device = d2d_device;
     cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return &newSurf->base;
    

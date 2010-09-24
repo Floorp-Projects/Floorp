@@ -322,7 +322,9 @@ class GeckoAppShell
             if (provider == null)
                 return;
 
-            sendEventToGecko(new GeckoEvent(lm.getLastKnownLocation(provider)));
+            Location loc = lm.getLastKnownLocation(provider);
+            if (loc != null)
+                sendEventToGecko(new GeckoEvent(loc));
             lm.requestLocationUpdates(provider, 100, (float).5, GeckoApp.surfaceView, Looper.getMainLooper());
         } else {
             lm.removeUpdates(GeckoApp.surfaceView);

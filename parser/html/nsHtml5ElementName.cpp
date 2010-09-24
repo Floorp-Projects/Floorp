@@ -331,7 +331,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_APPLET = new nsHtml5ElementName(nsHtml5Atoms::applet, nsHtml5Atoms::applet, NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET, PR_FALSE, PR_TRUE, PR_FALSE);
   ELT_ARCCOT = new nsHtml5ElementName(nsHtml5Atoms::arccot, nsHtml5Atoms::arccot, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_APPROX = new nsHtml5ElementName(nsHtml5Atoms::approx, nsHtml5Atoms::approx, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_BUTTON = new nsHtml5ElementName(nsHtml5Atoms::button, nsHtml5Atoms::button, NS_HTML5TREE_BUILDER_BUTTON, PR_FALSE, PR_FALSE, PR_FALSE);
+  ELT_BUTTON = new nsHtml5ElementName(nsHtml5Atoms::button, nsHtml5Atoms::button, NS_HTML5TREE_BUILDER_BUTTON, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_CIRCLE = new nsHtml5ElementName(nsHtml5Atoms::circle, nsHtml5Atoms::circle, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_CENTER = new nsHtml5ElementName(nsHtml5Atoms::center, nsHtml5Atoms::center, NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_CURSOR = new nsHtml5ElementName(nsHtml5Atoms::cursor, nsHtml5Atoms::cursor, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);

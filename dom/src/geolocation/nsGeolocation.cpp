@@ -257,14 +257,6 @@ nsresult
 nsGeolocationRequest::Init()
 {
   // This method is called before the user has given permission for this request.
-
-  // check to see if we have a geolocation provider, if not, notify an error and bail.
-  nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
-  if (!geoService->HasGeolocationProvider()) {
-    NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
-    return NS_ERROR_FAILURE;
-  }
-
   return NS_OK;
 }
 
@@ -743,22 +735,19 @@ nsGeolocationService::GetCachedPosition()
   return mLastPosition;
 }
 
-PRBool
-nsGeolocationService::HasGeolocationProvider()
-{
-  return mProviders.Count() > 0;
-}
-
 nsresult
 nsGeolocationService::StartDevice()
 {
   if (!sGeoEnabled)
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (!HasGeolocationProvider())
-    return NS_ERROR_NOT_AVAILABLE;
-  
-  // if we have one, start it up.
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    ContentChild* cpc = ContentChild::GetSingleton();
+    cpc->SendGeolocationStart();
+    return NS_OK;
+  }
+#endif
 
   // Start them up!
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -800,13 +789,21 @@ nsGeolocationService::SetDisconnectTimer()
 void 
 nsGeolocationService::StopDevice()
 {
-  for (PRUint32 i = mProviders.Count() - 1; i != PRUint32(-1); --i) {
-    mProviders[i]->Shutdown();
-  }
-
   if(mDisconnectTimer) {
     mDisconnectTimer->Cancel();
     mDisconnectTimer = nsnull;
+  }
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    ContentChild* cpc = ContentChild::GetSingleton();
+    cpc->SendGeolocationStop();
+    return; // bail early
+  }
+#endif
+
+  for (PRUint32 i = mProviders.Count() - 1; i != PRUint32(-1); --i) {
+    mProviders[i]->Shutdown();
   }
 }
 
@@ -1137,9 +1134,4 @@ nsGeolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
   nsCOMPtr<nsIRunnable> ev  = new RequestPromptEvent(request);
   NS_DispatchToMainThread(ev);
 }
-
-#if !defined(WINCE_WINDOWS_MOBILE) && !defined(MOZ_MAEMO_LIBLOCATION) && !defined(ANDROID)
-DOMCI_DATA(GeoPositionCoords, void)
-DOMCI_DATA(GeoPosition, void)
-#endif
 

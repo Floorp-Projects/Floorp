@@ -1,0 +1,12 @@
+object {
+  background-color: green;
+}
+
+object:enabled {
+  background-color: red;
+}
+
+/* ref should always be green! */
+.ref:enabled {
+  background-color: green;
+}

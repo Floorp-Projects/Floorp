@@ -61,6 +61,16 @@
       };
       testAccessibleTree("image_submit", accTree);
 
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF
+          }
+        ]
+      };
+      testAccessibleTree("output", accTree);
+
       SimpleTest.finish();
     }
 
@@ -80,6 +90,11 @@
     href="https://bugzilla.mozilla.org/show_bug.cgi?id=524521">
      Mozilla Bug 524521
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
+     title="make HTML <output> accessible">
+    Mozilla Bug 558036
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -92,5 +107,6 @@
 
   <input type="submit" id="submit">
   <input type="image" id="image_submit">
+  <output id="output">1337</output>
 </body>
 </html>
