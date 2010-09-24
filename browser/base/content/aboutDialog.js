@@ -213,6 +213,7 @@ appUpdater.prototype =
    */
   selectPanel: function(aChildID) {
     this.updateDeck.selectedPanel = document.getElementById(aChildID);
+    this.updateBtn.disabled = (aChildID != "updateButtonBox");
   },
 
   /**
