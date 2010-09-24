@@ -6,7 +6,7 @@ fails-if(!haveTestPlugin) == plugin-alpha-opacity.html div-alpha-opacity.html
 fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html
 fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1-ref.html
 fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html
-random-if(cocoaWidget||d2d) fails-if(!haveTestPlugin) skip-if(!areOOPPenabled()) == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html
-fails-if(!haveTestPlugin) skip-if(!areOOPPenabled()) == pluginproblemui-direction-2.html pluginproblemui-direction-2-ref.html
+random-if(cocoaWidget||d2d) fails-if(!haveTestPlugin) skip-if(!prefs.getBoolPref("dom.ipc.plugins.enabled")) == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html
+fails-if(!haveTestPlugin) skip-if(!prefs.getBoolPref("dom.ipc.plugins.enabled")) == pluginproblemui-direction-2.html pluginproblemui-direction-2-ref.html
 # Disabled for now to investigate Windows/Linux test failures
 # fails-if(!haveTestPlugin) == border-padding-3.html border-padding-3-ref.html
