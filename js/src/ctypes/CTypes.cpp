@@ -561,8 +561,7 @@ InitCTypeClass(JSContext* cx, JSObject* parent)
       !JS_DefineFunctions(cx, prototype, sCTypeFunctions))
     return NULL;
 
-  if (!JS_SealObject(cx, ctor, JS_FALSE) ||
-      !JS_SealObject(cx, prototype, JS_FALSE))
+  if (!JS_FreezeObject(cx, ctor) || !JS_FreezeObject(cx, prototype))
     return NULL;
 
   return prototype;
@@ -603,8 +602,8 @@ InitCDataClass(JSContext* cx, JSObject* parent, JSObject* CTypeProto)
       !JS_DefineFunctions(cx, prototype, sCDataFunctions))
     return NULL;
 
-  if (//!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
-      !JS_SealObject(cx, ctor, JS_FALSE))
+  if (//!JS_FreezeObject(cx, prototype) || // XXX fixme - see bug 541212!
+      !JS_FreezeObject(cx, ctor))
     return NULL;
 
   return prototype;
@@ -622,7 +621,7 @@ DefineABIConstant(JSContext* cx,
     return false;
   if (!JS_SetReservedSlot(cx, obj, SLOT_ABICODE, INT_TO_JSVAL(code)))
     return false;
-  return JS_SealObject(cx, obj, JS_FALSE);
+  return JS_FreezeObject(cx, obj);
 }
 
 // Set up a single type constructor for
@@ -692,9 +691,9 @@ InitTypeConstructor(JSContext* cx,
   if (instanceProps && !JS_DefineProperties(cx, dataProto, instanceProps))
     return false;
 
-  if (!JS_SealObject(cx, obj, JS_FALSE) ||
-      //!JS_SealObject(cx, dataProto, JS_FALSE) || // XXX fixme - see bug 541212!
-      !JS_SealObject(cx, typeProto, JS_FALSE))
+  if (!JS_FreezeObject(cx, obj) ||
+      //!JS_FreezeObject(cx, dataProto) || // XXX fixme - see bug 541212!
+      !JS_FreezeObject(cx, typeProto))
     return false;
 
   return true;
@@ -717,7 +716,7 @@ InitInt64Class(JSContext* cx,
   JSObject* ctor = JS_GetConstructor(cx, prototype);
   if (!ctor)
     return NULL;
-  if (!JS_SealObject(cx, ctor, JS_FALSE))
+  if (!JS_FreezeObject(cx, ctor))
     return NULL;
 
   // Stash ctypes.{Int64,UInt64}.prototype on a reserved slot of the 'join'
@@ -728,7 +727,7 @@ InitInt64Class(JSContext* cx,
          OBJECT_TO_JSVAL(prototype)))
     return NULL;
 
-  if (!JS_SealObject(cx, prototype, JS_FALSE))
+  if (!JS_FreezeObject(cx, prototype))
     return NULL;
 
   return prototype;
@@ -958,7 +957,7 @@ JS_InitCTypesClass(JSContext* cx, JSObject* global)
     return false;
 
   // Seal the ctypes object, to prevent modification.
-  return JS_SealObject(cx, ctypes, JS_FALSE);
+  return JS_FreezeObject(cx, ctypes);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2638,12 +2637,12 @@ CType::Create(JSContext* cx,
       return NULL;
 
     // Set the 'prototype' object.
-    if (//!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+    if (//!JS_FreezeObject(cx, prototype) || // XXX fixme - see bug 541212!
         !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
       return NULL;
   }
 
-  if (!JS_SealObject(cx, typeObj, JS_FALSE))
+  if (!JS_FreezeObject(cx, typeObj))
     return NULL;
 
   // Assert a sanity check on size and alignment: size % alignment should always
@@ -3953,7 +3952,7 @@ AddFieldToArray(JSContext* cx,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
-  return JS_SealObject(cx, fieldObj, JS_FALSE);
+  return JS_FreezeObject(cx, fieldObj);
 }
 
 JSBool
@@ -4114,7 +4113,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
 
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, sizeVal) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
-      //!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+      //!JS_FreezeObject(cx, prototype) || // XXX fixme - see bug 541212!
       !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
     return JS_FALSE;
 
@@ -4363,7 +4362,7 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
     return NULL;
 
   // Seal the fields array.
-  if (!JS_SealObject(cx, fieldsProp, JS_FALSE))
+  if (!JS_FreezeObject(cx, fieldsProp))
     return NULL;
 
   return fieldsProp;
@@ -4901,8 +4900,8 @@ FunctionType::ConstructData(JSContext* cx,
   // having to do things like reset SLOT_REFERENT when someone tries to
   // change the pointer value.
   // XXX This will need to change when bug 541212 is fixed -- CData::ValueSetter
-  // could be called on a sealed object.
-  return JS_SealObject(cx, dataObj, JS_FALSE);
+  // could be called on a frozen object.
+  return JS_FreezeObject(cx, dataObj);
 }
 
 typedef Array<AutoValue, 16> AutoValueAutoArray;
@@ -5118,7 +5117,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp
     return JS_FALSE;
 
   // Seal and cache it.
-  if (!JS_SealObject(cx, argTypes, JS_FALSE) ||
+  if (!JS_FreezeObject(cx, argTypes) ||
       !JS_SetReservedSlot(cx, obj, SLOT_ARGS_T, OBJECT_TO_JSVAL(argTypes)))
     return JS_FALSE;
 
@@ -5818,7 +5817,7 @@ Int64Base::Construct(JSContext* cx,
     return NULL;
   }
 
-  if (!JS_SealObject(cx, result, JS_FALSE))
+  if (!JS_FreezeObject(cx, result))
     return NULL;
 
   return result;

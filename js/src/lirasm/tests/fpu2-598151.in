@@ -1,0 +1,21 @@
+	ptr = allocp 8
+
+	k = immd 1.0
+	std k ptr 0
+
+	a = immd 1.0
+	b = immd 2.5
+	c = addd a b
+	std c ptr 0
+
+	x = ldd ptr 0
+	z = immd 0.0
+	p = eqd x z
+	jt p skip	
+
+	j done
+
+skip:	std c ptr 0
+
+done:	res = ldd ptr 0
+	retd res

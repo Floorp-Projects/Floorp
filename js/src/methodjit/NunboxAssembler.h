@@ -42,6 +42,7 @@
 #define jsjaeger_assembler_h__
 
 #include "methodjit/BaseAssembler.h"
+#include "methodjit/RematInfo.h"
 
 namespace js {
 namespace mjit {
@@ -153,6 +154,7 @@ class Assembler : public BaseAssembler
 
     /* Loads type first, then payload, returning label after type load. */
     Label loadValueAsComponents(Address address, RegisterID type, RegisterID payload) {
+        JS_ASSERT(address.base != type);
         loadTypeTag(address, type);
         Label l = label();
         loadPayload(address, payload);
@@ -160,6 +162,8 @@ class Assembler : public BaseAssembler
     }
 
     Label loadValueAsComponents(BaseIndex address, RegisterID type, RegisterID payload) {
+        JS_ASSERT(address.base != type);
+        JS_ASSERT(address.index != type);
         loadTypeTag(address, type);
         Label l = label();
         loadPayload(address, payload);
@@ -169,27 +173,7 @@ class Assembler : public BaseAssembler
     /*
      * Stores type first, then payload.
      */
-    void storeValue(const Value &v, Address address) {
-        jsval_layout jv;
-        jv.asBits = JSVAL_BITS(Jsvalify(v));
-
-        store32(ImmTag(jv.s.tag), tagOf(address));
-        store32(Imm32(jv.s.payload.u32), payloadOf(address));
-    }
-
-    void storeValue(const Value &v, BaseIndex address) {
-        jsval_layout jv;
-        jv.asBits = JSVAL_BITS(Jsvalify(v));
-
-        store32(ImmTag(jv.s.tag), tagOf(address));
-        store32(Imm32(jv.s.payload.u32), payloadOf(address));
-    }
-
-    /*
-     * Performs type store before payload store, even for Undefined.
-     * Returns label after type store.
-     */
-    Label storeValueForIC(const Value &v, Address address) {
+    Label storeValue(const Value &v, Address address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
 
@@ -197,6 +181,50 @@ class Assembler : public BaseAssembler
         Label l = label();
         store32(Imm32(jv.s.payload.u32), payloadOf(address));
         return l;
+    }
+
+    Label storeValue(const Value &v, BaseIndex address) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(v));
+
+        store32(ImmTag(jv.s.tag), tagOf(address));
+        Label l = label();
+        store32(Imm32(jv.s.payload.u32), payloadOf(address));
+        return l;
+    }
+
+    void storeValueFromComponents(RegisterID type, RegisterID payload, Address address) {
+        storeTypeTag(type, address);
+        storePayload(payload, address);
+    }
+
+    void storeValueFromComponents(RegisterID type, RegisterID payload, BaseIndex address) {
+        storeTypeTag(type, address);
+        storePayload(payload, address);
+    }
+
+    void storeValueFromComponents(ImmType type, RegisterID payload, Address address) {
+        storeTypeTag(type, address);
+        storePayload(payload, address);
+    }
+
+    void storeValueFromComponents(ImmType type, RegisterID payload, BaseIndex address) {
+        storeTypeTag(type, address);
+        storePayload(payload, address);
+    }
+
+    Label storeValue(const ValueRemat &vr, Address address) {
+        if (vr.isConstant) {
+            return storeValue(Valueify(vr.u.v), address);
+        } else {
+            if (vr.u.s.isTypeKnown)
+                storeTypeTag(ImmType(vr.u.s.type.knownType), address);
+            else
+                storeTypeTag(vr.u.s.type.reg, address);
+            Label l = label();
+            storePayload(vr.u.s.data, address);
+            return l;
+        }
     }
 
     void loadPrivate(Address privAddr, RegisterID to) {
@@ -288,8 +316,8 @@ class Assembler : public BaseAssembler
     }
 };
 
-} /* namespace js */
 } /* namespace mjit */
+} /* namespace js */
 
 #endif
 

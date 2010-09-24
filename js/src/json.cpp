@@ -345,7 +345,7 @@ JO(JSContext *cx, Value *vp, StringifyContext *scx)
 
     JSBool memberWritten = JS_FALSE;
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, &keySource->toObject(), JSITER_OWNONLY, props))
+    if (!GetPropertyNames(cx, &keySource->toObject(), JSITER_OWNONLY, &props))
         return JS_FALSE;
 
     for (size_t i = 0, len = props.length(); i < len; i++) {
@@ -608,7 +608,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
             }
         } else {
             AutoIdVector props(cx);
-            if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props))
+            if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props))
                 return false;
 
             for (size_t i = 0, len = props.length(); i < len; i++) {

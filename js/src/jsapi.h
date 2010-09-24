@@ -1920,6 +1920,10 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
+/* Queries the [[Extensible]] property of the object. */
+extern JS_PUBLIC_API(JSBool)
+JS_IsExtensible(JSObject *obj);
+
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
  * proto if proto's actual parameter value is null.
@@ -1928,8 +1932,19 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            JSObject *parent);
 
+/*
+ * Freeze obj, and all objects it refers to, recursively. This will not recurse
+ * through non-extensible objects, on the assumption that those are already
+ * deep-frozen.
+ */
 extern JS_PUBLIC_API(JSBool)
-JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep);
+JS_DeepFreezeObject(JSContext *cx, JSObject *obj);
+
+/*
+ * Freezes an object; see ES5's Object.freeze(obj) method.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,

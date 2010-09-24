@@ -90,7 +90,7 @@
 #endif
 #ifdef JS_VALGRIND
 #  include <valgrind/valgrind.h>
-#else
+#elif !defined(VALGRIND_DISCARD_TRANSLATIONS)
 #  define VALGRIND_DISCARD_TRANSLATIONS(addr, szB)
 #endif
 
@@ -190,6 +190,9 @@ static inline bool isU32(uintptr_t i) {
 
 #define alignTo(x,s)        ((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
 #define alignUp(x,s)        ((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
+
+#define NJ_MIN(x, y) ((x) < (y) ? (x) : (y))
+#define NJ_MAX(x, y) ((x) > (y) ? (x) : (y))
 
 namespace nanojit
 {

@@ -293,20 +293,6 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relink(shapeGuardJumpOffset, cs);
     }
 
-    // :TODO: x64 -- implement more efficient version.
-    void emitStore(Assembler &masm, Address address)
-    {
-        if (pic.u.vr.isConstant) {
-            masm.storeValue(Valueify(pic.u.vr.u.v), address);
-        } else {
-            if (pic.u.vr.u.s.isTypeKnown)
-                masm.storeTypeTag(ImmType(pic.u.vr.u.s.type.knownType), address);
-            else
-                masm.storeTypeTag(pic.u.vr.u.s.type.reg, address);
-            masm.storePayload(pic.u.vr.u.s.data, address);
-        }
-    }
-
     bool generateStub(uint32 initialShape, const Shape *shape, bool adding)
     {
         /* Exits to the slow path. */
@@ -390,7 +376,7 @@ class SetPropCompiler : public PICStubCompiler
             if (shape->slot < JS_INITIAL_NSLOTS) {
                 Address address(pic.objReg,
                                 offsetof(JSObject, fslots) + shape->slot * sizeof(Value));
-                emitStore(masm, address);
+                masm.storeValue(pic.u.vr, address);
             } else {
                 /* Check dslots non-zero. */
                 masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.shapeReg);
@@ -409,7 +395,7 @@ class SetPropCompiler : public PICStubCompiler
                 masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.shapeReg);
                 Address address(pic.shapeReg,
                                 (shape->slot - JS_INITIAL_NSLOTS) * sizeof(Value));
-                emitStore(masm, address);
+                masm.storeValue(pic.u.vr, address);
             }
 
             uint32 newShape = obj->shape();
@@ -446,7 +432,7 @@ class SetPropCompiler : public PICStubCompiler
                 pic.shapeRegHasBaseShape = false;
             }
 
-            emitStore(masm, address);
+            masm.storeValue(pic.u.vr, address);
         } else {
             //   \ /        In general, two function objects with different JSFunctions
             //    #         can have the same shape, thus we must not rely on the identity
@@ -466,7 +452,7 @@ class SetPropCompiler : public PICStubCompiler
                 Address addr(pic.shapeReg, shape->setterOp() == SetCallArg
                                            ? JSStackFrame::offsetOfFormalArg(fun, slot)
                                            : JSStackFrame::offsetOfFixed(slot));
-                emitStore(masm, addr);
+                masm.storeValue(pic.u.vr, addr);
                 skipOver = masm.jump();
             }
 
@@ -477,7 +463,7 @@ class SetPropCompiler : public PICStubCompiler
                 masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.objReg);
 
                 Address dslot(pic.objReg, slot * sizeof(Value));
-                emitStore(masm, dslot);
+                masm.storeValue(pic.u.vr, dslot);
             }
 
             pic.shapeRegHasBaseShape = false;
@@ -540,8 +526,6 @@ class SetPropCompiler : public PICStubCompiler
             return disable("dense array");
         if (!obj->isNative())
             return disable("non-native");
-        if (obj->sealed())
-            return disable("sealed");
 
         Class *clasp = obj->getClass();
 
@@ -571,8 +555,6 @@ class SetPropCompiler : public PICStubCompiler
 
             if (!holder->isNative())
                 return disable("non-native holder");
-            if (holder->sealed())
-                return disable("sealed holder");
 
             if (!shape->writable())
                 return disable("readonly");
@@ -912,8 +894,8 @@ class GetPropCompiler : public PICStubCompiler
          */
         uint32 thisvOffset = uint32(f.regs.sp - f.fp()->slots()) - 1;
         Address thisv(JSFrameReg, sizeof(JSStackFrame) + thisvOffset * sizeof(Value));
-        masm.storeTypeTag(ImmType(JSVAL_TYPE_STRING), thisv);
-        masm.storePayload(pic.objReg, thisv);
+        masm.storeValueFromComponents(ImmType(JSVAL_TYPE_STRING),
+                                      pic.objReg, thisv);
 
         /*
          * Clobber objReg with String.prototype and do some PIC stuff. Well,

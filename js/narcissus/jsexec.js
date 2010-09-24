@@ -1,5 +1,5 @@
 /* -*- Mode: JS; tab-width: 4; indent-tabs-mode: nil; -*-
- * vim: set sw=4 ts=8 et tw=78:
+ * vim: set sw=4 ts=4 et tw=78:
 /* ***** BEGIN LICENSE BLOCK *****
  *
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -140,7 +140,7 @@ Narcissus.interpreter = (function() {
             return s;
         },
 
-        //Don't want to proxy RegExp or some features won't work
+        // Don't want to proxy RegExp or some features won't work
         RegExp: RegExp,
 
         // Extensions to ECMA.
@@ -305,6 +305,22 @@ Narcissus.interpreter = (function() {
         var message = r + " (type " + (typeof v) + ") has no properties";
         throw rn ? new TypeError(message, rn.filename, rn.lineno)
                  : new TypeError(message);
+    }
+
+    function valuatePhis(n, v) {
+        var ps = n.phiUses;
+        if (!ps)
+            return;
+
+        for (var i = 0, j = ps.length; i < j; i++) {
+            // If the thing we're valuating is already equal to the thing we want
+            // to valuate it to, we have fully saturated (and have a cycle), and
+            // thus we should break.
+            if (ps[i].v === v)
+                break;
+            ps[i].v = v;
+            valuatePhis(ps[i], v);
+        }
     }
 
     function execute(n, x) {
@@ -818,11 +834,22 @@ Narcissus.interpreter = (function() {
             break;
 
           case IDENTIFIER:
-            for (s = x.scope; s; s = s.parent) {
-                if (n.value in s.object)
-                    break;
+            // Identifiers with forward pointers that weren't intervened can't be
+            // lvalues, so we safely get the cached value directly.
+            var resolved = n.resolve();
+
+            if (n.forward && !resolved.intervened &&
+                !(resolved.type == FUNCTION &&
+                  resolved.functionForm == parser.DECLARED_FORM)) {
+                v = resolved.v;
+                break;
+            } else {
+                for (s = x.scope; s; s = s.parent) {
+                    if (n.value in s.object)
+                        break;
+                }
+                v = new Reference(s && s.object, n.value, n);
             }
-            v = new Reference(s && s.object, n.value, n);
             break;
 
           case NUMBER:
@@ -838,6 +865,11 @@ Narcissus.interpreter = (function() {
           default:
             throw "PANIC: unknown operation " + n.type + ": " + uneval(n);
         }
+
+        if (n.backwards) {
+            n.v = v;
+        }
+        valuatePhis(n, v);
 
         return v;
     }
@@ -862,6 +894,21 @@ Narcissus.interpreter = (function() {
         var proto = {};
         definitions.defineProperty(this, "prototype", proto, true);
         definitions.defineProperty(proto, "constructor", this, false, false, true);
+    }
+
+    function getPropertyDescriptor(obj, name) {
+        while (obj) {
+            if (({}).hasOwnProperty.call(obj, name))
+                return Object.getOwnPropertyDescriptor(obj, name);
+            obj = Object.getPrototypeOf(obj);
+        }
+    }
+
+    function getOwnProperties(obj) {
+        var map = {};
+        for (var name in Object.getOwnPropertyNames(obj))
+            map[name] = Object.getOwnPropertyDescriptor(obj, name);
+        return map;
     }
 
     // Returns a new function wrapped with a Proxy.
@@ -1098,4 +1145,3 @@ Narcissus.interpreter = (function() {
     };
 
 }());
-

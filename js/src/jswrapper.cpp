@@ -135,7 +135,7 @@ bool
 JSWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     jsid id = JSID_VOID;
-    GET(GetPropertyNames(cx, wrappedObject(wrapper), JSITER_OWNONLY | JSITER_HIDDEN, props));
+    GET(GetPropertyNames(cx, wrappedObject(wrapper), JSITER_OWNONLY | JSITER_HIDDEN, &props));
 }
 
 static bool
@@ -157,7 +157,7 @@ bool
 JSWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     static jsid id = JSID_VOID;
-    GET(GetPropertyNames(cx, wrappedObject(wrapper), 0, props));
+    GET(GetPropertyNames(cx, wrappedObject(wrapper), 0, &props));
 }
 
 bool
@@ -207,7 +207,7 @@ bool
 JSWrapper::enumerateOwn(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     const jsid id = JSID_VOID;
-    GET(GetPropertyNames(cx, wrappedObject(wrapper), JSITER_OWNONLY, props));
+    GET(GetPropertyNames(cx, wrappedObject(wrapper), JSITER_OWNONLY, &props));
 }
 
 bool
