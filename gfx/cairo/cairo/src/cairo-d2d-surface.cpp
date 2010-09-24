@@ -2647,6 +2647,7 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
 		 	 const cairo_matrix_t *transform,
 			 cairo_box_t *box,
 			 cairo_clip_t *clip,
+                         cairo_filter_t filter,
 			 float opacity)
 {
     if (dst == src) {
@@ -2698,10 +2699,17 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
     rectDst.right = (float)x2;
     rectDst.bottom = (float)y2;
 
+    D2D1_BITMAP_INTERPOLATION_MODE interpMode =
+      D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+
+    if (filter == CAIRO_FILTER_NEAREST) {
+      interpMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+    }
+
     dst->rt->DrawBitmap(src->surfaceBitmap,
 			rectDst,
 			opacity,
-			D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+			interpMode,
 			rectSrc);
 
     return rv;
@@ -2717,6 +2725,7 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 		        const cairo_matrix_t *matrix,
 		        cairo_clip_t *clip,
 		        cairo_operator_t op,
+                        cairo_filter_t filter,
 			float opacity = 1.0f)
 {
     if (op == CAIRO_OPERATOR_OVER && src->content == CAIRO_CONTENT_COLOR) {
@@ -2733,7 +2742,7 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 
     cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
     if (op == CAIRO_OPERATOR_OVER && matrix->xy == 0 && matrix->yx == 0) {
-	return _cairo_d2d_blend_surface(dst, d2dsrc, matrix, box, clip, opacity);
+	return _cairo_d2d_blend_surface(dst, d2dsrc, matrix, box, clip, filter, opacity);
     }
     
     if (op == CAIRO_OPERATOR_OVER || opacity != 1.0f) {
@@ -3004,7 +3013,8 @@ _cairo_d2d_paint(void			*surface,
 	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
 
 	status = _cairo_d2d_try_fastblit(d2dsurf, surf_pattern->surface,
-				         NULL, &source->matrix, clip, op);
+				         NULL, &source->matrix, clip,
+                                         op, source->filter);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    return status;
@@ -3105,6 +3115,7 @@ _cairo_d2d_mask(void			*surface,
 							    &source->matrix,
 							    clip,
 							    op,
+                                                            source->filter,
 							    solidAlphaValue);
 	    if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
 		return rv;
@@ -3275,7 +3286,8 @@ _cairo_d2d_fill(void			*surface,
 	const cairo_surface_pattern_t *surf_pattern = 
 	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
 	cairo_int_status_t rv = _cairo_d2d_try_fastblit(d2dsurf, surf_pattern->surface,
-						        &box, &source->matrix, clip, op);
+						        &box, &source->matrix, clip, op,
+                                                        source->filter);
 
 	if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    return rv;
