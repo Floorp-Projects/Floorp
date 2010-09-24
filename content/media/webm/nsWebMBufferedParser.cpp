@@ -209,10 +209,8 @@ void nsWebMBufferedParser::Append(const unsigned char* aBuffer, PRUint32 aLength
   mCurrentOffset += aLength;
 }
 
-void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
-                                                    PRInt64 aStartOffset, PRInt64 aEndOffset,
-                                                    PRUint64 aTimecodeScale,
-                                                    PRInt64 aStartTimeOffsetNS)
+bool nsWebMBufferedState::CalculateBufferedForRange(PRInt64 aStartOffset, PRInt64 aEndOffset,
+                                                    PRUint64* aStartTime, PRUint64* aEndTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -220,7 +218,7 @@ void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
   PRUint32 start;
   mTimeMapping.GreatestIndexLtEq(aStartOffset, start);
   if (start == mTimeMapping.Length()) {
-    return;
+    return false;
   }
 
   // Find the first nsWebMTimeDataOffset at or before aEndOffset.
@@ -233,7 +231,7 @@ void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
 
   // Range is empty.
   if (end <= start) {
-    return;
+    return false;
   }
 
   NS_ASSERTION(mTimeMapping[start].mOffset >= aStartOffset &&
@@ -252,9 +250,9 @@ void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
   // from the ranges' start and end timestamps, so that those timestamps are
   // normalized in the range [0,duration].
 
-  double startTime = (mTimeMapping[start].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
-  double endTime = (mTimeMapping[end].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
-  aBuffered->Add(startTime, endTime);
+  *aStartTime = mTimeMapping[start].mTimecode;
+  *aEndTime = mTimeMapping[end].mTimecode;
+  return true;
 }
 
 void nsWebMBufferedState::NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset)
