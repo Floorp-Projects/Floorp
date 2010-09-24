@@ -3499,7 +3499,7 @@ SessionStoreService.prototype = {
    */
   _resetRestoringState: function sss__initRestoringState() {
     //
-    this._tasToRestore = { visible: [], hidden: [] };
+    this._tabsToRestore = { visible: [], hidden: [] };
     this._tabsRestoringCount = 0;
   },
 
