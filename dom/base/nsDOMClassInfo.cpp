@@ -6812,7 +6812,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // Unless our object is a native wrapper, in which case we have to
         // define it ourselves.
 
-        *_retval = JS_DefineProperty(cx, obj, "document", v, NULL, NULL,
+        *_retval = JS_WrapValue(cx, &v) &&
+                   JS_DefineProperty(cx, obj, "document", v, NULL, NULL,
                                      JSPROP_READONLY | JSPROP_ENUMERATE);
         if (!*_retval) {
           return NS_ERROR_UNEXPECTED;
