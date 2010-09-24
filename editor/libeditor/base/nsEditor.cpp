@@ -311,6 +311,21 @@ nsEditor::PostCreate()
   NotifyDocumentListeners(eDocumentCreated);
   NotifyDocumentListeners(eDocumentStateChanged);
   
+  // update nsTextStateManager if we have focus
+  if (HasFocus()) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    NS_ASSERTION(fm, "no focus manager?");
+
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    if (focusedContent) {
+      nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+      NS_ASSERTION(ps, "no pres shell even though we have focus");
+      nsPresContext* pc = ps->GetPresContext(); 
+
+      nsIMEStateManager::OnTextStateBlur(pc, nsnull);
+      nsIMEStateManager::OnTextStateFocus(pc, focusedContent);
+    }
+  }
   return NS_OK;
 }
 
