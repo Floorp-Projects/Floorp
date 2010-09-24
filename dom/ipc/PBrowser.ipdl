@@ -58,6 +58,7 @@ using nsTextEvent;
 using nsQueryContentEvent;
 using nsSelectionEvent;
 using RemoteDOMEvent;
+using nsIMEUpdatePreference;
 
 namespace mozilla {
 namespace dom {
@@ -89,6 +90,69 @@ parent:
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
+
+    /**
+     * Notifies chrome that there is a focus change involving an editable
+     * object (input, textarea, document, contentEditable. etc.)
+     *
+     *  focus        PR_TRUE if editable object is receiving focus
+     *               PR_FALSE if losing focus
+     *  preference   Native widget preference for IME updates
+     */
+    sync NotifyIMEFocus(PRBool focus)
+      returns (nsIMEUpdatePreference preference);
+
+    /**
+     * Notifies chrome that there has been a change in text content
+     * One call can encompass both a delete and an insert operation
+     * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
+     *
+     *  offset       Starting offset of the change
+     *  end          Ending offset of the range deleted
+     *  newEnd       New ending offset after insertion
+     *
+     *  for insertion, offset == end
+     *  for deletion, offset == newEnd
+     */
+    NotifyIMETextChange(PRUint32 offset, PRUint32 end, PRUint32 newEnd);
+
+    /**
+     * Notifies chrome that there has been a change in selection
+     * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
+     *
+     *  anchor       Offset where the selection started
+     *  focus        Offset where the caret is
+     */
+    NotifyIMESelection(PRUint32 anchor, PRUint32 focus);
+
+    /**
+     * Notifies chrome to refresh its text cache 
+     * Only called when NotifyIMEFocus returns PR_TRUE for mWantHints
+     *
+     *  text         The entire content of the text field
+     */
+    NotifyIMETextHint(nsString text);
+
+    /**
+     * Instructs chrome to end any pending composition
+     *
+     *  cancel       PR_TRUE if composition should be cancelled
+     *  composition  Text to commit before ending the composition
+     *
+     *  if cancel is PR_TRUE,
+     *    widget should return empty string for composition
+     *  if cancel is PR_FALSE,
+     *    widget should return the current composition text
+     */
+    sync EndIMEComposition(PRBool cancel) returns (nsString composition);
+
+    sync GetIMEEnabled() returns (PRUint32 value);
+
+    SetIMEEnabled(PRUint32 value);
+
+    sync GetIMEOpenState() returns (PRBool value);
+
+    SetIMEOpenState(PRBool value);
 
     PContentPermissionRequest(nsCString aType, URI uri);
 
