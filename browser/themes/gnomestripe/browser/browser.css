@@ -1762,11 +1762,6 @@ panel[dimmed="true"] {
   opacity: 0.5;
 }
 
-/* Remove the resizer from the statusbar compatibility shim */
-#status-bar .statusbar-resizerpanel {
-  display: none;
-}
-
 /* Vertically-center the statusbar compatibility shim, because
    toolbars, even in small-icon mode, are a bit taller than 
    statusbars. */

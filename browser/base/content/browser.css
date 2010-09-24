@@ -421,3 +421,8 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #geolocation-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
 }
+
+/* Remove the resizer from the statusbar compatibility shim */
+#status-bar > .statusbar-resizerpanel {
+  display: none;
+}
