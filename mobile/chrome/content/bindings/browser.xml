@@ -91,83 +91,77 @@
          Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
       </field>
 
-      <method name="receiveMessage">
-        <parameter name="aMessage"/>
-        <body><![CDATA[
-          let json = aMessage.json;
+      <field name="_messageListenerLocal"><![CDATA[
+        ({
+          self: this,
+          receiveMessage: function receiveMessage(aMessage) {
+            let self = this.self;
+            let json = aMessage.json;
 
-          switch (aMessage.name) {
-            case "DOMPopupBlocked":
-              this.onPopupBlocked(aMessage);
-              break;
+            switch (aMessage.name) {
+              case "DOMPopupBlocked":
+                self.onPopupBlocked(aMessage);
+                break;
 
-            case "pageshow":
-              this.onPageShow(aMessage);
+              case "pageshow":
+                self.onPageShow(aMessage);
 
-              if (this.mIconURL == "" && this._documentURI) {
-                // newURI call is throwing for chrome URI
-                try {
-                  // Use documentURIObject in the favicon construction so that we
-                  // do the right thing with about:-style error pages.  Bug 515188
-                  let iconURI = Services.io.newURI(this.documentURI.prePath + "/favicon.ico", null, null);
-                  if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
-                    gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
-                    this.mIconURL = iconURI.spec;
+                if (self.mIconURL == "" && self._documentURI) {
+                  // newURI call is throwing for chrome URI
+                  try {
+                    // Use documentURIObject in the favicon construction so that we
+                    // do the right thing with about:-style error pages.  Bug 515188
+                    let iconURI = Services.io.newURI(self.documentURI.prePath + "/favicon.ico", null, null);
+                    if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
+                      gFaviconService.setAndLoadFaviconForPage(self.currentURI, iconURI, true);
+                      self.mIconURL = iconURI.spec;
+                    }
                   }
+                  catch(e) {}
                 }
-                catch(e) {}
-              }
-              break;
+                break;
 
-            case "pagehide":
-              this.onPageHide(aMessage);
-              break;
+              case "pagehide":
+                self.onPageHide(aMessage);
+                break;
 
-            case "DOMTitleChanged":
-              this._contentTitle = aMessage.json.title;
-              break;
+              case "DOMTitleChanged":
+                self._contentTitle = aMessage.json.title;
+                break;
 
-            case "DOMLinkAdded":
-              let link = aMessage.json;
-              // ignore results from subdocuments
-              if (link.windowId != this.contentWindowId)
-                return;
+              case "DOMLinkAdded":
+                let link = aMessage.json;
+                // ignore results from subdocuments
+                if (link.windowId != self.contentWindowId)
+                  return;
 
-              let linkType = this._getLinkType(link);
-              switch(linkType) {
-                case "icon":
-                  let iconURI = Services.io.newURI(link.href, link.charset, null);
-                  if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
-                    gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
-                    this.mIconURL = iconURI.spec;
-                  }
-                  break;
-                case "search":
-                  this._searchEngines.push({ title: link.title, href: link.href });
-                  break;
-              }
-              break;
+                let linkType = self._getLinkType(link);
+                switch(linkType) {
+                  case "icon":
+                    let iconURI = Services.io.newURI(link.href, link.charset, null);
+                    if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
+                      gFaviconService.setAndLoadFaviconForPage(self.currentURI, iconURI, true);
+                      self.mIconURL = iconURI.spec;
+                    }
+                    break;
+                  case "search":
+                    self._searchEngines.push({ title: link.title, href: link.href });
+                    break;
+                }
+                break;
 
-            case "scroll":
-              // Cache viewport coordinates are specified relative to CSS viewport, so we
-              // have to be sure we send the message.
-              this._pendingPixelsX = Number.MAX_VALUE;
-              this._pendingPixelsY = Number.MAX_VALUE;
+              case "MozScrolledAreaChanged":
+                self._contentDocumentWidth = aMessage.json.width;
+                self._contentDocumentHeight = aMessage.json.height;
 
-              // Use floor so that we always guarantee top-left corner of content is visible.
-              this.scrollTo(Math.floor(json.x * this.scale), Math.floor(json.y * this.scale));
-              break;
-
-            case "MozScrolledAreaChanged":
-              this._contentDocumentWidth = aMessage.json.width;
-              this._contentDocumentHeight = aMessage.json.height;
-              // Recalculate whether the visible area is actually in bounds
-              this.scrollBy(0, 0);
-              this._updateCacheViewport();
-              break;
-         }
-        ]]></body>
-      </method>
+                // Recalculate whether the visible area is actually in bounds
+                self.scrollBy(0, 0);
+                self._updateCacheViewport();
+                break;
+            }
+          }
+        })
+      ]]></field>
 
       <method name="_getLinkType">
         <parameter name="aLink" />
@@ -543,23 +537,18 @@
           this._pendingThresholdY = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelY")) * this._recacheRatio;
 
           this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
-          this.messageManager.addMessageListener("DOMTitleChanged", this);
-          this.messageManager.addMessageListener("DOMLinkAdded", this);
-
-          // Listen for first load for lazy attachment to form fill controller
-          this.messageManager.addMessageListener("pageshow", this);
-          this.messageManager.addMessageListener("pagehide", this);
-          this.messageManager.addMessageListener("DOMPopupBlocked", this);
-
-          this.messageManager.addMessageListener("scroll", this);
-          this.messageManager.addMessageListener("MozScrolledAreaChanged", this);
+          this.messageManager.addMessageListener("DOMTitleChanged", this._messageListenerLocal);
+          this.messageManager.addMessageListener("DOMLinkAdded", this._messageListenerLocal);
+          this.messageManager.addMessageListener("pageshow", this._messageListenerLocal);
+          this.messageManager.addMessageListener("pagehide", this._messageListenerLocal);
+          this.messageManager.addMessageListener("DOMPopupBlocked", this._messageListenerLocal);
+          this.messageManager.addMessageListener("MozScrolledAreaChanged", this._messageListenerLocal);
 
           this._webProgress._init();
         ]]>
       </constructor>
 
     </implementation>
-
   </binding>
 
   <binding id="remote-browser" extends="#local-browser">
@@ -815,6 +804,35 @@
       <property name="documentCharsetInfo"
                 onget="throw 'documentCharsetInfo: Not Remoteable'"
                 readonly="true"/>
+
+      <constructor>
+        <![CDATA[
+          this.messageManager.addMessageListener("scroll", this._messageListenerRemote);
+        ]]>
+      </constructor>
+
+      <field name="_messageListenerRemote"><![CDATA[
+        ({
+          self: this,
+          receiveMessage: function receiveMessage(aMessage) {
+            let self = this.self;
+            let json = aMessage.json;
+
+            switch (aMessage.name) {
+              case "scroll":
+                // When CSS scroll offset changes, we must redefine our cache viewport because
+                // the cache viewport coordinate system's origin is the CSS scroll offset. Setting
+                // _pendingPixels* guarantees that _updateCacheViewport is called in scrollTo.
+                self._pendingPixelsX = Number.MAX_VALUE;
+                self._pendingPixelsY = Number.MAX_VALUE;
+
+                // Use floor so that we always guarantee top-left corner of content is visible.
+                self.scrollTo(Math.floor(json.x * self.scale), Math.floor(json.y * self.scale));
+                break;
+           }
+         }
+       })
+      ]]></field>
 
       <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
       <method name="_setScale">
