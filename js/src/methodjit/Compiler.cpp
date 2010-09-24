@@ -162,7 +162,7 @@ mjit::Compiler::~Compiler()
     cx->free(jumpMap);
 }
 
-CompileStatus
+CompileStatus JS_NEVER_INLINE
 mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {
     Compiler cc(cx, script, fun, scopeChain);
