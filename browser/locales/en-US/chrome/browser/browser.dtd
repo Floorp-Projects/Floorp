@@ -70,8 +70,8 @@ can reach it easily. -->
 <!ENTITY personalbarCmd.label "Bookmarks Toolbar">
 <!ENTITY personalbarCmd.accesskey "B">
 <!ENTITY bookmarksToolbarItem.label "Bookmarks Toolbar Items">
-<!ENTITY taskbarCmd.label "Status Bar">
-<!ENTITY taskbarCmd.accesskey "B">
+<!ENTITY addonBarCmd.label "Add-on Bar">
+<!ENTITY addonBarCmd.accesskey "B">
 
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
@@ -122,7 +122,6 @@ can reach it easily. -->
 <!ENTITY stopCmd.macCommandKey        ".">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY goEndCap.tooltip             "Go to the address in the Location Bar">
-<!ENTITY feedButton.tooltip           "Subscribe to this page…">
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
@@ -134,10 +133,14 @@ can reach it easily. -->
 
 <!-- Toolbar items --> 
 <!ENTITY appMenuButton.label          "Menu">
+<!ENTITY appMenuButton.tooltip        "Open &brandShortName; menu">
 <!ENTITY homeButton.label             "Home">
 
 <!ENTITY tabGroupsButton.label        "Tab Groups">
 <!ENTITY tabGroupsButton.tooltip      "Group your tabs">
+
+<!ENTITY feedButton.label             "Subscribe">
+<!ENTITY feedButton.tooltip           "Subscribe to this page…">
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
@@ -279,9 +282,10 @@ can reach it easily. -->
 <!ENTITY appMenuSidebars.label "Sidebars">
 <!ENTITY appMenuFind.label "Find…">
 <!ENTITY appMenuUnsorted.label "Unsorted Bookmarks">
+<!ENTITY appMenuWebDeveloper.label "Web Developer">
 <!ENTITY appMenuGettingStarted.label "Getting Started">
-
-<!ENTITY developerMenu.label "Developer">
+<!ENTITY appMenuSafeMode.label "Restart with Add-ons Disabled…">
+<!ENTITY appMenuSafeMode.accesskey "R">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.placeholder           "Go to a Web Site">

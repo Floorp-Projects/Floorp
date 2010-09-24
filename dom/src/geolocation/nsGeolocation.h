@@ -149,9 +149,6 @@ public:
   void SetCachedPosition(nsIDOMGeoPosition* aPosition);
   nsIDOMGeoPosition* GetCachedPosition();
 
-  // Returns true if there is at least one geolocation provider.
-  PRBool   HasGeolocationProvider();
-
   // Find and startup a geolocation device (gps, nmea, etc.)
   nsresult StartDevice();
 

@@ -35,6 +35,7 @@
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Rob Campbell <rcampbell@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
+#   David Dahl <ddahl@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -548,9 +549,9 @@
             </menu>
           </hbox>
           <menuseparator class="appmenu-menuseparator"/>
-          <menu id="appmenu_developer"
-                label="&developerMenu.label;">
-            <menupopup id="appmenu_developer_popup">
+          <menu id="appmenu_webDeveloper"
+                label="&appMenuWebDeveloper.label;">
+            <menupopup id="appmenu_webDeveloper_popup">
               <menuitem id="appmenu_webConsole"
                         label="&webConsoleCmd.label;"
                         type="checkbox"
@@ -568,16 +569,20 @@
                         command="View:PageSource"
                         key="key_viewSource"/>
               <menuseparator/>
-#define ID_PREFIX appmenu_
+#define ID_PREFIX appmenu_developer_
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
               <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
                         type="checkbox"
+                        observes="workOfflineMenuitemState"
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
           </menu>
           <menuseparator class="appmenu-menuseparator"/>
+#define ID_PREFIX appmenu_
+#include browser-charsetmenu.inc
+#undef ID_PREFIX
           <menuitem id="appmenu_fullScreen"
                     class="menuitem-tooltip"
                     label="&fullScreenCmd.label;"
@@ -721,7 +726,7 @@
               <menu class="split-menuitem-menu"
                     label="&preferencesCmd.label;">
                 <menupopup id="appmenu_customizeMenu"
-                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleStatusbar'));">
+                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleTabsOnTop').previousSibling);">
                   <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                             label="&preferencesCmdUnix.label;"
@@ -730,10 +735,6 @@
 #endif
                             oncommand="openPreferences();"/>
                   <menuseparator/>
-                  <menuitem id="appmenu_toggleStatusbar"
-                            type="checkbox"
-                            command="cmd_toggleTaskbar"
-                            observes="toggle_taskbar"/>
                   <menuseparator/>
                   <menuitem id="appmenu_toggleTabsOnTop"
                             label="&viewTabsOnTop.label;"
@@ -761,6 +762,15 @@
                             label="&appMenuGettingStarted.label;"
                             oncommand="gBrowser.loadOneTab('http://www.mozilla.com/firefox/central/', {inBackground: false});"
                             onclick="checkForMiddleClick(this, event);"/>
+                  <menuitem id="appmenu_troubleshootingInfo"
+                            label="&helpTroubleshootingInfo.label;"
+                            oncommand="openTroubleshootingPage()"
+                            onclick="checkForMiddleClick(this,event);"/>
+                  <menuseparator/>
+                  <menuitem id="appmenu_safeMode"
+                            accesskey="&appMenuSafeMode.accesskey;"
+                            label="&appMenuSafeMode.label;"
+                            oncommand="safeModeRestart();"/>
                   <menuseparator/>
                   <menuitem id="appmenu_about"
                             label="&aboutProduct.label;"
@@ -940,7 +950,7 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
-          <progressmeter id="urlbar-progress" mode="normal"/>
+          <progressmeter id="urlbar-progress" mode="normal" value="0" collapsed="true"/>
           <toolbarbutton id="urlbar-go-button"
                          onclick="gURLBar.handleCommand(event);"
                          tooltiptext="&goEndCap.tooltip;"/>
@@ -1282,41 +1292,16 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
-    <statusbar class="chromeclass-status" id="status-bar"
-#ifdef WINCE
-               hidden="true"
-#endif
-               >
-      <statusbarpanel id="statusbar-display" label="" flex="1"/>
-      <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
-                      tooltiptext="&downloadMonitor2.tooltip;" hidden="true"
-                      command="Tools:Downloads"/>
-      <statusbarpanel id="security-button" class="statusbarpanel-iconic"
-                      hidden="true"
-                      onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
-#ifdef MOZ_SERVICES_SYNC
-      <statusbarpanel id="sync-notifications-button"
-                      class="statusbarpanel-iconic-text"
-                      hidden="true"
-                      popup="sync-notifications-panel">
-      </statusbarpanel>
-      <panel id="sync-notifications-panel" position="before_end">
-          <notificationbox id="sync-notifications-box"/>
-      </panel>
-#endif
-      <statusbarpanel id="page-report-button" type="menu"
-                      class="statusbarpanel-menu-iconic"
-                      hidden="true"
-                      tooltiptext="&pageReportIcon.tooltip;">
-        <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
-          <menuitem observes="blockedPopupAllowSite"/>
-          <menuitem observes="blockedPopupEditSettings"/>
-          <menuitem observes="blockedPopupDontShowMessage"/>
-          <menuseparator observes="blockedPopupsSeparator"/>
-        </menupopup>
-      </statusbarpanel>
-    </statusbar>
+    <toolbar id="addon-bar" toolbarname="&addonBarCmd.label;" collapsed="true"
+             class="toolbar-primary chromeclass-toolbar"
+             context="toolbar-context-menu" toolboxid="navigator-toolbox"
+             mode="icons" iconsize="small" defaulticonsize="small"
+             lockiconsize="true"
+             customizable="true" align="right">
+      <statusbar id="status-bar"/>
+    </toolbar>
   </vbox>
+
 #ifndef XP_UNIX
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">

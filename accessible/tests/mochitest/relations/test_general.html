@@ -85,6 +85,11 @@
       // 'default button' relation
       testRelation("input", RELATION_DEFAULT_BUTTON, "submit");
 
+      // output 'for' relations
+      testRelation("output", RELATION_CONTROLLED_BY, ["input", "input2"]);
+      testRelation("input", RELATION_CONTROLLER_FOR, "output");
+      testRelation("input2", RELATION_CONTROLLER_FOR, "output");
+
       // 'described by'/'description for' relation for html:table and
       // html:caption
       testRelation("caption", RELATION_DESCRIPTION_FOR, "table");
@@ -124,6 +129,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=475298"
      title="mochitests for accessible relations">
     Mozilla Bug 475298
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
+     title="make HTML <output> accessible">
+    Mozilla Bug 558036
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -189,9 +199,11 @@
   <span id="flowfrom1">flow from</span>
   <span id="flowfrom2">flow from</span>
 
-  <form>
+  <form id="form">
     <input id="input" />
+    <input id="input2" />
     <input type="submit" id="submit" />
+    <output id="output" style="display:block" for="input input2"></output>
   </form>
 
   <table id="table">

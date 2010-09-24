@@ -88,6 +88,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
+#include "nsIEventStateManager.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -1100,7 +1101,8 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled))
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if (eventStates & NS_EVENT_STATE_DISABLED)
     return NS_OK;
 
   return nsHTMLScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -1981,7 +1983,8 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_FALSE;
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if (eventStates & NS_EVENT_STATE_DISABLED) {
     return NS_OK;
   }
 
@@ -2190,7 +2193,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   UpdateInListState(aMouseEvent);
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if (eventStates & NS_EVENT_STATE_DISABLED) {
     return NS_OK;
   }
 
@@ -2496,7 +2500,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ASSERTION(aKeyEvent, "keyEvent is null.");
 
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled))
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if (eventStates & NS_EVENT_STATE_DISABLED)
     return NS_OK;
 
   // Start by making sure we can query for a key event

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if input has a disabled fieldset ancestor, it is barred from
+             constraint validation and should not be affected by :invalid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <fieldset disabled>
+      <fieldset>
+        <input class='notinvalid' required>
+      </fieldset>
+    </fieldset>
+  </body>
+</html>

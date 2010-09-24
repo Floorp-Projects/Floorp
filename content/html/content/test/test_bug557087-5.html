@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557087
+-->
+<head>
+  <title>Test for Bug 557087</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557087">Mozilla Bug 557087</a>
+<p id="display"></p>
+<div id="content">
+  <iframe name='t'></iframe>
+  <form target='t' action="data:text/html,">
+    <fieldset disabled>
+      <fieldset>
+        <input name='i' value='i'>
+        <textarea name='t'>t</textarea>
+        <select name='s'><option>s</option></select>
+      </fieldset>
+    </fieldset>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 557087 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var testResults = [
+  "data:text/html,?",
+  "data:text/html,?",
+  "data:text/html,?i=i&t=t&s=s",
+  "data:text/html,?i=i&t=t&s=s",
+];
+var gTestCount = 0;
+
+var form = document.forms[0];
+var iframe = document.getElementsByTagName('iframe')[0];
+var fieldsets = document.getElementsByTagName('fieldset');
+
+function runTest()
+{
+  iframe.addEventListener("load", function() {
+    is(iframe.contentWindow.location.href, testResults[gTestCount],
+       testResults[gTestCount] + " should have been loaded");
+
+    switch (++gTestCount) {
+      case 1:
+        fieldsets[1].disabled = true;
+        fieldsets[0].disabled = false;
+        form.submit();
+        SimpleTest.executeSoon(function() {
+          form.submit()
+        });
+        break;
+      case 2:
+        fieldsets[0].disabled = false;
+        fieldsets[1].disabled = false;
+        SimpleTest.executeSoon(function() {
+          form.submit()
+        });
+        break;
+      case 3:
+        // Elements inside the first legend of a disabled fieldset are submittable.
+        fieldsets[0].disabled = true;
+        fieldsets[1].disabled = true;
+        var legend = document.createElement("legend");
+        fieldsets[0].appendChild(legend);
+        while (fieldsets[1].firstChild) {
+          legend.appendChild(fieldsets[1].firstChild);
+        }
+        SimpleTest.executeSoon(function() {
+          form.submit()
+        });
+        break;
+      default:
+        iframe.removeEventListener("load", arguments.callee, false);
+        SimpleTest.executeSoon(SimpleTest.finish);
+    }
+  }, false);
+
+  form.submit();
+}
+
+</script>
+</pre>
+</body>
+</html>

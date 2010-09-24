@@ -530,6 +530,7 @@ LayerManagerOGL::Render()
       mWidgetSize.height != height)
   {
     MakeCurrent(PR_TRUE);
+
     mWidgetSize.width = width;
     mWidgetSize.height = height;
   } else {
@@ -551,8 +552,10 @@ LayerManagerOGL::Render()
   const nsIntRect *clipRect = mRoot->GetClipRect();
 
   if (clipRect) {
-    mGLContext->fScissor(clipRect->x, clipRect->y,
-                         clipRect->width, clipRect->height);
+    nsIntRect r = *clipRect;
+    if (!mGLContext->IsDoubleBuffered())
+      mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
+    mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
     mGLContext->fScissor(0, 0, width, height);
   }
@@ -668,11 +671,39 @@ LayerManagerOGL::Render()
 void
 LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
 {
-  // Set the viewport correctly
+  // Set the viewport correctly.  Note that his viewport is used
+  // throughout the GL layers rendering pipeline, even when we're
+  // rendering to a FBO with different dimensions than the window.
+  // This means that we can set the viewMatrix once on every program
+  // (below).  When we render to a FBO (as in ContainerLayerOGL), we
+  // have to pass a correct child offset so that the coordinate system
+  // is translated appropriately to start at the origin of the FBO
+  // (or, put another way, so that the FBO looks to be at the right
+  // spot in the parent).
+  //
+  // Note: this effectively means that we can't really draw to a FBO
+  // that is bigger than the window dimensions.  This is fine for now,
+  // but might be a problem if we ever start doing GL drawing to
+  // retained layer FBOs that happen to retain more than is visible.
+  //
+  // When we're not double buffering, we use a FBO as our backbuffer.
+  // We use a normal view transform in that case, meaning that our FBO
+  // and all other FBOs look upside down.  We then do a Y-flip when
+  // we draw it into the window.
   mGLContext->fViewport(0, 0, aWidth, aHeight);
 
   // Matrix to transform to viewport space ( <-1.0, 1.0> topleft, 
-  // <1.0, -1.0> bottomright)
+  // <1.0, -1.0> bottomright).
+  //
+  // When we are double buffering, we change the view matrix around so
+  // that everything is right-side up; we're drawing directly into
+  // the window's back buffer, so this keeps things looking correct.
+  //
+  // XXX we could potentially always use the double-buffering view
+  // matrix and just change our single-buffer draw code.
+  //
+  // XXX we keep track of whether the window size changed, so we can
+  // skip this update if it hadn't since the last call.
   gfx3DMatrix viewMatrix;
   if (mGLContext->IsDoubleBuffered()) {
     /* If it's double buffered, we don't have a frontbuffer FBO,
@@ -870,6 +901,20 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
   *aTexture = tex;
 
   DEBUG_GL_ERROR_CHECK(gl());
+}
+
+void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
+{
+  if (aFilter == gfxPattern::FILTER_NEAREST) {
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+  } else {
+    if (aFilter != gfxPattern::FILTER_GOOD) {
+      NS_WARNING("Unsupported filter type!");
+    }
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  }
 }
 
 } /* layers */

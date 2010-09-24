@@ -43,10 +43,10 @@
 <!ENTITY syncKeyEntry.label        "Your Sync Key">
 <!ENTITY syncKeyEntry.accesskey    "K">
 <!ENTITY syncKeyGenerate.label     "Generate">
+<!ENTITY syncKeyStrength.label     "Strength:">
+<!ENTITY syncKeyHelp.label         "What does the strength mean?">
 <!ENTITY syncKeyBackup.description "Your Sync Key is required to access &syncBrand.fullName.label; on other machines. Please create a backup copy. We cannot help you recover your Sync Key.">
 
-<!ENTITY button.syncKeyBackup.email.label     "Email…">
-<!ENTITY button.syncKeyBackup.email.accesskey "E">
 <!ENTITY button.syncKeyBackup.print.label     "Print…">
 <!ENTITY button.syncKeyBackup.print.accesskey "P">
 <!ENTITY button.syncKeyBackup.save.label      "Save…">

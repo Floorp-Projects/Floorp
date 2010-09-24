@@ -635,8 +635,9 @@ HistoryMenu.prototype = {
       m.setAttribute("value", i);
       m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
 
-      // Set the targetURI attribute so it will be shown in tooltip and statusbar.
-      // SessionStore uses one-based indexes, so we need to normalize them.
+      // Set the targetURI attribute so it will be shown in tooltip and trigger
+      // onLinkHovered. SessionStore uses one-based indexes, so we need to
+      // normalize them.
       let tabData = undoItems[i].state;
       let activeIndex = (tabData.index || tabData.entries.length) - 1;
       if (activeIndex >= 0 && tabData.entries[activeIndex])
@@ -716,7 +717,7 @@ HistoryMenu.prototype = {
       m.setAttribute("class", "menuitem-iconic bookmark-item menuitem-with-favicon");
       m.setAttribute("oncommand", "undoCloseWindow(" + i + ");");
 
-      // Set the targetURI attribute so it will be shown in tooltip and statusbar.
+      // Set the targetURI attribute so it will be shown in tooltip.
       // SessionStore uses one-based indexes, so we need to normalize them.
       let activeIndex = (selectedTab.index || selectedTab.entries.length) - 1;
       if (activeIndex >= 0 && selectedTab.entries[activeIndex])
@@ -1164,9 +1165,7 @@ let BookmarksMenuButton = {
       // First popupshowing event, initialize immutable attributes.
       this._popupInitialized = true;
       // Update View bookmarks toolbar checkbox menuitem.
-      viewToolbar.setAttribute("toolbarindex",
-                               Array.indexOf(gNavToolbox.childNodes,
-                                             this.personalToolbar));
+      viewToolbar.setAttribute("toolbarId", this.personalToolbar.id);
 
       // Need to set the label on Unsorted Bookmarks menu.
       let unsortedBookmarksElt =

@@ -95,6 +95,7 @@ _TEST_FILES = \
 		$(warning test_bug507902.html temporarily disabled - see bug 510001) \
 		test_bug514732.html \
 		test_bug527306.html \
+		test_bug597333.html \
 		test_invalidate_during_plugin_paint.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \

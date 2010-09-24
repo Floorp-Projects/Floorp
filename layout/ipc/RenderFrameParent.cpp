@@ -89,8 +89,9 @@ SetTransformFor(ContainerLayer* aContainer, nsIFrame* aContainedFrame,
   // we set a compensating translation that moves the content document
   // pixels to where the user wants them to be.
   nsIntPoint scrollCompensation =
-    (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel) -
-     aMetrics.mViewportScrollOffset);
+    (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel));
+  scrollCompensation.x -= aMetrics.mViewportScrollOffset.x * aConfig.mXScale;
+  scrollCompensation.y -= aMetrics.mViewportScrollOffset.y * aConfig.mYScale;
   translation -= scrollCompensation;
 
   gfxMatrix transform;

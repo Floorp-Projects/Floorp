@@ -2032,8 +2032,13 @@ SessionStoreService.prototype = {
     let lastClosedWindowsCopy = this._closedWindows.slice();
 
 #ifndef XP_MACOSX
-    // if no non-popup browser window remains open, return the state of the last closed window(s)
-    if (nonPopupCount == 0 && lastClosedWindowsCopy.length > 0) {
+    // If no non-popup browser window remains open, return the state of the last
+    // closed window(s). We only want to do this when we're actually "ending"
+    // the session.
+    //XXXzpao We should do this for _restoreLastWindow == true, but that has
+    //        its own check for popups. c.f. bug 597619
+    if (nonPopupCount == 0 && lastClosedWindowsCopy.length > 0 &&
+        this._loadState == STATE_QUITTING) {
       // prepend the last non-popup browser window, so that if the user loads more tabs
       // at startup we don't accidentally add them to a popup window
       do {
@@ -2321,8 +2326,15 @@ SessionStoreService.prototype = {
       browser.userTypedValue = activePageData ? activePageData.url || null : null;
 
       // If the page has a title, set it.
-      if (activePageData && activePageData.title)
-        tab.label = activePageData.title;
+      if (activePageData) {
+        if (activePageData.title) {
+          tab.label = activePageData.title;
+          tab.crop = "end";
+        } else if (activePageData.url != "about:blank") {
+          tab.label = activePageData.url;
+          tab.crop = "center";
+        }
+      }
     }
     
     if (aTabs.length > 0) {

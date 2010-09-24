@@ -75,6 +75,7 @@ let Change = {
     this._dialogType = window.arguments[0];
     this._status = document.getElementById("status");
     this._statusIcon = document.getElementById("statusIcon");
+    this._statusRow = document.getElementById("statusRow");
     this._firstBox = document.getElementById("textBox1");
     this._secondBox = document.getElementById("textBox2");
 
@@ -173,6 +174,7 @@ let Change = {
     let passphrase = gSyncUtils.generatePassphrase();
     let el = document.getElementById("passphraseBox");
     el.value = gSyncUtils.hyphenatePassphrase(passphrase);
+    document.getElementById("passphraseStrengthRow").hidden = true;
     this._dialog.getButton("accept").disabled = false;
   },
 
@@ -234,10 +236,13 @@ let Change = {
         [valid, errorString] = gSyncUtils.validatePassword(this._firstBox, this._secondBox);
     }
     else {
-      if (this._updatingPassphrase)
+      if (this._updatingPassphrase) {
         [valid, errorString] = gSyncUtils.validatePassphrase(this._passphraseBox);
-      else
+      } else {
         [valid, errorString] = gSyncUtils.validatePassphrase(this._passphraseBox, true);
+        if (valid)
+          this.displayPassphraseStrength();
+      }
     }
 
     if (errorString == "")
@@ -245,7 +250,23 @@ let Change = {
     else
       this._updateStatusWithString(errorString, "error");
 
+    this._statusRow.hidden = valid;
     this._dialog.getButton("accept").disabled = !valid;
+  },
+
+  displayPassphraseStrength: function () {
+    let bits = Weave.Utils.passphraseStrength(this._passphraseBox.value);
+    let meter = document.getElementById("passphraseStrength");
+    meter.value = bits;
+    // The generated 20 character passphrase has an entropy of 94 bits
+    // which we consider "strong".
+    if (bits > 94)
+      meter.className = "strong";
+    else if (bits > 47)
+      meter.className = "medium";
+    else
+      meter.className = "";
+    document.getElementById("passphraseStrengthRow").hidden = false;
   },
 
   _str: function Change__string(str) {

@@ -4,6 +4,8 @@ pref("services.sync.userURL", "user/");
 pref("services.sync.miscURL", "misc/");
 pref("services.sync.termsURL", "https://services.mozilla.com/tos/");
 pref("services.sync.privacyURL", "https://services.mozilla.com/privacy-policy/");
+pref("services.sync.statusURL", "https://services.mozilla.com/status/");
+pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey");
 
 pref("services.sync.lastversion", "firstrun");
 pref("services.sync.autoconnect", true);

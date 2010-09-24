@@ -70,8 +70,10 @@
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
           <xul:notificationbox flex="1">
-            <xul:browser flex="1" type="content-primary" message="true" disablehistory="true"
-                         xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+            <xul:stack flex="1" anonid="browserStack">
+              <xul:browser type="content-primary" message="true" disablehistory="true"
+                           xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+            </xul:stack>
           </xul:notificationbox>
         </xul:tabpanels>
       </xul:tabbox>
@@ -276,7 +278,7 @@
         <parameter name="aBrowser"/>
         <body>
           <![CDATA[
-            return (aBrowser || this.mCurrentBrowser).parentNode;
+            return (aBrowser || this.mCurrentBrowser).parentNode.parentNode;
           ]]>
         </body>
       </method>
@@ -341,7 +343,7 @@
             mBrowser: aBrowser,
             mBlank: aStartsBlank,
 
-            // cache flags for correct status bar update after tab switching
+            // cache flags for correct status UI update after tab switching
             mStateFlags: 0,
             mStatus: 0,
             mMessage: "",
@@ -888,6 +890,9 @@
       <method name="_tabAttrModified">
         <parameter name="aTab"/>
         <body><![CDATA[
+          if (this._removingTabs.indexOf(aTab) > -1)
+            return;
+
           // This event should be dispatched when any of these attributes change:
           // label, crop, busy, image, selected
           var event = document.createEvent("Events");
@@ -1192,13 +1197,20 @@
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
+            // Create the browserStack container
+            var stack = document.createElementNS(
+                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                    "stack");
+            stack.setAttribute("anonid", "browserStack");
+            stack.appendChild(b);
+            stack.setAttribute("flex", "1");
+
             // Add the Message and the Browser to the box
             var notificationbox = document.createElementNS(
                                     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                     "notificationbox");
             notificationbox.setAttribute("flex", "1");
-            notificationbox.appendChild(b);
-            b.setAttribute("flex", "1");
+            notificationbox.appendChild(stack);
 
             var position = this.tabs.length - 1;
             var uniqueId = "panel" + Date.now() + position;
@@ -1580,12 +1592,12 @@
             // (see below), which would be hindered by the potentially expensive
             // browser removal. So we remove the browser and the panel in two
             // steps.
-            var panel = browser.parentNode;
+            var panel = browser.parentNode.parentNode;
 
             // This will unload the document. An unload handler could remove
             // dependant tabs, so it's important that the tabbrowser is now in
             // a consistent state (tab removed, tab positions updated, etc.).
-            panel.removeChild(browser);
+            panel.removeChild(browser.parentNode);
 
             // As the browser is removed, the removal of a dependent document can
             // cause the whole window to close. So at this point, it's possible
@@ -2358,7 +2370,7 @@
 
       <constructor>
         <![CDATA[
-          this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild;
+          this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild.firstChild;
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
 

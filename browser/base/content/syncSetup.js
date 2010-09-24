@@ -321,6 +321,7 @@ var gSyncSetup = {
 
     el = document.getElementById("generatePassphraseButton");
     el.hidden = true;
+    document.getElementById("passphraseStrengthRow").hidden = true;
     let feedback = document.getElementById("passphraseFeedbackRow");
     this._setFeedback(feedback, true, "");
   },
@@ -344,6 +345,23 @@ var gSyncSetup = {
 
     let feedback = document.getElementById("passphraseFeedbackRow");
     this._setFeedback(feedback, valid, str);
+    if (!valid)
+      return valid;
+
+    // Display passphrase strength
+    let pp = document.getElementById("weavePassphrase").value;
+    let bits = Weave.Utils.passphraseStrength(pp);
+    let meter = document.getElementById("passphraseStrength");
+    meter.value = bits;
+    // The generated 20 character passphrase has an entropy of 94 bits
+    // which we consider "strong".
+    if (bits > 94)
+      meter.className = "strong";
+    else if (bits > 47)
+      meter.className = "medium";
+    else
+      meter.className = "";
+    document.getElementById("passphraseStrengthRow").hidden = false;
     return valid;
   },
 

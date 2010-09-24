@@ -613,18 +613,13 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
   AutoResetInShow resetInShow(this);
   mInShow = PR_TRUE;
 
-  nsContentType contentType;
-
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
 
 #ifdef MOZ_IPC
-  if (mRemoteFrame) {
-    contentType = eContentTypeContent;
-  }
-  else
+  if (!mRemoteFrame)
 #endif
   {
     if (!mDocShell)
@@ -643,22 +638,6 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
                                          scrollbarPrefX);
       sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
                                          scrollbarPrefY);
-    }
-
-
-    nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
-    NS_ASSERTION(treeItem,
-                 "Found a nsIDocShell that isn't a nsIDocShellTreeItem.");
-
-    PRInt32 itemType;
-    treeItem->GetItemType(&itemType);
-
-    if (itemType == nsIDocShellTreeItem::typeChrome)
-      contentType = eContentTypeUI;
-    else {
-      nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-      treeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
-      contentType = sameTypeParent ? eContentTypeContentFrame : eContentTypeContent;
     }
   }
 

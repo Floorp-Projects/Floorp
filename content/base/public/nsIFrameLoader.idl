@@ -139,7 +139,7 @@ interface nsIFrameLoader : nsISupports
    * such a way that the <browser>'s visible rect encloses pixels that
    * the content document does not (yet) define.
    *
-   * The viewport scroll values are in units of content-document CSS
+   * The viewport scroll values are in units of chrome-document CSS
    * pixels.
    *
    * These APIs are designed to be used with nsIDOMWindowUtils

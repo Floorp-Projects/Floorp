@@ -45,23 +45,23 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
-  Cu.import("resource://gre/modules/HUDService.jsm");
   try {
-    return HUDService;
+    Cu.import("resource://gre/modules/HUDService.jsm");
   }
   catch (ex) {
     dump(ex + "\n");
   }
+  return HUDService;
 });
 
 XPCOMUtils.defineLazyGetter(this, "ConsoleUtils", function () {
-  Cu.import("resource://gre/modules/HUDService.jsm");
   try {
-    return ConsoleUtils;
+    Cu.import("resource://gre/modules/HUDService.jsm");
   }
   catch (ex) {
     dump(ex + "\n");
   }
+  return ConsoleUtils;
 });
 
 let log = function _log(msg) {
@@ -87,8 +87,6 @@ const TEST_ENCODING_ISO_8859_1 = "http://example.com/browser/toolkit/components/
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
 }
-
-content.location.href = TEST_URI;
 
 function testRegistries() {
   var displaysIdx = HUDService.displaysIndex();
@@ -224,6 +222,15 @@ function testConsoleLoggingAPI(aMethod)
   HUDService.clearDisplay(hudId);
   setStringFilter("");
 
+  // test for case insensitivity
+  setStringFilter("FOO");
+  browser.contentWindow.wrappedJSObject.console[aMethod]("foo-bar-baz");
+  browser.contentWindow.wrappedJSObject.console[aMethod]("bar-baz");
+  count = outputNode.querySelectorAll(".hud-filtered-by-string").length;
+  is(count, 1, "1 hidden " + aMethod + " node found");
+  HUDService.clearDisplay(hudId);
+  setStringFilter("");
+
   // test for multiple arguments.
   HUDService.clearDisplay(hudId);
   HUDService.setFilterState(hudId, aMethod, true);
@@ -246,7 +253,7 @@ function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
       return;
     }
   }
-  throw new Error(aSuccessErrObj.err);
+  ok(false, aSuccessErrObj.err);
 }
 
 // test network logging
@@ -627,6 +634,7 @@ function testNetworkPanel()
     var httpActivity = {
       url: "http://www.testpage.com",
       method: "GET",
+      body: null,
 
       panels: [],
       request: {
@@ -1363,6 +1371,7 @@ browser = gBrowser.getBrowserForTab(tab);
 
 function test() {
   waitForExplicitFinish();
+  content.location.href = TEST_URI;
   browser.addEventListener("DOMContentLoaded", function onLoad(event) {
     browser.removeEventListener("DOMContentLoaded", onLoad, false);
 
