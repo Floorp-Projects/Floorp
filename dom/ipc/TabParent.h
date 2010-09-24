@@ -179,7 +179,9 @@ public:
 
     static TabParent *GetIMETabParent() { return mIMETabParent; }
     bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
+    bool SendCompositionEvent(const nsCompositionEvent& event);
     bool SendTextEvent(const nsTextEvent& event);
+    bool SendSelectionEvent(const nsSelectionEvent& event);
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         PRBool aSync,
@@ -224,10 +226,12 @@ protected:
     nsString mIMECacheText;
     PRUint32 mIMESelectionAnchor;
     PRUint32 mIMESelectionFocus;
+    PRPackedBool mIMEComposing;
     PRPackedBool mIMECompositionEnding;
     // Buffer to store composition text during ResetInputState
     // Compositions in almost all cases are small enough for nsAutoString
     nsAutoString mIMECompositionText;
+    PRUint32 mIMECompositionStart;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;

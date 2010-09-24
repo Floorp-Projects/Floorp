@@ -216,6 +216,7 @@ private:
   // IME
   nsIMEUpdatePreference mIMEPreference;
   PRPackedBool mIMEComposing;
+  PRPackedBool mIMESuppressNotifySel;
 };
 
 }  // namespace widget
