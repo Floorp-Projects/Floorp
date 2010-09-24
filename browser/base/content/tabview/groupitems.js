@@ -910,7 +910,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           return;
 
         GroupItems.setActiveGroupItem(self);
-        GroupItems._updateTabBar();
         UI.goToTab(iQ(this).data("xulTab"));
       });
 
