@@ -209,7 +209,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
 
         JSBool retval = true;
         JSObject *pobj = NULL;
-        uintN flags = cx->resolveFlags | (set ? JSRESOLVE_ASSIGNING : 0);
+        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
                                                                          flags, &pobj, &retval);
         if (NS_FAILED(rv)) {
@@ -220,7 +220,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         }
 
         if (pobj)
-            return JS_GetPropertyDescriptorById(cx, pobj, id, cx->resolveFlags, desc);
+            return JS_GetPropertyDescriptorById(cx, pobj, id, flags, desc);
     }
 
     // There are no native numeric properties, so we can shortcut here. We will not
@@ -411,7 +411,7 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     if (!getOwnPropertyDescriptor(cx, wrapper, id, true, &existing_desc))
         return false;
 
-    if (existing_desc.attrs & JSPROP_PERMANENT)
+    if (existing_desc.obj && (existing_desc.attrs & JSPROP_PERMANENT))
         return true; // XXX throw?
 
     JSPropertyDescriptor *jsdesc = Jsvalify(desc);
