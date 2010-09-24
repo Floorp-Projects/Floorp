@@ -198,7 +198,7 @@ enum CompileStatus
 void JS_FASTCALL
 ProfileStubCall(VMFrame &f);
 
-CompileStatus
+CompileStatus JS_NEVER_INLINE
 TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
 
 void
