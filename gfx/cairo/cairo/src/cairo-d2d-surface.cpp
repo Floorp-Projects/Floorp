@@ -3063,6 +3063,60 @@ _cairo_d2d_mask(void			*surface,
 
     cairo_int_status_t status;
 
+    status = (cairo_int_status_t)_cairo_surface_mask_extents (&d2dsurf->base,
+		    op, source,
+		    mask,
+		    clip, &extents);
+    if (unlikely (status))
+	    return status;
+
+
+    D2D1_RECT_F rect = D2D1::RectF(0,
+				   0,
+				   (FLOAT)d2dsurf->rt->GetPixelSize().width,
+				   (FLOAT)d2dsurf->rt->GetPixelSize().height);
+
+    rect.left = (FLOAT)extents.x;
+    rect.right = (FLOAT)(extents.x + extents.width);
+    rect.top = (FLOAT)extents.y;
+    rect.bottom = (FLOAT)(extents.y + extents.height);
+
+    bool isSolidAlphaMask = false;
+    float solidAlphaValue = 1.0f;
+
+    if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
+	cairo_solid_pattern_t *solidPattern =
+	    (cairo_solid_pattern_t*)mask;
+	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
+	    isSolidAlphaMask = true;
+	    solidAlphaValue = solidPattern->color.alpha;
+	}
+    }
+
+    if (isSolidAlphaMask) {
+	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    const cairo_surface_pattern_t *surf_pattern = 
+		reinterpret_cast<const cairo_surface_pattern_t*>(source);
+	    cairo_box_t box;
+	    _cairo_box_from_rectangle(&box, &extents);
+	    cairo_int_status_t rv = _cairo_d2d_try_fastblit(d2dsurf,
+							    surf_pattern->surface,
+							    &box,
+							    &source->matrix,
+							    clip,
+							    op,
+							    solidAlphaValue);
+	    if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
+		return rv;
+	    }
+	}
+    }
+
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source);
+    if (!brush) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
@@ -3081,44 +3135,16 @@ _cairo_d2d_mask(void			*surface,
     }
 #endif
 
-    status = (cairo_int_status_t)_cairo_surface_mask_extents (&d2dsurf->base,
-		    op, source,
-		    mask,
-		    clip, &extents);
-    if (unlikely (status))
-	    return status;
+    if (isSolidAlphaMask) {
+	brush->SetOpacity(solidAlphaValue);
+	target_rt->FillRectangle(rect,
+				 brush);
+	brush->SetOpacity(1.0);
 
-
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source);
-    if (!brush) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    D2D1_RECT_F rect = D2D1::RectF(0,
-				   0,
-				   (FLOAT)d2dsurf->rt->GetPixelSize().width,
-				   (FLOAT)d2dsurf->rt->GetPixelSize().height);
-
-    rect.left = (FLOAT)extents.x;
-    rect.right = (FLOAT)(extents.x + extents.width);
-    rect.top = (FLOAT)extents.y;
-    rect.bottom = (FLOAT)(extents.y + extents.height);
-
-
-    if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
-	cairo_solid_pattern_t *solidPattern =
-	    (cairo_solid_pattern_t*)mask;
-	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
-	    brush->SetOpacity((FLOAT)solidPattern->color.alpha);
-	    target_rt->FillRectangle(rect,
-				     brush);
-	    brush->SetOpacity(1.0);
-
-	    if (target_rt.get() != d2dsurf->rt.get()) {
-		return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
-	    }
-	    return CAIRO_INT_STATUS_SUCCESS;
+	if (target_rt.get() != d2dsurf->rt.get()) {
+	    return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
 	}
+	return CAIRO_INT_STATUS_SUCCESS;
     }
 
     RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, mask, true);
