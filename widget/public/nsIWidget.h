@@ -117,10 +117,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// 36762512-d533-4884-9ac3-4ada8594146c
+// 8bd36c8c-8218-4859-bfbc-ca5d78b52f7d
 #define NS_IWIDGET_IID \
-  { 0x36762512, 0xd533, 0x4884, \
-    { 0x9a, 0xc3, 0x4a, 0xda, 0x85, 0x94, 0x14, 0x6c } }
+  { 0x8bd36c8c, 0x8218, 0x4859, \
+    { 0xbf, 0xbc, 0xca, 0x5d, 0x78, 0xb5, 0x2f, 0x7d } }
 
 /*
  * Window shadow styles
@@ -186,6 +186,38 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
+};
+
+
+/**
+ * Preference for receiving IME updates
+ *
+ * If mWantUpdates is true, PuppetWidget will forward
+ * nsIWidget::OnIMETextChange and nsIWidget::OnIMESelectionChange to the chrome
+ * process. This incurs overhead from observers and IPDL. If the IME
+ * implementation on a particular platform doesn't care about OnIMETextChange
+ * and OnIMESelectionChange from content processes, they should set
+ * mWantUpdates to false to avoid these overheads.
+ *
+ * If mWantHints is true, PuppetWidget will forward the content of text fields
+ * to the chrome process to be cached. This way we return the cached content
+ * during query events. (see comments in bug 583976). This only makes sense
+ * for IME implementations that do use query events, otherwise there's a
+ * significant overhead. Platforms that don't use query events should set
+ * mWantHints to false.
+ */
+struct nsIMEUpdatePreference {
+
+  nsIMEUpdatePreference()
+    : mWantUpdates(PR_FALSE), mWantHints(PR_FALSE)
+  {
+  }
+  nsIMEUpdatePreference(PRBool aWantUpdates, PRBool aWantHints)
+    : mWantUpdates(aWantUpdates), mWantHints(aWantHints)
+  {
+  }
+  PRPackedBool mWantUpdates;
+  PRPackedBool mWantHints;
 };
 
 
@@ -1219,6 +1251,11 @@ class nsIWidget : public nsISupports {
      * Selection has changed in the focused node
      */
     NS_IMETHOD OnIMESelectionChange(void) = 0;
+
+    /*
+     * Retrieves preference for IME updates
+     */
+    virtual nsIMEUpdatePreference GetIMEUpdatePreference() = 0;
 
     /*
      * Call this method when a dialog is opened which has a default button.
