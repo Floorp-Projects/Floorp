@@ -376,9 +376,11 @@ Chunk::init(JSRuntime *rt)
     Arena<FreeCell> *last = &arenas[JS_ARRAY_LENGTH(arenas) - 1];
     while (arena < last) {
         arena->header()->next = arena + 1;
+        arena->header()->isUsed = false;
         ++arena;
     }
     last->header()->next = NULL;
+    last->header()->isUsed = false;
     info.numFree = ArenasPerChunk;
 }
 
@@ -528,7 +530,7 @@ PickChunk(JSContext *cx)
         return NULL;
 
     /*
-     * FIXME bug 583732 - chunk is newly allocated and cannot present in
+     * FIXME bug 583732 - chunk is newly allocated and cannot be present in
      * the table so using ordinary lookupForAdd is suboptimal here.
      */
     GCChunkSet::AddPtr p = rt->gcChunkSet.lookupForAdd(chunk);
