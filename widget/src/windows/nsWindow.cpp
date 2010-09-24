@@ -6874,6 +6874,20 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
                 PR_TRUE);
     } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
       w->Move(configuration.mBounds.x, configuration.mBounds.y);
+
+
+      if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+          gfxWindowsPlatform::RENDER_DIRECT2D ||
+          GetLayerManager()->GetBackendType() != LayerManager::LAYERS_BASIC) {
+        // XXX - Workaround for Bug 587508. This will invalidate the part of the
+        // plugin window that might be touched by moving content somehow. The
+        // underlying problem should be found and fixed!
+        nsIntRegion r;
+        r.Sub(bounds, configuration.mBounds);
+        r.MoveBy(-bounds.x,
+                 -bounds.y);
+        w->Invalidate(r.GetBounds(), PR_FALSE);
+      }
     }
     rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
