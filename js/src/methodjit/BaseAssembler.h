@@ -145,6 +145,14 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegiste
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
 #endif
 
+    bool addressUsesRegister(Address address, RegisterID reg) {
+        return address.base == reg;
+    }
+
+    bool addressUsesRegister(BaseIndex address, RegisterID reg) {
+        return (address.base == reg) || (address.index == reg);
+    }
+
     size_t distanceOf(Label l) {
         return differenceBetween(startLabel, l);
     }
