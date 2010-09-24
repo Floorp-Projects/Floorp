@@ -449,9 +449,14 @@ function handleLoad() {
 
         // Housekeeping: change it back to the original login4. Actually,
         // just delete it and we'll re-add it as the next test.
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                      "mochiuser3", "mochipass3-new", "", "");
-        pwmgr.removeLogin(tmpLogin);
+        function clearIt() {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+            tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                          "mochiuser3", "mochipass3-new", "", "");
+            pwmgr.removeLogin(tmpLogin);
+        }
+        setTimeout(clearIt, 0);
+
         // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
         var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
                       getService(Ci.nsIHttpAuthManager);
@@ -474,7 +479,11 @@ function handleLoad() {
         clickPopupButton(popup, kRememberButton);
         popup.remove();
         
-        finishTest();
+        function finishIt() {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+            finishTest();
+        }
+        setTimeout(finishIt, 0);
         break;
 
     default:
