@@ -55,6 +55,7 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsvalue.h"
+#include "jscell.h"
 
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
@@ -66,6 +67,8 @@ enum {
     INT_STRING_LIMIT         = 256U,
     NUM_HUNDRED_STRINGS      = 156U
 };
+
+extern JSStringFinalizeOp str_finalizers[8];
 
 extern jschar *
 js_GetDependentStringChars(JSString *str);
@@ -128,7 +131,7 @@ struct JSString {
 
     friend JSAtom *
     js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
-
+ public:
     /*
      * Not private because we want to be able to use static
      * initializers for them. Don't use these directly!
@@ -196,7 +199,14 @@ struct JSString {
         return (mLengthAndFlags & flag) != 0;
     }
 
-  public:
+    inline js::gc::Cell *asCell() {
+        return reinterpret_cast<js::gc::Cell *>(this);
+    }
+    
+    inline js::gc::FreeCell *asFreeCell() {
+        return reinterpret_cast<js::gc::FreeCell *>(this);
+    }
+
     /*
      * Generous but sane length bound; the "-1" is there for comptibility with
      * OOM tests.
@@ -525,6 +535,8 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *length2String(jschar c1, jschar c2);
     static JSString *intString(jsint i);
+    
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
 };
 
 /*
@@ -532,7 +544,7 @@ struct JSString {
  * mallocing the string buffer for a small string. We keep 2 string headers'
  * worth of space in short strings so that more strings can be stored this way.
  */
-struct JSShortString {
+struct JSShortString : js::gc::Cell {
     JSString mHeader;
     JSString mDummy;
 
@@ -561,6 +573,8 @@ struct JSShortString {
     static inline bool fitsIntoShortString(size_t length) {
         return length <= MAX_SHORT_STRING_LENGTH;
     }
+    
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
 };
 
 /*
@@ -706,8 +720,6 @@ JS_STATIC_ASSERT(JSString::TOP_NODE & JSString::ROPE_BIT);
 
 JS_STATIC_ASSERT(((JSString::MAX_LENGTH << JSString::FLAGS_LENGTH_SHIFT) >>
                    JSString::FLAGS_LENGTH_SHIFT) == JSString::MAX_LENGTH);
-
-JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
 
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);

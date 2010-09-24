@@ -132,6 +132,7 @@ CPPSRCS		= \
 		jsgc.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
+		jscompartment.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -185,8 +186,10 @@ INSTALLED_HEADERS = \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
+		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
+		jscompartment.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \

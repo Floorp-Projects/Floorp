@@ -99,6 +99,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * Asserts to verify assumptions behind pn_ macros.
@@ -314,7 +315,7 @@ Parser::trace(JSTracer *trc)
 {
     JSObjectBox *objbox = traceListHead;
     while (objbox) {
-        JS_CALL_OBJECT_TRACER(trc, objbox->object, "parser.object");
+        MarkObject(trc, *objbox->object, "parser.object");
         objbox = objbox->traceLink;
     }
 }

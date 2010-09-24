@@ -103,6 +103,7 @@
 
 namespace nanojit {
 using namespace js;
+using namespace js::gc;
 
 /* Implement embedder-specific nanojit members. */
 
@@ -2929,7 +2930,7 @@ MarkTree(JSTracer* trc, TreeFragment *f)
         Value &v = *vp++;
         JS_SET_TRACING_NAME(trc, "jitgcthing");
         JS_ASSERT(v.isMarkable());
-        Mark(trc, v.asGCThing(), v.gcKind());
+        MarkGCThing(trc, v.toGCThing(), v.gcKind());
     }
     const Shape** shapep = f->shapes.data();
     len = f->shapes.length();

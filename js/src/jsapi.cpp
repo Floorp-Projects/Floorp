@@ -106,6 +106,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 class AutoVersionAPI
 {
@@ -2083,7 +2084,7 @@ JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
     JS_ASSERT(thing);
-    Mark(trc, thing, kind);
+    MarkKind(trc, thing, kind);
 }
 
 #ifdef DEBUG
@@ -2579,7 +2580,7 @@ JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
     JS_ASSERT(thing);
     JS_ASSERT(!cx->runtime->gcMarkingTracer);
-    return js_IsAboutToBeFinalized(thing);
+    return IsAboutToBeFinalized(thing);
 }
 
 JS_PUBLIC_API(void)
@@ -2953,6 +2954,11 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     JSCompartment *compartment = NewCompartment(cx, principals);
     if (!compartment)
         return NULL;
+
+    if (!compartment->init()) {
+        delete compartment;
+        return NULL;
+    }
 
     JSCompartment *saved = cx->compartment;
     cx->compartment = compartment;

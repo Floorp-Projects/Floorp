@@ -75,6 +75,49 @@ JSString::intString(jsint i)
     return JSString::intStringTable[u];
 }
 
+inline void
+JSString::finalize(JSContext *cx, unsigned thingKind) {
+    if (JS_LIKELY(thingKind == js::gc::FINALIZE_STRING)) {
+        JS_ASSERT(!JSString::isStatic(this));
+        JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+        if (isDependent()) {
+            JS_ASSERT(dependentBase());
+            JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
+        } else if (isFlat()) {
+            /*
+             * flatChars for stillborn string is null, but cx->free checks
+             * for a null pointer on its own.
+             */
+            cx->free(flatChars());
+        } else if (isTopNode()) {
+            cx->free(topNodeBuffer());
+        }
+    } else {
+        unsigned type = thingKind - js::gc::FINALIZE_EXTERNAL_STRING0;
+        JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
+        JS_ASSERT(!isStatic(this));
+        JS_ASSERT(isFlat());
+        JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+
+        /* A stillborn string has null chars. */
+        jschar *chars = flatChars();
+        if (!chars)
+            return;
+        JSStringFinalizeOp finalizer = str_finalizers[type];
+        if (finalizer)
+            finalizer(cx, this);
+    }
+}
+
+inline void
+JSShortString::finalize(JSContext *cx, unsigned thingKind)
+{
+    JS_ASSERT(js::gc::FINALIZE_SHORT_STRING == thingKind);
+    JS_ASSERT(!JSString::isStatic(header()));
+    JS_ASSERT(header()->isFlat());
+    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+}
+
 inline
 JSRopeBuilder::JSRopeBuilder(JSContext *cx)
   : cx(cx), mStr(cx->runtime->emptyString) {}

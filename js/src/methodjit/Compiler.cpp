@@ -52,6 +52,7 @@
 #include "FrameState-inl.h"
 #include "jsscriptinlines.h"
 #include "InlineFrameAssembler.h"
+#include "jscompartment.h"
 
 #include "jsautooplen.h"
 

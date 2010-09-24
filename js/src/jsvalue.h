@@ -600,7 +600,7 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    void *asGCThing() const {
+    void *toGCThing() const {
         JS_ASSERT(isGCThing());
         return JSVAL_TO_GCTHING_IMPL(data);
     }

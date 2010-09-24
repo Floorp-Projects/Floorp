@@ -51,6 +51,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 namespace js {
 

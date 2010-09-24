@@ -83,6 +83,7 @@
 #define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
 using namespace js;
+using namespace js::gc;
 
 static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
