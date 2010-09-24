@@ -1,0 +1,17 @@
+<!DOCTYPE HTML><html><head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<textarea maxlength="3"></textarea>
+<script>
+  var t = document.querySelector("textarea");
+  t.focus();
+
+  synthesizeKey("a", {});
+  synthesizeKey("b", {});
+  synthesizeKey("VK_ENTER", {});
+  synthesizeKey("c", {});
+</script>
+</body>
+</html>
