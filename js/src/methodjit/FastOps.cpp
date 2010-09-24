@@ -609,7 +609,11 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     stubcc.masm.lea(addr, Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
+#if defined JS_NUNBOX32
     masm.storePayload(data, addr);
+#elif defined JS_PUNBOX64
+    masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), data, addr);
+#endif
 
     if (!post && !popped)
         frame.pushInt32(data);
@@ -1241,15 +1245,7 @@ mjit::Compiler::jsop_setelem()
         frame.eviscerate(id);
 
         /* Perform the store. */
-        if (fe->isConstant()) {
-            masm.storeValue(fe->getValue(), slot);
-        } else {
-            masm.storePayload(frame.tempRegForData(fe), slot);
-            if (fe->isTypeKnown())
-                masm.storeTypeTag(ImmType(fe->getKnownType()), slot);
-            else
-                masm.storeTypeTag(frame.tempRegForType(fe), slot);
-        }
+        frame.storeTo(fe, slot);
     } else {
         RegisterID idReg = maybeIdReg.reg();
 
@@ -1299,11 +1295,11 @@ mjit::Compiler::jsop_setelem()
 
         /* Update the array length if needed. Don't worry about overflow. */
         Address arrayLength(baseReg, offsetof(JSObject, fslots[JSObject::JSSLOT_ARRAY_LENGTH]));
-        stubcc.masm.loadPayload(arrayLength, T1);
+        stubcc.masm.load32(arrayLength, T1);
         Jump underLength = stubcc.masm.branch32(Assembler::LessThan, idReg, T1);
         stubcc.masm.move(idReg, T1);
         stubcc.masm.add32(Imm32(1), T1);
-        stubcc.masm.storePayload(T1, arrayLength);
+        stubcc.masm.store32(T1, arrayLength);
         underLength.linkTo(stubcc.masm.label(), &stubcc.masm);
 
         /* Restore the dslots register if we clobbered it with the object. */
@@ -1325,12 +1321,19 @@ mjit::Compiler::jsop_setelem()
         /* Perform the store. */
         if (fe->isConstant()) {
             masm.storeValue(fe->getValue(), slot);
+        } else if (fe->isTypeKnown()) {
+            masm.storeValueFromComponents(ImmType(fe->getKnownType()),
+                                          frame.tempRegForData(fe), slot);
         } else {
+#if defined JS_NUNBOX32
+            masm.storeTypeTag(frame.tempRegForType(fe), slot);
             masm.storePayload(frame.tempRegForData(fe), slot);
-            if (fe->isTypeKnown())
-                masm.storeTypeTag(ImmType(fe->getKnownType()), slot);
-            else
-                masm.storeTypeTag(frame.tempRegForType(fe), slot);
+#elif defined JS_PUNBOX64
+            RegisterID dreg = frame.tempRegForData(fe);
+            frame.pinReg(dreg);
+            masm.storeValueFromComponents(frame.tempRegForType(fe), dreg, slot);
+            frame.unpinReg(dreg);
+#endif
         }
 
         frame.freeReg(idReg);

@@ -4,7 +4,7 @@ import Image, ImageDraw, ImageFont
 from config import *
 from acts import *
 from binlog import read_history
-from progressbar import ProgressBar
+from progressbar import ProgressBar, default_widgets
 from time import clock
 
 BLACK = (0, 0, 0)
@@ -56,7 +56,8 @@ def parse_cooked(filename):
     n = (f.tell() - pos) / 10
     f.seek(pos)
 
-    pb = ProgressBar('read input', n)
+    #pb = ProgressBar('read input', n)
+    pb = ProgressBar(maxval=n, widgets=['read-input: ']+default_widgets)
     blip = n / 100
 
     transitions = []
@@ -98,7 +99,8 @@ def draw(data, outfile):
     ep = 0
 
     # text progress indicator for graph generation
-    pb = ProgressBar('draw main', W*H)
+    # pb = ProgressBar('draw main', W*H)
+    pb = ProgressBar(maxval=W*H, widgets=['draw main: ']+default_widgets)
     blip = W*H//50
 
     # Flush events. We need to save them and draw them after filling the main area

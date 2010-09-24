@@ -945,6 +945,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
         NULL,       /* enumerate       */
         NULL,       /* typeof          */
         proxy_TraceObject,
+        NULL,       /* fix             */
         NULL,       /* thisObject      */
         proxy_Finalize, /* clear */
     }
@@ -985,6 +986,7 @@ JS_FRIEND_API(Class) OuterWindowProxyClass = {
         NULL,       /* enumerate       */
         NULL,       /* typeof          */
         proxy_TraceObject,
+        NULL,       /* fix             */
         NULL,       /* thisObject      */
         proxy_Finalize, /* clear */
     }
@@ -1047,6 +1049,7 @@ JS_FRIEND_API(Class) FunctionProxyClass = {
         NULL,       /* enumerate       */
         proxy_TypeOf_fun,
         proxy_TraceObject,
+        NULL,       /* fix             */
         NULL,       /* thisObject      */
         NULL,       /* clear           */
     }

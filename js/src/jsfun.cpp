@@ -1133,7 +1133,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_PRIVATE + JSObject::CALL_RESERVED_SLOTS + 1);
         JSScript *script = fun->u.i.script;
         memcpy(callobj.dslots, fp->formalArgs(), nargs * sizeof(Value));
-        if (!script->jit || script->usesEval) {
+        if (!script->jit || script->usesEval || script->debugMode) {
             memcpy(callobj.dslots + nargs, fp->slots(), nvars * sizeof(Value));
         } else if (script->jit) {
             for (uint32 i = 0; i < script->jit->nescaping; i++) {

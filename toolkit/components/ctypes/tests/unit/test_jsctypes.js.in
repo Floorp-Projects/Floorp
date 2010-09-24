@@ -1517,10 +1517,12 @@ function run_StructType_tests() {
   do_check_true(t_t.fields[1].b === ctypes.int8_t);
   do_check_true(t_t.fields[2].c === g_t);
   do_check_true(t_t.fields[3].d === ctypes.int8_t);
+/* disabled temporarily per bug 598225.
   do_check_throws(function() { t_t.fields.z = 0; }, Error);
   do_check_throws(function() { t_t.fields[4] = 0; }, Error);
   do_check_throws(function() { t_t.fields[4].a = 0; }, Error);
   do_check_throws(function() { t_t.fields[4].e = 0; }, Error);
+*/
 
   // Check that struct size bounds work, and that large, but not illegal, sizes
   // are OK.
@@ -1883,8 +1885,10 @@ function run_FunctionType_tests() {
   do_check_true(f4_t.argTypes.length == 2);
   do_check_true(f4_t.argTypes[0] === ctypes.int32_t);
   do_check_true(f4_t.argTypes[1] === fp_t);
+/* disabled temporarily per bug 598225.
   do_check_throws(function() { f4_t.argTypes.z = 0; }, Error);
   do_check_throws(function() { f4_t.argTypes[0] = 0; }, Error);
+*/
 
   let t4_t = f4_t.ptr.ptr.array(8).array();
   do_check_eq(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
@@ -2207,15 +2211,19 @@ function run_function_tests(library)
     ctypes.FunctionType.prototype);
   do_check_eq(test_ansi_len.constructor.toSource(),
     "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr]).ptr");
+/* disabled temporarily per bug 598225.
   do_check_throws(function() { test_ansi_len.value = null; }, Error);
   do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+*/
 
   // Test that the library.declare(name, functionType) form works.
   let test_ansi_len_2 = library.declare("test_ansi_len", fn_t);
   do_check_true(test_ansi_len_2.constructor === fn_t);
   do_check_eq(ptrValue(test_ansi_len), ptrValue(test_ansi_len_2));
+/* disabled temporarily per bug 598225.
   do_check_throws(function() { test_ansi_len_2.value = null; }, Error);
   do_check_eq(ptrValue(test_ansi_len_2), ptrValue(ptr));
+*/
 }
 
 function run_closure_tests(library)

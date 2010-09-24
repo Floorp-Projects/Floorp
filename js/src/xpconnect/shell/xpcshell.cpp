@@ -1263,7 +1263,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
 
-                if (!JS_SealObject(cx, obj, JS_TRUE))
+                if (!JS_DeepFreezeObject(cx, obj))
                     return JS_FALSE;
                 gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)

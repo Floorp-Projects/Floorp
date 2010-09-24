@@ -334,8 +334,8 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
         JumpList isDouble;
         masm.branchConvertDoubleToInt32(fpLeft, reg, isDouble, fpRight);
         
-        masm.storePayload(reg, frame.addressOf(lhs));
-        masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
+        masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), reg,
+                                      frame.addressOf(lhs));
         
         frame.freeReg(reg);
         done.setJump(masm.jump());
@@ -784,8 +784,8 @@ mjit::Compiler::jsop_neg()
         stubcc.masm.neg32(reg);
 
         /* Sync back with double path. */
-        stubcc.masm.storePayload(reg, frame.addressOf(fe));
-        stubcc.masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(fe));
+        stubcc.masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), reg,
+                                             frame.addressOf(fe));
 
         jmpIntRejoin.setJump(stubcc.masm.jump());
     }
@@ -978,7 +978,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
     }
 
     if (target) {
-        Value rval;
+        Value rval = UndefinedValue();  /* quiet gcc warning */
         bool rhsConst = false;
         if (rhs->isConstant()) {
             rhsConst = true;
