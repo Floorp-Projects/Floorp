@@ -623,19 +623,18 @@
                         var length = haystack.length;
                         var low = 0;
                         var high = length;
-                        while (high - low > 1) {
+                        while (low < high) {
                             var probe = low + ((high - low) >> 1);
                             var r = cmp(haystack, probe, needle);
                             if (r == 0) {
-                                low = probe;
-                                break;
+                                return probe;
                             } else if (r > 0) {
                                 low = probe + 1;
                             } else {
                                 high = probe;
                             }
                         }
-                        return low < length ? low : -1;
+                        return -1;
                     }
 
                     function bufferedCompare(buffered, i, time) {
