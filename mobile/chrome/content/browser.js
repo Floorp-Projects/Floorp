@@ -1022,7 +1022,7 @@ var Browser = {
         // does not have any assigned tab
         if (tab) {
           tab.updateViewportMetadata(json);
-          if (!this.isLoading())
+          if (!tab.isLoading())
             tab.updateThumbnail();
         }
         break;
