@@ -722,6 +722,8 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
             emitStubCmpOp(stub, target, fused);
         } else if (!target && (lhs->isType(JSVAL_TYPE_STRING) || rhs->isType(JSVAL_TYPE_STRING))) {
             emitStubCmpOp(stub, target, fused);
+        } else if (frame.haveSameBacking(lhs, rhs)) {
+            emitStubCmpOp(stub, target, fused);
         } else {
             jsop_equality_int_string(op, stub, target, fused);
         }
