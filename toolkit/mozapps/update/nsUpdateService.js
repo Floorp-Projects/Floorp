@@ -851,6 +851,18 @@ function Update(update) {
   if (0 == this._patches.length)
     throw Cr.NS_ERROR_ILLEGAL_VALUE;
 
+  // Fallback to the behavior prior to bug 530872 if the update does not have an
+  // appVersion attribute.
+  if (!update.hasAttribute("appVersion")) {
+    if (update.getAttribute("type") == "major") {
+      if (update.hasAttribute("detailsURL")) {
+        this.billboardURL = update.getAttribute("detailsURL");
+        this.showPrompt = true;
+        this.showNeverForVersion = true;
+      }
+    }
+  }
+
   for (var i = 0; i < update.attributes.length; ++i) {
     var attr = update.attributes.item(i);
     attr.QueryInterface(Ci.nsIDOMAttr);
@@ -1428,16 +1440,24 @@ UpdateService.prototype = {
 #
 #      Notes:
 #      a) if the app.update.auto preference is false then automatic download and
-#         install is disabled and the user will always be notified.
-#      b) Mode is determined by the value of the app.update.mode preference.
+#         install is disabled and the user will be notified.
+#      b) if the update has a showPrompt attribute the user will be notified.
+#      c) Mode is determined by the value of the app.update.mode preference.
 #
-#      The outcome is determined as follows:
+#      If the update when it is first read has an appVersion attribute the
+#      following behavior implemented in bug 530872 will occur:
+#      Mode   Incompatible Add-ons   Outcome
+#      0      N/A                    Auto Install
+#      1      Yes                    Notify
+#      1      No                     Auto Install
 #
-#      Update Type      Mode        Incompatible Add-ons   Outcome
-#      Major            all         N/A                    Notify
-#      Minor            0           N/A                    Auto Install
-#      Minor            1 or 2      Yes                    Notify
-#      Minor            1 or 2      No                     Auto Install
+#      If the update when it is first read does not have an appVersion attribute
+#      the following deprecated behavior will occur:
+#      Update Type   Mode   Incompatible Add-ons   Outcome
+#      Major         all    N/A                    Notify
+#      Minor         0      N/A                    Auto Install
+#      Minor         1      Yes                    Notify
+#      Minor         1      No                     Auto Install
      */
     if (update.showPrompt) {
       LOG("Checker:_selectAndInstallUpdate - prompting because the update " +
