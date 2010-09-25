@@ -1193,8 +1193,8 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             }
             else if(IS_SLIM_WRAPPER_OBJECT(flat))
             {
-                JSObject* global = JS_GetGlobalForObject(cx, flat);
-                if(global == xpcscope->GetGlobalJSObject())
+                if(flat->getCompartment(cx) ==
+                   xpcscope->GetGlobalJSObject()->getCompartment(cx))
                 {
                     *d = OBJECT_TO_JSVAL(flat);
                     return JS_TRUE;
