@@ -2525,6 +2525,12 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   // outer (through the JSExtendedClass hook outerObject), so this
   // prototype sharing works.
 
+  // Now that we're connecting the outer global to the inner one,
+  // we must have transplanted it. The JS engine tries to maintain
+  // the global object's compartment as its default compartment,
+  // so update that now since it might have changed.
+  JS_SetGlobalObject(mContext, outerGlobal);
+
   // We do *not* want to use anything else out of the outer
   // object's prototype chain than the first prototype, which is
   // the XPConnect prototype. The rest we want from the inner
@@ -2539,11 +2545,6 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal
   JS_SetPrototype(mContext, newInnerJSObject, proto);
   JS_SetPrototype(mContext, proto, innerProtoProto);
 
-  // Now that we're connecting the outer global to the inner one,
-  // we must have transplanted it. The JS engine tries to maintain
-  // the global object's compartment as its default compartment,
-  // so update that now since it might have changed.
-  JS_SetGlobalObject(mContext, outerGlobal);
   return NS_OK;
 }
 
@@ -2639,6 +2640,7 @@ nsresult
 nsJSContext::InitOuterWindow()
 {
   JSObject *global = JS_GetGlobalObject(mContext);
+  OBJ_TO_INNER_OBJECT(mContext, global);
 
   nsresult rv = InitClasses(global); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);

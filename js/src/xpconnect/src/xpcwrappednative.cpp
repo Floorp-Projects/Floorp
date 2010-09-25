@@ -51,6 +51,7 @@
 #include "nsINode.h"
 #include "xpcquickstubs.h"
 #include "jsproxy.h"
+#include "AccessCheck.h"
 
 /***************************************************************************/
 
@@ -518,9 +519,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             nsCOMPtr<nsIXPConnectWrappedJS> wrappedjs(do_QueryInterface(Object));
             JSObject *obj;
             wrappedjs->GetJSObject(&obj);
-            if((obj->isSystem() ||
-                JS_GetGlobalForObject(ccx, obj)->isSystem()) &&
-               !Scope->GetGlobalJSObject()->isSystem())
+            if(xpc::AccessCheck::isChrome(obj->getCompartment(ccx)) &&
+               !xpc::AccessCheck::isChrome(Scope->GetGlobalJSObject()->getCompartment(ccx)))
             {
                 needsCOW = JS_TRUE;
             }
