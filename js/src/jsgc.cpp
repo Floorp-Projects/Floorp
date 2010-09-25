@@ -219,6 +219,29 @@ Arena<T>::assureThingIsAligned(T *thing)
 {
     return (getAlignedThing(thing) == thing);
 }
+
+template
+bool
+Arena<JSObject>::assureThingIsAligned(JSObject *thing);
+
+template
+bool
+Arena<JSFunction>::assureThingIsAligned(JSFunction *thing);
+
+template
+bool
+Arena<JSString>::assureThingIsAligned(JSString *thing);
+
+template
+bool
+Arena<JSShortString>::assureThingIsAligned(JSShortString *thing);
+
+#if JS_HAS_XML_SUPPORT
+template
+bool
+Arena<JSXML>::assureThingIsAligned(JSXML *thing);
+#endif
+
 #endif
 
 template<typename T>
