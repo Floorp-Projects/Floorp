@@ -175,7 +175,6 @@ var Browser = {
     let inputHandlerOverlay = document.getElementById("inputhandler-overlay");
     inputHandlerOverlay.customDragger = new Browser.MainDragger();
 
-    let keySender = new ContentCustomKeySender(inputHandlerOverlay);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule();
     let scrollWheelModule = new ScrollwheelModule(inputHandlerOverlay);
@@ -341,7 +340,6 @@ var Browser = {
 
     messageManager.addMessageListener("Browser:ViewportMetadata", this);
     messageManager.addMessageListener("Browser:FormSubmit", this);
-    messageManager.addMessageListener("Browser:KeyPress", this);
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
@@ -613,13 +611,12 @@ var Browser = {
     if (oldBrowser) {
       oldBrowser.setAttribute("type", "content");
       oldBrowser.style.display = "none";
-      oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
     }
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
       browser.style.display = "";
-      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
+      browser.focus();
     }
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
@@ -1031,14 +1028,6 @@ var Browser = {
         browser.lastLocation = null;
         break;
 
-      case "Browser:KeyPress":
-        let event = document.createEvent("KeyEvents");
-        event.initKeyEvent("keypress", true, true, null,
-                        json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
-                        json.keyCode, json.charCode)
-        document.getElementById("mainKeyset").dispatchEvent(event);
-        break;
-
       case "Browser:ZoomToPoint:Return":
         // JSON-ified rect needs to be recreated so the methods exist
         let rect = Rect.fromRect(json.rect);
@@ -1399,14 +1388,11 @@ const ContentTouchHandler = {
 
   tapDown: function tapDown(aX, aY) {
     // Ensure that the content process has gets an activate event
-    let browser = getBrowser();
-    let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-    browser.focus();
-    try {
-      fl.activateRemoteFrame();
-    } catch (e) {
-    }
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
+
+    // Since overlay lays on top of browser element, we must focus the browser
+    // when user taps on overlay.
+    getBrowser().focus();
   },
 
   tapUp: function tapUp(aX, aY) {
@@ -1442,49 +1428,6 @@ const ContentTouchHandler = {
 
   toString: function toString() {
     return "[ContentTouchHandler] { }";
-  }
-};
-
-
-/** Watches for mouse events in chrome and sends them to content. */
-function ContentCustomKeySender(container) {
-  container.addEventListener("keypress", this, false);
-  container.addEventListener("keyup", this, false);
-  container.addEventListener("keydown", this, false);
-}
-
-ContentCustomKeySender.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-
-    let browser = getBrowser();
-    if (browser) {
-      browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
-        type: aEvent.type,
-        keyCode: aEvent.keyCode,
-        charCode: aEvent.charCode,
-        modifiers: this._parseModifiers(aEvent)
-      });
-    }
-  },
-
-  _parseModifiers: function _parseModifiers(aEvent) {
-    const masks = Components.interfaces.nsIDOMNSEvent;
-    var mval = 0;
-    if (aEvent.shiftKey)
-      mval |= masks.SHIFT_MASK;
-    if (aEvent.ctrlKey)
-      mval |= masks.CONTROL_MASK;
-    if (aEvent.altKey)
-      mval |= masks.ALT_MASK;
-    if (aEvent.metaKey)
-      mval |= masks.META_MASK;
-    return mval;
-  },
-
-  toString: function toString() {
-    return "[ContentCustomKeySender] { }";
   }
 };
 
@@ -2472,7 +2415,6 @@ Tab.prototype = {
 
     // stop about:blank from loading
     browser.stop();
-
 
     let self = this;
     browser.messageManager.addMessageListener("MozScrolledAreaChanged", function() {
