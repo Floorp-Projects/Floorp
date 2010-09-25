@@ -2508,7 +2508,7 @@ Tab.prototype = {
 
     // Do not repaint thumbnail if we already painted for this load. Bad things
     // happen when we do async canvas draws in quick succession.
-    if (!browser || this._lastThumbnailWindow == browser.contentWindowId)
+    if (!browser || this._thumbnailWindowId == browser.contentWindowId)
       return;
 
     // Do not try to paint thumbnails if contentWindowWidth/Height have not been
@@ -2516,7 +2516,7 @@ Tab.prototype = {
     if (!browser.contentWindowWidth || !browser.contentWindowHeight)
       return;
 
-    this._lastThumbnailWindow = browser.contentWindowId;
+    this._thumbnailWindowId = browser.contentWindowId;
     this._chromeTab.updateThumbnail(browser, browser.contentWindowWidth, browser.contentWindowHeight);
   },
 
