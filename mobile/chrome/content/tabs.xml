@@ -47,10 +47,14 @@
             const tabWidth = 106;
             const tabHeight = 64;
 
+            let ratio = tabHeight / tabWidth;
+            height = width * ratio;
+
             let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
             let renderer = rendererFactory(browser, canvas)
             renderer.drawContent(function(ctx, callback) {
-              ctx.clearRect(0, 0, tabWidth, tabHeight);
+              ctx.fillStyle = "white";
+              ctx.fillRect(0, 0, tabWidth, tabHeight);
               ctx.save();
               ctx.scale(tabWidth / width, tabHeight / height);
               callback(browser, 0, 0, width, height, "white");

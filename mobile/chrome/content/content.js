@@ -487,22 +487,24 @@ let ViewportHandler = {
   },
 
   handleEvent: function handleEvent(aEvent) {
+    let target = aEvent.originalTarget;
+    let isRootDocument = (target == content.document || target.ownerDocument == content.document);
+    if (!isRootDocument)
+      return;
+
     switch (aEvent.type) {
       case "DOMWindowCreated":
         this.resetMetadata();
         break;
 
       case "DOMMetaAdded":
-        let target = aEvent.originalTarget;
-        let isRootDocument = (target.ownerDocument == content.document);
-        if (isRootDocument && target.name == "viewport")
+        if (target.name == "viewport")
           this.updateMetadata();
         break;
 
       case "DOMContentLoaded":
       case "pageshow":
-        if (!this.metadata)
-          this.updateMetadata();
+        this.updateMetadata();
         break;
     }
   },
