@@ -1943,7 +1943,23 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mJSObject = outerObject;
       SetWrapper(mJSObject);
 
+      {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, mJSObject)) {
+          NS_ERROR("unable to enter a compartment");
+          return NS_ERROR_FAILURE;
+        }
+
+        JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
+      }
+
       mContext->SetOuterObject(mJSObject);
+    }
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, mJSObject)) {
+      NS_ERROR("unable to enter a compartment");
+      return NS_ERROR_FAILURE;
     }
 
     // XXX Not sure if this is needed.
@@ -1973,16 +1989,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   if (!aState && !reUseInnerWindow) {
     // Loading a new page and creating a new inner window, *not*
     // restoring from session history.
-
-    // InitClassesWithNewWrappedGlobal() (via CreateNativeGlobalForInner)
-    // for the new inner window
-    // sets the global object in cx to be the new wrapped global. We
-    // don't want that, but re-initializing the outer window will
-    // fix that for us. And perhaps more importantly, this will
-    // ensure that the outer window gets a new prototype so we don't
-    // leak prototype properties from the old inner window to the
-    // new one.
-    mContext->InitOuterWindow();
 
     // Now that both the the inner and outer windows are initialized
     // let the script context do its magic to hook them together.
@@ -2042,7 +2048,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Initialize DOM classes etc on the inner window.
-      rv = mContext->InitClasses(mJSObject);
+      rv = mContext->InitClasses(newInnerWindow->mJSObject);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (navigatorHolder) {

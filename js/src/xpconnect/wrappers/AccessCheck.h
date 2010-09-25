@@ -40,12 +40,15 @@
 #include "jsapi.h"
 #include "jswrapper.h"
 
+class nsIPrincipal;
+
 namespace xpc {
 
 class AccessCheck {
   public:
     static bool isSameOrigin(JSCompartment *a, JSCompartment *b);
     static bool isChrome(JSCompartment *compartment);
+    static nsIPrincipal *getPrincipal(JSCompartment *compartment);
     static bool isCrossOriginAccessPermitted(JSContext *cx, JSObject *obj, jsid id,
                                              JSWrapper::Action act);
     static bool isSystemOnlyAccessPermitted(JSContext *cx);

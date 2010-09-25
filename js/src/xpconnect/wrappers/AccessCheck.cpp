@@ -76,6 +76,12 @@ AccessCheck::isChrome(JSCompartment *compartment)
     return NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) && privileged;
 }
 
+nsIPrincipal *
+AccessCheck::getPrincipal(JSCompartment *compartment)
+{
+    return GetCompartmentPrincipal(compartment);
+}
+
 #define NAME(ch, str, cases) case ch: if (!strcmp(name, str)) switch (prop[0]) { cases }; break;
 #define PROP(ch, actions) case ch: { actions }; break;
 #define RW(str) if (!strcmp(prop, str)) return true;
