@@ -2416,7 +2416,6 @@ Tab.prototype = {
 
   startLoading: function startLoading() {
     if (this._loading) throw "Already Loading!";
-
     this._loading = true;
   },
 
@@ -2560,13 +2559,20 @@ Tab.prototype = {
   },
 
   updateThumbnail: function updateThumbnail() {
-    if (!this._browser)
+    let browser = this._browser;
+
+    // Do not repaint thumbnail if we already painted for this load. Bad things
+    // happen when we do async canvas draws in quick succession.
+    if (!browser || this._thumbnailWindowId == browser.contentWindowId)
       return;
 
-    // XXX: We don't know the size of the browser at this time and we can't fallback
-    // to contentWindow.innerWidth and .innerHeight. The viewport meta data is not
-    // even set yet. So fallback to something sane for now.
-    this._chromeTab.updateThumbnail(this._browser, 800, 500);
+    // Do not try to paint thumbnails if contentWindowWidth/Height have not been
+    // set yet. This also blows up for async canvas draws.
+    if (!browser.contentWindowWidth || !browser.contentWindowHeight)
+      return;
+
+    this._thumbnailWindowId = browser.contentWindowId;
+    this._chromeTab.updateThumbnail(browser, browser.contentWindowWidth, browser.contentWindowHeight);
   },
 
   toString: function() {
