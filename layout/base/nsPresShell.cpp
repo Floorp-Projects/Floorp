@@ -741,6 +741,7 @@ public:
   virtual NS_HIDDEN_(void) EndObservingDocument();
   virtual NS_HIDDEN_(nsresult) InitialReflow(nscoord aWidth, nscoord aHeight);
   virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight);
+  virtual NS_HIDDEN_(nsresult) ResizeReflowOverride(nscoord aWidth, nscoord aHeight);
   virtual NS_HIDDEN_(void) StyleChangeReflow();
   virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const;
   virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const;
@@ -1007,6 +1008,9 @@ protected:
   // sets up.
   void     ScheduleReflow();
 
+  // Reflow regardless of whether the override bit has been set.
+  nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight);
+
   // DoReflow returns whether the reflow finished without interruption
   PRBool DoReflow(nsIFrame* aFrame, PRBool aInterruptible);
 #ifdef DEBUG
@@ -1146,6 +1150,8 @@ protected:
 
   PRPackedBool mIgnoreFrameDestruction;
   PRPackedBool mHaveShutDown;
+
+  PRPackedBool mViewportOverridden;
 
   // This is used to protect ourselves from triggering reflow while in the
   // middle of frame construction and the like... it really shouldn't be
@@ -1662,6 +1668,7 @@ PresShell::PresShell()
   mRenderFlags = 0;
   mXResolution = 1.0;
   mYResolution = 1.0;
+  mViewportOverridden = PR_FALSE;
 
   static bool registeredReporter = false;
   if (!registeredReporter) {
@@ -2798,7 +2805,25 @@ PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
 }
 
 nsresult
+PresShell::ResizeReflowOverride(nscoord aWidth, nscoord aHeight)
+{
+  mViewportOverridden = PR_TRUE;
+  return ResizeReflowIgnoreOverride(aWidth, aHeight);
+}
+
+nsresult
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
+{
+  if (mViewportOverridden) {
+    // The viewport has been overridden, and this reflow request
+    // didn't ask to ignore the override.  Pretend it didn't happen.
+    return NS_OK;
+  }
+  return ResizeReflowIgnoreOverride(aWidth, aHeight);
+}
+
+nsresult
+PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
 {
   NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
   NS_PRECONDITION(aWidth != NS_UNCONSTRAINEDSIZE,

@@ -250,7 +250,7 @@ nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
   nscoord width = nsPresContext::CSSPixelsToAppUnits(aWidthPx);
   nscoord height = nsPresContext::CSSPixelsToAppUnits(aHeightPx);
 
-  presShell->ResizeReflow(width, height);
+  presShell->ResizeReflowOverride(width, height);
 
   return NS_OK;
 }

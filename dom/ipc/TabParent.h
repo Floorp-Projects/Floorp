@@ -91,7 +91,20 @@ public:
                                  nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const nsString& aJSON);
-    virtual bool RecvQueryContentResult(const nsQueryContentEvent& event);
+    virtual bool RecvNotifyIMEFocus(const PRBool& aFocus,
+                                    nsIMEUpdatePreference* aPreference);
+    virtual bool RecvNotifyIMETextChange(const PRUint32& aStart,
+                                         const PRUint32& aEnd,
+                                         const PRUint32& aNewEnd);
+    virtual bool RecvNotifyIMESelection(const PRUint32& aAnchor,
+                                        const PRUint32& aFocus);
+    virtual bool RecvNotifyIMETextHint(const nsString& aText);
+    virtual bool RecvEndIMEComposition(const PRBool& aCancel,
+                                       nsString* aComposition);
+    virtual bool RecvGetIMEEnabled(PRUint32* aValue);
+    virtual bool RecvSetIMEEnabled(const PRUint32& aValue);
+    virtual bool RecvGetIMEOpenState(PRBool* aValue);
+    virtual bool RecvSetIMEOpenState(const PRBool& aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
@@ -163,6 +176,12 @@ public:
     NS_DECL_NSISSLSTATUSPROVIDER
 
     void HandleDelayedDialogs();
+
+    static TabParent *GetIMETabParent() { return mIMETabParent; }
+    bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
+    bool SendCompositionEvent(const nsCompositionEvent& event);
+    bool SendTextEvent(const nsTextEvent& event);
+    bool SendSelectionEvent(const nsSelectionEvent& event);
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         PRBool aSync,
@@ -202,8 +221,21 @@ protected:
     nsString mSecurityTooltipText;
     nsCOMPtr<nsISupports> mSecurityStatusObject;
 
+    // IME
+    static TabParent *mIMETabParent;
+    nsString mIMECacheText;
+    PRUint32 mIMESelectionAnchor;
+    PRUint32 mIMESelectionFocus;
+    PRPackedBool mIMEComposing;
+    PRPackedBool mIMECompositionEnding;
+    // Buffer to store composition text during ResetInputState
+    // Compositions in almost all cases are small enough for nsAutoString
+    nsAutoString mIMECompositionText;
+    PRUint32 mIMECompositionStart;
+
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;
+    already_AddRefed<nsIWidget> GetWidget() const;
 };
 
 } // namespace dom

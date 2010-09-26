@@ -489,6 +489,11 @@
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"
                     key="key_privatebrowsing"/>
+          <menuitem label="&goOfflineCmd.label;"
+                    id="appmenu_offlineModeRecovery"
+                    type="checkbox"
+                    observes="workOfflineMenuitemState"
+                    oncommand="BrowserOffline.toggleOfflineStatus();"/>
           <menuseparator class="appmenu-menuseparator"/>
           <hbox>
             <menuitem id="appmenu-edit-label"

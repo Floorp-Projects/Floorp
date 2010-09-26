@@ -62,11 +62,6 @@
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 
-#ifdef ANDROID
-#include "AndroidBridge.h"
-using namespace mozilla;
-#endif
-
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -566,33 +561,6 @@ ContentParent::AfterProcessNextEvent(nsIThreadInternal *thread,
         return mOldObserver->AfterProcessNextEvent(thread, recursionDepth);
 
     return NS_OK;
-}
-
-
-bool 
-ContentParent::RecvNotifyIMEChange(const nsString& aText, 
-                                   const PRUint32& aTextLen, 
-                                   const int& aStart, const int& aEnd, 
-                                   const int& aNewEnd)
-{
-#ifdef ANDROID
-    AndroidBridge::Bridge()->NotifyIMEChange(aText.get(), aTextLen,
-                                             aStart, aEnd, aNewEnd);
-    return true;
-#else
-    return false;
-#endif
-}
-
-bool 
-ContentParent::RecvNotifyIME(const int& aType, const int& aStatus)
-{
-#ifdef ANDROID
-    AndroidBridge::Bridge()->NotifyIME(aType, aStatus);
-    return true;
-#else
-    return false;
-#endif
 }
 
 bool

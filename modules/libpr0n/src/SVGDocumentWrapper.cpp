@@ -266,15 +266,17 @@ SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
                                   nsresult status)
 {
   if (mListener) {
+    mListener->OnStopRequest(aRequest, ctxt, status);
     // A few levels up the stack, imgRequest::OnStopRequest is about to tell
     // all of its observers that we know our size and are ready to paint.  That
     // might not be true at this point, though -- so here, we synchronously
     // finish parsing & layout in our helper-document to make sure we can hold
     // up to this promise.
     nsCOMPtr<nsIParser> parser = do_QueryInterface(mListener);
-    parser->ContinueInterruptedParsing();
+    if (!parser->IsComplete()) {
+      parser->ContinueInterruptedParsing();
+    }
     FlushLayout();
-    mListener->OnStopRequest(aRequest, ctxt, status);
     mListener = nsnull;
 
     // In a normal document, this would be called by nsDocShell - but we don't

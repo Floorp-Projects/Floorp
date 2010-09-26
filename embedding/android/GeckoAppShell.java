@@ -272,6 +272,7 @@ class GeckoAppShell
 
         case NOTIFY_IME_FOCUSCHANGE:
             GeckoApp.surfaceView.mIMEFocus = state != 0;
+            IMEStateUpdater.resetIME();
             break;
 
         }
