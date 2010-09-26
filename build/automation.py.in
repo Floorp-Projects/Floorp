@@ -212,6 +212,8 @@ class Automation(object):
                  universal_newlines=False,
                  startupinfo=None,
                  creationflags=0):
+      args = automationutils.wrapCommand(args)
+      print "args: %s" % args
       subprocess.Popen.__init__(self, args, bufsize, executable,
                                 stdin, stdout, stderr,
                                 preexec_fn, close_fds,

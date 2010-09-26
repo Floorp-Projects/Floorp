@@ -51,6 +51,11 @@
 		8B4BDABE12012CEF009C7060 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4BDAA7120124EA009C7060 /* libcrypto.dylib */; };
 		8B4BDAC512012D05009C7060 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4BDAA7120124EA009C7060 /* libcrypto.dylib */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
+		D244536A12426F00009BBCE0 /* logging.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535112426EBB009BBCE0 /* logging.cc */; };
+		D244536B12426F00009BBCE0 /* minidump.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535212426EBB009BBCE0 /* minidump.cc */; };
+		D244536C12426F00009BBCE0 /* pathname_stripper.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535312426EBB009BBCE0 /* pathname_stripper.cc */; };
+		D244536D12426F00009BBCE0 /* basic_code_modules.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244534F12426E98009BBCE0 /* basic_code_modules.cc */; };
+		D244540B12439BA0009BBCE0 /* memory_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244540A12439BA0009BBCE0 /* memory_unittest.cc */; };
 		D24BBBFD121050F000F3D417 /* breakpadUtilities.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F92C563C0ECD10B3009BE4BA /* breakpadUtilities.dylib */; };
 		D24BBD291211EDB100F3D417 /* MachIPC.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53790ECCE635009BE4BA /* MachIPC.mm */; };
 		D24BBD321212CACF00F3D417 /* MachIPC.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53790ECCE635009BE4BA /* MachIPC.mm */; };
@@ -507,6 +512,11 @@
 		8B31FFF611F0C90500FCF3E4 /* Breakpad.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Breakpad.xcconfig; path = ../../common/mac/Breakpad.xcconfig; sourceTree = SOURCE_ROOT; };
 		8B4BDAA7120124EA009C7060 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		8DC2EF5B0486A6940098B216 /* Breakpad.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Breakpad.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D244534F12426E98009BBCE0 /* basic_code_modules.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = basic_code_modules.cc; path = ../../processor/basic_code_modules.cc; sourceTree = SOURCE_ROOT; };
+		D244535112426EBB009BBCE0 /* logging.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = logging.cc; path = ../../processor/logging.cc; sourceTree = SOURCE_ROOT; };
+		D244535212426EBB009BBCE0 /* minidump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minidump.cc; path = ../../processor/minidump.cc; sourceTree = SOURCE_ROOT; };
+		D244535312426EBB009BBCE0 /* pathname_stripper.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pathname_stripper.cc; path = ../../processor/pathname_stripper.cc; sourceTree = SOURCE_ROOT; };
+		D244540A12439BA0009BBCE0 /* memory_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = memory_unittest.cc; path = ../../common/memory_unittest.cc; sourceTree = SOURCE_ROOT; };
 		D2F9A3D41212F87C002747C1 /* exception_handler_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exception_handler_test.cc; path = tests/exception_handler_test.cc; sourceTree = "<group>"; };
 		D2F9A41512131EF0002747C1 /* libgtest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgtest.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F9A43C12131F55002747C1 /* gmock-all.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "gmock-all.cc"; path = "../../testing/src/gmock-all.cc"; sourceTree = SOURCE_ROOT; };
@@ -759,6 +769,7 @@
 				32DBCF5E0370ADEE00C91783 /* Breakpad_Prefix.pch */,
 				F92C538D0ECCE6F2009BE4BA /* client */,
 				F92C53600ECCE3D6009BE4BA /* common */,
+				D244536912426EE7009BBCE0 /* processor */,
 				0867D69AFE84028FC02AAC07 /* Frameworks */,
 				034768DFFF38A50411DB9C8B /* Products */,
 				F9C77DDB0F7DD5CF0045F7DB /* UnitTests-Info.plist */,
@@ -778,6 +789,17 @@
 				0867D69BFE84028FC02AAC07 /* Foundation.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D244536912426EE7009BBCE0 /* processor */ = {
+			isa = PBXGroup;
+			children = (
+				D244535112426EBB009BBCE0 /* logging.cc */,
+				D244535212426EBB009BBCE0 /* minidump.cc */,
+				D244535312426EBB009BBCE0 /* pathname_stripper.cc */,
+				D244534F12426E98009BBCE0 /* basic_code_modules.cc */,
+			);
+			name = processor;
 			sourceTree = "<group>";
 		};
 		D2F9A43812131F3B002747C1 /* gtest */ = {
@@ -813,6 +835,7 @@
 		F92C53600ECCE3D6009BE4BA /* common */ = {
 			isa = PBXGroup;
 			children = (
+				D244540A12439BA0009BBCE0 /* memory_unittest.cc */,
 				F92C53870ECCE6C0009BE4BA /* convert_UTF.c */,
 				F92C53880ECCE6C0009BE4BA /* convert_UTF.h */,
 				F92C53850ECCE6AD009BE4BA /* string_conversion.cc */,
@@ -1632,6 +1655,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D244536A12426F00009BBCE0 /* logging.cc in Sources */,
+				D244536B12426F00009BBCE0 /* minidump.cc in Sources */,
+				D244536C12426F00009BBCE0 /* pathname_stripper.cc in Sources */,
+				D244536D12426F00009BBCE0 /* basic_code_modules.cc in Sources */,
 				D2F9A4E112133AE2002747C1 /* crash_generation_client.cc in Sources */,
 				D2F9A4E212133AE2002747C1 /* crash_generation_server.cc in Sources */,
 				D24BBD321212CACF00F3D417 /* MachIPC.mm in Sources */,
@@ -1648,6 +1675,7 @@
 				F93DE33E0F82C66B00608B94 /* macho_walker.cc in Sources */,
 				F93DE33F0F82C66B00608B94 /* string_utilities.cc in Sources */,
 				D2F9A3D51212F87C002747C1 /* exception_handler_test.cc in Sources */,
+				D244540B12439BA0009BBCE0 /* memory_unittest.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2100,8 +2128,10 @@
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "BP_LOGGING_INCLUDE=\\\"client/mac/tests/testlogging.h\\\"";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
+					../../..,
 					../..,
 					../../testing,
 					../../testing/include,

@@ -515,7 +515,10 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
       IsClippingCheap(aTarget, aLayer->GetVisibleRegion())) {
     // We don't want to draw invalid stuff, so we need to clip. Might as
     // well clip to the smallest area possible --- the visible region.
-    gfxUtils::ClipToRegion(aTarget, aLayer->GetVisibleRegion());
+    // Bug 599189 if there is a non-integer-translation transform in aTarget,
+    // we might sample pixels outside GetVisibleRegion(), which is wrong
+    // and may cause gray lines.
+    gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetVisibleRegion());
   }
   if (aIsOpaqueContent) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
@@ -1800,7 +1803,7 @@ public:
     mOldYResolution = 1.0;
 
     if (IsSurfaceDescriptorValid(mFrontBufferDescriptor)) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontBufferDescriptor);
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontBufferDescriptor, mAllocator);
     }
   }
 
@@ -1916,7 +1919,7 @@ public:
   virtual void DestroyFrontBuffer()
   {
     if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface, mAllocator);
     }
     mFrontSurface = nsnull;
   }
@@ -2000,7 +2003,7 @@ public:
   virtual void DestroyFrontBuffer()
   {
     if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface, mAllocator);
     }
     mFrontSurface = nsnull;
   }

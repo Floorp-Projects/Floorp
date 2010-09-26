@@ -1728,15 +1728,21 @@ var gFinishedPage = {
     gUpdates.wiz.getButton("extra1").disabled = true;
 
     // Notify all windows that an application quit has been requested.
-    var os = CoC["@mozilla.org/observer-service;1"].
-             getService(CoI.nsIObserverService);
     var cancelQuit = CoC["@mozilla.org/supports-PRBool;1"].
                      createInstance(CoI.nsISupportsPRBool);
-    os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
+                                 "restart");
 
     // Something aborted the quit process.
     if (cancelQuit.data)
       return;
+
+    // If already in safe mode restart in safe mode (bug 327119)
+    if (Services.appinfo.inSafeMode) {
+      let env = CoC["@mozilla.org/process/environment;1"].
+                getService(CoI.nsIEnvironment);
+      env.set("MOZ_SAFE_MODE_RESTART", "1");
+    }
 
     // Restart the application
     CoC["@mozilla.org/toolkit/app-startup;1"].getService(CoI.nsIAppStartup).

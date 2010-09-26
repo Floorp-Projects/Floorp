@@ -186,6 +186,7 @@ src_client_linux_linux_client_unittest_SOURCES = \
 	src/client/linux/minidump_writer/line_reader_unittest.cc \
 	src/client/linux/minidump_writer/linux_dumper_unittest.cc \
 	src/client/linux/minidump_writer/minidump_writer_unittest.cc \
+	src/common/memory_unittest.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc
