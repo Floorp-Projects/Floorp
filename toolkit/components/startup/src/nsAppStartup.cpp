@@ -536,7 +536,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
 nsresult nsAppStartup::RecordStartupDuration()
 {
   nsresult rv;
-  PRTime launched, started;
+  PRTime launched = 0, started = 0;
   mRestoredTimestamp = PR_Now();
 
   nsCOMPtr<mozIStorageConnection> db;
@@ -553,6 +553,9 @@ nsresult nsAppStartup::RecordStartupDuration()
 
   runtime->GetLaunchTimestamp((PRUint64*)&launched);
   runtime->GetStartupTimestamp((PRUint64*)&started);
+
+  if (!launched)
+    launched = started;
 
   nsCAutoString appVersion, appBuild, platformVersion, platformBuild;
   appinfo->GetVersion(appVersion);
