@@ -37,9 +37,7 @@
 
 #ifndef json_h___
 #define json_h___
-/*
- * JS JSON functions.
- */
+
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsvalue.h"
