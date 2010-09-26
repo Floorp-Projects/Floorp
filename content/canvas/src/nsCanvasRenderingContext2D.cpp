@@ -3575,17 +3575,6 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         dirty = mThebes->UserToDevice(clip);
     }
 
-#if 1
-    // XXX cairo bug workaround; force a clip update on mThebes.
-    // Otherwise, a pixman clip gets left around somewhere, and pixman
-    // (Render) does source clipping as well -- so we end up
-    // compositing with an incorrect clip.  This only seems to affect
-    // fallback cases, which happen when we have CSS scaling going on.
-    // This will blow away the current path, but we already blew it
-    // away in this function earlier.
-    mThebes->UpdateSurfaceClip();
-#endif
-
 FINISH:
     if (NS_SUCCEEDED(rv))
         rv = Redraw(dirty);

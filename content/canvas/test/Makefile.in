@@ -68,10 +68,14 @@ _TEST_FILES_0 = \
 	image_green-redirect^headers^ \
 	test_drawImageIncomplete.html \
 	test_canvas_font_setter.html \
-	test_2d.composite.uncovered.image.source-in.html \
-	test_2d.composite.uncovered.image.destination-in.html \
-	test_2d.composite.uncovered.image.source-out.html \
-	test_2d.composite.uncovered.image.destination-atop.html \
+	test_2d.composite.canvas.destination-atop.html \
+	test_2d.composite.canvas.destination-in.html \
+	test_2d.composite.canvas.source-in.html \
+	test_2d.composite.canvas.source-out.html \
+	test_2d.composite.image.destination-atop.html \
+	test_2d.composite.image.destination-in.html \
+	test_2d.composite.image.source-in.html \
+	test_2d.composite.image.source-out.html \
 	test_mozGetAsFile.html \
 	$(NULL)
 
@@ -89,17 +93,14 @@ _TEST_FILES_0 = \
 #	test_2d.composite.clip.lighter.html \
 #
 
-# Temporarily disabled tests; unbounded operators changed behaviour, need to reevaluate tests
-#
-#	test_2d.composite.canvas.destination-atop.html \
-#	test_2d.composite.canvas.destination-in.html \
-#	test_2d.composite.canvas.source-in.html \
-#	test_2d.composite.canvas.source-out.html \
-#	test_2d.composite.image.destination-atop.html \
-#	test_2d.composite.image.destination-in.html \
-#	test_2d.composite.image.source-in.html \
-#	test_2d.composite.image.source-out.html \
-#
+# Temporarily disabled tests; unbounded operators changed behaviour, need to reevaluate tests.
+# At one point we were passing these accidentally, because the UpdateSurfaceClip at the end
+# of drawImage happened to clear the entire canvas with some operators, which is what these
+# tests were checking.
+#	test_2d.composite.uncovered.image.source-in.html \
+#	test_2d.composite.uncovered.image.destination-in.html \
+#	test_2d.composite.uncovered.image.source-out.html \
+#	test_2d.composite.uncovered.image.destination-atop.html \
 
 # Tests that fail on Mac (possibly because spec is underdefined?).  Bug 407105
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
