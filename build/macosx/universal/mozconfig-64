@@ -1,7 +1,0 @@
-# i386/x86-64 Universal Build mozconfig
-
-# As used here, arguments in $MOZ_BUILD_PROJECTS are suitable as arguments
-# to gcc's -arch parameter.
-mk_add_options MOZ_BUILD_PROJECTS="i386 x86_64"
-
-. $topsrcdir/build/macosx/universal/mozconfig.common
