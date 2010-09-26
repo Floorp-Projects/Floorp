@@ -299,7 +299,7 @@ load 503961-1.xhtml
 load 503961-2.html
 load 508168-1.html
 load 508908-1.html
-load 505912-1.html
+skip-if(cocoaWidget) load 505912-1.html # Mac OS X intermittent orange bug 599391
 load 509749-1.html
 load 511482.html
 load 512724-1.html
@@ -328,6 +328,7 @@ load 564968.xhtml
 load 570160.html
 load 571618-1.svg
 load 574958.xhtml
+load 580504-1.xhtml
 load 585598-1.xhtml
 load 586806-1.html
 load 586806-2.html

@@ -561,19 +561,17 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
     if (mEventCallback) {
         nsEventStatus status = (*mEventCallback)(aEvent);
 
-        // Don't track composition if event was dispatched to remote child
-        if (status != nsEventStatus_eConsumeNoDefault)
-            switch (aEvent->message) {
-            case NS_COMPOSITION_START:
-                mIMEComposing = PR_TRUE;
-                break;
-            case NS_COMPOSITION_END:
-                mIMEComposing = PR_FALSE;
-                break;
-            case NS_TEXT_TEXT:
-                mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
-                break;
-            }
+        switch (aEvent->message) {
+        case NS_COMPOSITION_START:
+            mIMEComposing = PR_TRUE;
+            break;
+        case NS_COMPOSITION_END:
+            mIMEComposing = PR_FALSE;
+            break;
+        case NS_TEXT_TEXT:
+            mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
+            break;
+        }
         return status;
     }
     return nsEventStatus_eIgnore;
@@ -1589,6 +1587,7 @@ nsWindow::ResetInputState()
         InitEvent(textEvent, nsnull);
         textEvent.theText = mIMEComposingText;
         DispatchEvent(&textEvent);
+        mIMEComposingText.Truncate(0);
 
         nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
         InitEvent(event, nsnull);
@@ -1626,6 +1625,7 @@ nsWindow::CancelIMEComposition()
         nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
         InitEvent(textEvent, nsnull);
         DispatchEvent(&textEvent);
+        mIMEComposingText.Truncate(0);
 
         nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
         InitEvent(compEvent, nsnull);
@@ -1690,5 +1690,11 @@ nsWindow::OnIMESelectionChange(void)
                                    int(event.mReply.mOffset + 
                                        event.mReply.mString.Length()), -1);
     return NS_OK;
+}
+
+nsIMEUpdatePreference
+nsWindow::GetIMEUpdatePreference()
+{
+    return nsIMEUpdatePreference(PR_TRUE, PR_TRUE);
 }
 

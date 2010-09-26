@@ -48,12 +48,18 @@ function test() {
   runNextTest();
 }
 
-let tests = [test_cascade, test_select];
+let tests = [test_cascade, test_select, test_multiWindowState,
+             test_setWindowStateNoOverwrite, test_setWindowStateOverwrite,
+             test_setBrowserStateInterrupted];
 function runNextTest() {
+  // Reset the pref
+  try {
+    Services.prefs.clearUserPref("browser.sessionstore.max_concurrent_tabs");
+  } catch (e) {}
+
+  // set an empty state & run the next test, or finish
   if (tests.length) {
-    ss.setWindowState(window,
-                      JSON.stringify({ windows: [{ tabs: [{ url: 'about:blank' }], }] }),
-                      true);
+    ss.setBrowserState(JSON.stringify({ windows: [{ tabs: [{ url: 'about:blank' }], }] }));
     executeSoon(tests.shift());
   }
   else {
@@ -70,7 +76,8 @@ function test_cascade() {
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
     onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+      if (aBrowser.__SS_restoring &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
           aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
           aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
         test_cascade_progressCallback();
@@ -102,28 +109,18 @@ function test_cascade() {
 
   function test_cascade_progressCallback() {
     loadCount++;
-    // We'll get the first <length of windows[0].tabs> load events here, even
-    // though they are ignored by sessionstore. Those are due to explicit
-    // "stop" events before any restoring action takes place. We can safely
-    // ignore these events.
-    if (loadCount <= state.windows[0].tabs.length)
-      return;
-
     let counts = countTabs();
-    let expected = expectedCounts[loadCount - state.windows[0].tabs.length - 1];
+    let expected = expectedCounts[loadCount - 1];
 
     is(counts[0], expected[0], "test_cascade: load " + loadCount + " - # tabs that need to be restored");
     is(counts[1], expected[1], "test_cascade: load " + loadCount + " - # tabs that are restoring");
     is(counts[2], expected[2], "test_cascade: load " + loadCount + " - # tabs that has been restored");
 
-    if (loadCount == state.windows[0].tabs.length * 2) {
-      window.gBrowser.removeTabsProgressListener(progressListener);
-      // Reset the pref
-      try {
-        Services.prefs.clearUserPref("browser.sessionstore.max_concurrent_tabs");
-      } catch (e) {}
-      runNextTest();
-    }
+    if (loadCount < state.windows[0].tabs.length)
+      return;
+
+    window.gBrowser.removeTabsProgressListener(progressListener);
+    runNextTest();
   }
 
   // This progress listener will get attached before the listener in session store.
@@ -140,7 +137,8 @@ function test_select() {
   // We have our own progress listener for this test, which we'll attach before our state is set
   let progressListener = {
     onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+      if (aBrowser.__SS_restoring &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
           aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
           aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
         test_select_progressCallback(aBrowser);
@@ -154,7 +152,7 @@ function test_select() {
     { entries: [{ url: "http://example.org" }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.org" }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.org" }], extData: { "uniq": r() } }
-  ], selectedIndex: 1 }] };
+  ], selected: 1 }] };
 
   let loadCount = 0;
   // expectedCounts looks a little wierd for the test case, but it works. See
@@ -171,32 +169,17 @@ function test_select() {
 
   function test_select_progressCallback(aBrowser) {
     loadCount++;
-    // We'll get the first <length of windows[0].tabs> load events here, even
-    // though they are ignored by sessionstore. Those are due to explicit
-    // "stop" events before any restoring action takes place. We can safely
-    // ignore these events.
-    if (loadCount <= state.windows[0].tabs.length)
-      return;
 
-    let loadIndex = loadCount - state.windows[0].tabs.length - 1;
     let counts = countTabs();
-    let expected = expectedCounts[loadIndex];
+    let expected = expectedCounts[loadCount - 1];
 
     is(counts[0], expected[0], "test_select: load " + loadCount + " - # tabs that need to be restored");
     is(counts[1], expected[1], "test_select: load " + loadCount + " - # tabs that are restoring");
     is(counts[2], expected[2], "test_select: load " + loadCount + " - # tabs that has been restored");
 
-    if (loadCount == state.windows[0].tabs.length * 2) {
-      window.gBrowser.removeTabsProgressListener(progressListener);
-      // Reset the pref
-      try {
-        Services.prefs.clearUserPref("browser.sessionstore.max_concurrent_tabs");
-      } catch (e) {}
-      runNextTest();
-    }
-    else {
+    if (loadCount < state.windows[0].tabs.length) {
       // double check that this tab was the right one
-      let expectedData = state.windows[0].tabs[tabOrder[loadIndex]].extData.uniq;
+      let expectedData = state.windows[0].tabs[tabOrder[loadCount - 1]].extData.uniq;
       let tab;
       for (let i = 0; i < window.gBrowser.tabs.length; i++) {
         if (!tab && window.gBrowser.tabs[i].linkedBrowser == aBrowser)
@@ -205,12 +188,346 @@ function test_select() {
       is(ss.getTabValue(tab, "uniq"), expectedData, "test_select: load " + loadCount + " - correct tab was restored");
 
       // select the next tab
-      window.gBrowser.selectTabAtIndex(tabOrder[loadIndex + 1]);
+      window.gBrowser.selectTabAtIndex(tabOrder[loadCount]);
+      return;
     }
+
+    window.gBrowser.removeTabsProgressListener(progressListener);
+    runNextTest();
   }
 
   window.gBrowser.addTabsProgressListener(progressListener);
   ss.setBrowserState(JSON.stringify(state));
+}
+
+
+function test_multiWindowState() {
+  // We have our own progress listener for this test, which we'll attach before our state is set
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      // We only care about load events when the tab still has __SS_restoring on it.
+      // Since our listener is attached before the sessionstore one, this works out.
+      if (aBrowser.__SS_restoring &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        test_multiWindowState_progressCallback(aBrowser);
+    }
+  }
+
+  // The first window will be put into the already open window and the second
+  // window will be opened with _openWindowWithState, which is the source of the problem.
+  let state = { windows: [
+    {
+      tabs: [
+        { entries: [{ url: "http://example.org#0" }], extData: { "uniq": r() } }
+      ],
+      selected: 1
+    },
+    {
+      tabs: [
+        { entries: [{ url: "http://example.com#1" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#2" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#3" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#4" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#5" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#6" }], extData: { "uniq": r() } }
+      ],
+      selected: 4
+    }
+  ] };
+  let numTabs = state.windows[0].tabs.length + state.windows[1].tabs.length;
+
+  let loadCount = 0;
+  function test_multiWindowState_progressCallback(aBrowser) {
+    loadCount++;
+
+    if (loadCount < numTabs)
+      return;
+
+    // We don't actually care about load order in this test, just that they all
+    // do load.
+    is(loadCount, numTabs, "test_multiWindowState: all tabs were restored");
+    let count = countTabs();
+    is(count[0], 0,
+       "test_multiWindowState: there are no tabs left needing restore");
+
+    // Remove the progress listener from this window, it will be removed from
+    // theWin when that window is closed (in setBrowserState).
+    window.gBrowser.removeTabsProgressListener(progressListener);
+    runNextTest();
+  }
+
+  // We also want to catch the 2nd window, so we need to observe domwindowopened
+  function windowObserver(aSubject, aTopic, aData) {
+    let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    if (aTopic == "domwindowopened") {
+      theWin.addEventListener("load", function() {
+        theWin.removeEventListener("load", arguments.callee, false);
+
+        Services.ww.unregisterNotification(windowObserver);
+        theWin.gBrowser.addTabsProgressListener(progressListener);
+      }, false);
+    }
+  }
+  Services.ww.registerNotification(windowObserver);
+
+  window.gBrowser.addTabsProgressListener(progressListener);
+  ss.setBrowserState(JSON.stringify(state));
+}
+
+
+function test_setWindowStateNoOverwrite() {
+  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
+  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
+
+  // We have our own progress listener for this test, which we'll attach before our state is set
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      // We only care about load events when the tab still has __SS_restoring on it.
+      // Since our listener is attached before the sessionstore one, this works out.
+      if (aBrowser.__SS_restoring &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        test_setWindowStateNoOverwrite_progressCallback(aBrowser);
+    }
+  }
+
+  // We'll use 2 states so that we can make sure calling setWindowState doesn't
+  // wipe out currently restoring data.
+  let state1 = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.com#1" }] },
+    { entries: [{ url: "http://example.com#2" }] },
+    { entries: [{ url: "http://example.com#3" }] },
+    { entries: [{ url: "http://example.com#4" }] },
+    { entries: [{ url: "http://example.com#5" }] },
+  ] }] };
+  let state2 = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org#1" }] },
+    { entries: [{ url: "http://example.org#2" }] },
+    { entries: [{ url: "http://example.org#3" }] },
+    { entries: [{ url: "http://example.org#4" }] },
+    { entries: [{ url: "http://example.org#5" }] }
+  ] }] };
+
+  let numTabs = state1.windows[0].tabs.length + state2.windows[0].tabs.length;
+
+  let loadCount = 0;
+  function test_setWindowStateNoOverwrite_progressCallback(aBrowser) {
+    loadCount++;
+
+    // When loadCount == 2, we'll also restore state2 into the window
+    if (loadCount == 2)
+      ss.setWindowState(window, JSON.stringify(state2), false);
+
+    if (loadCount < numTabs)
+      return;
+
+    // We don't actually care about load order in this test, just that they all
+    // do load.
+    is(loadCount, numTabs, "test_setWindowStateNoOverwrite: all tabs were restored");
+    is(window.__SS_tabsToRestore, 0,
+       "test_setWindowStateNoOverwrite: window doesn't think there are more tabs to restore");
+    let count = countTabs();
+    is(count[0], 0,
+       "test_setWindowStateNoOverwrite: there are no tabs left needing restore");
+
+    // Remove the progress listener from this window, it will be removed from
+    // theWin when that window is closed (in setBrowserState).
+    window.gBrowser.removeTabsProgressListener(progressListener);
+
+    runNextTest();
+  }
+
+  window.gBrowser.addTabsProgressListener(progressListener);
+  ss.setWindowState(window, JSON.stringify(state1), true);
+}
+
+
+function test_setWindowStateOverwrite() {
+  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
+  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
+
+  // We have our own progress listener for this test, which we'll attach before our state is set
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      // We only care about load events when the tab still has __SS_restoring on it.
+      // Since our listener is attached before the sessionstore one, this works out.
+      if (aBrowser.__SS_restoring &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        test_setWindowStateOverwrite_progressCallback(aBrowser);
+    }
+  }
+
+  // We'll use 2 states so that we can make sure calling setWindowState doesn't
+  // wipe out currently restoring data.
+  let state1 = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.com#1" }] },
+    { entries: [{ url: "http://example.com#2" }] },
+    { entries: [{ url: "http://example.com#3" }] },
+    { entries: [{ url: "http://example.com#4" }] },
+    { entries: [{ url: "http://example.com#5" }] },
+  ] }] };
+  let state2 = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org#1" }] },
+    { entries: [{ url: "http://example.org#2" }] },
+    { entries: [{ url: "http://example.org#3" }] },
+    { entries: [{ url: "http://example.org#4" }] },
+    { entries: [{ url: "http://example.org#5" }] }
+  ] }] };
+
+  let numTabs = 2 + state2.windows[0].tabs.length;
+
+  let loadCount = 0;
+  function test_setWindowStateOverwrite_progressCallback(aBrowser) {
+    loadCount++;
+
+    // When loadCount == 2, we'll also restore state2 into the window
+    if (loadCount == 2)
+      ss.setWindowState(window, JSON.stringify(state2), true);
+
+    if (loadCount < numTabs)
+      return;
+
+    // We don't actually care about load order in this test, just that they all
+    // do load.
+    is(loadCount, numTabs, "test_setWindowStateOverwrite: all tabs were restored");
+    is(window.__SS_tabsToRestore, 0,
+       "test_setWindowStateOverwrite: window doesn't think there are more tabs to restore");
+    let count = countTabs();
+    is(count[0], 0,
+       "test_setWindowStateOverwrite: there are no tabs left needing restore");
+
+    // Remove the progress listener from this window, it will be removed from
+    // theWin when that window is closed (in setBrowserState).
+    window.gBrowser.removeTabsProgressListener(progressListener);
+
+    runNextTest();
+  }
+
+  window.gBrowser.addTabsProgressListener(progressListener);
+  ss.setWindowState(window, JSON.stringify(state1), true);
+}
+
+
+function test_setBrowserStateInterrupted() {
+  // Set the pref to 1 so we know exactly how many tabs should be restoring at any given time
+  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 1);
+
+  // We have our own progress listener for this test, which we'll attach before our state is set
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      // We only care about load events when the tab still has __SS_restoring on it.
+      // Since our listener is attached before the sessionstore one, this works out.
+      if (aBrowser.__SS_restoring &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        test_setBrowserStateInterrupted_progressCallback(aBrowser);
+    }
+  }
+
+  // The first state will be loaded using setBrowserState, followed by the 2nd
+  // state also being loaded using setBrowserState, interrupting the first restore.
+  let state1 = { windows: [
+    {
+      tabs: [
+        { entries: [{ url: "http://example.org#1" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#2" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#3" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#4" }], extData: { "uniq": r() } }
+      ],
+      selected: 1
+    },
+    {
+      tabs: [
+        { entries: [{ url: "http://example.com#1" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#2" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#3" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#4" }], extData: { "uniq": r() } },
+      ],
+      selected: 3
+    }
+  ] };
+  let state2 = { windows: [
+    {
+      tabs: [
+        { entries: [{ url: "http://example.org#5" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#6" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#7" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#8" }], extData: { "uniq": r() } }
+      ],
+      selected: 3
+    },
+    {
+      tabs: [
+        { entries: [{ url: "http://example.com#5" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#6" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#7" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#8" }], extData: { "uniq": r() } },
+      ],
+      selected: 1
+    }
+  ] };
+
+  // interruptedAfter will be set after the selected tab from each window have loaded.
+  let interruptedAfter = 0;
+  let loadedWindow1 = false;
+  let loadedWindow2 = false;
+  let numTabs = state2.windows[0].tabs.length + state2.windows[1].tabs.length;
+
+  let loadCount = 0;
+  function test_setBrowserStateInterrupted_progressCallback(aBrowser) {
+    loadCount++;
+
+    if (aBrowser.currentURI.spec == state1.windows[0].tabs[2].entries[0].url)
+      loadedWindow1 = true;
+    if (aBrowser.currentURI.spec == state1.windows[1].tabs[0].entries[0].url)
+      loadedWindow2 = true;
+
+    if (!interruptedAfter && loadedWindow1 && loadedWindow2) {
+      interruptedAfter = loadCount;
+      ss.setBrowserState(JSON.stringify(state2));
+      return;
+    }
+
+    if (loadCount < numTabs + interruptedAfter)
+      return;
+
+    // We don't actually care about load order in this test, just that they all
+    // do load.
+    is(loadCount, numTabs + interruptedAfter,
+       "test_setBrowserStateInterrupted: all tabs were restored");
+    let count = countTabs();
+    is(count[0], 0,
+       "test_setBrowserStateInterrupted: there are no tabs left needing restore");
+
+    // Remove the progress listener from this window, it will be removed from
+    // theWin when that window is closed (in setBrowserState).
+    window.gBrowser.removeTabsProgressListener(progressListener);
+    Services.ww.unregisterNotification(windowObserver);
+    runNextTest();
+  }
+
+  // We also want to catch the extra windows (there should be 2), so we need to observe domwindowopened
+  function windowObserver(aSubject, aTopic, aData) {
+    let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    if (aTopic == "domwindowopened") {
+      theWin.addEventListener("load", function() {
+        theWin.removeEventListener("load", arguments.callee, false);
+
+        Services.ww.unregisterNotification(windowObserver);
+        theWin.gBrowser.addTabsProgressListener(progressListener);
+      }, false);
+    }
+  }
+  Services.ww.registerNotification(windowObserver);
+
+  window.gBrowser.addTabsProgressListener(progressListener);
+  ss.setBrowserState(JSON.stringify(state1));
 }
 
 

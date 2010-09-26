@@ -491,18 +491,20 @@ ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 
 
 void
-ShadowLayerManager::DestroySharedSurface(gfxSharedImageSurface* aSurface)
+ShadowLayerManager::DestroySharedSurface(gfxSharedImageSurface* aSurface,
+                                         PLayersParent* aDeallocator)
 {
-  mForwarder->DeallocShmem(aSurface->GetShmem());
+  aDeallocator->DeallocShmem(aSurface->GetShmem());
 }
 
 void
-ShadowLayerManager::DestroySharedSurface(SurfaceDescriptor* aSurface)
+ShadowLayerManager::DestroySharedSurface(SurfaceDescriptor* aSurface,
+                                         PLayersParent* aDeallocator)
 {
   if (PlatformDestroySharedSurface(aSurface)) {
     return;
   }
-  DestroySharedShmemSurface(aSurface, mForwarder);
+  DestroySharedShmemSurface(aSurface, aDeallocator);
 }
 
 
