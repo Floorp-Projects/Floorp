@@ -148,7 +148,7 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 # need to pass arch flags for universal builds
 ifdef UNIVERSAL_BINARY
-MAKE_SYM_STORE_ARGS := -c -a "ppc i386" --vcs-info
+MAKE_SYM_STORE_ARGS := -c -a "i386 x86_64" --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/universal
 else
 MAKE_SYM_STORE_ARGS := -c -a $(OS_TEST) --vcs-info
