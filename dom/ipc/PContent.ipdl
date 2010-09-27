@@ -93,14 +93,7 @@ parent:
     async LoadURIExternal(URI uri);
 
     // PrefService messages
-    sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
-    sync GetBoolPref(nsCString prefName) returns (PRBool retValue, nsresult rv);
-    sync GetIntPref(nsCString prefName)  returns (PRInt32 retValue, nsresult rv);
-    sync GetCharPref(nsCString prefName) returns (nsCString retValue, nsresult rv);
-    sync GetPrefLocalizedString(nsCString prefName) returns (nsString retValue, nsresult rv);
-    sync PrefHasUserValue(nsCString prefName) returns (PRBool retValue, nsresult rv);
-    sync PrefIsLocked(nsCString prefName) returns (PRBool retValue, nsresult rv);
-    sync GetChildList(nsCString domain) returns (nsCString[] list, nsresult rv);
+    sync ReadPrefs() returns (nsCString retValue);
 
     // PermissionsManager messages
     sync TestPermission(URI uri, nsCString type, PRBool exact) returns (PRUint32 retValue);

@@ -40,7 +40,7 @@
 extern PLDHashTable			gHashTable;
 extern PRBool               gDirty;
 
-enum pref_SaveTypes { SAVE_NONSHARED, SAVE_SHARED, SAVE_ALL };
+enum pref_SaveTypes { SAVE_NONSHARED, SAVE_SHARED, SAVE_ALL, SAVE_ALL_AND_DEFAULTS };
 
 // Passed as the arg to pref_savePref
 struct pref_saveArgs {
