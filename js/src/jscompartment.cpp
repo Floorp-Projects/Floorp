@@ -300,11 +300,21 @@ JSCompartment::sweep(JSContext *cx)
         if (IsAboutToBeFinalized(e.front().value.toGCThing()))
             e.removeFront();
     }
+
+#if defined JS_METHODJIT && defined JS_MONOIC
+    for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
+        JSScript *script = reinterpret_cast<JSScript *>(cursor);
+        if (script->jit)
+            mjit::ic::SweepCallICs(script);
+    }
+#endif
 }
 
 void
 JSCompartment::purge(JSContext *cx)
 {
+    freeLists.purge();
+
 #ifdef JS_METHODJIT
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;

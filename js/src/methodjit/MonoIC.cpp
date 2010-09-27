@@ -732,7 +732,7 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
 }
 
 void
-ic::SweepCallICs(JSContext *cx, JSScript *script)
+ic::SweepCallICs(JSScript *script)
 {
     for (uint32 i = 0; i < script->jit->nCallICs; i++) {
         ic::CallICInfo &ic = script->callICs[i];
