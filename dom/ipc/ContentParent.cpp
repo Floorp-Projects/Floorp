@@ -512,22 +512,27 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 bool
 ContentParent::RecvGeolocationStart()
 {
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return true;
+  if (mGeolocationWatchID == -1) {
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
+      return true;
+    }
+    geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
   }
-  geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
   return true;
 }
 
 bool
 ContentParent::RecvGeolocationStop()
 {
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return true;
+  if (mGeolocationWatchID != -1) {
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
+      return true;
+    }
+    geo->ClearWatch(mGeolocationWatchID);
+    mGeolocationWatchID = -1;
   }
-  geo->ClearWatch(mGeolocationWatchID);
   return true;
 }
 
