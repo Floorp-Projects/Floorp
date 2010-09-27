@@ -497,6 +497,10 @@
         <parameter name="y"/>
         <body>
           <![CDATA[
+            let position = this.getPosition();
+            x = Math.floor(Math.max(0, Math.min(this.contentDocumentWidth, x + position.x)));
+            y = Math.floor(Math.max(0, Math.min(this.contentDocumentHeight, y + position.y)));
+
             this.contentWindow.scrollBy(x, y);
           ]]>
         </body>
@@ -508,6 +512,9 @@
         <parameter name="y"/>
         <body>
           <![CDATA[
+            x = Math.floor(Math.max(0, Math.min(this.contentDocumentWidth, x)));
+            y = Math.floor(Math.max(0, Math.min(this.contentDocumentHeight, y)));
+            
             this.contentWindow.scrollTo(x, y);
           ]]>
         </body>

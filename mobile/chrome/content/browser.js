@@ -108,7 +108,26 @@ function onDebugKeyPress(ev) {
   const y = 89;
   const z = 90;
 
+  function doSwipe(aDirection) {
+    let e = document.createEvent("SimpleGestureEvent");
+    e.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,
+                               0, 0, 0, 0, false, false, false, false, 0, null,
+                               aDirection, 0);
+    document.getElementById("inputhandler-overlay").dispatchEvent(e);
+  }
   switch (ev.charCode) {
+  case w:
+    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_UP);
+    break;
+  case s:
+    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_DOWN);
+    break;
+  case d:
+    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_RIGHT);
+    break;
+  case a:
+    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_LEFT);
+    break;
   case f:
     MemoryObserver.observe();
     dump("Forced a GC\n");
