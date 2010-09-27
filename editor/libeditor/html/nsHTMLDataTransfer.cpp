@@ -263,6 +263,22 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                     PRInt32 aDestOffset,
                                     PRBool aDeleteSelection)
 {
+  return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
+      aFlavor, aSourceDoc, aDestNode, aDestOffset, aDeleteSelection,
+      PR_TRUE);
+}
+
+nsresult
+nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
+                                      const nsAString & aContextStr,
+                                      const nsAString & aInfoStr,
+                                      const nsAString & aFlavor,
+                                      nsIDOMDocument *aSourceDoc,
+                                      nsIDOMNode *aDestNode,
+                                      PRInt32 aDestOffset,
+                                      PRBool aDeleteSelection,
+                                      PRBool aTrustedInput)
+{
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
   // force IME commit; set up rules sniffing and batching
@@ -285,7 +301,8 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                    address_of(streamStartParent),
                                    address_of(streamEndParent),
                                    &streamStartOffset,
-                                   &streamEndOffset);
+                                   &streamEndOffset,
+                                   aTrustedInput);
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMNode> targetNode, tempNode;
@@ -1301,11 +1318,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty())
         {
           nsAutoEditBatch beginBatching(this);
-          rv = InsertHTMLWithContext(cffragment,
-                                     cfcontext, cfselection, flavor,
-                                     aSourceDoc,
-                                     aDestinationNode, aDestOffset,
-                                     aDoDeleteSelection);
+          rv = DoInsertHTMLWithContext(cffragment,
+                                       cfcontext, cfselection, flavor,
+                                       aSourceDoc,
+                                       aDestinationNode, aDestOffset,
+                                       aDoDeleteSelection,
+                                       PR_FALSE);
         }
       }
     }
@@ -1319,11 +1337,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
         stuffToPaste.Assign(text.get(), len / 2);
         nsAutoEditBatch beginBatching(this);
-        rv = InsertHTMLWithContext(stuffToPaste,
-                                   aContextStr, aInfoStr, flavor,
-                                   aSourceDoc,
-                                   aDestinationNode, aDestOffset,
-                                   aDoDeleteSelection);
+        rv = DoInsertHTMLWithContext(stuffToPaste,
+                                     aContextStr, aInfoStr, flavor,
+                                     aSourceDoc,
+                                     aDestinationNode, aDestOffset,
+                                     aDoDeleteSelection,
+                                     PR_FALSE);
       }
     }
     else if (0 == nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
@@ -1389,11 +1408,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
             nsAutoEditBatch beginBatching(this);
 
             const nsAFlatString& empty = EmptyString();
-            rv = InsertHTMLWithContext(stuffToPaste,
-                                       empty, empty, flavor, 
-                                       aSourceDoc,
-                                       aDestinationNode, aDestOffset,
-                                       aDoDeleteSelection);
+            rv = DoInsertHTMLWithContext(stuffToPaste,
+                                         empty, empty, flavor, 
+                                         aSourceDoc,
+                                         aDestinationNode, aDestOffset,
+                                         aDoDeleteSelection,
+                                         PR_FALSE);
           }
         }
       }
@@ -1418,11 +1438,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       AppendUTF8toUTF16(base64, stuffToPaste);
       stuffToPaste.AppendLiteral("\" alt=\"\" >");
       nsAutoEditBatch beginBatching(this);
-      rv = InsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(), 
-                                 NS_LITERAL_STRING(kFileMime),
-                                 aSourceDoc,
-                                 aDestinationNode, aDestOffset,
-                                 aDoDeleteSelection);
+      rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(), 
+                                   NS_LITERAL_STRING(kFileMime),
+                                   aSourceDoc,
+                                   aDestinationNode, aDestOffset,
+                                   aDoDeleteSelection,
+                                   PR_FALSE);
       PR_Free(base64);
     }
   }
@@ -2552,7 +2573,8 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
                                                   nsCOMPtr<nsIDOMNode> *outStartNode,
                                                   nsCOMPtr<nsIDOMNode> *outEndNode,
                                                   PRInt32 *outStartOffset,
-                                                  PRInt32 *outEndOffset)
+                                                  PRInt32 *outEndOffset,
+                                                  PRBool aTrustedInput)
 {
   NS_ENSURE_TRUE(outFragNode && outStartNode && outEndNode, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
@@ -2571,7 +2593,8 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsCOMPtr<nsIDOMNode> contextLeaf, junk;
   if (!aContextStr.IsEmpty())
   {
-    res = ParseFragment(aContextStr, tagStack, doc, address_of(contextAsNode));
+    res = ParseFragment(aContextStr, tagStack, doc, address_of(contextAsNode),
+                        aTrustedInput);
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
 
@@ -2591,7 +2614,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   NS_ENSURE_SUCCESS(res, res);
 
   // create fragment for pasted html
-  res = ParseFragment(aInputString, tagStack, doc, outFragNode);
+  res = ParseFragment(aInputString, tagStack, doc, outFragNode, aTrustedInput);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
 
@@ -2651,7 +2674,8 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                                      nsTArray<nsString> &aTagStack,
                                      nsIDocument* aTargetDocument,
-                                     nsCOMPtr<nsIDOMNode> *outNode)
+                                     nsCOMPtr<nsIDOMNode> *outNode,
+                                     PRBool aTrustedInput)
 {
   // figure out if we are parsing full context or not
   PRBool bContext = aTagStack.IsEmpty();
@@ -2664,24 +2688,31 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
 
   // create the html fragment sink
   nsCOMPtr<nsIContentSink> sink;
-  if (bContext)
-    sink = do_CreateInstance(NS_HTMLPARANOIDFRAGMENTSINK2_CONTRACTID);
-  else
-    sink = do_CreateInstance(NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID);
+  if (aTrustedInput) {
+    if (bContext)
+      sink = do_CreateInstance(NS_HTMLFRAGMENTSINK2_CONTRACTID);
+    else
+      sink = do_CreateInstance(NS_HTMLFRAGMENTSINK_CONTRACTID);
+  } else {
+    if (bContext)
+      sink = do_CreateInstance(NS_HTMLPARANOIDFRAGMENTSINK2_CONTRACTID);
+    else
+      sink = do_CreateInstance(NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID);
+
+    nsCOMPtr<nsIParanoidFragmentContentSink> paranoidSink(do_QueryInterface(sink));
+    NS_ASSERTION(paranoidSink, "Our content sink is paranoid");
+    if (bContext) {
+      // Allow comments for the context to catch our placeholder cookie
+      paranoidSink->AllowComments();
+    } else {
+      // Allow style elements and attributes for the actual content
+      paranoidSink->AllowStyles();
+    }
+  }
 
   NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
   nsCOMPtr<nsIFragmentContentSink> fragSink(do_QueryInterface(sink));
   NS_ENSURE_TRUE(fragSink, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIParanoidFragmentContentSink> paranoidSink(do_QueryInterface(sink));
-  NS_ASSERTION(paranoidSink, "Our content sink is paranoid");
-  if (bContext) {
-    // Allow comemnts for the context to catch our placeholder cookie
-    paranoidSink->AllowComments();
-  } else {
-    // Allow style elements and attributes for the actual content
-    paranoidSink->AllowStyles();
-  }
 
   fragSink->SetTargetDocument(aTargetDocument);
 
