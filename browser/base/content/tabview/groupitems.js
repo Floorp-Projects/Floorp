@@ -954,19 +954,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: showExpandControl
   // Show the control which expands a stacked groupItem into a quick-look view.
   showExpandControl: function GroupItem_showExpandControl() {
-    var childBB = this.getChild(0).getBounds();
-    var dT = childBB.top - this.getBounds().top;
-    var dL = childBB.left - this.getBounds().left;
-
+    let parentBB = this.getBounds();
+    let childBB = this.getChild(0).getBounds();
+    let padding = 7;
     this.$expander
         .show()
         .css({
           opacity: .2,
-          top: dT + childBB.height + Math.min(7, (this.getBounds().bottom-childBB.bottom)/2),
-          // TODO: Why the magic -6? because the childBB.width seems to be over-sizing itself.
-          // But who can blame an object for being a bit optimistic when self-reporting size.
-          // It has to impress the ladies somehow. Bug 586549
-          left: dL + childBB.width/2 - this.$expander.width()/2 - 6,
+          top: childBB.top + childBB.height - parentBB.top + padding,
+          left: parentBB.width/2 - this.$expander.width()/2
         });
   },
 
