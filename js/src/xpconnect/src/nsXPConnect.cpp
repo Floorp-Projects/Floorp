@@ -948,7 +948,9 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
     SaveFrame sf(aJSContext);
 
-    JSAutoEnterCompartment autoCompartment(ccx, aGlobalJSObj);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(ccx, aGlobalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     xpc_InitJSxIDClassObjects();
 
@@ -1008,17 +1010,17 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         if(!tempGlobal)
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        JSAutoEnterCompartment autocompartment(cx, tempGlobal);
-
         *global = tempGlobal;
         *compartment = tempGlobal->getCompartment(cx);
+
+        js::SwitchToCompartment(cx, *compartment);
 
         JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(origin));
         map.Put(origin, *compartment);
     }
     else
     {
-        JSAutoEnterCompartment autocompartment(cx, *compartment);
+        js::SwitchToCompartment(cx, *compartment);
 
         tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1066,7 +1068,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                          aPrincipal, &tempGlobal, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSAutoEnterCompartment autocompartment(ccx, compartment);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(ccx, tempGlobal))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
     if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))

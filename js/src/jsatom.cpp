@@ -521,7 +521,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
             atoms.add(p, StringToInitialAtomEntry(key));
         } else {
             if (flags & ATOM_TMPSTR) {
-                JSAutoEnterCompartment ac(cx, cx->runtime->defaultCompartment);
+                SwitchToCompartment sc(cx, cx->runtime->defaultCompartment);
+
                 if (flags & ATOM_NOCOPY) {
                     key = js_NewString(cx, str->flatChars(), str->flatLength());
                     if (!key)

@@ -1486,8 +1486,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
     JSAutoRequest ar(mContext);
 
-    JSAutoCrossCompartmentCall accc;
-    if (!accc.enter(mContext, (JSObject *)aScopeObject)) {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mContext, (JSObject *)aScopeObject)) {
       JSPRINCIPALS_DROP(mContext, jsprin);
       stack->Pop(nsnull);
       return NS_ERROR_FAILURE;
@@ -1686,8 +1686,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
-    JSAutoCrossCompartmentCall accc;
-    if (!accc.enter(mContext, (JSObject *)aScopeObject)) {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mContext, (JSObject *)aScopeObject)) {
       stack->Pop(nsnull);
       JSPRINCIPALS_DROP(mContext, jsprin);
       return NS_ERROR_FAILURE;
@@ -2129,8 +2129,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     }
 
     jsval funval = OBJECT_TO_JSVAL(static_cast<JSObject *>(aHandler));
-    JSAutoCrossCompartmentCall accc;
-    if (!accc.enter(mContext, target)) {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mContext, target)) {
       stack->Pop(nsnull);
       return NS_ERROR_FAILURE;
     }

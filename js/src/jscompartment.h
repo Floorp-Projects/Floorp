@@ -40,6 +40,7 @@
 #ifndef jscompartment_h___
 #define jscompartment_h___
 
+#include "jscntxt.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsfun.h"
@@ -98,5 +99,35 @@ struct JSCompartment {
     void finishArenaLists();
     bool arenaListsAreEmpty();
 };
+
+namespace js {
+
+class PreserveCompartment {
+  protected:
+    JSContext *cx;
+  private:
+    JSCompartment *oldCompartment;
+  public:
+     PreserveCompartment(JSContext *cx) : cx(cx) {
+        oldCompartment = cx->compartment;
+    }
+
+    ~PreserveCompartment() {
+        cx->compartment = oldCompartment;
+    }
+};
+
+class SwitchToCompartment : public PreserveCompartment {
+  public:
+    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment) : PreserveCompartment(cx) {
+        cx->compartment = newCompartment;
+    }
+
+    SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
+        cx->compartment = target->getCompartment(cx);
+    }
+};
+
+}
 
 #endif /* jscompartment_h___ */
