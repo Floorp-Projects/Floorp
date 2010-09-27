@@ -870,23 +870,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     }
 }
 
-void
-mjit::SweepCallICs(JSContext *cx)
-{
-#ifdef JS_MONOIC
-    JSRuntime *rt = cx->runtime;
-    for (size_t i = 0; i < rt->compartments.length(); i++) {
-        JSCompartment *compartment = rt->compartments[i];
-        for (JSScript *script = (JSScript *)compartment->scripts.next;
-             &script->links != &compartment->scripts;
-             script = (JSScript *)script->links.next) {
-            if (script->jit)
-                ic::SweepCallICs(cx, script);
-        }
-    }
-#endif
-}
-
 #ifdef JS_METHODJIT_PROFILE_STUBS
 void JS_FASTCALL
 mjit::ProfileStubCall(VMFrame &f)
