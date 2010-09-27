@@ -108,6 +108,9 @@ interface nsIXULRuntime : nsISupports
    */
   void invalidateCachesOnRestart();
 
+  readonly attribute unsigned long long launchTimestamp;
+  readonly attribute unsigned long long startupTimestamp;
+
   /**
    * Starts a child process. This method is intented to pre-start a
    * content child process so that when it is actually needed, it is

@@ -226,9 +226,10 @@ var AddonManagerInternal = {
   startup: function AMI_startup() {
     if (this.started)
       return;
-
     this.installListeners = [];
     this.addonListeners = [];
+
+    this._addNotificationListeners();
 
     let appChanged = undefined;
 
@@ -844,13 +845,41 @@ var AddonManagerInternal = {
       return i != aListener;
     });
   },
-  
+
   get autoUpdateDefault() {
     try {
       return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
     } catch(e) { }
     return true;
-  }
+  },
+
+  /**
+   * Adds an AddonListener that uses the observer service to notify
+   * native code of the extension events.
+   *
+   * Currently only handles that subset of the events and data that
+     * the about:startup page requires.
+   *
+   */
+  _addNotificationListeners: function()
+  {
+    const svc = Cc["@mozilla.org/observer-service;1"]
+                  .getService(Ci.nsIObserverService);
+    function notify(msg, extension)
+    {
+      let bag = Cc["@mozilla.org/hash-property-bag;1"]
+                  .createInstance(Ci.nsIWritablePropertyBag2);
+      bag.setPropertyAsAString("id", extension.id);
+      bag.setPropertyAsAString("name", extension.name);
+      bag.setPropertyAsAString("version", extension.version);
+      svc.notifyObservers(bag, "AddonManager-event", msg);
+    }
+    this.addAddonListener({ onEnabling: function(extension) { notify("Enabled", extension) },
+                            onDisabling: function(extension) { notify("Disabled", extension) },
+                            onInstalling: function(extension) { notify("Installed", extension) },
+                            onUninstalling: function(extension) { notify("Uninstalled", extension) },
+                          });
+  },
 };
 
 /**

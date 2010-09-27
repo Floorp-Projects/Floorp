@@ -1,0 +1,44 @@
+<!-- LOCALIZATION NOTE: The terminology here relies on some subtle
+distinctions between closely-related concepts, so I will try to
+explain them in the localization notes. These strings are all used on
+the about:startup page. -->
+
+<!ENTITY about.startup.title "&brandShortName; Startup History">
+<!ENTITY about.startup.timestamp "Timestamp">
+<!ENTITY about.startup.elapsed "Elapsed Time">
+
+<!-- LOCALIZATION NOTE (about.startup.app.launched): The timestamp for
+when the user told his operating system to begin running Firefox. -->
+<!ENTITY about.startup.app.launched "&brandShortName; Launched">
+
+<!-- LOCALIZATION NOTE (about.startup.app.started): The timestamp for
+when the operating system handed control over to Firefox itself. -->
+<!ENTITY about.startup.app.started "&brandShortName; Started">
+
+<!-- LOCALIZATION NOTE (about.startup.app.ready): The timestamp for
+when the Firefox startup process finished, and when Firefox was first
+ready for the user to use. -->
+<!ENTITY about.startup.app.ready "&brandShortName; Ready">
+
+<!-- LOCALIZATION NOTE (about.startup.duration.launch): The amount of
+time between the launch and startup timestamps; the duration of the
+launch process. -->
+<!ENTITY about.startup.duration.launch "Launch Time">
+
+<!-- LOCALIZATION NOTE (about.startup.duration.startup): The amount of
+time between the startup and ready timestamps; the duration of the
+startup process. -->
+<!ENTITY about.startup.duration.startup "Startup Time">
+
+<!-- LOCALIZATION NOTE (about.startup.duration.ready): The total time
+that the user had to wait between when they lauched firefox and it was
+ready to use. -->
+<!ENTITY about.startup.duration.ready "Elapsed Time">
+
+<!ENTITY about.startup.version "Version">
+<!ENTITY about.startup.table "Show Table">
+<!ENTITY about.startup.graph "Show Graph">
+<!ENTITY about.startup.extension "Extension">
+<!ENTITY about.startup.extensionID "ID">
+<!ENTITY about.startup.action "Action">
+<!ENTITY about.startup.noevents "No Events Recorded">
