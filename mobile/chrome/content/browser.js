@@ -1020,11 +1020,8 @@ var Browser = {
         let tab = Browser.getTabForBrowser(browser);
         // Some browser such as iframes loaded dynamically into the chrome UI
         // does not have any assigned tab
-        if (tab) {
+        if (tab)
           tab.updateViewportMetadata(json);
-          if (!tab.isLoading())
-            tab.updateThumbnail();
-        }
         break;
 
       case "Browser:FormSubmit":
