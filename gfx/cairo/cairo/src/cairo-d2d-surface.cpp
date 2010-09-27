@@ -377,6 +377,9 @@ cairo_d2d_finish_device(cairo_device_t *device)
 	if (FAILED(query->GetData(&done, sizeof(BOOL), 0))) {
 	    break;
 	}
+	if (FAILED(d2d_device->mD3D10Device->GetDeviceRemovedReason())) {
+	    break;
+	}
     }
 }
 
