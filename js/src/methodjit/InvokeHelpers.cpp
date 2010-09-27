@@ -86,9 +86,6 @@ using namespace JSC;
         return v;       \
     } while (0)
 
-static bool
-InlineReturn(VMFrame &f, JSBool ok);
-
 static jsbytecode *
 FindExceptionHandler(JSContext *cx)
 {
@@ -642,30 +639,40 @@ AdvanceReturnPC(JSContext *cx)
 #ifdef JS_TRACER
 
 static inline bool
-SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
+HandleErrorInExcessFrames(VMFrame &f, JSStackFrame *stopFp)
 {
     JSContext *cx = f.cx;
 
-    /* Remove the bottom frame. */
-    bool ok = false;
-    for (;;) {
-        JSStackFrame *fp = cx->fp();
+    /*
+     * Callers of this called either Interpret() or JaegerShot(), which would
+     * have searched for exception handlers already. If we see stopFp, just
+     * return false. Otherwise, pop the frame, since it's guaranteed useless.
+     */
+    JSStackFrame *fp = cx->fp();
+    if (fp == stopFp)
+        return false;
 
-        /* Look for an imacro with hard-coded exception handlers. */
-        if (fp->hasImacropc() && cx->throwing) {
+    bool returnOK = InlineReturn(f, false);
+
+    /* Remove the bottom frame. */
+    for (;;) {
+        fp = cx->fp();
+
+        /* Clear imacros. */
+        if (fp->hasImacropc()) {
             cx->regs->pc = fp->imacropc();
             fp->clearImacropc();
-            if (ok)
-                break;
         }
         JS_ASSERT(!fp->hasImacropc());
 
         /* If there's an exception and a handler, set the pc and leave. */
-        jsbytecode *pc = FindExceptionHandler(cx);
-        if (pc) {
-            cx->regs->pc = pc;
-            ok = true;
-            break;
+        if (cx->throwing) {
+            jsbytecode *pc = FindExceptionHandler(cx);
+            if (pc) {
+                cx->regs->pc = pc;
+                returnOK = true;
+                break;
+            }
         }
 
         /* Don't unwind if this was the entry frame. */
@@ -673,15 +680,14 @@ SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
             break;
 
         /* Unwind and return. */
-        ok &= bool(js_UnwindScope(cx, 0, cx->throwing));
-        InlineReturn(f, ok);
+        returnOK = bool(js_UnwindScope(cx, 0, returnOK || cx->throwing));
+        returnOK = InlineReturn(f, returnOK);
     }
 
-    /* Update the VMFrame before leaving. */
     JS_ASSERT(&f.regs == cx->regs);
+    JS_ASSERT_IF(returnOK, cx->fp() == stopFp);
 
-    JS_ASSERT_IF(!ok, cx->fp() == stopFp);
-    return ok;
+    return returnOK;
 }
 
 static inline bool
@@ -728,7 +734,7 @@ FrameIsFinished(JSContext *cx)
 }
 
 static bool
-RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
+FinishExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 {
     JSContext *cx = f.cx;
     while (cx->fp() != entryFrame || entryFrame->hasImacropc()) {
@@ -737,7 +743,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
         if (AtSafePoint(cx)) {
             JSScript *script = fp->script();
             if (!JaegerShotAtSafePoint(cx, script->nmap[cx->regs->pc - script->code])) {
-                if (!SwallowErrors(f, entryFrame))
+                if (!HandleErrorInExcessFrames(f, entryFrame))
                     return false;
 
                 /* Could be anywhere - restart outer loop. */
@@ -747,7 +753,7 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
             AdvanceReturnPC(cx);
         } else {
             if (!PartialInterpret(f)) {
-                if (!SwallowErrors(f, entryFrame))
+                if (!HandleErrorInExcessFrames(f, entryFrame))
                     return false;
             } else if (cx->fp() != entryFrame) {
                 /*
@@ -838,7 +844,7 @@ RunTracer(VMFrame &f)
         return NULL;
 
       case TPA_Error:
-        if (!SwallowErrors(f, entryFrame))
+        if (!HandleErrorInExcessFrames(f, entryFrame))
             THROWV(NULL);
         JS_ASSERT(!cx->fp()->hasImacropc());
         break;
@@ -871,8 +877,8 @@ RunTracer(VMFrame &f)
      */
 
   restart:
-    /* Step 1. Initial removal of excess frames. */
-    if (!RemoveExcessFrames(f, entryFrame))
+    /* Step 1. Finish frames created after the entry frame. */
+    if (!FinishExcessFrames(f, entryFrame))
         THROWV(NULL);
 
     /* IMacros are guaranteed to have been removed by now. */
@@ -903,7 +909,7 @@ RunTracer(VMFrame &f)
 
     /* Step 4. Do a partial interp, then restart the whole process. */
     if (!PartialInterpret(f)) {
-        if (!SwallowErrors(f, entryFrame))
+        if (!HandleErrorInExcessFrames(f, entryFrame))
             THROWV(NULL);
     }
 
