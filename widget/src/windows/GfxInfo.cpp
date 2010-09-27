@@ -176,7 +176,8 @@ GfxInfo::Init()
 
   /* DeviceKey is "reserved" according to MSDN so we'll be careful with it */
   /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
-  if (wcsncmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
+  /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need to compare case insenstively */
+  if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
     return;
 
   // make sure the string is NULL terminated
