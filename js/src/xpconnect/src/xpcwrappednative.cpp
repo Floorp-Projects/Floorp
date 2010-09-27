@@ -519,8 +519,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             nsCOMPtr<nsIXPConnectWrappedJS> wrappedjs(do_QueryInterface(Object));
             JSObject *obj;
             wrappedjs->GetJSObject(&obj);
-            if(xpc::AccessCheck::isChrome(obj->getCompartment(ccx)) &&
-               !xpc::AccessCheck::isChrome(Scope->GetGlobalJSObject()->getCompartment(ccx)))
+            if(xpc::AccessCheck::isChrome(obj->getCompartment()) &&
+               !xpc::AccessCheck::isChrome(Scope->GetGlobalJSObject()->getCompartment()))
             {
                 needsCOW = JS_TRUE;
             }

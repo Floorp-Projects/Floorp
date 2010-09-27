@@ -1010,7 +1010,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
         *global = tempGlobal;
-        *compartment = tempGlobal->getCompartment(cx);
+        *compartment = tempGlobal->getCompartment();
 
         js::SwitchToCompartment sc(cx, *compartment);
 
