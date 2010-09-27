@@ -2246,7 +2246,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
         rt->protoHazardShape = 0;
     }
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->freeLists.purge();
+        (*c)->purge(cx);
 
     js_PurgeThreads(cx);
     {
@@ -2335,11 +2335,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 #ifdef JS_TRACER
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->traceMonitor.sweep();
-#endif
-
-#ifdef JS_METHODJIT
-    /* Fix-up call ICs guarding against unreachable objects. */
-    mjit::SweepCallICs(cx);
 #endif
 
     /*

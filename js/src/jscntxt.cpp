@@ -2200,8 +2200,6 @@ void
 JSContext::purge()
 {
     FreeOldArenas(runtime, &regExpPool);
-    /* FIXME: bug 586161 */
-    compartment->purge(this);
 }
 
 void
