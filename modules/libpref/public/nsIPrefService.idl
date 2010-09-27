@@ -153,7 +153,7 @@ interface nsIPrefService : nsISupports
 
 };
 
-[scriptable, uuid(00162579-0687-478d-8a52-f49714d4c1be)]
+[scriptable, uuid(37577836-e3fc-4a5e-b5d1-92a17fe0e7f7)]
 interface nsIPrefServiceInternal : nsISupports
 {
   /**
@@ -168,6 +168,8 @@ interface nsIPrefServiceInternal : nsISupports
    * @see readUserPrefs
    */
   void readExtensionPrefs(in nsILocalFile aFile);
+
+  ACString serializePreferences();
 };
 
 %{C++
