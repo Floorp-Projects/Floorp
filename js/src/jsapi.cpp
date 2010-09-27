@@ -708,10 +708,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(debuggerLock);
 #endif
     propertyTree.finish();
-    /* Delete all remaining Compartments. Ideally only the defaultCompartment should be left. */
-    for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c)
-        delete *c;
-    compartments.clear();
 }
 
 JS_PUBLIC_API(JSRuntime *)
@@ -2948,11 +2944,6 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     JSCompartment *compartment = NewCompartment(cx, principals);
     if (!compartment)
         return NULL;
-
-    if (!compartment->init()) {
-        delete compartment;
-        return NULL;
-    }
 
     JSCompartment *saved = cx->compartment;
     cx->compartment = compartment;

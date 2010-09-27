@@ -628,8 +628,6 @@ js_GCThingIsMarked(void *thing, uint32 color = BLACK)
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
-    rt->defaultCompartment->init();
-
     /*
      * Make room for at least 16 chunks so the table would not grow before
      * the browser starts up.
@@ -933,13 +931,14 @@ js_FinishGC(JSRuntime *rt)
     if (JS_WANT_GC_METER_PRINT)
         js_DumpGCStats(rt, stdout);
 #endif
+
+    /* Delete all remaining Compartments. Ideally only the defaultCompartment should be left. */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         JSCompartment *comp = *c;
         comp->finishArenaLists();
         delete comp;
     }
     rt->compartments.clear();
-
     rt->defaultCompartment = NULL;
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
