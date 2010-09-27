@@ -153,7 +153,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         }
 
         /* If the wrapped object is already in this compartment, we are done. */
-        if (obj->getCompartment(cx) == this)
+        if (obj->compartment() == this)
             return true;
     }
 

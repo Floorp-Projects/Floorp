@@ -1117,7 +1117,7 @@ struct JSObject : js::gc::Cell {
 
     inline void dropProperty(JSContext *cx, JSProperty *prop);
 
-    JS_FRIEND_API(JSCompartment *) getCompartment(JSContext *cx);
+    inline JSCompartment *getCompartment() const;
 
     inline JSObject *getThrowTypeError() const;
 
