@@ -6513,7 +6513,7 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(cx->regs == &regs);
 #ifdef JS_TRACER
     if (regs.fp->hasImacropc() && cx->throwing) {
-        // Handle other exceptions as if they came from the imacro-calling pc.
+        // Handle exceptions as if they came from the imacro-calling pc.
         regs.pc = regs.fp->imacropc();
         regs.fp->clearImacropc();
         atoms = script->atomMap.vector;
