@@ -25,6 +25,7 @@
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
  * Tim Taubert <tim.taubert@gmx.de>
+ * Sean Dunn <seanedunn@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -89,6 +90,7 @@ function TabItem(tab, options) {
   this.keepProportional = true;
   this._hasBeenDrawn = false;
   this._reconnected = false;
+  this.isStacked = false;
 
   var self = this;
 
@@ -133,7 +135,7 @@ function TabItem(tab, options) {
 
     var phantomMargin = 40;
 
-    var groupItemBounds = this.getBoundsWithTitle();
+    var groupItemBounds = this.getBounds();
     groupItemBounds.inset(-phantomMargin, -phantomMargin);
 
     iQ(".phantom").remove();
@@ -226,6 +228,15 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.canvasEl.width = w;
     this.canvasEl.height = h;
     this.tabCanvas.paint();
+  },
+
+  // ----------
+  // Function: _getFontSizeFromWidth
+  // Private method that returns the fontsize to use given the tab's width
+  _getFontSizeFromWidth: function TabItem__getFontSizeFromWidth(width) {
+    let widthRange = new Range(0,TabItems.tabWidth);
+    let proportion = widthRange.proportion(width-this.sizeExtra.x, true); // in [0,1]
+    return TabItems.fontSizeRange.scale(proportion);
   },
 
   // ----------
@@ -386,16 +397,21 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
-  setBounds: function TabItem_setBounds(rect, immediately, options) {
-    if (!Utils.isRect(rect)) {
-      Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
+  setBounds: function TabItem_setBounds(inRect, immediately, options) {
+    if (!Utils.isRect(inRect)) {
+      Utils.trace('TabItem.setBounds: rect is not a real rectangle!', inRect);
       return;
     }
 
     if (!options)
       options = {};
 
-    TabItems.enforceMinSize(rect);
+    // force the input size to be valid
+    let validSize = TabItems.calcValidSize(
+      new Point(inRect.width, inRect.height), 
+      {hideTitle: (this.isStacked || options.hideTitle === true)});
+    let rect = new Rect(inRect.left, inRect.top, 
+      validSize.x, validSize.y);
 
     if (this._zoomPrep)
       this.bounds.copy(rect);
@@ -407,8 +423,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var $fav   = iQ(this.favEl);
       var css = {};
 
-      const fontSizeRange = new Range(8,15);
-
       if (rect.left != this.bounds.left || options.force)
         css.left = rect.left;
 
@@ -417,15 +431,16 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       if (rect.width != this.bounds.width || options.force) {
         css.width = rect.width - this.sizeExtra.x;
-        let widthRange = new Range(0,TabItems.tabWidth);
-        let proportion = widthRange.proportion(css.width, true); // in [0,1]
-
-        css.fontSize = fontSizeRange.scale(proportion); // returns a value in the fontSizeRange
+        css.fontSize = this._getFontSizeFromWidth(rect.width);
         css.fontSize += 'px';
       }
 
-      if (rect.height != this.bounds.height || options.force)
-        css.height = rect.height - this.sizeExtra.y;
+      if (rect.height != this.bounds.height || options.force) {
+        if (!this.isStacked)
+          css.height = rect.height - this.sizeExtra.y - TabItems.fontSizeRange.max;
+        else
+          css.height = rect.height - this.sizeExtra.y;
+      }
 
       if (Utils.isEmptyObject(css))
         return;
@@ -448,8 +463,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         });
       }
 
-      if (css.fontSize && !this.inStack()) {
-        if (css.fontSize < fontSizeRange.min)
+      if (css.fontSize && !this.isStacked) {
+        if (css.fontSize < TabItems.fontSizeRange.min)
           immediately ? $title.hide() : $title.fadeOut();
         else
           immediately ? $title.show() : $title.fadeIn();
@@ -460,7 +475,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         let widthRange, proportion;
 
-        if (this.inStack()) {
+        if (this.isStacked) {
           if (UI.rtl) {
             $fav.css({top:0, right:0});
           } else {
@@ -509,25 +524,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.setTrenches(rect);
 
     this.save();
-  },
-
-  // ----------
-  // Function: getBoundsWithTitle
-  // Returns a <Rect> for the groupItem's bounds, including the title
-  getBoundsWithTitle: function TabItem_getBoundsWithTitle() {
-    var b = this.getBounds();
-    var $title = iQ(this.container).find('.tab-title');
-    var height = b.height;
-    if ( Utils.isNumber($title.height()) )
-      height += $title.height();
-    return new Rect(b.left, b.top, b.width, height);
-  },
-
-  // ----------
-  // Function: inStack
-  // Returns true if this item is in a stacked groupItem.
-  inStack: function TabItem_inStack() {
-    return iQ(this.container).hasClass("stacked");
   },
 
   // ----------
@@ -678,11 +674,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   complete - a function to call after the zoom down animation
   zoomOut: function TabItem_zoomOut(complete) {
     var $tab = iQ(this.container);
-
-    var box = this.getBounds();
-    box.width -= this.sizeExtra.x;
-    box.height -= this.sizeExtra.y;
-
     var self = this;
     
     let onZoomDone = function onZoomDone() {
@@ -696,6 +687,13 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     
     let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
     if (animateZoom) {
+      let box = this.getBounds();
+      box.width -= this.sizeExtra.x;
+      if (!this.isStacked)
+        box.height -= this.sizeExtra.y + TabItems.fontSizeRange.max;
+      else
+        box.height -= this.sizeExtra.y;
+  
       TabItems.pausePainting();
       $tab.animate({
         left: box.left,
@@ -769,6 +767,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         .css(this.getZoomRect(2));
     } else {
       let box = this.getBounds();
+
       this._zoomPrep = false;
       $div.removeClass('front');
 
@@ -784,7 +783,10 @@ let TabItems = {
   minTabWidth: 40,
   tabWidth: 160,
   tabHeight: 120,
+  tabAspect: 0, // set in init
+  invTabAspect: 0, // set in init  
   fontSize: 9,
+  fontSizeRange: new Range(8,15),
   items: [],
   paintingPaused: 0,
   cachedDataCounter: 0,  // total number of cached data being displayed.
@@ -807,6 +809,8 @@ let TabItems = {
     let self = this;
     
     this.minTabHeight = this.minTabWidth * this.tabHeight / this.tabWidth;
+    this.tabAspect = this.tabHeight / this.tabWidth;
+    this.invTabAspect = 1 / this.tabAspect;
 
     let $canvas = iQ("<canvas>")
       .attr('moz-opaque', '');
@@ -1202,17 +1206,58 @@ let TabItems = {
 
     return sane;
   },
+  
+  // ----------
+  // Function: _getWidthForHeight
+  // Private method that returns the tabitem width given a height.
+  // Set options.hideTitle=true to measure without a title.
+  // Default is to measure with a title.
+  _getWidthForHeight: function TabItems__getWidthForHeight(height, options) {    
+    let titleSize = (options !== undefined && options.hideTitle === true) ? 
+      0 : TabItems.fontSizeRange.max;
+    return Math.max(0, Math.max(TabItems.minTabHeight, height - titleSize)) * 
+      TabItems.invTabAspect;
+  },
 
   // ----------
-  // Function: enforceMinSize
-  // Takes a <Rect> and modifies that <Rect> in case it is too small to be
-  // the bounds of a <TabItem>.
-  //
-  // Parameters:
-  //   bounds - (<Rect>) the target bounds of a <TabItem>
-  enforceMinSize: function TabItems_enforceMinSize(bounds) {
-    bounds.width = Math.max(bounds.width, this.minTabWidth);
-    bounds.height = Math.max(bounds.height, this.minTabHeight);
+  // Function: _getHeightForWidth
+  // Private method that returns the tabitem height given a width.
+  // Set options.hideTitle=false to measure without a title.
+  // Default is to measure with a title.
+  _getHeightForWidth: function TabItems__getHeightForWidth(width, options) {
+    let titleSize = (options !== undefined && options.hideTitle === true) ? 
+      0 : TabItems.fontSizeRange.max;
+    return Math.max(0, Math.max(TabItems.minTabWidth,width)) *
+      TabItems.tabAspect + titleSize;
+  },
+  
+  // ----------
+  // Function: calcValidSize
+  // Pass in a desired size, and receive a size based on proper title
+  // size and aspect ratio.
+  calcValidSize: function TabItems_calcValidSize(size, options) {
+    Utils.assert(Utils.isPoint(size), 'input is a Point');
+    let retSize = new Point(0,0);
+    if (size.x==-1) {
+      retSize.x = this._getWidthForHeight(size.y, options);
+      retSize.y = size.y;
+    } else if (size.y==-1) {
+      retSize.x = size.x;
+      retSize.y = this._getHeightForWidth(size.x, options);
+    } else {
+      let fitHeight = this._getHeightForWidth(size.x, options);
+      let fitWidth = this._getWidthForHeight(size.y, options);
+
+      // Go with the smallest final dimension.
+      if (fitWidth < size.x) {
+        retSize.x = fitWidth;
+        retSize.y = size.y;
+      } else {
+        retSize.x = size.x;
+        retSize.y = fitHeight;
+      }
+    }
+    return retSize;
   }
 };
 
