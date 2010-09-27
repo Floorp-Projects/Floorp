@@ -1588,11 +1588,11 @@ nsDOMWorker::PostMessageInternal(PRBool aToInner)
 
 PRBool
 nsDOMWorker::SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest,
-                                 JSAutoCrossCompartmentCall *aCall)
+                                 JSAutoEnterCompartment *aComp)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  if (!CompileGlobalObject(aCx, aRequest, aCall)) {
+  if (!CompileGlobalObject(aCx, aRequest, aComp)) {
     return PR_FALSE;
   }
 
@@ -1602,7 +1602,7 @@ nsDOMWorker::SetGlobalForContext(JSContext* aCx, nsLazyAutoRequest *aRequest,
 
 PRBool
 nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
-                                 JSAutoCrossCompartmentCall *aCall)
+                                 JSAutoEnterCompartment *aComp)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -1612,16 +1612,16 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
   // failure, the local request and call will automatically get cleaned
   // up. Once success is certain, we swap them into *aRequest and *aCall.
   nsLazyAutoRequest localRequest;
-  JSAutoCrossCompartmentCall localCall;
+  JSAutoEnterCompartment localAutoCompartment;
   localRequest.enter(aCx);
 
   PRBool success;
   if (mGlobal) {
-    success = localCall.enter(aCx, mGlobal);
+    success = localAutoCompartment.enter(aCx, mGlobal);
     NS_ENSURE_TRUE(success, PR_FALSE);
 
     aRequest->swap(localRequest);
-    aCall->swap(localCall);
+    aComp->swap(localAutoCompartment);
     return PR_TRUE;
   }
 
@@ -1662,7 +1662,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
 
   NS_ASSERTION(JS_GetGlobalObject(aCx) == global, "Global object mismatch!");
 
-  success = localCall.enter(aCx, global);
+  success = localAutoCompartment.enter(aCx, global);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
 #ifdef DEBUG
@@ -1734,7 +1734,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
   NS_ASSERTION(mPrincipal && mURI, "Script loader didn't set our principal!");
 
   aRequest->swap(localRequest);
-  aCall->swap(localCall);
+  aComp->swap(localAutoCompartment);
   return PR_TRUE;
 }
 
