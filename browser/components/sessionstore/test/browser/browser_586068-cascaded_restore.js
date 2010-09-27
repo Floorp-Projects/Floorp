@@ -50,7 +50,7 @@ function test() {
 
 let tests = [test_cascade, test_select, test_multiWindowState,
              test_setWindowStateNoOverwrite, test_setWindowStateOverwrite,
-             test_setBrowserStateInterrupted, test_reload];
+             test_setBrowserStateInterrupted];
 function runNextTest() {
   // Reset the pref
   try {
@@ -60,7 +60,6 @@ function runNextTest() {
   // set an empty state & run the next test, or finish
   if (tests.length) {
     ss.setBrowserState(JSON.stringify({ windows: [{ tabs: [{ url: 'about:blank' }], }] }));
-    info("running next test");
     executeSoon(tests.shift());
   }
   else {
@@ -529,66 +528,6 @@ function test_setBrowserStateInterrupted() {
 
   window.gBrowser.addTabsProgressListener(progressListener);
   ss.setBrowserState(JSON.stringify(state1));
-}
-
-
-function test_reload() {
-  // Set the pref to 0 so we know exactly how many tabs should be restoring at
-  // any given time. This guarantees that a finishing load won't start another.
-  Services.prefs.setIntPref("browser.sessionstore.max_concurrent_tabs", 0);
-
-  // We have our own progress listener for this test, which we'll attach before our state is set
-  let progressListener = {
-    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-      if (aBrowser.__SS_restoring &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
-        test_reload_progressCallback(aBrowser);
-    }
-  }
-
-  let state = { windows: [{ tabs: [
-    { entries: [{ url: "http://example.org/#1" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#2" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#3" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#4" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#5" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#6" }], extData: { "uniq": r() } }
-  ], selected: 1 }] };
-
-  let loadCount = 0;
-  function test_reload_progressCallback(aBrowser) {
-    loadCount++;
-
-    is(aBrowser.currentURI.spec, state.windows[0].tabs[loadCount - 1].entries[0].url,
-       "test_reload: load " + loadCount + " - browser loaded correct url");
-
-    if (loadCount <= state.windows[0].tabs.length) {
-      // double check that this tab was the right one
-      let expectedData = state.windows[0].tabs[loadCount - 1].extData.uniq;
-      let tab;
-      for (let i = 0; i < window.gBrowser.tabs.length; i++) {
-        if (!tab && window.gBrowser.tabs[i].linkedBrowser == aBrowser)
-          tab = window.gBrowser.tabs[i];
-      }
-      is(ss.getTabValue(tab, "uniq"), expectedData,
-         "test_reload: load " + loadCount + " - correct tab was restored");
-
-      if (loadCount == state.windows[0].tabs.length) {
-        window.gBrowser.removeTabsProgressListener(progressListener);
-        runNextTest();
-      }
-      else {
-        // reload the next tab
-        window.gBrowser.reloadTab(window.gBrowser.tabs[loadCount]);
-      }
-    }
-
-  }
-
-  window.gBrowser.addTabsProgressListener(progressListener);
-  ss.setBrowserState(JSON.stringify(state));
 }
 
 
