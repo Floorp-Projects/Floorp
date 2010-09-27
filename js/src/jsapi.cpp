@@ -1184,7 +1184,7 @@ bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
     JS_ASSERT(!call);
-    if (cx->compartment == target->getCompartment(cx))
+    if (cx->compartment == target->getCompartment())
         return true;
     call = JS_EnterCrossCompartmentCall(cx, target);
     return call != NULL;
@@ -1236,7 +1236,7 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
      * need to "move" the window from wrapper's compartment to target's
      * compartment.
      */
-    JSCompartment *destination = target->getCompartment(cx);
+    JSCompartment *destination = target->getCompartment();
 
     JSObject *obj;
     WrapperMap &map = destination->crossCompartmentWrappers;
@@ -1302,7 +1302,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 
     cx->globalObject = obj;
     if (!cx->maybefp())
-        cx->compartment = obj ? obj->getCompartment(cx) : cx->runtime->defaultCompartment;
+        cx->compartment = obj ? obj->getCompartment() : cx->runtime->defaultCompartment;
 }
 
 class AutoResolvingEntry {
@@ -2976,13 +2976,10 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     CHECK_REQUEST(cx);
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, Valueify(clasp), NULL, NULL);
-    if (!obj ||
-        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_COMPARTMENT,
-                            PrivateValue(cx->compartment))) {
+    if (!obj)
         return NULL;
-    }
 
-    /* FIXME: comment. */
+    /* Construct a regexp statics object for this global object. */
     JSObject *res = regexp_statics_construct(cx);
     if (!res ||
         !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS,

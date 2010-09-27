@@ -6207,7 +6207,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
             (void) clasp->mark(cx, obj, trc);
     }
     if (clasp->flags & JSCLASS_IS_GLOBAL) {
-        JSCompartment *compartment = obj->getCompartment(cx);
+        JSCompartment *compartment = obj->getCompartment();
         compartment->marked = true;
     }
 
@@ -6324,41 +6324,6 @@ js_ReportGetterOnlyAssignment(JSContext *cx)
                                         JSREPORT_STRICT_MODE_ERROR,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_GETTER_ONLY);
-}
-
-JSCompartment *
-JSObject::getCompartment(JSContext *cx)
-{
-    JSObject *obj = getGlobal();
-
-    Class *clasp = obj->getClass();
-    if (!(clasp->flags & JSCLASS_IS_GLOBAL)) {
-#if JS_HAS_XML_SUPPORT
-        // The magic AnyName object is runtime-wide.
-        if (clasp == &js_AnyNameClass)
-            return cx->runtime->defaultCompartment;
-
-        // The magic function namespace object is runtime-wide.
-        if (clasp == &js_NamespaceClass &&
-            obj->getNameURI() == ATOM_TO_JSVAL(cx->runtime->
-                                               atomState.functionNamespaceURIAtom)) {
-            return cx->runtime->defaultCompartment;
-        }
-#endif
-
-        /*
-         * Script objects and compile-time Function, Block, RegExp objects
-         * are not parented.
-         */
-        if (clasp == &js_FunctionClass || clasp == &js_BlockClass || clasp == &js_RegExpClass ||
-            clasp == &js_ScriptClass) {
-            // This is a bogus answer, but it'll do for now.
-            return cx->runtime->defaultCompartment;
-        }
-        JS_NOT_REACHED("non-global object at end of scope chain");
-    }
-    const Value &v = obj->getReservedSlot(JSRESERVED_GLOBAL_COMPARTMENT);
-    return (JSCompartment *)v.toPrivate();
 }
 
 JS_FRIEND_API(JSBool)

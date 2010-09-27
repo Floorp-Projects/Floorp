@@ -46,6 +46,7 @@
 #include "jsstaticcheck.h"
 #include "jsxml.h"
 #include "jsregexp.h"
+#include "jsgc.h"
 
 inline js::RegExpStatics *
 JSContext::regExpStatics()
@@ -525,7 +526,7 @@ class CompartmentChecker
 
     void check(JSObject *obj) {
         if (obj)
-            check(obj->getCompartment(context));
+            check(obj->getCompartment());
     }
 
     void check(const js::Value &v) {

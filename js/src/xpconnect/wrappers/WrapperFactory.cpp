@@ -80,7 +80,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     if (!obj)
         return nsnull;
 
-    JSCompartment *origin = obj->getCompartment(cx);
+    JSCompartment *origin = obj->getCompartment();
     JSCompartment *target = cx->compartment;
     JSObject *xrayHolder = nsnull;
 

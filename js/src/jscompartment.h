@@ -123,7 +123,7 @@ class SwitchToCompartment : public PreserveCompartment {
     }
 
     SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
-        cx->compartment = target->getCompartment(cx);
+        cx->compartment = target->getCompartment();
     }
 };
 
