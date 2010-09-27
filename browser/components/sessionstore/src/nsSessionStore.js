@@ -2435,10 +2435,7 @@ SessionStoreService.prototype = {
       history.PurgeHistory(history.count);
     }
     history.QueryInterface(Ci.nsISHistoryInternal);
-
-    browser.__SS_shistoryListener = new SessionStoreSHistoryListener(this, tab);
-    history.addSHistoryListener(browser.__SS_shistoryListener);
-
+    
     if (!tabData.entries) {
       tabData.entries = [];
     }
@@ -3521,15 +3518,12 @@ SessionStoreService.prototype = {
     this._tabsRestoringCount = 0;
   },
 
-  _resetTabRestoringState: function sss__resetTabRestoringState(aTab, aShouldRestoreTab) {
+  _resetTabRestoringState: function sss__resetTabRestoringState(aTab, aRestoreNextTab) {
     let browser = aTab.linkedBrowser;
-
-    // Always delete the session history listener off the browser
-    delete browser.__SS_shistoryListener;
 
     if (browser.__SS_restoring) {
       delete browser.__SS_restoring;
-      if (aShouldRestoreTab) {
+      if (aRestoreNextTab) {
         // this._tabsRestoringCount is decremented in restoreNextTab.
         this.restoreNextTab(true);
       }
@@ -3540,32 +3534,13 @@ SessionStoreService.prototype = {
       }
     }
     else if (browser.__SS_needsRestore) {
-      // First we'll remove the tab from the hidden/visible array of tabs left
-      // to restore.
-      let splicedTabs;
-      if (aTab.hidden) {
-        splicedTabs =
-          this._tabsToRestore.hidden.splice(this._tabsToRestore.hidden.indexOf(aTab), 1);
-      }
-      else {
-        splicedTabs =
-          this._tabsToRestore.visible.splice(this._tabsToRestore.visible.indexOf(aTab), 1);
-      }
-      if (aShouldRestoreTab && splicedTabs.length) {
-        // If we want to restore the tab, then we'll do that. This tab still
-        // needs restore, so we're going to restore this one, not the next one
-        // as was done above.
-        this.restoreTab(aTab);
-      }
-      else {
-        // If we don't want to restore the tab, we want to explicitly remove
-        // __SS_needsRestore and decrement __SS_tabsToRestore. Normally this is
-        // done in restoreTab.
-        let window = aTab.ownerDocument.defaultView;
-        window.__SS_tabsToRestore--;
-        delete browser.__SS_needsRestore;
-      }
-
+      let window = aTab.ownerDocument.defaultView;
+      window.__SS_tabsToRestore--;
+      delete browser.__SS_needsRestore;
+      if (aTab.hidden)
+        this._tabsToRestore.hidden.splice(this._tabsToRestore.hidden.indexOf(aTab));
+      else
+        this._tabsToRestore.visible.splice(this._tabsToRestore.visible.indexOf(aTab));
     }
   },
 
@@ -3700,10 +3675,11 @@ let XPathHelper = {
 let gRestoreTabsProgressListener = {
   ss: null,
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-    // Ignore state changes on browsers that we've already restored and state
-    // changes that aren't applicable.
-    if (aBrowser.__SS_restoring &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+    // Ignore state changes on browsers that we've already restored
+    if (!aBrowser.__SS_restoring)
+      return;
+
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
       delete aBrowser.__SS_restoring;
@@ -3711,35 +3687,6 @@ let gRestoreTabsProgressListener = {
     }
   }
 }
-
-// A SessionStoreSHistoryListener will be attached to each browser before it is
-// restored. We need to catch reloads that occur before the tab is restored
-// because otherwise, docShell will reload an old URI (usually about:blank).
-function SessionStoreSHistoryListener(ss, aTab) {
-  this.tab = aTab;
-  this.ss = ss;
-}
-SessionStoreSHistoryListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISHistoryListener,
-                                         Ci.nsISupportsWeakReference]),
-  browser: null,
-  ss: null,
-  OnHistoryNewEntry: function(aNewURI) { },
-  OnHistoryGoBack: function(aBackURI) { return true; },
-  OnHistoryGoForward: function(aForwardURI) { return true; },
-  OnHistoryGotoIndex: function(aIndex, aGotoURI) { return true; },
-  OnHistoryPurge: function(aNumEntries) { return true; },
-  OnHistoryReload: function(aReloadURI, aReloadFlags) {
-    // On reload, we want to make sure that session history loads the right
-    // URI. In order to do that, we will call _resetTabRestoringState.
-    // __SS_needsRestore will still be on this tab's browser, so we will end up
-    // calling restoreTab and this tab will be loaded.
-    this.ss._resetTabRestoringState(this.tab, true);
-    // Returning false will stop the load that docshell is attempting.
-    return false;
-  }
-}
-
 
 // see nsPrivateBrowsingService.js
 String.prototype.hasRootDomain = function hasRootDomain(aDomain)
