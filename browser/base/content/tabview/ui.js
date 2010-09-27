@@ -762,6 +762,25 @@ let UI = {
   },
 
   // ----------
+  // Function: getClosestTab
+  // Convenience function to get the next tab closest to the entered position
+  getClosestTab: function UI_getClosestTab(tabCenter) {
+    let cl = null;
+    let clDist;
+    for each(item in TabItems.getItems()) {
+      if (item.parent && item.parent.hidden) {
+        continue;
+      }
+      let testDist = tabCenter.distance(item.bounds.center());
+      if (cl==null || testDist < clDist) {
+        cl = item;
+        clDist = testDist;
+      }
+    }
+    return cl;
+  },
+
+  // ----------
   // Function: _setTabViewFrameKeyHandlers
   // Sets up the key handlers for navigating between tabs within the TabView UI.
   _setTabViewFrameKeyHandlers: function UI__setTabViewFrameKeyHandlers() {

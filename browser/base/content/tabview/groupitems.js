@@ -568,6 +568,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: closeAll
   // Closes the groupItem and all of its children.
   closeAll: function GroupItem_closeAll() {
+    let closeCenter = this.getBounds().center();
     if (this._children.length > 0) {
       this._children.forEach(function(child) {
         iQ(child.container).hide();
@@ -588,6 +589,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!this.locked.close)
         this.close();
     }
+    // Find closest tab to make active
+    UI.setActiveTab( UI.getClosestTab(closeCenter) );
   },
 
   // ----------
