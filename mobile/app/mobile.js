@@ -386,13 +386,8 @@ pref("browser.ui.touch.bottom", 4);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
-#if ANDROID
 pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", false);
-#else
-pref("plugin.disable", false);
-pref("dom.ipc.plugins.enabled", true);
-#endif
 
 // product URLs
 // The breakpad report server to link to in about:crashes
