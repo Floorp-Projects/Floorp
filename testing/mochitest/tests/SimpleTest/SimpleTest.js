@@ -38,13 +38,13 @@ if (parentRunner) {
 SimpleTest.testPluginIsOOP = function () {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(CI.nsIPrefBranch);
+                                .getService(Components.interfaces.nsIPrefBranch);
 
     var testPluginIsOOP = false;
     if (navigator.platform.indexOf("Mac") == 0) {
         var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                                   .getService(CI.nsIXULAppInfo)
-                                   .QueryInterface(CI.nsIXULRuntime);
+                                   .getService(Components.interfaces.nsIXULAppInfo)
+                                   .QueryInterface(Components.interfaces.nsIXULRuntime);
         if (xulRuntime.XPCOMABI.match(/x86-/)) {
             try {
                 testPluginIsOOP = prefservice.getBoolPref("dom.ipc.plugins.enabled.i386.test.plugin");
