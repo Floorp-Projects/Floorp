@@ -25,6 +25,7 @@
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
  * Tim Taubert <tim.taubert@gmx.de>
+ * Sean Dunn <seanedunn@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -420,16 +421,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
-  setBounds: function GroupItem_setBounds(rect, immediately, options) {
-    if (!Utils.isRect(rect)) {
-      Utils.trace('GroupItem.setBounds: rect is not a real rectangle!', rect);
+  setBounds: function GroupItem_setBounds(inRect, immediately, options) {
+    if (!Utils.isRect(inRect)) {
+      Utils.trace('GroupItem.setBounds: rect is not a real rectangle!', inRect);
       return;
     }
 
+    // Validate and conform passed in size
+    let validSize = GroupItems.calcValidSize(
+      new Point(inRect.width, inRect.height));
+    let rect = new Rect(inRect.left, inRect.top, validSize.x, validSize.y);
+
     if (!options)
       options = {};
-
-    GroupItems.enforceMinSize(rect);
 
     var titleHeight = this.$titlebar.height();
 
@@ -939,6 +943,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.setParent(null);
       item.removeClass("tabInGroupItem");
       item.removeClass("stacked");
+      item.isStacked = false;
       item.removeClass("stack-trayed");
       item.setRotation(0);
 
@@ -1068,7 +1073,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: shouldStack
-  // Returns true if the groupItem should stack (instead of grid).
+  // Returns true if the groupItem, given "count", should stack (instead of 
+  // grid).
   shouldStack: function GroupItem_shouldStack(count) {
     if (count <= 1)
       return false;
@@ -1076,7 +1082,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var bb = this.getContentBounds();
     var options = {
       return: 'widthAndColumns',
-      count: count || this._children.length
+      count: count || this._children.length,
+      hideTitle: false
     };
     let arrObj = Items.arrange(null, bb, options);
  
@@ -1160,28 +1167,25 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var maxRotation = 35; // degress
     var scale = 0.8;
     var newTabsPad = 10;
-    var w;
-    var h;
     var itemAspect = TabItems.tabHeight / TabItems.tabWidth;
     var bbAspect = bb.height / bb.width;
 
-    // compute h and w. h and w are the dimensions of each of the tabs... in other words, the
-    // height and width of the entire stack, modulo rotation.
+    // compute size of the entire stack, modulo rotation.
+    let size;
     if (bbAspect > itemAspect) { // Tall, thin groupItem
-      w = bb.width * scale;
-      h = w * itemAspect;
-      // let's say one, because, even though there's more space, we're enforcing that with scale.
-    } else { // Short, wide groupItem
-      h = bb.height * scale;
-      w = h * (1 / itemAspect);
-    }
+      size = TabItems.calcValidSize(new Point(bb.width * scale, -1),
+        {hideTitle:true});
+     } else { // Short, wide groupItem
+      size = TabItems.calcValidSize(new Point(-1, bb.height * scale),
+        {hideTitle:true});
+     }
+
 
     // x is the left margin that the stack will have, within the content area (bb)
     // y is the vertical margin
-    var x = (bb.width - w) / 2;
-
-    var y = Math.min(x, (bb.height - h) / 2);
-    var box = new Rect(bb.left + x, bb.top + y, w, h);
+    var x = (bb.width - size.x) / 2;
+    var y = Math.min(size.x, (bb.height - size.y) / 2);
+    var box = new Rect(bb.left + x, bb.top + y, size.x, size.y);
 
     var self = this;
     var children = [];
@@ -1198,7 +1202,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         zIndex--;
 
         child.addClass("stacked");
-        child.setBounds(box, !animate);
+        child.isStacked = true;
+        // Force a recalculation of height because we've changed how the title
+        // is shown.
+        child.setBounds(box, !animate, {force:true});
         child.setRotation((UI.rtl ? -1 : 1) * Math.min(index, 5) * 5);
       }
     });
@@ -1238,7 +1245,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
       childrenToArrange.forEach(function(child) {
-        child.removeClass("stacked")
+        child.removeClass("stacked");
+        child.isStacked = false;
       });
     }
   
@@ -1248,10 +1256,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // Items.arrange will determine where/how the child items should be
     // placed, but will *not* actually move them for us. This is our job.
     let result = Items.arrange(childrenToArrange, box, arrangeOptions);
-    let {dropIndex, rects} = result;
+    let {dropIndex, rects, columns} = result;
     if ("oldDropIndex" in options && options.oldDropIndex === dropIndex)
       return dropIndex;
 
+    this._columns = columns;
     let index = 0;
     let self = this;
     childrenToArrange.forEach(function GroupItem_arrange_children_each(child, i) {
@@ -1643,7 +1652,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
 // ##########
 // Class: GroupItems
-// Singelton for managing all <GroupItem>s.
+// Singleton for managing all <GroupItem>s.
 let GroupItems = {
   groupItems: [],
   nextID: 1,
@@ -2084,7 +2093,7 @@ let GroupItems = {
     // the orphan tab would be the same as tabItem when all tabs are app tabs
     // and a new tab is created.
     if (orphanTabItem && orphanTabItem.tab != tabItem.tab) {
-      newGroupItemBounds = orphanTabItem.getBoundsWithTitle();
+      newGroupItemBounds = orphanTabItem.getBounds();
       tabItems = [orphanTabItem, tabItem];
     } else {
       tabItem.setPosition(60, 60, true);
@@ -2362,18 +2371,6 @@ let GroupItems = {
   },
 
   // ----------
-  // Function: enforceMinSize
-  // Takes a <Rect> and modifies that <Rect> in case it is too small to be
-  // the bounds of a <GroupItem>.
-  //
-  // Parameters:
-  //   bounds - (<Rect>) the target bounds of a <GroupItem>
-  enforceMinSize: function GroupItems_enforceMinSize(bounds) {
-    bounds.width = Math.max(bounds.width, this.minGroupWidth);
-    bounds.height = Math.max(bounds.height, this.minGroupHeight);
-  },
-
-  // ----------
   // Function: getUnclosableGroupItemId
   // If there's only one (non-hidden) group, and there are app tabs present, 
   // returns that group.
@@ -2410,5 +2407,17 @@ let GroupItems = {
         groupItem.$closeButton.show();
       });
     }
+  },
+  
+  // ----------
+  // Function: calcValidSize
+  // Basic measure rules. Assures that item is a minimum size.
+  calcValidSize: function GroupItems_calcValidSize(size, options) {
+    Utils.assert(Utils.isPoint(size), 'input is a Point');
+    Utils.assert((size.x>0 || size.y>0) && (size.x!=0 && size.y!=0), 
+      "dimensions are valid:"+size.x+","+size.y);
+    return new Point(
+      Math.max(size.x, GroupItems.minGroupWidth),
+      Math.max(size.y, GroupItems.minGroupHeight));
   }
 };
