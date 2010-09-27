@@ -246,52 +246,6 @@ let WebNavigation =  {
 WebNavigation.init();
 
 
-let FocusEvents = {
-  init: function() {
-    addMessageListener("Content:Focus", this);
-    addMessageListener("Content:Blur", this);
-    addMessageListener("Content:KeyEvent", this);
-  },
-
-  receiveMessage: function(aMessage) {
-    let json = aMessage.json;
-
-    switch (aMessage.name) {
-      case "Content:Blur": {
-        let activeElement = content.document.activeElement;
-        if (activeElement)
-          activeElement.blur();
-
-        docShell.isActive = false;
-        break;
-      }
-
-      case "Content:Focus":
-        docShell.isActive = true;
-        break;
-
-      case "Content:KeyEvent": {
-        let utils = Util.getWindowUtils(content);
-        let defaultAction = utils.sendKeyEvent(json.type, json.keyCode, json.charCode, json.modifiers);
-        if (defaultAction && json.type == "keypress") {
-          const masks = Ci.nsIDOMNSEvent;
-          sendAsyncMessage("Content:KeyPress", {
-            ctrlKey: json.modifiers & masks.CONTROL_MASK,
-            shiftKey: json.modifiers & masks.SHIFT_MASK,
-            metaKey: json.modifiers & masks.META_MASK,
-            keyCode: json.keyCode,
-            charCode: json.charCode
-          });
-        }
-        break;
-      }
-    }
-  }
-};
-
-FocusEvents.init();
-
-
 let DOMEvents =  {
   init: function() {
     addEventListener("DOMContentLoaded", this, false);

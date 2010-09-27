@@ -358,9 +358,7 @@
             // (as opposed to one of its iframes).
             if (this.feeds && aMessage.target == this)
               this.feeds = null;
-
-            if (aMessage.windowId == this.contentWindowId)
-              this.scale = 1;
+            this.scale = 1;
          ]]>
         </body>
       </method>
@@ -810,14 +808,6 @@
       <constructor>
         <![CDATA[
           this.messageManager.addMessageListener("scroll", this._messageListenerRemote);
-          this.messageManager.addMessageListener("Content:KeyPress", this._messageListenerRemote);
-
-          this.addEventListener("keypress", this, false);
-          this.addEventListener("keyup", this, false);
-          this.addEventListener("keydown", this, false);
-
-          this.addEventListener("focus", this, false);
-          this.addEventListener("blur", this, false);
         ]]>
       </constructor>
 
@@ -839,18 +829,6 @@
                 // Use floor so that we always guarantee top-left corner of content is visible.
                 self.scrollTo(Math.floor(json.x * self.scale), Math.floor(json.y * self.scale));
                 break;
-
-              case "Content:KeyPress":
-                // Content did not want this keypress event, so resend event up the tree.
-                let node = this.self.parentNode;
-                if (!node)
-                  break;
-
-                let event = document.createEvent("KeyEvents");
-                event.initKeyEvent("keypress", true, true, null,
-                                json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
-                                json.keyCode, json.charCode)
-                node.dispatchEvent(event);
            }
          }
        })
@@ -928,58 +906,6 @@
           <![CDATA[
             let frameLoader = this._frameLoader;
             return { x: frameLoader.viewportScrollX, y: frameLoader.viewportScrollY };
-          ]]>
-        </body>
-      </method>
-
-      <method name="_parseModifiers">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            const masks = Components.interfaces.nsIDOMNSEvent;
-            var mval = 0;
-            if (aEvent.shiftKey)
-              mval |= masks.SHIFT_MASK;
-            if (aEvent.ctrlKey)
-              mval |= masks.CONTROL_MASK;
-            if (aEvent.altKey)
-              mval |= masks.ALT_MASK;
-            if (aEvent.metaKey)
-              mval |= masks.META_MASK;
-            return mval;
-          ]]>
-        </body>
-      </method>
-
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            switch (aEvent.type) {
-              case "keypress":
-              case "keyup":
-              case "keydown":
-                aEvent.stopPropagation();
-                aEvent.preventDefault();
-
-                this.messageManager.sendAsyncMessage("Content:KeyEvent", {
-                  type: aEvent.type,
-                  keyCode: aEvent.keyCode,
-                  charCode: aEvent.charCode,
-                  modifiers: this._parseModifiers(aEvent)
-                });
-                break;
-
-              case "focus":
-                let fl = this.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-                fl.activateRemoteFrame();
-                this.messageManager.sendAsyncMessage("Content:Focus");
-                break;
-
-              case "blur":
-                this.messageManager.sendAsyncMessage("Content:Blur");
-                break;
-            }
           ]]>
         </body>
       </method>
