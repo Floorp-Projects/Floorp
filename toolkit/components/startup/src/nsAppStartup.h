@@ -85,6 +85,11 @@ private:
   PRPackedBool mShuttingDown;   // Quit method reentrancy check
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
   PRPackedBool mRestart;        // Quit(eRestart)
+
+  PRTime mRestoredTimestamp;
+
+  nsresult RecordStartupDuration();
+  nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details);
 };
 
 #endif // nsAppStartup_h__
