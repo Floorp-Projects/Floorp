@@ -180,101 +180,10 @@ ContentParent::IsAlive()
 }
 
 bool
-ContentParent::RecvGetPrefType(const nsCString& prefName,
-                               PRInt32* retValue, nsresult* rv)
-{
-    *retValue = 0;
-
-    EnsurePrefService();
-    *rv = mPrefService->GetPrefType(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvGetBoolPref(const nsCString& prefName,
-                               PRBool* retValue, nsresult* rv)
-{
-    *retValue = PR_FALSE;
-
-    EnsurePrefService();
-    *rv = mPrefService->GetBoolPref(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvGetIntPref(const nsCString& prefName,
-                              PRInt32* retValue, nsresult* rv)
-{
-    *retValue = 0;
-
-    EnsurePrefService();
-    *rv = mPrefService->GetIntPref(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvGetCharPref(const nsCString& prefName,
-                               nsCString* retValue, nsresult* rv)
+ContentParent::RecvReadPrefs(nsCString* prefs)
 {
     EnsurePrefService();
-    *rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(*retValue));
-    return true;
-}
-
-bool
-ContentParent::RecvGetPrefLocalizedString(const nsCString& prefName,
-                                          nsString* retValue, nsresult* rv)
-{
-    EnsurePrefService();
-    nsCOMPtr<nsIPrefLocalizedString> string;
-    *rv = mPrefService->GetComplexValue(prefName.get(),
-            NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(string));
-
-    if (NS_SUCCEEDED(*rv))
-      string->GetData(getter_Copies(*retValue));
-
-    return true;
-}
-
-bool
-ContentParent::RecvPrefHasUserValue(const nsCString& prefName,
-                                    PRBool* retValue, nsresult* rv)
-{
-    *retValue = PR_FALSE;
-
-    EnsurePrefService();
-    *rv = mPrefService->PrefHasUserValue(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvPrefIsLocked(const nsCString& prefName,
-                                PRBool* retValue, nsresult* rv)
-{
-    *retValue = PR_FALSE;
-
-    EnsurePrefService();
-    *rv = mPrefService->PrefIsLocked(prefName.get(), retValue);
-        
-    return true;
-}
-
-bool
-ContentParent::RecvGetChildList(const nsCString& domain,
-                                nsTArray<nsCString>* list, nsresult* rv)
-{
-    EnsurePrefService();
-
-    PRUint32 count;
-    char **childArray;
-    *rv = mPrefService->GetChildList(domain.get(), &count, &childArray);
-
-    if (NS_SUCCEEDED(*rv)) {
-      list->SetCapacity(count);
-      for (PRUint32 i = 0; i < count; ++i)
-        *(list->AppendElement()) = childArray[i];
-    }
-        
+    mPrefService->SerializePreferences(*prefs);
     return true;
 }
 
