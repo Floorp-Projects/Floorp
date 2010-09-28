@@ -12,6 +12,10 @@
     <em:name>Test Bootstrap 1</em:name>
     <em:description>Test Description</em:description>
 
+    <em:iconURL>chrome://foo/skin/icon.png</em:iconURL>
+    <em:aboutURL>chrome://foo/content/about.xul</em:aboutURL>
+    <em:optionsURL>chrome://foo/content/options.xul</em:optionsURL>
+
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>
