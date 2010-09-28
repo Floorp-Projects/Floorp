@@ -165,6 +165,11 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         load32(Address(obj, offsetof(JSObject, objShape)), shape);
     }
 
+    Jump guardShape(RegisterID obj, uint32 shape) {
+        return branch32(NotEqual, Address(obj, offsetof(JSObject, objShape)),
+                        Imm32(shape));
+    }
+
     Jump testFunction(Condition cond, RegisterID fun) {
         return branchPtr(cond, Address(fun, offsetof(JSObject, clasp)),
                          ImmPtr(&js_FunctionClass));
