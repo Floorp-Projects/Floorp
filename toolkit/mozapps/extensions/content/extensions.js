@@ -1392,6 +1392,8 @@ var gSearchView = {
   },
 
   show: function(aQuery, aRequest) {
+    gEventManager.registerInstallListener(this);
+
     gHeader.isSearching = true;
     this.showEmptyNotice(false);
     this.showAllResultsLink(0);
@@ -1519,6 +1521,8 @@ var gSearchView = {
   },
 
   hide: function() {
+    gEventManager.unregisterInstallListener(this);
+
     // Uninstalling add-ons can mutate the list so find the add-ons first then
     // uninstall them
     var items = [];
@@ -1606,6 +1610,24 @@ var gSearchView = {
     sortService.sort(this._listBox, aSortBy, hints);
 
     this._listBox.appendChild(footer);
+  },
+
+  onDownloadCancelled: function(aInstall) {
+    this.removeInstall(aInstall);
+  },
+
+  onInstallCancelled: function(aInstall) {
+    this.removeInstall(aInstall);
+  },
+
+  removeInstall: function(aInstall) {
+    for (let i = 0; i < this._listBox.childNodes.length; i++) {
+      let item = this._listBox.childNodes[i];
+      if (item.mInstall == aInstall) {
+        this._listBox.removeChild(item);
+        return;
+      }
+    }
   },
 
   getSelectedAddon: function() {

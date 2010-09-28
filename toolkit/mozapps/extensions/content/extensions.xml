@@ -1553,6 +1553,7 @@
         <body><![CDATA[
           this.mAddon = this.mInstall.addon;
           this.setAttribute("name", this.mAddon.name);
+          this.setAttribute("value", this.mAddon.id);
           this.setAttribute("status", "installed");
         ]]></body>
       </method>
