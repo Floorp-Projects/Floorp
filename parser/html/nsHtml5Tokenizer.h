@@ -74,16 +74,16 @@ class nsHtml5Tokenizer
     static PRUnichar OCTYPE[];
     static PRUnichar UBLIC[];
     static PRUnichar YSTEM[];
-    static jArray<PRUnichar,PRInt32> TITLE_ARR;
-    static jArray<PRUnichar,PRInt32> SCRIPT_ARR;
-    static jArray<PRUnichar,PRInt32> STYLE_ARR;
-    static jArray<PRUnichar,PRInt32> PLAINTEXT_ARR;
-    static jArray<PRUnichar,PRInt32> XMP_ARR;
-    static jArray<PRUnichar,PRInt32> TEXTAREA_ARR;
-    static jArray<PRUnichar,PRInt32> IFRAME_ARR;
-    static jArray<PRUnichar,PRInt32> NOEMBED_ARR;
-    static jArray<PRUnichar,PRInt32> NOSCRIPT_ARR;
-    static jArray<PRUnichar,PRInt32> NOFRAMES_ARR;
+    static staticJArray<PRUnichar,PRInt32> TITLE_ARR;
+    static staticJArray<PRUnichar,PRInt32> SCRIPT_ARR;
+    static staticJArray<PRUnichar,PRInt32> STYLE_ARR;
+    static staticJArray<PRUnichar,PRInt32> PLAINTEXT_ARR;
+    static staticJArray<PRUnichar,PRInt32> XMP_ARR;
+    static staticJArray<PRUnichar,PRInt32> TEXTAREA_ARR;
+    static staticJArray<PRUnichar,PRInt32> IFRAME_ARR;
+    static staticJArray<PRUnichar,PRInt32> NOEMBED_ARR;
+    static staticJArray<PRUnichar,PRInt32> NOSCRIPT_ARR;
+    static staticJArray<PRUnichar,PRInt32> NOFRAMES_ARR;
   protected:
     nsHtml5TreeBuilder* tokenHandler;
     nsHtml5StreamParser* encodingDeclarationHandler;
@@ -112,12 +112,12 @@ class nsHtml5Tokenizer
   private:
     nsString* publicId;
     nsString* systemId;
-    jArray<PRUnichar,PRInt32> strBuf;
+    autoJArray<PRUnichar,PRInt32> strBuf;
     PRInt32 strBufLen;
-    jArray<PRUnichar,PRInt32> longStrBuf;
+    autoJArray<PRUnichar,PRInt32> longStrBuf;
     PRInt32 longStrBufLen;
-    jArray<PRUnichar,PRInt32> bmpChar;
-    jArray<PRUnichar,PRInt32> astralChar;
+    autoJArray<PRUnichar,PRInt32> bmpChar;
+    autoJArray<PRUnichar,PRInt32> astralChar;
   protected:
     nsHtml5ElementName* endTagExpectation;
   private:
@@ -144,7 +144,6 @@ class nsHtml5Tokenizer
     nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler);
     void setInterner(nsHtml5AtomTable* interner);
     void initLocation(nsString* newPublicId, nsString* newSystemId);
-    ~nsHtml5Tokenizer();
     void setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsIAtom* endTagExpectation);
     void setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsHtml5ElementName* endTagExpectation);
   private:
@@ -198,7 +197,7 @@ class nsHtml5Tokenizer
       appendLongStrBuf(c);
     }
 
-    void appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length);
+    void appendLongStrBuf(PRUnichar* buffer, PRInt32 offset, PRInt32 length);
     inline void appendStrBufToLongStrBuf()
     {
       appendLongStrBuf(strBuf, 0, strBufLen);
@@ -291,28 +290,6 @@ class nsHtml5Tokenizer
     static void initializeStatics();
     static void releaseStatics();
 };
-
-#ifdef nsHtml5Tokenizer_cpp__
-PRUnichar nsHtml5Tokenizer::LT_GT[] = { '<', '>' };
-PRUnichar nsHtml5Tokenizer::LT_SOLIDUS[] = { '<', '/' };
-PRUnichar nsHtml5Tokenizer::RSQB_RSQB[] = { ']', ']' };
-PRUnichar nsHtml5Tokenizer::REPLACEMENT_CHARACTER[] = { 0xfffd };
-PRUnichar nsHtml5Tokenizer::LF[] = { '\n' };
-PRUnichar nsHtml5Tokenizer::CDATA_LSQB[] = { 'C', 'D', 'A', 'T', 'A', '[' };
-PRUnichar nsHtml5Tokenizer::OCTYPE[] = { 'o', 'c', 't', 'y', 'p', 'e' };
-PRUnichar nsHtml5Tokenizer::UBLIC[] = { 'u', 'b', 'l', 'i', 'c' };
-PRUnichar nsHtml5Tokenizer::YSTEM[] = { 'y', 's', 't', 'e', 'm' };
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TITLE_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::SCRIPT_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::STYLE_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::PLAINTEXT_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::XMP_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TEXTAREA_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::IFRAME_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOEMBED_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOSCRIPT_ARR = 0;
-jArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = 0;
-#endif
 
 #define NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK ~1
 #define NS_HTML5TOKENIZER_DATA 0

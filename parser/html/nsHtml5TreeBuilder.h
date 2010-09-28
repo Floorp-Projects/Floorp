@@ -70,7 +70,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
     static PRUnichar REPLACEMENT_CHARACTER[];
-    static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
+    static staticJArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
@@ -84,15 +84,15 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     nsIAtom* contextName;
     PRInt32 contextNamespace;
     nsIContent** contextNode;
-    jArray<nsHtml5StackNode*,PRInt32> stack;
+    autoJArray<nsHtml5StackNode*,PRInt32> stack;
     PRInt32 currentPtr;
-    jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
+    autoJArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
     PRInt32 listPtr;
     nsIContent** formPointer;
     nsIContent** headPointer;
     nsIContent** deepTreeSurrogateParent;
   protected:
-    jArray<PRUnichar,PRInt32> charBuffer;
+    autoJArray<PRUnichar,PRInt32> charBuffer;
     PRInt32 charBufferLen;
   private:
     PRBool quirks;
@@ -244,11 +244,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 
 #include "nsHtml5TreeBuilderHSupplement.h"
 };
-
-#ifdef nsHtml5TreeBuilder_cpp__
-PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
-jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
-#endif
 
 #define NS_HTML5TREE_BUILDER_OTHER 0
 #define NS_HTML5TREE_BUILDER_A 1
