@@ -65,12 +65,15 @@
 
 #include "nsHtml5TreeBuilder.h"
 
+PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
+static const char* const QUIRKY_PUBLIC_IDS_DATA[] = { "+//silmaril//dtd html pro v0r11 19970101//", "-//advasoft ltd//dtd html 3.0 aswedit + extensions//", "-//as//dtd html 3.0 aswedit + extensions//", "-//ietf//dtd html 2.0 level 1//", "-//ietf//dtd html 2.0 level 2//", "-//ietf//dtd html 2.0 strict level 1//", "-//ietf//dtd html 2.0 strict level 2//", "-//ietf//dtd html 2.0 strict//", "-//ietf//dtd html 2.0//", "-//ietf//dtd html 2.1e//", "-//ietf//dtd html 3.0//", "-//ietf//dtd html 3.2 final//", "-//ietf//dtd html 3.2//", "-//ietf//dtd html 3//", "-//ietf//dtd html level 0//", "-//ietf//dtd html level 1//", "-//ietf//dtd html level 2//", "-//ietf//dtd html level 3//", "-//ietf//dtd html strict level 0//", "-//ietf//dtd html strict level 1//", "-//ietf//dtd html strict level 2//", "-//ietf//dtd html strict level 3//", "-//ietf//dtd html strict//", "-//ietf//dtd html//", "-//metrius//dtd metrius presentational//", "-//microsoft//dtd internet explorer 2.0 html strict//", "-//microsoft//dtd internet explorer 2.0 html//", "-//microsoft//dtd internet explorer 2.0 tables//", "-//microsoft//dtd internet explorer 3.0 html strict//", "-//microsoft//dtd internet explorer 3.0 html//", "-//microsoft//dtd internet explorer 3.0 tables//", "-//netscape comm. corp.//dtd html//", "-//netscape comm. corp.//dtd strict html//", "-//o'reilly and associates//dtd html 2.0//", "-//o'reilly and associates//dtd html extended 1.0//", "-//o'reilly and associates//dtd html extended relaxed 1.0//", "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//", "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//", "-//spyglass//dtd html 2.0 extended//", "-//sq//dtd html 2.0 hotmetal + extensions//", "-//sun microsystems corp.//dtd hotjava html//", "-//sun microsystems corp.//dtd hotjava strict html//", "-//w3c//dtd html 3 1995-03-24//", "-//w3c//dtd html 3.2 draft//", "-//w3c//dtd html 3.2 final//", "-//w3c//dtd html 3.2//", "-//w3c//dtd html 3.2s draft//", "-//w3c//dtd html 4.0 frameset//", "-//w3c//dtd html 4.0 transitional//", "-//w3c//dtd html experimental 19960712//", "-//w3c//dtd html experimental 970421//", "-//w3c//dtd w3 html//", "-//w3o//dtd w3 html 3.0//", "-//webtechs//dtd mozilla html 2.0//", "-//webtechs//dtd mozilla html//" };
+staticJArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = { QUIRKY_PUBLIC_IDS_DATA, NS_ARRAY_LENGTH(QUIRKY_PUBLIC_IDS_DATA) };
 void 
 nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
 {
   tokenizer = self;
-  stack = jArray<nsHtml5StackNode*,PRInt32>(64);
-  listOfActiveFormattingElements = jArray<nsHtml5StackNode*,PRInt32>(64);
+  stack = jArray<nsHtml5StackNode*,PRInt32>::newJArray(64);
+  listOfActiveFormattingElements = jArray<nsHtml5StackNode*,PRInt32>::newJArray(64);
   needToDropLF = PR_FALSE;
   originalMode = NS_HTML5TREE_BUILDER_INITIAL;
   currentPtr = -1;
@@ -83,7 +86,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   deepTreeSurrogateParent = nsnull;
   start(fragment);
   charBufferLen = 0;
-  charBuffer = jArray<PRUnichar,PRInt32>(1024);
+  charBuffer = jArray<PRUnichar,PRInt32>::newJArray(1024);
   framesetOk = PR_TRUE;
   if (fragment) {
     nsIContent** elt;
@@ -545,7 +548,6 @@ nsHtml5TreeBuilder::endTokenization()
       stack[currentPtr]->release();
       currentPtr--;
     }
-    stack.release();
     stack = nsnull;
   }
   if (listOfActiveFormattingElements) {
@@ -555,13 +557,9 @@ nsHtml5TreeBuilder::endTokenization()
       }
       listPtr--;
     }
-    listOfActiveFormattingElements.release();
     listOfActiveFormattingElements = nsnull;
   }
-  if (charBuffer) {
-    charBuffer.release();
-    charBuffer = nsnull;
-  }
+  charBuffer = nsnull;
   end();
 }
 
@@ -1129,9 +1127,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, nsHtml5ElementName::ELT_LABEL, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
               PRInt32 promptIndex = attributes->getIndex(nsHtml5AttributeName::ATTR_PROMPT);
               if (promptIndex > -1) {
-                jArray<PRUnichar,PRInt32> prompt = nsHtml5Portability::newCharArrayFromString(attributes->getValue(promptIndex));
+                autoJArray<PRUnichar,PRInt32> prompt = nsHtml5Portability::newCharArrayFromString(attributes->getValue(promptIndex));
                 appendCharacters(stack[currentPtr]->node, prompt, 0, prompt.length);
-                prompt.release();
               } else {
                 appendIsindexPrompt(stack[currentPtr]->node);
               }
@@ -1834,7 +1831,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
   PRInt32 charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
   PRInt32 start = -1;
   PRInt32 end = -1;
-  jArray<PRUnichar,PRInt32> buffer = nsHtml5Portability::newCharArrayFromString(attributeValue);
+  autoJArray<PRUnichar,PRInt32> buffer = nsHtml5Portability::newCharArrayFromString(attributeValue);
   for (PRInt32 i = 0; i < buffer.length; i++) {
     PRUnichar c = buffer[i];
     switch(charsetState) {
@@ -2020,7 +2017,6 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
     }
     charset = nsHtml5Portability::newStringFromBuffer(buffer, start, end - start);
   }
-  buffer.release();
   return charset;
 }
 
@@ -3081,9 +3077,8 @@ nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 {
   currentPtr++;
   if (currentPtr == stack.length) {
-    jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
+    jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>::newJArray(stack.length + 64);
     nsHtml5ArrayCopy::arraycopy(stack, newStack, stack.length);
-    stack.release();
     stack = newStack;
   }
   stack[currentPtr] = node;
@@ -3095,9 +3090,8 @@ nsHtml5TreeBuilder::silentPush(nsHtml5StackNode* node)
 {
   currentPtr++;
   if (currentPtr == stack.length) {
-    jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
+    jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>::newJArray(stack.length + 64);
     nsHtml5ArrayCopy::arraycopy(stack, newStack, stack.length);
-    stack.release();
     stack = newStack;
   }
   stack[currentPtr] = node;
@@ -3108,9 +3102,8 @@ nsHtml5TreeBuilder::append(nsHtml5StackNode* node)
 {
   listPtr++;
   if (listPtr == listOfActiveFormattingElements.length) {
-    jArray<nsHtml5StackNode*,PRInt32> newList = jArray<nsHtml5StackNode*,PRInt32>(listOfActiveFormattingElements.length + 64);
+    jArray<nsHtml5StackNode*,PRInt32> newList = jArray<nsHtml5StackNode*,PRInt32>::newJArray(listOfActiveFormattingElements.length + 64);
     nsHtml5ArrayCopy::arraycopy(listOfActiveFormattingElements, newList, listOfActiveFormattingElements.length);
-    listOfActiveFormattingElements.release();
     listOfActiveFormattingElements = newList;
   }
   listOfActiveFormattingElements[listPtr] = node;
@@ -3812,7 +3805,7 @@ nsHtml5TreeBuilder::charBufferContainsNonWhitespace()
 nsAHtml5TreeBuilderState* 
 nsHtml5TreeBuilder::newSnapshot()
 {
-  jArray<nsHtml5StackNode*,PRInt32> listCopy = jArray<nsHtml5StackNode*,PRInt32>(listPtr + 1);
+  jArray<nsHtml5StackNode*,PRInt32> listCopy = jArray<nsHtml5StackNode*,PRInt32>::newJArray(listPtr + 1);
   for (PRInt32 i = 0; i < listCopy.length; i++) {
     nsHtml5StackNode* node = listOfActiveFormattingElements[i];
     if (node) {
@@ -3822,7 +3815,7 @@ nsHtml5TreeBuilder::newSnapshot()
       listCopy[i] = nsnull;
     }
   }
-  jArray<nsHtml5StackNode*,PRInt32> stackCopy = jArray<nsHtml5StackNode*,PRInt32>(currentPtr + 1);
+  jArray<nsHtml5StackNode*,PRInt32> stackCopy = jArray<nsHtml5StackNode*,PRInt32>::newJArray(currentPtr + 1);
   for (PRInt32 i = 0; i < stackCopy.length; i++) {
     nsHtml5StackNode* node = stack[i];
     PRInt32 listIndex = findInListOfActiveFormattingElements(node);
@@ -3879,16 +3872,14 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
     }
   }
   if (listOfActiveFormattingElements.length < listLen) {
-    listOfActiveFormattingElements.release();
-    listOfActiveFormattingElements = jArray<nsHtml5StackNode*,PRInt32>(listLen);
+    listOfActiveFormattingElements = jArray<nsHtml5StackNode*,PRInt32>::newJArray(listLen);
   }
   listPtr = listLen - 1;
   for (PRInt32 i = 0; i <= currentPtr; i++) {
     stack[i]->release();
   }
   if (stack.length < stackLen) {
-    stack.release();
-    stack = jArray<nsHtml5StackNode*,PRInt32>(stackLen);
+    stack = jArray<nsHtml5StackNode*,PRInt32>::newJArray(stackLen);
   }
   currentPtr = stackLen - 1;
   for (PRInt32 i = 0; i < listLen; i++) {
@@ -4020,68 +4011,11 @@ nsHtml5TreeBuilder::getStackLength()
 void
 nsHtml5TreeBuilder::initializeStatics()
 {
-  QUIRKY_PUBLIC_IDS = jArray<const char*,PRInt32>(55);
-  QUIRKY_PUBLIC_IDS[0] = "+//silmaril//dtd html pro v0r11 19970101//";
-  QUIRKY_PUBLIC_IDS[1] = "-//advasoft ltd//dtd html 3.0 aswedit + extensions//";
-  QUIRKY_PUBLIC_IDS[2] = "-//as//dtd html 3.0 aswedit + extensions//";
-  QUIRKY_PUBLIC_IDS[3] = "-//ietf//dtd html 2.0 level 1//";
-  QUIRKY_PUBLIC_IDS[4] = "-//ietf//dtd html 2.0 level 2//";
-  QUIRKY_PUBLIC_IDS[5] = "-//ietf//dtd html 2.0 strict level 1//";
-  QUIRKY_PUBLIC_IDS[6] = "-//ietf//dtd html 2.0 strict level 2//";
-  QUIRKY_PUBLIC_IDS[7] = "-//ietf//dtd html 2.0 strict//";
-  QUIRKY_PUBLIC_IDS[8] = "-//ietf//dtd html 2.0//";
-  QUIRKY_PUBLIC_IDS[9] = "-//ietf//dtd html 2.1e//";
-  QUIRKY_PUBLIC_IDS[10] = "-//ietf//dtd html 3.0//";
-  QUIRKY_PUBLIC_IDS[11] = "-//ietf//dtd html 3.2 final//";
-  QUIRKY_PUBLIC_IDS[12] = "-//ietf//dtd html 3.2//";
-  QUIRKY_PUBLIC_IDS[13] = "-//ietf//dtd html 3//";
-  QUIRKY_PUBLIC_IDS[14] = "-//ietf//dtd html level 0//";
-  QUIRKY_PUBLIC_IDS[15] = "-//ietf//dtd html level 1//";
-  QUIRKY_PUBLIC_IDS[16] = "-//ietf//dtd html level 2//";
-  QUIRKY_PUBLIC_IDS[17] = "-//ietf//dtd html level 3//";
-  QUIRKY_PUBLIC_IDS[18] = "-//ietf//dtd html strict level 0//";
-  QUIRKY_PUBLIC_IDS[19] = "-//ietf//dtd html strict level 1//";
-  QUIRKY_PUBLIC_IDS[20] = "-//ietf//dtd html strict level 2//";
-  QUIRKY_PUBLIC_IDS[21] = "-//ietf//dtd html strict level 3//";
-  QUIRKY_PUBLIC_IDS[22] = "-//ietf//dtd html strict//";
-  QUIRKY_PUBLIC_IDS[23] = "-//ietf//dtd html//";
-  QUIRKY_PUBLIC_IDS[24] = "-//metrius//dtd metrius presentational//";
-  QUIRKY_PUBLIC_IDS[25] = "-//microsoft//dtd internet explorer 2.0 html strict//";
-  QUIRKY_PUBLIC_IDS[26] = "-//microsoft//dtd internet explorer 2.0 html//";
-  QUIRKY_PUBLIC_IDS[27] = "-//microsoft//dtd internet explorer 2.0 tables//";
-  QUIRKY_PUBLIC_IDS[28] = "-//microsoft//dtd internet explorer 3.0 html strict//";
-  QUIRKY_PUBLIC_IDS[29] = "-//microsoft//dtd internet explorer 3.0 html//";
-  QUIRKY_PUBLIC_IDS[30] = "-//microsoft//dtd internet explorer 3.0 tables//";
-  QUIRKY_PUBLIC_IDS[31] = "-//netscape comm. corp.//dtd html//";
-  QUIRKY_PUBLIC_IDS[32] = "-//netscape comm. corp.//dtd strict html//";
-  QUIRKY_PUBLIC_IDS[33] = "-//o'reilly and associates//dtd html 2.0//";
-  QUIRKY_PUBLIC_IDS[34] = "-//o'reilly and associates//dtd html extended 1.0//";
-  QUIRKY_PUBLIC_IDS[35] = "-//o'reilly and associates//dtd html extended relaxed 1.0//";
-  QUIRKY_PUBLIC_IDS[36] = "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//";
-  QUIRKY_PUBLIC_IDS[37] = "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//";
-  QUIRKY_PUBLIC_IDS[38] = "-//spyglass//dtd html 2.0 extended//";
-  QUIRKY_PUBLIC_IDS[39] = "-//sq//dtd html 2.0 hotmetal + extensions//";
-  QUIRKY_PUBLIC_IDS[40] = "-//sun microsystems corp.//dtd hotjava html//";
-  QUIRKY_PUBLIC_IDS[41] = "-//sun microsystems corp.//dtd hotjava strict html//";
-  QUIRKY_PUBLIC_IDS[42] = "-//w3c//dtd html 3 1995-03-24//";
-  QUIRKY_PUBLIC_IDS[43] = "-//w3c//dtd html 3.2 draft//";
-  QUIRKY_PUBLIC_IDS[44] = "-//w3c//dtd html 3.2 final//";
-  QUIRKY_PUBLIC_IDS[45] = "-//w3c//dtd html 3.2//";
-  QUIRKY_PUBLIC_IDS[46] = "-//w3c//dtd html 3.2s draft//";
-  QUIRKY_PUBLIC_IDS[47] = "-//w3c//dtd html 4.0 frameset//";
-  QUIRKY_PUBLIC_IDS[48] = "-//w3c//dtd html 4.0 transitional//";
-  QUIRKY_PUBLIC_IDS[49] = "-//w3c//dtd html experimental 19960712//";
-  QUIRKY_PUBLIC_IDS[50] = "-//w3c//dtd html experimental 970421//";
-  QUIRKY_PUBLIC_IDS[51] = "-//w3c//dtd w3 html//";
-  QUIRKY_PUBLIC_IDS[52] = "-//w3o//dtd w3 html 3.0//";
-  QUIRKY_PUBLIC_IDS[53] = "-//webtechs//dtd mozilla html 2.0//";
-  QUIRKY_PUBLIC_IDS[54] = "-//webtechs//dtd mozilla html//";
 }
 
 void
 nsHtml5TreeBuilder::releaseStatics()
 {
-  QUIRKY_PUBLIC_IDS.release();
 }
 
 

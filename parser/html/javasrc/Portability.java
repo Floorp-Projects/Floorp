@@ -86,14 +86,6 @@ public final class Portability {
         // No-op in Java
     }
     
-    /**
-     * Releases a Java array. This method is magically replaced by a macro in C++.
-     * @param arr
-     */
-    public static void releaseArray(Object arr) {
-        // No-op in Java
-    }    
-    
     // [NOCPP[
     // These are no longer used in Gecko. Need to decide what to do about these in the long term.    
     

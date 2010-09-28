@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Mozilla Foundation
+ * Copyright (c) 2009-2010 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -62,8 +62,8 @@ class nsHtml5Portability;
 class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
 {
   private:
-    jArray<nsHtml5StackNode*,PRInt32> stack;
-    jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
+    autoJArray<nsHtml5StackNode*,PRInt32> stack;
+    autoJArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
     nsIContent** formPointer;
     nsIContent** headPointer;
     nsIContent** deepTreeSurrogateParent;
@@ -92,9 +92,6 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     static void initializeStatics();
     static void releaseStatics();
 };
-
-#ifdef nsHtml5StateSnapshot_cpp__
-#endif
 
 
 
