@@ -64,7 +64,7 @@ nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
     return S_FALSE;
 
   *aIA2Array =
-    static_cast<IUnknown**>(nsMemory::Alloc((length) * sizeof(IUnknown*)));
+    static_cast<IUnknown**>(::CoTaskMemAlloc((length) * sizeof(IUnknown*)));
   if (!*aIA2Array)
     return E_OUTOFMEMORY;
 
@@ -90,7 +90,7 @@ nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
       (*aIA2Array)[idx2] = NULL;
     }
 
-    nsMemory::Free(*aIA2Array);
+    ::CoTaskMemFree(*aIA2Array);
     return GetHRESULT(rv);
   }
 

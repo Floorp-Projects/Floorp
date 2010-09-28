@@ -741,6 +741,7 @@ GLContextProviderWGL::GetGlobalContext()
 void
 GLContextProviderWGL::Shutdown()
 {
+    gGlobalContext = nsnull;
 }
 
 } /* namespace gl */

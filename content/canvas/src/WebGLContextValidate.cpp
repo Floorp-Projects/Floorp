@@ -450,6 +450,11 @@ WebGLContext::InitAndValidateGL()
         // gl_PointSize is always available in ES2 GLSL, but has to be
         // specifically enabled on desktop GLSL.
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
+
+        // gl_PointCoord is always available in ES2 GLSL and in newer desktop GLSL versions, but apparently
+        // not in OpenGL 2 and apparently not (due to a driver bug) on certain NVIDIA setups. See:
+        //   http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=261472
+        gl->fEnable(LOCAL_GL_POINT_SPRITE);
     }
 
     // Check the shader validator pref

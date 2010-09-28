@@ -216,9 +216,9 @@
 # 
 # Unix: Ctrl+K (cross platform binding)
 #       Ctrl+J (in case of emacs Ctrl-K conflict)
-# Mac:  Ctrl+K (cross platform binding)
+# Mac:  Cmd+K (cross platform binding)
+#       Cmd+Opt+F (platform convention)
 # Win:  Ctrl+K (cross platform binding)
-#       Ctrl+E (IE compat)
 #
 # We support Ctrl+K on all platforms now and advertise it in the menu since it is
 # our standard - it is a "safe" choice since it is near no harmful keys like "W" as
@@ -230,9 +230,6 @@
     <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
 #ifdef XP_MACOSX
     <key id="key_search2" key="&findOnCmd.commandkey;" command="Tools:Search" modifiers="accel,alt"/>
-#endif
-#ifdef XP_WIN
-    <key id="key_search2" key="&searchFocus.commandkey2;" command="Tools:Search" modifiers="accel"/>
 #endif
 #ifdef XP_GNOME
     <key id="key_search2" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
@@ -347,6 +344,8 @@
     <key id="key_showAllTabs" command="Browser:ShowAllTabs" keycode="VK_TAB" modifiers="control,shift"/>
 
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
+
+    <key id="key_tabview" key="&tabView.commandkey;" command="Browser:ToggleTabView" modifiers="accel"/>
 
     <key id="key_privatebrowsing" command="Tools:PrivateBrowsing" key="&privateBrowsingCmd.commandkey;" modifiers="accel,shift"/>
     <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
