@@ -1432,6 +1432,10 @@ private:
   // copy of the descriptor here so that we can call
   // DestroySharedSurface() on the descriptor.
   SurfaceDescriptor mBackBuffer;
+  // When we allocate a new front buffer, we keep a temporary record
+  // of it until reach PaintBuffer().  Then we pre-fill back->front
+  // and destroy our record.
+  SurfaceDescriptor mNewFrontBuffer;
   nsIntSize mBufferSize;
 };
  
@@ -1449,8 +1453,39 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
     NS_ABORT_IF_FALSE(IsSurfaceDescriptorValid(mBackBuffer),
                       "should have a back buffer by now");
 
+    nsIntRegion updatedRegion = aRegionToDraw;
+    if (IsSurfaceDescriptorValid(mNewFrontBuffer)) {
+      // We just allocated a new buffer pair.  We want to "pre-fill"
+      // the new front buffer by copying to it what we just painted
+      // into the back buffer.  This starts off our Swap()s from a
+      // stable base: the first swap will return the same valid region
+      // as our new back buffer.  Thereafter, we only need to
+      // invalidate what was painted into the back buffer.
+      nsRefPtr<gfxASurface> frontBuffer =
+        BasicManager()->OpenDescriptor(mNewFrontBuffer);
+      nsRefPtr<gfxASurface> backBuffer =
+        BasicManager()->OpenDescriptor(mBackBuffer);
+
+      nsRefPtr<gfxContext> ctx = new gfxContext(frontBuffer);
+      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      ctx->DrawSurface(backBuffer, backBuffer->GetSize());
+
+      BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
+                                          mValidRegion,
+                                          mXResolution,
+                                          mYResolution,
+                                          mBuffer.BufferRect(),
+                                          mNewFrontBuffer);
+
+      // Clear temporary record of new front buffer
+      mNewFrontBuffer = SurfaceDescriptor();
+      // And pretend that we didn't update anything, in order to
+      // stabilize the first swap.
+      updatedRegion.SetEmpty();
+    }
+
     BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
-                                        aRegionToDraw,
+                                        updatedRegion,
                                         mBuffer.BufferRect(),
                                         mBuffer.BufferRotation(),
                                         mBackBuffer);
@@ -1471,19 +1506,15 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
     mBackBuffer = SurfaceDescriptor();
   }
 
-  SurfaceDescriptor tmpFront;
   // XXX error handling
+  NS_ABORT_IF_FALSE(!IsSurfaceDescriptorValid(mNewFrontBuffer),
+                    "Bad!  Did we create a buffer twice without painting?");
   if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
                                          aType,
-                                         &tmpFront,
+                                         &mNewFrontBuffer,
                                          &mBackBuffer))
     NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
   mBufferSize = aSize;
-
-  nsIntRect bufRect = mVisibleRegion.GetBounds();
-  BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
-                                      bufRect,
-                                      tmpFront);
   return BasicManager()->OpenDescriptor(mBackBuffer);
 }
 
@@ -1769,6 +1800,10 @@ public:
     MOZ_COUNT_DTOR(BasicShadowThebesLayer);
   }
 
+  virtual void SetFrontBuffer(const ThebesBuffer& aNewFront,
+                              const nsIntRegion& aValidRegion,
+                              float aXResolution, float aYResolution);
+
   virtual void SetValidRegion(const nsIntRegion& aRegion)
   {
     mOldValidRegion = mValidRegion;
@@ -1828,6 +1863,25 @@ private:
   float mOldXResolution;
   float mOldYResolution;
 };
+
+void
+BasicShadowThebesLayer::SetFrontBuffer(const ThebesBuffer& aNewFront,
+                                       const nsIntRegion& aValidRegion,
+                                       float aXResolution, float aYResolution)
+{
+  mValidRegion = mOldValidRegion = aValidRegion;
+  mXResolution = mOldXResolution = aXResolution;
+  mYResolution = mOldYResolution = aYResolution;
+  nsRefPtr<gfxASurface> newFrontBuffer =
+    BasicManager()->OpenDescriptor(aNewFront.buffer());
+
+  nsRefPtr<gfxASurface> unused;
+  nsIntRect unusedRect;
+  nsIntPoint unusedRotation;
+  mFrontBuffer.Swap(newFrontBuffer, aNewFront.rect(), aNewFront.rotation(),
+                    getter_AddRefs(unused), &unusedRect, &unusedRotation);
+  mFrontBufferDescriptor = aNewFront.buffer();
+}
 
 void
 BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
