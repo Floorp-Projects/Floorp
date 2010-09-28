@@ -6421,7 +6421,8 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  if (mParser || mWeakSink) {
+  if ((!IsHTML() || aType > Flush_ContentAndNotify) &&
+      (mParser || mWeakSink)) {
     nsCOMPtr<nsIContentSink> sink;
     if (mParser) {
       sink = mParser->GetContentSink();
