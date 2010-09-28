@@ -30,10 +30,20 @@
 #include "prlog.h"
 #include "nsMemory.h"
 
+struct nsHtml5CharacterName {
+  PRUint16 nameStart;
+  PRUint16 nameLen;
+  #ifdef DEBUG
+  PRInt32 n;
+  #endif
+  PRInt32 length() const;
+  PRUnichar charAt(PRInt32 index) const;
+};
+
 class nsHtml5NamedCharacters
 {
   public:
-    static jArray<jArray<PRInt8,PRInt32>,PRInt32> NAMES;
+    static const nsHtml5CharacterName NAMES[];
     static const PRUnichar VALUES[][2];
     static PRUnichar** WINDOWS_1252;
     static void initializeStatics();
