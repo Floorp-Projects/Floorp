@@ -591,7 +591,14 @@ function check_test_10(install) {
   AddonManager.getAllInstalls(function(activeInstalls) {
     do_check_eq(activeInstalls.length, 0);
 
-    run_test_11();
+    restartManager();
+
+    // Check that the install did not complete
+    AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
+      do_check_eq(a3, null);
+
+      run_test_11();
+    });
   });
 }
 
@@ -934,6 +941,13 @@ function check_test_13(install) {
     do_check_false(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
     do_check_eq(olda2.pendingUpgrade, null);
 
-    end_test();
+    restartManager();
+
+    // Check that the upgrade did not complete
+    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+      do_check_eq(a2.version, "2.0");
+
+      end_test();
+    });
   });
 }
