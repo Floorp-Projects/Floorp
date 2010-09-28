@@ -6087,13 +6087,18 @@ DirectoryInstallLocation.prototype = {
     delete this._FileToIDMap[file.path];
     delete this._IDToFileMap[aId];
 
+    file = this._directory.clone();
+    file.append(aId);
+    if (!file.exists())
+      file.leafName += ".xpi";
+
     if (!file.exists()) {
       WARN("Attempted to remove " + aId + " from " +
            this._name + " but it was already gone");
       return;
     }
 
-    if (file.isFile())
+    if (file.leafName != aId)
       Services.obs.notifyObservers(file, "flush-cache-entry", null);
     file.remove(true);
   },
