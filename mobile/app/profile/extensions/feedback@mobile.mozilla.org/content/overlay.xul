@@ -70,7 +70,7 @@
             </setting>
           </settings>
           <settings id="feedback-tools" label="&feedback.tools.title;">
-            <setting pref="extensions.checkCompatibility.2.0b" title="&feedback.forceCompat.title;" type="bool" inverted="true" oninputchanged="Feedback.updateRestart();"/>
+            <setting pref="extensions.checkCompatibility.4.0b" title="&feedback.forceCompat.title;" type="bool" inverted="true" oninputchanged="Feedback.updateRestart();"/>
             <setting pref="browser.console.showInPanel" title="&feedback.errorConsole.title;" type="bool" oninputchanged="Feedback.updateRestart();"/>
           </settings>
         </richlistbox>
