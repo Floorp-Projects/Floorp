@@ -98,16 +98,14 @@ XPCOMUtils.defineLazyGetter(gStrings, "appVersion", function() {
   return Services.appinfo.version;
 });
 
-window.addEventListener("load",  initialize, false);
-window.addEventListener("unload",  shutdown, false);
-window.addEventListener("popstate", function(event) {
-  gViewController.statePopped(event);
-}, false);
+document.addEventListener("load", initialize, true);
+window.addEventListener("unload", shutdown, false);
 
 var gPendingInitializations = 1;
 __defineGetter__("gIsInitializing", function() gPendingInitializations > 0);
 
 function initialize() {
+  document.removeEventListener("load", initialize, true);
   gCategories.initialize();
   gHeader.initialize();
   gViewController.initialize();
@@ -142,6 +140,58 @@ function loadView(aViewId) {
   } else {
     gViewController.loadView(aViewId);
   }
+}
+
+/**
+ * A wrapper around the HTML5 session history service that continues to work
+ * even if the window has session history disabled.
+ * Without session history it currently only tracks the previous state so
+ * the popState function works.
+ */
+var gHistory = {
+  states: [],
+
+  pushState: function(aState) {
+    try {
+      window.history.pushState(aState, document.title);
+    }
+    catch(e) {
+      while (this.states.length > 1)
+        this.states.shift();
+      this.states.push(aState);
+    }
+  },
+
+  replaceState: function(aState) {
+    try {
+      window.history.replaceState(aState, document.title);
+    }
+    catch (e) {
+      this.states.pop();
+      this.states.push(aState);
+    }
+  },
+
+  popState: function() {
+    // If there are no cached states then the session history must be working
+    if (this.states.length == 0) {
+      window.addEventListener("popstate", function(event) {
+        window.removeEventListener("popstate", arguments.callee, true);
+        // TODO To ensure we can't go forward again we put an additional entry
+        // for the current state into the history. Ideally we would just strip
+        // the history but there doesn't seem to be a way to do that. Bug 590661
+        window.history.pushState(event.state, document.title);
+      }, true);
+      window.history.back();
+    } else {
+      if (this.states.length < 2)
+        throw new Error("Cannot popState from this view");
+
+      this.states.pop();
+      let state = this.states[this.states.length - 1];
+      gViewController.statePopped({ state: state });
+    }
+  },
 }
 
 var gEventManager = {
@@ -348,6 +398,10 @@ var gViewController = {
       view.initialize();
 
     window.controllers.appendController(this);
+
+    window.addEventListener("popstate",
+                            gViewController.statePopped.bind(gViewController),
+                            false);
   },
 
   shutdown: function() {
@@ -407,7 +461,7 @@ var gViewController = {
     if (aViewId == this.currentViewId)
       return;
 
-    window.history.pushState({
+    gHistory.pushState({
       view: aViewId,
       previousView: this.currentViewId
     }, document.title);
@@ -415,7 +469,7 @@ var gViewController = {
   },
 
   loadInitialView: function(aViewId) {
-    window.history.replaceState({
+    gHistory.replaceState({
       view: aViewId,
       previousView: null
     }, document.title);
@@ -459,20 +513,8 @@ var gViewController = {
 
   // Moves back in the document history and removes the current history entry
   popState: function(aCallback) {
-    this.viewChangeCallback = function() {
-      // TODO To ensure we can't go forward again we put an additional entry for
-      // the current page into the history. Ideally we would just strip the
-      // history but there doesn't seem to be a way to do that. Bug 590661
-      window.history.pushState({
-        view: gViewController.currentViewId,
-        previousView: gViewController.currentViewId
-      }, document.title);
-      this.updateCommands();
-
-      if (aCallback)
-        aCallback();
-    };
-    window.history.back();
+    this.viewChangeCallback = aCallback;
+    gHistory.popState();
   },
 
   notifyViewChanged: function() {
