@@ -115,7 +115,7 @@ gTests.push({
     todo_is(contentRegion.label, content.label, "The Content region");
 
     // Check for *Show images*
-    images = expected.imageRegion;
+    var images = expected.imageRegion;
     var imageRegion = document.getAnonymousElementByAttribute(contentRegion, "pref", images.pref); 
     var imageLabel = document.getAnonymousElementByAttribute(imageRegion, "class", "preftitle");
     is(imageLabel.value, images.value, "Show images label");

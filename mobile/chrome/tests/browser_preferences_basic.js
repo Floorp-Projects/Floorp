@@ -102,8 +102,9 @@ gTests.push({
 
   onPrefsView: function() {
     let prefsList = document.getElementById("prefs-list");
-    let w = prefsList.clientWidth;
-    let h = prefsList.clientHeight;
+    let prefsListRect = prefsList.getBoundingClientRect();
+    let w = prefsListRect.width;
+    let h = prefsListRect.height;
 
     //check whether the preferences panel is visible
     ok(BrowserUI.isPanelVisible(), "Preferences panel must now be visble");
@@ -130,7 +131,7 @@ gTests.push({
     gCurrentTest._prefsScrollbox.getPosition(x, y);
     ok((x.value == 0 && y.value == 0),"The preferences pane should be visible", "Got " + x.value + " " + y.value + ", expected 0,0");
 
-    // Move preferences pane upexpected "+ finalDragOffset +"
+    // Move preferences pane up
     dragElement(prefsList, w / 2, h / 2, w / 2, h / 4);
 
     // Check whether it is moved up to the correct view
@@ -144,6 +145,9 @@ gTests.push({
     // Check whether it goes back to old position
     gCurrentTest._prefsScrollbox.getPosition(x, y);
     ok((x.value == 0 && y.value == 0), "Preferences pane is panned down", "Got " + x.value + " " + y.value + ", expected 0,0");
+
+    // Force the scroll position to 0, 0 - just in case the previous test fails
+    gCurrentTest._prefsScrollbox.scrollTo(0, 0);
 
     // Now check whether it is not panned right/left
     // Move the preferences pane right
