@@ -4624,8 +4624,8 @@ AddonInstall.prototype = {
 
       this.channel = NetUtil.newChannel(this.sourceURI);
       this.channel.notificationCallbacks = this;
-      this.channel.QueryInterface(Ci.nsIHttpChannelInternal)
-                  .forceAllowThirdPartyCookie = true;
+      if (this.channel instanceof Ci.nsIHttpChannelInternal)
+        this.channel.forceAllowThirdPartyCookie = true;
       this.channel.asyncOpen(listener, null);
 
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
