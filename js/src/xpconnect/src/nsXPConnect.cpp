@@ -1013,14 +1013,14 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         *global = tempGlobal;
         *compartment = tempGlobal->getCompartment(cx);
 
-        js::SwitchToCompartment(cx, *compartment);
+        js::SwitchToCompartment sc(cx, *compartment);
 
         JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(origin));
         map.Put(origin, *compartment);
     }
     else
     {
-        js::SwitchToCompartment(cx, *compartment);
+        js::SwitchToCompartment sc(cx, *compartment);
 
         tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
