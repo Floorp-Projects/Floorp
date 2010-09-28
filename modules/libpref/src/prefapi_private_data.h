@@ -52,3 +52,4 @@ PLDHashOperator
 pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
+PrefHashEntry* pref_HashTableLookup(const void *key);
