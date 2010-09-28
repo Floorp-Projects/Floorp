@@ -1,0 +1,10 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE resources [
+#includesubst @BRANDPATH@
+#includesubst @STRINGSPATH@
+]>
+<resources>
+  <string name="splash_screen_label">&splash_screen_label;</string>
+  <string name="incompatable_cpu_error">&incompatable_cpu_error;</string>
+</resources>
