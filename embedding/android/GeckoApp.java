@@ -66,6 +66,21 @@ abstract public class GeckoApp
     public static GeckoApp mAppContext;
     ProgressDialog mProgressDialog;
 
+    void showErrorDialog(String message)
+    {
+        new AlertDialog.Builder(this)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("Exit",
+                               new DialogInterface.OnClickListener() {
+                                   public void onClick(DialogInterface dialog,
+                                                       int id)
+                                   {
+                                       GeckoApp.this.finish();
+                                   }
+                               }).show();
+    }
+
     void launch()
     {
         // unpack files in the components directory
@@ -110,7 +125,34 @@ abstract public class GeckoApp
                                                   ViewGroup.LayoutParams.FILL_PARENT));
 
         if (!GeckoAppShell.sGeckoRunning) {
-            
+            try {
+                BufferedReader reader =
+                    new BufferedReader(new FileReader("/proc/cpuinfo"));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    int index = line.indexOf("CPU architecture:");
+                    if (index == -1)
+                        continue;
+                    String versionStr = line.substring(18);
+                    Log.i("GeckoApp", "cpu version: " + versionStr);
+                    int version = Integer.parseInt(versionStr);
+
+                    if (version < getMinCPUVersion()) {
+                        showErrorDialog("This device does not meet the " +
+                                        "minimum system requirements for " +
+                                        getAppName() + ".");
+                        return;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                
+            } catch (Exception ex) {
+                // Not much we can do here, just continue assuming we're okay
+                Log.i("GeckoApp", "exception: " + ex);
+            }
+
             if (!useLaunchButton)
                 mProgressDialog = 
                     ProgressDialog.show(GeckoApp.this, "", getAppName() + 
@@ -170,7 +212,8 @@ abstract public class GeckoApp
     public void onResume()
     {
         Log.i("GeckoApp", "resume");
-        GeckoAppShell.onResume();
+        if (GeckoAppShell.sGeckoRunning)
+            GeckoAppShell.onResume();
         if (surfaceView != null)
             surfaceView.mSurfaceNeedsRedraw = true;
         // After an onPause, the activity is back in the foreground.
@@ -288,6 +331,7 @@ abstract public class GeckoApp
 
     abstract public String getAppName();
     abstract public String getContentProcessName();
+    abstract public int getMinCPUVersion();
 
     protected void unpackComponents()
     {

@@ -72,7 +72,7 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 
 /* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
 
-static const nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
+static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)
 {
   HKEY key;
   DWORD dwcbData;
@@ -142,7 +142,7 @@ static const nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName
 // The driver ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD, possibly
 // followed by &REV_XXXX.  We uppercase the string, and strip the &REV_ part
 // from it, if found.
-static const void normalizeDriverId(nsString& driverid) {
+static void normalizeDriverId(nsString& driverid) {
   ToUpperCase(driverid);
   PRInt32 rev = driverid.Find(NS_LITERAL_CSTRING("&REV_"));
   if (rev != -1) {
@@ -176,7 +176,8 @@ GfxInfo::Init()
 
   /* DeviceKey is "reserved" according to MSDN so we'll be careful with it */
   /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
-  if (wcsncmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
+  /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need to compare case insenstively */
+  if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
     return;
 
   // make sure the string is NULL terminated
@@ -443,6 +444,18 @@ static const PRUint32 deviceFamilyIntelGMAX3000[] = {
     0
 };
 
+// see bug 595364 comment 10
+// We have Direct2D crashes with these Intel GMA X3000 cards. They seem to constitute the first
+// generation of DX10 cards.
+static const PRUint32 deviceFamilyIntelGMAX3000BlockDirect2D[] = {
+    0x2982, /* IntelG35_1 */
+    0x2983, /* IntelG35_2 */
+    0x2A02, /* IntelGL960_1 */
+    0x2A03, /* IntelGL960_2 */
+    0x2A12, /* IntelGM965_1 */
+    0x2A13  /* IntelGM965_2 */
+};
+
 static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
     0x2A42, /* IntelGMA4500MHD_1 */
     0x2A43, /* IntelGMA4500MHD_2 */
@@ -471,12 +484,24 @@ static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
 
 static const GfxDriverInfo driverInfo[] = {
   /*
+   * Notice that the first match defines the result. So always implement special cases firsts and general case last.
+   */
+
+  /*
    * Intel entries
    */
 
+  /*
+   * Implement special Direct2D blocklist from bug 595364
+   */
+  { allWindowsVersions,
+    vendorIntel, deviceFamilyIntelGMAX3000BlockDirect2D,
+    nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED,
+    DRIVER_LESS_THAN, allDriverVersions },
+
   /* implement the blocklist from bug 594877
-   * Don't allow D2D on any drivers before this, as there's a crash when a MS Hotfix is installed.
-   * For safety, don't allow any other features on the buggy drivers.
+   * Block all features on any drivers before this, as there's a crash when a MS Hotfix is installed.
+   * The crash itself is Direct2D-related, but for safety we block all features.
    */
 #define IMPLEMENT_INTEL_DRIVER_BLOCKLIST(winVer, devFamily, driverVer) \
   { winVer,                                                            \

@@ -622,10 +622,12 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outStartNode,
                                         nsCOMPtr<nsIDOMNode> *outEndNode,
                                         PRInt32 *outStartOffset,
-                                        PRInt32 *outEndOffset);
+                                        PRInt32 *outEndOffset,
+                                        PRBool aTrustedInput);
   nsresult   ParseFragment(const nsAString & aStr, nsTArray<nsString> &aTagStack,
                            nsIDocument* aTargetDoc,
-                           nsCOMPtr<nsIDOMNode> *outNode);
+                           nsCOMPtr<nsIDOMNode> *outNode,
+                           PRBool aTrustedInput);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                       nsCOMArray<nsIDOMNode>& outNodeList,
                                       nsIDOMNode *aStartNode,
@@ -750,6 +752,23 @@ protected:
 
   // Whether the outer window of the DOM event target has focus or not.
   PRBool   OurWindowHasFocus();
+
+  // This function is used to insert a string of HTML input optionally with some
+  // context information into the editable field.  The HTML input either comes
+  // from a transferable object created as part of a drop/paste operation, or from
+  // the InsertHTML method.  We may want the HTML input to be sanitized (for example,
+  // if it's coming from a transferable object), in which case aTrustedInput should
+  // be set to false, otherwise, the caller should set it to true, which means that
+  // the HTML will be inserted in the DOM verbatim.
+  nsresult DoInsertHTMLWithContext(const nsAString& aInputString,
+                                   const nsAString& aContextStr,
+                                   const nsAString& aInfoStr,
+                                   const nsAString& aFlavor,
+                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDOMNode* aDestNode,
+                                   PRInt32 aDestOffset,
+                                   PRBool aDeleteSelection,
+                                   PRBool aTrustedInput);
 
 // Data members
 protected:
