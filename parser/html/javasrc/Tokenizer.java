@@ -36,6 +36,7 @@
 package nu.validator.htmlparser.impl;
 
 import nu.validator.htmlparser.annotation.Auto;
+import nu.validator.htmlparser.annotation.CharacterName;
 import nu.validator.htmlparser.annotation.Const;
 import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
@@ -3039,13 +3040,13 @@ public class Tokenizer implements Locator {
                             if (hi < lo) {
                                 break outer;
                             }
-                            if (entCol == NamedCharacters.NAMES[lo].length) {
+                            if (entCol == NamedCharacters.NAMES[lo].length()) {
                                 candidate = lo;
                                 strBufMark = strBufLen;
                                 lo++;
-                            } else if (entCol > NamedCharacters.NAMES[lo].length) {
+                            } else if (entCol > NamedCharacters.NAMES[lo].length()) {
                                 break outer;
-                            } else if (c > NamedCharacters.NAMES[lo][entCol]) {
+                            } else if (c > NamedCharacters.NAMES[lo].charAt(entCol)) {
                                 lo++;
                             } else {
                                 break loloop;
@@ -3056,12 +3057,12 @@ public class Tokenizer implements Locator {
                             if (hi < lo) {
                                 break outer;
                             }
-                            if (entCol == NamedCharacters.NAMES[hi].length) {
+                            if (entCol == NamedCharacters.NAMES[hi].length()) {
                                 break hiloop;
                             }
-                            if (entCol > NamedCharacters.NAMES[hi].length) {
+                            if (entCol > NamedCharacters.NAMES[hi].length()) {
                                 break outer;
-                            } else if (c < NamedCharacters.NAMES[hi][entCol]) {
+                            } else if (c < NamedCharacters.NAMES[hi].charAt(entCol)) {
                                 hi--;
                             } else {
                                 break hiloop;
@@ -3091,9 +3092,9 @@ public class Tokenizer implements Locator {
                         continue stateloop;
                     } else {
                         // c can't be CR, LF or nul if we got here
-                        byte[] candidateArr = NamedCharacters.NAMES[candidate];
-                        if (candidateArr.length == 0
-                                || candidateArr[candidateArr.length - 1] != ';') {
+                        @Const @CharacterName String candidateName = NamedCharacters.NAMES[candidate];
+                        if (candidateName.length() == 0
+                                || candidateName.charAt(candidateName.length() - 1) != ';') {
                             /*
                              * If the last character matched is not a U+003B
                              * SEMICOLON (;), there is a parse error.
@@ -6253,12 +6254,12 @@ public class Tokenizer implements Locator {
                             if (hi == -1) {
                                 break hiloop;
                             }
-                            if (entCol == NamedCharacters.NAMES[hi].length) {
+                            if (entCol == NamedCharacters.NAMES[hi].length()) {
                                 break hiloop;
                             }
-                            if (entCol > NamedCharacters.NAMES[hi].length) {
+                            if (entCol > NamedCharacters.NAMES[hi].length()) {
                                 break outer;
-                            } else if (c < NamedCharacters.NAMES[hi][entCol]) {
+                            } else if (c < NamedCharacters.NAMES[hi].charAt(entCol)) {
                                 hi--;
                             } else {
                                 break hiloop;
@@ -6269,13 +6270,13 @@ public class Tokenizer implements Locator {
                             if (hi < lo) {
                                 break outer;
                             }
-                            if (entCol == NamedCharacters.NAMES[lo].length) {
+                            if (entCol == NamedCharacters.NAMES[lo].length()) {
                                 candidate = lo;
                                 strBufMark = strBufLen;
                                 lo++;
-                            } else if (entCol > NamedCharacters.NAMES[lo].length) {
+                            } else if (entCol > NamedCharacters.NAMES[lo].length()) {
                                 break outer;
-                            } else if (c > NamedCharacters.NAMES[lo][entCol]) {
+                            } else if (c > NamedCharacters.NAMES[lo].charAt(entCol)) {
                                 lo++;
                             } else {
                                 break loloop;
@@ -6287,7 +6288,6 @@ public class Tokenizer implements Locator {
                         continue;
                     }
 
-                    // TODO warn about apos (IE) and TRADE (Opera)
                     if (candidate == -1) {
                         /*
                          * If no match can be made, then this is a parse error.
@@ -6297,9 +6297,9 @@ public class Tokenizer implements Locator {
                         state = returnState;
                         continue eofloop;
                     } else {
-                        byte[] candidateArr = NamedCharacters.NAMES[candidate];
-                        if (candidateArr.length == 0
-                                || candidateArr[candidateArr.length - 1] != ';') {
+                        @Const @CharacterName String candidateName = NamedCharacters.NAMES[candidate];
+                        if (candidateName.length() == 0
+                                || candidateName.charAt(candidateName.length() - 1) != ';') {
                             /*
                              * If the last character matched is not a U+003B
                              * SEMICOLON (;), there is a parse error.
