@@ -75,6 +75,8 @@ _TEST_FILES = \
   browser_uninstalling.js \
   browser_updatessl.js \
   browser_updatessl.rdf \
+  browser_install.js \
+  browser_install.xml \
   browser_installssl.js \
   browser_recentupdates.js \
   browser_manualupdates.js \
