@@ -97,7 +97,6 @@ class nsGeolocationRequest
 
   void SendLocation(nsIDOMGeoPosition* location);
   void MarkCleared();
-  PRBool IsActive() {return !mCleared;}
   PRBool Allowed() {return mAllowed;}
   void SetTimeoutTimer();
 
