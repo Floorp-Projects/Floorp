@@ -2027,7 +2027,8 @@ var FormHelperUI = {
       let enableZoom = Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom");
       if (enableZoom) {
         zoomLevel = (viewAreaHeight / caretLines) / harmonizedCaretHeight;
-        zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+        zoomLevel = Util.clamp(zoomLevel, kBrowserFormZoomLevelMin, kBrowserFormZoomLevelMax);
+        zoomLevel = Browser.selectedTab.clampZoomLevel(zoomLevel);
       }
       viewAreaWidth /= zoomLevel;
 
