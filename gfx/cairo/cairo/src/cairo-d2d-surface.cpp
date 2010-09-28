@@ -2691,8 +2691,9 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
     rectSrc.right = (float)(x2 * transform->xx + transform->x0);
     rectSrc.bottom = (float)(y2 * transform->yy + transform->y0);
 
-    if (rectSrc.left < 0 || rectSrc.top < 0 ||
-	rectSrc.right > sourceSize.width || rectSrc.bottom > sourceSize.height) {
+    if (rectSrc.left < 0 || rectSrc.top < 0 || rectSrc.right < 0 || rectSrc.bottom < 0 ||
+	rectSrc.right > sourceSize.width || rectSrc.bottom > sourceSize.height ||
+	rectSrc.left > sourceSize.width || rectSrc.top > sourceSize.height) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -2702,8 +2703,30 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
     rectDst.right = (float)x2;
     rectDst.bottom = (float)y2;
 
+    // Bug 599658 - if the src rect is inverted in either axis D2D is fine with
+    // this but it does not actually invert the bitmap. This is an easy way
+    // of doing that.
+    D2D1_MATRIX_3X2_F matrix = D2D1::IdentityMatrix();
+    bool needsTransform = false;
+    if (rectSrc.left > rectSrc.right) {
+	rectDst.left = -rectDst.left;
+	rectDst.right = -rectDst.right;
+	matrix._11 = -1.0;
+	needsTransform = true;
+    }
+    if (rectSrc.top > rectSrc.bottom) {
+	rectDst.top = -rectDst.top;
+	rectDst.bottom = -rectDst.bottom;
+	matrix._22 = -1.0;
+	needsTransform = true;
+    }
+
     D2D1_BITMAP_INTERPOLATION_MODE interpMode =
       D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+
+    if (needsTransform) {
+	dst->rt->SetTransform(matrix);
+    }
 
     if (filter == CAIRO_FILTER_NEAREST) {
       interpMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
@@ -2714,6 +2737,9 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
 			opacity,
 			interpMode,
 			rectSrc);
+    if (needsTransform) {
+	dst->rt->SetTransform(D2D1::IdentityMatrix());
+    }
 
     return rv;
 }
