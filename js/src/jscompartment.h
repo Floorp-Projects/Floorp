@@ -107,8 +107,10 @@ class PreserveCompartment {
     JSContext *cx;
   private:
     JSCompartment *oldCompartment;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER;
   public:
-     PreserveCompartment(JSContext *cx) : cx(cx) {
+     PreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) : cx(cx) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         oldCompartment = cx->compartment;
     }
 
