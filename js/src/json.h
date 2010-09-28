@@ -105,13 +105,6 @@ enum JSONParserState {
     JSON_PARSE_STATE_KEYWORD
 };
 
-enum JSONDataType {
-    JSON_DATA_STRING,
-    JSON_DATA_KEYSTRING,
-    JSON_DATA_NUMBER,
-    JSON_DATA_KEYWORD
-};
-
 struct JSONParser;
 
 extern JSONParser *
