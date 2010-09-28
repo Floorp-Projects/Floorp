@@ -720,15 +720,12 @@ ThreadData::Finish()
 #endif
 }
 
-extern "C" JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-                                   Value *stackLimit);
+extern "C" JSBool
+JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit);
 
-static inline JSBool
-EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
+JSBool
+mjit::EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit)
 {
-    JS_ASSERT(cx->regs);
-    JS_CHECK_RECURSION(cx, return JS_FALSE;);
-
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
     JSScript *script = fp->script();
@@ -738,10 +735,7 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
     prof.start();
 #endif
 
-    Value *stackLimit = cx->stack().getStackLimit(cx);
-    if (!stackLimit)
-        return false;
-
+    JS_ASSERT(cx->regs->fp  == fp);
     JSFrameRegs *oldRegs = cx->regs;
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
@@ -761,6 +755,18 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
     return ok;
 }
 
+static inline JSBool
+CheckStackAndEnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
+{
+    JS_CHECK_RECURSION(cx, return JS_FALSE;);
+
+    Value *stackLimit = cx->stack().getStackLimit(cx);
+    if (!stackLimit)
+        return false;
+
+    return EnterMethodJIT(cx, fp, code, stackLimit);
+}
+
 JSBool
 mjit::JaegerShot(JSContext *cx)
 {
@@ -775,7 +781,7 @@ mjit::JaegerShot(JSContext *cx)
 
     JS_ASSERT(cx->regs->pc == script->code);
 
-    return EnterMethodJIT(cx, cx->fp(), jit->invokeEntry);
+    return CheckStackAndEnterMethodJIT(cx, cx->fp(), jit->invokeEntry);
 }
 
 JSBool
@@ -785,7 +791,7 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
     JS_ASSERT(!TRACE_RECORDER(cx));
 #endif
 
-    return EnterMethodJIT(cx, cx->fp(), safePoint);
+    return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint);
 }
 
 template <typename T>
