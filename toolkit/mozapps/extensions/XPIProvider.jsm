@@ -1268,6 +1268,10 @@ var XPIProvider = {
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
+
+    // Ensure any changes to the add-ons list are flushed to disk
+    XPIDatabase.writeAddonsList([]);
+    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
   /**
