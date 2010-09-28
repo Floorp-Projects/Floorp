@@ -74,7 +74,7 @@ gTests.push({
 
     // Focus the url edit
     let urlbarEdit = document.getElementById("urlbar-edit");
-    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.clientWidth / 2, urlbarEdit.clientHeight / 2, {});
+    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
 
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);
@@ -205,7 +205,7 @@ gTests.push({
   onPageReady3: function(){
     let urlbarEdit = document.getElementById("urlbar-edit");
     is(urlbarEdit.value, "Browser Blank Page 01", "The title of the first page must be displayed");
-    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.clientWidth / 2, urlbarEdit.clientHeight / 2, {});
+    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
 
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);

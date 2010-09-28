@@ -116,7 +116,7 @@ gTests.push({
     is(bookmarkitem.getAttribute("uri"), testURL_01, "Bookmark has the right URL via attribute");
     is(bookmarkitem.spec, testURL_01, "Bookmark has the right URL via property");
 
-    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.width / 2, bookmarkitem.height / 2, {});
   }
 });
 
@@ -138,7 +138,7 @@ gTests.push({
 
   onBookmarksReady: function() {
     let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
-    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.width / 2, bookmarkitem.height / 2, {});
 
     let uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
     uritextbox.value = testURL_02;
@@ -178,7 +178,7 @@ gTests.push({
     is(PlacesUtils.bookmarks.getItemTitle(bookmark), "Browser Blank Page 01", "Title remains the same.");
 
     let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_02);
-    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
+    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.width / 2, bookmarkitem.height / 2, {});
 
     let titletextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "name");
     let newtitle = "Changed Title";
@@ -258,7 +258,7 @@ gTests.push({
     is(first.isEditing, false, "Desktop folder is not in edit mode");
 
     // Do not allow the "desktop" folder to be editable by tap
-    EventUtils.synthesizeMouse(first, first.clientWidth / 2, first.clientHeight / 2, {});
+    EventUtils.synthesizeMouse(first, first.width / 2, first.height / 2, {});
 
     // A tap on the "desktop" folder _should_ open the folder, not put it into edit mode.
     // So we need to get the first item again.

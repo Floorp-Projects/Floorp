@@ -25,6 +25,7 @@ function runNextTest() {
     gCurrentTest.run();
   }
   else {
+    BrowserUI.closeAutoComplete(true);
     finish();
   }
 }

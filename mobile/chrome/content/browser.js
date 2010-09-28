@@ -2523,7 +2523,10 @@ Tab.prototype = {
    */
   updateDefaultZoomLevel: function updateDefaultZoomLevel() {
     let browser = this._browser;
-    let isDefault = (browser.scale == this._defaultZoomLevel);
+    if (!browser)
+      return;
+
+    let isDefault = this.isDefaultZoomLevel();
     this._defaultZoomLevel = this.getDefaultZoomLevel();
     if (isDefault)
       browser.scale = this._defaultZoomLevel;
