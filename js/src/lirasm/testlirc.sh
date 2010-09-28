@@ -2,6 +2,8 @@
 
 set -eu
 
+exitcode=0
+
 LIRASM=$1
 
 TESTS_DIR=`dirname "$0"`/tests
@@ -33,6 +35,7 @@ function runtest {
         cat $outfile
         echo "actual output"
         cat testoutput.txt
+        exitcode=1
     fi
 }
 
@@ -116,3 +119,4 @@ runtest "--random 1000000 --optimize"
 
 rm testoutput.txt
 
+exit $exitcode
