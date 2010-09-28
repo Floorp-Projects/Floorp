@@ -40,6 +40,9 @@
 #ifndef jsinterpinlines_h__
 #define jsinterpinlines_h__
 
+#include "jsprobes.h"
+#include "methodjit/MethodJIT.h"
+
 inline void
 JSStackFrame::initPrev(JSContext *cx)
 {
@@ -82,6 +85,42 @@ JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);
 
+    JS_ASSERT(!hasCallObj());
+}
+
+inline void
+JSStackFrame::resetInvokeCallFrame()
+{
+    /* Undo changes to frame made during execution; see initCallFrame */
+
+    if (hasArgsObj())
+        args.nactual = argsObj().getArgsInitialLength();
+
+    JS_ASSERT(!(flags_ & ~(JSFRAME_FUNCTION |
+                           JSFRAME_OVERFLOW_ARGS |
+                           JSFRAME_UNDERFLOW_ARGS |
+                           JSFRAME_HAS_CALL_OBJ |
+                           JSFRAME_HAS_ARGS_OBJ |
+                           JSFRAME_OVERRIDE_ARGS |
+                           JSFRAME_HAS_PREVPC |
+                           JSFRAME_HAS_RVAL |
+                           JSFRAME_HAS_SCOPECHAIN |
+                           JSFRAME_HAS_ANNOTATION |
+                           JSFRAME_BAILED_AT_RETURN)));
+    flags_ &= JSFRAME_FUNCTION |
+              JSFRAME_OVERFLOW_ARGS |
+              JSFRAME_HAS_PREVPC |
+              JSFRAME_UNDERFLOW_ARGS;
+
+    JS_ASSERT_IF(!hasCallObj(), scopeChain_ == calleeValue().toObject().getParent());
+    JS_ASSERT_IF(hasCallObj(), scopeChain_ == callObj().getParent());
+    if (hasCallObj())
+        scopeChain_ = callObj().getParent();
+
+    JS_ASSERT(exec.fun == calleeValue().toObject().getFunctionPrivate());
+    JS_ASSERT(!hasImacropc());
+    JS_ASSERT(!hasHookData());
+    JS_ASSERT(annotation() == NULL);
     JS_ASSERT(!hasCallObj());
 }
 
@@ -269,6 +308,13 @@ JSStackFrame::forEachFormalArg(Op op)
         op(i, p);
 }
 
+JS_ALWAYS_INLINE void
+JSStackFrame::clearMissingArgs()
+{
+    if (flags_ & JSFRAME_UNDERFLOW_ARGS)
+        SetValueRangeToUndefined(formalArgs() + numActualArgs(), formalArgsEnd());
+}
+
 inline JSObject *
 JSStackFrame::computeThisObject(JSContext *cx)
 {
@@ -394,6 +440,37 @@ JSStackFrame::maybeCallObj() const
 
 namespace js {
 
+class AutoPreserveEnumerators {
+    JSContext *cx;
+    JSObject *enumerators;
+
+  public:
+    AutoPreserveEnumerators(JSContext *cx) : cx(cx), enumerators(cx->enumerators)
+    {
+    }
+
+    ~AutoPreserveEnumerators()
+    {
+        cx->enumerators = enumerators;
+    }
+};
+
+struct AutoInterpPreparer  {
+    JSContext *cx;
+    JSScript *script;
+
+    AutoInterpPreparer(JSContext *cx, JSScript *script)
+      : cx(cx), script(script)
+    {
+        cx->interpLevel++;
+    }
+
+    ~AutoInterpPreparer()
+    {
+        --cx->interpLevel;
+    }
+};
+
 inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp)
 {
@@ -405,6 +482,85 @@ PutActivationObjects(JSContext *cx, JSStackFrame *fp)
     } else if (fp->hasArgsObj()) {
         js_PutArgsObject(cx, fp);
     }
+}
+
+class InvokeSessionGuard
+{
+    InvokeArgsGuard args_;
+    InvokeFrameGuard frame_;
+    Value savedCallee_;
+    Value *formals_, *actuals_;
+    unsigned nformals_;
+    JSScript *script_;
+    void *code_;
+    Value *stackLimit_;
+    jsbytecode *stop_;
+
+    bool optimized() const { return frame_.pushed(); }
+
+  public:
+    InvokeSessionGuard() : args_(), frame_() {}
+    ~InvokeSessionGuard() {}
+
+    bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
+    bool invoke(JSContext *cx) const;
+
+    bool started() const {
+        return args_.pushed();
+    }
+
+    Value &operator[](unsigned i) const {
+        JS_ASSERT(i < argc());
+        Value &arg = i < nformals_ ? formals_[i] : actuals_[i];
+        JS_ASSERT_IF(optimized(), &arg == &frame_.fp()->canonicalActualArg(i));
+        JS_ASSERT_IF(!optimized(), &arg == &args_[i]);
+        return arg;
+    }
+
+    uintN argc() const {
+        return args_.argc();
+    }
+
+    const Value &rval() const {
+        return optimized() ? frame_.fp()->returnValue() : args_.rval();
+    }
+};
+
+inline bool
+InvokeSessionGuard::invoke(JSContext *cx) const
+{
+    /* N.B. Must be kept in sync with Invoke */
+
+    if (!optimized()) {
+        args_.callee() = savedCallee_;
+        return Invoke(cx, args_, 0);
+    }
+
+    /* Clear any garbage left from the last Invoke. */
+    JSStackFrame *fp = frame_.fp();
+    fp->clearMissingArgs();
+    fp->resetInvokeCallFrame();
+    SetValueRangeToUndefined(fp->slots(), script_->nfixed);
+
+    JSBool ok;
+    {
+        AutoPreserveEnumerators preserve(cx);
+        Probes::enterJSFun(cx, fp->fun());
+#ifdef JS_METHODJIT
+        AutoInterpPreparer prepareInterp(cx, script_);
+        ok = mjit::EnterMethodJIT(cx, fp, code_, stackLimit_);
+        cx->regs->pc = stop_;
+#else
+        cx->regs->pc = script_->code;
+        ok = Interpret(cx, cx->fp());
+#endif
+        Probes::exitJSFun(cx, fp->fun());
+    }
+
+    PutActivationObjects(cx, fp);
+
+    /* Don't clobber callee with rval; rval gets read from fp->rval. */
+    return ok;
 }
 
 }

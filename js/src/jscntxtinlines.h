@@ -352,12 +352,12 @@ StackSpace::popInvokeFrame(const InvokeFrameGuard &fg)
     }
 }
 
-JS_REQUIRES_STACK JS_ALWAYS_INLINE
-InvokeFrameGuard::~InvokeFrameGuard()
+JS_ALWAYS_INLINE void
+InvokeFrameGuard::pop()
 {
-    if (JS_UNLIKELY(!pushed()))
-        return;
+    JS_ASSERT(pushed());
     cx_->stack().popInvokeFrame(*this);
+    cx_ = NULL;
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *

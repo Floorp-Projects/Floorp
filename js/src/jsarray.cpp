@@ -1766,12 +1766,11 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
 
 struct CompareArgs
 {
-    JSContext       *context;
-    Value           fval;
-    InvokeArgsGuard args;
+    JSContext          *context;
+    InvokeSessionGuard session;
 
-    CompareArgs(JSContext *cx, const Value &fval)
-      : context(cx), fval(fval)
+    CompareArgs(JSContext *cx)
+      : context(cx)
     {}
 };
 
@@ -1792,17 +1791,15 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    CallArgs &args = ca->args;
-    args.callee() = ca->fval;
-    args.thisv().setNull();
-    args[0] = *av;
-    args[1] = *bv;
+    InvokeSessionGuard &session = ca->session;
+    session[0] = *av;
+    session[1] = *bv;
 
-    if (!Invoke(cx, ca->args, 0))
+    if (!session.invoke(cx))
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ValueToNumber(cx, args.rval(), &cmp))
+    if (!ValueToNumber(cx, session.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2040,10 +2037,8 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                 } while (++i != newlen);
             }
         } else {
-            LeaveTrace(cx);
-
-            CompareArgs ca(cx, fval);
-            if (!cx->stack().pushInvokeArgs(cx, 2, &ca.args))
+            CompareArgs ca(cx);
+            if (!ca.session.start(cx, fval, NullValue(), 2))
                 return false;
 
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
@@ -2819,34 +2814,31 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     if (length == 0)
         return JS_TRUE;
 
-    JSObject *thisp;
+    Value thisv;
     if (argc > 1 && !REDUCE_MODE(mode)) {
+        JSObject *thisp;
         if (!js_ValueToObjectOrNull(cx, argv[1], &thisp))
             return JS_FALSE;
-        argv[1].setObjectOrNull(thisp);
+        thisv.setObjectOrNull(thisp);
     } else {
-        thisp = NULL;
+        thisv.setNull();
     }
 
     /*
      * For all but REDUCE, we call with 3 args (value, index, array). REDUCE
      * requires 4 args (accum, value, index, array).
      */
-    LeaveTrace(cx);
     argc = 3 + REDUCE_MODE(mode);
 
-    InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
+    InvokeSessionGuard session;
+    if (!session.start(cx, ObjectValue(*callable), thisv, argc))
         return JS_FALSE;
 
     MUST_FLOW_THROUGH("out");
     JSBool ok = JS_TRUE;
     JSBool cond;
 
-    Value calleev, thisv, objv;
-    calleev.setObject(*callable);
-    thisv.setObjectOrNull(thisp);
-    objv.setObject(*obj);
+    Value objv = ObjectValue(*obj);
     AutoValueRooter tvr(cx);
     for (jsint i = start; i != end; i += step) {
         JSBool hole;
@@ -2861,22 +2853,22 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
          * Push callable and 'this', then args. We must do this for every
          * iteration around the loop since Invoke clobbers its arguments.
          */
-        args.callee() = calleev;
-        args.thisv() = thisv;
-        Value *sp = args.argv();
+        uintN argi = 0;
         if (REDUCE_MODE(mode))
-            *sp++ = *vp;
-        sp[0] = tvr.value();
-        sp[1].setInt32(i);
-        sp[2] = objv;
+            session[argi++] = *vp;
+        session[argi++] = tvr.value();
+        session[argi++] = Int32Value(i);
+        session[argi]   = objv;
 
         /* Do the call. */
-        ok = Invoke(cx, args, 0);
+        ok = session.invoke(cx);
         if (!ok)
             break;
 
+        const Value &rval = session.rval();
+
         if (mode > MAP)
-            cond = js_ValueToBoolean(args.rval());
+            cond = js_ValueToBoolean(rval);
 #ifdef __GNUC__ /* quell GCC overwarning */
         else
             cond = JS_FALSE;
@@ -2887,10 +2879,10 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             break;
           case REDUCE:
           case REDUCE_RIGHT:
-            *vp = args.rval();
+            *vp = rval;
             break;
           case MAP:
-            ok = SetArrayElement(cx, newarr, i, args.rval());
+            ok = SetArrayElement(cx, newarr, i, rval);
             if (!ok)
                 goto out;
             break;
