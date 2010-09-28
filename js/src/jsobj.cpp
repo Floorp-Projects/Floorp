@@ -6656,9 +6656,13 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         }
         MaybeDumpObject("callobj", fp->maybeCallObj());
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
-        MaybeDumpValue("this", fp->thisValue());
-        fprintf(stderr, "  rval: ");
-        dumpValue(fp->returnValue());
+        if (!fp->isDummyFrame()) {
+            MaybeDumpValue("this", fp->thisValue());
+            fprintf(stderr, "  rval: ");
+            dumpValue(fp->returnValue());
+        } else {
+            fprintf(stderr, "dummy frame");
+        }
         fputc('\n', stderr);
 
         fprintf(stderr, "  flags:");
