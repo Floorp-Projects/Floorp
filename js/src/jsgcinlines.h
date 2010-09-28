@@ -195,7 +195,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         obj->emptyShape->trace(trc);
 
     /* Delegate to ops or the native marking op. */
-    JSTraceOp op = obj->getOps()->trace;
+    TraceOp op = obj->getOps()->trace;
     (op ? op : js_TraceObject)(trc, obj);
 }
 
@@ -210,7 +210,7 @@ MarkChildren(JSTracer *trc, JSFunction *fun)
 
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
-    JSTraceOp op = obj->getOps()->trace;
+    TraceOp op = obj->getOps()->trace;
     (op ? op : js_TraceObject)(trc, obj);
 }
 

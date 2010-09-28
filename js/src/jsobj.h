@@ -1056,7 +1056,7 @@ struct JSObject : js::gc::Cell {
     void clear(JSContext *cx);
 
     JSBool lookupProperty(JSContext *cx, jsid id, JSObject **objp, JSProperty **propp) {
-        JSLookupPropOp op = getOps()->lookupProperty;
+        js::LookupPropOp op = getOps()->lookupProperty;
         return (op ? op : js_LookupProperty)(cx, this, id, objp, propp);
     }
 
@@ -1079,12 +1079,12 @@ struct JSObject : js::gc::Cell {
     }
 
     JSBool getAttributes(JSContext *cx, jsid id, uintN *attrsp) {
-        JSAttributesOp op = getOps()->getAttributes;
+        js::AttributesOp op = getOps()->getAttributes;
         return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
     }
 
     JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp) {
-        JSAttributesOp op = getOps()->setAttributes;
+        js::AttributesOp op = getOps()->setAttributes;
         return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
     }
 
@@ -1099,7 +1099,7 @@ struct JSObject : js::gc::Cell {
     }
 
     JSType typeOf(JSContext *cx) {
-        JSTypeOfOp op = getOps()->typeOf;
+        js::TypeOfOp op = getOps()->typeOf;
         return (op ? op : js_TypeOf)(cx, this);
     }
 
@@ -1335,11 +1335,11 @@ extern void
 js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
-js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
+js_HasOwnPropertyHelper(JSContext *cx, js::LookupPropOp lookup, uintN argc,
                         js::Value *vp);
 
 extern JSBool
-js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
+js_HasOwnProperty(JSContext *cx, js::LookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
