@@ -145,6 +145,7 @@ class SetPropCompiler : public PICStubCompiler
     JSObject *obj;
     JSAtom *atom;
     VoidStubUInt32 stub;
+    int lastStubSecondShapeGuard;
 
     static int32 dslotsLoadOffset(ic::PICInfo &pic) {
 #if defined JS_NUNBOX32
@@ -209,7 +210,8 @@ class SetPropCompiler : public PICStubCompiler
   public:
     SetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
                     VoidStubUInt32 stub)
-      : PICStubCompiler("setprop", f, script, pic), obj(obj), atom(atom), stub(stub)
+      : PICStubCompiler("setprop", f, script, pic), obj(obj), atom(atom), stub(stub),
+        lastStubSecondShapeGuard(pic.secondShapeGuard)
     { }
 
     bool disable(const char *reason)
@@ -291,12 +293,15 @@ class SetPropCompiler : public PICStubCompiler
         else
             shapeGuardJumpOffset = pic.shapeGuard + inlineShapeJump();
         repatcher.relink(shapeGuardJumpOffset, cs);
+        if (lastStubSecondShapeGuard)
+            repatcher.relink(lastStubSecondShapeGuard, cs);
     }
 
     bool generateStub(uint32 initialShape, const Shape *shape, bool adding)
     {
         /* Exits to the slow path. */
         Vector<Jump, 8> slowExits(f.cx);
+        Vector<Jump, 8> otherGuards(f.cx);
 
         Assembler masm;
 
@@ -309,8 +314,6 @@ class SetPropCompiler : public PICStubCompiler
         Label start = masm.label();
         Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
                                                 Imm32(initialShape));
-        if (!slowExits.append(shapeGuard))
-            return false;
 
 #if defined JS_NUNBOX32
         DBGLABEL(dbgStubShapeJump);
@@ -321,8 +324,7 @@ class SetPropCompiler : public PICStubCompiler
 
         JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->getClass() == &js_CallClass);
 
-        Jump rebrand;
-        Jump skipOver;
+        MaybeJump skipOver;
 
         if (adding) {
             JS_ASSERT(shape->hasSlot());
@@ -339,21 +341,16 @@ class SetPropCompiler : public PICStubCompiler
 #endif
 
             /* Emit shape guards for the object's prototype chain. */
-            size_t chainLength = 0;
             JSObject *proto = obj->getProto();
+            RegisterID lastReg = pic.objReg;
             while (proto) {
-                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, proto)), pic.shapeReg);
-                for (size_t i = 0; i < chainLength; i++)
-                    masm.loadPtr(Address(pic.shapeReg, offsetof(JSObject, proto)), pic.shapeReg);
-                masm.loadShape(pic.shapeReg, pic.shapeReg);
-
-                Jump protoGuard = masm.branch32(Assembler::NotEqual, pic.shapeReg,
-                                                Imm32(proto->shape()));
-                if (!slowExits.append(protoGuard))
+                masm.loadPtr(Address(lastReg, offsetof(JSObject, proto)), pic.shapeReg);
+                Jump protoGuard = masm.guardShape(pic.shapeReg, proto->shape());
+                if (!otherGuards.append(protoGuard))
                     return false;
 
                 proto = proto->getProto();
-                chainLength++;
+                lastReg = pic.shapeReg;
             }
 
             if (pic.kind == ic::PICInfo::SETMETHOD) {
@@ -427,7 +424,9 @@ class SetPropCompiler : public PICStubCompiler
                 masm.loadTypeTag(address, pic.shapeReg);
                 Jump skip = masm.testObject(Assembler::NotEqual, pic.shapeReg);
                 masm.loadPayload(address, pic.shapeReg);
-                rebrand = masm.testFunction(Assembler::Equal, pic.shapeReg);
+                Jump rebrand = masm.testFunction(Assembler::Equal, pic.shapeReg);
+                if (!slowExits.append(rebrand))
+                    return false;
                 skip.linkTo(masm.label(), &masm);
                 pic.shapeRegHasBaseShape = false;
             }
@@ -470,6 +469,17 @@ class SetPropCompiler : public PICStubCompiler
         }
         Jump done = masm.jump();
 
+        // Common all secondary guards into one big exit.
+        MaybeJump slowExit;
+        if (otherGuards.length()) {
+            for (Jump *pj = otherGuards.begin(); pj != otherGuards.end(); ++pj)
+                pj->linkTo(masm.label(), &masm);
+            slowExit = masm.jump();
+            pic.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
+        } else {
+            pic.secondShapeGuard = 0;
+        }
+
         JSC::ExecutablePool *ep = getExecPool(masm.size());
         if (!ep || !pic.execPools.append(ep)) {
             if (ep)
@@ -479,13 +489,14 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         JSC::LinkBuffer buffer(&masm, ep);
+        buffer.link(shapeGuard, pic.slowPathStart);
+        if (slowExit.isSet())
+            buffer.link(slowExit.get(), pic.slowPathStart);
         for (Jump *pj = slowExits.begin(); pj != slowExits.end(); ++pj)
             buffer.link(*pj, pic.slowPathStart);
         buffer.link(done, pic.storeBack);
-        if (!adding && shape->hasDefaultSetter() && (obj->brandedOrHasMethodBarrier()))
-            buffer.link(rebrand, pic.slowPathStart);
-        if (!shape->hasDefaultSetter())
-            buffer.link(skipOver, pic.storeBack);
+        if (skipOver.isSet())
+            buffer.link(skipOver.get(), pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %d %d at %p\n",
                    (void*)&pic,
@@ -721,14 +732,14 @@ class GetPropCompiler : public PICStubCompiler
                     VoidStub stub)
       : PICStubCompiler("getprop", f, script, pic), obj(obj), atom(atom),
         stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
-        lastStubSecondShapeGuard(pic.u.get.secondShapeGuard)
+        lastStubSecondShapeGuard(pic.secondShapeGuard)
     { }
 
     GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
                     VoidStubUInt32 stub)
       : PICStubCompiler("callprop", f, script, pic), obj(obj), atom(atom),
         stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
-        lastStubSecondShapeGuard(pic.u.get.secondShapeGuard)
+        lastStubSecondShapeGuard(pic.secondShapeGuard)
     { }
 
     static void reset(ic::PICInfo &pic)
@@ -1102,10 +1113,10 @@ class GetPropCompiler : public PICStubCompiler
                                            Imm32(holder->shape()));
             if (!shapeMismatches.append(j))
                 return false;
-            pic.u.get.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
+            pic.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
         } else {
             JS_ASSERT(holder->isNative()); /* Precondition: already checked. */
-            pic.u.get.secondShapeGuard = 0;
+            pic.secondShapeGuard = 0;
         }
 
         /* Load the value out of the object. */
@@ -1289,7 +1300,7 @@ class GetElemCompiler : public PICStubCompiler
                     VoidStub stub)
       : PICStubCompiler("getelem", f, script, pic), obj(obj), id(id),
         stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
-        lastStubSecondShapeGuard(pic.u.get.secondShapeGuard)
+        lastStubSecondShapeGuard(pic.secondShapeGuard)
     {}
 
     static void reset(ic::PICInfo &pic)
@@ -1458,10 +1469,10 @@ class GetElemCompiler : public PICStubCompiler
                                            Imm32(holder->shape()));
             if (!shapeMismatches.append(j))
                 return false;
-            pic.u.get.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
+            pic.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
         } else {
             JS_ASSERT(holder->isNative()); /* Precondition: already checked. */
-            pic.u.get.secondShapeGuard = 0;
+            pic.secondShapeGuard = 0;
         }
 
         /* Load the value out of the object. */
