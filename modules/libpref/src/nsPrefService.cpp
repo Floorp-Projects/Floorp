@@ -148,12 +148,7 @@ nsresult nsPrefService::Init()
     nsCAutoString prefs;
     cpc->SendReadPrefs(&prefs);
 
-    PrefParseState ps;
-    PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
-    nsresult rv = PREF_ParseBuf(&ps, prefs.get(), prefs.Length());
-    PREF_FinalizeParseState(&ps);
-
-    return rv;
+    return ReadPrefBuffer(prefs);
   }
 #endif
 
@@ -357,6 +352,34 @@ NS_IMETHODIMP nsPrefService::SerializePreferences(nsACString& prefs)
   PR_Free(valueArray);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsPrefService::SerializePreference(const nsACString& aPrefName, nsACString& aBuffer)
+{
+  PrefHashEntry *pref = pref_HashTableLookup(nsDependentCString(aPrefName).get());
+  if (!pref)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  char* prefArray = nsnull;
+
+  pref_saveArgs saveArgs;
+  saveArgs.prefArray = &prefArray;
+  saveArgs.saveTypes = SAVE_ALL_AND_DEFAULTS;
+
+  pref_savePref(&gHashTable, pref, 0, &saveArgs);
+  aBuffer = prefArray;
+  PR_Free(prefArray);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrefService::ReadPrefBuffer(const nsACString& aBuffer)
+{
+  PrefParseState ps;
+  PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  nsresult rv = PREF_ParseBuf(&ps, nsDependentCString(aBuffer).get(), aBuffer.Length());
+  PREF_FinalizeParseState(&ps);
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)

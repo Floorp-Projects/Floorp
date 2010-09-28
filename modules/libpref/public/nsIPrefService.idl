@@ -170,6 +170,8 @@ interface nsIPrefServiceInternal : nsISupports
   void readExtensionPrefs(in nsILocalFile aFile);
 
   ACString serializePreferences();
+  ACString serializePreference(in ACString aPrefName);
+  void readPrefBuffer(in ACString aBuffer);
 };
 
 %{C++
