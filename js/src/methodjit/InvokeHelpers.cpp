@@ -685,7 +685,7 @@ HandleErrorInExcessFrames(VMFrame &f, JSStackFrame *stopFp)
     }
 
     JS_ASSERT(&f.regs == cx->regs);
-    JS_ASSERT_IF(returnOK, cx->fp() == stopFp);
+    JS_ASSERT_IF(!returnOK, cx->fp() == stopFp);
 
     return returnOK;
 }
