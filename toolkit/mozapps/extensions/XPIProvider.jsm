@@ -4288,8 +4288,14 @@ AddonInstall.prototype = {
       let stagedJSON = stagedAddon.clone();
       stagedAddon.append(this.addon.id);
       stagedJSON.append(this.addon.id + ".json");
-      if (stagedAddon.exists())
+      if (stagedAddon.exists()) {
         stagedAddon.remove(true);
+      }
+      else {
+        stagedAddon.leafName += ".xpi";
+        if (stagedAddon.exists())
+          stagedAddon.remove(false);
+      }
       if (stagedJSON.exists())
         stagedJSON.remove(true);
       this.state = AddonManager.STATE_CANCELLED;
