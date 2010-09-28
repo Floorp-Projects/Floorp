@@ -510,28 +510,36 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
         key = AtomEntryToKey(*p);
     } else {
         /*
-         * Unless str is already allocated from the GC heap and flat, we have
-         * to release state->lock as string construction is a complex
-         * operation. For example, it can trigger GC which may rehash the table
-         * and make the entry invalid.
+         * Ensure that any atomized string lives only in the default
+         * compartment.
          */
-        if (!(flags & ATOM_TMPSTR) && str->isFlat()) {
+        bool needNewString = !!(flags & ATOM_TMPSTR) ||
+                             str->asCell()->compartment() != cx->runtime->defaultCompartment;
+
+        /*
+         * Unless str is already comes from the default compartment and flat,
+         * we have to relookup the key as the last ditch GC invoked from the
+         * string allocation or OOM handling may unlock the default
+         * compartment lock.
+         */
+        if (!needNewString && str->isFlat()) {
             str->flatClearMutable();
             key = str;
             atoms.add(p, StringToInitialAtomEntry(key));
         } else {
-            if (flags & ATOM_TMPSTR) {
+            if (needNewString) {
                 SwitchToCompartment sc(cx, cx->runtime->defaultCompartment);
-
+                jschar *chars = str->chars();
                 if (flags & ATOM_NOCOPY) {
-                    key = js_NewString(cx, str->flatChars(), str->flatLength());
+                    key = js_NewString(cx, chars, length);
                     if (!key)
                         return NULL;
 
                     /* Finish handing off chars to the GC'ed key string. */
+                    JS_ASSERT(flags & ATOM_TMPSTR);
                     str->mChars = NULL;
                 } else {
-                    key = js_NewStringCopyN(cx, str->flatChars(), str->flatLength());
+                    key = js_NewStringCopyN(cx, chars, length);
                     if (!key)
                         return NULL;
                 }
@@ -901,7 +909,7 @@ JSAutoAtomList::~JSAutoAtomList()
     if (table) {
         JS_HashTableDestroy(table);
     } else {
-        JSHashEntry *hep = list; 
+        JSHashEntry *hep = list;
         while (hep) {
             JSHashEntry *next = hep->next;
             js_free_temp_entry(parser, hep, HT_FREE_ENTRY);
