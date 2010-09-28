@@ -99,6 +99,7 @@ function getBoundingContentRect(aElement) {
   while(document.defaultView.frameElement)
     document = document.defaultView.frameElement.ownerDocument;
 
+  let content = document.defaultView;
   let offset = Util.getScrollOffset(content);
   let r = aElement.getBoundingClientRect();
 
