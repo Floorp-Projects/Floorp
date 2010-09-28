@@ -216,6 +216,12 @@ struct JITScript {
     void release();
 };
 
+/*
+ * Execute the given mjit code. This is a low-level call and callers must
+ * provide the same guarantees as JaegerShot/CheckStackAndEnterMethodJIT.
+ */
+JSBool EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit);
+
 /* Execute a method that has been JIT compiled. */
 JSBool JaegerShot(JSContext *cx);
 

@@ -191,6 +191,9 @@ struct JSStackFrame
     inline void initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
                               uint32 nactual, uint32 flags);
 
+    /* Used for SessionInvoke. */
+    inline void resetInvokeCallFrame();
+
     /* Called by method-jit stubs and serve as a specification for jit-code. */
     inline void initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flags);
     inline void initCallFrameEarlyPrologue(JSFunction *fun, void *ncode);
@@ -368,7 +371,8 @@ struct JSStackFrame
     template <class Op> inline void forEachCanonicalActualArg(Op op);
     template <class Op> inline void forEachFormalArg(Op op);
 
-    /* True if we have created an arguments object for this frame; implies hasArgs(). */
+    inline void clearMissingArgs();
+
     bool hasArgsObj() const {
         return !!(flags_ & JSFRAME_HAS_ARGS_OBJ);
     }
@@ -558,7 +562,7 @@ struct JSStackFrame
 
     /* Return value */
 
-    const js::Value& returnValue() {
+    const js::Value &returnValue() {
         if (!(flags_ & JSFRAME_HAS_RVAL))
             rval_.setUndefined();
         return rval_;
@@ -884,6 +888,32 @@ struct CallArgs
  */
 extern JS_REQUIRES_STACK bool
 Invoke(JSContext *cx, const CallArgs &args, uint32 flags);
+
+/*
+ * Natives like sort/forEach/replace call Invoke repeatedly with the same
+ * callee, this, and number of arguments. To optimize this, such natives can
+ * start an "invoke session" to factor out much of the dynamic setup logic
+ * required by a normal Invoke. Usage is:
+ *
+ *   InvokeSessionGuard session(cx);
+ *   if (!session.start(cx, callee, thisp, argc, &session))
+ *     ...
+ *
+ *   while (...) {
+ *     // write actual args (not callee, this)
+ *     session[0] = ...
+ *     ...
+ *     session[argc - 1] = ...
+ *
+ *     if (!session.invoke(cx, session))
+ *       ...
+ *
+ *     ... = session.rval();
+ *   }
+ *
+ *   // session ended by ~InvokeSessionGuard
+ */
+class InvokeSessionGuard;
 
 /*
  * Consolidated js_Invoke flags simply rename certain JSFRAME_* flags, so that

@@ -541,9 +541,8 @@ class InvokeArgsGuard : public CallArgs
     JSStackFrame     *prevInvokeFrame;
 #endif
   public:
-    inline InvokeArgsGuard() : cx(NULL), seg(NULL) {}
-    inline InvokeArgsGuard(JSContext *cx, Value *vp, uintN argc);
-    inline ~InvokeArgsGuard();
+    InvokeArgsGuard() : cx(NULL), seg(NULL) {}
+    ~InvokeArgsGuard();
     bool pushed() const { return cx != NULL; }
 };
 
@@ -565,8 +564,9 @@ class InvokeFrameGuard
     JSFrameRegs      *prevRegs_;
   public:
     InvokeFrameGuard() : cx_(NULL) {}
-    JS_REQUIRES_STACK ~InvokeFrameGuard();
+    ~InvokeFrameGuard() { if (pushed()) pop(); }
     bool pushed() const { return cx_ != NULL; }
+    void pop();
     JSStackFrame *fp() const { return regs_.fp; }
 };
 

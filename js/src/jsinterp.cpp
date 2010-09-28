@@ -586,37 +586,6 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
 
 namespace js {
 
-class AutoPreserveEnumerators {
-    JSContext *cx;
-    JSObject *enumerators;
-
-  public:
-    AutoPreserveEnumerators(JSContext *cx) : cx(cx), enumerators(cx->enumerators)
-    {
-    }
-
-    ~AutoPreserveEnumerators()
-    {
-        cx->enumerators = enumerators;
-    }
-};
-
-struct AutoInterpPreparer  {
-    JSContext *cx;
-    JSScript *script;
-
-    AutoInterpPreparer(JSContext *cx, JSScript *script)
-      : cx(cx), script(script)
-    {
-        cx->interpLevel++;
-    }
-
-    ~AutoInterpPreparer()
-    {
-        --cx->interpLevel;
-    }
-};
-
 JS_REQUIRES_STACK bool
 RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 {
@@ -652,6 +621,8 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 JS_REQUIRES_STACK bool
 Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
 {
+    /* N.B. Must be kept in sync with InvokeSessionGuard::start/invoke */
+
     CallArgs args = argsRef;
     JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
 
@@ -685,10 +656,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
         return CallJSNative(cx, fun->u.n.native, args.argc(), args.base());
     }
 
-    JS_ASSERT(fun->isInterpreted());
-    JSScript *script = fun->u.i.script;
-
     /* Handle the empty-script special case. */
+    JSScript *script = fun->script();
     if (JS_UNLIKELY(script->isEmpty())) {
         if (flags & JSINVOKE_CONSTRUCT) {
             JSObject *obj = js_CreateThisForFunction(cx, &callee);
@@ -719,6 +688,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
         return false;
 
     /*
+     * FIXME bug 592992: hoist to ExternalInvoke
+     *
      * Compute |this|. Currently, this must happen after the frame is pushed
      * and fp->scopeChain is correct because the thisObject hook may call
      * JS_GetScopeChain.
@@ -765,6 +736,98 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     JS_ASSERT_IF(ok && (flags & JSINVOKE_CONSTRUCT), !args.rval().isPrimitive());
 
     return ok;
+}
+
+bool
+InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &thisv, uintN argc)
+{
+#ifdef JS_TRACER
+    if (TRACE_RECORDER(cx))
+        AbortRecording(cx, "attempt to reenter VM while recording");
+    LeaveTrace(cx);
+#endif
+
+    /* Always push arguments, regardless of optimized/normal invoke. */
+    StackSpace &stack = cx->stack();
+    if (!stack.pushInvokeArgs(cx, argc, &args_))
+        return false;
+
+    do {
+        /* Hoist dynamic checks from scripted Invoke. */
+        if (!calleev.isObject())
+            break;
+        JSObject &callee = calleev.toObject();
+        if (callee.getClass() != &js_FunctionClass)
+            break;
+        JSFunction *fun = callee.getFunctionPrivate();
+        if (fun->isNative())
+            break;
+        script_ = fun->script();
+        if (fun->isHeavyweight() || script_->isEmpty() || cx->compartment->debugMode)
+            break;
+
+        /* Set (callee, this) once for the session (before args are duped). */
+        args_.callee().setObject(callee);
+        args_.thisv() = thisv;
+
+        /* Push the stack frame once for the session. */
+        uint32 flags = 0;
+        if (!stack.getInvokeFrame(cx, args_, fun, script_, &flags, &frame_))
+            return false;
+        JSStackFrame *fp = frame_.fp();
+        fp->initCallFrame(cx, calleev.toObject(), fun, argc, flags);
+        stack.pushInvokeFrame(cx, args_, &frame_);
+
+        // FIXME bug 592992: hoist thisObject hook to ExternalInvoke
+        if (thisv.isObject()) {
+            JSObject *thisp = thisv.toObject().thisObject(cx);
+            if (!thisp)
+                return false;
+            JS_ASSERT(IsSaneThisObject(*thisp));
+            fp->functionThis().setObject(*thisp);
+        }
+
+#ifdef JS_METHODJIT
+        /* Hoist dynamic checks from RunScript. */
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, fp);
+        if (status == mjit::Compile_Error)
+            return false;
+        if (status != mjit::Compile_Okay)
+            break;
+        code_ = script_->getJIT(fp->isConstructing())->invokeEntry;
+
+        /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
+        JS_CHECK_RECURSION(cx, return JS_FALSE);
+        stackLimit_ = stack.getStackLimit(cx);
+        if (!stackLimit_)
+            return false;
+
+        stop_ = script_->code + script_->length - 1;
+        JS_ASSERT(*stop_ == JSOP_STOP);
+#endif
+
+        /* Cached to avoid canonicalActualArg in InvokeSessionGuard::operator[]. */
+        nformals_ = fp->numFormalArgs();
+        formals_ = fp->formalArgs();
+        actuals_ = args_.argv();
+        JS_ASSERT(actuals_ == fp->actualArgs());
+        return true;
+    } while (0);
+
+    /*
+     * Use the normal invoke path.
+     *
+     * The callee slot gets overwritten during an unoptimized Invoke, so we
+     * cache it here and restore it before every Invoke call. The 'this' value
+     * does not get overwritten, so we can fill it here once.
+     */
+    if (frame_.pushed())
+        frame_.pop();
+    args_.thisv() = thisv;
+    savedCallee_ = calleev;
+    formals_ = actuals_ = args_.argv();
+    nformals_ = (unsigned)-1;
+    return true;
 }
 
 bool
