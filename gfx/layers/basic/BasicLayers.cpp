@@ -474,12 +474,11 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       // subpixel AA)
       state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
       InheritContextFlags(target, state.mContext);
+      mXResolution = paintXRes;
+      mYResolution = paintYRes;
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, state.mRegionToInvalidate,
                   aCallback, aCallbackData);
-
-      mXResolution = paintXRes;
-      mYResolution = paintYRes;
       Mutated();
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
@@ -1842,15 +1841,22 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
   // We have to invalidate the pixels painted into the new buffer.
   // They might overlap with our old pixels.
   if (mOldXResolution == mXResolution && mOldYResolution == mYResolution) {
-    aNewBackValidRegion->Sub(mValidRegion, aUpdatedRegion);
+    aNewBackValidRegion->Sub(mOldValidRegion, aUpdatedRegion);
   } else {
     // On resolution changes, pretend that our buffer has the new
     // resolution, but just has no valid content.  This can avoid
     // unnecessary buffer reallocs.
+    // 
+    // FIXME/bug 598866: when we start re-using buffers after
+    // resolution changes, we're going to need to implement
+    // front->back copies to avoid thrashing our valid region by
+    // always nullifying it.
     aNewBackValidRegion->SetEmpty();
     mOldXResolution = mXResolution;
     mOldYResolution = mYResolution;
   }
+  NS_ASSERTION(mXResolution == mOldXResolution && mYResolution == mOldYResolution,
+               "Uh-oh, buffer allocation thrash forthcoming!");
   *aNewXResolution = mXResolution;
   *aNewYResolution = mYResolution;
 
