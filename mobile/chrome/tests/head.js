@@ -1,6 +1,9 @@
 /*=============================================================================
   Common Helpers functions
 =============================================================================*/
+
+// Wait for a condition and call a supplied callback if condition is met within
+// alloted time. If condition is not met, cause a hard failure, stopping the test.
 function waitFor(callback, test, timeout) {
   if (test()) {
     callback();
@@ -10,6 +13,21 @@ function waitFor(callback, test, timeout) {
   timeout = timeout || Date.now();
   if (Date.now() - timeout > 1000)
     throw "waitFor timeout";
+  setTimeout(waitFor, 50, callback, test, timeout);
+};
+
+// Wait for a condition and call a supplied callback if condition is met within
+// alloted time. If condition is not met, continue anyway. Use this helper if the
+// callback will test for the outcome, but not stop the entire test.
+function waitForAndContinue(callback, test, timeout) {
+  if (test()) {
+    callback();
+    return;
+  }
+
+  timeout = timeout || Date.now();
+  if (Date.now() - timeout > 1000)
+    callback();
   setTimeout(waitFor, 50, callback, test, timeout);
 };
 
