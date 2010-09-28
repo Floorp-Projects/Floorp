@@ -881,6 +881,19 @@ typedef JSBool
 (* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
+typedef JSBool
+(* LookupPropOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                 JSProperty **propp);
+typedef JSBool
+(* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+typedef JSType
+(* TypeOfOp)(JSContext *cx, JSObject *obj);
+typedef void
+(* TraceOp)(JSTracer *trc, JSObject *obj);
+typedef JSObject *
+(* ObjectOp)(JSContext *cx, JSObject *obj);
+typedef void
+(* FinalizeOp)(JSContext *cx, JSObject *obj);
 
 class AutoIdVector;
 
@@ -959,19 +972,19 @@ struct ClassExtension {
 #define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
 
 struct ObjectOps {
-    JSLookupPropOp          lookupProperty;
+    js::LookupPropOp        lookupProperty;
     js::DefinePropOp        defineProperty;
     js::PropertyIdOp        getProperty;
     js::StrictPropertyIdOp  setProperty;
-    JSAttributesOp          getAttributes;
-    JSAttributesOp          setAttributes;
+    js::AttributesOp        getAttributes;
+    js::AttributesOp        setAttributes;
     js::StrictPropertyIdOp  deleteProperty;
     js::NewEnumerateOp      enumerate;
-    JSTypeOfOp              typeOf;
-    JSTraceOp               trace;
+    js::TypeOfOp            typeOf;
+    js::TraceOp             trace;
     js::FixOp               fix;
-    JSObjectOp              thisObject;
-    JSFinalizeOp            clear;
+    js::ObjectOp            thisObject;
+    js::FinalizeOp          clear;
 };
 
 #define JS_NULL_OBJECT_OPS  {NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL}
