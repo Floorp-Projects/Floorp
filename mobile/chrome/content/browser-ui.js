@@ -730,6 +730,13 @@ var BrowserUI = {
       return;
     }
 
+    // Check content helper
+    let contentHelper = document.getElementById("content-navigator");
+    if (contentHelper.isActive) {
+      contentHelper.hide();
+      return;
+    }
+
     // Only if there are no dialogs, popups, or panels open
     let tab = Browser.selectedTab;
     let browser = tab.browser;
