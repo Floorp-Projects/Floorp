@@ -1212,11 +1212,7 @@ Narcissus.parser = (function() {
 
           case BREAK:
           case CONTINUE:
-            if (tt === BREAK) {
-                b = builder.BREAK;
-            } else {
-                b = builder.CONTINUE;
-            }
+            b = (tt === BREAK) ? builder.BREAK : builder.CONTINUE;
             n = b.build(t);
 
             if (t.peekOnSameLine() === IDENTIFIER) {
