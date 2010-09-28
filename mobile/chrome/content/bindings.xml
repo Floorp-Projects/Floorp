@@ -1397,6 +1397,8 @@
         ]]></body>
       </method>
 
+      <property name="isActive" onget="return !this._spacer.hidden;"/>
+
       <field name="_model">null</field>
       <method name="show">
         <parameter name="aModel" />
