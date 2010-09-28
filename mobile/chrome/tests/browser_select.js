@@ -26,9 +26,8 @@ function onPageReady() {
   isnot(combo, null, "Get the select from web content");
 
   // Sending a synthesized event to the combo is not working
-  let container = document.getElementById("inputhandler-overlay");
   let rect = Browser.browserViewToClientRect(Rect.fromRect(combo.getBoundingClientRect()));
-  container.customClicker.singleClick(rect.left + 1, rect.top + 1);
+  ContentTouchHandler.tapSingle(rect.left + 1, rect.top + 1);
 
   waitFor(onUIReady, function() { return document.getElementById("select-container").hidden == false; });
 }
