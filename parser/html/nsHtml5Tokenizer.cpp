@@ -1468,13 +1468,13 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             if (hi < lo) {
               NS_HTML5_BREAK(outer);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length()) {
               candidate = lo;
               strBufMark = strBufLen;
               lo++;
-            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length) {
+            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c > nsHtml5NamedCharacters::NAMES[lo][entCol]) {
+            } else if (c > nsHtml5NamedCharacters::NAMES[lo].charAt(entCol)) {
               lo++;
             } else {
               NS_HTML5_BREAK(loloop);
@@ -1485,12 +1485,12 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             if (hi < lo) {
               NS_HTML5_BREAK(outer);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(hiloop);
             }
-            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c < nsHtml5NamedCharacters::NAMES[hi][entCol]) {
+            } else if (c < nsHtml5NamedCharacters::NAMES[hi].charAt(entCol)) {
               hi--;
             } else {
               NS_HTML5_BREAK(hiloop);
@@ -1514,8 +1514,8 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           reconsume = PR_TRUE;
           NS_HTML5_CONTINUE(stateloop);
         } else {
-          jArray<PRInt8,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
-          if (!candidateArr.length || candidateArr[candidateArr.length - 1] != ';') {
+          const nsHtml5CharacterName& candidateName = nsHtml5NamedCharacters::NAMES[candidate];
+          if (!candidateName.length() || candidateName.charAt(candidateName.length() - 1) != ';') {
             if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
               PRUnichar ch;
               if (strBufMark == strBufLen) {
@@ -3557,12 +3557,12 @@ nsHtml5Tokenizer::eof()
             if (hi == -1) {
               NS_HTML5_BREAK(hiloop);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(hiloop);
             }
-            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c < nsHtml5NamedCharacters::NAMES[hi][entCol]) {
+            } else if (c < nsHtml5NamedCharacters::NAMES[hi].charAt(entCol)) {
               hi--;
             } else {
               NS_HTML5_BREAK(hiloop);
@@ -3573,13 +3573,13 @@ nsHtml5Tokenizer::eof()
             if (hi < lo) {
               NS_HTML5_BREAK(outer);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length()) {
               candidate = lo;
               strBufMark = strBufLen;
               lo++;
-            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length) {
+            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c > nsHtml5NamedCharacters::NAMES[lo][entCol]) {
+            } else if (c > nsHtml5NamedCharacters::NAMES[lo].charAt(entCol)) {
               lo++;
             } else {
               NS_HTML5_BREAK(loloop);
@@ -3598,8 +3598,8 @@ nsHtml5Tokenizer::eof()
           state = returnState;
           NS_HTML5_CONTINUE(eofloop);
         } else {
-          jArray<PRInt8,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
-          if (!candidateArr.length || candidateArr[candidateArr.length - 1] != ';') {
+          const nsHtml5CharacterName& candidateName = nsHtml5NamedCharacters::NAMES[candidate];
+          if (!candidateName.length() || candidateName.charAt(candidateName.length() - 1) != ';') {
             if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
               PRUnichar ch;
               if (strBufMark == strBufLen) {
