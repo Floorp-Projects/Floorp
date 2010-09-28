@@ -1301,8 +1301,8 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    if (!cx->maybefp())
-        cx->compartment = obj ? obj->getCompartment() : cx->runtime->defaultCompartment;
+    if (!cx->hasfp())
+        cx->resetCompartment();
 }
 
 class AutoResolvingEntry {
@@ -5032,6 +5032,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         return;
     cx->restoreSegment();
+    cx->resetCompartment();
 }
 
 /************************************************************************/

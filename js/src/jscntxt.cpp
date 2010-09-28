@@ -2050,6 +2050,37 @@ JSContext::JSContext(JSRuntime *rt)
 {}
 
 void
+JSContext::resetCompartment()
+{
+    JSObject *scopeobj;
+    if (hasfp()) {
+        scopeobj = &fp()->scopeChain();
+    } else {
+        scopeobj = globalObject;
+        if (!scopeobj) {
+            compartment = runtime->defaultCompartment;
+            return;
+        }
+
+        /*
+         * Innerize. Assert, but check anyway, that this succeeds. (It
+         * can only fail due to bugs in the engine or embedding.)
+         */
+        OBJ_TO_INNER_OBJECT(this, scopeobj);
+        if (!scopeobj) {
+            /*
+             * Bug. Return NULL, not defaultCompartment, to crash rather
+             * than open a security hole.
+             */
+            JS_ASSERT(0);
+            compartment = NULL;
+            return;
+        }
+    }
+    compartment = scopeobj->getCompartment();
+}
+
+void
 JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)
 {
     JS_ASSERT(regs != &newregs);

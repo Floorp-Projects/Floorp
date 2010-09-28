@@ -325,6 +325,13 @@ AutoCompartment::enter()
     JS_ASSERT(!entered);
     if (origin != destination) {
         LeaveTrace(context);
+
+#ifdef DEBUG
+        JSCompartment *oldCompartment = context->compartment;
+        context->resetCompartment();
+        wasSane = (context->compartment == oldCompartment);
+#endif
+
         context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         frame.construct();
@@ -344,8 +351,9 @@ AutoCompartment::leave()
     JS_ASSERT(entered);
     if (origin != destination) {
         frame.destroy();
-        context->compartment = origin;
-        origin->wrapException(context);
+        context->resetCompartment();
+        JS_ASSERT_IF(wasSane && context->hasfp(), context->compartment == origin);
+        context->compartment->wrapException(context);
     }
     entered = false;
 }

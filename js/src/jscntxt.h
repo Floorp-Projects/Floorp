@@ -2021,9 +2021,14 @@ struct JSContext
     friend class js::StackSpace;
     friend bool js::Interpret(JSContext *, JSStackFrame *, uintN, uintN);
 
+    void resetCompartment();
+
     /* 'regs' must only be changed by calling this function. */
     void setCurrentRegs(JSFrameRegs *regs) {
+        JS_ASSERT_IF(regs, regs->fp);
         this->regs = regs;
+        if (!regs)
+            resetCompartment();
     }
 
     /* Temporary arena pool used while compiling and decompiling. */
