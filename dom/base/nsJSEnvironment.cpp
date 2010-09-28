@@ -2682,6 +2682,12 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   if (strcmp(aPropName, "dialogArguments") == 0 && argc <= 1) {
     vargs = argc ? argv[0] : JSVAL_VOID;
   } else {
+    for (PRUint32 i = 0; i < argc; ++i) {
+      if (!JS_WrapValue(mContext, &argv[i])) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
     JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
     vargs = OBJECT_TO_JSVAL(args);
   }
