@@ -75,7 +75,7 @@ class nsHtml5MetaScanner
     PRInt32 stateSave;
   private:
     PRInt32 strBufLen;
-    jArray<PRUnichar,PRInt32> strBuf;
+    autoJArray<PRUnichar,PRInt32> strBuf;
   protected:
     void stateLoop(PRInt32 state);
   private:
@@ -89,11 +89,6 @@ class nsHtml5MetaScanner
 
 #include "nsHtml5MetaScannerHSupplement.h"
 };
-
-#ifdef nsHtml5MetaScanner_cpp__
-PRUnichar nsHtml5MetaScanner::CHARSET[] = { 'c', 'h', 'a', 'r', 's', 'e', 't' };
-PRUnichar nsHtml5MetaScanner::CONTENT[] = { 'c', 'o', 'n', 't', 'e', 'n', 't' };
-#endif
 
 #define NS_HTML5META_SCANNER_NO 0
 #define NS_HTML5META_SCANNER_M 1

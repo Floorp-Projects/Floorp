@@ -54,7 +54,7 @@ public final class ElementName
 
     // ]NOCPP]
     
-    static ElementName elementNameByBuffer(char[] buf, int offset, int length, Interner interner) {
+    static ElementName elementNameByBuffer(@NoLength char[] buf, int offset, int length, Interner interner) {
         int hash = ElementName.bufToHash(buf, length);
         int index = Arrays.binarySearch(ElementName.ELEMENT_HASHES, hash);
         if (index < 0) {
@@ -78,7 +78,7 @@ public final class ElementName
      * @param len
      * @return
      */
-    private static int bufToHash(char[] buf, int len) {
+    private static int bufToHash(@NoLength char[] buf, int len) {
         int hash = len;
         hash <<= 5;
         hash += buf[0] - 0x60;
