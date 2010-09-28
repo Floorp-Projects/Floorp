@@ -396,24 +396,34 @@ protected:
    */
   void* mData;
   /**
-   * True if we are looking for elements named "*"
-   */
-  PRPackedBool mMatchAll;
-  /**
    * The current state of the list (possible values are:
    * LIST_UP_TO_DATE, LIST_LAZY, LIST_DIRTY
    */
   PRUint8 mState;
+
+  // The booleans have to use PRUint8 to pack with mState, because MSVC won't
+  // pack different typedefs together.  Once we no longer have to worry about
+  // flushes in XML documents, we can go back to using PRPackedBool for the
+  // booleans.
+  
+  /**
+   * True if we are looking for elements named "*"
+   */
+  PRUint8 mMatchAll : 1;
   /**
    * Whether to actually descend the tree.  If this is false, we won't
    * consider grandkids of mRootNode.
    */
-  PRPackedBool mDeep;
+  PRUint8 mDeep : 1;
   /**
    * Whether the return value of mFunc could depend on the values of
    * attributes.
    */
-  PRPackedBool mFuncMayDependOnAttr;
+  PRUint8 mFuncMayDependOnAttr : 1;
+  /**
+   * Whether we actually need to flush to get our state correct.
+   */
+  PRUint8 mFlushesNeeded : 1;
 
 #ifdef DEBUG_CONTENT_LIST
   void AssertInSync();
