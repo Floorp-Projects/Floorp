@@ -1017,6 +1017,13 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     bool indirectCall = (callerPC && *callerPC != JSOP_EVAL);
 
     /*
+     * If the callee was originally a cross-compartment wrapper, this should
+     * be an indirect call.
+     */
+    if (caller->scopeChain().compartment() != vp[0].toObject().compartment())
+        indirectCall = true;
+
+    /*
      * Ban indirect uses of eval (nonglobal.eval = eval; nonglobal.eval(....))
      * that attempt to use a non-global object as the scope object.
      *
@@ -1249,6 +1256,8 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         if (!script)
             return JS_FALSE;
     }
+
+    assertSameCompartment(cx, scopeobj, script);
 
     /*
      * Belt-and-braces: check that the lesser of eval's principals and the
@@ -3113,6 +3122,8 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     JSObject *thisp = proto->thisObject(cx);
     if (!thisp)
         return NULL;
+
+    assertSameCompartment(cx, obj, thisp);
 
     obj->setWithThis(thisp);
     return obj;
