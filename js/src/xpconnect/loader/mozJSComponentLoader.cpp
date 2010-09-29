@@ -1530,7 +1530,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                       JS_GetStringBytes(symbolName));
             }
 
-            if (!JS_SetProperty(mContext, targetObj,
+            JSAutoEnterCompartment target_ac;
+
+            if (!target_ac.enter(mContext, targetObj) ||
+                !JS_WrapValue(mContext, &val) ||
+                !JS_SetProperty(mContext, targetObj,
                                 JS_GetStringBytes(symbolName), &val)) {
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
