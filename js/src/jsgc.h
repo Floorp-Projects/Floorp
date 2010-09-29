@@ -149,41 +149,40 @@ static const uint32 BLACK = 0;
 
 /* An arena bitmap contains enough mark bits for all the cells in an arena. */
 struct ArenaBitmap {
-    static const size_t BitsPerWord = sizeof(uintptr_t) == 4 ? 32 : 64;
-    static const size_t BitmapSize  = (Arena<FreeCell>::ThingsPerArena / BitsPerWord) + 1;
-    uintptr_t bitmap[BitmapSize];
+    static const size_t BitCount = Arena<FreeCell>::ArenaSize / Cell::CellSize;
+    static const size_t BitWords = BitCount / JS_BITS_PER_WORD;
 
-    JS_ALWAYS_INLINE void mark(size_t bit, uint32 color) {
-        uintptr_t *word = &bitmap[bit / BitsPerWord];
-        JS_ASSERT(word < &bitmap[JS_ARRAY_LENGTH(bitmap)]);
-        *word |= (uintptr_t(1) << ((bit + color) % BitsPerWord));
-    }
+    uintptr_t bitmap[BitWords];
 
     JS_ALWAYS_INLINE bool isMarked(size_t bit, uint32 color) {
-        uintptr_t *word = &bitmap[bit / BitsPerWord];
-        JS_ASSERT(word < &bitmap[JS_ARRAY_LENGTH(bitmap)]);
-        return *word & (uintptr_t(1) << ((bit + color) % BitsPerWord));
+        bit += color;
+        JS_ASSERT(bit < BitCount);
+        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
+        return *word & (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
     }
 
     JS_ALWAYS_INLINE bool markIfUnmarked(size_t bit, uint32 color) {
-        uintptr_t *word = &bitmap[bit / BitsPerWord];
-        JS_ASSERT(word < &bitmap[JS_ARRAY_LENGTH(bitmap)]);
-        uintptr_t mask = (uintptr_t(1) << (bit % BitsPerWord));
+        JS_ASSERT(bit + color < BitCount);
+        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
+        uintptr_t mask = (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
         if (*word & mask)
             return false;
         *word |= mask;
         if (color != BLACK) {
-            mask = (uintptr_t(1) << ((bit + color) % BitsPerWord));
+            bit += color;
+            word = &bitmap[bit / JS_BITS_PER_WORD];
+            mask = (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
             if (*word & mask)
                 return false;
             *word |= mask;
         }
-
         return true;
     }
 };
 
-JS_STATIC_ASSERT(Arena<FreeCell>::ArenaSize % ArenaBitmap::BitsPerWord == 0);
+/* Ensure that bitmap covers the whole arena. */
+JS_STATIC_ASSERT(Arena<FreeCell>::ArenaSize % Cell::CellSize == 0);
+JS_STATIC_ASSERT(ArenaBitmap::BitCount % JS_BITS_PER_WORD == 0);
 
 /* Marking delay is used to resume marking later when recursive marking uses too much stack. */
 struct MarkingDelay {
@@ -364,12 +363,6 @@ ArenaBitmap *
 Arena<T>::bitmap() const
 {
     return &chunk()->bitmaps[arenaIndex()];
-}
-
-inline void
-Cell::mark(uint32 color = BLACK) const
-{
-    bitmap()->mark(cellIndex(), color);
 }
 
 static void
