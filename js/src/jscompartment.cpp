@@ -145,16 +145,23 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         /* Don't unwrap an outer window proxy. */
         if (!obj->getClass()->ext.innerObject) {
             obj = vp->toObject().unwrap(&flags);
-            OBJ_TO_OUTER_OBJECT(cx, obj);
-            if (!obj)
-                return false;
 
+            vp->setObject(*obj);
+
+            /* If the wrapped object is already in this compartment, we are done. */
+            if (obj->getCompartment() == this)
+                return true;
+        } else {
+            JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
             vp->setObject(*obj);
         }
 
-        /* If the wrapped object is already in this compartment, we are done. */
-        if (obj->compartment() == this)
-            return true;
+        OBJ_TO_OUTER_OBJECT(cx, obj);
+        if (!obj)
+            return false;
+
+        JS_ASSERT(obj->getCompartment() == vp->toObject().getCompartment());
+        vp->setObject(*obj);
     }
 
     /* If we already have a wrapper for this value, use it. */
@@ -216,14 +223,6 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         return false;
 
     vp->setObject(*wrapper);
-
-    /*
-     * If the returned "wrapper" is not a proxy, then we were attempting to
-     * wrap an XPConnect "holder" object and the actual wrapped object was
-     * in our compartment.
-     */
-    if (!wrapper->isProxy())
-        return true;
 
     wrapper->setProto(proto);
     if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
