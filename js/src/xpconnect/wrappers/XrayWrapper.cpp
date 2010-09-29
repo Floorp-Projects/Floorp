@@ -355,10 +355,34 @@ XrayWrapper<Base, Policy>::~XrayWrapper()
 }
 
 template <typename Base, typename Policy>
+class AutoLeaveHelper
+{
+  public:
+    AutoLeaveHelper(XrayWrapper<Base, Policy> &xray, JSContext *cx, JSObject *wrapper)
+      : xray(xray), cx(cx), wrapper(wrapper)
+    {
+    }
+    ~AutoLeaveHelper()
+    {
+        xray.leave(cx, wrapper);
+    }
+
+  private:
+    XrayWrapper<Base, Policy> &xray;
+    JSContext *cx;
+    JSObject *wrapper;
+};
+
+template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                  bool set, PropertyDescriptor *desc_in)
 {
+    if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
+        return false;
+
+    AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
+
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
 
     if (id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
@@ -543,7 +567,7 @@ CrossCompartmentXray::leave(JSContext *cx, JSObject *wrapper, void *priv)
 }
 
 #define XPCNW XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray>
-#define SCNW XrayWrapper<JSProxyHandler, SameCompartmentXray>
+#define SCNW XrayWrapper<JSWrapper, SameCompartmentXray>
 
 template <> XPCNW XPCNW::singleton(0);
 template <> SCNW SCNW::singleton(0);

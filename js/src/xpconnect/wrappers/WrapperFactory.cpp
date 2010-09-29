@@ -126,8 +126,17 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                                         CrossOriginAccessiblePropertiesOnly>::singleton;
         } else {
             typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
-            wrapper = &FilteringWrapper<Xray,
-                                        CrossOriginAccessiblePropertiesOnly>::singleton;
+
+            // Location objects can become same origin after navigation, so we might
+            // have to grant transparent access later on.
+            if (IsLocationObject(obj)) {
+                wrapper = &FilteringWrapper<Xray,
+                    SameOriginOrCrossOriginAccessiblePropertiesOnly>::singleton;
+            } else {
+                wrapper= &FilteringWrapper<Xray,
+                    CrossOriginAccessiblePropertiesOnly>::singleton;
+            }
+
             xrayHolder = Xray::createHolder(cx, obj, parent);
             if (!xrayHolder)
                 return nsnull;
@@ -137,6 +146,30 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     JSObject *wrapperObj = JSWrapper::New(cx, obj, wrappedProto, parent, wrapper);
     if (!wrapperObj || !xrayHolder)
         return wrapperObj;
+    wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
+    xrayHolder->setSlot(XrayUtils::JSSLOT_PROXY_OBJ, js::ObjectValue(*wrapperObj));
+    return wrapperObj;
+}
+
+typedef FilteringWrapper<XrayWrapper<JSWrapper, SameCompartmentXray>,
+                         SameOriginOrCrossOriginAccessiblePropertiesOnly> LW;
+
+bool
+WrapperFactory::IsLocationObject(JSObject *obj)
+{
+    const char *name = obj->getClass()->name;
+    return name[0] == 'L' && !strcmp(name, "Location");
+}
+
+JSObject *
+WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
+{
+    JSObject *xrayHolder = LW::createHolder(cx, obj, obj->getParent());
+    if (!xrayHolder)
+        return NULL;
+    JSObject *wrapperObj = JSWrapper::New(cx, obj, obj->getProto(), NULL, &LW::singleton);
+    if (!wrapperObj)
+        return NULL;
     wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
     xrayHolder->setSlot(XrayUtils::JSSLOT_PROXY_OBJ, js::ObjectValue(*wrapperObj));
     return wrapperObj;

@@ -237,7 +237,7 @@ private:
 class nsOuterWindowProxy : public JSWrapper
 {
 public:
-  nsOuterWindowProxy() : JSWrapper(0) {}
+  nsOuterWindowProxy() : JSWrapper((uintN)0) {}
 
   virtual bool isOuterWindow() {
     return true;
