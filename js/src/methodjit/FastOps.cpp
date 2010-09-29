@@ -206,10 +206,12 @@ mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
         frame.pinReg(rhsType.reg());
     }
 
-    RegisterID lhsType = frame.tempRegForType(lhs);
-    frame.pinReg(lhsType);
     RegisterID lhsData = frame.copyDataIntoReg(lhs);
-    frame.unpinReg(lhsType);
+    MaybeRegisterID lhsType;
+    if (rhsType.isSet() && frame.haveSameBacking(lhs, rhs))
+        lhsType = rhsType;
+    else
+        lhsType = frame.tempRegForType(lhs);
 
     /* Non-integer rhs jumps to stub. */
     MaybeJump rhsIntGuard;
@@ -219,11 +221,11 @@ mjit::Compiler::jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs)
     }
 
     /* Non-integer lhs jumps to double guard. */
-    Jump lhsIntGuard = masm.testInt32(Assembler::NotEqual, lhsType);
+    Jump lhsIntGuard = masm.testInt32(Assembler::NotEqual, lhsType.reg());
     stubcc.linkExitDirect(lhsIntGuard, stubcc.masm.label());
 
     /* Attempt to convert lhs double to int32. */
-    Jump lhsDoubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, lhsType);
+    Jump lhsDoubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, lhsType.reg());
     frame.loadDouble(lhs, FPRegisters::First, stubcc.masm);
     Jump lhsTruncateGuard = stubcc.masm.branchTruncateDoubleToInt32(FPRegisters::First, lhsData);
     stubcc.crossJump(stubcc.masm.jump(), masm.label());
