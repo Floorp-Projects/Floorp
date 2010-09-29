@@ -2124,6 +2124,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (cg->compileAndGo() && 
             cg->compiler()->globalScope->globalObj &&
+            !pn->isDeoptimized() &&
             !(cg->flags & TCF_STRICT_MODE_CODE)) { 
             switch (op) {
               case JSOP_NAME:     op = JSOP_GETGNAME; break;
