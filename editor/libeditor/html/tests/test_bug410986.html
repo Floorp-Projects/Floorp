@@ -32,7 +32,11 @@ SimpleTest.waitForFocus(function() {
     function() {
       var ed = document.getElementById("editor");
       ed.focus();
-      synthesizeKey("V", {accelKey: true, shiftKey: true});
+      if (navigator.platform.indexOf("Mac") >= 0) {
+        synthesizeKey("V", {accelKey: true, shiftKey: true, altKey: true});
+      } else {
+        synthesizeKey("V", {accelKey: true, shiftKey: true});
+      }
       is(ed.innerHTML, "green text", "Content should be pasted in plaintext format");
 
       ed.innerHTML = "";
