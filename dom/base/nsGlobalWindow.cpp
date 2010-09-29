@@ -2438,6 +2438,8 @@ nsGlobalWindow::AreDialogsBlocked()
 bool
 nsGlobalWindow::ConfirmDialogAllowed()
 {
+  FORWARD_TO_OUTER(ConfirmDialogAllowed, (), NS_ERROR_NOT_INITIALIZED);
+
   NS_ENSURE_TRUE(mDocShell, false);
   nsCOMPtr<nsIPromptService> promptSvc =
     do_GetService("@mozilla.org/embedcomp/prompt-service;1");
