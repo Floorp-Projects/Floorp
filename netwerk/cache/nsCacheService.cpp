@@ -133,7 +133,8 @@ static const char * prefList[] = {
 const PRInt32 BASE_LINE = 250 * 1024 * 1024;
 const PRInt32 MIN_SIZE = 50 * 1024 * 1024;
 const PRInt32 MAX_SIZE = 1024 * 1024 * 1024;
-
+// Default cache size was 50 MB for many years until FF 4:
+const PRInt32 PRE_FF4_DEFAULT_CACHE_SIZE = 50 * 1024 * 1024;
 
 class nsCacheProfilePrefObserver : public nsIObserver
 {
@@ -595,8 +596,7 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, PRBool
 {
     nsresult rv;
     // If user has explicitly set cache size to be smaller than previous default
-    // of 250MB, then smart sizing is off by default. Otherwise, smart sizing is
-    // on by default.
+    // of 50 MB, then keep user's value. Otherwise use smart sizing.
     if (firstRun) {
         // check if user has set cache size in the past
         PRBool userSet;
@@ -605,7 +605,7 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, PRBool
         if (userSet) {
             PRInt32 oldCapacity;
             rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
-            if (oldCapacity < BASE_LINE / 1024) {
+            if (oldCapacity < PRE_FF4_DEFAULT_CACHE_SIZE / 1024) {
                 branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF, 
                                     PR_FALSE);
                 return false;
