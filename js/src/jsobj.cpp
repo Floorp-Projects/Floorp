@@ -5339,6 +5339,11 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     added = false;
     if (!shape) {
         if (!obj->isExtensible()) {
+            if (defineHow & JSDNP_CACHE_RESULT) {
+                JS_ASSERT_NOT_ON_TRACE(cx);
+                TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, shape);
+            }
+
             /* Error in strict mode code, warn with strict option, otherwise do nothing. */
             if (strict)
                 return obj->reportNotExtensible(cx);
