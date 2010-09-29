@@ -111,11 +111,7 @@
                   try {
                     // Use documentURIObject in the favicon construction so that we
                     // do the right thing with about:-style error pages.  Bug 515188
-                    let iconURI = Services.io.newURI(self.documentURI.prePath + "/favicon.ico", null, null);
-                    if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
-                      gFaviconService.setAndLoadFaviconForPage(self.currentURI, iconURI, true);
-                      self.mIconURL = iconURI.spec;
-                    }
+                    self.loadFavicon(self.documentURI.prePath + "/favicon.ico", null);
                   }
                   catch(e) {}
                 }
@@ -138,11 +134,7 @@
                 let linkType = self._getLinkType(link);
                 switch(linkType) {
                   case "icon":
-                    let iconURI = Services.io.newURI(link.href, link.charset, null);
-                    if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
-                      gFaviconService.setAndLoadFaviconForPage(self.currentURI, iconURI, true);
-                      self.mIconURL = iconURI.spec;
-                    }
+                    self.loadFavicon(link.href, link.charset);
                     break;
                   case "search":
                     self._searchEngines.push({ title: link.title, href: link.href });
@@ -162,6 +154,30 @@
           }
         })
       ]]></field>
+
+      <method name="loadFavicon">
+        <parameter name="aURL"/>
+        <parameter name="aCharset"/>
+        <body><![CDATA[
+            let iconURI = Services.io.newURI(aURL, aCharset, null);
+            if (this.shouldLoadFavicon(iconURI)) {
+              gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
+              this.mIconURL = iconURI.spec;
+            }
+            else {
+               this.mIconURL = "";
+            }
+        ]]></body>
+      </method>
+
+      <method name="shouldLoadFavicon">
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          let docURI = this.currentURI;
+          return (!gFaviconService.isFailedFavicon(aURI) && docURI && ("schemeIs" in docURI) &&
+                  (docURI.schemeIs("http") || docURI.schemeIs("https") || docURI.schemeIs("about") || docURI.schemeIs("chrome")));
+        ]]></body>
+      </method>
 
       <method name="_getLinkType">
         <parameter name="aLink" />
