@@ -76,10 +76,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return nsnull;
 
-    OBJ_TO_OUTER_OBJECT(cx, obj);
-    if (!obj)
-        return nsnull;
-
     JSCompartment *origin = obj->getCompartment();
     JSCompartment *target = cx->compartment;
     JSObject *xrayHolder = nsnull;
