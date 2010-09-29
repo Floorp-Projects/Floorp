@@ -37,19 +37,13 @@
 
 MOZ_APP_NAME=fennec
 MOZ_APP_UA_NAME=Fennec
+
+MOZ_APP_VERSION=4.0b2pre
+
 MOZ_BRANDING_DIRECTORY=mobile/branding/nightly
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
-
-case "$target" in
-*-wince*)
-    . ${srcdir}/${MOZ_BUILD_APP}/winmo-version.txt
-    ;;
-*)
-    . ${srcdir}/${MOZ_BUILD_APP}/default-version.txt
-    ;;
-esac
 
 MOZ_SERVICES_SYNC=1
 MOZ_UPDATER=1

@@ -1,1 +1,0 @@
-MOZ_APP_VERSION=4.0b1pre
