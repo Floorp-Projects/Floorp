@@ -287,9 +287,22 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
   }
 #endif
 
+  typedef BOOL
+  (WINAPI *pfnSetDllDirectory) (LPCWSTR);
+  pfnSetDllDirectory setDllDirectory =
+    reinterpret_cast<pfnSetDllDirectory>
+    (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
+  if (setDllDirectory) {
+    setDllDirectory(NULL);
+  }
+
   nsresult rv = plugin->Load(outLibrary);
   if (NS_FAILED(rv))
       *outLibrary = NULL;
+
+  if (setDllDirectory) {
+    setDllDirectory(L"");
+  }
 
 #ifndef WINCE    
   if (restoreOrigDir) {
