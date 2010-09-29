@@ -101,6 +101,8 @@ IsPermitted(const char *name, const char* prop, bool set)
              PROP('n', RW("name"))
              PROP('r', RW("result"))
              PROP('t', R("toString")))
+        NAME('E', "Error",
+             PROP('m', R("message")))
         NAME('H', "History",
              PROP('b', R("back"))
              PROP('f', R("forward"))
