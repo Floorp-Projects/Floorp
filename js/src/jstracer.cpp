@@ -8414,7 +8414,8 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * the result is -0 in this case, which is not in the integer domain.
          */
         guard(false, lir->ins2ImmI(LIR_lti, d0, 0), exit);
-        branch->setTarget(lir->ins0(LIR_label));
+        if (branch)
+            branch->setTarget(lir->ins0(LIR_label));
         break;
       }
 #endif
@@ -12948,16 +12949,25 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         if (!js_EnsureDenseArrayCapacity(cx, obj, idx.toInt32()))
             RETURN_STOP_A("couldn't ensure dense array capacity for setelem");
 
-        // Grow the array if the index exceeds the capacity.  This happens
-        // rarely, eg. less than 1% of the time in SunSpider.
         LIns* capacity_ins =
             addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_CAPACITY),
                     "capacity");
-        LIns* br = lir->insBranch(LIR_jt, lir->ins2(LIR_ltui, idx_ins, capacity_ins), NULL);
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
-        LIns* res_ins = lir->insCall(&js_EnsureDenseArrayCapacity_ci, args);
-        guard(false, lir->insEqI_0(res_ins), mismatchExit);
-        br->setTarget(lir->ins0(LIR_label));
+        LIns* inRange_ins = lir->ins2(LIR_ltui, idx_ins, capacity_ins);
+        if (inRange_ins->isImmI()) {
+            // The (index < capacity) check can be converted to a constant 1
+            // if it's subsumed by a previous guard, in which case we don't
+            // need to re-check.  It should not have been converted to a
+            // constant 0.
+            JS_ASSERT(inRange_ins->immI() == 1);
+        } else {
+            // Grow the array if (index >= capacity).  This happens rarely,
+            // eg. less than 1% of the time in SunSpider.
+            LIns* br = lir->insBranch(LIR_jt, lir->ins2(LIR_ltui, idx_ins, capacity_ins), NULL);
+            LIns* args[] = { idx_ins, obj_ins, cx_ins };
+            LIns* res_ins = lir->insCall(&js_EnsureDenseArrayCapacity_ci, args);
+            guard(false, lir->insEqI_0(res_ins), mismatchExit);
+            br->setTarget(lir->ins0(LIR_label));
+        }
 
         // Get the address of the element.
         LIns *dslots_ins =
@@ -12985,7 +12995,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         LIns* res_ins2 = addName(lir->insCall(&js_Array_dense_setelem_hole_ci, args2),
                                  "hasNoIndexedProperties");
         guard(false, lir->insEqI_0(res_ins2), mismatchExit);
-        br2->setTarget(lir->ins0(LIR_label));
+        if (br2)
+            br2->setTarget(lir->ins0(LIR_label));
 
         // Right, actually set the element.
         box_value_into(v, v_ins, addr_ins, 0, ACCSET_OTHER);
