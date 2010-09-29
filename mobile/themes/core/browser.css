@@ -541,6 +541,12 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/addons-32.png");
 }
 
+.addon-banner-image {
+  width: 32px;
+  height: 32px;
+  list-style-image: url("chrome://browser/skin/images/addons-32.png");
+}
+
 richlistitem[isDisabled="true"] .title {
   color: gray;
 }
