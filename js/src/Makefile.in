@@ -132,6 +132,7 @@ CPPSRCS		= \
 		jsgc.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
+		jscompartment.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -185,8 +186,10 @@ INSTALLED_HEADERS = \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
+		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
+		jscompartment.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
@@ -686,6 +689,7 @@ endif
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
+ifeq ($(TARGET_CPU),sparc
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
 jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
 	$(REPORT_BUILD)
@@ -695,6 +699,7 @@ ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
 else
 	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv8plus.il $<
 endif # sparcv9
+endif # sparc
 endif # SOLARIS_SUNPRO_CXX
 
 ifeq ($(OS_ARCH),IRIX)

@@ -818,7 +818,7 @@ Assembler::asm_call(LIns* ins)
          * used here with the ultimate VFP register, and not R0/R1, which
          * potentially allows for R0/R1 to get corrupted as described.
          */
-    } else {
+    } else if (!ins->isop(LIR_callv)) {
         prepareResultReg(ins, rmask(retRegs[0]));
         // Immediately free the resources as we need to re-use the register for
         // the arguments.
@@ -837,7 +837,7 @@ Assembler::asm_call(LIns* ins)
 
     // If we aren't using VFP, assert that the LIR operation is an integer
     // function call.
-    NanoAssert(ARM_VFP || ins->isop(LIR_calli));
+    NanoAssert(ARM_VFP || ins->isop(LIR_callv) || ins->isop(LIR_calli));
 
     // If we're using VFP, and the return type is a double, it'll come back in
     // R0/R1. We need to either place it in the result fp reg, or store it.

@@ -1483,9 +1483,10 @@ namespace nanojit
                     live.add(ins->oprnd3(), 0);
                     break;
 
+                case LIR_callv:
                 case LIR_calli:
-                case LIR_calld:
                 CASE64(LIR_callq:)
+                case LIR_calld:
                     for (int i = 0, argc = ins->argc(); i < argc; i++)
                         live.add(ins->arg(i), 0);
                     break;
@@ -1739,9 +1740,10 @@ namespace nanojit
                 VMPI_snprintf(s, n, "%s", lirNames[op]);
                 break;
 
+            case LIR_callv:
             case LIR_calli:
-            case LIR_calld:
-            CASE64(LIR_callq:) {
+            CASE64(LIR_callq:)
+            case LIR_calld: {
                 const CallInfo* call = i->callInfo();
                 int32_t argc = i->argc();
                 int32_t m = int32_t(n);     // Windows doesn't have 'ssize_t'
@@ -3394,6 +3396,14 @@ namespace nanojit
         return out->insImmD(d);
     }
 
+    static const char* argtypeNames[] = {
+        "void",     // ARGTYPE_V  = 0
+        "int32_t",  // ARGTYPE_I  = 1
+        "uint32_t", // ARGTYPE_UI = 2
+        "uint64_t", // ARGTYPE_Q  = 3
+        "double"    // ARGTYPE_D  = 4
+    };
+
     LIns* ValidateWriter::insCall(const CallInfo *ci, LIns* args0[])
     {
         ArgType argTypes[MAXARGS];
@@ -3402,6 +3412,27 @@ namespace nanojit
         LIns* args[MAXARGS];    // in left-to-right order, unlike args0[]
 
         LOpcode op = getCallOpcode(ci);
+        ArgType retType = ci->returnType();
+
+        if ((op == LIR_callv) != (retType == ARGTYPE_V) ||
+            (op == LIR_calli) != (retType == ARGTYPE_UI ||
+                                  retType == ARGTYPE_I) ||
+#ifdef NANOJIT_64BIT
+            (op == LIR_callq) != (retType == ARGTYPE_Q) ||
+#endif
+            (op == LIR_calld) != (retType == ARGTYPE_D)) {
+            NanoAssertMsgf(0,
+                "LIR structure error (%s): return type mismatch: opcode %s with %s return type",
+                whereInPipeline, lirNames[op], argtypeNames[retType]);
+        }
+
+        if (op == LIR_callv && ci->_isPure) {
+            // Since nobody can use the result of a void call, any pure call
+            // would just be dead.  This is probably a mistake.
+            NanoAssertMsgf(0,
+                "LIR structure error (%s): LIR_callv must only be used with nonpure functions.",
+                whereInPipeline);
+        }
 
         if (ci->_isPure && ci->_storeAccSet != ACCSET_NONE)
             errorAccSet(ci->_name, ci->_storeAccSet, "it should be ACCSET_NONE for pure functions");
