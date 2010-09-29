@@ -327,6 +327,49 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
 #endif
 }
 
+void FrameState::storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg, RegisterID tempReg)
+{
+    JS_ASSERT(dataReg != typeReg && dataReg != tempReg && typeReg != tempReg);
+
+    if (fe->isConstant()) {
+        masm.loadValueAsComponents(fe->getValue(), typeReg, dataReg);
+        return;
+    }
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    if (fe->isTypeKnown()) {
+        RegisterID data = tempRegForData(fe);
+        if (data != dataReg)
+            masm.move(data, dataReg);
+        masm.move(ImmType(fe->getKnownType()), typeReg);
+        return;
+    }
+
+    RegisterID data = tempRegForData(fe);
+    RegisterID type = tempRegForType(fe);
+    if (data == typeReg && type == dataReg) {
+        masm.move(type, tempReg);
+        masm.move(data, dataReg);
+        masm.move(tempReg, typeReg);
+    } else if (data != dataReg) {
+        if (type == typeReg) {
+            masm.move(data, dataReg);
+        } else if (type != dataReg) {
+            masm.move(data, dataReg);
+            if (type != typeReg)
+                masm.move(type, typeReg);
+        } else {
+            JS_ASSERT(data != typeReg);
+            masm.move(type, typeReg);
+            masm.move(data, dataReg);
+        }
+    } else if (type != typeReg) {
+        masm.move(type, typeReg);
+    }
+}
+
 #ifdef DEBUG
 void
 FrameState::assertValidRegisterState() const

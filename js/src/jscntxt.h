@@ -883,6 +883,7 @@ JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
  */
 class FrameRegsIter
 {
+    JSContext         *cx;
     StackSegment      *curseg;
     JSStackFrame      *curfp;
     Value             *cursp;
@@ -2089,6 +2090,9 @@ struct JSContext
 
     /* Undoes calls to suspendActiveSegment. */
     void restoreSegment();
+
+    /* Get the frame whose prev() is fp, which may be in any segment. */
+    inline JSStackFrame *computeNextFrame(JSStackFrame *fp);
 
     /*
      * Perform a linear search of all frames in all segments in the given context

@@ -65,6 +65,7 @@
 #include "jsobjinlines.h"
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
+#include "StubCalls-inl.h"
 
 #include "jsautooplen.h"
 
@@ -72,19 +73,8 @@ using namespace js;
 using namespace js::mjit;
 using namespace JSC;
 
-#define THROW()  \
-    do {         \
-        void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        *f.returnAddressLocation() = ptr; \
-        return;  \
-    } while (0)
-
-#define THROWV(v)       \
-    do {                \
-        void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        *f.returnAddressLocation() = ptr; \
-        return v;       \
-    } while (0)
+static bool
+InlineReturn(VMFrame &f, JSBool ok, JSBool popFrame = JS_TRUE);
 
 static jsbytecode *
 FindExceptionHandler(JSContext *cx)
@@ -179,8 +169,16 @@ top:
     return NULL;
 }
 
+/*
+ * Clean up a frame and return.  popFrame indicates whether to additionally pop
+ * the frame and store the return value on the caller's stack.  The frame will
+ * normally be popped by the caller on return from a call into JIT code,
+ * so must be popped here when that caller code will not execute.  This can be
+ * either because of a call into an un-JITable script, or because the call is
+ * throwing an exception.
+ */
 static bool
-InlineReturn(VMFrame &f, JSBool ok)
+InlineReturn(VMFrame &f, JSBool ok, JSBool popFrame)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.regs.fp;
@@ -213,9 +211,11 @@ InlineReturn(VMFrame &f, JSBool ok)
     if (fp->isConstructing() && fp->returnValue().isPrimitive())
         fp->setReturnValue(fp->thisValue());
 
-    Value *newsp = fp->actualArgs() - 1;
-    newsp[-1] = fp->returnValue();
-    cx->stack().popInlineFrame(cx, fp->prev(), newsp);
+    if (popFrame) {
+        Value *newsp = fp->actualArgs() - 1;
+        newsp[-1] = fp->returnValue();
+        cx->stack().popInlineFrame(cx, fp->prev(), newsp);
+    }
 
     return ok;
 }
@@ -317,10 +317,11 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     void *ncode          = oldfp->nativeReturnAddress();
 
     /* Pop the inline frame. */
-    RemovePartialFrame(cx, oldfp);
+    f.fp() = oldfp->prev();
+    f.regs.sp = (Value*) oldfp;
 
     /* Reserve enough space for a callee frame. */
-    JSStackFrame *newfp = cx->stack().getInlineFrameWithinLimit(cx, cx->regs->sp, nactual,
+    JSStackFrame *newfp = cx->stack().getInlineFrameWithinLimit(cx, (Value*) oldfp, nactual,
                                                                 fun, fun->script(), &flags,
                                                                 f.entryFp, &f.stackLimit);
     if (!newfp)
@@ -356,11 +357,10 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 
     /*
      * FixupArity/RemovePartialFrame expect to be called after the early
-     * prologue. Pass null for ncode: either we will jump into jit code, which
-     * will set ncode, or we will jump into js::Interpret, which does not care
-     * about ncode.
+     * prologue. Pass the existing value for ncode, it has already been set
+     * by the jit code calling into this stub.
      */
-    fp->initCallFrameEarlyPrologue(fun, NULL);
+    fp->initCallFrameEarlyPrologue(fun, fp->nativeReturnAddress());
 
     /* Empty script does nothing. */
     if (script->isEmpty()) {
@@ -897,11 +897,12 @@ RunTracer(VMFrame &f)
         if (op == JSOP_RETURN && !entryFrame->isBailedAtReturn())
             entryFrame->setReturnValue(f.regs.sp[-1]);
 
-        /* Don't pop the frame if it's maybe owned by an Invoke. */
+        /* Cleanup activation objects on the frame unless it's owned by an Invoke. */
         if (f.fp() != f.entryFp) {
-            if (!InlineReturn(f, JS_TRUE))
+            if (!InlineReturn(f, JS_TRUE, JS_FALSE))
                 THROWV(NULL);
         }
+
         void *retPtr = JS_FUNC_TO_DATA_PTR(void *, InjectJaegerReturn);
         *f.returnAddressLocation() = retPtr;
         return NULL;
