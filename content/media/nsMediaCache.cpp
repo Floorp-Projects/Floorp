@@ -49,6 +49,7 @@
 #include "nsMediaStream.h"
 #include "nsMathUtils.h"
 #include "prlog.h"
+#include "nsIPrivateBrowsingService.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaCacheLog;
@@ -88,6 +89,42 @@ using mozilla::TimeDuration;
 // relaxed if we wanted to manage multiple caches with independent
 // size limits).
 static nsMediaCache* gMediaCache;
+
+class nsMediaCacheFlusher : public nsIObserver,
+                            public nsSupportsWeakReference {
+  nsMediaCacheFlusher() {}
+  ~nsMediaCacheFlusher();
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static void Init();
+};
+
+static nsMediaCacheFlusher* gMediaCacheFlusher;
+
+NS_IMPL_ISUPPORTS2(nsMediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
+
+nsMediaCacheFlusher::~nsMediaCacheFlusher()
+{
+  gMediaCacheFlusher = nsnull;
+}
+
+void nsMediaCacheFlusher::Init()
+{
+  if (gMediaCacheFlusher) {
+    return;
+  }
+
+  gMediaCacheFlusher = new nsMediaCacheFlusher();
+  NS_ADDREF(gMediaCacheFlusher);
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(gMediaCacheFlusher, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
+  }
+}
 
 class nsMediaCache {
 public:
@@ -334,6 +371,16 @@ protected:
 #endif
 };
 
+NS_IMETHODIMP
+nsMediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
+{
+  if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0 &&
+      NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+    nsMediaCache::Flush();
+  }
+  return NS_OK;
+}
+
 void nsMediaCacheStream::BlockList::AddFirstBlock(PRInt32 aBlock)
 {
   NS_ASSERTION(!mEntries.GetEntry(aBlock), "Block already in list");
@@ -531,6 +578,8 @@ nsMediaCache::Init()
   }
 #endif
 
+  nsMediaCacheFlusher::Init();
+
   return NS_OK;
 }
 
@@ -579,6 +628,7 @@ nsMediaCache::MaybeShutdown()
   // This function is static so we don't have to delete 'this'.
   delete gMediaCache;
   gMediaCache = nsnull;
+  NS_IF_RELEASE(gMediaCacheFlusher);
 }
 
 static void
