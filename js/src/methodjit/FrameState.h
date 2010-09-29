@@ -587,6 +587,12 @@ class FrameState
     void storeTo(FrameEntry *fe, Address address, bool popHint = false);
 
     /*
+     * Fully stores a FrameEntry into two arbitrary registers. tempReg may be
+     * used as a temporary.
+     */
+    void storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg, RegisterID tempReg);
+
+    /*
      * Stores the top stack slot back to a slot.
      */
     void storeLocal(uint32 n, bool popGuaranteed = false, bool typeChange = true);
