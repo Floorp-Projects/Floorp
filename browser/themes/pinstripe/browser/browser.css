@@ -970,13 +970,8 @@ toolbar[mode="icons"] #zoom-in-button {
 
 /* tab progress */
 
-.tab-progress-container {
-  margin-top: -2px;
-}
-
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab > .tab-stack > .tab-progress-container {
   -moz-box-pack: end;
-  margin-bottom: -2px;
 }
 
 /* ----- AUTOCOMPLETE ----- */
@@ -1558,6 +1553,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   font-weight: bold;
 }
 
+.tab-stack {
+  /* ensure stable tab height with and without toolbarbuttons on the tab bar */
+  height: 19px;
+}
+
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
@@ -1574,7 +1574,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-border-left-colors: rgba(0,0,0,.04) rgba(0,0,0,.17) rgba(255,255,255,.1);
   background-clip: padding-box;
   text-align: center;
-  height: 24px;
   background-image: url(chrome://browser/skin/tabbrowser/tab-bkgnd.png);
 }
 
