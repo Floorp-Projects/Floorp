@@ -661,12 +661,12 @@ var BrowserUI = {
   },
 
   showPanel: function showPanel(aPage) {
+    if (this.activePanel)
+      this.activePanel = null;
+
     Elements.panelUI.left = 0;
     Elements.panelUI.hidden = false;
     Elements.contentShowing.setAttribute("disabled", "true");
-
-    if (this.activePanel)
-      this.activePanel = null;
 
     if (aPage != undefined)
       this.switchPane(aPage);
