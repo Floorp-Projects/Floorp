@@ -4958,6 +4958,7 @@ MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
+MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
@@ -6610,6 +6611,13 @@ if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
 fi
 
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+
+dnl ========================================================
+dnl = Disable DOMCrypto
+dnl ========================================================
+if test -n "$MOZ_DISABLE_DOMCRYPTO"; then
+    AC_DEFINE(MOZ_DISABLE_DOMCRYPTO)
+fi
 
 dnl ========================================================
 dnl =
