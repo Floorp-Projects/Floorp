@@ -1287,8 +1287,8 @@ var PageActions = {
 
   updatePageSaveAs: function updatePageSaveAs(aNode) {
     // Check for local XUL content
-    let contentDocument = Browser.selectedBrowser.contentDocument;
-    return !(contentDocument && contentDocument instanceof XULDocument);
+    let contentWindow = Browser.selectedBrowser.contentWindow;
+    return !(contentWindow && contentWindow.document instanceof XULDocument);
   },
 
   updateShare: function updateShare(aNode) {
