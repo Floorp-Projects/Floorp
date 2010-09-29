@@ -187,7 +187,6 @@ var Browser = {
       dump("###########" + e + "\n");
     }
 
-    let container = document.getElementById("browsers");
     // XXX change
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
@@ -204,7 +203,7 @@ var Browser = {
     // Warning, total hack ahead. All of the real-browser related scrolling code
     // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
     // to redo all the dragging code.
-    this.contentScrollbox = container;
+    this.contentScrollbox = Elements.browsers;
     this.contentScrollboxScroller = {
       scrollBy: function(x, y) {
         getBrowser().scrollBy(x, y);
@@ -277,8 +276,9 @@ var Browser = {
       Browser.hideTitlebar();
 
       // XXX Hack. Browser also behaves badly on resize.
-      getBrowser().style.display = "none";
-      getBrowser().style.display = "block";
+      let browser = getBrowser();
+      browser.style.display = "none";
+      browser.style.display = "block";
 
       // We want to keep the current focused element into view if possible
       let currentElement = document.activeElement;
@@ -326,9 +326,8 @@ var Browser = {
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
-    let browsers = document.getElementById("browsers");
-    browsers.addEventListener("command", this._handleContentCommand, true);
-    browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
+    Elements.browsers.addEventListener("command", this._handleContentCommand, true);
+    Elements.browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
     // Login Manager and Form History initialization
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -483,14 +482,12 @@ var Browser = {
   },
 
   hideSidebars: function scrollSidebarsOffscreen() {
-    let container = document.getElementById("browsers");
-    let rect = container.getBoundingClientRect();
+    let rect = Elements.browsers.getBoundingClientRect();
     this.controlsScrollboxScroller.scrollBy(Math.round(rect.left), 0);
   },
 
   hideTitlebar: function hideTitlebar() {
-    let container = document.getElementById("browsers");
-    let rect = container.getBoundingClientRect();
+    let rect = Elements.browsers.getBoundingClientRect();
     this.pageScrollboxScroller.scrollBy(0, Math.round(rect.top));
     this.tryUnfloatToolbar();
   },
@@ -644,13 +641,12 @@ var Browser = {
 
     if (oldBrowser) {
       oldBrowser.setAttribute("type", "content");
-      oldBrowser.style.display = "none";
       oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
     }
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
-      browser.style.display = "";
+      Elements.browsers.selectedPanel = browser;
       browser.messageManager.sendAsyncMessage("Browser:Focus", {});
     }
 
@@ -1502,7 +1498,7 @@ function IdentityHandler() {
   };
 
   // Close the popup when reloading the page
-  document.getElementById("browsers").addEventListener("URLChanged", this, true);
+  Elements.browsers.addEventListener("URLChanged", this, true);
 
   this._cacheElements();
 }
@@ -2468,8 +2464,7 @@ Tab.prototype = {
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 
     // Append the browser to the document, which should start the page load
-    document.getElementById("browsers").appendChild(browser);
-    browser.style.display = "none";
+    Elements.browsers.appendChild(browser);
 
     // stop about:blank from loading
     browser.stop();
@@ -2493,7 +2488,7 @@ Tab.prototype = {
       this._loading = false;
 
       Util.executeSoon(function() {
-        document.getElementById("browsers").removeChild(browser);
+        Elements.browsers.removeChild(browser);
       });
     }
   },
