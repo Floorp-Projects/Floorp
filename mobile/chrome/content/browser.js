@@ -218,7 +218,7 @@ var Browser = {
     pageScrollbox.customDragger = controlsScrollbox.customDragger;
 
     let stylesheet = document.styleSheets[0];
-    for each (let style in ["viewport-width", "viewport-height", "window-width", "window-height", "toolbar-height"]) {
+    for each (let style in ["window-width", "window-height", "toolbar-height"]) {
       let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
       this.styles[style] = stylesheet.cssRules[index].style;
     }
