@@ -85,7 +85,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 
 #define NATIVE_GET(cx,obj,pobj,shape,getHow,vp,onerr)                         \
     JS_BEGIN_MACRO                                                            \
-        if (shape->hasDefaultGetter()) {                                      \
+        if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {         \
             /* Fast path for Object instance properties. */                   \
             JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
                       !shape->hasDefaultSetter());                            \
