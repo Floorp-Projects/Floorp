@@ -23,4 +23,3 @@ Keep in mind that nightly builds, which are used by Mozilla developers for
 testing, may be buggy. Firefox nightlies, for example, can be found at:
 
     ftp://ftp.mozilla.org/pub/firefox/nightly/latest-trunk/
-
