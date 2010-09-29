@@ -1405,7 +1405,9 @@ class TraceRecorder
     /* The destructor should only be called through finish*, not directly. */
     ~TraceRecorder();
     JS_REQUIRES_STACK AbortableRecordingStatus finishSuccessfully();
-    JS_REQUIRES_STACK AbortableRecordingStatus finishAbort(const char* reason);
+
+    enum AbortResult { NORMAL_ABORT, JIT_RESET };
+    JS_REQUIRES_STACK AbortResult finishAbort(const char* reason);
 
     friend class ImportBoxedStackSlotVisitor;
     friend class ImportUnboxedStackSlotVisitor;
@@ -1422,7 +1424,7 @@ class TraceRecorder
     friend MonitorResult MonitorLoopEdge(JSContext*, uintN&);
     friend TracePointAction MonitorTracePoint(JSContext*, uintN &inlineCallCount,
                                               bool &blacklist);
-    friend void AbortRecording(JSContext*, const char*);
+    friend AbortResult AbortRecording(JSContext*, const char*);
     friend class BoxArg;
     friend void TraceMonitor::sweep();
 
@@ -1509,7 +1511,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount);
 extern JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool& blacklist);
 
-extern JS_REQUIRES_STACK void
+extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
 
 extern void

@@ -2585,7 +2585,7 @@ TraceRecorder::finishSuccessfully()
 }
 
 /* This function aborts a recorder and any pending outer recorders. */
-JS_REQUIRES_STACK AbortableRecordingStatus
+JS_REQUIRES_STACK TraceRecorder::AbortResult
 TraceRecorder::finishAbort(const char* reason)
 {
     JS_ASSERT(traceMonitor->recorder == this);
@@ -2627,9 +2627,11 @@ TraceRecorder::finishAbort(const char* reason)
 
     localtm->recorder = NULL;
     delete this;
-    if (localtm->outOfMemory() || OverfullJITCache(localtm))
+    if (localtm->outOfMemory() || OverfullJITCache(localtm)) {
         ResetJIT(localcx, FR_OOM);
-    return ARECORD_ABORTED;
+        return JIT_RESET;
+    }
+    return NORMAL_ABORT;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -6128,7 +6130,9 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
         JS_ASSERT(entryFrameArgc(cx) == first->argc);
-        AbortRecording(cx, "No compatible inner tree");
+
+        if (AbortRecording(cx, "No compatible inner tree") == JIT_RESET)
+            return MONITOR_NOT_RECORDING;
 
         return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots));
     }
@@ -6195,10 +6199,13 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       case LOOP_EXIT:
         /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
         if (innermostNestedGuard) {
-            AbortRecording(cx, "Inner tree took different side exit, abort current "
-                              "recording and grow nesting tree");
-            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outer) ?
-                ARECORD_CONTINUE : ARECORD_ABORTED;
+            if (AbortRecording(cx, "Inner tree took different side exit, abort current "
+                                   "recording and grow nesting tree") == JIT_RESET) {
+                return ARECORD_ABORTED;
+            }
+            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outer)
+                   ? ARECORD_CONTINUE
+                   : ARECORD_ABORTED;
         }
 
         JS_ASSERT(oldInlineCallCount == inlineCallCount);
@@ -6211,23 +6218,31 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       {
         /* Abort recording so the inner loop can become type stable. */
         JSObject* _globalObj = globalObj;
-        AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
-        return AttemptToStabilizeTree(localCx, _globalObj, lr, outer, outerFragment->argc) ?
-            ARECORD_CONTINUE : ARECORD_ABORTED;
+        if (AbortRecording(cx, "Inner tree is trying to stabilize, "
+                               "abort outer recording") == JIT_RESET) {
+            return ARECORD_ABORTED;
+        }
+        return AttemptToStabilizeTree(localCx, _globalObj, lr, outer, outerFragment->argc)
+               ? ARECORD_CONTINUE
+               : ARECORD_ABORTED;
       }
 
       case OVERFLOW_EXIT:
         traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT: {
+      case CASE_EXIT:
         /* Abort recording the outer tree, extend the inner tree. */
-        AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
-        return AttemptToExtendTree(localCx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
-      }
+        if (AbortRecording(cx, "Inner tree is trying to grow, "
+                               "abort outer recording") == JIT_RESET) {
+            return ARECORD_ABORTED;
+        }
+        return AttemptToExtendTree(localCx, lr, NULL, outer)
+               ? ARECORD_CONTINUE
+               : ARECORD_ABORTED;
 
       case NESTED_EXIT:
-          JS_NOT_REACHED("NESTED_EXIT should be replaced by innermost side exit");
+        JS_NOT_REACHED("NESTED_EXIT should be replaced by innermost side exit");
       default:
         debug_only_printf(LC_TMTracer, "exit_type=%s\n", getExitName(lr->exitType));
         AbortRecording(cx, "Inner tree not suitable for calling");
@@ -7362,14 +7377,14 @@ TraceRecorder::monitorRecording(JSOp op)
     return status;
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason)
 {
 #ifdef DEBUG
     JS_ASSERT(TRACE_RECORDER(cx));
-    TRACE_RECORDER(cx)->finishAbort(reason);
+    return TRACE_RECORDER(cx)->finishAbort(reason);
 #else
-    TRACE_RECORDER(cx)->finishAbort("[no reason]");
+    return TRACE_RECORDER(cx)->finishAbort("[no reason]");
 #endif
 }
 
