@@ -82,6 +82,7 @@
 #include "jsautooplen.h"
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * Index limit must stay within 32 bits.
