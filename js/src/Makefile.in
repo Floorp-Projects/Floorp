@@ -689,7 +689,7 @@ endif
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
-ifeq ($(TARGET_CPU),sparc
+ifeq ($(TARGET_CPU),sparc)
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
 jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
 	$(REPORT_BUILD)
