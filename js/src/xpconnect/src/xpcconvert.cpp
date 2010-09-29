@@ -49,6 +49,7 @@
 #include "XPCWrapper.h"
 #include "nsJSPrincipals.h"
 #include "nsWrapperCache.h"
+#include "WrapperFactory.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -1345,6 +1346,30 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     JSObject *original = flat;
     if(!JS_WrapObject(ccx, &flat))
         return JS_FALSE;
+
+    // If the object was not wrapped, we are same compartment and don't need
+    // to enforce any cross origin policies, except in case of the location
+    // object, which always needs a wrapper in between.
+    if(original == flat)
+    {
+        if(xpc::WrapperFactory::IsLocationObject(flat))
+        {
+            JSObject *locationWrapper = wrapper->GetWrapper();
+            if(!locationWrapper)
+            {
+                locationWrapper = xpc::WrapperFactory::WrapLocationObject(cx, flat);
+                if(!locationWrapper)
+                    return JS_FALSE;
+
+                // Cache the location wrapper to ensure that we maintain
+                // the identity of window/document.location.
+                wrapper->SetWrapper(locationWrapper);
+            }
+
+            flat = locationWrapper;
+        }
+    }
+
     *d = OBJECT_TO_JSVAL(flat);
 
     if(dest)
