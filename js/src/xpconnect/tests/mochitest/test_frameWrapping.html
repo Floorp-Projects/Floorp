@@ -26,7 +26,7 @@ function go() {
         netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
         var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
-        is(utils.getClassName(win), "XPCCrossOriginWrapper", "correctly wrap frame elements");
+        is(utils.getClassName(win), "Proxy", "correctly wrap frame elements");
      })()
     SimpleTest.finish();
 }
