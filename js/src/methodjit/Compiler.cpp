@@ -54,6 +54,7 @@
 #include "InlineFrameAssembler.h"
 #include "jscompartment.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 
 #include "jsautooplen.h"
 
@@ -247,7 +248,6 @@ mjit::Compiler::generatePrologue()
 
         /* Fill in the members that initCallFrameLatePrologue does. */
         masm.storeValue(UndefinedValue(), Address(JSFrameReg, JSStackFrame::offsetOfReturnValue()));
-        masm.storePtr(ImmPtr(NULL), Address(JSFrameReg, JSStackFrame::offsetOfBlockChain()));
 
         /* Set cx->fp */
         masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ReturnReg);
@@ -1345,6 +1345,12 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
 
+          BEGIN_CASE(JSOP_BLOCKCHAIN)
+          END_CASE(JSOP_BLOCKCHAIN)
+
+          BEGIN_CASE(JSOP_NULLBLOCKCHAIN)
+          END_CASE(JSOP_NULLBLOCKCHAIN)
+
           BEGIN_CASE(JSOP_CONDSWITCH)
             /* No-op for the decompiler. */
           END_CASE(JSOP_CONDSWITCH)
@@ -1398,7 +1404,9 @@ mjit::Compiler::generateMethod()
             JSObjStubFun stub = stubs::Lambda;
             uint32 uses = 0;
 
-            JSOp next = JSOp(PC[JSOP_LAMBDA_LENGTH]);
+            jsbytecode *pc2 = js_AdvanceOverBlockchain(PC + JSOP_LAMBDA_LENGTH);
+            JSOp next = JSOp(*pc2);
+            
             if (next == JSOP_INITMETHOD) {
                 stub = stubs::LambdaForInit;
             } else if (next == JSOP_SETMETHOD) {
@@ -1416,7 +1424,14 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(uses));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
 
-            stubCall(stub);
+            if (stub == stubs::Lambda) {
+                stubCall(stub);
+            } else {
+                jsbytecode *savedPC = PC;
+                PC = pc2;
+                stubCall(stub);
+                PC = savedPC;
+            }
 
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
@@ -4274,7 +4289,9 @@ mjit::Compiler::leaveBlock()
      * PutBlockObject, and do away with the muckiness in PutBlockObject.
      */
     uint32 n = js_GetVariableStackUses(JSOP_LEAVEBLOCK, PC);
+    JSObject *obj = script->getObject(fullAtomIndex(PC + UINT16_LEN));
     prepareStubCall(Uses(n));
+    masm.move(ImmPtr(obj), Registers::ArgReg1);
     stubCall(stubs::LeaveBlock);
     frame.leaveBlock(n);
 }

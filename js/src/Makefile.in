@@ -202,6 +202,7 @@ INSTALLED_HEADERS = \
 		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
+		jsopcodeinlines.h \
 		jsotypes.h \
 		jsparse.h \
 		jsproxy.h \
