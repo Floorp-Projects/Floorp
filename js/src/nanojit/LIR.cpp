@@ -1959,6 +1959,7 @@ namespace nanojit
           CSE_ACC_MULTIPLE( EMB_NUM_USED_ACCS + 1),
           storesSinceLastLoad(ACCSET_NONE),
           alloc(alloc),
+          knownCmpValues(alloc),
           suspended(false)
     {
 
@@ -2060,6 +2061,8 @@ namespace nanojit
         // Note that this clears the CONST and MULTIPLE load tables as well.
         for (CseAcc a = 0; a < CSE_NUM_USED_ACCS; a++)
             clearL(a);
+
+        knownCmpValues.clear();
     }
 
     inline uint32_t CseFilter::hashImmI(int32_t a) {
@@ -2463,6 +2466,15 @@ namespace nanojit
         if (!ins) {
             ins = out->ins2(op, a, b);
             addNL(LIns2, ins, k);
+        } else if (ins->isCmp()) {
+            if (knownCmpValues.containsKey(ins)) {
+                // We've seen this comparison before, and it was previously
+                // used in a guard, so we know what its value must be at this
+                // point.  Replace it with a constant.
+                NanoAssert(ins->isCmp());
+                bool cmpValue = knownCmpValues.get(ins);
+                return insImmI(cmpValue ? 1 : 0);
+            }
         }
         NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b);
         return ins;
@@ -2576,6 +2588,13 @@ namespace nanojit
             if (!ins) {
                 ins = out->insGuard(op, c, gr);
                 addNL(LIns1, ins, k);
+            }
+            // After this guard, we know that 'c's result was true (if
+            // op==LIR_xf) or false (if op==LIR_xt), else we would have
+            // exited.  Record this fact in case 'c' occurs again.
+            if (!suspended) {
+                bool c_value = (op == LIR_xt ? false : true);
+                knownCmpValues.put(c, c_value);
             }
         } else {
             ins = out->insGuard(op, c, gr);
