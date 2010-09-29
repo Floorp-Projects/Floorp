@@ -158,6 +158,8 @@
       <handler event="keypress" key="u" modifiers="control" command="cmd_deleteToBeginningOfLine"/>
       <handler event="keypress" key="w" modifiers="control" command="cmd_deleteWordBackward"/>
       <handler event="keypress" key="v" modifiers="control" command="cmd_scrollPageDown"/>
+
+      <handler event="keypress" key="v" command="cmd_pasteNoFormatting" modifiers="accel,alt,shift"/>
     </handlers>
   </binding>
 
