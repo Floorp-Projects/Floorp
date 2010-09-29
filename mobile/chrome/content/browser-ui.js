@@ -83,6 +83,7 @@ let Elements = {};
   ["panelUI",            "panel-container"],
   ["viewBuffer",         "view-buffer"],
   ["toolbarContainer",   "toolbar-container"],
+  ["browsers",           "browsers"]
 ].forEach(function (aElementGlobal) {
   let [name, id] = aElementGlobal;
   XPCOMUtils.defineLazyGetter(Elements, name, function() {
@@ -1611,7 +1612,7 @@ var FindHelperUI = {
 
     // Listen for events where form assistant should be closed
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
-    document.getElementById("browsers").addEventListener("URLChanged", this, true);
+    Elements.browsers.addEventListener("URLChanged", this, true);
   },
 
   receiveMessage: function findHelperReceiveMessage(aMessage) {
@@ -1712,7 +1713,7 @@ var FormHelperUI = {
 
     // Listen for events where form assistant should be closed
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
-    document.getElementById("browsers").addEventListener("URLChanged", this, true);
+    Elements.browsers.addEventListener("URLChanged", this, true);
 
     // Listen for modal dialog to show/hide the UI
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
