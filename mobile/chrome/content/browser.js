@@ -1265,7 +1265,7 @@ const BrowserSearch = {
 
   isPermanentSearchEngine: function isPermanentSearchEngine(aEngine) {
     return !BrowserSearch.engines.some(function(item) {
-      return aEngine.title == item.name;
+      return aEngine.title == item.label;
     });
   }
 };
