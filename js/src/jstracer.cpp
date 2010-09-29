@@ -10401,7 +10401,8 @@ functionProbe(JSContext *cx, JSFunction *fun, JSBool enter)
     return true;
 }
 
-JS_DEFINE_CALLINFO_3(static, BOOL, functionProbe, CONTEXT, FUNCTION, BOOL, 0, 0)
+JS_DEFINE_CALLINFO_3(static, BOOL, functionProbe, CONTEXT, FUNCTION, BOOL,
+                     0, ACCSET_STORE_ANY)
 #endif
 
 JS_REQUIRES_STACK AbortableRecordingStatus
