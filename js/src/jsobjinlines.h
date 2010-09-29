@@ -60,6 +60,9 @@
 #include "jsscopeinlines.h"
 #include "jsstr.h"
 
+#include "jsgcinlines.h"
+#include "jsprobes.h"
+
 inline void
 JSObject::dropProperty(JSContext *cx, JSProperty *prop)
 {
@@ -113,6 +116,26 @@ JSObject::unbrand(JSContext *cx)
     if (!branded())
         setGeneric();
     return true;
+}
+
+inline void
+JSObject::finalize(JSContext *cx, unsigned thingKind)
+{
+    JS_ASSERT(thingKind == js::gc::FINALIZE_OBJECT ||
+              thingKind == js::gc::FINALIZE_FUNCTION);
+
+    /* Cope with stillborn objects that have no map. */
+    if (!map)
+        return;
+
+    /* Finalize obj first, in case it needs map and slots. */
+    js::Class *clasp = getClass();
+    if (clasp->finalize)
+        clasp->finalize(cx, this);
+
+    js::Probes::finalizeObject(this);
+
+    finish(cx);
 }
 
 /*

@@ -106,6 +106,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 class AutoVersionAPI
 {
@@ -707,10 +708,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(debuggerLock);
 #endif
     propertyTree.finish();
-    /* Delete all remaining Compartments. Ideally only the defaultCompartment should be left. */
-    for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c)
-        delete *c;
-    compartments.clear();
 }
 
 JS_PUBLIC_API(JSRuntime *)
@@ -758,12 +755,6 @@ JS_NewRuntime(uint32 maxbytes)
     }
 
     return rt;
-}
-
-JS_PUBLIC_API(void)
-JS_CommenceRuntimeShutDown(JSRuntime *rt)
-{
-    rt->gcFlushCodeCaches = true;
 }
 
 JS_PUBLIC_API(void)
@@ -1190,7 +1181,7 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
 }
 
 bool
-JSAutoCrossCompartmentCall::enter(JSContext *cx, JSObject *target)
+JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
     JS_ASSERT(!call);
     if (cx->compartment == target->getCompartment(cx))
@@ -1199,20 +1190,10 @@ JSAutoCrossCompartmentCall::enter(JSContext *cx, JSObject *target)
     return call != NULL;
 }
 
-JS_FRIEND_API(JSCompartment *)
-js_SwitchToCompartment(JSContext *cx, JSCompartment *compartment)
+void
+JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
 {
-    JSCompartment *c = cx->compartment;
-    cx->compartment = compartment;
-    return c;
-}
-
-JS_FRIEND_API(JSCompartment *)
-js_SwitchToObjectCompartment(JSContext *cx, JSObject *obj)
-{
-    JSCompartment *c = cx->compartment;
-    cx->compartment = obj->getCompartment(cx);
-    return c;
+    (void) enter(cx, target);
 }
 
 JS_PUBLIC_API(void *)
@@ -2083,7 +2064,7 @@ JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
     JS_ASSERT(thing);
-    Mark(trc, thing, kind);
+    MarkKind(trc, thing, kind);
 }
 
 #ifdef DEBUG
@@ -2579,7 +2560,7 @@ JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
     JS_ASSERT(thing);
     JS_ASSERT(!cx->runtime->gcMarkingTracer);
-    return js_IsAboutToBeFinalized(thing);
+    return IsAboutToBeFinalized(thing);
 }
 
 JS_PUBLIC_API(void)

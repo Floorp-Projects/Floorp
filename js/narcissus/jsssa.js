@@ -1068,21 +1068,18 @@
         for (var ns in super.prototype) {
             var childNS = childProto[ns];
             var superNS = superProto[ns];
-            var childNSType = typeof childNS;
-            if (childNSType === "undefined") {
+            if (childNS === undefined) {
                 childProto[ns] = superNS;
-            } else if (childNSType === "object") {
+            } else {
                 for (var m in superNS) {
                     let childMethod = childNS[m];
                     let superMethod = superNS[m];
-                    if (typeof childMethod === "undefined") {
+                    if (childMethod === undefined) {
                         childNS[m] = superMethod;
                     } else {
                         childNS[m] = function() {
-                            if (this.binds)
-                                return childMethod.apply(this, arguments);
-                            else
-                                return superMethod.apply(this, arguments);
+                            return (this.binds ? childMethod : superMethod)
+                                   .apply(this, arguments);
                         };
                     }
                 }

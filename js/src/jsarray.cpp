@@ -107,6 +107,7 @@
 #include "jscntxtinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 /* 2^32 - 1 as a number and a string */
 #define MAXINDEX 4294967295u

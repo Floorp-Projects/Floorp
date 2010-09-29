@@ -3165,7 +3165,7 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         return NULL;
 
     {
-        JSAutoCrossCompartmentCall ac;
+        JSAutoEnterCompartment ac;
         if (!ac.enter(cx, obj))
             return NULL;
 
@@ -3226,7 +3226,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     {
-        JSAutoCrossCompartmentCall ac;
+        JSAutoEnterCompartment ac;
         if (JSCrossCompartmentWrapper::isCrossCompartmentWrapper(sobj)) {
             sobj = sobj->unwrap();
             if (!ac.enter(cx, sobj))
@@ -5152,12 +5152,14 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
+NewGlobalObject(JSContext *cx)
 {
     JSObject *glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
     if (!glob)
         return NULL;
-    if (!call.enter(cx, glob))
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, glob))
         return NULL;
 
 #ifdef LAZY_STANDARD_CLASSES
@@ -5197,10 +5199,13 @@ int
 shell(JSContext *cx, int argc, char **argv, char **envp)
 {
     JSAutoRequest ar(cx);
-    JSAutoCrossCompartmentCall ac;
 
-    JSObject *glob = NewGlobalObject(cx, ac);
+    JSObject *glob = NewGlobalObject(cx);
     if (!glob)
+        return 1;
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, glob))
         return 1;
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
@@ -5239,8 +5244,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     class ShellWorkerHooks : public js::workers::WorkerHooks {
     public:
         JSObject *newGlobalObject(JSContext *cx) {
-            JSAutoCrossCompartmentCall ac;
-            return NewGlobalObject(cx, ac);
+            return NewGlobalObject(cx);
         }
     };
     ShellWorkerHooks hooks;
@@ -5347,8 +5351,6 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = shell(cx, argc, argv, envp);
-
-    JS_CommenceRuntimeShutDown(rt);
 
     DestroyContext(cx, true);
 

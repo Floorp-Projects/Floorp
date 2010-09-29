@@ -427,7 +427,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     JSBool needsCOW = JS_FALSE;
     JSBool needsXOW = JS_FALSE;
 
-    JSAutoCrossCompartmentCall accc;
+    JSAutoEnterCompartment ac;
 
     if(sciWrapper.GetFlags().WantPreCreate())
     {
@@ -457,7 +457,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             newParentVal = OBJECT_TO_JSVAL(parent);
         }
 
-        if(!accc.enter(ccx, parent))
+        if(!ac.enter(ccx, parent))
             return NS_ERROR_FAILURE;
 
         // Take the performance hit of checking the hashtable again in case
@@ -508,7 +508,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     }
     else
     {
-        if(!accc.enter(ccx, parent))
+        if(!ac.enter(ccx, parent))
             return NS_ERROR_FAILURE;
 
         nsISupports *Object = helper.Object();

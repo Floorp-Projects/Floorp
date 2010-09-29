@@ -99,6 +99,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * Asserts to verify assumptions behind pn_ macros.
@@ -314,7 +315,7 @@ Parser::trace(JSTracer *trc)
 {
     JSObjectBox *objbox = traceListHead;
     while (objbox) {
-        JS_CALL_OBJECT_TRACER(trc, objbox->object, "parser.object");
+        MarkObject(trc, *objbox->object, "parser.object");
         objbox = objbox->traceLink;
     }
 }
@@ -3600,6 +3601,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
     if (stmt && stmt->type == STMT_WITH) {
         data->fresh = false;
+        pn->pn_dflags |= PND_DEOPTIMIZED;
         return true;
     }
 
@@ -8502,78 +8504,79 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #endif
                    ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
             JSStmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
-            if (!stmt || stmt->type != STMT_WITH) {
-                JSDefinition *dn;
 
-                JSAtomListElement *ale = tc->decls.lookup(pn->pn_atom);
-                if (ale) {
-                    dn = ALE_DEFN(ale);
+            JSDefinition *dn;
+
+            JSAtomListElement *ale = tc->decls.lookup(pn->pn_atom);
+            if (ale) {
+                dn = ALE_DEFN(ale);
 #if JS_HAS_BLOCK_SCOPE
-                    /*
-                     * Skip out-of-scope let bindings along an ALE list or hash
-                     * chain. These can happen due to |let (x = x) x| block and
-                     * expression bindings, where the x on the right of = comes
-                     * from an outer scope. See bug 496532.
-                     */
-                    while (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc)) {
-                        do {
-                            ale = ALE_NEXT(ale);
-                        } while (ale && ALE_ATOM(ale) != pn->pn_atom);
-                        if (!ale)
-                            break;
-                        dn = ALE_DEFN(ale);
-                    }
-#endif
+                /*
+                 * Skip out-of-scope let bindings along an ALE list or hash
+                 * chain. These can happen due to |let (x = x) x| block and
+                 * expression bindings, where the x on the right of = comes
+                 * from an outer scope. See bug 496532.
+                 */
+                while (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc)) {
+                    do {
+                        ale = ALE_NEXT(ale);
+                    } while (ale && ALE_ATOM(ale) != pn->pn_atom);
+                    if (!ale)
+                        break;
+                    dn = ALE_DEFN(ale);
                 }
+#endif
+            }
 
+            if (ale) {
+                dn = ALE_DEFN(ale);
+            } else {
+                ale = tc->lexdeps.lookup(pn->pn_atom);
                 if (ale) {
                     dn = ALE_DEFN(ale);
                 } else {
-                    ale = tc->lexdeps.lookup(pn->pn_atom);
-                    if (ale) {
-                        dn = ALE_DEFN(ale);
-                    } else {
-                        /*
-                         * No definition before this use in any lexical scope.
-                         * Add a mapping in tc->lexdeps from pn->pn_atom to a
-                         * new node for the forward-referenced definition. This
-                         * placeholder definition node will be adopted when we
-                         * parse the real defining declaration form, or left as
-                         * a free variable definition if we never see the real
-                         * definition.
-                         */
-                        ale = MakePlaceholder(pn, tc);
-                        if (!ale)
-                            return NULL;
-                        dn = ALE_DEFN(ale);
+                    /*
+                     * No definition before this use in any lexical scope.
+                     * Add a mapping in tc->lexdeps from pn->pn_atom to a
+                     * new node for the forward-referenced definition. This
+                     * placeholder definition node will be adopted when we
+                     * parse the real defining declaration form, or left as
+                     * a free variable definition if we never see the real
+                     * definition.
+                     */
+                    ale = MakePlaceholder(pn, tc);
+                    if (!ale)
+                        return NULL;
+                    dn = ALE_DEFN(ale);
 
-                        /*
-                         * In case this is a forward reference to a function,
-                         * we pessimistically set PND_FUNARG if the next token
-                         * is not a left parenthesis.
-                         *
-                         * If the definition eventually parsed into dn is not a
-                         * function, this flag won't hurt, and if we do parse a
-                         * function with pn's name, then the PND_FUNARG flag is
-                         * necessary for safe context->display-based optimiza-
-                         * tion of the closure's static link.
-                         */
-                        JS_ASSERT(PN_TYPE(dn) == TOK_NAME);
-                        JS_ASSERT(dn->pn_op == JSOP_NOP);
-                        if (tokenStream.peekToken() != TOK_LP)
-                            dn->pn_dflags |= PND_FUNARG;
-                    }
+                    /*
+                     * In case this is a forward reference to a function,
+                     * we pessimistically set PND_FUNARG if the next token
+                     * is not a left parenthesis.
+                     *
+                     * If the definition eventually parsed into dn is not a
+                     * function, this flag won't hurt, and if we do parse a
+                     * function with pn's name, then the PND_FUNARG flag is
+                     * necessary for safe context->display-based optimiza-
+                     * tion of the closure's static link.
+                     */
+                    JS_ASSERT(PN_TYPE(dn) == TOK_NAME);
+                    JS_ASSERT(dn->pn_op == JSOP_NOP);
+                    if (tokenStream.peekToken() != TOK_LP)
+                        dn->pn_dflags |= PND_FUNARG;
                 }
-
-                JS_ASSERT(dn->pn_defn);
-                LinkUseToDef(pn, dn, tc);
-
-                /* Here we handle the backward function reference case. */
-                if (tokenStream.peekToken() != TOK_LP)
-                    dn->pn_dflags |= PND_FUNARG;
-
-                pn->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
             }
+
+            JS_ASSERT(dn->pn_defn);
+            LinkUseToDef(pn, dn, tc);
+
+            /* Here we handle the backward function reference case. */
+            if (tokenStream.peekToken() != TOK_LP)
+                dn->pn_dflags |= PND_FUNARG;
+
+            pn->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
+            if (stmt && stmt->type == STMT_WITH)
+                pn->pn_dflags |= PND_DEOPTIMIZED;
         }
 
 #if JS_HAS_XML_SUPPORT
