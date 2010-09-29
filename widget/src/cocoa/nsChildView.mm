@@ -1689,6 +1689,16 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+PRBool
+nsChildView::GetShouldAccelerate()
+{
+  // Don't use OpenGL for transparent windows.
+  if (!mView || ![[mView window] isOpaque])
+    return PR_FALSE;
+
+  return nsBaseWidget::GetShouldAccelerate();
+}
+
 inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
