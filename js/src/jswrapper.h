@@ -50,6 +50,10 @@ JS_BEGIN_EXTERN_C
 /* No-op wrapper handler base class. */
 class JSWrapper : public js::JSProxyHandler {
     uintN mFlags;
+  protected:
+    // XXX Hack to let wrappers derive from either cross compartment
+    // wrappers or JSProxyHandlers.
+    JS_FRIEND_API(JSWrapper(void *family));
   public:
     uintN flags() const { return mFlags; }
 

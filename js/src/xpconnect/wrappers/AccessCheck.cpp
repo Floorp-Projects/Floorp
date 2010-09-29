@@ -64,6 +64,22 @@ AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
 }
 
 bool
+AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *obj)
+{
+    JSCompartment *compartment = obj->compartment();
+
+    obj = obj->unwrap()->getParent();
+    if (!obj->getClass()->ext.innerObject) {
+        obj = obj->unwrap();
+        JS_ASSERT(obj->getClass()->ext.innerObject);
+    }
+    OBJ_TO_INNER_OBJECT(cx, obj);
+    if (!obj)
+        return false;
+    return isSameOrigin(compartment, obj->compartment());
+}
+
+bool
 AccessCheck::isChrome(JSCompartment *compartment)
 {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();

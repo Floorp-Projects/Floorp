@@ -52,6 +52,7 @@ class AccessCheck {
     static bool isCrossOriginAccessPermitted(JSContext *cx, JSObject *obj, jsid id,
                                              JSWrapper::Action act);
     static bool isSystemOnlyAccessPermitted(JSContext *cx);
+    static bool isLocationObjectSameOrigin(JSContext *cx, JSObject *obj);
 
     static bool needsSystemOnlyWrapper(JSObject *obj);
 
@@ -95,6 +96,20 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
         perm = DenyAccess;
         if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act))
             perm = PermitPropertyAccess;
+        return true;
+    }
+};
+
+// This policy only permits access to properties that are safe to be used
+// across origins.
+struct SameOriginOrCrossOriginAccessiblePropertiesOnly : public Policy {
+    static bool check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
+                      Permission &perm) {
+        perm = DenyAccess;
+        if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act) ||
+            AccessCheck::isLocationObjectSameOrigin(cx, wrapper)) {
+            perm = PermitPropertyAccess;
+        }
         return true;
     }
 };
