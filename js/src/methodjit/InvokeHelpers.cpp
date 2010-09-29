@@ -185,7 +185,6 @@ InlineReturn(VMFrame &f, JSBool ok, JSBool popFrame)
 
     JS_ASSERT(f.fp() != f.entryFp);
 
-    JS_ASSERT(!fp->hasBlockChain());
     JS_ASSERT(!js_IsActiveWithOrBlock(cx, &fp->scopeChain(), 0));
 
     // Marker for debug support.

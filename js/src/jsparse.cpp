@@ -3363,7 +3363,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (!CheckStrictBinding(cx, tc, atom, pn))
         return false;
 
-    blockObj = tc->blockChain;
+    blockObj = tc->blockChain();
     ale = tc->decls.lookup(atom);
     if (ale && ALE_DEFN(ale)->pn_blockid == tc->blockid()) {
         const char *name = js_AtomToPrintableString(cx, atom);
@@ -3428,7 +3428,7 @@ PopStatement(JSTreeContext *tc)
     JSStmtInfo *stmt = tc->topStmt;
 
     if (stmt->flags & SIF_SCOPE) {
-        JSObject *obj = stmt->blockObj;
+        JSObject *obj = stmt->blockBox->object;
         JS_ASSERT(!obj->isClonedBlock());
 
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
@@ -4215,8 +4215,8 @@ CheckDestructuring(JSContext *cx, BindData *data,
      */
     if (data &&
         data->binder == BindLet &&
-        OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0) {
-        ok = !!js_DefineNativeProperty(cx, tc->blockChain,
+        OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0) {
+        ok = !!js_DefineNativeProperty(cx, tc->blockChain(),
                                        ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                                        UndefinedValue(), NULL, NULL,
                                        JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -4580,7 +4580,7 @@ PushLexicalScope(JSContext *cx, TokenStream *ts, JSTreeContext *tc,
     if (!blockbox)
         return NULL;
 
-    js_PushBlockScope(tc, stmt, obj, -1);
+    js_PushBlockScope(tc, stmt, blockbox, -1);
     pn->pn_type = TOK_LEXICALSCOPE;
     pn->pn_op = JSOP_LEAVEBLOCK;
     pn->pn_objbox = blockbox;
@@ -5711,8 +5711,8 @@ Parser::statement()
         }
 
         if (stmt && (stmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(tc->blockChain == stmt->blockObj);
-            obj = tc->blockChain;
+            JS_ASSERT(tc->blockChainBox == stmt->blockBox);
+            obj = tc->blockChain();
         } else {
             if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
@@ -5762,9 +5762,9 @@ Parser::statement()
             JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
-            obj->setParent(tc->blockChain);
-            tc->blockChain = obj;
-            stmt->blockObj = obj;
+            obj->setParent(tc->blockChain());
+            tc->blockChainBox = blockbox;
+            stmt->blockBox = blockbox;
 
 #ifdef DEBUG
             pn1 = tc->blockNode;
@@ -6012,7 +6012,7 @@ Parser::variables(bool inLetHead)
      * this code will change soon.
      */
     if (let) {
-        JS_ASSERT(tc->blockChain == scopeStmt->blockObj);
+        JS_ASSERT(tc->blockChainBox == scopeStmt->blockBox);
         data.binder = BindLet;
         data.let.overflow = JSMSG_TOO_MANY_LOCALS;
     } else {
