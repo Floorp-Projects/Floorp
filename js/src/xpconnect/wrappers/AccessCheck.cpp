@@ -52,7 +52,7 @@ namespace xpc {
 static nsIPrincipal *
 GetCompartmentPrincipal(JSCompartment *compartment)
 {
-    return static_cast<nsJSPrincipals *>(compartment->principals)->nsIPrincipalPtr;
+    return compartment->principals ? static_cast<nsJSPrincipals *>(compartment->principals)->nsIPrincipalPtr : 0;
 }
 
 bool
