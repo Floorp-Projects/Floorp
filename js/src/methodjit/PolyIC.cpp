@@ -85,6 +85,14 @@ class PICStubCompiler
       : type(type), f(f), script(script), pic(pic)
     { }
 
+    bool isCallOp() const
+    {
+        if (pic.kind == ic::PICInfo::CALL)
+            return true;
+        JSOp op = JSOp(*f.regs.pc);
+        return !!(js_CodeSpec[op].format & JOF_CALLOP);
+    }
+
     bool disable(const char *reason, VoidStub stub)
     {
         return disable(reason, JS_FUNC_TO_DATA_PTR(void *, stub));
@@ -884,6 +892,8 @@ class GetPropCompiler : public PICStubCompiler
             return disable("proto walk on String.prototype");
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -918,7 +928,12 @@ class GetPropCompiler : public PICStubCompiler
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump shapeMismatch = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                            Imm32(obj->shape()));
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
 
         Jump done = masm.jump();
 
@@ -1120,7 +1135,12 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         /* Load the value out of the object. */
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1213,6 +1233,8 @@ class GetPropCompiler : public PICStubCompiler
         const Shape *shape = (const Shape *)prop;
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -1476,7 +1498,12 @@ class GetElemCompiler : public PICStubCompiler
         }
 
         /* Load the value out of the object. */
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1557,6 +1584,8 @@ class GetElemCompiler : public PICStubCompiler
         const Shape *shape = (const Shape *)prop;
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -1665,7 +1694,12 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(holder->shape()));
 
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
 
         Jump done = masm.jump();
 
@@ -1848,6 +1882,8 @@ class ScopeNameCompiler : public PICStubCompiler
 
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
