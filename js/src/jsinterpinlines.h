@@ -58,7 +58,6 @@ JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     rval_.setUndefined();
-    blockChain_ = NULL;
     JS_ASSERT(annotation() == NULL);
 
     JS_ASSERT(!hasCallObj());
@@ -106,7 +105,6 @@ inline void
 JSStackFrame::initCallFrameLatePrologue()
 {
     rval_.setUndefined();
-    blockChain_ = NULL;
 
     SetValueRangeToUndefined(slots(), script()->nfixed);
 }
@@ -147,7 +145,6 @@ JSStackFrame::initEvalFrame(JSScript *script, JSStackFrame *prev,
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     rval_.setUndefined();
-    blockChain_ = NULL;
     setAnnotation(prev->annotation());
 }
 
@@ -171,7 +168,6 @@ JSStackFrame::initGlobalFrame(JSScript *script, JSObject &chain, uint32 flagsArg
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     rval_.setUndefined();
-    blockChain_ = NULL;
     JS_ASSERT(annotation() == NULL);
 }
 

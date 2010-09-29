@@ -86,6 +86,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
+#include "jsopcodeinlines.h"
 
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
@@ -4354,9 +4355,6 @@ TraceRecorder::snapshot(ExitType exitType)
                                            nativeStackOffset(&cx->fp()->calleeValue()) / sizeof(double) :
                                            0;
     exit->exitType = exitType;
-    exit->block = fp->maybeBlockChain();
-    if (fp->hasBlockChain())
-        tree->gcthings.addUnique(ObjectValue(*fp->blockChain()));
     exit->pc = pc;
     exit->imacpc = fp->maybeImacropc();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
@@ -5734,7 +5732,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     regs->pc = fi.pc;
     if (fi.imacpc)
         fp->setImacropc(fi.imacpc);
-    fp->setBlockChain(fi.block);
 
     /* Set argc/flags then mimic JSOP_CALL. */
     uintN argc = fi.get_argc();
@@ -6930,13 +6927,9 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     /*
      * Adjust sp and pc relative to the tree we exited from (not the tree we
      * entered into).  These are our final values for sp and pc since
-     * SynthesizeFrame has already taken care of all frames in between. But
-     * first we recover fp->blockChain, which comes from the side exit
-     * struct.
+     * SynthesizeFrame has already taken care of all frames in between.
      */
     JSStackFrame* const fp = cx->fp();
-
-    fp->setBlockChain(innermost->block);
 
     /*
      * If we are not exiting from an inlined frame, the state->sp is spbase.
@@ -13336,9 +13329,6 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     JS_ASSERT(argc < FrameInfo::CONSTRUCTING_FLAG);
 
     tree->gcthings.addUnique(fval);
-    fi->block = fp->maybeBlockChain();
-    if (fp->hasBlockChain())
-        tree->gcthings.addUnique(ObjectValue(*fp->blockChain()));
     fi->pc = cx->regs->pc;
     fi->imacpc = fp->maybeImacropc();
     fi->spdist = cx->regs->sp - fp->slots();
@@ -14925,6 +14915,18 @@ TraceRecorder::record_JSOP_LINENO()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_BLOCKCHAIN()
+{
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NULLBLOCKCHAIN()
+{
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CONDSWITCH()
 {
     return ARECORD_CONTINUE;
@@ -15024,7 +15026,7 @@ TraceRecorder::record_JSOP_LAMBDA()
         if (FUN_OBJECT(fun)->getParent() != globalObj)
             RETURN_STOP_A("Null closure function object parent must be global object");
 
-        jsbytecode *pc2 = cx->regs->pc + JSOP_LAMBDA_LENGTH;
+        jsbytecode *pc2 = js_AdvanceOverBlockchain(cx->regs->pc + JSOP_LAMBDA_LENGTH);
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_INITMETHOD) {
@@ -15088,7 +15090,7 @@ TraceRecorder::record_JSOP_LAMBDA()
         return ARECORD_CONTINUE;
     }
 
-    if (cx->fp()->hasBlockChain())
+    if (js_GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns *proto_ins;
@@ -15114,7 +15116,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     if (FUN_OBJECT(fun)->getParent() != globalObj)
         return ARECORD_STOP;
 
-    if (cx->fp()->hasBlockChain())
+    if (js_GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns* args[] = {

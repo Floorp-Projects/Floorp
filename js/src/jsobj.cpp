@@ -1080,7 +1080,14 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      * Bring fp->scopeChain up to date. We're either going to use
      * it (direct call) or save it and restore it (indirect call).
      */
-    JSObject *callerScopeChain = js_GetScopeChain(cx, caller);
+    JSObject *callerScopeChain;
+
+    if (callerPC && *callerPC == JSOP_EVAL)
+        callerScopeChain = js_GetScopeChainFast(cx, caller, JSOP_EVAL,
+                                                JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+    else
+        callerScopeChain = js_GetScopeChain(cx, caller);
+
     if (!callerScopeChain)
         return JS_FALSE;
 
@@ -6677,8 +6684,6 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         fputc('\n', stderr);
 
         fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) &fp->scopeChain());
-        if (fp->hasBlockChain())
-            fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain());
 
         fputc('\n', stderr);
     }

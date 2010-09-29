@@ -130,7 +130,7 @@ struct JSStmtInfo {
     ptrdiff_t       continues;      /* offset of last continue in loop */
     union {
         JSAtom      *label;         /* name of LABEL */
-        JSObject    *blockObj;      /* block scope object */
+        JSObjectBox *blockBox;      /* block scope object */
     };
     JSStmtInfo      *down;          /* info for enclosing statement */
     JSStmtInfo      *downScope;     /* next enclosing lexical scope */
@@ -276,7 +276,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint32          blockidGen;     /* preincremented block number generator */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
-    JSObject        *blockChain;    /* compile time block scope chain (NB: one
+    JSObjectBox     *blockChainBox; /* compile time block scope chain (NB: one
                                        deeper than the topScopeStmt/downScope
                                        chain when in head of let block/expr) */
     JSParseNode     *blockNode;     /* parse node for a block with let declarations
@@ -308,7 +308,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     JSTreeContext(js::Parser *prs)
       : flags(0), bodyid(0), blockidGen(0),
-        topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
+        topStmt(NULL), topScopeStmt(NULL), blockChainBox(NULL), blockNode(NULL),
         parser(prs), scopeChain(NULL), parent(prs->tc), staticLevel(0),
         funbox(NULL), functionList(NULL), innermostWith(NULL), sharpSlotBase(-1)
     {
@@ -333,6 +333,10 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     uintN blockid() { return topStmt ? topStmt->blockid : bodyid; }
 
+    JSObject *blockChain() {
+        return blockChainBox ? blockChainBox->object : NULL;
+    }
+    
     bool atTopLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
 
     /* Test whether we're in a statement of given type. */
@@ -646,6 +650,13 @@ js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
          jsbytecode op2);
 
 /*
+ * Emit five bytecodes, an opcode with two 16-bit immediates.
+ */
+extern ptrdiff_t
+js_Emit5(JSContext *cx, JSCodeGenerator *cg, JSOp op, uint16 op1,
+         uint16 op2);
+
+/*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
  */
 extern ptrdiff_t
@@ -688,7 +699,7 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
  * (if generating code), js_PopStatementCG.
  */
 extern void
-js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
+js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObjectBox *blockBox,
                   ptrdiff_t top);
 
 /*
