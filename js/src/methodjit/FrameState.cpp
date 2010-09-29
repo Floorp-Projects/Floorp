@@ -1287,7 +1287,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(sp - n >= spBase);
     int32 depth = 0 - int32(n);
-    storeTop(&sp[depth - 1], true);
+    storeTop(peek(depth - 1), true);
     popn(n);
 }
 
@@ -1296,7 +1296,7 @@ FrameState::shift(int32 n)
 {
     JS_ASSERT(n < 0);
     JS_ASSERT(sp + n - 1 >= spBase);
-    storeTop(&sp[n - 1], true);
+    storeTop(peek(n - 1), true);
     pop();
 }
 
