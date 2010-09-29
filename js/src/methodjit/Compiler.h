@@ -120,7 +120,7 @@ class Compiler
         uint32       argc;
         DataLabelPtr funGuard;
         Jump         funJump;
-        Call         hotCall;
+        Jump         hotJump;
         Call         oolCall;
         Label        joinPoint;
         Label        slowJoinPoint;
@@ -134,6 +134,17 @@ class Compiler
 
   private:
 #endif
+
+    /*
+     * Writes of call return addresses which needs to be delayed until the final
+     * absolute address of the join point is known.
+     */
+    struct CallPatchInfo {
+        Label joinPoint;
+        DataLabelPtr fastNcodePatch;
+        DataLabelPtr slowNcodePatch;
+        bool hasSlowNcode;
+    };
 
 #if defined JS_POLYIC
     struct PICGenInfo {
@@ -215,6 +226,7 @@ class Compiler
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 64> pics;
 #endif
+    js::Vector<CallPatchInfo, 64> callPatches;
     js::Vector<InternalCallSite, 64> callSites;
     js::Vector<DoublePatch, 16> doubleList;
     js::Vector<uint32, 16> escapingList;
@@ -253,8 +265,6 @@ class Compiler
     void addCallSite(uint32 id, bool stub);
 
     /* Emitting helpers. */
-    RegisterID takeHWReturnAddress(Assembler &masm);
-    void restoreReturnAddress(Assembler &masm);
     void restoreFrameRegs(Assembler &masm);
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     void iter(uintN flags);
@@ -271,7 +281,9 @@ class Compiler
     void jsop_getprop_slow();
     void jsop_getarg(uint32 index);
     void jsop_this();
-    void emitReturn();
+    void emitReturn(FrameEntry *fe);
+    void emitFinalReturn(Assembler &masm);
+    void loadReturnValue(Assembler &masm);
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);

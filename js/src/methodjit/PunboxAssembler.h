@@ -125,6 +125,11 @@ class Assembler : public BaseAssembler
         return l;
     }
 
+    void loadValueAsComponents(const Value &val, RegisterID type, RegisterID payload) {
+        move(Imm64(val.asRawBits() & 0xFFFF800000000000), type);
+        move(Imm64(val.asRawBits() & 0x00007FFFFFFFFFFF), payload);
+    }
+
     template <typename T>
     void storeValueFromComponents(RegisterID type, RegisterID payload, T address) {
         move(type, Registers::ValueReg);

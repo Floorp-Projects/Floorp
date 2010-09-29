@@ -93,6 +93,10 @@
 
 #include "jsautooplen.h"
 
+#if defined(JS_METHODJIT) && defined(JS_MONOIC)
+#include "methodjit/MonoIC.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 
@@ -100,9 +104,60 @@ using namespace js::gc;
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 #ifdef DEBUG
-jsbytecode *const JSStackFrame::sInvalidpc = (jsbytecode *)0xbeef;
 JSObject *const JSStackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
 #endif
+
+jsbytecode *
+JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
+{
+    JS_ASSERT_IF(next, next->prev_ == this);
+    JS_ASSERT(cx->containingSegment(this) != NULL);
+
+    JSFrameRegs *regs;
+    if (cx->regs) {
+        regs = cx->regs;
+    } else {
+        StackSegment *segment = cx->getCurrentSegment();
+        regs = segment->getSuspendedRegs();
+    }
+
+    if (this == regs->fp)
+        return regs->pc;
+
+    if (!next)
+        next = cx->computeNextFrame(this);
+
+    if (next->flags_ & JSFRAME_HAS_PREVPC)
+        return next->prevpc_;
+
+#if defined(JS_METHODJIT) && defined(JS_MONOIC)
+    JSScript *script = this->script();
+    size_t low = 0;
+    size_t high = script->jit->nCallICs;
+    while (high > low + 1) {
+        /* Could overflow here on a script with 2 billion calls. Oh well. */
+        size_t mid = (high + low) / 2;
+        void *entry = script->callICs[mid].funGuard.executableAddress();
+
+        /*
+         * Use >= here as the return address of the call is likely to be
+         * the start address of the next (possibly IC'ed) operation.
+         */
+        if (entry >= next->ncode_)
+            high = mid;
+        else
+            low = mid;
+    }
+
+    js::mjit::ic::CallICInfo &callIC = script->callICs[low];
+
+    JS_ASSERT((uint8*)callIC.funGuard.executableAddress() + callIC.joinPointOffset == next->ncode_);
+    return callIC.pc;
+#else
+    JS_NOT_REACHED("Unknown PC for frame");
+    return NULL;
+#endif
+}
 
 /*
  * We can't determine in advance which local variables can live on the stack and
@@ -670,7 +725,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *initialVarObj;
     if (prev) {
         JS_ASSERT(chain == &prev->scopeChain());
-        frame.fp()->initEvalFrame(script, prev, flags);
+        frame.fp()->initEvalFrame(script, prev, prev->pc(cx), flags);
 
         /*
          * We want to call |prev->varobj()|, but this requires knowing the
