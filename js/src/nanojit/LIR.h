@@ -1964,12 +1964,6 @@ namespace nanojit
 
         Allocator& alloc;
 
-        // After a conditional guard such as "xf cmp", we know that 'cmp' must
-        // be true, else we would have side-exited.  So if we see 'cmp' again
-        // we can treat it like a constant.  This table records such
-        // comparisons.
-        HashMap <LIns*, bool> knownCmpValues;
-
         // If true, we will not add new instructions to the CSE tables, but we
         // will continue to CSE instructions that match existing table
         // entries.  Load instructions will still be removed if aliasing
