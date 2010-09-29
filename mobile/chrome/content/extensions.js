@@ -492,41 +492,23 @@ var ExtensionsView = {
     }
   },
 
-  displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aIsRecommended, aSelectFirstResult) {
-    this.clearSection("repo");
-
-    let strings = Elements.browserBundle;
-    if (aAddons.length == 0) {
-      let msg = aIsRecommended ? strings.getString("addonsSearchNone.recommended") :
-                                 strings.getString("addonsSearchNone.search");
-      let button = aIsRecommended ? strings.getString("addonsSearchNone.button") :
-                                    strings.getString("addonsSearchSuccess2.button");
-      let item = this.displaySectionMessage("repo", msg, button, true);
-
-      if (aSelectFirstResult)
-        this._list.scrollBoxObject.scrollToElement(item);
-      return;
-    }
-
-    if (aIsRecommended) {
-      // Locale sensitive sort
-      function compare(a, b) {
-        return String.localeCompare(a.name, b.name);
-      }
-      aAddons.sort(compare);
-    }
-
+  appendSearchResults: function(aAddons, aShowRating) {
     var urlproperties = [ "iconURL", "homepageURL" ];
     var properties = [ "name", "iconURL", "homepageURL", "screenshots" ];
     var foundItem = false;
     for (let i = 0; i < aAddons.length; i++) {
       let addon = aAddons[i];
 
+      // Check for a duplicate add-on, already in the search results
+      // (can happen when blending the recommended and browsed lists)
+      let element = ExtensionsView.getElementForAddon(addon.install.sourceURI.spec);
+      if (element)
+        continue;
+
       // Check for any items with potentially unsafe urls
       if (urlproperties.some(function (p) !this._isSafeURI(addon[p]), this))
         continue;
-      if (addon.screenshots &&
-          addon.screenshots.some(function (aScreenshot) !this._isSafeURI(aScreenshot), this))
+      if (addon.screenshots && addon.screenshots.some(function (aScreenshot) !this._isSafeURI(aScreenshot), this))
         continue;
 
       // Convert the numeric type to a string
@@ -538,46 +520,105 @@ var ExtensionsView = {
       listitem.setAttribute("homepageURL", addon.homepageURL);
       listitem.install = addon.install;
       listitem.setAttribute("sourceURL", addon.install.sourceURI.spec);
-      if (!aIsRecommended)
+      if (aShowRating)
         listitem.setAttribute("rating", addon.averageRating);
 
       let item = this._list.appendChild(listitem);
+    }
+  },
 
-      if (aSelectFirstResult && !foundItem) {
-        foundItem = true;
-        this._list.selectItem(item);
+  displayRecommendedResults: function ev_displaySearchResults(aRecommendedAddons, aBrowseAddons) {
+    this.clearSection("repo");
+
+    let strings = Elements.browserBundle;
+    let brandBundle = document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+
+    let whatare = document.createElement("richlistitem");
+    whatare.setAttribute("typeName", "banner");
+    whatare.setAttribute("label", strings.getString("addonsWhatAre.label"));
+
+    let desc = strings.getString("addonsWhatAre.description");
+    desc = desc.replace(/#1/g, brandShortName);
+    whatare.setAttribute("description", desc);
+
+    whatare.setAttribute("button", strings.getString("addonsWhatAre.button"));
+    whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('http://ebay.com');");
+    this._list.appendChild(whatare);
+
+    if (aRecommendedAddons.length == 0 && aBrowseAddons.length == 0) {
+      let msg = strings.getString("addonsSearchNone.recommended");
+      let button = strings.getString("addonsSearchNone.button");
+      let item = this.displaySectionMessage("repo", msg, button, true);
+
+      this._list.scrollBoxObject.scrollToElement(item);
+      return;
+    }
+
+    // Locale sensitive sort
+    function nameCompare(a, b) {
+      return String.localeCompare(a.name, b.name);
+    }
+    aRecommendedAddons.sort(nameCompare);
+
+    // Rating sort
+    function ratingCompare(a, b) {
+      return a.averageRating < b.averageRating;
+    }
+    aBrowseAddons.sort(ratingCompare);
+
+    this.appendSearchResults(aRecommendedAddons, false);
+    this.appendSearchResults(aBrowseAddons, true);
+
+    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+
+    let showmore = document.createElement("richlistitem");
+    showmore.setAttribute("typeName", "showmore");
+    showmore.setAttribute("label", strings.getString("addonsBrowseAll.label"));
+
+    let url = formatter.formatURLPref("extensions.getAddons.browseAddons");
+    showmore.setAttribute("url", url);
+    this._list.appendChild(showmore);
+  },
+
+  displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aSelectFirstResult) {
+    this.clearSection("repo");
+
+    let strings = Elements.browserBundle;
+    if (aAddons.length == 0) {
+      let msg = strings.getString("addonsSearchNone.search");
+      let button = strings.getString("addonsSearchSuccess2.button");
+      let item = this.displaySectionMessage("repo", msg, button, true);
+
+      if (aSelectFirstResult)
         this._list.scrollBoxObject.scrollToElement(item);
-      }
+      return;
+    }
+
+    let firstItem = this.appendSearchResults(aAddons, true);
+    if (aSelectFirstResult) {
+      this._list.selectItem(firstItem);
+      this._list.scrollBoxObject.scrollToElement(firstItem);
     }
 
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
 
-    if (!aIsRecommended) {
-      if (aTotalResults > aAddons.length) {
-        let showmore = document.createElement("richlistitem");
-        showmore.setAttribute("typeName", "showmore");
-
-        let labelBase = strings.getString("addonsSearchMore.label");
-        let label = PluralForm.get(aTotalResults, labelBase).replace("#1", aTotalResults);
-        showmore.setAttribute("label", label);
-
-        let url = Services.prefs.getCharPref("extensions.getAddons.search.browseURL");
-        url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
-        url = formatter.formatURL(url);
-        showmore.setAttribute("url", url);
-        this._list.appendChild(showmore);
-      }
-
-      this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess2.button"), true);
-    } else {
+    if (aTotalResults > aAddons.length) {
       let showmore = document.createElement("richlistitem");
       showmore.setAttribute("typeName", "showmore");
-      showmore.setAttribute("label", strings.getString("addonsBrowseAll.label"));
 
-      let url = formatter.formatURLPref("extensions.getAddons.browseAddons");
+      let labelBase = strings.getString("addonsSearchMore.label");
+      let label = PluralForm.get(aTotalResults, labelBase).replace("#1", aTotalResults);
+      showmore.setAttribute("label", label);
+
+      let url = Services.prefs.getCharPref("extensions.getAddons.search.browseURL");
+      url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
+      url = formatter.formatURL(url);
       showmore.setAttribute("url", url);
       this._list.appendChild(showmore);
     }
+
+    this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess2.button"), true);
   },
 
   showPage: function ev_showPage(aItem) {
@@ -692,7 +733,17 @@ var RecommendedSearchResults = {
 
   searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
     this.cache = aAddons;
-    ExtensionsView.displaySearchResults(aAddons, aTotalResults, true);
+    AddonRepository.searchAddons(" ", Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), BrowseSearchResults);
+  },
+
+  searchFailed: searchFailed
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// callback for the browse search
+var BrowseSearchResults = {
+  searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
+    ExtensionsView.displayRecommendedResults(RecommendedSearchResults.cache, aAddons);
   },
 
   searchFailed: searchFailed

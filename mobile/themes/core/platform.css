@@ -550,6 +550,12 @@ richlistitem description.normal {
   white-space: pre-wrap;
 }
 
+richlistitem label.normal-black,
+richlistitem description.normal-black {
+  font-size: 18px !important;
+  white-space: pre-wrap;
+}
+
 richlistitem label.normal-bold,
 richlistitem description.normal-bold {
   font-weight: bold;

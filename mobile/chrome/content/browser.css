@@ -158,6 +158,10 @@ richlistitem[typeName="showmore"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-showmore");
 }
 
+richlistitem[typeName="banner"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-banner");
+}
+
 richlistitem[typeName="download"][state="-1"] {
   -moz-binding: url("chrome://browser/content/bindings/downloads.xml#download-not-started");
 }
