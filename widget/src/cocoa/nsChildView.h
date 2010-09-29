@@ -228,6 +228,8 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 - (BOOL)isPluginView;
 
+- (BOOL)isUsingOpenGL;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
