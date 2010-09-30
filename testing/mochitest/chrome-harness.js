@@ -108,6 +108,9 @@ function getMochitestJarListing(basePath, testPath, dir)
   var fileName = fileHandler.getFileFromURLSpec(getResolvedURI(basePath).JARFile.spec);
   zReader.open(fileName);
   //hardcoded 'content' as that is the root dir in the mochikit.jar file
+  var idx = basePath.indexOf('/content');
+  var basePath = basePath.slice(0, idx);
+
   var base = "content/" + dir + "/";
 
   var singleTestPath;
@@ -119,7 +122,7 @@ function getMochitestJarListing(basePath, testPath, dir)
       if (pathEntry.isDirectory) {
         base = pathToCheck;
       } else {
-        singleTestPath = '/' + base + testPath;
+        singleTestPath = basePath + '/' + base + testPath;
         var singleObject = {};
         singleObject[singleTestPath] = true;
         return [singleObject, singleTestPath];
@@ -129,7 +132,7 @@ function getMochitestJarListing(basePath, testPath, dir)
       base = pathToCheck + "/";
     }
   }
-  var [links, count] = zList(base, zReader, true);
+  var [links, count] = zList(base, zReader, basePath, true);
   return [links, null];
 }
 
@@ -143,7 +146,7 @@ function getMochitestJarListing(basePath, testPath, dir)
  * returns:
  *  [json object of {dir:{subdir:{file:true, file:true, ...}}}, count of tests]
  */
-function zList(base, zReader, recurse) {
+function zList(base, zReader, baseJarName, recurse) {
   var dirs = zReader.findEntries(base + "*");
   var links = {};
   var count = 0;
@@ -162,12 +165,12 @@ function zList(base, zReader, recurse) {
     var myFile = fileArray[i];
     if (myFile.substr(-1) === '/' && recurse) {
       var childCount = 0;
-      [links[myFile], childCount] = zList(myFile, zReader, recurse);
+      [links[myFile], childCount] = zList(myFile, zReader, baseJarName, recurse);
       count += childCount;
     } else {
       if (myFile.indexOf("SimpleTest") == -1) {
         //we add the '/' so we don't try to run content/content/chrome
-        links['/' + myFile] = true;
+        links[baseJarName + '/' + myFile] = true;
       }
     }
   }
@@ -283,7 +286,7 @@ function extractJarToTmp(jar) {
   tmpdir.append("mochikit.tmp");
   // parseInt is used because octal escape sequences cause deprecation warnings
   // in strict mode (which is turned on in debug builds)
-  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
+  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
 
   var zReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Components.interfaces.nsIZipReader);
@@ -311,7 +314,7 @@ function extractJarToTmp(jar) {
     var targetDir = buildRelativePath(dirs.getNext(), tmpdir, filepath);
     // parseInt is used because octal escape sequences cause deprecation warnings
     // in strict mode (which is turned on in debug builds)
-    targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
+    targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
   }
 
   //now do the files
