@@ -612,7 +612,7 @@ ProcessFile(JSContext *cx,
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, obj)) {
             NS_ERROR("Failed to enter compartment!");
-            return false;
+            return;
         }
 
         JSScript* script =
@@ -639,7 +639,7 @@ ProcessFile(JSContext *cx,
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, obj)) {
             NS_ERROR("Failed to enter compartment!");
-            return false;
+            return;
         }
 
         /*
@@ -1223,7 +1223,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JSObject* global = GetGlobalObject();
 
   JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, global)) {
+  if (!ac.enter(mCx, global)) {
       NS_ERROR("Failed to enter compartment!");
       return false;
   }
