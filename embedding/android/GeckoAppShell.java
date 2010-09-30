@@ -510,4 +510,7 @@ class GeckoAppShell
         callObserver(alertName, "alertfinished", alertCookie);
         removeObserver(alertName);
     }
+    public static String showFilePicker() {
+        return GeckoApp.mAppContext.showFilePicker();
+    }
 }
