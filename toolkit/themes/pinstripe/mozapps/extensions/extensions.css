@@ -726,6 +726,9 @@
 
 .download-progress .progress {
   background-color: transparent;
+  /* Force the progress meter to use the default binding rather than the OSX
+     animated binding */
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter") !important;
 }
 
 .download-progress .start-cap, .download-progress .end-cap {
