@@ -2935,14 +2935,47 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
     JS_ASSERT(parent);
     JS_ASSERT(proto);
 
-    /*
-     * The cloned function object does not need the extra JSFunction members
-     * beyond JSObject as it points to fun via the private slot.
-     */
-    JSObject *clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent);
-    if (!clone)
-        return NULL;
-    clone->setPrivate(fun);
+    JSObject *clone;
+    if (cx->compartment == fun->compartment()) {
+        /*
+         * The cloned function object does not need the extra JSFunction members
+         * beyond JSObject as it points to fun via the private slot.
+         */
+        clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent);
+        if (!clone)
+            return NULL;
+        clone->setPrivate(fun);
+    } else {
+        /*
+         * Across compartments we have to deep copy JSFunction and clone the
+         * script (for interpreted functions).
+         */
+        clone = NewFunction(cx, parent);
+        if (!clone)
+            return NULL;
+        JSFunction *cfun = (JSFunction *) clone;
+        cfun->nargs = fun->nargs;
+        cfun->flags = fun->flags;
+        cfun->u = fun->getFunctionPrivate()->u;
+        cfun->atom = fun->atom;
+        clone->setPrivate(cfun);
+        if (cfun->isInterpreted()) {
+            JSScript *script = cfun->u.i.script;
+            JS_ASSERT(script);
+            if (script != JSScript::emptyScript()) {
+                JS_ASSERT(script->compartment == fun->compartment());
+                JS_ASSERT(script->compartment != cx->compartment);
+                cfun->u.i.script = js_CloneScript(cx, script);
+                if (!cfun->u.i.script)
+                    return NULL;
+                JS_ASSERT(cfun->u.i.script != JSScript::emptyScript());
+#ifdef CHECK_SCRIPT_OWNER
+                cfun->u.i.script->owner = NULL;
+#endif
+                js_CallNewScriptHook(cx, cfun->u.i.script, cfun);
+            }
+        }
+    }
     return clone;
 }
 
