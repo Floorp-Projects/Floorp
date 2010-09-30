@@ -594,7 +594,10 @@
             this._isEditing = true;
             if (this.control) {
               this.setAttribute("selected", "true");
-              this.control.scrollBoxObject.ensureElementIsVisible(this);
+              let self = this;
+              setTimeout(function() {
+                self.control.scrollBoxObject.ensureElementIsVisible(self); 
+              }, 0);
               this.control.activeItem = this;
             }
 
@@ -867,7 +870,6 @@
 
       <field name="_type"/>
       <field name="_mode"/>
-      <field name="_activeItem">null</field>
       <field name="_ignoreEditing">false</field>
       <field name="_parents">
         document.getAnonymousElementByAttribute(this, "anonid", "parent-items");
@@ -893,6 +895,7 @@
         </getter>
       </property>
 
+      <field name="_activeItem">null</field>
       <property name="activeItem">
         <getter>
           <![CDATA[
@@ -1025,6 +1028,14 @@
               items.unshift(this._desktopFolder);
 
             children.setItems(items.map(this.createItem));
+          ]]>
+        </body>
+      </method>
+
+      <method name="close">
+        <body>
+          <![CDATA[
+            this.activeItem = null;
           ]]>
         </body>
       </method>

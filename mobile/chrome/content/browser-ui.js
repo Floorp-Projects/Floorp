@@ -598,6 +598,11 @@ var BrowserUI = {
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
   },
 
+  updateCurrentBrowser: function _updateCurrentBrowser() {
+    let state = (Elements.contentShowing.getAttribute("disabled") == "true") ? "Blur" : "Focus";
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:" + state, {});
+  },
+
   updateStar: function() {
     if (PlacesUtils.getMostRecentBookmarkForURI(Browser.selectedBrowser.currentURI) != -1)
       this.starButton.setAttribute("starred", "true");
@@ -1634,6 +1639,7 @@ var FindHelperUI = {
 
   hide: function findHelperHide() {
     this._textbox.value = "";
+    this._textbox.blur();
     this._container.hide(this);
   },
 
