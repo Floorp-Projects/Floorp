@@ -577,7 +577,7 @@ function test_reload() {
 
       if (loadCount == state.windows[0].tabs.length) {
         window.gBrowser.removeTabsProgressListener(progressListener);
-        runNextTest();
+        test_reload2(state);
       }
       else {
         // reload the next tab
@@ -589,6 +589,62 @@ function test_reload() {
 
   window.gBrowser.addTabsProgressListener(progressListener);
   ss.setBrowserState(JSON.stringify(state));
+}
+
+
+// This test shouldn't be added to tests. It will be called directly from
+// test_reload. This guarantees that we're already in a tested restored state
+// and we know what the state should be.
+function test_reload2(aState) {
+  info("starting test_reload2");
+  let progressListener = {
+    onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)
+        test_reload2_progressCallback(aBrowser);
+    }
+  }
+
+  // Simulate a left mouse button click with no modifiers, which is what
+  // Command-R, or clicking reload does.
+  let fakeEvent = {
+    button: 0,
+    metaKey: false,
+    altKey: false,
+    ctrlKey: false,
+    shiftKey: false,
+  }
+
+  let loadCount = 0;
+  function test_reload2_progressCallback(aBrowser) {
+    loadCount++;
+
+    if (loadCount <= aState.windows[0].tabs.length) {
+      // double check that this tab was the right one
+      let expectedData = aState.windows[0].tabs[loadCount - 1].extData.uniq;
+      let tab;
+      for (let i = 0; i < window.gBrowser.tabs.length; i++) {
+        if (!tab && window.gBrowser.tabs[i].linkedBrowser == aBrowser)
+          tab = window.gBrowser.tabs[i];
+      }
+      is(ss.getTabValue(tab, "uniq"), expectedData,
+         "test_reload2: load " + loadCount + " - correct tab was reloaded");
+
+      if (loadCount == aState.windows[0].tabs.length) {
+        window.gBrowser.removeTabsProgressListener(progressListener);
+        runNextTest();
+      }
+      else {
+        // reload the next tab
+        window.gBrowser.selectTabAtIndex(loadCount);
+        BrowserReloadOrDuplicate(fakeEvent);
+      }
+    }
+  }
+
+  window.gBrowser.addTabsProgressListener(progressListener);
+  BrowserReloadOrDuplicate(fakeEvent);
 }
 
 
