@@ -394,65 +394,54 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/settings-active-rtl-64.png");
 }
 
-/* button overflows off the left edge */
+%ifdef MOZ_PLATFORM_MAEMO
+/* MAEMO only */
 #tool-panel-close {
-  list-style-image: url("chrome://browser/skin/images/settings-open-64.png");
-  -moz-margin-start: -40px; /* big number just to make sure the image overflows the edge */
+  -moz-margin-end: -8px; /* force the button to go to the edge */
+  -moz-padding-end: 8px !important; /* re-center the image */
+  min-width: 72px !important; /* 72, not 64 to make up for the negative margin */
+  min-height: 72px !important; /* 72, not 64 to make up for the negative margin */
+  list-style-image: url("chrome://browser/skin/images/task-back-40.png");
+}
+
+#tool-panel-close:hover:active {
+  background-color: #8db8d8 !important;
+}
+
+#tool-panel-close:hover:active:-moz-locale-dir(ltr) {
+  -moz-border-radius-bottomleft: 6px;
 }
 
 #tool-panel-close:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/images/settings-open-rtl-64.png");
+  list-style-image: url("chrome://browser/skin/images/task-back-rtl-40.png");
 }
 
+#tool-panel-close:hover:active:-moz-locale-dir(rtl) {
+  -moz-border-radius-bottomright: 6px;
+}
+%endif
+
 /* browsers ---------------------------------------------------------------- */
-#tile-stack > div:-moz-focusring {
+#content-stack > div:-moz-focusring {
   outline: 0 !important;
 }
 
 /* browser tools panel UI   ------------------------------------------------ */
-@media (min-width: 500px) {
-  #panel-container {
-    -moz-box-orient: horizontal;
-    -moz-box-direction: normal;
-  }
-
-  #panel-controls {
-    -moz-box-orient: vertical;
-    -moz-box-direction: normal;
-  }
-}
-
-@media (max-width: 499px) {
-  #panel-container {
-    -moz-box-orient: vertical;
-    -moz-box-direction: reverse;
-  }
-
-  #panel-controls {
-    -moz-box-orient: horizontal;
-    -moz-box-direction: reverse;
-    padding-top: 8px; /* core spacing */
-  }
-
-  #tool-panel-close {
-    -moz-margin-end: 8px; /* core spacing */
-  }
-
-  toolbarbutton.panel-button {
-    -moz-margin-end: 8px; /* core spacing */
-  }
+toolbarbutton.panel-button {
+  margin-top: 4px; /* half of core spacing */
+  -moz-margin-end: 8px; /* core spacing */
 }
 
 #panel-controls {
   /* match #browser-controls end padding */
   -moz-padding-start: 8px; /* core spacing */
   -moz-padding-end: 8px; /* core spacing */
-  -moz-box-align: end;
-  -moz-box-pack: end;
+  -moz-box-pack: start;
+  border-bottom: 1px solid #262629;
 }
 
 .panel-header {
-  padding: 8px; /* core spacing */
+  padding: 4px; /* core spacing */
 }
 
 #tool-addons {

@@ -344,14 +344,16 @@ var BrowserUI = {
     return targetNode ? true : false;
   },
 
-  switchPane: function switchPane(id) {
-    let button = document.getElementsByAttribute("linkedpanel", id)[0];
+  switchPane: function switchPane(aPanelId) {
+    let button = document.getElementsByAttribute("linkedpanel", aPanelId)[0];
     if (button)
       button.checked = true;
 
     this.blurFocusedElement();
 
-    let pane = document.getElementById(id);
+    let pane = document.getElementById(aPanelId);
+    let title = pane.getAttribute("label");
+    document.getElementById("panel-header").setAttribute("value", title);
     document.getElementById("panel-items").selectedPanel = pane;
   },
 
