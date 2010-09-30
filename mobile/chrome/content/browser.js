@@ -1148,7 +1148,10 @@ nsBrowserAccess.prototype = {
       return null;
     } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       let owner = isExternal ? null : Browser.selectedTab;
-      browser = Browser.addTab("about:blank", true, owner).browser;
+      let tab = Browser.addTab("about:blank", true, owner);
+      if (isExternal)
+        tab.closeOnExit = true;
+      browser = tab.browser;
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = Browser.selectedBrowser;
     }
