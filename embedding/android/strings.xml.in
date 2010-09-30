@@ -7,4 +7,6 @@
 <resources>
   <string name="splash_screen_label">&splash_screen_label;</string>
   <string name="incompatable_cpu_error">&incompatable_cpu_error;</string>
+  <string name="no_space_to_start_error">&no_space_to_start_error;</string>
+  <string name="error_loading_file">&error_loading_file;</string>
 </resources>
