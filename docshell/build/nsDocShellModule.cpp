@@ -57,6 +57,9 @@
 #ifdef MOZ_ENABLE_DBUS
 #include "nsDBusHandlerApp.h"
 #endif 
+#ifdef ANDROID
+#include "nsExternalSharingAppService.h"
+#endif
 
 // session history
 #include "nsSHEntry.h"
@@ -110,6 +113,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(PlatformLocalHandlerApp_t)
 #ifdef MOZ_ENABLE_DBUS
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDBusHandlerApp)
 #endif 
+#ifdef ANDROID
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalSharingAppService)
+#endif
 
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
@@ -134,6 +140,9 @@ NS_DEFINE_NAMED_CID(NS_LOCALHANDLERAPP_CID);
 #ifdef MOZ_ENABLE_DBUS
 NS_DEFINE_NAMED_CID(NS_DBUSHANDLERAPP_CID);
 #endif
+#ifdef ANDROID
+NS_DEFINE_NAMED_CID(NS_EXTERNALSHARINGAPPSERVICE_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_SHENTRY_CID);
 NS_DEFINE_NAMED_CID(NS_HISTORYENTRY_CID);
 NS_DEFINE_NAMED_CID(NS_SHTRANSACTION_CID);
@@ -157,6 +166,9 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_LOCALHANDLERAPP_CID, false, NULL, PlatformLocalHandlerApp_tConstructor },
 #ifdef MOZ_ENABLE_DBUS
   { &kNS_DBUSHANDLERAPP_CID, false, NULL, nsDBusHandlerAppConstructor },
+#endif
+#ifdef ANDROID
+  { &kNS_EXTERNALSHARINGAPPSERVICE_CID, false, NULL, nsExternalSharingAppServiceConstructor },
 #endif
   { &kNS_SHENTRY_CID, false, NULL, nsSHEntryConstructor },
   { &kNS_HISTORYENTRY_CID, false, NULL, nsSHEntryConstructor },
@@ -198,6 +210,9 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { NS_LOCALHANDLERAPP_CONTRACTID, &kNS_LOCALHANDLERAPP_CID },
 #ifdef MOZ_ENABLE_DBUS
   { NS_DBUSHANDLERAPP_CONTRACTID, &kNS_DBUSHANDLERAPP_CID },
+#endif
+#ifdef ANDROID
+  { NS_EXTERNALSHARINGAPPSERVICE_CONTRACTID, &kNS_EXTERNALSHARINGAPPSERVICE_CID },
 #endif
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
   { NS_HISTORYENTRY_CONTRACTID, &kNS_HISTORYENTRY_CID },

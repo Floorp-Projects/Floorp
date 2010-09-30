@@ -145,6 +145,14 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegiste
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
 #endif
 
+    bool addressUsesRegister(Address address, RegisterID reg) {
+        return address.base == reg;
+    }
+
+    bool addressUsesRegister(BaseIndex address, RegisterID reg) {
+        return (address.base == reg) || (address.index == reg);
+    }
+
     size_t distanceOf(Label l) {
         return differenceBetween(startLabel, l);
     }
@@ -155,6 +163,11 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 
     void loadShape(RegisterID obj, RegisterID shape) {
         load32(Address(obj, offsetof(JSObject, objShape)), shape);
+    }
+
+    Jump guardShape(RegisterID obj, uint32 shape) {
+        return branch32(NotEqual, Address(obj, offsetof(JSObject, objShape)),
+                        Imm32(shape));
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {

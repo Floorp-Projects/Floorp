@@ -83,6 +83,7 @@
 #define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
 using namespace js;
+using namespace js::gc;
 
 static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
@@ -2123,6 +2124,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (cg->compileAndGo() && 
             cg->compiler()->globalScope->globalObj &&
+            !pn->isDeoptimized() &&
             !(cg->flags & TCF_STRICT_MODE_CODE)) { 
             switch (op) {
               case JSOP_NAME:     op = JSOP_GETGNAME; break;

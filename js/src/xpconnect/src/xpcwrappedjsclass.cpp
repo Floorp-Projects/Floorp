@@ -247,9 +247,9 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     JSBool success = JS_FALSE;
     jsid funid;
     jsval fun;
-    JSAutoCrossCompartmentCall accc;
 
-    if(!accc.enter(cx, jsobj))
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(cx, jsobj))
         return nsnull;
 
     // Don't call the actual function on a content object. We'll determine
@@ -1311,7 +1311,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
     obj = thisObj = wrapper->GetJSObject();
 
-    JSAutoEnterCompartment autoCompartment(ccx, obj);
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, obj))
+        goto pre_call_clean_up;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = info->num_args;

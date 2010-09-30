@@ -163,34 +163,34 @@ Narcissus.interpreter = (function() {
         else { return (name in hostGlobal); }
     };
     globalHandler.get = function(receiver, name) {
-        if (narcissusGlobal.hasOwnProperty(name)) {
+        if (narcissusGlobal.hasOwnProperty(name))
             return narcissusGlobal[name];
-        }
+
         var globalFun = hostGlobal[name];
         if (definitions.isNativeCode(globalFun)) {
             // Enables native browser functions like 'alert' to work correctly.
             return Proxy.createFunction(
-                    definitions.makePassthruHandler(globalFun),
-                    function() { return globalFun.apply(hostGlobal, arguments); },
-                    function() {
-                        var a = arguments;
-                        switch (a.length) {
-                          case 0:
-                            return new globalFun();
-                          case 1:
-                            return new globalFun(a[0]);
-                          case 2:
-                            return new globalFun(a[0], a[1]);
-                          case 3:
-                            return new globalFun(a[0], a[1], a[2]);
-                          default:
-                            var argStr = "";
-                            for (var i=0; i<a.length; i++) {
-                                argStr += 'a[' + i + '],';
-                            }
-                            return eval('new ' + name + '(' + argStr.slice(0,-1) + ');');
+                definitions.makePassthruHandler(globalFun),
+                function() { return globalFun.apply(hostGlobal, arguments); },
+                function() {
+                    var a = arguments;
+                    switch (a.length) {
+                      case 0:
+                        return new globalFun();
+                      case 1:
+                        return new globalFun(a[0]);
+                      case 2:
+                        return new globalFun(a[0], a[1]);
+                      case 3:
+                        return new globalFun(a[0], a[1], a[2]);
+                      default:
+                        var argStr = "";
+                        for (var i=0; i<a.length; i++) {
+                            argStr += 'a[' + i + '],';
                         }
-                    });
+                        return eval('new ' + name + '(' + argStr.slice(0,-1) + ');');
+                    }
+                });
         }
         else { return globalFun; };
     };
@@ -307,7 +307,7 @@ Narcissus.interpreter = (function() {
                  : new TypeError(message);
     }
 
-    function valuatePhis(n, v) {
+    function evaluatePhis(n, v) {
         var ps = n.phiUses;
         if (!ps)
             return;
@@ -319,7 +319,7 @@ Narcissus.interpreter = (function() {
             if (ps[i].v === v)
                 break;
             ps[i].v = v;
-            valuatePhis(ps[i], v);
+            evaluatePhis(ps[i], v);
         }
     }
 
@@ -843,13 +843,13 @@ Narcissus.interpreter = (function() {
                   resolved.functionForm == parser.DECLARED_FORM)) {
                 v = resolved.v;
                 break;
-            } else {
-                for (s = x.scope; s; s = s.parent) {
-                    if (n.value in s.object)
-                        break;
-                }
-                v = new Reference(s && s.object, n.value, n);
             }
+
+            for (s = x.scope; s; s = s.parent) {
+                if (n.value in s.object)
+                    break;
+            }
+            v = new Reference(s && s.object, n.value, n);
             break;
 
           case NUMBER:
@@ -869,7 +869,7 @@ Narcissus.interpreter = (function() {
         if (n.backwards) {
             n.v = v;
         }
-        valuatePhis(n, v);
+        evaluatePhis(n, v);
 
         return v;
     }

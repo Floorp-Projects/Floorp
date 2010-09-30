@@ -92,6 +92,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 inline JSObject *
 JSObject::getThrowTypeError() const

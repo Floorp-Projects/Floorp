@@ -397,12 +397,12 @@ public:
     PRBool killWorkerWhenDone;
     {
       nsLazyAutoRequest ar;
-      JSAutoCrossCompartmentCall axcc;
+      JSAutoEnterCompartment ac;
 
       // Tell the worker which context it will be using
-      if (mWorker->SetGlobalForContext(cx, &ar, &axcc)) {
+      if (mWorker->SetGlobalForContext(cx, &ar, &ac)) {
         NS_ASSERTION(ar.entered(), "SetGlobalForContext must enter request on success");
-        NS_ASSERTION(axcc.entered(), "SetGlobalForContext must enter xcc on success");
+        NS_ASSERTION(ac.entered(), "SetGlobalForContext must enter compartment on success");
 
         RunQueue(cx, &killWorkerWhenDone);
 
@@ -413,7 +413,7 @@ public:
       }
       else {
         NS_ASSERTION(!ar.entered(), "SetGlobalForContext must not enter request on failure");
-        NS_ASSERTION(!axcc.entered(), "SetGlobalForContext must not enter xcc on failure");
+        NS_ASSERTION(!ac.entered(), "SetGlobalForContext must not enter compartment on failure");
 
         {
           // Code in XPConnect assumes that the context's global object won't be

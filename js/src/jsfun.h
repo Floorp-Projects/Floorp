@@ -303,8 +303,6 @@ struct JSFunction : public JSObject
     static const uint32 FIRST_FREE_SLOT = JSSLOT_PRIVATE + CLASS_RESERVED_SLOTS + 1;
 };
 
-JS_STATIC_ASSERT(sizeof(JSFunction) % JS_GCTHING_ALIGN == 0);
-
 /*
  * Trace-annotated native. This expands to a JSFunctionSpec initializer (like
  * JS_FN in jsapi.h). fastcall is a FastNative; trcinfo is a

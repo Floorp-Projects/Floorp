@@ -275,7 +275,9 @@ function extractJarToTmp(jar) {
                       .getService(Components.interfaces.nsIProperties)
                       .get("ProfD", Components.interfaces.nsILocalFile);
   tmpdir.append("mochikit.tmp");
-  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
+  // parseInt is used because octal escape sequences cause deprecation warnings
+  // in strict mode (which is turned on in debug builds)
+  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
 
   var zReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Components.interfaces.nsIZipReader);
@@ -301,7 +303,9 @@ function extractJarToTmp(jar) {
   var dirs = zReader.findEntries(filepath + '*/');
   while (dirs.hasMore()) {
     var targetDir = buildRelativePath(dirs.getNext(), tmpdir, filepath);
-    targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
+    // parseInt is used because octal escape sequences cause deprecation warnings
+    // in strict mode (which is turned on in debug builds)
+    targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
   }
 
   //now do the files

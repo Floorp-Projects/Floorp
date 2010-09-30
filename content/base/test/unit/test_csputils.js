@@ -46,6 +46,26 @@ const POLICY_PORT = 9000;
 const POLICY_URI = "http://localhost:" + POLICY_PORT + "/policy";
 const POLICY_URI_RELATIVE = "/policy";
 
+// helper to assert that an array has the given value somewhere.
+function do_check_in_array(arr, val, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+
+  var text = val + " in [" + arr.join(",") + "]";
+
+  for(var i in arr) {
+    dump(".......... " + i + "> " + arr[i] + "\n");
+    if(arr[i] == val) {
+      //succeed
+      ++_passedChecks;
+      dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
+           stack.lineNumber + "] " + text + "\n");
+      return;
+    }
+  }
+  do_throw(text, stack);
+}
+
 // helper to assert that an object or array must have a given key
 function do_check_has_key(foo, key, stack) {
   if (!stack) 
@@ -493,6 +513,66 @@ test(function test_FrameAncestor_defaults() {
       do_check_false(cspr.permits("http://self.com", SD.FRAME_ANCESTORS));
       do_check_false(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
      });
+
+test(function test_CSP_ReportURI_parsing() {
+      var cspr;
+      var SD = CSPRep.SRC_DIRECTIVES;
+      var self = "http://self.com:34";
+      var parsedURIs = [];
+
+      var uri_valid_absolute = self + "/report.py";
+      var uri_invalid_host_absolute = "http://foo.org:34/report.py";
+      var uri_valid_relative = "/report.py";
+      var uri_valid_relative_expanded = self + uri_valid_relative;
+      var uri_valid_relative2 = "foo/bar/report.py";
+      var uri_valid_relative2_expanded = self + "/" + uri_valid_relative2;
+      var uri_invalid_relative = "javascript:alert(1)";
+
+      cspr = CSPRep.fromString("allow *; report-uri " + uri_valid_absolute, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      do_check_in_array(parsedURIs, uri_valid_absolute);
+      do_check_eq(parsedURIs.length, 1);
+
+      cspr = CSPRep.fromString("allow *; report-uri " + uri_invalid_host_absolute, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      do_check_in_array(parsedURIs, "");
+      do_check_eq(parsedURIs.length, 1); // the empty string is in there.
+
+      cspr = CSPRep.fromString("allow *; report-uri " + uri_invalid_relative, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      do_check_in_array(parsedURIs, "");
+      do_check_eq(parsedURIs.length, 1);
+
+      cspr = CSPRep.fromString("allow *; report-uri " + uri_valid_relative, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      do_check_in_array(parsedURIs, uri_valid_relative_expanded);
+      do_check_eq(parsedURIs.length, 1);
+
+      cspr = CSPRep.fromString("allow *; report-uri " + uri_valid_relative2, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      dump(parsedURIs.length);
+      do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
+      do_check_eq(parsedURIs.length, 1);
+
+      // combination!
+      cspr = CSPRep.fromString("allow *; report-uri " +
+                               uri_valid_relative2 + " " +
+                               uri_valid_absolute, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
+      do_check_in_array(parsedURIs, uri_valid_absolute);
+      do_check_eq(parsedURIs.length, 2);
+
+      cspr = CSPRep.fromString("allow *; report-uri " +
+                               uri_valid_relative2 + " " +
+                               uri_invalid_host_absolute + " " +
+                               uri_valid_absolute, self);
+      parsedURIs = cspr.getReportURIs().split(/\s+/);
+      do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
+      do_check_in_array(parsedURIs, uri_valid_absolute);
+      do_check_eq(parsedURIs.length, 2);
+    });
+
 /*
 
 test(function test_CSPRep_fromPolicyURI_failswhenmixed() {

@@ -271,6 +271,9 @@ ContentSecurityPolicy.prototype = {
                + (blockedUri['asciiSpec'] ? " by " + blockedUri.asciiSpec : ""));
 
       // For each URI in the report list, send out a report.
+      // We make the assumption that all of the URIs are absolute URIs; this
+      // should be taken care of in CSPRep.fromString (where it converts any
+      // relative URIs into absolute ones based on "self").
       for (let i in uris) {
         if (uris[i] === "")
           continue;

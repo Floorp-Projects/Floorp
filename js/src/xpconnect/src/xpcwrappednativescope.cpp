@@ -469,7 +469,9 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
     while(cur)
     {
         XPCWrappedNativeScope* next = cur->mNext;
-        JSAutoEnterCompartment ac(cx, cur->mGlobalJSObject);
+
+        js::SwitchToCompartment sc(cx, cur->mGlobalJSObject);
+
         if(cur->mGlobalJSObject &&
            JS_IsAboutToBeFinalized(cx, cur->mGlobalJSObject))
         {
