@@ -878,25 +878,11 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
                                                getter_AddRefs(postDataStream));
     NS_ENSURE_SUBMIT_SUCCESS(rv);
 
-    nsAutoString method;
-    if (originatingElement &&
-        originatingElement->HasAttr(kNameSpaceID_None,
-                                    nsGkAtoms::formmethod)) {
-      if (!originatingElement->IsHTML()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      static_cast<nsGenericHTMLElement*>(originatingElement)->
-        GetEnumAttr(nsGkAtoms::formmethod, kFormDefaultMethod->tag, method);
-    } else {
-      GetEnumAttr(nsGkAtoms::method, kFormDefaultMethod->tag, method);
-    }
-
     rv = linkHandler->OnLinkClickSync(this, actionURI,
                                       target.get(),
                                       postDataStream, nsnull,
                                       getter_AddRefs(docShell),
-                                      getter_AddRefs(mSubmittingRequest),
-                                      NS_LossyConvertUTF16toASCII(method).get());
+                                      getter_AddRefs(mSubmittingRequest));
     NS_ENSURE_SUBMIT_SUCCESS(rv);
   }
 
