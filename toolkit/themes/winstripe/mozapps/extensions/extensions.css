@@ -47,26 +47,6 @@
   border-radius: 5px;
 }
 
-.nav-button {
-  list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
-  min-width: 0;
-  -moz-margin-end: 0;
-}
-
-.nav-button[disabled="true"] .button-icon {
-  opacity: 0.4;
-}
-
-#back-btn:-moz-locale-dir(ltr),
-#forward-btn:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0, 18px, 18px, 0);
-}
-
-#back-btn:-moz-locale-dir(rtl),
-#forward-btn:-moz-locale-dir(ltr) {
-  -moz-image-region: rect(0, 36px, 18px, 18px);
-}
-
 /*** global warnings ***/
 
 .global-warning {
