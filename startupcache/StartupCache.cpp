@@ -191,7 +191,7 @@ StartupCache::Init()
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   // Wait for 10 seconds, then write out the cache.
-  rv = mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, this, 10000,
+  rv = mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, this, 600000,
                                     nsITimer::TYPE_ONE_SHOT);
 
   return rv;
@@ -620,6 +620,9 @@ StartupCacheWrapper::ResetStartupWriteTimer()
     return NS_ERROR_NOT_INITIALIZED;
   }
   sc->mStartupWriteInitiated = PR_FALSE;
+  
+  // Init with a shorter timer, for testing convenience.
+  sc->mTimer->Cancel();
   sc->mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, sc, 10000,
                                    nsITimer::TYPE_ONE_SHOT);
   return NS_OK;
