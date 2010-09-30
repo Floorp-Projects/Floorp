@@ -42,6 +42,7 @@
 Runs the Mochitest test harness.
 """
 
+from __future__ import with_statement
 from datetime import datetime
 import optparse
 import os
@@ -343,7 +344,7 @@ class MochitestServer:
       c.close()
 
       rtncode = self._process.poll()
-      if (rtncode == None):
+      if rtncode is None:
         self._process.terminate()
     except:
       self._process.kill()
@@ -568,16 +569,18 @@ class Mochitest(object):
     self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
     browserEnv = self.buildBrowserEnv(options)
-    if (browserEnv == None):
+    if browserEnv is None:
       return 1
 
     manifest = self.buildProfile(options)
+    if manifest is None:
+      return 1
     self.startWebServer(options)
     self.startWebSocketServer(options)
 
     testURL = self.buildTestPath(options)
     self.buildURLOptions(options)
-    if (len(self.urlOpts) > 0):
+    if len(self.urlOpts) > 0:
       testURL += "?" + "&".join(self.urlOpts)
 
     # Remove the leak detection file so it can't "leak" to the tests run.
@@ -615,7 +618,8 @@ class Mochitest(object):
     processLeakLog(self.leak_report_file, options.leakThreshold)
     self.automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
-    self.cleanup(manifest, options)
+    if manifest is not None:
+      self.cleanup(manifest, options)
     return status
 
   def makeTestConfig(self, options):
@@ -673,27 +677,53 @@ toolbar#nav-bar {
 
     temp_file = os.path.join(tempfile.mkdtemp(), "mochikit.manifest")
     manifestFile = open(temp_file, "w")
-    manifestFile.write("content mochikit " + chrometestDir + " contentaccessible=yes\n")
 
+    browser_chrome = ""
     if options.browserChrome:
-      manifestFile.write("""overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
+      browser_chrome = """overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
 overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul
-""")
-    elif ((options.chrome == False) and (options.a11y == False)):
+"""
+    elif (options.chrome == False) and (options.a11y == False):
       #only do the ipc-overlay.xul for mochitest-plain.  
       #Currently there are focus issues in chrome tests and issues with new windows and dialogs when using ipc
-      manifestFile.write("overlay chrome://browser/content/browser.xul chrome://mochikit/content/ipc-overlay.xul")
+      browser_chrome += "overlay chrome://browser/content/browser.xul chrome://mochikit/content/ipc-overlay.xul\n"
+
+    jarDir = 'mochijar'
+    if not os.path.exists(os.path.join(self.SCRIPT_DIRECTORY, jarDir)):
+      print "TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension"
+      return None
+
+    if self.installTestsJar(options):
+      manifestFile.write("content mochitests jar:tests.jar!/content/\n");
+    else:
+      manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
+    self.installChromeJar(jarDir, browser_chrome, options)
       
     manifestFile.close()
 
     return self.installChromeFile(temp_file, options)
 
+  def installChromeJar(self, jarDirName, browser_chrome, options):
+    """
+      copy mochijar directory to profile as an extension so we have chrome://mochikit for all harness code
+    """
+    jarDir = os.path.join(options.profilePath, 'extensions', 'mochikit@mozilla.org')
+    shutil.copytree(os.path.join(self.SCRIPT_DIRECTORY, jarDirName), jarDir)
+    with open(os.path.join(jarDir, "chrome.manifest"), 'a') as mfile:
+      mfile.write(browser_chrome)
+
+    return jarDir
+
+  def installTestsJar(self, options):
+    """ copy tests.jar to the profile directory so we can auto register it in the .xul harness """
+    if os.path.exists(os.path.join(self.SCRIPT_DIRECTORY, 'tests.jar')):
+      shutil.copy(os.path.join(self.SCRIPT_DIRECTORY, 'tests.jar'), options.profilePath)
+      return True
+    return False
+
   def installChromeFile(self, filename, options):
-    (path, leaf) = os.path.split(options.app)
-    manifestdir = os.path.join(path, "distribution", "bundles", "mochitest")
-    if not os.path.exists(manifestdir):
-      os.makedirs(manifestdir)
-    manifest = os.path.join(manifestdir, "chrome.manifest")
+    """ copy tests.manifest to the profile directory so we can auto register with tests.jar """
+    manifest = os.path.join(options.profilePath, 'tests.manifest')
     shutil.copy(filename, manifest)
     return manifest
 
