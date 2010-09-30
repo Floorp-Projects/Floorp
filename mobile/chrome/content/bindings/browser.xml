@@ -542,6 +542,20 @@
         </body>
       </method>
 
+      <!-- Change client coordinates in device pixels to page-relative ones in CSS px. -->
+      <method name="transformClientToBrowser">
+        <parameter name="clientX"/>
+        <parameter name="clientY"/>
+        <body>
+          <![CDATA[
+            let bcr = this.getBoundingClientRect();
+            let scroll = this.getPosition();
+            return { x: (clientX + scroll.x - bcr.left) / this._scale,
+                     y: (clientY + scroll.y - bcr.top) / this._scale };
+          ]]>
+        </body>
+      </method>
+
       <constructor>
         <![CDATA[
           this._frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;

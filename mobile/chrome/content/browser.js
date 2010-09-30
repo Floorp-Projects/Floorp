@@ -872,7 +872,8 @@ var Browser = {
     if (!tab.allowZoom)
       return;
 
-    let oldZoomLevel = tab.browser.scale;
+    let browser = tab.browser;
+    let oldZoomLevel = browser.scale;
     let zoomLevel = oldZoomLevel;
 
     let zoomValues = ZoomManager.zoomValues;
@@ -882,10 +883,9 @@ var Browser = {
 
     zoomLevel = tab.clampZoomLevel(zoomLevel);
 
-    let [centerX, centerY] = this.transformClientToBrowser(window.innerWidth / 2,
-                                                           window.innerHeight / 2);
-
-    let rect = this._getZoomRectForPoint(centerX, centerY, zoomLevel);
+    let center = browser.transformClientToBrowser(window.innerWidth / 2,
+                                                  window.innerHeight / 2);
+    let rect = this._getZoomRectForPoint(center.x, center.y, zoomLevel);
     this.animatedZoomTo(rect);
   },
 
@@ -979,48 +979,6 @@ var Browser = {
       let zoomRect = this._getZoomRectForPoint(cX, cY, zoomLevel);
       this.animatedZoomTo(zoomRect);
     }
-  },
-
-  /**
-   * Transform x and y from client coordinates to BrowserView coordinates.
-   */
-  clientToBrowserView: function clientToBrowserView(x, y) {
-    let container = document.getElementById("browsers");
-    let containerBCR = container.getBoundingClientRect();
-
-    let x0 = Math.round(containerBCR.left);
-    let y0;
-    if (arguments.length > 1)
-      y0 = Math.round(containerBCR.top);
-
-    let scroll = getBrowser().getPosition();
-    return (arguments.length > 1) ? [x - x0 + scroll.x, y - y0 + scroll.y] : (x - x0 + scroll.x);
-  },
-
-  browserViewToClient: function browserViewToClient(x, y) {
-    let container = document.getElementById("browsers");
-    let containerBCR = container.getBoundingClientRect();
-
-    let x0 = Math.round(-containerBCR.left);
-    let y0;
-    if (arguments.length > 1)
-      y0 = Math.round(-containerBCR.top);
-
-    return (arguments.length > 1) ? [x - x0, y - y0] : (x - x0);
-  },
-
-  browserViewToClientRect: function browserViewToClientRect(rect) {
-    let container = document.getElementById("browsers");
-    let containerBCR = container.getBoundingClientRect();
-    return rect.clone().translate(Math.round(containerBCR.left), Math.round(containerBCR.top));
-  },
-
-  /**
-   * turn client coordinates into page-relative ones (adjusted for
-   * zoom and page position)
-   */
-  transformClientToBrowser: function transformClientToBrowser(cX, cY) {
-    return this.clientToBrowserView(cX, cY).map(function(val) { return val / getBrowser().scale });
   },
 
   /**
@@ -1415,13 +1373,12 @@ const ContentTouchHandler = {
   _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
     let aX = aX || 0;
     let aY = aY || 0;
-    let aModifiers = aModifiers || null;
     let browser = getBrowser();
-    let [x, y] = Browser.transformClientToBrowser(aX, aY);
+    let pos = browser.transformClientToBrowser(aX, aY);
     browser.messageManager.sendAsyncMessage(aName, {
-      x: x,
-      y: y,
-      modifiers: aModifiers,
+      x: pos.x,
+      y: pos.y,
+      modifiers: aModifiers || null,
       messageId: this._messageId
     });
   },

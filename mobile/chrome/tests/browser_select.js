@@ -26,7 +26,7 @@ function onPageReady() {
   isnot(combo, null, "Get the select from web content");
 
   // Sending a synthesized event to the combo is not working
-  let rect = Browser.browserViewToClientRect(Rect.fromRect(combo.getBoundingClientRect()));
+  let rect = browserViewToClientRect(Rect.fromRect(combo.getBoundingClientRect()));
   ContentTouchHandler.tapSingle(rect.left + 1, rect.top + 1);
 
   waitFor(onUIReady, function() { return document.getElementById("select-container").hidden == false; });
@@ -44,4 +44,10 @@ function onUIReady() {
 
   // We must finialize the tests
   finish();
+}
+
+function browserViewToClientRect(rect) {
+  let container = document.getElementById("browsers");
+  let containerBCR = container.getBoundingClientRect();
+  return rect.clone().translate(Math.round(containerBCR.left), Math.round(containerBCR.top));
 }
