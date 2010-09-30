@@ -100,7 +100,7 @@
   </broadcasterset>
 
   <observerset id="observerset">
-    <observes id="observe_contentShowing" element="bcast_contentShowing" attribute="disabled" onbroadcast="BrowserUI.updateCurrentBrowser();"/>
+    <observes id="observe_contentShowing" element="bcast_contentShowing" attribute="disabled" onbroadcast="BrowserUI.updateUIFocus();"/>
   </observerset>
 
   <commandset id="mainCommandSet">

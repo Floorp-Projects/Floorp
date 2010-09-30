@@ -598,7 +598,7 @@ var BrowserUI = {
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
   },
 
-  updateCurrentBrowser: function _updateCurrentBrowser() {
+  updateUIFocus: function _updateUIFocus() {
     let state = (Elements.contentShowing.getAttribute("disabled") == "true") ? "Blur" : "Focus";
     Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:" + state, {});
   },

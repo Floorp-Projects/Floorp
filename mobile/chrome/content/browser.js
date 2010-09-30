@@ -283,7 +283,7 @@ var Browser = {
       // We want to keep the current focused element into view if possible
       let currentElement = document.activeElement;
       let [scrollbox, scrollInterface] = ScrollUtils.getScrollboxFromElement(currentElement);
-      if (currentElement && scrollbox && currentElement != scrollbox) {
+      if (currentElement && (currentElement.id != "inputhandler-overlay") && scrollbox && currentElement != scrollbox) {
         // retrieve the direct child of the scrollbox
         while (currentElement.parentNode != scrollbox)
           currentElement = currentElement.parentNode;
