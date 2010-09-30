@@ -1236,9 +1236,10 @@ const BrowserSearch = {
     // XXX limit to the first search engine for now
     let engine = items[0];
     aNode.setAttribute("description", engine.title);
-    aNode.onclick = function() {
+    aNode.onclick = function(aEvent) {
       BrowserSearch.addPermanentSearchEngine(engine);
       PageActions.hideItem(aNode);
+      aEvent.stopPropagation(); // Don't hide the site menu.
     };
     return true;
   },

@@ -57,6 +57,7 @@ _BROWSER_FILES = \
   browser_click_content.html \
   browser_click_content.js \
   browser_contacts.js \
+  browser_find.js \
   browser_forms.html \
   browser_forms.js \
   browser_mainui.js \
