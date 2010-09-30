@@ -86,7 +86,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
     false,      /* debugMode */
 #endif
     const_cast<jsbytecode*>(emptyScriptCode),
-    {0, NULL}, NULL, 0, 0, 0,
+    {0, NULL}, NULL, NULL, 0, 0, 0,
     0,          /* nClosedArgs */
     0,          /* nClosedVars */
     NULL, {NULL},
@@ -1065,6 +1065,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
               nsrcnotes * sizeof(jssrcnote) ==
               (uint8 *)script + size);
 
+    script->compartment = cx->compartment;
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = cx->thread;
 #endif
@@ -1639,6 +1640,79 @@ js_GetScriptLineExtent(JSScript *script)
         }
     }
     return 1 + lineno - script->lineno;
+}
+
+class DisablePrincipalsTranscoding {
+    JSSecurityCallbacks *callbacks;
+    JSPrincipalsTranscoder temp;
+
+  public:
+    DisablePrincipalsTranscoding(JSContext *cx) {
+        callbacks = JS_GetRuntimeSecurityCallbacks(cx->runtime);
+        if (callbacks) {
+            temp = callbacks->principalsTranscoder;
+            callbacks->principalsTranscoder = NULL;
+        }
+    }
+
+    ~DisablePrincipalsTranscoding() {
+        if (callbacks)
+            callbacks->principalsTranscoder = temp;
+    }
+};
+
+JSScript *
+js_CloneScript(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(script != JSScript::emptyScript());
+    JS_ASSERT(cx->compartment != script->compartment);
+    JS_ASSERT(script->compartment);
+
+    // serialize script
+    JSXDRState *w = JS_XDRNewMem(cx, JSXDR_ENCODE);
+    if (!w)
+        return NULL;
+
+    // we don't want gecko to transcribe our principals for us
+    DisablePrincipalsTranscoding disable(cx);
+
+    if (!JS_XDRScript(w, &script)) {
+        JS_XDRDestroy(w);
+        return NULL;
+    }
+
+    uint32 nbytes;
+    void *p = JS_XDRMemGetData(w, &nbytes);
+    if (!p) {
+        JS_XDRDestroy(w);
+        return NULL;
+    }
+
+    // de-serialize script
+    JSXDRState *r = JS_XDRNewMem(cx, JSXDR_DECODE);
+    if (!r) {
+        JS_XDRDestroy(w);
+        return NULL;
+    }
+
+    // Hand p off from w to r.  Don't want them to share the data
+    // mem, lest they both try to free it in JS_XDRDestroy
+    JS_XDRMemSetData(r, p, nbytes);
+    JS_XDRMemSetData(w, NULL, 0);
+
+    // We can't use the public API because it makes a script object.
+    if (!js_XDRScript(r, &script, true, NULL))
+        return NULL;
+
+    JS_XDRDestroy(r);
+    JS_XDRDestroy(w);
+
+    // set the proper principals for the script
+    script->principals = script->compartment->principals;
+    if (script->principals)
+        JSPRINCIPALS_HOLD(cx, script->principals);
+
+    return script;
 }
 
 void
