@@ -122,6 +122,12 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
   JSObject* global = JS_GetGlobalObject(mCx);
   NS_ENSURE_TRUE(global, JS_FALSE);
 
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, global)) {
+    NS_ERROR("Failed to enter compartment!");
+    return false;
+  }
+
   JSString* str = JS_NewUCStringCopyN(mCx, aResponse.get(), aResponse.Length());
   NS_ENSURE_TRUE(str, JS_FALSE);
 
