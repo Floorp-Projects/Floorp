@@ -2133,6 +2133,9 @@ ProgressController.prototype = {
 
     this._hostChanged = true;
 
+    if (this._tab == Browser.selectedTab)
+      BrowserUI.updateURI();
+
     if (location != this.browser.lastLocation) {
       TapHighlightHelper.hide();
 
@@ -2141,8 +2144,6 @@ ProgressController.prototype = {
       this._tab.resetZoomLevel();
 
       if (this._tab == Browser.selectedTab) {
-        BrowserUI.updateURI();
-
         // We're about to have new page content, so scroll the content area
         // to the top so the new paints will draw correctly.
         // (background tabs are delayed scrolled to top in _documentStop)
