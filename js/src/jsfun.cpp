@@ -576,7 +576,9 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (arg < obj->getArgsInitialLength()) {
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
-                fp->canonicalActualArg(arg) = *vp;
+                JSScript *script = fp->functionScript();
+                if (script->usesArguments)
+                    fp->canonicalActualArg(arg) = *vp;
                 return true;
             }
         }
