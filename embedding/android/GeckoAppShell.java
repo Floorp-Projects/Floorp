@@ -560,4 +560,7 @@ class GeckoAppShell
          GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
          return metrics.densityDpi;
     }
+    public static String showFilePicker() {
+        return GeckoApp.mAppContext.showFilePicker();
+    }
 }
