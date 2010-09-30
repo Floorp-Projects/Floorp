@@ -717,8 +717,8 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2);
 extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
-extern JS_PUBLIC_API(void)
-JS_CommenceRuntimeShutDown(JSRuntime *rt);
+/* Deprecated. */
+#define JS_CommenceRuntimeShutDown(rt) ((void) 0) 
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
@@ -957,50 +957,31 @@ JS_WrapObject(JSContext *cx, JSObject **objp);
 extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
-extern JS_FRIEND_API(JSCompartment *)
-js_SwitchToCompartment(JSContext *cx, JSCompartment *compartment);
-
-extern JS_FRIEND_API(JSCompartment *)
-js_SwitchToObjectCompartment(JSContext *cx, JSObject *obj);
-
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
+class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
     JSCrossCompartmentCall *call;
+
   public:
-    JSAutoCrossCompartmentCall() : call(NULL) {}
+    JSAutoEnterCompartment() : call(NULL) {}
 
     bool enter(JSContext *cx, JSObject *target);
 
+    void enterAndIgnoreErrors(JSContext *cx, JSObject *target);
+
     bool entered() const { return call != NULL; }
 
-    ~JSAutoCrossCompartmentCall() {
+    ~JSAutoEnterCompartment() {
         if (call)
             JS_LeaveCrossCompartmentCall(call);
     }
 
-    void swap(JSAutoCrossCompartmentCall &other) {
+    void swap(JSAutoEnterCompartment &other) {
         JSCrossCompartmentCall *tmp = call;
         call = other.call;
         other.call = tmp;
-    }
-};
-
-class JSAutoEnterCompartment
-{
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment) : cx(cx) {
-        compartment = js_SwitchToCompartment(cx, newCompartment);
-    }
-    JSAutoEnterCompartment(JSContext *cx, JSObject *target) : cx(cx) {
-        compartment = js_SwitchToObjectCompartment(cx, target);
-    }
-    ~JSAutoEnterCompartment() {
-        js_SwitchToCompartment(cx, compartment);
     }
 };
 

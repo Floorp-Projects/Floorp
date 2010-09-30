@@ -1000,7 +1000,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
 
         frame.pop();
         frame.pop();
-        frame.throwaway();
+        frame.discardFrame();
 
         /* Start of the slow path for equality stub call. */
         Label stubCall = stubcc.masm.label();
@@ -1286,7 +1286,7 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
         stubcc.call(stub);
 
         frame.popn(2);
-        frame.forgetEverything();
+        frame.syncAndForgetEverything();
 
         Jump j = masm.branchDouble(dblCond, fpLeft, fpRight);
 
@@ -1453,7 +1453,12 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
             frame.pinReg(reg.reg());
         
         frame.popn(2);
-        frame.forgetEverything();
+
+        frame.syncAndKillEverything();
+        frame.unpinKilledReg(cmpReg);
+        if (reg.isSet())
+            frame.unpinKilledReg(reg.reg());
+        frame.syncAndForgetEverything();
         
         /* Operands could have been reordered, so use cmpOp. */
         Assembler::Condition i32Cond;

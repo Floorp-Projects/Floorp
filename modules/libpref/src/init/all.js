@@ -3210,7 +3210,11 @@ pref("gfx.color_management.mode", 0);
 #ifdef XP_WIN
 pref("layers.accelerate-all", true);
 #else
+#ifdef XP_MACOSX
+pref("layers.accelerate-all", true);
+#else
 pref("layers.accelerate-all", false);
+#endif
 #endif
 
 // Whether to allow acceleration on layers at all.

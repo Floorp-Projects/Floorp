@@ -45,6 +45,10 @@
 #include "PolyIC.h"
 #include "TrampolineCompiler.h"
 #include "jscntxtinlines.h"
+#include "jscompartment.h"
+#include "jsscope.h"
+
+#include "jsgcinlines.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -864,23 +868,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         // must protect against calling ReleaseScriptCode twice.
         script->jit = NULL;
     }
-}
-
-void
-mjit::SweepCallICs(JSContext *cx)
-{
-#ifdef JS_MONOIC
-    JSRuntime *rt = cx->runtime;
-    for (size_t i = 0; i < rt->compartments.length(); i++) {
-        JSCompartment *compartment = rt->compartments[i];
-        for (JSScript *script = (JSScript *)compartment->scripts.next;
-             &script->links != &compartment->scripts;
-             script = (JSScript *)script->links.next) {
-            if (script->jit)
-                ic::SweepCallICs(cx, script);
-        }
-    }
-#endif
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS

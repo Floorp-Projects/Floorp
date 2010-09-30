@@ -671,20 +671,7 @@ LayerManagerOGL::Render()
 void
 LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
 {
-  // Set the viewport correctly.  Note that his viewport is used
-  // throughout the GL layers rendering pipeline, even when we're
-  // rendering to a FBO with different dimensions than the window.
-  // This means that we can set the viewMatrix once on every program
-  // (below).  When we render to a FBO (as in ContainerLayerOGL), we
-  // have to pass a correct child offset so that the coordinate system
-  // is translated appropriately to start at the origin of the FBO
-  // (or, put another way, so that the FBO looks to be at the right
-  // spot in the parent).
-  //
-  // Note: this effectively means that we can't really draw to a FBO
-  // that is bigger than the window dimensions.  This is fine for now,
-  // but might be a problem if we ever start doing GL drawing to
-  // retained layer FBOs that happen to retain more than is visible.
+  // Set the viewport correctly. 
   //
   // When we're not double buffering, we use a FBO as our backbuffer.
   // We use a normal view transform in that case, meaning that our FBO

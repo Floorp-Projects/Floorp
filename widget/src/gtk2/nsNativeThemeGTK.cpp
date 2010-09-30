@@ -257,8 +257,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
       PRInt32 eventState = GetContentState(stateFrame, aWidgetType);
 
-      aState->disabled = ((eventState & NS_EVENT_STATE_DISABLED) == NS_EVENT_STATE_DISABLED ||
-                          IsReadOnly(aFrame));
+      aState->disabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
       aState->active  = (eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE;
       aState->focused = (eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS;
       aState->inHover = (eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER;

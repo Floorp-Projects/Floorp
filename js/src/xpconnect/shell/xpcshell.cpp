@@ -1969,7 +1969,7 @@ main(int argc, char **argv)
 
         JS_BeginRequest(cx);
         {
-            JSAutoCrossCompartmentCall ac;
+            JSAutoEnterCompartment ac;
             if (!ac.enter(cx, glob)) {
                 JS_EndRequest(cx);
                 return 1;

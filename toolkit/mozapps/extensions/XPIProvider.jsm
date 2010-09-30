@@ -1268,6 +1268,10 @@ var XPIProvider = {
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
+
+    // Ensure any changes to the add-ons list are flushed to disk
+    XPIDatabase.writeAddonsList([]);
+    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
   /**
@@ -6087,13 +6091,18 @@ DirectoryInstallLocation.prototype = {
     delete this._FileToIDMap[file.path];
     delete this._IDToFileMap[aId];
 
+    file = this._directory.clone();
+    file.append(aId);
+    if (!file.exists())
+      file.leafName += ".xpi";
+
     if (!file.exists()) {
       WARN("Attempted to remove " + aId + " from " +
            this._name + " but it was already gone");
       return;
     }
 
-    if (file.isFile())
+    if (file.leafName != aId)
       Services.obs.notifyObservers(file, "flush-cache-entry", null);
     file.remove(true);
   },

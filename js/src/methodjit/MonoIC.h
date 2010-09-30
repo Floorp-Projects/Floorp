@@ -193,7 +193,7 @@ void JS_FASTCALL NativeNew(VMFrame &f, uint32 index);
 void JS_FASTCALL NativeCall(VMFrame &f, uint32 index);
 
 void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSContext *cx, JSScript *script);
+void SweepCallICs(JSScript *script);
 
 } /* namespace ic */
 } /* namespace mjit */

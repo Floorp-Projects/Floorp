@@ -204,9 +204,6 @@ TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChai
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
 
-void
-SweepCallICs(JSContext *cx);
-
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {

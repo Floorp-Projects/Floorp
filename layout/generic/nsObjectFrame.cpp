@@ -2881,8 +2881,10 @@ nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
   mInstance = aInstance;
   PRBool useAsyncPainting = PR_FALSE;
   if (mInstance &&
-      NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncPainting)))
-      mUsePluginLayers = useAsyncPainting;
+      mUsePluginLayers &&
+      NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncPainting)) &&
+      !useAsyncPainting)
+      mUsePluginLayers = PR_FALSE;
 
   return NS_OK;
 }

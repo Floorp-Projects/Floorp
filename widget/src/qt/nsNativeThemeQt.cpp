@@ -314,7 +314,7 @@ nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
         QStyleOptionFrameV2 frameOpt;
         PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
-        if (!(eventState & NS_EVENT_STATE_DISABLED))
+        if (!IsDisabled(aFrame, eventState))
             frameOpt.state |= QStyle::State_Enabled;
 
         frameOpt.rect = r;
@@ -641,13 +641,15 @@ nsNativeThemeQt::InitButtonStyle(PRUint8 aWidgetType,
     opt.rect = rect;
     opt.palette = mNoBackgroundPalette;
 
-    if (!(eventState & NS_EVENT_STATE_DISABLED))
+    PRBool isDisabled = IsDisabled(aFrame, eventState);
+
+    if (!isDisabled)
         opt.state |= QStyle::State_Enabled;
     if (eventState & NS_EVENT_STATE_HOVER)
         opt.state |= QStyle::State_MouseOver;
     if (eventState & NS_EVENT_STATE_FOCUS)
         opt.state |= QStyle::State_HasFocus;
-    if (!(eventState & NS_EVENT_STATE_DISABLED) && (eventState & NS_EVENT_STATE_ACTIVE))
+    if (!isDisabled && (eventState & NS_EVENT_STATE_ACTIVE))
         // Don't allow sunken when disabled
         opt.state |= QStyle::State_Sunken;
 
@@ -678,7 +680,7 @@ nsNativeThemeQt::InitPlainStyle(PRUint8 aWidgetType,
 
     opt.rect = rect;
 
-    if (!(eventState & NS_EVENT_STATE_DISABLED))
+    if (!IsDisabled(aFrame, eventState))
         opt.state |= QStyle::State_Enabled;
     if (eventState & NS_EVENT_STATE_HOVER)
         opt.state |= QStyle::State_MouseOver;
@@ -695,8 +697,9 @@ nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
                                 QStyleOptionComboBox &opt)
 {
     PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+    PRBool isDisabled = IsDisabled(aFrame, eventState);
 
-    if (!(eventState & NS_EVENT_STATE_DISABLED))
+    if (!isDisabled)
         opt.state |= QStyle::State_Enabled;
     if (eventState & NS_EVENT_STATE_HOVER)
         opt.state |= QStyle::State_MouseOver;
@@ -704,7 +707,7 @@ nsNativeThemeQt::InitComboStyle(PRUint8 aWidgetType,
         opt.state |= QStyle::State_HasFocus;
     if (!(eventState & NS_EVENT_STATE_ACTIVE))
         opt.state |= QStyle::State_Raised;
-    if (!(eventState & NS_EVENT_STATE_DISABLED) && (eventState & NS_EVENT_STATE_ACTIVE))
+    if (!isDisabled && (eventState & NS_EVENT_STATE_ACTIVE))
         // Don't allow sunken when disabled
         opt.state |= QStyle::State_Sunken;
 

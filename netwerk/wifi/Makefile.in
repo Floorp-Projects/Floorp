@@ -64,7 +64,7 @@ ifeq ($(OS_ARCH),Darwin)
 CPPSRCS += nsWifiScannerMac.cpp
 CMMSRCS = osx_corewlan.mm
 else
-ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 CPPSRCS += nsWifiScannerWin.cpp
 else
 ifeq ($(OS_ARCH),Linux)
