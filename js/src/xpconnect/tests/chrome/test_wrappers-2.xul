@@ -1,12 +1,34 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <title>Tests XPConnect Wrappers</title>
-    <script type="text/javascript" src="/MochiKit/packed.js"></script>
-    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body>
-    <script class="testbody" type="text/javascript;version=1.7">
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+-->
+<window title="Mozilla Bug 500931"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=403005"
+     target="_blank">Mozilla Bug 403005</a>
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=409298"
+     target="_blank">Mozilla Bug 409298</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 403005 and 409298 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function go()
+  {
     ok(window instanceof Object, "window is instanceof Object");
 
     location.foopy = 3;
@@ -59,60 +81,55 @@
        for_each_expected.sort().toString(),
        'wrapper iterators are properly iterators');
 
+    let wrap = $('ifr').contentWindow.wrappedJSObject;
+    let iwin = $('ifr').contentWindow;
+
     let sjow_answer = [];
     let (obj = { a: 3, next:1 }) {
-        for (let i in XPCSafeJSObjectWrapper({ __proto__: obj}))
+        for (let i in wrap.to_iterate)
             sjow_answer.push(i);
         is(sjow_answer.sort().toString(), ['a', 'next'].sort().toString(),
            'enumeration over SJOWs walks the prototype chain');
     }
 
     sjow_answer = [];
-    for (let i in XPCSafeJSObjectWrapper(location))
+    for (let i in wrap.location)
         sjow_answer.push(i);
 
     is(sjow_answer.sort().toString(),
        expected.sort().toString(),
        'enumeration over SJOWs walks the prototype chain and works over XOWs');
 
-    for (let i in XPCSafeJSObjectWrapper({ 0: 0, "hi": "there" })) {
+    for (let i in wrap.enumerate) {
         is(typeof i, "string", "enumeration on wrappers only returns strings");
     }
 
-    ok(!(new XPCSafeJSObjectWrapper({}) == new XPCSafeJSObjectWrapper({})),
-       'SJOWs equality hook returns false correctly');
+    isnot(wrap, new XPCNativeWrapper(iwin),
+         'SJOWs equality hook returns false correctly against XPCNW');
 
-    let (obj = {}) {
-        ok(new XPCSafeJSObjectWrapper(obj) == new XPCSafeJSObjectWrapper(obj),
-           'SJOWs equality hook returns true correctly');
-    }
-
-    ok(new XPCSafeJSObjectWrapper(window) == new XPCNativeWrapper(window),
-       'SJOWs equality hook returns true correctly against XPCNW');
-    ok(new XPCSafeJSObjectWrapper(window) == window,
-       'SJOWs equality hook returns true correctly against XOW');
-
-    is(typeof(new XPCSafeJSObjectWrapper(function(){})), 'function',
+    is(typeof(wrap.func), 'function',
        'SJOWs look like functions when they wrap functions');
-    is(typeof(new XPCSafeJSObjectWrapper({})), 'object',
+    is(typeof(wrap.o), 'object',
        'SJOWs look like objects when they wrap objects');
+    ok(wrap.o === wrap.o,
+       "Identity holds when accessing the same object twice");
 
-    var origProto = window.__proto__;
+    var origProto = iwin.__proto__;
     try {
-        window.__proto__ = window;
+        iwin.__proto__ = iwin;
         ok(false, 'cyclic proto value allowed');
-        window.__proto__ = origProto;
+        iwin.__proto__ = origProto;
     } catch (e) {
         is(e.toString(),
            'TypeError: cyclic __proto__ value',
            'throw the right exception for a cyclic proto');
-        is(window.__proto__, origProto, 'reset __proto__ after a cyclic proto');
+        is(iwin.__proto__, origProto, 'reset __proto__ after a cyclic proto');
     }
 
     try {
-        is('PASS', window.eval("'PASS'"), 'window.eval throws an exception');
+        is('PASS', iwin.eval("'PASS'"), 'iwin.eval throws an exception');
     } catch (e) {
-        ok(false, 'window.eval does not throw an exception');
+        ok(false, 'iwin.eval does not throw an exception');
     }
 
     try {
@@ -129,58 +146,53 @@
     }
 
     // Some tests for SJOWs too.
-    is(new XPCSafeJSObjectWrapper(document.body) === document.body, true,
-       "triple equals ignores wrappers");
-    is(XPCSafeJSObjectWrapper.prototype + '',
-       "[object XPCSafeJSObjectWrapper]",
-       "able to convert XPCSafeJSObjectWrapper.prototype to string");
+    isnot(wrap.document.body != document.body, "body should not be the same");
 
     XPCNativeWrapper.prototype = {};
-    let (w = new XPCNativeWrapper(window)) {
-        ok(window.location, "able to set XPCNativeWrapper.prototype and do stuff with it");
+    let (w = new XPCNativeWrapper(iwin)) {
+        ok(iwin.location, "able to set XPCNativeWrapper.prototype and do stuff with it");
     }
 
-    is(new XPCNativeWrapper(window, Window).closed, false,
+    is(new XPCNativeWrapper(iwin, Window).closed, false,
        "able to wrap a window in a window XPCNativeWrapper");
     try {
         new XPCNativeWrapper(document, Window);
-        ok(false, "Able to wrap a document in a Window XPCNativeWrapper?")
+        todo(false, "Able to wrap a document in a Window XPCNativeWrapper?")
     } catch (e) {
         ok(/ILLEGAL_VALUE/(e), "not able to wrap a document in a Window XPCNativeWrapper");
     }
 
-    let (w = new XPCNativeWrapper(window)) {
+    let (w = new XPCNativeWrapper($('ifr').contentWindow)) {
         w.foopybar = 5;
-        ok(!("foopybar" in window), "XPCNativeWrappers allow expandos through");
+        ok(!("foopybar" in iwin), "XPCNativeWrappers allow expandos through");
         is(w.foopybar, 5, "can set expandos on XPCNativeWrappers, though");
 
         ok(delete w.foopybar, "deleting properties returns true correctly");
         ok(!("foopybar" in w), "Can delete properties from XPCNativeWrappers");
 
-        is(w.window, window, "w.window exists and is the window");
-        ok(delete w.window, "can delete builtin properties");
-        is(w.window, window, "w.window is automatically recreated");
+        is(w.window, iwin, "w.window exists and is the window");
+        ok(delete w.iwin, "can delete builtin properties");
+        is(w.window, iwin, "w.window is automatically recreated");
 
-        window.foopy = 5;
+        iwin.foopy = 5;
         ok(delete w.foopy, "delete returns true");
-        is(window.foopy, 5, "delete doesn't delete underlying properties");
-        ok(delete window.foopy, "can delete window.foopy");
-        ok(!("foopy" in window), "foopy is no longer in window");
+        is(iwin.foopy, 5, "delete doesn't delete underlying properties");
+        ok(delete iwin.foopy, "can delete window.foopy");
+        ok(!("foopy" in iwin), "foopy is no longer in window");
     }
 
     try {
-        is((function(x) { return x+1; }).apply(this,
-                                               XPCSafeJSObjectWrapper([1])),
-           2, "able to call apply with an XPCSafeJSObjectWrapped array");
+      is((function(x) { return x+1; }).apply(this, wrap.a), 2,
+         "able to call apply with an XPCSafeJSObjectWrapped array");
     } catch (e) {
         ok(false,
            "Unable to call apply() with a XPCSafeJSObjectWrapped array");
     }
 
     try {
-        window.__proto__ = null;
-        is(window.__proto__, null,
-           "allowed to update window.__proto__ to null");
+        iwin.__proto__ = null;
+        is(iwin.__proto__, null,
+           "allowed to update iwin.__proto__ to null");
     } catch (e) {
         ok(false, "some crazy exception was thrown");
     }
@@ -190,6 +202,13 @@
         ok(false, "Allowed to wrap E4X in SJOWs?");
     } catch (e) {
     }
-    </script>
-</body>
-</html>
+
+    SimpleTest.finish();
+  }
+  ]]></script>
+  <iframe type="content"
+    src="file_wrappers-2.html"
+    onload="go()"
+    id="ifr">
+  </iframe>
+</window>

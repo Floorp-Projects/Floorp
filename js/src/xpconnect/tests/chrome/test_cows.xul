@@ -1,20 +1,25 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for ChromeObjectWrappers</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
-<pre id="test">
-<script type="application/javascript">
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+-->
+<window title="Mozilla Bug 522764"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=522764 "
+     target="_blank">Mozilla Bug 522764 </a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
@@ -24,8 +29,16 @@ var test_utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
                  getInterface(Ci.nsIDOMWindowUtils);
 
 function getCOW(x) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  return test_utils.getCOWForObject(x, x);
+  if (typeof x == "function")
+    return eval(uneval(x));
+  var rval = {};
+  for (var i in x) {
+    if (x.__lookupGetter__(i))
+      rval.__defineGetter__(i, eval(uneval(x.__lookupGetter__(i))))
+    else
+      rval[i] = x[i];
+  }
+  return rval;
 }
 
 // Give the sandbox a way to create ChromeObjectWrapped objects.
@@ -201,8 +214,5 @@ try {
     todo(false, "COWs should be unwrapped when entering chrome space, " +
                 "not raise " + e);
 }
-
-</script>
-</pre>
-</body>
-</html>
+  ]]></script>
+</window>
