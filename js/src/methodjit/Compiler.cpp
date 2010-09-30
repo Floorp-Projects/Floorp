@@ -1007,7 +1007,6 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETLOCALPROP)
 
           BEGIN_CASE(JSOP_GETPROP)
-          BEGIN_CASE(JSOP_GETXPROP)
             jsop_getprop(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_GETPROP)
 
@@ -1538,6 +1537,10 @@ mjit::Compiler::generateMethod()
             emitReturn(NULL);
             goto done;
           END_CASE(JSOP_STOP)
+
+          BEGIN_CASE(JSOP_GETXPROP)
+            jsop_xname(script->getAtom(fullAtomIndex(PC)));
+          END_CASE(JSOP_GETXPROP)
 
           BEGIN_CASE(JSOP_ENTERBLOCK)
             enterBlock(script->getObject(fullAtomIndex(PC)));
@@ -3082,6 +3085,54 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     stubcc.rejoin(Changes(1));
 
     pics.append(pic);
+}
+
+void
+mjit::Compiler::jsop_xname(JSAtom *atom)
+{
+#ifdef JS_POLYIC
+    PICGenInfo pic(ic::PICInfo::XNAME);
+
+    FrameEntry *fe = frame.peek(-1);
+    if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
+        jsop_getprop(atom);
+        return;
+    }
+
+    if (!fe->isTypeKnown()) {
+        Jump notObject = frame.testObject(Assembler::NotEqual, fe);
+        stubcc.linkExit(notObject, Uses(1));
+    }
+
+    pic.shapeReg = frame.allocReg();
+    pic.objReg = frame.copyDataIntoReg(fe);
+    pic.typeReg = Registers::ReturnReg;
+    pic.atom = atom;
+    pic.hasTypeCheck = false;
+    pic.fastPathStart = masm.label();
+
+    pic.shapeGuard = masm.label();
+    Jump j = masm.jump();
+    DBGLABEL(dbgJumpOffset);
+    {
+        pic.slowPathStart = stubcc.linkExit(j, Uses(1));
+        stubcc.leave();
+        stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+        pic.callReturn = stubcc.call(ic::XName);
+    }
+
+    pic.storeBack = masm.label();
+    frame.pop();
+    frame.pushRegs(pic.shapeReg, pic.objReg);
+
+    JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
+
+    stubcc.rejoin(Changes(1));
+
+    pics.append(pic);
+#else
+    jsop_getprop(atom);
+#endif
 }
 
 void
