@@ -339,6 +339,7 @@ Content.prototype = {
 
     switch (aMessage.name) {
       case "Browser:Blur":
+        gFocusManager.clearFocus(content);
         docShell.isActive = false;
         this._selected = false;
         break;

@@ -188,7 +188,7 @@ MouseModule.prototype = {
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
     let [targetScrollbox, targetScrollInterface, dragger]
-      = this.getScrollboxFromElement(aEvent.target);
+      = ScrollUtils.getScrollboxFromElement(aEvent.target);
 
     // stop kinetic panning if targetScrollbox has changed
     if (this._kinetic.isActive() && this._dragger != dragger)
@@ -446,49 +446,17 @@ MouseModule.prototype = {
     this._downUpEvents.splice(0);
   },
 
-  /**
-   * The default dragger object used by MouseModule when dragging a scrollable
-   * element that provides no customDragger.  Simply performs the expected
-   * regular scrollBy calls on the scroller.
-   */
-  _defaultDragger: {
-    isDraggable: function isDraggable(target, scroller) {
-      let sX = {}, sY = {};
-      scroller.getScrolledSize(sX, sY);
-      let rect = target.getBoundingClientRect();
-      return { x: sX.value > rect.width, y: sY.value > rect.height };
-    },
+  toString: function toString() {
+    return '[MouseModule] {'
+      + '\n\tdragData=' + this._dragData + ', '
+      + 'dragger=' + this._dragger + ', '
+      + '\n\tdownUpEvents=' + this._downUpEvents + ', '
+      + 'length=' + this._downUpEvents.length + ', '
+      + '\n\ttargetScroller=' + this._targetScrollInterface + '}';
+  }
+};
 
-    dragStart: function dragStart(cx, cy, target, scroller) {},
-
-    dragStop : function dragStop(dx, dy, scroller) {
-      return this.dragMove(dx, dy, scroller);
-    },
-
-    dragMove : function dragMove(dx, dy, scroller) {
-      if (scroller.getPosition) {
-        try {
-
-          let oldX = {}, oldY = {};
-          scroller.getPosition(oldX, oldY);
-
-          scroller.scrollBy(dx, dy);
-
-          let newX = {}, newY = {};
-          scroller.getPosition(newX, newY);
-
-          return (newX.value != oldX.value) || (newY.value != oldY.value);
-
-        } catch (e) { /* we have no time for whiny scrollers! */ }
-      }
-
-      return false;
-    }
-  },
-
-  // -----------------------------------------------------------
-  // -- Utility functions
-
+var ScrollUtils = {
   /**
    * Walk up (parentward) the DOM tree from elem in search of a scrollable element.
    * Return the element and its scroll interface if one is found, two nulls otherwise.
@@ -530,14 +498,45 @@ MouseModule.prototype = {
     return [scrollbox, qinterface, (scrollbox ? (scrollbox.customDragger || this._defaultDragger) : null)];
   },
 
-  toString: function toString() {
-    return '[MouseModule] {'
-      + '\n\tdragData=' + this._dragData + ', '
-      + 'dragger=' + this._dragger + ', '
-      + '\n\tdownUpEvents=' + this._downUpEvents + ', '
-      + 'length=' + this._downUpEvents.length + ', '
-      + '\n\ttargetScroller=' + this._targetScrollInterface + '}';
-  }
+  /**
+   * The default dragger object used by MouseModule when dragging a scrollable
+   * element that provides no customDragger.  Simply performs the expected
+   * regular scrollBy calls on the scroller.
+   */
+  _defaultDragger: {
+    isDraggable: function isDraggable(target, scroller) {
+      let sX = {}, sY = {};
+      scroller.getScrolledSize(sX, sY);
+      let rect = target.getBoundingClientRect();
+      return { x: sX.value > rect.width, y: sY.value > rect.height };
+    },
+
+    dragStart: function dragStart(cx, cy, target, scroller) {},
+
+    dragStop : function dragStop(dx, dy, scroller) {
+      return this.dragMove(dx, dy, scroller);
+    },
+
+    dragMove : function dragMove(dx, dy, scroller) {
+      if (scroller.getPosition) {
+        try {
+
+          let oldX = {}, oldY = {};
+          scroller.getPosition(oldX, oldY);
+
+          scroller.scrollBy(dx, dy);
+
+          let newX = {}, newY = {};
+          scroller.getPosition(newX, newY);
+
+          return (newX.value != oldX.value) || (newY.value != oldY.value);
+
+        } catch (e) { /* we have no time for whiny scrollers! */ }
+      }
+
+      return false;
+    }
+  },
 };
 
 /**

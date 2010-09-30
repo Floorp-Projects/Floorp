@@ -58,6 +58,10 @@ label {
 }
 
 /* Override any OS inverse themes */
+richlistbox {
+  -moz-user-focus: ignore;
+}
+
 richlistbox,
 textbox {
   color: black;
@@ -533,6 +537,7 @@ richlistbox {
 }
 
 richlistitem {
+  -moz-user-focus: ignore;
   min-height: 70px; /* row size */
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
