@@ -35,18 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_CLIPBOARD_H
-#define NS_CLIPBOARD_H
+#ifndef NSFILEPICKER_H
+#define NSFILEPICKER_H
 
-#include "nsIClipboard.h"
+#include "nsIFilePicker.h"
+#include "nsString.h"
 
-class nsClipboard : public nsIClipboard
+class nsFilePicker : public nsIFilePicker
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICLIPBOARD
+  NS_DECL_NSIFILEPICKER
 
-  nsClipboard();
+private:
+  nsString mFilePath;
 };
-
 #endif
