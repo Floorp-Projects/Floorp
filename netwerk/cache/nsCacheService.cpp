@@ -134,7 +134,7 @@ const PRInt32 DEFAULT_CACHE_SIZE = 250 * 1024;  // 250 MB
 const PRInt32 MIN_CACHE_SIZE = 50 * 1024;       //  50 MB
 const PRInt32 MAX_CACHE_SIZE = 1024 * 1024;     //   1 GB
 // Default cache size was 50 MB for many years until FF 4:
-const PRInt32 PRE_FF4_DEFAULT_CACHE_SIZE = 50 * 1024;
+const PRInt32 PRE_GECKO_2_0_DEFAULT_CACHE_SIZE = 50 * 1024;
 
 class nsCacheProfilePrefObserver : public nsIObserver
 {
@@ -609,7 +609,7 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, PRBool
             // If user explicitly set cache size to be smaller than old default
             // of 50 MB, then keep user's value. Otherwise use smart sizing.
             rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
-            if (oldCapacity < PRE_FF4_DEFAULT_CACHE_SIZE) {
+            if (oldCapacity < PRE_GECKO_2_0_DEFAULT_CACHE_SIZE) {
                 branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF, 
                                     PR_FALSE);
                 return false;
