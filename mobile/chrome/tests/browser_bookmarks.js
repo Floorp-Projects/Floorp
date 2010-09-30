@@ -82,7 +82,7 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    this._currentTab = Browser.addTab(testURL_01, true);
+    this._currentTab = Browser.addTab(testURL_02, true);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow", function(aMessage) {
@@ -101,6 +101,13 @@ gTests.push({
   },
 
   onBookmarksReady: function() {
+    let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
+    bookmarkitem.control.scrollBoxObject.ensureElementIsVisible(bookmarkitem);
+
+    isnot(bookmarkitem, null, "Found the bookmark");
+    is(bookmarkitem.getAttribute("uri"), testURL_01, "Bookmark has the right URL via attribute");
+    is(bookmarkitem.spec, testURL_01, "Bookmark has the right URL via property");
+
     // Create a listener for the opening bookmark
     messageManager.addMessageListener("pageshow", function(aMessage) {
       messageManager.removeMessageListener(aMessage.name, arguments.callee);
@@ -110,11 +117,6 @@ gTests.push({
 
       runNextTest();
     });
-
-    let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
-    isnot(bookmarkitem, null, "Found the bookmark");
-    is(bookmarkitem.getAttribute("uri"), testURL_01, "Bookmark has the right URL via attribute");
-    is(bookmarkitem.spec, testURL_01, "Bookmark has the right URL via property");
 
     EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.width / 2, bookmarkitem.height / 2, {});
   }
