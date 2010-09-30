@@ -311,6 +311,7 @@ class Compiler
     bool jsop_callprop_generic(JSAtom *atom);
     void jsop_instanceof();
     void jsop_name(JSAtom *atom);
+    void jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();
 
