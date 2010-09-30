@@ -201,6 +201,12 @@ ThebesLayerD3D9::RenderLayer()
 
   if (!mTexture) {
     CreateNewTexture(gfxIntSize(visibleRect.width, visibleRect.height));
+    
+    if (!mTexture) {
+	NS_WARNING("Failed to create texture for thebes layer - not drawing.");
+	return;
+    }
+
     mValidRegion.SetEmpty();
   }
 

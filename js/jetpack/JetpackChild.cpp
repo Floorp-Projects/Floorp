@@ -431,7 +431,7 @@ JetpackChild::CreateSandbox(JSContext* cx, uintN argc, jsval* vp)
   if (!obj)
     return JS_FALSE;
 
-  JSAutoCrossCompartmentCall ac;
+  JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj))
     return JS_FALSE;
 
@@ -462,7 +462,7 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
   if (!str)
     return JS_FALSE;
 
-  JSAutoCrossCompartmentCall ac;
+  JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj))
     return JS_FALSE;
 

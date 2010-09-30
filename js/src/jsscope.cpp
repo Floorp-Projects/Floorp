@@ -67,6 +67,7 @@
 #include "jsscopeinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 uint32
 js_GenerateShape(JSContext *cx, bool gcLocked)
@@ -1361,16 +1362,16 @@ Shape::trace(JSTracer *trc) const
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if ((attrs & JSPROP_GETTER) && rawGetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            Mark(trc, getterObject(), JSTRACE_OBJECT);
+            Mark(trc, getterObject());
         }
         if ((attrs & JSPROP_SETTER) && rawSetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            Mark(trc, setterObject(), JSTRACE_OBJECT);
+            Mark(trc, setterObject());
         }
     }
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        Mark(trc, &methodObject(), JSTRACE_OBJECT);
+        Mark(trc, &methodObject());
     }
 }

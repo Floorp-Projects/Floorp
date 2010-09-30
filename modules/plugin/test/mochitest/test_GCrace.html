@@ -16,11 +16,8 @@
     SimpleTest.waitForExplicitFinish();
 
     function start() {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-      var prefs = Components.classes['@mozilla.org/preferences-service;1']
-        .getService(Components.interfaces.nsIPrefBranch);
-      if (!prefs.getBoolPref('dom.ipc.plugins.enabled')) {
-        ok(true, "Skipping this test when IPC plugins are not enabled.");
+      if (!SimpleTest.testPluginIsOOP()) {
+        ok(true, "Skipping this test when test plugin is not OOP.");
         SimpleTest.finish();
         return;
       }

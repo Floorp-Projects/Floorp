@@ -154,20 +154,22 @@ namespace nanojit
     typedef int RegisterMask;
 
     static const int NumSavedRegs = 3;
-    static const RegisterMask SavedRegs = 1<<EBX | 1<<EDI | 1<<ESI;
-    static const RegisterMask GpRegs = SavedRegs | 1<<EAX | 1<<ECX | 1<<EDX;
-    static const RegisterMask XmmRegs = 1<<XMM0|1<<XMM1|1<<XMM2|1<<XMM3|1<<XMM4|1<<XMM5|1<<XMM6|1<<XMM7;
-    static const RegisterMask x87Regs = 1<<FST0;
-    static const RegisterMask FpRegs = x87Regs | XmmRegs;
+    static const RegisterMask SavedRegs   = 1<<EBX | 1<<EDI | 1<<ESI;
+    static const RegisterMask GpRegs      = SavedRegs | 1<<EAX | 1<<ECX | 1<<EDX;
+    static const RegisterMask XmmRegs     = 1<<XMM0 | 1<<XMM1 | 1<<XMM2 | 1<<XMM3 |
+                                            1<<XMM4 | 1<<XMM5 | 1<<XMM6 | 1<<XMM7;
+    static const RegisterMask x87Regs     = 1<<FST0;
+    static const RegisterMask FpRegs      = x87Regs | XmmRegs;
     static const RegisterMask ScratchRegs = 1<<EAX | 1<<ECX | 1<<EDX | FpRegs;
 
-    static const RegisterMask AllowableFlagRegs = 1<<EAX |1<<ECX | 1<<EDX | 1<<EBX;
+    static const RegisterMask AllowableFlagRegs = 1<<EAX | 1<<ECX | 1<<EDX | 1<<EBX;
 
-    #define _rmask_(r)      (1<<(r))
-    #define _is_xmm_reg_(r) ((_rmask_(r)&XmmRegs)!=0)
-    #define _is_x87_reg_(r) ((_rmask_(r)&x87Regs)!=0)
-    #define _is_fp_reg_(r)  ((_rmask_(r)&FpRegs)!=0)
-    #define _is_gp_reg_(r)  ((_rmask_(r)&GpRegs)!=0)
+    static inline bool IsGpReg(Register r) {
+        return ((1<<r) & GpRegs) != 0;
+    }
+    static inline bool IsXmmReg(Register r) {
+        return ((1<<r) & XmmRegs) != 0;
+    }
 
     verbose_only( extern const char* regNames[]; )
 
@@ -198,23 +200,23 @@ namespace nanojit
         void asm_immd(Register r, uint64_t q, double d, bool canClobberCCs); \
         void IMM8(int32_t i) { \
             _nIns -= 1; \
-            *((int8_t*)_nIns) = (int8_t)(i); \
+            *((int8_t*)_nIns) = int8_t(i); \
         }; \
         void IMM16(int32_t i) { \
             _nIns -= 2; \
-            *((int16_t*)_nIns) = (int16_t)(i); \
+            *((int16_t*)_nIns) = int16_t(i); \
         }; \
         void IMM32(int32_t i) { \
             _nIns -= 4; \
-            *((int32_t*)_nIns) = (int32_t)(i); \
+            *((int32_t*)_nIns) = int32_t(i); \
         }; \
         void MODRMs(int32_t r, int32_t d, Register b, int32_t l, int32_t i); \
         void MODRMm(int32_t r, int32_t d, Register b); \
         void MODRMSIB(Register reg, Register base, int32_t index, int32_t scale, int32_t disp); \
         void MODRMdm(int32_t r, int32_t addr); \
         void MODRM(int32_t d, int32_t s) { \
-            NanoAssert((unsigned(d))<8 && (unsigned(s))<8); \
-            *(--_nIns) = (uint8_t) ( 3<<6 | d<<3 | s ); \
+            NanoAssert(unsigned(d) < 8 && unsigned(s) < 8); \
+            *(--_nIns) = uint8_t(3 << 6 | d << 3 | s); \
         }; \
         void ALU0(int32_t o); \
         void ALUm(int32_t c, int32_t r, int32_t d, Register b); \
@@ -226,7 +228,7 @@ namespace nanojit
         void ALU2sib(int32_t c, Register r, Register base, int32_t index, int32_t scale, int32_t disp); \
         void ALU(int32_t c, int32_t d, int32_t s) { \
             underrunProtect(2); \
-            MODRM(d,s); \
+            MODRM(d, s); \
             *(--_nIns) = uint8_t(c); \
         }; \
         void ALUi(int32_t c, int32_t r, int32_t i); \
@@ -262,8 +264,8 @@ namespace nanojit
         void CMPi(Register r, int32_t i); \
         void MR(Register d, Register s) { \
             count_mov(); \
-            ALU(0x8b,d,s); \
-            asm_output("mov %s,%s",gpn(d),gpn(s)); \
+            ALU(0x8b, d, s); \
+            asm_output("mov %s,%s", gpn(d), gpn(s)); \
         }; \
         void LEA(Register r, int32_t d, Register b); \
         void LEAmi4(Register r, int32_t d, int32_t i); \
@@ -377,21 +379,19 @@ namespace nanojit
         void SSE_CVTDQ2PD(Register d, Register r); \
         void SSE_MOVD(Register d, Register s); \
         void SSE_MOVSD(Register rd, Register rs); \
-        void SSE_MOVDm(Register d, Register b, Register xrs); \
         void SSE_ADDSD(Register rd, Register rs); \
         void SSE_ADDSDm(Register r, const double* addr); \
         void SSE_SUBSD(Register rd, Register rs); \
         void SSE_MULSD(Register rd, Register rs); \
         void SSE_DIVSD(Register rd, Register rs); \
         void SSE_UCOMISD(Register rl, Register rr); \
-        void SSE_CVTSI2SDm(Register xr, Register d, Register b); \
         void SSE_XORPD(Register r, const uint32_t* maskaddr); \
         void SSE_XORPDr(Register rd, Register rs); \
         void FPUc(int32_t o); \
         void FPU(int32_t o, Register r) { \
             underrunProtect(2); \
-            *(--_nIns) = uint8_t(((uint8_t)(o)&0xff) | (r&7)); \
-            *(--_nIns) = (uint8_t)((o>>8)&0xff); \
+            *(--_nIns) = uint8_t((uint8_t(o) & 0xff) | (r & 7)); \
+            *(--_nIns) = uint8_t((o >> 8) & 0xff); \
         }; \
         void FPUm(int32_t o, int32_t d, Register b); \
         void FPUdm(int32_t o, const double* const m); \
@@ -427,7 +427,8 @@ namespace nanojit
         void FSTP(Register r) { \
             count_fpu(); \
             FPU(0xddd8, r); \
-            asm_output("fstp %s",gpn(r)); fpu_pop(); \
+            asm_output("fstp %s", gpn(r)); \
+            fpu_pop(); \
         }; \
         void FCOMP(); \
         void FCOMPP(); \

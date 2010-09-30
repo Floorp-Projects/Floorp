@@ -1424,8 +1424,9 @@ class TraceRecorder
                                               bool &blacklist);
     friend void AbortRecording(JSContext*, const char*);
     friend class BoxArg;
+    friend void TraceMonitor::sweep();
 
-public:
+  public:
     static bool JS_REQUIRES_STACK
     startRecorder(JSContext*, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,

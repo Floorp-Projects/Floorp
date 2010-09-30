@@ -125,7 +125,10 @@ class RemoteOptions(MochitestOptions):
             return None
 
         if (options.remoteLogFile == None):
-            options.remoteLogFile =  automation._devicemanager.getDeviceRoot() + '/test.log'
+            options.remoteLogFile = automation._devicemanager.getDeviceRoot() + '/test.log'
+
+        if (options.remoteLogFile.count('/') < 1):
+            options.remoteLogFile = automation._devicemanager.getDeviceRoot() + '/' + options.remoteLogFile
 
         # Set up our options that we depend on based on the above
         productRoot = options.remoteTestRoot + "/" + automation._product
@@ -286,6 +289,7 @@ def main():
     if (options == None):
         sys.exit(1)
     
+    auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
     sys.exit(mochitest.runTests(options))
     

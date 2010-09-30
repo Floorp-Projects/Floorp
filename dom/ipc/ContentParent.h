@@ -125,29 +125,7 @@ private:
             const PRInt64& aContentLength);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
-    virtual bool RecvGetPrefType(const nsCString& prefName,
-            PRInt32* retValue, nsresult* rv);
-
-    virtual bool RecvGetBoolPref(const nsCString& prefName,
-            PRBool* retValue, nsresult* rv);
-
-    virtual bool RecvGetIntPref(const nsCString& prefName,
-            PRInt32* retValue, nsresult* rv);
-
-    virtual bool RecvGetCharPref(const nsCString& prefName,
-            nsCString* retValue, nsresult* rv);
-
-    virtual bool RecvGetPrefLocalizedString(const nsCString& prefName,
-            nsString* retValue, nsresult* rv);
-
-    virtual bool RecvPrefHasUserValue(const nsCString& prefName,
-            PRBool* retValue, nsresult* rv);
-
-    virtual bool RecvPrefIsLocked(const nsCString& prefName,
-            PRBool* retValue, nsresult* rv);
-
-    virtual bool RecvGetChildList(const nsCString& domain,
-            nsTArray<nsCString>* list, nsresult* rv);
+    virtual bool RecvReadPrefs(nsCString* prefs);
 
     virtual bool RecvTestPermission(const IPC::URI&  aUri,
                                     const nsCString& aType,
@@ -189,7 +167,7 @@ private:
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
     bool mIsAlive;
-    nsCOMPtr<nsIPrefBranch> mPrefService; 
+    nsCOMPtr<nsIPrefServiceInternal> mPrefService; 
     nsCOMPtr<nsIPermissionManager> mPermissionService; 
 };
 

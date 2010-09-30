@@ -509,13 +509,13 @@ namespace nanojit
     inline LOpcode getCallOpcode(const CallInfo* ci) {
         LOpcode op = LIR_callp;
         switch (ci->returnType()) {
-        case ARGTYPE_V: op = LIR_callp; break;
+        case ARGTYPE_V: op = LIR_callv; break;
         case ARGTYPE_I:
         case ARGTYPE_UI: op = LIR_calli; break;
-        case ARGTYPE_D: op = LIR_calld; break;
 #ifdef NANOJIT_64BIT
         case ARGTYPE_Q: op = LIR_callq; break;
 #endif
+        case ARGTYPE_D: op = LIR_calld; break;
         default:        NanoAssert(0);  break;
         }
         return op;
@@ -927,7 +927,8 @@ namespace nanojit
             return isCmpOpcode(opcode());
         }
         bool isCall() const {
-            return isop(LIR_calli) ||
+            return isop(LIR_callv) ||
+                   isop(LIR_calli) ||
 #if defined NANOJIT_64BIT
                    isop(LIR_callq) ||
 #endif

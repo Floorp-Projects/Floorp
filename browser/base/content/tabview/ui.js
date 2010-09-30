@@ -689,21 +689,6 @@ let UI = {
         }
         event.stopPropagation();
         event.preventDefault();
-      } else if (event.keyCode == KeyEvent.DOM_VK_SPACE) {
-        // alt/control + space to zoom into the active tab.
-#ifdef XP_MACOSX
-        if (event.altKey && !event.metaKey && !event.shiftKey &&
-            !event.ctrlKey) {
-#else
-        if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-            !event.altKey) {
-#endif
-          var activeTab = self.getActiveTab();
-          if (activeTab)
-            activeTab.zoomIn();
-          event.stopPropagation();
-          event.preventDefault();
-        }
       } else if (event.keyCode == KeyEvent.DOM_VK_ESCAPE ||
                  event.keyCode == KeyEvent.DOM_VK_RETURN ||
                  event.keyCode == KeyEvent.DOM_VK_ENTER) {

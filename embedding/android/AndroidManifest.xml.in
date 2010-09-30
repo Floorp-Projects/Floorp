@@ -20,7 +20,7 @@
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|orientation|mcc|mnc"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:launchMode="singleInstance">
+                  android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -1,5 +1,5 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<window class="reftest-wait" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <richlistbox id="a" datasources="" template="d"/>
 <script><![CDATA[    
 function doe() {
@@ -17,8 +17,7 @@ try { b.resultBindingChanged(null); } catch(ex) { }
 try { b.getResultForId("empty"); } catch(ex) { }
 try { b.getResultForContent(node); } catch(ex) { }
 try { b.hasGeneratedContent(null, null); } catch(ex) { }
-document.documentElement.removeAttribute("class");
 }
-setTimeout(doe, 0);
+window.addEventListener("load", doe, false);
 ]]></script>
 </window>

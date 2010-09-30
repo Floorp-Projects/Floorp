@@ -51,6 +51,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 namespace js {
 
@@ -220,7 +221,7 @@ JSProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
         return false;
     return EnumeratedIdVectorToIterator(cx, proxy, flags, props, vp);
 }
- 
+
 JSString *
 JSProxyHandler::obj_toString(JSContext *cx, JSObject *proxy)
 {
@@ -323,7 +324,7 @@ DerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
               atom == ATOM(set) ||
               atom == ATOM(enumerateOwn) ||
               atom == ATOM(iterate));
-    
+
     return GetTrap(cx, handler, atom, fvalp);
 }
 
@@ -1098,8 +1099,8 @@ proxy_create(JSContext *cx, uintN argc, Value *vp)
                              "create", "0", "s");
         return false;
     }
-    JSObject *handler;
-    if (!(handler = NonNullObject(cx, vp[2])))
+    JSObject *handler = NonNullObject(cx, vp[2]);
+    if (!handler)
         return false;
     JSObject *proto, *parent = NULL;
     if (argc > 1 && vp[3].isObject()) {
@@ -1128,8 +1129,8 @@ proxy_createFunction(JSContext *cx, uintN argc, Value *vp)
                              "createFunction", "1", "");
         return false;
     }
-    JSObject *handler;
-    if (!(handler = NonNullObject(cx, vp[2])))
+    JSObject *handler = NonNullObject(cx, vp[2]);
+    if (!handler)
         return false;
     JSObject *proto, *parent;
     parent = vp[0].toObject().getParent();
@@ -1167,8 +1168,8 @@ proxy_isTrapping(JSContext *cx, uintN argc, Value *vp)
                              "isTrapping", "0", "s");
         return false;
     }
-    JSObject *obj;
-    if (!(obj = NonNullObject(cx, vp[2])))
+    JSObject *obj = NonNullObject(cx, vp[2]);
+    if (!obj)
         return false;
     vp->setBoolean(obj->isProxy());
     return true;
@@ -1182,8 +1183,8 @@ proxy_fix(JSContext *cx, uintN argc, Value *vp)
                              "fix", "0", "s");
         return false;
     }
-    JSObject *obj;
-    if (!(obj = NonNullObject(cx, vp[2])))
+    JSObject *obj = NonNullObject(cx, vp[2]);
+    if (!obj)
         return false;
     if (obj->isProxy()) {
         JSBool flag;
@@ -1313,8 +1314,8 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
         return false;
     }
 
-    JSObject *props;
-    if (!(props = NonNullObject(cx, tvr.value())))
+    JSObject *props = NonNullObject(cx, tvr.value());
+    if (!props)
         return false;
 
     JSObject *proto = proxy->getProto();
@@ -1338,7 +1339,7 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
             return false;
     }
 
-    /* Trade spaces between the newborn object and the proxy. */
+    /* Trade contents between the newborn object and the proxy. */
     proxy->swap(newborn);
 
     /* The GC will dispose of the proxy object. */

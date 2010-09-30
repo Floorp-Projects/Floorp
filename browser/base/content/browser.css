@@ -152,6 +152,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 
 /* Some child nodes want to be ordered based on the locale's direction, while
    everything else should be ltr. */
+#urlbar-progress:-moz-locale-dir(rtl),
 .urlbar-input-box:-moz-locale-dir(rtl) {
   direction: rtl;
 }

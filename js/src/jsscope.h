@@ -291,6 +291,7 @@ struct Shape : public JSObjectMap
     friend struct ::JSObject;
     friend struct ::JSFunction;
     friend class js::PropertyTree;
+    friend bool HasUnreachableGCThings(TreeFragment *f);
 
   protected:
     mutable js::PropertyTable *table;
