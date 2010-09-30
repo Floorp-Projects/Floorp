@@ -130,6 +130,7 @@ DIST_LINK_FILES = \
   browserconfig.properties \
   blocklist.xml \
   chrome.manifest \
+  extensions \
   $(NULL)
 
 ifdef MOZ_IPC
