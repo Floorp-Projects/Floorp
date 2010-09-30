@@ -123,7 +123,7 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
   NS_ENSURE_TRUE(global, JS_FALSE);
 
   JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, global)) {
+  if (!ac.enter(mCx, global)) {
     NS_ERROR("Failed to enter compartment!");
     return false;
   }
