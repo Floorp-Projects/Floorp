@@ -1792,6 +1792,7 @@ var FormHelperUI = {
       case "FormAssist:Resize":
         // First hide all tool/sidebars they take to much space, this will adjust the visible rect.
         Browser.hideSidebars();
+        SelectHelperUI.resize();
         this._zoom(this._currentElementRect, this._currentCaretRect);
         this._container.contentHasChanged();
         break;
@@ -2140,7 +2141,7 @@ var SelectHelperUI = {
 
   dock: function dock(aContainer) {
     aContainer.insertBefore(this._panel, aContainer.lastChild);
-    this._panel.style.maxHeight = (window.innerHeight / 1.8) + "px";
+    this.resize();
     this._textbox.hidden = false;
 
     this._docked = true;
@@ -2162,6 +2163,10 @@ var SelectHelperUI = {
     this._selectedIndexes = null;
     this._panel.height = "";
     this._textbox.value = "";
+  },
+
+  resize: function resize() {
+    this._panel.style.maxHeight = (window.innerHeight / 1.8) + "px";
   },
 
   hide: function() {
