@@ -250,7 +250,6 @@ struct JSScript {
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
-    JSCompartment   *compartment; /* compartment the script was compiled for */
     const char      *filename;  /* source filename or null */
     uint32          lineno;     /* base line number of script */
     uint16          nslots;     /* vars plus maximum stack depth */
@@ -278,7 +277,6 @@ struct JSScript {
         JSObject    *object;
         JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
     } u;
-
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
@@ -549,9 +547,6 @@ js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
         op = JS_GetTrapOpcode(cx, script, pc);
     return op;
 }
-
-extern JSScript *
-js_CloneScript(JSContext *cx, JSScript *script);
 
 /*
  * If magic is non-null, js_XDRScript succeeds on magic number mismatch but
