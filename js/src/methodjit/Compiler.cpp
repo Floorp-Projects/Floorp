@@ -3105,7 +3105,6 @@ mjit::Compiler::jsop_name(JSAtom *atom)
 void
 mjit::Compiler::jsop_xname(JSAtom *atom)
 {
-#ifdef JS_POLYIC
     PICGenInfo pic(ic::PICInfo::XNAME);
 
     FrameEntry *fe = frame.peek(-1);
@@ -3145,9 +3144,6 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     stubcc.rejoin(Changes(1));
 
     pics.append(pic);
-#else
-    jsop_getprop(atom);
-#endif
 }
 
 void
@@ -3205,6 +3201,12 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     prepareStubCall(Uses(0));
     stubCall(stubs::Name);
     frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_xname(JSAtom *atom)
+{
+    jsop_getprop(atom);
 }
 
 void
