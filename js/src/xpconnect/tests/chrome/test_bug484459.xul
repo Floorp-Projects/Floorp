@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=484459
+-->
+<window title="Mozilla Bug 484459"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <iframe type="content"
+      src="data:text/html,&lt;script&gt;var x=3&lt;/script&gt;"
+      onload="go()"
+      id="ifr">
+    </iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    function go() {
+      var w = $('ifr').contentWindow.wrappedJSObject;
+      var sandbox = new Components.utils.Sandbox(w);
+      sandbox.__proto__ = w;
+      is(Components.utils.evalInSandbox("x * 4", sandbox), 12,
+         "Unexpected return from the sandbox");
+      SimpleTest.finish();
+    }
+  ]]></script>
+</window>
