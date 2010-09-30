@@ -1609,9 +1609,7 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 #endif /* DEBUG */
     }
 
-    nsresult rv = OnRedirectStateChange(aOldChannel, aNewChannel, aFlags,
-                                        stateFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    OnRedirectStateChange(aOldChannel, aNewChannel, aFlags, stateFlags);
     FireOnStateChange(this, aOldChannel, stateFlags, NS_OK);
   }
 
