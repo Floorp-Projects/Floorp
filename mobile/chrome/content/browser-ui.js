@@ -1130,6 +1130,8 @@ var TapHighlightHelper = {
 
 var PageActions = {
   init: function init() {
+    document.getElementById("pageactions-container").addEventListener("click", this, false);
+
     this.register("pageaction-reset", this.updatePagePermissions, this);
     this.register("pageaction-password", this.updateForgetPassword, this);
 #ifdef NS_PRINTING
@@ -1137,6 +1139,14 @@ var PageActions = {
 #endif
     this.register("pageaction-share", this.updateShare, this);
     this.register("pageaction-search", BrowserSearch.updatePageSearchEngines, BrowserSearch);
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "click":
+        getIdentityHandler().hide();
+        break;
+    }
   },
 
   /**
@@ -1207,7 +1217,7 @@ var PageActions = {
     return logins.some(function(login) login.hostname == host.prePath);
   },
 
-  forgetPassword: function forgetPassword() {
+  forgetPassword: function forgetPassword(aEvent) {
     let host = Browser.selectedBrowser.currentURI;
     let lm = this._loginManager;
 
@@ -1215,9 +1225,12 @@ var PageActions = {
       if (login.hostname == host.prePath)
         lm.removeLogin(login);
     });
+
+    this.hideItem(aEvent.target);
+    aEvent.stopPropagation(); // Don't hide the site menu.
   },
 
-  clearPagePermissions: function clearPagePermissions() {
+  clearPagePermissions: function clearPagePermissions(aEvent) {
     let pm = Services.perms;
     let host = Browser.selectedBrowser.currentURI;
     this._forEachPermissions(host, function(aType) {
@@ -1227,6 +1240,9 @@ var PageActions = {
     let lm = this._loginManager;
     if (!lm.getLoginSavingEnabled(host.prePath))
       lm.setLoginSavingEnabled(host.prePath, true);
+
+    this.hideItem(aEvent.target);
+    aEvent.stopPropagation(); // Don't hide the site menu.
   },
 
   savePageAsPDF: function saveAsPDF() {
