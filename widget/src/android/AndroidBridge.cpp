@@ -46,6 +46,7 @@
 
 #include "AndroidBridge.h"
 #include "nsAppShell.h"
+#include "nsOSHelperAppService.h"
 
 using namespace mozilla;
 
@@ -103,9 +104,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
-    jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;)[Ljava/lang/String;");
-    jGetHandlersForProtocol = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForProtocol", "(Ljava/lang/String;)[Ljava/lang/String;");
-    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+    jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jGetHandlersForProtocol = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForProtocol", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
@@ -258,65 +259,99 @@ AndroidBridge::NotifyXreExit()
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyXreExit);
 }
 
-PRBool
-AndroidBridge::GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray)
+static void 
+getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
+                           nsIMutableArray *aHandlersArray,
+                           nsIHandlerApp **aDefaultApp,
+                           const nsAString& aAction = EmptyString(),
+                           const nsACString& aMimeType = EmptyCString())
 {
-    NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
+    nsString empty = EmptyString();
+    for (jsize i = 0; i < aLen; i+=4) {
+        nsJNIString name( 
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i)));
+        nsJNIString isDefault(
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 1)));
+        nsJNIString packageName( 
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 2)));
+        nsJNIString className( 
+            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 3)));
+        nsIHandlerApp* app = nsOSHelperAppService::
+            CreateAndroidHandlerApp(name, className, packageName,
+                                    className, aMimeType, aAction);
+        
+        aHandlersArray->AppendElement(app, PR_FALSE);
+        if (aDefaultApp && isDefault.Length() > 0)
+            *aDefaultApp = app;
+    }
+}
+
+PRBool
+AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
+                                      nsIMutableArray *aHandlersArray,
+                                      nsIHandlerApp **aDefaultApp,
+                                      const nsAString& aAction)
+{
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
-    jstring jstr = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    jstring jstrMimeType =
+        mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    const PRUnichar* wAction;
+    PRUint32 actionLen = NS_StringGetData(aAction, &wAction);
+    jstring jstrAction = mJNIEnv->NewString(wAction, actionLen);
+
     jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
                                                   jGetHandlersForMimeType,
-                                                  jstr);
+                                                  jstrMimeType, jstrAction);
     jobjectArray arr = static_cast<jobjectArray>(obj);
     if (!arr)
         return PR_FALSE;
 
     jsize len = mJNIEnv->GetArrayLength(arr);
 
-    if (!aStringArray)
+    if (!aHandlersArray)
         return len > 0;
 
-    for (jsize i = 0; i < len; i++) {
-        jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));
-        nsJNIString jniStr(jstr);
-        aStringArray->InsertStringAt(jniStr, i);
-    }
-
+    getHandlersFromStringArray(mJNIEnv, arr, len, aHandlersArray, 
+                               aDefaultApp, aAction,
+                               nsDependentCString(aMimeType));
     return PR_TRUE;
 }
 
 PRBool
-AndroidBridge::GetHandlersForProtocol(const char *aScheme, nsStringArray* aStringArray)
+AndroidBridge::GetHandlersForProtocol(const char *aScheme,
+                                      nsIMutableArray* aHandlersArray,
+                                      nsIHandlerApp **aDefaultApp,
+                                      const nsAString& aAction)
 {
-    NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wScheme(aScheme);
-    jstring jstr = mJNIEnv->NewString(wScheme.get(), wScheme.Length());
+    jstring jstrScheme = mJNIEnv->NewString(wScheme.get(), wScheme.Length());
+    const PRUnichar* wAction;
+    PRUint32 actionLen = NS_StringGetData(aAction, &wAction);
+    jstring jstrAction = mJNIEnv->NewString(wAction, actionLen);
+
     jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
                                                   jGetHandlersForProtocol,
-                                                  jstr);
+                                                  jstrScheme, jstrAction);
     jobjectArray arr = static_cast<jobjectArray>(obj);
     if (!arr)
         return PR_FALSE;
 
     jsize len = mJNIEnv->GetArrayLength(arr);
 
-    if (!aStringArray)
+    if (!aHandlersArray)
         return len > 0;
 
-    for (jsize i = 0; i < len; i++) {
-        jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));
-        nsJNIString jniStr(jstr);
-        aStringArray->InsertStringAt(jniStr, i);
-    }
-
+    getHandlersFromStringArray(mJNIEnv, arr, len, aHandlersArray, 
+                               aDefaultApp, aAction);
     return PR_TRUE;
 }
 
 PRBool
 AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
-                               const nsAString& aPackageName, const nsAString& aClassName)
+                               const nsAString& aPackageName, const nsAString& aClassName,
+                               const nsAString& aAction)
 {
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
@@ -325,14 +360,19 @@ AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMi
     PRUint32 packageNameLen = NS_StringGetData(aPackageName, &wPackageName);
     const PRUnichar* wClassName;
     PRUint32 classNameLen = NS_StringGetData(aClassName, &wClassName);
+    const PRUnichar* wAction;
+    PRUint32 actionLen = NS_StringGetData(aAction, &wAction);
 
     jstring jstrUri = mJNIEnv->NewString(wUriSpec.get(), wUriSpec.Length());
     jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
     jstring jstrPackage = mJNIEnv->NewString(wPackageName, packageNameLen);
     jstring jstrClass = mJNIEnv->NewString(wClassName, classNameLen);
+    jstring jstrAction = mJNIEnv->NewString(wAction, actionLen);
+
     return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass,
                                             jOpenUriExternal,
-                                            jstrUri, jstrType, jstrPackage, jstrClass);
+                                            jstrUri, jstrType, jstrPackage, 
+                                            jstrClass, jstrAction);
 }
 
 void

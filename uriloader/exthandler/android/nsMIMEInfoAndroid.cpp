@@ -76,23 +76,19 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
     info.forget(aMimeInfo);
     return PR_TRUE;
   }
-  nsStringArray stringArray;
-  bridge->GetHandlersForMimeType(nsCAutoString(aMimeType).get(), &stringArray);
 
-  nsString empty = EmptyString();
-  PRInt32 len = stringArray.Count();
-  if (len == 0) {
+  nsIHandlerApp* systemDefault = nsnull;
+  bridge->GetHandlersForMimeType(nsCAutoString(aMimeType).get(), 
+                                 info->mHandlerApps, &systemDefault);
+  
+  if (systemDefault)
+    info->mPrefApp = systemDefault;
+
+  PRUint32 len;
+  info->mHandlerApps->GetLength(&len);
+  if (len == 1) {
     info.forget(aMimeInfo);
     return PR_FALSE;
-  }
-
-  for (jsize i = 0; i < len; i+=4) {
-    nsAndroidHandlerApp* app =
-      new nsAndroidHandlerApp(*stringArray[i], empty, *stringArray[i + 2],
-                              *stringArray[i + 3], aMimeType);
-    info->mHandlerApps->AppendElement(app, PR_FALSE);
-    if (stringArray[i + 1] > 0)
-      info->mPrefApp = app;
   }
   
   info.forget(aMimeInfo);
@@ -115,7 +111,6 @@ nsMIMEInfoAndroid::GetMimeInfoForProtocol(const nsACString &aScheme,
                                           PRBool *found,
                                           nsIHandlerInfo **info)
 {
-  const nsString &empty = EmptyString();
   const nsCString &emptyC = EmptyCString();
   mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
   nsMIMEInfoAndroid *mimeinfo = new nsMIMEInfoAndroid(emptyC);
@@ -128,26 +123,23 @@ nsMIMEInfoAndroid::GetMimeInfoForProtocol(const nsACString &aScheme,
     return NS_OK;
   }
 
+  nsIHandlerApp* systemDefault = nsnull;
+  bridge->GetHandlersForProtocol(nsCAutoString(aScheme).get(), 
+                                 mimeinfo->mHandlerApps, &systemDefault);
+  
+  if (systemDefault)
+    mimeinfo->mPrefApp = systemDefault;
 
-  nsStringArray stringArray;
-  bridge->GetHandlersForProtocol(nsCAutoString(aScheme).get(), &stringArray);
 
-  PRInt32 len = stringArray.Count();
-  if (len == 0) {
+  PRUint32 len;
+  mimeinfo->mHandlerApps->GetLength(&len);
+  if (len == 1) {
     // Code that calls this requires an object regardless if the OS has
     // something for us, so we return the empty object.
     *found = PR_FALSE;
     return NS_OK;
   }
   
-  for (jsize i = 0; i < len; i+=4) {
-    nsAndroidHandlerApp* app =
-      new nsAndroidHandlerApp(*stringArray[i], empty, *stringArray[i + 2],
-                              *stringArray[i + 3], emptyC);
-    mimeinfo->mHandlerApps->AppendElement(app, PR_FALSE);
-    if (!stringArray[i + 1]->IsEmpty())
-      mimeinfo->mPrefApp = app;
-  }
   return NS_OK;
 }
 

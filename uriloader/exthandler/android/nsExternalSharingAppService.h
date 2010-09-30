@@ -1,5 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,9 +11,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Mozilla browser.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
+ *
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,31 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAndroidHandlerApp_h
-#define nsAndroidHandlerApp_h
-
-#include "nsMIMEInfoImpl.h"
+#ifndef NS_EXTERNAL_SHARING_APP_SERVICE_H
+#define NS_EXTERNAL_SHARING_APP_SERVICE_H
 #include "nsIExternalSharingAppService.h"
 
-class nsAndroidHandlerApp : public nsISharingHandlerApp {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIHANDLERAPP
-    NS_DECL_NSISHARINGHANDLERAPP
 
-    public:
-    nsAndroidHandlerApp(const nsAString& aName, const nsAString& aDescription,
-                        const nsAString& aPackageName, 
-                        const nsAString& aClassName, 
-                        const nsACString& aMimeType, const nsAString& aAction);
-    virtual ~nsAndroidHandlerApp();
+#define NS_EXTERNALSHARINGAPPSERVICE_CID                \
+  {0x93e2c46e, 0x0011, 0x434b,                          \
+    {0x81, 0x2e, 0xb6, 0xf3, 0xa8, 0x1e, 0x2a, 0x58}}
+
+class nsExternalSharingAppService : public nsIExternalSharingAppService
+{
+public:
+  NS_DECL_ISUPPORTS
+    NS_DECL_NSIEXTERNALSHARINGAPPSERVICE
+
+    nsExternalSharingAppService();
 
 private:
-    nsString mName;
-    nsString mDescription;
-    nsCString mMimeType;
-    nsString mClassName;
-    nsString mPackageName;
-    nsString mAction;
+  ~nsExternalSharingAppService();
+
 };
-#endif
+
+#endif /*NS_EXTERNAL_SHARING_APP_SERVICE_H */

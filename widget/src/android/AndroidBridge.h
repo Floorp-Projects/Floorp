@@ -47,7 +47,8 @@
 
 #include "AndroidJavaWrappers.h"
 
-#include "nsVoidArray.h"
+#include "nsIMutableArray.h"
+#include "nsIMIMEInfo.h"
 
 // Some debug #defines
 // #define ANDROID_DEBUG_EVENTS
@@ -117,13 +118,20 @@ public:
     void SetSurfaceView(jobject jobj);
     AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
 
-    PRBool GetHandlersForProtocol(const char *aScheme, nsStringArray* aStringArray = nsnull);
+    PRBool GetHandlersForProtocol(const char *aScheme, 
+                                  nsIMutableArray* handlersArray = nsnull,
+                                  nsIHandlerApp **aDefaultApp = nsnull,
+                                  const nsAString& aAction = EmptyString());
 
-    PRBool GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray = nsnull);
+    PRBool GetHandlersForMimeType(const char *aMimeType,
+                                  nsIMutableArray* handlersArray = nsnull,
+                                  nsIHandlerApp **aDefaultApp = nsnull,
+                                  const nsAString& aAction = EmptyString());
 
     PRBool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType, 
                            const nsAString& aPackageName = EmptyString(), 
-                           const nsAString& aClassName = EmptyString());
+                           const nsAString& aClassName = EmptyString(),
+                           const nsAString& aAction = EmptyString());
 
     void GetMimeTypeFromExtension(const nsACString& aFileExt, nsCString& aMimeType);
 
