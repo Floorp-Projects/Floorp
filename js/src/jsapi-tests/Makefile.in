@@ -50,7 +50,6 @@ CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
   testClassGetter.cpp \
-  testCloneScript.cpp \
   testConservativeGC.cpp \
   testContexts.cpp \
   testDebugger.cpp \
