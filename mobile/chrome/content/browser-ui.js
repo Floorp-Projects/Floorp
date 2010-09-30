@@ -741,13 +741,17 @@ var BrowserUI = {
     let tab = Browser.selectedTab;
     let browser = tab.browser;
 
-    if (browser.canGoBack)
+    if (browser.canGoBack) {
       browser.goBack();
-    else if (tab.owner)
+    } else if (tab.owner) {
       this.closeTab(tab);
+    }
 #ifdef ANDROID
-    else
+    else {
       window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+      if (tab.closeOnExit)
+        this.closeTab(tab);
+    }
 #endif
   },
 
