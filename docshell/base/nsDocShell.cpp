@@ -5890,7 +5890,7 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     }
 
     // HTTP channel with unsafe methods should not be redirected to a cross-domain.
-    if (!ChannelIsSafeHTTPMethod(aNewChannel)) {
+    if (!ChannelIsSafeMethod(aNewChannel)) {
         // This code is very similar to the code of nsSameOriginChecker in
         // nsContentUtils but we can't use nsSameOriginChecker because it
         // needs to use a channel callback (which we already use).
@@ -8791,7 +8791,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
 
     // If a specific HTTP channel has been set and it is not a safe method,
     // we should prevent cross-origin requests.
-    if (aHttpMethod && ownerPrincipal && !ChannelIsSafeHTTPMethod(channel)) {
+    if (aHttpMethod && ownerPrincipal && !ChannelIsSafeMethod(channel)) {
         if (NS_FAILED(ownerPrincipal->CheckMayLoad(aURI, PR_FALSE))) {
             return NS_OK;
         }
@@ -10438,11 +10438,11 @@ nsDocShell::ChannelIsPost(nsIChannel* aChannel)
 
 /* static */
 bool
-nsDocShell::ChannelIsSafeHTTPMethod(nsIChannel* aChannel)
+nsDocShell::ChannelIsSafeMethod(nsIChannel* aChannel)
 {
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
     if (!httpChannel) {
-        return true;
+        return false;
     }
 
     nsCAutoString method;
