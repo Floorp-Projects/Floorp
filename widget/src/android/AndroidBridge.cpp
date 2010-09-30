@@ -111,6 +111,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
     jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
     jShowAlertNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jShowFilePicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePicker", "()Ljava/lang/String;");
 
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
@@ -415,6 +416,14 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
     args[3].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertCookie).get(), aAlertCookie.Length());
     args[4].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
     mJNIEnv->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotification, args);
+}
+
+void
+AndroidBridge::ShowFilePicker(nsAString& aFilePath)
+{
+    jstring jstr =  static_cast<jstring>(mJNIEnv->CallStaticObjectMethod(
+                                             mGeckoAppShellClass, jShowFilePicker));
+    aFilePath.Assign(nsJNIString(jstr));
 }
 
 void

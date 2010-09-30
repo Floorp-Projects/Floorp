@@ -144,6 +144,8 @@ public:
                                nsIObserver *aAlertListener,
                                const nsAString& aAlertName);
 
+    void ShowFilePicker(nsAString& aFilePath);
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
@@ -204,6 +206,7 @@ protected:
     jmethodID jGetClipboardText;
     jmethodID jSetClipboardText;
     jmethodID jShowAlertNotification;
+    jmethodID jShowFilePicker;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
