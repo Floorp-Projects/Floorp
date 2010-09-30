@@ -1909,6 +1909,13 @@ let GroupItems = {
       if (groupItems.length > 0) {
         groupItems.some(function(groupItem) {
           if (!groupItem.hidden) {
+            // restore the last active tab in the group
+            let activeTab = groupItem.getActiveTab();
+            if (activeTab) {
+              tabItem = activeTab;
+              return true;
+            }
+            // if no tab is active, use the first one
             var child = groupItem.getChild(0);
             if (child) {
               tabItem = child;
@@ -1930,6 +1937,13 @@ let GroupItems = {
       var firstGroupItems = groupItems.slice(currentIndex + 1);
       firstGroupItems.some(function(groupItem) {
         if (!groupItem.hidden) {
+          // restore the last active tab in the group
+          let activeTab = groupItem.getActiveTab();
+          if (activeTab) {
+            tabItem = activeTab;
+            return true;
+          }
+          // if no tab is active, use the first one
           var child = groupItem.getChild(0);
           if (child) {
             tabItem = child;
@@ -1947,6 +1961,13 @@ let GroupItems = {
         var secondGroupItems = groupItems.slice(0, currentIndex);
         secondGroupItems.some(function(groupItem) {
           if (!groupItem.hidden) {
+            // restore the last active tab in the group
+            let activeTab = groupItem.getActiveTab();
+            if (activeTab) {
+              tabItem = activeTab;
+              return true;
+            }
+            // if no tab is active, use the first one
             var child = groupItem.getChild(0);
             if (child) {
               tabItem = child;
