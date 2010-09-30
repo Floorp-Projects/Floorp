@@ -365,6 +365,16 @@ abstract public class GeckoApp
             unpackFile(zip, buf, null, "update.locale");
         } catch (Exception e) {/* this is non-fatal */}
 
+        // copy any .xpi file into an extensions/ directory
+        Enumeration<? extends ZipEntry> zipEntries = zip.entries();
+        while (zipEntries.hasMoreElements()) {
+          ZipEntry entry = zipEntries.nextElement();
+          if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
+            Log.i("GeckoAppJava", "installing extension : " + entry.getName());
+            unpackFile(zip, buf, entry, entry.getName());
+          }
+        }
+        
         ZipEntry componentsList = zip.getEntry("components/components.manifest");
         if (componentsList == null) {
             Log.i("GeckoAppJava", "Can't find components.manifest!");
