@@ -116,16 +116,30 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!vp->isMarkable())
         return true;
 
-    /* Static strings do not have to be wrapped. */
-    if (vp->isString() && JSString::isStatic(vp->toString()))
-        return true;
+    if (vp->isString()) {
+        JSString *str = vp->toString();
+
+        /* Static strings do not have to be wrapped. */
+        if (JSString::isStatic(str))
+            return true;
+
+        /* If the string is already in this compartment, we are done. */
+        if (str->asCell()->compartment() == this)
+            return true;
+
+        /* If the string is an atom, we don't have to copy. */
+        if (str->isAtomized()) {
+            JS_ASSERT(str->asCell()->compartment() == cx->runtime->defaultCompartment);
+            return true;
+        }
+    }
 
     /* Unwrap incoming objects. */
     if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
 
         /* If the object is already in this compartment, we are done. */
-        if (obj->getCompartment(cx) == this)
+        if (obj->compartment() == this)
             return true;
 
         /* Don't unwrap an outer window proxy. */
