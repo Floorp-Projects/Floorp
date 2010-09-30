@@ -25,7 +25,7 @@ function test() {
 
 function clickFired(aEvent) {
   isClickFired = true;
-  let [x, y] = Browser.browserViewToClient(aEvent.clientX, aEvent.clientY);
+  let [x, y] = browserViewToClient(aEvent.clientX, aEvent.clientY);
   clickPosition.x = x;
   clickPosition.y = y;
 }
@@ -113,4 +113,14 @@ function getBoundingContentRect(aElement) {
   }
 
   return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
+}
+
+browserViewToClient: function browserViewToClient(x, y) {
+  let container = document.getElementById("browsers");
+  let containerBCR = container.getBoundingClientRect();
+
+  let x0 = Math.round(-containerBCR.left);
+  let y0 = Math.round(-containerBCR.top);
+
+  return [x - x0, y - y0];
 }
