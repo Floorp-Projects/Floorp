@@ -67,11 +67,17 @@ let testData = [
   { width: 533.33,  scale: 1.5,    disableZoom: true }
 ];
 
+let isLocalScheme = Util.isLocalScheme;
+
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
 function test() {
   // This test is async
   waitForExplicitFinish();
+
+  // We need our test pages to open in remote tabs, until zooming in local tabs
+  // is fixed (bug 597081).
+  Util.isLocalScheme = function() { return false; };
 
   working_tab = Browser.addTab(testURL_blank, true);
   ok(working_tab, "Tab Opened");
@@ -91,8 +97,7 @@ function verifyBlank(n) {
     is(uri, testURL_blank, "URL Matches blank page "+n);
 
     // Check viewport settings
-    let style = window.getComputedStyle(working_tab.browser, null);
-    is(style.width, "980px", "Normal 'browser' width is 980 pixels");
+    is(working_tab.browser.contentWindowWidth, 980, "Normal 'browser' width is 980 pixels");
 
     loadTest(n);
   }
@@ -132,8 +137,7 @@ function verifyTest(n) {
     is(uri, testURL(n), "URL is "+testURL(n));
 
     let data = testData[n];
-    let style = window.getComputedStyle(working_tab.browser, null);
-    let actualWidth = parseFloat(style.width.replace(/[^\d\.]+/, ""));
+    let actualWidth = working_tab.browser.contentWindowWidth;
     is_approx(actualWidth, parseFloat(data.width), .01, "Viewport width=" + data.width);
 
     let zoomLevel = getBrowser().scale;
@@ -179,6 +183,7 @@ function finishTest(n) {
     startTest(n+1);
   } else {
     Browser.closeTab(working_tab);
+    Util.isLocalScheme = isLocalScheme;
     finish();
   }
 }
