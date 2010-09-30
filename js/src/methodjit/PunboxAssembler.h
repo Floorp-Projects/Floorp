@@ -228,8 +228,7 @@ class Assembler : public BaseAssembler
 
     Jump testNull(Assembler::Condition cond, Address address) {
         loadValue(address, Registers::ValueReg);
-        convertValueToType(Registers::ValueReg);
-        return branchPtr(cond, Registers::ValueReg, ImmShiftedTag(JSVAL_SHIFTED_TAG_NULL));
+        return branchPtr(cond, Registers::ValueReg, Imm64(JSVAL_BITS(JSVAL_NULL)));
     }
 
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {
