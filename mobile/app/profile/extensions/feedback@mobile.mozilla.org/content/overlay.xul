@@ -48,14 +48,11 @@
   <script type="application/javascript" src="chrome://feedback/content/overlay.js"/>
 
   <box id="panel-controls">
-    <toolbarbutton id="tool-feedback" autocheck="true" type="radio" group="1" class="panel-button button-image" linkedpanel="feedback-container" insertbefore="tool-addons"/>
+    <toolbarbutton id="tool-feedback" autocheck="true" type="radio" group="1" class="panel-button button-image" linkedpanel="feedback-container" insertafter="tool-addons"/>
   </box>
 
   <deck id="panel-items">
-    <vbox id="feedback-container" flex="1" hidden="true">
-      <hbox id="feedback-header" class="panel-header">
-        <label value="&feedbackHeader.label;" flex="1"/>
-      </hbox>
+    <vbox id="feedback-container" label="&feedbackHeader.label;" flex="1" hidden="true">
       <notificationbox id="feedback-messages" flex="1">
         <richlistbox id="feedback-list" flex="1" onselect="this.ensureSelectedElementIsVisible()">
           <settings id="feedback-communicate" label="&feedback.communicate.title;">
