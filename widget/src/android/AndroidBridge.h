@@ -166,6 +166,8 @@ public:
 
     int GetDPI();
 
+    void ShowFilePicker(nsAString& aFilePath);
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
@@ -226,6 +228,7 @@ protected:
     jmethodID jGetClipboardText;
     jmethodID jSetClipboardText;
     jmethodID jShowAlertNotification;
+    jmethodID jShowFilePicker;
     jmethodID jAlertsProgressListener_OnProgress;
     jmethodID jAlertsProgressListener_OnCancel;
     jmethodID jGetDpi;
