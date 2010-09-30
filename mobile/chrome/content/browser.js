@@ -81,10 +81,10 @@ function onDebugKeyPress(ev) {
 
   // use capitals so we require SHIFT here too
 
-  const a = 65;
+  const a = 65; // swipe left
   const b = 66;
   const c = 67;
-  const d = 68;
+  const d = 68; // swipe right
   const e = 69;
   const f = 70;  // force GC
   const g = 71;
@@ -99,11 +99,11 @@ function onDebugKeyPress(ev) {
   const p = 80;  // fake pinch zoom
   const q = 81;  // toggle orientation
   const r = 82;
-  const s = 83;
+  const s = 83; // swipe down
   const t = 84;
   const u = 85;
   const v = 86;
-  const w = 87;
+  const w = 87; // swipe up
   const x = 88;
   const y = 89;
   const z = 90;
