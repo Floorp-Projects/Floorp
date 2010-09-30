@@ -240,6 +240,7 @@
                     </box>
                     <textbox id="urlbar-edit"
                              type="autocomplete"
+                             class="uri-element"
                              autocompletesearch="history"
                              autocompletepopup="popup_autocomplete"
                              enablehistory="false"
