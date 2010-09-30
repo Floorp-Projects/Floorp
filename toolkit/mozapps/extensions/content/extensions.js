@@ -531,28 +531,6 @@ var gViewController = {
   },
 
   commands: {
-    cmd_back: {
-      isEnabled: function() {
-        return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .canGoBack;
-      },
-      doCommand: function() {
-        window.history.back();
-      }
-    },
-
-    cmd_forward: {
-      isEnabled: function() {
-        return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .canGoForward;
-      },
-      doCommand: function() {
-        window.history.forward();
-      }
-    },
-
     cmd_restartApp: {
       isEnabled: function() true,
       doCommand: function() {

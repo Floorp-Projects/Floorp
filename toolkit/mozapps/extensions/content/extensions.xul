@@ -113,8 +113,6 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_installFromFile"/>
-    <command id="cmd_back"/>
-    <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
@@ -140,12 +138,7 @@
   </commandset>
 
   <!-- main header -->
-  <hbox id="header" align="center">
-    <button id="back-btn" class="nav-button" command="cmd_back"
-            tooltiptext="&cmd.back.tooltip;"/>
-    <button id="forward-btn" class="nav-button" command="cmd_forward"
-            tooltiptext="&cmd.forward.tooltip;"/>
-    <spacer flex="1"/>
+  <hbox id="header" align="center" pack="end">
     <hbox id="updates-container" align="center">
       <image class="spinner"/>
       <label id="updates-noneFound" hidden="true"
