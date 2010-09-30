@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <OpenGL/OpenGL.h>
+
 #include "gfxPlatformMac.h"
 
 #include "gfxImageSurface.h"
@@ -57,10 +59,34 @@
 
 #include "qcms.h"
 
+static void forceGLInit()
+{
+    CGLPixelFormatAttribute attribs[] =
+    {
+        kCGLPFAAccelerated,
+        kCGLPFAColorSize, (CGLPixelFormatAttribute)24,
+        kCGLPFADepthSize, (CGLPixelFormatAttribute)16,
+        kCGLPFADoubleBuffer,
+        kCGLPFASupersample,
+        (CGLPixelFormatAttribute)0
+    };
+
+    CGLPixelFormatObj pixelFormatObj;
+    GLint numPixelFormats;
+
+    CGLChoosePixelFormat (attribs, &pixelFormatObj, &numPixelFormats);
+}
+
+
 gfxPlatformMac::gfxPlatformMac()
 {
     mOSXVersion = 0;
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
+
+    /* We'll force the initialization of GL unconditionally so that we'll see
+       the impact on Ts. Eventually, we should be able to do this on another
+       thread bringing the cost down */
+    forceGLInit();
 }
 
 gfxPlatformMac::~gfxPlatformMac()
