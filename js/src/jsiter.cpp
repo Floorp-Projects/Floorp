@@ -871,25 +871,17 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
 }
 
 /*
- * Suppress enumeration of deleted properties. This function must be called
- * when a property is deleted and there might be active enumerators. 
- *
- * We maintain a list of active non-escaping for-in enumerators. To suppress
- * a property, we check whether each active enumerator contains the (obj, id)
- * pair and has not yet enumerated |id|. If so, and |id| is the next property,
- * we simply advance the cursor. Otherwise, we delete |id| from the list.
+ * Suppress enumeration of deleted properties. We maintain a list of all active
+ * non-escaping for-in enumerators. Whenever a property is deleted, we check
+ * whether any active enumerator contains the (obj, id) pair and has not
+ * enumerated id yet. If so, we delete the id from the list (or advance the
+ * cursor if it is the next id to be enumerated).
  *
  * We do not suppress enumeration of a property deleted along an object's
  * prototype chain. Only direct deletions on the object are handled.
- *
- * This function can suppress multiple properties at once. The |predicate|
- * argument is an object which can be called on an id and returns true or
- * false. It also must have a method |matchesAtMostOne| which allows us to
- * stop searching after the first deletion if true.
  */
-template<typename IdPredicate>
-static bool
-SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicate)
+bool
+js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 {
     JSObject *iterobj = cx->enumerators;
     while (iterobj) {
@@ -901,7 +893,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
             jsid *props_cursor = ni->currentKey();
             jsid *props_end = ni->endKey();
             for (jsid *idp = props_cursor; idp < props_end; ++idp) {
-                if (predicate(*idp)) {
+                if (*idp == id) {
                     /*
                      * Check whether another property along the prototype chain
                      * became visible as a result of this deletion.
@@ -910,14 +902,14 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         AutoObjectRooter proto(cx, obj->getProto());
                         AutoObjectRooter obj2(cx);
                         JSProperty *prop;
-                        if (!proto.object()->lookupProperty(cx, *idp, obj2.addr(), &prop))
+                        if (!proto.object()->lookupProperty(cx, id, obj2.addr(), &prop))
                             return false;
                         if (prop) {
                             uintN attrs;
                             if (obj2.object()->isNative()) {
                                 attrs = ((Shape *) prop)->attributes();
                                 JS_UNLOCK_OBJ(cx, obj2.object());
-                            } else if (!obj2.object()->getAttributes(cx, *idp, &attrs)) {
+                            } else if (!obj2.object()->getAttributes(cx, id, &attrs)) {
                                 return false;
                             }
                             if (attrs & JSPROP_ENUMERATE)
@@ -933,7 +925,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         goto again;
 
                     /*
-                     * No property along the prototype chain stepped in to take the
+                     * No property along the prototype chain steppeded in to take the
                      * property's place, so go ahead and delete id from the list.
                      * If it is the next property to be enumerated, just skip it.
                      */
@@ -943,46 +935,13 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                         memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
                         ni->props_end = ni->endKey() - 1;
                     }
-                    if (predicate.matchesAtMostOne())
-                        break;
+                    break;
                 }
             }
         }
         iterobj = ni->next;
     }
     return true;
-}
-
-class SingleIdPredicate {
-    jsid id;
-public:
-    SingleIdPredicate(jsid id) : id(id) {}
-
-    bool operator()(jsid id) { return id == this->id; }
-    bool matchesAtMostOne() { return true; }
-};
-
-bool
-js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
-{
-    return SuppressDeletedPropertyHelper(cx, obj, SingleIdPredicate(id));
-}
-
-class IndexRangePredicate {
-    jsint begin, end;
-public:
-    IndexRangePredicate(jsint begin, jsint end) : begin(begin), end(end) {}
-
-    bool operator()(jsid id) { 
-        return JSID_IS_INT(id) && begin <= JSID_TO_INT(id) && JSID_TO_INT(id) < end;
-    }
-    bool matchesAtMostOne() { return false; }
-};
-
-bool
-js_SuppressDeletedIndexProperties(JSContext *cx, JSObject *obj, jsint begin, jsint end)
-{
-    return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
 JSBool

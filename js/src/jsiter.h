@@ -171,9 +171,6 @@ js_CloseIterator(JSContext *cx, JSObject *iterObj);
 bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
 
-bool
-js_SuppressDeletedIndexProperties(JSContext *cx, JSObject *obj, jsint begin, jsint end);
-
 /*
  * IteratorMore() indicates whether another value is available. It might
  * internally call iterobj.next() and then cache the value until its
