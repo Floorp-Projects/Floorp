@@ -1212,7 +1212,10 @@ var PageActions = {
     });
 
     if (!this._loginManager.getLoginSavingEnabled(host.prePath)) {
-      permissions.push("pageactions.password");
+      // If rememberSignons is false, then getLoginSavingEnabled returns false
+      // for all pages, so we should just ignore it (Bug 601163).
+      if (Services.prefs.getBoolPref("signon.rememberSignons"))
+        permissions.push("pageactions.password");
     }
 
     let descriptions = permissions.map(function(s) Elements.browserBundle.getString(s));
