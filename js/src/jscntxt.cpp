@@ -49,8 +49,8 @@
 #include "jsstdint.h"
 
 #include "jstypes.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsclist.h"
 #include "jsprf.h"
 #include "jsatom.h"
