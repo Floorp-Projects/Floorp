@@ -42,7 +42,7 @@
  */
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsbool.h"

@@ -49,7 +49,7 @@
  * is reference counted and the slot vector is malloc'ed.
  */
 #include "jsapi.h"
-#include "jshash.h" /* Added by JSIFY */
+#include "jshash.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
 #include "jslock.h"

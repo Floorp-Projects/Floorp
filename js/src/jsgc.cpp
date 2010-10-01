@@ -53,8 +53,8 @@
 #include <string.h>     /* for memset used when DEBUG */
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 #include "jsbit.h"
 #include "jsclist.h"
 #include "jsprf.h"
