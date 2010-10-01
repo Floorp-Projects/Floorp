@@ -55,8 +55,8 @@ toolbarbutton.urlbar-button {
   -moz-margin-start: 8px; /* core spacing */
 }
 
-%ifdef MOZ_PLATFORM_MAEMO
-/* MAEMO only */
+%ifndef ANDROID
+/* MAEMO (and desktop) only */
 #tool-app-switch {
   margin-top: -8px; /* force the button to go to the edge */
   margin-bottom: -8px; /* force the button to go to the edge */
@@ -78,7 +78,7 @@ toolbarbutton.urlbar-button {
   visibility: visible;
 }
 
-/* MAEMO only */
+/* MAEMO (and desktop) only */
 #tool-app-close {
   margin-top: -8px; /* force the button to go to the edge */
   margin-bottom: -8px; /* force the button to go to the edge */
@@ -394,8 +394,8 @@ toolbarbutton.page-button {
   list-style-image: url("chrome://browser/skin/images/settings-active-rtl-64.png");
 }
 
-%ifdef MOZ_PLATFORM_MAEMO
-/* MAEMO only */
+%ifndef ANDROID
+/* MAEMO (and desktop) only */
 #tool-panel-close {
   -moz-margin-end: -8px; /* force the button to go to the edge */
   -moz-padding-end: 8px !important; /* re-center the image */

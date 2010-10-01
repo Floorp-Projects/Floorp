@@ -261,7 +261,7 @@
                       <toolbarbutton id="tool-search" class="urlbar-cap-button" command="cmd_opensearch"/>
                     </hbox>
                   </hbox>
-#ifdef MOZ_PLATFORM_MAEMO
+#ifndef ANDROID
                   <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
 #endif
                 </toolbar>
@@ -377,7 +377,7 @@
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button button-image" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-console" type="radio" group="1" hidden="true" class="panel-button button-image" linkedpanel="console-container"/>
-#ifdef MOZ_PLATFORM_MAEMO
+#ifndef ANDROID
         <spacer flex="1"/>
         <toolbarbutton id="tool-panel-close" class="button-image" command="cmd_panel"/>
 #endif
