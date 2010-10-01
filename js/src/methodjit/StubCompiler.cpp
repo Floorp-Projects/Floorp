@@ -199,12 +199,6 @@ StubCompiler::fixCrossJumps(uint8 *ncode, size_t offset, size_t total)
         slow.link(joins[i].from, fast.locationOf(joins[i].to));
 }
 
-void
-StubCompiler::finalize(uint8 *ncode)
-{
-    masm.finalize(ncode);
-}
-
 JSC::MacroAssembler::Call
 StubCompiler::vpInc(JSOp op, uint32 depth)
 {
