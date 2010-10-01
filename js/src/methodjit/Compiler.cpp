@@ -75,7 +75,11 @@ static const char *OpcodeNames[] = {
 #endif
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
-  : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
+  : BaseCompiler(cx),
+    script(script),
+    scopeChain(scopeChain),
+    globalObj(scopeChain->getGlobal()),
+    fun(fun),
     analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
     branchPatches(ContextAllocPolicy(cx)),
 #if defined JS_MONOIC
@@ -450,21 +454,11 @@ mjit::Compiler::finishThisUp()
 #endif /* JS_MONOIC */
 
     for (size_t i = 0; i < callPatches.length(); i++) {
-        void *joinPoint = fullCode.locationOf(callPatches[i].joinPoint).executableAddress();
+        CallPatchInfo &patch = callPatches[i];
 
-        /* Patch the write of ncode in the hot path. */
-        JSC::CodeLocationDataLabelPtr fastNcode =
-            fullCode.locationOf(callPatches[i].fastNcodePatch);
-        JSC::RepatchBuffer fastRepatch((uint8*)fastNcode.executableAddress() - 32, 64, false);
-        fastRepatch.repatch(fastNcode, joinPoint);
-
-        /* Patch the write of ncode in the slow path. */
-        if (callPatches[i].hasSlowNcode) {
-            JSC::CodeLocationDataLabelPtr slowNcode =
-                stubCode.locationOf(callPatches[i].slowNcodePatch);
-            JSC::RepatchBuffer slowRepatch((uint8*)slowNcode.executableAddress() - 32, 64, false);
-            slowRepatch.repatch(slowNcode, joinPoint);
-        }
+        fullCode.patch(patch.fastNcodePatch, fullCode.locationOf(patch.joinPoint));
+        if (patch.hasSlowNcode)
+            stubCode.patch(patch.slowNcodePatch, fullCode.locationOf(patch.joinPoint));
     }
 
 #if defined JS_POLYIC
@@ -525,8 +519,8 @@ mjit::Compiler::finishThisUp()
     }
 
     /* Patch all outgoing calls. */
-    masm.finalize(result);
-    stubcc.finalize(result + masm.size());
+    masm.finalize(fullCode);
+    stubcc.masm.finalize(stubCode);
 
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
@@ -534,6 +528,7 @@ mjit::Compiler::finishThisUp()
     script->ncode = (uint8 *)(result + masm.distanceOf(invokeLabel));
 
     /* Build the table of call sites. */
+    script->jit->nCallSites = callSites.length();
     if (callSites.length()) {
         CallSite *callSiteList = (CallSite *)cursor;
         cursor += sizeof(CallSite) * callSites.length();
@@ -1689,13 +1684,6 @@ mjit::Compiler::labelOf(jsbytecode *pc)
     uint32 offs = uint32(pc - script->code);
     JS_ASSERT(jumpMap[offs].isValid());
     return jumpMap[offs];
-}
-
-JSC::ExecutablePool *
-mjit::Compiler::getExecPool(size_t size)
-{
-    ThreadData *jaegerData = &JS_METHODJIT_DATA(cx);
-    return jaegerData->execPool->poolForSize(size);
 }
 
 uint32
