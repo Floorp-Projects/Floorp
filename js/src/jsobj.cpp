@@ -2163,6 +2163,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         }
     }
 
+    bool callDelProperty = false;
+
     if (desc.isGenericDescriptor()) {
         /* 8.12.9 step 8, no validation required */
     } else if (desc.isDataDescriptor() != shape->isDataDescriptor()) {
@@ -2179,6 +2181,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                               rval);
             }
         }
+
+        callDelProperty = !shape->hasDefaultGetter() || !shape->hasDefaultSetter();
     } else {
         /* 8.12.9 step 11. */
         JS_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
@@ -2269,6 +2273,22 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
     *rval = true;
     obj2->dropProperty(cx, current);
+
+    /*
+     * Since "data" properties implemented using native C functions may rely on
+     * side effects during setting, we must make them aware that they have been
+     * "assigned"; deleting the property before redefining it does the trick.
+     * See bug 539766, where we ran into problems when we redefined
+     * arguments.length without making the property aware that its value had
+     * been changed (which would have happened if we had deleted it before
+     * redefining it or we had invoked its setter to change its value).
+     */
+    if (callDelProperty) {
+        Value dummy;
+        if (!CallJSPropertyOp(cx, obj2->getClass()->delProperty, obj2, desc.id, &dummy))
+            return false;
+    }
+
     return js_DefineProperty(cx, obj, desc.id, &v, getter, setter, attrs);
 }
 
