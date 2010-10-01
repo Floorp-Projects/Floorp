@@ -1959,8 +1959,7 @@ nsHttpChannel::OpenCacheEntry()
             mPostID = gHttpHandler->GenerateUniqueID();
     }
     else if ((mRequestHead.Method() != nsHttp::Get) &&
-             (mRequestHead.Method() != nsHttp::Head) &&
-             (!(mLoadFlags & FORCE_OPEN_CACHE_ENTRY))) {
+             (mRequestHead.Method() != nsHttp::Head)) {
         // don't use the cache for other types of requests
         return NS_OK;
     }

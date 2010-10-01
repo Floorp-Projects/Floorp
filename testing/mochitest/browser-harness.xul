@@ -208,15 +208,31 @@
 
     // Returns an array of browserTest objects for all the selected tests
     function listTests() {
+      var baseURL = 'chrome://mochitests/content';
+      var testsURI = Components.classes["@mozilla.org/file/directory_service;1"]
+                          .getService(Components.interfaces.nsIProperties)
+                          .get("ProfD", Components.interfaces.nsILocalFile);
+      testsURI.append("tests.manifest");
+      var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+                  getService(Components.interfaces.nsIIOService);
+      var manifestFile = ioSvc.newFileURI(testsURI)
+                      .QueryInterface(Components.interfaces.nsIFileURL).file;
+
+      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
+        autoRegister(manifestFile);
 
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                          getService(Ci.mozIJSSubScriptLoader);
       var srvScope = {};
-      var baseURL = 'chrome://mochikit/content';
       scriptLoader.loadSubScript('chrome://mochikit/content/server.js', srvScope);
 
-      var [links, singleTestPath] = getFileListing(baseURL, gConfig.testPath, "browser", srvScope);
+      var jar = getJar(baseURL);
+      if (jar != null) {
+        var [links, singleTestPath] = getMochitestJarListing(baseURL, gConfig.testPath, "browser");
+      } else {
+        var [links, singleTestPath] = getFileListing(baseURL, gConfig.testPath, "browser", srvScope);
+      }
 
       var fileNames = [];
       var fileNameRegexp = /browser_.+\.js$/;

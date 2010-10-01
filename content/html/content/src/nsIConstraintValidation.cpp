@@ -78,7 +78,16 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
   aValidationMessage.Truncate();
 
   if (IsCandidateForConstraintValidation() && !IsValid()) {
-    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(this);
+    NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
+
+    nsAutoString authorMessage;
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::x_moz_errormessage,
+                     authorMessage);
+
+    if (!authorMessage.IsEmpty()) {
+      aValidationMessage.Assign(authorMessage);
+    } else if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
       aValidationMessage.Assign(mCustomValidity);
     } else if (GetValidityState(VALIDITY_STATE_TOO_LONG)) {
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_TOO_LONG);

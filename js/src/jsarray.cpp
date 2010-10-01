@@ -2683,7 +2683,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
             return JS_FALSE;
         }
         if (!hole && StrictlyEqual(cx, *vp, tosearch)) {
-			vp->setNumber(i);
+            vp->setNumber(i);
             return JS_TRUE;
         }
         if (i == stop)

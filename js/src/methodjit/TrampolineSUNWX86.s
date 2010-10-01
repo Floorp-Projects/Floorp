@@ -65,7 +65,15 @@ JaegerTrampoline:
     call SetVMFrameRegs
     call PushActiveVMFrame
     popl  %edx
-    call  *16(%ebp)
+    jmp  *16(%ebp)
+.size   JaegerTrampoline, . - JaegerTrampoline
+
+/ void JaegerTrampolineReturn()
+.global JaegerTrampolineReturn
+.type   JaegerTrampolineReturn, @function
+JaegerTrampolineReturn:
+    movl  %edx, 0x18(%ebx)
+    movl  %ecx, 0x1C(%ebx)
     pushl %esp
     call PopActiveVMFrame
 
@@ -76,7 +84,7 @@ JaegerTrampoline:
     popl %ebp
     movl $1, %eax
     ret
-.size   JaegerTrampoline, . - JaegerTrampoline
+.size   JaegerTrampolineReturn, . - JaegerTrampolineReturn
 
 
 / void *JaegerThrowpoline(js::VMFrame *vmFrame)
@@ -117,24 +125,11 @@ throwpoline_exit:
 InjectJaegerReturn:
     movl 0x18(%ebx), %edx                        /* fp->rval_ data */
     movl 0x1C(%ebx), %ecx                        /* fp->rval_ type */
-    movl 0x2C(%ebx), %eax                        /* fp->ncode_ */
+    movl 0x14(%ebx), %eax                        /* fp->ncode_ */
     /* For Sun Studio there is no fast call. */
     /* We add the stack by 8 before. */
     addl $0x8, %esp
     /* Restore frame regs. */
     movl 0x1C(%esp), %ebx                        /* f.fp */
-    pushl %eax
-    ret
+    jmp *%eax
 .size   InjectJaegerReturn, . - InjectJaegerReturn
-	
-/*
- * Take the fifth parameter from JaegerShot() and jump to it. This makes it so
- * we can jump into arbitrary JIT code, which won't have the frame-fixup prologue.
- */
-.global SafePointTrampoline
-.type   SafePointTrampoline, @function
-SafePointTrampoline:
-    popl %eax
-    movl %eax, 0x2C(%ebx)
-    jmp  *24(%ebp)
-.size   SafePointTrampoline, . - SafePointTrampoline
