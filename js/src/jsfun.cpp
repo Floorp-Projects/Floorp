@@ -274,6 +274,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     } else {
         JS_ASSERT(!argsobj.getPrivate());
     }
+    fp->clearArgsObj();
 }
 
 #ifdef JS_TRACER
@@ -389,24 +390,26 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     uintN nsrcnotes = (sn - snbase) + 1;
 
     /* NB: GC must not occur before wscript is homed in wfun->u.i.script. */
-    JSScript *wscript = js_NewScript(cx, script->length, nsrcnotes,
-                                     script->atomMap.length,
-                                     (script->objectsOffset != 0)
-                                     ? script->objects()->length
-                                     : 0,
-                                     fun->u.i.nupvars,
-                                     (script->regexpsOffset != 0)
-                                     ? script->regexps()->length
-                                     : 0,
-                                     (script->trynotesOffset != 0)
-                                     ? script->trynotes()->length
-                                     : 0,
-                                     (script->constOffset != 0)
-                                     ? script->consts()->length
-                                     : 0,
-                                     (script->globalsOffset != 0)
-                                     ? script->globals()->length
-                                     : 0);
+    JSScript *wscript = JSScript::NewScript(cx, script->length, nsrcnotes,
+                                            script->atomMap.length,
+                                            (script->objectsOffset != 0)
+                                            ? script->objects()->length
+                                            : 0,
+                                            fun->u.i.nupvars,
+                                            (script->regexpsOffset != 0)
+                                            ? script->regexps()->length
+                                            : 0,
+                                            (script->trynotesOffset != 0)
+                                            ? script->trynotes()->length
+                                            : 0,
+                                            (script->constOffset != 0)
+                                            ? script->consts()->length
+                                            : 0,
+                                            (script->globalsOffset != 0)
+                                            ? script->globals()->length
+                                            : 0,
+                                            script->nClosedArgs,
+                                            script->nClosedVars);
     if (!wscript)
         return NULL;
 
@@ -432,6 +435,8 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
         memcpy(wscript->globals()->vector, script->globals()->vector,
                wscript->globals()->length * sizeof(GlobalSlotArray::Entry));
     }
+    if (script->nClosedArgs + script->nClosedVars != 0)
+        script->copyClosedSlotsTo(wscript);
 
     if (wfun->u.i.nupvars != 0) {
         JS_ASSERT(wfun->u.i.nupvars == wscript->upvars()->length);
@@ -471,10 +476,6 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
      * Fill in the rest of wscript. This means if you add members to JSScript
      * you must update this code. FIXME: factor into JSScript::clone method.
      */
-    wscript->noScriptRval = script->noScriptRval;
-    wscript->savedCallerFun = script->savedCallerFun;
-    wscript->hasSharps = script->hasSharps;
-    wscript->strictModeCode = script->strictModeCode;
     wscript->setVersion(script->getVersion());
     wscript->nfixed = script->nfixed;
     wscript->filename = script->filename;
@@ -482,6 +483,14 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     wscript->nslots = script->nslots;
     wscript->staticLevel = script->staticLevel;
     wscript->principals = script->principals;
+    wscript->noScriptRval = script->noScriptRval;
+    wscript->savedCallerFun = script->savedCallerFun;
+    wscript->hasSharps = script->hasSharps;
+    wscript->strictModeCode = script->strictModeCode;
+    wscript->compileAndGo = script->compileAndGo;
+    wscript->usesEval = script->usesEval;
+    wscript->usesArguments = script->usesArguments;
+    wscript->warnedAboutTwoArgumentEval = script->warnedAboutTwoArgumentEval;
     if (wscript->principals)
         JSPRINCIPALS_HOLD(cx, wscript->principals);
 #ifdef CHECK_SCRIPT_OWNER
@@ -567,7 +576,9 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (arg < obj->getArgsInitialLength()) {
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
-                fp->canonicalActualArg(arg) = *vp;
+                JSScript *script = fp->functionScript();
+                if (script->usesArguments)
+                    fp->canonicalActualArg(arg) = *vp;
                 return true;
             }
         }
@@ -1130,21 +1141,30 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         uint32 nargs = fun->nargs;
         uint32 nvars = fun->u.i.nvars;
 
-#ifdef JS_METHODJIT
         JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_PRIVATE + JSObject::CALL_RESERVED_SLOTS + 1);
+
         JSScript *script = fun->u.i.script;
         memcpy(callobj.dslots, fp->formalArgs(), nargs * sizeof(Value));
-        if (!script->jit || script->usesEval || script->debugMode) {
-            memcpy(callobj.dslots + nargs, fp->slots(), nvars * sizeof(Value));
-        } else if (script->jit) {
-            for (uint32 i = 0; i < script->jit->nescaping; i++) {
-                uint32 e = script->jit->escaping[i];
+        if (script->usesEval || script->debugMode) {
+            CopyValuesToCallObject(callobj, nargs, fp->formalArgs(), nvars, fp->slots());
+        } else {
+            /*
+             * For each arg & var that is closed over, copy it from the stack
+             * into the call object.
+             */
+            JSScript *script = fun->u.i.script;
+            uint32 nclosed = script->nClosedArgs;
+            for (uint32 i = 0; i < nclosed; i++) {
+                uint32 e = script->getClosedArg(i);
+                callobj.dslots[e] = fp->formalArg(e);
+            }
+
+            nclosed = script->nClosedVars;
+            for (uint32 i = 0; i < nclosed; i++) {
+                uint32 e = script->getClosedVar(i);
                 callobj.dslots[nargs + e] = fp->slots()[e];
             }
         }
-#else
-        CopyValuesToCallObject(callobj, nargs, fp->formalArgs(), nvars, fp->slots());
-#endif
     }
 
     /* Clear private pointers to fp, which is about to go away (js_Invoke). */
@@ -1157,6 +1177,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     callobj.setPrivate(NULL);
+    fp->clearCallObj();
 }
 
 JSBool JS_FASTCALL

@@ -85,6 +85,14 @@ class PICStubCompiler
       : type(type), f(f), script(script), pic(pic)
     { }
 
+    bool isCallOp() const
+    {
+        if (pic.kind == ic::PICInfo::CALL)
+            return true;
+        JSOp op = JSOp(*f.regs.pc);
+        return !!(js_CodeSpec[op].format & JOF_CALLOP);
+    }
+
     bool disable(const char *reason, VoidStub stub)
     {
         return disable(reason, JS_FUNC_TO_DATA_PTR(void *, stub));
@@ -884,6 +892,8 @@ class GetPropCompiler : public PICStubCompiler
             return disable("proto walk on String.prototype");
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -918,7 +928,12 @@ class GetPropCompiler : public PICStubCompiler
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump shapeMismatch = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                            Imm32(obj->shape()));
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
 
         Jump done = masm.jump();
 
@@ -1120,7 +1135,12 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         /* Load the value out of the object. */
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1213,6 +1233,8 @@ class GetPropCompiler : public PICStubCompiler
         const Shape *shape = (const Shape *)prop;
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -1476,7 +1498,12 @@ class GetElemCompiler : public PICStubCompiler
         }
 
         /* Load the value out of the object. */
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
         Jump done = masm.jump();
 
         JSC::ExecutablePool *ep = getExecPool(masm.size());
@@ -1557,6 +1584,8 @@ class GetElemCompiler : public PICStubCompiler
         const Shape *shape = (const Shape *)prop;
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -1578,7 +1607,6 @@ class ScopeNameCompiler : public PICStubCompiler
     JSAtom *atom;
     void   *stub;
 
-  public:
     JSObject *obj;
     JSObject *holder;
     JSProperty *prop;
@@ -1604,7 +1632,8 @@ class ScopeNameCompiler : public PICStubCompiler
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::Name));
+        VoidStubUInt32 stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
+        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
 
@@ -1614,6 +1643,10 @@ class ScopeNameCompiler : public PICStubCompiler
     {
         /* Walk the scope chain. */
         JSObject *tobj = scopeChain;
+
+        /* For GETXPROP, we'll never enter this loop. */
+        JS_ASSERT_IF(pic.kind == ic::PICInfo::XNAME, tobj && tobj == holder);
+        JS_ASSERT_IF(pic.kind == ic::PICInfo::XNAME, obj == tobj);
 
         while (tobj && tobj != holder) {
             if (!js_IsCacheableNonGlobalScope(tobj))
@@ -1650,7 +1683,9 @@ class ScopeNameCompiler : public PICStubCompiler
         Assembler masm;
         JumpList fails(f.cx);
 
-        masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
+        /* For GETXPROP, the object is already in objReg. */
+        if (pic.kind == ic::PICInfo::NAME)
+            masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == holder);
         JS_ASSERT(holder == scopeChain->getGlobal());
@@ -1661,18 +1696,27 @@ class ScopeNameCompiler : public PICStubCompiler
         if (!found)
             return disable("scope chain walk terminated early");
 
-        Jump finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
+        /* If a scope chain walk was required, the final object needs a NULL test. */
+        MaybeJump finalNull;
+        if (pic.kind == ic::PICInfo::NAME)
+            finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(holder->shape()));
 
-        masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        if (!shape->isMethod()) {
+            masm.loadSlot(pic.objReg, pic.objReg, shape->slot, pic.shapeReg, pic.objReg);
+        } else {
+            masm.loadValueAsComponents(ObjectValue(shape->methodObject()), pic.shapeReg,
+                                       pic.objReg);
+        }
 
         Jump done = masm.jump();
 
         // All failures flow to here, so there is a common point to patch.
         for (Jump *pj = fails.begin(); pj != fails.end(); ++pj)
             pj->linkTo(masm.label(), &masm);
-        finalNull.linkTo(masm.label(), &masm);
+        if (finalNull.isSet())
+            finalNull.get().linkTo(masm.label(), &masm);
         finalShape.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
@@ -1723,7 +1767,9 @@ class ScopeNameCompiler : public PICStubCompiler
         Assembler masm;
         Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
 
-        masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
+        /* For GETXPROP, the object is already in objReg. */
+        if (pic.kind == ic::PICInfo::NAME)
+            masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == holder);
         JS_ASSERT(holder != scopeChain->getGlobal());
@@ -1743,7 +1789,10 @@ class ScopeNameCompiler : public PICStubCompiler
         if (!found)
             return disable("scope chain walk terminated early");
 
-        Jump finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
+        /* If a scope chain walk was required, the final object needs a NULL test. */
+        MaybeJump finalNull;
+        if (pic.kind == ic::PICInfo::NAME)
+            finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(holder->shape()));
 
@@ -1784,7 +1833,8 @@ class ScopeNameCompiler : public PICStubCompiler
         // All failures flow to here, so there is a common point to patch.
         for (Jump *pj = fails.begin(); pj != fails.end(); ++pj)
             pj->linkTo(masm.label(), &masm);
-        finalNull.linkTo(masm.label(), &masm);
+        if (finalNull.isSet())
+            finalNull.get().linkTo(masm.label(), &masm);
         finalShape.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
@@ -1821,13 +1871,26 @@ class ScopeNameCompiler : public PICStubCompiler
         return true;
     }
 
-    bool update()
+    bool updateForName()
     {
-        JSContext *cx = f.cx;
-
-        if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &holder, &prop))
+        if (!js_FindProperty(f.cx, ATOM_TO_JSID(atom), &obj, &holder, &prop))
             return false;
 
+        return update();
+    }
+
+    bool updateForXName()
+    {
+        obj = scopeChain;
+
+        if (!obj->lookupProperty(f.cx, ATOM_TO_JSID(atom), &holder, &prop))
+            return false;
+
+        return update();
+    }
+
+    bool update()
+    {
         if (!pic.hit) {
             spew("first hit", "nop");
             pic.hit = true;
@@ -1848,6 +1911,8 @@ class ScopeNameCompiler : public PICStubCompiler
 
         if (!shape->hasDefaultGetterOrIsMethod())
             return disable("getter");
+        if (shape->isMethod() && !isCallOp())
+            return disable("method valued shape");
         if (!shape->hasSlot())
             return disable("invalid slot");
 
@@ -1855,6 +1920,40 @@ class ScopeNameCompiler : public PICStubCompiler
             return generateGlobalStub();
 
         return disable("scope object not handled yet");
+    }
+
+    bool retrieve(Value *vp)
+    {
+        JSContext *cx = f.cx;
+
+        if (prop && (!obj->isNative() || !holder->isNative())) {
+            holder->dropProperty(cx, prop);
+            if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
+                return false;
+        } else {
+            if (!prop) {
+                /* Kludge to allow (typeof foo == "undefined") tests. */
+                disable("property not found");
+                if (pic.kind == ic::PICInfo::NAME) {
+                    JSOp op2 = js_GetOpcode(cx, script, cx->regs->pc + JSOP_NAME_LENGTH);
+                    if (op2 == JSOP_TYPEOF) {
+                        vp->setUndefined();
+                        return true;
+                    }
+                }
+                ReportAtomNotDefined(cx, atom);
+                return false;
+            }
+            const Shape *shape = (const Shape *)prop;
+            JSObject *normalized = obj;
+            if (obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+                normalized = js_UnwrapWithObject(cx, obj);
+            NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp,
+                       return false);
+            JS_UNLOCK_OBJ(cx, holder);
+        }
+
+        return true;
     }
 };
 
@@ -2309,6 +2408,35 @@ SlowName(VMFrame &f, uint32 index)
     stubs::Name(f);
 }
 
+static void JS_FASTCALL
+SlowXName(VMFrame &f, uint32 index)
+{
+    stubs::GetProp(f);
+}
+
+void JS_FASTCALL
+ic::XName(VMFrame &f, uint32 index)
+{
+    JSScript *script = f.fp()->script();
+    ic::PICInfo &pic = script->pics[index];
+    JSAtom *atom = pic.atom;
+
+    /* GETXPROP is guaranteed to have an object. */
+    JSObject *obj = &f.regs.sp[-1].toObject();
+
+    ScopeNameCompiler cc(f, script, obj, pic, atom, SlowXName);
+
+    if (!cc.updateForXName()) {
+        cc.disable("error");
+        THROW();
+    }
+
+    Value rval;
+    if (!cc.retrieve(&rval))
+        THROW();
+    f.regs.sp[-1] = rval;
+}
+
 void JS_FASTCALL
 ic::Name(VMFrame &f, uint32 index)
 {
@@ -2318,37 +2446,14 @@ ic::Name(VMFrame &f, uint32 index)
 
     ScopeNameCompiler cc(f, script, &f.fp()->scopeChain(), pic, atom, SlowName);
 
-    if (!cc.update()) {
+    if (!cc.updateForName()) {
         cc.disable("error");
         THROW();
     }
 
     Value rval;
-    if (cc.prop && (!cc.obj->isNative() || !cc.holder->isNative())) {
-        cc.holder->dropProperty(f.cx, cc.prop);
-        if (!cc.obj->getProperty(f.cx, ATOM_TO_JSID(atom), &rval))
-            THROW();
-    } else {
-        if (!cc.prop) {
-            /* Kludge to allow (typeof foo == "undefined") tests. */
-            cc.disable("property not found");
-            JSOp op2 = js_GetOpcode(f.cx, f.fp()->script(), f.regs.pc + JSOP_NAME_LENGTH);
-            if (op2 == JSOP_TYPEOF) {
-                f.regs.sp[0].setUndefined();
-                return;
-            }
-            ReportAtomNotDefined(f.cx, atom);
-            THROW();
-        }
-        const Shape *shape = (const Shape *)cc.prop;
-        JSObject *normalized = cc.obj;
-        if (cc.obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
-            normalized = js_UnwrapWithObject(f.cx, cc.obj);
-        NATIVE_GET(f.cx, normalized, cc.holder, shape, JSGET_METHOD_BARRIER, &rval,
-                   THROW());
-        JS_UNLOCK_OBJ(f.cx, cc.holder);
-    }
-
+    if (!cc.retrieve(&rval))
+        THROW();
     f.regs.sp[0] = rval;
 }
 
@@ -2388,6 +2493,7 @@ ic::PurgePICs(JSContext *cx, JSScript *script)
             SetPropCompiler::reset(pic);
             break;
           case ic::PICInfo::NAME:
+          case ic::PICInfo::XNAME:
             ScopeNameCompiler::reset(pic);
             break;
           case ic::PICInfo::BIND:

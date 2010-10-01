@@ -870,17 +870,9 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
-        /*
-         * Inline js_GetScopeChain a bit to optimize for the case of a
-         * top-level function.
-         */
-        if (!fp->hasBlockChain()) {
-            obj2 = &fp->scopeChain();
-        } else {
-            obj2 = js_GetScopeChain(cx, fp);
-            if (!obj2)
-                THROW();
-        }
+        obj2 = js_GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        if (!obj2)
+            THROW();
     }
 
     /*
@@ -1346,7 +1338,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
 
           case JSTRAP_RETURN:
             f.cx->throwing = JS_FALSE;
-            f.cx->fp()->setReturnValue(rval);
+            f.cx->fp()->setAssignedReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
             *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
                                          JS_METHODJIT_DATA(f.cx).trampolines.forceReturnFast);
@@ -1386,7 +1378,7 @@ stubs::Trap(VMFrame &f, jsbytecode *pc)
 
       case JSTRAP_RETURN:
         f.cx->throwing = JS_FALSE;
-        f.cx->fp()->setReturnValue(rval);
+        f.cx->fp()->setAssignedReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
         *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
                                      JS_METHODJIT_DATA(f.cx).trampolines.forceReturnFast);
@@ -1526,7 +1518,8 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         if (!obj)
             THROWV(NULL);
     } else {
-        JSObject *parent = js_GetScopeChain(f.cx, f.fp());
+        JSObject *parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
+                                                JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             THROWV(NULL);
 
@@ -1575,7 +1568,7 @@ stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
         return obj;
     }
     return Lambda(f, fun);
@@ -1588,7 +1581,7 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
             return obj;
         }
     }
@@ -1607,7 +1600,7 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
          * we don't need to clone that compiler- created function
          * object for identity/mutation reasons.
          */
-        int iargc = GET_ARGC(f.regs.pc + JSOP_LAMBDA_LENGTH);
+        int iargc = GET_ARGC(f.regs.pc);
 
         /*
          * Note that we have not yet pushed obj as the final argument,
@@ -1637,7 +1630,7 @@ stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        jsbytecode *pc2 = f.regs.pc + JSOP_LAMBDA_LENGTH + JSOP_NULL_LENGTH;
+        jsbytecode *pc2 = f.regs.pc + JSOP_NULL_LENGTH;
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
@@ -1655,7 +1648,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun)) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = js_GetScopeChain(f.cx, f.fp());
+        parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
         if (!parent)
             THROWV(NULL);
     }
@@ -2457,7 +2450,9 @@ void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     JSFrameRegs &regs = f.regs;
+#ifdef DEBUG
     JSStackFrame *fp = f.fp();
+#endif
 
     JS_ASSERT(obj->isStaticBlock());
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
@@ -2469,7 +2464,6 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 
 #ifdef DEBUG
     JSContext *cx = f.cx;
-    JS_ASSERT(fp->maybeBlockChain() == obj->getParent());
 
     /*
      * The young end of fp->scopeChain() may omit blocks if we haven't closed
@@ -2491,19 +2485,17 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
             JS_ASSERT(parent);
     }
 #endif
-
-    fp->setBlockChain(obj);
 }
 
 void JS_FASTCALL
-stubs::LeaveBlock(VMFrame &f)
+stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp();
 
 #ifdef DEBUG
-    JS_ASSERT(fp->blockChain()->getClass() == &js_BlockClass);
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain());
+    JS_ASSERT(blockChain->isStaticBlock());
+    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, blockChain);
 
     JS_ASSERT(blockDepth <= StackDepth(fp->script()));
 #endif
@@ -2513,14 +2505,11 @@ stubs::LeaveBlock(VMFrame &f)
      * the stack into the clone, and pop it off the chain.
      */
     JSObject *obj = &fp->scopeChain();
-    if (obj->getProto() == fp->blockChain()) {
+    if (obj->getProto() == blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
             THROW();
     }
-
-    /* Pop the block chain, too.  */
-    fp->setBlockChain(fp->blockChain()->getParent());
 }
 
 void * JS_FASTCALL
