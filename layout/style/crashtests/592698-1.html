@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <iframe id="x"
+          src="data:text/html;charset=utf-8,%3Cdiv%20id%3D%22a%22%3Eaaa"></iframe>
+
+  <script>
+    window.onload = function() {
+      window.frames[0].document.getElementById("a").setAttribute("style",
+        '-moz-transition-property: color;' +
+        '-moz-transition-duration: 10s;' +
+        'transition-property: color;' +
+        'transition-duration: 10s; ' +
+        'color: red;');
+
+      // And start the transition
+      window.frames[0].document.documentElement.getBoundingClientRect();
+
+      // Now kill off the presshell
+      var frame = document.getElementById("x");
+      frame.style.display = "none";
+      document.documentElement.getBoundingClientRect();
+
+      // And wait for the refresh driver to fire
+      setTimeout(function() {
+          document.documentElement.className = "";
+      }, 100);
+    }
+  </script>
+</html>

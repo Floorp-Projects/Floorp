@@ -128,7 +128,7 @@ var satchelFormListener = {
         try {
             // Even though the global context is for a specific browser, we
             // can receive observer events from other tabs! Ensure this event
-            // is about our content. 
+            // is about our content.
             if (domWin.top != content)
                 return;
             if (!this.enabled)

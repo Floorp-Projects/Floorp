@@ -136,7 +136,7 @@ function checkInvalidPattern(element, completeCheck)
     ok(!element.checkValidity(), "Element should not be valid");
     ok(gInvalid, "Invalid event should have been thrown");
     is(element.validationMessage,
-       "The field value is not in the requested format.",
+       "Please match the requested format.",
        "Validation message is not valid");
   } else {
     ok(element.validity.patternMismatch,
@@ -261,13 +261,13 @@ function checkPatternValidity(element)
     element.pattern = "foo";
     element.value = "bar";
   }
-  element.title = "This is an explanation of the regexp.";
+  element.title = "this is an explanation of the regexp";
   is(element.validationMessage,
-     "The field value is not in the requested format. " + element.title,
+     "Please match the requested format: " + element.title + ".",
      "Validation message is not valid");
   element.title = "";
   is(element.validationMessage,
-     "The field value is not in the requested format.",
+     "Please match the requested format.",
      "Validation message is not valid");
 
   element.pattern = "foo";

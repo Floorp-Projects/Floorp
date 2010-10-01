@@ -22,6 +22,8 @@
 #
 # Contributor(s):
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Margaret Leibovic <margaret.leibovic@gmail.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,55 +53,88 @@
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 #endif
 
-<dialog xmlns:html="http://www.w3.org/1999/xhtml"
+<window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
         windowtype="Browser:About"
-        onload="init(event);" onunload="uninit(event);"
+        onload="init(event);"
+#ifdef MOZ_UPDATER
+        onunload="onUnload(event);"
+#endif
 #ifdef XP_MACOSX
         inwindowmenu="false"
-        buttons="extra2"
-        align="end"
 #else
         title="&aboutDialog.title;"
-        buttons="accept,extra2"
-#ifdef XP_UNIX
-        buttonlabelaccept="&closeCmdGNOME.label;"
-        buttonaccesskeyaccept="&closeCmdGNOME.accesskey;"
 #endif
-#endif
-        creditslabel="&copyright;"
-#ifdef XP_UNIX
-        creditsaccesskey="&copyrightGNOME.accesskey;"
-#else
-        creditsaccesskey="&copyright.accesskey;"
-#endif
-        aboutlabel="&aboutLink;"
-        aboutaccesskey="&aboutLink.accesskey;">
-    
+        >
+
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
 
-  <deck id="modes" flex="1">
-    <vbox flex="1" id="clientBox">
-#expand <label id="version" value="&aboutVersion; __MOZ_APP_VERSION__"/>
-      <label id="distribution"/>
-      <label id="distributionId"/>
-      <description id="copyright">
-        <label
-        class="text-link" href="about:license"
-        >&licenseLinkText;</label>&licenseLinkSuffix;&trademarkInfo;
+  <vbox>
+    <hbox id="clientBox">
+      <vbox id="leftBox" flex="1"/>
+      <vbox id="rightBox" flex="1">
+#expand <label id="version" value="__MOZ_APP_VERSION__"/>
+        <label id="distribution" class="text-blurb"/>
+        <label id="distributionId" class="text-blurb"/>
+        <vbox id="updateBox">
+#ifdef MOZ_UPDATER
+          <deck id="updateDeck" orient="vertical">
+            <hbox id="updateButtonBox" align="center">
+              <button id="updateButton" align="start"
+                      oncommand="gAppUpdater.buttonOnCommand();"/>
+              <spacer flex="1"/>
+            </hbox>
+            <hbox id="checkingForUpdates" align="center">
+              <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+            </hbox>
+            <hbox id="checkingAddonCompat" align="center">
+              <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
+            </hbox>
+            <hbox id="downloading" align="center">
+              <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+            </hbox>
+            <hbox id="downloadFailed" align="center">
+              <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+            </hbox>
+            <hbox id="adminDisabled" align="center">
+              <label>&update.adminDisabled;</label>
+            </hbox>
+            <hbox id="noUpdatesFound" align="center">
+              <label>&update.noUpdatesFound;</label>
+            </hbox>
+            <hbox id="manualUpdate" align="center">
+              <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+            </hbox>
+          </deck>
+#endif
+        </vbox>
+        <description class="text-blurb">
+          &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end2;
+        </description>
+        <description class="text-blurb">
+          &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute/">&contribute.getInvolvedLink;</label>&contribute.end;
+        </description>
+      </vbox>
+    </hbox>
+    <vbox id="bottomBox">
+      <hbox pack="center">
+        <label class="text-link bottom-link" href="about:license">&bottomLinks.license;</label>
+        <label class="text-link bottom-link" href="about:rights">&bottomLinks.rights;</label>
+        <label class="text-link bottom-link" href="http://www.mozilla.com/legal/privacy/">&bottomLinks.privacy;</label>
+      </hbox>
+      <description id="trademark">
+        <label class="trademark-label">&trademarkInfo.part1;</label>
+        <label class="trademark-label">&trademarkInfo.part2;</label>
       </description>
-      <textbox id="userAgent" multiline="true" readonly="true" flex="1"/>
     </vbox>
-    <vbox flex="1" id="creditsBox">
-      <iframe id="creditsIframe" flex="1"/>
-    </vbox>    
-  </deck>
-  <separator class="groove" id="groove"/>
+  </vbox>
+  
+  <keyset>
+    <key keycode="VK_ESCAPE" oncommand="window.close();"/>
+  </keyset>
 
 #ifdef XP_MACOSX
 #include browserMountPoints.inc
 #endif
-
-</dialog>
-
+</window>

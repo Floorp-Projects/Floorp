@@ -11,9 +11,23 @@
   display: none;
 }
 
-.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"]:not([pinned]) > .tab-close-button,
-.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab:not([pinned]) > .tab-close-button {
+.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > * > * > * .tab-close-button:not([pinned])[selected="true"],
+.tabbrowser-tabs[closebuttons="alltabs"] > * > * > * > .tab-close-button:not([pinned]) {
   display: -moz-box;
+}
+
+.tab-close-button[selected="true"] {
+  /* Make this button focusable so clicking on it will not focus the tab while
+     it's getting closed */
+  -moz-user-focus: normal;
+}
+
+.tab-label[pinned] {
+  display: none;
+}
+
+.tab-stack {
+  vertical-align: middle; /* for pinned tabs */
 }
 
 tabpanels {
@@ -23,4 +37,21 @@ tabpanels {
 .tab-drop-indicator {
   position: relative;
   z-index: 1;
+}
+
+/* tab progress */
+
+.tab-progress {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter") !important;
+  margin: 0;
+  min-width: 0;
+}
+
+.tab-progress[selected],
+.tab-progress:not([busy]) {
+  display: none;
+}
+
+.tab-progress-container {
+  -moz-box-pack: start;
 }

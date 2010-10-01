@@ -194,12 +194,12 @@ nsMargin nsRect::operator-(const nsRect& aRect) const
 }
 
 // scale the rect but round to smallest containing rect
-nsRect& nsRect::ScaleRoundOut(float aScale)
+nsRect& nsRect::ScaleRoundOut(float aXScale, float aYScale)
 {
-  nscoord right = NSToCoordCeil(float(XMost()) * aScale);
-  nscoord bottom = NSToCoordCeil(float(YMost()) * aScale);
-  x = NSToCoordFloor(float(x) * aScale);
-  y = NSToCoordFloor(float(y) * aScale);
+  nscoord right = NSToCoordCeil(float(XMost()) * aXScale);
+  nscoord bottom = NSToCoordCeil(float(YMost()) * aYScale);
+  x = NSToCoordFloor(float(x) * aXScale);
+  y = NSToCoordFloor(float(y) * aYScale);
   width = (right - x);
   height = (bottom - y);
   return *this;

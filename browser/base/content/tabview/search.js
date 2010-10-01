@@ -110,6 +110,43 @@ function scorePatternMatch(pattern, matched, offset) {
 }
 
 // ##########
+// Class: TabUtils
+// 
+// A collection of helper functions for dealing with both
+// <TabItem>s and <xul:tab>s without having to worry which
+// one is which.
+var TabUtils = {
+  // ---------
+  // Function: _nameOfTab
+  // Given a <TabItem> or a <xul:tab> returns the tab's name.
+  nameOf: function TabUtils_nameOfTab(tab) {
+    // We can have two types of tabs: A <TabItem> or a <xul:tab>
+    // because we have to deal with both tabs represented inside
+    // of active Panoramas as well as for windows in which
+    // Panorama has yet to be activated. We uses object sniffing to
+    // determine the type of tab and then returns its name.     
+    return tab.label != undefined ? tab.label : tab.nameEl.innerHTML;
+  },
+  
+  // ---------
+  // Function: favURLOf
+  // Given a <TabItem> or a <xul:tab> returns the URL of tab's favicon.
+  faviconURLOf: function TabUtils_faviconURLOf(tab) {
+    return tab.image != undefined ? tab.image : tab.favEl.src;
+  },
+  
+  // ---------
+  // Function: focus
+  // Given a <TabItem> or a <xul:tab>, focuses it and it's window.
+  focus: function TabUtils_focus(tab) {
+    // Convert a <TabItem> to a <xul:tab>
+    if (tab.tab != undefined) tab = tab.tab;
+    tab.ownerDocument.defaultView.gBrowser.selectedTab = tab;
+    tab.ownerDocument.defaultView.focus();    
+  }
+};
+
+// ##########
 // Class: TabMatcher
 // 
 // A singleton class that allows you to iterate over
@@ -119,66 +156,141 @@ function TabMatcher(term) {
   this.term = term; 
 }
 
-TabMatcher.prototype = {
+TabMatcher.prototype = {  
+  // ---------
+  // Function: _filterAndSortMatches
+  // Given an array of <TabItem>s and <xul:tab>s returns a new array
+  // of tabs whose name matched the search term, sorted by lexical
+  // closeness.  
+  _filterAndSortForMatches: function TabMatcher__filterAndSortForMatches(tabs) {
+    var self = this;
+    tabs = tabs.filter(function(tab){
+      var name = TabUtils.nameOf(tab);
+      return name.match(self.term, "i");
+    });
+
+    tabs.sort(function sorter(x, y){
+      var yScore = scorePatternMatch(self.term, TabUtils.nameOf(y));
+      var xScore = scorePatternMatch(self.term, TabUtils.nameOf(x));
+      return yScore - xScore; 
+    });
+    
+    return tabs;
+  },
+  
+  // ---------
+  // Function: _filterForUnmatches
+  // Given an array of <TabItem>s returns an unsorted array of tabs whose name
+  // does not match the the search term.
+  _filterForUnmatches: function TabMatcher__filterForUnmatches(tabs) {
+    var self = this;
+    return tabs.filter(function(tab) {
+      var name = tab.nameEl.innerHTML;
+      return !name.match(self.term, "i");
+    });
+  },
+  
+  // ---------
+  // Function: _getTabsForOtherWindows
+  // Returns an array of <TabItem>s and <xul:tabs>s representing that
+  // tabs from all windows but the currently focused window. <TabItem>s
+  // will be returned for windows in which Panorama has been activated at
+  // least once, while <xul:tab>s will be return for windows in which
+  // Panorama has never been activated.
+  _getTabsForOtherWindows: function TabMatcher__getTabsForOtherWindows(){
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var enumerator = wm.getEnumerator("navigator:browser");    
+    var currentWindow = wm.getMostRecentWindow("navigator:browser");
+    
+    var allTabs = [];    
+    while (enumerator.hasMoreElements()) {
+      var win = enumerator.getNext();
+      // This function gets tabs from other windows: not the one you currently
+      // have focused.
+      if (win != currentWindow) {
+        // If TabView is around iterate over all tabs, else get the currently
+        // shown tabs...
+        
+        tvWindow = win.TabView.getContentWindow();
+        if (tvWindow)
+          allTabs = allTabs.concat( tvWindow.TabItems.getItems() );
+        else
+          // win.gBrowser.tabs isn't a proper array, so we can't use concat
+          for (var i=0; i<win.gBrowser.tabs.length; i++) allTabs.push( win.gBrowser.tabs[i] );
+      } 
+    }
+    return allTabs;    
+  },
+  
+  // ----------
+  // Function: matchedTabsFromOtherWindows
+  // Returns an array of <TabItem>s and <xul:tab>s that match the search term
+  // from all windows but the currently focused window. <TabItem>s will be
+  // returned for windows in which Panorama has been activated at least once,
+  // while <xul:tab>s will be return for windows in which Panorama has never
+  // been activated.
+  // (new TabMatcher("app")).matchedTabsFromOtherWindows();
+  matchedTabsFromOtherWindows: function TabMatcher_matchedTabsFromOtherWindows(){
+    if (this.term.length < 2)
+      return [];
+    
+    var tabs = this._getTabsForOtherWindows();
+    tabs = this._filterAndSortForMatches(tabs);
+    return tabs;
+  },
+  
   // ----------
   // Function: matched
   // Returns an array of <TabItem>s which match the current search term.
   // If the term is less than 2 characters in length, it returns
   // nothing.
-  matched: function matched() {
-    var self = this;
+  matched: function TabMatcher_matched() {
     if (this.term.length < 2)
       return [];
-    
+      
     var tabs = TabItems.getItems();
-    tabs = tabs.filter(function(tab){
-      var name = tab.nameEl.innerHTML;      
-      return name.match(self.term, "i");
-    });
-    
-    tabs.sort(function sorter(x, y){
-      var yScore = scorePatternMatch(self.term, y.nameEl.innerHTML);
-      var xScore = scorePatternMatch(self.term, x.nameEl.innerHTML);
-      return yScore - xScore; 
-    });
-     
+    tabs = this._filterAndSortForMatches(tabs);
     return tabs;    
   },
   
   // ----------
   // Function: unmatched
   // Returns all of <TabItem>s that .matched() doesn't return.
-  unmatched: function unmatched() {
-    var self = this;    
+  unmatched: function TabMatcher_unmatched() {
     var tabs = TabItems.getItems();
-    
     if ( this.term.length < 2 )
       return tabs;
-    
-    return tabs.filter(function(tab) {
-      var name = tab.nameEl.innerHTML;
-      return !name.match(self.term, "i");
-    });
+      
+    return this._filterForUnmatches(tabs);
   },
 
   // ----------
   // Function: doSearch
-  // Performs the search. Lets you provide two functions, one that is called
-  // on all matched tabs, and one that is called on all unmatched tabs.
-  // Both functions take two parameters: A <TabItem> and its integer index
+  // Performs the search. Lets you provide three functions.
+  // The first is on all matched tabs in the window, the second on all unmatched
+  // tabs in the window, and the third on all matched tabs in other windows.
+  // The first two functions take two parameters: A <TabItem> and its integer index
   // indicating the absolute rank of the <TabItem> in terms of match to
-  // the search term. 
-  doSearch: function(matchFunc, unmatchFunc) {
+  // the search term. The last function also takes two paramaters, but can be
+  // passed both <TabItem>s and <xul:tab>s and the index is offset by the
+  // number of matched tabs inside the window.
+  doSearch: function TabMatcher_doSearch(matchFunc, unmatchFunc, otherFunc) {
     var matches = this.matched();
     var unmatched = this.unmatched();
+    var otherMatches = this.matchedTabsFromOtherWindows();
     
     matches.forEach(function(tab, i) {
       matchFunc(tab, i);
     });
+
+    otherMatches.forEach(function(tab,i){
+      otherFunc(tab, i+matches.length);      
+    });
     
     unmatched.forEach(function(tab, i) {
       unmatchFunc(tab, i);
-    });
+    });    
   }
 };
 
@@ -247,9 +359,14 @@ SearchEventHandlerClass.prototype = {
     if (event.which == event.DOM_VK_BACK_SPACE && term.length <= 1) 
       hideSearch(event);
 
-    var matches = (new TabMatcher(term)).matched();
-    if (event.which == event.DOM_VK_RETURN && matches.length > 0) {
-      matches[0].zoomIn();
+    var matcher = new TabMatcher(term);
+    var matches = matcher.matched();
+    var others =  matcher.matchedTabsFromOtherWindows();
+    if (event.which == event.DOM_VK_RETURN && (matches.length > 0 || others.length > 0)) {
+      if (matches.length > 0)
+        matches[0].zoomIn();
+      else
+        TabUtils.focus(others[0]);
       hideSearch(event);    
     }
   },
@@ -260,7 +377,8 @@ SearchEventHandlerClass.prototype = {
   // the before-search mode. 
   switchToBeforeMode: function switchToBeforeMode() {
     var self = this;
-    iQ(document).unbind("keydown", this.currentHandler);
+    if (this.currentHandler)
+      iQ(document).unbind("keydown", this.currentHandler);
     this.currentHandler = function(event) self.beforeSearchKeyHandler(event);
     iQ(document).keydown(self.currentHandler);
   },
@@ -271,7 +389,8 @@ SearchEventHandlerClass.prototype = {
   // the in-search mode.   
   switchToInMode: function switchToInMode() {
     var self = this;
-    iQ(document).unbind("keydown", this.currentHandler);
+    if (this.currentHandler)
+      iQ(document).unbind("keydown", this.currentHandler);
     this.currentHandler = function(event) self.inSearchKeyHandler(event);
     iQ(document).keydown(self.currentHandler);
   }
@@ -279,29 +398,52 @@ SearchEventHandlerClass.prototype = {
 
 var TabHandlers = {
   onMatch: function(tab, index){
-   tab.setZ(1010);   
-   index != 0 ? tab.addClass("notMainMatch") : tab.removeClass("notMainMatch");
-   
-   // Remove any existing handlers before adding the new ones.
-   // If we don't do this, then we may add more handlers than
-   // we remove.
-   iQ(tab.canvasEl)
+    tab.addClass("onTop");
+    index != 0 ? tab.addClass("notMainMatch") : tab.removeClass("notMainMatch");
+
+    // Remove any existing handlers before adding the new ones.
+    // If we don't do this, then we may add more handlers than
+    // we remove.
+    iQ(tab.canvasEl)
     .unbind("mousedown", TabHandlers._hideHandler)
     .unbind("mouseup", TabHandlers._showHandler);
-   
-   iQ(tab.canvasEl)
+
+    iQ(tab.canvasEl)
     .mousedown(TabHandlers._hideHandler)
     .mouseup(TabHandlers._showHandler);
   },
   
   onUnmatch: function(tab, index){
-    // TODO: Set back as value per tab. bug 593902
-    tab.setZ(500);
+    iQ(tab.container).removeClass("onTop");
     tab.removeClass("notMainMatch");
 
     iQ(tab.canvasEl)
      .unbind("mousedown", TabHandlers._hideHandler)
      .unbind("mouseup", TabHandlers._showHandler);
+  },
+  
+  onOther: function(tab, index){
+    // Unlike the other on* functions, in this function tab can
+    // either be a <TabItem> or a <xul:tab>. In other functions
+    // it is always a <TabItem>. Also note that index is offset
+    // by the number of matches within the window.
+    var item = iQ("<div/>")
+      .addClass("inlineMatch")
+      .click(function(){
+        TabUtils.focus(tab);
+      });
+    
+    iQ("<img/>")
+      .attr("src", TabUtils.faviconURLOf(tab) )
+      .appendTo(item);
+    
+    iQ("<span/>")
+      .text( TabUtils.nameOf(tab) )
+      .appendTo(item);
+      
+    index != 0 ? item.addClass("notMainMatch") : item.removeClass("notMainMatch");      
+    item.appendTo("#results");
+    iQ("#otherresults").show();    
   },
   
   _hideHandler: function(event){
@@ -332,7 +474,7 @@ function hideSearch(event){
   iQ("#searchbox").val("");
   iQ("#search").hide();
   
-  iQ("#searchbutton").css({top: 0, left: 0, opacity:.8});
+  iQ("#searchbutton").css({ opacity:.8 });
   
   var mainWindow = gWindow.document.getElementById("main-window");    
   mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
@@ -348,17 +490,28 @@ function hideSearch(event){
   let newEvent = document.createEvent("Events");
   newEvent.initEvent("tabviewsearchdisabled", false, false);
   dispatchEvent(newEvent);
+
+  // Return focus to the tab window
+  UI.blurAll();
+  gTabViewFrame.contentWindow.focus();
 }
 
 function performSearch() {
   var matcher = new TabMatcher(iQ("#searchbox").val());
-  matcher.doSearch(TabHandlers.onMatch, TabHandlers.onUnmatch);
+
+  // Remove any previous other-window search results and
+  // hide the display area.
+  iQ("#results").empty();
+  iQ("#otherresults").hide();
+  iQ("#otherresults>.label").text(tabviewString("search.otherWindowTabs"));
+
+  matcher.doSearch(TabHandlers.onMatch, TabHandlers.onUnmatch, TabHandlers.onOther);
 }
 
 function ensureSearchShown(event){
   var $search = iQ("#search");
   var $searchbox = iQ("#searchbox");
-  iQ("#searchbutton").css({top: -78, left: -300, opacity: 1});
+  iQ("#searchbutton").css({ opacity: 1 });
   
   
   if ($search.css("display") == "none") {

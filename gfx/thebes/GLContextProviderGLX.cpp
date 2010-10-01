@@ -98,6 +98,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xDestroyPixmap, { "glXDestroyPixmap", NULL } },
         { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
         { (PRFuncPtr*) &xCreateContext, { "glXCreateContext", NULL } },
+        { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
         { NULL, { NULL } }
     };
 
@@ -225,10 +226,7 @@ TRY_AGAIN_NO_SHARING:
 
     ~GLContextGLX()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         sGLXLibrary.xDeleteContext(mDisplay, mContext);
 
@@ -252,10 +250,21 @@ TRY_AGAIN_NO_SHARING:
         return IsExtensionSupported("GL_EXT_framebuffer_object");
     }
 
-    PRBool MakeCurrent()
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
     {
-        Bool succeeded = sGLXLibrary.xMakeCurrent(mDisplay, mDrawable, mContext);
-        NS_ASSERTION(succeeded, "Failed to make GL context current!");
+        PRBool succeeded = PR_TRUE;
+
+        // With the ATI FGLRX driver, glxMakeCurrent is very slow even when the context doesn't change.
+        // (This is not the case with other drivers such as NVIDIA).
+        // So avoid calling it more than necessary. Since GLX documentation says that:
+        //     "glXGetCurrentContext returns client-side information.
+        //      It does not make a round trip to the server."
+        // I assume that it's not worth using our own TLS slot here.
+        if (aForce || sGLXLibrary.xGetCurrentContext() != mContext) {
+            succeeded = sGLXLibrary.xMakeCurrent(mDisplay, mDrawable, mContext);
+            NS_ASSERTION(succeeded, "Failed to make GL context current!");
+        }
+
         return succeeded;
     }
 
@@ -343,7 +352,7 @@ protected:
     CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
     {
         mUpdateFormat = aFmt;
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, aFmt);
+        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
     }
 
     virtual already_AddRefed<gfxImageSurface>
@@ -697,10 +706,6 @@ GLContextProviderGLX::CreateForNativePixmapSurface(gfxASurface *aSurface)
                                                                      NULL,
                                                                      PR_FALSE,
                                                                      xs);
-    
-    if (!glContext->Init()) {
-        return nsnull;
-    }
 
     return glContext.forget();
 }

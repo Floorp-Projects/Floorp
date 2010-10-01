@@ -55,6 +55,7 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsvalue.h"
+#include "jscell.h"
 
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
@@ -66,6 +67,8 @@ enum {
     INT_STRING_LIMIT         = 256U,
     NUM_HUNDRED_STRINGS      = 156U
 };
+
+extern JSStringFinalizeOp str_finalizers[8];
 
 extern jschar *
 js_GetDependentStringChars(JSString *str);
@@ -82,6 +85,11 @@ struct JSRopeBufferInfo {
     /* Number of jschars we can hold, not including null terminator. */
     size_t capacity;
 };
+
+/* Forward declaration for friending. */
+namespace js { namespace mjit {
+    class Compiler;
+}}
 
 /*
  * The GC-thing "string" type.
@@ -119,10 +127,11 @@ struct JSRopeBufferInfo {
  */
 struct JSString {
     friend class js::TraceRecorder;
+    friend class js::mjit::Compiler;
 
     friend JSAtom *
     js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
-
+ public:
     /*
      * Not private because we want to be able to use static
      * initializers for them. Don't use these directly!
@@ -184,12 +193,20 @@ struct JSString {
                                 (1 << ROPE_TRAVERSAL_COUNT_SHIFT);
 
     static const size_t TYPE_MASK = JSSTRING_BITMASK(2);
+    static const size_t TYPE_FLAGS_MASK = JSSTRING_BITMASK(4);
 
     inline bool hasFlag(size_t flag) const {
         return (mLengthAndFlags & flag) != 0;
     }
 
-  public:
+    inline js::gc::Cell *asCell() {
+        return reinterpret_cast<js::gc::Cell *>(this);
+    }
+    
+    inline js::gc::FreeCell *asFreeCell() {
+        return reinterpret_cast<js::gc::FreeCell *>(this);
+    }
+
     /*
      * Generous but sane length bound; the "-1" is there for comptibility with
      * OOM tests.
@@ -259,6 +276,7 @@ struct JSString {
     /* Specific flat string initializer and accessor methods. */
     JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
@@ -267,6 +285,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = cap;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
@@ -317,6 +336,7 @@ struct JSString {
      */
     inline void flatSetAtomized() {
         JS_ASSERT(isFlat());
+        JS_ASSERT(!isStatic(this));
         JS_ATOMIC_SET_MASK((jsword *)&mLengthAndFlags, ATOMIZED);
     }
 
@@ -328,7 +348,13 @@ struct JSString {
 
     inline void flatClearMutable() {
         JS_ASSERT(isFlat());
-        mLengthAndFlags &= ~MUTABLE;
+
+        /*
+         * We cannot eliminate the flag check before writing to mLengthAndFlags as
+         * static strings may reside in write-protected memory. See bug 599481.
+         */
+        if (mLengthAndFlags & MUTABLE)
+            mLengthAndFlags &= ~MUTABLE;
     }
 
     /*
@@ -337,6 +363,7 @@ struct JSString {
      */
     inline void initDependent(JSString *bstr, jschar *chars, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         e.mParent = NULL;
         mChars = chars;
         mLengthAndFlags = DEPENDENT | (len << FLAGS_LENGTH_SHIFT);
@@ -361,6 +388,7 @@ struct JSString {
     inline void initTopNode(JSString *left, JSString *right, size_t len,
                             JSRopeBufferInfo *buf) {
         JS_ASSERT(left->length() + right->length() <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
         mLengthAndFlags = TOP_NODE | (len << FLAGS_LENGTH_SHIFT);
         mLeft = left;
         e.mRight = right;
@@ -500,16 +528,16 @@ struct JSString {
 
     static const SmallChar INVALID_SMALL_CHAR = -1;
 
-    static jschar fromSmallChar[];
-    static SmallChar toSmallChar[];
-    static JSString unitStringTable[];
-    static JSString length2StringTable[];
-    static JSString hundredStringTable[];
+    static const jschar fromSmallChar[];
+    static const SmallChar toSmallChar[];
+    static const JSString unitStringTable[];
+    static const JSString length2StringTable[];
+    static const JSString hundredStringTable[];
     /*
      * Since int strings can be unit strings, length-2 strings, or hundred
      * strings, we keep a table to map from integer to the correct string.
      */
-    static JSString *intStringTable[];
+    static const JSString *const intStringTable[];
     static const char deflatedIntStringTable[];
     static const char deflatedUnitStringTable[];
     static const char deflatedLength2StringTable[];
@@ -518,6 +546,8 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *length2String(jschar c1, jschar c2);
     static JSString *intString(jsint i);
+    
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
 };
 
 /*
@@ -525,7 +555,7 @@ struct JSString {
  * mallocing the string buffer for a small string. We keep 2 string headers'
  * worth of space in short strings so that more strings can be stored this way.
  */
-struct JSShortString {
+struct JSShortString : js::gc::Cell {
     JSString mHeader;
     JSString mDummy;
 
@@ -554,6 +584,8 @@ struct JSShortString {
     static inline bool fitsIntoShortString(size_t length) {
         return length <= MAX_SHORT_STRING_LENGTH;
     }
+    
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
 };
 
 /*
@@ -699,8 +731,6 @@ JS_STATIC_ASSERT(JSString::TOP_NODE & JSString::ROPE_BIT);
 
 JS_STATIC_ASSERT(((JSString::MAX_LENGTH << JSString::FLAGS_LENGTH_SHIFT) >>
                    JSString::FLAGS_LENGTH_SHIFT) == JSString::MAX_LENGTH);
-
-JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
 
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
@@ -1029,9 +1059,9 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
 }
 
 /*
- * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
- * and return null on error, otherwise return the jschar or byte vector that
- * was JS_malloc'ed. length is updated with the length of the new string in jschars.
+ * Inflate bytes to JS chars and vice versa.  Report out of memory via cx and
+ * return null on error, otherwise return the jschar or byte vector that was
+ * JS_malloc'ed. length is updated to the length of the new string in jschars.
  */
 extern jschar *
 js_InflateString(JSContext *cx, const char *bytes, size_t *length);

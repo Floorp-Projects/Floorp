@@ -58,6 +58,7 @@ endif
 
 XPCSHELL_TESTS = \
   xpcshell \
+  xpcshell-unpack \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -72,3 +73,5 @@ libs::
 			(cd $$dir && zip -r $(TESTXPI)/$$base.xpi *) \
 		done \
 	fi
+	cd $(TESTROOT)/xpcshell/ && tar -cPf - . | (cd $(TESTROOT)/xpcshell-unpack && tar -xPvf - )
+

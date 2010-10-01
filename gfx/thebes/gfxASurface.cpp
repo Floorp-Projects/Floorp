@@ -65,7 +65,7 @@
 #include "gfxDirectFBSurface.h"
 #endif
 
-#ifdef CAIRO_HAS_QT_SURFACE
+#if defined(CAIRO_HAS_QT_SURFACE) && defined(MOZ_WIDGET_QT)
 #include "gfxQPainterSurface.h"
 #endif
 
@@ -191,7 +191,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
         result = new gfxDirectFBSurface(csurf);
     }
 #endif
-#ifdef CAIRO_HAS_QT_SURFACE
+#if defined(CAIRO_HAS_QT_SURFACE) && defined(MOZ_WIDGET_QT)
     else if (stype == CAIRO_SURFACE_TYPE_QT) {
         result = new gfxQPainterSurface(csurf);
     }
@@ -421,6 +421,20 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
         case ImageFormatUnknown:
         default:
             return CONTENT_COLOR;
+    }
+}
+
+gfxASurface::gfxImageFormat
+gfxASurface::FormatFromContent(gfxASurface::gfxContentType type)
+{
+    switch (type) {
+        case CONTENT_COLOR_ALPHA:
+            return ImageFormatARGB32;
+        case CONTENT_ALPHA:
+            return ImageFormatA8;
+        case CONTENT_COLOR:
+        default:
+            return ImageFormatRGB24;
     }
 }
 

@@ -46,11 +46,15 @@
 
 #include "mozilla/unused.h"
 
+#include "mozilla/layout/RenderFrameParent.h"
+
 #include "gfxSharedImageSurface.h"
 
 #include "ImageLayers.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
+
+using mozilla::layout::RenderFrameParent;
 
 namespace mozilla {
 namespace layers {
@@ -146,7 +150,9 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpCreateThebesLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateThebesLayer"));
 
-      nsRefPtr<ThebesLayer> layer = layer_manager()->CreateShadowThebesLayer();
+      nsRefPtr<ShadowThebesLayer> layer =
+        layer_manager()->CreateShadowThebesLayer();
+      layer->SetParent(this);
       AsShadowLayer(edit.get_OpCreateThebesLayer())->Bind(layer);
       break;
     }
@@ -160,8 +166,10 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpCreateImageLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateImageLayer"));
 
-      AsShadowLayer(edit.get_OpCreateImageLayer())->Bind(
-        layer_manager()->CreateShadowImageLayer().get());
+      nsRefPtr<ShadowImageLayer> layer =
+        layer_manager()->CreateShadowImageLayer();
+      layer->SetParent(this);
+      AsShadowLayer(edit.get_OpCreateImageLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateColorLayer: {
@@ -174,7 +182,9 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
-      nsRefPtr<CanvasLayer> layer = layer_manager()->CreateShadowCanvasLayer();
+      nsRefPtr<ShadowCanvasLayer> layer = 
+        layer_manager()->CreateShadowCanvasLayer();
+      layer->SetParent(this);
       AsShadowLayer(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
     }
@@ -185,9 +195,8 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
         AsShadowLayer(otb)->AsLayer());
 
-      unused << thebes->Swap(new gfxSharedImageSurface(otb.initialFront()),
-                             otb.bufferRect(),
-                             nsIntPoint(0, 0));
+      thebes->SetFrontBuffer(otb.initialFront(), otb.frontValidRegion(),
+                             otb.xResolution(), otb.yResolution());
 
       break;
     }
@@ -218,6 +227,42 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       break;
     }
+    case Edit::TOpDestroyThebesFrontBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] DestroyThebesFrontBuffer"));
+
+      const OpDestroyThebesFrontBuffer& odfb =
+        edit.get_OpDestroyThebesFrontBuffer();
+      ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
+        AsShadowLayer(odfb)->AsLayer());
+
+      thebes->DestroyFrontBuffer();
+
+      break;
+    }
+    case Edit::TOpDestroyCanvasFrontBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] DestroyCanvasFrontBuffer"));
+
+      const OpDestroyCanvasFrontBuffer& odfb =
+        edit.get_OpDestroyCanvasFrontBuffer();
+      ShadowCanvasLayer* canvas = static_cast<ShadowCanvasLayer*>(
+        AsShadowLayer(odfb)->AsLayer());
+
+      canvas->DestroyFrontBuffer();
+
+      break;
+    }
+    case Edit::TOpDestroyImageFrontBuffer: {
+      MOZ_LAYERS_LOG(("[ParentSide] DestroyImageFrontBuffer"));
+
+      const OpDestroyImageFrontBuffer& odfb =
+        edit.get_OpDestroyImageFrontBuffer();
+      ShadowImageLayer* image = static_cast<ShadowImageLayer*>(
+        AsShadowLayer(odfb)->AsLayer());
+
+      image->DestroyFrontBuffer();
+
+      break;
+    }
 
       // Attributes
     case Edit::TOpSetLayerAttributes: {
@@ -240,11 +285,24 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       case Specific::Tnull_t:
         break;
 
-      case Specific::TThebesLayerAttributes:
+      case Specific::TThebesLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   thebes layer"));
 
-        static_cast<ShadowThebesLayer*>(layer)->SetValidRegion(
-          specific.get_ThebesLayerAttributes().validRegion());
+        ShadowThebesLayer* thebesLayer =
+          static_cast<ShadowThebesLayer*>(layer);
+        const ThebesLayerAttributes& attrs =
+          specific.get_ThebesLayerAttributes();
+
+        thebesLayer->SetValidRegion(attrs.validRegion());
+        thebesLayer->SetResolution(attrs.xResolution(), attrs.yResolution());
+
+        break;
+      }
+      case Specific::TContainerLayerAttributes:
+        MOZ_LAYERS_LOG(("[ParentSide]   container layer"));
+
+        static_cast<ContainerLayer*>(layer)->SetFrameMetrics(
+          specific.get_ContainerLayerAttributes().metrics());
         break;
 
       case Specific::TColorLayerAttributes:
@@ -278,7 +336,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpSetRoot: {
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
-      layer_manager()->SetRoot(AsShadowLayer(edit.get_OpSetRoot())->AsLayer());
+      mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsContainer();
       break;
     }
     case Edit::TOpInsertAfter: {
@@ -315,14 +373,15 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
-      nsRefPtr<gfxSharedImageSurface> newBack =
-        thebes->Swap(new gfxSharedImageSurface(newFront.buffer()),
-                     newFront.rect(),
-                     newFront.rotation());
-
-      // XXX figure me out
-      replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack->GetShmem()));
+      ThebesBuffer newBack;
+      nsIntRegion newValidRegion;
+      float newXResolution, newYResolution;
+      thebes->Swap(newFront, op.updatedRegion(),
+                   &newBack, &newValidRegion, &newXResolution, &newYResolution);
+      replyv.push_back(
+        OpThebesBufferSwap(
+          shadow, NULL,
+          newBack, newValidRegion, newXResolution, newYResolution));
       break;
     }
     case Edit::TOpPaintCanvas: {
@@ -371,7 +430,33 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     reply->AppendElements(&replyv.front(), replyv.size());
   }
 
+  // Ensure that any pending operations involving back and front
+  // buffers have completed, so that neither process stomps on the
+  // other's buffer contents.
+  ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
+
+  Frame()->ShadowLayersUpdated();
+
   return true;
+}
+
+PLayerParent*
+ShadowLayersParent::AllocPLayer()
+{
+  return new ShadowLayerParent();
+}
+
+bool
+ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
+{
+  delete actor;
+  return true;
+}
+
+RenderFrameParent*
+ShadowLayersParent::Frame()
+{
+  return static_cast<RenderFrameParent*>(Manager());
 }
 
 } // namespace layers

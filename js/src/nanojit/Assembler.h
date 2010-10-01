@@ -504,7 +504,13 @@ namespace nanojit
             debug_only( int32_t _fpuStkDepth; )
             debug_only( int32_t _sv_fpuStkDepth; )
 
-            // since we generate backwards the depth is negative
+            // The FPU stack depth is the number of pushes in excess of the number of pops.
+            // Since we generate backwards, we track the FPU stack depth as a negative number.
+            // We use the top of the x87 stack as the single allocatable FP register, FST0.
+            // Thus, between LIR instructions, the depth of the FPU stack must be either 0 or -1,
+            // depending on whether FST0 is in use.  Within the expansion of a single LIR
+            // instruction, however, deeper levels of the stack may be used as unmanaged
+            // temporaries.  Hence, we allow for all eight levels in the assertions below.
             inline void fpu_push() {
                 debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth <= 0); )
             }

@@ -85,12 +85,9 @@ ifdef MOZ_PROFILE_GENERATE
 MODULE_OPTIMIZE_FLAGS = -O0
 else
 MODULE_OPTIMIZE_FLAGS = -O2 -ip
-#XXX: do we want different INTERP_OPTIMIZER flags here?
 endif
 else # not INTEL_CXX
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fomit-frame-pointer $(MOZ_OPTIMIZE_SIZE_TWEAK)
-# Special optimization flags for jsinterp.c
-INTERP_OPTIMIZER = -O3 -fstrict-aliasing
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fomit-frame-pointer
 endif
 else # not GNU_CXX
 ifeq ($(OS_ARCH),SunOS)
@@ -135,6 +132,7 @@ CPPSRCS		= \
 		jsgc.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
+		jscompartment.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -150,6 +148,7 @@ CPPSRCS		= \
 		jsparse.cpp \
 		jsproxy.cpp \
 		jsprf.cpp \
+		jsprobes.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
 		jsreflect.cpp \
@@ -158,7 +157,6 @@ CPPSRCS		= \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
-		jstask.cpp \
 		jstypedarray.cpp \
 		jsutil.cpp \
 		jswrapper.cpp \
@@ -166,11 +164,6 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		$(NULL)
-
-ifdef HAVE_DTRACE
-CPPSRCS 	+= \
-		jsdtracef.cpp
-endif
 
 INSTALLED_HEADERS = \
 		js-config.h \
@@ -193,8 +186,10 @@ INSTALLED_HEADERS = \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
+		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
+		jscompartment.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
@@ -211,6 +206,7 @@ INSTALLED_HEADERS = \
 		jsparse.h \
 		jsproxy.h \
 		jsprf.h \
+		jsprobes.h \
 		jspropertycache.h \
 		jspropertycacheinlines.h \
 		jspropertytree.h \
@@ -226,7 +222,6 @@ INSTALLED_HEADERS = \
 		jsstaticcheck.h \
 		jsstdint.h \
 		jsstr.h \
-		jstask.h \
 		jstracer.h \
 		jstypedarray.h \
 		jstypes.h \
@@ -287,8 +282,91 @@ ASFILES += jswince.asm
 endif
 
 endif # ENABLE_TRACEJIT
+ifdef ENABLE_METHODJIT
 
-ifeq ($(TARGET_CPU), powerpc)
+###############################################
+# BEGIN include sources for the method JIT
+#
+VPATH += 	$(srcdir)/methodjit
+
+CPPSRCS += 	MethodJIT.cpp \
+		BytecodeAnalyzer.cpp \
+		StubCalls.cpp \
+		Compiler.cpp \
+		FrameState.cpp \
+		FastArithmetic.cpp \
+		FastOps.cpp \
+		StubCompiler.cpp \
+		MonoIC.cpp \
+		PolyIC.cpp \
+		ImmutableSync.cpp \
+		InvokeHelpers.cpp \
+		Retcon.cpp \
+		TrampolineCompiler.cpp \
+		$(NULL)
+#		PICStubCompiler.cpp \
+
+ifeq (86, $(findstring 86,$(TARGET_CPU)))
+ifeq (x86_64, $(TARGET_CPU))
+ifdef _MSC_VER
+ASFILES +=	TrampolineMasmX64.asm
+endif
+ifdef SOLARIS_SUNPRO_CXX
+ASFILES +=	TrampolineSUNWX64.s
+endif
+#CPPSRCS		+= only_on_x86_64.cpp
+else
+#CPPSRCS		+= only_on_x86.cpp
+ifdef SOLARIS_SUNPRO_CXX
+ASFILES +=	TrampolineSUNWX86.s
+endif
+endif
+endif
+ifeq (arm, $(TARGET_CPU))
+#CPPSRCS		+= only_on_arm.cpp
+endif
+#
+# END enclude sources for the method JIT
+#############################################
+
+endif
+
+###############################################
+# BEGIN include sources for V8 dtoa
+#
+VPATH += 	$(srcdir)/v8-dtoa \
+		$(NONE)
+
+CPPSRCS += 	checks.cc \
+		conversions.cc \
+		diy-fp.cc \
+		v8-dtoa.cc \
+		fast-dtoa.cc \
+		platform.cc \
+		utils.cc \
+		$(NONE)
+
+INSTALLED_HEADERS += \
+		cached-powers.h \
+		checks.h \
+		conversions.h \
+		diy-fp.h \
+		double.h \
+		dtoa.h \
+		fast-dtoa.h \
+		globals.h \
+		include-v8.h \
+		platform.h \
+		powers-ten.h \
+		utils.h \
+		v8.h \
+		$(NULL)
+
+#
+# END enclude sources for V8 dtoa
+#############################################
+
+ifeq (,$(filter-out powerpc sparc,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
@@ -377,7 +455,6 @@ endif # JS_HAS_CTYPES
 
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
-		jsdtracef.h \
 		$(CURDIR)/javascript-trace.h \
 		$(NULL)
 endif
@@ -612,6 +689,7 @@ endif
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
+ifeq ($(TARGET_CPU),sparc)
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
 jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
 	$(REPORT_BUILD)
@@ -621,12 +699,8 @@ ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
 else
 	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv8plus.il $<
 endif # sparcv9
+endif # sparc
 endif # SOLARIS_SUNPRO_CXX
-
-# Allow building jsinterp.c with special optimization flags
-ifdef INTERP_OPTIMIZER
-jsinterp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(INTERP_OPTIMIZER)
-endif
 
 ifeq ($(OS_ARCH),IRIX)
 ifndef GNU_CC
@@ -771,17 +845,18 @@ $(CURDIR)/jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
 	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
 
 # Force auto-header generation before compiling any source that may use them
-$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
+$(patsubst %.cc,%.$(OBJ_SUFFIX),$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX))): $(CURDIR)/jsautokw.h $(CURDIR)/jsautooplen.h
 
 ifdef HAVE_DTRACE
 $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 	dtrace -h -s $(srcdir)/javascript-trace.d -o javascript-trace.h.in
-	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
+	sed -e 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
+	    -e '/const/!s/char \*/const char */g' \
 	    javascript-trace.h.in > javascript-trace.h
 
 # We can't automatically generate dependencies on auto-generated headers;
 # we have to list them explicitly.
-$(addsuffix .$(OBJ_SUFFIX),jsdtracef jsinterp jsobj): $(CURDIR)/javascript-trace.h
+$(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
 ifdef ENABLE_TRACEJIT
@@ -830,6 +905,24 @@ CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1 -DENABLE_JIT=1
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
 
+ifdef ENABLE_METHODJIT
+# Build a standalone test program that exercises the assembler
+# sources a bit.
+TESTMAIN_OBJS = \
+		Assertions.$(OBJ_SUFFIX) \
+		ExecutableAllocatorPosix.$(OBJ_SUFFIX) \
+		ExecutableAllocatorWin.$(OBJ_SUFFIX) \
+		ExecutableAllocator.$(OBJ_SUFFIX) \
+		ARMAssembler.$(OBJ_SUFFIX) \
+		MacroAssemblerARM.$(OBJ_SUFFIX) \
+		TestMain.$(OBJ_SUFFIX) \
+		jsutil.$(OBJ_SUFFIX) \
+		jslog2.$(OBJ_SUFFIX)
+TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
+	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
+endif
+
 #
 # END kludges for the Nitro assembler
 ###############################################
+

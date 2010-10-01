@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
+#include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
 #endif
 
@@ -131,14 +132,6 @@ nsresult nsPrefService::Init()
 
   mRootBranch = (nsIPrefBranch2 *)rootBranch;
 
-#ifdef MOZ_IPC
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // We're done. Let the prefbranch remote requests.
-    return NS_OK;
-  }
-#endif
-
-  nsXPIDLCString lockFileName;
   nsresult rv;
 
   rv = PREF_Init();
@@ -147,6 +140,19 @@ nsresult nsPrefService::Init()
   rv = pref_InitInitialObjects();
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef MOZ_IPC
+  using mozilla::dom::ContentChild;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+
+    ContentChild* cpc = ContentChild::GetSingleton();
+    nsCAutoString prefs;
+    cpc->SendReadPrefs(&prefs);
+
+    return ReadPrefBuffer(prefs);
+  }
+#endif
+
+  nsXPIDLCString lockFileName;
   /*
    * The following is a small hack which will allow us to only load the library
    * which supports the netscape.cfg file if the preference is defined. We
@@ -319,6 +325,60 @@ NS_IMETHODIMP nsPrefService::ReadExtensionPrefs(nsILocalFile *aFile)
     }
     PREF_FinalizeParseState(&ps);
   }
+  return rv;
+}
+
+NS_IMETHODIMP nsPrefService::SerializePreferences(nsACString& prefs)
+{
+  char** valueArray = (char **)PR_Calloc(sizeof(char *), gHashTable.entryCount);
+  if (!valueArray)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  pref_saveArgs saveArgs;
+  saveArgs.prefArray = valueArray;
+  saveArgs.saveTypes = SAVE_ALL_AND_DEFAULTS;
+  
+  // get the lines that we're supposed to be writing
+  PL_DHashTableEnumerate(&gHashTable, pref_savePref, &saveArgs);
+    
+  char** walker = valueArray;
+  for (PRUint32 valueIdx = 0; valueIdx < gHashTable.entryCount; valueIdx++, walker++) {
+    if (*walker) {
+      prefs.Append(*walker);
+      prefs.Append(NS_LINEBREAK);
+      NS_Free(*walker);
+    }
+  }
+  PR_Free(valueArray);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrefService::SerializePreference(const nsACString& aPrefName, nsACString& aBuffer)
+{
+  PrefHashEntry *pref = pref_HashTableLookup(nsDependentCString(aPrefName).get());
+  if (!pref)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  char* prefArray = nsnull;
+
+  pref_saveArgs saveArgs;
+  saveArgs.prefArray = &prefArray;
+  saveArgs.saveTypes = SAVE_ALL_AND_DEFAULTS;
+
+  pref_savePref(&gHashTable, pref, 0, &saveArgs);
+  aBuffer = prefArray;
+  PR_Free(prefArray);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrefService::ReadPrefBuffer(const nsACString& aBuffer)
+{
+  PrefParseState ps;
+  PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  nsresult rv = PREF_ParseBuf(&ps, nsDependentCString(aBuffer).get(), aBuffer.Length());
+  PREF_FinalizeParseState(&ps);
   return rv;
 }
 

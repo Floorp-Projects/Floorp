@@ -1,0 +1,382 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL keyTimes</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=557885">Mozilla Bug
+  557885</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL keyTimes **/
+
+var gSvg = document.getElementById("svg");
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  gSvg.pauseAnimations();
+
+  var testCases = Array();
+
+  // Simple case
+  testCases.push({
+    'attr' : { 'values': '0; 50; 100',
+               'keyTimes': '0; .8; 1' },
+    'times': [ [ 4, 25 ],
+               [ 8, 50 ],
+               [ 9, 75 ],
+               [ 10, 100 ] ]
+  });
+
+  // Parsing tests
+  testCases.push(parseOk('  0 ; .8;1 ')); // extra whitespace
+  testCases.push(parseNotOk(';0; .8; 1')); // leading semi-colon
+  testCases.push(parseNotOk('; .8; 1')); // leading semi-colon
+  testCases.push(parseOk('0; .8; 1;')); // trailing semi-colon
+  testCases.push(parseNotOk('')); // empty string
+  testCases.push(parseNotOk('  ')); // empty string
+  testCases.push(parseNotOk('0; .8')); // too few values
+  testCases.push(parseNotOk('0; .8; .9; 1')); // too many values
+  testCases.push(parseNotOk('0; 1; .8')); // non-increasing
+  testCases.push(parseNotOk('0; .8; .9')); // final value non-1 with
+                                           // calcMode=linear
+  testCases.push(parseOk('0; .8; .9', { 'calcMode': 'discrete' }));
+  testCases.push(parseNotOk('0.01; .8; 1')); // first value not 0
+  testCases.push(parseNotOk('0.01; .8; 1', { 'calcMode': 'discrete' }));
+                                            // first value not 0
+  testCases.push(parseNotOk('0; .8; 1.1')); // out of range
+  testCases.push(parseNotOk('-0.1; .8; 1')); // out of range
+
+
+  // 2 values
+  testCases.push({
+    'attr' : { 'values': '0; 50',
+               'keyTimes': '0; 1' },
+    'times': [ [ 6, 30 ] ]
+  });
+
+  // 1 value
+  testCases.push({
+    'attr' : { 'values': '50',
+               'keyTimes': ' 0' },
+    'times': [ [ 7, 50 ] ]
+  });
+
+  // 1 bad value
+  testCases.push({
+    'attr' : { 'values': '50',
+               'keyTimes': '0.1' },
+    'times': [ [ 0, -100 ] ]
+  });
+
+  // 1 value, calcMode=discrete
+  testCases.push({
+    'attr' : { 'values': '50',
+               'calcMode': 'discrete',
+               'keyTimes': ' 0' },
+    'times': [ [ 7, 50 ] ]
+  });
+
+  // 1 bad value, calcMode=discrete
+  testCases.push({
+    'attr' : { 'values': '50',
+               'calcMode': 'discrete',
+               'keyTimes': '0.1' },
+    'times': [ [ 0, -100 ] ]
+  });
+
+  // from-to
+  testCases.push({
+    'attr' : { 'from': '10',
+               'to': '20',
+               'keyTimes': '0.0; 1.0' },
+    'times': [ [ 3.5, 13.5 ] ]
+  });
+
+  // from-to calcMode=discrete
+  testCases.push({
+    'attr' : { 'from': '10',
+               'to': '20',
+               'calcMode': 'discrete',
+               'keyTimes': '0.0; 0.7' },
+    'times': [ [ 0, 10 ],
+               [ 6.9, 10 ],
+               [ 7.0, 20 ],
+               [ 10.0, 20 ],
+               [ 11.0, 20 ] ]
+  });
+
+  // from-to calcMode=discrete one keyTime only
+  testCases.push({
+    'attr' : { 'values': '20',
+               'calcMode': 'discrete',
+               'keyTimes': '0' },
+    'times': [ [ 0, 20 ],
+               [ 6.9, 20 ],
+               [ 7.0, 20 ],
+               [ 10.0, 20 ],
+               [ 11.0, 20 ] ]
+  });
+
+  // from-to calcMode=discrete one keyTime, mismatches no. values
+  testCases.push({
+    'attr' : { 'values': '10; 20',
+               'calcMode': 'discrete',
+               'keyTimes': '0' },
+    'times': [ [ 0, -100 ] ]
+  });
+
+  // to
+  testCases.push({
+    'attr' : { 'to': '100',
+               'keyTimes': '0.0; 1.0' },
+    'times': [ [ 0, -100 ],
+               [ 7, 40 ] ]
+  });
+
+  // to -- bad number of keyTimes (too many)
+  testCases.push({
+    'attr' : { 'to': '100',
+               'keyTimes': '0.0; 0.5; 1.0' },
+    'times': [ [ 2, -100 ] ]
+  });
+
+  // to calcMode=discrete two keyTimes
+  // (technically, for discrete to-animation there is only ONE animation value
+  // but we allow two keyTimes to be specified since they're not going to have
+  // any effect anyway and this part of the spec is somewhat counter-intuitive.
+  // See bug 544855)
+  testCases.push({
+    'attr' : { 'to': '100',
+               'calcMode': 'discrete',
+               'keyTimes': '0.0; 1.0' },
+    'times': [ [ 0, 100 ],
+               [ 7, 100 ] ]
+  });
+
+  // to calcMode=discrete one keyTime
+  testCases.push({
+    'attr' : { 'to': '100',
+               'calcMode': 'discrete',
+               'keyTimes': '0' },
+    'times': [ [ 0, 100 ],
+               [ 7, 100 ] ]
+  });
+
+  // values calcMode=discrete
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20; 30',
+               'calcMode': 'discrete',
+               'keyTimes': '0;.2;.4;.6' },
+    'times': [ [ 0, 0 ],
+               [ 1.9, 0 ],
+               [ 2, 10 ],
+               [ 3.9, 10 ],
+               [ 4.0, 20 ],
+               [ 5.9, 20 ],
+               [ 6.0, 30 ],
+               [ 9.9, 30 ],
+               [ 10.0, 30 ] ]
+  });
+
+  // The following two accumulate tests are from SMIL 3.0
+  // (Note that this behaviour differs from that defined for SVG Tiny 1.2 which
+  // specifically excludes the last value: "Note that in the case of discrete
+  // animation, the frozen value that is used is the value of the animation just
+  // before the end of the active duration.")
+  // accumulate=none
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20',
+               'calcMode': 'discrete',
+               'keyTimes': '0;.5;1',
+               'fill': 'freeze',
+               'repeatCount': '2',
+               'accumulate': 'none' },
+    'times': [ [ 0, 0 ],
+               [ 5, 10 ],
+               [ 10, 0 ],
+               [ 15, 10 ],
+               [ 20, 20 ],
+               [ 25, 20 ] ]
+  });
+
+  // accumulate=sum
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20',
+               'calcMode': 'discrete',
+               'keyTimes': '0;.5;1',
+               'fill': 'freeze',
+               'repeatCount': '2',
+               'accumulate': 'sum' },
+    'times': [ [ 0, 0 ],
+               [ 5, 10 ],
+               [ 10, 20 ],
+               [ 15, 30 ],
+               [ 20, 40 ],
+               [ 25, 40 ] ]
+  });
+
+  // If the interpolation mode is paced, the keyTimes attribute is ignored.
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20',
+               'calcMode': 'paced',
+               'keyTimes': '0;.2;1' },
+    'times': [ [ 0, 0 ],
+               [ 2, 4 ],
+               [ 5, 10 ] ]
+  });
+
+  // SMIL 3 has:
+  //   If the simple duration is indefinite and the interpolation mode is
+  //   linear or spline, any keyTimes specification will be ignored.
+  // However, since keyTimes represent "a proportional offset into the simple
+  // duration of the animation element" surely discrete animation too cannot use
+  // keyTimes when the simple duration is indefinite. Hence SVGT 1.2 is surely
+  // more correct when it has:
+  //   If the simple duration is indefinite, any 'keyTimes' specification will
+  //   be ignored.
+  // (linear)
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20',
+               'dur': 'indefinite',
+               'keyTimes': '0;.2;1' },
+    'times': [ [ 0, 0 ],
+               [ 5, 0 ] ]
+  });
+  // (spline)
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20',
+               'dur': 'indefinite',
+               'calcMode': 'spline',
+               'keyTimes': '0;.2;1',
+               'keySplines': '0 0 1 1; 0 0 1 1' },
+    'times': [ [ 0, 0 ],
+               [ 5, 0 ] ]
+  });
+  // (discrete)
+  testCases.push({
+    'attr' : { 'values': '0; 10; 20',
+               'dur': 'indefinite',
+               'calcMode': 'discrete',
+               'keyTimes': '0;.2;1' },
+    'times': [ [ 0, 0 ],
+               [ 5, 0 ] ]
+  });
+
+  for (var i = 0; i < testCases.length; i++) {
+    gSvg.setCurrentTime(0);
+    var test = testCases[i];
+
+    // Create animation elements
+    var anim = createAnim(test.attr);
+
+    // Run samples
+    for (var j = 0; j < test.times.length; j++) {
+      var times = test.times[j];
+      gSvg.setCurrentTime(times[0]);
+      checkSample(anim, times[1], times[0], i);
+    }
+
+    removeElement(anim);
+  }
+
+  // fallback to discrete for non-additive animation
+  var attr = { 'values': 'butt; round; square',
+               'attributeName': 'stroke-linecap',
+               'calcMode': 'linear',
+               'keyTimes': '0;.2;1',
+               'fill': 'remove' };
+  var anim = createAnim(attr);
+  var samples = [ [ 0, 'butt' ],
+                  [ 1.9, 'butt' ],
+                  [ 2.0, 'round' ],
+                  [ 9.9, 'round' ],
+                  [ 10, 'butt' ] // fill=remove so we'll never set it to square
+                ];
+  for (var i = 0; i < samples.length; i++) {
+    var sample = samples[i];
+    gSvg.setCurrentTime(sample[0]);
+    checkLineCapSample(anim, sample[1], sample[0],
+      "[non-interpolatable fallback]");
+  }
+  removeElement(anim);
+
+  SimpleTest.finish();
+}
+
+function parseOk(str, extra)
+{
+  var attr = { 'values': '0; 50; 100',
+               'keyTimes': str };
+  if (typeof(extra) == "object") {
+    for (name in extra) {
+      attr[name] = extra[name];
+    }
+  }
+  return {
+    'attr' : attr,
+    'times': [ [ 0, 0 ] ]
+  };
+}
+
+function parseNotOk(str, extra)
+{
+  var result = parseOk(str, extra);
+  result.times = [ [ 0, -100 ] ];
+  return result;
+}
+
+function createAnim(attr)
+{
+  const svgns = "http://www.w3.org/2000/svg";
+  var anim = document.createElementNS(svgns, 'animate');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('dur','10s');
+  anim.setAttribute('begin','0s');
+  anim.setAttribute('fill','freeze');
+  for (name in attr) {
+    anim.setAttribute(name, attr[name]);
+  }
+  return document.getElementById('circle').appendChild(anim);
+}
+
+function checkSample(anim, expectedValue, sampleTime, caseNum)
+{
+  var msg = "Test case " + caseNum +
+    " (keyTimes: '" + anim.getAttribute('keyTimes') + "'" +
+    " calcMode: " + anim.getAttribute('calcMode') + "), " +
+    "t=" + sampleTime +
+    ": Unexpected sample value:";
+  is(anim.targetElement.cx.animVal.value, expectedValue, msg);
+}
+
+function checkLineCapSample(anim, expectedValue, sampleTime, caseDescr)
+{
+  var msg = "Test case " + caseDescr +
+    " (keyTimes: '" + anim.getAttribute('keyTimes') + "'" +
+    " calcMode: " + anim.getAttribute('calcMode') + "), " +
+    "t=" + sampleTime +
+    ": Unexpected sample value:";
+  var actualValue =
+    window.getComputedStyle(anim.targetElement, null).
+    getPropertyValue('stroke-linecap');
+  is(actualValue, expectedValue, msg);
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -1148,7 +1148,7 @@ namespace nanojit
                 // [xor  $t,$rr,$t]     if (rr==ra)
                 // and   $at,$at,$t
                 // srl   $at,$at,31
-                
+
                 if (ra == rb) {
                     // special case for (ra == rb) which can't overflow
                     MOVE(AT, ZERO);
@@ -1712,27 +1712,28 @@ namespace nanojit
     void
     Assembler::asm_call(LIns* ins)
     {
-        Register rr;
-        LOpcode op = ins->opcode();
+        if (!ins->isop(LIR_callv)) {
+            Register rr;
+            LOpcode op = ins->opcode();
 
-        switch (op) {
-        case LIR_calld:
-            NanoAssert(cpu_has_fpu);
-            rr = FV0;
-            break;
-        case LIR_calli:
-            rr = retRegs[0];
-            break;
-        default:
-            BADOPCODE(op);
-            return;
+            switch (op) {
+            case LIR_calli:
+                rr = retRegs[0];
+                break;
+            case LIR_calld:
+                NanoAssert(cpu_has_fpu);
+                rr = FV0;
+                break;
+            default:
+                BADOPCODE(op);
+                return;
+            }
+
+            deprecated_prepResultReg(ins, rmask(rr));
         }
-
-        deprecated_prepResultReg(ins, rmask(rr));
 
         // Do this after we've handled the call result, so we don't
         // force the call result to be spilled unnecessarily.
-
         evictScratchRegsExcept(0);
 
         const CallInfo* ci = ins->callInfo();

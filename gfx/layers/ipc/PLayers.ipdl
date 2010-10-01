@@ -40,6 +40,9 @@
 
 //include protocol PCompositor;
 include protocol PLayer;
+include protocol PRenderFrame;
+
+include "IPC/ShadowLayerUtils.h";
 
 using gfx3DMatrix;
 using gfxRGBA;
@@ -48,6 +51,8 @@ using nsIntRect;
 using nsIntRegion;
 using nsIntSize;
 using mozilla::GraphicsFilterType;
+using mozilla::layers::FrameMetrics;
+using mozilla::layers::SurfaceDescriptorX11;
 using mozilla::null_t;
 
 /**
@@ -71,23 +76,41 @@ struct OpCreateCanvasLayer     { PLayer layer; };
 // For the "buffer creation" operations, we send an initial front
 // buffer that only contains (transparent) black pixels just so that
 // we can swap it back after the first OpPaint without a special case.
+
+union SurfaceDescriptor {
+  Shmem;
+  SurfaceDescriptorX11;
+};
+
+struct ThebesBuffer {
+  SurfaceDescriptor buffer;
+  nsIntRect rect;
+  nsIntPoint rotation; 
+};
+
 struct OpCreateThebesBuffer {
   PLayer layer;
-  nsIntRect bufferRect;
-  Shmem initialFront;
+  ThebesBuffer initialFront;
+  nsIntRegion frontValidRegion;
+  float xResolution;
+  float yResolution;
 };
+struct OpDestroyThebesFrontBuffer { PLayer layer; };
 
 struct OpCreateCanvasBuffer {
   PLayer layer;
   nsIntSize size;
   Shmem initialFront;
 };
+struct OpDestroyCanvasFrontBuffer { PLayer layer; };
 
 struct OpCreateImageBuffer {
   PLayer layer;
   nsIntSize size;
   Shmem initialFront;
 };
+struct OpDestroyImageFrontBuffer { PLayer layer; };
+
 
 // Change a layer's attributes
 struct CommonLayerAttributes {
@@ -99,7 +122,12 @@ struct CommonLayerAttributes {
   nsIntRect clipRect;
 };
 
-struct ThebesLayerAttributes   { nsIntRegion validRegion; };
+struct ThebesLayerAttributes {
+  nsIntRegion validRegion;
+  float xResolution;
+  float yResolution;
+};
+struct ContainerLayerAttributes{ FrameMetrics metrics; };
 struct ColorLayerAttributes    { gfxRGBA color; };
 struct CanvasLayerAttributes   { GraphicsFilterType filter; };
 struct ImageLayerAttributes    { GraphicsFilterType filter; };
@@ -107,6 +135,7 @@ struct ImageLayerAttributes    { GraphicsFilterType filter; };
 union SpecificLayerAttributes {
   null_t;
   ThebesLayerAttributes;
+  ContainerLayerAttributes;
   ColorLayerAttributes;
   CanvasLayerAttributes;
   ImageLayerAttributes;
@@ -131,14 +160,10 @@ struct OpRemoveChild  { PLayer container; PLayer childLayer; };
 
 
 // Paint (buffer update)
-struct ThebesBuffer {
-  Shmem buffer;
-  nsIntRect rect;
-  nsIntPoint rotation; 
-};
 struct OpPaintThebesBuffer {
   PLayer layer;
   ThebesBuffer newFrontBuffer;
+  nsIntRegion updatedRegion;
 };
 
 struct OpPaintCanvas  {
@@ -163,6 +188,9 @@ union Edit {
   OpCreateCanvasBuffer;
   OpCreateThebesBuffer;
   OpCreateImageBuffer;
+  OpDestroyThebesFrontBuffer;
+  OpDestroyCanvasFrontBuffer;
+  OpDestroyImageFrontBuffer;
 
   OpSetLayerAttributes;
 
@@ -178,29 +206,26 @@ union Edit {
 
 
 // Replies to operations
-struct OpBufferSwap   { PLayer layer; Shmem newBackBuffer; };
+struct OpBufferSwap   { PLayer layer; SurfaceDescriptor newBackBuffer; };
 
-/*
- * XXX: if we choose *not* to do a new-front-to-new-back fill in the
- * parent process, then we'll need to send back the old buffer
- * attributes so that it can be filled anew.
- *
 struct OpThebesBufferSwap {
   PLayer layer;
   ThebesBuffer newBackBuffer;
+  nsIntRegion newValidRegion;
+  float newXResolution;
+  float newYResolution;
 };
-*/
 
 // Unit of a "changeset reply".  This is a weird abstraction, probably
 // only to be used for buffer swapping.
 union EditReply {
   OpBufferSwap;
-//  OpThebesBufferSwap;
+  OpThebesBufferSwap;
 };
 
 
 sync protocol PLayers {
-  //manager PCompositor /*or PContent or PMedia or PPlugin*/;
+  manager PRenderFrame /*or PCompositor or PMedia or PPlugin*/;
   manages PLayer;
 
 parent:

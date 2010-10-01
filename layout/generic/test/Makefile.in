@@ -58,6 +58,7 @@ _TEST_FILES = \
 		plugin_clipping_lib.js \
 		plugin_focus_helper.html \
 		test_backspace_delete.xul \
+		test_bug240933.html \
 		test_bug263683.html \
 		test_bug288789.html \
 		test_bug290397.html \
@@ -94,6 +95,7 @@ _TEST_FILES = \
 		$(warning test_bug507902.html temporarily disabled - see bug 510001) \
 		test_bug514732.html \
 		test_bug527306.html \
+		test_bug597333.html \
 		test_invalidate_during_plugin_paint.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \

@@ -43,6 +43,7 @@ VPATH       = \
   $(srcdir)/basic \
   $(srcdir)/opengl \
   $(srcdir)/d3d9 \
+  $(srcdir)/d3d10 \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -100,19 +101,44 @@ CPPSRCS += \
         Nv3DVUtils.cpp \
         $(NULL)
 endif
+ifdef MOZ_ENABLE_D3D10_LAYER
+EXPORTS += \
+        LayerManagerD3D10.h \
+        $(NULL)
+
+CPPSRCS += \
+        LayerManagerD3D10.cpp \
+        ThebesLayerD3D10.cpp \
+        ContainerLayerD3D10.cpp \
+        ImageLayerD3D10.cpp \
+        ColorLayerD3D10.cpp \
+        CanvasLayerD3D10.cpp \
+        $(NULL)
+endif
 endif
 
 ifdef MOZ_IPC #{
-EXPORTS_NAMESPACES = mozilla/layers
+EXPORTS_NAMESPACES = IPC mozilla/layers
+EXPORTS_IPC = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
         ShadowLayers.h \
+        ShadowLayersChild.h \
+        ShadowLayersParent.h \
         $(NULL)
 
 CPPSRCS += \
         ShadowLayers.cpp \
+        ShadowLayerChild.cpp \
+        ShadowLayersChild.cpp \
         ShadowLayerParent.cpp \
         ShadowLayersParent.cpp \
         $(NULL)
+
+ifdef MOZ_X11 #{
+EXPORTS_mozilla/layers += ShadowLayerUtilsX11.h
+CPPSRCS += ShadowLayerUtilsX11.cpp
+endif #}
+
 endif #}
 
 # Enable GLES2.0 under maemo
@@ -128,7 +154,7 @@ ifdef MOZ_IPC
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 endif
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS)
 	$(PYTHON) $(srcdir)/opengl/genshaders.py $< $@
@@ -136,4 +162,3 @@ LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS
 LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h
 
 GARBAGE += LayerManagerOGLShaders.h
-

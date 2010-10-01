@@ -77,6 +77,7 @@ _TEST_FILES = \
 		manifest.js \
 		reactivate_helper.html \
 		redirect.sjs \
+		referer.sjs \
 		seek1.js \
 		seek2.js \
 		seek3.js \
@@ -135,6 +136,7 @@ _TEST_FILES = \
 		test_source.html \
 		test_source_write.html \
 		test_standalone.html \
+		test_timeupdate_seek.html \
 		test_timeupdate_small_files.html \
 		test_volume.html \
 		test_video_to_canvas.html \
@@ -153,17 +155,6 @@ _TEST_FILES = \
 #   test_mixed_principals.html
 # Disabled since we don't play Wave files standalone, for now
 #		test_audioDocumentTitle.html
-
-ifdef MOZ_OGG
-ifneq ($(OS_ARCH),WINNT)
-# Disabled on windows until we figure out the random failures.
-# When this is fixed, make it backend-independent please.
-# See bug 475369 and bug 526323
-_TEST_FILES += \
-		test_timeupdate3.html \
-		$(NULL)
-endif
-endif
 
 # sample files
 _TEST_FILES += \
@@ -251,6 +242,7 @@ _TEST_FILES += \
 		file_audio_event_adopt_iframe.html \
 		test_audio_event_adopt.html \
 		test_framebuffer.html \
+		test_referer.html \
 		$(NULL)
 else
 _TEST_FILES += \

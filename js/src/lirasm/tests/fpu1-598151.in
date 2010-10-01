@@ -1,0 +1,12 @@
+	ptr = allocp 8
+
+	a = immd 1.0
+	b = immd 2.5
+	c = addd a b
+	std c ptr 0
+	j done
+
+foo:	std c ptr 0
+
+done:	res = ldd ptr 0
+	retd res

@@ -2341,7 +2341,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                                   display->mBinding->mOriginPrincipal,
                                   PR_FALSE, getter_AddRefs(binding),
                                   &resolveStyle);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
       return NS_OK; // Binding will load asynchronously.
 
     if (binding) {
@@ -5095,7 +5095,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                            PR_FALSE,
                                            getter_AddRefs(newPendingBinding->mBinding),
                                            &resolveStyle);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
       return;
 
     if (newPendingBinding->mBinding) {
@@ -7932,9 +7932,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didInvalidate = PR_TRUE;
       }
       if (hint & nsChangeHint_UpdateCursor) {
-        nsIViewManager* viewMgr = mPresShell->GetViewManager();
-        if (viewMgr)
-          viewMgr->SynthesizeMouseMove(PR_FALSE);
+        mPresShell->SynthesizeMouseMove(PR_FALSE);
       }
     }
   }
@@ -8189,6 +8187,12 @@ void
 nsCSSFrameConstructor::BeginUpdate() {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
+
+  nsRootPresContext* rootPresContext =
+    mPresShell->GetPresContext()->GetRootPresContext();
+  if (rootPresContext) {
+    rootPresContext->IncrementDOMGeneration();
+  }
 
   ++mUpdateCount;
 }

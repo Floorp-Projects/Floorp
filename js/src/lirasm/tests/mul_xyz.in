@@ -1,13 +1,13 @@
-; 1073741823 * 2 = 0x7ffffffe, and will nearly (but not quite) overflow.
+; 1073741823 * 2 < 2^31, and will not overflow.
 big = immi 1073741823
 two = immi 2
 
-res = mulxovi big two    ; no overflow, so we don't exit here
+res = muli big two
 
 ; Ensure that 'big' and 'two' get their own registers and
-; aren't shared with 'res'.  Also store 'res' so it isn't dead.
+; aren't shared with 'res'.
 m = allocp 12
 sti big m 0
 sti two m 4
-sti res m 8
-x                       ; we exit here
+
+reti res

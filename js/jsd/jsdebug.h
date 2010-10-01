@@ -143,6 +143,16 @@ JSD_DebuggerOnForUser(JSRuntime*         jsrt,
                       void*              user);
 
 /*
+ * Startup JSD in an application that uses compartments. Debugger
+ * objects will be allocated in the same compartment as scopeobj.
+ */
+extern JSD_PUBLIC_API(JSDContext*)
+JSD_DebuggerOnForUserWithCompartment(JSRuntime*         jsrt,
+                                     JSD_UserCallbacks* callbacks,
+                                     void*              user,
+                                     JSObject*          scopeobj);
+
+/*
 * Shutdown JSD for this JSDContext
 */
 extern JSD_PUBLIC_API(void)
@@ -949,14 +959,6 @@ extern JSD_PUBLIC_API(const char*)
 JSD_GetNameForStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
-
-/*
-* True if stack frame represents a native frame.
-*/
-extern JSD_PUBLIC_API(JSBool)
-JSD_IsStackFrameNative(JSDContext* jsdc,
-                       JSDThreadState* jsdthreadstate,
-                       JSDStackFrameInfo* jsdframe);
 
 /*
 * True if stack frame represents a frame created as a result of a debugger

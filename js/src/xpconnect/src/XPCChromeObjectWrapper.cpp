@@ -375,16 +375,20 @@ RewrapForContent(JSContext *cx, JSObject *wrapperObj, jsval *vp);
 // This function wrapper calls a function from untrusted content into chrome.
 
 static JSBool
-XPC_COW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                        jsval *rval)
+XPC_COW_FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
 {
+  JSObject *obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj)
+    return JS_FALSE;
+
   jsval funToCall;
-  if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]),
+  if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)),
                           XPCWrapper::eWrappedFunctionSlot, &funToCall)) {
     return JS_FALSE;
   }
 
   JSObject *scope = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(funToCall));
+  jsval *argv = JS_ARGV(cx, vp);
   for (uintN i = 0; i < argc; ++i) {
     if (!JSVAL_IS_PRIMITIVE(argv[i]) &&
         !RewrapObject(cx, scope, JSVAL_TO_OBJECT(argv[i]), XPCNW_EXPLICIT,
@@ -393,9 +397,9 @@ XPC_COW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
-  if (!RewrapObject(cx, scope, obj, XPCNW_EXPLICIT, rval) ||
-      !JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(*rval), funToCall, argc, argv,
-                            rval)) {
+  if (!RewrapObject(cx, scope, obj, XPCNW_EXPLICIT, vp) ||
+      !JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(*vp), funToCall, argc,
+                            JS_ARGV(cx, vp), vp)) {
     return JS_FALSE;
   }
 
@@ -404,9 +408,9 @@ XPC_COW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  return JSVAL_IS_PRIMITIVE(*rval) ||
+  return JSVAL_IS_PRIMITIVE(*vp) ||
          RewrapObject(cx, JS_GetGlobalForObject(cx, scope),
-                      JSVAL_TO_OBJECT(*rval), COW, rval);
+                      JSVAL_TO_OBJECT(*vp), COW, vp);
 }
 
 static JSBool

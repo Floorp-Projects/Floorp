@@ -249,6 +249,15 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
         cmp = DoCompare(actual.GetIntValue(), required.GetIntValue());
       }
       break;
+    case nsMediaFeature::eFloat:
+      {
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Number,
+                     "bad actual value");
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_Number,
+                     "bad required value");
+        cmp = DoCompare(actual.GetFloatValue(), required.GetFloatValue());
+      }
+      break;
     case nsMediaFeature::eIntRatio:
       {
         NS_ASSERTION(actual.GetUnit() == eCSSUnit_Array &&
@@ -421,6 +430,15 @@ nsMediaQuery::AppendToString(nsAString& aString) const
           // Use 'z-index' as a property that takes integer values
           // written without anything extra.
           expr.mValue.AppendToString(eCSSProperty_z_index, aString);
+          break;
+        case nsMediaFeature::eFloat:
+          {
+            NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Number,
+                         "bad unit");
+            // Use 'line-height' as a property that takes float values
+            // written in the normal way.
+            expr.mValue.AppendToString(eCSSProperty_line_height, aString);
+          }
           break;
         case nsMediaFeature::eIntRatio:
           {

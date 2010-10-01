@@ -52,7 +52,6 @@ function PubKey(uri) {
   WBORecord.call(this, uri);
   this.type = "pubkey";
   this.keyData = null;
-  this.privateKeyUri = null;
 }
 PubKey.prototype = {
   __proto__: WBORecord.prototype,
@@ -66,13 +65,16 @@ PubKey.prototype = {
     let key = this.payload.privateKeyUri;
     return Utils.makeURI(this.uri.resolve(key) || key);
   },
+  set privateKeyUri(value) {
+    this.payload.privateKeyUri = this.uri.getRelativeSpec(Utils.makeURI(value));
+  },
 
   get publicKeyUri() {
     throw "attempted to get public key url from a public key!";
   }
 };
 
-Utils.deferGetSet(PubKey, "payload", ["keyData", "privateKeyUri", "type"]);
+Utils.deferGetSet(PubKey, "payload", ["keyData", "type"]);
 
 function PrivKey(uri) {
   WBORecord.call(this, uri);
@@ -80,7 +82,6 @@ function PrivKey(uri) {
   this.salt = null;
   this.iv = null;
   this.keyData = null;
-  this.publicKeyUri = null;
 }
 PrivKey.prototype = {
   __proto__: WBORecord.prototype,
@@ -94,13 +95,16 @@ PrivKey.prototype = {
     let key = this.payload.publicKeyUri;
     return Utils.makeURI(this.uri.resolve(key) || key);
   },
+  set publicKeyUri(value) {
+    this.payload.publicKeyUri = this.uri.getRelativeSpec(Utils.makeURI(value));
+  },
 
   get privateKeyUri() {
     throw "attempted to get private key url from a private key!";
   }
 };
 
-Utils.deferGetSet(PrivKey, "payload", ["salt", "iv", "keyData", "publicKeyUri", "type"]);
+Utils.deferGetSet(PrivKey, "payload", ["salt", "iv", "keyData", "type"]);
 
 // XXX unused/unfinished
 function SymKey(keyData, wrapped) {
@@ -137,9 +141,14 @@ PubKeyManager.prototype = {
   },
 
   createKeypair: function KeyMgr_createKeypair(passphrase, pubkeyUri, privkeyUri) {
+    if (!pubkeyUri)
+      throw "Missing or null parameter 'pubkeyUri'.";
+    if (!privkeyUri)
+      throw "Missing or null parameter 'privkeyUri'.";
+
     this._log.debug("Generating RSA keypair");
-    let pubkey = new PubKey();
-    let privkey = new PrivKey();
+    let pubkey = new PubKey(pubkeyUri);
+    let privkey = new PrivKey(privkeyUri);
     privkey.salt = Svc.Crypto.generateRandomBytes(16);
     privkey.iv = Svc.Crypto.generateRandomIV();
 
@@ -148,14 +157,8 @@ PubKeyManager.prototype = {
                                privkey.iv, pub, priv);
     [pubkey.keyData, privkey.keyData] = [pub.value, priv.value];
 
-    if (pubkeyUri) {
-      pubkey.uri = pubkeyUri;
-      privkey.publicKeyUri = pubkeyUri;
-    }
-    if (privkeyUri) {
-      privkey.uri = privkeyUri;
-      pubkey.privateKeyUri = privkeyUri;
-    }
+    pubkey.privateKeyUri = privkeyUri;
+    privkey.publicKeyUri = pubkeyUri;
 
     this._log.debug("Generating RSA keypair... done");
     return {pubkey: pubkey, privkey: privkey};

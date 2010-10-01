@@ -132,6 +132,8 @@ MOZDEPTH ?= $(DEPTH)
 
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:
+# Adjust jar logs with the new locale (can't use sed -i because of bug 373784)
+	-$(PERL) -pi -e "s/en-US/$(AB_CD)/g" $(_ABS_DIST)/jarlog/*.jar.log
 # call a hook for apps to put their uninstall helper.exe into the package
 	$(UNINSTALLER_PACKAGE_HOOK)
 # copy xpi-stage over, but not install.rdf and chrome.manifest,

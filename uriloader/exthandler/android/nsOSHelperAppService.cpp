@@ -86,3 +86,14 @@ nsresult nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aS
     return nsMIMEInfoAndroid::GetMimeInfoForProtocol(aScheme, found, info);
 }
 
+nsIHandlerApp*
+nsOSHelperAppService::CreateAndroidHandlerApp(const nsAString& aName,
+                                              const nsAString& aDescription,
+                                              const nsAString& aPackageName,
+                                              const nsAString& aClassName, 
+                                              const nsACString& aMimeType,
+                                              const nsAString& aAction)
+{
+    return new nsAndroidHandlerApp(aName, aDescription, aPackageName,
+                                   aClassName, aMimeType, aAction);
+}

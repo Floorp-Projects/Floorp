@@ -163,7 +163,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int EMBED_OR_IMG = 48;
 
-    final static int AREA_OR_SPACER_OR_WBR = 49;
+    final static int AREA_OR_WBR = 49;
 
     final static int DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU = 50;
 
@@ -395,6 +395,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private T headPointer;
 
+    /**
+     * Used to work around Gecko limitations. Not used in Java.
+     */
+    private T deepTreeSurrogateParent;
+
     protected char[] charBuffer;
 
     protected int charBufferLen = 0;
@@ -507,6 +512,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         formPointer = null;
         Portability.releaseElement(headPointer);
         headPointer = null;
+        Portability.releaseElement(deepTreeSurrogateParent);
+        deepTreeSurrogateParent = null;
         // [NOCPP[
         html4 = false;
         idLocations.clear();
@@ -1226,14 +1233,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     public final void eof() throws SAXException {
         flushCharacters();
-        if (inForeign) {
-            err("End of file in a foreign namespace context.");
-            while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
-                popOnEof();
-            }
-            inForeign = false;
-        }
         eofloop: for (;;) {
+            if (inForeign) {
+                err("End of file in a foreign namespace context.");
+                break eofloop;
+            }
             switch (mode) {
                 case INITIAL:
                     /*
@@ -1391,6 +1395,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         formPointer = null;
         Portability.releaseElement(headPointer);
         headPointer = null;
+        Portability.releaseElement(deepTreeSurrogateParent);
+        deepTreeSurrogateParent = null;
         if (stack != null) {
             while (currentPtr > -1) {
                 stack[currentPtr].release();
@@ -1476,10 +1482,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             err("HTML start tag \u201C"
                                     + name
                                     + "\u201D in a foreign namespace context.");
-                            while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                            while (!isSpecialParentInForeign(stack[currentPtr])) {
                                 pop();
                             }
-                            inForeign = false;
+                            if (!hasForeignInScope()) {
+                                inForeign = false;
+                            }
                             continue starttagloop;
                         case FONT:
                             if (attributes.contains(AttributeName.COLOR)
@@ -1488,10 +1496,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 err("HTML start tag \u201C"
                                         + name
                                         + "\u201D in a foreign namespace context.");
-                                while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                                while (!isSpecialParentInForeign(stack[currentPtr])) {
                                     pop();
                                 }
-                                inForeign = false;
+                                if (!hasForeignInScope()) {
+                                    inForeign = false;
+                                }
                                 continue starttagloop;
                             }
                             // else fall thru
@@ -1786,7 +1796,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case MARQUEE_OR_APPLET:
                         case OBJECT:
                         case TABLE:
-                        case AREA_OR_SPACER_OR_WBR:
+                        case AREA_OR_WBR:
                         case BR:
                         case EMBED_OR_IMG:
                         case INPUT:
@@ -2007,7 +2017,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break starttagloop;
                             case BR:
                             case EMBED_OR_IMG:
-                            case AREA_OR_SPACER_OR_WBR:
+                            case AREA_OR_WBR:
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE
                             case PARAM_OR_SOURCE:
@@ -2906,6 +2916,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         }
     }
 
+    private boolean isSpecialParentInForeign(StackNode<T> stackNode) {
+        @NsUri String ns = stackNode.ns;
+        if ("http://www.w3.org/1999/xhtml" == ns) {
+            return true;
+        }
+        if (ns == "http://www.w3.org/2000/svg") {
+            return stackNode.group == FOREIGNOBJECT_OR_DESC
+                    || stackNode.group == TITLE;
+        }
+        assert ns == "http://www.w3.org/1998/Math/MathML" : "Unexpected namespace.";
+        return stackNode.group == MI_MO_MN_MS_MTEXT;
+    }
+
     /**
      * 
      * <p>
@@ -3123,7 +3146,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         while (currentPtr >= eltPos) {
                             pop();
                         }
-                        return;
+                        break endtagloop;
                     }
                     if (stack[--eltPos].ns == "http://www.w3.org/1999/xhtml") {
                         break;
@@ -3423,7 +3446,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             removeFromStack(eltPos);
                             break endtagloop;
                         case P:
-                            eltPos = findLastInScope("p");
+                            eltPos = findLastInButtonScope("p");
                             if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
                                 err("No \u201Cp\u201D element in scope but a \u201Cp\u201D end tag seen.");
                                 // XXX inline this case
@@ -3543,7 +3566,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     elementName,
                                     HtmlAttributes.EMPTY_ATTRIBUTES);
                             break endtagloop;
-                        case AREA_OR_SPACER_OR_WBR:
+                        case AREA_OR_WBR:
                         case PARAM_OR_SOURCE:
                         case EMBED_OR_IMG:
                         case IMAGE:
@@ -3896,6 +3919,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return TreeBuilder.NOT_FOUND_ON_STACK;
     }
 
+    private int findLastInButtonScope(@Local String name) {
+        for (int i = currentPtr; i > 0; i--) {
+            if (stack[i].name == name) {
+                return i;
+            } else if (stack[i].scoping || stack[i].name == "button") {
+                return TreeBuilder.NOT_FOUND_ON_STACK;
+            }
+        }
+        return TreeBuilder.NOT_FOUND_ON_STACK;
+    }
+
     private int findLastInScope(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
             if (stack[i].name == name) {
@@ -4168,7 +4202,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      * 
      */
     private void implicitlyCloseP() throws SAXException {
-        int eltPos = findLastInScope("p");
+        int eltPos = findLastInButtonScope("p");
         if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
             return;
         }
@@ -5357,7 +5391,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             }
         }
         Portability.retainElement(formPointer);
-        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
+        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
     }
 
     public boolean snapshotMatches(TreeBuilderState<T> snapshot) {
@@ -5370,6 +5404,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 || listLen != listPtr + 1
                 || formPointer != snapshot.getFormPointer()
                 || headPointer != snapshot.getHeadPointer()
+                || deepTreeSurrogateParent != snapshot.getDeepTreeSurrogateParent()
                 || mode != snapshot.getMode()
                 || originalMode != snapshot.getOriginalMode()
                 || framesetOk != snapshot.isFramesetOk()
@@ -5461,6 +5496,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         Portability.releaseElement(headPointer);
         headPointer = snapshot.getHeadPointer();
         Portability.retainElement(headPointer);
+        Portability.releaseElement(deepTreeSurrogateParent);
+        deepTreeSurrogateParent = snapshot.getDeepTreeSurrogateParent();
+        Portability.retainElement(deepTreeSurrogateParent);
         mode = snapshot.getMode();
         originalMode = snapshot.getOriginalMode();
         framesetOk = snapshot.isFramesetOk();
@@ -5494,6 +5532,15 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return headPointer;
     }
     
+    /**
+     * Returns the deepTreeSurrogateParent.
+     * 
+     * @return the deepTreeSurrogateParent
+     */
+    public T getDeepTreeSurrogateParent() {
+        return deepTreeSurrogateParent;
+    }
+
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElements()
      */

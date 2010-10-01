@@ -983,6 +983,8 @@ public:
     return result;
   }
 
+  PRBool IsRootContentDocument();
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -1265,12 +1267,25 @@ public:
    */
   void RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
 
+  /**
+   * Increment DOM-modification generation counter to indicate that
+   * the DOM has changed in a way that might lead to style changes/
+   * reflows/frame creation and destruction.
+   */
+  void IncrementDOMGeneration() { mDOMGeneration++; }
+
+  /**
+   * Get the current DOM generation counter.
+   */
+  PRUint32 GetDOMGeneration() { return mDOMGeneration; }
+
 private:
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
   // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
   // use as the root of the subtree to search for plugin updates, or
   // null to use the root frame of this prescontext
   nsIFrame* mUpdatePluginGeometryForFrame;
+  PRUint32 mDOMGeneration;
   PRPackedBool mNeedsToUpdatePluginGeometry;
 };
 

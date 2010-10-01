@@ -497,8 +497,7 @@ msFromTime(jsdouble t)
 Class js_DateClass = {
     js_Date_str,
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::DATE_CLASS_RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Date) |
-    JSCLASS_FAST_CONSTRUCTOR,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -2057,7 +2056,7 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
     /* Step 6. */
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, args))
+    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.callee() = toISO;
@@ -2343,19 +2342,20 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
 
 #if JS_HAS_TOSOURCE
 #include <string.h>
-#include "jsdtoa.h"
+#include "jsnum.h"
 
 static JSBool
 date_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble utctime;
-    char buf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr, *bytes;
+    char *numStr, *bytes;
     JSString *str;
 
     if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
 
-    numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
+    ToCStringBuf cbuf;
+    numStr = NumberToCString(cx, &cbuf, utctime);
     if (!numStr) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -2479,25 +2479,27 @@ JSBool
 js_Date(JSContext *cx, uintN argc, Value *vp)
 {
     /* Date called as function. */
-    if (!vp[1].isMagic(JS_FAST_CONSTRUCTOR))
+    if (!IsConstructing(vp))
         return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, vp);
+
+    Value *argv = vp + 2;
 
     /* Date called as constructor. */
     jsdouble d;
     if (argc == 0) {
         d = NowAsMillis();
     } else if (argc == 1) {
-        if (!vp[2].isString()) {
+        if (!argv[0].isString()) {
             /* the argument is a millisecond number */
-            if (!ValueToNumber(cx, vp[2], &d))
-                return JS_FALSE;
+            if (!ValueToNumber(cx, argv[0], &d))
+                return false;
             d = TIMECLIP(d);
         } else {
             /* the argument is a string; parse it. */
-            JSString *str = js_ValueToString(cx, vp[2]);
+            JSString *str = js_ValueToString(cx, argv[0]);
             if (!str)
-                return JS_FALSE;
-            vp[2].setString(str);
+                return false;
+            argv[0].setString(str);
 
             if (!date_parseString(str, &d, cx))
                 d = js_NaN;
@@ -2506,8 +2508,8 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
         }
     } else {
         jsdouble msec_time;
-        if (!date_msecFromArgs(cx, argc, vp + 2, &msec_time))
-            return JS_FALSE;
+        if (!date_msecFromArgs(cx, argc, argv, &msec_time))
+            return false;
 
         if (JSDOUBLE_IS_FINITE(msec_time)) {
             msec_time = UTC(msec_time, cx);
@@ -2518,10 +2520,10 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
 
     JSObject *obj = js_NewDateObjectMsec(cx, d);
     if (!obj)
-        return JS_FALSE;
+        return false;
     vp->setObject(*obj);
 
-    return JS_TRUE;
+    return true;
 }
 
 JSObject *
@@ -2529,7 +2531,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 {
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_DateClass, (Native) js_Date, MAXARGS,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
                                    NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;

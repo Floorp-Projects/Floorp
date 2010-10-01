@@ -74,6 +74,8 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
 
+  virtual bool IsDisabled() const { return PR_FALSE; }
+
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
@@ -82,9 +84,6 @@ public:
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.
   void DescendantsChanged();
-
-  // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; }
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -116,6 +115,8 @@ nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo
   , mValueModeFlag(eModeDefault)
 {
   AddMutationObserver(this);
+  // <output> is always barred from constraint validation.
+  SetBarredFromConstraintValidation(PR_TRUE);
 }
 
 nsHTMLOutputElement::~nsHTMLOutputElement()

@@ -1049,6 +1049,10 @@ class Protocol(ipdl.ast.Protocol):
     def otherProcessMethod(self):
         return ExprVar('OtherProcess')
 
+    def processingErrorVar(self):
+        assert self.decl.type.isToplevel()
+        return ExprVar('ProcessingError')
+
     def shouldContinueFromTimeoutVar(self):
         assert self.decl.type.isToplevel()
         return ExprVar('ShouldContinueFromReplyTimeout')
@@ -2471,6 +2475,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
         if ptype.isToplevel():
+            # void ProcessingError(code); default to no-op
+            processingerror = MethodDefn(
+                MethodDecl(p.processingErrorVar().name,
+                           params=[ Param(_Result.Type(), 'code') ],
+                           virtual=1))
+
             # bool ShouldContinueFromReplyTimeout(); default to |true|
             shouldcontinue = MethodDefn(
                 MethodDecl(p.shouldContinueFromTimeoutVar().name,
@@ -2487,7 +2497,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             exitedcall = MethodDefn(
                 MethodDecl(p.exitedCallVar().name, virtual=1))
 
-            self.cls.addstmts([ shouldcontinue,
+            self.cls.addstmts([ processingerror,
+                                shouldcontinue,
                                 entered, exited,
                                 enteredcall, exitedcall,
                                 Whitespace.NL ])
@@ -2715,6 +2726,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         deallocsubtreevar = ExprVar('DeallocSubtree')
         deallocshmemvar = ExprVar('DeallocShmems')
 
+        # OnProcesingError(code)
+        codevar = ExprVar('code')
+        onprocessingerror = MethodDefn(
+            MethodDecl('OnProcessingError',
+                       params=[ Param(_Result.Type(), codevar.name) ]))
+        if ptype.isToplevel():
+            onprocessingerror.addstmt(StmtReturn(
+                ExprCall(p.processingErrorVar(), args=[ codevar ])))
+        else:
+            onprocessingerror.addstmt(
+                _runtimeAbort("`OnProcessingError' called on non-toplevel actor"))
+        self.cls.addstmts([ onprocessingerror, Whitespace.NL ])
+
         # OnReplyTimeout()
         if toplevel.talksSync() or toplevel.talksRpc():
             ontimeout = MethodDefn(
@@ -2876,8 +2900,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         fatalerror = MethodDefn(MethodDecl(
             'FatalError',
             params=[ Decl(Type('char', const=1, ptrconst=1), msgvar.name) ],
-            const=1))
+            const=1, virtual=1))
         fatalerror.addstmts([
+            Whitespace('// Virtual method to prevent inlining.\n', indent=1),
+            Whitespace('// This give us better error reporting.\n', indent=1),
+            Whitespace('// See bug 589371\n\n', indent=1),
             _printErrorMessage('IPDL error:'),
             _printErrorMessage(msgvar),
             Whitespace.NL

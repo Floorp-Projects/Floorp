@@ -28,7 +28,7 @@
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Josh Aas <josh@mozilla.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -152,6 +152,7 @@ enum { XKeyPress = KeyPress };
 #include "nsThreadUtils.h"
 
 #include "gfxContext.h"
+#include "gfxPlatform.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsNativeDrawing.h"
@@ -159,6 +160,8 @@ enum { XKeyPress = KeyPress };
 #endif
 
 #include "gfxImageSurface.h"
+#include "gfxUtils.h"
+#include "Layers.h"
 
 // accessibility support
 #ifdef ACCESSIBILITY
@@ -232,6 +235,8 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
 #define MAC_CARBON_PLUGINS
 #endif
+
+using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
@@ -447,7 +452,28 @@ public:
                                      nsIDOMClientRect* clip);
 #endif
 
+  void NotifyPaintWaiter(nsDisplayListBuilder* aBuilder,
+                         LayerManager* aManager);
+  // Return true if we set image with valid surface
+  PRBool SetCurrentImage(ImageContainer* aContainer);
+
+  PRBool UseLayers()
+  {
+    return (mUsePluginLayers &&
+            (!mPluginWindow ||
+             mPluginWindow->type == NPWindowTypeDrawable));
+  }
+
 private:
+  // return FALSE if LayerSurface dirty (newly created and don't have valid plugin content yet)
+  PRBool IsUpToDate()
+  {
+    nsRefPtr<gfxASurface> readyToUse;
+    return NS_SUCCEEDED(mInstance->GetSurface(getter_AddRefs(readyToUse))) &&
+           readyToUse && readyToUse->GetSize() == gfxIntSize(mPluginWindow->width,
+                                                             mPluginWindow->height);
+  }
+
   void FixUpURLS(const nsString &name, nsAString &value);
 
   nsPluginNativeWindow       *mPluginWindow;
@@ -564,6 +590,10 @@ private:
   PRBool UpdateVisibility(PRBool aVisible);
 
 #endif
+
+  nsRefPtr<gfxASurface> mLayerSurface;
+  PRPackedBool          mWaitingForPaint;
+  PRPackedBool          mUsePluginLayers;
 };
 
   // Mac specific code to fix up port position and clip
@@ -790,6 +820,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     if (!pluginWidget)
       return NS_ERROR_FAILURE;
     pluginWidget->SetPluginEventModel(mInstanceOwner->GetEventModel());
+    pluginWidget->SetPluginDrawingModel(mInstanceOwner->GetDrawingModel());
 
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
       mInstanceOwner->SetupCARefresh();
@@ -1091,7 +1122,12 @@ nsObjectFrame::CallSetWindow()
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
-  window->CallSetWindow(pi);
+  if (mInstanceOwner->UseLayers()) {
+    pi->AsyncSetWindow(window);
+  }
+  else {
+    window->CallSetWindow(pi);
+  }
 
   mInstanceOwner->ReleasePluginPort(window->window);
 }
@@ -1200,8 +1236,16 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 nsRect
 nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetContentRect() - mFrame->GetPosition() +
+  nsRect r = mFrame->GetContentRect() - mFrame->GetPosition() +
     ToReferenceFrame();
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  if (mozilla::LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
+    gfxIntSize size = f->GetImageContainer()->GetCurrentSize();
+    PRInt32 appUnitsPerDevPixel = f->PresContext()->AppUnitsPerDevPixel();
+    r -= nsPoint((r.width - size.width * appUnitsPerDevPixel) / 2,
+                 (r.height - size.height * appUnitsPerDevPixel) / 2);
+  }
+  return r;
 }
 
 void
@@ -1595,6 +1639,137 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
   frame->DidReflow(presContext,
                    nsnull, status);  // DidReflow will take care of it
+}
+
+ImageContainer*
+nsObjectFrame::GetImageContainer()
+{
+  if (mImageContainer)
+    return mImageContainer;
+
+  nsRefPtr<LayerManager> manager =
+    nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc());
+  if (!manager)
+    return nsnull;
+
+  mImageContainer = manager->CreateImageContainer();
+  return mImageContainer;
+}
+
+void
+nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder,
+                                         LayerManager* aManager)
+{
+  // This is notification for reftests about async plugin paint start
+  if (!mWaitingForPaint && !IsUpToDate() && aBuilder->ShouldSyncDecodeImages()) {
+    nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
+                                         NS_LITERAL_STRING("MozPaintWait"),
+                                         PR_TRUE, PR_TRUE);
+    mWaitingForPaint = PR_TRUE;
+  }
+}
+
+PRBool
+nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
+{
+  mInstance->GetSurface(getter_AddRefs(mLayerSurface));
+  if (!mLayerSurface)
+    return PR_FALSE;
+
+  Image::Format format = Image::CAIRO_SURFACE;
+  nsRefPtr<Image> image;
+  image = aContainer->CreateImage(&format, 1);
+  if (!image)
+    return PR_FALSE;
+
+  NS_ASSERTION(image->GetFormat() == Image::CAIRO_SURFACE, "Wrong format?");
+  CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
+  CairoImage::Data cairoData;
+  cairoData.mSurface = mLayerSurface.get();
+  cairoData.mSize = mLayerSurface->GetSize();
+  pluginImage->SetData(cairoData);
+  aContainer->SetCurrentImage(image);
+
+  return PR_TRUE;
+}
+
+mozilla::LayerState
+nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
+                             LayerManager* aManager)
+{
+  if (!mInstanceOwner || !mInstanceOwner->UseLayers())
+    return mozilla::LAYER_NONE;
+
+  return mozilla::LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
+                          LayerManager* aManager,
+                          nsDisplayItem* aItem)
+{
+  if (!mInstanceOwner)
+    return nsnull;
+
+  NPWindow* window = nsnull;
+  mInstanceOwner->GetWindow(window);
+  if (!window)
+    return nsnull;
+
+  if (window->width <= 0 || window->height <= 0)
+    return nsnull;
+
+  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
+  gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
+  // to provide crisper and faster drawing.
+  r.Round();
+  nsRefPtr<Layer> layer =
+    (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+
+  if (!layer) {
+    mInstanceOwner->NotifyPaintWaiter(aBuilder, aManager);
+    // Initialize ImageLayer
+    layer = aManager->CreateImageLayer();
+  }
+
+  nsCOMPtr<nsIPluginInstance> pi;
+  mInstanceOwner->GetInstance(*getter_AddRefs(pi));
+  // Give plugin info about layer paint
+  if (pi) {
+    if (NS_FAILED(pi->NotifyPainted())) {
+      return nsnull;
+    }
+  }
+
+  if (!layer)
+    return nsnull;
+
+  NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "ObjectFrame works only with ImageLayer");
+  // Create image
+  nsRefPtr<ImageContainer> container = GetImageContainer();
+  if (!container)
+    return nsnull;
+
+  if (!mInstanceOwner->SetCurrentImage(container)) {
+    return nsnull;
+  }
+
+  ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
+  imglayer->SetContainer(container);
+  imglayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+
+  layer->SetContentFlags(IsOpaque() ? Layer::CONTENT_OPAQUE : 0);
+
+  // Set a transform on the layer to draw the plugin in the right place
+  gfxMatrix transform;
+  // Center plugin if layer size != frame rect
+  r.pos.x += (r.Width() - container->GetCurrentSize().width) / 2;
+  r.pos.y += (r.Height() - container->GetCurrentSize().height) / 2;
+  transform.Translate(r.pos);
+
+  layer->SetTransform(gfx3DMatrix::From2D(transform));
+  nsRefPtr<Layer> result = layer.forget();
+  return result.forget();
 }
 
 void
@@ -2459,6 +2634,53 @@ nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
   return nsnull;
 }
 
+/*static*/ void
+nsObjectFrame::BeginSwapDocShells(nsIContent* aContent, void*)
+{
+  NS_PRECONDITION(aContent, "");
+
+  // This function is called from a document content enumerator so we need
+  // to filter out the nsObjectFrames and ignore the rest.
+  nsIObjectFrame* obj = do_QueryFrame(aContent->GetPrimaryFrame());
+  if (!obj)
+    return;
+
+  nsObjectFrame* objectFrame = static_cast<nsObjectFrame*>(obj);
+  NS_ASSERTION(!objectFrame->mWidget || objectFrame->mWidget->GetParent(),
+               "Plugin windows must not be toplevel");
+  nsRootPresContext* rootPC = objectFrame->PresContext()->GetRootPresContext();
+  NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
+  rootPC->UnregisterPluginForGeometryUpdates(objectFrame);
+}
+
+/*static*/ void
+nsObjectFrame::EndSwapDocShells(nsIContent* aContent, void*)
+{
+  NS_PRECONDITION(aContent, "");
+
+  // This function is called from a document content enumerator so we need
+  // to filter out the nsObjectFrames and ignore the rest.
+  nsIObjectFrame* obj = do_QueryFrame(aContent->GetPrimaryFrame());
+  if (!obj)
+    return;
+
+  nsObjectFrame* objectFrame = static_cast<nsObjectFrame*>(obj);
+  nsRootPresContext* rootPC = objectFrame->PresContext()->GetRootPresContext();
+  NS_ASSERTION(rootPC, "unable to register the plugin frame");
+  nsIWidget* widget = objectFrame->GetWidget();
+  if (widget) {
+    // Reparent the widget.
+    nsIWidget* parent =
+      rootPC->PresShell()->GetRootFrame()->GetNearestWidget();
+    widget->SetParent(parent);
+    objectFrame->CallSetWindow();
+
+    // Register for geometry updates and make a request.
+    rootPC->RegisterPluginForGeometryUpdates(objectFrame);
+    rootPC->RequestUpdatePluginGeometry(objectFrame);
+  }
+}
+
 nsIFrame*
 NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -2563,6 +2785,16 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mEventModel = NPEventModelCocoa;
 #endif
 #endif
+
+  mWaitingForPaint = PR_FALSE;
+  mUsePluginLayers =
+    nsContentUtils::GetBoolPref("mozilla.plugins.use_layers",
+#ifdef MOZ_X11
+                                PR_TRUE); // Lets test plugin layers on X11 first
+#else
+                                PR_FALSE); // Lets test plugin layers on X11 first
+#endif
+
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
 }
@@ -2647,6 +2879,12 @@ nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
   NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set once!");
 
   mInstance = aInstance;
+  PRBool useAsyncPainting = PR_FALSE;
+  if (mInstance &&
+      mUsePluginLayers &&
+      NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncPainting)) &&
+      !useAsyncPainting)
+      mUsePluginLayers = PR_FALSE;
 
   return NS_OK;
 }
@@ -2829,6 +3067,22 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 {
   if (!mObjectFrame || !invalidRect || !mWidgetVisible)
     return NS_ERROR_FAILURE;
+
+
+  // Each time an asynchronously-drawing plugin sends a new surface to display,
+  // InvalidateRect is called. We notify reftests that painting is up to
+  // date and update our ImageContainer with the new surface.
+  nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+  if (container) {
+    SetCurrentImage(container);
+  }
+
+  if (mWaitingForPaint && IsUpToDate()) {
+    nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
+                                         NS_LITERAL_STRING("MozPaintWaitFinished"),
+                                         PR_TRUE, PR_TRUE);
+    mWaitingForPaint = false;
+  }
 
 #ifdef MOZ_USE_IMAGE_EXPOSE
   PRBool simpleImageRender = PR_FALSE;
@@ -5085,6 +5339,13 @@ nsPluginInstanceOwner::Destroy()
 void
 nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 {
+  // Drop image reference because the child may destroy the surface after we return.
+  if (mLayerSurface) {
+     nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+     container->SetCurrentImage(nsnull);
+     mLayerSurface = nsnull;
+  }
+
 #if defined(XP_WIN) || defined(MOZ_X11)
   if (aDelayedStop && mWidget) {
     // To delay stopping a plugin we need to reparent the plugin

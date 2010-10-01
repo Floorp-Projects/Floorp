@@ -43,6 +43,14 @@
 #include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
 #include "PluginProcessChild.h"
+#include "gfxASurface.h"
+#include "gfxContext.h"
+#ifdef MOZ_X11
+#include "gfxXlibSurface.h"
+#endif
+#include "gfxSharedImageSurface.h"
+#include "gfxUtils.h"
+#include "gfxAlphaRecovery.h"
 
 #include "mozilla/ipc/SyncChannel.h"
 
@@ -90,6 +98,13 @@ const int kFlashWMUSERMessageThrottleDelayMs = 5;
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
 
+template<>
+struct RunnableMethodTraits<PluginInstanceChild>
+{
+    static void RetainCallee(PluginInstanceChild* obj) { }
+    static void ReleaseCallee(PluginInstanceChild* obj) { }
+};
+
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                                          const nsCString& aMimeType)
     : mPluginIface(aPluginIface)
@@ -106,11 +121,29 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
-#if defined(OS_MACOSX)  
+#if defined(OS_MACOSX)
+#if defined(__i386__)
+    , mEventModel(NPEventModelCarbon)
+#endif
     , mShColorSpace(nsnull)
     , mShContext(nsnull)
     , mDrawingModel(NPDrawingModelCoreGraphics)
     , mCurrentEvent(nsnull)
+#endif
+    , mLayersRendering(PR_FALSE)
+    , mAccumulatedInvalidRect(0,0,0,0)
+    , mIsTransparent(PR_FALSE)
+    , mSurfaceType(gfxASurface::SurfaceTypeMax)
+    , mPendingForcePaint(PR_FALSE)
+    , mCurrentInvalidateTask(nsnull)
+    , mPendingPluginCall(PR_FALSE)
+    , mDoAlphaExtraction(PR_FALSE)
+    , mSurfaceDifferenceRect(0,0,0,0)
+#ifdef MOZ_X11
+    , mFlash10Quirks(PR_FALSE)
+#endif
+#if (MOZ_PLATFORM_MAEMO == 5)
+    , mMaemoImageRendering(PR_FALSE)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -128,6 +161,15 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #if defined(OS_WIN)
     InitPopupMenuHook();
 #endif // OS_WIN
+#ifdef MOZ_X11
+    const char *description = NULL;
+    mPluginIface->getvalue(GetNPP(), NPPVpluginDescriptionString,
+                           &description);
+    if (description) {
+        NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
+        mFlash10Quirks = StringBeginsWith(nsDependentCString(description), flash10Head);
+    }
+#endif
 }
 
 PluginInstanceChild::~PluginInstanceChild()
@@ -261,6 +303,18 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 #endif
         return NPERR_NO_ERROR;
 
+#if (MOZ_PLATFORM_MAEMO == 5)
+    case NPNVSupportsWindowlessLocal: {
+#ifdef MOZ_WIDGET_QT
+        const char *graphicsSystem = PR_GetEnv("MOZ_QT_GRAPHICSSYSTEM");
+        // we should set local rendering to false in order to render X-Plugin
+        // there is no possibility to change it later on maemo5 platform
+        mMaemoImageRendering = (!(graphicsSystem && !strcmp(graphicsSystem, "native")));
+#endif
+        *((NPBool*)aValue) = mMaemoImageRendering;
+        return NPERR_NO_ERROR;
+    }
+#endif
 #if defined(OS_LINUX)
     case NPNVSupportsXEmbedBool:
         *((NPBool*)aValue) = true;
@@ -401,9 +455,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
     case NPPVpluginTransparentBool: {
         NPError rv;
-        bool transparent = (NPBool) (intptr_t) aValue;
+        mIsTransparent = (NPBool) (intptr_t) aValue;
 
-        if (!CallNPN_SetValue_NPPVpluginTransparent(transparent, &rv))
+        if (!CallNPN_SetValue_NPPVpluginTransparent(mIsTransparent, &rv))
             return NPERR_GENERIC_ERROR;
 
         return rv;
@@ -427,6 +481,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
         if (!CallNPN_SetValue_NPPVpluginEventModel(eventModel, &rv))
             return NPERR_GENERIC_ERROR;
+#if defined(__i386__)
+        mEventModel = static_cast<NPEventModel>(eventModel);
+#endif
 
         return rv;
     }
@@ -813,6 +870,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     if (!XVisualIDToInfo(mWsInfo.display, aWindow.visualID,
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
+
+    mLayersRendering = PR_FALSE;
 
 #ifdef MOZ_WIDGET_GTK2
     if (gtk_check_version(2,18,7) != NULL) { // older
@@ -1938,6 +1997,541 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
     return NPERR_NO_ERROR;
 }
 
+bool
+PluginInstanceChild::RecvPaintFinished(void)
+{
+    if (mPendingForcePaint) {
+        nsIntRect r(0, 0, mWindow.width, mWindow.height);
+        mAccumulatedInvalidRect.UnionRect(r, mAccumulatedInvalidRect);
+        mPendingForcePaint = PR_FALSE;
+    }
+    if (!mAccumulatedInvalidRect.IsEmpty()) {
+        AsyncShowPluginFrame();
+    }
+
+    return true;
+}
+
+bool
+PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
+                                        const NPRemoteWindow& aWindow)
+{
+    AssertPluginThread();
+
+    mWindow.window = reinterpret_cast<void*>(aWindow.window);
+    if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) {
+        mCurrentSurface = nsnull;
+        mHelperSurface = nsnull;
+        mPendingForcePaint = PR_TRUE;
+    }
+    mWindow.x = aWindow.x;
+    mWindow.y = aWindow.y;
+    mWindow.width = aWindow.width;
+    mWindow.height = aWindow.height;
+    mWindow.clipRect = aWindow.clipRect;
+    mWindow.type = aWindow.type;
+
+    mLayersRendering = PR_TRUE;
+    mSurfaceType = aSurfaceType;
+    UpdateWindowAttributes(PR_TRUE);
+
+    return true;
+}
+
+static inline gfxRect
+GfxFromNsRect(const nsIntRect& aRect)
+{
+    return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+PRBool
+PluginInstanceChild::CreateOptSurface(void)
+{
+    nsRefPtr<gfxASurface> retsurf;
+    gfxASurface::gfxImageFormat format =
+        mIsTransparent ? gfxASurface::ImageFormatARGB32 :
+                         gfxASurface::ImageFormatRGB24;
+
+#if (MOZ_PLATFORM_MAEMO == 5)
+    // On Maemo 5, we must send the Visibility event to activate the plugin
+    if (mMaemoImageRendering) {
+        NPEvent pluginEvent;
+        XVisibilityEvent& visibilityEvent = pluginEvent.xvisibility;
+        visibilityEvent.type = VisibilityNotify;
+        visibilityEvent.display = 0;
+        visibilityEvent.state = VisibilityUnobscured;
+        mPluginIface->event(&mData, reinterpret_cast<void*>(&pluginEvent));
+    }
+#endif
+#ifdef MOZ_X11
+    Display* dpy = mWsInfo.display;
+    Screen* screen = DefaultScreenOfDisplay(dpy);
+    if (format == gfxASurface::ImageFormatRGB24 &&
+        DefaultDepth(dpy, DefaultScreen(dpy)) == 16) {
+        format = gfxASurface::ImageFormatRGB16_565;
+    }
+
+    if (mSurfaceType == gfxASurface::SurfaceTypeXlib) {
+        XRenderPictFormat* xfmt = gfxXlibSurface::FindRenderFormat(dpy, format);
+        if (!xfmt) {
+            NS_ERROR("Need X falback surface, but FindRenderFormat failed");
+            return PR_FALSE;
+        }
+        mCurrentSurface =
+            gfxXlibSurface::Create(screen, xfmt,
+                                   gfxIntSize(mWindow.width,
+                                              mWindow.height));
+        return mCurrentSurface != nsnull;
+    }
+#endif
+
+    // Make common shmem implementation working for any platform
+    mCurrentSurface = new gfxSharedImageSurface();
+    if (NS_FAILED(static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->
+        Init(this, gfxIntSize(mWindow.width, mWindow.height), format))) {
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
+PRBool
+PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
+{
+    if (!mCurrentSurface) {
+        NS_ERROR("Cannot create helper surface without mCurrentSurface");
+        return PR_FALSE;
+    }
+
+#ifdef MOZ_PLATFORM_MAEMO
+    // On maemo plugins support non-default visual rendering
+    PRBool supportNonDefaultVisual = PR_TRUE;
+#else
+    PRBool supportNonDefaultVisual = PR_FALSE;
+#endif
+#ifdef MOZ_X11
+    Screen* screen = DefaultScreenOfDisplay(mWsInfo.display);
+    Visual* defaultVisual = DefaultVisualOfScreen(screen);
+    Visual* visual = nsnull;
+    Colormap colormap = 0;
+    mDoAlphaExtraction = PR_FALSE;
+    PRBool createHelperSurface = PR_FALSE;
+
+    if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+        static_cast<gfxXlibSurface*>(mCurrentSurface.get())->
+            GetColormapAndVisual(&colormap, &visual);
+        // Create helper surface if layer surface visual not same as default
+        // and we don't support non-default visual rendering
+        if (!visual || (defaultVisual != visual && !supportNonDefaultVisual)) {
+            createHelperSurface = PR_TRUE;
+            visual = defaultVisual;
+            mDoAlphaExtraction = mIsTransparent;
+        }
+    } else if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+#if (MOZ_PLATFORM_MAEMO == 5)
+        if (mMaemoImageRendering) {
+            // No helper surface needed, when mMaemoImageRendering is TRUE.
+            // we can rendering directly into image memory
+            // with NPImageExpose Maemo5 NPAPI
+            return PR_TRUE;
+        }
+#endif
+        // For image layer surface we should always create helper surface
+        createHelperSurface = PR_TRUE;
+        // Check if we can create helper surface with non-default visual
+        visual = gfxXlibSurface::FindVisual(screen,
+            static_cast<gfxImageSurface*>(mCurrentSurface.get())->Format());
+        if (visual && defaultVisual != visual && !supportNonDefaultVisual) {
+            visual = defaultVisual;
+            mDoAlphaExtraction = mIsTransparent;
+        }
+    }
+
+    if (createHelperSurface) {
+        if (!visual) {
+            NS_ERROR("Need X falback surface, but visual failed");
+            return PR_FALSE;
+        }
+        mHelperSurface =
+            gfxXlibSurface::Create(screen, visual,
+                                   mCurrentSurface->GetSize());
+        if (!mHelperSurface) {
+            NS_WARNING("Fail to create create helper surface");
+            return PR_FALSE;
+        }
+    }
+#endif
+
+    return PR_TRUE;
+}
+
+PRBool
+PluginInstanceChild::EnsureCurrentBuffer(void)
+{
+    if (mCurrentSurface) {
+       return PR_TRUE;
+    }
+
+    if (!mWindow.width || !mWindow.height) {
+        return PR_FALSE;
+    }
+
+    if (!CreateOptSurface()) {
+        NS_ERROR("Cannot create optimized surface");
+        return PR_FALSE;
+    }
+
+    if (!MaybeCreatePlatformHelperSurface()) {
+        NS_ERROR("Cannot create helper surface");
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
+void
+PluginInstanceChild::UpdateWindowAttributes(PRBool aForceSetWindow)
+{
+    nsRefPtr<gfxASurface> curSurface = mHelperSurface ? mHelperSurface : mCurrentSurface;
+    PRBool needWindowUpdate = aForceSetWindow;
+#ifdef MOZ_X11
+    Visual* visual = nsnull;
+    Colormap colormap = 0;
+    if (curSurface && curSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+        static_cast<gfxXlibSurface*>(curSurface.get())->
+            GetColormapAndVisual(&colormap, &visual);
+        if (visual != mWsInfo.visual || colormap != mWsInfo.colormap) {
+            mWsInfo.visual = visual;
+            mWsInfo.colormap = colormap;
+            needWindowUpdate = PR_TRUE;
+        }
+    }
+#if (MOZ_PLATFORM_MAEMO == 5)
+    else if (curSurface && curSurface->GetType() == gfxASurface::SurfaceTypeImage
+             && mMaemoImageRendering) {
+        // For maemo5 we need to setup window/colormap to 0
+        // and specify depth of image surface
+        gfxImageSurface* img = static_cast<gfxImageSurface*>(curSurface.get());
+        if (mWindow.window ||
+            mWsInfo.depth != gfxUtils::ImageFormatToDepth(img->Format()) ||
+            mWsInfo.colormap) {
+            mWindow.window = nsnull;
+            mWsInfo.depth = gfxUtils::ImageFormatToDepth(img->Format());
+            mWsInfo.colormap = 0;
+            needWindowUpdate = PR_TRUE;
+        }
+    }
+#endif
+#endif
+    if (!needWindowUpdate) {
+        return;
+    }
+
+    // The clip rect is relative to drawable top-left.
+    nsIntRect clipRect;
+    mWindow.x = mWindow.y = 0;
+    clipRect.SetRect(mWindow.x, mWindow.y, mWindow.width, mWindow.height);
+    // Don't ask the plugin to draw outside the drawable.
+    // This also ensures that the unsigned clip rectangle offsets won't be -ve.
+
+    NPRect newClipRect;
+    newClipRect.left = clipRect.x;
+    newClipRect.top = clipRect.y;
+    newClipRect.right = clipRect.XMost();
+    newClipRect.bottom = clipRect.YMost();
+    mWindow.clipRect = newClipRect;
+
+    if (mPluginIface->setwindow) {
+        mPluginIface->setwindow(&mData, &mWindow);
+    }
+
+    return;
+}
+
+void
+PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
+                                                gfxASurface* aSurface)
+{
+    UpdateWindowAttributes();
+#ifdef MOZ_X11
+#if (MOZ_PLATFORM_MAEMO == 5)
+    // On maemo5 we do support Image rendering NPAPI
+    if (mMaemoImageRendering &&
+        aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        mPendingPluginCall = PR_TRUE;
+        gfxImageSurface* image = static_cast<gfxImageSurface*>(aSurface);
+        NPImageExpose imgExp;
+        imgExp.depth = gfxUtils::ImageFormatToDepth(image->Format());
+        imgExp.x = aRect.x;
+        imgExp.y = aRect.y;
+        imgExp.width = aRect.width;
+        imgExp.height = aRect.height;
+        imgExp.stride = image->Stride();
+        imgExp.data = (char *)image->Data();
+        imgExp.dataSize.width = image->Width();
+        imgExp.dataSize.height = image->Height();
+        imgExp.translateX = 0;
+        imgExp.translateY = 0;
+        imgExp.scaleX = 1;
+        imgExp.scaleY = 1;
+        NPEvent pluginEvent;
+        XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
+        exposeEvent.type = GraphicsExpose;
+        exposeEvent.display = 0;
+        // Store imageExpose structure pointer as drawable member
+        exposeEvent.drawable = (Drawable)&imgExp;
+        exposeEvent.x = imgExp.x;
+        exposeEvent.y = imgExp.y;
+        exposeEvent.width = imgExp.width;
+        exposeEvent.height = imgExp.height;
+        exposeEvent.count = 0;
+        // information not set:
+        exposeEvent.serial = 0;
+        exposeEvent.send_event = False;
+        exposeEvent.major_code = 0;
+        exposeEvent.minor_code = 0;
+        mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
+        mPendingPluginCall = PR_FALSE;
+        return;
+    }
+#endif
+    NS_ASSERTION(aSurface->GetType() == gfxASurface::SurfaceTypeXlib,
+                 "Non supported platform surface type");
+
+    mPendingPluginCall = PR_TRUE;
+    NPEvent pluginEvent;
+    XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
+    exposeEvent.type = GraphicsExpose;
+    exposeEvent.display = mWsInfo.display;
+    exposeEvent.drawable = static_cast<gfxXlibSurface*>(aSurface)->XDrawable();
+    exposeEvent.x = aRect.x;
+    exposeEvent.y = aRect.y;
+    exposeEvent.width = aRect.width;
+    exposeEvent.height = aRect.height;
+    exposeEvent.count = 0;
+    // information not set:
+    exposeEvent.serial = 0;
+    exposeEvent.send_event = False;
+    exposeEvent.major_code = 0;
+    exposeEvent.minor_code = 0;
+    mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
+    mPendingPluginCall = PR_FALSE;
+#endif
+}
+
+void
+PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
+                                        gfxASurface* aSurface,
+                                        const gfxRGBA& aColor)
+{
+    // Render using temporary X surface, with copy to image surface
+    nsIntRect plPaintRect(aRect);
+    nsRefPtr<gfxASurface> renderSurface = aSurface;
+#ifdef MOZ_X11
+    if (mIsTransparent && mFlash10Quirks) {
+        // Work around a bug in Flash up to 10.1 d51 at least, where expose event
+        // top left coordinates within the plugin-rect and not at the drawable
+        // origin are misinterpreted.  (We can move the top left coordinate
+        // provided it is within the clipRect.), see bug 574583
+        plPaintRect.SetRect(0, 0, aRect.XMost(), aRect.YMost());
+    }
+    if (renderSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
+        // On X11 we can paint to non Xlib surface only with HelperSurface
+#if (MOZ_PLATFORM_MAEMO == 5)
+        // Don't use mHelperSurface if surface is image and mMaemoImageRendering is TRUE
+        if (!mMaemoImageRendering ||
+            renderSurface->GetType() != gfxASurface::SurfaceTypeImage)
+#endif
+        renderSurface = mHelperSurface;
+    }
+#endif
+
+    if (mIsTransparent) {
+       // Clear surface content for transparent rendering
+       nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
+       ctx->SetColor(aColor);
+       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+       ctx->Rectangle(GfxFromNsRect(plPaintRect));
+       ctx->Fill();
+    }
+
+    PaintRectToPlatformSurface(plPaintRect, renderSurface);
+
+    if (renderSurface != aSurface) {
+        // Copy helper surface content to target
+        nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
+        ctx->SetSource(renderSurface);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->Rectangle(GfxFromNsRect(aRect));
+        ctx->Fill();
+    }
+}
+
+void
+PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
+                                                  gfxASurface* aSurface)
+{
+    // Paint onto black image
+    PRBool needImageSurface = PR_TRUE;
+    nsRefPtr<gfxImageSurface> blackImage;
+    gfxIntSize clipSize(aRect.width, aRect.height);
+    gfxPoint deviceOffset(-aRect.x, -aRect.y);
+    // Try to re-use existing image surface, and avoid one copy
+    if (aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        gfxImageSurface *surface = static_cast<gfxImageSurface*>(aSurface);
+        if (surface->Format() == gfxASurface::ImageFormatARGB32) {
+            needImageSurface = PR_FALSE;
+            blackImage = surface->GetSubimage(GfxFromNsRect(aRect));
+        }
+    }
+    // otherwise create new helper surface
+    if (needImageSurface) {
+        blackImage = new gfxImageSurface(clipSize, gfxASurface::ImageFormatARGB32);
+    }
+
+    // Paint to black image
+    blackImage->SetDeviceOffset(deviceOffset);
+    PaintRectToSurface(aRect, blackImage, gfxRGBA(0.0, 0.0, 0.0));
+
+    // Paint onto white image
+    nsRefPtr<gfxImageSurface> whiteImage =
+        new gfxImageSurface(clipSize, gfxASurface::ImageFormatRGB24);
+
+    whiteImage->SetDeviceOffset(deviceOffset);
+    PaintRectToSurface(aRect, whiteImage, gfxRGBA(1.0, 1.0, 1.0));
+
+    // Extract Alpha from black and white image and store to black Image
+    gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
+    if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage, nsnull)) {
+        return;
+    }
+
+    if (needImageSurface) {
+        nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->SetSource(blackImage);
+        ctx->Rectangle(GfxFromNsRect(aRect));
+        ctx->Fill();
+    }
+}
+
+PRBool
+PluginInstanceChild::ShowPluginFrame()
+{
+    if (mPendingPluginCall) {
+        return PR_FALSE;
+    }
+
+    if (!EnsureCurrentBuffer()) {
+        return PR_FALSE;
+    }
+
+    // Make expose rect not bigger than clip rect
+    mAccumulatedInvalidRect.IntersectRect(mAccumulatedInvalidRect,
+        nsIntRect(mWindow.clipRect.left, mWindow.clipRect.top,
+                  mWindow.clipRect.right - mWindow.clipRect.left,
+                  mWindow.clipRect.bottom - mWindow.clipRect.top));
+
+    // Cleare accRect here to be able to pass test_invalidate_during_plugin_paint  test
+    nsIntRect rect = mAccumulatedInvalidRect;
+    mAccumulatedInvalidRect.Empty();
+
+#ifdef MOZ_X11
+    // We can read safetly from XSurface, because PluginHost is not able to modify that surface
+    if (mBackSurface && mBackSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+        if (!mSurfaceDifferenceRect.IsEmpty()) {
+            // Read back previous content
+            nsRefPtr<gfxContext> ctx = new gfxContext(mCurrentSurface);
+            ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            ctx->SetSource(mBackSurface);
+            // Subtract from mSurfaceDifferenceRect area which is overlapping with rect
+            nsIntRegion result;
+            result.Sub(mSurfaceDifferenceRect, nsIntRegion(rect));
+            nsIntRegionRectIterator iter(result);
+            const nsIntRect* r;
+            while ((r = iter.Next()) != nsnull) {
+                ctx->Rectangle(GfxFromNsRect(*r));
+            }
+            ctx->Fill();
+        }
+    } else
+#endif
+    {
+        // Just repaint whole plugin, because we cannot read back from Shmem which is owned by another process
+        rect.SetRect(0, 0, mWindow.width, mWindow.height);
+    }
+
+    if (mDoAlphaExtraction) {
+        PaintRectWithAlphaExtraction(rect, mCurrentSurface);
+    } else {
+        PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
+    }
+
+    NPRect r = { rect.y, rect.x, rect.YMost(), rect.XMost() };
+    SurfaceDescriptor currSurf;
+    SurfaceDescriptor outSurf = null_t();
+#ifdef MOZ_X11
+    if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+        gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mCurrentSurface.get());
+        currSurf = SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
+                                        mCurrentSurface->GetSize());
+        // Need to sync all pending x-paint requests
+        // before giving drawable to another process
+        XSync(mWsInfo.display, False);
+    } else
+#endif
+    if (gfxSharedImageSurface::IsSharedImage(mCurrentSurface)) {
+        currSurf = static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->GetShmem();
+    } else {
+        NS_RUNTIMEABORT("Surface type is not remotable");
+        return PR_FALSE;
+    }
+    if (!SendShow(r, currSurf, &outSurf)) {
+        return PR_FALSE;
+    }
+
+    nsRefPtr<gfxASurface> tmp = mCurrentSurface;
+    mCurrentSurface = mBackSurface;
+    mBackSurface = tmp;
+    // Outdated back surface... not usable anymore due to changed plugin size.
+    // Dropping obsolete surface
+    if (mCurrentSurface && mBackSurface &&
+        mCurrentSurface->GetSize() != mBackSurface->GetSize()) {
+        mCurrentSurface = nsnull;
+    }
+    mSurfaceDifferenceRect = rect;
+    return PR_TRUE;
+}
+
+void
+PluginInstanceChild::InvalidateRectDelayed(void)
+{
+    if (!mCurrentInvalidateTask) {
+        return;
+    }
+
+    mCurrentInvalidateTask = nsnull;
+    if (mAccumulatedInvalidRect.IsEmpty()) {
+        return;
+    }
+
+    if (!ShowPluginFrame()) {
+        AsyncShowPluginFrame();
+    }
+}
+
+void
+PluginInstanceChild::AsyncShowPluginFrame(void)
+{
+    if (mCurrentInvalidateTask) {
+        return;
+    }
+
+    mCurrentInvalidateTask =
+        NewRunnableMethod(this, &PluginInstanceChild::InvalidateRectDelayed);
+    MessageLoop::current()->PostTask(FROM_HERE, mCurrentInvalidateTask);
+}
+
 void
 PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
 {
@@ -1954,6 +2548,17 @@ PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
     }
 #endif
 
+    if (mLayersRendering) {
+        nsIntRect r(aInvalidRect->left, aInvalidRect->top,
+                    aInvalidRect->right - aInvalidRect->left,
+                    aInvalidRect->bottom - aInvalidRect->top);
+
+        mAccumulatedInvalidRect.UnionRect(r, mAccumulatedInvalidRect);
+        // If we are able to paint and invalidate sent, then reset
+        // accumulated rectangle
+        AsyncShowPluginFrame();
+        return;
+    }
     SendNPN_InvalidateRect(*aInvalidRect);
 }
 
@@ -2031,6 +2636,19 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
 
+    if (mBackSurface) {
+        // Get last surface back, and drop it
+        SurfaceDescriptor temp = null_t();
+        NPRect r = { 0, 0, 1, 1 };
+        SendShow(r, temp, &temp);
+    }
+    if (gfxSharedImageSurface::IsSharedImage(mCurrentSurface))
+        DeallocShmem(static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->GetShmem());
+    if (gfxSharedImageSurface::IsSharedImage(mBackSurface))
+        DeallocShmem(static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem());
+    mCurrentSurface = nsnull;
+    mBackSurface = nsnull;
+
     nsTArray<PBrowserStreamChild*> streams;
     ManagedPBrowserStreamChild(streams);
 
@@ -2052,6 +2670,10 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     }
 
     mTimers.Clear();
+    if (mCurrentInvalidateTask) {
+        mCurrentInvalidateTask->Cancel();
+        mCurrentInvalidateTask = nsnull;
+    }
 
     PluginModuleChild::current()->NPP_Destroy(this);
     mData.ndata = 0;

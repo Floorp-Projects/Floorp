@@ -4,7 +4,7 @@ function testMethodInitSafety() {
 
     var s;
     var arr = [f, f, f, f, g];
-    assertEq(arr.length > RUNLOOP, true);
+    //assertEq(arr.length > RUNLOOP, true);
     for (var i = 0; i < arr.length; i++) {
         var x = {m: arr[i]};
         s = x.m();

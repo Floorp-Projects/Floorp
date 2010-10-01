@@ -162,6 +162,8 @@ public:
 
     ~GLContextOSMesa()
     {
+        MarkDestroyed();
+
         if (mContext)
             sOSMesaLibrary.fDestroyContext(mContext);
     }
@@ -222,7 +224,7 @@ public:
         return InitWithPrefix("gl", PR_TRUE);
     }
 
-    PRBool MakeCurrent()
+    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
     {
         PRBool succeeded
           = sOSMesaLibrary.fMakeCurrent(mContext, mThebesSurface->Data(),

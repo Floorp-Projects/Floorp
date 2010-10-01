@@ -399,7 +399,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(7a3c8687-6f52-47d5-9b8e-2ed8bf86c415)]
+[uuid(227ab41e-24dc-42a6-9e7b-e3a62132d781)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -892,4 +892,10 @@ interface nsIXPConnect : nsISupports
      */
     nsIXPConnectJSObjectHolder holdObject(in JSContextPtr aJSContext,
                                           in JSObjectPtr aObject);
+
+    /**
+     * Return the caller object of the current call from JS.
+     */
+    [noscript,notxpcom] void getCaller(out JSContextPtr aJSContext,
+                                       out JSObjectPtr aObject);
 };

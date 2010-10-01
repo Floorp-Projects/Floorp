@@ -87,8 +87,17 @@ protected:
 
   nsresult CompleteDefaultIndex(PRInt32 aSearchIndex);
   nsresult CompleteValue(nsString &aValue);
+
+  nsresult GetResultAt(PRInt32 aIndex, nsIAutoCompleteResult** aResult,
+                       PRInt32* aRowIndex);
   nsresult GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly,
                             nsAString & _retval);
+  nsresult GetResultLabelAt(PRInt32 aIndex, PRBool aValueOnly,
+                            nsAString & _retval);
+private:
+  nsresult GetResultValueLabelAt(PRInt32 aIndex, PRBool aValueOnly,
+                                 PRBool aGetValue, nsAString & _retval);
+protected:
   nsresult GetDefaultCompleteValue(PRInt32 aSearchIndex, PRBool aPreserveCasing,
                                    nsAString &_retval);
   nsresult ClearResults();

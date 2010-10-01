@@ -51,7 +51,6 @@
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
 
-
 class nsPopupBoxObject : public nsBoxObject,
                          public nsIPopupBoxObject
 {
@@ -268,25 +267,25 @@ nsPopupBoxObject::GetTriggerNode(nsIDOMNode** aTriggerNode)
 {
   *aTriggerNode = nsnull;
 
+  nsIContent* triggerContent = nsMenuPopupFrame::GetTriggerContent(GetMenuPopupFrame());
+  if (triggerContent)
+    CallQueryInterface(triggerContent, aTriggerNode);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::GetAnchorNode(nsIDOMElement** aAnchor)
+{
+  *aAnchor = nsnull;
+
   nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
-  while (menuPopupFrame) {
-    nsIContent* triggerContent = menuPopupFrame->GetTriggerContent();
-    if (triggerContent) {
-      CallQueryInterface(triggerContent, aTriggerNode);
-      break;
-    }
+  if (!menuPopupFrame)
+    return NS_OK;
 
-    // check up the menu hierarchy until a popup with a trigger node is found
-    nsMenuFrame* menuFrame = menuPopupFrame->GetParentMenu();
-    if (!menuFrame)
-      break;
-
-    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
-    if (!parentPopup || !parentPopup->IsMenu())
-      break;
-
-    menuPopupFrame = static_cast<nsMenuPopupFrame *>(parentPopup);
-  }
+  nsIContent* anchor = menuPopupFrame->GetAnchor();
+  if (anchor)
+    CallQueryInterface(anchor, aAnchor);
 
   return NS_OK;
 }

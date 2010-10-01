@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -44,6 +45,22 @@
 #include "jsparse.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
+#include "jsregexp.h"
+
+inline js::RegExpStatics *
+JSContext::regExpStatics()
+{
+    VOUCH_HAVE_STACK();
+    /*
+     * Whether we're on trace or not, the scope chain associated with cx->fp
+     * will lead us to the appropriate global. Although cx->fp is stale on
+     * trace, trace execution never crosses globals.
+     */
+    JS_ASSERT(hasfp());
+    JSObject *global = fp()->scopeChain().getGlobal();
+    js::RegExpStatics *res = js::RegExpStatics::extractFrom(global);
+    return res;
+}
 
 inline bool
 JSContext::ensureGeneratorStackSpace()
@@ -113,8 +130,8 @@ StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
     JS_ASSERT(from == firstUnused());
 #ifdef XP_WIN
     JS_ASSERT(from <= commitEnd);
-    if (commitEnd - from >= nvals)
-        return true;
+    if (JS_LIKELY(commitEnd - from >= nvals))
+        goto success;
     if (end - from < nvals) {
         if (maybecx)
             js_ReportOutOfScriptQuota(maybecx);
@@ -125,15 +142,20 @@ StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
             js_ReportOutOfScriptQuota(maybecx);
         return false;
     }
-    return true;
+    goto success;
 #else
-    if (end - from < nvals) {
+    if (JS_LIKELY(end - from < nvals)) {
         if (maybecx)
             js_ReportOutOfScriptQuota(maybecx);
         return false;
     }
-    return true;
+    goto success;
 #endif
+  success:
+#ifdef DEBUG
+    memset(from, 0xde, nvals * sizeof(js::Value));
+#endif
+    return true;
 }
 
 JS_ALWAYS_INLINE bool
@@ -145,8 +167,29 @@ StackSpace::ensureEnoughSpaceToEnterTrace()
     return end - firstUnused() > MAX_TRACE_SPACE_VALS;
 }
 
+JS_ALWAYS_INLINE bool
+StackSpace::EnsureSpaceCheck::operator()(const StackSpace &stack, JSContext *cx,
+                                         Value *from, uintN nvals)
+{
+    return stack.ensureSpace(cx, from, nvals);
+}
+
+JS_ALWAYS_INLINE bool
+StackSpace::LimitCheck::operator()(const StackSpace &stack, JSContext *cx,
+                                   Value *from, uintN nvals)
+{
+    JS_ASSERT(from == stack.firstUnused());
+    JS_ASSERT(from < *limit);
+    if (*limit - from >= ptrdiff_t(nvals))
+        return true;
+    if (stack.bumpCommitAndLimit(base, from, nvals, limit))
+        return true;
+    js_ReportOverRecursed(cx);
+    return false;
+}
+
 JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
-StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
+StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag)
 {
     if (JS_UNLIKELY(!isCurrentAndActive(cx)))
         return pushSegmentForInvoke(cx, argc, ag);
@@ -163,18 +206,18 @@ StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
     MakeValueRangeGCSafe(vp, vpend);
 
     /* Use invokeArgEnd to root [vp, vpend) until the frame is pushed. */
-    ag.prevInvokeArgEnd = invokeArgEnd;
+    ag->prevInvokeArgEnd = invokeArgEnd;
     invokeArgEnd = vpend;
 #ifdef DEBUG
-    ag.prevInvokeSegment = invokeSegment;
+    ag->prevInvokeSegment = invokeSegment;
     invokeSegment = currentSegment;
-    ag.prevInvokeFrame = invokeFrame;
+    ag->prevInvokeFrame = invokeFrame;
     invokeFrame = cx->maybefp();
 #endif
 
-    ag.cx = cx;
-    ag.argv_ = vp + 2;
-    ag.argc_ = argc;
+    ag->cx = cx;
+    ag->argv_ = vp + 2;
+    ag->argc_ = argc;
     return true;
 }
 
@@ -206,61 +249,99 @@ InvokeArgsGuard::~InvokeArgsGuard()
     cx->stack().popInvokeArgs(*this);
 }
 
+template <class Check>
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+StackSpace::getCallFrame(JSContext *cx, Value *firstUnused, uintN nactual,
+                         JSFunction *fun, JSScript *script, uint32 *flags,
+                         Check check) const
+{
+    JS_ASSERT(fun->script() == script);
+
+    /* Include an extra sizeof(JSStackFrame) for the method-jit. */
+    uintN nvals = VALUES_PER_STACK_FRAME + script->nslots;
+    uintN nformal = fun->nargs;
+
+    /* Maintain layout invariant: &formalArgs[0] == ((Value *)fp) - nformal. */
+
+    if (nactual == nformal) {
+        if (JS_UNLIKELY(!check(*this, cx, firstUnused, nvals)))
+            return NULL;
+        return reinterpret_cast<JSStackFrame *>(firstUnused);
+    }
+
+    if (nactual < nformal) {
+        *flags |= JSFRAME_UNDERFLOW_ARGS;
+        uintN nmissing = nformal - nactual;
+        if (JS_UNLIKELY(!check(*this, cx, firstUnused, nmissing + nvals)))
+            return NULL;
+        SetValueRangeToUndefined(firstUnused, nmissing);
+        return reinterpret_cast<JSStackFrame *>(firstUnused + nmissing);
+    }
+
+    *flags |= JSFRAME_OVERFLOW_ARGS;
+    uintN ncopy = 2 + nformal;
+    if (JS_UNLIKELY(!check(*this, cx, firstUnused, ncopy + nvals)))
+        return NULL;
+    memcpy(firstUnused, firstUnused - (2 + nactual), ncopy * sizeof(Value));
+    return reinterpret_cast<JSStackFrame *>(firstUnused + ncopy);
+}
+
 JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
 StackSpace::getInvokeFrame(JSContext *cx, const CallArgs &args,
-                           uintN nmissing, uintN nfixed,
-                           InvokeFrameGuard &fg) const
+                           JSFunction *fun, JSScript *script,
+                           uint32 *flags, InvokeFrameGuard *fg) const
 {
     JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
-    Value *start = args.argv() + args.argc();
-    ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
-    if (!ensureSpace(cx, start, nvals))
-        return false;
-    fg.regs.fp = reinterpret_cast<JSStackFrame *>(start + nmissing);
-    return true;
+    Value *firstUnused = args.argv() + args.argc();
+    fg->regs_.fp = getCallFrame(cx, firstUnused, args.argc(), fun, script, flags,
+                                EnsureSpaceCheck());
+    fg->regs_.sp = fg->regs_.fp->slots() + script->nfixed;
+    fg->regs_.pc = script->code;
+
+    return fg->regs_.fp != NULL;
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 StackSpace::pushInvokeFrame(JSContext *cx, const CallArgs &args,
-                            InvokeFrameGuard &fg)
+                            InvokeFrameGuard *fg)
 {
     JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
-    JSStackFrame *fp = fg.regs.fp;
-    JSStackFrame *down = cx->maybefp();
-    fp->down = down;
+    JSStackFrame *fp = fg->regs_.fp;
+    JSStackFrame *prev = cx->maybefp();
+    fp->prev_ = prev;
     if (JS_UNLIKELY(!currentSegment->inContext())) {
-        cx->pushSegmentAndFrame(currentSegment, fg.regs);
+        cx->pushSegmentAndFrame(currentSegment, fg->regs_);
     } else {
 #ifdef DEBUG
-        fp->savedPC = JSStackFrame::sInvalidPC;
-        JS_ASSERT(down->savedPC == JSStackFrame::sInvalidPC);
+        fp->savedpc_ = JSStackFrame::sInvalidpc;
+        JS_ASSERT(prev->savedpc_ == JSStackFrame::sInvalidpc);
 #endif
-        down->savedPC = cx->regs->pc;
-        fg.prevRegs = cx->regs;
-        cx->setCurrentRegs(&fg.regs);
+        prev->savedpc_ = cx->regs->pc;
+        fg->prevRegs_ = cx->regs;
+        cx->setCurrentRegs(&fg->regs_);
     }
-    fg.cx = cx;
 
+    fg->cx_ = cx;
     JS_ASSERT(isCurrentAndActive(cx));
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 StackSpace::popInvokeFrame(const InvokeFrameGuard &fg)
 {
-    JSContext *cx = fg.cx;
-    JSStackFrame *fp = fg.regs.fp;
+    JSContext *cx = fg.cx_;
+    JSStackFrame *fp = fg.regs_.fp;
 
     JS_ASSERT(isCurrentAndActive(cx));
     if (JS_UNLIKELY(currentSegment->getInitialFrame() == fp)) {
         cx->popSegmentAndFrame();
     } else {
-        JS_ASSERT(&fg.regs == cx->regs);
-        JS_ASSERT(fp->down == fg.prevRegs->fp);
-        cx->setCurrentRegs(fg.prevRegs);
+        JS_ASSERT(&fg.regs_ == cx->regs);
+        JS_ASSERT(fp->prev_ == fg.prevRegs_->fp);
+        cx->setCurrentRegs(fg.prevRegs_);
 #ifdef DEBUG
-        cx->fp()->savedPC = JSStackFrame::sInvalidPC;
+        cx->fp()->savedpc_ = JSStackFrame::sInvalidpc;
 #endif
     }
 }
@@ -270,53 +351,92 @@ InvokeFrameGuard::~InvokeFrameGuard()
 {
     if (JS_UNLIKELY(!pushed()))
         return;
-    cx->stack().popInvokeFrame(*this);
+    cx_->stack().popInvokeFrame(*this);
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, Value *sp,
-                           uintN nmissing, uintN nfixed) const
+StackSpace::getInlineFrame(JSContext *cx, Value *sp, uintN nactual,
+                           JSFunction *fun, JSScript *script, uint32 *flags) const
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->regs->sp == sp);
 
-    ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
-    if (!ensureSpace(cx, sp, nvals))
-        return NULL;
-
-    JSStackFrame *fp = reinterpret_cast<JSStackFrame *>(sp + nmissing);
-    return fp;
+    return getCallFrame(cx, sp, nactual, fun, script, flags, EnsureSpaceCheck());
 }
 
-JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
-                            JSStackFrame *newfp)
-{
-    JS_ASSERT(isCurrentAndActive(cx));
-    JS_ASSERT(cx->regs->fp == fp && cx->regs->pc == pc);
-
-    fp->savedPC = pc;
-    newfp->down = fp;
-#ifdef DEBUG
-    newfp->savedPC = JSStackFrame::sInvalidPC;
-#endif
-}
-
-JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
+JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
+StackSpace::getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
+                                      JSFunction *fun, JSScript *script, uint32 *flags,
+                                      JSStackFrame *base, Value **limit) const
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
-    JS_ASSERT(cx->regs->fp == up && up->down == down);
-    JS_ASSERT(up->savedPC == JSStackFrame::sInvalidPC);
-    JS_ASSERT(!up->hasIMacroPC());
+    JS_ASSERT(cx->regs->sp == sp);
+
+    return getCallFrame(cx, sp, nactual, fun, script, flags, LimitCheck(base, limit));
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+StackSpace::pushInlineFrame(JSContext *cx, JSScript *script, JSStackFrame *fp,
+                            JSFrameRegs *regs)
+{
+    JS_ASSERT(isCurrentAndActive(cx));
+    JS_ASSERT(cx->regs == regs && script == fp->script());
+
+    regs->fp->savedpc_ = regs->pc;
+    fp->prev_ = regs->fp;
+#ifdef DEBUG
+    fp->savedpc_ = JSStackFrame::sInvalidpc;
+#endif
+    regs->fp = fp;
+    regs->pc = script->code;
+    regs->sp = fp->slots() + script->nfixed;
+}
+
+JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *prev, Value *newsp)
+{
+    JS_ASSERT(isCurrentAndActive(cx));
+    JS_ASSERT(cx->hasActiveSegment());
+    JS_ASSERT(cx->regs->fp->prev_ == prev);
+    JS_ASSERT(cx->regs->fp->savedpc_ == JSStackFrame::sInvalidpc);
+    JS_ASSERT(!cx->regs->fp->hasImacropc());
+    JS_ASSERT(prev->base() <= newsp && newsp <= cx->regs->fp->formalArgsEnd());
 
     JSFrameRegs *regs = cx->regs;
-    regs->fp = down;
-    regs->pc = down->savedPC;
+    regs->fp = prev;
+    regs->pc = prev->savedpc_;
+    regs->sp = newsp;
 #ifdef DEBUG
-    down->savedPC = JSStackFrame::sInvalidPC;
+    prev->savedpc_ = JSStackFrame::sInvalidpc;
+#endif
+}
+
+JS_ALWAYS_INLINE Value *
+StackSpace::getStackLimit(JSContext *cx)
+{
+    Value *sp = cx->regs->sp;
+    JS_ASSERT(sp == firstUnused());
+    Value *limit = sp + STACK_QUOTA;
+
+    /*
+     * Try to reserve the whole STACK_QUOTA. If that fails, though, just
+     * reserve the minimum required space: enough for the nslots + an
+     * additional stack frame.
+     */
+#ifdef XP_WIN
+    if (JS_LIKELY(limit <= commitEnd))
+        return limit;
+    if (ensureSpace(NULL /* don't report error */, sp, STACK_QUOTA))
+        return limit;
+    uintN minimum = cx->fp()->numSlots() + VALUES_PER_STACK_FRAME;
+    return ensureSpace(cx, sp, minimum) ? sp + minimum : NULL;
+#else
+    if (JS_LIKELY(limit <= end))
+        return limit;
+    uintN minimum = cx->fp()->numSlots() + VALUES_PER_STACK_FRAME;
+    return ensureSpace(cx, sp, minimum) ? sp + minimum : NULL;
 #endif
 }
 
@@ -335,49 +455,23 @@ FrameRegsIter::FrameRegsIter(JSContext *cx)
     return;
 }
 
-inline Value *
-FrameRegsIter::contiguousDownFrameSP(JSStackFrame *up)
-{
-    JS_ASSERT(up->argv);
-    Value *sp = up->argv + up->numActualArgs();
-#ifdef DEBUG
-    JS_ASSERT(sp <= up->argEnd());
-    JS_ASSERT(sp >= (up->down->hasScript() ? up->down->base() : up->down->slots()));
-    if (up->hasFunction()) {
-        uint16 nargs = up->getFunction()->nargs;
-        uintN argc = up->numActualArgs();
-        uintN missing = argc < nargs ? nargs - argc : 0;
-        JS_ASSERT(sp == up->argEnd() - missing);
-    } else {
-        JS_ASSERT(sp == up->argEnd());
-    }
-#endif
-    return sp;
-}
-
 inline FrameRegsIter &
 FrameRegsIter::operator++()
 {
-    JSStackFrame *up = curfp;
-    JSStackFrame *down = curfp = curfp->down;
-    if (!down)
+    JSStackFrame *fp = curfp;
+    JSStackFrame *prev = curfp = curfp->prev();
+    if (!prev)
         return *this;
 
-    curpc = down->savedPC;
+    curpc = prev->savedpc_;
 
-    if (JS_UNLIKELY(up == curseg->getInitialFrame())) {
-        incSlow(up, down);
+    if (JS_UNLIKELY(fp == curseg->getInitialFrame())) {
+        incSlow(fp, prev);
         return *this;
     }
 
-    cursp = contiguousDownFrameSP(up);
+    cursp = fp->formalArgsEnd();
     return *this;
-}
-
-void
-AutoIdArray::trace(JSTracer *trc) {
-    JS_ASSERT(tag == IDARRAY);
-    MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 class AutoNamespaceArray : protected AutoGCRooter {
@@ -547,28 +641,54 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
-inline JSBool
-callJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
+JS_ALWAYS_INLINE bool
+CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
-    assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
-    JSBool ok = native(cx, thisobj, argc, argv, rval);
-    if (ok)
-        assertSameCompartment(cx, *rval);
-    return ok;
-}
-
-inline JSBool
-callJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
-{
+#ifdef DEBUG
+    JSBool alreadyThrowing = cx->throwing;
+#endif
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
-    if (ok)
+    if (ok) {
         assertSameCompartment(cx, vp[0]);
+        JS_ASSERT_IF(!alreadyThrowing, !cx->throwing);
+    }
     return ok;
 }
 
-inline JSBool
-callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+JS_ALWAYS_INLINE bool
+CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
+{
+#ifdef DEBUG
+    JSObject *callee = &vp[0].toObject();
+#endif
+
+    JS_ASSERT(vp[1].isMagic());
+    if (!CallJSNative(cx, native, argc, vp))
+        return false;
+
+    /*
+     * Native constructors must return non-primitive values on success.
+     * Although it is legal, if a constructor returns the callee, there is a
+     * 99.9999% chance it is a bug. If any valid code actually wants the
+     * constructor to return the callee, the assertion can be removed or
+     * (another) conjunct can be added to the antecedent.
+     *
+     * Proxies are exceptions to both rules: they can return primitives and
+     * they allow content to return the callee.
+     *
+     * (new Object(Object)) returns the callee.
+     */
+    extern JSBool proxy_Construct(JSContext *, uintN, Value *);
+    JS_ASSERT_IF(native != proxy_Construct &&
+                 (!callee->isFunction() || callee->getFunctionPrivate()->u.n.clasp != &js_ObjectClass),
+                 !vp->isPrimitive() && callee != &vp[0].toObject());
+
+    return true;
+}
+
+JS_ALWAYS_INLINE bool
+CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     JSBool ok = op(cx, obj, id, vp);
@@ -577,8 +697,8 @@ callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::V
     return ok;
 }
 
-inline JSBool
-callJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+JS_ALWAYS_INLINE bool
+CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
     assertSameCompartment(cx, obj, id, *vp);
     return op(cx, obj, id, vp);

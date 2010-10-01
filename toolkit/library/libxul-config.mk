@@ -243,7 +243,7 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifeq (,$(filter qt beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter android qt beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
@@ -350,6 +350,10 @@ COMPONENT_LIBS += gkdebug
 endif
 endif
 
+ifdef MOZ_APP_COMPONENT_LIBS
+COMPONENT_LIBS += $(MOZ_APP_COMPONENT_LIBS)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS += -framework OpenGL -lcups
 endif
@@ -363,6 +367,7 @@ EXTRA_DSO_LDOPTS += \
 	$(NSS_LIBS) \
 	$(MOZ_CAIRO_LIBS) \
 	$(MOZ_HARFBUZZ_LIBS) \
+	$(MOZ_APP_EXTRA_LIBS) \
 	$(NULL)
 
 ifdef MOZ_NATIVE_ZLIB

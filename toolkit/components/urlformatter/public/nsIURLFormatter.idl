@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Serge Gautherie <sgautherie.bz@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@
  * nsIURLFormatter
  *
  * nsIURLFormatter exposes methods to substitute variables in URL formats.
+ * Variable names can contain 'A-Z' letters and '_' characters.
  *
  * Mozilla Applications linking to Mozilla websites are strongly encouraged to use
  * URLs of the following format:
@@ -54,14 +56,24 @@ interface nsIURLFormatter: nsISupports
   /** 
    * formatURL - Formats a string URL
    *
-   * @param aFormat string 
+   * The set of known variables is predefined.
+   * If a variable is unknown, it is left unchanged and a non-fatal error is reported.
+   *
+   * @param aFormat string Unformatted URL.
+   *
+   * @return The formatted URL.
    */
   AString formatURL(in AString aFormat);
 
   /** 
-   * formatURLPref - Formats a string URL stored in a pref
+   * formatURLPref - Formats a string URL stored in a preference
    *
-   * @param aFormat string 
+   * If the preference value cannot be retrieved, a fatal error is reported
+   * and the "about:blank" URL is returned.
+   *
+   * @param aPref string Preference name.
+   *
+   * @return The formatted URL returned by formatURL(), or "about:blank".
    */
   AString formatURLPref(in AString aPref);
 };

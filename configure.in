@@ -4656,7 +4656,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.12.6, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
+    AM_PATH_NSS(3.12.8, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -6001,17 +6001,19 @@ if test -n "$MOZ_WEBM"; then
     WINNT:x86)
       if test -z "$GNU_CC"; then
         dnl Check for yasm 1.1 or greater.
-        if test "$_YASM_MAJOR_VERSION" -gt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -ge "1" \) ; then
+        if test -n "$COMPILE_ENVIRONMENT" -a -z "$YASM"; then
+          AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but it appears not to be installed.  Install it (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+        elif test -n "$COMPILE_ENVIRONMENT" -a "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
+          AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+        else
           VPX_ASFLAGS="-f win32 -rnasm -pnasm -DPIC"
           VPX_X86_ASM=1
-        else
-          AC_MSG_ERROR([yasm 1.1 or greater is required to build libvpx on Win32, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version (included in MozillaBuild 1.5.1 and newer) or configure with --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
         fi
       fi
     ;;
     esac
 
-    if test "$COMPILE_ENVIROMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
+    if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
       AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
     fi
 
@@ -8028,6 +8030,15 @@ else
     _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
     _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
   else
+    echo '#include <stdio.h>' > dummy-hello.c
+    changequote(,)
+    CL_INCLUDES_PREFIX=`"${CC}" -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/^\([^:]*:[^:]*:\).*stdio.h$/\1/p'`
+    changequote([,])
+    if test -z "$CL_INCLUDES_PREFIX"; then
+        AC_MSG_ERROR([Cannot find cl -showIncludes prefix.])
+    fi
+    AC_SUBST(CL_INCLUDES_PREFIX)
+    rm -f dummy-hello.c
     _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
     dnl cl.py provides dependency generation for MSVC
     CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
@@ -8060,6 +8071,11 @@ MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],
     MOZ_ENABLE_LIBXUL=1,
     MOZ_ENABLE_LIBXUL=)
+
+# split JS out by default to avoid VS2005 PGO crash (bug 591836).
+if test "$OS_ARCH" = "WINNT"; then
+  ENABLE_SHARED_JS=1
+fi
 
 MOZ_ARG_ENABLE_BOOL(shared-js,
 [  --enable-shared-js
@@ -8355,6 +8371,12 @@ MOZ_ARG_ENABLE_BOOL(system-cairo,
 MOZ_TREE_CAIRO=,
 MOZ_TREE_CAIRO=1 )
 
+MOZ_TREE_PIXMAN=1
+MOZ_ARG_ENABLE_BOOL(system-pixman,
+[ --enable-system-pixman Use system pixman (located with pkgconfig)],
+MOZ_TREE_PIXMAN=,
+MOZ_TREE_PIXMAN=1 )
+
 # Check for headers defining standard int types.
 AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
 
@@ -8403,6 +8425,7 @@ if test "$MOZ_TREE_CAIRO"; then
         fi
 
         AC_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
+        AC_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
 
         AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
         if test -z "$HAS_DDRAW"; then
@@ -8452,6 +8475,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(MOZ_ENABLE_DWRITE_FONT)
     AC_SUBST(MOZ_ENABLE_D2D_SURFACE)
     AC_SUBST(MOZ_ENABLE_D3D9_LAYER)
+    AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
     AC_SUBST(CAIRO_FT_CFLAGS)
     AC_SUBST(HAS_OGLES)
 
@@ -8486,7 +8510,16 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)
 
-    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src) $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'" $CAIRO_FT_LIBS"
+    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
+
+    if test "$MOZ_TREE_PIXMAN"; then
+        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
+    else
+        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.17.3)
+        MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
+        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
+    fi
+
     if test "$MOZ_X11"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
@@ -8508,6 +8541,7 @@ fi
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
+AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
 dnl qcms
@@ -8700,6 +8734,10 @@ fi
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
+fi
+
+if test "$MOZ_APP_COMPONENT_INCLUDE"; then
+  AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_INCLUDE, "$MOZ_APP_COMPONENT_INCLUDE")
 fi
 
 dnl ========================================================
@@ -8962,6 +9000,8 @@ AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(MOZ_NSS_PATCH)
+AC_SUBST(MOZ_APP_COMPONENT_LIBS)
+AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_MEDIA)
 AC_SUBST(MOZ_SYDNEYAUDIO)
@@ -8981,6 +9021,20 @@ if test "$USING_HCC"; then
    CXX="$CXX '$_OLDCXX'"
    AC_SUBST(CC)
    AC_SUBST(CXX)
+fi
+
+AC_MSG_CHECKING([for posix_fallocate])       
+AC_TRY_LINK([#define _XOPEN_SOURCE 600
+  #include <fcntl.h>],
+                 [posix_fallocate(0, 0, 0);],
+                 [ac_cv___posix_fallocate=true],
+                 [ac_cv___posix_fallocate=false])
+
+if test "$ac_cv___posix_fallocate" = true ; then
+  AC_DEFINE(HAVE_POSIX_FALLOCATE)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
 fi
 
 dnl Check for missing components

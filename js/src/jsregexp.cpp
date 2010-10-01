@@ -65,34 +65,49 @@ using namespace nanojit;
 #endif
 
 using namespace js;
+using namespace js::gc;
 
+/*
+ * RegExpStatics allocates memory -- in order to keep the statics stored
+ * per-global and not leak, we create a js::Class to wrap the C++ instance and
+ * provide an appropriate finalizer. We store an instance of that js::Class in
+ * a global reserved slot.
+ */
 
-class RegExpMatchBuilder
+static void
+resc_finalize(JSContext *cx, JSObject *obj)
 {
-    JSContext   *cx;
-    JSObject    *array;
+    RegExpStatics *res = static_cast<RegExpStatics *>(obj->getPrivate());
+    cx->destroy<RegExpStatics>(res);
+}
 
-  public:
-    RegExpMatchBuilder(JSContext *cx, JSObject *array) : cx(cx), array(array) {}
-    bool append(int index, JSString *str) {
-        JS_ASSERT(str);
-        return append(INT_TO_JSID(index), StringValue(str));
-    }
+static void
+resc_trace(JSTracer *trc, JSObject *obj)
+{
+    void *pdata = obj->getPrivate();
+    JS_ASSERT(pdata);
+    RegExpStatics *res = static_cast<RegExpStatics *>(pdata);
+    res->mark(trc);
+}
 
-    bool append(jsid id, Value val) {
-        return !!js_DefineProperty(cx, array, id, &val, js::PropertyStub, js::PropertyStub,
-                                   JSPROP_ENUMERATE);
-    }
-
-    bool appendIndex(int index) {
-        return append(ATOM_TO_JSID(cx->runtime->atomState.indexAtom), Int32Value(index));
-    }
-
-    /* Sets the input attribute of the match array. */
-    bool appendInput(JSString *str) {
-        JS_ASSERT(str);
-        return append(ATOM_TO_JSID(cx->runtime->atomState.inputAtom), StringValue(str));
-    }
+Class js::regexp_statics_class = {
+    "RegExpStatics", 
+    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE,
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    resc_finalize,
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    JS_CLASS_TRACE(resc_trace)
 };
 
 /*
@@ -113,23 +128,6 @@ SwapObjectRegExp(JSContext *cx, JSObject *obj, RegExp &newRegExp)
         oldRegExp->decref(cx);
 }
 
-void
-js_SaveAndClearRegExpStatics(JSContext *cx, js::RegExpStatics *statics, js::AutoStringRooter *tvr)
-{
-    JS_ASSERT(statics);
-    statics->clone(cx->regExpStatics);
-    if (statics->getInput())
-        tvr->setString(statics->getInput());
-    cx->regExpStatics.clear();
-}
-
-void
-js_RestoreRegExpStatics(JSContext *cx, js::RegExpStatics *statics)
-{
-    JS_ASSERT(statics);
-    cx->regExpStatics.clone(*statics);
-}
-
 JSObject * JS_FASTCALL
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 {
@@ -139,10 +137,11 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
     if (!clone)
         return NULL;
+    RegExpStatics *res = cx->regExpStatics();
     RegExp *re = RegExp::extractFrom(obj);
     {
         uint32 origFlags = re->getFlags();
-        uint32 staticsFlags = cx->regExpStatics.getFlags();
+        uint32 staticsFlags = res->getFlags();
         if ((origFlags & staticsFlags) != staticsFlags) {
             /*
              * This regex is lacking flags from the statics, so we must recompile with the new
@@ -172,112 +171,6 @@ js_ObjectIsRegExp(JSObject *obj)
 /*
  * js::RegExp
  */
-
-bool
-RegExp::execute(JSContext *cx, JSString *input, size_t *lastIndex, bool test, Value *rval)
-{
-#if !ENABLE_YARR_JIT
-    JS_ASSERT(compiled);
-#endif
-    const size_t pairCount = parenCount + 1;
-    const size_t bufCount = pairCount * 3; /* Should be x2, but PCRE has... needs. */
-    const size_t matchItemCount = pairCount * 2;
-
-    /*
-     * The regular expression arena pool is special... we want to hang on to it
-     * until a GC is performed so rapid subsequent regexp executions don't
-     * thrash malloc/freeing arena chunks.
-     *
-     * Stick a timestamp at the base of that pool.
-     */
-    if (!cx->regExpPool.first.next) {
-        int64 *timestamp;
-        JS_ARENA_ALLOCATE_CAST(timestamp, int64 *, &cx->regExpPool, sizeof *timestamp);
-        if (!timestamp)
-            return false;
-        *timestamp = JS_Now();
-    }
-
-    AutoArenaAllocator aaa(&cx->regExpPool);
-    int *buf = aaa.alloc<int>(bufCount);
-    if (!buf)
-        return false;
-    /*
-     * The JIT regexp procedure doesn't always initialize matchPair values.
-     * Maybe we can make this faster by ensuring it does?
-     */
-    for (int *it = buf; it != buf + matchItemCount; ++it)
-        *it = -1;
-    const jschar *chars = input->chars();
-    size_t len = input->length();
-    size_t inputOffset = 0;
-    if (sticky()) {
-        /* Sticky matches at the last index for the regexp object. */
-        chars += *lastIndex;
-        len -= *lastIndex;
-        inputOffset = *lastIndex;
-    }
-#if ENABLE_YARR_JIT
-    bool found = JSC::Yarr::executeRegex(cx, compiled, chars, *lastIndex - inputOffset, len, buf,
-                                         bufCount) != -1;
-#else
-    bool found;
-    if (jsRegExpExecute(cx, compiled, chars, len, *lastIndex - inputOffset, buf, bufCount) < 0)
-        return false; /* FIXME: error code reporting for PPC. */
-    found = buf[0] > 0;
-#endif
-    if (!found) {
-        *rval = NullValue();
-        return true;
-    }
-    RegExpStatics &statics = cx->regExpStatics;
-    statics.input = input;
-    statics.matchPairs.clear();
-    if (!statics.matchPairs.reserve(matchItemCount))
-        return false;
-    for (size_t idx = 0; idx < matchItemCount; idx += 2) {
-        JS_ASSERT(buf[idx + 1] >= buf[idx]);
-        if (!statics.matchPairs.append(buf[idx] + inputOffset))
-            return false;
-        if (!statics.matchPairs.append(buf[idx + 1] + inputOffset))
-            return false;
-    }
-    *lastIndex = statics.matchPairs[1];
-    if (test) {
-        *rval = BooleanValue(true);
-        return true;
-    }
-
-    /*
-     * Create the return array for a match. Returned array contents:
-     *  0:              matched string
-     *  1..parenCount:  paren matches
-     */
-    JSObject *array = js_NewSlowArrayObject(cx);
-    if (!array)
-        return false;
-    *rval = ObjectValue(*array);
-    RegExpMatchBuilder builder(cx, array);
-    for (size_t idx = 0; idx < matchItemCount; idx += 2) {
-        int start = statics.matchPairs[idx];
-        int end = statics.matchPairs[idx + 1];
-        JSString *captured;
-        if (start >= 0) {
-            JS_ASSERT(start <= end);
-            JS_ASSERT((unsigned) end <= input->length());
-            captured = js_NewDependentString(cx, input, start, end - start);
-            if (!(captured && builder.append(idx / 2, captured)))
-                return false;
-        } else {
-            /* Missing parenthesized match. */
-            JS_ASSERT(idx != 0); /* Since we had a match, first pair must be present. */
-            JS_ASSERT(start == end && end == -1);
-            if (!builder.append(INT_TO_JSID(idx / 2), UndefinedValue()))
-                return false;
-        }
-    }
-    return builder.appendIndex(statics.matchPairs[0]) && builder.appendInput(input);
-}
 
 void
 RegExp::handleYarrError(JSContext *cx, int error)
@@ -501,33 +394,33 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uint32 flags, JSObject **o
     static JSBool                                                               \
     name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                      \
     {                                                                           \
-        RegExpStatics &statics = cx->regExpStatics;                             \
+        RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
     }
 
-DEFINE_STATIC_GETTER(static_input_getter,        return statics.createInput(Valueify(vp)))
-DEFINE_STATIC_GETTER(static_multiline_getter,    *vp = BOOLEAN_TO_JSVAL(statics.multiline());
+DEFINE_STATIC_GETTER(static_input_getter,        return res->createInput(cx, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_multiline_getter,    *vp = BOOLEAN_TO_JSVAL(res->multiline());
                                                  return true)
-DEFINE_STATIC_GETTER(static_lastMatch_getter,    return statics.createLastMatch(Valueify(vp)))
-DEFINE_STATIC_GETTER(static_lastParen_getter,    return statics.createLastParen(Valueify(vp)))
-DEFINE_STATIC_GETTER(static_leftContext_getter,  return statics.createLeftContext(Valueify(vp)))
-DEFINE_STATIC_GETTER(static_rightContext_getter, return statics.createRightContext(Valueify(vp)))
+DEFINE_STATIC_GETTER(static_lastMatch_getter,    return res->createLastMatch(cx, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_lastParen_getter,    return res->createLastParen(cx, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_leftContext_getter,  return res->createLeftContext(cx, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_rightContext_getter, return res->createRightContext(cx, Valueify(vp)))
 
-DEFINE_STATIC_GETTER(static_paren1_getter,       return statics.createParen(0, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren2_getter,       return statics.createParen(1, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren3_getter,       return statics.createParen(2, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren4_getter,       return statics.createParen(3, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren5_getter,       return statics.createParen(4, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren6_getter,       return statics.createParen(5, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren7_getter,       return statics.createParen(6, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren8_getter,       return statics.createParen(7, Valueify(vp)))
-DEFINE_STATIC_GETTER(static_paren9_getter,       return statics.createParen(8, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren1_getter,       return res->createParen(cx, 0, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren2_getter,       return res->createParen(cx, 1, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren3_getter,       return res->createParen(cx, 2, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren4_getter,       return res->createParen(cx, 3, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren5_getter,       return res->createParen(cx, 4, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren6_getter,       return res->createParen(cx, 5, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren7_getter,       return res->createParen(cx, 6, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren8_getter,       return res->createParen(cx, 7, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 8, Valueify(vp)))
 
 #define DEFINE_STATIC_SETTER(name, code)                                        \
     static JSBool                                                               \
     name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                      \
     {                                                                           \
-        RegExpStatics &statics = cx->regExpStatics;                             \
+        RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
         return true;                                                            \
     }
@@ -535,11 +428,11 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return statics.createParen(8, V
 DEFINE_STATIC_SETTER(static_input_setter,
                      if (!JSVAL_IS_STRING(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_STRING, vp))
                          return false;
-                     statics.setInput(JSVAL_TO_STRING(*vp)))
+                     res->setInput(JSVAL_TO_STRING(*vp)))
 DEFINE_STATIC_SETTER(static_multiline_setter,
                      if (!JSVAL_IS_BOOLEAN(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_BOOLEAN, vp))
                          return false;
-                     statics.setMultiline(!!JSVAL_TO_BOOLEAN(*vp)))
+                     res->setMultiline(!!JSVAL_TO_BOOLEAN(*vp)))
 
 const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE;
 const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
@@ -578,9 +471,9 @@ static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval);
 
 static JSBool
-regexp_call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+regexp_call(JSContext *cx, uintN argc, Value *vp)
 {
-    return regexp_exec_sub(cx, argv[-2].toObjectOrNull(), argc, argv, JS_FALSE, rval);
+    return regexp_exec_sub(cx, &JS_CALLEE(cx, vp).toObject(), argc, JS_ARGV(cx, vp), false, vp);
 }
 
 #if JS_HAS_XDR
@@ -630,7 +523,7 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 {
     RegExp *re = RegExp::extractFrom(obj);
     if (re && re->getSource())
-        JS_CALL_STRING_TRACER(trc, re->getSource(), "source");
+        MarkString(trc, re->getSource(), "source");
 }
 
 static JSBool
@@ -655,7 +548,7 @@ regexp_enumerate(JSContext *cx, JSObject *obj)
 js::Class js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
@@ -779,10 +672,10 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
     return unescaped;
 }
 
-static inline JSBool
+static bool
 regexp_compile_sub_tail(JSContext *cx, JSObject *obj, Value *rval, JSString *str, uint32 flags = 0)
 {
-    flags |= cx->regExpStatics.getFlags();
+    flags |= cx->regExpStatics()->getFlags();
     RegExp *re = RegExp::create(cx, str, flags);
     if (!re)
         return false;
@@ -796,6 +689,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
 {
     if (!InstanceOf(cx, obj, &js_RegExpClass, argv))
         return false;
+
     if (argc == 0)
         return regexp_compile_sub_tail(cx, obj, rval, cx->runtime->emptyString);
 
@@ -847,6 +741,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
     if (!escapedSourceStr)
         return false;
     argv[0] = StringValue(escapedSourceStr);
+
     return regexp_compile_sub_tail(cx, obj, rval, escapedSourceStr, flags);
 }
 
@@ -890,6 +785,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     JS_UNLOCK_OBJ(cx, obj);
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
+    RegExpStatics *res = cx->regExpStatics();
     JSString *str;
     if (argc) {
         str = js_ValueToString(cx, argv[0]);
@@ -900,7 +796,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         argv[0] = StringValue(str);
     } else {
         /* Need to grab input from statics. */
-        str = cx->regExpStatics.getInput();
+        str = res->getInput();
         if (!str) {
             const char *sourceBytes = js_GetStringBytes(cx, re->getSource());
             if (sourceBytes) {
@@ -920,7 +816,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         *rval = NullValue();
     } else {
         size_t lastIndexInt = (size_t) lastIndex;
-        ok = re->execute(cx, str, &lastIndexInt, !!test, rval);
+        ok = re->execute(cx, res, str, &lastIndexInt, !!test, rval);
         if (ok && (re->global() || (!rval->isNull() && re->sticky()))) {
             if (rval->isNull())
                 obj->zeroRegExpLastIndex();
@@ -934,14 +830,14 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     return ok;
 }
 
-static JSBool
-regexp_exec(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
     return regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_FALSE, vp);
 }
 
-static JSBool
-regexp_test(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
     if (!regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_TRUE, vp))
         return false;
@@ -956,38 +852,46 @@ static JSFunctionSpec regexp_methods[] = {
 #endif
     JS_FN(js_toString_str,  regexp_toString,    0,0),
     JS_FN("compile",        regexp_compile,     2,0),
-    JS_FN("exec",           regexp_exec,        1,0),
-    JS_FN("test",           regexp_test,        1,0),
+    JS_FN("exec",           js_regexp_exec,     1,0),
+    JS_FN("test",           js_regexp_test,     1,0),
     JS_FS_END
 };
 
 static JSBool
-regexp_construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+regexp_construct(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!JS_IsConstructing(cx)) {
+    Value *argv = JS_ARGV(cx, vp);
+    if (!IsConstructing(vp)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
          * (regexp_compile_sub detects the regexp + flags case and throws a
-         * TypeError.)  See 10.15.3.1.
+         * TypeError.)  See 15.10.3.1.
          */
-        if ((argc < 2 || argv[1].isUndefined()) && !argv[0].isPrimitive() &&
-            argv[0].toObject().getClass() == &js_RegExpClass) {
-            *rval = argv[0];
+        if (argc >= 1 && argv[0].isObject() && argv[0].toObject().isRegExp() &&
+            (argc == 1 || argv[1].isUndefined()))
+        {
+            *vp = argv[0];
             return true;
         }
-
-        /* Otherwise, replace obj with a new RegExp object. */
-        obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
-        if (!obj)
-            return false;
-
-        /*
-         * regexp_compile_sub does not use rval to root its temporaries so we
-         * can use it to root obj.
-         */
-        *rval = ObjectValue(*obj);
     }
-    return regexp_compile_sub(cx, obj, argc, argv, rval);
+
+    /* Otherwise, replace obj with a new RegExp object. */
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
+    if (!obj)
+        return false;
+
+    return regexp_compile_sub(cx, obj, argc, argv, vp);
+}
+
+/* Similar to regexp_compile_sub_tail. */
+static bool
+InitRegExpClassCompile(JSContext *cx, JSObject *obj)
+{
+    RegExp *re = RegExp::create(cx, cx->runtime->emptyString, 0);
+    if (!re)
+        return false;
+    SwapObjectRegExp(cx, obj, *re);
+    return true;
 }
 
 JSObject *
@@ -1003,14 +907,13 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Give RegExp.prototype private data so it matches the empty string. */
-    Value rval;
     if (!JS_AliasProperty(cx, ctor, "input",        "$_") ||
         !JS_AliasProperty(cx, ctor, "multiline",    "$*") ||
         !JS_AliasProperty(cx, ctor, "lastMatch",    "$&") ||
         !JS_AliasProperty(cx, ctor, "lastParen",    "$+") ||
         !JS_AliasProperty(cx, ctor, "leftContext",  "$`") ||
         !JS_AliasProperty(cx, ctor, "rightContext", "$'") ||
-        !regexp_compile_sub(cx, proto, 0, NULL, &rval)) {
+        !InitRegExpClassCompile(cx, proto)) {
         return NULL;
     }
 

@@ -13,6 +13,9 @@ function test() {
   var triggers = encodeURIComponent(JSON.stringify({
     "Signed XPI": TESTROOT + "signed.xpi",
     "Signed XPI 2": TESTROOT + "signed2.xpi",
+    "Signed XPI 3": TESTROOT + "signed-no-o.xpi",
+    "Signed XPI 4": TESTROOT + "signed-no-cn.xpi",
+    "Signed XPI 5": TESTROOT + "unsigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -27,8 +30,18 @@ function get_item(items, url) {
 }
 
 function confirm_install(window) {
+
+  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"].
+                       getService(Components.interfaces.nsIStringBundleService);
+  var bundle = sbs.createBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties");
+
+  var expectedIntroString = bundle.formatStringFromName("itemWarnIntroMultiple", ["5"], 1);
+  
+  var introStringNode = window.document.getElementById("itemWarningIntro");
+  is(introStringNode.textContent, expectedIntroString, "Should have the correct intro string");
+
   items = window.document.getElementById("itemList").childNodes;
-  is(items.length, 2, "Should be 2 items listed in the confirmation dialog");
+  is(items.length, 5, "Should be 5 items listed in the confirmation dialog");
   let item = get_item(items, TESTROOT + "signed.xpi");
   if (item) {
     is(item.name, "Signed XPI Test", "Should have seen the name from the trigger list");
@@ -49,7 +62,7 @@ function install_ended(install, addon) {
 }
 
 function finish_test(count) {
-  is(count, 2, "2 Add-ons should have been successfully installed");
+  is(count, 5, "5 Add-ons should have been successfully installed");
 
   Services.perms.remove("example.com", "install");
 

@@ -205,6 +205,8 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 236539-1.html 236539-1-ref.html
 == 240029-1.html 240029-1-ref.html
 == 240470-1.html 240470-1-ref.html
+== 240933-1.html 240933-1-ref.html
+== 240933-2.html 240933-2-ref.html
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 == 243519-1.html 243519-1-ref.html
@@ -1431,6 +1433,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 552334-1.html 552334-1-ref.html
 random-if(d2d) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
+== 557087.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
 == 559284-1.html 559284-1-ref.html
 == 560455-1.xul 560455-1-ref.xul
@@ -1501,3 +1504,5 @@ random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
 == 589672-1.html 589672-1-ref.html
 == 586400-1.html 586400-1-ref.html
 == 593544-1.html 593544-1-ref.html
+== 594737-1.html 594737-1-ref.html
+== 594624-1.html 594624-1-ref.html

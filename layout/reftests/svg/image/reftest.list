@@ -15,6 +15,10 @@ include zoom/reftest.list
 == background-image-rect-1png.html  lime100x100-ref.html
 == background-image-rect-2.html     lime100x100-ref.html
 
+# Test for -moz-border-image
+== border-image-simple-1.html       lime100x100-ref.html
+== border-image-simple-2.html       lime100x100-ref.html
+
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
@@ -24,7 +28,9 @@ include zoom/reftest.list
 == img-simple-6.html  lime100x100-ref.html
 == img-simple-7.html  lime100x100-ref.html
 
+# More complex <img> tests
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
+random == img-dyn-1.html img-dyn-1-ref.html # Bug 596478
 
 # XXXdholbert Some of the tests below fail on Windows 7 right now. Marking them
 # random-on-windows right now while I investigate.

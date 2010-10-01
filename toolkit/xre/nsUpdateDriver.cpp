@@ -49,6 +49,7 @@
 #include "nsPrintfCString.h"
 #include "prproces.h"
 #include "prlog.h"
+#include "prenv.h"
 #include "nsVersionComparator.h"
 
 #ifdef XP_MACOSX
@@ -471,6 +472,10 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   } else {
     argv[3] = nsnull;
     argc = 3;
+  }
+
+  if (gSafeMode) {
+    PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
   }
 
   LOG(("spawning updater process [%s]\n", updaterPath.get()));

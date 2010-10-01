@@ -37,3 +37,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Return true if A is equal to B, where equality on arrays and objects
+ * means that they have the same set of enumerable properties, the values
+ * of each property are deep_equal, and their 'length' properties are
+ * equal. Equality on other types is ==.
+ */
+function deepEqual(a, b) {
+    if (typeof a != typeof b)
+        return false;
+
+    if (typeof a == 'object') {
+        var props = {};
+        // For every property of a, does b have that property with an equal value?
+        for (var prop in a) {
+            if (!deepEqual(a[prop], b[prop]))
+                return false;
+            props[prop] = true;
+        }
+        // Are all of b's properties present on a?
+        for (var prop in b)
+            if (!props[prop])
+                return false;
+        // length isn't enumerable, but we want to check it, too.
+        return a.length == b.length;
+    }
+
+    if (a === b) {
+        // Distinguish 0 from -0, even though they are ===.
+        return a !== 0 || 1/a === 1/b;
+    }
+
+    // Treat NaNs as equal, even though NaN !== NaN.
+    // NaNs are the only non-reflexive values, i.e., if a !== a, then a is a NaN.
+    // isNaN is broken: it converts its argument to number, so isNaN("foo") => true
+    return a !== a && b !== b;
+}

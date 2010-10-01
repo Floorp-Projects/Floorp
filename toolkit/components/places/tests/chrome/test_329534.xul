@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet
-  href="file:///c:/mozbuild/fx3.1/mozilla-central/testing/mochitest/tests/SimpleTest/test.css" type="text/css"?>
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <window title="Distribute to loading Livemark"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

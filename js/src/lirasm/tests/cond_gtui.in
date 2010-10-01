@@ -1,0 +1,53 @@
+; A few utility constants.
+sh0 = immi 0
+sh1 = immi 1
+sh2 = immi 2
+sh3 = immi 3
+sh4 = immi 4
+sh5 = immi 5
+sh6 = immi 6
+sh7 = immi 7
+sh8 = immi 8
+
+i0 = immi 0
+i1 = immi 1
+i2 = immi -1
+
+; ----------------------------------------------------------------------------
+; Combinations of 'gtui'.
+gt0 = gtui i0 i0 ; 0
+gt1 = gtui i0 i1 ; 0
+gt2 = gtui i0 i2 ; 0
+gt3 = gtui i1 i0 ; 1
+gt4 = gtui i1 i1 ; 0
+gt5 = gtui i1 i2 ; 0
+gt6 = gtui i2 i0 ; 1
+gt7 = gtui i2 i1 ; 1
+gt8 = gtui i2 i2 ; 0
+
+; Aggregate the results.
+gt0sh = lshi gt0 sh0
+gt1sh = lshi gt1 sh1
+gt2sh = lshi gt2 sh2
+gt3sh = lshi gt3 sh3
+gt4sh = lshi gt4 sh4
+gt5sh = lshi gt5 sh5
+gt6sh = lshi gt6 sh6
+gt7sh = lshi gt7 sh7
+gt8sh = lshi gt8 sh8
+
+gt0_1 = ori gt0sh gt1sh
+gt2_3 = ori gt2sh gt3sh
+gt4_5 = ori gt4sh gt5sh
+gt6_7 = ori gt6sh gt7sh
+
+gt0_3 = ori gt0_1 gt2_3
+gt4_7 = ori gt4_5 gt6_7
+
+gt0_7 = ori gt0_3 gt4_7
+
+gt = ori gt0_7 gt8sh
+
+; The result should be {0000,1100,1000}, 0x0c8, or 200.
+
+reti gt

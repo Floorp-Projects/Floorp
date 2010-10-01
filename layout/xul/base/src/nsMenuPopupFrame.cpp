@@ -320,7 +320,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   }
 
   aView->CreateWidgetForPopup(&widgetData, parentWidget,
-                              PR_TRUE, PR_TRUE, eContentTypeUI);
+                              PR_TRUE, PR_TRUE);
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
@@ -502,6 +502,28 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, P
     nsCOMPtr<nsIRunnable> event = new nsXULPopupShownEvent(GetContent(), pc);
     NS_DispatchToCurrentThread(event);
   }
+}
+
+nsIContent*
+nsMenuPopupFrame::GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame)
+{
+  while (aMenuPopupFrame) {
+    if (aMenuPopupFrame->mTriggerContent)
+      return aMenuPopupFrame->mTriggerContent;
+
+    // check up the menu hierarchy until a popup with a trigger node is found
+    nsMenuFrame* menuFrame = aMenuPopupFrame->GetParentMenu();
+    if (!menuFrame)
+      break;
+
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
+    if (!parentPopup || !parentPopup->IsMenu())
+      break;
+
+    aMenuPopupFrame = static_cast<nsMenuPopupFrame *>(parentPopup);
+  }
+
+  return nsnull;
 }
 
 void

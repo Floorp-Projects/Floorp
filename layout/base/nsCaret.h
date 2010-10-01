@@ -293,11 +293,8 @@ protected:
                                               // actually drawn (anon <BR> in text control)
     PRInt32               mLastContentOffset; // the offset for the last request
 
-    nsFrameSelection::HINT mLastHint;         // the hint associated with the last request, see also
-                                              // mLastBidiLevel above
-
-    nsWeakFrame           mLastFrame;         // the last frame on which the caret has been drawn.
-    PRInt32               mLastFrameOffset;   // the frame offset for the last caret position
+    nsFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also
+                                              // mLastBidiLevel below
 
 };
 

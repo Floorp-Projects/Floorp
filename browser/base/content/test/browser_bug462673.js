@@ -15,7 +15,7 @@ var runs = [
       is(tabbrowser.browsers.length, 1, "Window has one browser");
       is(tabbrowser.selectedTab, newTab, "Remaining tab is selected");
       is(tabbrowser.selectedBrowser, newBrowser, "Browser for remaining tab is selected");
-      is(tabbrowser.mTabBox.selectedPanel, newBrowser.parentNode, "Panel for remaining tab is selected");
+      is(tabbrowser.mTabBox.selectedPanel, newBrowser.parentNode.parentNode, "Panel for remaining tab is selected");
     }
   }
 ];
@@ -47,7 +47,7 @@ function runOneTest() {
       });
     }, true);
 
-    browser.contentWindow.location =
-      "chrome://mochikit/content/browser/browser/base/content/test/test_bug462673.html";
+    var rootDir = getRootDirectory(gTestPath);
+    browser.contentWindow.location = rootDir + "test_bug462673.html"
   }, false);
 }
