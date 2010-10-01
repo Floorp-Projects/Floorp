@@ -37,6 +37,13 @@
 #include "X86Assembler.h"
 #include "AbstractMacroAssembler.h"
 
+#if WTF_COMPILER_MSVC
+#if WTF_CPU_X86_64
+/* for __cpuid */
+#include <intrin.h>
+#endif
+#endif
+
 namespace JSC {
 
 class MacroAssemblerX86Common : public AbstractMacroAssembler<X86Assembler> {
@@ -1121,7 +1128,6 @@ private:
         volatile int flags_ecx = 0;
 #if WTF_COMPILER_MSVC
 #if WTF_CPU_X86_64
-        extern void __cpuid(int a[4], int b);
         int cpuinfo[4];
 
         __cpuid(cpuinfo, 1);
