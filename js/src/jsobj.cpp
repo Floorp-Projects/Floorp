@@ -4196,11 +4196,18 @@ js_CheckForStringIndex(jsid id)
     if (cp != end || (negative && index == 0))
         return id;
 
-    if (oldIndex < JSID_INT_MAX / 10 ||
-        (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10))) {
-        if (negative)
-            index = 0 - index;
-        id = INT_TO_JSID((jsint)index);
+    if (negative) {
+        if (oldIndex < -(JSID_INT_MIN / 10) ||
+            (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
+        {
+            id = INT_TO_JSID(jsint(-index));
+        }
+    } else {
+        if (oldIndex < JSID_INT_MAX / 10 ||
+            (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10)))
+        {
+            id = INT_TO_JSID(jsint(index));
+        }
     }
 
     return id;
