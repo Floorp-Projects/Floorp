@@ -175,7 +175,7 @@ js_GetBlockChain(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     JSScript *script = fp->script();
-    jsbytecode *start = script->main;
+    jsbytecode *start = script->code;
     /* Assume that imacros don't affect blockChain */
     jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
     
