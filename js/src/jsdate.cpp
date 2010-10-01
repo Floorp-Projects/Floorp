@@ -60,7 +60,7 @@
 #include "jsstdint.h"
 #include "jsprf.h"
 #include "prmjtime.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsversion.h"
 #include "jsbuiltins.h"
