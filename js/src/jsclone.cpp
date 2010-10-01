@@ -304,7 +304,7 @@ SCOutput::writeArray(const T *p, size_t nelems)
         js_ReportAllocationOverflow(context());
         return false;
     }
-    uint64_t nwords = JS_HOWMANY(nelems, sizeof(uint64_t) / sizeof(T));
+    size_t nwords = JS_HOWMANY(nelems, sizeof(uint64_t) / sizeof(T));
     size_t start = buf.length();
     if (!buf.growByUninitialized(nwords))
         return false;
@@ -463,7 +463,7 @@ JSStructuredCloneWriter::startObject(JSObject *obj)
     if (p) {
         JSContext *cx = context();
         const JSStructuredCloneCallbacks *cb = cx->runtime->structuredCloneCallbacks;
-        if (cb && cb->reportError)
+        if (cb)
             cb->reportError(cx, JS_SCERR_RECURSION);
         else
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SC_RECURSION);
@@ -521,20 +521,14 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
         } else if (js_IsArrayBuffer(obj) && ArrayBuffer::fromJSObject(obj)) {
             return writeArrayBuffer(obj);
         }
+
+        const JSStructuredCloneCallbacks *cb = context()->runtime->structuredCloneCallbacks;
+        if (cb)
+            return cb->write(context(), this, obj);
         /* else fall through */
     }
 
-    /*
-     * v is either an object or some strange value like JSVAL_HOLE. Even in the
-     * latter case, we call the write op anyway, to let the application throw
-     * the NOT_SUPPORTED_ERR exception.
-     */
-    JSContext *cx = context();
-    JSRuntime *rt = cx->runtime;
-    if (rt->structuredCloneCallbacks)
-        return rt->structuredCloneCallbacks->write(cx, this, Jsvalify(v));
-
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SC_UNSUPPORTED_TYPE);
+    JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_UNSUPPORTED_TYPE);
     return false;
 }
 
@@ -735,7 +729,7 @@ JSStructuredCloneReader::startRead(Value *vp)
       case SCTAG_ARRAY_BUFFER_OBJECT:
         return readArrayBuffer(data, vp);
 
-      default:
+      default: {
         if (tag <= SCTAG_FLOAT_MAX) {
             jsdouble d = ReinterpretPairAsDouble(tag, data);
             if (IsNonCanonicalizedNaN(d)) {
@@ -750,13 +744,17 @@ JSStructuredCloneReader::startRead(Value *vp)
         if (SCTAG_TYPED_ARRAY_MIN <= tag && tag <= SCTAG_TYPED_ARRAY_MAX)
             return readTypedArray(tag, data, vp);
 
-        JSRuntime *rt = context()->runtime;
-        if (!rt->structuredCloneCallbacks) {
+        const JSStructuredCloneCallbacks *cb = context()->runtime->structuredCloneCallbacks;
+        if (!cb) {
             JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
                                  "unsupported type");
             return false;
         }
-        return rt->structuredCloneCallbacks->read(context(), this, tag, data, Jsvalify(vp));
+        JSObject *obj = cb->read(context(), this, tag, data);
+        if (!obj)
+            return false;
+        vp->setObject(*obj);
+      }
     }
     return true;
 }
