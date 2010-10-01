@@ -488,7 +488,7 @@
               </hbox>
             </vbox>
 
-            <richlistbox id="console-box" class="console-box" flex="1" onkeypress="ConsoleView.onConsoleBoxKeyPress(event)"/>
+            <richlistbox id="console-box" class="console-box" flex="1" onkeypress="ConsoleView.onConsoleBoxKeyPress(event)" oncontextmenu="ConsoleView.onContextMenu(event);"/>
           </vbox>
         </deck>
       </vbox>
@@ -541,6 +541,9 @@
           <label id="context-hint" crop="center" flex="1"/>
         </hbox>
         <richlistbox id="context-commands" onclick="ContextHelper.hide();" flex="1">
+          <richlistitem class="context-command" id="context-copy" type="copy" onclick="ContextCommands.copy();">
+            <label value="&copy.label;"/>
+          </richlistitem>
           <richlistitem class="context-command" id="context-openinnewtab" type="link-saveable" onclick="ContextCommands.openInNewTab();">
             <label value="&contextOpenInNewTab.label;"/>
           </richlistitem>

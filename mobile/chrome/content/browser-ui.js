@@ -2437,7 +2437,7 @@ var ContextHelper = {
     last.setAttribute("selector", "last-child");
 
     let label = document.getElementById("context-hint");
-    label.value = this.popupState.label;
+    label.value = this.popupState.label || "";
 
     this._panel.hidden = false;
     window.addEventListener("resize", this, true);
@@ -2465,6 +2465,11 @@ var ContextHelper = {
 };
 
 var ContextCommands = {
+  copy: function cc_copy() {
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(ContextHelper.popupState.string);
+  },
+
   openInNewTab: function cc_openInNewTab() {
     Browser.addTab(ContextHelper.popupState.linkURL, false, Browser.selectedTab);
   },
