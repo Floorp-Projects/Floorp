@@ -1,0 +1,4 @@
+<!ENTITY  splash_screen_label "&brandShortName; is loading">
+<!ENTITY  incompatable_cpu_error "This device does not meet the minimum system requirements for &brandShortName;.">
+<!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
+<!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">

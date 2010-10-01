@@ -79,6 +79,8 @@ TEST_FILES = \
   test_writer_starvation.html \
   $(NULL)
 
+
+ifneq (mobile,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
   browserHelpers.js \
   browser_permissionsPrompt.html \
@@ -90,8 +92,10 @@ BROWSER_TEST_FILES = \
   head.js \
   $(NULL)
 
+libs:: $(BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+endif
+
 libs:: $(TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
-libs:: $(BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

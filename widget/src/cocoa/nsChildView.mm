@@ -1689,6 +1689,16 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+PRBool
+nsChildView::GetShouldAccelerate()
+{
+  // Don't use OpenGL for transparent windows.
+  if (!mView || ![[mView window] isOpaque])
+    return PR_FALSE;
+
+  return nsBaseWidget::GetShouldAccelerate();
+}
+
 inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
@@ -2588,10 +2598,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
    [self update];
 }
 
+- (BOOL) isUsingOpenGL
+{
+    return mGeckoChild && mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL;
+}
+
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
 {
+  float oldHeight = [self beginMaybeResetUnifiedToolbar];
+
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   [self drawRect:aRect inContext:cgContext];
 
@@ -2600,6 +2617,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if ([[self window] isKindOfClass:[BaseWindow class]]) {
     [(BaseWindow*)[self window] deferredInvalidateShadow];
   }
+
+  [self endMaybeResetUnifiedToolbar:oldHeight];
 }
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
@@ -2698,8 +2717,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
   targetContext->Clip();
 
-  float oldHeight = [self beginMaybeResetUnifiedToolbar];
-
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   PRBool painted;
   {
@@ -2715,8 +2732,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     CGContextFillRect(aContext, CGRectMake(aRect.origin.x, aRect.origin.y,
                                            aRect.size.width, aRect.size.height));
   }
-
-  [self endMaybeResetUnifiedToolbar:oldHeight];
 
   // note that the cairo surface *MUST* be destroyed at this point,
   // or bad things will happen (since we can't keep the cgContext around
