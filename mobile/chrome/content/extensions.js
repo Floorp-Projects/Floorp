@@ -530,6 +530,9 @@ var ExtensionsView = {
   displayRecommendedResults: function ev_displaySearchResults(aRecommendedAddons, aBrowseAddons) {
     this.clearSection("repo");
 
+    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+    let browseURL = formatter.formatURLPref("extensions.getAddons.browseAddons");
+
     let strings = Elements.browserBundle;
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
@@ -543,7 +546,7 @@ var ExtensionsView = {
     whatare.setAttribute("description", desc);
 
     whatare.setAttribute("button", strings.getString("addonsWhatAre.button"));
-    whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('http://ebay.com');");
+    whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('" + browseURL + "');");
     this._list.appendChild(whatare);
 
     if (aRecommendedAddons.length == 0 && aBrowseAddons.length == 0) {
@@ -570,14 +573,11 @@ var ExtensionsView = {
     this.appendSearchResults(aRecommendedAddons, false);
     this.appendSearchResults(aBrowseAddons, true);
 
-    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-
     let showmore = document.createElement("richlistitem");
     showmore.setAttribute("typeName", "showmore");
     showmore.setAttribute("label", strings.getString("addonsBrowseAll.label"));
 
-    let url = formatter.formatURLPref("extensions.getAddons.browseAddons");
-    showmore.setAttribute("url", url);
+    showmore.setAttribute("url", browseURL);
     this._list.appendChild(showmore);
   },
 
