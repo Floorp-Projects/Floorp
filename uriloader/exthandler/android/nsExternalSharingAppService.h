@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is SimpleTest.js stub for MochiKit v1.4.2 tests.
+ * The Original Code is Mozilla browser.
  *
- * The Initial Developer of the Original Code is
- * Serge Gautherie <sgautherie.bz@free.fr>.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ *
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Brad Lassey <blassey@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,14 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// NB: This code was adapted from
-//     http://www.nczonline.net/blog/2009/07/28/the-best-way-to-load-external-javascript/.
+#ifndef NS_EXTERNAL_SHARING_APP_SERVICE_H
+#define NS_EXTERNAL_SHARING_APP_SERVICE_H
+#include "nsIExternalSharingAppService.h"
 
 
-var script = document.createElement('script');
-script.type = 'text/javascript';
-script.src = '../../SimpleTest/SimpleTest.js';
+#define NS_EXTERNALSHARINGAPPSERVICE_CID                \
+  {0x93e2c46e, 0x0011, 0x434b,                          \
+    {0x81, 0x2e, 0xb6, 0xf3, 0xa8, 0x1e, 0x2a, 0x58}}
 
-var headFC = document.getElementsByTagName('head')[0];
-// Use insertBefore() instead of appendChild(), to avoid http://support.microsoft.com/kb/927917.
-headFC.parentNode.insertBefore(script, headFC);
+class nsExternalSharingAppService : public nsIExternalSharingAppService
+{
+public:
+  NS_DECL_ISUPPORTS
+    NS_DECL_NSIEXTERNALSHARINGAPPSERVICE
+
+    nsExternalSharingAppService();
+
+private:
+  ~nsExternalSharingAppService();
+
+};
+
+#endif /*NS_EXTERNAL_SHARING_APP_SERVICE_H */

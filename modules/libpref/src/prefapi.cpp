@@ -184,7 +184,6 @@ static nsresult pref_DoCallback(const char* changed_pref);
 
 
 static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, PRBool defaultPref);
-static inline PrefHashEntry* pref_HashTableLookup(const void *key);
 
 #define PREF_HASHTABLE_INITIAL_SIZE	2048
 
@@ -386,7 +385,6 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
     else
         return strcmp(s1, s2);
 }
-
 
 PRBool PREF_HasUserPref(const char *pref_name)
 {
@@ -678,7 +676,7 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
     gDirty = PR_TRUE;
 }
 
-static inline PrefHashEntry* pref_HashTableLookup(const void *key)
+PrefHashEntry* pref_HashTableLookup(const void *key)
 {
     PrefHashEntry* result =
         static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));

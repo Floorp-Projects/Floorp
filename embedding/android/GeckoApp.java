@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.zip.*;
 import java.nio.*;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.*;
 
 import android.os.*;
 import android.app.*;
@@ -54,6 +55,7 @@ import android.widget.*;
 import android.hardware.*;
 
 import android.util.*;
+import android.net.*;
 
 abstract public class GeckoApp
     extends Activity
@@ -84,7 +86,19 @@ abstract public class GeckoApp
     void launch()
     {
         // unpack files in the components directory
-        unpackComponents();
+        try {
+            unpackComponents();
+        } catch (FileNotFoundException fnfe) {
+            showErrorDialog(getString(R.string.error_loading_file));
+            return;
+        } catch (IOException ie) {
+            String msg = ie.getMessage();
+            if (msg.equalsIgnoreCase("No space left on device"))
+                showErrorDialog(getString(R.string.no_space_to_start_error));
+            else
+                showErrorDialog(getString(R.string.error_loading_file));
+            return;
+        }
         // and then fire us up
         Intent i = getIntent();
         String env = i.getStringExtra("env0");
@@ -138,9 +152,8 @@ abstract public class GeckoApp
                     int version = Integer.parseInt(versionStr);
 
                     if (version < getMinCPUVersion()) {
-                        showErrorDialog("This device does not meet the " +
-                                        "minimum system requirements for " +
-                                        getAppName() + ".");
+                        showErrorDialog(
+                            getString(R.string.incompatable_cpu_error));
                         return;
                     }
                     else {
@@ -155,8 +168,9 @@ abstract public class GeckoApp
 
             if (!useLaunchButton)
                 mProgressDialog = 
-                    ProgressDialog.show(GeckoApp.this, "", getAppName() + 
-                                        " is loading", true);
+                    ProgressDialog.show(GeckoApp.this, "",
+                                        getString(R.string.splash_screen_label),
+                                        true);
             // Load our JNI libs; we need to do this before launch() because
             // setInitialSize will be called even before Gecko is actually up
             // and running.
@@ -164,7 +178,7 @@ abstract public class GeckoApp
 
             if (useLaunchButton) {
                 final Button b = new Button(this);
-                b.setText("Launch");
+                b.setText("Launch"); // don't need to localize
                 b.setOnClickListener(new Button.OnClickListener() {
                         public void onClick (View v) {
                             // hide the button so we can't be launched again
@@ -334,36 +348,40 @@ abstract public class GeckoApp
     abstract public int getMinCPUVersion();
 
     protected void unpackComponents()
+        throws IOException, FileNotFoundException
     {
         ZipFile zip;
         InputStream listStream;
 
-        try {
-            File componentsDir = new File("/data/data/org.mozilla." + getAppName() +"/components");
-            componentsDir.mkdir();
-            zip = new ZipFile(getApplication().getPackageResourcePath());
-        } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
-            return;
-        }
+        File componentsDir = new File("/data/data/org.mozilla." + getAppName() +
+                                      "/components");
+        componentsDir.mkdir();
+        zip = new ZipFile(getApplication().getPackageResourcePath());
 
         byte[] buf = new byte[8192];
         unpackFile(zip, buf, null, "application.ini");
         unpackFile(zip, buf, null, getContentProcessName());
-        unpackFile(zip, buf, null, "update.locale");
-
         try {
-            ZipEntry componentsList = zip.getEntry("components/components.manifest");
-            if (componentsList == null) {
-                Log.i("GeckoAppJava", "Can't find components.manifest!");
-                return;
-            }
+            unpackFile(zip, buf, null, "update.locale");
+        } catch (Exception e) {/* this is non-fatal */}
 
-            listStream = new BufferedInputStream(zip.getInputStream(componentsList));
-        } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
+        // copy any .xpi file into an extensions/ directory
+        Enumeration<? extends ZipEntry> zipEntries = zip.entries();
+        while (zipEntries.hasMoreElements()) {
+          ZipEntry entry = zipEntries.nextElement();
+          if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
+            Log.i("GeckoAppJava", "installing extension : " + entry.getName());
+            unpackFile(zip, buf, entry, entry.getName());
+          }
+        }
+        
+        ZipEntry componentsList = zip.getEntry("components/components.manifest");
+        if (componentsList == null) {
+            Log.i("GeckoAppJava", "Can't find components.manifest!");
             return;
         }
+
+        listStream = new BufferedInputStream(zip.getInputStream(componentsList));
 
         StreamTokenizer tkn = new StreamTokenizer(new InputStreamReader(listStream));
         String line = "components/";
@@ -371,12 +389,7 @@ abstract public class GeckoApp
         boolean addnext = false;
         tkn.eolIsSignificant(true);
         do {
-            try {
-                status = tkn.nextToken();
-            } catch (IOException e) {
-                Log.i("GeckoAppJava", e.toString());
-                return;
-            }
+            status = tkn.nextToken();
             switch (status) {
             case StreamTokenizer.TT_WORD:
                 if (tkn.sval.equals("binary-component"))
@@ -397,57 +410,42 @@ abstract public class GeckoApp
         } while (status != StreamTokenizer.TT_EOF);
     }
 
-    private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry, String name)
+    private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry,
+                            String name)
+        throws IOException, FileNotFoundException
     {
         if (fileEntry == null)
             fileEntry = zip.getEntry(name);
-        if (fileEntry == null) {
-            Log.i("GeckoAppJava", "Can't find " + name + " in " + zip.getName());
-            return;
-        }
+        if (fileEntry == null)
+            throw new FileNotFoundException("Can't find " + name + " in " +
+                                            zip.getName());
 
-        File outFile = new File("/data/data/org.mozilla." + getAppName() + "/" + name);
+        File outFile = new File("/data/data/org.mozilla." + getAppName() +
+                                "/" + name);
         if (outFile.exists() &&
             outFile.lastModified() >= fileEntry.getTime() &&
             outFile.length() == fileEntry.getSize())
             return;
 
-        try {
-            File dir = outFile.getParentFile();
-            if (!outFile.exists())
-                dir.mkdirs();
-        } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
-            return;
-        }
+        File dir = outFile.getParentFile();
+        if (!outFile.exists())
+            dir.mkdirs();
 
         InputStream fileStream;
-        try {
-            fileStream = zip.getInputStream(fileEntry);
-        } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
-            return;
+        fileStream = zip.getInputStream(fileEntry);
+
+        OutputStream outStream = new FileOutputStream(outFile);
+
+        while (fileStream.available() > 0) {
+            int read = fileStream.read(buf, 0, buf.length);
+            outStream.write(buf, 0, read);
         }
 
-        OutputStream outStream;
-        try {
-            outStream = new FileOutputStream(outFile);
-
-            while (fileStream.available() > 0) {
-                int read = fileStream.read(buf, 0, buf.length);
-                outStream.write(buf, 0, read);
-            }
-
-            fileStream.close();
-            outStream.close();
-        } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
-            return;
-        }
-
+        fileStream.close();
+        outStream.close();
         outFile.setLastModified(fileEntry.getTime());
     }
-    
+
     public String getEnvString() {
         Map<String,String> envMap = System.getenv();
         Set<Map.Entry<String,String>> envSet = envMap.entrySet();
@@ -542,5 +540,65 @@ abstract public class GeckoApp
 
         if (statusCode == 0)
             System.exit(0);
+    }
+
+    static final int FILE_PICKER_REQUEST = 1;
+
+    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue();
+    public String showFilePicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        GeckoApp.this.
+            startActivityForResult(
+                Intent.createChooser(intent,"choose a file"),
+                FILE_PICKER_REQUEST);
+        String filePickerResult = "";
+        try {
+            filePickerResult = mFilePickerResult.take();
+        } catch (InterruptedException e) {
+            Log.i("GeckoApp", "error: " + e);
+        }
+        
+        return filePickerResult;
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, 
+                                    Intent data) {
+        String filePickerResult = "";
+        if (data != null && resultCode == RESULT_OK) {
+            try {
+                ContentResolver cr = getContentResolver();
+                Uri uri = data.getData();
+                String mimeType = cr.getType(uri);
+                String fileExt = "." + 
+                    mimeType.substring(mimeType.lastIndexOf('/') + 1);
+                File file = 
+                    File.createTempFile("tmp_" + 
+                                        (int)Math.floor(1000 * Math.random()), 
+                                        fileExt, 
+                                        new File("/data/data/org.mozilla." +
+                                                 getAppName()));
+                
+                FileOutputStream fos = new FileOutputStream(file);
+                InputStream is = cr.openInputStream(uri);
+                byte[] buf = new byte[4096];
+                int len = is.read(buf);
+                while (len != -1) {
+                    fos.write(buf, 0, len);
+                    len = is.read(buf);
+                }
+                fos.close();
+                filePickerResult =  file.getAbsolutePath();
+            }catch (Exception e) {
+                Log.e("GeckoApp", "error : "+ e);
+            }
+        }
+        try {
+            mFilePickerResult.put(filePickerResult);
+        } catch (InterruptedException e) {
+            Log.i("GeckoApp", "error: " + e);
+        }
     }
 }
