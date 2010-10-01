@@ -881,6 +881,9 @@ interface nsIXPConnect : nsISupports
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
                                        PRBool allowShortCircuit) const = 0;
 #endif
+    virtual char* DebugPrintJSStack(PRBool showArgs,
+                                    PRBool showLocals,
+                                    PRBool showThisProps) = 0;
 %}
 
     [notxpcom] void getNativeWrapperGetPropertyOp(out JSPropertyOp getProperty);
