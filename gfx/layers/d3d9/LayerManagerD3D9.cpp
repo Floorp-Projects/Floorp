@@ -334,6 +334,13 @@ LayerManagerD3D9::SetupPipeline()
   if (FAILED(hr)) {
     NS_WARNING("Failed to set texCoords shader constant!");
   }
+
+  float offset[] = { 0, 0, 0, 0 };
+  hr = device()->SetVertexShaderConstantF(CBvRenderTargetOffset, offset, 1);
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to set RenderTargetOffset shader constant!");
+  }
 }
 
 void
