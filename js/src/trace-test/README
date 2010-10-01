@@ -13,7 +13,7 @@ Python 2.5. This is already a standard requirement for building our tree.
 
 Basic usage:
 
-    python trace-test.py <path-to-js-shell>
+    python trace_test.py <path-to-js-shell>
 
 The progress bar shows [#tests passed, #tests failed, #tests run] at the left.
 If all tests pass, the output is 'PASSED ALL'. The test suite can be interrupted
@@ -21,11 +21,11 @@ at any time with Ctrl+C and partial results will be printed.
 
 To run only the basic tests, not including the slow tests:
 
-    python trace-test.py <path-to-js-shell> basic
+    python trace_test.py <path-to-js-shell> basic
 
 For more options:
 
-    python trace-test.py -h
+    python trace_test.py -h
 
 * CREATING NEW TESTS
 
