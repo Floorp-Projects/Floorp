@@ -230,17 +230,19 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="errorcertcheck" pageid="errorcertcheck"
-              object="gErrorCertCheckPage"
-              onpageshow="gErrorCertCheckPage.onPageShow();">
+  <wizardpage id="errorextra" pageid="errorextra"
+              object="gErrorExtraPage"
+              onpageshow="gErrorExtraPage.onPageShow();">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="errorCertAttrHasUpdateLabel"
              hidden="true">&errorCertAttrHasUpdate.label;</label>
       <label id="errorCertCheckNoUpdateLabel"
-             hidden="true">&errorCertAttrNoUpdate.label;</label>
+             hidden="true">&errorCertAttrNoUpdate2.label;</label>
+      <label id="genericBackgroundErrorLabel"
+             hidden="true">&genericBackgroundError.label;</label>
       <hbox>
-        <label id="errorCertAttrLinkLabel" class="text-link" hidden="true"
+        <label id="errorExtraLinkLabel" class="text-link" hidden="true"
                value="" onclick="openUpdateURL(event);"/>
       </hbox>
     </vbox>

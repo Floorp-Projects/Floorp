@@ -53,6 +53,10 @@
   -moz-margin-end: 0;
 }
 
+.nav-button[disabled="true"] .button-icon {
+  opacity: 0.4;
+}
+
 #back-btn:-moz-locale-dir(ltr),
 #forward-btn:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 18px, 18px, 0);
@@ -270,7 +274,7 @@
 }
 
 #header-utils-btn[open="true"] {
-  -moz-box-shadow: inset 3px 3px 8px #555;
+  box-shadow: inset 3px 3px 5.5px #555;
 }
 
 #header-utils-btn:-moz-focusring > .button-box {
@@ -469,6 +473,7 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
+
 /*** item - uninstalled ***/
 
 .addon[status="uninstalled"] {
@@ -594,6 +599,7 @@
 
 #detail-desc {
   -moz-margin-start: 6px;
+  white-space: pre-wrap;
 }
 
 #detail-contributions {
@@ -691,7 +697,7 @@
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
   border-radius: 10000px;
   border: 1px solid #555;
-  -moz-box-shadow: #777 1px 1px 2px;
+  box-shadow: #777 1px 1px 1.5px;
   width: 200px;
   height: 24px;
   margin: 0px 8px;
@@ -742,7 +748,7 @@
   width: 16px;
   height: 16px;
   margin: 3px;
-  -moz-box-shadow: #777 1px 1px 1px;
+  box-shadow: #777 1px 1px 1px;
 }
 
 .download-progress .pause {
@@ -774,6 +780,10 @@
 #updates-installed, #updates-downloaded {
   color: #00BB00;
   font-weight: bold;
+}
+
+#update-selected {
+  margin: 12px;
 }
 
 

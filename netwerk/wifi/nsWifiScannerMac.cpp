@@ -177,11 +177,11 @@ nsWifiMonitor::DoScanOld()
                                       &managed_access_points,
                                       &adhoc_access_points,
                                       0) != noErr) {
-      continue;
+      return NS_ERROR_FAILURE;
     }
 
     if (managed_access_points == NULL) {
-      continue;
+      return NS_ERROR_FAILURE;
     }
 
     int accessPointsCount = CFArrayGetCount(managed_access_points);

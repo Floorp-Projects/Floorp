@@ -107,16 +107,14 @@
         <column class="inputColumn" flex="1"/>
       </columns>
       <rows>
-        <row id="usernameRow" align="center">
-          <label value="&signIn.username.label;"
-                 accesskey="&signIn.username.accesskey;"
-                 control="weaveUsername"/>
-          <textbox id="weaveUsername"
-                   onchange="gSyncSetup.onUsernameChange()"/>
+        <row id="emailRow" align="center">
+          <label value="&setup.emailAddress.label;"
+                 accesskey="&setup.emailAddress.accesskey;"
+                 control="weaveEmail"/>
+          <textbox id="weaveEmail"
+                   onchange="gSyncSetup.onEmailChange()"/>
         </row>
-        <row id="usernameFeedbackRow"
-              align="center"
-              hidden="true">
+        <row id="emailFeedbackRow" align="center" hidden="true">
           <spacer/>
           <hbox>
             <image class="statusIcon"/>
@@ -140,20 +138,6 @@
                    onchange="gSyncSetup.onPasswordChange()"/>
         </row>
         <row id="passwordFeedbackRow" align="center" hidden="true">
-          <spacer/>
-          <hbox>
-            <image class="statusIcon"/>
-            <label class="status" value=" "/>
-          </hbox>
-        </row>
-        <row id="emailRow" align="center">
-          <label value="&setup.emailAddress.label;"
-                 accesskey="&setup.emailAddress.accesskey;"
-                 control="weaveEmail"/>
-          <textbox id="weaveEmail"
-                   onchange="gSyncSetup.onEmailChange()"/>
-        </row>
-        <row id="emailFeedbackRow" align="center" hidden="true">
           <spacer/>
           <hbox>
             <image class="statusIcon"/>
@@ -223,6 +207,7 @@
         <label value="&syncKeyEntry.label;"
                accesskey="&syncKeyEntry.accesskey;"
                control="weavePassphrase"/>
+        <spacer flex="1" />
         <label id="generatePassphraseButton"
                value="&syncKeyGenerate.label;"
                class="text-link inline-link"
@@ -233,22 +218,40 @@
                onkeyup="gSyncSetup.onPassphraseChange()"
                onchange="gSyncSetup.onPassphraseChange()"
                onfocus="this.select()"/>
-      <hbox id="passphraseFeedbackRow" align="center" hidden="true">
-        <spacer/>
-        <hbox>
-          <image class="statusIcon"/>
-          <label class="status" value=" "/>
+
+      <vbox id="passphraseFeedback" pack="center">
+        <hbox id="passphraseFeedbackRow" hidden="true" align="center">
+          <spacer/>
+          <hbox>
+            <image class="statusIcon"/>
+            <label class="status" value=" "/>
+          </hbox>
         </hbox>
-      </hbox>
+
+        <vbox id="passphraseStrengthRow" hidden="true" pack="end">
+          <hbox>
+            <label id="passphraseStrengthLabel"
+                   control="passphraseStrength"
+                   value="&syncKeyStrength.label;"/>
+            <progressmeter id="passphraseStrength"
+                           aria-labelledby="passphraseStrengthLabel"
+                           max="128"
+                           value="0"
+                           flex="1"/>
+          </hbox>
+          <hbox align="right" flex="1">
+            <label class="text-link inline-link"
+                   onclick="event.stopPropagation();
+                            gSyncUtils.openSyncKeyHelp();"
+                   value="&syncKeyHelp.label;"/>
+          </hbox>
+        </vbox>
+      </vbox>
     </groupbox>
 
     <groupbox align="center">
       <description>&syncKeyBackup.description;</description>
       <hbox>
-        <button label="&button.syncKeyBackup.email.label;"
-                accesskey="&button.syncKeyBackup.email.accesskey;"
-                oncommand="gSyncUtils.passphraseEmail('weavePassphrase');
-                           gSyncSetup.afterBackup();"/>
         <button label="&button.syncKeyBackup.print.label;"
                 accesskey="&button.syncKeyBackup.print.accesskey;"
                 oncommand="gSyncUtils.passphrasePrint('weavePassphrase');
@@ -308,16 +311,16 @@
             <textbox id="existingServerURL"
                      onchange="gSyncSetup.checkFields(event)"/>
           </row>
-          <row id="existingUsernameRow" align="center">
-            <label id="existingUsernameLabel"
-                   value="&signIn.username.label;"
-                   accesskey="&signIn.username.accesskey;"
-                   control="existingUsername"/>
-            <textbox id="existingUsername"
+          <row id="existingAccountRow" align="center">
+            <label id="existingAccountLabel"
+                   value="&signIn.account.label;"
+                   accesskey="&signIn.account.accesskey;"
+                   control="existingAccount"/>
+            <textbox id="existingAccountName"
                      oninput="gSyncSetup.checkFields(event)"
                      onchange="gSyncSetup.checkFields(event)"/>
           </row>
-          <row id="existingUsernameFeedbackRow" align="center" hidden="true">
+          <row id="existingAccountFeedbackRow" align="center" hidden="true">
             <spacer/>
             <hbox>
               <image class="statusIcon"/>

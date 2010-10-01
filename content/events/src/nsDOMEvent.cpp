@@ -63,7 +63,8 @@
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "MozMouseHittest", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
-  "focus", "blur", "load", "popstate", "beforeunload", "unload",
+  "focus", "blur", "load", "popstate", "beforescriptexecute",
+  "afterscriptexecute", "beforeunload", "unload",
   "hashchange", "readystatechange", "abort", "error",
   "submit", "reset", "change", "select", "input", "invalid", "text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
@@ -1127,6 +1128,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_load];
   case NS_POPSTATE:
     return sEventNames[eDOMEvents_popstate];
+  case NS_BEFORE_SCRIPT_EXECUTE:
+    return sEventNames[eDOMEvents_beforescriptexecute];
+  case NS_AFTER_SCRIPT_EXECUTE:
+    return sEventNames[eDOMEvents_afterscriptexecute];
   case NS_BEFORE_PAGE_UNLOAD:
     return sEventNames[eDOMEvents_beforeunload];
   case NS_PAGE_UNLOAD:

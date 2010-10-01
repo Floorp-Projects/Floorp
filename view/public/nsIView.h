@@ -62,8 +62,8 @@ enum nsViewVisibility {
 };
 
 #define NS_IVIEW_IID    \
-  { 0xba00349c, 0xe58a, 0x436a, \
-    { 0x9f, 0x1f, 0x05, 0xb3, 0xdd, 0x9d, 0x9d, 0x36 } }
+  { 0xd0c2cf54, 0xb527, 0x4d8e, \
+    { 0xba, 0x87, 0x39, 0x03, 0xa7, 0xc4, 0x13, 0xe1 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -248,6 +248,9 @@ public:
    * @result view's next sibling
    */
   nsIView* GetNextSibling() const { return reinterpret_cast<nsIView*>(mNextSibling); }
+  void SetNextSibling(nsIView *aSibling) {
+    mNextSibling = reinterpret_cast<nsView*>(aSibling);
+  }
 
   /**
    * Set the view's link to client owned data.
@@ -281,15 +284,11 @@ public:
    *
    * @param aWidgetInitData data used to initialize this view's widget before
    *        its create is called.
-   * @param aContentType is either content, UI or inherit from parent window.
-   *        This is used to expose what type of window this is to 
-   *        assistive technology like screen readers.
    * @return error status
    */
   nsresult CreateWidget(nsWidgetInitData *aWidgetInitData = nsnull,
                         PRBool aEnableDragDrop = PR_TRUE,
-                        PRBool aResetVisibility = PR_TRUE,
-                        nsContentType aContentType = eContentTypeInherit);
+                        PRBool aResetVisibility = PR_TRUE);
 
   /**
    * Create a widget for this view with an explicit parent widget.
@@ -299,8 +298,7 @@ public:
   nsresult CreateWidgetForParent(nsIWidget* aParentWidget,
                                  nsWidgetInitData *aWidgetInitData = nsnull,
                                  PRBool aEnableDragDrop = PR_TRUE,
-                                 PRBool aResetVisibility = PR_TRUE,
-                                 nsContentType aContentType = eContentTypeInherit);
+                                 PRBool aResetVisibility = PR_TRUE);
 
   /**
    * Create a popup widget for this view.  Pass |aParentWidget| to
@@ -312,8 +310,7 @@ public:
   nsresult CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
                                 nsIWidget* aParentWidget = nsnull,
                                 PRBool aEnableDragDrop = PR_TRUE,
-                                PRBool aResetVisibility = PR_TRUE,
-                                nsContentType aContentType = eContentTypeInherit);
+                                PRBool aResetVisibility = PR_TRUE);
 
   /**
    * Attach/detach a top level widget from this view. When attached, the view

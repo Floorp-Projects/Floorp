@@ -94,15 +94,6 @@ window.dialog {
 
 /* ::::: alert icons :::::*/
 
-.message-icon,
-.alert-icon,
-.error-icon,
-.question-icon,
-.authentication-icon {
-  width: 40px;
-  height: 40px;
-}
-
 .message-icon {
   list-style-image: url("moz-icon://stock/gtk-dialog-info?size=dialog");
 }
@@ -203,11 +194,11 @@ sidebarheader:-moz-lwtheme {
 }
 
 :root:-moz-lwtheme-darktext {
-  text-shadow: 1px 1px 2px white;
+  text-shadow: 1px 1px 1.5px white;
 }
 
 :root:-moz-lwtheme-brighttext {
-  text-shadow: 1px 1px 2px black;
+  text-shadow: 1px 1px 1.5px black;
 }
 
 .inset {

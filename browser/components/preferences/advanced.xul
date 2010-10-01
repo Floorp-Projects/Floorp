@@ -68,9 +68,8 @@
 
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
-#ifdef XP_WIN
-      <preference id="gfx.direct2d.disabled"           name="gfx.direct2d.disabled"           type="bool"   inverted="true"/>
-#endif
+      <preference id="layers.accelerate-none"          name="layers.accelerate-none"          type="bool"   inverted="true"
+                  onchange="gAdvancedPane.updateHardwareAcceleration()"/>
       <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
 #ifdef HAVE_SHELL_SERVICE
@@ -89,6 +88,7 @@
  
       <preference id="browser.cache.disk.smart_size.enabled"
                   name="browser.cache.disk.smart_size.enabled"
+                  inverted="true"
                   type="bool"/>
  
      <!-- Update tab -->
@@ -181,12 +181,10 @@
                       label="&useSmoothScrolling.label;"
                       accesskey="&useSmoothScrolling.accesskey;"
                       preference="general.smoothScroll"/>
-#ifdef XP_WIN
             <checkbox id="allowHWAccel"
                       label="&allowHWAccel.label;"
                       accesskey="&allowHWAccel.accesskey;"
-                      preference="gfx.direct2d.disabled"/>
-#endif
+                      preference="layers.accelerate-none"/>
             <checkbox id="checkSpelling"
                       label="&checkSpelling.label;"
                       accesskey="&checkSpelling.accesskey;"
@@ -246,16 +244,18 @@
             <checkbox preference="browser.cache.disk.smart_size.enabled"
                       id="allowSmartSize" flex="1"
                       onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
-                      label="&smartSizeCache.label;"/>
+                      label="&overrideSmartCacheSize.label;" 
+                      accesskey="&overrideSmartCacheSize.accesskey;"/>
             <hbox align="center" class="indent">
               <label id="useCacheBefore" control="cacheSize"
-                     accesskey="&useCacheBefore.accesskey;" value="&useCacheBefore.label;"/>
-              <textbox id="cacheSize" type="number" size="2"
+                     accesskey="&limitCacheSizeBefore.accesskey;" 
+                     value="&limitCacheSizeBefore.label;"/>
+              <textbox id="cacheSize" type="number" size="4" max="1024"
                        preference="browser.cache.disk.capacity"
                        onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                        onsynctopreference="return gAdvancedPane.writeCacheSize();"
                        aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
-              <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
+              <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
             </hbox>
             <hbox align="center">
               <checkbox id="offlineNotify" flex="1"

@@ -37,29 +37,23 @@ tabbrowser {
   min-width: 1px;
 }
 
-.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-text,
-.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-icon-image,
-.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-close-button {
+.tab-progress:not([fadein]):not([pinned]),
+.tab-label:not([fadein]):not([pinned]),
+.tab-icon-image:not([fadein]):not([pinned]),
+.tab-close-button:not([fadein]):not([pinned]) {
   opacity: 0 !important;
 }
 
-.tabbrowser-tab > .tab-text,
-.tabbrowser-tab > .tab-icon-image,
-.tabbrowser-tab > .tab-close-button {
+.tab-progress,
+.tab-label,
+.tab-icon-image,
+.tab-close-button {
   -moz-transition: opacity .25s;
 }
 
 .tabbrowser-tab[pinned] {
   position: fixed;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
-}
-
-.tabbrowser-tab[pinned] > .tab-text {
-  display: none;
-}
-
-.tabbrowser-tab[pinned] > .tab-icon-image {
-  vertical-align: middle;
 }
 
 #alltabs-popup {
@@ -143,19 +137,80 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 
+#appmenu_offlineModeRecovery:not([checked=true]) {
+  display: none;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
+#urlbar-progress {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
+}
+
 /* Some child nodes want to be ordered based on the locale's direction, while
    everything else should be ltr. */
-#urlbar:-moz-locale-dir(rtl) > .autocomplete-textbox-container > .textbox-input-box {
+#urlbar-progress:-moz-locale-dir(rtl),
+.urlbar-input-box:-moz-locale-dir(rtl) {
   direction: rtl;
 }
 
-#urlbar html|*.autocomplete-textbox {
+html|*.urlbar-input {
   direction: ltr;
+}
+
+/* over-link in location bar */
+
+/* Delay transitions on mouseout.  (Mouseover transitions are delayed by a
+   timeout in urlbarBindings.xml.) */
+.urlbar-textbox-container:not([overlinkstate]),
+.urlbar-over-link-layer:not([overlinkstate]),
+.urlbar-textbox-container-children:not([overlinkstate]),
+.urlbar-over-link-box:not([overlinkstate]) {
+  -moz-transition-delay: 100ms;
+}
+
+.urlbar-over-link-layer[overlinkstate="fade-in"],
+.urlbar-textbox-container:not([overlinkstate]) {
+  -moz-transition-property: color;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
+}
+
+.urlbar-textbox-container[overlinkstate="fade-in"],
+.urlbar-over-link-layer:not([overlinkstate]) {
+  -moz-transition-property: color;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: linear;
+  color: transparent;
+}
+
+.urlbar-over-link-box[overlinkstate="fade-in"],
+.urlbar-textbox-container-children:not([overlinkstate]) {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  opacity: 1;
+}
+
+.urlbar-textbox-container-children[overlinkstate="fade-in"],
+.urlbar-over-link-box:not([overlinkstate]) {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  opacity: 0;
+}
+
+.urlbar-textbox-container[overlinkstate="showing"] {
+  color: transparent;
+}
+
+.urlbar-over-link-box[overlinkstate="showing"] {
+  opacity: 1;
+}
+
+.urlbar-textbox-container-children[overlinkstate="showing"] {
+  opacity: 0;
 }
 
 /* For results that are actions, their description text is shown instead of
@@ -184,15 +239,6 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
 #urlbar-throbber:not([busy="true"]),
 #urlbar-throbber[busy="true"] + #page-proxy-favicon {
   display: none;
-}
-
-#feed-button > .button-box > .box-inherit > .button-text,
-#feed-button > .button-box > .button-menu-dropmarker {
-  display: none;
-}
-
-#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
-  direction: rtl;
 }
 
 #urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,
@@ -277,13 +323,14 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   min-width: 1px;
 }
 
-/* Sync statusbar UI */
 %ifdef MOZ_SERVICES_SYNC
-#sync-notifications-box {
+/* Sync notification UI */
+#sync-notifications {
   -moz-binding: url("chrome://browser/content/syncNotification.xml#notificationbox");
+  overflow-y: visible !important;
 }
 
-#sync-notifications-box notification {
+#sync-notifications notification {
   -moz-binding: url("chrome://browser/content/syncNotification.xml#notification");
 }
 %endif
@@ -372,6 +419,21 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: -moz-box;
 }
 
+#invalid-form-popup {
+  max-width: 280px;
+}
+
 #geolocation-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
+}
+
+/* override hidden="true" for the status bar compatibility shim
+   in case it was persisted for the real status bar */
+#status-bar {
+  display: -moz-box;
+}
+
+/* Remove the resizer from the statusbar compatibility shim */
+#status-bar > .statusbar-resizerpanel {
+  display: none;
 }

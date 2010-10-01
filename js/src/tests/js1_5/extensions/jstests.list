@@ -106,7 +106,7 @@ script regress-361552.js
 script regress-361558.js
 script regress-361571.js
 script regress-361856.js
-skip-if(!xulRuntime.shell) script regress-361964.js # alert is not dismissed.
+skip script regress-361964.js # slow, alert not dismissed, now busted by harness
 random script regress-363258.js # bug 524788
 script regress-363988.js
 script regress-365527.js
@@ -189,7 +189,6 @@ skip script regress-437288-01.js # obsolete test
 script regress-44009.js
 script regress-443569.js
 script regress-446386.js
-script regress-449657.js
 script regress-452168.js
 script regress-452178.js
 script regress-452329.js

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557087
+-->
+<head>
+  <title>Test for Bug 557087</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557087">Mozilla Bug 557087</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <fieldset disabled>
+    <input>
+  </fieldset>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 557087 **/
+
+// Testing random stuff following review comments.
+
+var fieldset = document.getElementsByTagName("fieldset")[0];
+
+is(fieldset.elements.length, 1,
+   "there should be one element inside the fieldset");
+is(fieldset.elements[0], document.getElementsByTagName("input")[0],
+   "input should be the element inside the fieldset");
+
+document.body.removeChild(document.getElementById('content'));
+is(fieldset.querySelector("input:disabled"), fieldset.elements[0],
+   "the input should still be disabled");
+
+fieldset.disabled = false;
+is(fieldset.querySelector("input:enabled"), fieldset.elements[0],
+   "the input should be enabled");
+
+</script>
+</pre>
+</body>
+</html>

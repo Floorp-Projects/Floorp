@@ -40,24 +40,13 @@
 #include "nsUCSupport.h"
 
 
-class nsJapaneseToUnicode : public nsBasicDecoderSupport
-{
-protected:
-
- void setMapMode();
-
-protected:
- const PRUint16 * const *mMapIndex;
-};
-
-class nsShiftJISToUnicode : public nsJapaneseToUnicode
+class nsShiftJISToUnicode : public nsBasicDecoderSupport
 {
 public:
 
  nsShiftJISToUnicode() 
      { 
          mState=0; mData=0; 
-         setMapMode();
      }
  virtual ~nsShiftJISToUnicode() {}
 
@@ -72,7 +61,6 @@ public:
  NS_IMETHOD Reset()
      {
         mState = 0;
-        setMapMode();
         return NS_OK;
      }
 
@@ -85,14 +73,13 @@ private:
  PRInt32 mData;
 };
 
-class nsEUCJPToUnicodeV2 : public nsJapaneseToUnicode
+class nsEUCJPToUnicodeV2 : public nsBasicDecoderSupport
 {
 public:
 
  nsEUCJPToUnicodeV2() 
      { 
           mState=0; mData=0; 
-          setMapMode();
      }
  virtual ~nsEUCJPToUnicodeV2() {}
 
@@ -107,7 +94,6 @@ public:
  NS_IMETHOD Reset()
      {
         mState = 0;
-        setMapMode();
         return NS_OK;
      }
 
@@ -116,7 +102,7 @@ private:
  PRInt32 mData;
 };
  
-class nsISO2022JPToUnicodeV2 : public nsJapaneseToUnicode
+class nsISO2022JPToUnicodeV2 : public nsBasicDecoderSupport
 {
 public:
 
@@ -130,7 +116,6 @@ public:
         mGB2312Decoder = nsnull;
         mEUCKRDecoder = nsnull;
         mISO88597Decoder = nsnull;
-        setMapMode();
      }
  virtual ~nsISO2022JPToUnicodeV2()
      {
@@ -152,7 +137,6 @@ public:
         mState = mState_ASCII;
         mLastLegalState = mState_ASCII;
         mRunLength = 0;
-        setMapMode();
         return NS_OK;
      }
 

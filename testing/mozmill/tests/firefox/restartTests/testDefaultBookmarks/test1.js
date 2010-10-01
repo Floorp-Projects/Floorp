@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Henrik Skupin <hskupin@mozilla.com>
+ *   Geo Mealer <gmealer@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@ var RELATIVE_ROOT = '../../../shared-modules';
 var MODULE_REQUIRES = ['ModalDialogAPI', 'PlacesAPI', 'UtilsAPI'];
 
 const gDelay = 0;
+const gTimeout = 5000;
 
 var setupModule = function(module) {
   module.controller = mozmill.getBrowserController();
@@ -48,7 +50,29 @@ var setupModule = function(module) {
 }
 
 var testVerifyDefaultBookmarks = function() {
-  var elemString = "/*[name()='window']/*[name()='toolbox'][1]/*[name()='toolbar'][3]/*[name()='toolbaritem'][1]/*[name()='hbox'][1]/*[name()='toolbarbutton'][%1]";
+  var toolbarElemString = "/*[name()='window']/*[name()='deck'][1]" +
+                          "/*[name()='vbox'][1]/*[name()='toolbox'][1]" +
+                          "/*[name()='toolbar'][3]";
+  var elemString = toolbarElemString + "/*[name()='toolbaritem'][1]" +
+                   "/*[name()='hbox'][1]/*[name()='hbox'][1]" +
+                   "/*[name()='scrollbox'][1]/*[name()='toolbarbutton'][%1]";
+
+  // Default bookmarks toolbar should be closed
+  var toolbar = new elementslib.XPath(controller.window.document, toolbarElemString);
+  controller.assertProperty(toolbar, "collapsed", true);
+
+  // Open the bookmarks toolbar via bookmarks button for the rest of the test
+  var bookmarksButton = new elementslib.ID(controller.window.document, "bookmarks-menu-button");
+  controller.click(bookmarksButton);
+  
+  var bookmarkBarItem = new elementslib.ID(controller.window.document, "BMB_viewBookmarksToolbar");
+  controller.mouseDown(bookmarkBarItem);
+  controller.mouseUp(bookmarkBarItem);
+  
+  // Make sure bookmarks toolbar is now open
+  controller.waitFor(function() {
+    return toolbar.getNode().collapsed == false;
+  }, gTimeout, 100, 'Bookmarks toolbar is open' );
 
   // Get list of items on the bookmarks toolbar and open container
   var toolbarNodes = getBookmarkToolbarItems();

@@ -310,7 +310,7 @@ static PRBool GMA9XXGraphics()
 #endif
 
 PRBool
-nsNPAPIPlugin::RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
+nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
@@ -366,14 +366,24 @@ nsNPAPIPlugin::RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag
   // of "dom.ipc.plugins.enabled"
   // The "filename.dll" part can contain shell wildcard pattern
 
-  nsCAutoString prefFile(aFilePath);
+  nsCAutoString prefFile(aPluginTag->mFullPath.get());
   PRInt32 slashPos = prefFile.RFindCharInSet("/\\");
   if (kNotFound == slashPos)
     return PR_FALSE;
   prefFile.Cut(0, slashPos + 1);
   ToLowerCase(prefFile);
 
+#ifdef XP_MACOSX
+#if defined(__i386__)
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.i386.");
+#elif defined(__x86_64__)
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.x86_64.");
+#elif defined(__ppc__)
+  nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.ppc.");
+#endif
+#else
   nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.");
+#endif
 
   PRUint32 prefCount;
   char** prefNames;
@@ -413,7 +423,17 @@ nsNPAPIPlugin::RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag
 
   if (!prefSet) {
     oopPluginsEnabled = PR_FALSE;
+#ifdef XP_MACOSX
+#if defined(__i386__)
+    prefs->GetBoolPref("dom.ipc.plugins.enabled.i386", &oopPluginsEnabled);
+#elif defined(__x86_64__)
+    prefs->GetBoolPref("dom.ipc.plugins.enabled.x86_64", &oopPluginsEnabled);
+#elif defined(__ppc__)
+    prefs->GetBoolPref("dom.ipc.plugins.enabled.ppc", &oopPluginsEnabled);
+#endif
+#else
     prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+#endif
   }
 
   return oopPluginsEnabled;
@@ -422,29 +442,27 @@ nsNPAPIPlugin::RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag
 #endif // MOZ_IPC
 
 inline PluginLibrary*
-GetNewPluginLibrary(const char* aFilePath,
-                    PRLibrary* aLibrary)
+GetNewPluginLibrary(nsPluginTag *aPluginTag)
 {
+  if (!aPluginTag) {
+    return nsnull;
+  }
+
 #ifdef MOZ_IPC
-  nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
-  nsPluginTag* tag = host->FindTagForLibrary(aLibrary);
-  if (tag) {
-    if (aFilePath && nsNPAPIPlugin::RunPluginOOP(aFilePath, tag)) {
-      return PluginModuleParent::LoadModule(aFilePath);
-    }
+  if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
+    return PluginModuleParent::LoadModule(aPluginTag->mFullPath.get());
   }
 #endif
-  return new PluginPRLibrary(aFilePath, aLibrary);
+  return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
 }
 
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
-nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
-                            nsIPlugin** aResult)
+nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsIPlugin** aResult)
 {
   *aResult = nsnull;
 
-  if (!aFilePath || !aLibrary) {
+  if (!aPluginTag) {
     return NS_ERROR_FAILURE;
   }
 
@@ -454,7 +472,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PluginLibrary* pluginLib = GetNewPluginLibrary(aFilePath, aLibrary);
+  PluginLibrary* pluginLib = GetNewPluginLibrary(aPluginTag);
   if (!pluginLib) {
     return NS_ERROR_FAILURE;
   }

@@ -121,9 +121,13 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   PRBool isHTML = PR_FALSE;
   PRBool isXHTML = PR_FALSE;
   if (aDoctype) {
-    nsAutoString publicId;
+    nsAutoString publicId, name;
     aDoctype->GetPublicId(publicId);
-    if (publicId.EqualsLiteral("-//W3C//DTD HTML 4.01//EN") ||
+    if (publicId.IsEmpty()) {
+      aDoctype->GetName(name);
+    }
+    if (name.EqualsLiteral("html") ||
+        publicId.EqualsLiteral("-//W3C//DTD HTML 4.01//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.01 Frameset//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.01 Transitional//EN") ||
         publicId.EqualsLiteral("-//W3C//DTD HTML 4.0//EN") ||

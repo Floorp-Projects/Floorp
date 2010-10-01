@@ -453,6 +453,12 @@ void printflags(char *trusts, unsigned int flags);
 extern int ffs(unsigned int i);
 #endif
 
+/* Finds certificate by searching it in the DB or by examinig file
+ * in the local directory. */
+CERTCertificate*
+SECU_FindCertByNicknameOrFilename(CERTCertDBHandle *handle,
+                                  char *name, PRBool ascii,
+                                  void *pwarg);
 #include "secerr.h"
 #include "sslerr.h"
 

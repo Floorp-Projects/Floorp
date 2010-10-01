@@ -395,35 +395,41 @@ public:
     JS_TriggerOperationCallback(cx);
 
     PRBool killWorkerWhenDone;
+    {
+      nsLazyAutoRequest ar;
+      JSAutoEnterCompartment ac;
 
-    // Tell the worker which context it will be using
-    if (mWorker->SetGlobalForContext(cx)) {
-      RunQueue(cx, &killWorkerWhenDone);
+      // Tell the worker which context it will be using
+      if (mWorker->SetGlobalForContext(cx, &ar, &ac)) {
+        NS_ASSERTION(ar.entered(), "SetGlobalForContext must enter request on success");
+        NS_ASSERTION(ac.entered(), "SetGlobalForContext must enter compartment on success");
 
-      // Code in XPConnect assumes that the context's global object won't be
-      // replaced outside of a request.
-      JSAutoRequest ar(cx);
+        RunQueue(cx, &killWorkerWhenDone);
 
-      // Remove the global object from the context so that it might be garbage
-      // collected.
-      JS_SetGlobalObject(cx, NULL);
-      JS_SetContextPrivate(cx, NULL);
-    }
-    else {
-      {
-        // Code in XPConnect assumes that the context's global object won't be
-        // replaced outside of a request.
-        JSAutoRequest ar(cx);
-
-        // This is usually due to a parse error in the worker script...
+        // Remove the global object from the context so that it might be garbage
+        // collected.
         JS_SetGlobalObject(cx, NULL);
         JS_SetContextPrivate(cx, NULL);
       }
+      else {
+        NS_ASSERTION(!ar.entered(), "SetGlobalForContext must not enter request on failure");
+        NS_ASSERTION(!ac.entered(), "SetGlobalForContext must not enter compartment on failure");
 
-      nsAutoMonitor mon(gDOMThreadService->mMonitor);
-      killWorkerWhenDone = mKillWorkerWhenDone;
-      gDOMThreadService->WorkerComplete(this);
-      mon.NotifyAll();
+        {
+          // Code in XPConnect assumes that the context's global object won't be
+          // replaced outside of a request.
+          JSAutoRequest ar2(cx);
+
+          // This is usually due to a parse error in the worker script...
+          JS_SetGlobalObject(cx, NULL);
+          JS_SetContextPrivate(cx, NULL);
+        }
+
+        nsAutoMonitor mon(gDOMThreadService->mMonitor);
+        killWorkerWhenDone = mKillWorkerWhenDone;
+        gDOMThreadService->WorkerComplete(this);
+        mon.NotifyAll();
+      }
     }
 
     if (killWorkerWhenDone) {
@@ -481,7 +487,8 @@ protected:
       }
 
       // Clear out any old cruft hanging around in the regexp statics.
-      JS_ClearRegExpStatics(aCx);
+      if (JSObject *global = JS_GetGlobalObject(aCx))
+          JS_ClearRegExpStatics(aCx, global);
 
       runnable->Run();
     }

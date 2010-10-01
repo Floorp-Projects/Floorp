@@ -46,6 +46,7 @@
         width="1024">
   <script src="chrome://mochikit/content/tests/SimpleTest/MozillaFileLogger.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/quit.js"/>
+  <script src="chrome://mochikit/content/chrome-harness.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
     #results {
       margin: 5px;
@@ -88,6 +89,11 @@
     }
   ]]></style>
   <script type="application/javascript;version=1.7"><![CDATA[
+    if (Cc === undefined) {
+      var Cc = Components.classes;
+      var Ci = Components.interfaces;
+    }
+    
     var gConfig;
 
     var gDumper = {
@@ -162,24 +168,6 @@
       return eval(config);
     }
 
-    function getChromeDir() {
-      const Cc = Components.classes; const Ci = Components.interfaces;
-
-      /** Find our chrome dir **/
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-      var chromeURI = ios.newURI("chrome://mochikit/content/",
-                                 null, null);
-      var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                        getService(Ci.nsIChromeRegistry).
-                        convertChromeURL(chromeURI);
-      var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
-                        getService(Ci.nsIFileProtocolHandler);
-      var chromeDir = fileHandler.getFileFromURLSpec(resolvedURI.spec);
-
-      return chromeDir.parent.QueryInterface(Ci.nsILocalFile);
-    }
-
     function browserTest(aTestFile) {
       this.path = aTestFile;
       this.dumper = gDumper;
@@ -220,49 +208,19 @@
 
     // Returns an array of browserTest objects for all the selected tests
     function listTests() {
-      const Cc = Components.classes; const Ci = Components.interfaces;
-
-      var ioSvc = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-
-      var testsDir = getChromeDir();
-      testsDir.appendRelativePath("browser");
-
-      var requestPath = "chrome://mochikit/content/browser";
-      var fileNameRegexp = /browser_.+\.js$/;
-
-      if (gConfig.testPath) {
-        var testsDirURI = ioSvc.newFileURI(testsDir);
-        testsDir = ioSvc.newURI(gConfig.testPath, null, testsDirURI)
-                        .QueryInterface(Ci.nsIFileURL).file;
-
-        // Invalid testPath...
-        if (!testsDir.exists())
-          return [];
-
-        // If we were passed a specific file, run only that test.
-        if (testsDir.isFile()) {
-          if (fileNameRegexp.test(testsDir.leafName))
-            return [new browserTest(requestPath + "/" + gConfig.testPath)];
-
-          // We were passed a file that's not a test...
-          return [];
-        }
-
-        // otherwise, we were passed a directory of tests
-        requestPath += "/" + gConfig.testPath;
-      }
 
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                          getService(Ci.mozIJSSubScriptLoader);
       var srvScope = {};
-      scriptLoader.loadSubScript("chrome://mochikit/content/server.js", srvScope);
+      var baseURL = 'chrome://mochikit/content';
+      scriptLoader.loadSubScript('chrome://mochikit/content/server.js', srvScope);
 
-      var [links, ] = srvScope.list(requestPath, testsDir, true);
+      var [links, singleTestPath] = getFileListing(baseURL, gConfig.testPath, "browser", srvScope);
+
       var fileNames = [];
+      var fileNameRegexp = /browser_.+\.js$/;
       srvScope.arrayOfTestFiles(links, fileNames, fileNameRegexp);
-
       return fileNames.map(function (f) new browserTest(f));
     }
 
@@ -277,7 +235,6 @@
 
       setStatus("Running...");
       testWin.focus();
-
       var Tester = new testWin.Tester(listTests(), gDumper, testsFinished);
       Tester.start();
     }

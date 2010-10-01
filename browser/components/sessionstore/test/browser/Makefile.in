@@ -117,7 +117,14 @@ _BROWSER_TEST_FILES = \
 	browser_579879.js \
 	browser_580512.js \
 	browser_586147.js \
+	browser_586068-cascaded_restore.js \
 	$(NULL)
+
+ifneq ($(OS_ARCH),Darwin)
+_BROWSER_TEST_FILES += \
+	browser_597071.js \
+	$(NULL)
+endif
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

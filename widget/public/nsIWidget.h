@@ -52,6 +52,7 @@
 #include "nsNativeWidget.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
+#include "nsXULAppAPI.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -72,6 +73,11 @@ namespace mozilla {
 namespace layers {
 class LayerManager;
 }
+#ifdef MOZ_IPC
+namespace dom {
+class PBrowserChild;
+}
+#endif
 }
 
 /**
@@ -111,9 +117,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
+// 8bd36c8c-8218-4859-bfbc-ca5d78b52f7d
 #define NS_IWIDGET_IID \
-  { 0xe1dda370, 0xdf16, 0x4c92, \
-    { 0x9b, 0x86, 0x4b, 0xd9, 0xcf, 0xff, 0x4e, 0xb1 } }
+  { 0x8bd36c8c, 0x8218, 0x4859, \
+    { 0xbf, 0xbc, 0xca, 0x5d, 0x78, 0xb5, 0x2f, 0x7d } }
 
 /*
  * Window shadow styles
@@ -125,6 +132,13 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_STYLE_WINDOW_SHADOW_MENU             2
 #define NS_STYLE_WINDOW_SHADOW_TOOLTIP          3
 #define NS_STYLE_WINDOW_SHADOW_SHEET            4
+
+/**
+ * nsIWidget::OnIMEFocusChange should be called during blur,
+ * but other OnIME*Change methods should not be called
+ */
+#define NS_SUCCESS_IME_NO_UPDATES \
+    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_WIDGET, 1)
 
 /**
  * Cursor types.
@@ -183,10 +197,46 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 
 
 /**
+ * Preference for receiving IME updates
+ *
+ * If mWantUpdates is true, PuppetWidget will forward
+ * nsIWidget::OnIMETextChange and nsIWidget::OnIMESelectionChange to the chrome
+ * process. This incurs overhead from observers and IPDL. If the IME
+ * implementation on a particular platform doesn't care about OnIMETextChange
+ * and OnIMESelectionChange from content processes, they should set
+ * mWantUpdates to false to avoid these overheads.
+ *
+ * If mWantHints is true, PuppetWidget will forward the content of text fields
+ * to the chrome process to be cached. This way we return the cached content
+ * during query events. (see comments in bug 583976). This only makes sense
+ * for IME implementations that do use query events, otherwise there's a
+ * significant overhead. Platforms that don't use query events should set
+ * mWantHints to false.
+ */
+struct nsIMEUpdatePreference {
+
+  nsIMEUpdatePreference()
+    : mWantUpdates(PR_FALSE), mWantHints(PR_FALSE)
+  {
+  }
+  nsIMEUpdatePreference(PRBool aWantUpdates, PRBool aWantHints)
+    : mWantUpdates(aWantUpdates), mWantHints(aWantHints)
+  {
+  }
+  PRPackedBool mWantUpdates;
+  PRPackedBool mWantHints;
+};
+
+
+/**
  * The base class for all the widgets. It provides the interface for
  * all basic and necessary functionality.
  */
 class nsIWidget : public nsISupports {
+#ifdef MOZ_IPC
+  protected:
+    typedef mozilla::dom::PBrowserChild PBrowserChild;
+#endif
 
   public:
     typedef mozilla::layers::LayerManager LayerManager;
@@ -1191,6 +1241,9 @@ class nsIWidget : public nsISupports {
      *
      * If this returns NS_ERROR_*, OnIMETextChange and OnIMESelectionChange
      * and OnIMEFocusChange(PR_FALSE) will be never called.
+     *
+     * If this returns NS_SUCCESS_IME_NO_UPDATES, OnIMEFocusChange(PR_FALSE)
+     * will be called but OnIMETextChange and OnIMESelectionChange will NOT.
      */
     NS_IMETHOD OnIMEFocusChange(PRBool aFocus) = 0;
 
@@ -1208,6 +1261,11 @@ class nsIWidget : public nsISupports {
      * Selection has changed in the focused node
      */
     NS_IMETHOD OnIMESelectionChange(void) = 0;
+
+    /*
+     * Retrieves preference for IME updates
+     */
+    virtual nsIMEUpdatePreference GetIMEUpdatePreference() = 0;
 
     /*
      * Call this method when a dialog is opened which has a default button.
@@ -1238,9 +1296,39 @@ class nsIWidget : public nsISupports {
                                               PRBool aIsHorizontal,
                                               PRInt32 &aOverriddenDelta) = 0;
 
-    
+#ifdef MOZ_IPC
+    /**
+     * Return true if this process shouldn't use platform widgets, and
+     * so should use PuppetWidgets instead.  If this returns true, the
+     * result of creating and using a platform widget is undefined,
+     * and likely to end in crashes or other buggy behavior.
+     */
+    static bool
+    UsePuppetWidgets()
+    { return XRE_GetProcessType() == GeckoProcessType_Content; }
 
+    /**
+     * Allocate and return a "puppet widget" that doesn't directly
+     * correlate to a platform widget; platform events and data must
+     * be fed to it.  Currently used in content processes.  NULL is
+     * returned if puppet widgets aren't supported in this build
+     * config, on this platform, or for this process type.
+     *
+     * This function is called "Create" to match CreateInstance().
+     * The returned widget must still be nsIWidget::Create()d.
+     */
+    static already_AddRefed<nsIWidget>
+    CreatePuppetWidget(PBrowserChild *aTabChild);
+#endif
+
+    /**
+     * Reparent this widget's native widget.
+     * @param aNewParent the native widget of aNewParent is the new native
+     *                   parent widget
+     */
+    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
 protected:
+
     // keep the list of children.  We also keep track of our siblings.
     // The ownership model is as follows: parent holds a strong ref to
     // the first element of the list, and each element holds a strong

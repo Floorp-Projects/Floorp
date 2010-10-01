@@ -107,9 +107,12 @@ ToStringGuts(XPCCallContext& ccx)
 /***************************************************************************/
 
 static JSBool
-XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
-                       uintN argc, jsval *argv, jsval *vp)
+XPC_WN_Shared_ToString(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+
     if(IS_SLIM_WRAPPER(obj))
     {
         XPCNativeScriptableInfo *si =
@@ -142,13 +145,12 @@ XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
     
     XPCCallContext ccx(JS_CALLER, cx, obj);
     ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
-    ccx.SetArgsAndResultPtr(argc, argv, vp);
+    ccx.SetArgsAndResultPtr(argc, JS_ARGV(cx, vp), vp);
     return ToStringGuts(ccx);
 }
 
 static JSBool
-XPC_WN_Shared_ToSource(JSContext *cx, JSObject *obj,
-                       uintN argc, jsval *argv, jsval *vp)
+XPC_WN_Shared_ToSource(JSContext *cx, uintN argc, jsval *vp)
 {
     static const char empty[] = "({})";
     JSString *str = JS_NewStringCopyN(cx, empty, sizeof(empty)-1);
@@ -200,15 +202,18 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
 // double wrapped JSObjects.
 
 static JSBool
-XPC_WN_DoubleWrappedGetter(JSContext *cx, JSObject *obj,
-                           uintN argc, jsval *argv, jsval *vp)
+XPC_WN_DoubleWrappedGetter(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+
     MORPH_SLIM_WRAPPER(cx, obj);
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    NS_ASSERTION(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION, "bad function");
+    NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
 
     JSObject* realObject = GetDoubleWrappedJSObject(ccx, wrapper);
     if(!realObject)
@@ -959,6 +964,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
         js::Valueify(XPC_WN_JSOp_Enumerate),
         XPC_WN_JSOp_TypeOf_Object,
         nsnull, // trace
+        nsnull, // fix
         XPC_WN_JSOp_ThisObject,
         XPC_WN_JSOp_Clear
     }
@@ -1061,32 +1067,41 @@ XPC_WN_Helper_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
 }
 
 static JSBool
-XPC_WN_Helper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval)
+XPC_WN_Helper_Call(JSContext *cx, uintN argc, jsval *vp)
 {
-    // this is a hack to get the obj of the actual object not the object
-    // that JS thinks is the 'this' (which it passes as 'obj').
-    if(!(obj = JSVAL_TO_OBJECT(argv[-2])))
+    // N.B. we want obj to be the callee, not JS_THIS(cx, vp)
+    JSObject *obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+
+    XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, JSID_VOID,
+                       argc, JS_ARGV(cx, vp), vp);
+    if(!ccx.IsValid())
         return JS_FALSE;
+
+    JS_ASSERT(obj == ccx.GetFlattenedJSObject());
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
-    Call(wrapper, cx, obj, argc, argv, rval, &retval);
+    Call(wrapper, cx, obj, argc, JS_ARGV(cx, vp), vp, &retval);
     POST_HELPER_STUB
 }
 
 static JSBool
-XPC_WN_Helper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                        jsval *rval)
+XPC_WN_Helper_Construct(JSContext *cx, uintN argc, jsval *vp)
 {
-    // this is a hack to get the obj of the actual object not the object
-    // that JS thinks is the 'this' (which it passes as 'obj').
-    if(!(obj = JSVAL_TO_OBJECT(argv[-2])))
+    JSObject *obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if(!obj)
         return JS_FALSE;
+
+    XPCCallContext ccx(JS_CALLER, cx, obj, nsnull, JSID_VOID,
+                       argc, JS_ARGV(cx, vp), vp);
+    if(!ccx.IsValid())
+        return JS_FALSE;
+
+    JS_ASSERT(obj == ccx.GetFlattenedJSObject());
 
     SLIM_LOG_WILL_MORPH(cx, obj);
     PRE_HELPER_STUB_NO_SLIM
-    Construct(wrapper, cx, obj, argc, argv, rval, &retval);
+    Construct(wrapper, cx, obj, argc, JS_ARGV(cx, vp), vp, &retval);
     POST_HELPER_STUB
 }
 
@@ -1707,25 +1722,24 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
 /***************************************************************************/
 
 JSBool
-XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
-                  uintN argc, jsval *argv, jsval *vp)
+XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp)
 {
-    NS_ASSERTION(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION, "bad function");
-    JSObject* funobj = JSVAL_TO_OBJECT(argv[-2]);
+    NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
+    JSObject* funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+
+    JSObject* obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
 
 #ifdef DEBUG_slimwrappers
-    const char* funname = nsnull;
-    if(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION)
-    {
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-        funname = JS_GetFunctionName(fun);
-    }
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    const char* funname = JS_GetFunctionName(fun);
     SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);
 #endif
     if(IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-    XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOID, argc, argv, vp);
+    XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOID, argc, JS_ARGV(cx, vp), vp);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
@@ -1739,15 +1753,18 @@ XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
 }
 
 JSBool
-XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *vp)
+XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp)
 {
-    NS_ASSERTION(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION, "bad function");
-    JSObject* funobj = JSVAL_TO_OBJECT(argv[-2]);
+    NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
+    JSObject* funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+
+    JSObject* obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
 
 #ifdef DEBUG_slimwrappers
     const char* funname = nsnull;
-    if(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION)
+    if(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION)
     {
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         funname = JS_GetFunctionName(fun);
@@ -1767,13 +1784,13 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
     if(!XPCNativeMember::GetCallInfo(ccx, funobj, &iface, &member))
         return Throw(NS_ERROR_XPC_CANT_GET_METHOD_INFO, cx);
 
-    ccx.SetArgsAndResultPtr(argc, argv, vp);
+    ccx.SetArgsAndResultPtr(argc, JS_ARGV(cx, vp), vp);
     if(argc && member->IsWritableAttribute())
     {
         ccx.SetCallInfo(iface, member, JS_TRUE);
         JSBool retval = XPCWrappedNative::SetAttribute(ccx);
-        if(retval && vp)
-            *vp = argv[0];
+        if(retval)
+            *vp = JS_ARGV(cx, vp)[0];
         return retval;
     }
     // else...

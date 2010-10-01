@@ -116,13 +116,10 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
   if (!mAreas) {
     // Not using NS_GetContentList because this should not be cached
     mAreas = new nsContentList(this,
-                               nsGkAtoms::area,
                                mNodeInfo->NamespaceID(),
+                               nsGkAtoms::area,
+                               nsGkAtoms::area,
                                PR_FALSE);
-
-    if (!mAreas) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
   }
 
   NS_ADDREF(*aAreas = mAreas);

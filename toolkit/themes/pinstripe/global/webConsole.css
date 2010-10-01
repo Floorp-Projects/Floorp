@@ -40,6 +40,11 @@
 
 .hud-box {
     border-bottom: 1px solid #aaa;
+    text-shadow: none;
+}
+
+.hud-group label {
+    padding-left: 1em;
 }
 
 .hud-outer-wrapper {
@@ -62,6 +67,11 @@
     -moz-user-select: text;
     white-space: pre-wrap;
     -moz-user-focus: normal;
+}
+
+.hud-clickable {
+    cursor: pointer !important;
+    text-decoration: underline;
 }
 
 .hud-output-node .hud-network {
@@ -88,12 +98,11 @@
     color: red; font-weight: bold;
 }
 
-.hud-msg-node {    
+.hud-msg-node {
     width: 100%;
-    margin-top: 0.3em; 
-    margin-bottom: 0.3em; 
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
     padding-left: 0.3em;
-    border-bottom: 1px solid #eee;   
 }
 
 .hud-output-node {
@@ -169,10 +178,14 @@
 
 .hud-console-filter-toolbar {
     background: @scopeBarBackground@ !important;
-    border-bottom: @scopeBarSeparatorBorder@;
+    border-bottom: @scopeBarSeparatorBorder@ !important;
     padding: 0px 1px;
     -moz-appearance: none !important;
     -moz-box-align: center;
+}
+
+.hud-console-filter-toolbar:-moz-lwtheme {
+    border-top: @scopeBarSeparatorBorder@ !important;
 }
 
 .jsterm-close-button {

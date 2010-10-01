@@ -390,18 +390,13 @@ nsXPConnect::Collect()
     // cycle collection. So to compensate for JS_BeginRequest in
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
-    JS_ASSERT(cx->requestDepth >= 1);
-    JS_ASSERT(cx->thread->requestContext == cx);
-    if(cx->requestDepth >= 2)
-    {
-        JS_GC(cx);
-    }
-    else
-    {
-        JS_THREAD_DATA(cx)->conservativeGC.disable();
-        JS_GC(cx);
-        JS_THREAD_DATA(cx)->conservativeGC.enable();
-    }
+    JS_ASSERT(cx->thread->data.requestDepth >= 1);
+    JS_ASSERT(!cx->thread->data.conservativeGC.requestThreshold);
+    if(cx->thread->data.requestDepth == 1)
+        cx->thread->data.conservativeGC.requestThreshold = 1;
+    JS_GC(cx);
+    if(cx->thread->data.requestDepth == 1)
+        cx->thread->data.conservativeGC.requestThreshold = 0;
 }
 
 NS_IMETHODIMP
@@ -515,17 +510,6 @@ nsXPConnect::ToParticipant(void *p)
     if (!ADD_TO_CC(js_GetGCThingTraceKind(p)))
         return NULL;
     return this;
-}
-
-void
-nsXPConnect::CommenceShutdown()
-{
-#ifdef DEBUG
-    fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
-#endif
-    // Tell the JS engine that we are about to destroy the runtime.
-    JSRuntime* rt = mRuntime->GetJSRuntime();
-    JS_CommenceRuntimeShutDown(rt);
 }
 
 NS_IMETHODIMP
@@ -851,16 +835,19 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     return NS_OK;
 }
 
-PRInt32
-nsXPConnect::GetRequestDepth(JSContext* cx)
+unsigned
+nsXPConnect::GetOutstandingRequests(JSContext* cx)
 {
-    PRInt32 requestDepth = cx->outstandingRequests;
+    unsigned n = cx->outstandingRequests;
     XPCCallContext* context = mCycleCollectionContext;
-    // Ignore the request from the XPCCallContext we created for cycle
+    // Ignore the contribution from the XPCCallContext we created for cycle
     // collection.
     if(context && cx == context->GetJSContext())
-        --requestDepth;
-    return requestDepth;
+    {
+        JS_ASSERT(n);
+        --n;
+    }
+    return n;
 }
 
 class JSContextParticipant : public nsCycleCollectionParticipant
@@ -887,14 +874,13 @@ public:
     {
         JSContext *cx = static_cast<JSContext*>(n);
 
-        // Add cx->requestDepth to the refcount, if there are outstanding
+        // Add outstandingRequests to the count, if there are outstanding
         // requests the context needs to be kept alive and adding unknown
         // edges will ensure that any cycles this context is in won't be
         // collected.
-        PRInt32 refCount = nsXPConnect::GetXPConnect()->GetRequestDepth(cx) + 1;
+        unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
 
-        cb.DescribeNode(RefCounted, refCount, sizeof(JSContext),
-                        "JSContext");
+        cb.DescribeNode(RefCounted, refCount, sizeof(JSContext), "JSContext");
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
         if (cx->globalObject) {
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
@@ -962,6 +948,10 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
     SaveFrame sf(aJSContext);
 
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(ccx, aGlobalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
     xpc_InitJSxIDClassObjects();
 
     XPCWrappedNativeScope* scope =
@@ -1020,17 +1010,17 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         if(!tempGlobal)
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        JSAutoEnterCompartment autocompartment(cx, tempGlobal);
-
         *global = tempGlobal;
         *compartment = tempGlobal->getCompartment(cx);
+
+        js::SwitchToCompartment sc(cx, *compartment);
 
         JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(origin));
         map.Put(origin, *compartment);
     }
     else
     {
-        JSAutoEnterCompartment autocompartment(cx, *compartment);
+        js::SwitchToCompartment sc(cx, *compartment);
 
         tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1078,7 +1068,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                          aPrincipal, &tempGlobal, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSAutoEnterCompartment autocompartment(ccx, compartment);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(ccx, tempGlobal))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
     if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))
@@ -2722,6 +2714,16 @@ nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObject,
 
     NS_ADDREF(*aHolder = objHolder);
     return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
+{
+    XPCCallContext *ccx = XPCPerThreadData::GetData(nsnull)->GetCallContext();
+    *aJSContext = ccx->GetJSContext();
+
+    // Set to the caller in XPC_WN_Helper_{Call,Construct}
+    *aObj = ccx->GetFlattenedJSObject();
 }
 
 /* These are here to be callable from a debugger */

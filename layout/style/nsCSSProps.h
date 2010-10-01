@@ -88,6 +88,12 @@
 // nsCSSProps::OtherNameFor to get the other property.
 #define CSS_PROPERTY_REPORT_OTHER_NAME            (1<<7)
 
+// This property allows calc() between lengths and percentages and
+// stores such calc() expressions in its style structs (typically in an
+// nsStyleCoord, although this is not the case for 'background-position'
+// and 'background-size').
+#define CSS_PROPERTY_STORES_CALC                  (1<<8)
+
 /**
  * Types of animatable values.
  */

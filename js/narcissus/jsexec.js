@@ -1,5 +1,5 @@
 /* -*- Mode: JS; tab-width: 4; indent-tabs-mode: nil; -*-
- * vim: set sw=4 ts=8 et tw=78:
+ * vim: set sw=4 ts=4 et tw=78:
 /* ***** BEGIN LICENSE BLOCK *****
  *
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -85,7 +85,7 @@ Narcissus.interpreter = (function() {
             x2.callee = x.callee;
             x2.scope = x.scope;
             try {
-                x2.execute(parser.parse(new parser.DefaultBuilder, s));
+                x2.execute(parser.parse(new definitions.Builder, s));
                 return x2.result;
             } catch (e if e instanceof SyntaxError || isStackOverflow(e)) {
                 /*
@@ -119,7 +119,7 @@ Narcissus.interpreter = (function() {
 
             // NB: Use the STATEMENT_FORM constant since we don't want to push this
             // function onto the fake compilation context.
-            var x = { builder: new parser.DefaultBuilder };
+            var x = { builder: new definitions.Builder };
             var f = parser.FunctionDefinition(t, x, false, parser.STATEMENT_FORM);
             var s = {object: global, parent: null};
             return newFunction(f,{scope:s});
@@ -140,7 +140,7 @@ Narcissus.interpreter = (function() {
             return s;
         },
 
-        //Don't want to proxy RegExp or some features won't work
+        // Don't want to proxy RegExp or some features won't work
         RegExp: RegExp,
 
         // Extensions to ECMA.
@@ -163,34 +163,34 @@ Narcissus.interpreter = (function() {
         else { return (name in hostGlobal); }
     };
     globalHandler.get = function(receiver, name) {
-        if (narcissusGlobal.hasOwnProperty(name)) {
+        if (narcissusGlobal.hasOwnProperty(name))
             return narcissusGlobal[name];
-        }
+
         var globalFun = hostGlobal[name];
         if (definitions.isNativeCode(globalFun)) {
             // Enables native browser functions like 'alert' to work correctly.
             return Proxy.createFunction(
-                    definitions.makePassthruHandler(globalFun),
-                    function() { return globalFun.apply(hostGlobal, arguments); },
-                    function() {
-                        var a = arguments;
-                        switch (a.length) {
-                          case 0:
-                            return new globalFun();
-                          case 1:
-                            return new globalFun(a[0]);
-                          case 2:
-                            return new globalFun(a[0], a[1]);
-                          case 3:
-                            return new globalFun(a[0], a[1], a[2]);
-                          default:
-                            var argStr = "";
-                            for (var i=0; i<a.length; i++) {
-                                argStr += 'a[' + i + '],';
-                            }
-                            return eval('new ' + name + '(' + argStr.slice(0,-1) + ');');
+                definitions.makePassthruHandler(globalFun),
+                function() { return globalFun.apply(hostGlobal, arguments); },
+                function() {
+                    var a = arguments;
+                    switch (a.length) {
+                      case 0:
+                        return new globalFun();
+                      case 1:
+                        return new globalFun(a[0]);
+                      case 2:
+                        return new globalFun(a[0], a[1]);
+                      case 3:
+                        return new globalFun(a[0], a[1], a[2]);
+                      default:
+                        var argStr = "";
+                        for (var i=0; i<a.length; i++) {
+                            argStr += 'a[' + i + '],';
                         }
-                    });
+                        return eval('new ' + name + '(' + argStr.slice(0,-1) + ');');
+                    }
+                });
         }
         else { return globalFun; };
     };
@@ -307,6 +307,22 @@ Narcissus.interpreter = (function() {
                  : new TypeError(message);
     }
 
+    function evaluatePhis(n, v) {
+        var ps = n.phiUses;
+        if (!ps)
+            return;
+
+        for (var i = 0, j = ps.length; i < j; i++) {
+            // If the thing we're valuating is already equal to the thing we want
+            // to valuate it to, we have fully saturated (and have a cycle), and
+            // thus we should break.
+            if (ps[i].v === v)
+                break;
+            ps[i].v = v;
+            evaluatePhis(ps[i], v);
+        }
+    }
+
     function execute(n, x) {
         var a, f, i, j, r, s, t, u, v;
 
@@ -347,7 +363,8 @@ Narcissus.interpreter = (function() {
                                         u.filename, u.lineno);
                 }
                 if (u.readOnly || !hasDirectProperty(t, s)) {
-                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, u.readOnly);
+                    // Does not correctly handle 'const x;' -- see bug 592335.
+                    definitions.defineProperty(t, s, undefined, x.type !== EVAL_CODE, false);
                 }
             }
             // FALL THROUGH
@@ -498,7 +515,8 @@ Narcissus.interpreter = (function() {
             throw THROW;
 
           case RETURN:
-            x.result = getValue(execute(n.value, x));
+            // Check for returns with no return value
+            x.result = n.value ? getValue(execute(n.value, x)) : undefined;
             throw RETURN;
 
           case WITH:
@@ -816,6 +834,17 @@ Narcissus.interpreter = (function() {
             break;
 
           case IDENTIFIER:
+            // Identifiers with forward pointers that weren't intervened can't be
+            // lvalues, so we safely get the cached value directly.
+            var resolved = n.resolve();
+
+            if (n.forward && !resolved.intervened &&
+                !(resolved.type == FUNCTION &&
+                  resolved.functionForm == parser.DECLARED_FORM)) {
+                v = resolved.v;
+                break;
+            }
+
             for (s = x.scope; s; s = s.parent) {
                 if (n.value in s.object)
                     break;
@@ -836,6 +865,11 @@ Narcissus.interpreter = (function() {
           default:
             throw "PANIC: unknown operation " + n.type + ": " + uneval(n);
         }
+
+        if (n.backwards) {
+            n.v = v;
+        }
+        evaluatePhis(n, v);
 
         return v;
     }
@@ -860,6 +894,21 @@ Narcissus.interpreter = (function() {
         var proto = {};
         definitions.defineProperty(this, "prototype", proto, true);
         definitions.defineProperty(proto, "constructor", this, false, false, true);
+    }
+
+    function getPropertyDescriptor(obj, name) {
+        while (obj) {
+            if (({}).hasOwnProperty.call(obj, name))
+                return Object.getOwnPropertyDescriptor(obj, name);
+            obj = Object.getPrototypeOf(obj);
+        }
+    }
+
+    function getOwnProperties(obj) {
+        var map = {};
+        for (var name in Object.getOwnPropertyNames(obj))
+            map[name] = Object.getOwnPropertyDescriptor(obj, name);
+        return map;
     }
 
     // Returns a new function wrapped with a Proxy.
@@ -1023,7 +1072,7 @@ Narcissus.interpreter = (function() {
             return s;
 
         var x = new ExecutionContext(GLOBAL_CODE);
-        x.execute(parser.parse(new parser.DefaultBuilder, s, f, l));
+        x.execute(parser.parse(new definitions.Builder, s, f, l));
         return x.result;
     }
 
@@ -1059,7 +1108,7 @@ Narcissus.interpreter = (function() {
             }
         }
 
-        var b = new parser.DefaultBuilder;
+        var b = new definitions.Builder;
         var x = new ExecutionContext(GLOBAL_CODE);
 
         ExecutionContext.current = x;
@@ -1096,4 +1145,3 @@ Narcissus.interpreter = (function() {
     };
 
 }());
-

@@ -57,6 +57,7 @@ struct HasResultCodes
 {
     enum Result {
         MsgProcessed,
+        MsgDropped,
         MsgNotKnown,
         MsgNotAllowed,
         MsgPayloadError,
@@ -93,6 +94,7 @@ public:
         virtual void OnChannelClose() = 0;
         virtual void OnChannelError() = 0;
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
+        virtual void OnProcessingError(Result aError) = 0;
     };
 
 public:

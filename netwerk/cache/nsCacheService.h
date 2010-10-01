@@ -170,6 +170,7 @@ private:
     friend class nsCacheServiceAutoLock;
     friend class nsOfflineCacheDevice;
     friend class nsProcessRequestEvent;
+    friend class nsSetSmartSizeEvent;
 
     /**
      * Internal Methods

@@ -102,6 +102,13 @@ FULL_NSPR_LIBS=$(subst $(prefix),\$${sdkdir},$(shell $(DEPTH)/nsprpub/config/nsp
 NSPR_VERSION=$(shell $(DEPTH)/nsprpub/config/nspr-config --version)
 endif
 
+MOZ_XUL_LINK = -lxpcomglue_s -lxul -lxpcom
+ifdef JS_SHARED_LIBRARY
+MOZ_JS_LINK = -lmozjs
+else
+MOZ_JS_LINK = $(MOZ_XUL_LINK)
+endif
+
 $(warning FULL_NSPR_CFLAGS=$(FULL_NSPR_CFLAGS))
 
 ifndef MOZ_NATIVE_NSS
@@ -120,7 +127,9 @@ endif
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" \
 	-e "s|%NSPR_NAME%|$(NSPR_NAME)|" \
-	-e "s|%NSPR_VERSION%|$(NSPR_VERSION)|" > $@
+	-e "s|%NSPR_VERSION%|$(NSPR_VERSION)|" \
+	-e "s|%MOZ_XUL_LINK%|$(MOZ_XUL_LINK)|" \
+	-e "s|%MOZ_JS_LINK%|$(MOZ_JS_LINK)|" > $@
 	chmod 644 $@
 
 install:: $(pkg_config_files)

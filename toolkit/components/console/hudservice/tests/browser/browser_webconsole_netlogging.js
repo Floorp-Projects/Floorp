@@ -74,9 +74,22 @@ function testNetworkLogging()
     is(httpActivity.url, TEST_NETWORK_REQUEST_URI,
       "Logged network entry is page load");
     is(httpActivity.method, "GET", "Method is correct");
-    is(httpActivity.request.body, undefined, "No request body sent");
-      ok(httpActivity.response.body.indexOf("<!DOCTYPE HTML>") == 0,
-        "Response body's beginning is okay");
+    ok(!("body" in httpActivity.request), "No request body was stored");
+    ok(!("body" in httpActivity.response), "No response body was stored");
+
+    // Turn on logging of request bodies and check again.
+    HUDService.saveRequestAndResponseBodies = true;
+    browser.addEventListener("load", function onLoad () {
+      browser.removeEventListener("load", onLoad, true);
+      loggingGen.next();
+    }, true);
+    content.location.reload();
+    yield;
+
+    let httpActivity = lastFinishedRequest;
+    ok(httpActivity, "Page load was logged again");
+    ok(httpActivity.response.body.indexOf("<!DOCTYPE HTML>") == 0,
+      "Response body's beginning is okay");
 
     // Start xhr-get test.
     browser.contentWindow.wrappedJSObject.testXhrGet(loggingGen);
@@ -90,7 +103,7 @@ function testNetworkLogging()
       httpActivity = lastFinishedRequest;
       isnot(httpActivity, null, "testXhrGet() was logged");
       is(httpActivity.method, "GET", "Method is correct");
-      is(httpActivity.request.body, undefined, "No request body was sent");
+      is(httpActivity.request.body, null, "No request body was sent");
       is(httpActivity.response.body, TEST_DATA_JSON_CONTENT,
         "Response is correct");
       lastFinishedRequest = null;

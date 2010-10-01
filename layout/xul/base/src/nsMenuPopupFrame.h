@@ -235,8 +235,8 @@ public:
     return nsnull;
   }
 
-  nsIContent* GetTriggerContent() { return mTriggerContent; }
-  void SetTriggerContent(nsIContent* aTriggerContent) { mTriggerContent = aTriggerContent; }
+  static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
+  void ClearTriggerContent() { mTriggerContent = nsnull; }
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell
@@ -324,6 +324,9 @@ public:
 
   // Return true if the popup is positioned relative to an anchor.
   PRBool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
+
+  // Return the anchor if there is one.
+  nsIContent* GetAnchor() const { return mAnchorContent; }
 
   // Return the screen coordinates of the popup, or (-1, -1) if anchored.
   nsIntPoint ScreenPosition() const { return nsIntPoint(mScreenXPos, mScreenYPos); }

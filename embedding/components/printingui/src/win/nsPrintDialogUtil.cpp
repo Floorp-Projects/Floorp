@@ -476,20 +476,11 @@ static PropKeyInfo gAllPropKeys[] = {
 // to its parent window
 static void GetLocalRect(HWND aWnd, RECT& aRect, HWND aParent)
 {
-  RECT wr;
-  ::GetWindowRect(aParent, &wr);
-
-  RECT cr;
-  ::GetClientRect(aParent, &cr);
-
   ::GetWindowRect(aWnd, &aRect);
 
-  int borderH = (wr.bottom-wr.top+1) - (cr.bottom-cr.top+1);
-  int borderW = ((wr.right-wr.left+1) - (cr.right-cr.left+1))/2;
-  aRect.top    -= wr.top+borderH-borderW;
-  aRect.left   -= wr.left+borderW;
-  aRect.right  -= wr.left+borderW;
-  aRect.bottom -= wr.top+borderH-borderW;
+  // MapWindowPoints converts screen coordinates to client coordinates.
+  // It works correctly in both left-to-right and right-to-left windows.
+  ::MapWindowPoints(NULL, aParent, (LPPOINT)&aRect, 2);
 }
 
 //--------------------------------------------------------

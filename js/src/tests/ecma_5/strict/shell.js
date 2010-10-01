@@ -33,6 +33,36 @@ function completesNormally(code) {
 }
 
 /*
+ * returns(VALUE)(CODE) returns true if evaluating CODE (as eval code)
+ * completes normally (rather than throwing an exception), yielding a value
+ * strictly equal to VALUE.
+ */
+function returns(value) {
+  return function(code) {
+    try {
+      return eval(code) === value;
+    } catch (exception) {
+      return false;
+    }
+  }
+}
+
+/*
+ * returnsCopyOf(VALUE)(CODE) returns true if evaluating CODE (as eval code)
+ * completes normally (rather than throwing an exception), yielding a value
+ * that is deepEqual to VALUE.
+ */
+function returnsCopyOf(value) {
+  return function(code) {
+    try {
+      return deepEqual(eval(code), value);
+    } catch (exception) {
+      return false;
+    }
+  }
+}
+
+/*
  * raisesException(EXCEPTION)(CODE) returns true if evaluating CODE (as eval
  * code) throws an exception object whose prototype is
  * EXCEPTION.prototype, and returns false if it throws any other error

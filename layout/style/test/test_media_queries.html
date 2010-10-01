@@ -26,6 +26,13 @@ SimpleTest.waitForExplicitFinish();
 
 var iframe;
 
+function getZoomRatio() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  return utils.screenPixelsPerCSSPixel;
+}
+
 function run() {
   iframe = document.getElementById("subdoc");
   var subdoc = iframe.contentDocument;
@@ -328,6 +335,26 @@ function run() {
   should_not_apply("all and (max-device-aspect-ratio: " + low_dar_1 + ")");
   should_apply("not all and (max-device-aspect-ratio: " + low_dar_2 + ")");
   expression_should_not_be_parseable("max-device-aspect-ratio");
+
+  var real_dpr = 1.0 * getZoomRatio();
+  var high_dpr = 1.1 * getZoomRatio();
+  var low_dpr = 0.9 * getZoomRatio();
+  should_apply("all and (max--moz-device-pixel-ratio: " + real_dpr + ")");
+  should_apply("all and (min--moz-device-pixel-ratio: " + real_dpr + ")");
+  should_not_apply("not all and (max--moz-device-pixel-ratio: " + real_dpr + ")");
+  should_not_apply("not all and (min--moz-device-pixel-ratio: " + real_dpr + ")");
+  should_apply("all and (min--moz-device-pixel-ratio: " + low_dpr + ")");
+  should_apply("all and (max--moz-device-pixel-ratio: " + high_dpr + ")");
+  should_not_apply("all and (max--moz-device-pixel-ratio: " + low_dpr + ")");
+  should_not_apply("all and (min--moz-device-pixel-ratio: " + high_dpr + ")");
+  should_apply("not all and (max--moz-device-pixel-ratio: " + low_dpr + ")");
+  should_apply("not all and (min--moz-device-pixel-ratio: " + high_dpr + ")");
+  should_apply("(-moz-device-pixel-ratio: " + real_dpr + ")");
+  should_not_apply("(-moz-device-pixel-ratio: " + high_dpr + ")");
+  should_not_apply("(-moz-device-pixel-ratio: " + low_dpr + ")");
+  should_apply("(-moz-device-pixel-ratio)");
+  expression_should_not_be_parseable("min--moz-device-pixel-ratio");
+  expression_should_not_be_parseable("max--moz-device-pixel-ratio");
 
   features = [ "max-aspect-ratio", "device-aspect-ratio" ];
   for (i in features) {

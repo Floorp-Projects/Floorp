@@ -1527,8 +1527,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   } else
 #endif
 
-  /* If there is any opacity, wrap it up in an opacity list. */
-  if (disp->mOpacity < 1.0f) {
+  /* If there is any opacity, wrap it up in an opacity list.
+   * If there's nothing in the list, don't add anything.
+   */
+  if (disp->mOpacity < 1.0f && !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
@@ -1536,10 +1538,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   /* If we're going to apply a transformation, wrap everything in an
-   * nsDisplayTransform.
+   * nsDisplayTransform. If there's nothing in the list, don't add anything.
    */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-      disp->HasTransform()) {
+      disp->HasTransform() && !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
@@ -3216,88 +3218,6 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
   skipWhitespace = PR_TRUE;
 }
 
-/**
- * This class does calc() computation of lengths and percents separately,
- * with support for min() and max().  However, its support for min() and
- * max() is fundamentally broken in cases where percentages and lengths
- * are mixed.
- *
- * It is used only for intrinsic width computation, where being an
- * approximation is sometimes ok (although it would be good to fix at
- * some point in the future).
- */
-struct LengthPercentPairWithMinMaxCalcOps : public css::StyleCoordInputCalcOps
-{
-  struct result_type {
-    nscoord mLength;
-    float mPercent;
-
-    result_type(nscoord aLength, float aPercent)
-      : mLength(aLength), mPercent(aPercent) {}
-  };
-
-  result_type ComputeLeafValue(const nsStyleCoord& aValue)
-  {
-    if (aValue.GetUnit() == eStyleUnit_Percent) {
-      return result_type(0, aValue.GetPercentValue());
-    }
-    return result_type(aValue.GetCoordValue(), 0.0f);
-  }
-
-  result_type
-  MergeAdditive(nsCSSUnit aCalcFunction,
-                result_type aValue1, result_type aValue2)
-  {
-    if (aCalcFunction == eCSSUnit_Calc_Plus) {
-      return result_type(NSCoordSaturatingAdd(aValue1.mLength,
-                                              aValue2.mLength),
-                         aValue1.mPercent + aValue2.mPercent);
-    }
-    if (aCalcFunction == eCSSUnit_Calc_Minus) {
-      return result_type(NSCoordSaturatingSubtract(aValue1.mLength,
-                                                   aValue2.mLength, 0),
-                         aValue1.mPercent - aValue2.mPercent);
-    }
-    if (aCalcFunction == eCSSUnit_Calc_Minimum) {
-      // This is fundamentally incorrect; see the comment above the
-      // start of the class definition.
-      return result_type(NS_MIN(aValue1.mLength, aValue2.mLength),
-                         NS_MIN(aValue1.mPercent, aValue2.mPercent));
-    }
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Maximum,
-                      "unexpected unit");
-    // This is fundamentally incorrect; see the comment above the
-    // start of the class definition.
-    return result_type(NS_MAX(aValue1.mLength, aValue2.mLength),
-                       NS_MAX(aValue1.mPercent, aValue2.mPercent));
-  }
-
-  result_type
-  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
-                       float aValue1, result_type aValue2)
-  {
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_L,
-                      "unexpected unit");
-    return result_type(NSCoordSaturatingMultiply(aValue2.mLength, aValue1),
-                       aValue1 * aValue2.mPercent);
-  }
-
-  result_type
-  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
-                       result_type aValue1, float aValue2)
-  {
-    NS_ABORT_IF_FALSE(aCalcFunction == eCSSUnit_Calc_Times_R ||
-                      aCalcFunction == eCSSUnit_Calc_Divided,
-                      "unexpected unit");
-    if (aCalcFunction == eCSSUnit_Calc_Divided) {
-      aValue2 = 1.0f / aValue2;
-    }
-    return result_type(NSCoordSaturatingMultiply(aValue1.mLength, aValue2),
-                       aValue1.mPercent * aValue2);
-  }
-
-};
-
 static void
 AddCoord(const nsStyleCoord& aStyle,
          nsIRenderingContext* aRenderingContext,
@@ -3305,20 +3225,35 @@ AddCoord(const nsStyleCoord& aStyle,
          nscoord* aCoord, float* aPercent,
          PRBool aClampNegativeToZero)
 {
-  if (!aStyle.IsCoordPercentCalcUnit()) {
-    return;
+  switch (aStyle.GetUnit()) {
+    case eStyleUnit_Coord: {
+      NS_ASSERTION(!aClampNegativeToZero || aStyle.GetCoordValue() >= 0,
+                   "unexpected negative value");
+      *aCoord += aStyle.GetCoordValue();
+      return;
+    }
+    case eStyleUnit_Percent: {
+      NS_ASSERTION(!aClampNegativeToZero || aStyle.GetPercentValue() >= 0.0f,
+                   "unexpected negative value");
+      *aPercent += aStyle.GetPercentValue();
+      return;
+    }
+    case eStyleUnit_Calc: {
+      const nsStyleCoord::Calc *calc = aStyle.GetCalcValue();
+      if (aClampNegativeToZero) {
+        // This is far from ideal when one is negative and one is positive.
+        *aCoord += NS_MAX(calc->mLength, 0);
+        *aPercent += NS_MAX(calc->mPercent, 0.0f);
+      } else {
+        *aCoord += calc->mLength;
+        *aPercent += calc->mPercent;
+      }
+      return;
+    }
+    default: {
+      return;
+    }
   }
-
-  LengthPercentPairWithMinMaxCalcOps ops;
-  LengthPercentPairWithMinMaxCalcOps::result_type pair =
-    css::ComputeCalc(aStyle, ops);
-  if (aClampNegativeToZero) {
-    // This is far from ideal when one is negative and one is positive.
-    pair.mLength = NS_MAX(pair.mLength, 0);
-    pair.mPercent = NS_MAX(pair.mPercent, 0.0f);
-  }
-  *aCoord += pair.mLength;
-  *aPercent += pair.mPercent;
 }
 
 /* virtual */ nsIFrame::IntrinsicWidthOffsetData
@@ -3326,10 +3261,6 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result;
 
-  // FIXME: The handling of calc() with min() and max() by AddCoord
-  // is a rough approximation.  It could be improved, but only by
-  // changing the IntrinsicWidthOffsets API substantially.  See the
-  // comment above LengthPercentPairWithMinMaxCalcOps.
   const nsStyleMargin *styleMargin = GetStyleMargin();
   AddCoord(styleMargin->mMargin.GetLeft(), aRenderingContext, this,
            &result.hMargin, &result.hPctMargin, PR_FALSE);
@@ -4325,6 +4256,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
   nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
   if (boxShadows) {
     nsRect shadows;
+    PRInt32 A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
     for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
       nsRect tmpRect(nsPoint(0, 0), aNewSize);
       nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
@@ -4332,10 +4264,11 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
       // inset shadows are never painted outside the frame
       if (shadow->mInset)
         continue;
-      nscoord outsetRadius = shadow->mRadius + shadow->mSpread;
 
       tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
-      tmpRect.Inflate(outsetRadius, outsetRadius);
+      tmpRect.Inflate(shadow->mSpread, shadow->mSpread);
+      tmpRect.Inflate(
+        nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
 
       shadows.UnionRect(shadows, tmpRect);
     }
@@ -5417,6 +5350,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
     {
       PRBool eatingNonRenderableWS = PR_FALSE;
       PRBool done = PR_FALSE;
+      PRBool jumpedLine = PR_FALSE;
       
       while (!done) {
         PRBool movingInFrameDirection =
@@ -5428,7 +5362,6 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           done = current->PeekOffsetCharacter(movingInFrameDirection, &offset); 
 
         if (!done) {
-          PRBool jumpedLine;
           result =
             current->GetFrameFromDirection(aPos->mDirection, aPos->mVisual,
                                            aPos->mJumpLines, aPos->mScrollViewStop,
@@ -5449,6 +5382,15 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       aPos->mResultContent = range.content;
       // Output offset is relative to content, not frame
       aPos->mContentOffset = offset < 0 ? range.end : range.start + offset;
+      // If we're dealing with a text frame and moving backward positions us at
+      // the end of that line, decrease the offset by one to make sure that
+      // we're placed before the linefeed character on the previous line.
+      if (offset < 0 && jumpedLine &&
+          aPos->mDirection == eDirPrevious &&
+          current->GetStyleText()->NewlineIsSignificant() &&
+          current->HasTerminalNewline()) {
+        --aPos->mContentOffset;
+      }
       
       break;
     }
@@ -5676,6 +5618,11 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       FrameContentRange range = GetRangeForFrame(targetFrame.frame);
       aPos->mResultContent = range.content;
       aPos->mContentOffset = endOfLine ? range.end : range.start;
+      if (endOfLine && targetFrame.frame->HasTerminalNewline()) {
+        // Do not position the caret after the terminating newline if we're
+        // trying to move to the end of line (see bug 596506)
+        --aPos->mContentOffset;
+      }
       aPos->mResultFrame = targetFrame.frame;
       aPos->mAttachForward = (aPos->mContentOffset == range.start);
       if (!range.content)

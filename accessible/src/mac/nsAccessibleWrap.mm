@@ -86,17 +86,6 @@ nsAccessibleWrap::GetNativeInterface (void **aOutInterface)
   return NS_ERROR_FAILURE;
 }
 
-// get the native NSWindow we reside in.
-void
-nsAccessibleWrap::GetNativeWindow (void **aOutNativeWindow)
-{
-  *aOutNativeWindow = nsnull;
-
-  nsDocAccessible *docAcc = GetDocAccessible();
-  if (docAcc)
-    docAcc->GetWindowHandle (aOutNativeWindow);
-}
-
 // overridden in subclasses to create the right kind of object. by default we create a generic
 // 'mozAccessible' node.
 objc_class*

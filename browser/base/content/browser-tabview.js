@@ -101,6 +101,11 @@ let TabView = {
       Services.obs.addObserver(observer, "quit-application-requested", false);
     }
   },
+  
+  // ----------
+  getContentWindow: function TabView_getContentWindow() {
+    return this._window;
+  },
 
   // ----------
   isVisible: function() {
@@ -136,6 +141,20 @@ let TabView = {
     else 
       this.show();
   },
+  
+  getActiveGroupName: function Tabview_getActiveGroupName() {
+    // We get the active group this way, instead of querying
+    // GroupItems.getActiveGroupItem() because the tabSelect event
+    // will not have happened by the time the browser tries to
+    // update the title.
+    let activeTab = window.gBrowser.selectedTab;
+    if (activeTab.tabItem && activeTab.tabItem.parent){
+      let groupName = activeTab.tabItem.parent.getTitle();
+      if (groupName)
+        return groupName;
+    }
+    return null;
+  },  
 
   // ----------
   updateContextMenu: function(tab, popup) {
@@ -150,8 +169,11 @@ let TabView = {
       let activeGroup = tab.tabItem.parent;
       let groupItems = self._window.GroupItems.groupItems;
 
-      groupItems.forEach(function(groupItem) { 
-        if (groupItem.getTitle().length > 0 && 
+      groupItems.forEach(function(groupItem) {
+        // if group has title, it's not hidden and there is no active group or
+        // the active group id doesn't match the group id, a group menu item
+        // would be added.
+        if (groupItem.getTitle().length > 0 && !groupItem.hidden &&
             (!activeGroup || activeGroup.id != groupItem.id)) {
           let menuItem = self._createGroupMenuItem(groupItem);
           popup.insertBefore(menuItem, separator);
@@ -190,47 +212,6 @@ let TabView = {
         return;
 
       let charCode = event.charCode;
-#ifdef XP_MACOSX
-      // if a text box in a webpage has the focus, the event.altKey would
-      // return false so we are depending on the charCode here.
-      if (!event.ctrlKey && !event.metaKey && !event.shiftKey &&
-          charCode == 160) { // alt + space
-#else
-      if (event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && 
-          charCode == KeyEvent.DOM_VK_SPACE) { // ctrl + space
-#endif
-
-        // Don't handle this event if it's coming from a node that might allow
-        // multiple keyboard selection like selects or trees
-        let node = event.target;
-        switch (node.namespaceURI) {
-          case "http://www.w3.org/1999/xhtml":
-            // xhtml:select only allows multiple when the attr is set
-            if (node.localName == "select" && node.hasAttribute("multiple"))
-              return;
-            break;
-
-          case "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul":
-            switch (node.localName) {
-              case "listbox":
-                // xul:listbox is by default single
-                if (node.getAttribute("seltype") == "multiple")
-                  return;
-                break;
-              case "tree":
-                // xul:tree is by default multiple
-                if (node.getAttribute("seltype") != "single")
-                  return;
-                break;
-            }
-        }
-
-        event.stopPropagation();
-        event.preventDefault();
-        self.show();
-        return;
-      }
-
       // Control (+ Shift) + `
       if (event.ctrlKey && !event.metaKey && !event.altKey &&
           (charCode == 96 || charCode == 126)) {

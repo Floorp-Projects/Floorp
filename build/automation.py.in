@@ -212,6 +212,8 @@ class Automation(object):
                  universal_newlines=False,
                  startupinfo=None,
                  creationflags=0):
+      args = automationutils.wrapCommand(args)
+      print "args: %s" % args
       subprocess.Popen.__init__(self, args, bufsize, executable,
                                 stdin, stdout, stderr,
                                 preexec_fn, close_fds,
@@ -336,6 +338,7 @@ user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("dom.max_chrome_script_run_time", 0);
 user_pref("dom.popup_maximum", -1);
+user_pref("dom.successive_dialog_time_limit", 0);
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
@@ -343,9 +346,11 @@ user_pref("shell.checkDefaultClient", false);
 user_pref("browser.warnOnQuit", false);
 user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
+user_pref("devtools.errorconsole.enabled", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
-user_pref("javascript.options.jit.content", true);
+user_pref("javascript.options.tracejit.content", true);
+user_pref("javascript.options.methodjit.content", true);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
 user_pref("test.mousescroll", true);
@@ -373,6 +378,9 @@ user_pref("urlclassifier.updateinterval", 172800);
 user_pref("browser.safebrowsing.provider.0.gethashURL", "http://%(server)s/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.provider.0.keyURL", "http://%(server)s/safebrowsing-dummy/newkey");
 user_pref("browser.safebrowsing.provider.0.updateURL", "http://%(server)s/safebrowsing-dummy/update");
+// Point update checks to the local testing server for fast failures
+user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL");
+user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
@@ -567,6 +575,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
+
+    # Don't do this for Mac since it makes the Mac OS X 10.5 (32-bit)
+    # trace-malloc leak test hang.  (It doesn't make the 10.6 (64-bit)
+    # leak test hang, though.)
+    if not self.IS_MAC:
+      env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
     return env
 
   if IS_WIN32:

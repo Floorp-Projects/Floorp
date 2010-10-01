@@ -50,6 +50,28 @@
 JS_BEGIN_EXTERN_C
 
 /*
+ * Debug mode is a compartment-wide mode that enables a debugger to attach
+ * to and interact with running methodjit-ed frames. In particular, it causes
+ * every function to be compiled as if an eval was present (so eval-in-frame)
+ * can work, and it ensures that functions can be re-JITed for other debug
+ * features. In general, it is not safe to interact with frames that were live
+ * before debug mode was enabled. For this reason, it is also not safe to
+ * enable debug mode while frames are live.
+ */
+
+/* Get current state of debugging mode. */
+extern JS_PUBLIC_API(JSBool)
+JS_GetDebugMode(JSContext *cx);
+
+/* Turn on debugging mode, ignoring the presence of live frames. */
+extern JS_FRIEND_API(JSBool)
+js_SetDebugMode(JSContext *cx, JSBool debug);
+
+/* Turn on debugging mode. */
+extern JS_PUBLIC_API(JSBool)
+JS_SetDebugMode(JSContext *cx, JSBool debug);
+
+/*
  * Unexported library-private helper used to unpatch all traps in a script.
  * Returns script->code if script has no traps, else a JS_malloc'ed copy of
  * script->code which the caller must JS_free, or null on JS_malloc OOM.
@@ -111,24 +133,16 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj);
 extern void
 js_SweepWatchPoints(JSContext *cx);
 
-extern JSScopeProperty *
-js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);
-
 #ifdef __cplusplus
 
-/*
- * NB: callers outside of jsdbgapi.c must pass non-null scope.
- */
-extern js::PropertyOp
-js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
-                    const JSScopeProperty *sprop);
+extern const js::Shape *
+js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id);
 
 extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
-                     js::Value *rval);
+js_watch_set_wrapper(JSContext *cx, uintN argc, js::Value *vp);
 
 extern js::PropertyOp
 js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, js::PropertyOp setter);
@@ -174,9 +188,6 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun);
 extern JS_PUBLIC_API(JSNative)
 JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
 
-extern JS_PUBLIC_API(JSFastNative)
-JS_GetFunctionFastNative(JSContext *cx, JSFunction *fun);
-
 extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
 
@@ -206,22 +217,8 @@ JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
  * Return a weak reference to fp's principals.  A null return does not denote
  * an error, it means there are no principals.
  */
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
-
-/*
- * This API is like JS_StackFramePrincipals(cx, caller), except that if
- * cx->runtime->findObjectPrincipals is non-null, it returns the weaker of
- * the caller's principals and the object principals of fp's callee function
- * object (fp->argv[-2]), which is eval, Function, or a similar eval-like
- * method.  The caller parameter should be JS_GetScriptedCaller(cx, fp).
- *
- * All eval-like methods must use JS_EvalFramePrincipals to acquire a weak
- * reference to the correct principals for the eval call to be secure, given
- * an embedding that calls JS_SetObjectPrincipalsFinder (see jsapi.h).
- */
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller);
+extern JSPrincipals *
+js_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
 
 JSPrincipals *
 js_EvalFramePrincipals(JSContext *cx, JSObject *callee, JSStackFrame *caller);
@@ -236,7 +233,7 @@ extern JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp);
+JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp);
 
 /* this is deprecated, use JS_GetFrameScopeChain instead */
 extern JS_PUBLIC_API(JSObject *)
@@ -380,11 +377,13 @@ typedef struct JSPropertyDescArray {
     JSPropertyDesc  *array;     /* alloc'd by Get, freed by Put */
 } JSPropertyDescArray;
 
+typedef struct JSScopeProperty JSScopeProperty;
+
 extern JS_PUBLIC_API(JSScopeProperty *)
 JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *shape,
                    JSPropertyDesc *pd);
 
 extern JS_PUBLIC_API(JSBool)
@@ -493,6 +492,9 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 
+extern JS_FRIEND_API(void)
+js_RevertVersion(JSContext *cx);
+
 extern JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt);
 
@@ -518,66 +520,53 @@ extern JS_PUBLIC_API(JSBool)
 JS_DisconnectShark();
 
 extern JS_FRIEND_API(JSBool)
-js_StopShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval);
+js_StopShark(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_StartShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_StartShark(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_ConnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                jsval *rval);
+js_ConnectShark(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_DisconnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                   jsval *rval);
+js_DisconnectShark(JSContext *cx, uintN argc, jsval *vp);
 
 #endif /* MOZ_SHARK */
 
 #ifdef MOZ_CALLGRIND
 
 extern JS_FRIEND_API(JSBool)
-js_StopCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval);
+js_StopCallgrind(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_StartCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                  jsval *rval);
+js_StartCallgrind(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_DumpCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval);
+js_DumpCallgrind(JSContext *cx, uintN argc, jsval *vp);
 
 #endif /* MOZ_CALLGRIND */
 
 #ifdef MOZ_VTUNE
 
 extern JS_FRIEND_API(JSBool)
-js_StartVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_StartVtune(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_StopVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval);
+js_StopVtune(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_PauseVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_PauseVtune(JSContext *cx, uintN argc, jsval *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_ResumeVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval);
+js_ResumeVtune(JSContext *cx, uintN argc, jsval *vp);
 
 #endif /* MOZ_VTUNE */
 
 #ifdef MOZ_TRACEVIS
 extern JS_FRIEND_API(JSBool)
-js_InitEthogram(JSContext *cx, JSObject *obj,
-                uintN argc, jsval *argv, jsval *rval);
+js_InitEthogram(JSContext *cx, uintN argc, jsval *vp);
 extern JS_FRIEND_API(JSBool)
-js_ShutdownEthogram(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *rval);
+js_ShutdownEthogram(JSContext *cx, uintN argc, jsval *vp);
 #endif /* MOZ_TRACEVIS */
 
 JS_END_EXTERN_C

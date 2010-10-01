@@ -485,8 +485,8 @@ typedef JSUintPtr JSUword;
 ***********************************************************************/
 
 #ifdef __GNUC__
-# define JS_FUNC_TO_DATA_PTR(type, fun) (__extension__ (type) (fun))
-# define JS_DATA_TO_FUNC_PTR(type, ptr) (__extension__ (type) (ptr))
+# define JS_FUNC_TO_DATA_PTR(type, fun) (__extension__ (type) (size_t) (fun))
+# define JS_DATA_TO_FUNC_PTR(type, ptr) (__extension__ (type) (size_t) (ptr))
 #else
 /* Use an extra (void *) cast for MSVC. */
 # define JS_FUNC_TO_DATA_PTR(type, fun) ((type) (void *) (fun))

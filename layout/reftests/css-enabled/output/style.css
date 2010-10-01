@@ -1,0 +1,12 @@
+output {
+  background-color: green;
+}
+
+output:enabled {
+  background-color: red;
+}
+
+/* ref should always be green! */
+.ref:enabled {
+  background-color: green;
+}

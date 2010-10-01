@@ -41,7 +41,7 @@
 const SEARCH_ENGINES = {
   "Google": {
     image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAYCAMAAABwdHsxAAADAFBMVEVogZYwjM9NtOspS2u0KAfYZBb3rRTiurCMjYrUWhIaPlzDNgfVRgjaVgvoizTI9f2ta17/9Wzrs0v46M/+7VOW6vrJQAsBLochdr+nmF/++o+UDQK88vzaYQarq6scarXT+f68vLzjdRrjewp5d3WqGATkUwaTq9uk7PnUaydkICTJSBD4uCDgZAz9+LiK6PjRZFH33Xv01qbrlxznhgvwx5gCBCbOUhLjfCzhaxHztXG8RhX93UP5yTRGl9QhRGT5wigkRmXniRj70zoKWrT2yUdqjs3UhzXvl0JwU0teu+EBElGD2fH83FZo1vTPilT0vDmd0Z3dbhrWrHLhcQir8PzTTDfPrVGrajv03cf5+vkwUG6z8PrSUw571uzvpCGPTzBsPDMxMEcHagXrkg7voBHf/P8FGHHhzrbyryOQZAeDNCudnZyTJBL2zlT+xByoUCG1wspyY1nRiH7STA3yiB7Jjx/pqT/Pz8/7lhDvfBxTUkl95PY/RE0DI2SQbT7LzJjxdg1OMTzutynnm2v+5DWsNBX+/tVDqOa7tnX57OPGYSHysziEo5a3XBe3l3j+0SXCoaCsjTL++fMgQmLmxXdv0ezsv0ycQxf8p0X1hwrenDU/Tnj9//tkyNj3+fX89fDv22QXHEWQydee7/xEdKG84uRWi5bwaxyK3/L++/iU5PMWM2Q6GS7UXg81l9gmSGgXOVewsKO3x+ECK8h8x3j7/fs5bMBke6kuTmwoRV/SbArKeSrB1snY373x5aSIRz85YIvragDD5+lnorUvSWF80PCQr6o4KGKysrIeQmIgXJ1Vb4j///8+XXjs7ewaUZSutsKFkqY4T3IhXqgYSHtwiJwUNVLExcbk5eU4SGcrcLEsP1wPKV77+/vy8/NBkcBmrN+drLklNGIONHQ5WXVxyuk0VXHHz9dmxuonZahTrNqPobEcP19CVXMURIljzvE/odz29vYcP3VieZHo6OhCYHxOW29y2vNYwe79/f33+PnU2eExgcLX2Nje397NKLzjAAACjElEQVR42q2UMWvbQBTHPRgro6CDKIJOPQSeVH+CDuZ2E3BIVmNkBB5agTF0NYV00y7jdMji0XqxvNljAzmEPASrQ0Vwhk41tPZiC6l3OjmNXYeYujfo3nF3v/fe/+le5hX5HyOTzv1Of88bnXelq0q8C9NRHMcpFrHd3gPTD0qV17uisWeDqE269gyguU88pcrRDowNXrqYTt1/xkQwXi8mZ2Q/TO9vDNa2FVkJLUPocDsYDoe1lB6EURzZ4RrDThHi0RF7mRh+bFGirCEYCJnMLpzUase5XI2aZxhjKM6wS64YJlDZqWxAPEq6ztjFm01KEzGdTxGirgoNFpRfrU7IEg8IiQFoqRlmqYp0p4VGDEO8zB1sYoLyKJlFVCdxjotwntNpISJqYfjKMQKi1fDVvJlqg2G6gWmh98l8iuRoWL1O7Bc53b2TJoSFc88xquwKqig8SGyDFvxRMGyriEdDUF140+DR9HN6hGHOBJIsjinLpvHoV84EIPGCL/ClAzOiojzfKeejz9WX3H6ru98Td6GWaqOi3lbBQQsTlyzzOU1ajjimTgpUkxRDN7Uvtl1kmTGMgT5+28BcAAC/SBSJBl7mWS1kkwRVnpWvs8n1HP6nMswFQmJyp71+DK4mgZ0ssEarFsiyQe0sg9V03acnG2luClgcQx+DKaOyTwTjAUNiS5OKWFGwZbGYw5GsiqKYNI6erp8XTo7TGigAToecVSofjvrEzMuyPBIe9xvXux2MvXCZZroQhNU6a7/mJ5VsK87l+FaD2TLpTvTTbTbj7bb13PiJZ0zAT+u6PtH9nhuKxD270s0hGAfSBOCgaJLHxDrlffcQzOoXSKyYjksOwdDWOLcG2H5i8zf27La6kVLrqwAAAABJRU5ErkJggg=="
-  , params: "source=hp"
+  , params: "source=hp&channel=np"
   , links: {
       advanced: "http://www.google.com/advanced_search"
     , preferences: "http://www.google.com/preferences"
@@ -54,16 +54,31 @@ const SEARCH_ENGINES = {
   }
 };
 
+// The process of adding a new default snippet involves:
+//   * add a new entity to aboutHome.dtd
+//   * add a <span/> for it in aboutHome.xhtml
+//   * add an entry here in the proper ordering (based on spans)
+// The <a/> part of the snippet will be linked to the corresponding url.
+const DEFAULT_SNIPPETS_URLS = [
+  "http://www.mozilla.com/firefox/4.0/features"
+, "https://addons.mozilla.org/firefox/?browse=featured"
+];
+
+const SNIPPETS_UPDATE_INTERVAL_MS = 86400000; // 1 Day.
+
 let gSearchEngine;
 
 function onLoad(event)
 {
   setupSearchEngine();
   document.getElementById("searchText").focus();
+
+  loadSnippets();
 }
 
 
-function onSearchSubmit(aEvent) {
+function onSearchSubmit(aEvent)
+{
   let searchTerms = document.getElementById("searchText").value;
   if (gSearchEngine && searchTerms.length > 0) {
     const SEARCH_TOKENS = {
@@ -80,7 +95,8 @@ function onSearchSubmit(aEvent) {
 }
 
 
-function setupSearchEngine() {
+function setupSearchEngine()
+{
   gSearchEngine = JSON.parse(localStorage["search-engine"]);
 
   // Look for extended information, like logo and links.
@@ -113,5 +129,65 @@ function setupSearchEngine() {
       prefsLink.setAttribute("href", gSearchEngine.links.preferences);
       prefsLink.hidden = false;
     }
+  }
+}
+
+function loadSnippets()
+{
+  // Check last snippets update.
+  let lastUpdate = localStorage["snippets-last-update"];
+  let updateURL = localStorage["snippets-update-url"];
+  if (updateURL && (!lastUpdate ||
+                    Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
+    // Try to update from network.
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', updateURL, true);
+    xhr.onerror = function (event) {
+      showSnippets();
+    };
+    xhr.onload = function (event)
+    {
+      if (xhr.status == 200) {
+        localStorage["snippets"] = xhr.responseText;
+        localStorage["snippets-last-update"] = Date.now();
+      }
+      showSnippets();
+    };
+    xhr.send(null);
+  } else {
+    showSnippets();
+  }
+}
+
+function showSnippets()
+{
+  let snippets = localStorage["snippets"];
+  if (snippets) {
+    let snippetsElt = document.getElementById("snippets");
+    snippetsElt.innerHTML = snippets;
+    // Scripts injected by innerHTML are inactive, so we have to relocate them
+    // through DOM manipulation to activate their contents.
+    Array.forEach(snippetsElt.getElementsByTagName("script"), function(elt) {
+      let relocatedScript = document.createElement("script");
+      relocatedScript.type = "text/javascript;version=1.8";
+      relocatedScript.text = elt.text;
+      snippetsElt.replaceChild(relocatedScript, elt);
+    });
+    snippetsElt.hidden = false;
+  } else {
+    // If there are no saved snippets, show one of the default ones.
+    let defaultSnippetsElt = document.getElementById("defaultSnippets");
+    let entries = defaultSnippetsElt.querySelectorAll("span");
+    // Choose a random snippet.  Assume there is always at least one.
+    let randIndex = Math.round(Math.random() * (entries.length - 1));
+    let entry = entries[randIndex];
+    // Inject url in the eventual link.
+    if (DEFAULT_SNIPPETS_URLS[randIndex]) {
+      let links = entry.getElementsByTagName("a");
+      if (links.length != 1)
+        return; // Something is messed up in this entry, we support just 1 link.
+      links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
+    }
+    entry.hidden = false;
   }
 }

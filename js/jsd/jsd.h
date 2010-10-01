@@ -340,7 +340,9 @@ extern void JSD_ASSERT_VALID_OBJECT(JSDObject* jsdobj);
 extern JSDContext*
 jsd_DebuggerOnForUser(JSRuntime*         jsrt,
                       JSD_UserCallbacks* callbacks,
-                      void*              user);
+                      void*              user,
+                      JSObject*          scopeobj);
+
 extern JSDContext*
 jsd_DebuggerOn(void);
 
@@ -706,11 +708,6 @@ extern JSDValue*
 jsd_GetScopeChainForStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe);
-
-extern JSBool
-jsd_IsStackFrameNative(JSDContext* jsdc, 
-                       JSDThreadState* jsdthreadstate,
-                       JSDStackFrameInfo* jsdframe);
 
 extern JSBool
 jsd_IsStackFrameDebugger(JSDContext* jsdc, 

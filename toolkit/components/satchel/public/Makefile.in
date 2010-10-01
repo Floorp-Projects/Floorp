@@ -49,6 +49,7 @@ XPIDL_MODULE = satchel
 XPIDLSRCS	= nsIFormFillController.idl \
             nsIFormAutoComplete.idl \
             nsIFormHistory.idl \
+            nsIInputListAutoComplete.idl \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk

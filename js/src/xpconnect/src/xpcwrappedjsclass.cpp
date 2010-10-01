@@ -248,6 +248,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     jsid funid;
     jsval fun;
 
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(cx, jsobj))
+        return nsnull;
+
     // Don't call the actual function on a content object. We'll determine
     // whether or not a content object is capable of implementing the
     // interface (i.e. whether the interface is scriptable) and most content
@@ -1116,7 +1120,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     JSStackFrame * fp = nsnull;
                     while((fp = JS_FrameIterator(cx, &fp)))
                     {
-                        if(!JS_IsNativeFrame(cx, fp))
+                        if(JS_IsScriptFrame(cx, fp))
                         {
                             onlyNativeStackFrames = PR_FALSE;
                             break;
@@ -1307,7 +1311,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
     obj = thisObj = wrapper->GetJSObject();
 
-    JSAutoEnterCompartment autoCompartment(ccx, obj);
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, obj))
+        goto pre_call_clean_up;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = info->num_args;

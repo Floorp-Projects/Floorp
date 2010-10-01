@@ -11,9 +11,7 @@ function run_test() {
   const profileDir = gProfD.clone();
   profileDir.append("extensions");
 
-  var dest = profileDir.clone();
-  dest.append("addon1@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     optionsURL: "chrome://test/content/options.xul",
@@ -41,11 +39,9 @@ function run_test() {
       "Test Contributor 1",
       "Test Contributor 2"
     ]
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon2@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
     updateURL: "https://www.foo.com",
@@ -55,11 +51,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 2"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon3@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://www.foo.com",
@@ -69,11 +63,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 3"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon4@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://www.foo.com",
@@ -84,11 +76,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 4"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon5@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon5@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -97,11 +87,9 @@ function run_test() {
       maxVersion: "*"
     }],
     name: "Test Addon 5"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon6@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon6@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -110,11 +98,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 6"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon7@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon7@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -123,11 +109,9 @@ function run_test() {
       maxVersion: "0"
     }],
     name: "Test Addon 7"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon8@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon8@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -136,11 +120,9 @@ function run_test() {
       maxVersion: "*"
     }],
     name: "Test Addon 8"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon9@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon9@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -149,11 +131,9 @@ function run_test() {
       maxVersion: "1.9.*"
     }],
     name: "Test Addon 9"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon10@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon10@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -162,11 +142,9 @@ function run_test() {
       maxVersion: "1.9.*"
     }],
     name: "Test Addon 10"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon11@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -175,11 +153,9 @@ function run_test() {
       maxVersion: "1.9.2"
     }],
     name: "Test Addon 11"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon12@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon12@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -188,11 +164,9 @@ function run_test() {
       maxVersion: "1.9.1.*"
     }],
     name: "Test Addon 12"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon13@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon13@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -205,11 +179,9 @@ function run_test() {
       maxVersion: "0.5"
     }],
     name: "Test Addon 13"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon14@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon14@tests.mozilla.org",
     version: "1.0",
     targetApplications: [{
@@ -222,11 +194,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 14"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon15@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon15@tests.mozilla.org",
     version: "1.0",
     updateKey: "foo",
@@ -236,11 +206,9 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 15"
-  }, dest);
+  }, profileDir);
 
-  dest = profileDir.clone();
-  dest.append("addon16@tests.mozilla.org");
-  writeInstallRDFToDir({
+  writeInstallRDFForExtension({
     id: "addon16@tests.mozilla.org",
     version: "1.0",
     updateKey: "foo",
@@ -251,7 +219,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 16"
-  }, dest);
+  }, profileDir);
 
   do_test_pending();
   startupManager();

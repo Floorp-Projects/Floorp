@@ -154,6 +154,15 @@ void nestegg_destroy(nestegg * context);
     @retval -1 Error. */
 int nestegg_duration(nestegg * context, uint64_t * duration);
 
+/** Query the tstamp scale of the media stream in nanoseconds.
+    Timecodes presented by nestegg have been scaled by this value
+    before presentation to the caller.
+    @param context Stream context initialized by #nestegg_init.
+    @param scale   Storage for the queried scale factor.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_tstamp_scale(nestegg * context, uint64_t * scale);
+
 /** Query the number of tracks in the media stream.
     @param context Stream context initialized by #nestegg_init.
     @param tracks  Storage for the queried track count.

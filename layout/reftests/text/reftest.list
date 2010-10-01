@@ -28,12 +28,15 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 == soft-hyphens-1b.html soft-hyphens-1-ref.html
 == soft-hyphens-1c.html soft-hyphens-1-ref.html
 == swash-1.html swash-1-ref.html
+# Test for bug 593564, synthetic bold should cause glyph metrics to increase
+# Random on Windows - fails on tinderbox Opt reftest, passes elsewhere - see bug 597300
+random-if(winWidget) HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 random == wordwrap-02.html wordwrap-02-ref.html # bad fonts on test boxes
-random-if(gtk2Widget) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
+random-if(gtk2Widget) fails-if(d2d) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes; bug 593160
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html

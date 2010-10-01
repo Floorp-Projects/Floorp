@@ -14,8 +14,8 @@
 <!ENTITY server.label               "Server">
 <!ENTITY serverType.main.label      "&syncBrand.fullName.label; Server">
 <!ENTITY serverType.custom.label    "Use a custom server">
-<!ENTITY signIn.username.label      "User Name">
-<!ENTITY signIn.username.accesskey  "U">
+<!ENTITY signIn.account.label       "Email Address / User Name">
+<!ENTITY signIn.account.accesskey   "E">
 <!ENTITY signIn.password.label      "Password">
 <!ENTITY signIn.password.accesskey  "P">
 <!ENTITY signIn.serverURL.label     "Server URL">
@@ -43,17 +43,14 @@
 <!ENTITY syncKeyEntry.label        "Your Sync Key">
 <!ENTITY syncKeyEntry.accesskey    "K">
 <!ENTITY syncKeyGenerate.label     "Generate">
+<!ENTITY syncKeyStrength.label     "Strength:">
+<!ENTITY syncKeyHelp.label         "What does the strength mean?">
 <!ENTITY syncKeyBackup.description "Your Sync Key is required to access &syncBrand.fullName.label; on other machines. Please create a backup copy. We cannot help you recover your Sync Key.">
 
-<!ENTITY button.syncKeyBackup.email.label     "Email…">
-<!ENTITY button.syncKeyBackup.email.accesskey "E">
 <!ENTITY button.syncKeyBackup.print.label     "Print…">
 <!ENTITY button.syncKeyBackup.print.accesskey "P">
 <!ENTITY button.syncKeyBackup.save.label      "Save…">
 <!ENTITY button.syncKeyBackup.save.accesskey  "S">
-
-<!ENTITY page.syncKeyBackup.title     "Your Firefox Sync Key">
-<!ENTITY page.syncKeyBackup.descr     "This secret key is used to encrypt your personal data. It is not uploaded to the server and cannot be recovered. Do not lose it or share with other people.">
 
 <!-- New Account Page 3: Captcha -->
 <!ENTITY setup.captchaPage2.title.label     "Please Confirm You're Not a Robot">

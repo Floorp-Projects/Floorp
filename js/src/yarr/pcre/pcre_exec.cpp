@@ -52,7 +52,7 @@ the JavaScript specification. There are also some supporting functions. */
 
 using namespace WTF;
 
-#ifndef WTF_COMPILER_MSVC
+#if !WTF_COMPILER_MSVC && !WTF_COMPILER_SUNPRO
 #define USE_COMPUTED_GOTO_FOR_MATCH_RECURSION
 #endif
 

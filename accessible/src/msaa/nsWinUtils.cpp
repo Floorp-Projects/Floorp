@@ -43,6 +43,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsIWinAccessNode.h"
 #include "nsArrayUtils.h"
+#include "nsIDocShellTreeItem.h"
 
 HRESULT
 nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
@@ -63,7 +64,7 @@ nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
     return S_FALSE;
 
   *aIA2Array =
-    static_cast<IUnknown**>(nsMemory::Alloc((length) * sizeof(IUnknown*)));
+    static_cast<IUnknown**>(::CoTaskMemAlloc((length) * sizeof(IUnknown*)));
   if (!*aIA2Array)
     return E_OUTOFMEMORY;
 
@@ -89,10 +90,64 @@ nsWinUtils::ConvertToIA2Array(nsIArray *aGeckoArray, IUnknown ***aIA2Array,
       (*aIA2Array)[idx2] = NULL;
     }
 
-    nsMemory::Free(*aIA2Array);
+    ::CoTaskMemFree(*aIA2Array);
     return GetHRESULT(rv);
   }
 
   *aIA2ArrayLen = length;
   return S_OK;
+}
+
+void
+nsWinUtils::RegisterNativeWindow(LPCWSTR aWindowClass)
+{
+  WNDCLASSW wc;
+  wc.style = CS_GLOBALCLASS;
+  wc.lpfnWndProc = nsAccessNodeWrap::WindowProc;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  wc.hInstance = GetModuleHandle(NULL);
+  wc.hIcon = NULL;
+  wc.hCursor = NULL;
+  wc.hbrBackground = NULL;
+  wc.lpszMenuName = NULL;
+  wc.lpszClassName = aWindowClass;
+  ::RegisterClassW(&wc);
+}
+
+HWND
+nsWinUtils::CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd)
+{
+  return ::CreateWindowW(aWindowClass,
+                         L"NetscapeDispatchWnd",
+                         WS_CHILD | WS_VISIBLE,
+                         CW_USEDEFAULT, CW_USEDEFAULT,
+                         0, 0,
+                         aParentWnd,
+                         NULL,
+                         GetModuleHandle(NULL),
+                         NULL);
+}
+
+bool
+nsWinUtils::IsWindowEmulationEnabled()
+{
+  return ::GetModuleHandleW(kJAWSModuleHandle) ||
+    ::GetModuleHandleW(kWEModuleHandle)  ||
+    ::GetModuleHandleW(kDolphnModuleHandle);
+}
+
+bool
+nsWinUtils::IsTabDocument(nsIDocument* aDocumentNode)
+{
+  nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+
+  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+
+  return parentTreeItem == rootTreeItem;
 }

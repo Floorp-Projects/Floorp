@@ -100,6 +100,10 @@
 #define WTF_COMPILER_WINSCW 1
 #endif
 
+/* COMPILER(SUNPRO) - Sun Studio for Solaris */
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#define WTF_COMPILER_SUNPRO 1
+#endif
 
 
 /* ==== CPU() - the target CPU architecture ==== */
@@ -835,6 +839,26 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
     #define ENABLE_JIT 1
 #endif
 
+#if WTF_PLATFORM_QT
+#if WTF_CPU_X86_64 && WTF_PLATFORM_DARWIN
+    #define ENABLE_JIT 1
+#elif WTF_CPU_X86 && WTF_PLATFORM_DARWIN
+    #define ENABLE_JIT 1
+    #define WTF_USE_JIT_STUB_ARGUMENT_VA_LIST 1
+#elif WTF_CPU_X86 && WTF_PLATFORM_WIN_OS && WTF_COMPILER_MINGW && GCC_VERSION >= 40100
+    #define ENABLE_JIT 1
+    #define WTF_USE_JIT_STUB_ARGUMENT_VA_LIST 1
+#elif WTF_CPU_X86 && WTF_PLATFORM_WIN_OS && WTF_COMPILER_MSVC
+    #define ENABLE_JIT 1
+    #define WTF_USE_JIT_STUB_ARGUMENT_REGISTER 1
+#elif WTF_CPU_X86 && WTF_PLATFORM_LINUX && GCC_VERSION >= 40100
+    #define ENABLE_JIT 1
+    #define WTF_USE_JIT_STUB_ARGUMENT_VA_LIST 1
+#elif WTF_CPU_ARM_TRADITIONAL && WTF_PLATFORM_LINUX
+    #define ENABLE_JIT 1
+#endif
+#endif /* PLATFORM(QT) */
+
 #endif /* !defined(ENABLE_JIT) */
 
 #if ENABLE_JIT
@@ -876,8 +900,6 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 /* YARR supports x86 & x86-64, and has been tested on Mac and Windows. */
 #if (WTF_CPU_X86 \
  || WTF_CPU_X86_64 \
- || WTF_CPU_ARM_THUMB2 \
- || WTF_CPU_ARM_TRADITIONAL \
  || WTF_CPU_X86)
 #define ENABLE_YARR_JIT 1
 #else

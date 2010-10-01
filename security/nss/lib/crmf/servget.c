@@ -508,7 +508,8 @@ crmf_copy_cert_req_msg(CRMFCertReqMsg *srcReqMsg)
     }
     newReqMsg = PORT_ArenaZNew(poolp, CRMFCertReqMsg);
     if (newReqMsg == NULL) {
-        goto loser;
+        PORT_FreeArena(poolp, PR_TRUE);
+        return NULL;
     }
 
     newReqMsg->poolp = poolp;

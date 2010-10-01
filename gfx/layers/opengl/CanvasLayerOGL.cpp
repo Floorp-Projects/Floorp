@@ -247,12 +247,18 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
 
   if (useGLContext) {
+    mCanvasGLContext->MakeCurrent();
+    mCanvasGLContext->fFlush();
+
+    gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     DEBUG_GL_ERROR_CHECK(gl());
     program = mOGLManager->GetRGBALayerProgram();
   } else {
     program = mOGLManager->GetBGRALayerProgram();
   }
+
+  ApplyFilter(mFilter);
 
   program->Activate();
   program->SetLayerQuadRect(mBounds);

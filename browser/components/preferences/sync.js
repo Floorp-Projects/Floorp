@@ -119,7 +119,7 @@ let gSyncPane = {
       this.page = PAGE_NO_ACCOUNT;
     else {
       this.page = PAGE_HAS_ACCOUNT;
-      document.getElementById("currentUser").value = Weave.Service.username;
+      document.getElementById("currentAccount").value = Weave.Service.account;
       document.getElementById("syncComputerName").value = Weave.Clients.localName;
       if (Weave.Status.service == Weave.LOGIN_FAILED)
         this.onLoginError();
@@ -144,7 +144,7 @@ let gSyncPane = {
                   Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL;
       let buttonChoice =
         Services.prompt.confirmEx(window,
-                                  this._stringBundle.GetStringFromName("differentAccount.title"),
+                                  this._stringBundle.GetStringFromName("stopUsingAccount.title"),
                                   this._stringBundle.GetStringFromName("differentAccount.label"),
                                   flags,
                                   this._stringBundle.GetStringFromName("differentAccountConfirm.label"),
@@ -204,6 +204,15 @@ let gSyncPane = {
       window.openDialog("chrome://browser/content/syncSetup.xul",
                         "weaveSetup", "centerscreen,chrome,resizable=no", resetSync);
     }
+  },
+
+  openQuotaDialog: function () {
+    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
+    if (win)
+      win.focus();
+    else 
+      window.openDialog("chrome://browser/content/syncQuota.xul", "",
+                        "centerscreen,chrome,dialog,modal");
   },
 
   resetSync: function () {

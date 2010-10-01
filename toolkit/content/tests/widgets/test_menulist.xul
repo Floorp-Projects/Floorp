@@ -1,0 +1,241 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist Tests"
+        onload="setTimeout(testtag_menulists, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="xul_selectcontrol.js"></script>      
+
+<vbox id="scroller" style="overflow: auto" height="60">
+  <menulist id="menulist" onpopupshown="test_menulist_open(this, this.parentNode)"
+            onpopuphidden="$('menulist-in-listbox').open = true;">
+    <menupopup id="menulist-popup"/>
+  </menulist>
+  <button label="Two"/>
+  <button label="Three"/>
+</vbox>
+<listbox id="scroller-in-listbox" style="overflow: auto" height="60">
+  <listitem allowevents="true">
+    <menulist id="menulist-in-listbox" onpopupshown="test_menulist_open(this, this.parentNode.parentNode)"
+              onpopuphidden="SimpleTest.executeSoon(checkScrollAndFinish)">
+      <menupopup id="menulist-in-listbox-popup">
+        <menuitem label="One" value="one"/>
+        <menuitem label="Two" value="two"/>
+      </menupopup>
+    </menulist>
+  </listitem>
+  <listitem label="Two"/>
+  <listitem label="Three"/>
+  <listitem label="Four"/>
+  <listitem label="Five"/>
+  <listitem label="Six"/>
+</listbox>
+
+<hbox>
+  <menulist id="menulist-size">
+    <menupopup>
+      <menuitem label="Menuitem Label" width="200"/>
+    </menupopup>
+  </menulist>
+</hbox>
+
+<menulist id="menulist-editable" editable="true">
+  <menupopup id="menulist-popup-editable"/>
+</menulist>
+
+<menulist id="menulist-initwithvalue" value="two">
+  <menupopup>
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three"/>
+  </menupopup>
+</menulist>
+<menulist id="menulist-initwithselected" value="two">
+  <menupopup>
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three" selected="true"/>
+  </menupopup>
+</menulist>
+<menulist id="menulist-editable-initwithvalue" editable="true" value="Two">
+  <menupopup>
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three"/>
+  </menupopup>
+</menulist>
+<menulist id="menulist-editable-initwithselected" editable="true" value="two">
+  <menupopup>
+    <menuitem label="One" value="one"/>
+    <menuitem label="Two" value="two"/>
+    <menuitem label="Three" value="three" selected="true"/>
+  </menupopup>
+</menulist>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function testtag_menulists()
+{
+  testtag_menulist_UI_start($("menulist"), false);
+  testtag_menulist_UI_start($("menulist-editable"), true);
+
+  // bug 566154, the menulist width should account for vertical scrollbar
+  ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
+     "menulist popup width includes scrollbar width");
+
+  $("menulist").open = true;
+}
+
+function testtag_menulist_UI_start(element, editable)
+{
+  var testprefix = editable ? "editable" : "";
+
+  // check the menupopup property
+  var popup = element.menupopup;
+  ok(popup && popup.localName == "menupopup" &&
+              popup.parentNode == element, testprefix + " menupopup");
+
+  // test the interfaces that menulist implements
+  test_nsIDOMXULMenuListElement(element, testprefix, editable);
+
+  element.value = "";
+
+  test_nsIDOMXULSelectControlElement(element, "menuitem",
+                                     editable ? "editable" : null);
+}
+
+function test_nsIDOMXULMenuListElement(element, testprefix, editable)
+{
+  is(element.open, false, testprefix + " open");
+  is(element.editable, editable, testprefix + " editable");
+
+  if (editable) {
+    var inputField = element.inputField;
+    is(inputField &&
+                  inputField instanceof Components.interfaces.nsIDOMHTMLInputElement,
+                  true, testprefix + " inputField");
+
+    // check if the select method works
+    inputField.select();
+    is(inputField.selectionStart, 0, testprefix + " empty select selectionStart");
+    is(inputField.selectionEnd, 0, testprefix + " empty select selectionEnd");
+
+    element.value = "Some Text";
+    inputField.select();
+    is(inputField.selectionStart, 0, testprefix + " empty select selectionStart");
+    is(inputField.selectionEnd, 9, testprefix + " empty select selectionEnd");
+  }
+  else {
+    is(element.inputField, null , testprefix + " inputField");
+  }
+
+  element.appendItem("Item One", "one");
+  var seconditem = element.appendItem("Item Two", "two");
+  var thirditem = element.appendItem("Item Three", "three");
+  element.appendItem("Item Four", "four");
+
+  seconditem.image = "happy.png";
+  seconditem.setAttribute("description", "This is the second description");
+  thirditem.image = "happy.png";
+  thirditem.setAttribute("description", "This is the third description");
+
+  // check the image and description properties
+  // editable menulists don't use the image or description properties currently
+  if (editable) {
+    element.selectedIndex = 1;
+    is(element.image, "", testprefix + " image set to selected");
+    is(element.description, "", testprefix + " description set to selected");
+  }
+  else {
+    element.selectedIndex = 1;
+    is(element.image, "happy.png", testprefix + " image set to selected");
+    is(element.description, "This is the second description", testprefix + " description set to selected");
+    element.selectedIndex = -1;
+    is(element.image, "", testprefix + " image set when none selected");
+    is(element.description, "", testprefix + " description set when none selected");
+    element.selectedIndex = 2;
+    is(element.image, "happy.png", testprefix + " image set to selected again");
+    is(element.description, "This is the third description", testprefix + " description set to selected again");
+
+    // check that changing the properties of the selected item changes the menulist's properties
+    thirditem.label = "Item Number Three";
+    is(element.label, "Item Number Three", testprefix + " label modified");
+    thirditem.value = "item-three";
+    is(element.value, "item-three", testprefix + " value modified");
+    thirditem.image = "smile.png";
+    is(element.image, "smile.png", testprefix + " image modified");
+    thirditem.setAttribute("description", "Changed description");
+    is(element.description, "Changed description", testprefix + " description modified");
+    seconditem.label = "Changed Label 2";
+    is(element.label, "Item Number Three", testprefix + " label of another item modified");
+
+    element.selectedIndex = 0;
+    is(element.image, "", testprefix + " image set to selected with no image");
+    is(element.description, "", testprefix + " description set to selected with no description");
+  }
+
+  // check the removeAllItems method
+  element.appendItem("An Item", "anitem");
+  element.appendItem("Another Item", "anotheritem");
+  element.removeAllItems();
+  is(element.itemCount, 0, testprefix + " removeAllItems");
+}
+
+function test_menulist_open(element, scroller)
+{
+  element.appendItem("Scroll Item 1", "scrollitem1");
+  element.appendItem("Scroll Item 2", "scrollitem2");
+  element.focus();
+
+/*
+  // bug 530504, mousewheel while menulist is open should not scroll menulist
+  // items or parent
+  var scrolled = false;
+  var mouseScrolled = function (event) { scrolled = true; }
+  window.addEventListener("DOMMouseScroll", mouseScrolled, false);
+  synthesizeMouseScroll(element, 2, 2, { delta: 10 });
+  is(scrolled, true, "mousescroll " + element.id);
+  is(scroller.scrollTop, 0, "scroll position on mousescroll " + element.id);
+  window.removeEventListener("DOMMouseScroll", mouseScrolled, false);
+*/
+
+  // bug 543065, hovering the mouse over an item should highlight it and not
+  // scroll the parent
+  var item = element.menupopup.childNodes[1];
+
+  synthesizeMouse(element.menupopup.childNodes[1], 2, 2, { type: "mousemove" });
+  synthesizeMouse(element.menupopup.childNodes[1], 6, 6, { type: "mousemove" });
+  is(element.menuBoxObject.activeChild, item, "activeChild after menu highlight " + element.id);
+  is(scroller.scrollTop, 0, "scroll position after menu highlight " + element.id);
+
+  element.open = false;
+}
+
+function checkScrollAndFinish()
+{
+  is($("scroller").scrollTop, 0, "mousewheel on menulist does not scroll vbox parent");
+  is($("scroller-in-listbox").scrollTop, 0, "mousewheel on menulist does not scroll listbox parent");
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

@@ -138,6 +138,7 @@ ACCESSIBILITY_ATOM(object, "object")
 ACCESSIBILITY_ATOM(ol, "ol")
 ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
+ACCESSIBILITY_ATOM(output, "output")
 ACCESSIBILITY_ATOM(panel, "panel") // XUL
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")

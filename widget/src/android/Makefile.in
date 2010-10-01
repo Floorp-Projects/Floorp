@@ -63,6 +63,7 @@ CPPSRCS	= \
 	nsScreenManagerAndroid.cpp \
 	nsIdleServiceAndroid.cpp \
 	nsClipboard.cpp \
+	nsFilePicker.cpp \
 	$(NULL)
 
 NOT_THERE_YET_CPPSRCS = \
@@ -72,7 +73,6 @@ NOT_THERE_YET_CPPSRCS = \
 	nsNativeThemeQt.cpp \
 	mozqwidget.cpp \
 	nsSound.cpp \
-	nsFilePicker.cpp \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
@@ -90,8 +90,6 @@ EXTRA_DSO_LDOPTS += -L$(DIST)/lib
 
 EXPORTS = AndroidBridge.h AndroidJavaWrappers.h
 
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_WIDGET

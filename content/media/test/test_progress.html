@@ -17,10 +17,6 @@ var manager = new MediaTestManager;
 function do_progress(e) {
   var v = e.target;
   ok(!v._finished, "Check no progress events after completed for " + v._name);
-  ok(e.lengthComputable, "Check progress lengthComputable for " + v._name);
-  v._last_progress_total = e.loaded;
-  ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded + " for " + v._name);
-  is(e.total, v._size, "Check progress total for " + v._name);
 }
 
 function do_ended(e) {
@@ -39,9 +35,7 @@ function startTest(test, token) {
   v.src = test.name;
   v.autoplay = true;
   v._name = test.name;
-  v._size = test.size;
   v._finished = false;
-  v._last_progress_total = 0;
   v.addEventListener("ended", do_ended, false);
   v.addEventListener("progress", do_progress, false);
   document.body.appendChild(v);

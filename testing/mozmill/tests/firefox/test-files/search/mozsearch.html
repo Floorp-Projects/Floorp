@@ -1,0 +1,18 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Add MozSearch Plugin</title>
+
+  <script>
+    function add() {
+      var engine_url = window.document.location.href.replace(".html", ".xml")
+      window.external.AddSearchProvider(engine_url);
+    }
+  </script>
+</head>
+
+<body>
+  Click <a href="#" name="add" onclick="add();">here</a> to add the Mozilla
+  Test MozSearch plugin.
+</body>
+</html>

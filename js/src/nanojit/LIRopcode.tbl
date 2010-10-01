@@ -161,11 +161,10 @@ OP_UN(32)
 //---------------------------------------------------------------------------
 // Calls
 //---------------------------------------------------------------------------
-OP___(calli,    33, C,    I,   -1)  // call subroutine that returns an int
-OP_64(callq,    34, C,    Q,   -1)  // call subroutine that returns a quad
-OP___(calld,    35, C,    D,   -1)  // call subroutine that returns a double
-
-OP_UN(36)
+OP___(callv,    33, C,    V,   -1)  // call subroutine that returns void
+OP___(calli,    34, C,    I,   -1)  // call subroutine that returns an int
+OP_64(callq,    35, C,    Q,   -1)  // call subroutine that returns a quad
+OP___(calld,    36, C,    D,   -1)  // call subroutine that returns a double
 
 //---------------------------------------------------------------------------
 // Branches and labels
@@ -210,7 +209,9 @@ OP_UN(52)
 // Comparisons
 //---------------------------------------------------------------------------
 
-// Within each size group, order must be preserved so that, except for eq*, (op
+// All comparisons return an int:  0 on failure and 1 on success.
+//
+// Within each type group, order must be preserved so that, except for eq*, (op
 // ^ 1) gives the opposite one (eg. lt ^ 1 == gt).  eq* must have odd numbers
 // for this to work.  They must also remain contiguous so that opcode range
 // checking works correctly.  Static assertions in LIR.h check these
@@ -263,6 +264,9 @@ OP___(andi,     85, Op2,  I,    1)  // bitwise-AND int
 OP___(ori,      86, Op2,  I,    1)  // bitwise-OR int
 OP___(xori,     87, Op2,  I,    1)  // bitwise-XOR int
 
+// For all three integer shift operations, only the bottom five bits of the
+// second operand are used, and they are treated as unsigned.  This matches
+// x86 semantics.
 OP___(lshi,     88, Op2,  I,    1)  // left shift int
 OP___(rshi,     89, Op2,  I,    1)  // right shift int (>>)
 OP___(rshui,    90, Op2,  I,    1)  // right shift unsigned int (>>>)
@@ -274,6 +278,9 @@ OP_64(andq,     93, Op2,  Q,    1)  // bitwise-AND quad
 OP_64(orq,      94, Op2,  Q,    1)  // bitwise-OR quad
 OP_64(xorq,     95, Op2,  Q,    1)  // bitwise-XOR quad
 
+// For all three quad shift operations, only the bottom six bits of the
+// second operand are used, and they are treated as unsigned.  This matches
+// x86-64 semantics.
 OP_64(lshq,     96, Op2,  Q,    1)  // left shift quad;           2nd operand is an int
 OP_64(rshq,     97, Op2,  Q,    1)  // right shift quad;          2nd operand is an int
 OP_64(rshuq,    98, Op2,  Q,    1)  // right shift unsigned quad; 2nd operand is an int

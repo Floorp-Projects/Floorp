@@ -368,8 +368,8 @@
                     // fully loaded. (If it's still loading, it will fire a progress event
                     // and we'll figure out the exact state then.)
                     this.bufferBar.setAttribute("max", 100);
-                    if (this.video.networkState == this.video.NETWORK_LOADED)
-                        this.bufferBar.setAttribute("value", 100);
+                    if (this.video.readyState >= this.video.HAVE_METADATA)
+                        this.showBuffered();
                     else
                         this.bufferBar.setAttribute("value", 0);
 
@@ -458,15 +458,7 @@
                             this.durationChange(duration);
                             break;
                         case "progress":
-                            var loaded = aEvent.loaded;
-                            var total = aEvent.total;
-                            this.log("+++ load, " + loaded + " of " + total);
-                            // When the source is streaming, the value of .total is -1. Set the
-                            // progress bar to the maximum, since it's not useful.
-                            if (total == -1)
-                                total = loaded;
-                            this.bufferBar.max = total;
-                            this.bufferBar.value = loaded;
+                            this.showBuffered();
                             this.setupStatusFader();
                             break;
                         case "suspend":
@@ -508,6 +500,10 @@
                             this.bufferBar.value = 0;
                             break;
                         case "seeking":
+                            this.showBuffered();
+                            this.statusIcon.setAttribute("type", "throbber");
+                            this.setupStatusFader();
+                            break;
                         case "waiting":
                             this.statusIcon.setAttribute("type", "throbber");
                             this.setupStatusFader();
@@ -597,6 +593,53 @@
 
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
                     this.scrubber.value = currentTime;
+                },
+
+                showBuffered : function() {
+                    function bsearch(haystack, needle, cmp) {
+                        var length = haystack.length;
+                        var low = 0;
+                        var high = length;
+                        while (high - low > 1) {
+                            var probe = low + ((high - low) >> 1);
+                            var r = cmp(haystack, probe, needle);
+                            if (r == 0) {
+                                low = probe;
+                                break;
+                            } else if (r > 0) {
+                                low = probe + 1;
+                            } else {
+                                high = probe;
+                            }
+                        }
+                        return low < length ? low : -1;
+                    }
+
+                    function bufferedCompare(buffered, i, time) {
+                        if (time > buffered.end(i)) {
+                            return 1;
+                        } else if (time >= buffered.start(i)) {
+                            return 0;
+                        }
+                        return -1;
+                    }
+
+                    var duration = Math.round(this.video.duration * 1000);
+                    if (isNaN(duration))
+                        duration = this.maxCurrentTimeSeen;
+
+                    // Find the range that the current play position is in and use that
+                    // range for bufferBar.  At some point we may support multiple ranges
+                    // displayed in the bar.
+                    var currentTime = this.video.currentTime;
+                    var buffered = this.video.buffered;
+                    var index = bsearch(buffered, currentTime, bufferedCompare);
+                    var endTime = 0;
+                    if (index >= 0) {
+                        endTime = Math.round(buffered.end(index) * 1000);
+                    }
+                    this.bufferBar.max = duration;
+                    this.bufferBar.value = endTime;
                 },
 
                 onVolumeMouseInOut : function (event) {

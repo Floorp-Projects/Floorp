@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=592802
+-->
+<head>
+  <title>Test for Bug 592802</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/mockObjects.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=592802">Mozilla Bug 592802</a>
+<p id="display"></p>
+<div id="content">
+  <input id='a' type='file'>
+  <input id='a2' type='file'>
+</div>
+<button id='b' onclick="document.getElementById('a').click();">Show Filepicker</button>
+<button id='b2' onclick="document.getElementById('a2').click();">Show Filepicker</button>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 592802 **/
+
+SimpleTest.waitForExplicitFinish();
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function simpleEnumerator(items)
+{
+  this._items = items;
+  this._nextIndex = 0;
+}
+
+simpleEnumerator.prototype = {
+  QueryInterface: function(aIID)
+  {
+    if (Ci.nsISimpleEnumerator.equals(aIID) ||
+        Ci.nsISupports.equals(aIID)) {
+      return this;
+    }
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  hasMoreElements: function()
+  {
+    return this._nextIndex < this._items.length;
+  },
+
+  getNext: function()
+  {
+    if (!this.hasMoreElements()) {
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
+    return this._items[this._nextIndex++];
+  }
+};
+
+function MockFilePicker()
+{
+}
+
+MockFilePicker.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
+
+  // Constants
+  returnOK: 0, // the user hits OK (select a file)
+  returnCancel: 1, // the user cancel the file selection
+  returnReplace: 2, // the user replace the selection
+
+  // Properties
+  defaultExtension: "",
+  defaultString: "",
+  get displayDirectory() { return null; },
+  set displayDirectory(val) { },
+  get fileURL() { return null; },
+  filterIndex: 0,
+
+  get file() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var fileName = "592808_file";
+    var fileData = "file content";
+
+    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                           .getService(Components.interfaces.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+    testFile.append(fileName);
+    var outStream = Components.
+                    classes["@mozilla.org/network/file-output-stream;1"].
+                    createInstance(Components.interfaces.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    return testFile;
+  },
+
+  get files() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var fileName = "592808_file";
+    var fileData = "file content";
+
+    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                           .getService(Components.interfaces.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+    testFile.append(fileName);
+    var outStream = Components.
+                    classes["@mozilla.org/network/file-output-stream;1"].
+                    createInstance(Components.interfaces.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    return new simpleEnumerator([testFile]);
+  },
+
+  appendFilter: function(val) {},
+
+  appendFilters: function(val) {},
+
+  init: function() {},
+
+  show: function()
+  {
+    if (firstFilePickerShow) {
+      firstFilePickerShow = false;
+      return this.returnCancel;
+    } else {
+      return this.returnOK;
+    }
+  }
+};
+
+var mockFilePickerRegisterer =
+  new MockObjectRegisterer("@mozilla.org/filepicker;1",MockFilePicker);
+
+mockFilePickerRegisterer.register();
+
+var testData = [
+/* visibility | display | multiple */
+  [ "",       "",     false ],
+  [ "hidden", "",     false ],
+  [ "",       "none", false ],
+  [ "",       "",     true ],
+  [ "hidden", "",     true ],
+  [ "",       "none", true ],
+];
+
+var testCounter = 0;
+var testNb = testData.length;
+
+var firstFilePickerShow = true;
+
+function finished()
+{
+  mockFilePickerRegisterer.unregister();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(function() {
+  // mockFilePicker will simulate a cancel for the first time the file picker will be shown.
+  var b2 = document.getElementById('b2');
+  b2.focus(); // Be sure the element is visible.
+  document.getElementById('b2').addEventListener("change", function(aEvent) {
+    aEvent.target.removeEventListener("change", arguments.callee, false);
+    ok(false, "When cancel is received, change should not fire");
+  }, false);
+  synthesizeMouse(b2, 2, 2, {});
+
+  // Now, we can launch tests when file picker isn't canceled.
+  var b = document.getElementById('b');
+  b.focus(); // Be sure the element is visible.
+
+  document.getElementById('a').addEventListener("change", function(aEvent) {
+    ok(true, "change event correctly sent");
+    testCounter++;
+
+    if (testCounter >= testNb) {
+      aEvent.target.removeEventListener("change", arguments.callee, false);
+      SimpleTest.executeSoon(finished);
+    } else {
+      var data = testData[testCounter];
+      var a = document.getElementById('a');
+      a.style.visibility = data[0];
+      a.style.display = data[1];
+      a.multiple = data[2];
+
+      SimpleTest.executeSoon(function() {
+        synthesizeMouse(b, 2, 2, {});
+      });
+    }
+  }, false);
+
+  synthesizeMouse(b, 2, 2, {});
+});
+
+</script>
+</pre>
+</body>
+</html>
