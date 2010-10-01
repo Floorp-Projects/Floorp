@@ -65,6 +65,7 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -133,7 +134,9 @@ public class SUTAgentAndroid extends Activity
     	{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
+
+//        Debug.waitForDebugger();
+
 //        long lHeapSize = VMRuntime.getRuntime().getMinimumHeapSize();
 //        lHeapSize = 16000000;
 //        VMRuntime.getRuntime().setMinimumHeapSize(lHeapSize);

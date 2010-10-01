@@ -45,6 +45,10 @@ function messageReceiver(evt)
 
   switch (evt.data)
   {
+    case "path-is-set":
+      chromePathIsSet(evt);
+      break;
+      
     case "post-to-self":
       checkSelf(evt);
       break;
@@ -73,10 +77,15 @@ function checkSelf(evt)
   is(evt.origin, prepath, "wrong origin for chrome: URL");
   is(evt.source, null, "chrome posters get a null source, for security");
 
+  window.frames.contentDomain.postMessage(prepath, "*");
+}
+
+
+function chromePathIsSet(evt)
+{
   window.frames.contentDomain.postMessage("post-to-content",
                                           "http://example.org");
 }
-
 
 /*************
  * RECEIVERS *

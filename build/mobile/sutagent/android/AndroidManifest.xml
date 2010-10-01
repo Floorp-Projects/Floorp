@@ -5,6 +5,7 @@
       android:versionName="1.0" android:sharedUserId="org.mozilla.sharedID">
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
         <activity android:name=".SUTAgentAndroid"
+                  android:screenOrientation="nosensor"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +26,7 @@
 
     </application>
     
-    <uses-sdk android:minSdkVersion="5"/>
+    <uses-sdk android:minSdkVersion="5" android:targetSdkVersion="8"/>
 
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
 <uses-permission android:name="android.permission.INTERNET"></uses-permission>
@@ -58,5 +59,10 @@
 <uses-permission android:name="android.permission.STATUS_BAR"></uses-permission>
 
 <uses-permission android:name="android.permission.VIBRATE"></uses-permission>
+
+
+
+<uses-permission android:name="android.permission.SET_TIME"></uses-permission>
+
 
 </manifest> 
