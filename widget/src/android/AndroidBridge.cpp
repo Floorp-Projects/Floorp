@@ -112,6 +112,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
     jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
     jShowAlertNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jAlertsProgressListener_OnProgress = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
     jShowFilePicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showFilePicker", "()Ljava/lang/String;");
 
 
@@ -459,6 +460,22 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
     args[3].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertCookie).get(), aAlertCookie.Length());
     args[4].l = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
     mJNIEnv->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotification, args);
+}
+
+void
+AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
+                                                 PRInt64 aProgress,
+                                                 PRInt64 aProgressMax,
+                                                 const nsAString& aAlertText)
+{
+    ALOG("AlertsProgressListener_OnProgress");
+
+    AutoLocalJNIFrame jniFrame;
+
+    jstring jstrName = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
+    jstring jstrText = mJNIEnv->NewString(nsPromiseFlatString(aAlertText).get(), aAlertText.Length());
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jAlertsProgressListener_OnProgress,
+                                  jstrName, aProgress, aProgressMax, jstrText);
 }
 
 void
