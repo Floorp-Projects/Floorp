@@ -13849,7 +13849,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     LIns* dslots_ins =
         addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER), "dslots");
     vp = &obj->dslots[jsuint(idx)];
-	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
+    JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
                          lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
     v_ins = unbox_value(*vp, addr_ins, 0, branchExit);

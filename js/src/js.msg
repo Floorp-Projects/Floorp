@@ -339,3 +339,6 @@ MSG_DEF(JSMSG_CALLER_IS_STRICT,       256, 0, JSEXN_TYPEERR, "access to strict m
 MSG_DEF(JSMSG_NEED_DEBUG_MODE,        257, 0, JSEXN_ERR, "function can be called only in debug mode")
 MSG_DEF(JSMSG_STRICT_CODE_LET_EXPR_STMT, 258, 0, JSEXN_ERR, "strict mode code may not contain unparenthesized let expression statements")
 MSG_DEF(JSMSG_CANT_CHANGE_EXTENSIBILITY, 259, 0, JSEXN_TYPEERR, "can't change object's extensibility")
+MSG_DEF(JSMSG_SC_BAD_SERIALIZED_DATA, 260, 1, JSEXN_INTERNALERR, "bad serialized structured data ({0})")
+MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,    261, 0, JSEXN_TYPEERR, "unsupported type for structured data")
+MSG_DEF(JSMSG_SC_RECURSION,           262, 0, JSEXN_INTERNALERR, "recursive object")
