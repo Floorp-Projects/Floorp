@@ -125,6 +125,11 @@ class Assembler : public BaseAssembler
         return l;
     }
 
+    void loadValueAsComponents(const Value &val, RegisterID type, RegisterID payload) {
+        move(Imm64(val.asRawBits() & 0xFFFF800000000000), type);
+        move(Imm64(val.asRawBits() & 0x00007FFFFFFFFFFF), payload);
+    }
+
     template <typename T>
     void storeValueFromComponents(RegisterID type, RegisterID payload, T address) {
         move(type, Registers::ValueReg);
@@ -223,8 +228,7 @@ class Assembler : public BaseAssembler
 
     Jump testNull(Assembler::Condition cond, Address address) {
         loadValue(address, Registers::ValueReg);
-        convertValueToType(Registers::ValueReg);
-        return branchPtr(cond, Registers::ValueReg, ImmShiftedTag(JSVAL_SHIFTED_TAG_NULL));
+        return branchPtr(cond, Registers::ValueReg, Imm64(JSVAL_BITS(JSVAL_NULL)));
     }
 
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {

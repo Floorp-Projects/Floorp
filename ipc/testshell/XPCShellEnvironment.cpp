@@ -609,6 +609,12 @@ ProcessFile(JSContext *cx,
 
         JSAutoRequest ar(cx);
 
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj)) {
+            NS_ERROR("Failed to enter compartment!");
+            return;
+        }
+
         JSScript* script =
             JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
                                               env->GetPrincipal());
@@ -629,6 +635,12 @@ ProcessFile(JSContext *cx,
         *bufp = '\0';
 
         JSAutoRequest ar(cx);
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj)) {
+            NS_ERROR("Failed to enter compartment!");
+            return;
+        }
 
         /*
          * Accumulate lines until we get a 'compilable unit' - one that either
@@ -1172,6 +1184,12 @@ XPCShellEnvironment::Init()
     {
         JSAutoRequest ar(cx);
 
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, globalObj)) {
+            NS_ERROR("Failed to enter compartment!");
+            return false;
+        }
+
         if (!JS_DefineFunctions(cx, globalObj, gGlobalFunctions)) {
             NS_ERROR("JS_DefineFunctions failed!");
             return false;
@@ -1203,6 +1221,12 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS_ClearPendingException(mCx);
 
   JSObject* global = GetGlobalObject();
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(mCx, global)) {
+      NS_ERROR("Failed to enter compartment!");
+      return false;
+  }
 
   JSScript* script =
       JS_CompileUCScriptForPrincipals(mCx, global, GetPrincipal(),

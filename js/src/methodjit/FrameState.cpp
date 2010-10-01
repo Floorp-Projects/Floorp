@@ -70,9 +70,9 @@ FrameState::init(uint32 nargs)
 
     eval = script->usesEval || cx->compartment->debugMode;
 
-    size_t totalBytes = sizeof(FrameEntry) * nslots +         // entries[]
-                        sizeof(FrameEntry *) * nslots +       // tracker.entries
-                        (eval ? 0 : sizeof(uint32) * nslots); // closedVars[]
+    size_t totalBytes = sizeof(FrameEntry) * nslots +               // entries[]
+                        sizeof(FrameEntry *) * nslots +             // tracker.entries
+                        (eval ? 0 : sizeof(JSPackedBool) * nslots); // closedVars[]
 
     uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
     if (!cursor)
@@ -93,8 +93,8 @@ FrameState::init(uint32 nargs)
     cursor += sizeof(FrameEntry *) * nslots;
 
     if (!eval && nslots) {
-        escaping = (uint32 *)cursor;
-        cursor += sizeof(uint32) * nslots;
+        closedVars = (JSPackedBool *)cursor;
+        cursor += sizeof(JSPackedBool) * nslots;
     }
 
     JS_ASSERT(reinterpret_cast<uint8 *>(entries) + totalBytes == cursor);
@@ -325,6 +325,49 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
             fe->type.setRegister(reg);
     }
 #endif
+}
+
+void FrameState::storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg, RegisterID tempReg)
+{
+    JS_ASSERT(dataReg != typeReg && dataReg != tempReg && typeReg != tempReg);
+
+    if (fe->isConstant()) {
+        masm.loadValueAsComponents(fe->getValue(), typeReg, dataReg);
+        return;
+    }
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    if (fe->isTypeKnown()) {
+        RegisterID data = tempRegForData(fe);
+        if (data != dataReg)
+            masm.move(data, dataReg);
+        masm.move(ImmType(fe->getKnownType()), typeReg);
+        return;
+    }
+
+    RegisterID data = tempRegForData(fe);
+    RegisterID type = tempRegForType(fe);
+    if (data == typeReg && type == dataReg) {
+        masm.move(type, tempReg);
+        masm.move(data, dataReg);
+        masm.move(tempReg, typeReg);
+    } else if (data != dataReg) {
+        if (type == typeReg) {
+            masm.move(data, dataReg);
+        } else if (type != dataReg) {
+            masm.move(data, dataReg);
+            if (type != typeReg)
+                masm.move(type, typeReg);
+        } else {
+            JS_ASSERT(data != typeReg);
+            masm.move(type, typeReg);
+            masm.move(data, dataReg);
+        }
+    } else if (type != typeReg) {
+        masm.move(type, typeReg);
+    }
 }
 
 #ifdef DEBUG
@@ -1053,7 +1096,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 
     storeTop(local, popGuaranteed, typeChange);
 
-    bool closed = eval || escaping[n];
+    bool closed = eval || isClosedVar(n);
     if (closed || inTryBlock) {
         /* Ensure that the local variable remains synced. */
         if (local->isCopy()) {
