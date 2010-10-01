@@ -73,8 +73,8 @@ gTests.push({
     is(prefs.panelContainer.hidden, false, "Preferences should be visible");
 
     // Check whether the Preferences pan title is Preferences
-    var prefTitle = document.getElementById("prefs-header");
-    is(prefTitle.firstChild.value, "Preferences", "The title must be preferences");
+    var prefTitle = document.getElementById("panel-header");
+    is(prefTitle.value, "Preferences", "The title must be preferences");
 
     var prefsList = document.getElementById("prefs-messages");
 
