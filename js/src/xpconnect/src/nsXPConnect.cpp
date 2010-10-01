@@ -2228,6 +2228,22 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs,
     return NS_OK;
 }
 
+char*
+nsXPConnect::DebugPrintJSStack(PRBool showArgs,
+                               PRBool showLocals,
+                               PRBool showThisProps)
+{
+    JSContext* cx;
+    if(NS_FAILED(Peek(&cx)))
+        printf("failed to peek into nsIThreadJSContextStack service!\n");
+    else if(!cx)
+        printf("there is no JSContext on the nsIThreadJSContextStack!\n");
+    else
+        return xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps);
+
+    return nsnull;
+}
+
 /* void debugDumpEvalInJSStackFrame (in PRUint32 aFrameNumber, in string aSourceText); */
 NS_IMETHODIMP
 nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSourceText)
@@ -2736,6 +2752,15 @@ JS_EXPORT_API(void) DumpJSStack()
         xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
     else
         printf("failed to get XPConnect service!\n");
+}
+
+JS_EXPORT_API(char*) PrintJSStack()
+{
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+    return (NS_SUCCEEDED(rv) && xpc) ? 
+        xpc->DebugPrintJSStack(PR_TRUE, PR_TRUE, PR_FALSE) :
+        nsnull;
 }
 
 JS_EXPORT_API(void) DumpJSEval(PRUint32 frameno, const char* text)
