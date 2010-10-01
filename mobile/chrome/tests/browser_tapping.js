@@ -3,7 +3,7 @@
  *   single tap, double tap & long tap
  */
 
-let testURL = "chrome://mochikit/content/browser/mobile/chrome/browser_tap_content.html";
+let testURL = chromeRoot + "browser_tap_content.html";
 
 let gTests = [];
 let gCurrentTest = null;

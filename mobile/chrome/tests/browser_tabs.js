@@ -1,6 +1,6 @@
-let testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
-let testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
-let testURL_03 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html#tab3";
+let testURL_01 = chromeRoot + "browser_blank_01.html";
+let testURL_02 = chromeRoot + "browser_blank_02.html";
+let testURL_03 = chromeRoot + "browser_blank_01.html#tab3";
 
 let new_tab_01;
 let new_tab_02;

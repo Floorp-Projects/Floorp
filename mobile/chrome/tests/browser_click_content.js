@@ -1,4 +1,4 @@
-let testURL_click = "chrome://mochikit/content/browser/mobile/chrome/browser_click_content.html";
+let testURL_click = chromeRoot + "browser_click_content.html";
 
 let currentTab;
 let element;

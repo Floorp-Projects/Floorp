@@ -67,5 +67,6 @@ let AsyncTests = {
   }
 };
 
-messageManager.loadFrameScript("chrome://mochikit/content/browser/mobile/chrome/remote_head.js", true);
+let chromeRoot = getRootDirectory(gTestPath);
+messageManager.loadFrameScript(chromeRoot + "remote_head.js", true);
 messageManager.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", true);

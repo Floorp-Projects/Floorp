@@ -1,5 +1,5 @@
-let testURL = "chrome://mochikit/content/browser/mobile/chrome/browser_forms.html";
-messageManager.loadFrameScript("chrome://mochikit/content/browser/mobile/chrome/remote_forms.js", true);
+let testURL = chromeRoot + "browser_forms.html";
+messageManager.loadFrameScript(chromeRoot + "remote_forms.js", true);
 
 let newTab = null;
 let isLoading = function() {
