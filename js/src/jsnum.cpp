@@ -408,7 +408,7 @@ ParseIntDoubleHelper(jsdouble d)
     if (d > 0)
         return floor(d);
     if (d < 0)
-    	return -floor(-d);
+        return -floor(-d);
     return 0;
 }
 

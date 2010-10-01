@@ -67,6 +67,7 @@
 #include "jsopcode.h"
 #include "jspropertycache.h"
 #include "jsscan.h"
+#include "jsemit.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -86,12 +87,17 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
+#include "jsopcodeinlines.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
 
 #include "jsautooplen.h"
+
+#if defined(JS_METHODJIT) && defined(JS_MONOIC)
+#include "methodjit/MonoIC.h"
+#endif
 
 using namespace js;
 using namespace js::gc;
@@ -100,9 +106,144 @@ using namespace js::gc;
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 #ifdef DEBUG
-jsbytecode *const JSStackFrame::sInvalidpc = (jsbytecode *)0xbeef;
 JSObject *const JSStackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
 #endif
+
+jsbytecode *
+JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
+{
+    JS_ASSERT_IF(next, next->prev_ == this);
+    JS_ASSERT(cx->containingSegment(this) != NULL);
+
+    JSFrameRegs *regs;
+    if (cx->regs) {
+        regs = cx->regs;
+    } else {
+        StackSegment *segment = cx->getCurrentSegment();
+        regs = segment->getSuspendedRegs();
+    }
+
+    if (this == regs->fp)
+        return regs->pc;
+
+    if (!next)
+        next = cx->computeNextFrame(this);
+
+    if (next->flags_ & JSFRAME_HAS_PREVPC)
+        return next->prevpc_;
+
+#if defined(JS_METHODJIT) && defined(JS_MONOIC)
+    JSScript *script = this->script();
+    size_t low = 0;
+    size_t high = script->jit->nCallICs;
+    while (high > low + 1) {
+        /* Could overflow here on a script with 2 billion calls. Oh well. */
+        size_t mid = (high + low) / 2;
+        void *entry = script->callICs[mid].funGuard.executableAddress();
+
+        /*
+         * Use >= here as the return address of the call is likely to be
+         * the start address of the next (possibly IC'ed) operation.
+         */
+        if (entry >= next->ncode_)
+            high = mid;
+        else
+            low = mid;
+    }
+
+    js::mjit::ic::CallICInfo &callIC = script->callICs[low];
+
+    JS_ASSERT((uint8*)callIC.funGuard.executableAddress() + callIC.joinPointOffset == next->ncode_);
+    return callIC.pc;
+#else
+    JS_NOT_REACHED("Unknown PC for frame");
+    return NULL;
+#endif
+}
+
+/*
+ * This computes the blockChain by iterating through the bytecode
+ * of the current script until it reaches the PC. Each time it sees
+ * an ENTERBLOCK or LEAVEBLOCK instruction, it records the new
+ * blockChain. A faster variant of this function that doesn't
+ * require bytecode scanning appears below.
+ */
+JSObject *
+js_GetBlockChain(JSContext *cx, JSStackFrame *fp)
+{
+    if (!fp->isScriptFrame())
+        return NULL;
+
+    JSScript *script = fp->script();
+    jsbytecode *start = script->main;
+    /* Assume that imacros don't affect blockChain */
+    jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
+    
+    JS_ASSERT(pc >= start && pc < script->code + script->length);
+    
+    ptrdiff_t oplen;
+    JSObject *blockChain = NULL;
+    for (jsbytecode *p = start; p < pc; p += oplen) {
+        JSOp op = js_GetOpcode(cx, script, p);
+        const JSCodeSpec *cs = &js_CodeSpec[op];
+        oplen = cs->length;
+        if (oplen < 0)
+            oplen = js_GetVariableBytecodeLength(p);
+
+        if (op == JSOP_ENTERBLOCK) { 
+            blockChain = script->getObject(GET_INDEX(p));
+        } else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR) {
+            /*
+             * Some LEAVEBLOCK instructions are due to early exits via
+             * return/break/etc. from block-scoped loops and functions.
+             * We should ignore these instructions, since they don't really
+             * signal the end of the block.
+             */
+            jssrcnote *sn = js_GetSrcNote(script, p);
+            if (!(sn && SN_TYPE(sn) == SRC_HIDDEN))
+                blockChain = blockChain->getParent();
+        }
+    }
+
+    return blockChain;
+}
+
+/*
+ * This function computes the current blockChain, but only in
+ * the special case where a BLOCKCHAIN or NULLBLOCKCHAIN
+ * instruction appears immediately after the current PC.
+ * We ensure this happens for a few important ops like DEFFUN.
+ * |oplen| is the length of opcode at the current PC.
+ */
+JSObject *
+js_GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
+{
+    /* Assume that we're in a script frame. */
+    jsbytecode *pc = fp->pc(cx);
+
+    /* The fast path. */
+    if (pc[oplen] == JSOP_NULLBLOCKCHAIN) {
+        JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
+        return NULL;
+    }
+
+    JSScript *script = fp->script();
+
+    JS_ASSERT(js_GetOpcode(cx, script, pc) == op);
+    
+    JSObject *blockChain;
+    JSOp opNext = js_GetOpcode(cx, script, pc + oplen);
+    if (opNext == JSOP_BLOCKCHAIN) {
+        blockChain = script->getObject(GET_INDEX(pc + oplen));
+    } else if (opNext == JSOP_NULLBLOCKCHAIN) {
+        blockChain = NULL;
+    } else {
+        blockChain = NULL; /* appease gcc */
+        JS_NOT_REACHED("invalid opcode for fast block chain access");
+    }
+
+    return blockChain;
+}
 
 /*
  * We can't determine in advance which local variables can live on the stack and
@@ -134,10 +275,10 @@ JSObject *const JSStackFrame::sInvalidScopeChain = (JSObject *)0xbeef;
  * This lazy cloning is implemented in js_GetScopeChain, which is also used in
  * some other cases --- entering 'with' blocks, for example.
  */
-JSObject *
-js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
+static JSObject *
+js_GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
 {
-    JSObject *sharedBlock = fp->maybeBlockChain();
+    JSObject *sharedBlock = blockChain;
 
     if (!sharedBlock) {
         /*
@@ -253,6 +394,18 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     /* Place our newly cloned blocks at the head of the scope chain.  */
     fp->setScopeChainNoCallObj(*innermostNewChild);
     return innermostNewChild;
+}
+
+JSObject *
+js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
+{
+    return js_GetScopeChainFull(cx, fp, js_GetBlockChain(cx, fp));
+}
+
+JSObject *
+js_GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
+{
+    return js_GetScopeChainFull(cx, fp, js_GetBlockChainFast(cx, fp, op, oplen));
 }
 
 JSBool
@@ -670,7 +823,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *initialVarObj;
     if (prev) {
         JS_ASSERT(chain == &prev->scopeChain());
-        frame.fp()->initEvalFrame(script, prev, flags);
+        frame.fp()->initEvalFrame(script, prev, prev->pc(cx), flags);
 
         /*
          * We want to call |prev->varobj()|, but this requires knowing the
@@ -1167,20 +1320,12 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
 JS_REQUIRES_STACK JSBool
 js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
 {
-    JSObject *obj;
     Class *clasp;
 
     JS_ASSERT(stackDepth >= 0);
     JS_ASSERT(cx->fp()->base() + stackDepth <= cx->regs->sp);
 
     JSStackFrame *fp = cx->fp();
-    for (obj = fp->maybeBlockChain(); obj; obj = obj->getParent()) {
-        JS_ASSERT(obj->isStaticBlock());
-        if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
-            break;
-    }
-    fp->setBlockChain(obj);
-
     for (;;) {
         clasp = js_IsActiveWithOrBlock(cx, &fp->scopeChain(), stackDepth);
         if (!clasp)
@@ -2063,7 +2208,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
     JS_END_MACRO
 
 #define GET_FULL_INDEX(PCOFF)                                                 \
-    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + PCOFF))
+    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + (PCOFF)))
 
 #define LOAD_OBJECT(PCOFF, obj)                                               \
     (obj = script->getObject(GET_FULL_INDEX(PCOFF)))
@@ -2402,6 +2547,7 @@ ADD_EMPTY_CASE(JSOP_STARTXML)
 ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
 #endif
 ADD_EMPTY_CASE(JSOP_UNUSED180)
+ADD_EMPTY_CASE(JSOP_NULLBLOCKCHAIN)
 END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_TRACE)
@@ -2410,8 +2556,10 @@ END_CASE(JSOP_TRACE)
 
 /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
 BEGIN_CASE(JSOP_LINENO)
-BEGIN_CASE(JSOP_DEFUPVAR)
-END_CASE(JSOP_DEFUPVAR)
+END_CASE(JSOP_LINENO)
+
+BEGIN_CASE(JSOP_BLOCKCHAIN)
+END_CASE(JSOP_BLOCKCHAIN)
 
 BEGIN_CASE(JSOP_PUSH)
     PUSH_UNDEFINED();
@@ -2426,7 +2574,7 @@ BEGIN_CASE(JSOP_POPN)
     regs.sp -= GET_UINT16(regs.pc);
 #ifdef DEBUG
     JS_ASSERT(regs.fp->base() <= regs.sp);
-    JSObject *obj = regs.fp->maybeBlockChain();
+    JSObject *obj = js_GetBlockChain(cx, regs.fp);
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - regs.fp->base()));
@@ -2508,7 +2656,6 @@ BEGIN_CASE(JSOP_STOP)
     if (entryFrame != regs.fp)
   inline_return:
     {
-        JS_ASSERT(!regs.fp->hasBlockChain());
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, &regs.fp->scopeChain(), 0));
         if (JS_UNLIKELY(regs.fp->hasHookData())) {
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
@@ -2901,7 +3048,7 @@ END_CASE(JSOP_PICK)
 
 #define NATIVE_GET(cx,obj,pobj,shape,getHow,vp)                               \
     JS_BEGIN_MACRO                                                            \
-        if (shape->hasDefaultGetter()) {                                      \
+        if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {         \
             /* Fast path for Object instance properties. */                   \
             JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
                       !shape->hasDefaultSetter());                            \
@@ -3287,7 +3434,7 @@ BEGIN_CASE(JSOP_URSH)
     u >>= (j & 31);
 
     regs.sp--;
-	regs.sp[-1].setNumber(uint32(u));
+    regs.sp[-1].setNumber(uint32(u));
 }
 END_CASE(JSOP_URSH)
 
@@ -5162,17 +5309,9 @@ BEGIN_CASE(JSOP_DEFFUN)
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
-        /*
-         * Inline js_GetScopeChain a bit to optimize for the case of a
-         * top-level function.
-         */
-        if (!regs.fp->hasBlockChain()) {
-            obj2 = &regs.fp->scopeChain();
-        } else {
-            obj2 = js_GetScopeChain(cx, regs.fp);
-            if (!obj2)
-                goto error;
-        }
+        obj2 = js_GetScopeChainFast(cx, regs.fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        if (!obj2)
+            goto error;
     }
 
     /*
@@ -5309,7 +5448,8 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         if (!obj)
             goto error;
     } else {
-        JSObject *parent = js_GetScopeChain(cx, regs.fp);
+        JSObject *parent = js_GetScopeChainFast(cx, regs.fp, JSOP_DEFLOCALFUN,
+                                                JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             goto error;
 
@@ -5375,7 +5515,7 @@ BEGIN_CASE(JSOP_LAMBDA)
             parent = &regs.fp->scopeChain();
 
             if (obj->getParent() == parent) {
-                jsbytecode *pc2 = regs.pc + JSOP_LAMBDA_LENGTH;
+                jsbytecode *pc2 = js_AdvanceOverBlockchain(regs.pc + JSOP_LAMBDA_LENGTH);
                 JSOp op2 = JSOp(*pc2);
 
                 /*
@@ -5388,27 +5528,15 @@ BEGIN_CASE(JSOP_LAMBDA)
                  * break from the outer do-while(0).
                  */
                 if (op2 == JSOP_INITMETHOD) {
-#ifdef DEBUG
-                    const Value &lref = regs.sp[-1];
-                    JS_ASSERT(lref.isObject());
-                    JSObject *obj2 = &lref.toObject();
-                    JS_ASSERT(obj2->getClass() == &js_ObjectClass);
-#endif
-
-                    fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
+                    fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                     JS_FUNCTION_METER(cx, joinedinitmethod);
                     break;
                 }
 
                 if (op2 == JSOP_SETMETHOD) {
-#ifdef DEBUG
-                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
-                    JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
-#endif
-
                     const Value &lref = regs.sp[-1];
                     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-                        fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
+                        fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                         JS_FUNCTION_METER(cx, joinedsetmethod);
                         break;
                     }
@@ -5473,7 +5601,7 @@ BEGIN_CASE(JSOP_LAMBDA)
             }
 #endif
         } else {
-            parent = js_GetScopeChain(cx, regs.fp);
+            parent = js_GetScopeChainFast(cx, regs.fp, JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
             if (!parent)
                 goto error;
         }
@@ -6334,8 +6462,6 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
     regs.sp = vp;
 
 #ifdef DEBUG
-    JS_ASSERT(regs.fp->maybeBlockChain() == obj->getParent());
-
     /*
      * The young end of fp->scopeChain may omit blocks if we haven't closed
      * over them, but if there are any closure blocks on fp->scopeChain, they'd
@@ -6356,18 +6482,17 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
             JS_ASSERT(parent);
     }
 #endif
-
-    regs.fp->setBlockChain(obj);
 }
 END_CASE(JSOP_ENTERBLOCK)
 
 BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 BEGIN_CASE(JSOP_LEAVEBLOCK)
 {
+    JSObject *blockChain;
+    LOAD_OBJECT(UINT16_LEN, blockChain);
 #ifdef DEBUG
-    JS_ASSERT(regs.fp->blockChain()->isStaticBlock());
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, regs.fp->blockChain());
-
+    JS_ASSERT(blockChain->isStaticBlock());
+    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, blockChain);
     JS_ASSERT(blockDepth <= StackDepth(script));
 #endif
     /*
@@ -6376,14 +6501,11 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      * the stack into the clone, and pop it off the chain.
      */
     JSObject &obj = regs.fp->scopeChain();
-    if (obj.getProto() == regs.fp->blockChain()) {
+    if (obj.getProto() == blockChain) {
         JS_ASSERT(obj.isClonedBlock());
         if (!js_PutBlockObject(cx, JS_TRUE))
             goto error;
     }
-
-    /* Pop the block chain, too.  */
-    regs.fp->setBlockChain(regs.fp->blockChain()->getParent());
 
     /* Move the result of the expression to the new topmost stack slot. */
     Value *vp = NULL;  /* silence GCC warnings */
@@ -6716,7 +6838,6 @@ END_CASE(JSOP_ARRAYPUSH)
         AbortRecording(cx, "recording out of Interpret");
 #endif
 
-    JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), !regs.fp->hasBlockChain());
     JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), !js_IsActiveWithOrBlock(cx, &regs.fp->scopeChain(), 0));
 
     --cx->interpLevel;

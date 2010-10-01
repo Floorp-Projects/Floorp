@@ -71,6 +71,7 @@ class InlineFrameAssembler {
     typedef JSC::MacroAssembler::Address Address;
     typedef JSC::MacroAssembler::Imm32 Imm32;
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
+    typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
     Assembler &masm;
     uint32     frameDepth;      // script->nfixed + stack depth at caller call site
@@ -105,13 +106,11 @@ class InlineFrameAssembler {
         tempRegs.takeReg(funObjReg);
     }
 
-    inline void assemble()
+    DataLabelPtr assemble(void *ncode)
     {
         JS_ASSERT((flags & ~JSFRAME_CONSTRUCTING) == 0);
 
         RegisterID t0 = tempRegs.takeAnyReg();
-
-        masm.storePtr(ImmPtr(pc), Address(JSFrameReg, JSStackFrame::offsetOfSavedpc()));
 
         AdjustedFrame adj(sizeof(JSStackFrame) + frameDepth * sizeof(Value));
         masm.store32(Imm32(JSFRAME_FUNCTION | flags), adj.addrOf(JSStackFrame::offsetOfFlags()));
@@ -119,10 +118,15 @@ class InlineFrameAssembler {
         masm.storePtr(t0, adj.addrOf(JSStackFrame::offsetOfScopeChain()));
         masm.storePtr(JSFrameReg, adj.addrOf(JSStackFrame::offsetOfPrev()));
 
+        DataLabelPtr ncodePatch =
+            masm.storePtrWithPatch(ImmPtr(ncode), adj.addrOf(JSStackFrame::offsetOfncode()));
+
         /* Adjust JSFrameReg. Callee fills in the rest. */
         masm.addPtr(Imm32(sizeof(JSStackFrame) + sizeof(Value) * frameDepth), JSFrameReg);
 
         tempRegs.putReg(t0);
+
+        return ncodePatch;
     }
 };
 
