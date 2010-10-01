@@ -43,8 +43,8 @@
 
 #include <stdio.h>
 #include <spawn.h>
+#include <crt_externs.h>
 
-#ifdef XP_MACOSX
 namespace {
 cpu_type_t pref_cpu_types[2] = {
 #if defined(__i386__)
@@ -56,7 +56,6 @@ cpu_type_t pref_cpu_types[2] = {
 #endif
                                  CPU_TYPE_ANY };
 }
-#endif
 
 void LaunchChildMac(int aArgc, char** aArgv)
 {
@@ -85,7 +84,14 @@ void LaunchChildMac(int aArgc, char** aArgv)
     return;
   }
 
-  int result = posix_spawnp(NULL, argv_copy[0], NULL, &spawnattr, argv_copy, NULL);
+  // Pass along our environment.
+  char** envp = NULL;
+  char*** cocoaEnvironment = _NSGetEnviron();
+  if (cocoaEnvironment) {
+    envp = *cocoaEnvironment;
+  }
+
+  int result = posix_spawnp(NULL, argv_copy[0], NULL, &spawnattr, argv_copy, envp);
 
   posix_spawnattr_destroy(&spawnattr);
 
