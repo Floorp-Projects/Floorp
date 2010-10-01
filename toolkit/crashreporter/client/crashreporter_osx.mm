@@ -41,6 +41,8 @@
 #import <CoreFoundation/CoreFoundation.h>
 #include "crashreporter.h"
 #include "crashreporter_osx.h"
+#include <crt_externs.h>
+#include <spawn.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -62,6 +64,16 @@ static vector<string> gRestartArgs;
 static bool gDidTrySend = false;
 static bool gRTLlayout = false;
 
+static cpu_type_t pref_cpu_types[2] = {
+#if defined(__i386__)
+                                 CPU_TYPE_X86,
+#elif defined(__x86_64__)
+                                 CPU_TYPE_X86_64,
+#elif defined(__ppc__)
+                                 CPU_TYPE_POWERPC,
+#endif
+                                 CPU_TYPE_ANY };
+
 #define NSSTR(s) [NSString stringWithUTF8String:(s).c_str()]
 
 static NSString* Str(const char* aName)
@@ -73,10 +85,24 @@ static NSString* Str(const char* aName)
 
 static bool RestartApplication()
 {
-  char** argv = reinterpret_cast<char**>(
-    malloc(sizeof(char*) * (gRestartArgs.size() + 1)));
+  vector<char*> argv(gRestartArgs.size() + 1);
 
-  if (!argv) return false;
+  posix_spawnattr_t spawnattr;
+  if (posix_spawnattr_init(&spawnattr) != 0) {
+    return false;
+  }
+
+  // Set spawn attributes.
+  size_t attr_count = sizeof(pref_cpu_types) / sizeof(pref_cpu_types[0]);
+  size_t attr_ocount = 0;
+  if (posix_spawnattr_setbinpref_np(&spawnattr,
+                                    attr_count,
+                                    pref_cpu_types,
+                                    &attr_ocount) != 0 ||
+      attr_ocount != attr_count) {
+    posix_spawnattr_destroy(&spawnattr);
+    return false;
+  }
 
   unsigned int i;
   for (i = 0; i < gRestartArgs.size(); i++) {
@@ -84,17 +110,20 @@ static bool RestartApplication()
   }
   argv[i] = 0;
 
-  pid_t pid = fork();
-  if (pid == -1)
-    return false;
-  else if (pid == 0) {
-    (void)execv(argv[0], argv);
-    _exit(1);
-  }
+  char **env = NULL;
+  char ***nsEnv = _NSGetEnviron();
+  if (nsEnv)
+    env = *nsEnv;
+  int result = posix_spawnp(NULL,
+                            argv[0],
+                            NULL,
+                            &spawnattr,
+                            &argv[0],
+                            env);
 
-  free(argv);
+  posix_spawnattr_destroy(&spawnattr);
 
-  return true;
+  return result == 0;
 }
 
 @implementation CrashReporterUI
