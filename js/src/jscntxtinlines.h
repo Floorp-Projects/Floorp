@@ -71,6 +71,21 @@ JSContext::ensureGeneratorStackSpace()
     return ok;
 }
 
+JSStackFrame *
+JSContext::computeNextFrame(JSStackFrame *fp)
+{
+    JSStackFrame *next = NULL;
+    for (js::StackSegment *ss = currentSegment; ; ss = ss->getPreviousInContext()) {
+        JSStackFrame *end = ss->getInitialFrame()->prev();
+        for (JSStackFrame *f = ss->getCurrentFrame(); f != end; next = f, f = f->prev()) {
+            if (f == fp)
+                return next;
+        }
+        if (end != ss->getPreviousInContext()->getCurrentFrame())
+            next = NULL;
+    }
+}
+
 namespace js {
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSFrameRegs *
@@ -309,16 +324,10 @@ StackSpace::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
     JSStackFrame *fp = fg->regs_.fp;
-    JSStackFrame *prev = cx->maybefp();
-    fp->prev_ = prev;
+    fp->setPrev(cx->regs);
     if (JS_UNLIKELY(!currentSegment->inContext())) {
         cx->pushSegmentAndFrame(currentSegment, fg->regs_);
     } else {
-#ifdef DEBUG
-        fp->savedpc_ = JSStackFrame::sInvalidpc;
-        JS_ASSERT(prev->savedpc_ == JSStackFrame::sInvalidpc);
-#endif
-        prev->savedpc_ = cx->regs->pc;
         fg->prevRegs_ = cx->regs;
         cx->setCurrentRegs(&fg->regs_);
     }
@@ -339,10 +348,8 @@ StackSpace::popInvokeFrame(const InvokeFrameGuard &fg)
     } else {
         JS_ASSERT(&fg.regs_ == cx->regs);
         JS_ASSERT(fp->prev_ == fg.prevRegs_->fp);
+        JS_ASSERT(fp->prevpc() == fg.prevRegs_->pc);
         cx->setCurrentRegs(fg.prevRegs_);
-#ifdef DEBUG
-        cx->fp()->savedpc_ = JSStackFrame::sInvalidpc;
-#endif
     }
 }
 
@@ -384,11 +391,8 @@ StackSpace::pushInlineFrame(JSContext *cx, JSScript *script, JSStackFrame *fp,
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->regs == regs && script == fp->script());
 
-    regs->fp->savedpc_ = regs->pc;
-    fp->prev_ = regs->fp;
-#ifdef DEBUG
-    fp->savedpc_ = JSStackFrame::sInvalidpc;
-#endif
+    fp->setPrev(regs);
+
     regs->fp = fp;
     regs->pc = script->code;
     regs->sp = fp->slots() + script->nfixed;
@@ -400,17 +404,13 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *prev, Value *newsp)
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->regs->fp->prev_ == prev);
-    JS_ASSERT(cx->regs->fp->savedpc_ == JSStackFrame::sInvalidpc);
     JS_ASSERT(!cx->regs->fp->hasImacropc());
     JS_ASSERT(prev->base() <= newsp && newsp <= cx->regs->fp->formalArgsEnd());
 
     JSFrameRegs *regs = cx->regs;
+    regs->pc = prev->pc(cx, regs->fp);
     regs->fp = prev;
-    regs->pc = prev->savedpc_;
     regs->sp = newsp;
-#ifdef DEBUG
-    prev->savedpc_ = JSStackFrame::sInvalidpc;
-#endif
 }
 
 JS_ALWAYS_INLINE Value *
@@ -442,6 +442,7 @@ StackSpace::getStackLimit(JSContext *cx)
 
 JS_REQUIRES_STACK inline
 FrameRegsIter::FrameRegsIter(JSContext *cx)
+  : cx(cx)
 {
     curseg = cx->getCurrentSegment();
     if (JS_UNLIKELY(!curseg || !curseg->isActive())) {
@@ -463,7 +464,7 @@ FrameRegsIter::operator++()
     if (!prev)
         return *this;
 
-    curpc = prev->savedpc_;
+    curpc = curfp->pc(cx, fp);
 
     if (JS_UNLIKELY(fp == curseg->getInitialFrame())) {
         incSlow(fp, prev);

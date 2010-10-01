@@ -142,8 +142,13 @@ PKG_STAGE = $(DIST)/universal/test-package-stage
 endif
 
 package-tests:
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	@rm -f "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
+ifndef UNIVERSAL_BINARY
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+else
+	#building tests.jar (bug 543800) fails on unify, so we build tests.jar after unify is run
+	$(MAKE) -C $(DEPTH)/testing/mochitest stage-chromejar PKG_STAGE=$(DIST)/universal
+endif
 	cd $(PKG_STAGE) && \
 	  zip -r9D "$(call core_abspath,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" *
 

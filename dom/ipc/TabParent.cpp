@@ -317,12 +317,14 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 
 bool
 TabParent::RecvNotifyIMEFocus(const PRBool& aFocus,
-                              nsIMEUpdatePreference* aPreference)
+                              nsIMEUpdatePreference* aPreference,
+                              PRUint32* aSeqno)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
     return true;
 
+  *aSeqno = mIMESeqno;
   mIMETabParent = aFocus ? this : nsnull;
   mIMESelectionAnchor = 0;
   mIMESelectionFocus = 0;
@@ -355,16 +357,19 @@ TabParent::RecvNotifyIMETextChange(const PRUint32& aStart,
 }
 
 bool
-TabParent::RecvNotifyIMESelection(const PRUint32& aAnchor,
+TabParent::RecvNotifyIMESelection(const PRUint32& aSeqno,
+                                  const PRUint32& aAnchor,
                                   const PRUint32& aFocus)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
     return true;
 
-  mIMESelectionAnchor = aAnchor;
-  mIMESelectionFocus = aFocus;
-  widget->OnIMESelectionChange();
+  if (aSeqno == mIMESeqno) {
+    mIMESelectionAnchor = aAnchor;
+    mIMESelectionFocus = aFocus;
+    widget->OnIMESelectionChange();
+  }
   return true;
 }
 
@@ -444,12 +449,13 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
 }
 
 bool
-TabParent::SendCompositionEvent(const nsCompositionEvent& event)
+TabParent::SendCompositionEvent(nsCompositionEvent& event)
 {
   mIMEComposing = event.message == NS_COMPOSITION_START;
   mIMECompositionStart = PR_MIN(mIMESelectionAnchor, mIMESelectionFocus);
   if (mIMECompositionEnding)
     return true;
+  event.seqno = ++mIMESeqno;
   return PBrowserParent::SendCompositionEvent(event);
 }
 
@@ -461,7 +467,7 @@ TabParent::SendCompositionEvent(const nsCompositionEvent& event)
  * here and pass the text as the EndIMEComposition return value
  */
 bool
-TabParent::SendTextEvent(const nsTextEvent& event)
+TabParent::SendTextEvent(nsTextEvent& event)
 {
   if (mIMECompositionEnding) {
     mIMECompositionText = event.theText;
@@ -476,14 +482,16 @@ TabParent::SendTextEvent(const nsTextEvent& event)
   mIMESelectionAnchor = mIMESelectionFocus =
       mIMECompositionStart + event.theText.Length();
 
+  event.seqno = ++mIMESeqno;
   return PBrowserParent::SendTextEvent(event);
 }
 
 bool
-TabParent::SendSelectionEvent(const nsSelectionEvent& event)
+TabParent::SendSelectionEvent(nsSelectionEvent& event)
 {
   mIMESelectionAnchor = event.mOffset + (event.mReversed ? event.mLength : 0);
   mIMESelectionFocus = event.mOffset + (!event.mReversed ? event.mLength : 0);
+  event.seqno = ++mIMESeqno;
   return PBrowserParent::SendSelectionEvent(event);
 }
 

@@ -37,3 +37,4 @@ skip-if(!xulRuntime.shell) script 15.2.3.6-dictionary-redefinition-7-of-8.js # u
 skip-if(!xulRuntime.shell) script 15.2.3.6-dictionary-redefinition-8-of-8.js # uses shell load() function
 script 15.2.3.6-define-over-method.js
 script mutation-prevention-methods.js
+script vacuous-accessor-unqualified-name.js
