@@ -79,7 +79,6 @@
 #include "jsxml.h"
 #include "jsperf.h"
 
-#include "prenv.h"
 #include "prmjtime.h"
 
 #ifdef JSDEBUGGER
@@ -861,12 +860,14 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             StartTraceVis(argv[i]);
             break;
 #endif
+#ifdef JS_THREADSAFE
         case 'g':
             if (++i == argc)
                 return usage();
 
             PR_Sleep(PR_SecondsToInterval(atoi(argv[i])));
             break;
+#endif
 
         default:
             return usage();
@@ -5336,7 +5337,7 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
                             FILE* defaultOut,
                             FILE** outFile)
 {
-    const char* outPath = PR_GetEnv(envVar);
+    const char* outPath = getenv(envVar);
     if (!outPath || !*outPath || !(*outFile = fopen(outPath, "w"))) {
         *outFile = defaultOut;
     }
