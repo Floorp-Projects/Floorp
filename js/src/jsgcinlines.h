@@ -67,6 +67,11 @@ JS_ALWAYS_INLINE T *
 NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 {
     JS_ASSERT(thingKind < js::gc::FINALIZE_LIMIT);
+#ifdef JS_THREADSAFE
+    JS_ASSERT_IF((cx->compartment == cx->runtime->defaultCompartment),
+                 (thingKind == js::gc::FINALIZE_STRING) ||
+                 (thingKind == js::gc::FINALIZE_SHORT_STRING));
+#endif
 
     METER(cx->compartment->compartmentStats[thingKind].alloc++);
     do {
