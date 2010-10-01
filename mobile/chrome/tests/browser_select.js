@@ -1,4 +1,4 @@
-let testURL = "chrome://mochikit/content/browser/mobile/chrome/browser_select.html";
+let testURL = chromeRoot + "browser_select.html";
 let new_tab = null;
 
 //------------------------------------------------------------------------------

@@ -4,8 +4,8 @@
  *              component, specifically for bookmark management.
  */
 
-var testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
-var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
+var testURL_01 = chromeRoot + "browser_blank_01.html";
+var testURL_02 = chromeRoot + "browser_blank_02.html";
 
 // A queue to order the tests and a handle for each test
 var gTests = [];

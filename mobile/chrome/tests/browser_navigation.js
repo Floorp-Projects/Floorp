@@ -1,7 +1,7 @@
-var testURL_01 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
-var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
-var testURL_03 = "chrome://mochikit/content/browser/mobile/chrome/browser_english_title.html";
-var testURL_04 = "chrome://mochikit/content/browser/mobile/chrome/browser_no_title.html";
+var testURL_01 = chromeRoot + "browser_blank_01.html";
+var testURL_02 = chromeRoot + "browser_blank_02.html";
+var testURL_03 = chromeRoot + "browser_english_title.html";
+var testURL_04 = chromeRoot + "browser_no_title.html";
 var pngURL = "data:image/gif;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==";
 
 // A queue to order the tests and a handle for each test

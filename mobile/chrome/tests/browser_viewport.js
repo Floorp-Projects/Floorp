@@ -38,10 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-let testURL_blank = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_01.html";
+let testURL_blank = chromeRoot + "browser_blank_01.html";
 let testURL = function testURL(n) {
-  return "chrome://mochikit/content/browser/mobile/chrome/browser_viewport_" +
+  return chromeRoot + "browser_viewport_" +
          (n<10 ? "0" : "") + n + ".html";
 }
 
