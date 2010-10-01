@@ -2026,7 +2026,7 @@ JSBool
 date_toJSON(JSContext *cx, uintN argc, Value *vp)
 {
     /* Step 1. */
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = js_ValueToNonNullObject(cx, vp[1]);
     if (!obj)
         return false;
 
