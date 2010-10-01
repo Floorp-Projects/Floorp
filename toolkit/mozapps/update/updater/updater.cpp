@@ -96,6 +96,9 @@
 #else
 # include <sys/wait.h>
 # include <unistd.h>
+#ifdef XP_MACOSX
+# include <sys/time.h>
+#endif
 
 # define NS_T(str) str
 # define NS_tsnprintf snprintf
@@ -1430,10 +1433,30 @@ UpdateThreadFunc(void *param)
     gArchiveReader.Close();
   }
 
-  if (rv)
+  if (rv) {
     LOG(("failed: %d\n", rv));
-  else
+  }
+  else {
+#ifdef XP_MACOSX
+    // If the update was successful we need to update the timestamp
+    // on the top-level Mac OS X bundle directory so that Mac OS X's
+    // Launch Services picks up any major changes. Here we assume that
+    // the current working directory is the top-level bundle directory.
+    char* cwd = getcwd(NULL, 0);
+    if (cwd) {
+      if (utimes(cwd, NULL) != 0) {
+        LOG(("Couldn't set access/modification time on application bundle.\n"));
+      }
+      free(cwd);
+    }
+    else {
+      LOG(("Couldn't get current working directory for setting "
+           "access/modification time on application bundle.\n"));
+    }
+#endif
+
     LOG(("succeeded\n"));
+  }
   WriteStatusFile(rv);
 
   LOG(("calling QuitProgressUI\n"));

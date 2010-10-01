@@ -143,13 +143,16 @@ public:
    *
    * It is expected that Created*Buffer() will be followed by a
    * Painted*Buffer() in the same transaction, so that
-   * |aInitialFrontBuffer| is never actually drawn to screen.
+   * |aInitialFrontBuffer| is never actually drawn to screen.  It is
+   * OK if it is drawn though.
    */
   /**
    * |aBufferRect| is the screen rect covered by |aInitialFrontBuffer|.
    */
   void CreatedThebesBuffer(ShadowableLayer* aThebes,
-                           nsIntRect aBufferRect,
+                           const nsIntRegion& aFrontValidRegion,
+                           float aXResolution, float aYResolution,
+                           const nsIntRect& aBufferRect,
                            const SurfaceDescriptor& aInitialFrontBuffer);
   /**
    * For the next two methods, |aSize| is the size of
@@ -393,6 +396,16 @@ public:
     NS_ABORT_IF_FALSE(!mAllocator, "Stomping parent?");
     mAllocator = aParent;
   }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   *
+   * Override the front buffer and its valid region with the specified
+   * values.  This is called when a new buffer has been created.
+   */
+  virtual void SetFrontBuffer(const ThebesBuffer& aNewFront,
+                              const nsIntRegion& aValidRegion,
+                              float aXResolution, float aYResolution) = 0;
 
   virtual void InvalidateRegion(const nsIntRegion& aRegion)
   {

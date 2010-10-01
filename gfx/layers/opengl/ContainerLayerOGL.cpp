@@ -169,9 +169,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
 
-    // Note that we don't set a new viewport here, even though we're
-    // about to render to a new FBO -- see the comments in
-    // LayerManagerOGL::SetupPipeline.
+    gl()->PushViewportRect();
+    mOGLManager->SetupPipeline(visibleRect.width, visibleRect.height);
 
     gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
     gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
@@ -214,6 +213,12 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   if (needsFramebuffer) {
     // Unbind the current framebuffer and rebind the previous one.
+    
+    // Restore the viewport
+    gl()->PopViewportRect();
+    nsIntRect viewport = gl()->ViewportRect();
+    mOGLManager->SetupPipeline(viewport.width, viewport.height);
+
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);
 

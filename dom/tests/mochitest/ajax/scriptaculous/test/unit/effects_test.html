@@ -385,7 +385,7 @@
         duration:0.5
       });
       $('error_message_3').morph('final', {duration:0.5});
-      wait(1000,function(){
+      wait(2000,function(){
         assertEqual('17px', $('error_test_ul').getStyle('margin-right'));
         assertEqual('40px', $('error_test_ul').getStyle('font-size'));
         assertEqual('#ffffff', $('error_message_2').getStyle('background-color').parseColor());

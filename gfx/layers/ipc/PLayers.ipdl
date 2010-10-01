@@ -82,10 +82,18 @@ union SurfaceDescriptor {
   SurfaceDescriptorX11;
 };
 
+struct ThebesBuffer {
+  SurfaceDescriptor buffer;
+  nsIntRect rect;
+  nsIntPoint rotation; 
+};
+
 struct OpCreateThebesBuffer {
   PLayer layer;
-  nsIntRect bufferRect;
-  SurfaceDescriptor initialFront;
+  ThebesBuffer initialFront;
+  nsIntRegion frontValidRegion;
+  float xResolution;
+  float yResolution;
 };
 struct OpDestroyThebesFrontBuffer { PLayer layer; };
 
@@ -152,11 +160,6 @@ struct OpRemoveChild  { PLayer container; PLayer childLayer; };
 
 
 // Paint (buffer update)
-struct ThebesBuffer {
-  SurfaceDescriptor buffer;
-  nsIntRect rect;
-  nsIntPoint rotation; 
-};
 struct OpPaintThebesBuffer {
   PLayer layer;
   ThebesBuffer newFrontBuffer;
