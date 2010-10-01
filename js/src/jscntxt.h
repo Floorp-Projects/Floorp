@@ -1478,6 +1478,9 @@ struct JSRuntime {
      */
     JSSecurityCallbacks *securityCallbacks;
 
+    /* Structured data callbacks are runtime-wide. */
+    const JSStructuredCloneCallbacks *structuredCloneCallbacks;
+
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
      * This really should be free of all locking overhead and allocated in

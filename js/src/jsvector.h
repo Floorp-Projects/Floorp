@@ -41,6 +41,7 @@
 #define jsvector_h_
 
 #include "jstl.h"
+#include "jsprvtd.h"
 
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
