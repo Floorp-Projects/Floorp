@@ -44,10 +44,8 @@ class nsIFormControl;
 class nsISimpleEnumerator;
 class nsIURI;
 
-#define NS_FORM_METHOD_GET     0
-#define NS_FORM_METHOD_POST    1
-#define NS_FORM_METHOD_PUT     2
-#define NS_FORM_METHOD_DELETE  3
+#define NS_FORM_METHOD_GET  0
+#define NS_FORM_METHOD_POST 1
 #define NS_FORM_ENCTYPE_URLENCODED 0
 #define NS_FORM_ENCTYPE_MULTIPART  1
 #define NS_FORM_ENCTYPE_TEXTPLAIN  2

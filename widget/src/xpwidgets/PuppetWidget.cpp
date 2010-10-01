@@ -111,7 +111,8 @@ PuppetWidget::Create(nsIWidget        *aParent,
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
   mIMEComposing = PR_FALSE;
-  mIMESuppressNotifySel = PR_FALSE;
+  mIMELastReceivedSeqno = 0;
+  mIMELastBlurSeqno = 0;
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
@@ -277,15 +278,28 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   if (mEventCallback) {
     if (event->message == NS_COMPOSITION_START) {
       mIMEComposing = PR_TRUE;
-    } else if (event->message == NS_SELECTION_SET) {
-      mIMESuppressNotifySel = PR_TRUE;
+    }
+    switch (event->eventStructType) {
+    case NS_COMPOSITION_EVENT:
+      mIMELastReceivedSeqno = static_cast<nsCompositionEvent*>(event)->seqno;
+      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+        return NS_OK;
+      break;
+    case NS_TEXT_EVENT:
+      mIMELastReceivedSeqno = static_cast<nsTextEvent*>(event)->seqno;
+      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+        return NS_OK;
+      break;
+    case NS_SELECTION_EVENT:
+      mIMELastReceivedSeqno = static_cast<nsSelectionEvent*>(event)->seqno;
+      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+        return NS_OK;
+      break;
     }
     aStatus = (*mEventCallback)(event);
 
     if (event->message == NS_COMPOSITION_END) {
       mIMEComposing = PR_FALSE;
-    } else if (event->message == NS_SELECTION_SET) {
-      mIMESuppressNotifySel = PR_FALSE;
     }
   } else if (mChild) {
     event->widget = mChild;
@@ -401,9 +415,10 @@ PuppetWidget::OnIMEFocusChange(PRBool aFocus)
     ResetInputState();
   }
 
+  PRUint32 chromeSeqno;
   mIMEPreference.mWantUpdates = PR_FALSE;
   mIMEPreference.mWantHints = PR_FALSE;
-  if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreference))
+  if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreference, &chromeSeqno))
     return NS_ERROR_FAILURE;
 
   if (aFocus) {
@@ -411,6 +426,8 @@ PuppetWidget::OnIMEFocusChange(PRBool aFocus)
       // call OnIMEFocusChange on blur but no other updates
       return NS_SUCCESS_IME_NO_UPDATES;
     OnIMESelectionChange(); // Update selection
+  } else {
+    mIMELastBlurSeqno = chromeSeqno;
   }
   return NS_OK;
 }
@@ -444,13 +461,6 @@ PuppetWidget::OnIMESelectionChange(void)
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  // When we send selection notifications during a composition or during a
-  // set selection event, there is a race condition where the notification
-  // arrives at chrome too late, which leads to chrome thinking the
-  // selection was elsewhere. Suppress notifications here to avoid that.
-  if (mIMEComposing || mIMESuppressNotifySel)
-    return NS_OK;
-
   if (mIMEPreference.mWantUpdates) {
     nsEventStatus status;
     nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
@@ -458,7 +468,8 @@ PuppetWidget::OnIMESelectionChange(void)
     DispatchEvent(&queryEvent, status);
 
     if (queryEvent.mSucceeded) {
-      mTabChild->SendNotifyIMESelection(queryEvent.GetSelectionStart(),
+      mTabChild->SendNotifyIMESelection(mIMELastReceivedSeqno,
+                                        queryEvent.GetSelectionStart(),
                                         queryEvent.GetSelectionEnd());
     }
   }

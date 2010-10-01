@@ -1098,9 +1098,18 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   background-color: transparent;
 }
 
-.tab-progress[busy][stalled][value="0"],
-#urlbar-progress[busy][stalled][value="0"] {
-  /* TODO: add connecting state (bug 596812) */
+#urlbar-progress[value="0"] > .progress-remainder {
+  background-image: -moz-linear-gradient(left, rgba(255,255,255,0), rgb(255,255,255), rgba(255,255,255,0)) !important;
+  background-size: 10%;
+  background-repeat: no-repeat;
+  background-position: right;
+  -moz-transition-property: background-position;
+  -moz-transition-duration: 2s;
+  -moz-transition-timing-function: linear;
+}
+
+#urlbar-progress[value="0"][slideback] > .progress-remainder {
+  background-position: left;
 }
 
 .tab-progress > .progress-bar,

@@ -3539,10 +3539,15 @@ SessionStoreService.prototype = {
     function sss__resetTabRestoringState(aTab, aRestoreNextTab, aRestoreThisTab) {
     let browser = aTab.linkedBrowser;
 
-    // Always delete the session history listener off the browser
-    delete browser.__SS_shistoryListener;
-
     if (browser.__SS_restoring) {
+      // If the session history listener hasn't been detached, make sure we
+      // remove it and delete the reference.
+      if (browser.__SS_shistoryListener) {
+        browser.webNavigation.sessionHistory.
+                              removeSHistoryListener(browser.__SS_shistoryListener);
+        delete browser.__SS_shistoryListener;
+      }
+
       delete browser.__SS_restoring;
       if (aRestoreNextTab) {
         // this._tabsRestoringCount is decremented in restoreNextTab.
@@ -3721,8 +3726,12 @@ let gRestoreTabsProgressListener = {
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-      delete aBrowser.__SS_restoring;
-      this.ss.restoreNextTab(true);
+      // We need to reset the tab before starting the next restore.
+      // _resetTabRestoringState will make sure we remove the session history
+      // listener and will call restoreNextTab.
+      let window = aBrowser.ownerDocument.defaultView;
+      let tab = window.gBrowser._getTabForContentWindow(aBrowser.contentWindow);
+      this.ss._resetTabRestoringState(tab, true, false);
     }
   }
 }
