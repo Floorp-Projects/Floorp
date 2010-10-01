@@ -121,6 +121,7 @@ CPPSRCS		= \
 		jsarray.cpp \
 		jsatom.cpp \
 		jsbool.cpp \
+		jsclone.cpp \
 		jscntxt.cpp \
 		jsdate.cpp \
 		jsdbgapi.cpp \
@@ -177,6 +178,7 @@ INSTALLED_HEADERS = \
 		jsbit.h \
 		jsbool.h \
 		jsclist.h \
+		jsclone.h \
 		jscntxt.h \
 		jscompat.h \
 		jsdate.h \
