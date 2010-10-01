@@ -3878,7 +3878,7 @@ nsHttpChannel::ContinueOnStartRequest2(nsresult result)
     if (NS_FAILED(mStatus)) {
         PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
         PRBool waitingForRedirectCallback;
-        nsresult rv = ProcessFallback(&waitingForRedirectCallback);
+        ProcessFallback(&waitingForRedirectCallback);
         if (waitingForRedirectCallback)
             return NS_OK;
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
@@ -4585,7 +4585,10 @@ nsHttpChannel::WaitForRedirectCallback()
     if (mCachePump) {
         rv = mCachePump->Suspend();
         if (NS_FAILED(rv) && mTransactionPump) {
-            nsresult resume = mTransactionPump->Resume();
+#ifdef DEBUG
+            nsresult resume = 
+#endif
+            mTransactionPump->Resume();
             NS_ASSERTION(NS_SUCCEEDED(resume),
                 "Failed to resume transaction pump");
         }
