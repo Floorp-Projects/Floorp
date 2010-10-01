@@ -374,40 +374,6 @@ abstract public class GeckoApp
             unpackFile(zip, buf, entry, entry.getName());
           }
         }
-        
-        ZipEntry componentsList = zip.getEntry("components/components.manifest");
-        if (componentsList == null) {
-            Log.i("GeckoAppJava", "Can't find components.manifest!");
-            return;
-        }
-
-        listStream = new BufferedInputStream(zip.getInputStream(componentsList));
-
-        StreamTokenizer tkn = new StreamTokenizer(new InputStreamReader(listStream));
-        String line = "components/";
-        int status;
-        boolean addnext = false;
-        tkn.eolIsSignificant(true);
-        do {
-            status = tkn.nextToken();
-            switch (status) {
-            case StreamTokenizer.TT_WORD:
-                if (tkn.sval.equals("binary-component"))
-                    addnext = true;
-                else if (addnext) {
-                    line += tkn.sval;
-                    addnext = false;
-                }
-                break;
-            case StreamTokenizer.TT_NUMBER:
-                break;
-            case StreamTokenizer.TT_EOF:
-            case StreamTokenizer.TT_EOL:
-                unpackFile(zip, buf, null, line);
-                line = "components/";
-                break;
-            }
-        } while (status != StreamTokenizer.TT_EOF);
     }
 
     private void unpackFile(ZipFile zip, byte[] buf, ZipEntry fileEntry,
