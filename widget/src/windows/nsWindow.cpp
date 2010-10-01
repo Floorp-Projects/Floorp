@@ -174,6 +174,9 @@
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
+#ifdef MOZ_ENABLE_D3D10_LAYER
+#include "LayerManagerD3D10.h"
+#endif
 #include "LayerManagerOGL.h"
 #endif
 #include "BasicLayers.h"
@@ -553,7 +556,6 @@ nsWindow::Create(nsIWidget *aParent,
   }
 
   mPopupType = aInitData->mPopupHint;
-  mContentType = aInitData->mContentType;
   mIsRTL = aInitData->mRTL;
 
   DWORD style = WindowStyle();
@@ -735,18 +737,6 @@ LPCWSTR nsWindow::WindowClass()
       ERROR_CLASS_ALREADY_EXISTS != GetLastError();
     nsWindow::sIsRegistered = succeeded;
 
-    wc.lpszClassName = kClassNameContentFrame;
-    if (!::RegisterClassW(&wc) && 
-      ERROR_CLASS_ALREADY_EXISTS != GetLastError()) {
-      nsWindow::sIsRegistered = FALSE;
-    }
-
-    wc.lpszClassName = kClassNameContent;
-    if (!::RegisterClassW(&wc) && 
-      ERROR_CLASS_ALREADY_EXISTS != GetLastError()) {
-      nsWindow::sIsRegistered = FALSE;
-    }
-
     wc.lpszClassName = kClassNameGeneral;
     ATOM generalClassAtom = ::RegisterClassW(&wc);
     if (!generalClassAtom && 
@@ -767,12 +757,6 @@ LPCWSTR nsWindow::WindowClass()
   }
   if (mWindowType == eWindowType_dialog) {
     return kClassNameDialog;
-  }
-  if (mContentType == eContentTypeContent) {
-    return kClassNameContent;
-  }
-  if (mContentType == eContentTypeContentFrame) {
-    return kClassNameContentFrame;
   }
   return kClassNameGeneral;
 }
@@ -1018,38 +1002,37 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 {
   mParent = aNewParent;
 
-  if (aNewParent) {
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-    nsIWidget* parent = GetParent();
-    if (parent) {
-      parent->RemoveChild(this);
-    }
-
-    HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
-    NS_ASSERTION(newParent, "Parent widget has a null native window handle");
-    if (newParent && mWnd) {
-      ::SetParent(mWnd, newParent);
-    }
-
-    aNewParent->AddChild(this);
-
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
   nsIWidget* parent = GetParent();
-
   if (parent) {
     parent->RemoveChild(this);
   }
-
+  if (aNewParent) {
+    ReparentNativeWidget(aNewParent);
+    aNewParent->AddChild(this);
+    return NS_OK;
+  }
   if (mWnd) {
     // If we have no parent, SetParent should return the desktop.
     VERIFY(::SetParent(mWnd, nsnull));
   }
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
+{
+  NS_PRECONDITION(aNewParent, "");
+
+  mParent = aNewParent;
+  if (mWindowType == eWindowType_popup) {
+    return NS_OK;
+  }
+  HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
+  NS_ASSERTION(newParent, "Parent widget has a null native window handle");
+  if (newParent && mWnd) {
+    ::SetParent(mWnd, newParent);
+  }
   return NS_OK;
 }
 
@@ -2746,10 +2729,22 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
   UpdateNonClientMargins();
 
+  // Prevent window updates during the transition.
+  DWORD style;
+  if (nsUXThemeData::CheckForCompositor()) {
+    style = GetWindowLong(mWnd, GWL_STYLE);
+    SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
+  }
+
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
   nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
+
+  if (nsUXThemeData::CheckForCompositor()) {
+    style = GetWindowLong(mWnd, GWL_STYLE);
+    SetWindowLong(mWnd, GWL_STYLE, style | WS_VISIBLE);
+  }
 
   // Let the dom know via web shell window
   nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
@@ -2797,8 +2792,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
   switch (aDataType) {
     case NS_NATIVE_TMP_WINDOW:
-      return (void*)::CreateWindowExW(WS_EX_NOACTIVATE |
-                                       mIsRTL ? WS_EX_LAYOUTRTL : 0,
+      return (void*)::CreateWindowExW(mIsRTL ? WS_EX_LAYOUTRTL : 0,
                                       WindowClass(),
                                       L"",
                                       WS_CHILD,
@@ -3194,6 +3188,7 @@ nsWindow::GetLayerManager()
     PRBool accelerateByDefault = PR_TRUE;
     PRBool disableAcceleration = PR_FALSE;
     PRBool preferOpenGL = PR_FALSE;
+    PRBool useD3D10 = PR_FALSE;
     if (prefs) {
       prefs->GetBoolPref("layers.accelerate-all",
                          &accelerateByDefault);
@@ -3201,6 +3196,8 @@ nsWindow::GetLayerManager()
                          &disableAcceleration);
       prefs->GetBoolPref("layers.prefer-opengl",
                          &preferOpenGL);
+      prefs->GetBoolPref("layers.use-d3d10",
+                         &useD3D10);
     }
 
     const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -3224,8 +3221,17 @@ nsWindow::GetLayerManager()
       mUseAcceleratedRendering = PR_TRUE;
 
     if (mUseAcceleratedRendering) {
+#ifdef MOZ_ENABLE_D3D10_LAYER
+      if (useD3D10) {
+        nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
+          new mozilla::layers::LayerManagerD3D10(this);
+        if (layerManager->Initialize()) {
+          mLayerManager = layerManager;
+        }
+      }
+#endif
 #ifdef MOZ_ENABLE_D3D9_LAYER
-      if (!preferOpenGL) {
+      if (!preferOpenGL && !mLayerManager) {
         nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
           new mozilla::layers::LayerManagerD3D9(this);
         if (layerManager->Initialize()) {
@@ -3244,7 +3250,7 @@ nsWindow::GetLayerManager()
 
     // Fall back to software if we couldn't use any hardware backends.
     if (!mLayerManager)
-      mLayerManager = new BasicLayerManager(this);
+      mLayerManager = CreateBasicLayerManager();
   }
 #endif
 
@@ -6883,6 +6889,20 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
                 PR_TRUE);
     } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
       w->Move(configuration.mBounds.x, configuration.mBounds.y);
+
+
+      if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
+          gfxWindowsPlatform::RENDER_DIRECT2D ||
+          GetLayerManager()->GetBackendType() != LayerManager::LAYERS_BASIC) {
+        // XXX - Workaround for Bug 587508. This will invalidate the part of the
+        // plugin window that might be touched by moving content somehow. The
+        // underlying problem should be found and fixed!
+        nsIntRegion r;
+        r.Sub(bounds, configuration.mBounds);
+        r.MoveBy(-bounds.x,
+                 -bounds.y);
+        w->Invalidate(r.GetBounds(), PR_FALSE);
+      }
     }
     rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -7553,8 +7573,8 @@ nsWindow::OnIMESelectionChange(void)
 #define NS_LOG_WMGETOBJECT_THISWND                                             \
 {                                                                              \
   printf("\n*******Get Doc Accessible*******\nOrig Window: ");                 \
-  printf("\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p, content type: %d,\n",\
-         mWnd, ::GetParent(mWnd), this, mContentType);                         \
+  printf("\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p,\n",               \
+         mWnd, ::GetParent(mWnd), this);                                       \
   NS_LOG_WMGETOBJECT_WNDACC(this)                                              \
   printf("\n  }\n");                                                           \
 }
@@ -7606,38 +7626,8 @@ nsWindow::GetRootAccessible()
   }
 
   NS_LOG_WMGETOBJECT_THISWND
-
-  if (mContentType != eContentTypeInherit) {
-    // We're on a MozillaContentWindowClass or MozillaUIWindowClass window.
-    // Search for the correct visible child window to get an accessible 
-    // document from. Make sure to use an active child window. If this window
-    // doesn't have child windows then return an accessible for it.
-    HWND accessibleWnd = ::GetTopWindow(mWnd);
-    NS_LOG_WMGETOBJECT_WND("Top Window", accessibleWnd);
-    if (!accessibleWnd) {
-      NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
-      return DispatchAccessibleEvent(NS_GETACCESSIBLE);
-    }
-
-    nsWindow* accessibleWindow = nsnull;
-    while (accessibleWnd) {
-      // Loop through windows and find the first one with accessibility info
-      accessibleWindow = GetNSWindowPtr(accessibleWnd);
-      if (accessibleWindow) {
-        nsAccessible *rootAccessible =
-          accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE);
-        if (rootAccessible) {
-          // Success, one of the child windows was active.
-          return rootAccessible;
-        }
-      }
-      accessibleWnd = ::GetNextWindow(accessibleWnd, GW_HWNDNEXT);
-      NS_LOG_WMGETOBJECT_WND("Next Window", accessibleWnd);
-    }
-    return nsnull;
-  }
-
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
+
   return DispatchAccessibleEvent(NS_GETACCESSIBLE);
 }
 

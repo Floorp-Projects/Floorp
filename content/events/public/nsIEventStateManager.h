@@ -220,4 +220,16 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 // Content shows its placeholder
 #define NS_EVENT_STATE_MOZ_PLACEHOLDER (1 << 30)
 
+// Content is a submit control and the form isn't valid.
+#define NS_EVENT_STATE_MOZ_SUBMITINVALID (1U << 31)
+
+/**
+ * WARNING:
+ * (1U << 31) should work but we currently handle event states with PRInt32
+ * so it's an edge case.
+ * DO NOT ADD AN EVENT STATE after NS_EVENT_STATE_MOZ_SUBMITINVALID until we
+ * move to PRUint64 and we introduce a type to handle event states.
+ * See bug 595036.
+ */
+
 #endif // nsIEventStateManager_h__

@@ -35,17 +35,17 @@ function test() {
   indexTest(2, 2);
   indexTest(3, 3);
 
-  var eh = new PinUnpinHandler(tabs[3], "TabPin");
+  var eh = new PinUnpinHandler(tabs[3], "TabPinned");
   gBrowser.pinTab(tabs[3]);
-  is(eh.eventCount, 2, "TabPin event should be fired");
+  is(eh.eventCount, 2, "TabPinned event should be fired");
   indexTest(0, 1);
   indexTest(1, 2);
   indexTest(2, 3);
   indexTest(3, 0);
 
-  eh = new PinUnpinHandler(tabs[1], "TabPin");
+  eh = new PinUnpinHandler(tabs[1], "TabPinned");
   gBrowser.pinTab(tabs[1]);
-  is(eh.eventCount, 2, "TabPin event should be fired");
+  is(eh.eventCount, 2, "TabPinned event should be fired");
   indexTest(0, 2);
   indexTest(1, 1);
   indexTest(2, 3);
@@ -57,14 +57,14 @@ function test() {
   gBrowser.moveTabTo(tabs[2], 0);
   indexTest(2, 2, "shouldn't be able to mix a normal tab into pinned tabs");
 
-  eh = new PinUnpinHandler(tabs[1], "TabUnpin");
+  eh = new PinUnpinHandler(tabs[1], "TabUnpinned");
   gBrowser.unpinTab(tabs[1]);
-  is(eh.eventCount, 2, "TabUnpin event should be fired");
+  is(eh.eventCount, 2, "TabUnpinned event should be fired");
   indexTest(1, 1, "unpinning a tab should move a tab to the start of normal tabs");
 
-  eh = new PinUnpinHandler(tabs[3], "TabUnpin");
+  eh = new PinUnpinHandler(tabs[3], "TabUnpinned");
   gBrowser.unpinTab(tabs[3]);
-  is(eh.eventCount, 2, "TabUnpin event should be fired");
+  is(eh.eventCount, 2, "TabUnpinned event should be fired");
   indexTest(3, 0, "unpinning a tab should move a tab to the start of normal tabs");
 
   gBrowser.removeTab(tabs[1]);

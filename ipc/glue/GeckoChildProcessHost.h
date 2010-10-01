@@ -64,9 +64,16 @@ public:
 
   ~GeckoChildProcessHost();
 
-  bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>(), int32 timeoutMs=0);
+  static nsresult GetArchitecturesForBinary(const char *path, uint32 *result);
+
+  static uint32 GetSupportedArchitecturesForProcessType(GeckoProcessType type);
+
+  bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>(),
+                  int32 timeoutMs=0,
+                  base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
   bool AsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
-  bool PerformAsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
+  bool PerformAsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>(),
+                          base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
 
   virtual void OnChannelConnected(int32 peer_pid);
   virtual void OnMessageReceived(const IPC::Message& aMsg);

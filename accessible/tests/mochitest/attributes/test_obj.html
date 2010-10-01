@@ -3,6 +3,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=475006
 https://bugzilla.mozilla.org/show_bug.cgi?id=391829
 https://bugzilla.mozilla.org/show_bug.cgi?id=581952
+https://bugzilla.mozilla.org/show_bug.cgi?id=558036
 -->
 <head>
   <title>Group attributes tests</title>
@@ -39,6 +40,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=581952
       testAttrs("sortOther", {"sort" : "other"}, true);
 
       // live object attribute
+      
+      // HTML
+      testAttrs("output", {"live" : "polite"}, true);
+
+      // ARIA
       testAttrs("live", {"live" : "polite"}, true);
       testAttrs("live2", {"live" : "polite"}, true);
       testAbsentAttrs("live3", {"live" : ""});
@@ -108,6 +114,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=581952
      title="Make explicit that aria-label is not an object attribute">
     Mozilla Bug 475006
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
+     title="make HTML <output> accessible">
+    Mozilla Bug 558036
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -130,6 +141,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=581952
   <div id="sortNone" role="columnheader" aria-sort="none"></div>
   <div id="sortOther" role="columnheader" aria-sort="other"></div>
 
+  <!-- html -->
+  <output id="output"></output>
+
+  <!-- back to aria -->
   <div id="live" aria-live="polite">excuse <div id="liveChild">me</div></div>
   <div id="live2" role="marquee" aria-live="polite">excuse <div id="live2Child">me</div></div>
   <div id="live3" role="region">excuse</div>

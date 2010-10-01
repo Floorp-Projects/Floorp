@@ -47,6 +47,7 @@
 #include "nsIDocument.h"
 #include "nsFocusManager.h"
 #include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 
 #include "nsIScrollableFrame.h"
 
@@ -109,6 +110,21 @@ nsDOMWindowUtils::nsDOMWindowUtils(nsGlobalWindow *aWindow)
 
 nsDOMWindowUtils::~nsDOMWindowUtils()
 {
+}
+
+nsIPresShell*
+nsDOMWindowUtils::GetPresShell()
+{
+  if (!mWindow)
+    return nsnull;
+
+  nsIDocShell *docShell = mWindow->GetDocShell();
+  if (!docShell)
+    return nsnull;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  return presShell;
 }
 
 nsPresContext*
@@ -189,38 +205,90 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 NS_IMETHODIMP
 nsDOMWindowUtils::Redraw(PRUint32 aCount, PRUint32 *aDurationOut)
 {
-  nsresult rv;
-
   if (aCount == 0)
     aCount = 1;
 
-  nsCOMPtr<nsIDocShell> docShell = mWindow->GetDocShell();
-  if (docShell) {
-    nsCOMPtr<nsIPresShell> presShell;
+  if (nsIPresShell* presShell = GetPresShell()) {
+    nsIFrame *rootFrame = presShell->GetRootFrame();
 
-    rv = docShell->GetPresShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(rv) && presShell) {
-      nsIFrame *rootFrame = presShell->GetRootFrame();
+    if (rootFrame) {
+      nsRect r(nsPoint(0, 0), rootFrame->GetSize());
 
-      if (rootFrame) {
-        nsRect r(nsPoint(0, 0), rootFrame->GetSize());
+      PRIntervalTime iStart = PR_IntervalNow();
 
-        PRIntervalTime iStart = PR_IntervalNow();
-
-        for (PRUint32 i = 0; i < aCount; i++)
-          rootFrame->InvalidateWithFlags(r, nsIFrame::INVALIDATE_IMMEDIATE);
+      for (PRUint32 i = 0; i < aCount; i++)
+        rootFrame->InvalidateWithFlags(r, nsIFrame::INVALIDATE_IMMEDIATE);
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
-        XSync(GDK_DISPLAY(), False);
+      XSync(GDK_DISPLAY(), False);
 #endif
 
-        *aDurationOut = PR_IntervalToMilliseconds(PR_IntervalNow() - iStart);
+      *aDurationOut = PR_IntervalToMilliseconds(PR_IntervalNow() - iStart);
 
-        return NS_OK;
-      }
+      return NS_OK;
     }
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  if (!(aWidthPx >= 0.0 && aHeightPx >= 0.0)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nscoord width = nsPresContext::CSSPixelsToAppUnits(aWidthPx);
+  nscoord height = nsPresContext::CSSPixelsToAppUnits(aHeightPx);
+
+  presShell->ResizeReflowOverride(width, height);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
+                                 float aWidthPx, float aHeightPx)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  } 
+
+  nsRect displayport(nsPresContext::CSSPixelsToAppUnits(aXPx),
+                     nsPresContext::CSSPixelsToAppUnits(aYPx),
+                     nsPresContext::CSSPixelsToAppUnits(aWidthPx),
+                     nsPresContext::CSSPixelsToAppUnits(aHeightPx));
+  presShell->SetDisplayPort(displayport);
+
+  presShell->SetIgnoreViewportScrolling(PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  return presShell ? presShell->SetResolution(aXResolution, aYResolution)
+                   : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -575,7 +643,7 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GarbageCollect()
+nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
 {
   // Always permit this in debug builds.
 #ifndef DEBUG
@@ -584,7 +652,7 @@ nsDOMWindowUtils::GarbageCollect()
   }
 #endif
 
-  nsJSContext::CC();
+  nsJSContext::CC(aListener);
 
   return NS_OK;
 }
@@ -1481,6 +1549,62 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
     return NS_ERROR_FAILURE;
 
   mgr->GetBackendName(aType);
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
+                                 PRUint32 aFlags,
+                                 nscolor aBackgroundColor,
+                                 gfxContext* aThebesContext)
+{
+    // Get DOM Document
+    nsresult rv;
+    nsCOMPtr<nsIDOMDocument> ddoc;
+    rv = mWindow->GetDocument(getter_AddRefs(ddoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get Document
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get Primary Shell
+    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+    // Render Document
+    return presShell->RenderDocument(aRect, aFlags, aBackgroundColor, aThebesContext);
+}
+
+NS_IMETHODIMP 
+nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
+{
+  NS_ENSURE_ARG_POINTER(aCursor);
+
+  PRBool isSameDoc = PR_FALSE;
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  do {
+    if (nsEventStateManager::sMouseOverDocument == doc.get()) {
+      isSameDoc = PR_TRUE;
+      break;
+    }
+  } while ((doc = doc->GetParentDocument()));
+
+  if (!isSameDoc) {
+    *aCursor = eCursor_none;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  // fetch cursor value from window's widget
+  *aCursor = widget->GetCursor();
 
   return NS_OK;
 }

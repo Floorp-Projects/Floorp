@@ -78,8 +78,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBCURSOR
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBCursor,
-                                           nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBCursor,
+                                                         nsDOMEventTargetHelper)
 
   static
   already_AddRefed<IDBCursor>
@@ -137,7 +137,7 @@ protected:
   nsCOMPtr<nsIVariant> mCachedKey;
   jsval mCachedValue;
   bool mHaveCachedValue;
-  JSRuntime* mJSRuntime;
+  bool mValueRooted;
 
   bool mContinueCalled;
   PRUint32 mDataIndex;

@@ -702,6 +702,20 @@ nsWaveStateMachine::Run()
         mSeekTime = NS_MIN(mSeekTime, GetDuration());
         float seekTime = mSeekTime;
 
+        // Calculate relative offset within PCM data.
+        PRInt64 position = RoundDownToSample(TimeToBytes(seekTime));
+        NS_ABORT_IF_FALSE(position >= 0 && position <= GetDataLength(),
+                          "Invalid seek position");
+        // Convert to absolute offset within stream.
+        position += mWavePCMOffset;
+
+        // If in the midst of a seek, report the requested seek time
+        // as the current time as required by step 8 of 4.8.10.9 'Seeking'
+        // in the WHATWG spec.
+        PRInt64 oldPosition = mPlaybackPosition;
+        mPlaybackPosition = position;
+        FirePositionChanged(PR_TRUE);
+
         monitor.Exit();
         nsCOMPtr<nsIRunnable> startEvent =
           NS_NewRunnableMethod(mDecoder, &nsWaveDecoder::SeekingStarted);
@@ -712,22 +726,14 @@ nsWaveStateMachine::Run()
           break;
         }
 
-        // Calculate relative offset within PCM data.
-        PRInt64 position = RoundDownToSample(TimeToBytes(seekTime));
-        NS_ABORT_IF_FALSE(position >= 0 && position <= GetDataLength(),
-                          "Invalid seek position");
-        // Convert to absolute offset within stream.
-        position += mWavePCMOffset;
-
         monitor.Exit();
         nsresult rv;
         rv = mStream->Seek(nsISeekableStream::NS_SEEK_SET, position);
+        monitor.Enter();
         if (NS_FAILED(rv)) {
           NS_WARNING("Seek failed");
-        }
-        monitor.Enter();
-        if (NS_SUCCEEDED(rv)) {
-          mPlaybackPosition = position;
+          mPlaybackPosition = oldPosition;
+          FirePositionChanged(PR_TRUE);
         }
 
         if (mState == STATE_SHUTDOWN) {
@@ -757,8 +763,6 @@ nsWaveStateMachine::Run()
           }
           ChangeState(nextState);
         }
-
-        FirePositionChanged(PR_TRUE);
 
         monitor.Exit();
         nsCOMPtr<nsIRunnable> stopEvent =
@@ -1429,6 +1433,7 @@ nsWaveDecoder::MetadataLoaded()
   } else {
     StartProgress();
   }
+  StartTimeUpdate();
 }
 
 void
@@ -1548,6 +1553,7 @@ nsWaveDecoder::Shutdown()
     return;
 
   mShuttingDown = PR_TRUE;
+  StopTimeUpdate();
 
   nsMediaDecoder::Shutdown();
 
@@ -1674,7 +1680,7 @@ nsWaveDecoder::PlaybackPositionChanged()
 
   if (mElement && lastTime != mCurrentTime) {
     UpdateReadyStateForData();
-    mElement->DispatchSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    FireTimeUpdate();
   }
 }
 

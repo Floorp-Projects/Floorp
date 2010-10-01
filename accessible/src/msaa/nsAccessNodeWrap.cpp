@@ -46,6 +46,7 @@
 #include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
 #include "nsRootAccessible.h"
+#include "nsWinUtils.h"
 
 #include "nsAttrName.h"
 #include "nsIDocument.h"
@@ -63,6 +64,7 @@
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
 HINSTANCE nsAccessNodeWrap::gmUserLib = nsnull;
 LPFNACCESSIBLEOBJECTFROMWINDOW nsAccessNodeWrap::gmAccessibleObjectFromWindow = nsnull;
+LPFNLRESULTFROMOBJECT nsAccessNodeWrap::gmLresultFromObject = NULL;
 LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
 LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
@@ -132,12 +134,58 @@ STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 {
+  *ppv = nsnull;
+
   static const GUID IID_SimpleDOMDeprecated = {0x0c539790,0x12e4,0x11cf,0xb6,0x61,0x00,0xaa,0x00,0x4c,0xd6,0xd8};
+
+  // Provide a special service ID for getting the accessible for the browser tab
+  // document that contains this accessible object. If this accessible object
+  // is not inside a browser tab then the service fails with E_NOINTERFACE.
+  // A use case for this is for screen readers that need to switch context or
+  // 'virtual buffer' when focus moves from one browser tab area to another.
+  static const GUID SID_IAccessibleContentDocument = {0xa5d8e1f3,0x3571,0x4d8f,0x95,0x21,0x07,0xed,0x28,0xfb,0x07,0x2e};
+
   if (guidService != IID_ISimpleDOMNode &&
       guidService != IID_SimpleDOMDeprecated &&
       guidService != IID_IAccessible &&  guidService != IID_IAccessible2 &&
-      guidService != IID_IAccessibleApplication)
+      guidService != IID_IAccessibleApplication &&
+      guidService != SID_IAccessibleContentDocument)
     return E_INVALIDARG;
+
+  if (guidService == SID_IAccessibleContentDocument) {
+    if (iid != IID_IAccessible)
+      return E_NOINTERFACE;
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = 
+      nsCoreUtils::GetDocShellTreeItemFor(mContent);
+    if (!docShellTreeItem)
+      return E_UNEXPECTED;
+
+    // Walk up the parent chain without crossing the boundary at which item
+    // types change, preventing us from walking up out of tab content.
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if (!root)
+      return E_UNEXPECTED;
+
+
+    // If the item type is typeContent, we assume we are in browser tab content.
+    // Note this includes content such as about:addons, for consistency.
+    PRInt32 itemType;
+    root->GetItemType(&itemType);
+    if (itemType != nsIDocShellTreeItem::typeContent)
+      return E_NOINTERFACE;
+
+    // Make sure this is a document.
+    nsDocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
+    if (!docAcc)
+      return E_UNEXPECTED;
+
+    *ppv = static_cast<IAccessible*>(docAcc);
+
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
+    return NS_OK;
+  }
 
   // Can get to IAccessibleApplication from any node via QS
   if (iid == IID_IAccessibleApplication) {
@@ -569,7 +617,14 @@ void nsAccessNodeWrap::InitAccessibility()
   }
 
   DoATSpecificProcessing();
-  
+
+  // Register window class that'll be used for document accessibles associated
+  // with tabs.
+  if (nsWinUtils::IsWindowEmulationEnabled()) {
+    nsWinUtils::RegisterNativeWindow(kClassNameTabContent);
+    sHWNDCache.Init(4);
+  }
+
   nsAccessNode::InitXPAccessibility();
 }
 
@@ -577,6 +632,11 @@ void nsAccessNodeWrap::ShutdownAccessibility()
 {
   NS_IF_RELEASE(gTextEvent);
   ::DestroyCaret();
+
+  // Unregister window call that's used for document accessibles associated
+  // with tabs.
+  if (nsWinUtils::IsWindowEmulationEnabled())
+    ::UnregisterClassW(kClassNameTabContent, GetModuleHandle(NULL));
 
   nsAccessNode::ShutdownXPAccessibility();
 }
@@ -624,7 +684,7 @@ GetHRESULT(nsresult aResult)
 
 PRBool nsAccessNodeWrap::IsOnlyMsaaCompatibleJawsPresent()
 {
-  HMODULE jhookhandle = ::GetModuleHandleW(L"jhook");
+  HMODULE jhookhandle = ::GetModuleHandleW(kJAWSModuleHandle);
   if (!jhookhandle)
     return PR_FALSE;  // No JAWS, or some other screen reader, use IA2
 
@@ -655,10 +715,10 @@ PRBool nsAccessNodeWrap::IsOnlyMsaaCompatibleJawsPresent()
 
 void nsAccessNodeWrap::TurnOffNewTabSwitchingForJawsAndWE()
 {
-  HMODULE srHandle = ::GetModuleHandleW(L"jhook");
+  HMODULE srHandle = ::GetModuleHandleW(kJAWSModuleHandle);
   if (!srHandle) {
     // No JAWS, try Window-Eyes
-    srHandle = ::GetModuleHandleW(L"gwm32inc");
+    srHandle = ::GetModuleHandleW(kWEModuleHandle);
     if (!srHandle) {
       // no screen reader we're interested in. Bail out.
       return;
@@ -693,4 +753,50 @@ void nsAccessNodeWrap::DoATSpecificProcessing()
     gIsIA2Disabled  = PR_TRUE;
 
   TurnOffNewTabSwitchingForJawsAndWE();
+}
+
+nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible> nsAccessNodeWrap::sHWNDCache;
+
+LRESULT CALLBACK
+nsAccessNodeWrap::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  switch (msg) {
+    case WM_GETOBJECT:
+    {
+      if (lParam == OBJID_CLIENT) {
+        nsDocAccessible* document = sHWNDCache.GetWeak(static_cast<void*>(hWnd));
+        if (document) {
+          IAccessible* msaaAccessible = NULL;
+          document->GetNativeInterface((void**)&msaaAccessible); // does an addref
+          if (msaaAccessible) {
+            LRESULT result = LresultFromObject(IID_IAccessible, wParam,
+                                               msaaAccessible); // does an addref
+            msaaAccessible->Release(); // release extra addref
+            return result;
+          }
+        }
+      }
+      return 0;
+    }
+  }
+
+  return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+STDMETHODIMP_(LRESULT)
+nsAccessNodeWrap::LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc)
+{
+  // open the dll dynamically
+  if (!gmAccLib)
+    gmAccLib =::LoadLibraryW(L"OLEACC.DLL");
+
+  if (gmAccLib) {
+    if (!gmLresultFromObject)
+      gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
+
+    if (gmLresultFromObject)
+      return gmLresultFromObject(riid, wParam, pAcc);
+  }
+
+  return 0;
 }

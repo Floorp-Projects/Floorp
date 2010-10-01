@@ -2121,7 +2121,7 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 #define PROFILE_CHANGE_TEARDOWN_TOPIC "profile-change-teardown"
 #define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC "profile-change-teardown-veto"
 #define PROFILE_BEFORE_CHANGE_TOPIC "profile-before-change"
-#define PROFILE_AFTER_CHANGE_TOPIC "profile-after-change"
+#define PROFILE_DO_CHANGE_TOPIC "profile-do-change"
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
@@ -2141,7 +2141,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving profile change topic\n"));
     DoProfileBeforeChange(aSubject);
   }
-  else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0) {
+  else if (nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC) == 0) {
     if (someData && NS_LITERAL_STRING("startup").Equals(someData)) {
       // The application is initializing against a known profile directory for
       // the first time during process execution.
@@ -2379,7 +2379,7 @@ nsNSSComponent::RegisterObservers()
     observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
-    observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
+    observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
   }
@@ -2404,7 +2404,7 @@ nsNSSComponent::DeregisterObservers()
     observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC);
     observerService->RemoveObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
-    observerService->RemoveObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
+    observerService->RemoveObserver(this, PROFILE_DO_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC);
   }

@@ -37,8 +37,9 @@
 #include <string>
 
 #include "client/minidump_file_writer.h"
-#include "google_breakpad/common/minidump_format.h"
+#include "common/memory.h"
 #include "common/mac/macho_utilities.h"
+#include "google_breakpad/common/minidump_format.h"
 
 #include "dynamic_images.h"
 
@@ -119,6 +120,7 @@ class MinidumpGenerator {
 
   // Stream writers
   bool WriteThreadListStream(MDRawDirectory *thread_list_stream);
+  bool WriteMemoryListStream(MDRawDirectory *memory_list_stream);
   bool WriteExceptionStream(MDRawDirectory *exception_stream);
   bool WriteSystemInfoStream(MDRawDirectory *system_info_stream);
   bool WriteModuleListStream(MDRawDirectory *module_list_stream);
@@ -165,6 +167,15 @@ class MinidumpGenerator {
   
   // Information about dynamically loaded code
   DynamicImages *dynamic_images_;
+
+  // PageAllocator makes it possible to allocate memory
+  // directly from the system, even while handling an exception.
+  mutable PageAllocator allocator_;
+
+  // Blocks of memory written to the dump. These are all currently
+  // written while writing the thread list stream, but saved here
+  // so a memory list stream can be written afterwards.
+  wasteful_vector<MDMemoryDescriptor> memory_blocks_;
 };
 
 }  // namespace google_breakpad

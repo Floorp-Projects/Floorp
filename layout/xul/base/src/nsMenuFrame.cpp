@@ -1254,8 +1254,7 @@ nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, PRBool aFlipChecked)
 
   PRBool shift = PR_FALSE, control = PR_FALSE, alt = PR_FALSE, meta = PR_FALSE;
   if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
-                 aEvent->eventStructType == NS_KEY_EVENT ||
-                 aEvent->eventStructType == NS_ACCESSIBLE_EVENT)) {
+                 aEvent->eventStructType == NS_KEY_EVENT)) {
     shift = static_cast<nsInputEvent *>(aEvent)->isShift;
     control = static_cast<nsInputEvent *>(aEvent)->isControl;
     alt = static_cast<nsInputEvent *>(aEvent)->isAlt;
@@ -1368,6 +1367,13 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
         return PR_FALSE;
       tmpSize = mPopupFrame->GetPrefSize(aState);
       aSize.width = tmpSize.width;
+
+      // if there is a scroll frame, add the desired width of the scrollbar as well
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(mPopupFrame->GetFirstChild(nsnull));
+      if (scrollFrame) {
+        aSize.width += scrollFrame->GetDesiredScrollbarSizes(&aState).LeftRight();
+      }
+
       return PR_TRUE;
     }
   }

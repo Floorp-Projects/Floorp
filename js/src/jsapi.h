@@ -308,21 +308,22 @@ JSVAL_TO_PRIVATE(jsval v)
 #define JSID_TYPE_MASK                   0x7
 
 /*
- * Do not use canonical 'id' for jsid parameters since this is a magic word in
+ * Avoid using canonical 'id' for jsid parameters since this is a magic word in
  * Objective-C++ which, apparently, wants to be able to #include jsapi.h.
  */
+#define id iden
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_STRING(jsid iden)
+JSID_IS_STRING(jsid id)
 {
-    return (JSID_BITS(iden) & JSID_TYPE_MASK) == 0;
+    return (JSID_BITS(id) & JSID_TYPE_MASK) == 0;
 }
 
 static JS_ALWAYS_INLINE JSString *
-JSID_TO_STRING(jsid iden)
+JSID_TO_STRING(jsid id)
 {
-    JS_ASSERT(JSID_IS_STRING(iden));
-    return (JSString *)(JSID_BITS(iden));
+    JS_ASSERT(JSID_IS_STRING(id));
+    return (JSString *)(JSID_BITS(id));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -332,24 +333,24 @@ JS_StringHasBeenInterned(JSString *str);
 static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
-    jsid iden;
+    jsid id;
     JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-    JSID_BITS(iden) = (size_t)str;
-    return iden;
+    JSID_BITS(id) = (size_t)str;
+    return id;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_INT(jsid iden)
+JSID_IS_INT(jsid id)
 {
-    return !!(JSID_BITS(iden) & JSID_TYPE_INT);
+    return !!(JSID_BITS(id) & JSID_TYPE_INT);
 }
 
 static JS_ALWAYS_INLINE int32
-JSID_TO_INT(jsid iden)
+JSID_TO_INT(jsid id)
 {
-    JS_ASSERT(JSID_IS_INT(iden));
-    return ((int32)JSID_BITS(iden)) >> 1;
+    JS_ASSERT(JSID_IS_INT(id));
+    return ((int32)JSID_BITS(id)) >> 1;
 }
 
 #define JSID_INT_MIN  (-(1 << 30))
@@ -365,45 +366,46 @@ INT_FITS_IN_JSID(int32 i)
 static JS_ALWAYS_INLINE jsid
 INT_TO_JSID(int32 i)
 {
-    jsid iden;
+    jsid id;
     JS_ASSERT(INT_FITS_IN_JSID(i));
-    JSID_BITS(iden) = ((i << 1) | JSID_TYPE_INT);
-    return iden;
+    JSID_BITS(id) = ((i << 1) | JSID_TYPE_INT);
+    return id;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_OBJECT(jsid iden)
+JSID_IS_OBJECT(jsid id)
 {
-    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT;
+    return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT &&
+           (size_t)JSID_BITS(id) != JSID_TYPE_OBJECT;
 }
 
 static JS_ALWAYS_INLINE JSObject *
-JSID_TO_OBJECT(jsid iden)
+JSID_TO_OBJECT(jsid id)
 {
-    JS_ASSERT(JSID_IS_OBJECT(iden));
-    return (JSObject *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
+    JS_ASSERT(JSID_IS_OBJECT(id));
+    return (JSObject *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
 static JS_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
-    jsid iden;
+    jsid id;
     JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
-    JSID_BITS(iden) = ((size_t)obj | JSID_TYPE_OBJECT);
-    return iden;
+    JSID_BITS(id) = ((size_t)obj | JSID_TYPE_OBJECT);
+    return id;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_GCTHING(jsid iden)
+JSID_IS_GCTHING(jsid id)
 {
-    return JSID_IS_STRING(iden) || JSID_IS_OBJECT(iden);
+    return JSID_IS_STRING(id) || JSID_IS_OBJECT(id);
 }
 
 static JS_ALWAYS_INLINE void *
-JSID_TO_GCTHING(jsid iden)
+JSID_TO_GCTHING(jsid id)
 {
-    return (void *)(JSID_BITS(iden) & ~(size_t)JSID_TYPE_MASK);
+    return (void *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
 /*
@@ -412,11 +414,11 @@ JSID_TO_GCTHING(jsid iden)
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
+JSID_IS_DEFAULT_XML_NAMESPACE(jsid id)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
-                 JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
-    return ((size_t)JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
+                 JSID_BITS(id) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
+    return ((size_t)JSID_BITS(id) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
 }
 
 #ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
@@ -433,17 +435,27 @@ extern JS_PUBLIC_DATA(jsid) JS_DEFAULT_XML_NAMESPACE_ID;
  */
 
 static JS_ALWAYS_INLINE JSBool
-JSID_IS_VOID(jsid iden)
+JSID_IS_VOID(jsid id)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
-                 JSID_BITS(iden) == JSID_TYPE_VOID);
-    return ((size_t)JSID_BITS(iden) == JSID_TYPE_VOID);
+    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+                 JSID_BITS(id) == JSID_TYPE_VOID);
+    return ((size_t)JSID_BITS(id) == JSID_TYPE_VOID);
 }
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_EMPTY(jsid id)
+{
+    return ((size_t)JSID_BITS(id) == JSID_TYPE_OBJECT);
+}
+
+#undef id
 
 #ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
+extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 #else
-#define JSID_VOID  ((jsid)JSID_TYPE_VOID)
+# define JSID_VOID      ((jsid)JSID_TYPE_VOID)
+# define JSID_EMPTY     ((jsid)JSID_TYPE_OBJECT)
 #endif
 
 /************************************************************************/
@@ -472,6 +484,8 @@ extern JS_PUBLIC_DATA(jsid) JSID_VOID;
                                            if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
+#define JSFUN_CONSTRUCTOR       0x02    /* native that can be called as a ctor
+                                           without creating a this object */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
@@ -485,9 +499,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #define JSFUN_THISP_BOOLEAN   0x0400    /* |this| may be a primitive boolean */
 #define JSFUN_THISP_PRIMITIVE 0x0700    /* |this| may be any primitive value */
 
-#define JSFUN_FAST_NATIVE     0x0800    /* JSFastNative needs no JSStackFrame */
-
-#define JSFUN_FLAGS_MASK      0x0ff8    /* overlay JSFUN_* attributes --
+#define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
                                            flag interpreted functions */
 
@@ -705,8 +717,8 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2);
 extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
-extern JS_PUBLIC_API(void)
-JS_CommenceRuntimeShutDown(JSRuntime *rt);
+/* Deprecated. */
+#define JS_CommenceRuntimeShutDown(rt) ((void) 0) 
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
@@ -907,6 +919,8 @@ JS_StringToVersion(const char *string);
                                                    leaving that up to the
                                                    embedding. */
 
+#define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
+
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
 
@@ -938,36 +952,37 @@ extern JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RewrapObject(JSContext *cx, JSObject **objp);
+JS_WrapObject(JSContext *cx, JSObject **objp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RewrapValue(JSContext *cx, jsval *p);
+JS_WrapValue(JSContext *cx, jsval *vp);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
+class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
     JSCrossCompartmentCall *call;
+
   public:
-    JSAutoCrossCompartmentCall() : call(NULL) {}
+    JSAutoEnterCompartment() : call(NULL) {}
 
     bool enter(JSContext *cx, JSObject *target);
 
-    ~JSAutoCrossCompartmentCall() {
+    void enterAndIgnoreErrors(JSContext *cx, JSObject *target);
+
+    bool entered() const { return call != NULL; }
+
+    ~JSAutoEnterCompartment() {
         if (call)
             JS_LeaveCrossCompartmentCall(call);
     }
-};
 
-class JS_FRIEND_API(JSAutoEnterCompartment)
-{
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment);
-    JSAutoEnterCompartment(JSContext *cx, JSObject *target);
-    ~JSAutoEnterCompartment();
+    void swap(JSAutoEnterCompartment &other) {
+        JSCrossCompartmentCall *tmp = call;
+        call = other.call;
+        other.call = tmp;
+    }
 };
 
 JS_BEGIN_EXTERN_C
@@ -1038,6 +1053,34 @@ JS_GetGlobalForScopeChain(JSContext *cx);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_InitCTypesClass(JSContext *cx, JSObject *global);
+
+/*
+ * Convert a unicode string 'source' of length 'slen' to the platform native
+ * charset, returning a null-terminated string allocated with JS_malloc. On
+ * failure, this function should report an error.
+ */
+typedef char *
+(* JSCTypesUnicodeToNativeFun)(JSContext *cx, const jschar *source, size_t slen);
+
+/*
+ * Set of function pointers that ctypes can use for various internal functions.
+ * See JS_SetCTypesCallbacks below. Providing NULL for a function is safe,
+ * and will result in the applicable ctypes functionality not being available.
+ */
+struct JSCTypesCallbacks {
+    JSCTypesUnicodeToNativeFun unicodeToNative;
+};
+
+typedef struct JSCTypesCallbacks JSCTypesCallbacks;
+
+/*
+ * Set the callbacks on the provided 'ctypesObj' object. 'callbacks' should be a
+ * pointer to static data that exists for the lifetime of 'ctypesObj', but it
+ * may safely be altered after calling this function and without having
+ * to call this function again.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_SetCTypesCallbacks(JSContext *cx, JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
 #endif
 
 /*
@@ -1064,9 +1107,11 @@ JS_InitCTypesClass(JSContext *cx, JSObject *global);
  * WARNING: These are not (yet) mandatory macros, but new code outside of the
  * engine should use them. In the Mozilla 2.0 milestone their definitions may
  * change incompatibly.
+ *
+ * N.B. constructors must not use JS_THIS, as no 'this' object has been created.
  */
+
 #define JS_CALLEE(cx,vp)        ((vp)[0])
-#define JS_ARGV_CALLEE(argv)    ((argv)[-2])
 #define JS_THIS(cx,vp)          JS_ComputeThis(cx, vp)
 #define JS_THIS_OBJECT(cx,vp)   (JSVAL_TO_OBJECT(JS_THIS(cx,vp)))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
@@ -1075,6 +1120,15 @@ JS_InitCTypesClass(JSContext *cx, JSObject *global);
 
 extern JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp);
+
+#ifdef __cplusplus
+#undef JS_THIS
+static inline jsval
+JS_THIS(JSContext *cx, jsval *vp)
+{
+    return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
+}
+#endif
 
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);
@@ -1630,7 +1684,6 @@ struct JSClass {
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
-/* (1<<4) was JSCLASS_SHARE_ALL_PROPERTIES, now obsolete. See bug 527805. */
 #define JSCLASS_NEW_RESOLVE_GETS_START  (1<<5)  /* JSNewResolveOp gets starting
                                                    object in prototype chain
                                                    passed in via *objp in/out
@@ -1665,10 +1718,11 @@ struct JSClass {
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
 /* Additional global reserved slots, beyond those for standard prototypes. */
-#define JSRESERVED_GLOBAL_SLOTS_COUNT     3
+#define JSRESERVED_GLOBAL_SLOTS_COUNT     4
 #define JSRESERVED_GLOBAL_COMPARTMENT     (JSProto_LIMIT * 3)
 #define JSRESERVED_GLOBAL_THIS            (JSRESERVED_GLOBAL_COMPARTMENT + 1)
 #define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
+#define JSRESERVED_GLOBAL_REGEXP_STATICS  (JSRESERVED_GLOBAL_THROWTYPEERROR + 1)
 
 /*
  * ECMA-262 requires that most constructors used internally create objects
@@ -1763,38 +1817,23 @@ struct JSFunctionSpec {
     JSNative        call;
     uint16          nargs;
     uint16          flags;
-
-    /*
-     * extra & 0xFFFF:  Number of extra argument slots for local GC roots.
-     *                  If fast native, must be zero.
-     * extra >> 16:     Reserved for future use (must be 0).
-     */
-    uint32          extra;
 };
 
 /*
  * Terminating sentinel initializer to put at the end of a JSFunctionSpec array
  * that's passed to JS_DefineFunctions or JS_InitClass.
  */
-#define JS_FS_END JS_FS(NULL,NULL,0,0,0)
+#define JS_FS_END JS_FS(NULL,NULL,0,0)
 
 /*
- * Initializer macro for a JSFunctionSpec array element. This is the original
- * kind of native function specifier initializer. Use JS_FN ("fast native", see
- * JSFastNative in jspubtd.h) for all functions that do not need a stack frame
- * when activated.
+ * Initializer macros for a JSFunctionSpec array element. JS_FN (whose name
+ * pays homage to the old JSNative/JSFastNative split) simply adds the flag
+ * JSFUN_STUB_GSOPS.
  */
-#define JS_FS(name,call,nargs,flags,extra)                                    \
-    {name, call, nargs, flags, extra}
-
-/*
- * "Fast native" initializer macro for a JSFunctionSpec array element. Use this
- * in preference to JS_FS if the native in question does not need its own stack
- * frame when activated.
- */
-#define JS_FN(name,fastcall,nargs,flags)                                      \
-    JS_FS(name, (JSNative)(fastcall), nargs,                                  \
-          (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS, 0)
+#define JS_FS(name,call,nargs,flags)                                          \
+    {name, call, nargs, flags}
+#define JS_FN(name,call,nargs,flags)                                          \
+    {name, call, nargs, (flags) | JSFUN_STUB_GSOPS}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
@@ -1862,6 +1901,10 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
+/* Queries the [[Extensible]] property of the object. */
+extern JS_PUBLIC_API(JSBool)
+JS_IsExtensible(JSObject *obj);
+
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
  * proto if proto's actual parameter value is null.
@@ -1870,8 +1913,19 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            JSObject *parent);
 
+/*
+ * Freeze obj, and all objects it refers to, recursively. This will not recurse
+ * through non-extensible objects, on the assumption that those are already
+ * deep-frozen.
+ */
 extern JS_PUBLIC_API(JSBool)
-JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep);
+JS_DeepFreezeObject(JSContext *cx, JSObject *obj);
+
+/*
+ * Freezes an object; see ES5's Object.freeze(obj) method.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
@@ -2355,6 +2409,13 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                       JSPrincipals *principals,
+                                       const jschar *chars, size_t length,
+                                       const char *filename, uintN lineno,
+                                       JSVersion version);
+
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
 
 extern JS_PUBLIC_API(JSScript *)
@@ -2420,6 +2481,14 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   uintN nargs, const char **argnames,
                                   const jschar *chars, size_t length,
                                   const char *filename, uintN lineno);
+
+extern JS_PUBLIC_API(JSFunction *)
+JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         JSPrincipals *principals, const char *name,
+                                         uintN nargs, const char **argnames,
+                                         const jschar *chars, size_t length,
+                                         const char *filename, uintN lineno,
+                                         JSVersion version);
 
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
@@ -2501,6 +2570,13 @@ JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
                     jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
+JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                        JSPrincipals *principals,
+                                        const jschar *chars, uintN length,
+                                        const char *filename, uintN lineno,
+                                        jsval *rval, JSVersion version);
+
+extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  JSPrincipals *principals,
                                  const jschar *chars, uintN length,
@@ -2550,9 +2626,6 @@ JS_TriggerAllOperationCallbacks(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
-
-extern JS_PUBLIC_API(JSBool)
-JS_IsConstructing(JSContext *cx);
 
 /*
  * Saving and restoring frame chains.
@@ -2915,25 +2988,32 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
 #define JSREG_NOCOMPILE 0x20    /* do not try to compile to native code */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags);
+JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags);
+JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags);
 
 extern JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline);
+JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multiline);
 
 extern JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_ClearRegExpRoots(JSContext *cx);
+JS_ClearRegExpStatics(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
+JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, size_t length,
                  size_t *indexp, JSBool test, jsval *rval);
 
-/* TODO: compile, get/set other statics... */
+/* RegExp interface for clients without a global object. */
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN flags);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
+                          size_t *indexp, JSBool test, jsval *rval);
 
 /************************************************************************/
 
@@ -3026,6 +3106,87 @@ JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
 extern JS_PUBLIC_API(JSFunctionCallback)
 JS_GetFunctionCallback(JSContext *cx);
 #endif
+
+/************************************************************************/
+
+/*
+ * JS_IsConstructing must be called from within a native given the
+ * native's original cx and vp arguments. If JS_IsConstructing is true,
+ * JS_THIS must not be used; the constructor should construct and return a
+ * new object. Otherwise, the native is called as an ordinary function and
+ * JS_THIS may be used.
+ */
+static JS_ALWAYS_INLINE JSBool
+JS_IsConstructing(JSContext *cx, const jsval *vp)
+{
+    jsval_layout l;
+
+#ifdef DEBUG
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if (JS_ObjectIsFunction(cx, callee)) {
+        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
+        JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
+    }
+#endif
+
+    l.asBits = JSVAL_BITS(vp[1]);
+    return JSVAL_IS_MAGIC_IMPL(l);
+}
+
+/*
+ * In the case of a constructor called from JS_ConstructObject and
+ * JS_InitClass where the class has the JSCLASS_CONSTRUCT_PROTOTYPE flag set,
+ * the JS engine passes the constructor a non-standard 'this' object. In such
+ * cases, the following query provides the additional information of whether a
+ * special 'this' was supplied. E.g.:
+ *
+ *   JSBool foo_native(JSContext *cx, uintN argc, jsval *vp) {
+ *     JSObject *maybeThis;
+ *     if (JS_IsConstructing_PossiblyWithGivenThisObject(cx, vp, &maybeThis)) {
+ *       // native called as a constructor
+ *       if (maybeThis)
+ *         // native called as a constructor with maybeThis as 'this'
+ *     } else {
+ *       // native called as function, maybeThis is still uninitialized
+ *     }
+ *   }
+ *
+ * Note that embeddings do not need to use this query unless they use the
+ * aforementioned API/flags.
+ */
+static JS_ALWAYS_INLINE JSBool
+JS_IsConstructing_PossiblyWithGivenThisObject(JSContext *cx, const jsval *vp,
+                                              JSObject **maybeThis)
+{
+    jsval_layout l;
+    JSBool isCtor;
+
+#ifdef DEBUG
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+    if (JS_ObjectIsFunction(cx, callee)) {
+        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
+        JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
+    } else {
+        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
+    }
+#endif
+
+    l.asBits = JSVAL_BITS(vp[1]);
+    isCtor = JSVAL_IS_MAGIC_IMPL(l);
+    if (isCtor)
+        *maybeThis = MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(l);
+    return isCtor;
+}
+
+/*
+ * If a constructor does not have any static knowledge about the type of
+ * object to create, it can request that the JS engine create a default new
+ * 'this' object, as is done for non-constructor natives when called with new.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
 
 /************************************************************************/
 

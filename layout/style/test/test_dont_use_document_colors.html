@@ -9,7 +9,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style type="text/css">
 
-  #one, #three { background: blue; color: yellow; border: thin solid red; -moz-column-rule: 2px solid green; text-shadow: 2px 2px green; -moz-box-shadow: 3px 7px blue; }
+  #one, #three { background: blue; color: yellow; border: thin solid red; -moz-column-rule: 2px solid green; text-shadow: 2px 2px green; box-shadow: 3px 7px blue; }
   #two { background: transparent; border: thin solid; }
   #five, #six {border: thick solid red; -moz-border-start-color:green; -moz-border-end-color:blue}
   #seven {
@@ -93,8 +93,8 @@ function part1()
           "-moz-column-rule-color applies");
     isnot(cs1.textShadow, cs2.textShadow,
           "text-shadow applies");
-    isnot(cs1.MozBoxShadow, cs2.MozBoxShadow,
-          "-moz-box-shadow applies");
+    isnot(cs1.boxShadow, cs2.boxShadow,
+          "box-shadow applies");
     is(cs1.borderTopColor, cs3.borderTopColor, "border-top-color applies");
     is(cs1.borderRightColor, cs3.borderRightColor,
        "border-right-color applies");
@@ -106,8 +106,8 @@ function part1()
        "-moz-column-rule-color applies");
     is(cs1.textShadow, cs3.textShadow,
        "text-shadow applies");
-    is(cs1.MozBoxShadow, cs3.MozBoxShadow,
-       "-moz-box-shadow applies");
+    is(cs1.boxShadow, cs3.boxShadow,
+       "box-shadow applies");
     isnot(cs5.borderRightColor, cs2.borderRightColor,
           "-moz-border-end-color applies");
     isnot(cs5.borderLeftColor, cs2.borderLeftColor,
@@ -178,8 +178,8 @@ function part2()
        "-moz-column-rule-color is blocked");
     is(cs1.textShadow, cs2.textShadow,
        "text-shadow is blocked");
-    is(cs1.MozBoxShadow, cs2.MozBoxShadow,
-       "-moz-box-shadow is blocked");
+    is(cs1.boxShadow, cs2.boxShadow,
+       "box-shadow is blocked");
     is(cs3.backgroundColor, cs1.backgroundColor, "background-color transparency preserved (opaque)");
     is(cs3.color, cs4.color, "color is blocked");
     is(cs3.borderTopColor, cs4.borderTopColor, "border-top-color is blocked");

@@ -2716,26 +2716,30 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
 }
 
 static JSBool
-MethodWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+MethodWrapper(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
+    if (!thisobj)
+        return JS_FALSE;
+
+    jsval *argv = JS_ARGV(cx, vp);
     jsval v;
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &v) ||
-        !JS_CallFunctionValue(cx, obj, v, argc, argv, rval)) {
+    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v) ||
+        !JS_CallFunctionValue(cx, thisobj, v, argc, argv, vp)) {
         return JS_FALSE;
     }
 
-    if (JSVAL_IS_PRIMITIVE(*rval))
+    if (JSVAL_IS_PRIMITIVE(*vp))
        return JS_TRUE;
 
     XPCWrappedNative *wn =
-        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*rval));
+        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp));
     if (!wn) {
         XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
         return JS_FALSE;
     }
 
-    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, rval);
+    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, vp);
 }
 
 /* void lookupMethod (); */
@@ -3013,13 +3017,13 @@ PrincipalHolder::GetPrincipal()
 }
 
 static JSBool
-SandboxDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+SandboxDump(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     if (!argc)
         return JS_TRUE;
 
-    str = JS_ValueToString(cx, argv[0]);
+    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return JS_FALSE;
 
@@ -3045,28 +3049,33 @@ SandboxDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     fputs(cstr, stderr);
     NS_Free(cstr);
+    JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     return JS_TRUE;
 }
 
 static JSBool
-SandboxDebug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+SandboxDebug(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef DEBUG
-    return SandboxDump(cx, obj, argc, argv, rval);
+    return SandboxDump(cx, argc, vp);
 #else
     return JS_TRUE;
 #endif
 }
 
 static JSBool
-SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+SandboxImport(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
+    if (!thisobj)
+        return JS_FALSE;
+
     if (argc < 1) {
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
         return JS_FALSE;
     }
 
+    jsval *argv = JS_ARGV(cx, vp);
     JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
     if (!fun) {
         XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
@@ -3092,7 +3101,9 @@ SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsid id;
     if (!JS_ValueToId(cx, STRING_TO_JSVAL(funname), &id))
         return JS_FALSE;
-    return JS_SetPropertyById(cx, obj, id, &argv[0]);
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_SetPropertyById(cx, thisobj, id, &argv[0]);
 }
 
 static JSBool
@@ -3174,10 +3185,10 @@ static JSClass SandboxClass = {
 };
 
 static JSFunctionSpec SandboxFunctions[] = {
-    {"dump",    SandboxDump,    1,0,0},
-    {"debug",   SandboxDebug,   1,0,0},
-    {"importFunction", SandboxImport, 1,0,0},
-    {nsnull,nsnull,0,0,0}
+    {"dump",    SandboxDump,    1,0},
+    {"debug",   SandboxDebug,   1,0},
+    {"importFunction", SandboxImport, 1,0},
+    {nsnull,nsnull,0,0}
 };
 
 #endif /* !XPCONNECT_STANDALONE */
@@ -3259,7 +3270,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
     js::AutoObjectRooter tvr(cx, sandbox);
 
     {
-        JSAutoCrossCompartmentCall ac;
+        JSAutoEnterCompartment ac;
         if (!ac.enter(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
 

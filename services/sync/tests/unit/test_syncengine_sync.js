@@ -46,8 +46,8 @@ SteamStore.prototype = {
     return (id in this.items);
   },
 
-  createRecord: function(id) {
-    var record = new SteamRecord();
+  createRecord: function(id, uri) {
+    var record = new SteamRecord(uri);
     record.id = id;
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
@@ -117,27 +117,6 @@ function sync_httpd_setup(handlers) {
   handlers["/1.0/foo/storage/keys/privkey"]
       = (new ServerWBO('privkey')).handler();
   return httpd_setup(handlers);
-}
-
-function createAndUploadKeypair() {
-  let storageURL = Svc.Prefs.get("clusterURL") + Svc.Prefs.get("storageAPI")
-                   + "/" + ID.get("WeaveID").username + "/storage/";
-
-  PubKeys.defaultKeyUri = storageURL + "keys/pubkey";
-  PrivKeys.defaultKeyUri = storageURL + "keys/privkey";
-  let keys = PubKeys.createKeypair(ID.get("WeaveCryptoID"),
-                                   PubKeys.defaultKeyUri,
-                                   PrivKeys.defaultKeyUri);
-  PubKeys.uploadKeypair(keys);
-}
-
-function createAndUploadSymKey(url) {
-  let symkey = Svc.Crypto.generateRandomKey();
-  let pubkey = PubKeys.getDefaultKey();
-  let meta = new CryptoMeta(url);
-  meta.addUnwrappedKey(pubkey, symkey);
-  let res = new Resource(meta.uri);
-  res.put(meta);
 }
 
 // Turn WBO cleartext into "encrypted" payload as it goes over the wire
@@ -278,7 +257,7 @@ function test_syncStartup_metaGet404() {
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     _("New bulk key was uploaded");
-    let key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
+    let key = crypto_steam.data.keyring["../keys/pubkey"];
     do_check_eq(key.wrapped, "fake-symmetric-key-0");
     do_check_eq(key.hmac, "fake-symmetric-key-0                                            ");
 
@@ -460,7 +439,7 @@ function test_syncStartup_badKeyWipesServerData() {
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     // New bulk key was uploaded
-    key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
+    key = crypto_steam.data.keyring["../keys/pubkey"];
     do_check_eq(key.wrapped, "fake-symmetric-key-1");
     do_check_eq(key.hmac, "fake-symmetric-key-1                                            ");
 

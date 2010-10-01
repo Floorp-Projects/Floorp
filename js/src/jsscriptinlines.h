@@ -76,8 +76,6 @@ JSScript::isEmpty() const
     if (length <= 3) {
         jsbytecode *pc = code;
 
-        if (JSOp(*pc) == JSOP_TRACE)
-            ++pc;
         if (noScriptRval && JSOp(*pc) == JSOP_FALSE)
             ++pc;
         if (JSOp(*pc) == JSOP_STOP)

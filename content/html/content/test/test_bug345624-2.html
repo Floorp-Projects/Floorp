@@ -63,7 +63,7 @@ function checkTooLongValidity(element)
     "Element should not be valid when it is too long");
 
   is(element.validationMessage,
-    "The text is too long. It is 3 characters long and the limit is 2.",
+    "Please shorten this text to 2 characters or less (you are currently using 3 characters).",
     "The validation message text is not correct");
   ok(!element.checkValidity(), "The element should not be valid");
   element.setCustomValidity("custom message");

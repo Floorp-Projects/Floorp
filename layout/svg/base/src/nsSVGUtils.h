@@ -60,6 +60,7 @@ class nsIFrame;
 struct nsStyleSVGPaint;
 class nsIDOMSVGElement;
 class nsIDOMSVGLength;
+class nsIDOMSVGNumberList;
 class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsSVGPreserveAspectRatio;
@@ -593,6 +594,11 @@ public:
     return NS_lround(NS_MAX(double(PR_INT32_MIN),
                             NS_MIN(double(PR_INT32_MAX), aVal)));
   }
+
+  /**
+   * Returns aIndex-th item of nsIDOMSVGNumberList
+   */
+  static float GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex);
 
 private:
   /* Computational (nil) surfaces */

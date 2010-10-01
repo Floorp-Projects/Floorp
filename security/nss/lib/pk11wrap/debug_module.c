@@ -661,7 +661,7 @@ static void print_attr_value(CK_ATTRIBUTE_PTR attr)
     case CKA_KEY_TYPE:
 	if (attr->ulValueLen > 0 && attr->pValue) {
 	    CK_KEY_TYPE keyType = *((CK_KEY_TYPE *)attr->pValue);
-	    get_obj_class(keyType, valstr, sizeof valstr);
+	    get_key_type(keyType, valstr, sizeof valstr);
 	    PR_LOG(modlog, 4, (fmt_s_s_d, 
 	           atype, valstr, attr->ulValueLen));
 	    break;

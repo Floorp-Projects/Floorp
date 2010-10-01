@@ -55,6 +55,8 @@
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
 
+#include "nsIGfxInfo.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -148,7 +150,29 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
     if (mGLContext)
       CleanupResources();
 
-    mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      PRInt32 status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
+        if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+            status != nsIGfxInfo::FEATURE_AVAILABLE) {
+          NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
+          return PR_FALSE;
+        }
+      }
+    }
+
+    mGLContext = nsnull;
+
+#ifdef XP_WIN
+    if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
+      printf_stderr("Trying GL layers...\n");
+      mGLContext = gl::GLContextProviderEGL::CreateForWindow(mWidget);
+    }
+#endif
+
+    if (!mGLContext)
+      mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
 
     if (!mGLContext) {
       NS_WARNING("Failed to create LayerManagerOGL context");
@@ -470,17 +494,6 @@ LayerManagerOGL::RememberImageContainer(ImageContainer *aContainer)
   mImageContainers.AppendElement(aContainer);
 }
 
-void
-LayerManagerOGL::MakeCurrent()
-{
-  if (mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return;
-  }
-
-  mGLContext->MakeCurrent();
-}
-
 LayerOGL*
 LayerManagerOGL::RootLayer() const
 {
@@ -502,10 +515,27 @@ LayerManagerOGL::Render()
 
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
+
   GLint width = rect.width;
   GLint height = rect.height;
 
-  MakeCurrent();
+  // We can't draw anything to something with no area
+  // so just return
+  if (width == 0 || height == 0)
+    return;
+
+  // If the widget size changed, we have to force a MakeCurrent
+  // to make sure that GL sees the updated widget size.
+  if (mWidgetSize.width != width ||
+      mWidgetSize.height != height)
+  {
+    MakeCurrent(PR_TRUE);
+
+    mWidgetSize.width = width;
+    mWidgetSize.height = height;
+  } else {
+    MakeCurrent();
+  }
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
@@ -515,32 +545,27 @@ LayerManagerOGL::Render()
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
+  mGLContext->fEnable(LOCAL_GL_BLEND);
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
-
-#if 0
-  // XXX for whatever reason, scissor is not working -- even with no
-  // cliprect set, so we go through the 0,0,w,h path, any updates
-  // after the initial render end up failing the scissor rectangle.  I
-  // have no idea why.  We disable it for now, because it's not actually
-  // helping us with anything -- we draw to a specific location in the
-  // front buffer as it is.
 
   const nsIntRect *clipRect = mRoot->GetClipRect();
 
   if (clipRect) {
-    mGLContext->fScissor(clipRect->x, clipRect->y,
-                         clipRect->width, clipRect->height);
+    nsIntRect r = *clipRect;
+    if (!mGLContext->IsDoubleBuffered())
+      mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
+    mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
     mGLContext->fScissor(0, 0, width, height);
   }
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
-#else
-  mGLContext->fDisable(LOCAL_GL_SCISSOR_TEST);
-#endif
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
+
+  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
@@ -646,11 +671,26 @@ LayerManagerOGL::Render()
 void
 LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
 {
-  // Set the viewport correctly
+  // Set the viewport correctly. 
+  //
+  // When we're not double buffering, we use a FBO as our backbuffer.
+  // We use a normal view transform in that case, meaning that our FBO
+  // and all other FBOs look upside down.  We then do a Y-flip when
+  // we draw it into the window.
   mGLContext->fViewport(0, 0, aWidth, aHeight);
 
   // Matrix to transform to viewport space ( <-1.0, 1.0> topleft, 
-  // <1.0, -1.0> bottomright)
+  // <1.0, -1.0> bottomright).
+  //
+  // When we are double buffering, we change the view matrix around so
+  // that everything is right-side up; we're drawing directly into
+  // the window's back buffer, so this keeps things looking correct.
+  //
+  // XXX we could potentially always use the double-buffering view
+  // matrix and just change our single-buffer draw code.
+  //
+  // XXX we keep track of whether the window size changed, so we can
+  // skip this update if it hadn't since the last call.
   gfx3DMatrix viewMatrix;
   if (mGLContext->IsDoubleBuffered()) {
     /* If it's double buffered, we don't have a frontbuffer FBO,
@@ -705,6 +745,9 @@ LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
                                     mFBOTextureTarget,
                                     mBackBufferTexture,
                                     0);
+
+  NS_ASSERTION(mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
+               LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
 
   mBackBufferSize.width = aWidth;
   mBackBufferSize.height = aHeight;
@@ -845,6 +888,20 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
   *aTexture = tex;
 
   DEBUG_GL_ERROR_CHECK(gl());
+}
+
+void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
+{
+  if (aFilter == gfxPattern::FILTER_NEAREST) {
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+  } else {
+    if (aFilter != gfxPattern::FILTER_GOOD) {
+      NS_WARNING("Unsupported filter type!");
+    }
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  }
 }
 
 } /* layers */

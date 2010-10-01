@@ -34,53 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLFieldSetElement.h"
+
+#include "nsHTMLFieldSetElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsIConstraintValidation.h"
-
-
-class nsHTMLFieldSetElement : public nsGenericHTMLFormElement,
-                              public nsIDOMHTMLFieldSetElement,
-                              public nsIConstraintValidation
-{
-public:
-  using nsIConstraintValidation::GetValidationMessage;
-
-  nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLFieldSetElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
-
-  // nsIDOMHTMLFieldSetElement
-  NS_DECL_NSIDOMHTMLFIELDSETELEMENT
-
-  // nsIFormControl
-  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_FIELDSET; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  // nsIConstraintValidation
-  PRBool IsBarredFromConstraintValidation() const { return PR_TRUE; };
-};
-
-// construction, destruction
+#include "nsEventDispatcher.h"
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
@@ -88,7 +49,11 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
 
 nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
+  , mElements(nsnull)
+  , mFirstLegend(nsnull)
 {
+  // <fieldset> is always barred from constraint validation.
+  SetBarredFromConstraintValidation(PR_TRUE);
 }
 
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
@@ -96,6 +61,16 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 }
 
 // nsISupports
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLFieldSetElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElements)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLFieldSetElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFieldSetElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mElements, nsIDOMNodeList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
@@ -111,14 +86,49 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
                                                nsGenericHTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFieldSetElement)
 
+NS_IMPL_ELEMENT_CLONE(nsHTMLFieldSetElement)
 
-// nsIDOMHTMLFieldSetElement
+
+NS_IMPL_BOOL_ATTR(nsHTMLFieldSetElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLFieldSetElement, Name, name)
 
 // nsIConstraintValidation
 NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLFieldSetElement)
 
-NS_IMPL_ELEMENT_CLONE(nsHTMLFieldSetElement)
+// nsIContent
+nsresult
+nsHTMLFieldSetElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  // Do not process any DOM events if the element is disabled.
+  aVisitor.mCanHandle = PR_FALSE;
+  if (IsDisabled()) {
+    return NS_OK;
+  }
 
+  return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
+}
+
+nsresult
+nsHTMLFieldSetElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    const nsAString* aValue, PRBool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled &&
+      nsINode::GetFirstChild()) {
+    if (!mElements) {
+      mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull,
+                                    PR_TRUE);
+    }
+
+    PRUint32 length = mElements->Length(PR_TRUE);
+    for (PRUint32 i=0; i<length; ++i) {
+      static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
+        ->FieldSetDisabledChanged(0);
+    }
+  }
+
+  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
+                                                aValue, aNotify);
+}
 
 // nsIDOMHTMLFieldSetElement
 
@@ -126,6 +136,34 @@ NS_IMETHODIMP
 nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
+}
+
+NS_IMETHODIMP
+nsHTMLFieldSetElement::GetType(nsAString& aType)
+{
+  aType.AssignLiteral("fieldset");
+  return NS_OK;
+}
+
+/* static */
+PRBool
+nsHTMLFieldSetElement::MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,
+                                           nsIAtom* aAtom, void* aData)
+{
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aContent);
+  return formControl && formControl->GetType() != NS_FORM_LABEL;
+}
+
+NS_IMETHODIMP
+nsHTMLFieldSetElement::GetElements(nsIDOMHTMLCollection** aElements)
+{
+  if (!mElements) {
+    mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull,
+                                  PR_TRUE);
+  }
+
+  NS_ADDREF(*aElements = mElements);
+  return NS_OK;
 }
 
 // nsIFormControl
@@ -141,3 +179,83 @@ nsHTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   return NS_OK;
 }
+
+nsresult
+nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
+                                     PRBool aNotify)
+{
+  bool firstLegendHasChanged = false;
+
+  if (aChild->IsHTML(nsGkAtoms::legend)) {
+    if (!mFirstLegend) {
+      mFirstLegend = aChild;
+      // We do not want to notify the first time mFirstElement is set.
+    } else {
+      // If mFirstLegend is before aIndex, we do not change it.
+      // Otherwise, mFirstLegend is now aChild.
+      if (aIndex <= IndexOf(mFirstLegend)) {
+        mFirstLegend = aChild;
+        firstLegendHasChanged = true;
+      }
+    }
+  }
+
+  nsresult rv = nsGenericHTMLFormElement::InsertChildAt(aChild, aIndex, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (firstLegendHasChanged) {
+    NotifyElementsForFirstLegendChange();
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
+                                     PRBool aMutationEvent /* = PR_TRUE */)
+{
+  bool firstLegendHasChanged = false;
+
+  if (GetChildAt(aIndex) == mFirstLegend) {
+    // If we are removing the first legend we have to found another one.
+    for (nsIContent* child = mFirstLegend; child;
+         child = child->GetNextSibling()) {
+      if (child->IsHTML(nsGkAtoms::legend)) {
+        mFirstLegend = child;
+        firstLegendHasChanged = true;
+        break;
+      }
+    }
+  }
+
+  nsresult rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify, aMutationEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (firstLegendHasChanged) {
+    NotifyElementsForFirstLegendChange();
+  }
+
+  return rv;
+}
+
+void
+nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange()
+{
+  /**
+   * NOTE: this could be optimized if only call when the fieldset is currently
+   * disabled.
+   * This should also make sure that mElements is set when we happen to be here.
+   * However, this method shouldn't be called very often in normal use cases.
+   */
+  if (!mElements) {
+    mElements = new nsContentList(this, MatchListedElements, nsnull, nsnull,
+                                  PR_TRUE);
+  }
+
+  PRUint32 length = mElements->Length(PR_TRUE);
+  for (PRUint32 i=0; i<length; ++i) {
+    static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
+      ->FieldSetFirstLegendChanged();
+  }
+}
+

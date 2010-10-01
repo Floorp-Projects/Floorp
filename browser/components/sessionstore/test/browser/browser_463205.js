@@ -39,15 +39,14 @@ function test() {
   
   waitForExplicitFinish();
   
-  let testURL = "chrome://mochikit/content/browser/" +
-    "browser/components/sessionstore/test/browser/browser_463205_sample.html";
+  let rootDir = getRootDirectory(gTestPath);
+  let testURL = rootDir + "browser_463205_sample.html";
 
   let doneURL = "done";
 
   let mainURL = testURL;
   let frame1URL = "data:text/html,<input%20id='original'>";
-  let frame2URL = "chrome://mochikit/content/browser/" +
-    "browser/components/sessionstore/test/browser/browser_463205_helper.html";
+  let frame2URL = rootDir + "browser_463205_helper.html";
   let frame3URL = "data:text/html,mark2";
 
   let frameCount = 0;
@@ -100,8 +99,7 @@ function test() {
     mainURL = testURL;
     frame1URL = "http://mochi.test:8888/browser/" +
       "browser/components/sessionstore/test/browser/browser_463205_helper.html";
-    frame2URL = "chrome://mochikit/content/browser/" +
-      "browser/components/sessionstore/test/browser/browser_463205_helper.html";
+    frame2URL = rootDir + "browser_463205_helper.html";
     frame3URL = "data:text/html,mark2";
 
     frameCount = 0;

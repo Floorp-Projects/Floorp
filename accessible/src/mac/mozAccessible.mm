@@ -594,9 +594,13 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsAccessibleWrap *accWrap = static_cast<nsAccessibleWrap*>(mGeckoAccessible);
+
+  // Get a pointer to the native window (NSWindow) we reside in.
   NSWindow *nativeWindow = nil;
-  accWrap->GetNativeWindow ((void**)&nativeWindow);
-  
+  nsDocAccessible* docAcc = accWrap->GetDocAccessible();
+  if (docAcc)
+    nativeWindow = static_cast<NSWindow*>(docAcc->GetNativeWindow());
+
   NSAssert1(nativeWindow, @"Could not get native window for %@", self);
   return nativeWindow;
 

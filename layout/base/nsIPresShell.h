@@ -63,6 +63,7 @@
 #include "nsEvent.h"
 #include "nsCompatibility.h"
 #include "nsFrameManagerBase.h"
+#include "nsRect.h"
 #include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
@@ -99,7 +100,6 @@ class nsDisplayListBuilder;
 class nsPIDOMWindow;
 struct nsPoint;
 struct nsIntPoint;
-struct nsRect;
 struct nsIntRect;
 class nsRefreshDriver;
 class nsARefreshObserver;
@@ -139,8 +139,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe63a350c, 0x4e04, 0x4056, \
-    { 0x8d, 0xa0, 0x51, 0xcc, 0x55, 0x68, 0x68, 0x42 } }
+ { 0xb79574cd, 0x2555, 0x4b57, \
+    { 0xb3, 0xf8, 0x27, 0x57, 0x3e, 0x60, 0x74, 0x01 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -195,6 +195,11 @@ class nsIPresShell : public nsIPresShell_base
 {
 protected:
   typedef mozilla::layers::LayerManager LayerManager;
+
+  enum {
+    STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
+    STATE_USING_DISPLAYPORT = 0x2
+  };
 
 public:
   virtual NS_HIDDEN_(nsresult) Init(nsIDocument* aDocument,
@@ -345,6 +350,12 @@ public:
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
   virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
+  /**
+   * Reflow, and also change presshell state so as to only permit
+   * reflowing off calls to ResizeReflowOverride() in the future.
+   * ResizeReflow() calls are ignored after ResizeReflowOverride().
+   */
+  virtual NS_HIDDEN_(nsresult) ResizeReflowOverride(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Reflow the frame model with a reflow reason of eReflowReason_StyleChange
@@ -841,6 +852,8 @@ public:
    *   set RENDER_ASYNC_DECODE_IMAGES to avoid having images synchronously
    * decoded during rendering.
    * (by default images decode synchronously with RenderDocument)
+   *   set RENDER_DOCUMENT_RELATIVE to interpret |aRect| relative to the
+   * document instead of the CSS viewport
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext the gfxContext to render to. We render so that
    * one CSS pixel in the source document is rendered to one unit in the current
@@ -851,7 +864,8 @@ public:
     RENDER_IGNORE_VIEWPORT_SCROLLING = 0x02,
     RENDER_CARET = 0x04,
     RENDER_USE_WIDGET_LAYERS = 0x08,
-    RENDER_ASYNC_DECODE_IMAGES = 0x10
+    RENDER_ASYNC_DECODE_IMAGES = 0x10,
+    RENDER_DOCUMENT_RELATIVE = 0x20
   };
   virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, PRUint32 aFlags,
                                               nscolor aBackgroundColor,
@@ -1054,6 +1068,54 @@ public:
   virtual LayerManager* GetLayerManager() = 0;
 
   /**
+   * Track whether we're ignoring viewport scrolling for the purposes
+   * of painting.  If we are ignoring, then layers aren't clipped to
+   * the CSS viewport and scrollbars aren't drawn.
+   */
+  virtual void SetIgnoreViewportScrolling(PRBool aIgnore) = 0;
+  PRBool IgnoringViewportScrolling() const
+  { return mRenderFlags & STATE_IGNORING_VIEWPORT_SCROLLING; }
+
+  /**
+   * Set up a "displayport", which overrides what everything else thinks
+   * is the visible region of this document with the specified
+   * displayport rect.
+   */
+  virtual void SetDisplayPort(const nsRect& aDisplayPort) = 0;
+  PRBool UsingDisplayPort() const
+  { return mRenderFlags & STATE_USING_DISPLAYPORT; }
+
+  /**
+   * Return the displayport being used.  |UsingDisplayPort()| must be
+   * true.
+   */
+  nsRect GetDisplayPort()
+  {
+    NS_ABORT_IF_FALSE(UsingDisplayPort(), "no displayport defined!");
+    return mDisplayPort;
+  }
+
+   /**
+   * Set a "resolution" for the document, which if not 1.0 will
+   * allocate more or fewer pixels for rescalable content by a factor
+   * of |resolution| in both dimensions.  Return NS_OK iff the
+   * resolution bounds are sane, and the resolution of this was
+   * actually updated.
+   *
+   * The resolution defaults to 1.0.
+   */
+  virtual nsresult SetResolution(float aXResolution, float aYResolution) = 0;
+  float GetXResolution() { return mXResolution; }
+  float GetYResolution() { return mYResolution; }
+
+  /**
+   * Dispatch a mouse move event based on the most recent mouse position if
+   * this PresShell is visible. This is used when the contents of the page
+   * moved (aFromScroll is false) or scrolled (aFromScroll is true).
+   */
+  virtual void SynthesizeMouseMove(PRBool aFromScroll) = 0;
+
+  /**
    * Refresh observer management.
    */
 protected:
@@ -1153,6 +1215,22 @@ protected:
 
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;
+
+  // Flags controlling how our document is rendered.  These persist
+  // between paints and so are tied with retained layer pixels.
+  // PresShell flushes retained layers when the rendering state
+  // changes in a way that prevents us from being able to (usefully)
+  // re-use old pixels.
+  PRUint32                  mRenderFlags;
+  // If displayport rendering has been requested, |UsingDisplayPort()|
+  // is true and |mDisplayPort| defines the "visible rect" we
+  // maintain.
+  nsRect                    mDisplayPort;
+
+  // Used to force allocation and rendering of proportionally more or
+  // less pixels in the given dimension.
+  float                     mXResolution;
+  float                     mYResolution;
 
   // Live pres shells, for memory and other tracking
   typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;

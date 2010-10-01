@@ -135,18 +135,21 @@ JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
     return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == b);
 }
 
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_MAGIC_IMPL(jsval_layout l)
-{
-    return l.s.tag == JSVAL_TAG_MAGIC;
-}
-
 static JS_ALWAYS_INLINE jsval_layout
 MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
 {
     jsval_layout l;
     l.s.tag = JSVAL_TAG_MAGIC;
     l.s.payload.why = why;
+    return l;
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+MAGIC_TO_JSVAL_IMPL(JSObject *obj)
+{
+    jsval_layout l;
+    l.s.tag = JSVAL_TAG_MAGIC;
+    l.s.payload.obj = obj;
     return l;
 }
 
@@ -225,17 +228,19 @@ JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
     return l.asBits == (((uint64)(uint32)b) | JSVAL_SHIFTED_TAG_BOOLEAN);
 }
 
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_MAGIC_IMPL(jsval_layout l)
-{
-    return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_MAGIC;
-}
-
 static JS_ALWAYS_INLINE jsval_layout
 MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
 {
     jsval_layout l;
     l.asBits = ((uint64)(uint32)why) | JSVAL_SHIFTED_TAG_MAGIC;
+    return l;
+}
+
+static JS_ALWAYS_INLINE jsval_layout
+MAGIC_TO_JSVAL_IMPL(JSObject *obj)
+{
+    jsval_layout l;
+    l.asBits = ((uint64)obj) | JSVAL_SHIFTED_TAG_MAGIC;
     return l;
 }
 
@@ -291,7 +296,7 @@ BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64 *slot)
     /* N.B. for 32-bit payloads, the high 32 bits of the slot are trash. */
     jsval_layout l;
     JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
-    uint32 isI32 = (uint32)(type < JSVAL_LOWER_INCL_TYPE_OF_GCTHING_SET);
+    uint32 isI32 = (uint32)(type < JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET);
     uint32 shift = isI32 * 32;
     uint64 mask = ((uint64)-1) >> shift;
     uint64 payload = *slot & mask;
@@ -322,47 +327,67 @@ class Value
 
     /*** Mutatators ***/
 
+    JS_ALWAYS_INLINE
     void setNull() {
         data.asBits = JSVAL_BITS(JSVAL_NULL);
     }
 
+    JS_ALWAYS_INLINE
     void setUndefined() {
         data.asBits = JSVAL_BITS(JSVAL_VOID);
     }
 
+    JS_ALWAYS_INLINE
     void setInt32(int32 i) {
         data = INT32_TO_JSVAL_IMPL(i);
     }
 
+    JS_ALWAYS_INLINE
     int32 &getInt32Ref() {
         JS_ASSERT(isInt32());
         return data.s.payload.i32;
     }
 
+    JS_ALWAYS_INLINE
     void setDouble(double d) {
         data = DOUBLE_TO_JSVAL_IMPL(d);
     }
 
+    JS_ALWAYS_INLINE
     double &getDoubleRef() {
         JS_ASSERT(isDouble());
         return data.asDouble;
     }
 
+    JS_ALWAYS_INLINE
     void setString(JSString *str) {
         data = STRING_TO_JSVAL_IMPL(str);
     }
 
+    JS_ALWAYS_INLINE
     void setObject(JSObject &obj) {
         JS_ASSERT(&obj != NULL);
         data = OBJECT_TO_JSVAL_IMPL(&obj);
     }
 
+    JS_ALWAYS_INLINE
     void setBoolean(bool b) {
         data = BOOLEAN_TO_JSVAL_IMPL(b);
     }
 
+    JS_ALWAYS_INLINE
     void setMagic(JSWhyMagic why) {
         data = MAGIC_TO_JSVAL_IMPL(why);
+    }
+
+    JS_ALWAYS_INLINE
+    void setMagicWithObjectOrNullPayload(JSObject *obj) {
+        data = MAGIC_TO_JSVAL_IMPL(obj);
+    }
+
+    JS_ALWAYS_INLINE
+    JSObject *getMagicObjectOrNullPayload() const {
+        return MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(data);
     }
 
     JS_ALWAYS_INLINE
@@ -398,6 +423,7 @@ class Value
             setUndefined();
     }
 
+    JS_ALWAYS_INLINE
     void swap(Value &rhs) {
         uint64 tmp = rhs.data.asBits;
         rhs.data.asBits = data.asBits;
@@ -406,85 +432,112 @@ class Value
 
     /*** Value type queries ***/
 
+    JS_ALWAYS_INLINE
     bool isUndefined() const {
         return JSVAL_IS_UNDEFINED_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isNull() const {
         return JSVAL_IS_NULL_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isNullOrUndefined() const {
         return isNull() || isUndefined();
     }
 
+    JS_ALWAYS_INLINE
     bool isInt32() const {
         return JSVAL_IS_INT32_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isInt32(int32 i32) const {
         return JSVAL_IS_SPECIFIC_INT32_IMPL(data, i32);
     }
 
+    JS_ALWAYS_INLINE
     bool isDouble() const {
         return JSVAL_IS_DOUBLE_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isNumber() const {
         return JSVAL_IS_NUMBER_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isString() const {
         return JSVAL_IS_STRING_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isObject() const {
         return JSVAL_IS_OBJECT_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isPrimitive() const {
         return JSVAL_IS_PRIMITIVE_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isObjectOrNull() const {
         return JSVAL_IS_OBJECT_OR_NULL_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isGCThing() const {
         return JSVAL_IS_GCTHING_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isBoolean() const {
         return JSVAL_IS_BOOLEAN_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isTrue() const {
         return JSVAL_IS_SPECIFIC_BOOLEAN(data, true);
     }
 
+    JS_ALWAYS_INLINE
     bool isFalse() const {
         return JSVAL_IS_SPECIFIC_BOOLEAN(data, false);
     }
 
+    JS_ALWAYS_INLINE
     bool isMagic() const {
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool isMagic(JSWhyMagic why) const {
         JS_ASSERT_IF(isMagic(), data.s.payload.why == why);
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
+#if JS_BITS_PER_WORD == 64
+    JS_ALWAYS_INLINE
+    bool hasPtrPayload() const {
+        return data.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_PTR_PAYLOAD_SET;
+    }
+#endif
+
+    JS_ALWAYS_INLINE
     bool isMarkable() const {
         return JSVAL_IS_TRACEABLE_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     int32 gcKind() const {
         JS_ASSERT(isMarkable());
         return JSVAL_TRACE_KIND_IMPL(data);
     }
 
 #ifdef DEBUG
+    JS_ALWAYS_INLINE
     JSWhyMagic whyMagic() const {
         JS_ASSERT(isMagic());
         return data.s.payload.why;
@@ -493,65 +546,78 @@ class Value
 
     /*** Comparison ***/
 
+    JS_ALWAYS_INLINE
     bool operator==(const Value &rhs) const {
         return data.asBits == rhs.data.asBits;
     }
 
+    JS_ALWAYS_INLINE
     bool operator!=(const Value &rhs) const {
         return data.asBits != rhs.data.asBits;
     }
 
+    JS_ALWAYS_INLINE
     friend bool SameType(const Value &lhs, const Value &rhs) {
         return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
     }
 
     /*** Extract the value's typed payload ***/
 
+    JS_ALWAYS_INLINE
     int32 toInt32() const {
         JS_ASSERT(isInt32());
         return JSVAL_TO_INT32_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     double toDouble() const {
         JS_ASSERT(isDouble());
         return data.asDouble;
     }
 
+    JS_ALWAYS_INLINE
     double toNumber() const {
         JS_ASSERT(isNumber());
         return isDouble() ? toDouble() : double(toInt32());
     }
 
+    JS_ALWAYS_INLINE
     JSString *toString() const {
         JS_ASSERT(isString());
         return JSVAL_TO_STRING_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     JSObject &toObject() const {
         JS_ASSERT(isObject());
         return *JSVAL_TO_OBJECT_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     JSObject *toObjectOrNull() const {
         JS_ASSERT(isObjectOrNull());
         return JSVAL_TO_OBJECT_IMPL(data);
     }
 
-    void *asGCThing() const {
+    JS_ALWAYS_INLINE
+    void *toGCThing() const {
         JS_ASSERT(isGCThing());
         return JSVAL_TO_GCTHING_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     bool toBoolean() const {
         JS_ASSERT(isBoolean());
         return JSVAL_TO_BOOLEAN_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     uint32 payloadAsRawUint32() const {
         JS_ASSERT(!isDouble());
         return data.s.payload.u32;
     }
 
+    JS_ALWAYS_INLINE
     uint64 asRawBits() const {
         return data.asBits;
     }
@@ -562,18 +628,22 @@ class Value
      * these operations to be implemented more efficiently, since doubles
      * generally already require special handling by the caller.
      */
+    JS_ALWAYS_INLINE
     JSValueType extractNonDoubleType() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     JSValueTag extractNonDoubleTag() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     void unboxNonDoubleTo(uint64 *out) const {
         UNBOX_NON_DOUBLE_JSVAL(data, out);
     }
 
+    JS_ALWAYS_INLINE
     void boxNonDoubleFrom(JSValueType type, uint64 *out) {
         data = BOX_NON_DOUBLE_JSVAL(type, out);
     }
@@ -583,11 +653,13 @@ class Value
      * JSVAL_TYPE_NONFUNOBJ. Since these two operations just return the type of
      * a value, the caller must handle JSVAL_TYPE_OBJECT separately.
      */
+    JS_ALWAYS_INLINE
     JSValueType extractNonDoubleObjectTraceType() const {
         JS_ASSERT(!isObject());
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     JSValueTag extractNonDoubleObjectTraceTag() const {
         JS_ASSERT(!isObject());
         return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
@@ -602,27 +674,48 @@ class Value
      * Privates values are given a type type which ensures they are not marked.
      */
 
+    JS_ALWAYS_INLINE
     void setPrivate(void *ptr) {
         data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
     }
 
+    JS_ALWAYS_INLINE
     void *toPrivate() const {
         JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(data));
         return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     void setPrivateUint32(uint32 ui) {
         data = PRIVATE_UINT32_TO_JSVAL_IMPL(ui);
     }
 
+    JS_ALWAYS_INLINE
     uint32 toPrivateUint32() const {
         JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(data));
         return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
     }
 
+    JS_ALWAYS_INLINE
     uint32 &getPrivateUint32Ref() {
         JS_ASSERT(isDouble());
         return data.s.payload.u32;
+    }
+
+    /*
+     * An unmarked value is just a void* cast as a Value. Thus, the Value is
+     * not safe for GC and must not be marked. This API avoids raw casts
+     * and the ensuing strict-aliasing warnings.
+     */
+
+    JS_ALWAYS_INLINE
+    void setUnmarkedPtr(void *ptr) {
+        data.asPtr = ptr;
+    }
+
+    JS_ALWAYS_INLINE
+    void *toUnmarkedPtr() const {
+        return data.asPtr;
     }
 
   private:
@@ -764,9 +857,7 @@ static inline const Value &  Valueify(const jsval &v)  { return (const Value &)v
 struct Class;
 
 typedef JSBool
-(* Native)(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);
-typedef JSBool
-(* FastNative)(JSContext *cx, uintN argc, Value *vp);
+(* Native)(JSContext *cx, uintN argc, Value *vp);
 typedef JSBool
 (* PropertyOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 typedef JSBool
@@ -787,12 +878,37 @@ typedef JSBool
 typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 typedef JSBool
+(* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
+typedef JSBool
+(* LookupPropOp)(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                 JSProperty **propp);
+typedef JSBool
+(* AttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+typedef JSType
+(* TypeOfOp)(JSContext *cx, JSObject *obj);
+typedef void
+(* TraceOp)(JSTracer *trc, JSObject *obj);
+typedef JSObject *
+(* ObjectOp)(JSContext *cx, JSObject *obj);
+typedef void
+(* FinalizeOp)(JSContext *cx, JSObject *obj);
+
+class AutoIdVector;
+
+/*
+ * Prepare to make |obj| non-extensible; in particular, fully resolve its properties.
+ * On error, return false.
+ * If |obj| is now ready to become non-extensible, set |*fixed| to true and return true.
+ * If |obj| refuses to become non-extensible, set |*fixed| to false and return true; the
+ * caller will throw an appropriate error.
+ */
+typedef JSBool
+(* FixOp)(JSContext *cx, JSObject *obj, bool *fixed, AutoIdVector *props);
 
 static inline Native            Valueify(JSNative f)          { return (Native)f; }
 static inline JSNative          Jsvalify(Native f)            { return (JSNative)f; }
-static inline FastNative        Valueify(JSFastNative f)      { return (FastNative)f; }
-static inline JSFastNative      Jsvalify(FastNative f)        { return (JSFastNative)f; }
 static inline PropertyOp        Valueify(JSPropertyOp f)      { return (PropertyOp)f; }
 static inline JSPropertyOp      Jsvalify(PropertyOp f)        { return (JSPropertyOp)f; }
 static inline ConvertOp         Valueify(JSConvertOp f)       { return (ConvertOp)f; }
@@ -805,12 +921,6 @@ static inline CheckAccessOp     Valueify(JSCheckAccessOp f)   { return (CheckAcc
 static inline JSCheckAccessOp   Jsvalify(CheckAccessOp f)     { return (JSCheckAccessOp)f; }
 static inline EqualityOp        Valueify(JSEqualityOp f);     /* Same type as JSHasInstanceOp */
 static inline JSEqualityOp      Jsvalify(EqualityOp f);       /* Same type as HasInstanceOp */
-static inline DefinePropOp      Valueify(JSDefinePropOp f)    { return (DefinePropOp)f; }
-static inline JSDefinePropOp    Jsvalify(DefinePropOp f)      { return (JSDefinePropOp)f; }
-static inline PropertyIdOp      Valueify(JSPropertyIdOp f);   /* Same type as JSPropertyOp */
-static inline JSPropertyIdOp    Jsvalify(PropertyIdOp f);     /* Same type as PropertyOp */
-static inline CallOp            Valueify(JSCallOp f);         /* Same type as JSFastNative */
-static inline JSCallOp          Jsvalify(CallOp f);           /* Same type as FastNative */
 
 static const PropertyOp    PropertyStub  = (PropertyOp)JS_PropertyStub;
 static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
@@ -862,18 +972,19 @@ struct ClassExtension {
 #define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
 
 struct ObjectOps {
-    JSLookupPropOp      lookupProperty;
-    js::DefinePropOp    defineProperty;
-    js::PropertyIdOp    getProperty;
-    js::PropertyIdOp    setProperty;
-    JSAttributesOp      getAttributes;
-    JSAttributesOp      setAttributes;
-    js::PropertyIdOp    deleteProperty;
-    js::NewEnumerateOp  enumerate;
-    JSTypeOfOp          typeOf;
-    JSTraceOp           trace;
-    JSObjectOp          thisObject;
-    JSFinalizeOp        clear;
+    js::LookupPropOp        lookupProperty;
+    js::DefinePropOp        defineProperty;
+    js::PropertyIdOp        getProperty;
+    js::StrictPropertyIdOp  setProperty;
+    js::AttributesOp        getAttributes;
+    js::AttributesOp        setAttributes;
+    js::StrictPropertyIdOp  deleteProperty;
+    js::NewEnumerateOp      enumerate;
+    js::TypeOfOp            typeOf;
+    js::TraceOp             trace;
+    js::FixOp               fix;
+    js::ObjectOp            thisObject;
+    js::FinalizeOp          clear;
 };
 
 #define JS_NULL_OBJECT_OPS  {NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL}
@@ -885,9 +996,6 @@ struct Class {
     uint8               pad[sizeof(JSClass) - sizeof(ClassSizeMeasurement) -
                             sizeof(ClassExtension) - sizeof(ObjectOps)];
 
-    /* Flag indicating that Class::call is a fast native. */
-    static const uint32 CALL_IS_FAST = JSCLASS_INTERNAL_FLAG1;
-
     /* Class is not native and its map is not a scope. */
     static const uint32 NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
 
@@ -895,13 +1003,6 @@ struct Class {
         return !(flags & NON_NATIVE);
     }
 };
-
-/* Helper to initialize Class::call when Class::CALL_IS_FAST. */
-inline Native
-CastCallOpAsNative(CallOp op)
-{
-    return reinterpret_cast<Native>(op);
-}
 
 JS_STATIC_ASSERT(offsetof(JSClass, name) == offsetof(Class, name));
 JS_STATIC_ASSERT(offsetof(JSClass, flags) == offsetof(Class, flags));
@@ -942,6 +1043,38 @@ static JS_ALWAYS_INLINE JSClass *              Jsvalify(Class *c)               
 static JS_ALWAYS_INLINE Class *                Valueify(JSClass *c)              { return (Class *)c; }
 static JS_ALWAYS_INLINE JSPropertyDescriptor * Jsvalify(PropertyDescriptor *p) { return (JSPropertyDescriptor *) p; }
 static JS_ALWAYS_INLINE PropertyDescriptor *   Valueify(JSPropertyDescriptor *p) { return (PropertyDescriptor *) p; }
+
+/******************************************************************************/
+
+/*
+ * Any cast-via-function-call, inlined or not, will cause initialization to
+ * happen at startup, rather than statically, so just cast in release builds.
+ */
+#ifdef DEBUG
+
+static inline JSNative JsvalifyNative(Native n)   { return (JSNative)n; }
+static inline JSNative JsvalifyNative(JSNative n) { return n; }
+static inline Native ValueifyNative(JSNative n)   { return (Native)n; }
+static inline Native ValueifyNative(Native n)     { return n; }
+
+# define JS_VALUEIFY_NATIVE(n) js::ValueifyNative(n)
+# define JS_JSVALIFY_NATIVE(n) js::JsvalifyNative(n)
+
+#else
+
+# define JS_VALUEIFY_NATIVE(n) ((js::Native)n)
+# define JS_JSVALIFY_NATIVE(n) ((JSNative)n)
+
+#endif
+
+/*
+ * JSFunctionSpec uses JSAPI jsval in function signatures whereas the engine
+ * uses js::Value. To avoid widespread (JSNative) casting, have JS_FN perfom a
+ * type-safe cast.
+ */
+#undef JS_FN
+#define JS_FN(name,call,nargs,flags)                                          \
+     {name, JS_JSVALIFY_NATIVE(call), nargs, (flags) | JSFUN_STUB_GSOPS}
 
 /******************************************************************************/
 

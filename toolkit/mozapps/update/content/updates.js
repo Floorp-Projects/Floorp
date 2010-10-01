@@ -50,6 +50,7 @@ const CoR = Components.results;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const PREF_APP_UPDATE_BACKGROUNDERRORS   = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
 const PREF_APP_UPDATE_CERT_ERRORS        = "app.update.cert.errors";
 const PREF_APP_UPDATE_ENABLED            = "app.update.enabled";
@@ -75,6 +76,7 @@ const SRCEVT_BACKGROUND       = 2;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
+const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
 
 var gLogEnabled = false;
 var gUpdatesFoundPageId;
@@ -404,8 +406,9 @@ var gUpdates = {
         // their permission to install, and it's ready for download.
         this.setUpdate(arg0);
         if (this.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-            this.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
-          aCallback("errorcertcheck");
+            this.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE ||
+            this.update.errorCode == BACKGROUNDCHECK_MULTIPLE_FAILURES) {
+          aCallback("errorextra");
           return;
         }
 
@@ -591,6 +594,11 @@ var gCheckingPage = {
     // notifications will never happen.
     Services.prefs.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
 
+    // The user will be notified if there is an error so clear the background
+    // check error count.
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
+
     this._checker = CoC["@mozilla.org/updates/update-checker;1"].
                     createInstance(CoI.nsIUpdateChecker);
     this._checker.checkForUpdates(this.updateListener, true);
@@ -666,8 +674,8 @@ var gCheckingPage = {
       gUpdates.setUpdate(update);
       if (update.errorCode &&
           (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-           update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE )) {
-        gUpdates.wiz.goTo("errorcertcheck");
+           update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE)) {
+        gUpdates.wiz.goTo("errorextra");
       }
       else {
         gUpdates.wiz.goTo("errors");
@@ -1443,8 +1451,6 @@ var gDownloadingPage = {
    *          Additional data
    */
   onStartRequest: function(request, context) {
-    if (request instanceof CoI.nsIIncrementalDownload)
-      LOG("gDownloadingPage", "onStartRequest - spec: " + request.URI.spec);
     // This !paused test is necessary because onStartRequest may fire after
     // the download was paused (for those speedy clickers...)
     if (this._paused)
@@ -1467,8 +1473,6 @@ var gDownloadingPage = {
    *          The total number of bytes that must be transferred
    */
   onProgress: function(request, context, progress, maxProgress) {
-    LOG("gDownloadingPage", "onProgress - progress: " + progress + "/" +
-        maxProgress);
     let status = this._updateDownloadStatus(progress, maxProgress);
     var currentProgress = Math.round(100 * (progress / maxProgress));
 
@@ -1514,8 +1518,6 @@ var gDownloadingPage = {
    *          Human readable version of |status|
    */
   onStatus: function(request, context, status, statusText) {
-    LOG("gDownloadingPage", "onStatus - status: " + status + ", text: " +
-        statusText);
     this._setStatus(statusText);
   },
 
@@ -1529,10 +1531,6 @@ var gDownloadingPage = {
    *          Status code containing the reason for the cessation.
    */
   onStopRequest: function(request, context, status) {
-    if (request instanceof CoI.nsIIncrementalDownload)
-      LOG("gDownloadingPage", "onStopRequest - spec: " + request.URI.spec +
-          ", status: " + status);
-
     if (this._downloadProgress.mode != "normal")
       this._downloadProgress.mode = "normal";
 
@@ -1610,9 +1608,10 @@ var gErrorsPage = {
 };
 
 /**
- * The page shown when there is a certificate attribute check error.
+ * The page shown when there is a background check or a certificate attribute
+ * error.
  */
-var gErrorCertCheckPage = {
+var gErrorExtraPage = {
   /**
    * Initialize
    */
@@ -1623,13 +1622,19 @@ var gErrorCertCheckPage = {
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS))
       Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
 
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
+
     if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
       document.getElementById("errorCertAttrHasUpdateLabel").hidden = false;
     }
     else {
-      document.getElementById("errorCertCheckNoUpdateLabel").hidden = false;
+      if (gUpdates.update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE)
+        document.getElementById("errorCertCheckNoUpdateLabel").hidden = false;
+      else
+        document.getElementById("genericBackgroundErrorLabel").hidden = false;
       var manualURL = Services.urlFormatter.formatURLPref(PREF_APP_UPDATE_MANUAL_URL);
-      var errorLinkLabel = document.getElementById("errorCertAttrLinkLabel");
+      var errorLinkLabel = document.getElementById("errorExtraLinkLabel");
       errorLinkLabel.value = manualURL;
       errorLinkLabel.setAttribute("url", manualURL);
       errorLinkLabel.hidden = false;
@@ -1723,15 +1728,21 @@ var gFinishedPage = {
     gUpdates.wiz.getButton("extra1").disabled = true;
 
     // Notify all windows that an application quit has been requested.
-    var os = CoC["@mozilla.org/observer-service;1"].
-             getService(CoI.nsIObserverService);
     var cancelQuit = CoC["@mozilla.org/supports-PRBool;1"].
                      createInstance(CoI.nsISupportsPRBool);
-    os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
+                                 "restart");
 
     // Something aborted the quit process.
     if (cancelQuit.data)
       return;
+
+    // If already in safe mode restart in safe mode (bug 327119)
+    if (Services.appinfo.inSafeMode) {
+      let env = CoC["@mozilla.org/process/environment;1"].
+                getService(CoI.nsIEnvironment);
+      env.set("MOZ_SAFE_MODE_RESTART", "1");
+    }
 
     // Restart the application
     CoC["@mozilla.org/toolkit/app-startup;1"].getService(CoI.nsIAppStartup).

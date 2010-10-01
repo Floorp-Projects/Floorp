@@ -5,22 +5,15 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
-function test_urlsAndIdentities() {
-  _("Various Service properties correspond to preference settings and update other object properties upon being set.");
+function test_identities() {
+  _("Account related Service properties correspond to preference settings and update other object properties upon being set.");
 
   try {
     _("Verify initial state");
+    do_check_eq(Svc.Prefs.get("account"), undefined);
     do_check_eq(Svc.Prefs.get("username"), undefined);
-    do_check_eq(PubKeys.defaultKeyUri, undefined);
-    do_check_eq(PrivKeys.defaultKeyUri, undefined);
     do_check_eq(ID.get("WeaveID").username, "");
     do_check_eq(ID.get("WeaveCryptoID").username, "");
-
-    do_check_true(!!Service.serverURL); // actual value may change
-    do_check_eq(Service.clusterURL, "");
-    do_check_eq(Service.infoURL, undefined);
-    do_check_eq(Service.storageURL, undefined);
-    do_check_eq(Service.metaURL, undefined);
 
     _("The 'username' attribute is normalized to lower case, updates preferences and identities.");
     Service.username = "TarZan";
@@ -29,26 +22,71 @@ function test_urlsAndIdentities() {
     do_check_eq(ID.get("WeaveID").username, "tarzan");
     do_check_eq(ID.get("WeaveCryptoID").username, "tarzan");
 
-    // Since we don't have a cluster URL yet, these will still not be defined.
-    do_check_eq(Service.infoURL, undefined);
-    do_check_eq(Service.storageURL, undefined);
-    do_check_eq(Service.metaURL, undefined);
-    do_check_eq(PubKeys.defaultKeyUri, undefined);
-    do_check_eq(PrivKeys.defaultKeyUri, undefined);
+    _("If not set, the 'account attribute' falls back to the username for backwards compatibility.");
+    do_check_eq(Service.account, "tarzan");
 
-    _("Tabs are stripped from the 'username' attribute as they can't be part of a URI.");
-    Service.username = "jo\thn\tdoe";
+    _("Setting 'username' to a non-truthy value resets the pref.");
+    Service.username = null;
+    do_check_eq(Service.username, "");
+    do_check_eq(Service.account, "");
+    const default_marker = {};
+    do_check_eq(Svc.Prefs.get("username", default_marker), default_marker);
+    do_check_eq(ID.get("WeaveID").username, null);
+    do_check_eq(ID.get("WeaveCryptoID").username, null);
 
+    _("The 'account' attribute will set the 'username' if it doesn't contain characters that aren't allowed in the username.");
+    Service.account = "johndoe";
+    do_check_eq(Service.account, "johndoe");
     do_check_eq(Service.username, "johndoe");
     do_check_eq(Svc.Prefs.get("username"), "johndoe");
     do_check_eq(ID.get("WeaveID").username, "johndoe");
     do_check_eq(ID.get("WeaveCryptoID").username, "johndoe");
 
+    _("If 'account' contains disallowed characters such as @, 'username' will the base32 encoded SHA1 hash of 'account'");
+    Service.account = "John@Doe.com";
+    do_check_eq(Service.account, "john@doe.com");
+    do_check_eq(Service.username, "7wohs32cngzuqt466q3ge7indszva4of");
+
+    _("Setting 'account' to a non-truthy value resets the pref.");
+    Service.account = null;
+    do_check_eq(Service.account, "");
+    do_check_eq(Svc.Prefs.get("account", default_marker), default_marker);
+    do_check_eq(Service.username, "");
+    do_check_eq(Svc.Prefs.get("username", default_marker), default_marker);
+
+  } finally {
+    Svc.Prefs.resetBranch("");
+  }
+}
+
+function test_urls() {
+  _("URL related Service properties corresopnd to preference settings.");
+  try {
+    do_check_eq(PubKeys.defaultKeyUri, undefined);
+    do_check_eq(PrivKeys.defaultKeyUri, undefined);
+    do_check_true(!!Service.serverURL); // actual value may change
+    do_check_eq(Service.clusterURL, "");
+    do_check_eq(Service.userBaseURL, undefined);
+    do_check_eq(Service.infoURL, undefined);
+    do_check_eq(Service.storageURL, undefined);
+    do_check_eq(Service.metaURL, undefined);
+
     _("The 'clusterURL' attribute updates preferences and cached URLs.");
+    Service.username = "johndoe";
+
+    // Since we don't have a cluster URL yet, these will still not be defined.
+    do_check_eq(Service.infoURL, undefined);
+    do_check_eq(Service.userBaseURL, undefined);
+    do_check_eq(Service.storageURL, undefined);
+    do_check_eq(Service.metaURL, undefined);
+    do_check_eq(PubKeys.defaultKeyUri, undefined);
+    do_check_eq(PrivKeys.defaultKeyUri, undefined);
+
     Service.serverURL = "http://weave.server/";
     Service.clusterURL = "http://weave.cluster/";
     do_check_eq(Svc.Prefs.get("clusterURL"), "http://weave.cluster/");
 
+    do_check_eq(Service.userBaseURL, "http://weave.cluster/1.0/johndoe/");
     do_check_eq(Service.infoURL,
                 "http://weave.cluster/1.0/johndoe/info/collections");
     do_check_eq(Service.storageURL,
@@ -195,7 +233,8 @@ function test_locked() {
 }
 
 function run_test() {
-  test_urlsAndIdentities();
+  test_identities();
+  test_urls();
   test_syncID();
   test_prefAttributes();
   test_locked();

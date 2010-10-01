@@ -172,6 +172,12 @@ void
 cairo_d2d_finish_device(cairo_device_t *device);
 
 /**
+ * Gets the D3D10 device used by a certain cairo_device_t.
+ */
+struct ID3D10Device1*
+cairo_d2d_device_get_device(cairo_device_t *device);
+
+/**
  * Create a D2D surface for an HWND
  *
  * \param device Device used to create the surface
@@ -210,6 +216,22 @@ cairo_d2d_surface_create(cairo_device_t *device,
  */
 cairo_public cairo_surface_t *
 cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo_content_t content);
+
+/**
+ * Create a D3D surface from an ID3D10Texture2D texture, this is obtained from a
+ * CreateTexture2D call on a D3D10 device. This has to be an A8R8G8B8 format
+ * or an A8 format, the treatment of the alpha channel can be indicated using
+ * the content parameter.
+ *
+ * \param device Device used to create the surface
+ * \param texture Texture that we want to wrap
+ * \param content Content of the texture
+ * \return New cairo surface
+ */
+cairo_public cairo_surface_t *
+cairo_d2d_surface_create_for_texture(cairo_device_t *device,
+				     struct ID3D10Texture2D *texture,
+				     cairo_content_t content);
 
 /**
  * Present the backbuffer for a surface create for an HWND. This needs

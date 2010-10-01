@@ -54,6 +54,9 @@ let gSyncUtils = {
       openUILinkIn(url, "window");
     else if (thisDocEl.id == "BrowserPreferences" && !thisDocEl.instantApply)
       openUILinkIn(url, "window");
+    else if (document.documentElement.id == "change-dialog")
+      Weave.Svc.WinMediator.getMostRecentWindow("navigator:browser")
+        .openUILinkIn(url, "tab");
     else
       openUILinkIn(url, "tab");
   },
@@ -102,6 +105,10 @@ let gSyncUtils = {
     this._openLink(Weave.Svc.Prefs.get("privacyURL"));
   },
 
+  openSyncKeyHelp: function () {
+    this._openLink(Weave.Svc.Prefs.get("syncKeyHelpURL"));
+  },
+
   // xxxmpc - fix domain before 1.3 final (bug 583652)
   _baseURL: "http://www.mozilla.com/firefox/sync/",
 
@@ -147,21 +154,6 @@ let gSyncUtils = {
   },
 
   /**
-   * Trigger the mailto protocol handler to send a passphrase backup email.
-   * 
-   * @param elid : ID of the form element containing the passphrase.
-   */
-  passphraseEmail: function(elid) {
-    let pp = document.getElementById(elid).value;
-    let subject = this.bundle.GetStringFromName("email.synckey.subject");
-    let body = this.bundle.formatStringFromName("email.synckey.body", [pp], 1);
-    let uri = Weave.Utils.makeURI("mailto:?subject=" + subject + "&body=" + body);
-    let protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                     .getService(Ci.nsIExternalProtocolService);
-    protoSvc.loadURI(uri);
-  },
-
-  /**
    * Prepare an invisible iframe with the passphrase backup document.
    * Used by both the print and saving methods.
    *
@@ -182,6 +174,17 @@ let gSyncUtils = {
       // Insert the Sync Key into the page.
       let el = iframe.contentDocument.getElementById("synckey");
       el.firstChild.nodeValue = pp;
+
+      // Insert the TOS and Privacy Policy URLs into the page.
+      let termsURL = Weave.Svc.Prefs.get("termsURL");
+      el = iframe.contentDocument.getElementById("tosLink");
+      el.setAttribute("href", termsURL);
+      el.firstChild.nodeValue = termsURL;
+
+      let privacyURL = Weave.Svc.Prefs.get("privacyURL");
+      el = iframe.contentDocument.getElementById("ppLink");
+      el.setAttribute("href", privacyURL);
+      el.firstChild.nodeValue = privacyURL;
 
       callback(iframe);
     }, false);
@@ -237,6 +240,9 @@ let gSyncUtils = {
 
         let serializer = new XMLSerializer();
         let output = serializer.serializeToString(iframe.contentDocument);
+        output = output.replace(/<!DOCTYPE (.|\n)*?]>/,
+          '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" ' +
+          '"DTD/xhtml1-strict.dtd">');
         output = Weave.Utils.encodeUTF8(output);
         stream.write(output, output.length);
       }
@@ -262,6 +268,8 @@ let gSyncUtils = {
       valid = val1.length >= Weave.MIN_PASS_LENGTH;
     else if (val1 && val1 == Weave.Service.username)
       error = "change.password.pwSameAsUsername";
+    else if (val1 && val1 == Weave.Service.account)
+      error = "change.password.pwSameAsEmail";
     else if (val1 && val1 == Weave.Service.password)
       error = "change.password.pwSameAsPassword";
     else if (val1 && val1 == Weave.Service.passphrase)
@@ -293,6 +301,8 @@ let gSyncUtils = {
 
     if (val == Weave.Service.username)
       error = "change.synckey.sameAsUsername";
+    else if (val == Weave.Service.account)
+      error = "change.synckey.sameAsEmail";
     else if (val == Weave.Service.password)
       error = "change.synckey.sameAsPassword";
     else if (change && val == Weave.Service.passphrase)

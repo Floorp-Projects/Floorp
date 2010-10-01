@@ -470,6 +470,8 @@ static void RemoveArg(char **argv)
 static ArgResult
 CheckArg(const char* aArg, PRBool aCheckOSInt = PR_FALSE, const char **aParam = nsnull, PRBool aRemArg = PR_TRUE)
 {
+  NS_ABORT_IF_FALSE(gArgv, "gArgv must be initialized before CheckArg()");
+
   char **curarg = gArgv + 1; // skip argv[0]
   ArgResult ar = ARG_NONE;
 
@@ -3044,6 +3046,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
 
+  if (PR_GetEnv("MOZ_SAFE_MODE_RESTART")) {
+    gSafeMode = PR_TRUE;
+    // unset the env variable
+    PR_SetEnv("MOZ_SAFE_MODE_RESTART=");
+  }
+
   ar = CheckArg("safe-mode", PR_TRUE);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -safe-mode is invalid when argument -osint is specified\n");
@@ -3272,7 +3280,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 1;
     }
 
-#if defined(MOZ_UPDATER)
+#if defined(MOZ_UPDATER) && !defined(ANDROID)
   // Check for and process any available updates
   nsCOMPtr<nsIFile> updRoot;
   PRBool persistent;

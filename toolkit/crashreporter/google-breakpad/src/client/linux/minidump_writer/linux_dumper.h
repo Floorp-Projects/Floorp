@@ -36,7 +36,7 @@
 #include <sys/types.h>
 #include <sys/user.h>
 
-#include "common/linux/memory.h"
+#include "common/memory.h"
 #include "google_breakpad/common/minidump_format.h"
 
 namespace google_breakpad {

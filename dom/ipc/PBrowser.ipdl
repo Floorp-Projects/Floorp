@@ -43,22 +43,22 @@ include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PContentPermissionRequest;
-include protocol PExternalHelperApp;
+include protocol PRenderFrame;
 
-include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "IPC/nsGUIEventIPC.h";
 
-using IPC::URI;
-using MagicWindowHandle;
-using RemoteDOMEvent;
 using gfxMatrix;
+using IPC::URI;
+using nsIntSize;
 using nsCompositionEvent;
 using nsTextEvent;
 using nsQueryContentEvent;
 using nsSelectionEvent;
+using RemoteDOMEvent;
+using nsIMEUpdatePreference;
 
 namespace mozilla {
 namespace dom {
@@ -72,7 +72,7 @@ rpc protocol PBrowser
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
     manages PContentPermissionRequest;
-    manages PExternalHelperApp;
+    manages PRenderFrame;
 
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
@@ -86,52 +86,102 @@ parent:
 
     Event(RemoteDOMEvent aEvent);
 
-    NotifyStateChange(PRUint32 stateFlags, nsresult status);
-
-    NotifyProgressChange(PRInt64 curSelfProgress,
-                         PRInt64 maxSelfProgress,
-                         PRInt64 curTotalProgress,
-                         PRInt64 maxTotalProgress);
-
-    NotifyLocationChange(nsCString uri);
-
-    NotifyStatusChange(nsresult status,
-                       nsString message);
-
-    NotifySecurityChange(PRUint32 aState,
-                         PRBool aUseSSLStatusObject,
-                         nsString aTooltip,
-                         nsCString aSecInfoAsString);
-
-    sync RefreshAttempted(nsCString uri, PRInt32 millis,
-                          bool sameURI) returns (bool retval);
-
-
     rpc CreateWindow() returns (PBrowser window);
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
 
-    QueryContentResult(nsQueryContentEvent event);
+    /**
+     * Notifies chrome that there is a focus change involving an editable
+     * object (input, textarea, document, contentEditable. etc.)
+     *
+     *  focus        PR_TRUE if editable object is receiving focus
+     *               PR_FALSE if losing focus
+     *  preference   Native widget preference for IME updates
+     */
+    sync NotifyIMEFocus(PRBool focus)
+      returns (nsIMEUpdatePreference preference);
+
+    /**
+     * Notifies chrome that there has been a change in text content
+     * One call can encompass both a delete and an insert operation
+     * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
+     *
+     *  offset       Starting offset of the change
+     *  end          Ending offset of the range deleted
+     *  newEnd       New ending offset after insertion
+     *
+     *  for insertion, offset == end
+     *  for deletion, offset == newEnd
+     */
+    NotifyIMETextChange(PRUint32 offset, PRUint32 end, PRUint32 newEnd);
+
+    /**
+     * Notifies chrome that there has been a change in selection
+     * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
+     *
+     *  anchor       Offset where the selection started
+     *  focus        Offset where the caret is
+     */
+    NotifyIMESelection(PRUint32 anchor, PRUint32 focus);
+
+    /**
+     * Notifies chrome to refresh its text cache 
+     * Only called when NotifyIMEFocus returns PR_TRUE for mWantHints
+     *
+     *  text         The entire content of the text field
+     */
+    NotifyIMETextHint(nsString text);
+
+    /**
+     * Instructs chrome to end any pending composition
+     *
+     *  cancel       PR_TRUE if composition should be cancelled
+     *  composition  Text to commit before ending the composition
+     *
+     *  if cancel is PR_TRUE,
+     *    widget should return empty string for composition
+     *  if cancel is PR_FALSE,
+     *    widget should return the current composition text
+     */
+    sync EndIMEComposition(PRBool cancel) returns (nsString composition);
+
+    sync GetIMEEnabled() returns (PRUint32 value);
+
+    SetIMEEnabled(PRUint32 value);
+
+    sync GetIMEOpenState() returns (PRBool value);
+
+    SetIMEOpenState(PRBool value);
 
     PContentPermissionRequest(nsCString aType, URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
                    PRInt32[] aIntParams, nsString[] aStringParams);
 
+    /**
+     * Create a layout frame (encapsulating a remote layer tree) for
+     * the page that is currently loaded in the <browser>.
+     */
+    async PRenderFrame();
+
     __delete__();
 
-    PExternalHelperApp(URI uri, nsCString aMimeContentType, bool aForceSave, PRInt64 aContentLength);
-
 child:
-    CreateWidget(MagicWindowHandle parentWidget);
+    /**
+     * Notify the remote browser that it has been Show()n on this
+     * side, with the given |visibleRect|.  This message is expected
+     * to trigger creation of the remote browser's "widget".
+     *
+     * |Show()| and |Move()| take IntSizes rather than Rects because
+     * content processes always render to a virtual <0, 0> top-left
+     * point.
+     */
+    Show(nsIntSize size);
 
     LoadURL(nsCString uri);
 
-    Move(PRUint32 x,
-         PRUint32 y,
-         PRUint32 width,
-         PRUint32 height);
+    Move(nsIntSize size);
 
     /**
      * Sending an activate message moves focus to the child.
@@ -161,8 +211,6 @@ child:
     CompositionEvent(nsCompositionEvent event);
 
     TextEvent(nsTextEvent event);
-
-    QueryContentEvent(nsQueryContentEvent event);
 
     SelectionEvent(nsSelectionEvent event);
 

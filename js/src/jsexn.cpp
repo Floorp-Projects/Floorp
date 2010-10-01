@@ -63,13 +63,15 @@
 #include "jsstaticcheck.h"
 
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 /* Forward declarations for js_ErrorClass's initializer. */
 static JSBool
-Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);
+Exception(JSContext *cx, uintN argc, Value *vp);
 
 static void
 exn_trace(JSTracer *trc, JSObject *obj);
@@ -257,6 +259,19 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
     return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
+namespace {
+
+struct CopyTo
+{
+    Value *dst;
+    CopyTo(jsval *dst) : dst(Valueify(dst)) {}
+    void operator()(uintN, Value *src) {
+        *dst++ = *src;
+    }
+};
+
+}
+
 static JSBool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                JSString *filename, uintN lineno, JSErrorReport *report)
@@ -292,11 +307,11 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
     stackDepth = 0;
     valueCount = 0;
-    for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
-        if (fp->hasFunction() && fp->argv && !fp->isEvalFrame()) {
+    for (fp = js_GetTopStackFrame(cx); fp; fp = fp->prev()) {
+        if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
             Value v = NullValue();
             if (checkAccess &&
-                !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
+                !checkAccess(cx, &fp->callee(), callerid, JSACC_READ, &v)) {
                 break;
             }
             valueCount += fp->numActualArgs();
@@ -333,22 +348,22 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
-    for (fp = js_GetTopStackFrame(cx); fp != fpstop; fp = fp->down) {
-        if (!fp->hasFunction() || fp->isEvalFrame()) {
+    for (fp = js_GetTopStackFrame(cx); fp != fpstop; fp = fp->prev()) {
+        if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
             elem->funName = NULL;
             elem->argc = 0;
         } else {
-            elem->funName = fp->getFunction()->atom
-                            ? ATOM_TO_STRING(fp->getFunction()->atom)
+            elem->funName = fp->fun()->atom
+                            ? ATOM_TO_STRING(fp->fun()->atom)
                             : cx->runtime->emptyString;
             elem->argc = fp->numActualArgs();
-            memcpy(values, fp->argv, elem->argc * sizeof(jsval));
+            fp->forEachCanonicalActualArg(CopyTo(values));
             values += elem->argc;
         }
         elem->ulineno = 0;
         elem->filename = NULL;
-        if (fp->hasScript()) {
-            elem->filename = fp->getScript()->filename;
+        if (fp->isScriptFrame()) {
+            elem->filename = fp->script()->filename;
             if (fp->pc(cx))
                 elem->ulineno = js_FramePCToLineNumber(cx, fp);
         }
@@ -393,16 +408,14 @@ exn_trace(JSTracer *trc, JSObject *obj)
     priv = GetExnPrivate(trc->context, obj);
     if (priv) {
         if (priv->message)
-            JS_CALL_STRING_TRACER(trc, priv->message, "exception message");
+            MarkString(trc, priv->message, "exception message");
         if (priv->filename)
-            JS_CALL_STRING_TRACER(trc, priv->filename, "exception filename");
+            MarkString(trc, priv->filename, "exception filename");
 
         elem = priv->stackElems;
         for (vcount = i = 0; i != priv->stackDepth; ++i, ++elem) {
-            if (elem->funName) {
-                JS_CALL_STRING_TRACER(trc, elem->funName,
-                                      "stack trace function name");
-            }
+            if (elem->funName)
+                MarkString(trc, elem->funName, "stack trace function name");
             if (IS_GC_MARKING_TRACER(trc) && elem->filename)
                 js_MarkScriptFilename(elem->filename);
             vcount += elem->argc;
@@ -696,31 +709,27 @@ StringToFilename(JSContext *cx, JSString *str)
 }
 
 static JSBool
-Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+Exception(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *message, *filename;
     JSStackFrame *fp;
 
-    if (!JS_IsConstructing(cx)) {
-        /*
-         * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
-         * called as functions, without operator new.  But as we do not give
-         * each constructor a distinct JSClass, whose .name member is used by
-         * NewNativeClassInstance to find the class prototype, we must get the
-         * class prototype ourselves.
-         */
-        if (!argv[-2].toObject().getProperty(cx,
-                                             ATOM_TO_JSID(cx->runtime->atomState
-                                                          .classPrototypeAtom),
-                                             rval)) {
-            return JS_FALSE;
-        }
-        JSObject *errProto = &rval->toObject();
-        obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
-        if (!obj)
-            return JS_FALSE;
-        rval->setObject(*obj);
-    }
+    /*
+     * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
+     * called as functions, without operator new.  But as we do not give
+     * each constructor a distinct JSClass, whose .name member is used by
+     * NewNativeClassInstance to find the class prototype, we must get the
+     * class prototype ourselves.
+     */
+    JSObject &callee = vp[0].toObject();
+    Value protov;
+    if (!callee.getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
+        return JS_FALSE;
+
+    JSObject *errProto = &protov.toObject();
+    JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
+    if (!obj)
+        return JS_FALSE;
 
     /*
      * If it's a new object of class Exception, then null out the private
@@ -730,6 +739,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         obj->setPrivate(NULL);
 
     /* Set the 'message' property. */
+    Value *argv = vp + 2;
     if (argc != 0) {
         message = js_ValueToString(cx, argv[0]);
         if (!message)
@@ -749,7 +759,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     } else {
         fp = js_GetScriptedCaller(cx, NULL);
         if (fp) {
-            filename = FilenameToString(cx, fp->getScript()->filename);
+            filename = FilenameToString(cx, fp->script()->filename);
             if (!filename)
                 return JS_FALSE;
         } else {
@@ -768,8 +778,13 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         lineno = (fp && fp->pc(cx)) ? js_FramePCToLineNumber(cx, fp) : 0;
     }
 
-    return (obj->getClass() != &js_ErrorClass) ||
-            InitExnPrivate(cx, obj, message, filename, lineno, NULL);
+    if (obj->getClass() == &js_ErrorClass &&
+        !InitExnPrivate(cx, obj, message, filename, lineno, NULL)) {
+        return JS_FALSE;
+    }
+
+    vp->setObject(*obj);
+    return JS_TRUE;
 }
 
 /*
@@ -780,7 +795,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
  * number information along with this message.
  */
 static JSBool
-exn_toString(JSContext *cx, uintN argc, jsval *vp)
+exn_toString(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
     jsval v;
@@ -788,11 +803,11 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars, *cp;
     size_t name_length, message_length, length;
 
-    obj = JS_THIS_OBJECT(cx, vp);
+    obj = ComputeThisFromVp(cx, vp);
     if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), Valueify(&v)))
         return JS_FALSE;
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
-    *vp = STRING_TO_JSVAL(name);
+    vp->setString(name);
 
     if (!JS_GetProperty(cx, obj, js_message_str, &v))
         return JS_FALSE;
@@ -825,7 +840,7 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
         result = name;
     }
 
-    *vp = STRING_TO_JSVAL(result);
+    vp->setString(result);
     return JS_TRUE;
 }
 
@@ -834,7 +849,7 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
  * Return a string that may eval to something similar to the original object.
  */
 static JSBool
-exn_toSource(JSContext *cx, uintN argc, jsval *vp)
+exn_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
     JSString *name, *message, *filename, *lineno_as_str, *result;
@@ -842,13 +857,13 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
-    obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), Valueify(vp)))
+    obj = ComputeThisFromVp(cx, vp);
+    if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), vp))
         return false;
-    name = js_ValueToString(cx, Valueify(*vp));
+    name = js_ValueToString(cx, *vp);
     if (!name)
         return false;
-    *vp = STRING_TO_JSVAL(name);
+    vp->setString(name);
 
     {
         AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroots), Valueify(localroots));
@@ -948,7 +963,7 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
             cx->free(chars);
             return false;
         }
-        *vp = STRING_TO_JSVAL(result);
+        vp->setString(result);
         return true;
     }
 }
@@ -1030,7 +1045,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* Make a constructor function for the current name. */
         JSProtoKey protoKey = GetExceptionProtoKey(i);
         JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
-        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, 0);
+        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, JSFUN_CONSTRUCTOR);
         if (!fun)
             return NULL;
         roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));

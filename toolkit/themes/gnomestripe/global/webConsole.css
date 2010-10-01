@@ -21,7 +21,8 @@
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
-
+ *   Mihai Șucan <mihai.sucan@gmail.com>
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -38,6 +39,11 @@
 
 .hud-box {
     border-bottom: 1px solid #aaa;
+    text-shadow: none;
+}
+
+.hud-group label {
+    padding-left: 1em;
 }
 
 .hud-outer-wrapper {
@@ -56,10 +62,15 @@
     font-weight: bold;
 }
 
-.hud-output-node div {
+.hud-output-node * {
     -moz-user-select: text;
     white-space: pre-wrap;
     -moz-user-focus: normal;
+}
+
+.hud-clickable {
+    cursor: pointer !important;
+    text-decoration: underline;
 }
 
 .hud-output-node .hud-network {
@@ -86,12 +97,11 @@
     color: red; font-weight: bold;
 }
 
-.hud-msg-node {    
+.hud-msg-node {
     width: 100%;
-    margin-top: 0.3em; 
-    margin-bottom: 0.3em; 
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
     padding-left: 0.3em;
-    border-bottom: 1px solid #eee;   
 }
 
 .hud-output-node {

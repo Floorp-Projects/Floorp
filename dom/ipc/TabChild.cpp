@@ -39,7 +39,10 @@
 #include "TabChild.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/PContentDialogChild.h"
+#include "mozilla/layers/PLayersChild.h"
+#include "mozilla/layout/RenderFrameChild.h"
 
+#include "BasicLayers.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsEmbedCID.h"
@@ -54,7 +57,6 @@
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/DocumentRendererShmemChild.h"
 #include "mozilla/ipc/DocumentRendererNativeIDChild.h"
-#include "mozilla/dom/ExternalHelperAppChild.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
@@ -89,17 +91,9 @@
 #include "nsIEventListenerManager.h"
 #include "PCOMContentPermissionRequestChild.h"
 
-#ifdef MOZ_WIDGET_QT
-#include <QGraphicsView>
-#include <QGraphicsWidget>
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-#include <gdk/gdkx.h>
-#include <gtk/gtk.h>
-#endif
-
 using namespace mozilla::dom;
+using namespace mozilla::layers;
+using namespace mozilla::layout;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -122,7 +116,8 @@ public:
 
 
 TabChild::TabChild(PRUint32 aChromeFlags)
-  : mTabChildGlobal(nsnull)
+  : mRemoteFrame(nsnull)
+  , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
 {
     printf("creating %d!\n", NS_IsMainThread());
@@ -131,10 +126,6 @@ TabChild::TabChild(PRUint32 aChromeFlags)
 nsresult
 TabChild::Init()
 {
-#ifdef MOZ_WIDGET_GTK2
-  gtk_init(NULL, NULL);
-#endif
-
   nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
   if (!webBrowser) {
     NS_ERROR("Couldn't create a nsWebBrowser?");
@@ -142,10 +133,6 @@ TabChild::Init()
   }
 
   webBrowser->SetContainerWindow(this);
-  nsCOMPtr<nsIWeakReference> weak =
-    do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
-  webBrowser->AddWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
-
   mWebNav = do_QueryInterface(webBrowser);
   NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
 
@@ -155,7 +142,6 @@ TabChild::Init()
 }
 
 NS_INTERFACE_MAP_BEGIN(TabChild)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener2)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
@@ -163,11 +149,9 @@ NS_INTERFACE_MAP_BEGIN(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener2)
-  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITabChild)
   NS_INTERFACE_MAP_ENTRY(nsIDialogCreator)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(TabChild)
@@ -419,41 +403,87 @@ TabChild::ArraysToParams(const nsTArray<int>& aIntParams,
   }
 }
 
-bool
-TabChild::RecvCreateWidget(const MagicWindowHandle& parentWidget)
+void
+TabChild::DestroyWindow()
 {
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
+    if (baseWindow)
+        baseWindow->Destroy();
+
+    // NB: the order of mWidget->Destroy() and mRemoteFrame->Destroy()
+    // is important: we want to kill off remote layers before their
+    // frames
+    if (mWidget) {
+        mWidget->Destroy();
+    }
+
+    if (mRemoteFrame) {
+        mRemoteFrame->Destroy();
+        mRemoteFrame = nsnull;
+    }
+}
+
+void
+TabChild::ActorDestroy(ActorDestroyReason why)
+{
+  // The messageManager relays messages via the TabChild which
+  // no longer exists.
+  static_cast<nsFrameMessageManager*>
+    (mTabChildGlobal->mMessageManager.get())->Disconnect();
+  mTabChildGlobal->mMessageManager = nsnull;
+}
+
+TabChild::~TabChild()
+{
+    nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
+    if (webBrowser) {
+      webBrowser->SetContainerWindow(nsnull);
+    }
+    if (mCx) {
+      DestroyCx();
+    }
+    
+    nsIEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
+    if (elm) {
+      elm->Disconnect();
+    }
+    mTabChildGlobal->mTabChild = nsnull;
+}
+
+bool
+TabChild::RecvLoadURL(const nsCString& uri)
+{
+    printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
+
+    nsresult rv = mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
+                                   nsIWebNavigation::LOAD_FLAGS_NONE,
+                                   NULL, NULL, NULL);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
+    }
+
+    return NS_SUCCEEDED(rv);
+}
+
+bool
+TabChild::RecvShow(const nsIntSize& size)
+{
+    printf("[TabChild] SHOW (w,h)= (%d, %d)\n", size.width, size.height);
+
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (!baseWindow) {
         NS_ERROR("mWebNav doesn't QI to nsIBaseWindow");
-        return true;
+        return false;
     }
 
-#ifdef MOZ_WIDGET_GTK2
-    GtkWidget* win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-#elif defined(MOZ_WIDGET_QT)
-    QGraphicsView *view = new QGraphicsView(new QGraphicsScene());
-    NS_ENSURE_TRUE(view, false);
-    QGraphicsWidget *win = new QGraphicsWidget();
-    NS_ENSURE_TRUE(win, false);
-    view->scene()->addItem(win);
-#elif defined(XP_WIN)
-    HWND win = parentWidget;
-#elif defined(ANDROID)
-    // Fake pointer to make baseWindow->InitWindow work
-    // The android widget code is mostly disabled in the child process
-    // so it won't choke on this
-    void *win = (void *)0x1234;
-#elif defined(XP_MACOSX)
-#  warning IMPLEMENT ME
-#else
-#error You lose!
-#endif
+    if (!InitWidget(size)) {
+        return false;
+    }
 
-#if !defined(XP_MACOSX)
-    baseWindow->InitWindow(win, 0, 0, 0, 0, 0);
+    baseWindow->InitWindow(0, mWidget,
+                           0, 0, size.width, size.height);
     baseWindow->Create();
     baseWindow->SetVisibility(PR_TRUE);
-#endif
 
     // IPC uses a WebBrowser object for which DNS prefetching is turned off
     // by default. But here we really want it, so enable it explicitly
@@ -470,207 +500,16 @@ TabChild::RecvCreateWidget(const MagicWindowHandle& parentWidget)
 }
 
 bool
-TabChild::DestroyWidget()
+TabChild::RecvMove(const nsIntSize& size)
 {
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
-    if (baseWindow)
-        baseWindow->Destroy();
+    printf("[TabChild] RESIZE to (w,h)= (%ud, %ud)\n", size.width, size.height);
 
-    return true;
-}
-
-void
-TabChild::ActorDestroy(ActorDestroyReason why)
-{
-  // The messageManager relays messages via the TabChild which
-  // no longer exists.
-  static_cast<nsFrameMessageManager*>
-    (mTabChildGlobal->mMessageManager.get())->Disconnect();
-  mTabChildGlobal->mMessageManager = nsnull;
-}
-
-TabChild::~TabChild()
-{
-    nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
-    nsCOMPtr<nsIWeakReference> weak =
-      do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
-    webBrowser->RemoveWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
-
-    if (webBrowser) {
-      webBrowser->SetContainerWindow(nsnull);
-    }
-    if (mCx) {
-      DestroyCx();
-    }
-    
-    nsIEventListenerManager* elm = mTabChildGlobal->GetListenerManager(PR_FALSE);
-    if (elm) {
-      elm->Disconnect();
-    }
-    mTabChildGlobal->mTabChild = nsnull;
-}
-
-NS_IMETHODIMP
-TabChild::OnStateChange(nsIWebProgress *aWebProgress,
-                        nsIRequest *aRequest,
-                        PRUint32 aStateFlags,
-                        nsresult aStatus)
-{
-  SendNotifyStateChange(aStateFlags, aStatus);
-  return NS_OK;
-}
-
-// Only one of OnProgressChange / OnProgressChange64 will be called.
-// According to interface, it should be OnProgressChange64, but looks
-// like docLoader only sends the former.
-NS_IMETHODIMP
-TabChild::OnProgressChange(nsIWebProgress *aWebProgress,
-                           nsIRequest *aRequest,
-                           PRInt32 aCurSelfProgress,
-                           PRInt32 aMaxSelfProgress,
-                           PRInt32 aCurTotalProgress,
-                           PRInt32 aMaxTotalProgress)
-{
-  SendNotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
-                           aCurTotalProgress, aMaxTotalProgress);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnStatusChange(nsIWebProgress *aWebProgress,
-                         nsIRequest *aRequest,
-                         nsresult aStatus,
-                         const PRUnichar* aMessage)
-{
-  nsDependentString message(aMessage);
-  SendNotifyStatusChange(aStatus, message);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnSecurityChange(nsIWebProgress *aWebProgress,
-                           nsIRequest *aRequest,
-                           PRUint32 aState)
-{
-  nsCString secInfoAsString;
-  if (aState & nsIWebProgressListener::STATE_IS_SECURE) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-    if (channel) {
-      nsCOMPtr<nsISupports> secInfoSupports;
-      channel->GetSecurityInfo(getter_AddRefs(secInfoSupports));
-
-      nsCOMPtr<nsISerializable> secInfoSerializable =
-          do_QueryInterface(secInfoSupports);
-      NS_SerializeToString(secInfoSerializable, secInfoAsString);
-    }
-  }
-
-  PRBool useSSLStatusObject = PR_FALSE;
-  nsAutoString securityTooltip;
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aWebProgress);
-  if (docShell) {
-    nsCOMPtr<nsISecureBrowserUI> secureUI;
-    docShell->GetSecurityUI(getter_AddRefs(secureUI));
-    if (secureUI) {
-      secureUI->GetTooltipText(securityTooltip);
-      nsCOMPtr<nsISupports> supports;
-      nsCOMPtr<nsISSLStatusProvider> provider = do_QueryInterface(secureUI);
-      nsresult rv = provider->GetSSLStatus(getter_AddRefs(supports));
-      if (NS_SUCCEEDED(rv) && supports) {
-        /*
-         * useSSLStatusObject: Security UI internally holds 4 states: secure, mixed,
-         * broken, no security.  In cases of secure, mixed and broken it holds reference
-         * to a valid SSL status object.  But, in case of the 'broken' state it doesn't
-         * return the SSL status object (returns null), in contrary to the 'mixed' state
-         * for which it returns.
-         * 
-         * However, mixed and broken states are both reported to the upper level
-         * as nsIWebProgressListener::STATE_IS_BROKEN, i.e. states are merged,
-         * so we cannot determine, if to return the status object or not.
-         *
-         * TabParent is extracting the SSL status object from the security info
-         * serialization (string). SSL status object is always present there
-         * even security UI implementation doesn't present it.  This argument 
-         * tells the parent if the SSL status object is being presented by 
-         * the security UI here, on the child process, and so if it has to be
-         * presented also on the parent process.
-         */
-        useSSLStatusObject = PR_TRUE;
-      }
-    }
-  }
-
-  SendNotifySecurityChange(aState, useSSLStatusObject, securityTooltip,
-                           secInfoAsString);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnLocationChange(nsIWebProgress *aWebProgress,
-                           nsIRequest *aRequest,
-                           nsIURI *aLocation)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-  nsCString uri;
-  aLocation->GetSpec(uri);
-  SendNotifyLocationChange(uri);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnProgressChange64(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest,
-                             PRInt64 aCurSelfProgress,
-                             PRInt64 aMaxSelfProgress,
-                             PRInt64 aCurTotalProgress,
-                             PRInt64 aMaxTotalProgress)
-{
-  SendNotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
-                           aCurTotalProgress, aMaxTotalProgress);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::OnRefreshAttempted(nsIWebProgress *aWebProgress,
-                             nsIURI *aURI, PRInt32 aMillis,
-                             PRBool aSameURL, PRBool *aRefreshAllowed)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  nsCString uri;
-  aURI->GetSpec(uri);
-  bool sameURL = aSameURL;
-  bool refreshAllowed;
-  SendRefreshAttempted(uri, aMillis, sameURL, &refreshAllowed);
-  *aRefreshAllowed = refreshAllowed;
-  return NS_OK;
-}
-
-bool
-TabChild::RecvLoadURL(const nsCString& uri)
-{
-    printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
-
-    nsresult rv = mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
-                                   nsIWebNavigation::LOAD_FLAGS_NONE,
-                                   NULL, NULL, NULL);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("mWebNav->LoadURI failed. Eating exception, what else can I do?");
-    }
-
-    return true;
-}
-
-bool
-TabChild::RecvMove(const PRUint32& x,
-                   const PRUint32& y,
-                   const PRUint32& width,
-                   const PRUint32& height)
-{
-    printf("[TabChild] MOVE to (x,y)=(%ud, %ud), (w,h)= (%ud, %ud)\n",
-           x, y, width, height);
+    mWidget->Resize(0, 0, size.width, size.height,
+                    PR_TRUE);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mWebNav);
-    baseWin->SetPositionAndSize(x, y, width, height, PR_TRUE);
+    baseWin->SetPositionAndSize(0, 0, size.width, size.height,
+                                PR_TRUE);
     return true;
 }
 
@@ -733,16 +572,6 @@ TabChild::RecvTextEvent(const nsTextEvent& event)
 }
 
 bool
-TabChild::RecvQueryContentEvent(const nsQueryContentEvent& event)
-{
-  nsQueryContentEvent localEvent(event);
-  DispatchWidgetEvent(localEvent);
-  // Send result back even if query failed
-  SendQueryContentResult(localEvent);
-  return true;
-}
-
-bool
 TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
 {
   nsSelectionEvent localEvent(event);
@@ -753,28 +582,12 @@ TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
 bool
 TabChild::DispatchWidgetEvent(nsGUIEvent& event)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
-  NS_ENSURE_TRUE(window, false);
-
-  nsIDocShell *docShell = window->GetDocShell();
-  NS_ENSURE_TRUE(docShell, false);
-
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, false);
-
-  nsIFrame *frame = presShell->GetRootFrame();
-  NS_ENSURE_TRUE(frame, false);
-
-  nsIView *view = frame->GetView();
-  NS_ENSURE_TRUE(view, false);
-
-  nsCOMPtr<nsIWidget> widget = view->GetNearestWidget(nsnull);
-  NS_ENSURE_TRUE(widget, false);
+  if (!mWidget)
+    return false;
 
   nsEventStatus status;
-  event.widget = widget;
-  NS_ENSURE_SUCCESS(widget->DispatchEvent(&event, status), false);
+  event.widget = mWidget;
+  NS_ENSURE_SUCCESS(mWidget->DispatchEvent(&event, status), false);
   return true;
 }
 
@@ -1054,9 +867,22 @@ TabChild::RecvDestroy()
   );
 
   // XXX what other code in ~TabChild() should we be running here?
-  DestroyWidget();
+  DestroyWindow();
 
   return Send__delete__(this);
+}
+
+PRenderFrameChild*
+TabChild::AllocPRenderFrame()
+{
+    return new RenderFrameChild();
+}
+
+bool
+TabChild::DeallocPRenderFrame(PRenderFrameChild* aFrame)
+{
+    delete aFrame;
+    return true;
 }
 
 bool
@@ -1142,6 +968,53 @@ TabChild::InitTabChildGlobal()
   JS_SetGlobalObject(cx, global);
   DidCreateCx();
   return true;
+}
+
+bool
+TabChild::InitWidget(const nsIntSize& size)
+{
+    NS_ABORT_IF_FALSE(!mWidget && !mRemoteFrame, "CreateWidget twice?");
+
+    mWidget = nsIWidget::CreatePuppetWidget(this);
+    if (!mWidget) {
+        NS_ERROR("couldn't create fake widget");
+        return false;
+    }
+    mWidget->Create(
+        nsnull, 0,              // no parents
+        nsIntRect(nsIntPoint(0, 0), size),
+        nsnull,                 // HandleWidgetEvent
+        nsnull                  // nsIDeviceContext
+        );
+
+    RenderFrameChild* remoteFrame =
+        static_cast<RenderFrameChild*>(SendPRenderFrameConstructor());
+    if (!remoteFrame) {
+      NS_WARNING("failed to construct RenderFrame");
+      return false;
+    }
+
+    NS_ABORT_IF_FALSE(0 == remoteFrame->ManagedPLayersChild().Length(),
+                      "shouldn't have a shadow manager yet");
+    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor();
+    if (!shadowManager) {
+      NS_WARNING("failed to construct LayersChild");
+      // This results in |remoteFrame| being deleted.
+      PRenderFrameChild::Send__delete__(remoteFrame);
+      return false;
+    }
+
+    LayerManager* lm = mWidget->GetLayerManager();
+    NS_ABORT_IF_FALSE(LayerManager::LAYERS_BASIC == lm->GetBackendType(),
+                      "content processes should only be using BasicLayers");
+
+    BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
+    NS_ABORT_IF_FALSE(!bslm->HasShadowManager(),
+                      "PuppetWidget shouldn't have shadow manager yet");
+    bslm->SetShadowManager(shadowManager);
+
+    mRemoteFrame = remoteFrame;
+    return true;
 }
 
 static bool
@@ -1237,24 +1110,4 @@ TabChildGlobal::GetPrincipal()
     return nsnull;
   return mTabChild->GetPrincipal();
 }
-
-PExternalHelperAppChild*
-TabChild::AllocPExternalHelperApp(const IPC::URI& uri,
-                                  const nsCString& aMimeContentType,
-                                  const bool& aForceSave,
-                                  const PRInt64& aContentLength)
-{
-  ExternalHelperAppChild *child = new ExternalHelperAppChild();
-  child->AddRef();
-  return child;
-}
-
-bool
-TabChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
-{
-  ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
-  child->Release();
-  return true;
-}
-
 

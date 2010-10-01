@@ -52,6 +52,10 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRect.h"
+#include "gfxASurface.h"
+#ifdef MOZ_X11
+class gfxXlibSurface;
+#endif
 
 namespace mozilla {
 namespace plugins {
@@ -165,6 +169,12 @@ public:
     virtual bool
     RecvNPN_InvalidateRect(const NPRect& rect);
 
+    // Async rendering
+    virtual bool
+    RecvShow(const NPRect& updatedRect,
+             const SurfaceDescriptor& newSurface,
+             SurfaceDescriptor* prevSurface);
+
     virtual bool
     AnswerNPN_PushPopupsEnabledState(const bool& aState);
 
@@ -250,6 +260,11 @@ public:
     void Invalidate();
 #endif // definied(OS_MACOSX)
 
+    nsresult AsyncSetWindow(NPWindow* window);
+    nsresult NotifyPainted(void);
+    nsresult GetSurface(gfxASurface** aSurface);
+    nsresult UseAsyncPainting(PRBool* aIsAsync);
+
 private:
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
@@ -304,6 +319,12 @@ private:
     int16_t            mDrawingModel;
     nsIOSurface       *mIOSurface;
 #endif // definied(OS_MACOSX)
+
+    // ObjectFrame layer wrapper
+    nsRefPtr<gfxASurface>    mFrontSurface;
+
+    // Don't spam plugin process with extra paint notifications
+    PRPackedBool             mSentPaintNotification;
 };
 
 

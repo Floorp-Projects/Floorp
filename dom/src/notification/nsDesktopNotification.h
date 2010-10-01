@@ -37,6 +37,11 @@
 #ifndef nsDesktopNotification_h
 #define nsDesktopNotification_h
 
+#ifdef MOZ_IPC
+#include "PCOMContentPermissionRequestChild.h"
+#endif
+
+
 #include "nsDOMClassInfo.h"
 #include "nsIJSContextStack.h"
 
@@ -44,7 +49,7 @@
 
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDesktopNotificationPrompt.h"
+#include "nsIContentPermissionPrompt.h"
 
 #include "nsIObserver.h"
 #include "nsString.h"
@@ -140,20 +145,24 @@ protected:
 /*
  * Simple Request
  */
-class nsDesktopNotificationRequest : public nsIDOMDesktopNotificationRequest,
+class nsDesktopNotificationRequest : public nsIContentPermissionRequest,
                                      public nsRunnable
+#ifdef MOZ_IPC
+ , public PCOMContentPermissionRequestChild
+#endif
+
 {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDESKTOPNOTIFICATIONREQUEST
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
 
   nsDesktopNotificationRequest(nsDOMDesktopNotification* notification)
     : mDesktopNotification(notification) {}
 
   NS_IMETHOD Run()
   {
-    nsCOMPtr<nsIDesktopNotificationPrompt> prompt =
-      do_GetService(NS_DOM_DESKTOP_NOTIFICATION_PROMPT_CONTRACTID);
+    nsCOMPtr<nsIContentPermissionPrompt> prompt =
+      do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
     if (prompt) {
       prompt->Prompt(this);
     }
@@ -161,8 +170,21 @@ class nsDesktopNotificationRequest : public nsIDOMDesktopNotificationRequest,
   }
 
   ~nsDesktopNotificationRequest()
+  {
+  }
+
+#ifdef MOZ_IPC
+
+ bool Recv__delete__(const bool& allow)
  {
+   if (allow)
+     (void) Allow();
+   else
+     (void) Cancel();
+   return true;
  }
+ void IPDLRelease() { Release(); }
+#endif
 
   nsRefPtr<nsDOMDesktopNotification> mDesktopNotification;
 };

@@ -45,6 +45,8 @@
 #include "jsapi.h"
 #include "jsproxy.h"
 
+JS_BEGIN_EXTERN_C
+
 /* No-op wrapper handler base class. */
 class JSWrapper : public js::JSProxyHandler {
     uintN mFlags;
@@ -152,9 +154,8 @@ class AutoCompartment
     JSObject * const target;
     JSCompartment * const destination;
   private:
-    LazilyConstructed<FrameGuard> frame;
+    LazilyConstructed<DummyFrameGuard> frame;
     JSFrameRegs regs;
-    RegExpStatics statics;
     AutoStringRooter input;
     bool entered;
 
@@ -175,5 +176,7 @@ extern JSObject *
 TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, uintN flags);
 
 }
+
+JS_END_EXTERN_C
 
 #endif

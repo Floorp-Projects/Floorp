@@ -1704,8 +1704,7 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
 {
   // If this is an in-process plugin we'll need to load it here if we haven't already.
 #ifdef MOZ_IPC
-  if (!aPluginTag->mLibrary &&
-      !nsNPAPIPlugin::RunPluginOOP(aPluginTag->mFileName.get(), aPluginTag)) {
+  if (!nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
 #else
   if (!aPluginTag->mLibrary) {
 #endif
@@ -1754,9 +1753,7 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
   short pluginRefNum = pluginFile.OpenPluginResource();
 #endif
 
-  rv = nsNPAPIPlugin::CreatePlugin(fullPath.get(),
-                                   aPluginTag->mLibrary,
-                                   aOutNPAPIPlugin);
+  rv = nsNPAPIPlugin::CreatePlugin(aPluginTag, aOutNPAPIPlugin);
 
 #if defined(XP_MACOSX) && !defined(__LP64__)
   if (NS_SUCCEEDED(rv))

@@ -1,5 +1,6 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
+  skin/classic/browser/urlbar-over-link-arrow.png
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
@@ -11,7 +12,6 @@ browser.jar:
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
-  skin/classic/browser/feed-icons.png
   skin/classic/browser/fullscreen-video.css
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
@@ -45,7 +45,6 @@ browser.jar:
   skin/classic/browser/searchbar-dropmarker.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
-  skin/classic/browser/Search-addengines.png
   skin/classic/browser/section_collapsed.png
   skin/classic/browser/section_collapsed-rtl.png
   skin/classic/browser/section_expanded.png
@@ -109,8 +108,6 @@ browser.jar:
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
-  skin/classic/browser/tabbrowser/progress.png                           (tabbrowser/progress.png)
-  skin/classic/browser/tabbrowser/progress-pulsing.png                   (tabbrowser/progress-pulsing.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png                     (tabbrowser/tab-arrow-left.png)
   skin/classic/browser/tabbrowser/tab-arrow-right.png                    (tabbrowser/tab-arrow-right.png)
   skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png              (tabbrowser/tabbrowser-tabs-bkgnd.png)
@@ -119,19 +116,18 @@ browser.jar:
   skin/classic/browser/tabview/edit-light.png               (tabview/edit-light.png)
   skin/classic/browser/tabview/edit.png                     (tabview/edit.png)
   skin/classic/browser/tabview/new-tab.png                  (tabview/new-tab.png)
-  skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
+  skin/classic/browser/tabview/search.png                   (tabview/search.png)
   skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
-  skin/classic/browser/tabview/search.png                   (tabview/search.png)
+  skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
 #ifdef MOZ_SERVICES_SYNC
-  skin/classic/browser/sync-16-throbber.png
+  skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.png
   skin/classic/browser/sync-mobileIcon.png
-  skin/classic/browser/sync-usedBefore.png
-  skin/classic/browser/sync-usedNever.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
+  skin/classic/browser/syncQuota.css
 #endif

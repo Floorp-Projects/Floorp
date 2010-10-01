@@ -44,6 +44,14 @@
 #include "Accessible2.h"
 
 #include "nsIArray.h"
+#include "nsIDocument.h"
+
+const LPCWSTR kClassNameRoot = L"MozillaUIWindowClass";
+const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";
+
+const LPCWSTR kJAWSModuleHandle = L"jhook";
+const LPCWSTR kWEModuleHandle = L"gwm32inc";
+const LPCWSTR kDolphnModuleHandle = L"dolwinhk";
 
 class nsWinUtils
 {
@@ -54,6 +62,26 @@ public:
    */
   static HRESULT ConvertToIA2Array(nsIArray *aCollection,
                                    IUnknown ***aAccessibles, long *aCount);
+
+  /**
+   * Helper to register window class.
+   */
+  static void RegisterNativeWindow(LPCWSTR aWindowClass);
+
+  /**
+   * Helper to create a window.
+   */
+  static HWND CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd);
+
+  /**
+   * Return true if window emulation is enabled.
+   */
+  static bool IsWindowEmulationEnabled();
+
+  /**
+   * Return true if the given document node is for tab document accessible.
+   */
+  static bool IsTabDocument(nsIDocument* aDocumentNode);
 };
 
 #endif

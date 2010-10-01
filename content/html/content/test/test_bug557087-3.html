@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557087
+-->
+<head>
+  <title>Test for Bug 557087</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557087">Mozilla Bug 557087</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 557087 **/
+
+function checkValueMissing(aElement, aExpected)
+{
+  var msg = aExpected ? aElement.tagName + " should suffer from value missing"
+                      : aElement.tagName + " should not suffer from value missing"
+  is(aElement.validity.valueMissing, aExpected, msg);
+}
+
+function checkCandidateForConstraintValidation(aElement, aExpected)
+{
+  var msg = aExpected ? aElement.tagName + " should be candidate for constraint validation"
+                      : aElement.tagName + " should not be candidate for constraint validation"
+  is(aElement.willValidate, aExpected, msg);
+}
+
+function checkDisabledPseudoClass(aElement, aDisabled)
+{
+  var disabledElements = document.querySelectorAll(":disabled");
+  var found = false;
+
+  for each(var e in disabledElements) {
+    if (aElement == e) {
+      found = true;
+      break;
+    }
+  }
+
+  var msg = aDisabled ? aElement.tagName + " should have :disabled applying"
+                      : aElement.tagName + " should not have :disabled applying";
+  ok(aDisabled ? found : !found, msg);
+}
+
+function checkEnabledPseudoClass(aElement, aEnabled)
+{
+  var enabledElements = document.querySelectorAll(":enabled");
+  var found = false;
+
+  for each(var e in enabledElements) {
+    if (aElement == e) {
+      found = true;
+      break;
+    }
+  }
+
+  var msg = aEnabled ? aElement.tagName + " should have :enabled applying"
+                     : aElement.tagName + " should not have :enabled applying";
+  ok(aEnabled ? found : !found, msg);
+}
+
+function checkFocus(aElement, aExpected)
+{
+  aElement.setAttribute('tabindex', 1);
+
+  // We use the focus manager so we can test <label>.
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var fm = Components.classes["@mozilla.org/focus-manager;1"]
+                     .getService(Components.interfaces.nsIFocusManager);
+  fm.setFocus(aElement, 0);
+
+  if (aExpected) {
+    is(document.activeElement, aElement, "element should be focused");
+  } else {
+    isnot(document.activeElement, aElement, "element should not be focused");
+  }
+
+  aElement.blur();
+  aElement.removeAttribute('tabindex');
+}
+
+var elements = [ "input", "button", "select", "textarea", "fieldset", "option",
+                 "optgroup", "label", "output", "object" ];
+
+var testData = {
+/* tag name | affected by disabled | test focus | test pseudo-classes | test willValidate */
+  "INPUT":    [ true,  true, true,  true,  true  ],
+  "BUTTON":   [ true,  true, true,  true,  false ],
+  "SELECT":   [ true,  true, true,  true,  false ],
+  "TEXTAREA": [ true,  true, true,  true,  true  ],
+  "FIELDSET": [ true,  true, true,  false, false ],
+  "OPTION":   [ false, true, true,  false, false ],
+  "OPTGROUP": [ false, true, true,  false, false ],
+  "OBJECT":   [ false, true, false, false, false ],
+  "LABEL":    [ false, true, false, false, false ],
+  "OUTPUT":   [ false, true, false, false, false ],
+};
+
+/**
+ * For not candidate elements without disabled attribute and not submittable,
+ * we only have to check that focus and click works even inside a disabled
+ * fieldset.
+ */
+function checkElement(aElement, aDisabled)
+{
+  var data = testData[aElement.tagName];
+  var expected = data[0] ? !aDisabled : true;
+
+  if (data[1]) {
+    checkFocus(aElement, expected);
+  }
+
+  if (data[2]) {
+    checkEnabledPseudoClass(aElement,  data[0] ? !aDisabled : true);
+    checkDisabledPseudoClass(aElement, data[0] ? aDisabled : false);
+  }
+
+  if (data[3]) {
+    checkCandidateForConstraintValidation(aElement, expected);
+  }
+
+  if (data[4]) {
+    checkValueMissing(aElement, expected);
+  }
+}
+
+var fieldset1 = document.createElement("fieldset");
+var fieldset2 = document.createElement("fieldset");
+var legendA = document.createElement("legend");
+var legendB = document.createElement("legend");
+var content  = document.getElementById('content');
+content.appendChild(fieldset1);
+fieldset1.appendChild(fieldset2);
+fieldset2.disabled = true;
+
+for each(var data in elements) {
+  var element = document.createElement(data);
+
+  if (data[4]) {
+    element.required = true;
+  }
+
+  fieldset1.disabled = false;
+  fieldset2.appendChild(element);
+
+  checkElement(element, fieldset2.disabled);
+
+  // Make sure changes are correctly managed.
+  fieldset2.disabled = false;
+  checkElement(element, fieldset2.disabled);
+  fieldset2.disabled = true;
+  checkElement(element, fieldset2.disabled);
+
+  // Make sure if a fieldset which is not the first fieldset is disabled, the
+  // elements inside the second fielset are disabled.
+  fieldset2.disabled = false;
+  fieldset1.disabled = true;
+  checkElement(element, fieldset1.disabled);
+
+  // Make sure the state change of the inner fieldset will not confuse.
+  fieldset2.disabled = true;
+  fieldset2.disabled = false;
+  checkElement(element, fieldset1.disabled);
+
+
+  /* legend tests */
+
+  // elements in the first legend of a disabled fieldset should not be disabled.
+  fieldset2.disabled = true;
+  fieldset1.disabled = false;
+  legendA.appendChild(element);
+  fieldset2.appendChild(legendA);
+  checkElement(element, false);
+
+  // elements in the second legend should be disabled
+  fieldset2.insertBefore(legendB, legendA);
+  checkElement(element, fieldset2.disabled);
+  fieldset2.removeChild(legendB);
+
+  // Elements in the first legend of a fieldset disabled by another fieldset
+  // should be disabled.
+  fieldset1.disabled = true;
+  checkElement(element, fieldset1.disabled);
+
+  // Elements inside a fieldset inside the first legend of a disabled fieldset
+  // should not be diasbled.
+  fieldset2.disabled = false;
+  fieldset1.appendChild(legendA);
+  legendA.appendChild(fieldset2);
+  fieldset2.appendChild(element);
+  checkElement(element, false);
+
+  // Elements inside the first legend of a disabled fieldset inside the first
+  // legend of a disabled fieldset should not be disabled.
+  fieldset2.disabled = false;
+  fieldset2.appendChild(legendB);
+  legendB.appendChild(element);
+  checkElement(element, false);
+  fieldset2.removeChild(legendB);
+  fieldset1.appendChild(fieldset2);
+
+  element.parentNode.removeChild(element);
+}
+
+</script>
+</pre>
+</body>
+</html>

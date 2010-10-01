@@ -211,13 +211,13 @@ function _execute_test() {
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
-      _dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e);
+      msg = "TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e;
       if (e.stack) {
-        _dump(" - See following stack:\n");
+        _dump(msg + " - See following stack:\n");
         _dump_exception_stack(e.stack);
       }
       else {
-        _dump("\n");
+        _dump(msg + "\n");
       }
     }
   }
@@ -516,7 +516,8 @@ function do_get_profile() {
   let provider = {
     getFile: function(prop, persistent) {
       persistent.value = true;
-      if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS") {
+      if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS" ||
+          prop == "ProfLDS" || prop == "TmpD") {
         return file.clone();
       }
       throw Components.results.NS_ERROR_FAILURE;

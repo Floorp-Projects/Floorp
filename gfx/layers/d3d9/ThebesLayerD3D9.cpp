@@ -52,13 +52,13 @@ ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   , mD2DSurfaceInitialized(false)
 {
   mImplData = static_cast<LayerD3D9*>(this);
-  aManager->deviceManager()->mThebesLayers.AppendElement(this);
+  aManager->deviceManager()->mLayersWithResources.AppendElement(this);
 }
 
 ThebesLayerD3D9::~ThebesLayerD3D9()
 {
-  if (mD3DManager->deviceManager()) {
-    mD3DManager->deviceManager()->mThebesLayers.RemoveElement(this);
+  if (mD3DManager) {
+    mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
   }
 }
 
@@ -97,6 +97,8 @@ ThebesLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
     // texture.
     mTexture = nsnull;
   }
+
+  VerifyContentType();
 
   nsRefPtr<IDirect3DTexture9> oldTexture = mTexture;
 
@@ -195,8 +197,16 @@ ThebesLayerD3D9::RenderLayer()
     }
   }
 
+  VerifyContentType();
+
   if (!mTexture) {
     CreateNewTexture(gfxIntSize(visibleRect.width, visibleRect.height));
+    
+    if (!mTexture) {
+	NS_WARNING("Failed to create texture for thebes layer - not drawing.");
+	return;
+    }
+
     mValidRegion.SetEmpty();
   }
 
@@ -271,6 +281,13 @@ ThebesLayerD3D9::CleanResources()
   mTexture = nsnull;
 }
 
+void
+ThebesLayerD3D9::LayerManagerDestroyed()
+{
+  mD3DManager->deviceManager()->mLayersWithResources.RemoveElement(this);
+  mD3DManager = nsnull;
+}
+
 Layer*
 ThebesLayerD3D9::GetLayer()
 {
@@ -281,6 +298,24 @@ PRBool
 ThebesLayerD3D9::IsEmpty()
 {
   return !mTexture;
+}
+
+void
+ThebesLayerD3D9::VerifyContentType()
+{
+#ifdef CAIRO_HAS_D2D_SURFACE
+  if (mD2DSurface) {
+    gfxASurface::gfxContentType type = CanUseOpaqueSurface() ?
+      gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
+
+    if (type != mD2DSurface->GetContentType()) {
+      // We could choose to recreate only the D2D surface, but since we can't
+      // use retention the synchronisation overhead probably isn't worth it.
+      mD2DSurface = nsnull;
+      mTexture = nsnull;
+    }
+  }
+#endif
 }
 
 void
@@ -361,7 +396,7 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
     gfxPlatform::GetPlatform()->
       CreateOffscreenSurface(gfxIntSize(bounds.width,
                                         bounds.height),
-                             imageFormat);
+                             gfxASurface::ContentFromFormat(imageFormat));
   }
 
   context = new gfxContext(destinationSurface);

@@ -1,4 +1,7 @@
-/*
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=79:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2009 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,7 +24,8 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ * 
+ * ***** END LICENSE BLOCK ***** */
 
 #ifndef MacroAssemblerCodeRef_h
 #define MacroAssemblerCodeRef_h
@@ -153,6 +157,13 @@ public:
     bool operator!()
     {
         return !m_value;
+    }
+
+    ptrdiff_t operator -(const MacroAssemblerCodePtr &other) const
+    {
+        JS_ASSERT(m_value);
+        return reinterpret_cast<uint8 *>(m_value) -
+               reinterpret_cast<uint8 *>(other.m_value);
     }
 
 private:

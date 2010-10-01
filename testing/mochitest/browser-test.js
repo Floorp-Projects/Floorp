@@ -23,6 +23,7 @@ function testOnLoad() {
   var sstring = Cc["@mozilla.org/supports-string;1"].
                 createInstance(Ci.nsISupportsString);
   sstring.data = location.search;
+
   ww.openWindow(window, "chrome://mochikit/content/browser-harness.xul", "browserTest",
                 "chrome,centerscreen,dialog,resizable,titlebar,toolbar=no,width=800,height=600", sstring);
 }
@@ -194,10 +195,17 @@ Tester.prototype = {
     // Import utils in the test scope.
     this.currentTest.scope.EventUtils = this.EventUtils;
     this.currentTest.scope.SimpleTest = this.SimpleTest;
+    this.currentTest.scope.gTestPath = this.currentTest.path;
+
     // Override SimpleTest methods with ours.
     ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot"].forEach(function(m) {
       this.SimpleTest[m] = this[m];
     }, this.currentTest.scope);
+
+    //load the tools to work with chrome .jar and remote
+    try {
+      this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", this.currentTest.scope);
+    } catch (ex) { /* no chrome-harness tools */ }
 
     // Import head.js script if it exists.
     var currentTestDirPath =
@@ -344,6 +352,10 @@ function testScope(aTester, aTest) {
 
   this.requestLongerTimeout = function test_requestLongerTimeout(aFactor) {
     self.__timeoutFactor = aFactor;
+  };
+
+  this.copyToProfile = function test_copyToProfile(filename) {
+    self.SimpleTest.copyToProfile(filename);
   };
 
   this.finish = function test_finish() {

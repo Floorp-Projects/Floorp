@@ -19,7 +19,7 @@ skip-if(winWidget) == textarea-resize-background.html textarea-resize-background
 != textarea-ltr-scrollbar.html textarea-rtl-scrollbar.html
 != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
 != textarea-ltr.html textarea-no-resize.html
-random-if(gtk2Widget) != textarea-rtl.html textarea-no-resize.html # bug 558201
+!= textarea-rtl.html textarea-no-resize.html
 == textarea-setvalue-framereconstruction-1.html textarea-setvalue-framereconstruction-ref.html
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html

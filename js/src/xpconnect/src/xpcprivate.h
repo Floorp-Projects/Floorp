@@ -58,6 +58,7 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsgc.h"
+#include "jscompartment.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -450,7 +451,13 @@ public:
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
     nsIXPCSecurityManager* GetDefaultSecurityManager() const
-        {return mDefaultSecurityManager;}
+    {
+        // mDefaultSecurityManager is main-thread only.
+        if (!NS_IsMainThread()) {
+            return nsnull;
+        }
+        return mDefaultSecurityManager;
+    }
 
     PRUint16 GetDefaultSecurityManagerFlags() const
         {return mDefaultSecurityManagerFlags;}
@@ -489,13 +496,12 @@ public:
                                           bool explainExpectedLiveGarbage);
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
-    virtual void CommenceShutdown();
     virtual void Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
 
-    PRInt32 GetRequestDepth(JSContext* cx);
+    unsigned GetOutstandingRequests(JSContext* cx);
 
     // This returns the singleton nsCycleCollectionParticipant for JSContexts.
     static nsCycleCollectionParticipant *JSContextParticipant();
@@ -1277,12 +1283,10 @@ extern JSBool
 XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 extern JSBool
-XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
-                  uintN argc, jsval *argv, jsval *vp);
+XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
-XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *vp);
+XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
@@ -1313,6 +1317,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
         XPC_WN_JSOp_TypeOf_Function,                                          \
         nsnull, /* trace          */                                          \
+        nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
         XPC_WN_JSOp_Clear                                                     \
     }
@@ -1329,6 +1334,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
         XPC_WN_JSOp_TypeOf_Object,                                            \
         nsnull, /* trace          */                                          \
+        nsnull, /* fix            */                                          \
         XPC_WN_JSOp_ThisObject,                                               \
         XPC_WN_JSOp_Clear                                                     \
     }
@@ -1597,8 +1603,7 @@ public:
                             jsval* pval)
         {NS_ASSERTION(IsConstant(),
                       "Only call this if you're sure this is a constant!");
-         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
-         *pval = mVal; return JS_TRUE;}
+         return Resolve(ccx, iface, nsnull, pval);}
 
     JSBool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
                              JSObject *parent, jsval* pval);
@@ -1622,13 +1627,13 @@ public:
     void SetName(jsid a) {mName = a;}
 
     void SetMethod(PRUint16 index)
-        {mVal = JSVAL_NULL; mFlags = METHOD; mIndex = index;}
+        {mFlags = METHOD; mIndex = index;}
 
     void SetConstant(PRUint16 index)
-        {mVal = JSVAL_NULL; mFlags = CONSTANT; mIndex = index;}
+        {mFlags = CONSTANT; mIndex = index;}
 
     void SetReadOnlyAttribute(PRUint16 index)
-        {mVal = JSVAL_NULL; mFlags = GETTER; mIndex = index;}
+        {mFlags = GETTER; mIndex = index;}
 
     void SetWritableAttribute()
         {NS_ASSERTION(mFlags == GETTER,"bad"); mFlags = GETTER | SETTER_TOO;}
@@ -1637,27 +1642,20 @@ public:
     XPCNativeMember()  {MOZ_COUNT_CTOR(XPCNativeMember);}
     ~XPCNativeMember() {MOZ_COUNT_DTOR(XPCNativeMember);}
 
-    void DealWithDyingGCThings(JSContext* cx, XPCJSRuntime* rt)
-        {if(IsResolved() && JSVAL_IS_GCTHING(mVal) &&
-           JS_IsAboutToBeFinalized(cx, JSVAL_TO_GCTHING(mVal)))
-           {mVal = JSVAL_NULL; mFlags &= ~RESOLVED;}}
-
 private:
-    JSBool IsResolved() const {return mFlags & RESOLVED;}
-    JSBool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface);
+    JSBool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
+                   JSObject *parent, jsval *vp);
 
     enum {
-        RESOLVED    = 0x01,
-        METHOD      = 0x02,
-        CONSTANT    = 0x04,
-        GETTER      = 0x08,
-        SETTER_TOO  = 0x10
+        METHOD      = 0x01,
+        CONSTANT    = 0x02,
+        GETTER      = 0x04,
+        SETTER_TOO  = 0x08
     };
 
 private:
     // our only data...
     jsid     mName;
-    jsval    mVal;
     PRUint16 mIndex;
     PRUint16 mFlags;
 };
@@ -1695,8 +1693,6 @@ public:
         {NS_ASSERTION(!IsMarked(), "bad"); return mMemberCount;}
     XPCNativeMember* GetMemberAt(PRUint16 i)
         {NS_ASSERTION(i < mMemberCount, "bad index"); return &mMembers[i];}
-
-    inline void DealWithDyingGCThings(JSContext* cx, XPCJSRuntime* rt);
 
     void DebugDump(PRInt16 depth);
 
@@ -3542,7 +3538,7 @@ struct XPCJSContextInfo {
     XPCJSContextInfo(JSContext* aCx) :
         cx(aCx),
         frame(nsnull),
-        requestDepth(0)
+        suspendDepth(0)
     {}
     JSContext* cx;
 
@@ -3550,8 +3546,8 @@ struct XPCJSContextInfo {
     // one.
     JSStackFrame* frame;
 
-    // Greater than 0 if a request was suspended
-    jsrefcount requestDepth;
+    // Greater than 0 if a request was suspended.
+    jsrefcount suspendDepth;
 };
 
 class XPCJSContextStack

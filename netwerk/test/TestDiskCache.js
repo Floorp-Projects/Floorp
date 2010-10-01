@@ -25,12 +25,6 @@ function openCacheEntry(mode)
     return entry;
 }
 
-function dumpLeaks()
-{
-    var leakDetector = Components.classes["@mozilla.org/xpcom/leakdetector;1"].getService(Components.interfaces.nsILeakDetector);
-    leakDetector.dumpLeaks();
-}
-
 function wrapInputStream(input)
 {
     var nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;

@@ -24,6 +24,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Neil Rashbrook <neil@parkwaycc.co.uk>
  *   Ben Goodger <ben@mozilla.org>
+ *   Siddharth Agarwal <sid.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -535,6 +536,64 @@ int GetDIBits(HDC hdc,
 }
 #endif
 
+// Given a BITMAPINFOHEADER, returns the size of the color table.
+static int GetColorTableSize(BITMAPINFOHEADER* aHeader)
+{
+  int colorTableSize = -1;
+
+  // http://msdn.microsoft.com/en-us/library/dd183376%28v=VS.85%29.aspx
+  switch (aHeader->biBitCount) {
+  case 0:
+    colorTableSize = 0;
+    break;
+  case 1:
+    colorTableSize = 2 * sizeof(RGBQUAD);
+    break;
+  case 4:
+  case 8:
+  {
+    // The maximum possible size for the color table is 2**bpp, so check for
+    // that and fail if we're not in those bounds
+    unsigned int maxEntries = 1 << (aHeader->biBitCount);
+    if (aHeader->biClrUsed > 0 && aHeader->biClrUsed <= maxEntries)
+      colorTableSize = aHeader->biClrUsed * sizeof(RGBQUAD);
+    else if (aHeader->biClrUsed == 0)
+      colorTableSize = maxEntries * sizeof(RGBQUAD);
+    break;
+  }
+  case 16:
+  case 32:
+    if (aHeader->biCompression == BI_RGB)
+      colorTableSize = 0;
+    else if (aHeader->biCompression == BI_BITFIELDS)
+      colorTableSize = 3 * sizeof(DWORD);
+    break;
+  case 24:
+    colorTableSize = 0;
+    break;
+  }
+
+  if (colorTableSize < 0)
+    NS_WARNING("Unable to figure out the color table size for this bitmap");
+
+  return colorTableSize;
+}
+
+// Given a header and a size, creates a freshly allocated BITMAPINFO structure.
+// It is the caller's responsibility to null-check and delete the structure.
+static BITMAPINFO* CreateBitmapInfo(BITMAPINFOHEADER* aHeader,
+                                    size_t aColorTableSize)
+{
+  BITMAPINFO* bmi = (BITMAPINFO*) ::operator new(sizeof(BITMAPINFOHEADER) +
+                                                 aColorTableSize,
+                                                 mozilla::fallible_t());
+  if (bmi) {
+    memcpy(bmi, aHeader, sizeof(BITMAPINFOHEADER));
+    memset(bmi->bmiColors, 0, aColorTableSize);
+  }
+  return bmi;
+}
+
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
   // Check whether the icon requested's a file icon or a stock icon
@@ -566,21 +625,23 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     {
       // we got the bitmaps, first find out their size
       HDC hDC = CreateCompatibleDC(NULL); // get a device context for the screen.
-      BITMAPINFO maskInfo  = {{sizeof(BITMAPINFOHEADER)}};
-      BITMAPINFO colorInfo = {{sizeof(BITMAPINFOHEADER)}};
-      if (GetDIBits(hDC, iconInfo.hbmMask,  0, 0, NULL, &maskInfo,  DIB_RGB_COLORS) &&
-          GetDIBits(hDC, iconInfo.hbmColor, 0, 0, NULL, &colorInfo, DIB_RGB_COLORS) &&
-          maskInfo.bmiHeader.biHeight == colorInfo.bmiHeader.biHeight &&
-          maskInfo.bmiHeader.biWidth  == colorInfo.bmiHeader.biWidth  &&
-          colorInfo.bmiHeader.biBitCount > 8 &&
-          colorInfo.bmiHeader.biSizeImage > 0 &&
-          maskInfo.bmiHeader.biSizeImage > 0) {
-
+      BITMAPINFOHEADER maskHeader  = {sizeof(BITMAPINFOHEADER)};
+      BITMAPINFOHEADER colorHeader = {sizeof(BITMAPINFOHEADER)};
+      int colorTableSize, maskTableSize;
+      if (GetDIBits(hDC, iconInfo.hbmMask,  0, 0, NULL, (BITMAPINFO*)&maskHeader,  DIB_RGB_COLORS) &&
+          GetDIBits(hDC, iconInfo.hbmColor, 0, 0, NULL, (BITMAPINFO*)&colorHeader, DIB_RGB_COLORS) &&
+          maskHeader.biHeight == colorHeader.biHeight &&
+          maskHeader.biWidth  == colorHeader.biWidth  &&
+          colorHeader.biBitCount > 8 &&
+          colorHeader.biSizeImage > 0 &&
+          maskHeader.biSizeImage > 0  &&
+          (colorTableSize = GetColorTableSize(&colorHeader)) >= 0 &&
+          (maskTableSize  = GetColorTableSize(&maskHeader))  >= 0) {
         PRUint32 iconSize = sizeof(ICONFILEHEADER) +
                             sizeof(ICONENTRY) +
                             sizeof(BITMAPINFOHEADER) +
-                            colorInfo.bmiHeader.biSizeImage +
-                            maskInfo.bmiHeader.biSizeImage;
+                            colorHeader.biSizeImage +
+                            maskHeader.biSizeImage;
 
         char *buffer = new char[iconSize];
         if (!buffer)
@@ -600,15 +661,15 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 
           // followed by the single icon entry
           ICONENTRY iconEntry;
-          iconEntry.ieWidth = colorInfo.bmiHeader.biWidth;
-          iconEntry.ieHeight = colorInfo.bmiHeader.biHeight;
+          iconEntry.ieWidth = colorHeader.biWidth;
+          iconEntry.ieHeight = colorHeader.biHeight;
           iconEntry.ieColors = 0;
           iconEntry.ieReserved = 0;
           iconEntry.iePlanes = 1;
-          iconEntry.ieBitCount = colorInfo.bmiHeader.biBitCount;
+          iconEntry.ieBitCount = colorHeader.biBitCount;
           iconEntry.ieSizeImage = sizeof(BITMAPINFOHEADER) +
-                                  colorInfo.bmiHeader.biSizeImage +
-                                  maskInfo.bmiHeader.biSizeImage;
+                                  colorHeader.biSizeImage +
+                                  maskHeader.biSizeImage;
           iconEntry.ieFileOffset = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY);
           howMuch = sizeof(ICONENTRY);
           memcpy(whereTo, &iconEntry, howMuch);
@@ -616,22 +677,27 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 
           // followed by the bitmap info header
           // (doubling the height because icons have two bitmaps)
-          colorInfo.bmiHeader.biHeight *= 2;
-          colorInfo.bmiHeader.biSizeImage += maskInfo.bmiHeader.biSizeImage;
+          colorHeader.biHeight *= 2;
+          colorHeader.biSizeImage += maskHeader.biSizeImage;
           howMuch = sizeof(BITMAPINFOHEADER);
-          memcpy(whereTo, &colorInfo.bmiHeader, howMuch);
+          memcpy(whereTo, &colorHeader, howMuch);
           whereTo += howMuch;
-          colorInfo.bmiHeader.biHeight /= 2;
-          colorInfo.bmiHeader.biSizeImage -= maskInfo.bmiHeader.biSizeImage;
+          colorHeader.biHeight /= 2;
+          colorHeader.biSizeImage -= maskHeader.biSizeImage;
 
-          // followed by the bitmap data
-          if (GetDIBits(hDC, iconInfo.hbmColor, 0,
-                        colorInfo.bmiHeader.biHeight, whereTo,
-                        &colorInfo, DIB_RGB_COLORS)) {
-            whereTo += colorInfo.bmiHeader.biSizeImage;
-            if (GetDIBits(hDC, iconInfo.hbmMask, 0,
-                          maskInfo.bmiHeader.biHeight, whereTo,
-                          &maskInfo, DIB_RGB_COLORS)) {
+          // followed by the XOR bitmap data (colorHeader)
+          // (you'd expect the color table to come here, but it apparently doesn't)
+          BITMAPINFO* colorInfo = CreateBitmapInfo(&colorHeader, colorTableSize);
+          if (colorInfo && GetDIBits(hDC, iconInfo.hbmColor, 0,
+                                     colorHeader.biHeight, whereTo, colorInfo,
+                                     DIB_RGB_COLORS)) {
+            whereTo += colorHeader.biSizeImage;
+
+            // and finally the AND bitmap data (maskHeader)
+            BITMAPINFO* maskInfo = CreateBitmapInfo(&maskHeader, maskTableSize);
+            if (maskInfo && GetDIBits(hDC, iconInfo.hbmMask, 0,
+                                      maskHeader.biHeight, whereTo, maskInfo,
+                                      DIB_RGB_COLORS)) {
               // Now, create a pipe and stuff our data into it
               nsCOMPtr<nsIInputStream> inStream;
               nsCOMPtr<nsIOutputStream> outStream;
@@ -646,7 +712,9 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
               }
 
             } // if we got bitmap bits
+            delete maskInfo;
           } // if we got mask bits
+          delete colorInfo;
           delete [] buffer;
         } // if we allocated the buffer
       } // if we got mask size

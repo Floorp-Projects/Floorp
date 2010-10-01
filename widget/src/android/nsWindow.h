@@ -159,9 +159,12 @@ public:
     NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
     NS_IMETHOD OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
     NS_IMETHOD OnIMESelectionChange(void);
+    virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
+    LayerManager* GetLayerManager();
     gfxASurface* GetThebesSurface();
 
+    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();

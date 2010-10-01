@@ -111,7 +111,7 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             continue;
 
         if (vd.buf == nsnull) {
-            LogMessage("No VBO bound to enabled attrib index %d!", i);
+            LogMessage(mVerbose, "No VBO bound to enabled attrib index %d!", i);
             return PR_FALSE;
         }
 
@@ -126,12 +126,12 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             CheckedUint32(vd.componentSize()) * vd.size;   // and the number of bytes needed for these components
 
         if (!checked_needed.valid()) {
-            LogMessage("Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
+            LogMessage(mVerbose, "Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
             return PR_FALSE;
         }
 
         if (vd.buf->ByteLength() < checked_needed.value()) {
-            LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
+            LogMessage(mVerbose, "VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
                        i, checked_needed.value(), vd.buf->ByteLength());
             return PR_FALSE;
         }
@@ -450,6 +450,11 @@ WebGLContext::InitAndValidateGL()
         // gl_PointSize is always available in ES2 GLSL, but has to be
         // specifically enabled on desktop GLSL.
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
+
+        // gl_PointCoord is always available in ES2 GLSL and in newer desktop GLSL versions, but apparently
+        // not in OpenGL 2 and apparently not (due to a driver bug) on certain NVIDIA setups. See:
+        //   http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=261472
+        gl->fEnable(LOCAL_GL_POINT_SPRITE);
     }
 
     // Check the shader validator pref
@@ -467,6 +472,14 @@ WebGLContext::InitAndValidateGL()
         }
     }
 #endif
+
+    // notice that the point of calling GetError here is not only to check for error,
+    // it is also to reset the error flag so that a subsequent WebGL getError call will give the correct result.
+    GLenum error = gl->fGetError();
+    if (error != LOCAL_GL_NO_ERROR) {
+        LogMessage("GL error 0x%x occurred during WebGL context initialization!", error);
+        return PR_FALSE;
+    }
 
     return PR_TRUE;
 }

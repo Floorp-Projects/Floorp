@@ -611,10 +611,31 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
   return NS_OK;
 }
 
+nsresult 
+nsAutoCompleteController::GetResultAt(PRInt32 aIndex, nsIAutoCompleteResult** aResult,
+                                      PRInt32* aRowIndex)
+{
+  PRInt32 searchIndex;
+  RowIndexToSearch(aIndex, &searchIndex, aRowIndex);
+  NS_ENSURE_TRUE(searchIndex >= 0 && *aRowIndex >= 0, NS_ERROR_FAILURE);
+
+  *aResult = mResults[searchIndex];
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsAutoCompleteController::GetValueAt(PRInt32 aIndex, nsAString & _retval)
 {
-  GetResultValueAt(aIndex, PR_FALSE, _retval);
+  GetResultLabelAt(aIndex, PR_FALSE, _retval);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::GetLabelAt(PRInt32 aIndex, nsAString & _retval)
+{
+  GetResultLabelAt(aIndex, PR_FALSE, _retval);
 
   return NS_OK;
 }
@@ -622,13 +643,10 @@ nsAutoCompleteController::GetValueAt(PRInt32 aIndex, nsAString & _retval)
 NS_IMETHODIMP
 nsAutoCompleteController::GetCommentAt(PRInt32 aIndex, nsAString & _retval)
 {
-  PRInt32 searchIndex;
   PRInt32 rowIndex;
-  RowIndexToSearch(aIndex, &searchIndex, &rowIndex);
-  NS_ENSURE_TRUE(searchIndex >= 0 && rowIndex >= 0, NS_ERROR_FAILURE);
-
-  nsIAutoCompleteResult *result = mResults[searchIndex];
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  nsIAutoCompleteResult* result;
+  nsresult rv = GetResultAt(aIndex, &result, &rowIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return result->GetCommentAt(rowIndex, _retval);
 }
@@ -636,13 +654,10 @@ nsAutoCompleteController::GetCommentAt(PRInt32 aIndex, nsAString & _retval)
 NS_IMETHODIMP
 nsAutoCompleteController::GetStyleAt(PRInt32 aIndex, nsAString & _retval)
 {
-  PRInt32 searchIndex;
   PRInt32 rowIndex;
-  RowIndexToSearch(aIndex, &searchIndex, &rowIndex);
-  NS_ENSURE_TRUE(searchIndex >= 0 && rowIndex >= 0, NS_ERROR_FAILURE);
-
-  nsIAutoCompleteResult *result = mResults[searchIndex];
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  nsIAutoCompleteResult* result;
+  nsresult rv = GetResultAt(aIndex, &result, &rowIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return result->GetStyleAt(rowIndex, _retval);
 }
@@ -650,13 +665,10 @@ nsAutoCompleteController::GetStyleAt(PRInt32 aIndex, nsAString & _retval)
 NS_IMETHODIMP
 nsAutoCompleteController::GetImageAt(PRInt32 aIndex, nsAString & _retval)
 {
-  PRInt32 searchIndex;
   PRInt32 rowIndex;
-  RowIndexToSearch(aIndex, &searchIndex, &rowIndex);
-  NS_ENSURE_TRUE(searchIndex >= 0 && rowIndex >= 0, NS_ERROR_FAILURE);
-
-  nsIAutoCompleteResult *result = mResults[searchIndex];
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  nsIAutoCompleteResult* result;
+  nsresult rv = GetResultAt(aIndex, &result, &rowIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return result->GetImageAt(rowIndex, _retval);
 }
@@ -678,6 +690,13 @@ nsAutoCompleteController::GetSearchString(nsAString &aSearchString)
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteObserver
+
+NS_IMETHODIMP
+nsAutoCompleteController::OnUpdateSearchResult(nsIAutoCompleteSearch *aSearch, nsIAutoCompleteResult* aResult)
+{
+  ClearResults();
+  return OnSearchResult(aSearch, aResult);
+}
 
 NS_IMETHODIMP
 nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch, nsIAutoCompleteResult* aResult)
@@ -1473,17 +1492,27 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
 }
 
 nsresult
+nsAutoCompleteController::GetResultLabelAt(PRInt32 aIndex, PRBool aValueOnly, nsAString & _retval)
+{
+  return GetResultValueLabelAt(aIndex, aValueOnly, PR_FALSE, _retval);
+}
+
+nsresult
 nsAutoCompleteController::GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly, nsAString & _retval)
+{
+  return GetResultValueLabelAt(aIndex, aValueOnly, PR_TRUE, _retval);
+}
+
+nsresult
+nsAutoCompleteController::GetResultValueLabelAt(PRInt32 aIndex, PRBool aValueOnly,
+                                               PRBool aGetValue, nsAString & _retval)
 {
   NS_ENSURE_TRUE(aIndex >= 0 && (PRUint32) aIndex < mRowCount, NS_ERROR_ILLEGAL_VALUE);
 
-  PRInt32 searchIndex;
   PRInt32 rowIndex;
-  RowIndexToSearch(aIndex, &searchIndex, &rowIndex);
-  NS_ENSURE_TRUE(searchIndex >= 0 && rowIndex >= 0, NS_ERROR_FAILURE);
-
-  nsIAutoCompleteResult *result = mResults[searchIndex];
-  NS_ENSURE_TRUE(result != nsnull, NS_ERROR_FAILURE);
+  nsIAutoCompleteResult *result;
+  nsresult rv = GetResultAt(aIndex, &result, &rowIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint16 searchResult;
   result->GetSearchResult(&searchResult);
@@ -1494,7 +1523,10 @@ nsAutoCompleteController::GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly, ns
     result->GetErrorDescription(_retval);
   } else if (searchResult == nsIAutoCompleteResult::RESULT_SUCCESS ||
              searchResult == nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING) {
-    result->GetValueAt(rowIndex, _retval);
+    if (aGetValue)
+      result->GetValueAt(rowIndex, _retval);
+    else
+      result->GetLabelAt(rowIndex, _retval);
   }
 
   return NS_OK;

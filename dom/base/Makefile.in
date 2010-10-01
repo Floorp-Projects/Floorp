@@ -103,6 +103,15 @@ CPPSRCS =			\
 	nsQueryContentEventResult.cpp \
 	$(NULL)
 
+ifdef MOZ_IPC
+EXPORTS += \
+  nsContentPermissionHelper.h \
+  $(NULL)
+CPPSRCS += \
+  nsContentPermissionHelper.cpp \
+  $(NULL)
+endif
+
 include $(topsrcdir)/dom/dom-config.mk
 
 ifdef MOZ_JSDEBUGGER
