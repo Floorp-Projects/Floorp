@@ -123,8 +123,11 @@ gTests.push({
     is(document.getElementById("tool-preferences").checked, true, "Preferences button must be pressed");
 
     // Verify back button is exists, is visible and is depressed
-    is(document.getElementById("tool-panel-close").hidden, false, "Panel close button must be visible");
-    is(document.getElementById("tool-panel-close").checked, false, "Panel close button must not be pressed");
+    // This button does not exist on Android.
+    if (document.getElementById("tool-panel-close")) {
+      is(document.getElementById("tool-panel-close").hidden, false, "Panel close button must be visible");
+      is(document.getElementById("tool-panel-close").checked, false, "Panel close button must not be pressed");
+    }
 
     // Now pan preferences pane up/down, left/right
     // check whether it is in correct position
@@ -163,8 +166,7 @@ gTests.push({
     ok((x.value == 0 && y.value ==0 ), "Preferences pane is not panned right", "Got " + x.value + " " + y.value + ", expected 0,0");
 
     // Close the preferences pane
-    var prefClose = document.getElementById("tool-panel-close");
-    prefClose.click();
+    BrowserUI.hidePanel();
     waitFor(gCurrentTest.finish, function () { return document.getElementById("panel-container").hidden == true; });
   },
 
