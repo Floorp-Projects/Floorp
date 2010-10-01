@@ -57,6 +57,7 @@ let ConsoleView = {
 
     let self = this;
     let panels = document.getElementById("panel-items");
+
     panels.addEventListener("select",
                             function(aEvent) {
                               if (panels.selectedPanel.id == "console-container")
@@ -252,6 +253,20 @@ let ConsoleView = {
       this._list.mode = mode;
       this._list.scrollToIndex(0);
     }
+  },
+
+  onContextMenu: function cv_onContextMenu(aEvent) {
+    let row = aEvent.target;
+    let text = ["msg", "href", "line", "code", "col"].map(function(attr) row.getAttribute(attr))
+               .filter(function(x) x).join("\n");
+
+    ContextHelper.showPopup({
+      target: row,
+      json: {
+        types: ["copy"],
+        string: text
+      }
+    });
   },
 
   onEvalKeyPress: function cv_onEvalKeyPress(aEvent) {
