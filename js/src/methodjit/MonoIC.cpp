@@ -277,28 +277,24 @@ SlowNewFromIC(VMFrame &f, uint32 index)
  * scripted native, then a small stub is generated which inlines the native
  * invocation.
  */
-class CallCompiler
+class CallCompiler : public BaseCompiler
 {
     VMFrame &f;
-    JSContext *cx;
     CallICInfo &ic;
     Value *vp;
     bool callingNew;
 
   public:
     CallCompiler(VMFrame &f, CallICInfo &ic, bool callingNew)
-      : f(f), cx(f.cx), ic(ic), vp(f.regs.sp - (ic.argc + 2)), callingNew(callingNew)
+      : BaseCompiler(f.cx), f(f), ic(ic), vp(f.regs.sp - (ic.argc + 2)), callingNew(callingNew)
     {
     }
 
     JSC::ExecutablePool *poolForSize(size_t size, CallICInfo::PoolIndex index)
     {
-        mjit::ThreadData *jm = &JS_METHODJIT_DATA(cx);
-        JSC::ExecutablePool *ep = jm->execPool->poolForSize(size);
-        if (!ep) {
-            js_ReportOutOfMemory(f.cx);
+        JSC::ExecutablePool *ep = getExecPool(size);
+        if (!ep)
             return NULL;
-        }
         JS_ASSERT(!ic.pools[index]);
         ic.pools[index] = ep;
         return ep;

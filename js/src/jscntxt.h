@@ -244,7 +244,7 @@ namespace mjit {
 
     struct ThreadData
     {
-        JSC::ExecutableAllocator *execPool;
+        JSC::ExecutableAllocator *execAlloc;
 
         // Trampolines for JIT code.
         Trampolines trampolines;

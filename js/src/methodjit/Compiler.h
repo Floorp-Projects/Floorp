@@ -45,6 +45,7 @@
 #include "BytecodeAnalyzer.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
+#include "BaseCompiler.h"
 #include "StubCompiler.h"
 #include "MonoIC.h"
 #include "PolyIC.h"
@@ -52,21 +53,8 @@
 namespace js {
 namespace mjit {
 
-class Compiler
+class Compiler : public BaseCompiler
 {
-    typedef JSC::MacroAssembler::Label Label;
-    typedef JSC::MacroAssembler::Imm32 Imm32;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler::AbsoluteAddress AbsoluteAddress;
-    typedef JSC::MacroAssembler::BaseIndex BaseIndex;
-    typedef JSC::MacroAssembler::Jump Jump;
-    typedef JSC::MacroAssembler::JumpList JumpList;
-    typedef JSC::MacroAssembler::Call Call;
-    typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
-    typedef JSC::MacroAssembler::DataLabel32 DataLabel32;
 
     struct BranchPatch {
         BranchPatch(const Jump &j, jsbytecode *pc)
@@ -208,7 +196,6 @@ class Compiler
         bool ool;
     };
 
-    JSContext *cx;
     JSScript *script;
     JSObject *scopeChain;
     JSObject *globalObj;
@@ -259,7 +246,6 @@ class Compiler
     /* Non-emitting helpers. */
     uint32 fullAtomIndex(jsbytecode *pc);
     void jumpInScript(Jump j, jsbytecode *pc);
-    JSC::ExecutablePool *getExecPool(size_t size);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
     void addCallSite(uint32 id, bool stub);
 
