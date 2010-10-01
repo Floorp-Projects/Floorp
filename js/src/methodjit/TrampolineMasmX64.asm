@@ -103,8 +103,9 @@ JaegerTrampoline ENDP
 
 ; void JaegerTrampolineReturn();
 JaegerTrampolineReturn PROC FRAME
+    .ENDPROLOG
     or      rcx, rdx
-    mov     [rbx + 0x30], rcx
+    mov     qword ptr [rbx + 30h], rcx
     sub     rsp, 20h
     lea     rcx, [rsp+20h]
     call    PopActiveVMFrame
@@ -120,7 +121,7 @@ JaegerTrampolineReturn PROC FRAME
     pop     rbp
     mov     rax, 1
     ret
-JaegerTrampoline ENDP
+JaegerTrampolineReturn ENDP
 
 
 ; void JaegerThrowpoline()
