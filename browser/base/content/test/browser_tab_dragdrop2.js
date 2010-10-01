@@ -11,8 +11,8 @@ function test()
     // Now run the tests again and then close C.
     // The test results does not matter, all this is just to exercise some code to
     // catch assertions or crashes.
-    var uri = "chrome://mochikit/content/browser/" +
-              "browser/base/content/test/browser_tab_dragdrop2_frame1.xul";
+    var chromeroot = getRootDirectory(gTestPath);
+    var uri = chromeroot + "browser_tab_dragdrop2_frame1.xul";
     let window_B = openDialog(location, "_blank", "chrome,all,dialog=no,left=200,top=200,width=200,height=200", uri);
     window_B.addEventListener("load", function(aEvent) {
       window_B.removeEventListener("load", arguments.callee, false);

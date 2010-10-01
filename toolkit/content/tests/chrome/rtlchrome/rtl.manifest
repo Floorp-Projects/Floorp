@@ -1,10 +1,5 @@
-content rtlchrome /content
+content rtlchrome /
 
 # Override intl.css with our own CSS file
 override chrome://global/locale/intl.css chrome://rtlchrome/rtl.css
 override chrome://global/locale/global.dtd chrome://rtlchrome/rtl.dtd
-
-
-# Override intl.css with our own CSS file
-override chrome://global/locale/intl.css chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/rtl.css
-override chrome://global/locale/global.dtd chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/rtl.dtd
