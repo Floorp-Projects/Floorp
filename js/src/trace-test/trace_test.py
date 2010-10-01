@@ -261,6 +261,10 @@ def run_tests(tests, test_dir, lib_dir):
                 for test, fout, ferr, fcode in failures:
                     if test.path not in written:
                         out.write(os.path.relpath(test.path, test_dir) + '\n')
+                        if OPTIONS.write_failure_output:
+                            out.write(fout)
+                            out.write(ferr)
+                            out.write('Exit code: ' + str(fcode) + "\n")
                         written.add(test.path)
                 out.close()
             except IOError:
@@ -349,6 +353,8 @@ def main(argv):
                   help='Example: --jitflags=j,mj to run each test with -j and -m -j')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
+    op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',
+                  help='With --write-failures=FILE, additionally write the output of failed tests to [FILE]')
     (OPTIONS, args) = op.parse_args(argv)
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
