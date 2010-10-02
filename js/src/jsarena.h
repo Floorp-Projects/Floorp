@@ -126,6 +126,7 @@ struct JSArenaPool {
         else                                                                  \
             _a->avail = _p + _nb;                                             \
         p = (type) _p;                                                        \
+        STATIC_ASSUME(!p || ubound((char *)p) >= nb)                          \
         JS_ArenaCountAllocation(pool, nb);                                    \
     JS_END_MACRO
 
@@ -149,6 +150,7 @@ struct JSArenaPool {
         } else {                                                              \
             p = (type) JS_ArenaGrow(pool, p, size, incr);                     \
         }                                                                     \
+        STATIC_ASSUME(!p || ubound((char *)p) >= size + incr);                \
         JS_ArenaCountGrowth(pool, size, incr);                                \
     JS_END_MACRO
 

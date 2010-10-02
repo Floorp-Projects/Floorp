@@ -139,6 +139,7 @@ StackSpace::isCurrentAndActive(JSContext *cx) const
            currentSegment == cx->getCurrentSegment();
 }
 
+STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
@@ -642,6 +643,7 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
+STATIC_PRECONDITION_ASSUME(ubound(vp) >= argc + 2)
 JS_ALWAYS_INLINE bool
 CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
@@ -657,6 +659,7 @@ CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
     return ok;
 }
 
+STATIC_PRECONDITION(ubound(vp) >= argc + 2)
 JS_ALWAYS_INLINE bool
 CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
