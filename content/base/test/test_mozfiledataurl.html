@@ -21,6 +21,10 @@
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.8">
 
+try {
+  createBlobURL(undefined);
+} catch(e) { }
+
 window.addEventListener("message", function(e) {
   gen.send(JSON.parse(e.data));
 }, false);
