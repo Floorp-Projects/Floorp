@@ -1017,29 +1017,28 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     bool indirectCall = (callerPC && *callerPC != JSOP_EVAL);
 
     /*
-     * This call to JSObject::wrappedObject is safe because of the security
-     * checks we do below. However, the control flow below is confusing, so we
-     * double check. There are two cases:
-     * - Direct call: This object is never used. So unwrapping can't hurt.
-     * - Indirect call: If this object isn't already the scope chain (which
-     *   we're guaranteed to be allowed to access) then we do a security
-     *   check.
-     */
-    Value *argv = JS_ARGV(cx, vp);
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-    obj = obj->wrappedObject(cx);
-
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    if (!obj)
-        return JS_FALSE;
-
-    /*
      * Ban indirect uses of eval (nonglobal.eval = eval; nonglobal.eval(....))
      * that attempt to use a non-global object as the scope object.
+     *
+     * This ban is a bit silly, since we could just disregard the this-argument
+     * entirely and comply with ES5, which supports indirect eval. See bug
+     * 592664.
      */
     {
+        JSObject *obj = ComputeThisFromVp(cx, vp);
+        if (!obj)
+            return JS_FALSE;
+
+        /*
+         * This call to JSObject::wrappedObject is safe because the result is
+         * only used for this check.
+         */
+        obj = obj->wrappedObject(cx);
+
+        OBJ_TO_INNER_OBJECT(cx, obj);
+        if (!obj)
+            return JS_FALSE;
+
         JSObject *parent = obj->getParent();
         if (indirectCall || parent) {
             uintN flags = parent
@@ -1053,6 +1052,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
+    Value *argv = JS_ARGV(cx, vp);
     if (!argv[0].isString()) {
         *vp = argv[0];
         return JS_TRUE;
@@ -1102,16 +1102,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     if (indirectCall) {
         /* Pretend that we're top level. */
         staticLevel = 0;
-
-        if (!js_CheckPrincipalsAccess(cx, obj,
-                                      js_StackFramePrincipals(cx, caller),
-                                      cx->runtime->atomState.evalAtom)) {
-            return JS_FALSE;
-        }
-
-        /* NB: We know inner is a global object here. */
-        JS_ASSERT(!obj->getParent());
-        scopeobj = obj;
+        scopeobj = vp[0].toObject().getGlobal();
     } else {
         /*
          * Compile using the caller's current scope object.
