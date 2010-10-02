@@ -106,7 +106,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
     jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jGetHandlersForProtocol = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForProtocol", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
-    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
     jGetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getClipboardText", "()Ljava/lang/String;");
@@ -351,7 +351,7 @@ AndroidBridge::GetHandlersForProtocol(const char *aScheme,
 PRBool
 AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
                                const nsAString& aPackageName, const nsAString& aClassName,
-                               const nsAString& aAction)
+                               const nsAString& aAction, const nsAString& aTitle)
 {
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
@@ -362,17 +362,20 @@ AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMi
     PRUint32 classNameLen = NS_StringGetData(aClassName, &wClassName);
     const PRUnichar* wAction;
     PRUint32 actionLen = NS_StringGetData(aAction, &wAction);
+    const PRUnichar* wTitle;
+    PRUint32 titleLen = NS_StringGetData(aTitle, &wTitle);
 
     jstring jstrUri = mJNIEnv->NewString(wUriSpec.get(), wUriSpec.Length());
     jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
     jstring jstrPackage = mJNIEnv->NewString(wPackageName, packageNameLen);
     jstring jstrClass = mJNIEnv->NewString(wClassName, classNameLen);
     jstring jstrAction = mJNIEnv->NewString(wAction, actionLen);
+    jstring jstrTitle = mJNIEnv->NewString(wTitle, titleLen);
 
     return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass,
                                             jOpenUriExternal,
                                             jstrUri, jstrType, jstrPackage, 
-                                            jstrClass, jstrAction);
+                                            jstrClass, jstrAction, jstrTitle);
 }
 
 void
