@@ -48,7 +48,7 @@
 #include "jsstdint.h"
 #include "jsbit.h"
 #include "jsarena.h"
-#include "jsutil.h"
+#include "jsprvtd.h"
 
 #ifdef JS_ARENAMETER
 static JSArenaStats *arena_stats_list;

@@ -3955,6 +3955,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         /* Non-native case: use the ida enumerated when iterobj was created. */
         ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
+        STATIC_ASSUME(i <= ida->length);
         if (i == 0) {
             *idp = JSID_VOID;
         } else {

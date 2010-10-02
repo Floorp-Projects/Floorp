@@ -442,8 +442,7 @@ class CallCompiler : public BaseCompiler
         if (callingNew)
             vp[1].setMagicWithObjectOrNullPayload(NULL);
 
-        Native fn = fun->u.n.native;
-        if (!fn(cx, ic.argc, vp))
+        if (!CallJSNative(cx, fun->u.n.native, ic.argc, vp))
             THROWV(true);
 
         /* Right now, take slow-path for IC misses or multiple stubs. */
