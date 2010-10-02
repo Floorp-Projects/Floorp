@@ -4289,6 +4289,7 @@ StructType::ConstructData(JSContext* cx,
   if (argc == fields->count()) {
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
       const FieldInfo& field = r.front().value;
+      STATIC_ASSUME(field.mIndex < fields->count());  /* Quantified invariant */
       if (!ImplicitConvert(cx, argv[field.mIndex], field.mType,
              buffer + field.mOffset,
              false, NULL))

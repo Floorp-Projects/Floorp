@@ -210,7 +210,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
 
 namespace {
 
-struct PutArg
+struct STATIC_SKIP_INFERENCE PutArg
 {
     PutArg(Value *dst) : dst(dst) {}
     Value *dst;
@@ -2288,7 +2288,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
 
 namespace {
 
-struct CopyNonHoleArgs
+struct STATIC_SKIP_INFERENCE CopyNonHoleArgs
 {
     CopyNonHoleArgs(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
     JSObject *aobj;

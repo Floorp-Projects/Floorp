@@ -221,6 +221,7 @@ StackSpace::mark(JSTracer *trc)
      */
     Value *end = firstUnused();
     for (StackSegment *seg = currentSegment; seg; seg = seg->getPreviousInMemory()) {
+        STATIC_ASSERT(ubound(end) >= 0);
         if (seg->inContext()) {
             /* This may be the only pointer to the initialVarObj. */
             if (seg->hasInitialVarObj())

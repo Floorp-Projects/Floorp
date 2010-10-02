@@ -52,6 +52,7 @@
 
 struct JSFrameRegs
 {
+    STATIC_SKIP_INFERENCE
     js::Value       *sp;                  /* stack pointer */
     jsbytecode      *pc;                  /* program counter */
     JSStackFrame    *fp;                  /* active frame */

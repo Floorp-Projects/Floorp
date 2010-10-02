@@ -530,7 +530,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         }
 
         if (ucr->fun->isNative()) {
-            if (!ucr->fun->u.n.native(cx, argc, vp))
+            if (!CallJSNative(cx, ucr->fun->u.n.native, argc, vp))
                 THROW();
             return;
         }
