@@ -584,9 +584,10 @@ typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReade
  * Structured data serialization hook. The engine can write primitive values,
  * Objects, Arrays, Dates, RegExps, TypedArrays, and ArrayBuffers. Any other
  * type of object requires application support. This callback must first use
- * the JS_WritePair API to write an object header, passing a value greater than
- * JS_SCTAG_USER to the tag parameter. Then it can use the JS_Write* APIs to
- * write any other relevant parts of the value v to the writer w.
+ * the JS_WriteUint32Pair API to write an object header, passing a value
+ * greater than JS_SCTAG_USER to the tag parameter. Then it can use the
+ * JS_Write* APIs to write any other relevant parts of the value v to the
+ * writer w.
  *
  * Return true on success, false on error/exception.
  */

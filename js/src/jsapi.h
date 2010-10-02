@@ -2937,13 +2937,13 @@ JS_PUBLIC_API(void)
 JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);
 
 JS_PUBLIC_API(JSBool)
-JS_ReadPair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2);
+JS_ReadUint32Pair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2);
 
 JS_PUBLIC_API(JSBool)
 JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len);
 
 JS_PUBLIC_API(JSBool)
-JS_WritePair(JSStructuredCloneWriter *w, uint32 tag, uint32 data);
+JS_WriteUint32Pair(JSStructuredCloneWriter *w, uint32 tag, uint32 data);
 
 JS_PUBLIC_API(JSBool)
 JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len);
