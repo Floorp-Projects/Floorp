@@ -3068,6 +3068,8 @@ nsGlobalWindow::CreateBlobURL(nsIDOMFile* aFile, nsAString& aURL)
 
   NS_ENSURE_STATE(mDoc);
 
+  NS_ENSURE_ARG_POINTER(aFile);
+
   nsresult rv = aFile->GetInternalUrl(mDoc->NodePrincipal(), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
