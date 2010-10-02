@@ -134,7 +134,6 @@ nsHttpChannel::nsHttpChannel()
     , mCustomConditionalRequest(PR_FALSE)
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
-    , mRemoteChannel(PR_FALSE)
     , mRequestTimeInitialized(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
@@ -3175,12 +3174,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
 
-    // transfer the remote flag
-    nsCOMPtr<nsIHttpChannelParentInternal> httpInternal = 
-        do_QueryInterface(newChannel);
-    if (httpInternal)
-        httpInternal->SetServicingRemoteChannel(mRemoteChannel);
-
     return NS_OK;
 }
 
@@ -3627,22 +3620,6 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     return NS_OK;
 }
 
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIHttpChannelParentInternal
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetServicingRemoteChannel(PRBool *value)
-{
-    *value = mRemoteChannel;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetServicingRemoteChannel(PRBool value)
-{
-    mRemoteChannel = value;
-    return NS_OK;
-}
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
