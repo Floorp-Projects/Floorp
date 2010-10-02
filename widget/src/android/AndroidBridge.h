@@ -128,10 +128,11 @@ public:
                                   nsIHandlerApp **aDefaultApp = nsnull,
                                   const nsAString& aAction = EmptyString());
 
-    PRBool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType, 
-                           const nsAString& aPackageName = EmptyString(), 
+    PRBool OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
+                           const nsAString& aPackageName = EmptyString(),
                            const nsAString& aClassName = EmptyString(),
-                           const nsAString& aAction = EmptyString());
+                           const nsAString& aAction = EmptyString(),
+                           const nsAString& aTitle = EmptyString());
 
     void GetMimeTypeFromExtension(const nsACString& aFileExt, nsCString& aMimeType);
 

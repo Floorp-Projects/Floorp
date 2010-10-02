@@ -407,10 +407,11 @@ class GeckoAppShell
     }
 
     static boolean openUriExternal(String aUriSpec, String aMimeType, String aPackageName, 
-                                   String aClassName, String aAction) {
+                                   String aClassName, String aAction, String aTitle) {
         Intent intent = getIntentForActionString(aAction);
         if (aAction.equalsIgnoreCase(Intent.ACTION_SEND)) {
             intent.putExtra(Intent.EXTRA_TEXT, aUriSpec);
+            intent.putExtra(Intent.EXTRA_SUBJECT, aTitle);
             if (aMimeType != null && aMimeType.length() > 0)
                 intent.setType(aMimeType);
         } else if (aMimeType.length() > 0) {
