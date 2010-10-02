@@ -348,11 +348,12 @@ _TEST_FILES2 = \
 		test_classList.html \
 		test_bug514487.html \
 		test_range_bounds.html \
-		test_bug543870.html \
-		file_bug543870_img.jpg \
-		file_bug543870_inner.html \
-		file_bug543870_doc.html \
-		file_bug543870_text.txt \
+		test_mozfiledataurl.html \
+		file_mozfiledataurl_audio.ogg \
+		file_mozfiledataurl_img.jpg \
+		file_mozfiledataurl_inner.html \
+		file_mozfiledataurl_doc.html \
+		file_mozfiledataurl_text.txt \
 		test_bug475156.html \
 		bug475156.sjs \
 		test_bug544642.html \
