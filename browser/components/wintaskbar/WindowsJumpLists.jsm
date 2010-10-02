@@ -166,8 +166,14 @@ var tasksCfg = [
     },
     args:             "-private-toggle",
     iconIndex:        0, // Fx app icon
-    open:             true,
-    close:            true,
+    get open() {
+      // Don't show when inside permanent private browsing mode
+      return !_privateBrowsingSvc.autoStarted;
+    },
+    get close() {
+      // Don't show when inside permanent private browsing mode
+      return !_privateBrowsingSvc.autoStarted;
+    },
   },
 ];
 
