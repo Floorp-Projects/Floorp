@@ -5306,7 +5306,7 @@ JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ReadPair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2)
+JS_ReadUint32Pair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2)
 {
     return r->input().readPair((uint32_t *) p1, (uint32_t *) p2);
 }
@@ -5318,7 +5318,7 @@ JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_WritePair(JSStructuredCloneWriter *w, uint32 tag, uint32 data)
+JS_WriteUint32Pair(JSStructuredCloneWriter *w, uint32 tag, uint32 data)
 {
     return w->output().writePair(tag, data);
 }
