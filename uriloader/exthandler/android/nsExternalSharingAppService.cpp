@@ -67,7 +67,7 @@ nsExternalSharingAppService::ShareWithDefault(const nsAString & data,
   if (AndroidBridge::Bridge())
     return AndroidBridge::Bridge()->
       OpenUriExternal(NS_ConvertUTF16toUTF8(data), NS_ConvertUTF16toUTF8(mime),
-                      emptyString,emptyString, sendAction) ? NS_OK : NS_ERROR_FAILURE;
+                      emptyString,emptyString, sendAction, title) ? NS_OK : NS_ERROR_FAILURE;
 
   return NS_ERROR_FAILURE;
 }
