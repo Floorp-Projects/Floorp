@@ -133,7 +133,6 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
     return SendCancelEarly(rv);
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-  httpChan->SetServicingRemoteChannel(PR_TRUE);
 
   if (doResumeAt)
     httpChan->ResumeAt(startPos, entityID);
