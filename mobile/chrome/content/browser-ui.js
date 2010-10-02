@@ -2510,28 +2510,17 @@ var ContextCommands = {
 var SharingUI = {
   _dialog: null,
 
-  show: function show(aURL, aTitle, aType) {
+  show: function show(aURL, aTitle) {
     try {
-      this.showSharingUI(aURL, aTitle, aType);
+      this.showSharingUI(aURL, aTitle);
     } catch (ex) {
       this.showFallback(aURL, aTitle);
     }
   },
 
-  showSharingUI: function showSharingUI(aURL, aTitle, aType) {
+  showSharingUI: function showSharingUI(aURL, aTitle) {
     let sharingSvc = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
-    let mimeType = aType;
-    if (mimeType == null) {
-      try {
-        let mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-        let uri = Services.io.newURI(aURL, null, null);
-        mimeType = mimeSvc.getTypeFromURI(uri);
-      } catch (ex) {
-        // Could not find out the mime type, but lets continue
-        mimeType = "";
-      }
-    }
-    sharingSvc.shareWithDefault(aURL, mimeType, aTitle);
+    sharingSvc.shareWithDefault(aURL, "text/plain", aTitle);
   },
 
   showFallback: function showFallback(aURL, aTitle) {
