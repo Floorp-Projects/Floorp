@@ -89,7 +89,7 @@ check::
 	$(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy $(DIST)/bin
 endif
 
-default alldep all:: $(topsrcdir)/configure config.status
+default alldep all:: $(topsrcdir)/configure $(topsrcdir)/js/src/configure config.status js/src/config.status
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
 	$(RM) -rf $(DIST)/private
@@ -104,10 +104,24 @@ $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	@echo "but your build might not succeed."
 	@exit 1
 
+$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in
+	@echo "STOP!  js/src/configure.in has changed, and your js/src/configure is out of date."
+	@echo "Please rerun autoconf in js/src and re-configure your build directory."
+	@echo "To ignore this message, touch 'js/src/configure' in the source directory,"
+	@echo "but your build might not succeed."
+	@exit 1
+
 config.status: $(topsrcdir)/configure
 	@echo "STOP!  configure has changed and needs to be run in this build directory."
 	@echo "Please rerun configure."
 	@echo "To ignore this message, touch 'config.status' in the build directory,"
+	@echo "but your build might not succeed."
+	@exit 1
+
+js/src/config.status: $(topsrcdir)/js/src/configure
+	@echo "STOP!  js/src/configure has changed and needs to be run in this build directory."
+	@echo "Please rerun js/src/configure."
+	@echo "To ignore this message, touch 'js/src/config.status' in the build directory,"
 	@echo "but your build might not succeed."
 	@exit 1
 
