@@ -145,7 +145,7 @@ public:
 
 public: /* internal necko use only */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
-    nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
+
     void InternalSetUploadStream(nsIInputStream *uploadStream) 
       { mUploadStream = uploadStream; }
     void SetUploadStreamHasHeaders(PRBool hasHeaders) 
