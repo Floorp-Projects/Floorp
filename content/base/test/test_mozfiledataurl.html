@@ -12,6 +12,7 @@
 <iframe id=inner></iframe>
 <iframe id=iframe></iframe>
 <img id=img onload="gen.send(event);">
+<audio id=audio oncanplay="gen.send(event);">
 <input type=file id=fileList>
 </p>
 <div id="content" style="display: none">
@@ -24,8 +25,8 @@ window.addEventListener("message", function(e) {
   gen.send(JSON.parse(e.data));
 }, false);
 
-const innerSameSiteURI = "file_bug543870_inner.html";
-const innerCrossSiteURI = "http://example.com/tests/content/base/test/file_bug543870_inner.html"
+const innerSameSiteURI = "file_mozfiledataurl_inner.html";
+const innerCrossSiteURI = "http://example.com/tests/content/base/test/file_mozfiledataurl_inner.html"
 
 gen = runTest();
 SimpleTest.waitForExplicitFinish();
@@ -33,11 +34,12 @@ SimpleTest.waitForExplicitFinish();
 function runTest() {
   inner = document.getElementById('inner');
   img = document.getElementById('img');
+  audio = document.getElementById('audio');
   iframe = document.getElementById('iframe');
   inner.onload = function() { gen.send("inner loaded"); };
 
   // Attempt to load a image in this document
-  var file = getFile("file_bug543870_img.jpg");
+  var file = getFile("file_mozfiledataurl_img.jpg");
   var fileurl = createBlobURL(file);
   img.src = fileurl;
   var e = (yield);
@@ -46,7 +48,7 @@ function runTest() {
   is(img.height, 90, "correct height");
 
   // Revoke url and attempt to load a image in this document
-  img.src = "file_bug543870_img.jpg";
+  img.src = "file_mozfiledataurl_img.jpg";
   is((yield).type, "load", "successfull reset image");
   revokeBlobURL(fileurl);
   todo(false, "urls need to act like 404s, not fail to parse");
@@ -79,9 +81,46 @@ function runTest() {
   isnot(res.width, 120, "correct error width");
   isnot(res.height, 90, "correct error height");
 
+  // Attempt to load an audio in this document
+  var file = getFile("file_mozfiledataurl_audio.ogg");
+  var fileurl = createBlobURL(file);
+  audio.src = fileurl;
+  var e = (yield);
+  is(e.type, "canplay", "loaded successfully");
+
+  // Revoke url and attempt to load a audio in this document
+  audio.src = "file_mozfiledataurl_audio.ogg";
+  is((yield).type, "canplay", "successfully reset audio");
+  revokeBlobURL(fileurl);
+  todo(false, "urls need to act like 404s, not fail to parse");
+/*  img.src = fileurl;
+  var e = (yield);
+  is(e.type, "error", "failed successfully");
+  isnot(img.width, 120, "correct error width");
+  isnot(img.height, 90, "correct error height");
+*/
+  // Generate new fileurl and make sure it's different from the old
+  var oldFileurl = fileurl;
+  var fileurl = createBlobURL(file);
+  isnot(fileurl, oldFileurl, "createBlobURL generated the same url twice");
+
+  // Attempt to load an audio in a different same-origin document
+  inner.src = innerSameSiteURI;
+  yield;
+  inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "canplay", "loaded successfully");
+  
+  // Attempt to load an audio in a different cross-origin document
+  inner.src = innerCrossSiteURI;
+  yield;
+  inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "error", "failed successfully");
+
   // Attempt to load a HTML document in an iframe in this document
   iframe.onload = function() { gen.next(); };
-  iframe.src = "file_bug543870_doc.html";
+  iframe.src = "file_mozfiledataurl_doc.html";
   yield;
   is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
      "This here is a document!",
@@ -92,7 +131,7 @@ function runTest() {
      "image in iframe height");
 
   // Attempt to load a HTML document in an iframe in this document, using file url
-  file = getFile("file_bug543870_doc.html");
+  file = getFile("file_mozfiledataurl_doc.html");
   fileurl = createBlobURL(file);
   iframe.src = fileurl;
   yield;
@@ -107,7 +146,7 @@ function runTest() {
   // Attempt to load a HTML document in an iframe in inner document
   inner.src = innerSameSiteURI;
   is((yield), "inner loaded", "correct gen.next()");
-  inner.contentWindow.postMessage(JSON.stringify({iframe:"file_bug543870_doc.html"}), "*");
+  inner.contentWindow.postMessage(JSON.stringify({iframe:"file_mozfiledataurl_doc.html"}), "*");
   var res = (yield);
   is(res.type, "load", "loaded successfully");
   is(res.text, "This here is a document!", "loaded successfully");
@@ -128,7 +167,7 @@ function runTest() {
   is(res.type, "error", "load failed successfully");
 
   // Attempt to load file url using XHR
-  file = getFile("file_bug543870_text.txt");
+  file = getFile("file_mozfiledataurl_text.txt");
   fileurl = createBlobURL(file);
   xhr = new XMLHttpRequest;
   xhr.onload = function() { gen.send("XHR finished"); };

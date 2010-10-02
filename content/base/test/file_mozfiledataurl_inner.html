@@ -2,6 +2,7 @@
 <html>
 <script type="application/javascript;version=1.8">
 var img;
+var audio;
 var iframe;
 
 addEventListener("message", function(e) {
@@ -9,6 +10,8 @@ addEventListener("message", function(e) {
   
   if ("img" in mess)
     img.src = mess.img;
+  else if ("audio" in mess)
+    audio.src = mess.audio
   else if ("iframe" in mess)
     iframe.src = mess.iframe;
   else if ("xhr" in mess) {
@@ -29,6 +32,10 @@ addEventListener("message", function(e) {
 
 function sendItUp(obj) {
   window.parent.postMessage(JSON.stringify(obj), "*");
+}
+
+function audioNotifyParent(e) {
+  sendItUp({ type: e.type });
 }
 
 function imgNotifyParent(e) {
@@ -54,10 +61,13 @@ onload = function() {
   img.onerror = img.onload = imgNotifyParent;
   iframe = document.getElementById('iframe');
   iframe.onerror = iframe.onload = iframeNotifyParent;
+  audio = document.getElementById('audio');
+  audio.onerror = audio.oncanplay = audioNotifyParent;
 }
 
 </script>
 <body>
 <img id=img>
+<audio id=audio>
 <iframe id=iframe></iframe>
 </html>
