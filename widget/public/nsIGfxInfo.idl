@@ -43,6 +43,9 @@
 [scriptable, uuid(d2bfa0fd-8f73-4660-9609-f999680243b1)]
 interface nsIGfxInfo : nsISupports
 {
+  /*
+   * These are win32-specific
+   */
   readonly attribute boolean D2DEnabled;
   readonly attribute boolean DWriteEnabled;
   
