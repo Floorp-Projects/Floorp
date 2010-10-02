@@ -154,7 +154,7 @@ function runUpdate(aUpdatesDir, aUpdater) {
   var process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
-  var args = [updatesDirPath, 0, cwdPath];
+  var args = [updatesDirPath, cwdPath];
   process.run(true, args, args.length);
   return process.exitValue;
 }
