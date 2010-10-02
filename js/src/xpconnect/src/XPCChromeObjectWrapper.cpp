@@ -255,16 +255,16 @@ js::Class COWClass = {
     "ChromeObjectWrapper",
     JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 1),
-    js::Valueify(XPC_COW_AddProperty),
-    js::Valueify(XPC_COW_DelProperty),
-    js::Valueify(XPC_COW_GetProperty),
-    js::Valueify(XPC_COW_SetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_COW_AddProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_COW_DelProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_COW_GetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_COW_SetProperty),
     XPC_COW_Enumerate,
     (JSResolveOp)XPC_COW_NewResolve,
-    js::Valueify(XPC_COW_Convert),
+    JS_VALUEIFY(js::ConvertOp, XPC_COW_Convert),
     JS_FinalizeStub,
     nsnull,   // reserved0
-    js::Valueify(XPC_COW_CheckAccess),
+    JS_VALUEIFY(js::CheckAccessOp, XPC_COW_CheckAccess),
     nsnull,   // call
     nsnull,   // construct
     nsnull,   // xdrObject
@@ -273,7 +273,7 @@ js::Class COWClass = {
 
     // ClassExtension
     {
-      js::Valueify(XPC_COW_Equality),
+      JS_VALUEIFY(js::EqualityOp, XPC_COW_Equality),
       nsnull, // outerObject
       nsnull, // innerObject
       XPC_COW_Iterator,

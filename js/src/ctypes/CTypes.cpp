@@ -5362,7 +5362,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   for (JSUint32 i = 0; i < cif->nargs; ++i)
     argv[i] = JSVAL_VOID;
 
-  js::AutoArrayRooter roots(cx, argv.length(), Valueify(argv.begin()));
+  js::AutoArrayRooter roots(cx, argv.length(), argv.begin());
   for (JSUint32 i = 0; i < cif->nargs; ++i) {
     // Convert each argument, and have any CData objects created depend on
     // the existing buffers.

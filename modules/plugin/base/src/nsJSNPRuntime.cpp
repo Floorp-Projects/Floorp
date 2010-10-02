@@ -855,7 +855,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier id,
   AutoJSExceptionReporter reporter(cx);
 
   jsval v = NPVariantToJSVal(npp, cx, value);
-  js::AutoValueRooter tvr(cx, js::Valueify(v));
+  js::AutoValueRooter tvr(cx, v);
 
   if (NPIdentifierIsString(id)) {
     JSString *str = NPIdentifierToString(id);

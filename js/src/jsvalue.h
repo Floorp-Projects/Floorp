@@ -1052,6 +1052,9 @@ static JS_ALWAYS_INLINE PropertyDescriptor *   Valueify(JSPropertyDescriptor *p)
  */
 #ifdef DEBUG
 
+# define JS_VALUEIFY(type, v) js::Valueify(v)
+# define JS_JSVALIFY(type, v) js::Jsvalify(v)
+
 static inline JSNative JsvalifyNative(Native n)   { return (JSNative)n; }
 static inline JSNative JsvalifyNative(JSNative n) { return n; }
 static inline Native ValueifyNative(JSNative n)   { return (Native)n; }
@@ -1062,8 +1065,11 @@ static inline Native ValueifyNative(Native n)     { return n; }
 
 #else
 
-# define JS_VALUEIFY_NATIVE(n) ((js::Native)n)
-# define JS_JSVALIFY_NATIVE(n) ((JSNative)n)
+# define JS_VALUEIFY(type, v) ((type)(v))
+# define JS_JSVALIFY(type, v) ((type)(v))
+
+# define JS_VALUEIFY_NATIVE(n) ((js::Native)(n))
+# define JS_JSVALIFY_NATIVE(n) ((JSNative)(n))
 
 #endif
 
