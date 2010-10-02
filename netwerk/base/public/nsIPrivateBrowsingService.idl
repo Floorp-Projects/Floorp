@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(49d6f133-80c0-48c7-876d-0b70bbfd0289)]
+[scriptable, uuid(4b731983-9542-49f4-b16b-de68ad1c2068)]
 interface nsIPrivateBrowsingService : nsISupports
 {
     // When read, determines whether the private browsing mode is currently
@@ -51,6 +51,10 @@ interface nsIPrivateBrowsingService : nsISupports
     // automatically at application startup.
     // This value will never be true if privateBrowsingEnabled is false.
     readonly attribute boolean autoStarted;
+
+    // Determine whether the last private browsing transition was performed through
+    // the command line (using either the -private or -private-toggle switches).
+    readonly attribute boolean lastChangedByCommandLine;
 
     /**
      * Removes all data stored for a given domain.  This includes all data for
