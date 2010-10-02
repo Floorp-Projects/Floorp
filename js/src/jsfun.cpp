@@ -1145,7 +1145,11 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 
         JSScript *script = fun->u.i.script;
         memcpy(callobj.dslots, fp->formalArgs(), nargs * sizeof(Value));
-        if (script->usesEval || script->debugMode) {
+        if (script->usesEval
+#ifdef JS_METHODJIT
+            || script->debugMode
+#endif
+            ) {
             CopyValuesToCallObject(callobj, nargs, fp->formalArgs(), nvars, fp->slots());
         } else {
             /*
