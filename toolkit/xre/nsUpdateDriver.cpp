@@ -23,6 +23,7 @@
  *  Darin Fisher <darin@meer.net>
  *  Ben Turner <mozilla@songbirdnest.com>
  *  Robert Strong <robert.bugzilla@gmail.com>
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,7 @@
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
 #include "nsCommandLineServiceMac.h"
+#include "MacLaunchHelper.h"
 #endif
 
 #if defined(XP_WIN)
@@ -79,7 +81,7 @@
 // Windows.
 //
 // On platforms where we are not calling execv, we may need to make the
-// udpaterfail executable wait for the calling process to exit.  Otherwise, the
+// updater executable wait for the calling process to exit.  Otherwise, the
 // updater may have trouble modifying our executable image (because it might
 // still be in use).  This is accomplished by passing our PID to the updater so
 // that it can wait for us to exit.  This is not perfect as there is a race
@@ -136,43 +138,30 @@ GetCurrentWorkingDir(char *buf, size_t size)
 }
 
 #if defined(XP_MACOSX)
-
 // This is a copy of OS X's XRE_GetBinaryPath from nsAppRunner.cpp with the
 // gBinaryPath check removed so that the updater can reload the stub executable
 // instead of xulrunner-bin. See bug 349737.
 static nsresult
 GetXULRunnerStubPath(const char* argv0, nsILocalFile* *aResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> lf;
-
-  NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(lf));
-  nsCOMPtr<nsILocalFileMac> lfm (do_QueryInterface(lf));
-  if (!lfm)
-    return NS_ERROR_FAILURE;
-
   // Works even if we're not bundled.
-  CFBundleRef appBundle = CFBundleGetMainBundle();
+  CFBundleRef appBundle = ::CFBundleGetMainBundle();
   if (!appBundle)
     return NS_ERROR_FAILURE;
 
-  CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
+  CFURLRef bundleURL = ::CFBundleCopyExecutableURL(appBundle);
   if (!bundleURL)
     return NS_ERROR_FAILURE;
 
-  FSRef fileRef;
-  if (!CFURLGetFSRef(bundleURL, &fileRef)) {
-    CFRelease(bundleURL);
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsILocalFileMac> lfm;
+  nsresult rv = NS_NewLocalFileWithCFURL(bundleURL, PR_TRUE, getter_AddRefs(lfm));
 
-  rv = lfm->InitWithFSRef(&fileRef);
-  CFRelease(bundleURL);
+  ::CFRelease(bundleURL);
 
   if (NS_FAILED(rv))
     return rv;
 
-  NS_ADDREF(*aResult = lf);
+  NS_ADDREF(*aResult = static_cast<nsILocalFile*>(lfm.get()));
   return NS_OK;
 }
 #endif /* XP_MACOSX */
@@ -456,22 +445,24 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   pid.AppendInt((PRInt32) getpid());
 #endif
 
-  int argc = appArgc + 4;
+  int argc = appArgc + 5;
   char **argv = new char*[argc + 1];
   if (!argv)
     return;
   argv[0] = (char*) updaterPath.get();
   argv[1] = (char*) updateDirPath.get();
-  argv[2] = (char*) pid.get();
+  argv[2] = (char*) applyToDir.get();
+  argv[3] = (char*) pid.get();
   if (appArgc) {
-    argv[3] = workingDirPath;
-    argv[4] = (char*) appFilePath.get();
+    argv[4] = workingDirPath;
+    argv[5] = (char*) appFilePath.get();
     for (int i = 1; i < appArgc; ++i)
-      argv[4 + i] = appArgv[i];
-    argv[4 + appArgc] = nsnull;
+      argv[5 + i] = appArgv[i];
+    argc = 5 + appArgc;
+    argv[argc] = NULL;
   } else {
-    argv[3] = nsnull;
-    argc = 3;
+    argc = 4;
+    argv[4] = NULL;
   }
 
   if (gSafeMode) {
@@ -481,36 +472,21 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
 
 #if defined(USE_EXECV)
-  chdir(applyToDir.get());
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
-  _wchdir(applyToDir.get());
-
-  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv))
+  if (!WinLaunchChild(updaterPathW.get(), argc, argv))
     return;
   _exit(0);
-#else
-  PRStatus status;
-  PRProcessAttr *attr;
-  
-  attr = PR_NewProcessAttr();
-  if (!attr)
-    goto end;
-
-  status = PR_ProcessAttrSetCurrentDirectory(attr, applyToDir.get());
-  if (status != PR_SUCCESS)
-    goto end;
-
-#ifdef XP_MACOSX
+#elif defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(argc, argv, PR_TRUE);
-#endif
-
-  PR_CreateProcessDetached(updaterPath.get(), argv, nsnull, attr);
+  // LaunchChildMac uses posix_spawnp and prefers the current
+  // architecture when launching. It doesn't require a
+  // null-terminated string but it doesn't matter if we pass one.
+  LaunchChildMac(argc, argv);
   exit(0);
-
-end:
-  PR_DestroyProcessAttr(attr); 
-  delete[] argv;
+#else
+  PR_CreateProcessDetached(updaterPath.get(), argv, NULL, NULL);
+  exit(0);
 #endif
 }
 
