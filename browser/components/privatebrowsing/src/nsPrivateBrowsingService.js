@@ -469,8 +469,10 @@ PrivateBrowsingService.prototype = {
     if (aCmdLine.handleFlag("private", false))
       ; // It has already been handled
     else if (aCmdLine.handleFlag("private-toggle", false)) {
+      if (this._autoStarted) {
+        throw Cr.NS_ERROR_ABORT;
+      }
       this.privateBrowsingEnabled = !this.privateBrowsingEnabled;
-      this._autoStarted = false;
       this._lastChangedByCommandLine = true;
     }
   },
