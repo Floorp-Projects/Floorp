@@ -212,6 +212,7 @@ class StartRequestEvent : public ChildChannelEvent
   StartRequestEvent(HttpChannelChild* child,
                     const nsHttpResponseHead& responseHead,
                     const PRBool& useResponseHead,
+                    const RequestHeaderTuples& requestHeaders,
                     const PRBool& isFromCache,
                     const PRBool& cacheEntryAvailable,
                     const PRUint32& cacheExpirationTime,
@@ -219,6 +220,7 @@ class StartRequestEvent : public ChildChannelEvent
                     const nsCString& securityInfoSerialization)
   : mChild(child)
   , mResponseHead(responseHead)
+  , mRequestHeaders(requestHeaders)
   , mUseResponseHead(useResponseHead)
   , mIsFromCache(isFromCache)
   , mCacheEntryAvailable(cacheEntryAvailable)
@@ -229,16 +231,18 @@ class StartRequestEvent : public ChildChannelEvent
 
   void Run() 
   { 
-    mChild->OnStartRequest(mResponseHead, mUseResponseHead, mIsFromCache, 
-                           mCacheEntryAvailable, mCacheExpirationTime, 
-                           mCachedCharset, mSecurityInfoSerialization);
+    mChild->OnStartRequest(mResponseHead, mUseResponseHead, mRequestHeaders,
+                           mIsFromCache, mCacheEntryAvailable,
+                           mCacheExpirationTime, mCachedCharset,
+                           mSecurityInfoSerialization);
   }
  private:
   HttpChannelChild* mChild;
   nsHttpResponseHead mResponseHead;
-  PRBool mUseResponseHead;
-  PRBool mIsFromCache;
-  PRBool mCacheEntryAvailable;
+  RequestHeaderTuples mRequestHeaders;
+  PRPackedBool mUseResponseHead;
+  PRPackedBool mIsFromCache;
+  PRPackedBool mCacheEntryAvailable;
   PRUint32 mCacheExpirationTime;
   nsCString mCachedCharset;
   nsCString mSecurityInfoSerialization;
@@ -247,6 +251,7 @@ class StartRequestEvent : public ChildChannelEvent
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const PRBool& useResponseHead,
+                                     const RequestHeaderTuples& requestHeaders,
                                      const PRBool& isFromCache,
                                      const PRBool& cacheEntryAvailable,
                                      const PRUint32& cacheExpirationTime,
@@ -255,11 +260,12 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
 {
   if (ShouldEnqueue()) {
     EnqueueEvent(new StartRequestEvent(this, responseHead, useResponseHead,
+                                       requestHeaders,
                                        isFromCache, cacheEntryAvailable,
                                        cacheExpirationTime, cachedCharset,
                                        securityInfoSerialization));
   } else {
-    OnStartRequest(responseHead, useResponseHead, isFromCache,
+    OnStartRequest(responseHead, useResponseHead, requestHeaders, isFromCache,
                    cacheEntryAvailable, cacheExpirationTime, cachedCharset,
                    securityInfoSerialization);
   }
@@ -269,6 +275,7 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
 void 
 HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const PRBool& useResponseHead,
+                                 const RequestHeaderTuples& requestHeaders,
                                  const PRBool& isFromCache,
                                  const PRBool& cacheEntryAvailable,
                                  const PRUint32& cacheExpirationTime,
@@ -291,6 +298,13 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
   mCachedCharset = cachedCharset;
 
   AutoEventEnqueuer ensureSerialDispatch(this);
+
+  // replace our request headers with what actually got sent in the parent
+  mRequestHead.ClearHeaders();
+  for (PRUint32 i = 0; i < requestHeaders.Length(); i++) {
+    mRequestHead.Headers().SetHeader(nsHttp::ResolveAtom(requestHeaders[i].mHeader),
+                                     requestHeaders[i].mValue);
+  }
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv)) {
