@@ -253,25 +253,25 @@ js::Class SJOWClass = {
     "XPCSafeJSObjectWrapper",
     JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(sSJOWSlots),
-    js::Valueify(XPC_SJOW_AddProperty),
-    js::Valueify(XPC_SJOW_DelProperty),
-    js::Valueify(XPC_SJOW_GetProperty),
-    js::Valueify(XPC_SJOW_SetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SJOW_AddProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SJOW_DelProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SJOW_GetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SJOW_SetProperty),
     XPC_SJOW_Enumerate,
     (JSResolveOp)XPC_SJOW_NewResolve,
-    js::Valueify(XPC_SJOW_Convert),
+    JS_VALUEIFY(js::ConvertOp, XPC_SJOW_Convert),
     XPC_SJOW_Finalize,
     nsnull,   // reserved0
-    js::Valueify(XPC_SJOW_CheckAccess),
-    js::Valueify(XPC_SJOW_Call),
-    js::Valueify(XPC_SJOW_Create),
+    JS_VALUEIFY(js::CheckAccessOp, XPC_SJOW_CheckAccess),
+    JS_VALUEIFY(js::CallOp, XPC_SJOW_Call),
+    JS_VALUEIFY(js::CallOp, XPC_SJOW_Create),
     nsnull,   // xdrObject
     nsnull,   // hasInstance
     nsnull,   // mark
 
     // ClassExtension
     {
-      js::Valueify(XPC_SJOW_Equality),
+      JS_VALUEIFY(js::EqualityOp, XPC_SJOW_Equality),
       nsnull, // outerObject
       nsnull, // innerObject
       XPC_SJOW_Iterator,

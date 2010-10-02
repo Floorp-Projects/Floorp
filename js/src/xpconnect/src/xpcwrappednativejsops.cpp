@@ -924,15 +924,15 @@ js::Class XPC_WN_NoHelper_JSClass = {
     JSCLASS_MARK_IS_TRACE, // flags;
 
     /* Mandatory non-null function pointer members. */
-    js::Valueify(XPC_WN_OnlyIWrite_PropertyStub), // addProperty
-    js::Valueify(XPC_WN_CannotModifyPropertyStub),// delProperty
-    js::PropertyStub,                             // getProperty
-    js::Valueify(XPC_WN_OnlyIWrite_PropertyStub), // setProperty
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_PropertyStub), // addProperty
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_CannotModifyPropertyStub),// delProperty
+    js::PropertyStub,                                            // getProperty
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_PropertyStub), // setProperty
    
-    XPC_WN_Shared_Enumerate,                      // enumerate
-    XPC_WN_NoHelper_Resolve,                      // resolve
-    js::Valueify(XPC_WN_Shared_Convert),          // convert
-    XPC_WN_NoHelper_Finalize,                     // finalize
+    XPC_WN_Shared_Enumerate,                                     // enumerate
+    XPC_WN_NoHelper_Resolve,                                     // resolve
+    JS_VALUEIFY(js::ConvertOp, XPC_WN_Shared_Convert),           // convert
+    XPC_WN_NoHelper_Finalize,                                    // finalize
    
     /* Optionally non-null members start here. */
     nsnull,                         // reserved0
@@ -945,7 +945,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
 
     // ClassExtension
     {
-        js::Valueify(XPC_WN_Equality),
+        JS_VALUEIFY(js::EqualityOp, XPC_WN_Equality),
         XPC_WN_OuterObject,
         XPC_WN_InnerObject,
         nsnull, // iteratorObject
@@ -961,7 +961,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
         nsnull, // getAttributes
         nsnull, // setAttributes
         nsnull, // deleteProperty
-        js::Valueify(XPC_WN_JSOp_Enumerate),
+        JS_VALUEIFY(js::NewEnumerateOp, XPC_WN_JSOp_Enumerate),
         XPC_WN_JSOp_TypeOf_Object,
         nsnull, // trace
         nsnull, // fix
@@ -1911,7 +1911,7 @@ js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     js::PropertyStub,               // setProperty;
     XPC_WN_Shared_Proto_Enumerate,  // enumerate;
     XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
-    js::Valueify(XPC_WN_Shared_Proto_Convert), // convert;
+    JS_VALUEIFY(js::ConvertOp, XPC_WN_Shared_Proto_Convert), // convert;
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
@@ -1938,7 +1938,7 @@ js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
     js::PropertyStub,               // setProperty;
     XPC_WN_Shared_Proto_Enumerate,  // enumerate;
     XPC_WN_ModsAllowed_Proto_Resolve,// resolve;
-    js::Valueify(XPC_WN_Shared_Proto_Convert), // convert;
+    JS_VALUEIFY(js::ConvertOp, XPC_WN_Shared_Proto_Convert), // convert;
     XPC_WN_Shared_Proto_Finalize,    // finalize;
 
     /* Optionally non-null members start here. */
@@ -2013,14 +2013,14 @@ js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
     WRAPPER_SLOTS | JSCLASS_MARK_IS_TRACE, // flags;
 
     /* Mandatory non-null function pointer members. */
-    js::Valueify(XPC_WN_OnlyIWrite_Proto_PropertyStub), // addProperty;
-    js::Valueify(XPC_WN_CannotModifyPropertyStub),      // delProperty;
-    js::PropertyStub,                                   // getProperty;
-    js::Valueify(XPC_WN_OnlyIWrite_Proto_PropertyStub), // setProperty;
-    XPC_WN_Shared_Proto_Enumerate,                      // enumerate;
-    XPC_WN_NoMods_Proto_Resolve,                        // resolve;
-    js::Valueify(XPC_WN_Shared_Proto_Convert),          // convert;
-    XPC_WN_Shared_Proto_Finalize,                       // finalize;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_Proto_PropertyStub), // addProperty;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_CannotModifyPropertyStub),      // delProperty;
+    js::PropertyStub,                                                  // getProperty;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_Proto_PropertyStub), // setProperty;
+    XPC_WN_Shared_Proto_Enumerate,                                     // enumerate;
+    XPC_WN_NoMods_Proto_Resolve,                                       // resolve;
+    JS_VALUEIFY(js::ConvertOp, XPC_WN_Shared_Proto_Convert),           // convert;
+    XPC_WN_Shared_Proto_Finalize,                                      // finalize;
 
     /* Optionally non-null members start here. */
     nsnull,                         // reserved0;
@@ -2040,14 +2040,14 @@ js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
     WRAPPER_SLOTS | JSCLASS_MARK_IS_TRACE,              // flags;
 
     /* Mandatory non-null function pointer members. */
-    js::Valueify(XPC_WN_OnlyIWrite_Proto_PropertyStub), // addProperty;
-    js::Valueify(XPC_WN_CannotModifyPropertyStub),      // delProperty;
-    js::PropertyStub,                                   // getProperty;
-    js::Valueify(XPC_WN_OnlyIWrite_Proto_PropertyStub), // setProperty;
-    XPC_WN_Shared_Proto_Enumerate,                      // enumerate;
-    XPC_WN_NoMods_Proto_Resolve,                        // resolve;
-    js::Valueify(XPC_WN_Shared_Proto_Convert),          // convert;
-    XPC_WN_Shared_Proto_Finalize,                       // finalize;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_Proto_PropertyStub), // addProperty;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_CannotModifyPropertyStub),      // delProperty;
+    js::PropertyStub,                                                  // getProperty;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_Proto_PropertyStub), // setProperty;
+    XPC_WN_Shared_Proto_Enumerate,                                     // enumerate;
+    XPC_WN_NoMods_Proto_Resolve,                                       // resolve;
+    JS_VALUEIFY(js::ConvertOp, XPC_WN_Shared_Proto_Convert),           // convert;
+    XPC_WN_Shared_Proto_Finalize,                                      // finalize;
 
     /* Optionally non-null members start here. */
     nsnull,                         // reserved0;
@@ -2124,12 +2124,12 @@ js::Class XPC_WN_Tearoff_JSClass = {
     "WrappedNative_TearOff",                        // name;
     WRAPPER_SLOTS | JSCLASS_MARK_IS_TRACE,          // flags;
 
-    js::Valueify(XPC_WN_OnlyIWrite_PropertyStub),   // addProperty;
-    js::Valueify(XPC_WN_CannotModifyPropertyStub),  // delProperty;
-    js::PropertyStub,                               // getProperty;
-    js::Valueify(XPC_WN_OnlyIWrite_PropertyStub),   // setProperty;
-    XPC_WN_TearOff_Enumerate,                       // enumerate;
-    XPC_WN_TearOff_Resolve,                         // resolve;
-    js::Valueify(XPC_WN_Shared_Convert),            // convert;
-    XPC_WN_TearOff_Finalize                        // finalize;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_PropertyStub),   // addProperty;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_CannotModifyPropertyStub),  // delProperty;
+    js::PropertyStub,                                              // getProperty;
+    JS_VALUEIFY(js::PropertyOp, XPC_WN_OnlyIWrite_PropertyStub),   // setProperty;
+    XPC_WN_TearOff_Enumerate,                                      // enumerate;
+    XPC_WN_TearOff_Resolve,                                        // resolve;
+    JS_VALUEIFY(js::ConvertOp, XPC_WN_Shared_Convert),             // convert;
+    XPC_WN_TearOff_Finalize                                        // finalize;
 };
