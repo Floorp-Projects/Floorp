@@ -738,10 +738,6 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
     prof.start();
 #endif
 
-#ifdef DEBUG
-    JSStackFrame *checkFp = fp;
-#endif
-
     Value *stackLimit = cx->stack().getStackLimit(cx);
     if (!stackLimit)
         return false;
@@ -752,8 +748,10 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
     JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit);
 
     cx->setCurrentRegs(oldRegs);
+    JS_ASSERT(fp == cx->fp());
 
-    JS_ASSERT(checkFp == cx->fp());
+    /* The trampoline wrote the return value but did not set the HAS_RVAL flag. */
+    fp->markReturnValue();
 
 #ifdef JS_METHODJIT_SPEW
     prof.stop();

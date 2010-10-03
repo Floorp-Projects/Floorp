@@ -311,7 +311,6 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
      * early prologue.
      */
     uint32 flags         = oldfp->isConstructingFlag();
-    JSObject &scopeChain = oldfp->scopeChain();
     JSFunction *fun      = oldfp->fun();
     void *ncode          = oldfp->nativeReturnAddress();
 
@@ -327,7 +326,7 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
         THROWV(NULL);
 
     /* Reset the part of the stack frame set by the caller. */
-    newfp->initCallFrameCallerHalf(cx, scopeChain, nactual, flags);
+    newfp->initCallFrameCallerHalf(cx, nactual, flags);
 
     /* Reset the part of the stack frame set by the prologue up to now. */
     newfp->initCallFrameEarlyPrologue(fun, ncode);
@@ -821,6 +820,16 @@ RunTracer(VMFrame &f)
     /* :TODO: nuke PIC? */
     if (!cx->traceJitEnabled)
         return NULL;
+
+    /*
+     * Force initialization of the entry frame's scope chain and return value,
+     * if necessary.  The tracer can query the scope chain without needing to
+     * check the HAS_SCOPECHAIN flag, and the frame is guaranteed to have the
+     * correct return value stored if we trace/interpret through to the end
+     * of the frame.
+     */
+    entryFrame->scopeChain();
+    entryFrame->returnValue();
 
     bool blacklist;
     uintN inlineCallCount = 0;
