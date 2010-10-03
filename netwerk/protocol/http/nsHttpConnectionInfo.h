@@ -75,14 +75,14 @@ public:
 
     nsrefcnt AddRef()
     {
-        nsrefcnt n = PR_AtomicIncrement((PRInt32 *) &mRef);
+        nsrefcnt n = NS_AtomicIncrementRefcnt(mRef);
         NS_LOG_ADDREF(this, n, "nsHttpConnectionInfo", sizeof(*this));
         return n;
     }
 
     nsrefcnt Release()
     {
-        nsrefcnt n = PR_AtomicDecrement((PRInt32 *) &mRef);
+        nsrefcnt n = NS_AtomicDecrementRefcnt(mRef);
         NS_LOG_RELEASE(this, n, "nsHttpConnectionInfo");
         if (n == 0)
             delete this;

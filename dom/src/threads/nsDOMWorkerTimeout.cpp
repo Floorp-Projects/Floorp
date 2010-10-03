@@ -425,7 +425,7 @@ void
 nsDOMWorkerTimeout::AcquireSpinlock()
 {
   PRUint32 loopCount = 0;
-  while (PR_AtomicSet(&mSuspendSpinlock, 1) == 1) {
+  while (PR_ATOMIC_SET(&mSuspendSpinlock, 1) == 1) {
     if (++loopCount > SUSPEND_SPINLOCK_COUNT) {
       LOG(("AcquireSpinlock taking too long (looped %u times), yielding.",
            loopCount));
@@ -446,7 +446,7 @@ nsDOMWorkerTimeout::ReleaseSpinlock()
 #ifdef DEBUG
   PRInt32 suspended =
 #endif
-  PR_AtomicSet(&mSuspendSpinlock, 0);
+  PR_ATOMIC_SET(&mSuspendSpinlock, 0);
   NS_ASSERTION(suspended == 1, "Huh?!");
 }
 

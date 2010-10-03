@@ -97,7 +97,7 @@ nsBaseAppShell::Init()
 void
 nsBaseAppShell::NativeEventCallback()
 {
-  PRInt32 hasPending = PR_AtomicSet(&mNativeEventPending, 0);
+  PRInt32 hasPending = PR_ATOMIC_SET(&mNativeEventPending, 0);
   if (hasPending == 0)
     return;
 
@@ -262,7 +262,7 @@ nsBaseAppShell::OnDispatchedEvent(nsIThreadInternal *thr)
   if (mBlockNativeEvent)
     return NS_OK;
 
-  PRInt32 lastVal = PR_AtomicSet(&mNativeEventPending, 1);
+  PRInt32 lastVal = PR_ATOMIC_SET(&mNativeEventPending, 1);
   if (lastVal == 1)
     return NS_OK;
 
