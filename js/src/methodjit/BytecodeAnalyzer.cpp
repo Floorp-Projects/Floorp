@@ -116,6 +116,18 @@ BytecodeAnalyzer::analyze(uint32 index)
             usesRval = true;
             break;
 
+          case JSOP_NAME:
+          case JSOP_CALLNAME:
+          case JSOP_BINDNAME:
+          case JSOP_SETNAME:
+          case JSOP_DELNAME:
+          case JSOP_INCNAME:
+          case JSOP_DECNAME:
+          case JSOP_NAMEINC:
+          case JSOP_NAMEDEC:
+            usesScope = true;
+            break;
+
           case JSOP_DEFAULT:
           case JSOP_GOTO:
             offs = (pc + JSOP_GOTO_LENGTH) - script->code;

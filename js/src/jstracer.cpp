@@ -5739,7 +5739,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
                    ? JSFRAME_CONSTRUCTING | JSFRAME_CONSTRUCTING
                    : 0;
 
-
     /* Get pointer to new/frame/slots, prepare arguments. */
     StackSpace &stack = cx->stack();
     JSStackFrame *newfp = stack.getInlineFrame(cx, regs->sp, argc, newfun,

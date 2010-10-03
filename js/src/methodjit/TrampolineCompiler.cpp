@@ -126,7 +126,7 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     /* Store any known return value */
     masm.loadValueAsComponents(UndefinedValue(), JSReturnReg_Type, JSReturnReg_Data);
     Jump rvalClear = masm.branchTest32(Assembler::Zero,
-                                       FrameFlagsAddress(), Imm32(JSFRAME_RVAL_ASSIGNED));
+                                       FrameFlagsAddress(), Imm32(JSFRAME_HAS_RVAL));
     Address rvalAddress(JSFrameReg, JSStackFrame::offsetOfReturnValue());
     masm.loadValueAsComponents(rvalAddress, JSReturnReg_Type, JSReturnReg_Data);
     rvalClear.linkTo(masm.label(), &masm);
