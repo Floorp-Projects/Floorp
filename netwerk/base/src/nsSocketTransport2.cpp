@@ -43,6 +43,7 @@
 #endif
 
 #include "nsSocketTransport2.h"
+#include "nsAtomicRefcnt.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"
@@ -55,7 +56,6 @@
 #include "netCore.h"
 #include "nsInt64.h"
 #include "prmem.h"
-#include "pratom.h"
 #include "plstr.h"
 #include "prnetdb.h"
 #include "prerror.h"
@@ -263,14 +263,14 @@ NS_IMPL_QUERY_INTERFACE2(nsSocketInputStream,
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketInputStream::AddRef()
 {
-    PR_AtomicIncrement((PRInt32*)&mReaderRefCnt);
+    NS_AtomicIncrementRefcnt(mReaderRefCnt);
     return mTransport->AddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketInputStream::Release()
 {
-    if (PR_AtomicDecrement((PRInt32*)&mReaderRefCnt) == 0)
+    if (NS_AtomicDecrementRefcnt(mReaderRefCnt) == 0)
         Close();
     return mTransport->Release();
 }
@@ -522,14 +522,14 @@ NS_IMPL_QUERY_INTERFACE2(nsSocketOutputStream,
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketOutputStream::AddRef()
 {
-    PR_AtomicIncrement((PRInt32*)&mWriterRefCnt);
+    NS_AtomicIncrementRefcnt(mWriterRefCnt);
     return mTransport->AddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsSocketOutputStream::Release()
 {
-    if (PR_AtomicDecrement((PRInt32*)&mWriterRefCnt) == 0)
+    if (NS_AtomicDecrementRefcnt(mWriterRefCnt) == 0)
         Close();
     return mTransport->Release();
 }
