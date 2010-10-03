@@ -141,7 +141,7 @@ nsrefcnt nsJAR::Release(void)
 {
   nsrefcnt count; 
   NS_PRECONDITION(0 != mRefCnt, "dup release"); 
-  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt); 
+  count = NS_AtomicDecrementRefcnt(mRefCnt); 
   NS_LOG_RELEASE(this, count, "nsJAR"); 
   if (0 == count) {
     mRefCnt = 1; /* stabilize */ 

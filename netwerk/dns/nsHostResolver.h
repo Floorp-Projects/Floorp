@@ -39,7 +39,7 @@
 #define nsHostResolver_h__
 
 #include "nscore.h"
-#include "pratom.h"
+#include "nsAtomicRefcnt.h"
 #include "prcvar.h"
 #include "prclist.h"
 #include "prnetdb.h"
@@ -56,12 +56,12 @@ class nsResolveHostCallback;
     nsAutoRefCnt _refc;                                                      \
   public:                                                                    \
     PRInt32 AddRef() {                                                       \
-        PRInt32 n = PR_AtomicIncrement((PRInt32*)&_refc);                    \
+        PRInt32 n = NS_AtomicIncrementRefcnt(_refc);                         \
         NS_LOG_ADDREF(this, n, #classname, sizeof(classname));               \
         return n;                                                            \
     }                                                                        \
     PRInt32 Release() {                                                      \
-        PRInt32 n = PR_AtomicDecrement((PRInt32*)&_refc);                    \
+        PRInt32 n = NS_AtomicDecrementRefcnt(_refc);                         \
         NS_LOG_RELEASE(this, n, #classname);                                 \
         if (n == 0)                                                          \
             delete this;                                                     \

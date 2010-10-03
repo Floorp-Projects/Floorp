@@ -103,7 +103,7 @@ class nsStringStats
       PRInt32 mAdoptFreeCount;
   };
 static nsStringStats gStringStats;
-#define STRING_STAT_INCREMENT(_s) PR_AtomicIncrement(&gStringStats.m ## _s ## Count)
+#define STRING_STAT_INCREMENT(_s) PR_ATOMIC_INCREMENT(&gStringStats.m ## _s ## Count)
 #else
 #define STRING_STAT_INCREMENT(_s)
 #endif
@@ -177,7 +177,7 @@ class nsACStringAccessor : public nsACString
 void
 nsStringBuffer::AddRef()
   {
-    PR_AtomicIncrement(&mRefCount);
+    PR_ATOMIC_INCREMENT(&mRefCount);
     STRING_STAT_INCREMENT(Share);
     NS_LOG_ADDREF(this, mRefCount, "nsStringBuffer", sizeof(*this));
   }
@@ -185,7 +185,7 @@ nsStringBuffer::AddRef()
 void
 nsStringBuffer::Release()
   {
-    PRInt32 count = PR_AtomicDecrement(&mRefCount);
+    PRInt32 count = PR_ATOMIC_DECREMENT(&mRefCount);
     NS_LOG_RELEASE(this, count, "nsStringBuffer");
     if (count == 0)
       {
