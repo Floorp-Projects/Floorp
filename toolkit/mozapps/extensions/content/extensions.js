@@ -1280,6 +1280,9 @@ var gDiscoverView = {
   // after this then it must also load the discover homepage
   loaded: false,
   _browser: null,
+  _loading: null,
+  home: null,
+  loadListeners: [],
 
   initialize: function() {
     if (Services.prefs.getPrefType(PREF_DISCOVERURL) == Services.prefs.PREF_INVALID) {
@@ -1289,7 +1292,10 @@ var gDiscoverView = {
     }
 
     this.node = document.getElementById("discover-view");
+    this._loading = document.getElementById("discover-loading");
+    this._error = document.getElementById("discover-error");
     this._browser = document.getElementById("discover-browser");
+    this._browser.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL | Ci.nsIWebProgress.NOTIFY_STATE_ALL);
 
     var url = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
                 .getService(Ci.nsIURLFormatter)
@@ -1312,36 +1318,119 @@ var gDiscoverView = {
       var browser = gDiscoverView._browser;
       browser.homePage = url + "#" + JSON.stringify(list);
 
-      if (gDiscoverView.loaded) {
-        browser.addEventListener("load", function() {
-          browser.removeEventListener("load", arguments.callee, true);
-          notifyInitialized();
-        }, true);
-        browser.goHome();
-      } else {
-        notifyInitialized();
+      try {
+        gDiscoverView.home = Services.io.newURI(url, null, null);
       }
+      catch (e) {
+        gDiscoverView.showError();
+        return;
+      }
+
+      if (gDiscoverView.loaded)
+        gDiscoverView.loadBrowser(notifyInitialized);
+      else
+        notifyInitialized();
     });
   },
 
   show: function() {
-    if (!this.loaded) {
-      this.loaded = true;
-
-      var browser = gDiscoverView._browser;
-      browser.addEventListener("load", function() {
-        browser.removeEventListener("load", arguments.callee, true);
-        gViewController.updateCommands();
-        gViewController.notifyViewChanged();
-      }, true);
-      browser.goHome();
-    } else {
+    // If the view has loaded before and the error page is not visible then
+    // there is nothing else to do
+    if (this.loaded && this.node.selectedPanel != this._error) {
       gViewController.updateCommands();
       gViewController.notifyViewChanged();
+      return;
     }
+
+    this.loaded = true;
+
+    // No homepage means initialization isn't complete, the browser will get
+    // loaded once initialization is complete
+    if (!this.home) {
+      this.loadListeners.push(gViewController.notifyViewChanged.bind(gViewController));
+      return;
+    }
+
+    this.loadBrowser(gViewController.notifyViewChanged.bind(gViewController));
   },
 
   hide: function() { },
+
+  showError: function() {
+    this.node.selectedPanel = this._error;
+  },
+
+  loadBrowser: function(aCallback) {
+    this.node.selectedPanel = this._loading;
+
+    if (aCallback)
+      this.loadListeners.push(aCallback);
+
+    gDiscoverView._browser.goHome();
+  },
+
+  onLocationChange: function(aWebProgress, aRequest, aLocation) {
+    // If the hostname is the same and either the home scheme is not https or
+    // the new location is https then continue with the load
+    if (aLocation.host == this.home.host &&
+        (!this.home.schemeIs("https") || aLocation.schemeIs("https")))
+      return;
+
+    this.showError();
+    aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+  },
+
+  onSecurityChange: function(aWebProgress, aRequest, aState) {
+    // Don't care about security if the page is not https
+    if (!this.home.schemeIs("https"))
+      return;
+
+    // If the request was secure then it is ok
+    if (aState & Ci.nsIWebProgressListener.STATE_IS_SECURE)
+      return;
+
+    // Show errors for insecure requests
+    this.showError();
+    aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+  },
+
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    // Only care about the network stop status events
+    if (!(aStateFlags & (Ci.nsIWebProgressListener.STATE_IS_NETWORK)) ||
+        !(aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP)))
+      return;
+
+    var location = this._browser.currentURI;
+
+    // If the new page is not on the correct host or is not https when the
+    // default page is https or there was an error loading the page then show
+    // the error message
+    if (location.host != this.home.host ||
+        (this.home.schemeIs("https") && !location.schemeIs("https")) ||
+        !Components.isSuccessCode(aStatus) ||
+        (aRequest && aRequest instanceof Ci.nsIHttpChannel && !aRequest.requestSucceeded)) {
+      this.showError();
+    } else {
+      // Got a successful load, make sure the browser is visible
+      this.node.selectedPanel = this._browser;
+      gViewController.updateCommands();
+    }
+
+    var listeners = this.loadListeners;
+    this.loadListeners = [];
+
+    listeners.forEach(function(aListener) {
+      aListener();
+    });
+  },
+
+  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
+                             aMaxSelfProgress, aCurTotalProgress,
+                             aMaxTotalProgress) { },
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) { },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference]),
 
   getSelectedAddon: function() null
 };
