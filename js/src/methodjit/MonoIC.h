@@ -109,8 +109,8 @@ struct MICInfo {
     } u;
 };
 
-void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
-void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
+void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);
+void JS_FASTCALL SetGlobalName(VMFrame &f, uint32 index);
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
 struct CallICInfo {
@@ -187,10 +187,10 @@ struct CallICInfo {
     }
 };
 
-void * JS_FASTCALL New(VMFrame &f, ic::CallICInfo *ic);
-void * JS_FASTCALL Call(VMFrame &f, ic::CallICInfo *ic);
-void JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
-void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
+void * JS_FASTCALL New(VMFrame &f, uint32 index);
+void * JS_FASTCALL Call(VMFrame &f, uint32 index);
+void JS_FASTCALL NativeNew(VMFrame &f, uint32 index);
+void JS_FASTCALL NativeCall(VMFrame &f, uint32 index);
 
 void PurgeMICs(JSContext *cx, JSScript *script);
 void SweepCallICs(JSScript *script);

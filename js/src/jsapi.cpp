@@ -2990,7 +2990,7 @@ JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, *vp);
 
-    return js_CreateThis(cx, JSVAL_TO_OBJECT(*vp));
+    return js_NewInstance(cx, JSVAL_TO_OBJECT(*vp));
 }
 
 JS_PUBLIC_API(JSBool)

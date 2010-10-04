@@ -764,9 +764,9 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
 JSBool
 mjit::JaegerShot(JSContext *cx)
 {
-    JSStackFrame *fp = cx->fp();
-    JSScript *script = fp->script();
-    JITScript *jit = script->getJIT(fp->isConstructing());
+    JSScript *script = cx->fp()->script();
+
+    JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
 
 #ifdef JS_TRACER
     if (TRACE_RECORDER(cx))
@@ -775,7 +775,7 @@ mjit::JaegerShot(JSContext *cx)
 
     JS_ASSERT(cx->regs->pc == script->code);
 
-    return EnterMethodJIT(cx, cx->fp(), jit->invokeEntry);
+    return EnterMethodJIT(cx, cx->fp(), script->jit->invoke);
 }
 
 JSBool
@@ -795,47 +795,37 @@ static inline void Destroy(T &t)
 }
 
 void
-mjit::JITScript::release()
+mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
+    if (script->jit) {
 #if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
-    void *addr = code.m_code.executableAddress();
-    memset(addr, 0xcc, code.m_size);
+        memset(script->jit->invoke, 0xcc, script->jit->inlineLength +
+               script->jit->outOfLineLength);
 #endif
+        script->jit->execPool->release();
+        script->jit->execPool = NULL;
 
-    code.m_executablePool->release();
+        // Releasing the execPool takes care of releasing the code.
+        script->ncode = NULL;
 
 #if defined JS_POLYIC
-    for (uint32 i = 0; i < nPICs; i++) {
-        pics[i].releasePools();
-        Destroy(pics[i].execPools);
-    }
+        for (uint32 i = 0; i < script->jit->nPICs; i++) {
+            script->pics[i].releasePools();
+            Destroy(script->pics[i].execPools);
+        }
 #endif
 
 #if defined JS_MONOIC
-    for (uint32 i = 0; i < nCallICs; i++)
-        callICs[i].releasePools();
+        for (uint32 i = 0; i < script->jit->nCallICs; i++)
+            script->callICs[i].releasePools();
 #endif
-}
 
-void
-mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
-{
-    // NB: The recompiler may call ReleaseScriptCode, in which case it
-    // will get called again when the script is destroyed, so we
-    // must protect against calling ReleaseScriptCode twice.
+        cx->free(script->jit);
 
-    if (script->jitNormal) {
-        script->jitNormal->release();
-        script->jitArityCheckNormal = NULL;
-        cx->free(script->jitNormal);
-        script->jitNormal = NULL;
-    }
-
-    if (script->jitCtor) {
-        script->jitCtor->release();
-        script->jitArityCheckCtor = NULL;
-        cx->free(script->jitCtor);
-        script->jitCtor = NULL;
+        // The recompiler may call ReleaseScriptCode, in which case it
+        // will get called again when the script is destroyed, so we
+        // must protect against calling ReleaseScriptCode twice.
+        script->jit = NULL;
     }
 }
 

@@ -327,7 +327,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
 #endif
 }
 
-void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
+void FrameState::storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg, RegisterID tempReg)
 {
     JS_ASSERT(dataReg != typeReg && dataReg != tempReg && typeReg != tempReg);
 
@@ -346,15 +346,6 @@ void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, 
         masm.move(ImmType(fe->getKnownType()), typeReg);
         return;
     }
-
-#ifdef JS_PUNBOX64 
-    // If the value is synced, and requires at least one load, we can do
-    // better on x64.
-    if (fe->type.inMemory() && fe->data.inMemory()) {
-        masm.loadValueAsComponents(addressOf(fe), typeReg, dataReg);
-        return;
-    }
-#endif
 
     RegisterID data = tempRegForData(fe);
     RegisterID type = tempRegForType(fe);
@@ -900,14 +891,6 @@ FrameState::ownRegForData(FrameEntry *fe)
         masm.loadPayload(addressOf(fe), reg);
     }
     return reg;
-}
-
-void
-FrameState::discardFe(FrameEntry *fe)
-{
-    forgetEntry(fe);
-    fe->type.setMemory();
-    fe->data.setMemory();
 }
 
 void

@@ -169,20 +169,21 @@ struct GlobalSlotArray {
 namespace JSC {
     class ExecutablePool;
 }
-
-#define JS_UNJITTABLE_SCRIPT (reinterpret_cast<void*>(1))
-
-enum JITScriptStatus {
-    JITScript_None,
-    JITScript_Invalid,
-    JITScript_Valid
-};
-
 namespace js {
 namespace mjit {
 
 struct JITScript;
 
+namespace ic {
+# if defined JS_POLYIC
+    struct PICInfo;
+# endif
+# if defined JS_MONOIC
+    struct MICInfo;
+    struct CallICInfo;
+# endif
+}
+struct CallSite;
 }
 }
 #endif
@@ -284,35 +285,20 @@ struct JSScript {
 
   public:
 #ifdef JS_METHODJIT
-    // Fast-cached pointers to make calls faster. These are also used to
-    // quickly test whether there is JIT code; a NULL value means no
-    // compilation has been attempted. A JS_UNJITTABLE_SCRIPT value means
-    // compilation failed. Any value is the arity-check entry point.
-    void *jitArityCheckNormal;
-    void *jitArityCheckCtor;
+    // Note: the other pointers in this group may be non-NULL only if 
+    // |execPool| is non-NULL.
+    void            *ncode;     /* native code compiled by the method JIT */
+    void            **nmap;     /* maps PCs to native code */
+    js::mjit::JITScript *jit;   /* Extra JIT info */
+# if defined JS_POLYIC
+    js::mjit::ic::PICInfo *pics; /* PICs in this script */
+# endif
+# if defined JS_MONOIC
+    js::mjit::ic::MICInfo *mics; /* MICs in this script. */
+    js::mjit::ic::CallICInfo *callICs; /* CallICs in this script. */
+# endif
 
-    js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
-    js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
-
-    bool hasJITCode() {
-        return jitNormal || jitCtor;
-    }
-
-    inline void **maybeNativeMap(bool constructing);
-    inline bool hasNativeCodeForPC(bool constructing, jsbytecode *pc);
-
-    js::mjit::JITScript *getJIT(bool constructing) {
-        return constructing ? jitCtor : jitNormal;
-    }
-
-    JITScriptStatus getJITStatus(bool constructing) {
-        void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;
-        if (addr == NULL)
-            return JITScript_None;
-        if (addr == JS_UNJITTABLE_SCRIPT)
-            return JITScript_Invalid;
-        return JITScript_Valid;
-    }
+    bool isValidJitCode(void *jcode);
 #endif
 
     /* Script notes are allocated right after the code. */
@@ -406,6 +392,17 @@ struct JSScript {
     static JSScript *emptyScript() {
         return const_cast<JSScript *>(&emptyScriptConst);
     }
+
+#ifdef JS_METHODJIT
+    /*
+     * Map the given PC to the corresponding native code address.
+     */
+    void *pcToNative(jsbytecode *pc) {
+        JS_ASSERT(nmap);
+        JS_ASSERT(nmap[pc - code]);
+        return nmap[pc - code];
+    }
+#endif
 
     uint32 getClosedArg(uint32 index) {
         JS_ASSERT(index < nClosedArgs);

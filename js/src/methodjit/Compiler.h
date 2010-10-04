@@ -72,7 +72,6 @@ class Compiler : public BaseCompiler
         Label entry;
         Label stubEntry;
         DataLabel32 shape;
-        DataLabelPtr addrLabel;
 #if defined JS_PUNBOX64
         uint32 patchValueOffset;
 #endif
@@ -115,8 +114,6 @@ class Compiler : public BaseCompiler
         Label        slowJoinPoint;
         Label        slowPathStart;
         Label        hotPathLabel;
-        DataLabelPtr addrLabel1;
-        DataLabelPtr addrLabel2;
         Jump         oolJump;
         RegisterID   funObjReg;
         RegisterID   funPtrReg;
@@ -146,7 +143,6 @@ class Compiler : public BaseCompiler
         Label storeBack;
         Label typeCheck;
         Label slowPathStart;
-        DataLabelPtr addrLabel;
         RegisterID shapeReg;
         RegisterID objReg;
         RegisterID idReg;
@@ -200,12 +196,10 @@ class Compiler : public BaseCompiler
         bool ool;
     };
 
-    JSStackFrame *fp;
     JSScript *script;
     JSObject *scopeChain;
     JSObject *globalObj;
     JSFunction *fun;
-    bool isConstructing;
     BytecodeAnalyzer analysis;
     Label *jumpMap;
     jsbytecode *PC;
@@ -217,7 +211,7 @@ class Compiler : public BaseCompiler
     js::Vector<CallGenInfo, 64> callICs;
 #endif
 #if defined JS_POLYIC
-    js::Vector<PICGenInfo, 16> pics;
+    js::Vector<PICGenInfo, 64> pics;
 #endif
     js::Vector<CallPatchInfo, 64> callPatches;
     js::Vector<InternalCallSite, 64> callSites;
@@ -232,10 +226,10 @@ class Compiler : public BaseCompiler
     // follows interpreter usage in JSOP_LENGTH.
     enum { LengthAtomIndex = uint32(-2) };
 
-    Compiler(JSContext *cx, JSStackFrame *fp);
+    Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
     ~Compiler();
 
-    CompileStatus compile();
+    CompileStatus Compile();
 
     jsbytecode *getPC() { return PC; }
     Label getLabel() { return masm.label(); }
@@ -244,11 +238,10 @@ class Compiler : public BaseCompiler
     void *findCallSite(const CallSite &callSite);
 
   private:
-    CompileStatus performCompilation(JITScript **jitp);
     CompileStatus generatePrologue();
     CompileStatus generateMethod();
     CompileStatus generateEpilogue();
-    CompileStatus finishThisUp(JITScript **jitp);
+    CompileStatus finishThisUp();
 
     /* Non-emitting helpers. */
     uint32 fullAtomIndex(jsbytecode *pc);
@@ -264,9 +257,6 @@ class Compiler : public BaseCompiler
     void iterMore();
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID fpReg);
-    void passPICAddress(PICGenInfo &pic);
-    void passMICAddress(MICGenInfo &mic);
-    void constructThis();
 
     /* Opcode handlers. */
     void jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne = NULL, Jump *slowTwo = NULL);
@@ -278,13 +268,12 @@ class Compiler : public BaseCompiler
     void jsop_this();
     void emitReturn(FrameEntry *fe);
     void emitFinalReturn(Assembler &masm);
-    void loadReturnValue(Assembler *masm, FrameEntry *fe);
-    void emitReturnValue(Assembler *masm, FrameEntry *fe);
+    void loadReturnValue(Assembler &masm);
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);
+    void emitPrimitiveTestForNew(uint32 argc);
     void inlineCallHelper(uint32 argc, bool callingNew);
-    void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
