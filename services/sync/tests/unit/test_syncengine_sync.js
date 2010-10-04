@@ -48,7 +48,6 @@ SteamStore.prototype = {
 
   createRecord: function(id, uri) {
     var record = new SteamRecord(uri);
-    record.id = id;
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
   },
@@ -125,7 +124,7 @@ function encryptPayload(cleartext) {
     cleartext = JSON.stringify(cleartext);
   }
 
-  return {encryption: "http://localhost:8080/1.0/foo/storage/crypto/steam",
+  return {encryption: "../crypto/steam",
           ciphertext: cleartext, // ciphertext == cleartext with fake crypto
           IV: "irrelevant",
           hmac: Utils.sha256HMAC(cleartext, null)};
@@ -502,6 +501,15 @@ function test_processIncoming_createFromServer() {
       'scotsman', encryptPayload({id: 'scotsman',
                                   denomination: "Flying Scotsman"}));
 
+  // Two pathological cases involving relative URIs gone wrong.
+  collection.wbos['../pathological'] = new ServerWBO(
+      '../pathological', encryptPayload({id: '../pathological',
+                                         denomination: "Pathological Case"}));
+  let wrong_keyuri = encryptPayload({id: "wrong_keyuri",
+                                     denomination: "Wrong Key URI"});
+  wrong_keyuri.encryption = "../../crypto/steam";
+  collection.wbos["wrong_keyuri"] = new ServerWBO("wrong_keyuri", wrong_keyuri);
+
   let server = sync_httpd_setup({
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler(),
@@ -520,6 +528,8 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine.lastModified, null);
     do_check_eq(engine._store.items.flying, undefined);
     do_check_eq(engine._store.items.scotsman, undefined);
+    do_check_eq(engine._store.items['../pathological'], undefined);
+    do_check_eq(engine._store.items.wrong_keyuri, undefined);
 
     engine._processIncoming();
 
@@ -530,6 +540,8 @@ function test_processIncoming_createFromServer() {
     // Local records have been created from the server data.
     do_check_eq(engine._store.items.flying, "LNER Class A3 4472");
     do_check_eq(engine._store.items.scotsman, "Flying Scotsman");
+    do_check_eq(engine._store.items['../pathological'], "Pathological Case");
+    do_check_eq(engine._store.items.wrong_keyuri, "Wrong Key URI");
 
   } finally {
     server.stop(do_test_finished);
