@@ -203,15 +203,6 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i("GeckoApp","onNewIntent: "+uri);
         }
-        else if (Intent.ACTION_MAIN.equals(action)) {
-            Log.i("GeckoApp", "Intent : ACTION_MAIN");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
-        }
-        else if (action.equals("org.mozilla.fennec.WEBAPP")) {
-            String uri = intent.getStringExtra("args");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
-            Log.i("GeckoApp","Intent : WEBAPP - " + uri);
-        }
     }
 
     @Override
