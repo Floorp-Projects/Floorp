@@ -86,6 +86,9 @@
                                        appear to call itself via its own name
                                        or arguments.callee */
 
+#define JSFUN_PROTOTYPE     0x0800  /* function is Function.prototype for some
+                                       global object */
+
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
                                        JSFunctionSpec::call points to a
@@ -169,6 +172,8 @@ struct JSFunction : public JSObject
     bool isNative()          const { return !FUN_INTERPRETED(this); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+
+    bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 
     inline bool inStrictMode() const;
 
