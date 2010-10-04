@@ -129,9 +129,6 @@ PrivateBrowsingService.prototype = {
   // List of nsIXULWindows we are going to be closing during the transition
   _windowsToClose: [],
 
-  // Whether private browsing has been turned on from the command line
-  _lastChangedByCommandLine: false,
-
   // XPCOM registration
   classID: Components.ID("{c31f4883-839b-45f6-82ad-a6a9bc5ad599}"),
 
@@ -234,9 +231,6 @@ PrivateBrowsingService.prototype = {
       // to be restored, do it now
       if (!this._inPrivateBrowsing) {
         this._currentStatus = STATE_WAITING_FOR_RESTORE;
-        if (!this._getBrowserWindow()) {
-          ss.init(null);
-        }
         ss.setBrowserState(this._savedBrowserState);
         this._savedBrowserState = null;
 
@@ -279,9 +273,6 @@ PrivateBrowsingService.prototype = {
         };
         // Transition into private browsing mode
         this._currentStatus = STATE_WAITING_FOR_RESTORE;
-        if (!this._getBrowserWindow()) {
-          ss.init(null);
-        }
         ss.setBrowserState(JSON.stringify(privateBrowsingState));
       }
     }
@@ -448,10 +439,6 @@ PrivateBrowsingService.prototype = {
         if (aSubject.findFlag("private", false) >= 0) {
           this.privateBrowsingEnabled = true;
           this._autoStarted = true;
-          this._lastChangedByCommandLine = true;
-        }
-        else if (aSubject.findFlag("private-toggle", false) >= 0) {
-          this._lastChangedByCommandLine = true;
         }
         break;
       case "sessionstore-browser-state-restored":
@@ -471,7 +458,6 @@ PrivateBrowsingService.prototype = {
     else if (aCmdLine.handleFlag("private-toggle", false)) {
       this.privateBrowsingEnabled = !this.privateBrowsingEnabled;
       this._autoStarted = false;
-      this._lastChangedByCommandLine = true;
     }
   },
 
@@ -548,7 +534,6 @@ PrivateBrowsingService.prototype = {
     } finally {
       this._windowsToClose = [];
       this._notifyIfTransitionComplete();
-      this._lastChangedByCommandLine = false;
     }
   },
 
@@ -557,13 +542,6 @@ PrivateBrowsingService.prototype = {
    */
   get autoStarted() {
     return this._inPrivateBrowsing && this._autoStarted;
-  },
-
-  /**
-   * Whether the latest transition was initiated from the command line.
-   */
-  get lastChangedByCommandLine() {
-    return this._lastChangedByCommandLine;
   },
 
   removeDataFromDomain: function PBS_removeDataFromDomain(aDomain)
