@@ -43,17 +43,6 @@ registerCleanupFunction(function() {
   }
 });
 
-function log_exceptions(aCallback) {
-  try {
-    var args = Array.slice(arguments, 1);
-    return aCallback.apply(null, args);
-  }
-  catch (e) {
-    info("Exception thrown: " + e);
-    throw e;
-  }
-}
-
 function add_test(test) {
   gPendingTests.push(test);
 }
@@ -75,7 +64,7 @@ function run_next_test() {
     info("Running test " + gTestsRun);
 
   gTestStart = Date.now();
-  log_exceptions(test);
+  test();
 }
 
 function get_addon_file_url(aFilename) {
@@ -145,33 +134,33 @@ function get_addon_element(aManager, aId) {
 
 function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
   if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
-    log_exceptions(aCallback, aManagerWindow);
+    aCallback(aManagerWindow);
     return;
   }
 
   aManagerWindow.document.addEventListener("ViewChanged", function() {
     aManagerWindow.document.removeEventListener("ViewChanged", arguments.callee, false);
-    log_exceptions(aCallback, aManagerWindow);
+    aCallback(aManagerWindow);
   }, false);
 }
 
 function wait_for_manager_load(aManagerWindow, aCallback) {
   if (!aManagerWindow.gIsInitializing) {
-    log_exceptions(aCallback, aManagerWindow);
+    aCallback(aManagerWindow);
     return;
   }
 
   info("Waiting for initialization");
   aManagerWindow.document.addEventListener("Initialized", function() {
     aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
-    log_exceptions(aCallback, aManagerWindow);
+    aCallback(aManagerWindow);
   }, false);
 }
 
 function open_manager(aView, aCallback, aLoadCallback) {
   function setup_manager(aManagerWindow) {
     if (aLoadCallback)
-      log_exceptions(aLoadCallback, aManagerWindow);
+      aLoadCallback(aManagerWindow);
 
     if (aView)
       aManagerWindow.loadView(aView);
@@ -204,7 +193,7 @@ function close_manager(aManagerWindow, aCallback) {
 
   aManagerWindow.addEventListener("unload", function() {
     this.removeEventListener("unload", arguments.callee, false);
-    log_exceptions(aCallback);
+    aCallback();
   }, false);
 
   aManagerWindow.close();

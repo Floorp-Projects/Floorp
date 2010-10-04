@@ -42,8 +42,6 @@
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
 <!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
 ]>
@@ -241,28 +239,10 @@
       <deck id="view-port" flex="1">
 
         <!-- discover view -->
-        <deck id="discover-view" flex="1" class="view-pane">
-          <vbox id="discover-loading" align="center" pack="center" flex="1">
-            <hbox class="loading discover-box" align="center">
-              <image/>
-              <label value="&loading.label;"/>
-            </hbox>
-          </vbox>
-          <hbox id="discover-error" flex="1" align="center">
-            <spacer flex="1"/>
-            <hbox flex="1" class="discover-box" align="center">
-              <image class="discover-logo"/>
-              <vbox flex="1" align="stretch">
-                <label class="discover-title">&discover.title;</label>
-                <description class="discover-description">&discover.description2;</description>
-                <description class="discover-footer">&discover.footer;</description>
-              </vbox>
-            </hbox>
-            <spacer flex="1"/>
-          </hbox>
+        <vbox id="discover-view" flex="1" class="view-pane">
           <browser id="discover-browser" type="content" flex="1"
                    disablehistory="true" homepage="about:blank"/>
-        </deck>
+        </vbox>
 
         <!-- search view -->
         <vbox id="search-view" flex="1" class="view-pane">
