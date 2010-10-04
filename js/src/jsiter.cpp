@@ -1283,7 +1283,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         JSObject *enumerators = cx->enumerators;
         cx->enumerators = gen->enumerators;
 
-        ok = RunScript(cx, stackfp->script(), stackfp->fun(), stackfp->scopeChain());
+        ok = RunScript(cx, stackfp->script(), stackfp);
 
         gen->enumerators = cx->enumerators;
         cx->enumerators = enumerators;

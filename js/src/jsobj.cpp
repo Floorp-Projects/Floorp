@@ -2770,7 +2770,7 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSObject*
-js_NewInstance(JSContext *cx, JSObject *callee)
+js_CreateThis(JSContext *cx, JSObject *callee)
 {
     Class *clasp = callee->getClass();
 
@@ -2788,6 +2788,25 @@ js_NewInstance(JSContext *cx, JSObject *callee)
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
     return NewObject<WithProto::Class>(cx, newclasp, proto, parent);
+}
+
+JSObject *
+js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
+{
+    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent());
+}
+
+JSObject *
+js_CreateThisForFunction(JSContext *cx, JSObject *callee)
+{
+    Value protov;
+    if (!callee->getProperty(cx,
+                             ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                             &protov)) {
+        return NULL;
+    }
+    JSObject *proto = protov.isObject() ? &protov.toObject() : NULL;
+    return js_CreateThisForFunctionWithProto(cx, callee, proto);
 }
 
 #ifdef JS_TRACER
@@ -2840,7 +2859,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, ST
                      nanojit::ACCSET_STORE_ANY)
 
 JSObject* FASTCALL
-js_NewInstanceFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
+js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JS_ASSERT(ctor->isFunction());
@@ -2891,7 +2910,7 @@ js_NewInstanceFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
     return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
-JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstanceFromTrace, CONTEXT, CLASS, OBJECT, 0,
+JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, CLASS, OBJECT, 0,
                      nanojit::ACCSET_STORE_ANY)
 
 #else  /* !JS_TRACER */
