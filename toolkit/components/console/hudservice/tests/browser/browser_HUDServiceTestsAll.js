@@ -691,7 +691,8 @@ function testNetworkPanel()
     httpActivity.timing.RESPONSE_HEADER = 1000;
     httpActivity.response.status = "999 earthquake win";
     httpActivity.response.header = {
-      leaveHouses: "true"
+      leaveHouses: "true",
+      "Content-Type": "text/html"
     }
     networkPanel.update();
     checkIsVisible(networkPanel, {
@@ -915,26 +916,85 @@ function testNetworkPanel()
     networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
     networkPanel.isDoneCallback = function NP_doneCallback() {
       networkPanel.isDoneCallback = null;
-
-      checkIsVisible(networkPanel, {
-        requestBody: false,
-        requestFormData: true,
-        requestCookie: true,
-        responseContainer: true,
-        responseBody: false,
-        responseBodyCached: true,
-        responseNoBody: false,
-        responseImage: false,
-        responseImageCached: false
-      });
-
-      checkNodeContent(networkPanel, "responseBodyCachedContent", "<body>\u00fc\u00f6\u00E4</body>");
-      networkPanel.panel.hidePopup();
-
-      // Run the next test.
-      testErrorOnPageReload();
+      testDriver.next();
     }
     yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: false,
+      requestFormData: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseBodyCached: true,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    checkNodeContent(networkPanel, "responseBodyCachedContent", "<body>\u00fc\u00f6\u00E4</body>");
+    networkPanel.panel.hidePopup();
+
+    // Test a response with a content type that can't be displayed in the
+    // NetworkPanel.
+    httpActivity.response.header["Content-Type"] = "application/x-shockwave-flash";
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.isDoneCallback = function NP_doneCallback() {
+      networkPanel.isDoneCallback = null;
+      testDriver.next();
+    }
+
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: false,
+      requestFormData: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseBodyCached: false,
+      responseBodyUnknownType: true,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    let responseString = HUDService.getFormatStr("NetworkPanel.responseBodyUnableToDisplay.content", ["application/x-shockwave-flash"]);
+    checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", responseString);
+    networkPanel.panel.hidePopup();
+
+    // Test if the NetworkPanel figures out the content type based on an URL as
+    // well.
+    delete httpActivity.response.header["Content-Type"];
+    httpActivity.url = "http://www.test.com/someCrazyFile.swf?done=right&ending=txt"
+
+    networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
+    networkPanel.isDoneCallback = function NP_doneCallback() {
+      networkPanel.isDoneCallback = null;
+      testDriver.next();
+    }
+
+    yield;
+
+    checkIsVisible(networkPanel, {
+      requestBody: false,
+      requestFormData: true,
+      requestCookie: true,
+      responseContainer: true,
+      responseBody: false,
+      responseBodyCached: false,
+      responseBodyUnknownType: true,
+      responseNoBody: false,
+      responseImage: false,
+      responseImageCached: false
+    });
+
+    checkNodeContent(networkPanel, "responseBodyUnknownTypeContent", responseString);
+    networkPanel.panel.hidePopup();
+
+    // Run the next test.
+    testErrorOnPageReload();
   };
 
   testDriver = testGen();
