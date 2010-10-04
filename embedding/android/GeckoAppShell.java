@@ -560,9 +560,6 @@ class GeckoAppShell
 
         removeNotification(notificationID);
     }
-    public static String showFilePicker() {
-        return GeckoApp.mAppContext.showFilePicker();
-    }
 
     private static void removeNotification(int notificationID) {
         mAlertNotifications.remove(notificationID);

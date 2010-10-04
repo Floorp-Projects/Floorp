@@ -162,8 +162,6 @@ public:
                                            PRInt64 aProgressMax,
                                            const nsAString& aAlertText);
 
-    void ShowFilePicker(nsAString& aFilePath);
-
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
