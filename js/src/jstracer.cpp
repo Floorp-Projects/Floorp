@@ -2788,6 +2788,13 @@ TraceMonitor::sweep()
     JS_ASSERT(!ontrace());
     debug_only_print0(LC_TMTracer, "Purging fragments with dead things");
 
+    bool shouldAbortRecording = false;
+    TreeFragment *recorderTree = NULL;
+    if (recorder) {
+        recorderTree = recorder->getTree();
+        shouldAbortRecording = HasUnreachableGCThings(recorderTree);
+    }
+        
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &vmfragments[i];
         while (TreeFragment* frag = *fragp) {
@@ -2805,7 +2812,9 @@ TraceMonitor::sweep()
                 JS_ASSERT(frag->root == frag);
                 *fragp = frag->next;
                 do {
-                    verbose_only( FragProfiling_FragFinalizer(frag, this); )
+                    verbose_only( FragProfiling_FragFinalizer(frag, this); );
+                    if (recorderTree == frag)
+                        shouldAbortRecording = true;
                     TrashTree(frag);
                     frag = frag->peer;
                 } while (frag);
@@ -2815,7 +2824,7 @@ TraceMonitor::sweep()
         }
     }
 
-    if (recorder && HasUnreachableGCThings(recorder->getTree()))
+    if (shouldAbortRecording)
         recorder->finishAbort("dead GC things");
 }
 
