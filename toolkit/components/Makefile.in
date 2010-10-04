@@ -70,7 +70,6 @@ PARALLEL_DIRS += \
   typeaheadfind \
   urlformatter \
   viewconfig \
-  webapps \
   $(NULL)
 
 ifdef BUILD_CTYPES
