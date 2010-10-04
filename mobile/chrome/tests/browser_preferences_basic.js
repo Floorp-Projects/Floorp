@@ -134,25 +134,6 @@ gTests.push({
     gCurrentTest._prefsScrollbox.getPosition(x, y);
     ok((x.value == 0 && y.value == 0),"The preferences pane should be visible", "Got " + x.value + " " + y.value + ", expected 0,0");
 
-    // Move preferences pane up
-    dragElement(prefsList, w / 2, h / 2, w / 2, h / 4);
-
-    // Check whether it is moved up to the correct view
-    let distance = (h / 2) - (h / 4);
-    gCurrentTest._prefsScrollbox.getPosition(x, y);
-    ok((x.value == 0 && y.value == distance), "Preferences pane is panned up", "Got " + x.value + " " + y.value + ", expected 0," + distance);
-
-    // Move preferences pane down
-    dragElement(prefsList, w / 2, h / 4, w / 2, h / 2);
-
-    // Check whether it goes back to old position
-    gCurrentTest._prefsScrollbox.getPosition(x, y);
-    ok((x.value == 0 && y.value == 0), "Preferences pane is panned down", "Got " + x.value + " " + y.value + ", expected 0,0");
-
-    // Force the scroll position to 0, 0 - just in case the previous test fails
-    gCurrentTest._prefsScrollbox.scrollTo(0, 0);
-
-    // Now check whether it is not panned right/left
     // Move the preferences pane right
     dragElement(prefsList, w / 2, h / 2, w / 4, h / 2);
 
@@ -165,12 +146,36 @@ gTests.push({
     gCurrentTest._prefsScrollbox.getPosition(x, y);
     ok((x.value == 0 && y.value ==0 ), "Preferences pane is not panned right", "Got " + x.value + " " + y.value + ", expected 0,0");
 
-    // Close the preferences pane
-    BrowserUI.hidePanel();
-    waitFor(gCurrentTest.finish, function () { return document.getElementById("panel-container").hidden == true; });
+    // Move preferences pane up
+    let [x1, y1, x2, y2] = [w / 2, h / 2, w / 2, h / 4].map(Math.round);
+    EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mousedown" });
+    EventUtils.synthesizeMouse(prefsList, x2, y2, { type: "mousemove" });
+
+    // Check whether it is moved up to the correct view
+    let distance = y1 - y2;
+    gCurrentTest._prefsScrollbox.getPosition(x, y);
+    ok((x.value == 0 && y.value == distance), "Preferences pane is panned up", "Got " + x.value + " " + y.value + ", expected 0," + distance);
+
+    // Need to wait for a paint event before another 
+    addEventListener("MozBeforePaint", function(aEvent) {
+      removeEventListener("MozBeforePaint", arguments.callee, false);
+
+      // Move preferences pane down
+      EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mousemove" });
+      EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mouseup" });
+
+      // Check whether it goes back to old position
+      gCurrentTest._prefsScrollbox.getPosition(x, y);
+      ok((x.value == 0 && y.value == 0), "Preferences pane is panned down", "Got " + x.value + " " + y.value + ", expected 0,0");
+
+      gCurrentTest.finish();
+    }, false);
   },
 
   finish: function() {
+    // Close the preferences pane
+    BrowserUI.hidePanel();
+
     // check whether the preferences pane has disappeared
     is(document.getElementById("panel-container").hidden, true, "Preference pane is now invisible");
 
@@ -183,7 +188,9 @@ gTests.push({
     var prefsOpen = document.getElementById("tool-panel-open");
     is(prefsOpen.checked, false, "Preferences open button must not be depressed");
 
-    Browser.closeTab(this._currentTab);
+    // Reset the UI before the next test starts.
+    Browser.hideSidebars();
+    Browser.closeTab(gCurrentTest._currentTab);
     runNextTest();
   }
 });

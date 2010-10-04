@@ -62,7 +62,6 @@ function runNextTest() {
 // Verify preferences and text
 gTests.push({
   desc: "Verify Preferences and Text",
-  _currentTab : null,
 
   run: function(){
     var prefs = getPreferencesElements();
@@ -72,7 +71,7 @@ gTests.push({
     // 2. For each prefs *verify text *the button/option type *verify height of each field to be the same
     is(prefs.panelContainer.hidden, false, "Preferences should be visible");
 
-    // Check whether the Preferences pan title is Preferences
+    // Check whether the Preferences pane title is Preferences
     var prefTitle = document.getElementById("panel-header");
     is(prefTitle.value, "Preferences", "The title must be preferences");
 
@@ -178,7 +177,6 @@ gTests.push({
 
     prefs.panelClose.click()
     is(document.getElementById("panel-container").hidden, true, "Preferences panel should be closed");
-    Browser.closeTab(gCurrentTest._currentTab);
     runNextTest();
   }
 });

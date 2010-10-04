@@ -74,7 +74,11 @@ function done() {
   Browser.closeTab(new_tab_01);
   Browser.closeTab(new_tab_02);
   Browser.closeTab(new_tab_03);
-  
+
+  // For some reason, this test is causing the sidebar to appear.
+  // Clean up the UI for later tests (see bug 598962).
+  Browser.hideSidebars();
+
   // We must finialize the tests
   finish();
 }
