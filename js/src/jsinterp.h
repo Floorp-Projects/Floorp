@@ -968,7 +968,7 @@ extern JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0, uintN interpFlags = 0);
 
 extern JS_REQUIRES_STACK bool
-RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp);
+RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject &scopeChain);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
