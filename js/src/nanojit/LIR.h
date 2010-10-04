@@ -1676,10 +1676,36 @@ namespace nanojit
     private:
         Allocator& alloc;
 
-        template <class Key>
-        class CountMap: public HashMap<Key, int> {
+        // A small string-wrapper class, required because we need '==' to
+        // compare string contents, not string pointers, when strings are used
+        // as keys in CountMap.
+        struct Str {
+            Allocator& alloc;
+            char* s;
+
+            Str(Allocator& alloc_, const char* s_) : alloc(alloc_) {
+                s = new (alloc) char[1+strlen(s_)];
+                strcpy(s, s_);
+            }
+
+            bool operator==(const Str& str) const {
+                return (0 == strcmp(this->s, str.s));
+            }
+        };
+
+        // Similar to 'struct Str' -- we need to hash the string's contents,
+        // not its pointer.
+        template<class K> struct StrHash {
+            static size_t hash(const Str &k) {
+                // (const void*) cast is required by ARM RVCT 2.2
+                return murmurhash((const void*)k.s, strlen(k.s));
+            }
+        };
+
+        template <class Key, class H=DefaultHash<Key> >
+        class CountMap: public HashMap<Key, int, H> {
         public:
-            CountMap(Allocator& alloc) : HashMap<Key, int>(alloc) {}
+            CountMap(Allocator& alloc) : HashMap<Key, int, H>(alloc, 128) {}
             int add(Key k) {
                 int c = 1;
                 if (this->containsKey(k)) {
@@ -1692,7 +1718,7 @@ namespace nanojit
 
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
-        CountMap<const char *> namecounts;
+        CountMap<Str, StrHash<Str> > namecounts;
 
         void addNameWithSuffix(LIns* i, const char *s, int suffix, bool ignoreOneSuffix);
 
