@@ -79,6 +79,7 @@ _TEST_FILES = \
   browser_recentupdates.js \
   browser_manualupdates.js \
   browser_globalwarnings.js \
+  discovery.html \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)
