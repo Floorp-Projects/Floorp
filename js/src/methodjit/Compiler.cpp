@@ -2419,19 +2419,18 @@ mjit::Compiler::jsop_length()
 #endif
 }
 
-#ifdef JS_MONOIC
-void
-mjit::Compiler::passMICAddress(MICGenInfo &mic)
-{
-    mic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
-}
-#endif
-
 #if defined JS_POLYIC
+
 void
 mjit::Compiler::passPICAddress(PICGenInfo &pic)
 {
     pic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
+}
+
+void
+mjit::Compiler::passMICAddress(MICGenInfo &mic)
+{
+    mic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
 }
 
 void
