@@ -95,8 +95,8 @@
 <!-- LOCALIZATION NOTE (discover.title,discover.description,discover.footer):
      Displayed in the center of the Get Add-ons view, see bug 601143 for mockups. -->
 <!ENTITY discover.title                       "What are Add-ons?">
-<!ENTITY discover.description                 "Add-ons are applications that let you personalize Firefox with
-  extra functionality or style. Try a time-saving sidebar, a weather notifier, or a themed look to make Firefox
+<!ENTITY discover.description2                "Add-ons are applications that let you personalize &brandShortName; with
+  extra functionality or style. Try a time-saving sidebar, a weather notifier, or a themed look to make &brandShortName;
   your own.">
 <!ENTITY discover.footer                      "When you're connected to the internet, this pane will feature
   some of the best and most popular add-ons for you to try out.">
