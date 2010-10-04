@@ -612,7 +612,7 @@ JS_DECLARE_CALLINFO(js_NumberToString)
 
 /* Defined in jsobj.cpp. */
 JS_DECLARE_CALLINFO(js_Object_tn)
-JS_DECLARE_CALLINFO(js_CreateThisFromTrace)
+JS_DECLARE_CALLINFO(js_NewInstanceFromTrace)
 JS_DECLARE_CALLINFO(js_NonEmptyObject)
 
 /* Defined in jsregexp.cpp. */

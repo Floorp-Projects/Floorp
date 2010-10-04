@@ -99,6 +99,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         }                                                                     \
     JS_END_MACRO
 
+
 }}
 
 #endif /* jslogic_h__ */
