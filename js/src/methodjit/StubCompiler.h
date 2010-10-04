@@ -125,11 +125,15 @@ class StubCompiler
     STUB_CALL_TYPE(BoolStub);
     STUB_CALL_TYPE(VoidStubAtom);
     STUB_CALL_TYPE(VoidStubPC);
+#ifdef JS_POLYIC
+    STUB_CALL_TYPE(VoidStubPIC);
+#endif
+#ifdef JS_MONOIC
     STUB_CALL_TYPE(VoidStubMIC);
     STUB_CALL_TYPE(VoidPtrStubMIC);
-    STUB_CALL_TYPE(VoidStubPIC);
     STUB_CALL_TYPE(VoidStubCallIC);
     STUB_CALL_TYPE(VoidPtrStubCallIC);
+#endif
 
 #undef STUB_CALL_TYPE
 
