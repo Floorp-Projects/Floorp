@@ -2118,18 +2118,12 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (!session.invoke(cx))
             return false;
 
-        /*
-         * NB: we count on the newborn string root to hold any string
-         * created by this js_ValueToString that would otherwise be GC-
-         * able, until we use rdata.repstr in DoReplace.
-         */
-        JSString *repstr = js_ValueToString(cx, session.rval());
-        if (!repstr)
+        /* root repstr: rdata is on the stack, so scanned by conservative gc. */
+        rdata.repstr = ValueToString_TestForStringInline(cx, session.rval());
+        if (!rdata.repstr)
             return false;
 
-        rdata.repstr = repstr;
-        *sizep = repstr->length();
-
+        *sizep = rdata.repstr->length();
         return true;
     }
 

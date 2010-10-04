@@ -973,6 +973,23 @@ js_ValueToPrintable(JSContext *cx, const js::Value &, JSValueToStringFun v2sfun)
 extern JSString *
 js_ValueToString(JSContext *cx, const js::Value &v);
 
+namespace js {
+
+/*
+ * Most code that calls js_ValueToString knows the value is (probably) not a
+ * string, so it does not make sense to put this inline fast path into
+ * js_ValueToString.
+ */
+static JS_ALWAYS_INLINE JSString *
+ValueToString_TestForStringInline(JSContext *cx, const Value &v)
+{
+    if (v.isString())
+        return v.toString();
+    return js_ValueToString(cx, v);
+}
+
+}
+
 /*
  * This function implements E-262-3 section 9.8, toString. Convert the given
  * value to a string of jschars appended to the given buffer. On error, the
