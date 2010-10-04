@@ -354,45 +354,6 @@
 }
 
 
-/*** discover view ***/
-
-.discover-box {
-  margin: 10px;
-  padding: 20px;
-  color: #373d48;
-  font-size: 12px;
-  border: 1px solid #a8b8d1;
-  -moz-border-radius: 8px;
-  background-image: -moz-linear-gradient(center top , #ffffff 0pt, #ecf1f7 100%);
-  box-shadow: 0pt -3px 0pt rgba(58, 78, 103, 0.05) inset, 0pt 3px 0pt rgba(175, 195, 220, 0.3);
-}
-
-#discover-error .discover-box {
-  max-width: 45em;
-}
-
-.discover-logo {
-  list-style-image: url("chrome://mozapps/skin/extensions/discover-logo.png");
-  -moz-margin-end: 15px;
-}
-
-.discover-title {
-  font-weight: bold;
-  font-size: 24px;
-  font-family: MetaWebPro-Book, "Trebuchet MS", sans-serif;
-  margin: 0 0 15px 0;
-}
-
-.discover-description {
-  text-align: justify;
-  margin: 0 0 15px 0;
-}
-
-.discover-footer {
-  text-align: justify;
-}
-
-
 /*** list ***/
 
 .list {
@@ -612,7 +573,7 @@
   -moz-transition-duration: 1s;
 }
 
-.loading > image {
+#detail-view .loading > image {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
