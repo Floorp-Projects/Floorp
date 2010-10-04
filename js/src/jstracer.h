@@ -949,7 +949,7 @@ class TraceRecorder
     /* Carry the return value from a native call to the record_NativeCallComplete. */
     nanojit::LIns*                  native_rval_ins;
 
-    /* Carry the return value of js_NewInstance to record_NativeCallComplete. */
+    /* Carry the return value of js_CreateThis to record_NativeCallComplete. */
     nanojit::LIns*                  newobj_ins;
 
     /* Carry the JSSpecializedNative used to generate a call to record_NativeCallComplete. */

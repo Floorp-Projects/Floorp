@@ -11051,6 +11051,20 @@ TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
     guard(true, lir->insEqI_0(status_ins), STATUS_EXIT);
 }
 
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_BEGIN()
+{
+    JSStackFrame* fp = cx->fp();
+    if (fp->isConstructing()) {
+        LIns* callee_ins = get(&cx->fp()->calleeValue());
+        LIns* args[] = { callee_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
+        LIns* tv_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
+        guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
+        set(&fp->thisValue(), tv_ins);
+    }
+    return ARECORD_CONTINUE;
+}
+
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[], bool rooted)
 {
@@ -11360,7 +11374,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             clasp = &js_ObjectClass;
         JS_ASSERT(((jsuword) clasp & 3) == 0);
 
-        // Abort on |new Function|. js_NewInstance would allocate a regular-
+        // Abort on |new Function|. js_CreateThis would allocate a regular-
         // sized JSObject, not a Function-sized one. (The Function ctor would
         // deep-bail anyway but let's not go there.)
         if (clasp == &js_FunctionClass)
@@ -11379,7 +11393,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             args[0] = INS_CONSTOBJ(funobj);
             args[1] = INS_CONSTPTR(clasp);
             args[2] = cx_ins;
-            newobj_ins = lir->insCall(&js_NewInstanceFromTrace_ci, args);
+            newobj_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
             guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
 
             /*
@@ -11504,15 +11518,8 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
     }
 #endif
 
-    if (FUN_INTERPRETED(fun)) {
-        if (mode == JSOP_NEW) {
-            LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_NewInstanceFromTrace_ci, args);
-            guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
-            set(&tval, tv_ins);
-        }
+    if (FUN_INTERPRETED(fun))
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
-    }
 
     Native native = fun->maybeNative();
     Value* argv = &tval + 1;
@@ -13306,7 +13313,15 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
      * and does not call any TR::record_*CallComplete hook.
      */
     if (fun->u.i.script->isEmpty()) {
-        LIns* rval_ins = constructing ? stack(-1 - argc) : INS_UNDEFINED();
+        LIns* rval_ins;
+        if (constructing) {
+            LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
+            LIns* tv_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
+            guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
+            rval_ins = tv_ins;
+        } else {
+            rval_ins = INS_UNDEFINED();
+        }
         stack(-2 - argc, rval_ins);
         return RECORD_CONTINUE;
     }

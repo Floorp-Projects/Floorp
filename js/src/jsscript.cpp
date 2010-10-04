@@ -118,7 +118,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     uint32 length, lineno, nslots, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nupvars, nregexps, nconsts, i;
     uint32 prologLength, version, encodedClosedCount;
-    uint16 nClosedArgs, nClosedVars;
+    uint16 nClosedArgs = 0, nClosedVars = 0;
     JSPrincipals *principals;
     uint32 encodeable;
     JSBool filenameWasSaved;
@@ -1640,16 +1640,6 @@ js_GetScriptLineExtent(JSScript *script)
     }
     return 1 + lineno - script->lineno;
 }
-
-#ifdef JS_METHODJIT
-bool
-JSScript::isValidJitCode(void *jcode)
-{
-    return (char*)jcode >= (char*)jit->invoke &&
-           (char*)jcode < (char*)jit->invoke +
-           jit->inlineLength + jit->outOfLineLength;
-}
-#endif
 
 void
 JSScript::copyClosedSlotsTo(JSScript *other)

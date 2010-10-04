@@ -1569,7 +1569,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     if (fp->isScriptFrame())
         js_TraceScript(trc, fp->script());
 
-    MarkValue(trc, fp->thisValue(), "this");
     MarkValue(trc, fp->returnValue(), "rval");
 }
 

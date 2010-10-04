@@ -111,8 +111,7 @@ class PICStubCompiler : public BaseCompiler
         return disable(reason, JS_FUNC_TO_DATA_PTR(void *, stub));
     }
 
-    bool disable(const char *reason, VoidStubUInt32 stub)
-    {
+    bool disable(const char *reason, VoidStubPIC stub) {
         return disable(reason, JS_FUNC_TO_DATA_PTR(void *, stub));
     }
 
@@ -159,7 +158,7 @@ class SetPropCompiler : public PICStubCompiler
 {
     JSObject *obj;
     JSAtom *atom;
-    VoidStubUInt32 stub;
+    VoidStubPIC stub;
     int lastStubSecondShapeGuard;
 
     static int32 dslotsLoadOffset(ic::PICInfo &pic) {
@@ -224,7 +223,7 @@ class SetPropCompiler : public PICStubCompiler
 
   public:
     SetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
-                    VoidStubUInt32 stub)
+                    VoidStubPIC stub)
       : PICStubCompiler("setprop", f, script, pic), obj(obj), atom(atom), stub(stub),
         lastStubSecondShapeGuard(pic.secondShapeGuard)
     { }
@@ -746,7 +745,7 @@ class GetPropCompiler : public PICStubCompiler
     { }
 
     GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
-                    VoidStubUInt32 stub)
+                    VoidStubPIC stub)
       : PICStubCompiler("callprop", f, script, pic), obj(obj), atom(atom),
         stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
         lastStubSecondShapeGuard(pic.secondShapeGuard)
@@ -770,7 +769,7 @@ class GetPropCompiler : public PICStubCompiler
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
 
-        VoidStubUInt32 stub;
+        VoidStubPIC stub;
         switch (pic.kind) {
           case ic::PICInfo::GET:
             stub = ic::GetProp;
@@ -1573,7 +1572,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
   public:
     ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
-                      JSAtom *atom, VoidStubUInt32 stub)
+                      JSAtom *atom, VoidStubPIC stub)
       : PICStubCompiler("name", f, script, pic), scopeChain(scopeChain), atom(atom),
         stub(JS_FUNC_TO_DATA_PTR(void *, stub)), obj(NULL), holder(NULL), prop(NULL)
     { }
@@ -1591,7 +1590,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
-        VoidStubUInt32 stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
+        VoidStubPIC stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
         MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
@@ -1912,7 +1911,7 @@ class BindNameCompiler : public PICStubCompiler
 
   public:
     BindNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
-                      JSAtom *atom, VoidStubUInt32 stub)
+                      JSAtom *atom, VoidStubPIC stub)
       : PICStubCompiler("bind", f, script, pic), scopeChain(scopeChain), atom(atom),
         stub(JS_FUNC_TO_DATA_PTR(void *, stub))
     { }
@@ -2020,15 +2019,14 @@ class BindNameCompiler : public PICStubCompiler
 };
 
 void JS_FASTCALL
-ic::GetProp(VMFrame &f, uint32 index)
+ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
-    PICInfo &pic = script->pics[index];
 
-    JSAtom *atom = pic.atom;
+    JSAtom *atom = pic->atom;
     if (atom == f.cx->runtime->atomState.lengthAtom) {
         if (f.regs.sp[-1].isString()) {
-            GetPropCompiler cc(f, script, NULL, pic, NULL, stubs::Length);
+            GetPropCompiler cc(f, script, NULL, *pic, NULL, stubs::Length);
             if (!cc.generateStringLengthStub()) {
                 cc.disable("error");
                 THROW();
@@ -2039,7 +2037,7 @@ ic::GetProp(VMFrame &f, uint32 index)
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden())) {
-                GetPropCompiler cc(f, script, obj, pic, NULL, stubs::Length);
+                GetPropCompiler cc(f, script, obj, *pic, NULL, stubs::Length);
                 if (obj->isArray()) {
                     if (!cc.generateArrayLengthStub()) {
                         cc.disable("error");
@@ -2063,8 +2061,8 @@ ic::GetProp(VMFrame &f, uint32 index)
     if (!obj)
         THROW();
 
-    if (pic.shouldGenerate()) {
-        GetPropCompiler cc(f, script, obj, pic, atom, stubs::GetProp);
+    if (pic->shouldGenerate()) {
+        GetPropCompiler cc(f, script, obj, *pic, atom, stubs::GetProp);
         if (!cc.update()) {
             cc.disable("error");
             THROW();
@@ -2078,10 +2076,9 @@ ic::GetProp(VMFrame &f, uint32 index)
 }
 
 void JS_FASTCALL
-ic::GetElem(VMFrame &f, uint32 picIndex)
+ic::GetElem(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
-    PICInfo &pic = script->pics[picIndex];
 
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
     if (!obj)
@@ -2090,8 +2087,8 @@ ic::GetElem(VMFrame &f, uint32 picIndex)
     Value idval = f.regs.sp[-1];
     JS_ASSERT(idval.isString());
     JSString *id = idval.toString();
-    if (pic.shouldGenerate()) {
-        GetElemCompiler cc(f, script, obj, pic, id, stubs::GetElem);
+    if (pic->shouldGenerate()) {
+        GetElemCompiler cc(f, script, obj, *pic, id, stubs::GetElem);
         if (!cc.update()) {
             cc.disable("error");
             THROW();
@@ -2107,46 +2104,29 @@ ic::GetElem(VMFrame &f, uint32 picIndex)
     f.regs.sp[-2] = v;
 }
 
-void JS_FASTCALL
-ic::SetPropDumb(VMFrame &f, uint32 index)
-{
-    JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JS_ASSERT(pic.isSet());
-    JSAtom *atom = pic.atom;
-
-    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
-    if (!obj)
-        THROW();
-    Value rval = f.regs.sp[-1];
-    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1],
-                          script->strictModeCode))
-        THROW();
-    f.regs.sp[-2] = rval;
-}
-
+template <JSBool strict>
 static void JS_FASTCALL
-SetPropSlow(VMFrame &f, uint32 index)
+SetPropDumb(VMFrame &f, ic::PICInfo *pic)
 {
-    JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JS_ASSERT(pic.isSet());
+    stubs::SetPropNoCache<strict>(f, pic->atom);
+}
 
-    JSAtom *atom = pic.atom;
-    STRICT_VARIANT(stubs::SetName)(f, atom);
+template <JSBool strict>
+static void JS_FASTCALL
+SetPropSlow(VMFrame &f, ic::PICInfo *pic)
+{
+    stubs::SetName<strict>(f, pic->atom);
 }
 
 void JS_FASTCALL
-ic::SetProp(VMFrame &f, uint32 index)
+ic::SetProp(VMFrame &f, ic::PICInfo *pic)
 {
     JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
     if (!obj)
         THROW();
 
     JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JSAtom *atom = pic.atom;
-    JS_ASSERT(pic.isSet());
+    JS_ASSERT(pic->isSet());
 
     //
     // Important: We update the PIC before looking up the property so that the
@@ -2157,7 +2137,7 @@ ic::SetProp(VMFrame &f, uint32 index)
     // cache can't handle a GET and SET from the same scripted PC.
     //
 
-    VoidStubUInt32 stub;
+    VoidStubPIC stub;
     switch (JSOp(*f.regs.pc)) {
       case JSOP_PROPINC:
       case JSOP_PROPDEC:
@@ -2167,40 +2147,36 @@ ic::SetProp(VMFrame &f, uint32 index)
       case JSOP_NAMEDEC:
       case JSOP_INCNAME:
       case JSOP_DECNAME:
-        stub = SetPropDumb;
+        stub = STRICT_VARIANT(SetPropDumb);
         break;
       default:
-        stub = SetPropSlow;
+        stub = STRICT_VARIANT(SetPropSlow);
         break;
     }
 
-    SetPropCompiler cc(f, script, obj, pic, atom, stub);
+    SetPropCompiler cc(f, script, obj, *pic, pic->atom, stub);
     if (!cc.update()) {
         cc.disable("error");
         THROW();
     }
     
     Value rval = f.regs.sp[-1];
-    stub(f, index);
+    stub(f, pic);
 }
 
 static void JS_FASTCALL
-CallPropSlow(VMFrame &f, uint32 index)
+CallPropSlow(VMFrame &f, ic::PICInfo *pic)
 {
-    JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    stubs::CallProp(f, pic.atom);
+    stubs::CallProp(f, pic->atom);
 }
 
 void JS_FASTCALL
-ic::CallProp(VMFrame &f, uint32 index)
+ic::CallProp(VMFrame &f, ic::PICInfo *pic)
 {
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
     JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JSAtom *origAtom = pic.atom;
 
     Value lval;
     lval = regs.sp[-1];
@@ -2260,7 +2236,7 @@ ic::CallProp(VMFrame &f, uint32 index)
      * PropertyCache::test.
      */
     jsid id;
-    id = ATOM_TO_JSID(origAtom);
+    id = ATOM_TO_JSID(pic->atom);
 
     regs.sp++;
     regs.sp[-1].setNull();
@@ -2298,7 +2274,7 @@ ic::CallProp(VMFrame &f, uint32 index)
         }
     }
 
-    GetPropCompiler cc(f, script, &objv.toObject(), pic, origAtom, CallPropSlow);
+    GetPropCompiler cc(f, script, &objv.toObject(), *pic, pic->atom, CallPropSlow);
     if (usePIC) {
         if (lval.isObject()) {
             if (!cc.update()) {
@@ -2319,7 +2295,7 @@ ic::CallProp(VMFrame &f, uint32 index)
 
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isUndefined())) {
-        regs.sp[-2].setString(ATOM_TO_STRING(origAtom));
+        regs.sp[-2].setString(ATOM_TO_STRING(pic->atom));
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     }
@@ -2327,28 +2303,26 @@ ic::CallProp(VMFrame &f, uint32 index)
 }
 
 static void JS_FASTCALL
-SlowName(VMFrame &f, uint32 index)
+SlowName(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::Name(f);
 }
 
 static void JS_FASTCALL
-SlowXName(VMFrame &f, uint32 index)
+SlowXName(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::GetProp(f);
 }
 
 void JS_FASTCALL
-ic::XName(VMFrame &f, uint32 index)
+ic::XName(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JSAtom *atom = pic.atom;
 
     /* GETXPROP is guaranteed to have an object. */
     JSObject *obj = &f.regs.sp[-1].toObject();
 
-    ScopeNameCompiler cc(f, script, obj, pic, atom, SlowXName);
+    ScopeNameCompiler cc(f, script, obj, *pic, pic->atom, SlowXName);
 
     if (!cc.updateForXName()) {
         cc.disable("error");
@@ -2362,13 +2336,11 @@ ic::XName(VMFrame &f, uint32 index)
 }
 
 void JS_FASTCALL
-ic::Name(VMFrame &f, uint32 index)
+ic::Name(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JSAtom *atom = pic.atom;
 
-    ScopeNameCompiler cc(f, script, &f.fp()->scopeChain(), pic, atom, SlowName);
+    ScopeNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, SlowName);
 
     if (!cc.updateForName()) {
         cc.disable("error");
@@ -2382,19 +2354,17 @@ ic::Name(VMFrame &f, uint32 index)
 }
 
 static void JS_FASTCALL
-SlowBindName(VMFrame &f, uint32 index)
+SlowBindName(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::BindName(f);
 }
 
 void JS_FASTCALL
-ic::BindName(VMFrame &f, uint32 index)
+ic::BindName(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
-    ic::PICInfo &pic = script->pics[index];
-    JSAtom *atom = pic.atom;
 
-    BindNameCompiler cc(f, script, &f.fp()->scopeChain(), pic, atom, SlowBindName);
+    BindNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, SlowBindName);
 
     JSObject *obj = cc.update();
     if (!obj) {
@@ -2406,11 +2376,10 @@ ic::BindName(VMFrame &f, uint32 index)
 }
 
 void
-ic::PurgePICs(JSContext *cx, JSScript *script)
+JITScript::purgePICs()
 {
-    uint32 npics = script->jit->nPICs;
-    for (uint32 i = 0; i < npics; i++) {
-        ic::PICInfo &pic = script->pics[i];
+    for (uint32 i = 0; i < nPICs; i++) {
+        ic::PICInfo &pic = pics[i];
         switch (pic.kind) {
           case ic::PICInfo::SET:
           case ic::PICInfo::SETMETHOD:
@@ -2436,6 +2405,15 @@ ic::PurgePICs(JSContext *cx, JSScript *script)
         }
         pic.reset();
     }
+}
+
+void
+ic::PurgePICs(JSContext *cx, JSScript *script)
+{
+    if (script->jitNormal)
+        script->jitNormal->purgePICs();
+    if (script->jitCtor)
+        script->jitCtor->purgePICs();
 }
 
 #endif /* JS_POLYIC */
