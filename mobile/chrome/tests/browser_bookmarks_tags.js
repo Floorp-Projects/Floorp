@@ -88,7 +88,7 @@ gTests.push({
 
     BrowserUI.activePanel = null;
 
-    Browser.closeTab(this._currentTab);
+    Browser.closeTab(gCurrentTest._currentTab);
 
     runNextTest();
   }
