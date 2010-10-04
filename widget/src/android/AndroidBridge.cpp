@@ -478,14 +478,6 @@ AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
 }
 
 void
-AndroidBridge::ShowFilePicker(nsAString& aFilePath)
-{
-    jstring jstr =  static_cast<jstring>(mJNIEnv->CallStaticObjectMethod(
-                                             mGeckoAppShellClass, jShowFilePicker));
-    aFilePath.Assign(nsJNIString(jstr));
-}
-
-void
 AndroidBridge::SetSurfaceView(jobject obj)
 {
     mSurfaceView.Init(obj);
