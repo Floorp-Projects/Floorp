@@ -1407,8 +1407,18 @@ extern JSObject *
 js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, js::Value *argv);
 
+// Specialized call for constructing |this| with a known function callee,
+// and a known prototype.
 extern JSObject *
-js_NewInstance(JSContext *cx, JSObject *callee);
+js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto);
+
+// Specialized call for constructing |this| with a known function callee.
+extern JSObject *
+js_CreateThisForFunction(JSContext *cx, JSObject *callee);
+
+// Generic call for constructing |this|.
+extern JSObject *
+js_CreateThis(JSContext *cx, JSObject *callee);
 
 extern jsid
 js_CheckForStringIndex(jsid id);
