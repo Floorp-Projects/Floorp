@@ -125,6 +125,11 @@ class StubCompiler
     STUB_CALL_TYPE(BoolStub);
     STUB_CALL_TYPE(VoidStubAtom);
     STUB_CALL_TYPE(VoidStubPC);
+    STUB_CALL_TYPE(VoidStubMIC);
+    STUB_CALL_TYPE(VoidPtrStubMIC);
+    STUB_CALL_TYPE(VoidStubPIC);
+    STUB_CALL_TYPE(VoidStubCallIC);
+    STUB_CALL_TYPE(VoidPtrStubCallIC);
 
 #undef STUB_CALL_TYPE
 

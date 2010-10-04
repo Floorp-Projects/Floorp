@@ -283,6 +283,22 @@ template void JS_FASTCALL stubs::SetName<false>(VMFrame &f, JSAtom *origAtom);
 
 template<JSBool strict>
 void JS_FASTCALL
+stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    Value rval = f.regs.sp[-1];
+    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
+        THROW();
+    f.regs.sp[-2] = rval;
+}
+
+template void JS_FASTCALL stubs::SetPropNoCache<true>(VMFrame &f, JSAtom *origAtom);
+template void JS_FASTCALL stubs::SetPropNoCache<false>(VMFrame &f, JSAtom *origAtom);
+
+template<JSBool strict>
+void JS_FASTCALL
 stubs::SetGlobalNameDumb(VMFrame &f, JSAtom *atom)
 {
     JSContext *cx = f.cx;
@@ -2517,14 +2533,15 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     jsbytecode *jpc = pc;
     JSScript *script = f.fp()->script();
+    JITScript *jit = script->getJIT(f.fp()->isConstructing());
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
 
     if (!lval.isPrimitive()) {
         ptrdiff_t offs = (pc + GET_JUMP_OFFSET(pc)) - script->code;
-        JS_ASSERT(script->nmap[offs]);
-        return script->nmap[offs];
+        JS_ASSERT(jit->nmap[offs]);
+        return jit->nmap[offs];
     }
 
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
@@ -2544,8 +2561,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
                 JSString *rhs = rval.toString();
                 if (rhs == str || js_EqualStrings(str, rhs)) {
                     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                    JS_ASSERT(script->nmap[offs]);
-                    return script->nmap[offs];
+                    JS_ASSERT(jit->nmap[offs]);
+                    return jit->nmap[offs];
                 }
             }
             pc += JUMP_OFFSET_LEN;
@@ -2557,8 +2574,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (rval.isNumber() && d == rval.toNumber()) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(script->nmap[offs]);
-                return script->nmap[offs];
+                JS_ASSERT(jit->nmap[offs]);
+                return jit->nmap[offs];
             }
             pc += JUMP_OFFSET_LEN;
         }
@@ -2568,16 +2585,16 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (lval == rval) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(script->nmap[offs]);
-                return script->nmap[offs];
+                JS_ASSERT(jit->nmap[offs]);
+                return jit->nmap[offs];
             }
             pc += JUMP_OFFSET_LEN;
         }
     }
 
     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(jpc)) - script->code;
-    JS_ASSERT(script->nmap[offs]);
-    return script->nmap[offs];
+    JS_ASSERT(jit->nmap[offs]);
+    return jit->nmap[offs];
 }
 
 void * JS_FASTCALL
@@ -2586,6 +2603,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     jsbytecode * const originalPC = origPc;
     jsbytecode *pc = originalPC;
     JSScript *script = f.fp()->script();
+    JITScript *jit = script->getJIT(f.fp()->isConstructing());
     uint32 jumpOffset = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
 
@@ -2625,8 +2643,8 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 finally:
     /* Provide the native address. */
     ptrdiff_t offset = (originalPC + jumpOffset) - script->code;
-    JS_ASSERT(script->nmap[offset]);
-    return script->nmap[offset];
+    JS_ASSERT(jit->nmap[offset]);
+    return jit->nmap[offset];
 }
 
 void JS_FASTCALL
