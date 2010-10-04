@@ -524,14 +524,14 @@ mjit::Compiler::jsop_bitop(JSOp op)
         RegisterID rr = frame.tempRegForData(rhs);
 #endif
 
-        frame.pinReg(rr);
         if (lhs->isConstant()) {
+            frame.pinReg(rr);
             reg = frame.allocReg();
             masm.move(Imm32(lhs->getValue().toInt32()), reg);
+            frame.unpinReg(rr);
         } else {
             reg = frame.copyDataIntoReg(lhs);
         }
-        frame.unpinReg(rr);
         
         if (op == JSOP_LSH) {
             masm.lshift32(rr, reg);
