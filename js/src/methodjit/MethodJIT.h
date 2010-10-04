@@ -139,6 +139,18 @@ struct VMFrame
 extern "C" void JaegerStubVeneer(void);
 #endif
 
+namespace mjit {
+namespace ic {
+# if defined JS_POLYIC
+    struct PICInfo;
+# endif
+# if defined JS_MONOIC
+    struct MICInfo;
+    struct CallICInfo;
+# endif
+}
+}
+
 typedef void (JS_FASTCALL *VoidStub)(VMFrame &);
 typedef void (JS_FASTCALL *VoidVpStub)(VMFrame &, Value *);
 typedef void (JS_FASTCALL *VoidStubUInt32)(VMFrame &, uint32);
@@ -158,26 +170,47 @@ typedef JSString * (JS_FASTCALL *JSStrStubUInt32)(VMFrame &, uint32);
 typedef void (JS_FASTCALL *VoidStubJSObj)(VMFrame &, JSObject *);
 typedef void (JS_FASTCALL *VoidStubPC)(VMFrame &, jsbytecode *);
 typedef JSBool (JS_FASTCALL *BoolStubUInt32)(VMFrame &f, uint32);
-
-#define JS_UNJITTABLE_METHOD (reinterpret_cast<void*>(1))
+typedef void (JS_FASTCALL *VoidStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef void * (JS_FASTCALL *VoidPtrStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef void (JS_FASTCALL *VoidStubPIC)(VMFrame &, js::mjit::ic::PICInfo *);
+typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
+typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 
 namespace mjit {
 
+struct CallSite;
+
 struct JITScript {
-    JSC::ExecutablePool *execPool;   /* pool that contains |ncode|; script owns the pool */
-    uint32          inlineLength;    /* length of inline JIT'd code */
-    uint32          outOfLineLength; /* length of out of line JIT'd code */
+    typedef JSC::MacroAssemblerCodeRef CodeRef;
+    CodeRef         code;       /* pool & code addresses */
+
     js::mjit::CallSite *callSites;
     uint32          nCallSites;
+    void            **nmap;     /* scripted pc to native code map. */
 #ifdef JS_MONOIC
-    uint32          nMICs;           /* number of MonoICs */
-    uint32          nCallICs;        /* number of call ICs */
+    ic::MICInfo     *mics;      /* MICs in this script. */
+    uint32          nMICs;      /* number of MonoICs */
+    ic::CallICInfo  *callICs;   /* CallICs in this script. */
+    uint32          nCallICs;   /* number of call ICs */
 #endif
 #ifdef JS_POLYIC
-    uint32          nPICs;           /* number of PolyICs */
+    ic::PICInfo     *pics;      /* PICs in this script */
+    uint32          nPICs;      /* number of PolyICs */
 #endif
-    void            *invoke;         /* invoke address */
-    void            *arityCheck;     /* arity check address */
+    void            *invokeEntry;       /* invoke address */
+    void            *fastEntry;         /* cached entry, fastest */
+    void            *arityCheckEntry;   /* arity check address */
+
+    bool isValidCode(void *ptr) {
+        char *jitcode = (char *)code.m_code.executableAddress();
+        char *jcheck = (char *)ptr;
+        return jcheck >= jitcode && jcheck < jitcode + code.m_size;
+    }
+
+    void sweepCallICs();
+    void purgeMICs();
+    void purgePICs();
+    void release();
 };
 
 /* Execute a method that has been JIT compiled. */
@@ -197,18 +230,21 @@ void JS_FASTCALL
 ProfileStubCall(VMFrame &f);
 
 CompileStatus JS_NEVER_INLINE
-TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
+TryCompile(JSContext *cx, JSStackFrame *fp);
 
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
 
 static inline CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
+CanMethodJIT(JSContext *cx, JSScript *script, JSStackFrame *fp)
 {
-    if (!cx->methodJitEnabled || script->ncode == JS_UNJITTABLE_METHOD)
+    if (!cx->methodJitEnabled)
         return Compile_Abort;
-    if (script->ncode == NULL)
-        return TryCompile(cx, script, fun, scopeChain);
+    JITScriptStatus status = script->getJITStatus(fp->isConstructing());
+    if (status == JITScript_Invalid)
+        return Compile_Abort;
+    if (status == JITScript_None)
+        return TryCompile(cx, fp);
     return Compile_Okay;
 }
 
@@ -222,6 +258,25 @@ struct CallSite
 } /* namespace mjit */
 
 } /* namespace js */
+
+inline void **
+JSScript::maybeNativeMap(bool constructing)
+{
+    js::mjit::JITScript *jit = constructing ? jitCtor : jitNormal;
+    if (!jit)
+        return NULL;
+    return jit->nmap;
+}
+
+inline bool
+JSScript::hasNativeCodeForPC(bool constructing, jsbytecode *pc)
+{
+    js::mjit::JITScript *jit = getJIT(constructing);
+    if (!jit)
+        return false;
+    JS_ASSERT(pc >= code && pc < code + length);
+    return !!jit->nmap[pc - code];
+}
 
 #ifdef _MSC_VER
 extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);
