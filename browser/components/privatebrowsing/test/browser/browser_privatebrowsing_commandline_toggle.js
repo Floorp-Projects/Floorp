@@ -128,8 +128,6 @@ function test() {
     is(browser.contentWindow.location, "about:", "The correct page has been loaded");
 
     simulatePrivateCommandLineArgument();
-    is(pb.lastChangedByCommandLine, true,
-       "The status change reason should reflect the PB mode being set from the command line");
     tab = gBrowser.selectedTab;
     browser = gBrowser.getBrowserForTab(tab);
     browser.addEventListener("load", function() {
@@ -139,8 +137,6 @@ function test() {
          "about:privatebrowsing should now be loaded");
 
       simulatePrivateCommandLineArgument();
-      is(pb.lastChangedByCommandLine, true,
-         "The status change reason should reflect the PB mode being set from the command line");
       tab = gBrowser.selectedTab;
       browser = gBrowser.getBrowserForTab(tab);
       browser.addEventListener("load", function() {
