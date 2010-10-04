@@ -321,12 +321,14 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
     checkMatchPairs(buf, matchItemCount);
 
     if (res) {
+        res->aboutToWrite();
         res->input = input;
-        res->matchPairs.clear();
-        if (!res->matchPairs.reserve(matchItemCount))
+        if (!res->matchPairs.resizeUninitialized(matchItemCount)) {
+            js_ReportOutOfMemory(cx);
             return false;
+        }
         for (size_t i = 0; i < matchItemCount; ++i)
-            JS_ALWAYS_TRUE(res->matchPairs.append(buf[i] + inputOffset));
+            res->matchPairs[i] = buf[i] + inputOffset;
     }
 
     *lastIndex = buf[1] + inputOffset;
@@ -494,24 +496,12 @@ RegExp::clone(JSContext *cx, const RegExp &other)
 
 /* RegExpStatics inlines. */
 
-
 inline RegExpStatics *
 RegExpStatics::extractFrom(JSObject *global)
 {
     Value resVal = global->getReservedSlot(JSRESERVED_GLOBAL_REGEXP_STATICS);
     RegExpStatics *res = static_cast<RegExpStatics *>(resVal.toObject().getPrivate());
     return res;
-}
-
-inline void
-RegExpStatics::clone(const RegExpStatics &other)
-{
-    JS_ASSERT(this != &other);
-    clear();
-    input = other.input;
-    flags = other.flags;
-    JS_ASSERT((flags & allFlags) == flags);
-    matchPairs.append(other.matchPairs);
 }
 
 inline bool
