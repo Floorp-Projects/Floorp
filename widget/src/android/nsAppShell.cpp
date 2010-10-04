@@ -129,6 +129,7 @@ nsAppShell::ScheduleNativeEventCallback()
     PostEvent(new AndroidGeckoEvent(AndroidGeckoEvent::NATIVE_POKE));
 }
 
+
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {

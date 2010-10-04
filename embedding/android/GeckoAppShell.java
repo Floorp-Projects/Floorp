@@ -363,26 +363,6 @@ class GeckoAppShell
         Log.i("GeckoAppJava", "scheduling restart");
         gRestartScheduled = true;        
     }
- 
-    // "Installs" an application by creating a shortcut
-    static void installWebApplication(String aURI, String aTitle, String aIconData) {
-        Log.w("GeckoAppJava", "installWebApplication for " + aURI + " [" + aTitle + "]");
-
-        // the intent to be launched by the shortcut
-        Intent shortcutIntent = new Intent("org.mozilla.fennec.WEBAPP");
-        shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                    "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".App");
-        shortcutIntent.putExtra("args", "--webapp=" + aURI);
-        
-        Intent intent = new Intent();
-        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
-        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bitmap);
-        intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-        GeckoApp.mAppContext.sendBroadcast(intent);
-    }
     
     static String[] getHandlersForMimeType(String aMimeType, String aAction) {
         Intent intent = getIntentForActionString(aAction);
