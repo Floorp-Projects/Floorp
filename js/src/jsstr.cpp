@@ -2057,19 +2057,21 @@ InterpretDollar(JSContext *cx, RegExpStatics *res, jschar *dp, jschar *ep, Repla
 
 class PreserveRegExpStatics
 {
-    js::RegExpStatics * const saved;
-    js::RegExpStatics container;
+    js::RegExpStatics *const original;
+    js::RegExpStatics buffer;
 
   public:
-    explicit PreserveRegExpStatics(RegExpStatics *toSave) : saved(toSave) {
-        container.clone(*toSave);
-        container.checkInvariants();
-        saved->checkInvariants();
+    explicit PreserveRegExpStatics(RegExpStatics *original)
+     : original(original),
+       buffer(RegExpStatics::InitBuffer())
+    {}
+
+    bool init(JSContext *cx) {
+        return original->save(cx, &buffer);
     }
 
     ~PreserveRegExpStatics() {
-        saved->clone(container);
-        saved->checkInvariants();
+        original->restore();
     }
 };
 
@@ -2089,20 +2091,19 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         uintN p = res->getParenCount();
         uintN argc = 1 + p + 2;
 
-        if (!rdata.session.started()) {
+        InvokeSessionGuard &session = rdata.session;
+        if (!session.started()) {
             Value lambdav = ObjectValue(*lambda);
             if (!rdata.session.start(cx, lambdav, NullValue(), argc))
                 return false;
         }
 
-        PreserveRegExpStatics save(res);
-
-        /* Push lambda and its 'this' parameter. */
-        InvokeSessionGuard &session = rdata.session;
-
-        uintN argi = 0;
+        PreserveRegExpStatics staticsGuard(res);
+        if (!staticsGuard.init(cx))
+            return false;
 
         /* Push $&, $1, $2, ... */
+        uintN argi = 0;
         if (!res->createLastMatch(cx, &session[argi++]))
             return false;
 
