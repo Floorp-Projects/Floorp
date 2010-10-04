@@ -360,54 +360,48 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 
     /*
      * There are 4 cases, based on whether on whether the left or right is a
-     * rope or non-rope string. This can be handled in a general way, but it's
-     * empirically a little faster and arguably simpler to handle each of the 4
-     * cases independently and directly.
+     * rope or non-rope string.
      */
+    JSRopeBufferInfo *buf = NULL;
+
     if (leftRopeTop) {
+        /* Left child is a rope. */
+        JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
+
+        /* If both children are ropes, steal the larger buffer. */
         if (JS_UNLIKELY(rightRopeTop)) {
-            JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
             JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
 
-            /* Attempt to steal the larger buffer. WLOG, it's the left one. */
+            /* Put the larger buffer into 'leftBuf'. */
             if (leftBuf->capacity >= rightBuf->capacity) {
                 cx->free(rightBuf);
             } else {
                 cx->free(leftBuf);
                 leftBuf = rightBuf;
             }
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, true, true, leftBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, true, true, left, right, length, buf);
-        } else {
-            /* Steal buffer from left if it's big enough. */
-            JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, true, false, leftBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, true, false, left, right, length, buf);
         }
+
+        buf = ObtainRopeBuffer(cx, true, rightRopeTop, leftBuf, length, left, right);
+        if (!buf)
+            return NULL;
+    } else if (JS_UNLIKELY(rightRopeTop)) {
+        /* Right child is a rope: steal its buffer if big enough. */
+        JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
+
+        buf = ObtainRopeBuffer(cx, false, true, rightBuf, length, left, right);
+        if (!buf)
+            return NULL;
     } else {
-        if (JS_UNLIKELY(rightRopeTop)) {
-            /* Steal buffer from right if it's big enough. */
-            JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, false, true, rightBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, false, true, left, right, length, buf);
-        } else {
-            /* Need to make a new buffer. */
-            size_t capacity;
-            size_t allocSize = RopeAllocSize(length, &capacity);
-            JSRopeBufferInfo *buf = (JSRopeBufferInfo *) cx->malloc(allocSize);
-            if (!buf)
-                return NULL;
-
-            buf->capacity = capacity;
-            return FinishConcat(cx, false, false, left, right, length, buf);
-        }
+        /* Neither child is a rope: need to make a new buffer. */
+        size_t capacity;
+        size_t allocSize = RopeAllocSize(length, &capacity);
+        buf = (JSRopeBufferInfo *) cx->malloc(allocSize);
+        if (!buf)
+            return NULL;
+        buf->capacity = capacity;
     }
+
+    return FinishConcat(cx, leftRopeTop, rightRopeTop, left, right, length, buf);
 }
 
 JSString * JS_FASTCALL
