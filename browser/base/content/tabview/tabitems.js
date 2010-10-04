@@ -390,10 +390,12 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           $fav.css({top:4,left:4});
           widthRange = new Range(40, 45);
           proportion = widthRange.proportion(css.width); // between 0 and 1
-          $close.show().css({opacity:proportion});
-          if (proportion <= .1)
-            $close.hide()
         }
+
+        if (proportion <= .1)
+          $close.hide();
+        else
+          $close.show().css({opacity:proportion});
 
         var pad = 1 + 5 * proportion;
         var alphaRange = new Range(0.1,0.2);
