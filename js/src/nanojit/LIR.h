@@ -1718,7 +1718,7 @@ namespace nanojit
 
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
-        CountMap<Str&, StrHash<Str&> > namecounts;
+        CountMap<Str, StrHash<Str> > namecounts;
 
         void addNameWithSuffix(LIns* i, const char *s, int suffix, bool ignoreOneSuffix);
 
