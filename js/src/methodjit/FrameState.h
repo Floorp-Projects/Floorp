@@ -590,7 +590,7 @@ class FrameState
      * Fully stores a FrameEntry into two arbitrary registers. tempReg may be
      * used as a temporary.
      */
-    void loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
+    void storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg, RegisterID tempReg);
 
     /*
      * Stores the top stack slot back to a slot.
@@ -653,11 +653,6 @@ class FrameState
      * Forget a type, syncing in the process.
      */
     inline void forgetType(FrameEntry *fe);
-
-    /*
-     * Discards a FrameEntry, tricking the FS into thinking it's synced.
-     */
-    void discardFe(FrameEntry *fe);
 
     /*
      * Helper function. Tests if a slot's type is null. Condition should

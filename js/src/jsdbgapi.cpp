@@ -116,7 +116,8 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
          &script->links != &cx->compartment->scripts;
          script = (JSScript *)script->links.next) {
         if (script->debugMode != debug &&
-            script->hasJITCode() &&
+            script->ncode &&
+            script->ncode != JS_UNJITTABLE_METHOD &&
             !IsScriptLive(cx, script)) {
             /*
              * In the event that this fails, debug mode is left partially on,
@@ -235,10 +236,6 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         return JS_FALSE;
     }
 
-    // Do not trap BEGIN, it's a special prologue opcode.
-    if (JSOp(*pc) == JSOP_BEGIN)
-        pc += JSOP_BEGIN_LENGTH;
-
     JS_ASSERT((JSOp) *pc != JSOP_TRAP);
     junk = NULL;
     rt = cx->runtime;
@@ -277,7 +274,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         cx->free(junk);
 
 #ifdef JS_METHODJIT
-    if (script->hasJITCode()) {
+    if (script->ncode != NULL && script->ncode != JS_UNJITTABLE_METHOD) {
         mjit::Recompiler recompiler(cx, script);
         if (!recompiler.recompile())
             return JS_FALSE;
@@ -330,7 +327,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         DBG_UNLOCK(cx->runtime);
 
 #ifdef JS_METHODJIT
-    if (script->hasJITCode()) {
+    if (script->ncode != NULL && script->ncode != JS_UNJITTABLE_METHOD) {
         mjit::Recompiler recompiler(cx, script);
         recompiler.recompile();
     }

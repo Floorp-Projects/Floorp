@@ -1196,7 +1196,7 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        if (!cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
+        if (cx->fp()->script()->nmap == NULL) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
