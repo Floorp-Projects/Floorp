@@ -116,6 +116,7 @@ chrome.jar:
   skin/images/toggledarkright-inactive-64.png   (images/toggledarkright-inactive-64.png)
   skin/images/toggledarkboth-active-64.png      (images/toggledarkboth-active-64.png)
   skin/images/toggledarkboth-inactive-64.png    (images/toggledarkboth-inactive-64.png)
+  skin/images/browseaddons-bg.png           (images/browseaddons-bg.png)
   skin/images/button-default-64.png         (images/button-default-64.png)
   skin/images/button-active-64.png          (images/button-active-64.png)
   skin/images/buttondark-default-64.png     (images/buttondark-default-64.png)

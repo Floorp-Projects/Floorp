@@ -553,6 +553,13 @@ richlistitem[isDisabled="true"] image {
   opacity: 0.25;
 }
 
+richlistitem[typeName="banner"],
+richlistitem[typeName="showmore"] {
+  background-color: rgb(255,255,255);
+  background: url(chrome://browser/skin/images/browseaddons-bg.png) repeat-x center top,
+              -moz-linear-gradient(top, rgb(220,236,253) 10%, rgb(255,255,255) 90%)
+}
+
 /* downloads panel UI   ---------------------------------------------------- */
 .download-retry-failed {
   color: red !important;
