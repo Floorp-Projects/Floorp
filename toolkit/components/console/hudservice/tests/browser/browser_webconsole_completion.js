@@ -62,9 +62,8 @@ function testCompletion() {
   input.value = "docu";
   input.setSelectionRange(4, 4);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  is(input.value, "document", "'docu' completion");
-  is(input.selectionStart, 4, "start selection is alright");
-  is(input.selectionEnd, 8, "end selection is alright");
+  is(input.value, "docu", "'docu' completion");
+  is(jsterm.completeNode.value, "    ment", "'docu' completion");
 
   // Test typing 'docu' and press tab.
   input.value = "docu";
@@ -73,26 +72,24 @@ function testCompletion() {
   is(input.value, "document", "'docu' tab completion");
   is(input.selectionStart, 8, "start selection is alright");
   is(input.selectionEnd, 8, "end selection is alright");
+  is(jsterm.completeNode.value.replace(/ /g, ""), "", "'docu' completed");
 
   // Test typing 'document.getElem'.
   input.value = "document.getElem";
   input.setSelectionRange(16, 16);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  is(input.value, "document.getElementById", "'document.getElem' completion");
-  is(input.selectionStart, 16, "start selection is alright");
-  is(input.selectionEnd, 23, "end selection is alright");
+  is(input.value, "document.getElem", "'document.getElem' completion");
+  is(jsterm.completeNode.value, "                entById", "'document.getElem' completion");
 
   // Test pressing tab another time.
   jsterm.complete(jsterm.COMPLETE_FORWARD);
-  is(input.value, "document.getElementsByClassName", "'document.getElem' another tab completion");
-  is(input.selectionStart, 16, "start selection is alright");
-  is(input.selectionEnd, 31, "end selection is alright");
+  is(input.value, "document.getElem", "'document.getElem' completion");
+  is(jsterm.completeNode.value, "                entsByClassName", "'document.getElem' another tab completion");
 
   // Test pressing shift_tab.
   jsterm.complete(jsterm.COMPLETE_BACKWARD);
-  is(input.value, "document.getElementById", "'document.getElem' untab completion");
-  is(input.selectionStart, 16, "start selection is alright");
-  is(input.selectionEnd, 23, "end selection is alright");
+  is(input.value, "document.getElem", "'document.getElem' untab completion");
+  is(jsterm.completeNode.value, "                entById", "'document.getElem' completion");
 
   jsterm.clearOutput();
   jsterm.history.splice(0);   // workaround for bug 592552

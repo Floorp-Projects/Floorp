@@ -3943,6 +3943,7 @@ JSTerm.prototype = {
     let eventHandlerInput = this.inputEventHandler();
     this.inputNode.addEventListener('input', eventHandlerInput, false);
     this.outputNode = this.mixins.outputNode;
+    this.completeNode = this.mixins.completeNode;
     if (this.mixins.cssClassOverride) {
       this.cssClassOverride = this.mixins.cssClassOverride;
     }
@@ -4283,20 +4284,21 @@ JSTerm.prototype = {
         }
         return;
       }
-      else if (aEvent.shiftKey && aEvent.keyCode == 13) {
+      else if (aEvent.shiftKey &&
+          aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
         // shift return
         // TODO: expand the inputNode height by one line
         return;
       }
       else {
         switch(aEvent.keyCode) {
-          case 13:
-            // return
+          case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
             self.execute();
             aEvent.preventDefault();
             break;
-          case 38:
-            // up arrow: history previous
+
+          case Ci.nsIDOMKeyEvent.DOM_VK_UP:
+            // history previous
             if (self.caretAtStartOfInput()) {
               let updated = self.historyPeruse(HISTORY_BACK);
               if (updated && aEvent.cancelable) {
@@ -4305,8 +4307,9 @@ JSTerm.prototype = {
               }
             }
             break;
-          case 40:
-            // down arrow: history next
+
+          case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
+            // history next
             if (self.caretAtEndOfInput()) {
               let updated = self.historyPeruse(HISTORY_FORWARD);
               if (updated && aEvent.cancelable) {
@@ -4316,8 +4319,13 @@ JSTerm.prototype = {
               }
             }
             break;
-          case 9:
-            // tab key
+
+          case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
+            // accept proposed completion
+            self.acceptProposedCompletion();
+            break;
+
+          case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
             // If there are more than one possible completion, pressing tab
             // means taking the next completion, shift_tab means taking
             // the previous completion.
@@ -4330,19 +4338,13 @@ JSTerm.prototype = {
             }
             if (completionResult) {
               if (aEvent.cancelable) {
-              aEvent.preventDefault();
-            }
-            aEvent.target.focus();
+                aEvent.preventDefault();
+              }
+              aEvent.target.focus();
             }
             break;
-          case 8:
-            // backspace key
-          case 46:
-            // delete key
-            // necessary so that default is not reached.
-            break;
+
           default:
-            // all not handled keys
             // Store the current inputNode value. If the value is the same
             // after keyDown event was handled (after 0ms) then the user
             // moved the cursor. If the value changed, then call the complete
@@ -4478,30 +4480,22 @@ JSTerm.prototype = {
     let inputValue = inputNode.value;
     // If the inputNode has no value, then don't try to complete on it.
     if (!inputValue) {
+      this.updateCompleteNode("");
       return false;
     }
-    let selStart = inputNode.selectionStart, selEnd = inputNode.selectionEnd;
 
-    // 'Normalize' the selection so that end is always after start.
-    if (selStart > selEnd) {
-      let newSelEnd = selStart;
-      selStart = selEnd;
-      selEnd = newSelEnd;
-    }
-
-    // Only complete if the selection is at the end of the input.
-    if (selEnd != inputValue.length) {
+    // Only complete if the selection is empty and at the end of the input.
+    if (inputNode.selectionStart == inputNode.selectionEnd &&
+        inputNode.selectionEnd != inputValue.length) {
+      // TODO: shouldnt we do this in the other 'bail' cases?
       this.lastCompletion = null;
+      this.updateCompleteNode("");
       return false;
     }
-
-    // Remove the selected text from the inputValue.
-    inputValue = inputValue.substring(0, selStart);
 
     let matches;
     let matchIndexToUse;
     let matchOffset;
-    let completionStr;
 
     // If there is a saved completion from last time and the used value for
     // completion stayed the same, then use the stored completion.
@@ -4520,6 +4514,7 @@ JSTerm.prototype = {
       // Look up possible completion values.
       let completion = this.propertyProvider(this.sandbox.window, inputValue);
       if (!completion) {
+        this.updateCompleteNode("");
         return false;
       }
       matches = completion.matches;
@@ -4534,7 +4529,11 @@ JSTerm.prototype = {
       };
     }
 
-    if (matches.length != 0) {
+    if (type != this.COMPLETE_HINT_ONLY && matches.length == 1) {
+      this.acceptProposedCompletion();
+      return true;
+    }
+    else if (matches.length != 0) {
       // Ensure that the matchIndexToUse is always a valid array index.
       if (matchIndexToUse < 0) {
         matchIndexToUse = matches.length + (matchIndexToUse % matches.length);
@@ -4546,26 +4545,30 @@ JSTerm.prototype = {
         matchIndexToUse = matchIndexToUse % matches.length;
       }
 
-      completionStr = matches[matchIndexToUse].substring(matchOffset);
-      this.setInputValue(inputValue + completionStr);
-
-      selEnd = inputValue.length + completionStr.length;
-
-      // If there is more than one possible completion or the completed part
-      // should get displayed only without moving the cursor at the end of the
-      // completion.
-      if (matches.length > 1 || type === this.COMPLETE_HINT_ONLY) {
-        inputNode.setSelectionRange(selStart, selEnd);
-      }
-      else {
-        inputNode.setSelectionRange(selEnd, selEnd);
-      }
-
+      let completionStr = matches[matchIndexToUse].substring(matchOffset);
+      this.updateCompleteNode(completionStr);
       return completionStr ? true : false;
+    }
+    else {
+      this.updateCompleteNode("");
     }
 
     return false;
-  }
+  },
+
+  acceptProposedCompletion: function JSTF_acceptProposedCompletion()
+  {
+    this.setInputValue(this.inputNode.value + this.completionValue);
+    this.updateCompleteNode("");
+  },
+
+  updateCompleteNode: function JSTF_updateCompleteNode(suffix)
+  {
+    this.completionValue = suffix;
+
+    let prefix = new Array(this.inputNode.value.length + 1).join(" ");
+    this.completeNode.value = prefix + this.completionValue;
+  },
 };
 
 /**
@@ -4611,38 +4614,38 @@ JSTermFirefoxMixin.prototype = {
    */
   generateUI: function JSTF_generateUI()
   {
-    let inputContainer = this.xulElementFactory("hbox");
-    inputContainer.setAttribute("class", "jsterm-input-container");
-    inputContainer.setAttribute("style", "direction: ltr;");
+    this.completeNode = this.xulElementFactory("textbox");
+    this.completeNode.setAttribute("class", "jsterm-complete-node");
+    this.completeNode.setAttribute("multiline", "true");
+    this.completeNode.setAttribute("rows", "1");
 
-    let inputNode = this.xulElementFactory("textbox");
-    inputNode.setAttribute("class", "jsterm-input-node");
-    inputNode.setAttribute("flex", "1");
-    inputNode.setAttribute("multiline", "true");
-    inputNode.setAttribute("rows", "1");
-    inputContainer.appendChild(inputNode);
+    this.inputNode = this.xulElementFactory("textbox");
+    this.inputNode.setAttribute("class", "jsterm-input-node");
+    this.inputNode.setAttribute("multiline", "true");
+    this.inputNode.setAttribute("rows", "1");
+
+    let inputStack = this.xulElementFactory("stack");
+    inputStack.setAttribute("class", "jsterm-stack-node");
+    inputStack.setAttribute("flex", "1");
+    inputStack.appendChild(this.completeNode);
+    inputStack.appendChild(this.inputNode);
 
     if (this.existingConsoleNode == undefined) {
-      // create elements
-      let term = this.xulElementFactory("vbox");
-      term.setAttribute("class", "jsterm-wrapper-node");
-      term.setAttribute("flex", "1");
+      this.outputNode = this.xulElementFactory("vbox");
+      this.outputNode.setAttribute("class", "jsterm-output-node");
 
-      let outputNode = this.xulElementFactory("vbox");
-      outputNode.setAttribute("class", "jsterm-output-node");
-
-      // construction
-      term.appendChild(outputNode);
-      term.appendChild(inputNode);
-
-      this.outputNode = outputNode;
-      this.inputNode = inputNode;
-      this.term = term;
+      this.term = this.xulElementFactory("vbox");
+      this.term.setAttribute("class", "jsterm-wrapper-node");
+      this.term.setAttribute("flex", "1");
+      this.term.appendChild(this.outputNode);
     }
     else {
-      this.inputNode = inputNode;
-      this.term = inputContainer;
       this.outputNode = this.existingConsoleNode;
+
+      this.term = this.xulElementFactory("hbox");
+      this.term.setAttribute("class", "jsterm-input-container");
+      this.term.setAttribute("style", "direction: ltr;");
+      this.term.appendChild(inputStack);
     }
   },
 

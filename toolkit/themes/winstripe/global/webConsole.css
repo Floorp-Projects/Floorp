@@ -210,6 +210,19 @@
   overflow-x: hidden;
 }
 
+.jsterm-complete-node {
+    font-family: monospace;
+    font-size: 9pt;
+    border: none;
+    padding: 0px 0px 0px 16px;
+    -moz-appearance: none;
+}
+
+.jsterm-complete-node textarea {
+    overflow-x: hidden;
+    color: #AAA;
+}
+
 .jsterm-output-line {
   font-size: 1em;
 }
