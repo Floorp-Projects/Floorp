@@ -322,7 +322,7 @@ public:
     return NS_OK;
   }
 private:
-  nsCOMPtr<Connection> mConnection;
+  nsRefPtr<Connection> mConnection;
   nsCOMPtr<nsIEventTarget> mCallingThread;
   nsCOMPtr<nsIRunnable> mCallbackEvent;
 };
@@ -352,9 +352,10 @@ Connection::~Connection()
   (void)Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(
+NS_IMPL_THREADSAFE_ISUPPORTS2(
   Connection,
-  mozIStorageConnection
+  mozIStorageConnection,
+  nsIInterfaceRequestor
 )
 
 nsIEventTarget *
@@ -639,6 +640,22 @@ Connection::getFilename()
     (void)mDatabaseFile->GetNativeLeafName(leafname);
   }
   return leafname;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+Connection::GetInterface(const nsIID &aIID,
+                         void **_result)
+{
+  if (aIID.Equals(NS_GET_IID(nsIEventTarget))) {
+    nsIEventTarget *background = getAsyncExecutionTarget();
+    NS_IF_ADDREF(background);
+    *_result = background;
+    return NS_OK;
+  }
+  return NS_ERROR_NO_INTERFACE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
