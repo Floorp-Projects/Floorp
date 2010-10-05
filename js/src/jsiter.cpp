@@ -1271,7 +1271,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 
         /* Copy frame onto the stack. */
         stackfp->stealFrameAndSlots(stackvp, genfp, genvp, gen->regs.sp);
-        stackfp->setPrev(cx->regs);
+        stackfp->resetGeneratorPrev(cx);
         stackfp->unsetFloatingGenerator();
         RebaseRegsFromTo(&gen->regs, genfp, stackfp);
         MUST_FLOW_THROUGH("restore");

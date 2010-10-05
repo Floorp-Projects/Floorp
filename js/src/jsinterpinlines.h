@@ -41,6 +41,29 @@
 #define jsinterpinlines_h__
 
 inline void
+JSStackFrame::initPrev(JSContext *cx)
+{
+    JS_ASSERT(flags_ & JSFRAME_HAS_PREVPC);
+    if (JSFrameRegs *regs = cx->regs) {
+        prev_ = regs->fp;
+        prevpc_ = regs->pc;
+        JS_ASSERT_IF(!prev_->isDummyFrame() && !prev_->hasImacropc(),
+                     uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
+    } else {
+        prev_ = NULL;
+#ifdef DEBUG
+        prevpc_ = (jsbytecode *)0xbadc;
+#endif
+    }
+}
+
+inline void
+JSStackFrame::resetGeneratorPrev(JSContext *cx)
+{
+    initPrev(cx);
+}
+
+inline void
 JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
                             uint32 nactual, uint32 flagsArg)
 {
@@ -54,7 +77,7 @@ JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
     exec.fun = fun;
     args.nactual = nactual;  /* only need to write if over/under-flow */
     scopeChain_ = callee.getParent();
-    /* prevpc_, prev_ initialized by push*Frame */
+    initPrev(cx);
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);
@@ -89,7 +112,6 @@ JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flag
 inline void
 JSStackFrame::initCallFrameEarlyPrologue(JSFunction *fun, void *ncode)
 {
-    /* Initialize state that gets set early in a jitted function's prologue. */
     exec.fun = fun;
     ncode_ = ncode;
 }
@@ -105,8 +127,7 @@ JSStackFrame::initCallFrameLatePrologue()
 }
 
 inline void
-JSStackFrame::initEvalFrame(JSScript *script, JSStackFrame *prev,
-                            jsbytecode *prevpc, uint32 flagsArg)
+JSStackFrame::initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev, uint32 flagsArg)
 {
     JS_ASSERT(flagsArg & JSFRAME_EVAL);
     JS_ASSERT((flagsArg & ~(JSFRAME_EVAL | JSFRAME_DEBUGGER)) == 0);
@@ -133,10 +154,12 @@ JSStackFrame::initEvalFrame(JSScript *script, JSStackFrame *prev,
     } else {
         exec.script = script;
     }
+
     scopeChain_ = &prev->scopeChain();
     JS_ASSERT_IF(isFunctionFrame(), &callObj() == &prev->callObj());
 
-    setPrev(prev, prevpc);
+    prev_ = prev;
+    prevpc_ = prev->pc(cx);
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     setAnnotation(prev->annotation());
@@ -157,7 +180,6 @@ JSStackFrame::initGlobalFrame(JSScript *script, JSObject &chain, uint32 flagsArg
     exec.script = script;
     args.script = (JSScript *)0xbad;
     scopeChain_ = &chain;
-
     prev_ = NULL;
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
@@ -169,7 +191,7 @@ JSStackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
 {
     js::PodZero(this);
     flags_ = JSFRAME_DUMMY | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN;
-    setPrev(cx->regs);
+    initPrev(cx);
     chain.isGlobal();
     setScopeChainNoCallObj(chain);
 }
