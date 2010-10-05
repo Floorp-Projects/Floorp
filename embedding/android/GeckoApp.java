@@ -408,7 +408,7 @@ abstract public class GeckoApp
 
         File outFile = new File("/data/data/org.mozilla." + getAppName() + "/" + name);
         if (outFile.exists() &&
-            outFile.lastModified() >= fileEntry.getTime() &&
+            outFile.lastModified() == fileEntry.getTime() &&
             outFile.length() == fileEntry.getSize())
             return;
 
