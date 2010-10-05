@@ -1042,10 +1042,8 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
-// Enable the Error Console (for now, see bug 601201)
-pref("devtools.errorconsole.enabled", true);
-
-// disable the Inspector
+// Disable the error console and inspector
+pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", false);
 
 // Whether the character encoding menu is under the main Firefox button. This
