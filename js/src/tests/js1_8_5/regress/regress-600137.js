@@ -4,15 +4,19 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-try {
-    for (var [e] = /x/ in d) {
-        (function () {});
-    }
-} catch (e) {}
-try {
-    let(x = Object.freeze(this, /x/))
-    e = #0= * .toString
-    function y() {}
-} catch (e) {}
+if (typeof evalcx == 'function') {
+    var src = 'try {\n' +
+    '    for (var [e] = /x/ in d) {\n' +
+    '        (function () {});\n' +
+    '    }\n' +
+    '} catch (e) {}\n' +
+    'try {\n' +
+    '    let(x = Object.freeze(this, /x/))\n' +
+    '    e = #0= * .toString\n' +
+    '    function y() {}\n' +
+    '} catch (e) {}';
+
+    evalcx(src);
+}
 
 reportCompare(0, 0, "don't crash");
