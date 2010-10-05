@@ -558,6 +558,12 @@ class GeckoAppShell
         AlertNotification notification = mAlertNotifications.get(notificationID);
         if (notification != null)
             notification.updateProgress(aAlertText, aProgress, aProgressMax);
+
+        if (aProgress == aProgressMax) {
+            // Hide the notification at 100%
+            removeObserver(aAlertName);
+            removeNotification(notificationID);
+        }
     }
 
     public static void alertsProgressListener_OnCancel(String aAlertName) {
