@@ -476,19 +476,12 @@ var ExtensionsView = {
     let strings = Elements.browserBundle;
     if (aTerms) {
       AddonSearchResults.selectFirstResult = aSelectFirstResult;
-      this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
-                                strings.getString("addonsSearchStart.button"), false);
+      this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"), strings.getString("addonsSearchStart.button"), false);
       AddonRepository.searchAddons(aTerms, Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
     }
     else {
-      if (RecommendedSearchResults.cache) {
-        this.displaySearchResults(RecommendedSearchResults.cache, -1, true);
-      }
-      else {
-        this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
-                                  strings.getString("addonsSearchStart.button"), false);
-        AddonRepository.retrieveRecommendedAddons(Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
-      }
+      this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"), strings.getString("addonsSearchStart.button"), false);
+      AddonRepository.retrieveRecommendedAddons(Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
     }
   },
 
