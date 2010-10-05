@@ -137,6 +137,8 @@ struct JSStackFrame
     friend class js::FrameRegsIter;
     friend struct JSContext;
 
+    inline void initPrev(JSContext *cx);
+
   public:
     /*
      * Stack frame sort (see JSStackFrame comment above)
@@ -195,8 +197,8 @@ struct JSStackFrame
     inline void initCallFrameLatePrologue();
 
     /* Used for eval. */
-    inline void initEvalFrame(JSScript *script, JSStackFrame *prev,
-                              jsbytecode *prevpc, uint32 flags);
+    inline void initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev,
+                              uint32 flags);
     inline void initGlobalFrame(JSScript *script, JSObject &chain, uint32 flags);
 
     /* Used when activating generators. */
@@ -223,27 +225,7 @@ struct JSStackFrame
         return prev_;
     }
 
-    void setPrev(JSStackFrame *prev, jsbytecode *prevpc) {
-        JS_ASSERT(flags_ & JSFRAME_HAS_PREVPC);
-        prev_ = prev;
-        if (prev) {
-            prevpc_ = prevpc;
-            JS_ASSERT_IF(!prev->isDummyFrame() && !prev->hasImacropc(),
-                         uint32(prevpc - prev->script()->code) < prev->script()->length);
-        }
-    }
-
-    void setPrev(JSFrameRegs *regs) {
-        JS_ASSERT(flags_ & JSFRAME_HAS_PREVPC);
-        if (regs) {
-            prev_ = regs->fp;
-            prevpc_ = regs->pc;
-            JS_ASSERT_IF(!prev_->isDummyFrame() && !prev_->hasImacropc(),
-                         uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
-        } else {
-            prev_ = NULL;
-        }
-    }
+    inline void resetGeneratorPrev(JSContext *cx);
 
     /*
      * Frame slots
