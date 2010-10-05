@@ -4451,6 +4451,17 @@ EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
 JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
 JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
 
+class EmitLevelManager
+{
+private:
+    JSCodeGenerator *cg;
+    
+public:
+    EmitLevelManager(JSCodeGenerator *cg) : cg(cg) { cg->emitLevel++; }
+
+    ~EmitLevelManager() { cg->emitLevel--; }
+};
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -4468,6 +4479,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSOp op;
     TokenKind type;
     uint32 argc;
+    EmitLevelManager elm(cg);
 #if JS_HAS_SHARP_VARS
     jsint sharpnum;
 #endif
@@ -4475,7 +4487,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     ok = JS_TRUE;
-    cg->emitLevel++;
     pn->pn_offset = top = CG_OFFSET(cg);
 
     /* Emit notes to tell the current bytecode's source line number. */
@@ -6848,7 +6859,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * MakeDefIntoUse in jsparse.cpp.
          */
         if (pn->pn_op == JSOP_NOP)
-            return JS_TRUE;
+            break;
         if (!EmitNameOp(cx, cg, pn, JS_FALSE))
             return JS_FALSE;
         break;
@@ -7049,7 +7060,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(0);
     }
 
-    if (ok && --cg->emitLevel == 0) {
+    /* cg->emitLevel == 1 means we're last on the stack, so finish up. */
+    if (ok && cg->emitLevel == 1) {
         if (cg->spanDeps)
             ok = OptimizeSpanDeps(cx, cg);
         if (!UpdateLineNumberNotes(cx, cg, pn->pn_pos.end.lineno))
