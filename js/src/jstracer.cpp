@@ -12484,59 +12484,60 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
 
 JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
 
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getUnitString(LIns* str_ins, LIns* idx_ins)
+{
+    LIns *chars_ins = getStringChars(str_ins);
+    LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
+                                lir->ins2(LIR_addp,
+                                          chars_ins,
+                                          lir->ins2ImmI(LIR_lshp, idx_ins, 1)),
+                                0, ACCSET_OTHER, LOAD_CONST);
+    guard(true, lir->ins2ImmI(LIR_ltui, ch_ins, UNIT_STRING_LIMIT), snapshot(MISMATCH_EXIT));
+    return lir->ins2(LIR_addp,
+                     INS_CONSTPTR(JSString::unitStringTable),
+                     lir->ins2ImmI(LIR_lshp,
+                                   lir->insUI2P(ch_ins),
+                                   (sizeof(JSString) == 16) ? 4 : 5));
+}
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode)
 {
     idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
                                     ACCSET_OTHER);
-    LIns *br = lir->insBranch(LIR_jt,
-                              lir->insEqP_0(lir->ins2(LIR_andp,
-                                                      length_ins,
-                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
-                              NULL);
-    lir->insCall(&js_Flatten_ci, &str_ins);
-    label(br);
 
-    LIns *phi_ins = NULL;
+    LIns *br1 = lir->insBranch(LIR_jt,
+                               lir->insEqP_0(lir->ins2(LIR_andp,
+                                                       length_ins,
+                                                       INS_CONSTWORD(JSString::ROPE_BIT))),
+                               NULL);
+    lir->insCall(&js_Flatten_ci, &str_ins);
+    label(br1);
+
+    LIns* inRange = lir->ins2(LIR_ltup,
+                              idx_ins,
+                              lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT));
+
+    LIns* ret;
     if (mode == JSOP_GETELEM) {
-        guard(true,
-              lir->ins2(LIR_ltup,
-                        idx_ins,
-                        lir->ins2ImmI(LIR_rshup,
-                                      length_ins,
-                                      JSString::FLAGS_LENGTH_SHIFT)),
-              MISMATCH_EXIT);
+        guard(true, inRange, MISMATCH_EXIT);
+
+        ret = getUnitString(str_ins, idx_ins);
     } else {
-        phi_ins = lir->insAlloc(sizeof(JSString *));
+        LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
         lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
 
-        br = lir->insBranch(LIR_jf,
-                            lir->ins2(LIR_ltup,
-                                      idx_ins,
-                                      lir->ins2ImmI(LIR_rshup,
-                                                    length_ins,
-                                                    JSString::FLAGS_LENGTH_SHIFT)),
-                            NULL);
+        LIns* br2 = lir->insBranch(LIR_jf, inRange, NULL);
+        LIns *unitstr_ins = getUnitString(str_ins, idx_ins);
+        lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
+        label(br2);
+
+        ret = lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
     }
-
-    LIns *chars_ins = getStringChars(str_ins);
-    LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
-                                lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
-                                ACCSET_OTHER, LOAD_CONST);
-    guard(true, lir->ins2ImmI(LIR_ltui, ch_ins, UNIT_STRING_LIMIT), snapshot(MISMATCH_EXIT));
-    LIns *unitstr_ins = lir->ins2(LIR_addp,
-                                  INS_CONSTPTR(JSString::unitStringTable),
-                                  lir->ins2ImmI(LIR_lshp,
-                                                lir->insUI2P(ch_ins),
-                                                (sizeof(JSString) == 16) ? 4 : 5));
-    if (mode == JSOP_GETELEM)
-        return unitstr_ins;
-
-    lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
-    label(br);
-
-    return lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
+    return ret;
 }
 
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I

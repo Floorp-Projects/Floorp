@@ -1235,6 +1235,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
                                                    nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getUnitString(nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
     JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
                                                nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
                                                JSOp mode);
