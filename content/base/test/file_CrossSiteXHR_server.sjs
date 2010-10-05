@@ -100,6 +100,13 @@ function handleRequest(request, response)
      query.allowOrigin = hops[query.hop-1].allowOrigin;
      query.allowHeaders = hops[query.hop-1].allowHeaders;
   }
+
+  if (!isPreflight && query.status) {
+    response.setStatusLine(null, query.status, query.statusMessage);
+  }
+  if (isPreflight && query.preflightStatus) {
+    response.setStatusLine(null, query.preflightStatus, "preflight status");
+  }
   
   if (query.allowOrigin && (!isPreflight || !query.noAllowPreflight))
     response.setHeader("Access-Control-Allow-Origin", query.allowOrigin);
