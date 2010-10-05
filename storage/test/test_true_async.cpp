@@ -39,6 +39,7 @@
 #include "storage_test_harness.h"
 #include "prthread.h"
 #include "nsIEventTarget.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "sqlite3.h"
 
@@ -221,6 +222,14 @@ get_conn_async_thread(mozIStorageConnection *db)
   nsCOMPtr<nsIThread> asyncThread;
   threadMan->GetThreadFromPRThread(last_non_watched_thread,
                                    getter_AddRefs(asyncThread));
+
+  // Additionally, check that the thread we get as the background thread is the
+  // same one as the one we report from getInterface.
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(db);
+  nsCOMPtr<nsIThread> allegedAsyncThread = do_QueryInterface(target);
+  PRThread *allegedPRThread;
+  (void)allegedAsyncThread->GetPRThread(&allegedPRThread);
+  do_check_eq(allegedPRThread, last_non_watched_thread);
   return asyncThread.forget();
 }
 
