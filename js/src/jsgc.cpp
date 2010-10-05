@@ -2675,6 +2675,11 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
     RecordNativeStackTopForGC(cx);
 
+#ifdef DEBUG
+    int stackDummy;
+    JS_ASSERT(JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy));
+#endif
+
     GCTIMER_BEGIN();
 
     do {
