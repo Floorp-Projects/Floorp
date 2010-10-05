@@ -276,7 +276,7 @@ JSStackFrame::varobj(JSContext *cx) const
 inline uintN
 JSStackFrame::numActualArgs() const
 {
-    JS_ASSERT(isFunctionFrame() && !isEvalFrame());
+    JS_ASSERT(hasArgs());
     if (JS_UNLIKELY(flags_ & (JSFRAME_OVERFLOW_ARGS | JSFRAME_UNDERFLOW_ARGS)))
         return hasArgsObj() ? argsObj().getArgsInitialLength() : args.nactual;
     return numFormalArgs();
@@ -285,8 +285,8 @@ JSStackFrame::numActualArgs() const
 inline js::Value *
 JSStackFrame::actualArgs() const
 {
-    JS_ASSERT(isFunctionFrame() && !isEvalFrame());
-    js::Value *argv = formalArgsEnd() - numFormalArgs();
+    JS_ASSERT(hasArgs());
+    js::Value *argv = formalArgs();
     if (JS_UNLIKELY(flags_ & JSFRAME_OVERFLOW_ARGS)) {
         uintN nactual = hasArgsObj() ? argsObj().getArgsInitialLength() : args.nactual;
         return argv - (2 + nactual);
@@ -297,12 +297,10 @@ JSStackFrame::actualArgs() const
 inline js::Value *
 JSStackFrame::actualArgsEnd() const
 {
-    JS_ASSERT(isFunctionFrame() && !isEvalFrame());
+    JS_ASSERT(hasArgs());
     if (JS_UNLIKELY(flags_ & JSFRAME_OVERFLOW_ARGS))
-        return formalArgsEnd() - (2 + numFormalArgs());
-    uintN argc = numActualArgs();
-    uintN nmissing = numFormalArgs() - argc;
-    return formalArgsEnd() - nmissing;
+        return formalArgs() - 2;
+    return formalArgs() + numActualArgs();
 }
 
 inline void
