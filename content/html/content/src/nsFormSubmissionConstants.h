@@ -39,10 +39,8 @@
 #define nsFormSubmissionConstants_h__
 
 static const nsAttrValue::EnumTable kFormMethodTable[] = {
-  { "get",    NS_FORM_METHOD_GET },
-  { "post",   NS_FORM_METHOD_POST },
-  { "put",    NS_FORM_METHOD_PUT },
-  { "delete", NS_FORM_METHOD_DELETE },
+  { "get", NS_FORM_METHOD_GET },
+  { "post", NS_FORM_METHOD_POST },
   { 0 }
 };
 // Default method is 'get'.

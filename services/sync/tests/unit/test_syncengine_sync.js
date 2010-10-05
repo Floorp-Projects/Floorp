@@ -48,7 +48,6 @@ SteamStore.prototype = {
 
   createRecord: function(id, uri) {
     var record = new SteamRecord(uri);
-    record.id = id;
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
   },
@@ -125,7 +124,7 @@ function encryptPayload(cleartext) {
     cleartext = JSON.stringify(cleartext);
   }
 
-  return {encryption: "http://localhost:8080/1.0/foo/storage/crypto/steam",
+  return {encryption: "../crypto/steam",
           ciphertext: cleartext, // ciphertext == cleartext with fake crypto
           IV: "irrelevant",
           hmac: Utils.sha256HMAC(cleartext, null)};
@@ -502,6 +501,15 @@ function test_processIncoming_createFromServer() {
       'scotsman', encryptPayload({id: 'scotsman',
                                   denomination: "Flying Scotsman"}));
 
+  // Two pathological cases involving relative URIs gone wrong.
+  collection.wbos['../pathological'] = new ServerWBO(
+      '../pathological', encryptPayload({id: '../pathological',
+                                         denomination: "Pathological Case"}));
+  let wrong_keyuri = encryptPayload({id: "wrong_keyuri",
+                                     denomination: "Wrong Key URI"});
+  wrong_keyuri.encryption = "../../crypto/steam";
+  collection.wbos["wrong_keyuri"] = new ServerWBO("wrong_keyuri", wrong_keyuri);
+
   let server = sync_httpd_setup({
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler(),
@@ -520,6 +528,8 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine.lastModified, null);
     do_check_eq(engine._store.items.flying, undefined);
     do_check_eq(engine._store.items.scotsman, undefined);
+    do_check_eq(engine._store.items['../pathological'], undefined);
+    do_check_eq(engine._store.items.wrong_keyuri, undefined);
 
     engine._processIncoming();
 
@@ -530,6 +540,8 @@ function test_processIncoming_createFromServer() {
     // Local records have been created from the server data.
     do_check_eq(engine._store.items.flying, "LNER Class A3 4472");
     do_check_eq(engine._store.items.scotsman, "Flying Scotsman");
+    do_check_eq(engine._store.items['../pathological'], "Pathological Case");
+    do_check_eq(engine._store.items.wrong_keyuri, "Wrong Key URI");
 
   } finally {
     server.stop(do_test_finished);
@@ -1075,6 +1087,68 @@ function test_syncFinish_deleteLotsInBatches() {
   }
 }
 
+function test_canDecrypt_noCryptoMeta() {
+  _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+  createAndUploadKeypair();
+
+  let engine = makeSteamEngine();
+  try {
+
+    do_check_false(engine.canDecrypt());
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+function test_canDecrypt_true() {
+  _("SyncEngine.canDecrypt returns true if the engine can decrypt the items on the server.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  let crypto_steam = new ServerWBO('steam');
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+  createAndUploadKeypair();
+  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+
+  let engine = makeSteamEngine();
+  try {
+
+    do_check_true(engine.canDecrypt());
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
 function run_test() {
   test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
   test_syncStartup_metaGet404();
@@ -1092,4 +1166,6 @@ function run_test() {
   test_syncFinish_noDelete();
   test_syncFinish_deleteByIds();
   test_syncFinish_deleteLotsInBatches();
+  test_canDecrypt_noCryptoMeta();
+  test_canDecrypt_true();
 }

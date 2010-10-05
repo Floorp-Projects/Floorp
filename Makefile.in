@@ -120,9 +120,6 @@ export::
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
 include $(topsrcdir)/testing/testsuite-targets.mk
-else
-# OS X Universal builds will want to call this, so stub it out
-package-tests:
 endif
 
 include $(topsrcdir)/config/rules.mk

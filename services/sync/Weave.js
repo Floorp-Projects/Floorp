@@ -83,7 +83,7 @@ WeaveService.prototype = {
     if (resProt.hasSubstitution("services-sync"))
       return;
 
-    let uri = ioService.newURI("resource://gre/modules/services-sync/",
+    let uri = ioService.newURI("resource:///modules/services-sync/",
                                null, null);
     resProt.setSubstitution("services-sync", uri);
   }
