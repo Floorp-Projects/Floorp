@@ -76,11 +76,11 @@ CryptoWrapper.prototype = {
     this.cleartext = null;
   },
 
-  decrypt: function CryptoWrapper_decrypt(passphrase) {
+  decrypt: function CryptoWrapper_decrypt(passphrase, keyUri) {
     let pubkey = PubKeys.getDefaultKey();
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
-    let meta = CryptoMetas.get(this.encryption);
+    let meta = CryptoMetas.get(keyUri);
     let symkey = meta.getKey(privkey, passphrase);
 
     // Authenticate the encrypted blob with the expected HMAC
