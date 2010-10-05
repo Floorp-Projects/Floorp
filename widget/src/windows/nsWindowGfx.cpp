@@ -760,6 +760,11 @@ DDRAW_FAILED:
         }
         break;
 #endif
+#ifdef MOZ_ENABLE_D3D10_LAYER
+      case LayerManager::LAYERS_D3D10:
+        result = DispatchWindowEvent(&event, eventStatus);
+        break;
+#endif
       default:
         NS_ERROR("Unknown layers backend used!");
         break;

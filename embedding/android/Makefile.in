@@ -49,6 +49,7 @@ JAVAFILES = \
   GeckoEvent.java \
   GeckoSurfaceView.java \
   GeckoInputConnection.java \
+  AlertNotification.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
@@ -97,14 +98,9 @@ ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
 endif
 
-RES_DRAWABLE = \
-  res/drawable/alertaddons.png \
-  res/drawable/alertdownloads.png \
-  $(NULL)
-
-RES_DRAWABLE_HDPI = \
-  res/drawable-hdpi/alertaddons.png \
-  res/drawable-hdpi/alertdownloads.png \
+RES_LAYOUT = \
+  res/layout/notification_progress.xml \
+  res/layout/notification_progress_text.xml
   $(NULL)
 
 NATIVE_LIBS = $(shell cat $(DIST)/bin/dependentlibs.list) libxpcom.so libnssckbi.so libfreebl3.so libmozutils.so
@@ -168,18 +164,22 @@ res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-hdpi
 	cp $(ICON_PATH_HDPI) $@
 
-$(RES_DRAWABLE):
+ifdef MOZ_ANDROID_DRAWABLES
+RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
+
+$(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
-	cp $(topsrcdir)/mobile/app/android/drawable/* res/drawable/
+	$(NSINSTALL) $^ res/drawable/
+endif
 
-$(RES_DRAWABLE_HDPI):
-	$(NSINSTALL) -D res/drawable-hdpi
-	cp $(topsrcdir)/mobile/app/android/drawable-hdpi/* res/drawable-hdpi/
+$(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
+	$(NSINSTALL) -D res/layout
+	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
 
-R.java: $(MOZ_APP_ICON) $(RES_DRAWABLE) $(RES_DRAWABLE_HDPI) res/values/strings.xml $(LOCALIZED_STRINGS_XML) AndroidManifest.xml
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml $(LOCALIZED_STRINGS_XML) AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_DRAWABLE) $(RES_DRAWABLE_HDPI) res/values/strings.xml $(LOCALIZED_STRINGS_XML)
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml $(LOCALIZED_STRINGS_XML)
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs/armeabi/%: $(DIST)/lib/%

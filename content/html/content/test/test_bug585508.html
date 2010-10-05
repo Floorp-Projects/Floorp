@@ -30,9 +30,11 @@ var methodTestData = [
   // Default value.
   [ "get" ],
   // Valid values.
-  [ "get", "post", "put", "delete" ],
+  [ "get", "post" ],
   // Invalid values.
   [ "", " ", "foo" ],
+  // TODO values, see bug 583289 and bug 583288.
+  [ "delete", "put" ],
 ];
 
 function checkAttribute(form, attrName, idlName, data)

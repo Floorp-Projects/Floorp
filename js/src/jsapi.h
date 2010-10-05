@@ -2844,6 +2844,112 @@ JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 
 /************************************************************************/
 
+/* API for the HTML5 internal structured cloning algorithm. */
+
+/* The maximum supported structured-clone serialization format version. */
+#define JS_STRUCTURED_CLONE_VERSION 1
+
+JS_PUBLIC_API(JSBool)
+JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes, jsval *vp);
+
+/* Note: On success, the caller is responsible for calling js_free(*datap). */
+JS_PUBLIC_API(JSBool)
+JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp);
+
+JS_PUBLIC_API(JSBool)
+JS_StructuredClone(JSContext *cx, jsval v, jsval *vp);
+
+#ifdef __cplusplus
+/* RAII sugar for JS_WriteStructuredClone. */
+class JSAutoStructuredCloneBuffer {
+    JSContext *cx;
+    uint64 *data_;
+    size_t nbytes_;
+
+  public:
+    explicit JSAutoStructuredCloneBuffer(JSContext *cx) : cx(cx), data_(NULL), nbytes_(0) {}
+    ~JSAutoStructuredCloneBuffer() { clear(); }
+
+    uint64 *data() const { return data_; }
+    size_t nbytes() const { return nbytes_; }
+
+    void clear() {
+        if (data_) {
+            JS_free(cx, data_);
+            data_ = NULL;
+            nbytes_ = 0;
+        }
+    }
+
+    /*
+     * Adopt some memory. It will be automatically freed by the destructor.
+     * data must have been allocated using JS_malloc.
+     */
+    void adopt(uint64 *data, size_t nbytes) {
+        clear();
+        data_ = data;
+        nbytes_ = nbytes;
+    }
+
+    /*
+     * Remove the buffer so that it will not be automatically freed.
+     * After this, the caller is responsible for calling JS_free(*datap).
+     */
+    void steal(uint64 **datap, size_t *nbytesp) {
+        *datap = data_;
+        *nbytesp = nbytes_;
+        data_ = NULL;
+        nbytes_ = 0;
+    }
+
+    bool read(jsval *vp) const {
+        JS_ASSERT(data_);
+        return !!JS_ReadStructuredClone(cx, data_, nbytes_, vp);
+    }
+
+    bool write(jsval v) {
+        clear();
+        bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_);
+        if (!ok) {
+            data_ = NULL;
+            nbytes_ = 0;
+        }
+        return ok;
+    }
+};
+#endif
+
+/* API for implementing custom serialization behavior (for ImageData, File, etc.) */
+
+/* The range of tag values the application may use for its own custom object types. */
+#define JS_SCTAG_USER_MIN  ((uint32) 0xFFFF8000)
+#define JS_SCTAG_USER_MAX  ((uint32) 0xFFFFFFFF)
+
+#define JS_SCERR_RECURSION 0
+
+struct JSStructuredCloneCallbacks {
+    ReadStructuredCloneOp read;
+    WriteStructuredCloneOp write;
+    StructuredCloneErrorOp reportError;
+};
+
+JS_PUBLIC_API(void)
+JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);
+
+JS_PUBLIC_API(JSBool)
+JS_ReadPair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2);
+
+JS_PUBLIC_API(JSBool)
+JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len);
+
+JS_PUBLIC_API(JSBool)
+JS_WritePair(JSStructuredCloneWriter *w, uint32 tag, uint32 data);
+
+JS_PUBLIC_API(JSBool)
+JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len);
+
+/************************************************************************/
+
 /*
  * Locale specific string conversion and error message callbacks.
  */

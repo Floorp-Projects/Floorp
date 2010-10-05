@@ -48,6 +48,7 @@ namespace mozilla {
 namespace layers {
 
 class ThebesLayerBufferOGL;
+class BasicBufferOGL;
 
 class ThebesLayerOGL : public ThebesLayer, 
                        public LayerOGL
@@ -72,6 +73,8 @@ public:
                            const nsIntPoint& aOffset);
 
 private:
+  friend class BasicBufferOGL;
+
   PRBool CreateSurface();
 
   nsRefPtr<Buffer> mBuffer;

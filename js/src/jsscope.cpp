@@ -169,7 +169,13 @@ PropertyTable::init(JSContext *cx, Shape *lastProp)
         METER(searches);
         METER(initSearches);
         Shape **spp = search(shape.id, true);
-        SHAPE_STORE_PRESERVING_COLLISION(spp, &shape);
+
+        /*
+         * Beware duplicate args and arg vs. var conflicts: the youngest shape
+         * (nearest to lastProp) must win. See bug 600067.
+         */
+        if (!SHAPE_FETCH(spp))
+            SHAPE_STORE_PRESERVING_COLLISION(spp, &shape);
     }
     return true;
 }

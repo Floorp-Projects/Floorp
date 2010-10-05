@@ -150,7 +150,7 @@ var tasksCfg = [
     close:            false, // no point
   },
 
-  // Privacy mode
+  // Toggle the Private Browsing mode
   {
     get title() {
       if (_privateBrowsingSvc.privateBrowsingEnabled)

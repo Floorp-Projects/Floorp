@@ -214,7 +214,10 @@ struct ParamTraits<nsIStringInputStream*>
       NS_ASSERTION(value.Length() == length, "SetLength failed");
       char *c = value.BeginWriting();
       PRUint32 bytesRead;
-      nsresult rv = aParam->Read(c, length, &bytesRead);
+#ifdef DEBUG
+      nsresult rv = 
+#endif
+      aParam->Read(c, length, &bytesRead);
       NS_ASSERTION(NS_SUCCEEDED(rv) && bytesRead == length, "Read failed");
     }
 

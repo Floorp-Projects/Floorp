@@ -134,7 +134,6 @@ nsHttpChannel::nsHttpChannel()
     , mCustomConditionalRequest(PR_FALSE)
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
-    , mRemoteChannel(PR_FALSE)
     , mRequestTimeInitialized(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
@@ -1016,12 +1015,7 @@ nsHttpChannel::ProcessResponse()
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
 
-    if (!mRemoteChannel) {
-      // For non-remote channels, we are responsible for cookies.
-      // Set cookies, if any exist; done after OnExamineResponse to allow those
-      // observers to modify the cookie response headers.
-      SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
-    }
+    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
     // handle unused username and password in url (see bug 232567)
     if (httpStatus != 401 && httpStatus != 407) {
@@ -1959,8 +1953,7 @@ nsHttpChannel::OpenCacheEntry()
             mPostID = gHttpHandler->GenerateUniqueID();
     }
     else if ((mRequestHead.Method() != nsHttp::Get) &&
-             (mRequestHead.Method() != nsHttp::Head) &&
-             (!(mLoadFlags & FORCE_OPEN_CACHE_ENTRY))) {
+             (mRequestHead.Method() != nsHttp::Head)) {
         // don't use the cache for other types of requests
         return NS_OK;
     }
@@ -3181,12 +3174,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         resumableChannel->ResumeAt(mStartPos, mEntityID);
     }
 
-    // transfer the remote flag
-    nsCOMPtr<nsIHttpChannelParentInternal> httpInternal = 
-        do_QueryInterface(newChannel);
-    if (httpInternal)
-        httpInternal->SetServicingRemoteChannel(mRemoteChannel);
-
     return NS_OK;
 }
 
@@ -3559,17 +3546,13 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         }
     }
     
-    if (!mRemoteChannel) {
-      // For non-remote channels, we are responsible for cookies.
-
-      // Remember the cookie header that was set, if any
-      const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
-      if (cookieHeader) {
+    // Remember the cookie header that was set, if any
+    const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
+    if (cookieHeader) {
         mUserSetCookieHeader = cookieHeader;
-      }
-
-      AddCookiesToRequest();
     }
+
+    AddCookiesToRequest();
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
@@ -3637,22 +3620,6 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     return NS_OK;
 }
 
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIHttpChannelParentInternal
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetServicingRemoteChannel(PRBool *value)
-{
-    *value = mRemoteChannel;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetServicingRemoteChannel(PRBool value)
-{
-    mRemoteChannel = value;
-    return NS_OK;
-}
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -3879,7 +3846,7 @@ nsHttpChannel::ContinueOnStartRequest2(nsresult result)
     if (NS_FAILED(mStatus)) {
         PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
         PRBool waitingForRedirectCallback;
-        nsresult rv = ProcessFallback(&waitingForRedirectCallback);
+        ProcessFallback(&waitingForRedirectCallback);
         if (waitingForRedirectCallback)
             return NS_OK;
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
@@ -4466,11 +4433,8 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // the server response could have included cookies that must be sent with
     // this authentication attempt (bug 84794).
     // TODO: save cookies from auth response and send them here (bug 572151).
-    if (!mRemoteChannel) {
-      // For non-remote channels, we are responsible for cookies.
-      AddCookiesToRequest();
-    }
-
+    AddCookiesToRequest();
+    
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
 
@@ -4586,7 +4550,10 @@ nsHttpChannel::WaitForRedirectCallback()
     if (mCachePump) {
         rv = mCachePump->Suspend();
         if (NS_FAILED(rv) && mTransactionPump) {
-            nsresult resume = mTransactionPump->Resume();
+#ifdef DEBUG
+            nsresult resume = 
+#endif
+            mTransactionPump->Resume();
             NS_ASSERTION(NS_SUCCEEDED(resume),
                 "Failed to resume transaction pump");
         }

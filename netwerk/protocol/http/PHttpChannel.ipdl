@@ -100,13 +100,14 @@ parent:
   DocumentChannelCleanup();
 
 child:
-  OnStartRequest(nsHttpResponseHead responseHead,
-                 PRBool             useResponseHead,
-                 PRBool             isFromCache,
-                 PRBool             cacheEntryAvailable,
-                 PRUint32           cacheExpirationTime,
-                 nsCString          cachedCharset,
-                 nsCString          securityInfoSerialization);
+  OnStartRequest(nsHttpResponseHead  responseHead,
+                 PRBool              useResponseHead,
+                 RequestHeaderTuples requestHeaders,
+                 PRBool              isFromCache,
+                 PRBool              cacheEntryAvailable,
+                 PRUint32            cacheExpirationTime,
+                 nsCString           cachedCharset,
+                 nsCString           securityInfoSerialization);
 
   OnDataAvailable(nsCString data, 
                   PRUint32  offset, 

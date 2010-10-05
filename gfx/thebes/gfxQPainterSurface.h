@@ -41,6 +41,9 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
+#include "cairo-features.h"
+#ifdef CAIRO_HAS_QT_SURFACE
+
 class QPainter;
 class QImage;
 
@@ -62,5 +65,7 @@ public:
 protected:
     QPainter *mPainter;
 };
+
+#endif
 
 #endif /* GFX_QPAINTERSURFACE_H */

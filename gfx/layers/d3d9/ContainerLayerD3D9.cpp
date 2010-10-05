@@ -159,26 +159,23 @@ ContainerLayerD3D9::RenderLayer()
     renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
     device()->SetRenderTarget(0, renderSurface);
     device()->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
-    device()->GetVertexShaderConstantF(12, previousRenderTargetOffset, 1);
+    device()->GetVertexShaderConstantF(CBvRenderTargetOffset, previousRenderTargetOffset, 1);
     renderTargetOffset[0] = (float)visibleRect.x;
     renderTargetOffset[1] = (float)visibleRect.y;
-    device()->SetVertexShaderConstantF(12, renderTargetOffset, 1);
+    device()->SetVertexShaderConstantF(CBvRenderTargetOffset, renderTargetOffset, 1);
 
-    float viewMatrix[4][4];
+    gfx3DMatrix viewMatrix;
     /*
      * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
      * <1.0, -1.0> bottomright)
      */
-    memset(&viewMatrix, 0, sizeof(viewMatrix));
-    viewMatrix[0][0] = 2.0f / visibleRect.width;
-    viewMatrix[1][1] = -2.0f / visibleRect.height;
-    viewMatrix[2][2] = 1.0f;
-    viewMatrix[3][0] = -1.0f;
-    viewMatrix[3][1] = 1.0f;
-    viewMatrix[3][3] = 1.0f;
+    viewMatrix._11 = 2.0f / visibleRect.width;
+    viewMatrix._22 = -2.0f / visibleRect.height;
+    viewMatrix._41 = -1.0f;
+    viewMatrix._42 = 1.0f;
 
-    device()->GetVertexShaderConstantF(8, &oldViewMatrix[0][0], 4);
-    device()->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
+    device()->GetVertexShaderConstantF(CBmProjection, &oldViewMatrix[0][0], 4);
+    device()->SetVertexShaderConstantF(CBmProjection, &viewMatrix._11, 4);
   }
 
   /*
@@ -228,27 +225,17 @@ ContainerLayerD3D9::RenderLayer()
   if (useIntermediate) {
     device()->SetRenderTarget(0, previousRenderTarget);
     device()->SetScissorRect(&oldClipRect);
-    device()->SetVertexShaderConstantF(12, previousRenderTargetOffset, 1);
-    device()->SetVertexShaderConstantF(8, &oldViewMatrix[0][0], 4);
+    device()->SetVertexShaderConstantF(CBvRenderTargetOffset, previousRenderTargetOffset, 1);
+    device()->SetVertexShaderConstantF(CBmProjection, &oldViewMatrix[0][0], 4);
 
-    float quadTransform[4][4];
-    /*
-     * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-     * and size. To get pixel perfect mapping we offset the quad half a pixel
-     * to the top-left.
-     *
-     * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
-     */
-    memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)visibleRect.width;
-    quadTransform[1][1] = (float)visibleRect.height;
-    quadTransform[2][2] = 1.0f;
-    quadTransform[3][0] = (float)visibleRect.x;
-    quadTransform[3][1] = (float)visibleRect.y;
-    quadTransform[3][3] = 1.0f;
+    device()->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(visibleRect.x,
+                                                          visibleRect.y,
+                                                          visibleRect.width,
+                                                          visibleRect.height),
+                                       1);
 
-    device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
-    device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
+    device()->SetVertexShaderConstantF(CBmLayerTransform, &mTransform._11, 4);
 
     float opacityVector[4];
     /*
@@ -256,7 +243,7 @@ ContainerLayerD3D9::RenderLayer()
      * first component since it's declared as a 'float'.
      */
     opacityVector[0] = opacity;
-    device()->SetPixelShaderConstantF(0, opacityVector, 1);
+    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacityVector, 1);
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 

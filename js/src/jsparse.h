@@ -535,6 +535,7 @@ public:
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
     bool isAssigned() const     { return test(PND_ASSIGNED); }
     bool isFunArg() const       { return test(PND_FUNARG); }
+    bool isClosed() const       { return test(PND_CLOSED); }
 
     /* Defined below, see after struct JSDefinition. */
     void setFunArg();
@@ -914,6 +915,7 @@ struct JSObjectBox {
     JSObjectBox         *traceLink;
     JSObjectBox         *emitLink;
     JSObject            *object;
+    uintN               index;
 };
 
 #define JSFB_LEVEL_BITS 14

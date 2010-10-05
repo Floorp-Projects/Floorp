@@ -3229,6 +3229,7 @@ pref("gfx.direct2d.disabled", false);
 pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
+pref("layers.use-d3d10", false);
 #endif
 #endif
 

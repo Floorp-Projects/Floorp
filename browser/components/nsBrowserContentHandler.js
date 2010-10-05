@@ -531,8 +531,7 @@ nsBrowserContentHandler.prototype = {
     }
     if (cmdLine.handleFlag("silent", false))
       cmdLine.preventDefault = true;
-    if (cmdLine.findFlag("private-toggle", false) >= 0 &&
-        cmdLine.state != cmdLine.STATE_INITIAL_LAUNCH)
+    if (cmdLine.findFlag("private-toggle", false) >= 0)
       cmdLine.preventDefault = true;
 
     var searchParam = cmdLine.handleFlagWithParam("search", false);
