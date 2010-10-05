@@ -60,6 +60,9 @@
 #include "nsIAlertsService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsConsoleMessage.h"
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 
@@ -545,6 +548,41 @@ ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
   SendGeolocationUpdate(GeoPosition(postion));
   return NS_OK;
+}
+
+bool
+ContentParent::RecvConsoleMessage(const nsString& aMessage)
+{
+  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!svc)
+    return true;
+  
+  nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
+  svc->LogMessage(msg);
+  return true;
+}
+
+bool
+ContentParent::RecvScriptError(const nsString& aMessage,
+                                      const nsString& aSourceName,
+                                      const nsString& aSourceLine,
+                                      const PRUint32& aLineNumber,
+                                      const PRUint32& aColNumber,
+                                      const PRUint32& aFlags,
+                                      const nsCString& aCategory)
+{
+  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!svc)
+      return true;
+
+  nsCOMPtr<nsIScriptError> msg(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  nsresult rv = msg->Init(aMessage.get(), aSourceName.get(), aSourceLine.get(),
+                          aLineNumber, aColNumber, aFlags, aCategory.get());
+  if (NS_FAILED(rv))
+    return true;
+
+  svc->LogMessage(msg);
+  return true;
 }
 
 } // namespace dom

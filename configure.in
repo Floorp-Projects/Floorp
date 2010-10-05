@@ -4958,6 +4958,7 @@ MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
+MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
 NECKO_COOKIES=1
@@ -6610,6 +6611,13 @@ if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
 fi
 
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
+
+dnl ========================================================
+dnl = Disable DOMCrypto
+dnl ========================================================
+if test -n "$MOZ_DISABLE_DOMCRYPTO"; then
+    AC_DEFINE(MOZ_DISABLE_DOMCRYPTO)
+fi
 
 dnl ========================================================
 dnl =
@@ -8425,6 +8433,7 @@ if test "$MOZ_TREE_CAIRO"; then
         fi
 
         AC_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
+        AC_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
 
         AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
         if test -z "$HAS_DDRAW"; then
@@ -8474,6 +8483,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(MOZ_ENABLE_DWRITE_FONT)
     AC_SUBST(MOZ_ENABLE_D2D_SURFACE)
     AC_SUBST(MOZ_ENABLE_D3D9_LAYER)
+    AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
     AC_SUBST(CAIRO_FT_CFLAGS)
     AC_SUBST(HAS_OGLES)
 

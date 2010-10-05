@@ -310,29 +310,36 @@ LayerManagerD3D9::SetupPipeline()
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  float viewMatrix[4][4];
+  gfx3DMatrix viewMatrix;
   /*
    * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
    * <1.0, -1.0> bottomright)
    */
-  memset(&viewMatrix, 0, sizeof(viewMatrix));
-  viewMatrix[0][0] = 2.0f / rect.width;
-  viewMatrix[1][1] = -2.0f / rect.height;
-  viewMatrix[2][2] = 1.0f;
-  viewMatrix[3][0] = -1.0f;
-  viewMatrix[3][1] = 1.0f;
-  viewMatrix[3][3] = 1.0f;
+  viewMatrix._11 = 2.0f / rect.width;
+  viewMatrix._22 = -2.0f / rect.height;
+  viewMatrix._41 = -1.0f;
+  viewMatrix._42 = 1.0f;
 
-  HRESULT hr = device()->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
+  HRESULT hr = device()->SetVertexShaderConstantF(CBmProjection,
+                                                  &viewMatrix._11, 4);
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to set projection shader constant!");
   }
 
-  hr = device()->SetVertexShaderConstantF(13, ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
+  hr = device()->SetVertexShaderConstantF(CBvTextureCoords,
+                                          ShaderConstantRect(0, 0, 1.0f, 1.0f),
+                                          1);
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to set texCoords shader constant!");
+  }
+
+  float offset[] = { 0, 0, 0, 0 };
+  hr = device()->SetVertexShaderConstantF(CBvRenderTargetOffset, offset, 1);
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to set RenderTargetOffset shader constant!");
   }
 }
 

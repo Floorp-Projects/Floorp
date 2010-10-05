@@ -951,4 +951,16 @@
       ]]></constructor>
     </implementation>
   </binding>
+  
+  <binding id="urlbar-progress" extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
+    <handlers>
+      <handler event="transitionend"><![CDATA[
+        if (this.hasAttribute("slideback") || this.value > 0)
+          this.removeAttribute("slideback");
+        else
+          this.setAttribute("slideback", true);
+      ]]></handler>
+    </handlers>
+  </binding>
+  
 </bindings>
