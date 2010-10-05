@@ -2032,6 +2032,39 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 }
 
 /*
+ * Try to convert a *NAME op to a *GNAME op, which optimizes access to
+ * undeclared globals. Return true if a conversion was made.
+ *
+ * This conversion is not made if we are in strict mode, because the
+ * access to an undeclared global would be an error.
+ */
+static bool
+TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
+{
+    if (cg->compileAndGo() && 
+        cg->compiler()->globalScope->globalObj &&
+        !pn->isDeoptimized() &&
+        !(cg->flags & TCF_STRICT_MODE_CODE)) { 
+        switch (*op) {
+          case JSOP_NAME:     *op = JSOP_GETGNAME; break;
+          case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
+          case JSOP_INCNAME:  *op = JSOP_INCGNAME; break;
+          case JSOP_NAMEINC:  *op = JSOP_GNAMEINC; break;
+          case JSOP_DECNAME:  *op = JSOP_DECGNAME; break;
+          case JSOP_NAMEDEC:  *op = JSOP_GNAMEDEC; break;
+          case JSOP_SETCONST:
+          case JSOP_DELNAME:
+          case JSOP_FORNAME:
+            /* Not supported. */
+            return false;
+          default: JS_NOT_REACHED("gname");
+        }
+        return true;
+    }
+    return false;
+}
+
+/*
  * BindNameToSlot attempts to optimize name gets and sets to stack slot loads
  * and stores, given the compile-time information in cg and a TOK_NAME node pn.
  * It returns false on error, true on success.
@@ -2140,6 +2173,21 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_TRUE;
 
             JS_ASSERT(caller->isScriptFrame());
+
+            /*
+             * If this is an eval in the global scope, then unbound variables
+             * must be globals, so try to use GNAME ops.
+             */
+            if (caller->isGlobalFrame() && TryConvertToGname(cg, pn, &op)) {
+                ale = cg->atomList.add(cg->parser, atom);
+                if (!ale)
+                    return JS_FALSE;
+
+                pn->pn_op = op;
+                pn->pn_dflags |= PND_BOUND;
+                return JS_TRUE;
+            }
+
             if (!caller->isFunctionFrame())
                 return JS_TRUE;
 
@@ -2178,30 +2226,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return MakeUpvarForEval(pn, cg);
         }
 
-        /*
-         * Optimize accesses to undeclared globals, but only if we are in
-         * compile-and-go mode, the global is the same as the scope chain,
-         * and we are not in strict mode.
-         */
-        if (cg->compileAndGo() && 
-            cg->compiler()->globalScope->globalObj &&
-            !pn->isDeoptimized() &&
-            !(cg->flags & TCF_STRICT_MODE_CODE)) { 
-            switch (op) {
-              case JSOP_NAME:     op = JSOP_GETGNAME; break;
-              case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
-              case JSOP_INCNAME:  op = JSOP_INCGNAME; break;
-              case JSOP_NAMEINC:  op = JSOP_GNAMEINC; break;
-              case JSOP_DECNAME:  op = JSOP_DECGNAME; break;
-              case JSOP_NAMEDEC:  op = JSOP_GNAMEDEC; break;
-              case JSOP_SETCONST:
-              case JSOP_DELNAME:
-              case JSOP_FORNAME:
-                /* Not supported. */
-                return JS_TRUE;
-              default: JS_NOT_REACHED("gname");
-            }
-        }
+        /* Optimize accesses to undeclared globals. */
+        if (!TryConvertToGname(cg, pn, &op))
+            return JS_TRUE;
 
         ale = cg->atomList.add(cg->parser, atom);
         if (!ale)
