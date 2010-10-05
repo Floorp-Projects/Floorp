@@ -2303,7 +2303,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN 
     do {                                                                      \
         JS_ASSERT_IF(leaveOnSafePoint, !TRACE_RECORDER(cx));                  \
         if (leaveOnSafePoint && !regs.fp->hasImacropc() &&                    \
-            script->hasNativeCodeForPC(regs.fp->isConstructing(), regs.pc)) { \
+            script->maybeNativeCodeForPC(regs.fp->isConstructing(), regs.pc)) { \
             JS_ASSERT(!TRACE_RECORDER(cx));                                   \
             interpReturnOK = true;                                            \
             goto stop_recording;                                              \

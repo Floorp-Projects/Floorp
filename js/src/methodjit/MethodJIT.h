@@ -190,7 +190,6 @@ struct JITScript {
 
     js::mjit::CallSite *callSites;
     uint32          nCallSites;
-    void            **nmap;     /* scripted pc to native code map. */
 #ifdef JS_MONOIC
     ic::MICInfo     *mics;      /* MICs in this script. */
     uint32          nMICs;      /* number of MonoICs */
@@ -262,25 +261,6 @@ struct CallSite
 } /* namespace mjit */
 
 } /* namespace js */
-
-inline void **
-JSScript::maybeNativeMap(bool constructing)
-{
-    js::mjit::JITScript *jit = constructing ? jitCtor : jitNormal;
-    if (!jit)
-        return NULL;
-    return jit->nmap;
-}
-
-inline bool
-JSScript::hasNativeCodeForPC(bool constructing, jsbytecode *pc)
-{
-    js::mjit::JITScript *jit = getJIT(constructing);
-    if (!jit)
-        return false;
-    JS_ASSERT(pc >= code && pc < code + length);
-    return !!jit->nmap[pc - code];
-}
 
 #ifdef _MSC_VER
 extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);

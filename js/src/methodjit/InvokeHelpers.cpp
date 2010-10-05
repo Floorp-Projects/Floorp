@@ -588,8 +588,7 @@ js_InternalThrow(VMFrame &f)
 
     JSStackFrame *fp = cx->fp();
     JSScript *script = fp->script();
-    JITScript *jit = script->getJIT(fp->isConstructing());
-    return jit->nmap[pc - script->code];
+    return script->nativeCodeForPC(fp->isConstructing(), pc);
 }
 
 void JS_FASTCALL
@@ -677,7 +676,7 @@ HandleErrorInExcessFrames(VMFrame &f, JSStackFrame *stopFp)
     return returnOK;
 }
 
-static inline bool
+static inline void *
 AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
@@ -685,12 +684,7 @@ AtSafePoint(JSContext *cx)
         return false;
 
     JSScript *script = fp->script();
-    JITScript *jit = script->getJIT(fp->isConstructing());
-    if (!jit->nmap)
-        return false;
-
-    JS_ASSERT(cx->regs->pc >= script->code && cx->regs->pc < script->code + script->length);
-    return !!jit->nmap[cx->regs->pc - script->code];
+    return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc);
 }
 
 static inline JSBool
@@ -700,9 +694,9 @@ PartialInterpret(VMFrame &f)
     JSStackFrame *fp = cx->fp();
 
 #ifdef DEBUG
-    JITScript *jit = fp->script()->getJIT(fp->isConstructing());
-    JS_ASSERT(fp->hasImacropc() || !jit->nmap ||
-              !jit->nmap[cx->regs->pc - fp->script()->code]);
+    JSScript *script = fp->script();
+    JS_ASSERT(fp->hasImacropc() ||
+              !script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc));
 #endif
 
     JSBool ok = JS_TRUE;
@@ -729,12 +723,8 @@ FinishExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 {
     JSContext *cx = f.cx;
     while (cx->fp() != entryFrame || entryFrame->hasImacropc()) {
-        JSStackFrame *fp = cx->fp();
-
-        if (AtSafePoint(cx)) {
-            JSScript *script = fp->script();
-            JITScript *jit = script->getJIT(fp->isConstructing());
-            if (!JaegerShotAtSafePoint(cx, jit->nmap[cx->regs->pc - script->code])) {
+        if (void *ncode = AtSafePoint(cx)) {
+            if (!JaegerShotAtSafePoint(cx, ncode)) {
                 if (!HandleErrorInExcessFrames(f, entryFrame))
                     return false;
 
@@ -887,12 +877,8 @@ RunTracer(VMFrame &f)
     JS_ASSERT(!entryFrame->hasImacropc());
 
     /* Step 2. If entryFrame is at a safe point, just leave. */
-    if (AtSafePoint(cx)) {
-        JITScript *jit = entryFrame->script()->getJIT(entryFrame->isConstructing());
-        uint32 offs = uint32(cx->regs->pc - entryFrame->script()->code);
-        JS_ASSERT(jit->nmap[offs]);
-        return jit->nmap[offs];
-    }
+    if (void *ncode = AtSafePoint(cx))
+        return ncode;
 
     /* Step 3. If entryFrame is at a RETURN, then leave slightly differently. */
     if (JSOp op = FrameIsFinished(cx)) {
