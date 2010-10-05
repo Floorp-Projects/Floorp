@@ -124,6 +124,17 @@ function handleRequest(request, response)
     if (query.allowMethods)
       response.setHeader("Access-Control-Allow-Methods", query.allowMethods);
   }
+  else {
+    if (query.responseHeaders) {
+      let responseHeaders = eval(query.responseHeaders);
+      for (let responseHeader in responseHeaders) {
+        response.setHeader(responseHeader, responseHeaders[responseHeader]);
+      }
+    }
+
+    if (query.exposeHeaders)
+      response.setHeader("Access-Control-Expose-Headers", query.exposeHeaders);
+  }
 
   if (query.hop && query.hop < hops.length) {
     newURL = hops[query.hop].server +
