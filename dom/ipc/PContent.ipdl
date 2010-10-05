@@ -115,6 +115,11 @@ parent:
     GeolocationStart();
     GeolocationStop();
 
+    ConsoleMessage(nsString message);
+    ScriptError(nsString message, nsString sourceName, nsString sourceLine,
+                PRUint32 lineNumber, PRUint32 colNumber, PRUint32 flags,
+                nsCString category); 
+
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);
 

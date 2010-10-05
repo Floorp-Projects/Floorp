@@ -44,6 +44,12 @@ if test $? -ne 0 ; then
   exit 1
 fi
 
+# On Mac, force a top-level file so that OS X reloads the Info.plist
+# and launches the right architecture for the OS version, bug 600098
+if [[ -d Contents ]]; then
+  touch force_plist_reload
+fi
+
 list_files files
 
 popd

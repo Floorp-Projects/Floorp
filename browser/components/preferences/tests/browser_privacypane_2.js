@@ -43,9 +43,9 @@ function test() {
   let jar = getJar(rootDir);
   if (jar) {
     let tmpdir = extractJarToTmp(jar);
-    rootDir = "file://" + tmpdir.path;
+    rootDir = "file://" + tmpdir.path + '/';
   }
-  loader.loadSubScript(rootDir + "/privacypane_tests.js", this);
+  loader.loadSubScript(rootDir + "privacypane_tests.js", this);
 
   run_test_subset([
     test_historymode_retention("remember", undefined),

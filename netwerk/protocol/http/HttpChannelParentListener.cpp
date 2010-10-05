@@ -43,6 +43,7 @@
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/unused.h"
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
@@ -55,6 +56,8 @@
 #include "nsISerializable.h"
 #include "nsIAssociatedContentSecurity.h"
 #include "nsISecureBrowserUI.h"
+
+using mozilla::unused;
 
 namespace mozilla {
 namespace net {
@@ -223,11 +226,12 @@ HttpChannelParentListener::AsyncOnChannelRedirect(
   nsHttpResponseHead *responseHead = oldHttpChannel->GetResponseHead();
 
   // TODO: check mActiveChannel->mIPCClosed and return val from Send function
-  mActiveChannel->SendRedirect1Begin(mRedirectChannel,
-                                     IPC::URI(newURI),
-                                     redirectFlags,
-                                     responseHead ? *responseHead 
-                                                  : nsHttpResponseHead());
+  
+  unused << mActiveChannel->SendRedirect1Begin(mRedirectChannel,
+                                               IPC::URI(newURI),
+                                               redirectFlags,
+                                               responseHead ? *responseHead 
+                                                            : nsHttpResponseHead());
 
   // mActiveChannel gets the response in RecvRedirect2Result and forwards it
   // to this wrapper through OnContentRedirectResultReceived
@@ -269,7 +273,7 @@ HttpChannelParentListener::OnRedirectResult(PRBool succeeded)
 
   if (succeeded && !mActiveChannel->mIPCClosed) {
     // TODO: check return value: assume child dead if failed
-    mActiveChannel->SendRedirect3Complete();
+    unused << mActiveChannel->SendRedirect3Complete();
   }
 
   HttpChannelParent* channelToDelete;
@@ -283,7 +287,7 @@ HttpChannelParentListener::OnRedirectResult(PRBool succeeded)
   }
 
   if (!channelToDelete->mIPCClosed)
-    HttpChannelParent::Send__delete__(channelToDelete);
+    unused << HttpChannelParent::Send__delete__(channelToDelete);
   mRedirectChannel = nsnull;
 
   return NS_OK;

@@ -78,4 +78,27 @@ interface nsIAlertsService : nsISupports
                               [optional] in AString cookie,
                               [optional] in nsIObserver alertListener,
                               [optional] in AString name);
+
+};
+
+[scriptable, uuid(df1bd4b0-3a8c-40e6-806a-203f38b0bd9f)]
+interface nsIAlertsProgressListener : nsISupports
+{
+    /**
+     * Called to notify the alert service that progress has occurred for the
+     * given notification previously displayed with showAlertNotification().
+     *
+     * @param name         The name of the notification displaying the
+     *                     progress. On Android the name is hashed and used
+     *                     as a notification ID.
+     * @param progress     Numeric value in the range 0 to progressMax
+     *                     indicating the current progress.
+     * @param progressMax  Numeric value indicating the maximum progress.
+     * @param text         The contents of the alert. If not provided,
+     *                     the percentage will be displayed.
+     */
+    void onProgress(in AString name,
+                    in long long progress,
+                    in long long progressMax,
+                    [optional] in AString text);
 };

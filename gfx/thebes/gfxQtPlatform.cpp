@@ -200,10 +200,12 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
         && 16 == QX11Info().depth())
         imageFormat = gfxASurface::ImageFormatRGB16_565;
 
+#ifdef CAIRO_HAS_QT_SURFACE
     if (mRenderMode == RENDER_QPAINTER) {
       newSurface = new gfxQPainterSurface(size, imageFormat);
       return newSurface.forget();
     }
+#endif
 
     if (mRenderMode == RENDER_BUFFERED &&
         sDefaultQtPaintEngineType != QPaintEngine::X11) {

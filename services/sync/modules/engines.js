@@ -468,7 +468,13 @@ SyncEngine.prototype = {
       handled.push(item.id);
 
       try {
-        item.decrypt(ID.get("WeaveCryptoID"));
+        // Short-circuit the key URI to the engine's one in case the WBO's
+        // might be wrong due to relative URI confusions (bug 600995).
+        try {
+          item.decrypt(ID.get("WeaveCryptoID"), this.cryptoMetaURL);
+        } catch (ex) {
+          item.decrypt(ID.get("WeaveCryptoID"), item.encryption);
+        }
         if (this._reconcile(item)) {
           count.applied++;
           this._tracker.ignoreAll = true;
@@ -763,7 +769,7 @@ SyncEngine.prototype = {
     test.sort = "newest";
     test.full = true;
     test.recordHandler = function(record) {
-      record.decrypt(ID.get("WeaveCryptoID"));
+      record.decrypt(ID.get("WeaveCryptoID"), this.cryptoMetaURL);
       canDecrypt = true;
     };
 

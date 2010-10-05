@@ -121,6 +121,7 @@ CPPSRCS		= \
 		jsarray.cpp \
 		jsatom.cpp \
 		jsbool.cpp \
+		jsclone.cpp \
 		jscntxt.cpp \
 		jsdate.cpp \
 		jsdbgapi.cpp \
@@ -177,6 +178,7 @@ INSTALLED_HEADERS = \
 		jsbit.h \
 		jsbool.h \
 		jsclist.h \
+		jsclone.h \
 		jscntxt.h \
 		jscompat.h \
 		jsdate.h \
@@ -202,6 +204,7 @@ INSTALLED_HEADERS = \
 		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
+		jsopcodeinlines.h \
 		jsotypes.h \
 		jsparse.h \
 		jsproxy.h \
@@ -861,7 +864,7 @@ endif
 
 ifdef ENABLE_TRACEJIT
 # Imacro compilation.
-$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm
+$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm jsopcode.tbl
 	$(PYTHON) $< $(srcdir)/imacros.jsasm $(CURDIR)/imacros.c.out
 $(addsuffix .$(OBJ_SUFFIX),jstracer): $(CURDIR)/imacros.c.out
 

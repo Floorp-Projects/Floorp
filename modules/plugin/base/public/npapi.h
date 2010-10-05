@@ -426,7 +426,7 @@ typedef enum {
 #endif
   , NPNVsupportsCocoaBool = 3001 /* TRUE if the browser supports the Cocoa event model */
 #endif
-#if defined(MOZ_PLATFORM_MAEMO) && (MOZ_PLATFORM_MAEMO == 5)
+#if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
   , NPNVSupportsWindowlessLocal = 2002
 #endif
 } NPNVariable;

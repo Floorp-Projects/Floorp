@@ -147,7 +147,7 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 }
 
 #urlbar-progress {
-  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-progress");
 }
 
 /* Some child nodes want to be ordered based on the locale's direction, while

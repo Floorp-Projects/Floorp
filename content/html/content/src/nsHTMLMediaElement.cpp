@@ -973,7 +973,6 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
     listener = crossSiteListener;
     NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
-    crossSiteListener->AllowHTTPResult(HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE);
   } else {
     rv = nsContentUtils::GetSecurityManager()->
            CheckLoadURIWithPrincipal(NodePrincipal(),

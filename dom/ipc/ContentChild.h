@@ -43,6 +43,7 @@
 #include "mozilla/dom/PContentChild.h"
 
 #include "nsTArray.h"
+#include "nsIConsoleListener.h"
 
 struct ChromePackage;
 class nsIObserver;
@@ -54,6 +55,7 @@ namespace dom {
 
 class AlertObserver;
 class PrefObserver;
+class ConsoleListener;
 
 class ContentChild : public PContentChild
 {
@@ -64,6 +66,7 @@ public:
     bool Init(MessageLoop* aIOLoop,
               base::ProcessHandle aParentHandle,
               IPC::Channel* aChannel);
+    void InitXPCOM();
 
     static ContentChild* GetSingleton() {
         NS_ASSERTION(sSingleton, "not initialized");
@@ -124,6 +127,7 @@ private:
 
     nsTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsTArray<nsAutoPtr<PrefObserver> > mPrefObservers;
+    nsRefPtr<ConsoleListener> mConsoleListener;
     bool mDead;
 
     static ContentChild* sSingleton;
