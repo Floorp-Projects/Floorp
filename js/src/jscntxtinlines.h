@@ -324,8 +324,6 @@ StackSpace::pushInvokeFrame(JSContext *cx, const CallArgs &args,
 {
     JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
-    JSStackFrame *fp = fg->regs_.fp;
-    fp->setPrev(cx->regs);
     if (JS_UNLIKELY(!currentSegment->inContext())) {
         cx->pushSegmentAndFrame(currentSegment, fg->regs_);
     } else {
@@ -391,8 +389,6 @@ StackSpace::pushInlineFrame(JSContext *cx, JSScript *script, JSStackFrame *fp,
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->regs == regs && script == fp->script());
-
-    fp->setPrev(regs);
 
     regs->fp = fp;
     regs->pc = script->code;
