@@ -43,6 +43,8 @@
  * for a name of the form JSOP_UNUSED* and claim it.  Otherwise, always add at
  * the end of the table.
  *
+ * When changing the bytecode, don't forget to update JSXDR_BYTECODE_VERSION!
+ *
  * Includers must define an OPDEF macro of the following form:
  *
  * #define OPDEF(op,val,name,image,length,nuses,ndefs,prec,format) ...
@@ -623,3 +625,4 @@ OPDEF(JSOP_NULLBLOCKCHAIN,248,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
 OPDEF(JSOP_BEGIN,         249,"begin",         NULL,  1,  0,  0,  0,  JOF_BYTE|JOF_TMPSLOT)
 
+/* When adding bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */
