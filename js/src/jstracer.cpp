@@ -13472,6 +13472,9 @@ TraceRecorder::record_JSOP_APPLY()
             JSStackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
                 RETURN_STOP_A("can't reach arguments object's frame");
+            if (aobj->isArgsLengthOverridden())
+                RETURN_STOP_A("can't trace arguments with overridden length");
+            guardArgsLengthNotAssigned(aobj_ins);
             length = afp->numActualArgs();
         } else {
             RETURN_STOP_A("arguments parameter of apply is not a dense array or argments object");
@@ -15233,7 +15236,7 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
     // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = stobj_get_fslot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
     LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
-    guard(true, lir->insEqI_0(ovr_ins), snapshot(BRANCH_EXIT));
+    guard(true, lir->insEqI_0(ovr_ins), snapshot(MISMATCH_EXIT));
     return len_ins;
 }
 
