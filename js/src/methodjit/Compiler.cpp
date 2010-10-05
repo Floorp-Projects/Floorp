@@ -370,7 +370,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     /* Build the pc -> ncode mapping. */
     void **nmap = (void **)cursor;
-    jit->nmap = nmap;
     cursor += sizeof(void *) * script->length;
 
     for (size_t i = 0; i < script->length; i++) {
@@ -590,6 +589,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
 
+    script->setNativeMap(isConstructing, nmap);
     *jitp = jit;
 
     return Compile_Okay;
