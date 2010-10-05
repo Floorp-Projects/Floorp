@@ -1042,8 +1042,8 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
-// Disable the Error Console
-pref("devtools.errorconsole.enabled", false);
+// Enable the Error Console (for now, see bug 601201)
+pref("devtools.errorconsole.enabled", true);
 
 // disable the Inspector
 pref("devtools.inspector.enabled", false);
