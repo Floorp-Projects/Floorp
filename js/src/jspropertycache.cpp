@@ -308,7 +308,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     // The method JIT's implementation of instanceof contains an internal lookup
     // of the prototype property.
-    if (op == JSOP_INSTANCEOF)
+    if (op == JSOP_INSTANCEOF || op == JSOP_BEGIN)
         return cx->runtime->atomState.classPrototypeAtom;
 
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
