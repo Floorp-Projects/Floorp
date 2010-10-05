@@ -486,6 +486,56 @@ function runTest() {
                  preflightStatus: 200
                },
 
+               // exposed headers
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header" },
+                 exposeHeaders: "x-my-header",
+                 expectedResponseHeaders: ["x-my-header"],
+               },
+               { pass: 0,
+                 method: "GET",
+                 origin: "http://invalid",
+                 responseHeaders: { "x-my-header": "x header" },
+                 exposeHeaders: "x-my-header",
+                 expectedResponseHeaders: [],
+               },
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header" },
+                 expectedResponseHeaders: [],
+               },
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header" },
+                 exposeHeaders: "x-my-header y",
+                 expectedResponseHeaders: [],
+               },
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header" },
+                 exposeHeaders: "y x-my-header",
+                 expectedResponseHeaders: [],
+               },
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header" },
+                 exposeHeaders: "x-my-header, y-my-header z",
+                 expectedResponseHeaders: [],
+               },
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header" },
+                 exposeHeaders: "x-my-header, y-my-hea(er",
+                 expectedResponseHeaders: [],
+               },
+               { pass: 1,
+                 method: "GET",
+                 responseHeaders: { "x-my-header": "x header",
+                                    "y-my-header": "y header" },
+                 exposeHeaders: "  ,  ,,y-my-header,z-my-header,  ",
+                 expectedResponseHeaders: ["y-my-header"],
+               },
                ];
 
   if (!runPreflightTests) {
@@ -494,11 +544,12 @@ function runTest() {
 
   for each(test in tests) {
     var req = {
-      url: baseURL + "allowOrigin=" + escape(origin),
+      url: baseURL + "allowOrigin=" + escape(test.origin || origin),
       method: test.method,
       headers: test.headers,
       uploadProgress: test.uploadProgress,
       body: test.body,
+      responseHeaders: test.responseHeaders,
     };
 
     if (test.pass) {
@@ -541,6 +592,10 @@ function runTest() {
     }
     if (test.preflightStatus)
       req.url += "&preflightStatus=" + test.preflightStatus;
+    if (test.responseHeaders)
+      req.url += "&responseHeaders=" + escape(test.responseHeaders.toSource());
+    if (test.exposeHeaders)
+      req.url += "&exposeHeaders=" + escape(test.exposeHeaders);
 
     loaderWindow.postMessage(req.toSource(), origin);
     res = eval(yield);
@@ -574,6 +629,20 @@ function runTest() {
            "opening,rs1,sending,rs1,loadstart,rs2,rs4,load",
            "wrong responseText in test for " + test.toSource());
       }
+      if (test.responseHeaders) {
+        for (header in test.responseHeaders) {
+          if (test.expectedResponseHeaders.indexOf(header) == -1) {
+            is(res.responseHeaders[header], null,
+               "wrong response header (" + header + ") in test for " +
+               test.toSource());
+          }
+          else {
+            is(res.responseHeaders[header], test.responseHeaders[header],
+               "wrong response header (" + header + ") in test for " +
+               test.toSource());
+          }
+        }
+      }
     }
     else {
       is(res.didFail, true,
@@ -589,6 +658,13 @@ function runTest() {
          "wrong events in test for " + test.toSource());
       is(res.progressEvents, 0,
          "wrong events in test for " + test.toSource());
+      if (test.responseHeaders) {
+        for (header in test.responseHeaders) {
+          is(res.responseHeaders[header], null,
+             "wrong response header (" + header + ") in test for " +
+             test.toSource());
+        }
+      }
     }
   }
 

@@ -1416,7 +1416,13 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
                                     nsACString& _retval)
 {
   nsresult rv = NS_OK;
-  _retval.Truncate();
+  _retval.SetIsVoid(PR_TRUE);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
+
+  if (!httpChannel) {
+    return NS_OK;
+  }
 
   // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
   PRBool chrome = PR_FALSE; // default to false in case IsCapabilityEnabled fails
@@ -1425,13 +1431,11 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
        (header.LowerCaseEqualsASCII("set-cookie") ||
         header.LowerCaseEqualsASCII("set-cookie2"))) {
     NS_WARNING("blocked access to response header");
-    _retval.SetIsVoid(PR_TRUE);
     return NS_OK;
   }
 
   // Check for dangerous headers
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    
     // Make sure we don't leak header information from denied cross-site
     // requests.
     if (mChannel) {
@@ -1456,16 +1460,33 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
     }
 
     if (!safeHeader) {
+      nsCAutoString headerVal;
+      // The "Access-Control-Expose-Headers" header contains a comma separated
+      // list of method names.
+      httpChannel->
+        GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"),
+                          headerVal);
+      nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
+      while(exposeTokens.hasMoreTokens()) {
+        const nsDependentCSubstring& token = exposeTokens.nextToken();
+        if (token.IsEmpty()) {
+          continue;
+        }
+        if (!IsValidHTTPToken(token)) {
+          return NS_OK;
+        }
+        if (header.Equals(token, nsCaseInsensitiveCStringComparator())) {
+          safeHeader = PR_TRUE;
+        }
+      }
+    }
+
+    if (!safeHeader) {
       return NS_OK;
     }
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
-
-  if (httpChannel) {
-    rv = httpChannel->GetResponseHeader(header, _retval);
-  }
-
+  rv = httpChannel->GetResponseHeader(header, _retval);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     // Means no header
     _retval.SetIsVoid(PR_TRUE);
