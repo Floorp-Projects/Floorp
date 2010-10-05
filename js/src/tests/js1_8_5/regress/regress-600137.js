@@ -6,7 +6,7 @@
 
 try {
     for (var [e] = /x/ in d) {
-        function () {}
+        (function () {});
     }
 } catch (e) {}
 try {
