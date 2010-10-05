@@ -92,6 +92,7 @@ CMMSRCS = \
 		nsCocoaTextInputHandler.mm \
 		nsMacDockSupport.mm \
 		nsStandaloneNativeMenu.mm \
+		GfxInfo.mm \
 		$(NULL)
 
 ifeq (x86_64,$(TARGET_CPU))

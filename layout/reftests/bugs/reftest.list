@@ -1506,3 +1506,4 @@ random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
 == 593544-1.html 593544-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 594624-1.html 594624-1-ref.html
+fails-if(!haveTestPlugin) == 599476.html 599476-ref.html

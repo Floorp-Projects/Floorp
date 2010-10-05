@@ -118,4 +118,6 @@ function do_test() {
   do_check_true(pb.privateBrowsingEnabled);
   // and should appear as auto-started!
   do_check_true(pb.autoStarted);
+  // and should be coming from the command line!
+  do_check_eq(pb.lastChangedByCommandLine, true);
 }

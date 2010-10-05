@@ -84,7 +84,12 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mPlugin(plugin),
     mMIMEType(nsnull),
     mOwner(nsnull),
-    mCurrentPluginEvent(nsnull)
+    mCurrentPluginEvent(nsnull),
+#ifdef MOZ_X11
+    mUsePluginLayersPref(PR_TRUE)
+#else
+    mUsePluginLayersPref(PR_FALSE)
+#endif
 {
   NS_ASSERTION(mPlugin != NULL, "Plugin is required when creating an instance.");
 
@@ -92,6 +97,14 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
 
   mNPP.pdata = NULL;
   mNPP.ndata = this;
+
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    PRBool useLayersPref;
+    nsresult rv = prefs->GetBoolPref("mozilla.plugins.use_layers", &useLayersPref);
+    if (NS_SUCCEEDED(rv))
+      mUsePluginLayersPref = useLayersPref;
+  }
 
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance ctor: this=%p\n",this));
 }
@@ -878,6 +891,11 @@ nsNPAPIPluginInstance::NotifyPainted(void)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
 {
+  if (!mUsePluginLayersPref) {
+    *aIsAsync = mUsePluginLayersPref;
+    return NS_OK;
+  }
+
   PluginDestructionGuard guard(this);
 
   if (!mPlugin)

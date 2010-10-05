@@ -145,6 +145,14 @@ class Assembler : public BaseAssembler
         return l;
     }
 
+    void loadValueAsComponents(const Value &val, RegisterID type, RegisterID payload) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(val));
+
+        move(ImmTag(jv.s.tag), type);
+        move(Imm32(jv.s.payload.u32), payload);
+    }
+
     /*
      * Stores type first, then payload.
      */

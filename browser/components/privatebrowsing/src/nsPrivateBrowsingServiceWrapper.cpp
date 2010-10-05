@@ -107,6 +107,15 @@ nsPrivateBrowsingServiceWrapper::GetAutoStarted(PRBool *aAutoStarted)
 }
 
 NS_IMETHODIMP
+nsPrivateBrowsingServiceWrapper::GetLastChangedByCommandLine(PRBool *aReason)
+{
+  if (!aReason)
+    return NS_ERROR_NULL_POINTER;
+  JSStackGuard guard;
+  return mPBService->GetLastChangedByCommandLine(aReason);
+}
+
+NS_IMETHODIMP
 nsPrivateBrowsingServiceWrapper::RemoveDataFromDomain(const nsACString & aDomain)
 {
   JSStackGuard guard;

@@ -216,7 +216,13 @@ private:
   // IME
   nsIMEUpdatePreference mIMEPreference;
   PRPackedBool mIMEComposing;
-  PRPackedBool mIMESuppressNotifySel;
+  // Latest seqno received through events
+  PRUint32 mIMELastReceivedSeqno;
+  // Chrome's seqno value when last blur occurred
+  // arriving events with seqno up to this should be discarded
+  // Note that if seqno overflows (~50 days at 1 ms increment rate),
+  // events will be discarded until new focus/blur occurs
+  PRUint32 mIMELastBlurSeqno;
 };
 
 }  // namespace widget

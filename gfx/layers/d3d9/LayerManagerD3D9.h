@@ -66,8 +66,20 @@ class ThebesLayerD3D9;
 struct ShaderConstantRect
 {
   float mX, mY, mWidth, mHeight;
+
+  // Provide all the commonly used argument types to prevent all the local
+  // casts in the code.
   ShaderConstantRect(float aX, float aY, float aWidth, float aHeight)
     : mX(aX), mY(aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  ShaderConstantRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+    : mX((float)aX), mY((float)aY)
+    , mWidth((float)aWidth), mHeight((float)aHeight)
+  { }
+
+  ShaderConstantRect(PRInt32 aX, PRInt32 aY, float aWidth, float aHeight)
+    : mX((float)aX), mY((float)aY), mWidth(aWidth), mHeight(aHeight)
   { }
 
   // For easy passing to SetVertexShaderConstantF.

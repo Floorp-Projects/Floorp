@@ -373,17 +373,26 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
 
   if (destBuffer) {
     if (mTexImage) {
-      nsIntRect overlap;
-      overlap.IntersectRect(mBufferRect, destBufferRect);
+      // BlitTextureImage depends on the FBO texture target being
+      // TEXTURE_2D.  This isn't the case on some older X1600-era Radeons.
+      if (mLayer->mOGLManager->FBOTextureTarget() == LOCAL_GL_TEXTURE_2D) {
+        nsIntRect overlap;
+        overlap.IntersectRect(mBufferRect, destBufferRect);
 
-      nsIntRect srcRect(overlap), dstRect(overlap);
-      srcRect.MoveBy(- mBufferRect.TopLeft() + mBufferRotation);
-      dstRect.MoveBy(- destBufferRect.TopLeft());
+        nsIntRect srcRect(overlap), dstRect(overlap);
+        srcRect.MoveBy(- mBufferRect.TopLeft() + mBufferRotation);
+        dstRect.MoveBy(- destBufferRect.TopLeft());
 
-      destBuffer->Resize(destBufferRect.Size());
+        destBuffer->Resize(destBufferRect.Size());
 
-      gl()->BlitTextureImage(mTexImage, srcRect,
-                             destBuffer, dstRect);
+        gl()->BlitTextureImage(mTexImage, srcRect,
+                               destBuffer, dstRect);
+      } else {
+        // can't blit, just draw everything
+        destBufferRect = visibleBounds;
+        destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
+                                              LOCAL_GL_REPEAT);
+      }
     }
 
     mTexImage = destBuffer.forget();
