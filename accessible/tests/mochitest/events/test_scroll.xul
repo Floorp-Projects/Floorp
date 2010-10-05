@@ -73,10 +73,10 @@
       var jar = getJar(rootDir);
       if (jar) {
         var tmpdir = extractJarToTmp(jar);
-        rootDir = "file://" + tmpdir.path;
+        rootDir = "file://" + tmpdir.path + '/';
       }
 
-      var url = rootDir + "/scroll.html#link1";
+      var url = rootDir + "scroll.html#link1";
       var tabBrowser = document.getElementById("tabBrowser");
       tabBrowser.loadURI(url);
     }

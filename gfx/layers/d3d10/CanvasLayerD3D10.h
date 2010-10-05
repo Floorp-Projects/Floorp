@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Brad Lassey <blassey@mozilla.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Bas Schouten <bschouten@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +36,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSFILEPICKER_H
-#define NSFILEPICKER_H
+#ifndef GFX_CANVASLAYEROGL_H
+#define GFX_CANVASLAYEROGL_H
 
-#include "nsIFilePicker.h"
-#include "nsString.h"
+#include "LayerManagerD3D10.h"
+#include "GLContext.h"
+#include "gfxASurface.h"
 
-class nsFilePicker : public nsIFilePicker
+namespace mozilla {
+namespace layers {
+
+class THEBES_API CanvasLayerD3D10 : public CanvasLayer,
+                                    public LayerD3D10
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFILEPICKER
+  CanvasLayerD3D10(LayerManagerD3D10 *aManager)
+    : CanvasLayer(aManager, NULL),
+      LayerD3D10(aManager),
+      mTexture(0),
+      mDataIsPremultiplied(PR_FALSE),
+      mNeedsYFlip(PR_FALSE)
+  {
+      mImplData = static_cast<LayerD3D10*>(this);
+  }
+
+  ~CanvasLayerD3D10();
+
+  // CanvasLayer implementation
+  virtual void Initialize(const Data& aData);
+  virtual void Updated(const nsIntRect& aRect);
+
+  // LayerD3D10 implementation
+  virtual Layer* GetLayer();
+  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
 
 private:
-  nsString mFilePath;
+  typedef mozilla::gl::GLContext GLContext;
+
+  nsRefPtr<gfxASurface> mSurface;
+  nsRefPtr<GLContext> mGLContext;
+
+  PRUint32 mCanvasFramebuffer;
+
+  nsRefPtr<ID3D10Texture2D> mTexture;
+  nsRefPtr<ID3D10ShaderResourceView> mSRView;
+
+  nsIntRect mBounds;
+
+  PRPackedBool mDataIsPremultiplied;
+  PRPackedBool mNeedsYFlip;
+  PRPackedBool mIsD2DTexture;
 };
-#endif
+
+} /* layers */
+} /* mozilla */
+#endif /* GFX_CANVASLAYERD3D10_H */

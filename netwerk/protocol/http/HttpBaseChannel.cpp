@@ -1244,25 +1244,34 @@ HttpBaseChannel::AddCookiesToRequest()
     return;
   }
 
+  bool useCookieService = 
+#ifdef MOZ_IPC
+    (XRE_GetProcessType() == GeckoProcessType_Default);
+#else
+    PR_TRUE;
+#endif
   nsXPIDLCString cookie;
+  if (useCookieService) {
+    nsICookieService *cs = gHttpHandler->GetCookieService();
+    if (cs) {
+      cs->GetCookieStringFromHttp(mURI,
+                                  nsnull,
+                                  this, getter_Copies(cookie));
+    }
 
-  nsICookieService *cs = gHttpHandler->GetCookieService();
-  if (cs) {
-    cs->GetCookieStringFromHttp(mURI,
-                                mDocumentURI ? mDocumentURI : mOriginalURI,
-                                this, getter_Copies(cookie));
+    if (cookie.IsEmpty()) {
+      cookie = mUserSetCookieHeader;
+    }
+    else if (!mUserSetCookieHeader.IsEmpty()) {
+      cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
+    }
   }
-
-  if (cookie.IsEmpty()) {
+  else {
     cookie = mUserSetCookieHeader;
   }
-  else if (!mUserSetCookieHeader.IsEmpty()) {
-    cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
-  }
 
-  // overwrite any existing cookie headers.  be sure to clear any
-  // existing cookies if we have no cookies to set or if the cookie
-  // service is unavailable.
+  // If we are in the child process, we want the parent seeing any
+  // cookie headers that might have been set by SetRequestHeader()
   SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, PR_FALSE);
 }
 

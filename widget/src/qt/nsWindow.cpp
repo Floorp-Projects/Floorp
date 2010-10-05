@@ -976,8 +976,10 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
         targetSurface = gBufferSurface;
 
+#ifdef CAIRO_HAS_QT_SURFACE
     } else if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
         targetSurface = new gfxQPainterSurface(aPainter);
+#endif
     }
 
     if (NS_UNLIKELY(!targetSurface))
@@ -2443,9 +2445,11 @@ nsWindow::GetThebesSurface()
         return mThebesSurface;
 
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
+#ifdef CAIRO_HAS_QT_SURFACE
     if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
         mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR);
     }
+#endif
     if (!mThebesSurface) {
         gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatRGB24;
         mThebesSurface = new gfxImageSurface(gfxIntSize(1, 1), imageFormat);

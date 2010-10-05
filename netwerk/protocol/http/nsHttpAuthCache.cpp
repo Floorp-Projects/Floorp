@@ -415,7 +415,7 @@ nsHttpAuthEntry::Set(const char *path,
         memcpy(newChall, chall, challLen);
     newChall[challLen] = 0;
 
-    nsresult rv;
+    nsresult rv = NS_OK;
     if (ident) {
         rv = mIdent.Set(*ident);
     } 

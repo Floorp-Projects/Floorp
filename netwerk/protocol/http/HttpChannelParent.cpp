@@ -133,7 +133,6 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
     return SendCancelEarly(rv);
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-  httpChan->SetServicingRemoteChannel(PR_TRUE);
 
   if (doResumeAt)
     httpChan->ResumeAt(startPos, entityID);
@@ -284,7 +283,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   nsHttpChannel *chan = static_cast<nsHttpChannel *>(aRequest);
   nsHttpResponseHead *responseHead = chan->GetResponseHead();
-
+  nsHttpRequestHead  *requestHead = chan->GetRequestHead();
   PRBool isFromCache = false;
   chan->IsFromCache(&isFromCache);
   PRUint32 expirationTime = nsICache::NO_EXPIRATION_TIME;
@@ -309,9 +308,21 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
       NS_SerializeToString(secInfoSer, secInfoSerialization);
   }
 
+  RequestHeaderTuples headers;
+  nsHttpHeaderArray harray = requestHead->Headers();
+
+  for (PRUint32 i = 0; i < harray.Count(); i++) {
+    RequestHeaderTuple* tuple = headers.AppendElement();
+    tuple->mHeader = harray.Headers()[i].header;
+    tuple->mValue  = harray.Headers()[i].value;
+    tuple->mMerge  = false;
+  }
+
   if (mIPCClosed || 
       !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
-                          !!responseHead, isFromCache,
+                          !!responseHead,
+                          headers,
+                          isFromCache,
                           mCacheDescriptor ? PR_TRUE : PR_FALSE,
                           expirationTime, cachedCharset, secInfoSerialization)) 
   {

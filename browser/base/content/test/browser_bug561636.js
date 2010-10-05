@@ -355,7 +355,7 @@ function test9()
       gBrowser.removeTab(tab, {animate: false});
 
       // Next test
-      executeSoon(finish);
+      executeSoon(test10);
     });
   };
 
@@ -371,4 +371,39 @@ function test9()
   }, true);
 
   tab.linkedBrowser.loadURI(uri);
+}
+
+/**
+ * In this test, we check that the author defined error message is shown.
+ */
+function test10()
+{
+  let uri = "data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input x-moz-errormessage='foo' required id='i'><input id='s' type='submit'></form>";
+  let tab = gBrowser.addTab();
+
+  gInvalidFormPopup.addEventListener("popupshown", function() {
+    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+
+    let doc = gBrowser.contentDocument;
+    is(doc.activeElement, doc.getElementById('i'),
+       "First invalid element should be focused");
+
+    checkPopupShow();
+
+    is(gInvalidFormPopup.firstChild.nodeValue, "foo",
+       "The panel should show the author defined error message");
+
+    // Clean-up and next test.
+    gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+    executeSoon(finish);
+  }, false);
+
+  tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+
+    gBrowser.contentDocument.getElementById('s').click();
+  }, true);
+
+  gBrowser.selectedTab = tab;
+  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
 }

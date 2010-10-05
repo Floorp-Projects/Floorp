@@ -260,6 +260,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug505783.html \
 		test_bug457746.html \
 		test_bug587931.html \
+		test_bug592829.html \
 		test_bug518104.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
