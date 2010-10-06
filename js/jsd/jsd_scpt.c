@@ -500,18 +500,20 @@ jsd_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript)
 jsuword
 jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
 {
-#ifdef LIVEWIRE
-    if( jsdscript && jsdscript->lwscript )
-    {
-        uintN newline;
-        jsdlw_RawToProcessedLineNumber(jsdc, jsdscript, line, &newline);
-        if( line != newline )
-            line = newline;
-    }
-#endif
-
     return (jsuword) JS_LineNumberToPC(jsdc->dumbContext, 
                                        jsdscript->script, line );
+}
+
+jsuword
+jsd_GetFirstValidPC(JSDContext* jsdc, JSDScript* jsdscript)
+{
+    return (jsuword) JS_FirstValidPC(jsdc->dumbContext, jsdscript->script );
+}
+
+jsuword
+jsd_GetEndPC(JSDContext* jsdc, JSDScript* jsdscript)
+{
+    return (jsuword) JS_EndPC(jsdc->dumbContext, jsdscript->script );
 }
 
 uintN
