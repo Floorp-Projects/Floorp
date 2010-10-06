@@ -70,13 +70,18 @@ add_test(function() {
     is(gAvailableCategory.badgeCount, 1, "Badge for Available Updates should now be 1");
     run_next_test();
   }, false);
-  
-  gProvider.createInstalls([{
-    name: "manually updating addon (new and improved!)",
-    existingAddon: gProvider.addons[1],
-    version: "1.1",
-    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml", null, null)
-  }]);
+
+  gCategoryUtilities.openType("extension", function() {
+    gProvider.createInstalls([{
+      name: "manually updating addon (new and improved!)",
+      existingAddon: gProvider.addons[1],
+      version: "1.1",
+      releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml", null, null)
+    }]);
+
+    var item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
+    is(item._version.value, "1.0", "Should still show the old version in the normal list");
+  });
 });
 
 
