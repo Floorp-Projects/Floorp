@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =   imgutils.js \
+                lime100x100.svg \
                 test_bug399925.html \
                 bug399925.gif \
                 schrep.png \
@@ -71,6 +72,7 @@ _TEST_FILES =   imgutils.js \
                 bug497665-iframe.html \
                 bug497665.sjs \
                 test_bug553982.html \
+                test_bug601470.html \
 		$(NULL)
 
 # Tests disabled due to intermittent orange
