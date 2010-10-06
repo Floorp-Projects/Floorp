@@ -1032,27 +1032,22 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                                 mediaTime);
           }
           if (NS_SUCCEEDED(res)){
-            PRInt64 audioTime = seekTime;
             SoundData* audio = HasAudio() ? mReader->mAudioQueue.PeekFront() : nsnull;
-            if (audio) {
-              audioTime = audio->mTime;
-              mPlayDuration = TimeDuration::FromMilliseconds(mAudioStartTime);
-            }
-            mAudioStartTime = (audioTime >= seekTime) ? seekTime : audioTime;
+            NS_ASSERTION(!audio || (audio->mTime <= seekTime &&
+                                    seekTime <= audio->mTime + audio->mDuration),
+                         "Seek target should lie inside the first audio block after seek");
+            PRInt64 startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
+            mAudioStartTime = startTime;
+            mPlayDuration = TimeDuration::FromMilliseconds(startTime);
             if (HasVideo()) {
               nsAutoPtr<VideoData> video(mReader->mVideoQueue.PeekFront());
               if (video) {
+                NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
+                             "Seek target should lie inside the first frame after seek");
                 RenderVideoFrame(video);
-                if (!audio) {
-                  NS_ASSERTION(video->mTime <= seekTime &&
-                               seekTime <= video->mEndTime,
-                               "Seek target should lie inside the first frame after seek");
-                  mPlayDuration = TimeDuration::FromMilliseconds(seekTime);
-                }
+                mReader->mVideoQueue.PopFront();
               }
-              mReader->mVideoQueue.PopFront();
             }
-            UpdatePlaybackPosition(seekTime);
           }
         }
         mDecoder->StartProgressUpdates();
