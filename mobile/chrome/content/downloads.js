@@ -48,6 +48,7 @@ var DownloadsView = {
   _list: null,
   _dlmgr: null,
   _progress: null,
+  _progressAlert: null,
 
   _initStatement: function dv__initStatement() {
     if (this._stmt)
@@ -162,7 +163,9 @@ var DownloadsView = {
 
     this._list = document.getElementById("downloads-list");
 
-    this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    if (this._dlmgr == null)
+      this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+
     this._progress = new DownloadProgressListener();
     this._dlmgr.addListener(this._progress);
 
@@ -443,6 +446,17 @@ var DownloadsView = {
       notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
                                      strings.getFormattedString(msgKey, [download.displayName]), true, "", observer,
                                      download.target.spec.replace("file:", "download:"));
+
+#ifdef ANDROID
+    if (aTopic == "dl-start") {
+      if (this._dlmgr == null)
+        this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+
+      this._progressAlert = new AlertDownloadProgressListener();
+      this._dlmgr.addListener(this._progressAlert);
+    }
+#endif
+
     }
   },
 
@@ -541,3 +555,35 @@ DownloadProgressListener.prototype = {
     return this;
   }
 };
+
+#ifdef ANDROID
+// AlertDownloadProgressListener is used to display progress in the alert notifications.
+function AlertDownloadProgressListener() { }
+
+AlertDownloadProgressListener.prototype = {
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsIDownloadProgressListener
+  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) {
+    if (aDownload.percentComplete == -1) {
+      // Undetermined progress is not supported yet
+      return;
+    }
+    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+    let notificationName = aDownload.target.spec.replace("file:", "download:");
+    progressListener.onProgress(notificationName, aDownload.percentComplete, 100);
+  },
+
+  onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) { },
+  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) { },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsISupports
+  QueryInterface: function (aIID) {
+    if (!aIID.equals(Ci.nsIDownloadProgressListener) &&
+        !aIID.equals(Ci.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+#endif
