@@ -18,7 +18,7 @@ browser[remote="true"] {
   -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
 }
 
-box[type="documenttab"] {
+documenttab {
   -moz-binding: url("chrome://browser/content/tabs.xml#documenttab");
 }
 

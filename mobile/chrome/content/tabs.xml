@@ -9,31 +9,47 @@
   <binding id="documenttab">
     <content>
       <xul:stack anonid="page" class="documenttab-container" flex="1">
-        <html:canvas anonid="canvas" class="documenttab-canvas" left="0" width="106" height="64" moz-opaque="true"
-          onclick="document.getBindingParent(this)._onClick()" xbl:inherits="selected"/>
-        <xul:hbox class="documenttab-close-container" left="0" top="10" height="64" width="55" align="center" onclick="document.getBindingParent(this)._close()">
+        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" width="106" height="64" moz-opaque="true" empty="true"
+          onclick="document.getBindingParent(this)._onClick()"/>
+        <xul:hbox class="documenttab-reload" left="0" top="0" width="122" height="80" onclick="document.getBindingParent(this)._onUndo();"/>
+        <xul:hbox class="documenttab-close-container" left="0" top="10" height="64" width="55" align="center" onclick="document.getBindingParent(this)._onClose()">
           <xul:image anonid="close" class="documenttab-close" mousethrough="always"/>
         </xul:hbox>
       </xul:stack>
     </content>
-    
+
    <implementation>
+      <field name="thumbnail">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
+      <field name="_container">this.parentNode.parentNode;</field>
       <method name="_onClick">
         <body>
           <![CDATA[
-            this.parentNode.selectedTab = this;
+            this._container.selectedTab = this;
 
-            let selectFn = new Function("event", this.parentNode.getAttribute('onselect'));
+            let selectFn = new Function("event", this._container.getAttribute("onselect"));
             selectFn.call(this);
           ]]>
         </body>
       </method>
 
-      <method name="_close">
+      <method name="_onClose">
         <body>
           <![CDATA[
-            let closeFn = new Function("event", this.parentNode.getAttribute('onclosetab'));
+
+            let callbackFunc = this._container.getAttribute(this.hasAttribute("reload") ? "onclosereloadtab" : "onclosetab");
+            let closeFn = new Function("event", callbackFunc);
             closeFn.call(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onUndo">
+        <body>
+          <![CDATA[
+            let closeFn = new Function("event", this._container.getAttribute("onreloadtab"));
+            closeFn.call(this);
+
+            this._container.removeTab(this);
           ]]>
         </body>
       </method>
@@ -49,9 +65,11 @@
 
             let ratio = tabHeight / tabWidth;
             height = width * ratio;
+            
+            let thumbnail = this.thumbnail;
+            thumbnail.removeAttribute("empty");
 
-            let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
-            let renderer = rendererFactory(browser, canvas)
+            let renderer = rendererFactory(browser, thumbnail)
             renderer.drawContent(function(ctx, callback) {
               ctx.save();
               ctx.clearRect(0, 0, tabWidth, tabHeight);
@@ -66,22 +84,24 @@
   </binding>
 
   <binding id="tablist">
+    <content>
+      <xul:vbox anonid="tabs-children" flex="1"/>
+      <xul:box anonid="tabs-undo"/>
+    </content>
     <implementation>
+      <field name="children">document.getAnonymousElementByAttribute(this, "anonid", "tabs-children");</field>
+      <field name="_tabsUndo">document.getAnonymousElementByAttribute(this, "anonid", "tabs-undo");</field>
+      <field name="_closedTab">null</field>
       <field name="_selectedTab">null</field>
 
-      <property name="selectedTab">
-        <getter>
-          <![CDATA[
-            return this._selectedTab;
-          ]]>
-        </getter>
+      <property name="selectedTab" onget="return this._selectedTab;">
         <setter>
           <![CDATA[
             if (this._selectedTab)
-              this._selectedTab.removeAttribute('selected');
+              this._selectedTab.removeAttribute("selected");
 
             if (val)
-              val.setAttribute('selected', 'true');
+              val.setAttribute("selected", "true");
 
             this._selectedTab = val;
           ]]>
@@ -91,9 +111,8 @@
       <method name="addTab">
         <body>
           <![CDATA[
-            let tab = document.createElement("box");
-            tab.setAttribute("type", "documenttab");
-            this.appendChild(tab);
+            let tab = document.createElement("documenttab");
+            this.children.appendChild(tab);
             this._updateWidth();
             return tab;
           ]]>
@@ -104,21 +123,51 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            this.removeChild(aTab);
-            this._updateWidth();
+            let closedTab = this._closedTab;
+            if (closedTab) {
+              this._tabsUndo.removeChild(closedTab);
+              this._closedTab = null;
+            }
+
+            if (!closedTab || closedTab != aTab) {
+              if (aTab.thumbnail && !aTab.thumbnail.hasAttribute("empty")) {
+                // duplicate the old thumbnail to the new one because moving the
+                // tab in the dom clear the canvas
+                let oldThumbnail = aTab.thumbnail.toDataURL("image/png");
+                this._tabsUndo.appendChild(aTab);
+                let thumbnailImg = new Image();
+                thumbnailImg.onload = function() aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
+                thumbnailImg.src = oldThumbnail;
+              }
+              else
+                this._tabsUndo.appendChild(aTab);
+
+              aTab.setAttribute("reload", "true");
+              this._closedTab = aTab;
+            }
+
+            this.resize();
           ]]>
         </body>
+      </method>
+
+      <method name="removeClosedTab">
+        <body><![CDATA[
+          if (!this._closedTab)
+            return;
+
+          this.removeTab(this._closedTab);
+        ]]></body>
       </method>
 
       <method name="resize">
         <body>
           <![CDATA[
             let container = this.parentNode.getBoundingClientRect();
-            let element   = this.getBoundingClientRect();
-            
-            let height = (element.top - container.top) +
-                         ((container.top + container.height) - (element.top + element.height));
-            this.style.height = height + "px";
+            let element   = this.children.getBoundingClientRect();
+
+            let height = (element.top - container.top) + ((container.top + container.height) - (element.top + element.height));
+            this.children.style.height = height + "px";
 
             this._updateWidth();
           ]]>
@@ -129,12 +178,12 @@
       <method name="_updateWidth">
         <body>
           <![CDATA[
-            let firstBox = this.firstChild.getBoundingClientRect();
-            let lastBox = this.lastChild.getBoundingClientRect();
-            let columnsCount = Math.ceil(this.childNodes.length / Math.floor(this.style.height / firstBox.height));
+            let firstBox = this.children.firstChild.getBoundingClientRect();
+            let lastBox = this.children.lastChild.getBoundingClientRect();
+            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.style.height / firstBox.height));
             if (this._columnsCount != columnsCount) {
               let width = Math.max(lastBox.right - firstBox.left, firstBox.right - lastBox.left);
-              this.style.width = width + "px";
+              this.children.style.width = width + "px";
               this._columnsCount = columnsCount;
             }
           ]]>

@@ -42,6 +42,7 @@ chrome.jar:
   skin/images/folder-32.png                 (images/folder-32.png)
   skin/images/stop-30.png                   (images/stop-30.png)
   skin/images/reload-30.png                 (images/reload-30.png)
+  skin/images/reload-tab.png                (images/reload-tab.png)
   skin/images/alert-addons-30.png           (images/alert-addons-30.png)
   skin/images/alert-downloads-30.png        (images/alert-downloads-30.png)
   skin/images/addons-default-64.png         (images/addons-default-64.png)
