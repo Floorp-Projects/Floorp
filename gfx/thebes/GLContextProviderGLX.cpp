@@ -137,9 +137,9 @@ GLXLibrary::EnsureInitialized()
     if (gGLXVersion < 0x0103)
         return PR_FALSE;
 
-    gIsATI = vendor && strstr(vendor, "ATI");
-    gIsChromium = (vendor && strstr(vendor, "Chromium")) ||
-        (serverVersion && strstr(serverVersionStr, "Chromium"));
+    gIsATI = vendor && DoesVendorStringMatch(vendor, "ATI");
+    gIsChromium = (vendor && DoesVendorStringMatch(vendor, "Chromium")) ||
+        (serverVersion && DoesVendorStringMatch(serverVersionStr, "Chromium"));
 
     mInitialized = PR_TRUE;
     return PR_TRUE;
