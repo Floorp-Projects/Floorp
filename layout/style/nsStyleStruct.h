@@ -482,11 +482,7 @@ struct nsStyleBackground {
     // of the corresponding frame changes.  This is true for any
     // non-solid-color background whose position or size depends on
     // the frame size.
-    PRBool RenderingMightDependOnFrameSize() const {
-      return (!mImage.IsEmpty() &&
-              (mPosition.DependsOnFrameSize() ||
-               mSize.DependsOnFrameSize(mImage.GetType())));
-    }
+    PRBool RenderingMightDependOnFrameSize() const;
 
     // An equality operator that compares the images using URL-equality
     // rather than pointer-equality.
