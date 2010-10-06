@@ -1094,7 +1094,8 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         // data to begin playback, or if we've not downloaded a reasonable
         // amount of data inside our buffering time.
         TimeDuration elapsed = TimeStamp::Now() - mBufferingStart;
-        if ((!mDecoder->CanPlayThrough() || !HasAmpleDecodedData()) &&
+        PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
+        if (((!isLiveStream && !mDecoder->CanPlayThrough()) || !HasAmpleDecodedData()) &&
              elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
              stream->GetCachedDataEnd(mDecoder->mDecoderPosition) < mBufferingEndOffset &&
              !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
