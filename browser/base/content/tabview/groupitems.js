@@ -1582,7 +1582,7 @@ let GroupItems = {
   getNextID: function GroupItems_getNextID() {
     var result = this.nextID;
     this.nextID++;
-    this.save();
+    this._save();
     return result;
   },
 
@@ -1602,20 +1602,22 @@ let GroupItems = {
   // Function: saveAll
   // Saves GroupItems state, as well as the state of all of the groupItems.
   saveAll: function GroupItems_saveAll() {
-    this.save();
+    this._save();
     this.groupItems.forEach(function(groupItem) {
       groupItem.save();
     });
   },
 
   // ----------
-  // Function: save
+  // Function: _save
   // Saves GroupItems state.
-  save: function GroupItems_save() {
+  _save: function GroupItems__save() {
     if (!this._inited) // too soon to save now
       return;
 
-    Storage.saveGroupItemsData(gWindow, {nextID:this.nextID});
+    let activeGroupId = this._activeGroupItem ? this._activeGroupItem.id : null;
+    Storage.saveGroupItemsData(
+      gWindow, { nextID: this.nextID, activeGroupId: activeGroupId });
   },
 
   // ----------
@@ -1637,8 +1639,14 @@ let GroupItems = {
   // If no data, sets up blank slate (including "new tabs" groupItem).
   reconstitute: function GroupItems_reconstitute(groupItemsData, groupItemData) {
     try {
-      if (groupItemsData && groupItemsData.nextID)
-        this.nextID = groupItemsData.nextID;
+      let activeGroupId;
+
+      if (groupItemsData) {
+        if (groupItemsData.nextID)
+          this.nextID = groupItemsData.nextID;
+        if (groupItemsData.activeGroupId)
+          activeGroupId = groupItemsData.activeGroupId;
+      }
 
       if (groupItemData) {
         for (var id in groupItemData) {
@@ -1652,9 +1660,15 @@ let GroupItems = {
           }
         }
       }
+      // set active group item
+      if (activeGroupId) {
+        let activeGroupItem = this.groupItem(activeGroupId);
+        if (activeGroupItem)
+          this.setActiveGroupItem(activeGroupItem);
+      }
 
       this._inited = true;
-      this.save(); // for nextID
+      this._save(); // for nextID
     } catch(e) {
       Utils.log("error in recons: "+e);
     }
@@ -1763,38 +1777,83 @@ let GroupItems = {
   // Given a <TabItem>, files it in the appropriate groupItem.
   newTab: function GroupItems_newTab(tabItem) {
     let activeGroupItem = this.getActiveGroupItem();
-    let orphanTab = this.getActiveOrphanTab();
-//    Utils.log('newTab', activeGroupItem, orphanTab);
+
+    // 1. Active group
+    // 2. Active orphan
+    // 3. First visible non-app tab (that's not the tab in question), whether it's an
+    // orphan or not (make a new group if it's an orphan, add it to the group if it's
+    // not)
+    // 4. First group
+    // 5. First orphan that's not the tab in question
+    // 6. At this point there should be no groups or tabs (except for app tabs and the
+    // tab in question): make a new group
+
     if (activeGroupItem) {
       activeGroupItem.add(tabItem);
-    } else if (orphanTab) {
-      let newGroupItemBounds = orphanTab.getBoundsWithTitle();
-      newGroupItemBounds.inset(-40,-40);
-      let newGroupItem = new GroupItem([orphanTab, tabItem], {bounds: newGroupItemBounds});
-      newGroupItem.snap();
-      this.setActiveGroupItem(newGroupItem);
-    } else {
-      this.positionNewTabAtBottom(tabItem);
+      return;
     }
-  },
 
-  // ----------
-  // Function: positionNewTabAtBottom
-  // Does what it says on the tin.
-  // TODO: Make more robust and improve documentation,
-  // Also, this probably belongs in tabitems.js
-  // Bug 586558
-  positionNewTabAtBottom: function GroupItems_positionNewTabAtBottom(tabItem) {
-    let windowBounds = Items.getSafeWindowBounds();
+    let orphanTabItem = this.getActiveOrphanTab();
+    if (!orphanTabItem) {
+      let otherTab;
+      // find first visible non-app tab in the tabbar.
+      gBrowser.visibleTabs.some(function(tab) {
+        if (!tab.pinned && tab != tabItem.tab) {
+          otherTab = tab;
+          return true;
+        }
+        return false;
+      });
 
-    let itemBounds = new Rect(
-      windowBounds.right - TabItems.tabWidth,
-      windowBounds.bottom - TabItems.tabHeight,
-      TabItems.tabWidth,
-      TabItems.tabHeight
-    );
+      if (otherTab) {
+        // the first visible tab belongs to a group, add the new tabItem into 
+        // that group
+        if (otherTab.tabItem.parent) {
+          let groupItem = otherTab.tabItem.parent;
+          groupItem.add(tabItem);
+          this.setActiveGroupItem(groupItem);
+          return;
+        }
+        // the first visible tab is an orphan tab, set the orphan tab, and 
+        // create a new group for orphan tab and new tabItem
+        orphanTabItem = otherTab.tabItem;
+      }
 
-    tabItem.setBounds(itemBounds);
+      if (!orphanTabItem) {
+        // add the new tabItem to the first group item
+        if (this.groupItems.length > 0) {
+          let groupItem = this.groupItems[0];
+          groupItem.add(tabItem);
+          this.setActiveGroupItem(groupItem);
+          return;
+        }
+        // set the orphan tab, and create a new group for orphan tab and 
+        // new tabItem
+        let orphanedTabs = this.getOrphanedTabs();
+        if (orphanedTabs.length > 0)
+          orphanTabItem = orphanedTabs[0];
+      }
+    }
+
+    // create new group for orphan tab and new tabItem
+    let tabItems;
+    let newGroupItemBounds; 
+    // the orphan tab would be the same as tabItem when all tabs are app tabs
+    // and a new tab is created.
+    if (orphanTabItem && orphanTabItem.tab != tabItem.tab) {
+      newGroupItemBounds = orphanTabItem.getBoundsWithTitle();
+      tabItems = [orphanTabItem, tabItem];
+    } else {
+      tabItem.setPosition(60, 60, true);
+      newGroupItemBounds = tabItem.getBounds();
+      tabItems = [tabItem];
+    }
+
+    newGroupItemBounds.inset(-40,-40);
+    let newGroupItem = 
+      new GroupItem(tabItems, { bounds: newGroupItemBounds });
+    newGroupItem.snap();
+    this.setActiveGroupItem(newGroupItem);
   },
 
   // ----------
@@ -1825,6 +1884,7 @@ let GroupItems = {
     }
 
     this._activeGroupItem = groupItem;
+    this._save();
   },
 
   // ----------
