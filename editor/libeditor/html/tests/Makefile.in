@@ -64,6 +64,7 @@ _TEST_FILES = \
 		test_bug592592.html \
 		test_bug597784.html \
 		test_bug599322.html \
+		test_bug601881.html \
 		test_CF_HTML_clipboard.html \
 		test_contenteditable_focus.html \
 		test_contenteditable_text_input_handling.html \
