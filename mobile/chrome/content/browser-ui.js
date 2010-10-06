@@ -352,8 +352,6 @@ var BrowserUI = {
     this.blurFocusedElement();
 
     let pane = document.getElementById(aPanelId);
-    let title = pane.getAttribute("label");
-    document.getElementById("panel-header").setAttribute("value", title);
     document.getElementById("panel-items").selectedPanel = pane;
   },
 
