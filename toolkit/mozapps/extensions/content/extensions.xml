@@ -1084,7 +1084,9 @@
           } else {
             this.removeAttribute("pending");
 
-            if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+            var isUpgrade = this.hasAttribute("upgrade");
+
+            if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
               this.setAttribute("notification", "error");
               this._error.textContent = gStrings.ext.formatStringFromName(
                 "notification.blocked",
@@ -1093,14 +1095,14 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
               this._errorLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
               this._errorLink.hidden = false;
-            } else if (!this.mAddon.isCompatible) {
+            } else if (!isUpgrade && !this.mAddon.isCompatible) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
                 "notification.incompatible",
                 [this.mAddon.name, gStrings.brandShortName, gStrings.appVersion], 3
               );
               this._warningLink.hidden = true;
-            } else if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
+            } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
                 "notification.softblocked",
@@ -1109,7 +1111,7 @@
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.softblocked.link");
               this._warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
               this._warningLink.hidden = false;
-            } else if (this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
+            } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
                 "notification.outdated",
