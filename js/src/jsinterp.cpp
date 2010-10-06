@@ -762,7 +762,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     PutActivationObjects(cx, fp);
 
     args.rval() = fp->returnValue();
-    JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !args.rval().isPrimitive());
+    JS_ASSERT_IF(ok && (flags & JSINVOKE_CONSTRUCT), !args.rval().isPrimitive());
 
     return ok;
 }
