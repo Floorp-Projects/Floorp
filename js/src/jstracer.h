@@ -1676,14 +1676,14 @@ MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
 
-extern void
+extern bool
 InitJIT(TraceMonitor *tm);
 
 extern void
 FinishJIT(TraceMonitor *tm);
 
 extern void
-PurgeScriptFragments(JSContext* cx, JSScript* script);
+PurgeScriptFragments(TraceMonitor* tm, JSScript* script);
 
 extern bool
 OverfullJITCache(TraceMonitor* tm);

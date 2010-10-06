@@ -1751,7 +1751,7 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
         while ((script = *listp) != NULL) {
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
-            js_DestroyScript(cx, script);
+            js_DestroyScriptFromGC(cx, script, data);
         }
     }
 }
