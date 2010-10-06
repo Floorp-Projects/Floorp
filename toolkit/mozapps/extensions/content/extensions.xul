@@ -442,11 +442,12 @@
                 <image id="detail-icon" class="icon"/>
                 <vbox flex="1">
                   <vbox id="detail-summary">
-                    <hbox id="detail-name-container">
-                      <label id="detail-name"/>
+                    <hbox id="detail-name-container" align="start">
+                      <label id="detail-name" flex="1"/>
                       <label id="detail-version"/>
                       <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                       <label class="update-postfix" value="&addon.update.postfix;"/>
+                      <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->
                     </hbox>
                     <label id="detail-creator" class="creator"/>
                   </vbox>
