@@ -154,7 +154,8 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
     if (gfxInfo) {
       PRInt32 status;
       if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
+        if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+            status != nsIGfxInfo::FEATURE_AVAILABLE) {
           NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
           return PR_FALSE;
         }
