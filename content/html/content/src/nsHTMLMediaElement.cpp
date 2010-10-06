@@ -388,7 +388,8 @@ NS_IMPL_STRING_ATTR(nsHTMLMediaElement, Preload, preload)
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
 NS_IMETHODIMP nsHTMLMediaElement::GetMozAutoplayEnabled(PRBool *aAutoplayEnabled)
 {
-  *aAutoplayEnabled = mAutoplayEnabled;
+  // Do not allow autoplay on editable nodes
+  *aAutoplayEnabled = !IsEditable() && mAutoplayEnabled;
 
   return NS_OK;
 }
