@@ -1,5 +1,5 @@
 # svg-as-an-image tests
-include image/reftest.list
+include as-image/reftest.list
 
 # sizing tests
 include sizing/reftest.list
