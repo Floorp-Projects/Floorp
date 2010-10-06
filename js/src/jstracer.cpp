@@ -9732,6 +9732,13 @@ TraceRecorder::is_boxed_true(LIns *vaddr_ins, AccSet accSet)
     return lir->ins2(LIR_andi, bool_ins, payload_ins);
 }
 
+LIns*
+TraceRecorder::is_boxed_magic(LIns *vaddr_ins, JSWhyMagic why, AccSet accSet)
+{
+    LIns *tag_ins = lir->insLoad(LIR_ldi, vaddr_ins, sTagOffset, accSet);
+    return lir->ins2(LIR_eqi, tag_ins, INS_CONSTU(JSVAL_TAG_MAGIC));
+}
+
 void
 TraceRecorder::box_value_into(const Value &v, LIns *v_ins, LIns *dstaddr_ins, ptrdiff_t offset,
                               AccSet accSet)
@@ -9901,6 +9908,13 @@ TraceRecorder::is_boxed_true(LIns *vaddr_ins, AccSet accSet)
 {
     LIns *v_ins = lir->insLoad(LIR_ldq, vaddr_ins, 0, accSet);
     return lir->ins2(LIR_eqq, v_ins, lir->insImmQ(JSVAL_BITS(JSVAL_TRUE)));
+}
+
+LIns*
+TraceRecorder::is_boxed_magic(LIns *vaddr_ins, JSWhyMagic why, AccSet accSet)
+{
+    LIns *v_ins = lir->insLoad(LIR_ldq, vaddr_ins, 0, accSet);
+    return lir->ins2(LIR_eqq, v_ins, INS_CONSTQWORD(BUILD_JSVAL(JSVAL_TAG_MAGIC, why)));
 }
 
 LIns*
@@ -10362,14 +10376,18 @@ TraceRecorder::record_EnterFrame()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_LeaveFrame()
 {
+    JSStackFrame *fp = cx->fp();
+
     debug_only_stmt(
         debug_only_printf(LC_TMTracer,
                           "LeaveFrame (back to %s), callDepth=%d\n",
-                          js_AtomToPrintableString(cx, cx->fp()->fun()->atom),
+                          fp->isFunctionFrame()
+                          ? js_AtomToPrintableString(cx, fp->fun()->atom)
+                          : "global code",
                           callDepth);
         );
 
-    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp()->script(),
+    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, fp->script(),
               cx->regs->pc)].length == JSOP_CALL_LENGTH);
 
     if (callDepth-- <= 0)
@@ -12547,6 +12565,21 @@ static bool OkToTraceTypedArrays = true;
 static bool OkToTraceTypedArrays = false;
 #endif
 
+JS_REQUIRES_STACK void
+TraceRecorder::guardNotHole(LIns *argsobj_ins, LIns *idx_ins)
+{
+    // vp = &argsobj->fslots[JSSLOT_ARGS_DATA].slots[idx]
+    LIns* argsData_ins = stobj_get_fslot_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+    LIns* slotOffset_ins = lir->ins2(LIR_addp,
+                                     INS_CONSTWORD(offsetof(ArgumentsData, slots)),
+                                     lir->insUI2P(lir->ins2ImmI(LIR_muli, idx_ins, sizeof(Value))));
+    LIns* vp_ins = lir->ins2(LIR_addp, argsData_ins, slotOffset_ins);
+
+    guard(false,
+          addName(is_boxed_magic(vp_ins, JS_ARGS_HOLE, ACCSET_OTHER), "guard(not deleted arg)"),
+          MISMATCH_EXIT);
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
 {
@@ -12587,14 +12620,21 @@ TraceRecorder::record_JSOP_GETELEM()
     }
 
     if (obj->isArguments()) {
+        // Don't even try to record if out of range or reading a deleted arg
+        int32 int_idx = idx.toInt32();
+        if (int_idx < 0 || int_idx >= (int32)obj->getArgsInitialLength())
+            RETURN_STOP_A("cannot trace arguments with out of range index");
+        if (obj->getArgsElement(int_idx).isMagic(JS_ARGS_HOLE))
+            RETURN_STOP_A("reading deleted args element");
+
+        // Only trace reading arguments out of active, tracked frame
         unsigned depth;
         JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (afp) {
-            int32 int_idx = idx.toInt32();
-            if (int_idx < 0 || int_idx >= (int32)afp->numActualArgs())
-                RETURN_STOP_A("cannot trace arguments with out of range index");
             Value* vp = &afp->canonicalActualArg(int_idx);
             if (idx_ins->isImmD()) {
+                JS_ASSERT(int_idx == (int32)idx_ins->immD());
+                guardNotHole(obj_ins, INS_CONST(int_idx));
                 v_ins = get(vp);
             } else {
                 // If the index is not a constant expression, we generate LIR to load the value from
@@ -12610,6 +12650,8 @@ TraceRecorder::record_JSOP_GETELEM()
                       addName(lir->ins2(LIR_ltui, idx_ins, INS_CONSTU(afp->numActualArgs())),
                               "guard(upvar index in range)"),
                       MISMATCH_EXIT);
+
+                guardNotHole(obj_ins, idx_ins);
 
                 JSValueType type = getCoercedType(*vp);
 
