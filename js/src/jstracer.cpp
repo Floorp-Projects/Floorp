@@ -10376,16 +10376,14 @@ TraceRecorder::record_EnterFrame()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_LeaveFrame()
 {
-    JSStackFrame *fp = cx->fp();
+    debug_only_stmt(JSStackFrame *fp = cx->fp();)
 
-    debug_only_stmt(
-        debug_only_printf(LC_TMTracer,
-                          "LeaveFrame (back to %s), callDepth=%d\n",
-                          fp->isFunctionFrame()
-                          ? js_AtomToPrintableString(cx, fp->fun()->atom)
-                          : "global code",
-                          callDepth);
-        );
+    debug_only_printf(LC_TMTracer,
+                      "LeaveFrame (back to %s), callDepth=%d\n",
+                      fp->isFunctionFrame()
+                      ? js_AtomToPrintableString(cx, fp->fun()->atom)
+                      : "global code",
+                      callDepth);
 
     JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, fp->script(),
               cx->regs->pc)].length == JSOP_CALL_LENGTH);
