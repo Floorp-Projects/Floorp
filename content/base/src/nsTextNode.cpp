@@ -222,7 +222,7 @@ nsTextNode::BindToAttribute(nsIAttribute* aAttr)
 nsresult
 nsTextNode::UnbindFromAttribute()
 {
-  NS_ASSERTION(GetNodeParent(), "Bind before unbinging!");
+  NS_ASSERTION(GetNodeParent(), "Bind before unbinding!");
   NS_ASSERTION(GetNodeParent() &&
                GetNodeParent()->IsNodeOfType(nsINode::eATTRIBUTE),
                "Use this method only to unbind from an attribute!");

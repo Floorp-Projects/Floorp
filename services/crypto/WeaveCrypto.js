@@ -107,12 +107,34 @@ WeaveCrypto.prototype = {
         Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
         // Open the NSS library.
-        let path = ctypes.libraryName("nss3");
-
-        this.log("Using NSS library " + path);
+        let nssfile = Services.dirsvc.get("GreD", Ci.nsILocalFile);
+        let os = Services.appinfo.OS;
+        switch (os) {
+          case "WINNT":
+          case "WINMO":
+          case "WINCE":
+            nssfile.append("nss3.dll");
+            break;
+          case "Darwin":
+            nssfile.append("libnss3.dylib");
+            break;
+          case "Linux":
+          case "SunOS":
+          case "WebOS": // Palm Pre
+            nssfile.append("libnss3.so");
+            break;
+          case "Android":
+            // Android uses a $GREDIR/lib/ subdir.
+            nssfile.append("lib");
+            nssfile.append("libnss3.so");
+            break;
+          default:
+            throw Components.Exception("unsupported platform: " + os, Cr.NS_ERROR_UNEXPECTED);
+        }
+        this.log("Using NSS library " + nssfile.path);
 
         // XXX really want to be able to pass specific dlopen flags here.
-        let nsslib = ctypes.open(path);
+        let nsslib = ctypes.open(nssfile.path);
 
         this.log("Initializing NSS types and function declarations...");
 
