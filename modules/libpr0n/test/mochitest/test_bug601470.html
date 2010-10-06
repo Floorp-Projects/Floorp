@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=601470
+-->
+<head>
+  <title>Test for Bug 601470</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=601470">Mozilla Bug 601470</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <img src="lime100x100.svg" style="width: 100px; height: 100px;">
+  <img src="damon.jpg"       style="width: 100px; height: 100px;">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 601470 **/
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var mgr = Components
+    .classes["@mozilla.org/memory-reporter-manager;1"]
+    .getService(Components.interfaces.nsIMemoryReporterManager);
+
+  var e = mgr.enumerateReporters();
+  var memoryCounter = 0;
+  while (e.hasMoreElements()) {
+    var mr =
+      e.getNext().QueryInterface(Components.interfaces.nsIMemoryReporter);
+    memoryCounter += mr.memoryUsed;
+  }
+  ok(memoryCounter > 0, "we should be using a nonzero amount of memory");
+  ok(true, "yay, didn't crash!");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
