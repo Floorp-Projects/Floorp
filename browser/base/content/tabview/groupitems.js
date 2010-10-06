@@ -1386,39 +1386,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // TabItems will have handled the new tab and added the tabItem property.
     // We don't have to check if it's an app tab (and therefore wouldn't have a
     // TabItem), since we've just created it.
-    let newItem = newTab.tabItem;
-
-    var self = this;
-    iQ(newItem.container).css({opacity: 0});
-    let $anim = iQ("<div>")
-      .addClass("newTabAnimatee")
-      .css({
-        top: newItem.bounds.top + 5,
-        left: newItem.bounds.left + 5,
-        width: newItem.bounds.width - 10,
-        height: newItem.bounds.height - 10,
-        zIndex: 999,
-        opacity: 0
-      })
-      .appendTo("body")
-      .animate({opacity: 1}, {
-        duration: 500,
-        complete: function() {
-          $anim.animate({
-            top: 0,
-            left: 0,
-            width: window.innerWidth,
-            height: window.innerHeight
-          }, {
-            duration: 270,
-            complete: function() {
-              iQ(newItem.container).css({opacity: 1});
-              newItem.zoomIn(!url);
-              $anim.remove();
-            }
-          });
-        }
-      });
+    newTab.tabItem.zoomIn(!url);
   },
 
   // ----------
