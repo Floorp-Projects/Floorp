@@ -235,9 +235,11 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         return JS_FALSE;
     }
 
-    // Do not trap BEGIN, it's a special prologue opcode.
-    if (JSOp(*pc) == JSOP_BEGIN)
-        pc += JSOP_BEGIN_LENGTH;
+    if (JSOp(*pc) == JSOP_BEGIN) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
+                                     NULL, JSMSG_READ_ONLY, "trap invalid on BEGIN opcode");
+        return JS_FALSE;
+    }
 
     JS_ASSERT((JSOp) *pc != JSOP_TRAP);
     junk = NULL;
@@ -1017,6 +1019,12 @@ JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
 {
     return js_LineNumberToPC(script, lineno);
+}
+
+JS_PUBLIC_API(jsbytecode *)
+JS_EndPC(JSContext *cx, JSScript *script)
+{
+    return script->code + script->length;
 }
 
 JS_PUBLIC_API(uintN)

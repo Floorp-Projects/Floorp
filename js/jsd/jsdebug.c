@@ -348,6 +348,14 @@ JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
     return jsd_GetClosestPC(jsdc, jsdscript, line);
 }
 
+JSD_PUBLIC_API(jsuword)
+JSD_GetEndPC(JSDContext* jsdc, JSDScript* jsdscript)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JSD_ASSERT_VALID_SCRIPT(jsdscript);
+    return jsd_GetEndPC(jsdc, jsdscript);
+}
+
 JSD_PUBLIC_API(uintN)
 JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
 {
