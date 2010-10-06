@@ -26,9 +26,11 @@ function waitForAndContinue(callback, test, timeout) {
   }
 
   timeout = timeout || Date.now();
-  if (Date.now() - timeout > 1000)
+  if (Date.now() - timeout > 1000) {
     callback();
-  setTimeout(waitFor, 50, callback, test, timeout);
+    return;
+  }
+  setTimeout(waitForAndContinue, 50, callback, test, timeout);
 };
 
 function makeURI(spec) {
