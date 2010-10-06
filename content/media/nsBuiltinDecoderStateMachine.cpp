@@ -152,7 +152,7 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mPositionChangeQueued(PR_FALSE),
   mAudioCompleted(PR_FALSE),
   mBufferExhausted(PR_FALSE),
-  mGotDurationFromHeader(PR_FALSE),
+  mGotDurationFromMetaData(PR_FALSE),
   mStopDecodeThreads(PR_TRUE),
   mEventManager(aDecoder)
 {
@@ -1287,7 +1287,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
     if (mVideoFrameEndTime != -1 || mAudioEndTime != -1) {
       // These will be non -1 if we've displayed a video frame, or played an audio sample.
       clock_time = NS_MIN(clock_time, NS_MAX(mVideoFrameEndTime, mAudioEndTime));
-      if (clock_time - mStartTime > mCurrentFrameTime) {
+      if (clock_time > GetMediaTime()) {
         // Only update the playback position if the clock time is greater
         // than the previous playback position. The audio clock can
         // sometimes report a time less than its previously reported in
@@ -1349,7 +1349,7 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   }
   if (startTime != 0) {
     mStartTime = startTime;
-    if (mGotDurationFromHeader) {
+    if (mGotDurationFromMetaData) {
       NS_ASSERTION(mEndTime != -1,
                    "We should have mEndTime as supplied duration here");
       // We were specified a duration from a Content-Duration HTTP header.
@@ -1425,6 +1425,8 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
   }
   mDecoder->StartProgressUpdates();
   const nsVideoInfo& info = mReader->GetInfo();
+
+  mGotDurationFromMetaData = (GetDuration() != -1);
 
   if (!info.mHasVideo && !info.mHasAudio) {
     mState = DECODER_STATE_SHUTDOWN;      

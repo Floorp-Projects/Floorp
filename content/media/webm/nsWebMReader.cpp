@@ -399,6 +399,7 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
     mAudioSamples = 0;
   }
 
+  PRInt32 total_samples = 0;
   for (PRUint32 i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -423,7 +424,6 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
 
     float** pcm = 0;
     PRInt32 samples = 0;
-    PRInt32 total_samples = 0;
     while ((samples = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
       float* buffer = new float[samples * mChannels];
       float* p = buffer;
@@ -597,10 +597,15 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       }
       mVideoPackets.PushFront(next_packet);
     } else {
-      r = nestegg_duration(mContext, &next_tstamp);
-      if (r == -1) {
+      MonitorAutoExit exitMon(mMonitor);
+      MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
+      nsBuiltinDecoderStateMachine* s =
+        static_cast<nsBuiltinDecoderStateMachine*>(mDecoder->GetStateMachine());
+      PRInt64 endTime = s->GetEndMediaTime();
+      if (endTime == -1) {
         return PR_FALSE;
       }
+      next_tstamp = endTime * NS_PER_MS;
     }
   }
 
@@ -718,15 +723,20 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
   if (stream->IsDataCachedToEndOfStream(0)) {
     uint64_t duration = 0;
     if (nestegg_duration(mContext, &duration) == 0) {
-      aBuffered->Add(aStartTime / MS_PER_S, duration / NS_PER_S);
+      aBuffered->Add(0, duration / NS_PER_S);
     }
   } else {
     PRInt64 startOffset = stream->GetNextCachedData(0);
+    PRInt64 startTimeOffsetNS = aStartTime * NS_PER_MS;
     while (startOffset >= 0) {
       PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
       NS_ASSERTION(startOffset < endOffset, "Cached range invalid");
 
-      mBufferedState->CalculateBufferedForRange(aBuffered, startOffset, endOffset, timecodeScale);
+      mBufferedState->CalculateBufferedForRange(aBuffered,
+                                                startOffset,
+                                                endOffset,
+                                                timecodeScale,
+                                                startTimeOffsetNS);
 
       // Advance to the next cached data range.
       startOffset = stream->GetNextCachedData(endOffset);

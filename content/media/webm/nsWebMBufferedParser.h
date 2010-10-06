@@ -223,7 +223,8 @@ public:
   void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset);
   void CalculateBufferedForRange(nsTimeRanges* aBuffered,
                                  PRInt64 aStartOffset, PRInt64 aEndOffset,
-                                 PRUint64 aTimecodeScale);
+                                 PRUint64 aTimecodeScale,
+                                 PRInt64 aStartTimeOffsetNS);
 
 private:
   // Sorted (by offset) map of data offsets to timecodes.  Populated
