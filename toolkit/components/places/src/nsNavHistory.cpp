@@ -804,12 +804,6 @@ nsNavHistory::InitDB()
   rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Lock the database file.  This is done partly to avoid third party
-  // applications to access it while it's in use, partly for performance.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA locking_mode = EXCLUSIVE"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Be sure to set journal mode after page_size.  WAL would prevent the change
   // otherwise.
   if (NS_FAILED(SetJournalMode(JOURNAL_WAL))) {
