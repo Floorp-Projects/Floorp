@@ -1002,6 +1002,17 @@ interface jsdIScript : jsdIEphemeral
      */
     boolean isLineExecutable (in unsigned long line, in unsigned long pcmap);
     /**
+     * Get the first valid PC in the script. This will be either
+     * (a) the first bytecode in the script, or (b) the next bytecode
+     * in the script, iff the first bytecode is a JSOP_BEGIN.
+     */
+    unsigned long getFirstValidPC ();
+    /**
+     * Return the last valid PC in the script (i.e., the PC just after 
+     * the last bytecode).
+     */
+    unsigned long getEndValidPC ();
+    /**
      * Set a breakpoint at a PC in this script.
      */
     void setBreakpoint (in unsigned long pc);
