@@ -421,11 +421,6 @@ toolbarbutton.page-button {
 }
 %endif
 
-/* browsers ---------------------------------------------------------------- */
-#content-stack > div:-moz-focusring {
-  outline: 0 !important;
-}
-
 /* browser tools panel UI   ------------------------------------------------ */
 toolbarbutton.panel-button {
   margin-top: 4px; /* half of core spacing */

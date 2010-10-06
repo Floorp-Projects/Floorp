@@ -276,12 +276,10 @@
 
             <!-- Content viewport -->
             <vbox id="content-viewport" class="window-width window-height">
-              <stack id="content-stack" class="window-width" flex="1">
+              <stack id="content-stack" flex="1">
               <!-- Content viewport -->
-                <html:div>
-                  <deck id="browsers" class="window-width window-height"/>
-                  <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;"/>
-                </html:div>
+                <deck id="browsers" flex="1"/>
+                <html:canvas id="content-overlay" style="display: none; z-index: 1000;" left="0" top="0"/>
                 <html:div id="inputhandler-overlay" style="z-index: 1001" tabindex="-1"/>
               </stack>
               <box id="content-navigator-spacer" hidden="true"/>
