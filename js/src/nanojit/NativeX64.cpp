@@ -131,14 +131,14 @@ namespace nanojit
     // encode 2-register rex prefix.  dropped if none of its bits are set.
     static inline uint64_t rexrb(uint64_t op, Register r, Register b) {
         int shift = 64 - 8*oplen(op);
-        uint64_t rex = ((op >> shift) & 255) | ((r&8)>>1) | ((b&8)>>3);
+        uint64_t rex = ((op >> shift) & 255) | ((REGNUM(r)&8)>>1) | ((REGNUM(b)&8)>>3);
         return rex != 0x40 ? op | rex << shift : op - 1;
     }
 
     // encode 3-register rex prefix.  dropped if none of its bits are set.
     static inline uint64_t rexrxb(uint64_t op, Register r, Register x, Register b) {
         int shift = 64 - 8*oplen(op);
-        uint64_t rex = ((op >> shift) & 255) | ((r&8)>>1) | ((x&8)>>2) | ((b&8)>>3);
+        uint64_t rex = ((op >> shift) & 255) | ((REGNUM(r)&8)>>1) | ((REGNUM(x)&8)>>2) | ((REGNUM(b)&8)>>3);
         return rex != 0x40 ? op | rex << shift : op - 1;
     }
 
@@ -146,15 +146,15 @@ namespace nanojit
     // keep REX if b >= rsp, to allow uniform use of all 16 8bit registers
     static inline uint64_t rexrb8(uint64_t op, Register r, Register b) {
         int shift = 64 - 8*oplen(op);
-        uint64_t rex = ((op >> shift) & 255) | ((r&8)>>1) | ((b&8)>>3);
-        return ((rex | (b & ~3)) != 0x40) ? (op | (rex << shift)) : op - 1;
+        uint64_t rex = ((op >> shift) & 255) | ((REGNUM(r)&8)>>1) | ((REGNUM(b)&8)>>3);
+        return ((rex | (REGNUM(b) & ~3)) != 0x40) ? (op | (rex << shift)) : op - 1;
     }
 
     // encode 2-register rex prefix that follows a manditory prefix (66,F2,F3)
     // [prefix][rex][opcode]
     static inline uint64_t rexprb(uint64_t op, Register r, Register b) {
         int shift = 64 - 8*oplen(op) + 8;
-        uint64_t rex = ((op >> shift) & 255) | ((r&8)>>1) | ((b&8)>>3);
+        uint64_t rex = ((op >> shift) & 255) | ((REGNUM(r)&8)>>1) | ((REGNUM(b)&8)>>3);
         // to drop rex, we replace rex with manditory prefix, and decrement length
         return rex != 0x40 ? op | rex << shift :
             ((op & ~(255LL<<shift)) | (op>>(shift-8)&255) << shift) - 1;
@@ -162,26 +162,26 @@ namespace nanojit
 
     // [rex][opcode][mod-rr]
     static inline uint64_t mod_rr(uint64_t op, Register r, Register b) {
-        return op | uint64_t((r&7)<<3 | (b&7))<<56;
+        return op | uint64_t((REGNUM(r)&7)<<3 | (REGNUM(b)&7))<<56;
     }
 
     // [rex][opcode][modrm=r][sib=xb]
     static inline uint64_t mod_rxb(uint64_t op, Register r, Register x, Register b) {
-        return op | /*modrm*/uint64_t((r&7)<<3)<<48 | /*sib*/uint64_t((x&7)<<3|(b&7))<<56;
+        return op | /*modrm*/uint64_t((REGNUM(r)&7)<<3)<<48 | /*sib*/uint64_t((REGNUM(x)&7)<<3|(REGNUM(b)&7))<<56;
     }
 
     static inline uint64_t mod_disp32(uint64_t op, Register r, Register b, int32_t d) {
         NanoAssert(IsGpReg(r) && IsGpReg(b));
-        NanoAssert((b & 7) != 4); // using RSP or R12 as base requires SIB
+        NanoAssert((REGNUM(b) & 7) != 4); // using RSP or R12 as base requires SIB
         uint64_t mod = (((op>>24)&255)>>6); // mod bits in addressing mode: 0,1,2, or 3
         if (mod == 2 && isS8(d)) {
             // op is:  0x[disp32=0][mod=2:r:b][op][rex][len]
             int len = oplen(op);
-            op = (op & ~0xff000000LL) | (0x40 | (r&7)<<3 | (b&7))<<24; // replace mod
+            op = (op & ~0xff000000LL) | (0x40 | (REGNUM(r)&7)<<3 | (REGNUM(b)&7))<<24; // replace mod
             return op<<24 | int64_t(d)<<56 | (len-3); // shrink disp, add disp8
         } else {
             // op is: 0x[disp32][mod][op][rex][len]
-            return op | int64_t(d)<<32 | uint64_t((r&7)<<3 | (b&7))<<24;
+            return op | int64_t(d)<<32 | uint64_t((REGNUM(r)&7)<<3 | (REGNUM(b)&7))<<24;
         }
     }
 
@@ -320,8 +320,8 @@ namespace nanojit
     // op = [rex][opcode][modrm][imm8]
     void Assembler::emitr_imm8(uint64_t op, Register b, int32_t imm8) {
         NanoAssert(IsGpReg(b) && isS8(imm8));
-        op |= uint64_t(imm8)<<56 | uint64_t(b&7)<<48;  // modrm is 2nd to last byte
-        emit(rexrb(op, (Register)0, b));
+        op |= uint64_t(imm8)<<56 | uint64_t(REGNUM(b)&7)<<48;  // modrm is 2nd to last byte
+        emit(rexrb(op, RZero, b));
     }
 
     void Assembler::emitxm_abs(uint64_t op, Register r, int32_t addr32)
@@ -329,8 +329,8 @@ namespace nanojit
         underrunProtect(4+8);
         *((int32_t*)(_nIns -= 4)) = addr32;
         _nvprof("x64-bytes", 4);
-        op = op | uint64_t((r&7)<<3)<<48; // put rr[0:2] into mod/rm byte
-        op = rexrb(op, r, (Register)0);   // put rr[3] into rex byte
+        op = op | uint64_t((REGNUM(r)&7)<<3)<<48; // put rr[0:2] into mod/rm byte
+        op = rexrb(op, r, RZero);         // put rr[3] into rex byte
         emit(op);
     }
 
@@ -340,7 +340,7 @@ namespace nanojit
         int32_t d = (int32_t)(addr64 - _nIns);
         *((int32_t*)(_nIns -= 4)) = d;
         _nvprof("x64-bytes", 4);
-        emitrr(op, r, (Register)0);
+        emitrr(op, r, RZero);
     }
 
     // Succeeds if 'target' is within a signed 8-bit offset from the current
@@ -362,10 +362,10 @@ namespace nanojit
         return isS32(target - _nIns);
     }
 
-#define RB(r)       gpRegNames8[(r)]
-#define RS(r)       gpRegNames16[(r)]
-#define RBhi(r)     gpRegNames8hi[(r)]
-#define RL(r)       gpRegNames32[(r)]
+#define RB(r)       gpRegNames8[(REGNUM(r))]
+#define RS(r)       gpRegNames16[(REGNUM(r))]
+#define RBhi(r)     gpRegNames8hi[(REGNUM(r))]
+#define RL(r)       gpRegNames32[(REGNUM(r))]
 #define RQ(r)       gpn(r)
 
     typedef Register R;
@@ -387,12 +387,12 @@ namespace nanojit
     void Assembler::SARQ(R r)   { emitr(X64_sarq, r); asm_output("sarq %s, ecx", RQ(r)); }
     void Assembler::SHLQ(R r)   { emitr(X64_shlq, r); asm_output("shlq %s, ecx", RQ(r)); }
 
-    void Assembler::SHRI( R r, I i)   { emit8(rexrb(X64_shri  | U64(r&7)<<48, (R)0, r), i); asm_output("shrl %s, %d", RL(r), i); }
-    void Assembler::SARI( R r, I i)   { emit8(rexrb(X64_sari  | U64(r&7)<<48, (R)0, r), i); asm_output("sarl %s, %d", RL(r), i); }
-    void Assembler::SHLI( R r, I i)   { emit8(rexrb(X64_shli  | U64(r&7)<<48, (R)0, r), i); asm_output("shll %s, %d", RL(r), i); }
-    void Assembler::SHRQI(R r, I i)   { emit8(rexrb(X64_shrqi | U64(r&7)<<48, (R)0, r), i); asm_output("shrq %s, %d", RQ(r), i); }
-    void Assembler::SARQI(R r, I i)   { emit8(rexrb(X64_sarqi | U64(r&7)<<48, (R)0, r), i); asm_output("sarq %s, %d", RQ(r), i); }
-    void Assembler::SHLQI(R r, I i)   { emit8(rexrb(X64_shlqi | U64(r&7)<<48, (R)0, r), i); asm_output("shlq %s, %d", RQ(r), i); }
+    void Assembler::SHRI( R r, I i)   { emit8(rexrb(X64_shri  | U64(REGNUM(r)&7)<<48, RZero, r), i); asm_output("shrl %s, %d", RL(r), i); }
+    void Assembler::SARI( R r, I i)   { emit8(rexrb(X64_sari  | U64(REGNUM(r)&7)<<48, RZero, r), i); asm_output("sarl %s, %d", RL(r), i); }
+    void Assembler::SHLI( R r, I i)   { emit8(rexrb(X64_shli  | U64(REGNUM(r)&7)<<48, RZero, r), i); asm_output("shll %s, %d", RL(r), i); }
+    void Assembler::SHRQI(R r, I i)   { emit8(rexrb(X64_shrqi | U64(REGNUM(r)&7)<<48, RZero, r), i); asm_output("shrq %s, %d", RQ(r), i); }
+    void Assembler::SARQI(R r, I i)   { emit8(rexrb(X64_sarqi | U64(REGNUM(r)&7)<<48, RZero, r), i); asm_output("sarq %s, %d", RQ(r), i); }
+    void Assembler::SHLQI(R r, I i)   { emit8(rexrb(X64_shlqi | U64(REGNUM(r)&7)<<48, RZero, r), i); asm_output("shlq %s, %d", RQ(r), i); }
 
     void Assembler::SETE( R r)  { emitr8(X64_sete, r); asm_output("sete %s", RB(r)); }
     void Assembler::SETL( R r)  { emitr8(X64_setl, r); asm_output("setl %s", RB(r)); }
@@ -503,7 +503,7 @@ namespace nanojit
 
     void Assembler::MOVQI(R r, U64 u64)         { emitr_imm64(X64_movqi,r,u64); asm_output("movq %s, %p",RQ(r),(void*)u64); }
 
-    void Assembler::LEARIP(R r, I32 d)          { emitrm(X64_learip,r,d,(Register)0); asm_output("lea %s, %d(rip)",RQ(r),d); }
+    void Assembler::LEARIP(R r, I32 d)          { emitrm(X64_learip,r,d,RZero); asm_output("lea %s, %d(rip)",RQ(r),d); }
 
     void Assembler::LEALRM(R r, I d, R b)       { emitrm(X64_lealrm,r,d,b); asm_output("leal %s, %d(%s)",RL(r),d,RL(b)); }
     void Assembler::LEAQRM(R r, I d, R b)       { emitrm(X64_leaqrm,r,d,b); asm_output("leaq %s, %d(%s)",RQ(r),d,RQ(b)); }
@@ -530,7 +530,12 @@ namespace nanojit
     void Assembler::JMP32(S n, NIns* t)    { emit_target32(n,X64_jmp, t); asm_output("jmp %p", t); }
     void Assembler::JMP64(S n, NIns* t)    { emit_target64(n,X64_jmpi, t); asm_output("jmp %p", t); }
 
-    void Assembler::JMPX(R indexreg, NIns** table)  { emitrxb_imm(X64_jmpx, (R)0, indexreg, (Register)5, (int32_t)(uintptr_t)table); asm_output("jmpq [%s*8 + %p]", RQ(indexreg), (void*)table); }
+    void Assembler::JMPX(R indexreg, NIns** table)
+    {
+        Register R5 = { 5 };
+        emitrxb_imm(X64_jmpx, RZero, indexreg, R5, (int32_t)(uintptr_t)table);
+        asm_output("jmpq [%s*8 + %p]", RQ(indexreg), (void*)table);
+    }
 
     void Assembler::JMPXB(R indexreg, R tablereg)   { emitxb(X64_jmpxb, indexreg, tablereg); asm_output("jmp [%s*8 + %s]", RQ(indexreg), RQ(tablereg)); }
 
@@ -585,14 +590,14 @@ namespace nanojit
     void Assembler::CALLRAX()       { emit(X64_callrax); asm_output("call (rax)"); }
     void Assembler::RET()           { emit(X64_ret);     asm_output("ret");        }
 
-    void Assembler::MOVQSPR(I d, R r)   { emit(X64_movqspr | U64(d) << 56 | U64((r&7)<<3) << 40 | U64((r&8)>>1) << 24); asm_output("movq %d(rsp), %s", d, RQ(r)); }    // insert r into mod/rm and rex bytes
+    void Assembler::MOVQSPR(I d, R r)   { emit(X64_movqspr | U64(d) << 56 | U64((REGNUM(r)&7)<<3) << 40 | U64((REGNUM(r)&8)>>1) << 24); asm_output("movq %d(rsp), %s", d, RQ(r)); }    // insert r into mod/rm and rex bytes
 
     void Assembler::XORPSA(R r, I32 i32)    { emitxm_abs(X64_xorpsa, r, i32); asm_output("xorps %s, (0x%x)",RQ(r), i32); }
     void Assembler::XORPSM(R r, NIns* a64)  { emitxm_rel(X64_xorpsm, r, a64); asm_output("xorps %s, (%p)",  RQ(r), a64); }
 
-    void Assembler::X86_AND8R(R r)  { emit(X86_and8r | U64(r<<3|(r|4))<<56); asm_output("andb %s, %s", RB(r), RBhi(r)); }
-    void Assembler::X86_SETNP(R r)  { emit(X86_setnp | U64(r|4)<<56); asm_output("setnp %s", RBhi(r)); }
-    void Assembler::X86_SETE(R r)   { emit(X86_sete  | U64(r)<<56);   asm_output("sete %s", RB(r)); }
+    void Assembler::X86_AND8R(R r)  { emit(X86_and8r | U64(REGNUM(r)<<3|(REGNUM(r)|4))<<56); asm_output("andb %s, %s", RB(r), RBhi(r)); }
+    void Assembler::X86_SETNP(R r)  { emit(X86_setnp | U64(REGNUM(r)|4)<<56); asm_output("setnp %s", RBhi(r)); }
+    void Assembler::X86_SETE(R r)   { emit(X86_sete  | U64(REGNUM(r))<<56);   asm_output("sete %s", RB(r)); }
 
 #undef R
 #undef I
@@ -962,14 +967,15 @@ namespace nanojit
         #ifdef _WIN64
             else if (ty == ARGTYPE_D && arg_index < NumArgRegs) {
                 // double goes in XMM reg # based on overall arg_index
-                asm_regarg(ty, arg, Register(XMM0+arg_index));
+                Register rxi = { REGNUM(XMM0) + arg_index };
+                asm_regarg(ty, arg, rxi);
                 arg_index++;
             }
         #else
-            else if (ty == ARGTYPE_D && fr < XMM8) {
+            else if (ty == ARGTYPE_D && REGNUM(fr) < REGNUM(XMM8)) {
                 // double goes in next available XMM register
                 asm_regarg(ty, arg, fr);
-                fr = Register(fr + 1);
+                fr = REGINC(fr);
             }
         #endif
             else {
@@ -1403,7 +1409,8 @@ namespace nanojit
         if (op == LIR_eqd) {
             // result = ZF & !PF, must do logic on flags
             // r = al|bl|cl|dl, can only use rh without rex prefix
-            Register r = prepareResultReg(ins, 1<<RAX|1<<RCX|1<<RDX|1<<RBX);
+            Register r = prepareResultReg(ins, 1<<REGNUM(RAX) | 1<<REGNUM(RCX) |
+                                               1<<REGNUM(RDX) | 1<<REGNUM(RBX));
             MOVZX8(r, r);       // movzx8   r,rl     r[8:63] = 0
             X86_AND8R(r);       // and      rl,rh    rl &= rh
             X86_SETNP(r);       // setnp    rh       rh = !PF
@@ -1915,7 +1922,7 @@ namespace nanojit
 #ifdef _WIN64
         a.free = 0x001fffcf; // rax-rbx, rsi, rdi, r8-r15, xmm0-xmm5
 #else
-        a.free = 0xffffffff & ~(1<<RSP | 1<<RBP);
+        a.free = 0xffffffff & ~(1<<REGNUM(RSP) | 1<<REGNUM(RBP));
 #endif
     }
 
@@ -1954,16 +1961,18 @@ namespace nanojit
     #if defined _MSC_VER
         DWORD tr;
         _BitScanForward(&tr, set);
-        _allocator.free &= ~rmask((Register)tr);
-        return (Register) tr;
+        Register r = { tr };
+        _allocator.free &= ~rmask(r);
+        return r;
     #else
         // gcc asm syntax
-        Register r;
+        uint32_t regnum;
         asm("bsf    %1, %%eax\n\t"
             "btr    %%eax, %2\n\t"
             "movl   %%eax, %0\n\t"
-            : "=m"(r) : "m"(set), "m"(_allocator.free) : "%eax", "memory");
+            : "=m"(regnum) : "m"(set), "m"(_allocator.free) : "%eax", "memory");
         (void)set;
+        Register r = { regnum };
         return r;
     #endif
     }
