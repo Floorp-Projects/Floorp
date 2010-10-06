@@ -309,7 +309,9 @@
 
                 setupStatusFader : function(immediate) {
                     var show = false;
-                    if (this.video.seeking || this.video.error ||
+                    if (this.video.seeking ||
+                        this.video.error ||
+                        this.video.networkState == this.video.NETWORK_NO_SOURCE ||
                         (this.video.networkState == this.video.NETWORK_LOADING &&
                          (this.video.paused || this.video.ended
                            ? this.video.readyState < this.video.HAVE_CURRENT_DATA
@@ -515,11 +517,22 @@
                             this.setupStatusFader();
                             break;
                         case "error":
-                            this.statusIcon.setAttribute("type", "error");
-                            this.setupStatusFader(true);
-                            // If video hasn't shown anything yet, disable the controls.
-                            if (!this.firstFrameShown)
-                                this.startFadeOut(this.controlBar);
+                            // We'll show the error status icon when we receive an error event
+                            // under either of the following conditions:
+                            // 1. The video has its error attribute set; this means we're loading
+                            //    from our src attribute, and the load failed, or we we're loading 
+                            //    from source children and the decode or playback failed after we 
+                            //    determined our selected resource was playable.
+                            // 2. The video's networkState is NETWORK_NO_SOURCE. This means we we're
+                            //    loading from child source elements, but we were unable to select
+                            //    any of the child elements for playback during resource selection.
+                            if (this.video.error || this.video.networkState == this.video.NETWORK_NO_SOURCE) {
+                              this.statusIcon.setAttribute("type", "error");
+                              this.setupStatusFader(true);
+                              // If video hasn't shown anything yet, disable the controls.
+                              if (!this.firstFrameShown)
+                                  this.startFadeOut(this.controlBar);
+                            }
                             break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
