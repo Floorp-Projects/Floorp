@@ -1231,7 +1231,7 @@ var PageActions = {
 
   updateForgetPassword: function updateForgetPassword(aNode) {
     let host = Browser.selectedBrowser.currentURI;
-    let logins = this._loginManager.findLogins({}, host.prePath, "", null);
+    let logins = this._loginManager.findLogins({}, host.prePath, "", "");
 
     return logins.some(function(login) login.hostname == host.prePath);
   },
@@ -1240,7 +1240,7 @@ var PageActions = {
     let host = Browser.selectedBrowser.currentURI;
     let lm = this._loginManager;
 
-    lm.findLogins({}, host.prePath, "", null).forEach(function(login) {
+    lm.findLogins({}, host.prePath, "", "").forEach(function(login) {
       if (login.hostname == host.prePath)
         lm.removeLogin(login);
     });
