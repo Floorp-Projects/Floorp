@@ -181,28 +181,29 @@ js_GetBlockChain(JSContext *cx, JSStackFrame *fp)
     jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
     
     JS_ASSERT(pc >= start && pc < script->code + script->length);
-    
-    ptrdiff_t oplen;
-    JSObject *blockChain = NULL;
-    for (jsbytecode *p = start; p < pc; p += oplen) {
-        JSOp op = js_GetOpcode(cx, script, p);
-        const JSCodeSpec *cs = &js_CodeSpec[op];
-        oplen = cs->length;
-        if (oplen < 0)
-            oplen = js_GetVariableBytecodeLength(p);
 
-        if (op == JSOP_ENTERBLOCK) { 
-            blockChain = script->getObject(GET_INDEX(p));
-        } else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR) {
-            /*
-             * Some LEAVEBLOCK instructions are due to early exits via
-             * return/break/etc. from block-scoped loops and functions.
-             * We should ignore these instructions, since they don't really
-             * signal the end of the block.
-             */
-            jssrcnote *sn = js_GetSrcNote(script, p);
-            if (!(sn && SN_TYPE(sn) == SRC_HIDDEN))
+    JSObject *blockChain = NULL;
+    if (*pc == JSOP_BLOCKCHAIN) {
+        blockChain = script->getObject(GET_INDEX(pc));
+    } else if (*pc == JSOP_NULLBLOCKCHAIN) {
+        blockChain = NULL;
+    } else {
+        ptrdiff_t oplen;
+        for (jsbytecode *p = start; p < pc; p += oplen) {
+            JSOp op = js_GetOpcode(cx, script, p);
+            const JSCodeSpec *cs = &js_CodeSpec[op];
+            oplen = cs->length;
+            if (oplen < 0)
+                oplen = js_GetVariableBytecodeLength(p);
+            
+            if (op == JSOP_ENTERBLOCK)
+                blockChain = script->getObject(GET_INDEX(p));
+            else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR)
                 blockChain = blockChain->getParent();
+            else if (op == JSOP_BLOCKCHAIN)
+                blockChain = script->getObject(GET_INDEX(p));
+            else if (op == JSOP_NULLBLOCKCHAIN)
+                blockChain = NULL;
         }
     }
 
@@ -6746,8 +6747,6 @@ END_CASE(JSOP_ARRAYPUSH)
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                JS_ASSERT(js_GetOpcode(cx, regs.fp->script(), regs.pc) == JSOP_ENTERBLOCK);
-
 #if JS_HAS_GENERATORS
                 /* Catch cannot intercept the closing of a generator. */
                 if (JS_UNLIKELY(cx->exception.isMagic(JS_GENERATOR_CLOSING)))
