@@ -81,12 +81,14 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
 interface imgIContainer : nsISupports
 {
   /**
-   * The width of the container rectangle.
+   * The width of the container rectangle.  In the case of any error,
+   * zero is returned, and an exception will be thrown.
    */
   readonly attribute PRInt32 width;
 
   /**
-   * The height of the container rectangle.
+   * The height of the container rectangle.  In the case of any error,
+   * zero is returned, and an exception will be thrown.
    */
   readonly attribute PRInt32 height;
 
