@@ -998,71 +998,112 @@ EvalCacheHash(JSContext *cx, JSString *str)
     return &JS_SCRIPTS_TO_GC(cx)[h];
 }
 
+static JS_ALWAYS_INLINE JSScript *
+EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN staticLevel,
+                JSPrincipals *principals, JSObject *scopeobj, JSScript ***bucketp)
+{
+    /*
+     * Cache local eval scripts indexed by source qualified by scope.
+     *
+     * An eval cache entry should never be considered a hit unless its
+     * strictness matches that of the new eval code. The existing code takes
+     * care of this, because hits are qualified by the function from which
+     * eval was called, whose strictness doesn't change. Scripts produced by
+     * calls to eval from global code are not cached.
+     */
+    JSScript **bucket = EvalCacheHash(cx, str);
+    *bucketp = bucket;
+    uintN count = 0;
+    JSScript **scriptp = bucket;
+
+    EVAL_CACHE_METER(probe);
+    JSVersion version = cx->findVersion();
+    JSScript *script;
+    while ((script = *scriptp) != NULL) {
+        if (script->savedCallerFun &&
+            script->staticLevel == staticLevel &&
+            script->version == version &&
+            (script->principals == principals ||
+             (principals->subsume(principals, script->principals) &&
+              script->principals->subsume(script->principals, principals)))) {
+            /*
+             * Get the prior (cache-filling) eval's saved caller function.
+             * See Compiler::compileScript in jsparse.cpp.
+             */
+            JSFunction *fun = script->getFunction(0);
+
+            if (fun == caller->fun()) {
+                /*
+                 * Get the source string passed for safekeeping in the
+                 * atom map by the prior eval to Compiler::compileScript.
+                 */
+                JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
+
+                if (src == str || js_EqualStrings(src, str)) {
+                    /*
+                     * Source matches, qualify by comparing scopeobj to the
+                     * COMPILE_N_GO-memoized parent of the first literal
+                     * function or regexp object if any. If none, then this
+                     * script has no compiled-in dependencies on the prior
+                     * eval's scopeobj.
+                     */
+                    JSObjectArray *objarray = script->objects();
+                    int i = 1;
+
+                    if (objarray->length == 1) {
+                        if (script->regexpsOffset != 0) {
+                            objarray = script->regexps();
+                            i = 0;
+                        } else {
+                            EVAL_CACHE_METER(noscope);
+                            i = -1;
+                        }
+                    }
+                    if (i < 0 ||
+                        objarray->vector[i]->getParent() == scopeobj) {
+                        JS_ASSERT(staticLevel == script->staticLevel);
+                        EVAL_CACHE_METER(hit);
+                        *scriptp = script->u.nextToGC;
+                        script->u.nextToGC = NULL;
+                        return script;
+                    }
+                }
+            }
+        }
+
+        if (++count == EVAL_CACHE_CHAIN_LIMIT)
+            return NULL;
+        EVAL_CACHE_METER(step);
+        scriptp = &script->u.nextToGC;
+    }
+    return NULL;
+}
+
 static JSBool
 obj_eval(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc < 1) {
         vp->setUndefined();
-        return JS_TRUE;
+        return true;
     }
 
     JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
-    if (!caller) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_INDIRECT_CALL, js_eval_str);
-        return JS_FALSE;
-    }
-
-    jsbytecode *callerPC = caller->pc(cx);
-    bool indirectCall = (callerPC && *callerPC != JSOP_EVAL);
+    jsbytecode *callerPC;
+    bool directCall = caller &&
+                      (callerPC = caller->pc(cx)) != NULL &&
+                      js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL;
 
     /*
-     * If the callee was originally a cross-compartment wrapper, this should
-     * be an indirect call.
+     * If the callee was originally a cross-compartment wrapper, this is an
+     * indirect call.
      */
-    if (caller->scopeChain().compartment() != vp[0].toObject().compartment())
-        indirectCall = true;
-
-    /*
-     * Ban indirect uses of eval (nonglobal.eval = eval; nonglobal.eval(....))
-     * that attempt to use a non-global object as the scope object.
-     *
-     * This ban is a bit silly, since we could just disregard the this-argument
-     * entirely and comply with ES5, which supports indirect eval. See bug
-     * 592664.
-     */
-    {
-        JSObject *obj = ComputeThisFromVp(cx, vp);
-        if (!obj)
-            return JS_FALSE;
-
-        /*
-         * This call to JSObject::wrappedObject is safe because the result is
-         * only used for this check.
-         */
-        obj = obj->wrappedObject(cx);
-
-        OBJ_TO_INNER_OBJECT(cx, obj);
-        if (!obj)
-            return JS_FALSE;
-
-        JSObject *parent = obj->getParent();
-        if (indirectCall || parent) {
-            uintN flags = parent
-                          ? JSREPORT_ERROR
-                          : JSREPORT_STRICT | JSREPORT_WARNING;
-            if (!JS_ReportErrorFlagsAndNumber(cx, flags, js_GetErrorMessage, NULL,
-                                              JSMSG_BAD_INDIRECT_CALL,
-                                              js_eval_str)) {
-                return JS_FALSE;
-            }
-        }
-    }
+    if (directCall && caller->scopeChain().compartment() != vp[0].toObject().compartment())
+        directCall = false;
 
     Value *argv = JS_ARGV(cx, vp);
     if (!argv[0].isString()) {
         *vp = argv[0];
-        return JS_TRUE;
+        return true;
     }
 
     /*
@@ -1075,7 +1116,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
             "Support for eval(code, scopeObject) has been removed. "
             "Use |with (scopeObject) eval(code);| instead.";
         if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
-            return JS_FALSE;
+            return false;
         caller->script()->warnedAboutTwoArgumentEval = true;
     }
 
@@ -1083,55 +1124,45 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     MUST_FLOW_THROUGH("out");
     uintN staticLevel = caller->script()->staticLevel + 1;
 
+    JSObject *scopeobj;
+
     /*
-     * Bring fp->scopeChain up to date. We're either going to use
-     * it (direct call) or save it and restore it (indirect call).
+     * Per ES5, if we see an indirect call, then run in the global scope.
+     * (eval is specified this way so that the compiler can make assumptions
+     * about what bindings may or may not exist in the current frame if it
+     * doesn't see 'eval'.)
      */
-    JSObject *callerScopeChain;
-
-    if (callerPC && *callerPC == JSOP_EVAL)
-        callerScopeChain = js_GetScopeChainFast(cx, caller, JSOP_EVAL,
-                                                JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
-    else
-        callerScopeChain = js_GetScopeChain(cx, caller);
-
-    if (!callerScopeChain)
-        return JS_FALSE;
-
-    JSObject *scopeobj = NULL;
-
-#if JS_HAS_EVAL_THIS_SCOPE
-    /*
-     * If we see an indirect call, then run eval in the global scope. We do
-     * this so the compiler can make assumptions about what bindings may or
-     * may not exist in the current frame if it doesn't see 'eval'.
-     */
-    if (indirectCall) {
-        /* Pretend that we're top level. */
-        staticLevel = 0;
-        scopeobj = vp[0].toObject().getGlobal();
-    } else {
+    if (directCall) {
         /*
          * Compile using the caller's current scope object.
          *
          * NB: This means that the C API must not be used to call eval.
          */
+        scopeobj = js_GetScopeChainFast(cx, caller, JSOP_EVAL,
+                                        JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+        if (!scopeobj)
+            return false;
+
         JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
-        scopeobj = callerScopeChain;
+    } else {
+        /* Pretend that we're top level. */
+        staticLevel = 0;
+        scopeobj = vp[0].toObject().getGlobal();
     }
-#endif
 
     /* Ensure we compile this eval with the right object in the scope chain. */
     JSObject *result = CheckScopeChainValidity(cx, scopeobj, js_eval_str);
-    JS_ASSERT_IF(result, result == scopeobj);
     if (!result)
-        return JS_FALSE;
+        return false;
+    JS_ASSERT(result == scopeobj);
 
-    // CSP check: is eval() allowed at all?
-    // report errors via CSP is done in the script security mgr.
+    /*
+     * CSP check: Is eval() allowed at all?
+     * Report errors via CSP is done in the script security mgr.
+     */
     if (!js_CheckContentSecurityPolicy(cx)) {
         JS_ReportError(cx, "call to eval() blocked by CSP");
-        return  JS_FALSE;
+        return false;
     }
 
     JSObject *callee = &vp[0].toObject();
@@ -1140,8 +1171,6 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     const char *file = js_ComputeFilename(cx, caller, principals, &line);
 
     JSString *str = argv[0].toString();
-    JSScript *script = NULL;
-
     const jschar *chars;
     size_t length;
     str->getCharsAndLength(chars, length);
@@ -1160,86 +1189,14 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
             ok = js_ConsumeJSONText(cx, jp, chars+1, length-2);
             ok &= js_FinishJSONParse(cx, jp, NullValue());
             if (ok)
-                return JS_TRUE;
+                return true;
         }
     }
 
-    /*
-     * Cache local eval scripts indexed by source qualified by scope.
-     *
-     * An eval cache entry should never be considered a hit unless its
-     * strictness matches that of the new eval code. The existing code takes
-     * care of this, because hits are qualified by the function from which
-     * eval was called, whose strictness doesn't change. Scripts produced by
-     * calls to eval from global code are not cached.
-     */
-    JSScript **bucket = EvalCacheHash(cx, str);
-    if (!indirectCall && caller->isFunctionFrame()) {
-        uintN count = 0;
-        JSScript **scriptp = bucket;
-
-        EVAL_CACHE_METER(probe);
-        JSVersion version = cx->findVersion();
-        while ((script = *scriptp) != NULL) {
-            if (script->savedCallerFun &&
-                script->staticLevel == staticLevel &&
-                script->version == version &&
-                (script->principals == principals ||
-                 (principals->subsume(principals, script->principals) &&
-                  script->principals->subsume(script->principals, principals)))) {
-                /*
-                 * Get the prior (cache-filling) eval's saved caller function.
-                 * See Compiler::compileScript in jsparse.cpp.
-                 */
-                JSFunction *fun = script->getFunction(0);
-
-                if (fun == caller->fun()) {
-                    /*
-                     * Get the source string passed for safekeeping in the
-                     * atom map by the prior eval to Compiler::compileScript.
-                     */
-                    JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
-
-                    if (src == str || js_EqualStrings(src, str)) {
-                        /*
-                         * Source matches, qualify by comparing scopeobj to the
-                         * COMPILE_N_GO-memoized parent of the first literal
-                         * function or regexp object if any. If none, then this
-                         * script has no compiled-in dependencies on the prior
-                         * eval's scopeobj.
-                         */
-                        JSObjectArray *objarray = script->objects();
-                        int i = 1;
-
-                        if (objarray->length == 1) {
-                            if (script->regexpsOffset != 0) {
-                                objarray = script->regexps();
-                                i = 0;
-                            } else {
-                                EVAL_CACHE_METER(noscope);
-                                i = -1;
-                            }
-                        }
-                        if (i < 0 ||
-                            objarray->vector[i]->getParent() == scopeobj) {
-                            JS_ASSERT(staticLevel == script->staticLevel);
-                            EVAL_CACHE_METER(hit);
-                            *scriptp = script->u.nextToGC;
-                            script->u.nextToGC = NULL;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (++count == EVAL_CACHE_CHAIN_LIMIT) {
-                script = NULL;
-                break;
-            }
-            EVAL_CACHE_METER(step);
-            scriptp = &script->u.nextToGC;
-        }
-    }
+    JSScript *script = NULL;
+    JSScript **bucket = NULL;
+    if (directCall && caller->isFunctionFrame())
+        script = EvalCacheLookup(cx, str, caller, staticLevel, principals, scopeobj, &bucket);
 
     /*
      * We can't have a callerFrame (down in js_Execute's terms) if we're in
@@ -1254,7 +1211,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                                          chars, length,
                                          NULL, file, line, str, staticLevel);
         if (!script)
-            return JS_FALSE;
+            return false;
     }
 
     assertSameCompartment(cx, scopeobj, script);
@@ -1267,8 +1224,10 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                                          cx->runtime->atomState.evalAtom) &&
                 Execute(cx, scopeobj, script, callerFrame, JSFRAME_EVAL, vp);
 
-    script->u.nextToGC = *bucket;
-    *bucket = script;
+    if (bucket) {
+        script->u.nextToGC = *bucket;
+        *bucket = script;
+    }
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;
 #endif
