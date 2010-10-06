@@ -252,13 +252,8 @@ var gEventManager = {
       // install is an update
       let addon = install.existingAddon;
       this.delegateAddonEvent(aEvent, [addon].concat(aParams));
-      return;
     }
 
-    this.delegateNewInstallEvent(aEvent, aParams);
-  },
-
-  delegateNewInstallEvent: function(aEvent, aParams) {
     for (let i = 0; i < this._installListeners.length; i++) {
       let listener = this._installListeners[i];
       if (!(aEvent in listener))
@@ -911,8 +906,7 @@ var gViewController = {
         if (isPending(aAddon, "install")) {
           aAddon.install.cancel();
         } else if (isPending(aAddon, "upgrade")) {
-          this.mAddon.pendingUpgrade.install.cancel();
-          this._updateState();
+          aAddon.pendingUpgrade.install.cancel();
         } else if (isPending(aAddon, "uninstall")) {
           aAddon.cancelUninstall();
         } else if (isPending(aAddon, "enable")) {
@@ -1066,10 +1060,8 @@ function getAddonsAndInstalls(aType, aCallback) {
   if (aType != null) {
     addonTypes = [aType];
     installTypes = [aType];
-    if (aType == "extension") {
-      addonTypes.push("bootstrapped");
+    if (aType == "extension")
       installTypes = addonTypes.concat("");
-    }
   }
 
   var addons = null, installs = null;
@@ -1741,7 +1733,10 @@ var gListView = {
   },
 
   onNewInstall: function(aInstall) {
-    // the event manager ensures that upgrades are filtered out
+    // Ignore any upgrade installs
+    if (aInstall.existingAddon)
+      return;
+
     var item = createItem(aInstall, true);
     this._listBox.insertBefore(item, this._listBox.firstChild);
   },
@@ -1760,6 +1755,13 @@ var gListView = {
 
   onInstallCancelled: function(aInstall) {
     this.removeInstall(aInstall);
+  },
+
+  onInstallEnded: function(aInstall) {
+    // Remove any install entries for upgrades, their status will appear against
+    // the existing item
+    if (aInstall.existingAddon)
+      this.removeInstall(aInstall);
   },
 
   removeInstall: function(aInstall) {
