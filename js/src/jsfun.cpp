@@ -2981,13 +2981,13 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
                      CONTEXT, FUNCTION, OBJECT, 0, nanojit::ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK JSObject *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun)
+js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
 {
     /*
      * Flat closures can be partial, they may need to search enclosing scope
      * objects via JSOP_NAME, etc.
      */
-    JSObject *scopeChain = js_GetScopeChain(cx, cx->fp());
+    JSObject *scopeChain = js_GetScopeChainFast(cx, cx->fp(), op, oplen);
     if (!scopeChain)
         return NULL;
 
