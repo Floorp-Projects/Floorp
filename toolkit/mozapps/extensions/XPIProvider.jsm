@@ -2245,6 +2245,10 @@ var XPIProvider = {
     }
     this.selectedSkin = newSkin;
 
+    // Flush the preferences to disk so they don't get out of sync with the
+    // database
+    Services.prefs.savePrefFile(null);
+
     // Mark the previous theme as disabled. This won't cause recursion since
     // only enabled calls notifyAddonChanged.
     if (previousTheme)
