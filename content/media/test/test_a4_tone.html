@@ -178,7 +178,7 @@ function audioAvailable(event) {
   spectrumMaxs.push({ value: maxValue, index: maxIndex, time: (currentSampleOffset / testFileSampleRate) });
 
   if( (typeof event.time !== "number") ||
-      (Math.abs(event.time - currentSampleOffset / testFileSampleRate) > 0.01) ) {
+      (Math.abs(event.time - currentSampleOffset / testFileSampleRate) >= 0.001) ) {
     isTimePropertyValid = false;
   }
 

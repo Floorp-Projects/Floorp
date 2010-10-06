@@ -413,7 +413,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // state machine.
   void Stop();
 
-  void AudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength, PRUint64 aTime);
+  void AudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength, float aTime);
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.

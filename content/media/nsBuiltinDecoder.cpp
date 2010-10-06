@@ -310,7 +310,7 @@ already_AddRefed<nsIPrincipal> nsBuiltinDecoder::GetCurrentPrincipal()
 
 void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
                                       PRUint32 aFrameBufferLength,
-                                      PRUint64 aTime)
+                                      float aTime)
 {
   // Auto manage the frame buffer's memory. If we return due to an error
   // here, this ensures we free the memory. Otherwise, we pass off ownership
