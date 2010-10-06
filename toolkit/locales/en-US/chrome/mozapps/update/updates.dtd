@@ -18,6 +18,8 @@
                                            not have the system permissions required to install it. Please contact your
                                            system administrator, or try again from an account that has permission to
                                            install software on this computer.">
+<!ENTITY  manualUpdate.space.desc         "A recommended security and stability update is available, but you do
+                                           not have enough space to install it.">
 <!ENTITY  manualUpdateGetMsg.label        "You can always get the latest version of &brandShortName; at:">
 
 <!ENTITY  incompatibleCheck.title         "Checking Add-on Compatibility">
