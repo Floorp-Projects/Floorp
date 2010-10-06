@@ -43,6 +43,8 @@ add_test(function() {
     id: "addon2@tests.mozilla.org",
     name: "manually updating addon",
     version: "1.0",
+    isCompatible: false,
+    blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }]);
   
@@ -115,6 +117,8 @@ add_test(function() {
   is_element_visible(postfix, "'Update' postfix should be visible");
   is_element_visible(item._updateAvailable, "");
   is_element_visible(item._relNotesToggle, "Release notes toggle should be visible");
+  is_element_hidden(item._warning, "Incompatible warning should be hidden");
+  is_element_hidden(item._error, "Blocklist error should be hidden");
 
   info("Opening release notes");
   item.addEventListener("RelNotesToggle", function() {
