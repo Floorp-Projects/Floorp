@@ -3,11 +3,11 @@ expected = 'undefined,';
 
 function f() { 
     (eval("\
-        function () {\
+        (function () {\
             for (var z = 0; z < 2; ++z) {\
                 x = ''\
             }\
-        }\
+        })\
     "))();
 }
 __defineSetter__("x", eval)
