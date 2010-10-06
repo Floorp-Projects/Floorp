@@ -13435,9 +13435,9 @@ TraceRecorder::record_JSOP_APPLY()
 
     /*
      * We don't trace apply and call with a primitive 'this', which is the
-     * first positional parameter.
+     * first positional parameter, unless 'this' is null.  That's ok.
      */
-    if (argc > 0 && !vp[2].isObject())
+    if (argc > 0 && !vp[2].isObjectOrNull())
         return record_JSOP_CALL();
 
     /*
