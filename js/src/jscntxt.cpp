@@ -510,6 +510,16 @@ JSThreadData::init()
     return true;
 }
 
+MathCache *
+JSThreadData::allocMathCache(JSContext *cx)
+{
+    JS_ASSERT(!mathCache);
+    mathCache = new MathCache;
+    if (!mathCache)
+        js_ReportOutOfMemory(cx);
+    return mathCache;
+}
+
 void
 JSThreadData::finish()
 {
@@ -530,6 +540,7 @@ JSThreadData::finish()
     jmData.Finish();
 #endif
     stackSpace.finish();
+    delete mathCache;
 }
 
 void
