@@ -547,7 +547,7 @@ namespace nanojit
 
     inline RegisterMask rmask(Register r)
     {
-        return RegisterMask(1) << r;
+        return RegisterMask(1) << REGNUM(r);
     }
 
     //-----------------------------------------------------------------------
@@ -656,7 +656,7 @@ namespace nanojit
     private:
         // SharedFields: fields shared by all LIns kinds.
         //
-        // The .inReg, .reg, .inAr and .arIndex fields form a "reservation"
+        // The .inReg, .regnum, .inAr and .arIndex fields form a "reservation"
         // that is used temporarily during assembly to record information
         // relating to register allocation.  See class RegAlloc for more
         // details.  Note: all combinations of .inReg/.inAr are possible, ie.
@@ -668,7 +668,7 @@ namespace nanojit
         //
         struct SharedFields {
             uint32_t inReg:1;           // if 1, 'reg' is active
-            Register reg:7;
+            uint32_t regnum:7;
             uint32_t inAr:1;            // if 1, 'arIndex' is active
             uint32_t isResultLive:1;    // if 1, the instruction's result is live
 
@@ -758,7 +758,12 @@ namespace nanojit
         }
         Register deprecated_getReg() {
             NanoAssert(isExtant());
-            return ( isInReg() ? sharedFields.reg : deprecated_UnknownReg );
+            if (isInReg()) {
+                Register r = { sharedFields.regnum };
+                return r;
+            } else { 
+                return deprecated_UnknownReg;
+            }
         }
         uint32_t deprecated_getArIndex() {
             NanoAssert(isExtant());
@@ -782,11 +787,12 @@ namespace nanojit
         }
         Register getReg() {
             NanoAssert(isInReg());
-            return sharedFields.reg;
+            Register r = { sharedFields.regnum };
+            return r;
         }
         void setReg(Register r) {
             sharedFields.inReg = 1;
-            sharedFields.reg = r;
+            sharedFields.regnum = REGNUM(r);
         }
         void clearReg() {
             sharedFields.inReg = 0;
