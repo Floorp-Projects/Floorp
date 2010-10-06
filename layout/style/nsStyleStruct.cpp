@@ -1865,7 +1865,16 @@ nsStyleBackground::Layer::SetInitialValues()
   mImage.SetNull();
 }
 
-PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
+PRBool
+nsStyleBackground::Layer::RenderingMightDependOnFrameSize() const
+{
+  return (!mImage.IsEmpty() &&
+          (mPosition.DependsOnFrameSize() ||
+           mSize.DependsOnFrameSize(mImage.GetType())));
+}
+
+PRBool
+nsStyleBackground::Layer::operator==(const Layer& aOther) const
 {
   return mAttachment == aOther.mAttachment &&
          mClip == aOther.mClip &&
