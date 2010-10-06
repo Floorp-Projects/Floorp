@@ -187,29 +187,10 @@ function populateGraphicsSection() {
       createHeader(bundle.GetStringFromName("driverDate")),
       createElement("td", gfxInfo.adapterDriverDate),
     ]));
-
-    var d2dEnabled = gfxInfo.D2DEnabled;
-    var d2dMessage = d2dEnabled;
-    if (!d2dEnabled) {
-      var d2dStatus = gfxInfo.getFeatureStatus(gfxgfxInfoInfo.FEATURE_DIRECT2D);
-      if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DEVICE ||
-          d2dStatus == gfxInfo.FEATURE_DISCOURAGED)
-      {
-        d2dMessage = bundle.GetStringFromName("blockedGraphicsCard");
-      }
-      else if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DRIVER_VERSION)
-      {
-        var d2dSuggestedDriverVersion = gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
-        if (d2dSuggestedDriverVersion) {
-          d2dMessage += bundle.GetStringFromName("tryNewerDriverVersion").replace("%1", d2dSuggestedDriverVersion);
-        }
-      }
-    }
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("direct2DEnabled")),
-      createElement("td", d2dMessage),
+      createElement("td", gfxInfo.D2DEnabled),
     ]));
-
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("directWriteEnabled")),
       createElement("td", gfxInfo.DWriteEnabled),
