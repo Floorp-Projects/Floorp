@@ -80,7 +80,8 @@ LayerManagerD3D9::Initialize()
   if (gfxInfo) {
     PRInt32 status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-      if (status != nsIGfxInfo::FEATURE_NO_INFO)
+      if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+          status != nsIGfxInfo::FEATURE_AVAILABLE)
       {
         NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
         return PR_FALSE;

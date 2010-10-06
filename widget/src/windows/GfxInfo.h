@@ -62,8 +62,6 @@ private:
   nsString mDriverVersion;
   nsString mDriverDate;
   nsString mDeviceKey;
-
-  nsresult GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion);
 };
 
 } // namespace widget
