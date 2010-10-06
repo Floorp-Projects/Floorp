@@ -1,10 +1,10 @@
 for (a in (eval("\
-  function() {\
+  (function() {\
     return function() {\
       yield ((function() {\
         return d\
       })())\
     } ();\
   var d = []\
-  }\
+  })\
 "))());

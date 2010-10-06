@@ -1,4 +1,4 @@
-function()[function() function() function() function() function() function() {}]
+(function()[function() function() function() function() function() function() {}]);
 foo = [{
   text: "(function(){if(d){(1)}})",
   s: function() {},
@@ -46,9 +46,9 @@ foo = [{
   }
 } ());
 s = [function() function() function() function() function() function() {}]
-[function() function() function() function() {}]
-function() { [function() function() {}] }
-function() {}
+[function() function() function() function() {}];
+(function() { [function() function() {}] });
+(function() {});
 (eval("\
   (function(){\
     for each(d in[\
@@ -57,4 +57,4 @@ function() {}
       [].filter(new Function,gczeal(2))\
     }\
   })\
-"))()
+"))();
