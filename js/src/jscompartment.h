@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jsgc.h"
+#include "jsmath.h"
 #include "jsobj.h"
 #include "jsfun.h"
 #include "jsgcstats.h"

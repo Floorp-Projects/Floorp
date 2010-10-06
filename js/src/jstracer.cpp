@@ -11228,6 +11228,11 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
                 if (!tval.isNumber())
                     goto next_specialization;
                 *argp = this_ins;
+            } else if (argtype == 'M') {
+                MathCache *mathCache = JS_THREAD_DATA(cx)->getMathCache(cx);
+                if (!mathCache)
+                    return RECORD_ERROR;
+                *argp = INS_CONSTPTR(mathCache);
             } else {
                 JS_NOT_REACHED("unknown prefix arg type");
             }
