@@ -409,6 +409,7 @@ var BrowserUI = {
     let tabs = document.getElementById("tabs");
     tabs.addEventListener("TabSelect", this, true);
     tabs.addEventListener("TabOpen", this, true);
+    window.addEventListener("PanFinished", this, true);
 
     // listen content messages
     messageManager.addMessageListener("DOMLinkAdded", this);
@@ -770,8 +771,8 @@ var BrowserUI = {
       case "TabOpen":
       {
         let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
-        if (!(tabsVisibility == 1.0) && Browser.selectedTab.chromeTab != aEvent.target)
-          NewTabPopup.show(aEvent.target);
+        if (!(tabsVisibility == 1.0) && Browser.selectedTab.chromeTab != aEvent.originalTarget)
+          NewTabPopup.show(aEvent.originalTarget);
 
         // Workaround to hide the tabstrip if it is partially visible
         // See bug 524469
@@ -780,6 +781,11 @@ var BrowserUI = {
 
         break;
       }
+      case "PanFinished":
+        let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
+        if (tabsVisibility == 0.0)
+          document.getElementById("tabs").removeClosedTab();
+        break;
       // Window events
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)

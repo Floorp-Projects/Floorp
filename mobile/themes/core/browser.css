@@ -1007,7 +1007,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
   -moz-border-end: 3px solid #262629;
 }
 
-#tabs {
+#tabs > * {
   display: block;
   -moz-column-width: 128px;
   -moz-column-gap: 0;
@@ -1017,12 +1017,16 @@ autocompleteresult.noresults > .autocomplete-item-container {
   background-color: transparent;
 }
 
+#tabs documenttab:only-child .documenttab-close {
+  display: none;
+}
+
 #tabs-controls {
   margin-top: 8px; /* core spacing */
   -moz-box-pack: start;
 }
 
-box[type="documenttab"] {
+documenttab {
   /* display:block allow us to change the line-height, it won't work otherwise */
   display: block;
   width: 128px;
@@ -1030,13 +1034,31 @@ box[type="documenttab"] {
   line-height: 0;
 }
 
-.documenttab-canvas {
+documenttab .documenttab-thumbnail {
   /* keep the unselected thumbnails aligned with the selected one */
   border: 8px solid #36373b;
   background-color: white;
 }
 
-.documenttab-canvas[selected="true"] {
+documenttab .documenttab-close-container {
+  -moz-margin-end: 65px;
+}
+
+documenttab .documenttab-close-container > .documenttab-close {
+  width: 40px;
+  height: 40px;
+  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
+}
+
+documenttab .documenttab-close-container:hover:active > .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
+}
+
+documenttab .documenttab-reload {
+  display: none;
+}
+
+documenttab[selected="true"] .documenttab-thumbnail {
   border: 8px solid;
   -moz-border-radius: 3px;
   -moz-border-top-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
@@ -1045,22 +1067,23 @@ box[type="documenttab"] {
   -moz-border-left-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
 }
 
-.documenttab-close-container {
-  -moz-margin-end: 65px;
+documenttab[reload="true"] .documenttab-thumbnail {
+  border: 8px solid;
+  -moz-border-radius: 3px;
+  -moz-border-top-colors: #262629 #262629 #262629 #262629 #262629 !important;
+  -moz-border-right-colors: #262629 #262629 #262629 #262629 #262629 !important;
+  -moz-border-bottom-colors: #262629 #262629 #262629 #262629 #262629 !important;
+  -moz-border-left-colors: #262629 #262629 #262629 #262629 #262629 !important;
+  opacity: 0.5;
 }
 
-.documenttab-close {
-  width: 40px;
-  height: 40px;
-  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
-}
-
-hbox:hover:active > .documenttab-close {
-  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
-}
-
-box[type="documenttab"]:only-child > stack > hbox > .documenttab-close {
+documenttab[reload="true"] .documenttab-close-container {
   display: none;
+}
+
+documenttab[reload="true"] .documenttab-reload {
+  background: url("chrome://browser/skin/images/reload-tab.png") no-repeat center center, -moz-radial-gradient(circle, rgba(137,215,21,0.8) 10%, rgba(68,108,17,0) 40%);
+  display: -moz-box;
 }
 
 #newtab-button {
