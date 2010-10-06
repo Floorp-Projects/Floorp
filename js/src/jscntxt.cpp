@@ -475,7 +475,9 @@ AllFramesIter::operator++()
 {
     JS_ASSERT(!done());
     if (curfp == curcs->getInitialFrame()) {
-        curcs = curcs->getPreviousInMemory();
+        do {
+            curcs = curcs->getPreviousInMemory();
+        } while (curcs && !curcs->inContext());
         curfp = curcs ? curcs->getCurrentFrame() : NULL;
     } else {
         curfp = curfp->prev();
