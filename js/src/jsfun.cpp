@@ -518,15 +518,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          */
         uintN arg = uintN(JSID_TO_INT(id));
         if (arg < obj->getArgsInitialLength()) {
-            JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
-            if (fp) {
-                JS_ASSERT(fp->numActualArgs() == obj->getArgsInitialLength());
+            JS_ASSERT(!obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE));
+            if (JSStackFrame *fp = (JSStackFrame *) obj->getPrivate())
                 *vp = fp->canonicalActualArg(arg);
-            } else {
-                const Value &v = obj->getArgsElement(arg);
-                if (!v.isMagic(JS_ARGS_HOLE))
-                    *vp = v;
-            }
+            else
+                *vp = obj->getArgsElement(arg);
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
