@@ -81,7 +81,7 @@ public:
   nsresult  InitializeGlobalPrinters();
 
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
-  PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
+  PRUint32  GetNumPrinters()             { return mGlobalNumPrinters; }
   nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName);
 
