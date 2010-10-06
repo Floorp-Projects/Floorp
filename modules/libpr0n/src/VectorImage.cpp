@@ -310,11 +310,13 @@ NS_IMETHODIMP
 VectorImage::GetWidth(PRInt32* aWidth)
 {
   if (mError || !mIsFullyLoaded) {
+    *aWidth = 0;
     return NS_ERROR_FAILURE;
   }
 
   if (!mSVGDocumentWrapper->GetWidthOrHeight(SVGDocumentWrapper::eWidth,
                                              *aWidth)) {
+    *aWidth = 0;
     return NS_ERROR_FAILURE;
   }
 
@@ -327,11 +329,13 @@ NS_IMETHODIMP
 VectorImage::GetHeight(PRInt32* aHeight)
 {
   if (mError || !mIsFullyLoaded) {
+    *aHeight = 0;
     return NS_ERROR_FAILURE;
   }
 
   if (!mSVGDocumentWrapper->GetWidthOrHeight(SVGDocumentWrapper::eHeight,
                                              *aHeight)) {
+    *aHeight = 0;
     return NS_ERROR_FAILURE;
   }
 
