@@ -29,6 +29,6 @@
       </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
-    <install size="2">http://example.com/browser/toolkit/mozapps/extensions/test/browser/addons/browser_install.xpi</install>
+    <install size="2">http://example.com/browser/toolkit/mozapps/extensions/test/browser/addons/browser_install1_2.xpi</install>
   </addon>
 </searchresults>

@@ -4301,12 +4301,12 @@ AddonInstall.prototype = {
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
 
-      AddonManagerPrivate.callAddonListeners("onOperationCancelled", createWrapper(this.addon));
-
       if (this.existingAddon) {
         delete this.existingAddon.pendingUpgrade;
         this.existingAddon.pendingUpgrade = null;
       }
+
+      AddonManagerPrivate.callAddonListeners("onOperationCancelled", createWrapper(this.addon));
 
       AddonManagerPrivate.callInstallListeners("onInstallCancelled",
                                                this.listeners, this.wrapper);

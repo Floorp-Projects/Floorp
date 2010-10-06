@@ -661,7 +661,8 @@
       <method name="onInstallEnded">
         <body><![CDATA[
           this.refreshState();
-          this.mControl.onInstallCompleted();
+          if ("onInstallCompleted" in this.mControl)
+            this.mControl.onInstallCompleted();
         ]]></body>
       </method>
 
