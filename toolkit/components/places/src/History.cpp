@@ -170,7 +170,7 @@ public:
   // If we are a content process, always remote the request to the
   // parent process.
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mozilla::dom::ContentChild * cpc = 
+    mozilla::dom::ContentChild* cpc =
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     (void)cpc->SendStartVisitedQuery(aURI);
@@ -178,9 +178,8 @@ public:
   }
 #endif
 
-    nsNavHistory* navHist = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navHist, NS_ERROR_FAILURE);
-    mozIStorageStatement* stmt = navHist->GetStatementById(DB_IS_PAGE_VISITED);
+    mozIStorageAsyncStatement* stmt =
+      History::GetService()->GetIsVisitedStatement();
     NS_ENSURE_STATE(stmt);
 
     // Bind by index for performance.
@@ -260,7 +259,7 @@ class FailSafeFinishTask
 {
 public:
   FailSafeFinishTask()
-  : mAppended(false) 
+  : mAppended(false)
   {
   }
 
@@ -952,6 +951,37 @@ History::NotifyVisited(nsIURI* aURI)
   mObservers.RemoveEntry(aURI);
 }
 
+mozIStorageAsyncStatement*
+History::GetIsVisitedStatement()
+{
+  if (mIsVisitedStatement) {
+    return mIsVisitedStatement;
+  }
+
+  // If we don't yet have a database connection, go ahead and clone it now.
+  if (!mReadOnlyDBConn) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(history, nsnull);
+
+    nsCOMPtr<mozIStorageConnection> dbConn;
+    (void)history->GetDBConnection(getter_AddRefs(dbConn));
+    NS_ENSURE_TRUE(dbConn, nsnull);
+
+    (void)dbConn->Clone(PR_TRUE, getter_AddRefs(mReadOnlyDBConn));
+    NS_ENSURE_TRUE(mReadOnlyDBConn, nsnull);
+  }
+
+  // Now we can create our cached statement.
+  nsresult rv = mReadOnlyDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "SELECT h.id "
+    "FROM moz_places h "
+    "WHERE url = ?1 "
+      "AND EXISTS(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1) "
+  ),  getter_AddRefs(mIsVisitedStatement));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  return mIsVisitedStatement;
+}
+
 /* static */
 History*
 History::GetService()
@@ -1005,6 +1035,10 @@ History::Shutdown()
   while (mPendingVisits.PeekFront()) {
     nsCOMPtr<Step> deadTaskWalking =
       dont_AddRef(static_cast<Step*>(mPendingVisits.PopFront()));
+  }
+
+  if (mReadOnlyDBConn) {
+    (void)mReadOnlyDBConn->AsyncClose(nsnull);
   }
 }
 

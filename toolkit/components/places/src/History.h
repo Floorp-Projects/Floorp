@@ -48,6 +48,7 @@
 #include "nsTArray.h"
 #include "nsDeque.h"
 #include "nsIObserver.h"
+#include "mozIStorageConnection.h"
 
 namespace mozilla {
 namespace places {
@@ -71,7 +72,7 @@ public:
    * @param aURI
    *        The URI to notify about.
    */
-  void NotifyVisited(nsIURI *aURI);
+  void NotifyVisited(nsIURI* aURI);
 
   /**
    * Append a task to the queue for SQL queries that need to happen
@@ -94,18 +95,37 @@ public:
   void CurrentTaskFinished();
 
   /**
+   * Obtains the statement to use to check if a URI is visited or not.
+   */
+  mozIStorageAsyncStatement* GetIsVisitedStatement();
+
+  /**
    * Obtains a pointer to this service.
    */
-  static History *GetService();
+  static History* GetService();
 
   /**
    * Obtains a pointer that has had AddRef called on it.  Used by the service
    * manager only.
    */
-  static History *GetSingleton();
+  static History* GetSingleton();
 
 private:
-  ~History();
+  virtual ~History();
+
+  /**
+   * A read-only database connection used for checking if a URI is visited.
+   *
+   * @note this should only be accessed by GetIsVisistedStatement and Shutdown.
+   */
+  nsCOMPtr<mozIStorageConnection> mReadOnlyDBConn;
+
+  /**
+   * An asynchronous statement to query if a URI is visited or not.
+   *
+   * @note this should only be accessed by GetIsVisistedStatement.
+   */
+  nsCOMPtr<mozIStorageAsyncStatement> mIsVisitedStatement;
 
   /**
    * Since visits rapidly fire at once, it's very likely to have race
@@ -132,21 +152,21 @@ private:
    */
   void Shutdown();
 
-  static History *gService;
+  static History* gService;
 
   // Ensures new tasks aren't started on destruction.
   bool mShuttingDown;
 
-  typedef nsTArray<mozilla::dom::Link *> ObserverArray;
+  typedef nsTArray<mozilla::dom::Link* > ObserverArray;
 
   class KeyClass : public nsURIHashKey
   {
   public:
-    KeyClass(const nsIURI *aURI)
+    KeyClass(const nsIURI* aURI)
     : nsURIHashKey(aURI)
     {
     }
-    KeyClass(const KeyClass &aOther)
+    KeyClass(const KeyClass& aOther)
     : nsURIHashKey(aOther)
     {
       NS_NOTREACHED("Do not call me!");
