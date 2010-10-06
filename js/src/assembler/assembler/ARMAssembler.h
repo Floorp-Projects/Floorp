@@ -132,7 +132,7 @@ namespace JSC {
     class ARMAssembler {
     public:
         
-#ifdef DEBUG
+#ifdef JS_METHODJIT_SPEW
         bool isOOLPath;
         // Assign a default value to keep Valgrind quiet.
         ARMAssembler() : isOOLPath(false) { }
