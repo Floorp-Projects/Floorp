@@ -1514,13 +1514,18 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
 }
 
 static JSBool
-EmitBlockChain(JSContext *cx, JSCodeGenerator *cg)
+EmitKnownBlockChain(JSContext *cx, JSCodeGenerator *cg, JSObjectBox *box)
 {
-    JSObjectBox *box = cg->blockChainBox;
     if (box)
         return EmitIndexOp(cx, JSOP_BLOCKCHAIN, box->index, cg);
     else
         return js_Emit1(cx, cg, JSOP_NULLBLOCKCHAIN) >= 0;
+}
+
+static JSBool
+EmitBlockChain(JSContext *cx, JSCodeGenerator *cg)
+{
+    return EmitKnownBlockChain(cx, cg, cg->blockChainBox);
 }
 
 static ptrdiff_t
@@ -1541,7 +1546,14 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
     if (index < 0)
         return -1;
 
-    return EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, lastp);
+    ptrdiff_t result = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, lastp);
+    if (result < 0)
+        return result;
+
+    if (!EmitBlockChain(cx, cg))
+        return -1;
+
+    return result;
 }
 
 static JSBool
@@ -5368,16 +5380,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         tryEnd = CG_OFFSET(cg);
 
+        JSObjectBox *prevBox = NULL;
         /* If this try has a catch block, emit it. */
         pn2 = pn->pn_kid2;
         lastCatch = NULL;
         if (pn2) {
-            JSObjectBox *prevBox = NULL;
             uintN count = 0;    /* previous catch block's population */
             
             /*
              * The emitted code for a catch block looks like:
              *
+             * blockchain
              * [throwing]                          only if 2nd+ catch block
              * [leaveblock]                        only if 2nd+ catch block
              * enterblock                          with SRC_CATCH
@@ -5403,6 +5416,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 JS_ASSERT(cg->stackDepth == depth);
                 guardJump = GUARDJUMP(stmtInfo);
                 if (guardJump != -1) {
+                    if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
+                        return JS_FALSE;
+                
                     /* Fix up and clean up previous catch block. */
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
 
@@ -5487,6 +5503,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * stack unbalanced.
          */
         if (lastCatch && lastCatch->pn_kid2) {
+            if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
+                return JS_FALSE;
+            
             CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
 
             /* Sync the stack to take into account pushed exception. */
@@ -5501,6 +5520,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 js_Emit1(cx, cg, JSOP_THROW) < 0) {
                 return JS_FALSE;
             }
+
+            if (EmitBlockChain(cx, cg) < 0)
+                return JS_FALSE;
         }
 
         JS_ASSERT(cg->stackDepth == depth);
@@ -5681,6 +5703,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (top + JSOP_RETURN_LENGTH != CG_OFFSET(cg)) {
             CG_BASE(cg)[top] = JSOP_SETRVAL;
             if (js_Emit1(cx, cg, JSOP_RETRVAL) < 0)
+                return JS_FALSE;
+            if (EmitBlockChain(cx, cg) < 0)
                 return JS_FALSE;
         }
         break;
