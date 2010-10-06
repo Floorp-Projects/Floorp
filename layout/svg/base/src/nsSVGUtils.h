@@ -600,6 +600,16 @@ public:
    */
   static float GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex);
 
+  /**
+   * Given a nsIContent* that is actually an nsSVGSVGElement*, this method
+   * checks whether it currently has a valid viewBox, and returns true if so.
+   *
+   * No other type of element should be passed to this method.
+   * (In debug builds, anything non-<svg> will trigger an abort; in non-debug
+   * builds, it will trigger a PR_FALSE return-value as a safe fallback.)
+   */
+  static PRBool RootSVGElementHasViewbox(const nsIContent *aRootSVGElem);
+
 private:
   /* Computational (nil) surfaces */
   static gfxASurface *gThebesComputationalSurface;
