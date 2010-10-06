@@ -1266,7 +1266,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
  * of the with block with sp + stackIndex.
  */
 JS_STATIC_INTERPRET JS_REQUIRES_STACK JSBool
-js_EnterWith(JSContext *cx, jsint stackIndex)
+js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen)
 {
     JSStackFrame *fp = cx->fp();
     Value *sp = cx->regs->sp;
@@ -1283,7 +1283,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
         sp[-1].setObject(*obj);
     }
 
-    JSObject *parent = js_GetScopeChain(cx, fp);
+    JSObject *parent = js_GetScopeChainFast(cx, fp, op, oplen);
     if (!parent)
         return JS_FALSE;
 
@@ -2614,7 +2614,7 @@ BEGIN_CASE(JSOP_POPV)
 END_CASE(JSOP_POPV)
 
 BEGIN_CASE(JSOP_ENTERWITH)
-    if (!js_EnterWith(cx, -1))
+    if (!js_EnterWith(cx, -1, JSOP_ENTERWITH, JSOP_ENTERWITH_LENGTH))
         goto error;
 
     /*
@@ -5411,7 +5411,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
     LOAD_FUNCTION(0);
 
     JSObject *obj = (op == JSOP_DEFFUN_FC)
-                    ? js_NewFlatClosure(cx, fun)
+                    ? js_NewFlatClosure(cx, fun, JSOP_DEFFUN_FC, JSOP_DEFFUN_FC_LENGTH)
                     : js_NewDebuggableFlatClosure(cx, fun);
     if (!obj)
         goto error;
@@ -5484,7 +5484,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
     JSFunction *fun;
     LOAD_FUNCTION(SLOTNO_LEN);
 
-    JSObject *obj = js_NewFlatClosure(cx, fun);
+    JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_DEFLOCALFUN_FC, JSOP_DEFLOCALFUN_FC_LENGTH);
     if (!obj)
         goto error;
 
@@ -5536,12 +5536,23 @@ BEGIN_CASE(JSOP_LAMBDA)
                  * break from the outer do-while(0).
                  */
                 if (op2 == JSOP_INITMETHOD) {
+#ifdef DEBUG
+                    const Value &lref = regs.sp[-1];
+                    JS_ASSERT(lref.isObject());
+                    JSObject *obj2 = &lref.toObject();
+                    JS_ASSERT(obj2->getClass() == &js_ObjectClass);
+#endif
+                    
                     fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                     JS_FUNCTION_METER(cx, joinedinitmethod);
                     break;
                 }
 
                 if (op2 == JSOP_SETMETHOD) {
+#ifdef DEBUG
+                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
+                    JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
+#endif
                     const Value &lref = regs.sp[-1];
                     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
                         fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
@@ -5628,7 +5639,7 @@ BEGIN_CASE(JSOP_LAMBDA_FC)
     JSFunction *fun;
     LOAD_FUNCTION(0);
 
-    JSObject *obj = js_NewFlatClosure(cx, fun);
+    JSObject *obj = js_NewFlatClosure(cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         goto error;
 
@@ -6351,7 +6362,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
          * temporaries.
          */
         JS_ASSERT(IsXML(regs.sp[-1]));
-        if (!js_EnterWith(cx, -2))
+        if (!js_EnterWith(cx, -2, JSOP_ENDFILTER, JSOP_ENDFILTER_LENGTH))
             goto error;
         regs.sp--;
         len = GET_JUMP_OFFSET(regs.pc);

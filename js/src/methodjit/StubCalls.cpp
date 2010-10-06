@@ -1545,7 +1545,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_DEFLOCALFUN_FC, JSOP_DEFLOCALFUN_FC_LENGTH);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -2390,7 +2390,7 @@ stubs::Throw(VMFrame &f)
 JSObject * JS_FASTCALL
 stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         THROWV(NULL);
     return obj;

@@ -47,6 +47,7 @@
 #include "jsobj.h"
 #include "jsatom.h"
 #include "jsstr.h"
+#include "jsopcode.h"
 
 /*
  * The high two bits of JSFunction.flags encode whether the function is native
@@ -517,7 +518,7 @@ extern JSObject * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 
 extern JS_REQUIRES_STACK JSObject *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun);
+js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen);
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);

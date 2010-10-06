@@ -4648,6 +4648,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 CG_SWITCH_TO_PROLOG(cg);
                 op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
                 EMIT_INDEX_OP(op, index);
+
                 /* Make blockChain determination quicker. */
                 if (EmitBlockChain(cx, cg) < 0)
                     return JS_FALSE;
@@ -5314,6 +5315,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_WITH, CG_OFFSET(cg));
         if (js_Emit1(cx, cg, JSOP_ENTERWITH) < 0)
+            return JS_FALSE;
+
+        /* Make blockChain determination quicker. */
+        if (EmitBlockChain(cx, cg) < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
@@ -6475,6 +6480,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
         if (EmitJump(cx, cg, JSOP_ENDFILTER, top - CG_OFFSET(cg)) < 0)
+            return JS_FALSE;
+
+        /* Make blockChain determination quicker. */
+        if (EmitBlockChain(cx, cg) < 0)
             return JS_FALSE;
         break;
 #endif
