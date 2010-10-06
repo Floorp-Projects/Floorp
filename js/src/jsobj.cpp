@@ -4653,9 +4653,9 @@ cleanup:
     return ok;
 }
 
-int
-js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
-                           JSObject **objp, JSProperty **propp)
+static JS_ALWAYS_INLINE int
+js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                                 JSObject **objp, JSProperty **propp)
 {
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
@@ -4706,6 +4706,13 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     *objp = NULL;
     *propp = NULL;
     return protoIndex;
+}
+
+int
+js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                           JSObject **objp, JSProperty **propp)
+{
+    return js_LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
 }
 
 PropertyCacheEntry *
@@ -4891,9 +4898,9 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
     return obj;
 }
 
-JSBool
-js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
-             Value *vp)
+static JS_ALWAYS_INLINE JSBool
+js_NativeGetInline(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
+                   Value *vp)
 {
     LeaveTraceIfGlobalObject(cx, pobj);
 
@@ -4937,6 +4944,13 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, u
     }
 
     return true;
+}
+
+JSBool
+js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
+             Value *vp)
+{
+    return js_NativeGetInline(cx, obj, pobj, shape, getHow, vp);
 }
 
 JSBool
@@ -5014,8 +5028,9 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
     id = js_CheckForStringIndex(id);
 
     aobj = js_GetProtoIfDenseArray(obj);
-    protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags,
-                                            &obj2, &prop);
+    /* This call site is hot -- use the always-inlined variant of js_LookupPropertyWithFlags(). */
+    protoIndex = js_LookupPropertyWithFlagsInline(cx, aobj, id, cx->resolveFlags,
+                                                  &obj2, &prop);
     if (protoIndex < 0)
         return JS_FALSE;
 
@@ -5093,7 +5108,8 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
         JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2, shape);
     }
 
-    if (!js_NativeGet(cx, obj, obj2, shape, getHow, vp))
+    /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
+    if (!js_NativeGetInline(cx, obj, obj2, shape, getHow, vp))
         return JS_FALSE;
 
     JS_UNLOCK_OBJ(cx, obj2);
@@ -5108,18 +5124,25 @@ js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id,
     return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, shapeOut, holderOut);
 }
 
-extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+static JS_ALWAYS_INLINE JSBool
+js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
 {
     const Shape *shape;
     JSObject *holder;
     return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, &shape, &holder);
 }
 
+extern JSBool
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+{
+    return js_GetPropertyHelperInline(cx, obj, id, getHow, vp);
+}
+
 JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return js_GetPropertyHelper(cx, obj, id, JSGET_METHOD_BARRIER, vp);
+    /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
+    return js_GetPropertyHelperInline(cx, obj, id, JSGET_METHOD_BARRIER, vp);
 }
 
 JSBool
