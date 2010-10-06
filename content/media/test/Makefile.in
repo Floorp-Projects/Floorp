@@ -192,6 +192,7 @@ _TEST_FILES += \
 		bug580982.webm \
 		chain.ogv \
 		dirac.ogg \
+		split.webm \
 		seek.ogv \
 		seek.webm \
 		seek.yuv \
