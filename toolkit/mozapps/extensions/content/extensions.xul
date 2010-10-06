@@ -380,7 +380,7 @@
         </vbox>
 
         <!-- detail view -->
-        <vbox id="detail-view" flex="1" class="view-pane">
+        <scrollbox id="detail-view" flex="1" class="view-pane addon-view" orient="vertical">
           <!-- global warnings -->
           <hbox class="global-warning-container global-warning">
             <image class="warning-icon"/>
@@ -403,7 +403,7 @@
                     command="cmd_enableUpdateSecurity"/>
             <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
           </hbox>
-          <scrollbox  flex="1" class="addon-view" orient="horizontal" pack="stretch" align="start">
+          <hbox flex="1">
             <spacer flex="1"/>
             <!-- "loading" splash screen -->
             <hbox class="loading" flex="1">
@@ -552,8 +552,8 @@
               </hbox>
             </vbox>
             <spacer flex="1"/>
-          </scrollbox>
-        </vbox>
+          </hbox>
+        </scrollbox>
 
       </deck>
 
