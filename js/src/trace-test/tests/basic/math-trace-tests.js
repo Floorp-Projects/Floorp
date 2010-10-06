@@ -23,10 +23,10 @@ function testmath(funcname, args, expected) {
     // Unless we eval here, the call to funcname won't get traced.
     // FUNCNAME="Infinity/Math.abs" and cases like that happen to
     // parse, too, in a twisted way.
-    var mapfunc = eval("function(a) {\n"
+    var mapfunc = eval("(function(a) {\n"
                        + "   for (var i = 0; i < a.length; i++)\n"
                        + "       a[i] = " + funcname + "(" + actuals +");\n"
-                       + " }\n");
+                       + " })\n");
 
     // To prevent the compiler from doing constant folding, produce an
     // array to pass to mapfunc that contains enough dummy

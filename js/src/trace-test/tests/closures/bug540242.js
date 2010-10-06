@@ -1,6 +1,6 @@
 for (j = 0; j < 1; j++) {
  var f = eval("\
-   function() {\
+   (function() {\
      for (var a = 0; a < 8; ++a) {\
        if (a % 3 == 2) {\
          eval(\"\
@@ -11,7 +11,7 @@ for (j = 0; j < 1; j++) {
        }\
        gc()\
      }\
-   }\
+   })\
  ");
  f()
 }
