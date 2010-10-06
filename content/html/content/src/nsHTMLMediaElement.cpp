@@ -758,7 +758,8 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
     }
 
     // If we have a type attribute, it must be a supported type.
-    if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+    if (child->HasAttr(kNameSpaceID_None, nsGkAtoms::type) &&
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
         GetCanPlay(type) == CANPLAY_NO)
     {
       DispatchAsyncSourceError(child);
@@ -1977,7 +1978,18 @@ void nsHTMLMediaElement::NetworkError()
 
 void nsHTMLMediaElement::DecodeError()
 {
-  Error(nsIDOMMediaError::MEDIA_ERR_DECODE);
+  if (!mIsLoadingFromSrcAttribute) {
+    NS_ASSERTION(mSourceLoadCandidate, "Must know the source we were loading from!");
+    if (mDecoder) {
+      mDecoder->Shutdown();
+      mDecoder = nsnull;
+    }
+    mError = nsnull;
+    DispatchAsyncSourceError(mSourceLoadCandidate);
+    QueueLoadFromSourceTask();
+  } else {
+    Error(nsIDOMMediaError::MEDIA_ERR_DECODE);
+  }
 }
 
 void nsHTMLMediaElement::LoadAborted()
