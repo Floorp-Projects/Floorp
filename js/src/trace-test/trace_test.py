@@ -182,7 +182,7 @@ def run_test(test, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
-        sys.stdout.write('Exit code: ' + str(p.returncode) + "\n")
+        sys.stdout.write('Exit code: %s\n' % code)
     if test.valgrind:
         sys.stdout.write(err)
     return (check_output(out, err, code, test.allow_oom, test.error), 
