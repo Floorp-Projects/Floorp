@@ -281,11 +281,11 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 #bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbarFolderMenu {
+#BMB_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
-#BMB_unsortedBookmarksFolderMenu {
+#BMB_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png");
 }
 

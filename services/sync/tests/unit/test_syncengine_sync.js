@@ -1087,6 +1087,68 @@ function test_syncFinish_deleteLotsInBatches() {
   }
 }
 
+function test_canDecrypt_noCryptoMeta() {
+  _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+  createAndUploadKeypair();
+
+  let engine = makeSteamEngine();
+  try {
+
+    do_check_false(engine.canDecrypt());
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+function test_canDecrypt_true() {
+  _("SyncEngine.canDecrypt returns true if the engine can decrypt the items on the server.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  let crypto_steam = new ServerWBO('steam');
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+  createAndUploadKeypair();
+  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+
+  let engine = makeSteamEngine();
+  try {
+
+    do_check_true(engine.canDecrypt());
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
 function run_test() {
   test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
   test_syncStartup_metaGet404();
@@ -1104,4 +1166,6 @@ function run_test() {
   test_syncFinish_noDelete();
   test_syncFinish_deleteByIds();
   test_syncFinish_deleteLotsInBatches();
+  test_canDecrypt_noCryptoMeta();
+  test_canDecrypt_true();
 }
