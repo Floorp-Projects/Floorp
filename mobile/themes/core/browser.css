@@ -441,7 +441,11 @@ toolbarbutton.panel-button {
 }
 
 .panel-header {
-  padding: 4px; /* core spacing */
+  font-weight: bold;
+  color: white;
+  background-color: #6576eb;
+  margin: 0;
+  padding: 2px;
 }
 
 #tool-addons {
