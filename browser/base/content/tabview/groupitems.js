@@ -1542,6 +1542,7 @@ let GroupItems = {
   },
 
   // ----------
+  // Function: _handleAttrModified
   // watch for icon changes on app tabs
   _handleAttrModified: function GroupItems__handleAttrModified(xulTab) {
     if (xulTab.ownerDocument.defaultView != gWindow || !xulTab.pinned)
@@ -1561,16 +1562,18 @@ let GroupItems = {
   },
 
   // ----------
-  // when a tab becomes pinned, add it to the app tab tray in all groups
-  handleTabPin: function GroupItems_handleTabPin(xulTab) {
+  // Function: addAppTab
+  // Adds the given xul:tab to the app tab tray in all groups
+  addAppTab: function GroupItems_addAppTab(xulTab) {
     this.groupItems.forEach(function(groupItem) {
       groupItem.addAppTab(xulTab);
     });
   },
 
   // ----------
-  // when a tab becomes unpinned, remove it from the app tab tray in all groups
-  handleTabUnpin: function GroupItems_handleTabUnpin(xulTab) {
+  // Function: removeAppTab
+  // Removes the given xul:tab from the app tab tray in all groups
+  removeAppTab: function GroupItems_removeAppTab(xulTab) {
     this.groupItems.forEach(function(groupItem) {
       groupItem.removeAppTab(xulTab);
     });
