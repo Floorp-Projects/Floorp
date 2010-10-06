@@ -1036,7 +1036,7 @@ GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
 # define JS_STATIC_INTERPRET
 
 extern JS_REQUIRES_STACK JSBool
-js_EnterWith(JSContext *cx, jsint stackIndex);
+js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen);
 
 extern JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx);
