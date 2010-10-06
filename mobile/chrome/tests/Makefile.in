@@ -65,6 +65,7 @@ _BROWSER_FILES = \
   browser_preferences_basic.js \
   browser_preferences_text.js \
   browser_rect.js \
+  browser_rememberPassword.js \
   browser_select.html \
   browser_select.js \
   browser_sessionstore.js \
