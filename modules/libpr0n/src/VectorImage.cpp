@@ -214,8 +214,7 @@ VectorImage::VectorImage(imgStatusTracker* aStatusTracker) :
   mIsInitialized(PR_FALSE),
   mIsFullyLoaded(PR_FALSE),
   mHaveAnimations(PR_FALSE),
-  mHaveRestrictedRegion(PR_FALSE),
-  mError(PR_FALSE)
+  mHaveRestrictedRegion(PR_FALSE)
 {
 }
 
@@ -255,11 +254,19 @@ VectorImage::GetCurrentFrameRect(nsIntRect& aRect)
 }
 
 PRUint32
-VectorImage::GetDataSize()
+VectorImage::GetDecodedDataSize()
 {
-  // XXXdholbert "sizeof(*this)" is, of course, quite an underestimate.  This
-  // needs to be smarter -- see bug 590790.
+  // XXXdholbert TODO: return num bytes used by helper SVG doc. (bug 590790)
   return sizeof(*this);
+}
+
+PRUint32
+VectorImage::GetSourceDataSize()
+{
+  // We're not storing the source data -- we just feed that directly to
+  // our helper SVG document as we receive it, for it to parse.
+  // So 0 is an appropriate return value here.
+  return 0;
 }
 
 nsresult

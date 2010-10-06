@@ -180,7 +180,6 @@ public:
                 const char* aURIString,
                 PRUint32 aFlags);
   void     GetCurrentFrameRect(nsIntRect& aRect);
-  PRUint32 GetDataSize();
 
   // Raster-specific methods
   static NS_METHOD WriteToRasterImage(nsIInputStream* aIn, void* aClosure,
@@ -494,8 +493,6 @@ private: // data
   // Helpers for decoder
   PRPackedBool               mWorkerPending:1;
   PRPackedBool               mInDecoder:1;
-
-  PRPackedBool               mError:1;  // Error handling
 
   // Whether the animation can stop, due to running out
   // of frames, or no more owning request
