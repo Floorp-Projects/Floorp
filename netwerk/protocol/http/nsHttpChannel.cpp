@@ -910,13 +910,6 @@ nsresult
 nsHttpChannel::ProcessSTSHeader()
 {
     nsresult rv;
-
-    // We need to check private browsing mode here since some permissions are
-    // allowed to be tweaked when private browsing mode is enabled, but STS is
-    // not allowed to operate at all in PBM.
-    if (gHttpHandler->InPrivateBrowsingMode())
-        return NS_OK;
-
     PRBool isHttps = PR_FALSE;
     rv = mURI->SchemeIs("https", &isHttps);
     NS_ENSURE_SUCCESS(rv, rv);
