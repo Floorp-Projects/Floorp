@@ -1164,7 +1164,9 @@
 
       <method name="_updateUpgradeInfo">
         <body><![CDATA[
-          this._version.value = this.mManualUpdate.version;
+          // Only update the version string if we're displaying the upgrade info
+          if (this.hasAttribute("upgrade"))
+            this._version.value = this.mManualUpdate.version;
         ]]></body>
       </method>
 
