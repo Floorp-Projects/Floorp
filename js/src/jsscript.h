@@ -510,8 +510,19 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 extern JS_FRIEND_API(void)
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
+/*
+ * The function must be used only outside the GC for a script that was run
+ * only on the current thread.
+ */
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
+
+/*
+ * If data is not null, it indicates that the script could been accessed only
+ * from that thread.
+ */
+extern void
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSThreadData *data);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);

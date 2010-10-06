@@ -898,6 +898,10 @@ typedef HashMap<jsbytecode*,
 
 class Oracle;
 
+typedef HashSet<JSScript *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> TracedScriptSet;
+
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -997,6 +1001,9 @@ struct TraceMonitor {
     // This must be used in only one place at a given time. It must be cleared
     // before use.
     TypeMap*                cachedTempTypeMap;
+
+    /* Scripts with recorded fragments. */
+    TracedScriptSet         tracedScripts;
 
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */

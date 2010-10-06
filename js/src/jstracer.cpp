@@ -2751,6 +2751,7 @@ TraceMonitor::flush()
 
     PodArrayZero(vmfragments);
     reFragments = new (alloc) REHashMap(alloc);
+    tracedScripts.clear();
 
     needFlush = JS_FALSE;
 }
@@ -5637,7 +5638,11 @@ RecordTree(JSContext* cx, TreeFragment* first, JSScript* outerScript, jsbytecode
 
     AUDIT(recorderStarted);
 
-    if (tm->outOfMemory() || OverfullJITCache(tm)) {
+    if (tm->outOfMemory() ||
+        OverfullJITCache(tm) ||
+        !tm->tracedScripts.put(cx->fp()->script())) {
+        if (!OverfullJITCache(tm))
+            js_ReportOutOfMemory(cx);
         Backoff(cx, (jsbytecode*) f->root->ip);
         ResetJIT(cx, FR_OOM);
         debug_only_print0(LC_TMTracer,
@@ -7532,7 +7537,7 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
     tm->maxCodeCacheBytes = bytes;
 }
 
-void
+bool
 InitJIT(TraceMonitor *tm)
 {
 #if defined JS_JIT_SPEW
@@ -7637,6 +7642,10 @@ InitJIT(TraceMonitor *tm)
     jitstats.archIsAMD64 = 1;
 #endif
 #endif
+
+    if (!tm->tracedScripts.init())
+        return false;
+    return true;
 }
 
 void
@@ -7748,16 +7757,19 @@ FinishJIT(TraceMonitor *tm)
 }
 
 JS_REQUIRES_STACK void
-PurgeScriptFragments(JSContext* cx, JSScript* script)
+PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 {
     debug_only_printf(LC_TMTracer,
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
-    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
     /* A recorder script is being evaluated and can not be destroyed or GC-ed. */
     JS_ASSERT_IF(tm->recorder, 
                  JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
+
+    TracedScriptSet::Ptr found = tm->tracedScripts.lookup(script);
+    if (!found)
+        return;
+    tm->tracedScripts.remove(found);
 
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &tm->vmfragments[i];
