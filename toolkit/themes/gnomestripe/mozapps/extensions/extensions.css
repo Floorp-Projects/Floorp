@@ -504,7 +504,6 @@
 }
 
 .detail-view-container {
-  overflow: auto;
   padding: 2em;
   font-size: 110%;
 }
@@ -538,13 +537,13 @@
 
 #detail-desc-container {
   margin-bottom: 2em;
-  /* This is necessary to fix layout issues with multi-line descriptions, see
-     bug 592712*/
-  outline: solid transparent;
 }
 
 #detail-desc {
   -moz-margin-start: 6px;
+  /* This is necessary to fix layout issues with multi-line descriptions, see
+     bug 592712*/
+  outline: solid transparent;
   white-space: pre-wrap;
 }
 
