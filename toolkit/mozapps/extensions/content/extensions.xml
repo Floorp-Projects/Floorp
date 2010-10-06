@@ -743,91 +743,99 @@
                     oncommand="document.getBindingParent(this).undo();"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
-      <xul:hbox align="stretch">
-        <xul:vbox pack="start">
-          <xul:vbox align="center" pack="center" class="icon-container">
-            <xul:image anonid="icon" class="icon"/>
-          </xul:vbox>
+
+      <xul:hbox>
+        <xul:vbox align="center" pack="center" class="icon-container">
+          <xul:image anonid="icon" class="icon"/>
         </xul:vbox>
-        <xul:vbox flex="1" class="fade" align="stretch">
-          <xul:hbox class="name-container" align="end">
-            <xul:label anonid="name" class="name" xbl:inherits="value=name"/>
-            <xul:label anonid="version" class="version"/>
-            <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
-            <xul:label class="update-postfix" value="&addon.update.postfix;"/>
+        <xul:vbox flex="1">
+          <xul:hbox align="start">
+            <xul:vbox flex="1">
+              <xul:hbox class="name-container" align="end">
+                <xul:label anonid="name" class="name" crop="end" flex="1"
+                           xbl:inherits="value=name,tooltiptext=name"/>
+                <xul:label anonid="version" class="version"/>
+                <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
+                <xul:label class="update-postfix" value="&addon.update.postfix;"/>
+                <xul:spacer flex="5000"/> <!-- Necessary to make the name crop -->
+              </xul:hbox>
+              <xul:label anonid="creator" class="creator"/>
+            </xul:vbox>
+            <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
           </xul:hbox>
-          <xul:label anonid="creator" class="creator"/>
-          <xul:spacer flex="1"/>
-          <xul:hbox align="center" class="description-container">
-            <xul:label flex="1" anonid="description" class="description" crop="end"/>
-            <xul:button class="details button-link"
-                        label="&addon.details.label;"
-                        tooltiptext="&addon.details.tooltip;"
-                        oncommand="document.getBindingParent(this).showInDetailView();"/>
-            <xul:spacer flex="5000"/> <!-- Necessary to make the description crop -->
-          </xul:hbox>
-          <xul:vbox anonid="relnotes-container" class="relnotes-container">
-            <xul:label class="relnotes-header" value="&addon.releaseNotes.label;"/>
-            <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
-            <xul:label anonid="relnotes-error" hidden="true"
-                       value="&addon.errorLoadingReleaseNotes.label;"/>
-            <xul:vbox anonid="relnotes"/>
-          </xul:vbox>
-          <xul:hbox pack="start">
-            <xul:button anonid="relnotes-toggle" class="relnotes-toggle"
-                        hidden="true" label="&cmd.showReleaseNotes.label;"
-                        tooltiptext="&cmd.showReleaseNotes.tooltip;"
-                        showlabel="&cmd.showReleaseNotes.label;"
-                        showtooltip="&cmd.showReleaseNotes.tooltip;"
-                        hidelabel="&cmd.hideReleaseNotes.label;"
-                        hidetooltip="&cmd.hideReleaseNotes.tooltip;"
-                        oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
-          </xul:hbox>
-        </xul:vbox>
-        <xul:vbox class="fade" align="end">
-          <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
-          <xul:spacer flex="1"/>
-          <xul:hbox class="status-container">
-            <xul:hbox anonid="checking-update" hidden="true">
-              <xul:image class="spinner"/>
-              <xul:label value="&addon.checkingForUpdates.label;"/>
-            </xul:hbox>
-            <xul:vbox anonid="update-available" class="update-available"
-                      hidden="true" align="end">
-              <xul:checkbox anonid="include-update" class="include-update"
-                            label="&addon.includeUpdate.label;" checked="true"
-                            oncommand="document.getBindingParent(this).onIncludeUpdateChanged();"/>
-              <xul:hbox align="center">
-                <xul:label class="update-available-notice"
-                           value="&addon.updateAvailable.label;"/>
-                <xul:button anonid="update-btn" class="addon-control"
-                            label="&addon.updateNow.label;"
-                            tooltiptext="&addon.updateNow.tooltip;"
-                            oncommand="document.getBindingParent(this).upgrade();"/>
+
+          <xul:hbox flex="1" align="end">
+            <xul:vbox flex="1">
+              <xul:hbox align="center" class="description-container">
+                <xul:label flex="1" anonid="description" class="description" crop="end"/>
+                <xul:button class="details button-link"
+                            label="&addon.details.label;"
+                            tooltiptext="&addon.details.tooltip;"
+                            oncommand="document.getBindingParent(this).showInDetailView();"/>
+                <xul:spacer flex="5000"/> <!-- Necessary to make the description crop -->
+              </xul:hbox>
+              <xul:vbox anonid="relnotes-container" class="relnotes-container">
+                <xul:label class="relnotes-header" value="&addon.releaseNotes.label;"/>
+                <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
+                <xul:label anonid="relnotes-error" hidden="true"
+                           value="&addon.errorLoadingReleaseNotes.label;"/>
+                <xul:vbox anonid="relnotes"/>
+              </xul:vbox>
+              <xul:hbox pack="start">
+                <xul:button anonid="relnotes-toggle" class="relnotes-toggle"
+                            hidden="true" label="&cmd.showReleaseNotes.label;"
+                            tooltiptext="&cmd.showReleaseNotes.tooltip;"
+                            showlabel="&cmd.showReleaseNotes.label;"
+                            showtooltip="&cmd.showReleaseNotes.tooltip;"
+                            hidelabel="&cmd.hideReleaseNotes.label;"
+                            hidetooltip="&cmd.hideReleaseNotes.tooltip;"
+                            oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
               </xul:hbox>
             </xul:vbox>
-            <xul:hbox anonid="install-status" class="install-status"
-                      hidden="true"/>
-          </xul:hbox>
-          <xul:hbox anonid="control-container" class="control-container">
-            <xul:button anonid="preferences-btn" class="addon-control"
+            <xul:vbox>
+              <xul:hbox class="status-container" pack="end">
+                <xul:hbox anonid="checking-update" hidden="true">
+                  <xul:image class="spinner"/>
+                  <xul:label value="&addon.checkingForUpdates.label;"/>
+                </xul:hbox>
+                <xul:vbox anonid="update-available" class="update-available"
+                          hidden="true" align="end">
+                  <xul:checkbox anonid="include-update" class="include-update"
+                                label="&addon.includeUpdate.label;" checked="true"
+                                oncommand="document.getBindingParent(this).onIncludeUpdateChanged();"/>
+                  <xul:hbox align="center">
+                    <xul:label class="update-available-notice"
+                               value="&addon.updateAvailable.label;"/>
+                    <xul:button anonid="update-btn" class="addon-control"
+                                label="&addon.updateNow.label;"
+                                tooltiptext="&addon.updateNow.tooltip;"
+                                oncommand="document.getBindingParent(this).upgrade();"/>
+                  </xul:hbox>
+                </xul:vbox>
+                <xul:hbox anonid="install-status" class="install-status"
+                          hidden="true"/>
+              </xul:hbox>
+              <xul:hbox anonid="control-container" class="control-container">
+                <xul:button anonid="preferences-btn" class="addon-control"
 #ifdef XP_WIN
-                        label="&cmd.showPreferencesWin.label;"
-                        tooltiptext="&cmd.showPreferencesWin.tooltip;"
+                            label="&cmd.showPreferencesWin.label;"
+                            tooltiptext="&cmd.showPreferencesWin.tooltip;"
 #else
-                        label="&cmd.showPreferencesUnix.label;"
-                        tooltiptext="&cmd.showPreferencesUnix.tooltip;"
+                            label="&cmd.showPreferencesUnix.label;"
+                            tooltiptext="&cmd.showPreferencesUnix.tooltip;"
 #endif
-                        oncommand="document.getBindingParent(this).showPreferences();"/>
-            <xul:button anonid="enable-btn"  class="addon-control enable"
-                        label="&cmd.enableAddon.label;"
-                        oncommand="document.getBindingParent(this).userDisabled = false;"/>
-            <xul:button anonid="disable-btn" class="addon-control disable"
-                        label="&cmd.disableAddon.label;"
-                        oncommand="document.getBindingParent(this).userDisabled = true;"/>
-            <xul:button anonid="remove-btn" class="addon-control remove"
-                        label="&cmd.uninstallAddon.label;"
-                        oncommand="document.getBindingParent(this).uninstall();"/>
+                            oncommand="document.getBindingParent(this).showPreferences();"/>
+                <xul:button anonid="enable-btn"  class="addon-control enable"
+                            label="&cmd.enableAddon.label;"
+                            oncommand="document.getBindingParent(this).userDisabled = false;"/>
+                <xul:button anonid="disable-btn" class="addon-control disable"
+                            label="&cmd.disableAddon.label;"
+                            oncommand="document.getBindingParent(this).userDisabled = true;"/>
+                <xul:button anonid="remove-btn" class="addon-control remove"
+                            label="&cmd.uninstallAddon.label;"
+                            oncommand="document.getBindingParent(this).uninstall();"/>
+              </xul:hbox>
+            </xul:vbox>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>

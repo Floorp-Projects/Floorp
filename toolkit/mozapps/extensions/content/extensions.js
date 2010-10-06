@@ -1855,7 +1855,7 @@ var gDetailView = {
 
     this.node.setAttribute("type", aAddon.type);
 
-    document.getElementById("detail-name").value = aAddon.name;
+    document.getElementById("detail-name").textContent = aAddon.name;
     var icon = aAddon.icon64URL ? aAddon.icon64URL : aAddon.iconURL;
     document.getElementById("detail-icon").src = icon ? icon : null;
     document.getElementById("detail-creator").setCreator(aAddon.creator, aAddon.homepageURL);
