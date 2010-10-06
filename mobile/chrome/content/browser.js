@@ -241,6 +241,9 @@ var Browser = {
       this.styles[style] = stylesheet.cssRules[index].style;
     }
 
+    // Init the cache used in the resize handler
+    window.cachedWidth = window.innerWidth;
+
     function resizeHandler(e) {
       if (e.target != window)
         return;

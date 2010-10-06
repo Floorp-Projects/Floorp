@@ -232,34 +232,21 @@
 
     function initWeave() {
       let chromeWin = getChromeWin();
-      if ("WeaveGlue" in chromeWin) {
-        chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:login:finish", false);
-        chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:logout:finish", false);
+      chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:login:finish", false);
+      chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:logout:finish", false);
 
-        updateWeaveButton();
-      }
-      else {
-        let loading = document.getElementById("remoteTabs");
-        loading.parentNode.removeChild(loading);
-      }
+      updateWeaveButton();
     }
 
     function uninitWeave() {
       let chromeWin = getChromeWin();
-      if ("WeaveGlue" in chromeWin) {
-        chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:login:finish");
-        chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:logout:finish");
-      }
+      chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:login:finish");
+      chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:logout:finish");
     }
 
     function updateWeaveButton() {
-      let weave = getChromeWin().Weave;
-      if (!weave)
-        return;
-
-      let isDisabled =
-        (weave.Status.checkSetup() == weave.CLIENT_NOT_CONFIGURED)
-        || !weave.Service.isLoggedIn;
+      let chromeWin = getChromeWin();
+      let isDisabled = chromeWin.document.getElementById("cmd_remoteTabs").getAttribute("disabled");
       document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
     }
 
