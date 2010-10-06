@@ -64,7 +64,7 @@ using namespace js::mjit;
 using namespace js::mjit::ic;
 #endif
 
-#define ADD_CALLSITE(stub) addCallSite(__LINE__, (stub))
+#define ADD_CALLSITE(stub) if (debugMode) addCallSite(__LINE__, (stub))
 
 #if defined(JS_METHODJIT_SPEW)
 static const char *OpcodeNames[] = {
@@ -96,7 +96,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     callPatches(ContextAllocPolicy(cx)),
     callSites(ContextAllocPolicy(cx)), 
     doubleList(ContextAllocPolicy(cx)),
-    stubcc(cx, *this, frame, script)
+    stubcc(cx, *this, frame, script),
+    debugMode(cx->compartment->debugMode)
 #if defined JS_TRACER
     ,addTraceHints(cx->traceJitEnabled)
 #endif
@@ -173,7 +174,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     PC = script->code;
 
 #ifdef JS_METHODJIT
-    script->debugMode = cx->compartment->debugMode;
+    script->debugMode = debugMode;
 #endif
 
     for (uint32 i = 0; i < script->nClosedVars; i++)
@@ -2092,7 +2093,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     FrameEntry *fe = frame.peek(-int(argc + 2));
 
     /* Currently, we don't support constant functions. */
-    if (fe->isConstant() || fe->isNotType(JSVAL_TYPE_OBJECT) || script->debugMode) {
+    if (fe->isConstant() || fe->isNotType(JSVAL_TYPE_OBJECT) || debugMode) {
         emitUncachedCall(argc, callingNew);
         return;
     }

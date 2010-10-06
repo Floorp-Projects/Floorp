@@ -225,6 +225,7 @@ class Compiler : public BaseCompiler
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
+    bool debugMode;
     bool addTraceHints;
 
   public:
