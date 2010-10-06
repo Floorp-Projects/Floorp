@@ -67,6 +67,7 @@
 #include "nsReadableUtils.h"
 #else
 #ifdef XP_MACOSX
+#include <crt_externs.h>
 #include <spawn.h>
 #include <sys/wait.h>
 #endif
@@ -525,7 +526,7 @@ nsProcess::RunProcess(PRBool blocking, char **my_argv, nsIObserver* observer,
 
     // Note that the 'argv' array is already null-terminated, which 'posix_spawnp' requires.
     pid_t newPid = 0;
-    int result = posix_spawnp(&newPid, my_argv[0], NULL, &spawnattr, my_argv, NULL);
+    int result = posix_spawnp(&newPid, my_argv[0], NULL, &spawnattr, my_argv, *_NSGetEnviron());
     mPid = static_cast<PRInt32>(newPid);
 
     posix_spawnattr_destroy(&spawnattr);
