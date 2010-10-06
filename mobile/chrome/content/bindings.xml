@@ -391,7 +391,6 @@
 #ifdef MOZ_SERVICES_SYNC
             let remoteItems = RemoteTabsList.panel._getRemoteTabs();
 #endif
-
             for (let i = 0; i < self._items.childNodes.length; i++) {
               let item = self._items.childNodes[i];
               if (!item.hasAttribute("url"))
@@ -399,6 +398,20 @@
 
               let currentURL = item.getAttribute("url");
               let itemHost = self._getEffectiveHost(Services.io.newURI(currentURL, null, null));
+
+#ifdef MOZ_SERVICES_SYNC
+              // check if the tab is in the remote list
+              for (let i = 0; i < remoteItems.length; i++) {
+                let remoteURI = remoteItems[i].uri;
+                if (remoteURI) {
+                  let itemHost = Services.io.newURI(currentURL, null, null);
+                  let remoteHost = Services.io.newURI(remoteURI, null, null);
+                  if (itemHost.equals(remoteHost))
+                    item.setAttribute("remote", "true");
+                }
+              }
+#endif
+
               for (let badgeHost in self._badges) {
                 if (itemHost == badgeHost) {
                   // wrap the item to prevent setting a badge on a wrong item
@@ -419,22 +432,6 @@
                   break;
                 }
               }
-
-#ifdef MOZ_SERVICES_SYNC
-              // once we have check badges, check if the tab is in the remote list
-              if (!Weave.Service.isLoggedIn)
-                return;
-
-              for (let i = 0; i < remoteItems.length; i++) {
-                let remoteURI = remoteItems[i].uri;
-                if (remoteURI) {
-                  let itemHost = Services.io.newURI(currentURL, null, null);
-                  let remoteHost = Services.io.newURI(remoteURI, null, null);
-                  if (itemHost.equals(remoteHost))
-                    item.setAttribute("remote", "true");
-                }
-              }
-#endif
             }
           }, 300, this);
         ]]></body>
@@ -1242,6 +1239,10 @@
 
       <method name="_getRemoteTabs">
         <body><![CDATA[
+          // Don't do anything if the Weave isn't ready
+          if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") == "true")
+            return [];
+
           // Don't do anything if the tabs engine isn't ready
           let engine = Weave.Engines.get("tabs");
           if (!engine)
