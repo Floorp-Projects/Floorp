@@ -103,8 +103,9 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -455,6 +456,17 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole,
         !(*vp = obj->getDenseArrayElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
         *hole = JS_FALSE;
         return JS_TRUE;
+    }
+    if (obj->isArguments() &&
+        index < obj->getArgsInitialLength() &&
+        !(*vp = obj->getArgsElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
+        *hole = JS_FALSE;
+        JSStackFrame *fp = (JSStackFrame *)obj->getPrivate();
+        if (fp != JS_ARGUMENTS_OBJECT_ON_TRACE) {
+            if (fp)
+                *vp = fp->canonicalActualArg(index);
+            return JS_TRUE;
+        }
     }
 
     AutoIdRooter idr(cx);
