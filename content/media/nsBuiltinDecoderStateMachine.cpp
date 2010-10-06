@@ -437,7 +437,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       // time.
       missingSamples = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX), missingSamples);
       audioDuration += PlaySilence(static_cast<PRUint32>(missingSamples),
-                                   channels, sampleTime);
+                                   channels, playedSamples);
     } else {
       audioDuration += PlayFromAudioQueue(sampleTime, channels);
     }
