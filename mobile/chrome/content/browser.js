@@ -1357,8 +1357,7 @@ const ContentTouchHandler = {
         break;
 
       case "Browser:Highlight": {
-        let rects = aMessage.json.rects.map(
-          function(r) new Rect(r.left, r.top, r.width, r.height));
+        let rects = aMessage.json.rects.map(function(r) new Rect(r.left, r.top, r.width, r.height));
         TapHighlightHelper.show(rects);
         break;
       }

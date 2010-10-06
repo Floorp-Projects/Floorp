@@ -1084,18 +1084,16 @@ var TapHighlightHelper = {
                             .translate(-scroll.x, -scroll.y);
 
     let overlay = this._overlay;
-    overlay.width = canvasArea.width;
-    overlay.style.width = canvasArea.width + "px";
-    overlay.height = canvasArea.height;
-    overlay.style.height = canvasArea.height + "px";
+    overlay.setAttribute("width", canvasArea.width);
+    overlay.setAttribute("height", canvasArea.height);
 
     let ctx = overlay.getContext("2d");
     ctx.save();
     ctx.translate(-canvasArea.left, -canvasArea.top);
     ctx.scale(browser.scale, browser.scale);
 
-    overlay.style.left = canvasArea.left + "px";
-    overlay.style.top = canvasArea.top + "px";
+    overlay.setAttribute("left", canvasArea.left);
+    overlay.setAttribute("top", canvasArea.top);
     ctx.fillStyle = "rgba(0, 145, 255, .5)";
     for (let i = aRects.length - 1; i >= 0; i--) {
       let rect = aRects[i];

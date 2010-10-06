@@ -71,10 +71,6 @@ gTests.push({
     // 2. For each prefs *verify text *the button/option type *verify height of each field to be the same
     is(prefs.panelContainer.hidden, false, "Preferences should be visible");
 
-    // Check whether the Preferences pane title is Preferences
-    var prefTitle = document.getElementById("panel-header");
-    is(prefTitle.value, "Preferences", "The title must be preferences");
-
     var prefsList = document.getElementById("prefs-messages");
 
     // Check for *About page*
