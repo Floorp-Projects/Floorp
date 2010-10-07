@@ -3181,10 +3181,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       PRBool forceFit = aState.IsAdjacentWithTop() && clearance <= 0 &&
         !floatAvailableSpace.mHasFloats;
       nsCollapsingMargin collapsedBottomMargin;
-      nsRect combinedArea(0,0,0,0);
+      nsOverflowAreas overflowAreas;
       *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, forceFit, aLine.get(),
                                          collapsedBottomMargin,
-                                         aLine->mBounds, combinedArea, frameReflowStatus);
+                                         aLine->mBounds, overflowAreas,
+                                         frameReflowStatus);
       if (aLine->SetCarriedOutBottomMargin(collapsedBottomMargin)) {
         line_iterator nextLine = aLine;
         ++nextLine;
@@ -3192,8 +3193,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           nextLine->MarkPreviousMarginDirty();
         }
       }
-      
-      aLine->SetCombinedArea(combinedArea);
+
+      aLine->SetOverflowAreas(overflowAreas);
       if (*aKeepReflowGoing) {
         // Some of the child block fit
         
