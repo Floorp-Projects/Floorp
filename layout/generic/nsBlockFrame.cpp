@@ -961,9 +961,10 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   if (needFloatManager)
     autoFloatManager.CreateFloatManager(aPresContext);
 
-  // OK, some lines may be reflowed. Blow away any saved line cursor because
-  // we may invalidate the nondecreasing combinedArea.y/yMost invariant,
-  // and we may even delete the line with the line cursor.
+  // OK, some lines may be reflowed. Blow away any saved line cursor
+  // because we may invalidate the nondecreasing
+  // overflowArea.VisualOverflow().y/yMost invariant, and we may even
+  // delete the line with the line cursor.
   ClearLineCursor();
 
   if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
@@ -1193,12 +1194,17 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
            aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
            aMetrics.width, aMetrics.height,
            aMetrics.mCarriedOutBottomMargin.get());
-    if (HasOverflowRect()) {
-      printf(" combinedArea={%d,%d,%d,%d}",
-             aMetrics.mOverflowArea.x,
-             aMetrics.mOverflowArea.y,
-             aMetrics.mOverflowArea.width,
-             aMetrics.mOverflowArea.height);
+    if (HasOverflowAreas()) {
+      printf(" overflow-vis={%d,%d,%d,%d}",
+             aMetrics.VisualOverflow().x,
+             aMetrics.VisualOverflow().y,
+             aMetrics.VisualOverflow().width,
+             aMetrics.VisualOverflow().height);
+      printf(" overflow-scr={%d,%d,%d,%d}",
+             aMetrics.ScrollableOverflow().x,
+             aMetrics.ScrollableOverflow().y,
+             aMetrics.ScrollableOverflow().width,
+             aMetrics.ScrollableOverflow().height);
     }
     printf("\n");
   }
@@ -1659,8 +1665,11 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     // with aLine's floats
     nscoord lineYA = aLine->mBounds.y + aDeltaY;
     nscoord lineYB = lineYA + aLine->mBounds.height;
-    nscoord lineYCombinedA = aLine->GetCombinedArea().y + aDeltaY;
-    nscoord lineYCombinedB = lineYCombinedA + aLine->GetCombinedArea().height;
+    // Scrollable overflow should be sufficient for things that affect
+    // layout.
+    nsRect overflow = aLine->GetOverflowArea(eScrollableOverflow);
+    nscoord lineYCombinedA = overflow.y + aDeltaY;
+    nscoord lineYCombinedB = lineYCombinedA + overflow.height;
     if (floatManager->IntersectsDamage(lineYA, lineYB) ||
         floatManager->IntersectsDamage(lineYCombinedA, lineYCombinedB)) {
       aLine->MarkDirty();
@@ -1732,14 +1741,16 @@ static void DumpLine(const nsBlockReflowState& aState, nsLineBox* aLine,
                      nscoord aDeltaY, PRInt32 aDeltaIndent) {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
-    nsRect lca(aLine->GetCombinedArea());
+    nsRect ovis(aLine->GetVisualOverflowArea());
+    nsRect oscr(aLine->GetScrollableOverflowArea());
     nsBlockFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent + aDeltaIndent);
-    printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d childCount=%d\n",
+    printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldoverflow-vis={%d,%d,%d,%d} oldoverflow-scr={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d childCount=%d\n",
            static_cast<void*>(aLine), aState.mY,
            aLine->IsDirty() ? "yes" : "no",
            aLine->mBounds.x, aLine->mBounds.y,
            aLine->mBounds.width, aLine->mBounds.height,
-           lca.x, lca.y, lca.width, lca.height,
+           ovis.x, ovis.y, ovis.width, ovis.height,
+           oscr.x, oscr.y, oscr.width, oscr.height,
            aDeltaY, aState.mPrevBottomMargin.get(), aLine->GetChildCount());
   }
 #endif
@@ -2448,7 +2459,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   // Now that we know what kind of line we have, reflow it
   if (aLine->IsBlock()) {
     nsRect oldBounds = aLine->mFirstChild->GetRect();
-    nsRect oldCombinedArea(aLine->GetCombinedArea());
+    nsRect oldVisOverflow(aLine->GetVisualOverflowArea());
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
     nsRect newBounds = aLine->mFirstChild->GetRect();
 
@@ -2461,13 +2472,13 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // overflowArea and bounds. This should be considered a temporary hack
     // until we decide how it's really supposed to work.
     // Note that we have a similar hack in nsTableFrame::InvalidateFrame.
-    nsRect lineCombinedArea(aLine->GetCombinedArea());
-    if (oldCombinedArea.TopLeft() != lineCombinedArea.TopLeft() ||
+    nsRect visOverflow(aLine->GetVisualOverflowArea());
+    if (oldVisOverflow.TopLeft() != visOverflow.TopLeft() ||
         oldBounds.TopLeft() != newBounds.TopLeft()) {
       // The block has moved, and so to be safe we need to repaint
       // XXX We need to improve on this...
       nsRect  dirtyRect;
-      dirtyRect.UnionRect(oldCombinedArea, lineCombinedArea);
+      dirtyRect.UnionRect(oldVisOverflow, visOverflow);
 #ifdef NOISY_BLOCK_INVALIDATE
       printf("%p invalidate 6 (%d, %d, %d, %d)\n",
              this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
@@ -2479,7 +2490,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       nsRect boundsHStrip, boundsVStrip;
       nsLayoutUtils::GetRectDifferenceStrips(oldBounds, newBounds,
                                              &boundsHStrip, &boundsVStrip);
-      nsLayoutUtils::GetRectDifferenceStrips(oldCombinedArea, lineCombinedArea,
+      nsLayoutUtils::GetRectDifferenceStrips(oldVisOverflow, visOverflow,
                                              &combinedAreaHStrip,
                                              &combinedAreaVStrip);
 
@@ -2502,7 +2513,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     }
   }
   else {
-    nsRect oldCombinedArea(aLine->GetCombinedArea());
+    nsRect oldVisOverflow(aLine->GetVisualOverflowArea());
     aLine->SetLineWrapped(PR_FALSE);
 
     rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
@@ -2510,7 +2521,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // We don't really know what changed in the line, so use the union
     // of the old and new combined areas
     nsRect dirtyRect;
-    dirtyRect.UnionRect(oldCombinedArea, aLine->GetCombinedArea());
+    dirtyRect.UnionRect(oldVisOverflow, aLine->GetVisualOverflowArea());
 #ifdef NOISY_BLOCK_INVALIDATE
     printf("%p invalidate (%d, %d, %d, %d)\n",
            this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
@@ -2640,7 +2651,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
     if (aFromLine.next() != fromLineList->end())
       aFromLine.next()->MarkPreviousMarginDirty();
 
-    Invalidate(fromLine->GetCombinedArea());
+    Invalidate(fromLine->GetVisualOverflowArea());
     fromLineList->erase(aFromLine);
     // aFromLine is now invalid
     aState.FreeLineBox(fromLine);
@@ -2679,10 +2690,10 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 {
   NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
 
-  Invalidate(aLine->GetCombinedArea());
+  Invalidate(aLine->GetVisualOverflowArea());
   // Adjust line state
   aLine->SlideBy(aDY);
-  Invalidate(aLine->GetCombinedArea());
+  Invalidate(aLine->GetVisualOverflowArea());
 
   // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
@@ -5392,13 +5403,13 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
         // XXX We need to do this if we're removing a frame as a result of
         // a call to RemoveFrame(), but we may not need to do this in all
         // cases...
-        nsRect lineCombinedArea(cur->GetCombinedArea());
+        nsRect visOverflow(cur->GetVisualOverflowArea());
 #ifdef NOISY_BLOCK_INVALIDATE
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
-               this, lineCombinedArea.x, lineCombinedArea.y,
-               lineCombinedArea.width, lineCombinedArea.height);
+               this, visOverflow.x, visOverflow.y,
+               visOverflow.width, visOverflow.height);
 #endif
-        Invalidate(lineCombinedArea);
+        Invalidate(visOverflow);
       } else {
         nsLineList* lineList = RemoveOverflowLines();
         line = lineList->erase(line);
@@ -5771,7 +5782,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   if (aFloat->HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, aFloat,
                                                aFloat->GetView(),
-                                               &metrics.mOverflowArea,
+                                               metrics.VisualOverflow(),
                                                NS_FRAME_NO_MOVE_VIEW);
   }
   // Pass floatRS so the frame hierarchy can be used (redoFloatRS has the same hierarchy)  
@@ -6035,7 +6046,7 @@ nsBlockFrame::AdjustForTextIndent(const nsLineBox* aLine,
 static void DebugOutputDrawLine(PRInt32 aDepth, nsLineBox* aLine, PRBool aDrawn) {
   if (nsBlockFrame::gNoisyDamageRepair) {
     nsFrame::IndentBy(stdout, aDepth+1);
-    nsRect lineArea = aLine->GetCombinedArea();
+    nsRect lineArea = aLine->GetVisualOverflowArea();
     printf("%s line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
            aDrawn ? "draw" : "skip",
            static_cast<void*>(aLine),
@@ -6149,7 +6160,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     for (line_iterator line = mLines.begin(cursor);
          line != line_end;
          ++line) {
-      nsRect lineArea = line->GetCombinedArea();
+      nsRect lineArea = line->GetVisualOverflowArea();
       if (!lineArea.IsEmpty()) {
         // Because we have a cursor, the combinedArea.ys are non-decreasing.
         // Once we've passed aDirtyRect.YMost(), we can never see it again.
@@ -6170,7 +6181,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     for (line_iterator line = begin_lines();
          line != line_end;
          ++line) {
-      nsRect lineArea = line->GetCombinedArea();
+      nsRect lineArea = line->GetVisualOverflowArea();
       rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
                        aLists, this);
       if (NS_FAILED(rv))
@@ -6312,17 +6323,17 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y)
   nsLineBox* property = static_cast<nsLineBox*>
     (props.Get(LineCursorProperty()));
   line_iterator cursor = mLines.begin(property);
-  nsRect cursorArea = cursor->GetCombinedArea();
+  nsRect cursorArea = cursor->GetVisualOverflowArea();
 
   while ((cursorArea.IsEmpty() || cursorArea.YMost() > y)
          && cursor != mLines.front()) {
     cursor = cursor.prev();
-    cursorArea = cursor->GetCombinedArea();
+    cursorArea = cursor->GetVisualOverflowArea();
   }
   while ((cursorArea.IsEmpty() || cursorArea.YMost() <= y)
          && cursor != mLines.back()) {
     cursor = cursor.next();
-    cursorArea = cursor->GetCombinedArea();
+    cursorArea = cursor->GetVisualOverflowArea();
   }
 
   if (cursor.get() != property) {
