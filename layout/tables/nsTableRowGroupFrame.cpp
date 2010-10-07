@@ -475,7 +475,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
         aReflowState.availSize.height -= height;
       }
     }
-    ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
   }
 
   if (haveRow)
@@ -548,11 +548,11 @@ nsTableRowGroupFrame::DidResizeRows(nsHTMLReflowMetrics& aDesiredSize)
   // update the cells spanning rows with their new heights
   // this is the place where all of the cells in the row get set to the height of the row
   // Reset the overflow area
-  aDesiredSize.mOverflowArea = nsRect(0, 0, 0, 0);
+  aDesiredSize.mOverflowAreas.Clear();
   for (nsTableRowFrame* rowFrame = GetFirstRow();
        rowFrame; rowFrame = rowFrame->GetNextRow()) {
     rowFrame->DidResize();
-    ConsiderChildOverflow(aDesiredSize.mOverflowArea, rowFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, rowFrame);
   }
 }
 
@@ -1349,8 +1349,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
 
-  aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, nsRect(0, 0, aDesiredSize.width,
-	                                                                      aDesiredSize.height));
+  aDesiredSize.UnionOverflowAreasWithDesiredBounds();
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.

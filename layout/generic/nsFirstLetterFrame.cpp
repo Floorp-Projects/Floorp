@@ -249,9 +249,8 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   // Ensure that the overflow rect contains the child textframe's overflow rect.
   // Note that if this is floating, the overline/underline drawable area is in
   // the overflow rect of the child textframe.
-  aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea,
-                           nsRect(0, 0, aMetrics.width, aMetrics.height));
-  ConsiderChildOverflow(aMetrics.mOverflowArea, kid);
+  aMetrics.UnionOverflowAreasWithDesiredBounds();
+  ConsiderChildOverflow(aMetrics.mOverflowAreas, kid);
 
   // Create a continuation or remove existing continuations based on
   // the reflow completion status.

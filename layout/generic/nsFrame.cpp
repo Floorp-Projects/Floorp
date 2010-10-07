@@ -4527,10 +4527,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.mCarriedOutBottomMargin.Zero();
-    aMetrics.mOverflowArea.x = 0;
-    aMetrics.mOverflowArea.y = 0;
-    aMetrics.mOverflowArea.width = 0;
-    aMetrics.mOverflowArea.height = 0;
+    aMetrics.mOverflowAreas.Clear();
     return PR_TRUE;
   }
   mState &= ~NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
@@ -6825,8 +6822,9 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
   // Should we do this if IsCollapsed() is true?
   nsSize size(GetSize());
-  desiredSize.mOverflowArea.UnionRect(desiredSize.mOverflowArea,
-                                      nsRect(nsPoint(0, 0), size));
+  desiredSize.width = size.width;
+  desiredSize.height = size.height;
+  desiredSize.UnionOverflowAreasWithDesiredBounds();
   FinishAndStoreOverflow(desiredSize.mOverflowAreas, size);
 
   SyncLayout(aState);

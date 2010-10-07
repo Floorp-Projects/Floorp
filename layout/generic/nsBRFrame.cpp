@@ -181,8 +181,8 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   else {
     aStatus = NS_FRAME_COMPLETE;
   }
-  
-  aMetrics.mOverflowArea = nsRect(0, 0, aMetrics.width, aMetrics.height);
+
+  aMetrics.SetOverflowAreasToDesiredBounds();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;

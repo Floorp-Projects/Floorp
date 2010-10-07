@@ -154,8 +154,7 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   aDesiredSize.width = aReflowState.ComputedWidth();
   aDesiredSize.height = aReflowState.ComputedHeight();
-  aDesiredSize.mOverflowArea =
-    nsRect(0, 0, aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
   aStatus = NS_FRAME_COMPLETE;
 
   return NS_OK;
