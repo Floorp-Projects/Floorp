@@ -379,10 +379,8 @@ function openAboutDialog() {
   var enumerator = Services.wm.getEnumerator("Browser:About");
   while (enumerator.hasMoreElements()) {
     let win = enumerator.getNext();
-#ifdef XP_WIN
     if (win.opener != window)
       continue;
-#endif
     win.focus();
     return;
   }
@@ -390,11 +388,7 @@ function openAboutDialog() {
 #ifdef XP_MACOSX
   var features = "chrome,resizable=no,minimizable=no";
 #else
-#ifdef XP_WIN
   var features = "chrome,centerscreen,dependent";
-#else
-  var features = "chrome,centerscreen";
-#endif
 #endif
   window.openDialog("chrome://browser/content/aboutDialog.xul", "", features);
 }
