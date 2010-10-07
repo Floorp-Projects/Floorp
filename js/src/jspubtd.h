@@ -165,6 +165,10 @@ typedef struct JSSecurityCallbacks JSSecurityCallbacks;
 typedef struct JSONParser        JSONParser;
 typedef struct JSCompartment     JSCompartment;
 typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
+typedef struct JSStructuredCloneWriter JSStructuredCloneWriter;
+typedef struct JSStructuredCloneReader JSStructuredCloneReader;
+typedef struct JSStructuredCloneCallbacks JSStructuredCloneCallbacks;
+
 #ifdef __cplusplus
 typedef class JSWrapper          JSWrapper;
 typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
@@ -564,6 +568,37 @@ typedef enum {
 
 typedef JSBool
 (* JSCompartmentCallback)(JSContext *cx, JSCompartment *compartment, uintN compartmentOp);
+
+/*
+ * Read structured data from the reader r. This hook is used to read a value
+ * previously serialized by a call to the WriteStructuredCloneOp hook.
+ *
+ * tag and data are the pair of uint32 values from the header. The callback may
+ * use the JS_Read* APIs to read any other relevant parts of the object from
+ * the reader r. Return the new object on success, NULL on error/exception.
+ */
+typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReader *r,
+                                           uint32 tag, uint32 data);
+
+/*
+ * Structured data serialization hook. The engine can write primitive values,
+ * Objects, Arrays, Dates, RegExps, TypedArrays, and ArrayBuffers. Any other
+ * type of object requires application support. This callback must first use
+ * the JS_WriteUint32Pair API to write an object header, passing a value
+ * greater than JS_SCTAG_USER to the tag parameter. Then it can use the
+ * JS_Write* APIs to write any other relevant parts of the value v to the
+ * writer w.
+ *
+ * Return true on success, false on error/exception.
+ */
+typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w, JSObject *obj);
+
+/*
+ * This is called when JS_WriteStructuredClone finds that the object to be
+ * written is recursive. To follow HTML5, the application must throw a
+ * DATA_CLONE_ERR DOMException. errorid is always JS_SCERR_RECURSION.
+ */
+typedef void (*StructuredCloneErrorOp)(JSContext *cx, uint32 errorid);
 
 JS_END_EXTERN_C
 

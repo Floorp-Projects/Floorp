@@ -165,6 +165,7 @@ struct ParamTraits<nsTextEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, aParam.seqno);
     WriteParam(aMsg, aParam.theText);
     WriteParam(aMsg, aParam.isChar);
     WriteParam(aMsg, aParam.rangeCount);
@@ -175,6 +176,7 @@ struct ParamTraits<nsTextEvent>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) ||
+        !ReadParam(aMsg, aIter, &aResult->seqno) ||
         !ReadParam(aMsg, aIter, &aResult->theText) ||
         !ReadParam(aMsg, aIter, &aResult->isChar) ||
         !ReadParam(aMsg, aIter, &aResult->rangeCount))
@@ -212,11 +214,13 @@ struct ParamTraits<nsCompositionEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, aParam.seqno);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult));
+    return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->seqno);
   }
 };
 
@@ -261,6 +265,7 @@ struct ParamTraits<nsSelectionEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<nsGUIEvent>(aParam));
+    WriteParam(aMsg, aParam.seqno);
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, aParam.mLength);
     WriteParam(aMsg, aParam.mReversed);
@@ -271,11 +276,30 @@ struct ParamTraits<nsSelectionEvent>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, static_cast<nsGUIEvent*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->seqno) &&
            ReadParam(aMsg, aIter, &aResult->mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mLength) &&
            ReadParam(aMsg, aIter, &aResult->mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mExpandToClusterBoundary) &&
            ReadParam(aMsg, aIter, &aResult->mSucceeded);
+  }
+};
+
+template<>
+struct ParamTraits<nsIMEUpdatePreference>
+{
+  typedef nsIMEUpdatePreference paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mWantUpdates);
+    WriteParam(aMsg, aParam.mWantHints);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mWantUpdates) &&
+           ReadParam(aMsg, aIter, &aResult->mWantHints);
   }
 };
 

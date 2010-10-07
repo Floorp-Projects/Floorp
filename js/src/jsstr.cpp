@@ -52,8 +52,8 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -83,9 +83,15 @@
 #include "jscntxtinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
 JS_STATIC_ASSERT(JSString::MAX_LENGTH <= JSVAL_INT_MAX);
+
+JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
+JSStringFinalizeOp str_finalizers[JS_EXTERNAL_STRING_LIMIT] = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
 
 const jschar *
 js_GetStringChars(JSContext *cx, JSString *str)
@@ -354,54 +360,48 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 
     /*
      * There are 4 cases, based on whether on whether the left or right is a
-     * rope or non-rope string. This can be handled in a general way, but it's
-     * empirically a little faster and arguably simpler to handle each of the 4
-     * cases independently and directly.
+     * rope or non-rope string.
      */
+    JSRopeBufferInfo *buf = NULL;
+
     if (leftRopeTop) {
+        /* Left child is a rope. */
+        JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
+
+        /* If both children are ropes, steal the larger buffer. */
         if (JS_UNLIKELY(rightRopeTop)) {
-            JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
             JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
 
-            /* Attempt to steal the larger buffer. WLOG, it's the left one. */
+            /* Put the larger buffer into 'leftBuf'. */
             if (leftBuf->capacity >= rightBuf->capacity) {
                 cx->free(rightBuf);
             } else {
                 cx->free(leftBuf);
                 leftBuf = rightBuf;
             }
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, true, true, leftBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, true, true, left, right, length, buf);
-        } else {
-            /* Steal buffer from left if it's big enough. */
-            JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, true, false, leftBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, true, false, left, right, length, buf);
         }
+
+        buf = ObtainRopeBuffer(cx, true, rightRopeTop, leftBuf, length, left, right);
+        if (!buf)
+            return NULL;
+    } else if (JS_UNLIKELY(rightRopeTop)) {
+        /* Right child is a rope: steal its buffer if big enough. */
+        JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
+
+        buf = ObtainRopeBuffer(cx, false, true, rightBuf, length, left, right);
+        if (!buf)
+            return NULL;
     } else {
-        if (JS_UNLIKELY(rightRopeTop)) {
-            /* Steal buffer from right if it's big enough. */
-            JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, false, true, rightBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, false, true, left, right, length, buf);
-        } else {
-            /* Need to make a new buffer. */
-            size_t capacity;
-            size_t allocSize = RopeAllocSize(length, &capacity);
-            JSRopeBufferInfo *buf = (JSRopeBufferInfo *) cx->malloc(allocSize);
-            if (!buf)
-                return NULL;
-
-            buf->capacity = capacity;
-            return FinishConcat(cx, false, false, left, right, length, buf);
-        }
+        /* Neither child is a rope: need to make a new buffer. */
+        size_t capacity;
+        size_t allocSize = RopeAllocSize(length, &capacity);
+        buf = (JSRopeBufferInfo *) cx->malloc(allocSize);
+        if (!buf)
+            return NULL;
+        buf->capacity = capacity;
     }
+
+    return FinishConcat(cx, leftRopeTop, rightRopeTop, left, right, length, buf);
 }
 
 JSString * JS_FASTCALL
@@ -1689,6 +1689,26 @@ class RegExpGuard
      */
     static const size_t MAX_FLAT_PAT_LEN = 256;
 
+    static JSString *flattenPattern(JSContext *cx, JSString *patstr) {
+        JSCharBuffer cb(cx);
+        if (!cb.reserve(patstr->length()))
+            return NULL;
+
+        static const jschar ESCAPE_CHAR = '\\';
+        const jschar *chars = patstr->chars();
+        size_t len = patstr->length();
+        for (const jschar *it = chars; it != chars + len; ++it) {
+            if (RegExp::isMetaChar(*it)) {
+                if (!cb.append(ESCAPE_CHAR) || !cb.append(*it))
+                    return NULL;
+            } else {
+                if (!cb.append(*it))
+                    return NULL;
+            }
+        }
+        return js_NewStringFromCharBuffer(cx, cb);
+    }
+
   public:
     explicit RegExpGuard(JSContext *cx) : cx(cx), rep(NULL) {}
 
@@ -1768,7 +1788,17 @@ class RegExpGuard
             opt = NULL;
         }
 
-        rep.re_ = RegExp::createFlagged(cx, fm.patstr, opt);
+        JSString *patstr;
+        if (flat) {
+            patstr = flattenPattern(cx, fm.patstr);
+            if (!patstr)
+                return false;
+        } else {
+            patstr = fm.patstr;
+        }
+        JS_ASSERT(patstr);
+
+        rep.re_ = RegExp::createFlagged(cx, patstr, opt);
         if (!rep.re_)
             return NULL;
         rep.reobj_ = NULL;
@@ -2417,9 +2447,10 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 {
     ReplaceData rdata(cx);
     NORMALIZE_THIS(cx, vp, rdata.str);
+    static const uint32 optarg = 2;
 
     /* Extract replacement string/function. */
-    if (argc >= 2 && js_IsCallable(vp[3])) {
+    if (argc >= optarg && js_IsCallable(vp[3])) {
         rdata.lambda = &vp[3].toObject();
         rdata.repstr = NULL;
         rdata.dollar = rdata.dollarEnd = NULL;
@@ -2450,9 +2481,9 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
      * |RegExp| statics.
      */
 
-    const FlatMatch *fm = rdata.g.tryFlatMatch(rdata.str, 2, argc, false);
+    const FlatMatch *fm = rdata.g.tryFlatMatch(rdata.str, optarg, argc, false);
     if (!fm) {
-        JS_ASSERT_IF(!rdata.g.hasRegExpPair(), argc > 2);
+        JS_ASSERT_IF(!rdata.g.hasRegExpPair(), argc > optarg);
         return str_replace_regexp(cx, argc, vp, rdata);
     }
 
@@ -3089,7 +3120,7 @@ static JSFunctionSpec string_methods[] = {
 #pragma pack(push, 8)
 #endif
 
-JSString JSString::unitStringTable[]
+const JSString JSString::unitStringTable[]
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -3115,7 +3146,7 @@ __attribute__ ((aligned (8)))
 
 #define R TO_SMALL_CHAR
 
-JSString::SmallChar JSString::toSmallChar[] = { R7(0) };
+const JSString::SmallChar JSString::toSmallChar[] = { R7(0) };
 
 #undef R
 
@@ -3128,7 +3159,7 @@ JSString::SmallChar JSString::toSmallChar[] = { R7(0) };
                                    'A' - 36))
 #define R FROM_SMALL_CHAR
 
-jschar JSString::fromSmallChar[] = { R6(0) };
+const jschar JSString::fromSmallChar[] = { R6(0) };
 
 #undef R
 
@@ -3149,7 +3180,7 @@ jschar JSString::fromSmallChar[] = { R6(0) };
 #pragma pack(push, 8)
 #endif
 
-JSString JSString::length2StringTable[]
+const JSString JSString::length2StringTable[]
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -3191,7 +3222,7 @@ JS_STATIC_ASSERT(100 + (1 << 7) + (1 << 4) + (1 << 3) + (1 << 2) == 256);
 #pragma pack(push, 8)
 #endif
 
-JSString JSString::hundredStringTable[]
+const JSString JSString::hundredStringTable[]
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -3209,7 +3240,7 @@ __attribute__ ((aligned (8)))
               TO_SMALL_CHAR(((c) % 10) + '0') :                               \
               JSString::hundredStringTable + ((c) - 100))
 
-JSString *JSString::intStringTable[] = { R8(0) };
+const JSString *const JSString::intStringTable[] = { R8(0) };
 
 #undef R
 
@@ -3454,7 +3485,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
     jschar *chars = base->chars() + start;
 
     if (length == 1 && *chars < UNIT_STRING_LIMIT)
-        return &JSString::unitStringTable[*chars];
+        return const_cast<JSString *>(&JSString::unitStringTable[*chars]);
 
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())
@@ -4181,7 +4212,7 @@ DeflatedStringCache::sweep(JSContext *cx)
 
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         JSString *str = e.front().key;
-        if (js_IsAboutToBeFinalized(str)) {
+        if (IsAboutToBeFinalized(str)) {
             char *bytes = e.front().value;
             e.removeFront();
 
@@ -4320,7 +4351,7 @@ js_GetStringBytes(JSContext *cx, JSString *str)
         rt = cx->runtime;
     } else {
         /* JS_GetStringBytes calls us with null cx. */
-        rt = js_GetGCThingRuntime(str);
+        rt = GetGCThingRuntime(str);
     }
 
     return rt->deflatedStringCache->getBytes(cx, str);

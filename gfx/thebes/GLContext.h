@@ -42,6 +42,8 @@
 #define GLCONTEXT_H_
 
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -178,11 +180,27 @@ public:
     virtual PRBool EndUpdate() = 0;
 
     /**
+     * Set this TextureImage's size, and ensure a texture has been
+     * allocated.  Must not be called between BeginUpdate and EndUpdate.
+     * After a resize, the contents are undefined.
+     *
+     * If this isn't implemented by a subclass, it will just perform
+     * a dummy BeginUpdate/EndUpdate pair.
+     */
+    virtual void Resize(const nsIntSize& aSize) {
+        nsIntRegion r(nsIntRect(0, 0, aSize.width, aSize.height));
+        gfxContext *dummy = BeginUpdate(r);
+        EndUpdate();
+    }
+
+    /**
      * Return this TextureImage's texture ID for use with GL APIs.
      * Callers are responsible for properly binding the texture etc.
      *
-     * The effects of using a texture after BeginUpdate() but before
-     * EndUpdate() are undefined.
+     * The texture is only texture complete after either Resize
+     * or a matching pair of BeginUpdate/EndUpdate have been called.
+     * Otherwise, a texture ID may be returned, but the texture
+     * may not be texture complete.
      */
     GLuint Texture() { return mTexture; }
 
@@ -202,6 +220,8 @@ public:
     PRBool IsRGB() const { return mIsRGBFormat; }
 
 protected:
+    friend class GLContext;
+
     /**
      * After the ctor, the TextureImage is invalid.  Implementations
      * must allocate resources successfully before returning the new
@@ -241,6 +261,7 @@ public:
 
     virtual PRBool InUpdate() const { return !!mUpdateContext; }
 
+    virtual void Resize(const nsIntSize& aSize);
 protected:
     typedef gfxASurface::gfxImageFormat ImageFormat;
 
@@ -342,9 +363,14 @@ public:
 #else
         mIsGLES2(PR_FALSE),
 #endif
+        mIsGlobalSharedContext(PR_FALSE),
+        mWindowOriginBottomLeft(PR_FALSE),
+        mVendor(-1),
         mCreationFormat(aFormat),
         mSharedContext(aSharedContext),
         mOffscreenTexture(0),
+        mBlitProgram(0),
+        mBlitFramebuffer(0),
         mOffscreenFBO(0),
         mOffscreenDepthRB(0),
         mOffscreenStencilRB(0)
@@ -353,6 +379,7 @@ public:
     }
 
     virtual ~GLContext() {
+        NS_ASSERTION(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
 #ifdef DEBUG
         if (mSharedContext) {
             GLContext *tip = mSharedContext;
@@ -427,7 +454,43 @@ public:
     PRBool IsGLES2() {
         return mIsGLES2;
     }
- 
+
+    enum { VendorIntel, VendorNVIDIA, VendorATI, VendorOther };
+
+    PRBool Vendor() const {
+        return mVendor;
+    }
+
+    /**
+     * Returns PR_TRUE if the window coordinate origin is the bottom
+     * left corener.  If PR_FALSE, it is the top left corner.
+     *
+     * This needs to be taken into account when calling glViewport
+     * and glScissor when drawing directly to a window.  If this is
+     * PR_FALSE, the y coordinate given to those functions should be
+     * (windowHeight - (desiredHeight + desiredY)).
+     *
+     * This should only be done when drawing directly to a window;
+     * when drawing to a FBO, the origin is always the bottom left.
+     *
+     * See FixWindowCoordinateRect().
+     */
+    PRBool IsWindowOriginBottomLeft() {
+        return mWindowOriginBottomLeft;
+    }
+
+    /**
+     * Fix up the rectangle given in aRect, taking into account
+     * window height aWindowHeight and whether windows have their
+     * natural origin in the bottom left or not.
+     */
+    nsIntRect& FixWindowCoordinateRect(nsIntRect& aRect, int aWindowHeight) {
+        if (!mWindowOriginBottomLeft) {
+            aRect.y = aWindowHeight - (aRect.height + aRect.y);
+        }
+        return aRect;
+    }
+
     /**
      * If this context wraps a double-buffered target, swap the back
      * and front buffers.  It should be assumed that after a swap, the
@@ -494,15 +557,12 @@ public:
     }
 
     /*
-     * All the methods below are only valid if IsOffscreen() returns
-     * true.
-     */
-
-    /*
      * Resize the current offscreen buffer.  Returns true on success.
      * If it returns false, the context should be treated as unusable
      * and should be recreated.  After the resize, the viewport is not
      * changed; glViewport should be called as appropriate.
+     *
+     * Only valid if IsOffscreen() returns true.
      */
     virtual PRBool ResizeOffscreen(const gfxIntSize& aNewSize) {
         if (mOffscreenFBO)
@@ -512,6 +572,8 @@ public:
 
     /*
      * Return size of this offscreen context.
+     *
+     * Only valid if IsOffscreen() returns true.
      */
     gfxIntSize OffscreenSize() {
         return mOffscreenSize;
@@ -520,6 +582,8 @@ public:
     /*
      * In some cases, we have to allocate a bigger offscreen buffer
      * than what's requested.  This is the bigger size.
+     *
+     * Only valid if IsOffscreen() returns true.
      */
     gfxIntSize OffscreenActualSize() {
         return mOffscreenActualSize;
@@ -529,6 +593,8 @@ public:
      * If this context is FBO-backed, return the FBO or the color
      * buffer texture.  If the context is not FBO-backed, 0 is
      * returned (which is also a valid FBO binding).
+     *
+     * Only valid if IsOffscreen() returns true.
      */
     GLuint GetOffscreenFBO() {
         return mOffscreenFBO;
@@ -537,7 +603,11 @@ public:
         return mOffscreenTexture;
     }
 
-    /**
+    virtual PRBool TextureImageSupportsGetBackingSurface() {
+        return PR_FALSE;
+    }
+
+    /**`
      * Return a valid, allocated TextureImage of |aSize| with
      * |aContentType|.  The TextureImage's texture is configured to
      * use |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
@@ -579,6 +649,34 @@ public:
                                     gfxImageSurface *aDest);
 
     /**
+     * Copy a rectangle from one TextureImage into another.  The
+     * source and destination are given in integer coordinates, and
+     * will be converted to texture coordinates.
+     *
+     * For the source texture, the wrap modes DO apply -- it's valid
+     * to use REPEAT or PAD and expect appropriate behaviour if the source
+     * rectangle extends beyond its bounds.
+     *
+     * For the destination texture, the wrap modes DO NOT apply -- the
+     * destination will be clipped by the bounds of the texture.
+     *
+     * Note: calling this function will cause the following OpenGL state
+     * to be changed:
+     *
+     *   - current program
+     *   - framebuffer binding
+     *   - viewport
+     *   - blend state (will be enabled at end)
+     *   - scissor state (will be enabled at end)
+     *   - vertex attrib 0 and 1 (pointer and enable state [enable state will be disabled at exit])
+     *   - array buffer binding (will be 0)
+     *   - active texture (will be 0)
+     *   - texture 0 binding
+     */
+    void BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
+                          TextureImage *aDst, const nsIntRect& aDstRect);
+
+    /**
      * Known GL extensions that can be queried by
      * IsExtensionSupported.  The results of this are cached, and as
      * such it's safe to use this even in performance critical code.
@@ -611,6 +709,10 @@ protected:
     PRPackedBool mIsOffscreen;
     PRPackedBool mIsGLES2;
     PRPackedBool mIsGlobalSharedContext;
+    PRPackedBool mWindowOriginBottomLeft;
+
+    int mVendor;
+
     ContextFormat mCreationFormat;
     nsRefPtr<GLContext> mSharedContext;
 
@@ -620,6 +722,11 @@ protected:
     gfxIntSize mOffscreenSize;
     gfxIntSize mOffscreenActualSize;
     GLuint mOffscreenTexture;
+
+    // lazy-initialized things
+    GLuint mBlitProgram, mBlitFramebuffer;
+    void UseBlitProgram();
+    void SetBlitFramebufferForDestTexture(GLuint aTexture);
 
     // helper to create/resize an offscreen FBO,
     // for offscreen implementations that use FBOs.
@@ -811,8 +918,6 @@ public:
     PFNGLREADPIXELSPROC fReadPixels;
     typedef void (GLAPIENTRY * PFNGLSAMPLECOVERAGEPROC) (GLclampf value, realGLboolean invert);
     PFNGLSAMPLECOVERAGEPROC fSampleCoverage;
-    typedef void (GLAPIENTRY * PFNGLSCISSORPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
-    PFNGLSCISSORPROC fScissor;
     typedef void (GLAPIENTRY * PFNGLSTENCILFUNCPROC) (GLenum func, GLint ref, GLuint mask);
     PFNGLSTENCILFUNCPROC fStencilFunc;
     typedef void (GLAPIENTRY * PFNGLSTENCILFUNCSEPARATEPROC) (GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
@@ -889,8 +994,6 @@ public:
     PFNGLVERTEXATTRIB3FVPROC fVertexAttrib3fv;
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIB4FVPROC) (GLuint index, const GLfloat* v);
     PFNGLVERTEXATTRIB4FVPROC fVertexAttrib4fv;
-    typedef void (GLAPIENTRY * PFNGLVIEWPORTPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
-    PFNGLVIEWPORTPROC fViewport;
     typedef void (GLAPIENTRY * PFNGLCOMPILESHADERPROC) (GLuint shader);
     PFNGLCOMPILESHADERPROC fCompileShader;
     typedef void (GLAPIENTRY * PFNGLCOPYTEXIMAGE2DPROC) (GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
@@ -946,7 +1049,74 @@ public:
         }
     }
 
+    void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+        ScissorRect().SetRect(x, y, width, height);
+        priv_fScissor(x, y, width, height);
+    }
+
+    nsIntRect& ScissorRect() {
+        return mScissorStack[mScissorStack.Length()-1];
+    }
+
+    void PushScissorRect() {
+        mScissorStack.AppendElement(ScissorRect());
+    }
+
+    void PushScissorRect(const nsIntRect& aRect) {
+        mScissorStack.AppendElement(aRect);
+        priv_fScissor(aRect.x, aRect.y, aRect.width, aRect.height);
+    }
+
+    void PopScissorRect() {
+        if (mScissorStack.Length() < 2) {
+            NS_WARNING("PopScissorRect with Length < 2!");
+            return;
+        }
+
+        nsIntRect thisRect = ScissorRect();
+        mScissorStack.TruncateLength(mScissorStack.Length() - 1);
+        if (thisRect != ScissorRect()) {
+            priv_fScissor(ScissorRect().x, ScissorRect().y,
+                          ScissorRect().width, ScissorRect().height);
+        }
+    }
+
+    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+        ViewportRect().SetRect(x, y, width, height);
+        priv_fViewport(x, y, width, height);
+    }
+
+    nsIntRect& ViewportRect() {
+        return mViewportStack[mViewportStack.Length()-1];
+    }
+
+    void PushViewportRect() {
+        mViewportStack.AppendElement(ViewportRect());
+    }
+
+    void PushViewportRect(const nsIntRect& aRect) {
+        mViewportStack.AppendElement(aRect);
+        priv_fViewport(aRect.x, aRect.y, aRect.width, aRect.height);
+    }
+
+    void PopViewportRect() {
+        if (mViewportStack.Length() < 2) {
+            NS_WARNING("PopViewportRect with Length < 2!");
+            return;
+        }
+
+        nsIntRect thisRect = ViewportRect();
+        mViewportStack.TruncateLength(mViewportStack.Length() - 1);
+        if (thisRect != ViewportRect()) {
+            priv_fViewport(ViewportRect().x, ViewportRect().y,
+                           ViewportRect().width, ViewportRect().height);
+        }
+    }
+
 protected:
+    nsTArray<nsIntRect> mViewportStack;
+    nsTArray<nsIntRect> mScissorStack;
+
     /* These are different between GLES2 and desktop GL; we hide those differences, use the GL
      * names, but the most limited data type.
      */
@@ -959,6 +1129,16 @@ protected:
     PFNGLDEPTHRANGEPROC priv_fDepthRange;
     typedef void (GLAPIENTRY * PFNGLCLEARDEPTHPROC) (GLclampd);
     PFNGLCLEARDEPTHPROC priv_fClearDepth;
+
+    /* These are special because we end up tracking these so that we don't
+     * have to query the values from GL.
+     */
+
+    typedef void (GLAPIENTRY * PFNGLVIEWPORTPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
+    PFNGLVIEWPORTPROC priv_fViewport;
+    typedef void (GLAPIENTRY * PFNGLSCISSORPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
+    PFNGLSCISSORPROC priv_fScissor;
+
 
     /* These are special -- they create or delete GL resources that can live
      * in a shared namespace.  In DEBUG, we wrap these calls so that we can
@@ -1162,12 +1342,13 @@ public:
     nsTArray<NamedResource> mTrackedRenderbuffers;
     nsTArray<NamedResource> mTrackedBuffers;
 #endif
-    
+
 };
 
 inline void
 GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
 {
+    aCx->MakeCurrent();
     GLenum err = aCx->fGetError();
     if (err) {
         printf_stderr("GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
@@ -1179,6 +1360,27 @@ GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
 #else
 #  define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
 #endif
+
+inline PRBool
+DoesVendorStringMatch(const char* aVendorString, const char *aWantedVendor)
+{
+    const char *occurrence = strstr(aVendorString, aWantedVendor);
+
+    // aWantedVendor not found
+    if (!occurrence)
+        return PR_FALSE;
+
+    // aWantedVendor preceded by alpha character
+    if (occurrence != aVendorString && isalpha(*(occurrence-1)))
+        return PR_FALSE;
+
+    // aWantedVendor followed by alpha character
+    const char *afterOccurrence = occurrence + strlen(aWantedVendor);
+    if (isalpha(*afterOccurrence))
+        return PR_FALSE;
+
+    return PR_TRUE;
+}
 
 } /* namespace gl */
 } /* namespace mozilla */

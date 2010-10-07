@@ -86,10 +86,8 @@ Narcissus.parser = (function() {
             if (typeof unbound !== "object")
                 continue;
 
-            /*
-             * We store the bound sub-builder as builder's own property
-             * so that we can have multiple builders at the same time.
-             */
+            // We store the bound sub-builder as builder's own property
+            // so that we can have multiple builders at the same time.
             var bound = builder[ns] = {};
             for (var m in unbound) {
                 bound[m] = bindMethod(unbound[m], builder);
@@ -1214,11 +1212,7 @@ Narcissus.parser = (function() {
 
           case BREAK:
           case CONTINUE:
-            if (tt === BREAK) {
-                b = builder.BREAK;
-            } else {
-                b = builder.CONTINUE;
-            }
+            b = (tt === BREAK) ? builder.BREAK : builder.CONTINUE;
             n = b.build(t);
 
             if (t.peekOnSameLine() === IDENTIFIER) {

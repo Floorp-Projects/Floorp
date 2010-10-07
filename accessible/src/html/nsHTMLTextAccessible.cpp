@@ -40,6 +40,8 @@
 #include "nsHTMLTextAccessible.h"
 
 #include "nsDocAccessible.h"
+#include "nsAccUtils.h"
+#include "nsRelUtils.h"
 #include "nsTextEquivUtils.h"
 
 #include "nsIFrame.h"
@@ -194,6 +196,56 @@ nsHTMLLabelAccessible::NativeRole()
 {
   return nsIAccessibleRole::ROLE_LABEL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLOuputAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsHTMLOutputAccessible::
+  nsHTMLOutputAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
+{
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLOutputAccessible, nsHyperTextAccessible)
+
+NS_IMETHODIMP
+nsHTMLOutputAccessible::GetRelationByType(PRUint32 aRelationType,
+                                          nsIAccessibleRelation** aRelation)
+{
+  nsresult rv = nsAccessibleWrap::GetRelationByType(aRelationType, aRelation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (rv != NS_OK_NO_RELATION_TARGET)
+    return NS_OK; // XXX bug 381599, avoid performance problems
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_CONTROLLED_BY) {
+    return nsRelUtils::
+      AddTargetFromIDRefsAttr(aRelationType, aRelation, mContent,
+                              nsAccessibilityAtoms::_for);
+  }
+
+  return NS_OK;
+}
+
+PRUint32
+nsHTMLOutputAccessible::NativeRole()
+{
+  return nsIAccessibleRole::ROLE_SECTION;
+}
+
+nsresult
+nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+{
+  nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::live,
+                         NS_LITERAL_STRING("polite"));
+  
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLLIAccessible

@@ -106,6 +106,25 @@ public:
 };
 
 /**
+ * Used for HTML output element.
+ */
+class nsHTMLOutputAccessible : public nsHyperTextAccessibleWrap
+{
+public:
+  nsHTMLOutputAccessible(nsIContent* aContent, nsIWeakReference* aShell);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIAccessible
+  NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
+                               nsIAccessibleRelation** aRelation);
+
+  // nsAccessible
+  virtual PRUint32 NativeRole();
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
+};
+
+/**
  * Used for bullet of HTML list item element (for example, HTML li).
  */
 class nsHTMLListBulletAccessible : public nsLeafAccessible

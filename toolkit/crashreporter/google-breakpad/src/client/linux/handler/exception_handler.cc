@@ -86,7 +86,7 @@
 
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
-#include "common/linux/memory.h"
+#include "common/memory.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/guid_creator.h"
 

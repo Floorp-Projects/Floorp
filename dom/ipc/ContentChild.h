@@ -43,6 +43,7 @@
 #include "mozilla/dom/PContentChild.h"
 
 #include "nsTArray.h"
+#include "nsIConsoleListener.h"
 
 struct ChromePackage;
 class nsIObserver;
@@ -54,6 +55,7 @@ namespace dom {
 
 class AlertObserver;
 class PrefObserver;
+class ConsoleListener;
 
 class ContentChild : public PContentChild
 {
@@ -64,6 +66,7 @@ public:
     bool Init(MessageLoop* aIOLoop,
               base::ProcessHandle aParentHandle,
               IPC::Channel* aChannel);
+    void InitXPCOM();
 
     static ContentChild* GetSingleton() {
         NS_ASSERTION(sSingleton, "not initialized");
@@ -98,26 +101,16 @@ public:
     virtual bool RecvSetOffline(const PRBool& offline);
 
     virtual bool RecvNotifyVisited(const IPC::URI& aURI);
-
-    /**
-     * Notify |aObserver| of changes to |aPrefRoot|.|aDomain|.  If
-     * |aHoldWeak|, only a weak reference to |aObserver| is held.
-     */
-    nsresult AddRemotePrefObserver(const nsCString& aDomain, 
-                                   const nsCString& aPrefRoot, 
-                                   nsIObserver* aObserver, PRBool aHoldWeak);
-    nsresult RemoveRemotePrefObserver(const nsCString& aDomain, 
-                                      const nsCString& aPrefRoot, 
-                                      nsIObserver* aObserver);
-
     // auto remove when alertfinished is received.
     nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);
 
-    virtual bool RecvNotifyRemotePrefObserver(const nsCString& aDomain);
+    virtual bool RecvPreferenceUpdate(const nsCString& aDomain);
     
     virtual bool RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData);
 
     virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
+
+    virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere);
 
 private:
     NS_OVERRIDE
@@ -134,6 +127,7 @@ private:
 
     nsTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsTArray<nsAutoPtr<PrefObserver> > mPrefObservers;
+    nsRefPtr<ConsoleListener> mConsoleListener;
     bool mDead;
 
     static ContentChild* sSingleton;

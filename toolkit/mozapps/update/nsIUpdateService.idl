@@ -50,7 +50,7 @@ interface nsIXMLHttpRequest;
  * be downloaded and applied to a version of this application so that it
  * can be updated.
  */
-[scriptable, uuid(56863a67-bd69-42de-9f40-583e625b457d)]
+[scriptable, uuid(60523512-bb69-417c-9b2c-87a0664b0bbe)]
 interface nsIUpdatePatch : nsISupports
 {
   /**
@@ -65,6 +65,11 @@ interface nsIUpdatePatch : nsISupports
    * The URL this patch was being downloaded from
    */
   attribute AString URL;
+
+  /**
+   * The final URL this patch was being downloaded from
+   */
+  attribute AString finalURL;
 
   /**
    * The hash function to use when determining this file's integrity

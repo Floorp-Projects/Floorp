@@ -150,7 +150,7 @@ var tasksCfg = [
     close:            false, // no point
   },
 
-  // Privacy mode
+  // Toggle the Private Browsing mode
   {
     get title() {
       if (_privateBrowsingSvc.privateBrowsingEnabled)
@@ -205,9 +205,6 @@ var WinTaskbarJumpList =
 
     // jump list refresh timer
     this._initTimer();
-
-    // build the list
-    this.update();
   },
 
   update: function WTBJL_update() {

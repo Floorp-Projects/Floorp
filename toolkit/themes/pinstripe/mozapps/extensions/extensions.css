@@ -49,53 +49,6 @@
   border-radius: 5px;
 }
 
-.nav-button {
-  -moz-appearance: none;
-  min-width: 0;
-  padding: 0 4px;
-  margin: 0;
-  text-shadow: @loweredShadow@;
-  border: 1px solid @toolbarbuttonBorderColor@;
-  box-shadow: @loweredShadow@;
-  background: @toolbarbuttonBackground@;
-  background-origin: border-box;
-  list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
-}
-
-.nav-button .button-text {
-  display: none;
-}
-
-.nav-button[disabled="true"] .button-icon {
-  opacity: 0.4;
-}
-
-#back-btn:-moz-locale-dir(ltr),
-#forward-btn:-moz-locale-dir(rtl) {
-  border-top-left-radius: @toolbarbuttonCornerRadius@;
-  border-bottom-left-radius: @toolbarbuttonCornerRadius@;
-  border-right: none;
-  -moz-image-region: rect(0, 20px, 20px, 0);
-}
-
-#back-btn:-moz-locale-dir(rtl),
-#forward-btn:-moz-locale-dir(ltr) {
-  border-top-right-radius: @toolbarbuttonCornerRadius@;
-  border-bottom-right-radius: @toolbarbuttonCornerRadius@;
-  -moz-image-region: rect(0, 40px, 20px, 20px);
-}
-
-.nav-button:hover:active:not([disabled="true"]) {
-  background: @toolbarbuttonPressedBackgroundColor@;
-  text-shadow: @loweredShadow@;
-  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
-}
-
-.nav-button:-moz-window-inactive {
-  border-color: @toolbarbuttonInactiveBorderColor@;
-  background-image: @toolbarbuttonInactiveBackgroundImage@;
-}
-
 /*** global warnings ***/
 
 .global-warning {
@@ -726,6 +679,9 @@
 
 .download-progress .progress {
   background-color: transparent;
+  /* Force the progress meter to use the default binding rather than the OSX
+     animated binding */
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter") !important;
 }
 
 .download-progress .start-cap, .download-progress .end-cap {

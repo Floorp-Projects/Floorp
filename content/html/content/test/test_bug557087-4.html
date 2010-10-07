@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=557087
+-->
+<head>
+  <title>Test for Bug 557087</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557087">Mozilla Bug 557087</a>
+<p id="display"></p>
+<div id="content">
+  <iframe name='f'></iframe>
+  <form target='f' action="data:text/html">
+    <input type='text' id='a'>
+    <input type='checkbox' id='b'>
+    <input type='radio' id='c'>
+    <fieldset disabled>
+      <fieldset>
+        <input type='submit' id='s'>
+      </fieldset>
+    </fieldset>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 557087 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var gExpectedSubmits = 6;
+var gSubmitReceived = 0;
+var gEnd = false;
+
+var fieldsets = document.getElementsByTagName("fieldset");
+var form = document.forms[0];
+
+form.addEventListener("submit", function() {
+  ok(gEnd, gEnd ? "expected submit" : "non expected submit");
+  if (++gSubmitReceived >= gExpectedSubmits) {
+    form.removeEventListener("submit", arguments.callee, false);
+    SimpleTest.finish();
+  }
+}, false);
+
+var inputs = [
+  document.getElementById('a'),
+  document.getElementById('b'),
+  document.getElementById('c'),
+];
+
+function doSubmit()
+{
+  for each(e in inputs) {
+    e.focus();
+    synthesizeKey("VK_RETURN", {});
+  }
+}
+
+SimpleTest.waitForFocus(function() {
+  doSubmit();
+
+  fieldsets[1].disabled = true;
+  fieldsets[0].disabled = false;
+  doSubmit();
+
+  fieldsets[0].disabled = false;
+  fieldsets[1].disabled = false;
+
+  gEnd = true;
+  doSubmit();
+
+  // Simple check that we can submit from inside a legend even if the fieldset
+  // is disabled.
+  var legend = document.createElement("legend");
+  fieldsets[0].appendChild(legend);
+  fieldsets[0].disabled = true;
+  legend.appendChild(document.getElementById('s'));
+
+  doSubmit();
+});
+
+</script>
+</pre>
+</body>
+</html>

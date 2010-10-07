@@ -146,12 +146,14 @@ function run_test() {
     do_check_neq(t1, null);
     do_check_false(t1.userDisabled);
     do_check_false(t1.appDisabled);
+    do_check_true(t1.isActive);
     do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_ENABLE));
 
     // Theme 2 was previously disabled
     do_check_neq(t1, null);
     do_check_true(t2.userDisabled);
     do_check_false(t2.appDisabled);
+    do_check_false(t2.isActive);
     do_check_true(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
 
     do_test_finished();

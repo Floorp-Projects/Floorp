@@ -539,7 +539,7 @@ public final class ElementName
     public static final ElementName APPLET = new ElementName("applet", "applet", TreeBuilder.MARQUEE_OR_APPLET, false, true, false);
     public static final ElementName ARCCOT = new ElementName("arccot", "arccot", TreeBuilder.OTHER, false, false, false);
     public static final ElementName APPROX = new ElementName("approx", "approx", TreeBuilder.OTHER, false, false, false);
-    public static final ElementName BUTTON = new ElementName("button", "button", TreeBuilder.BUTTON, false, false, false);
+    public static final ElementName BUTTON = new ElementName("button", "button", TreeBuilder.BUTTON, true, false, false);
     public static final ElementName CIRCLE = new ElementName("circle", "circle", TreeBuilder.OTHER, false, false, false);
     public static final ElementName CENTER = new ElementName("center", "center", TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU, true, false, false);
     public static final ElementName CURSOR = new ElementName("cursor", "cursor", TreeBuilder.OTHER, false, false, false);

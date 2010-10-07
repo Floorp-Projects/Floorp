@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/PBrowserChild.h"
 #include "BasicLayers.h"
 
 #include "gfxPlatform.h"
@@ -45,6 +46,7 @@
 
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+using namespace mozilla::dom;
 
 static void
 InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
@@ -56,12 +58,12 @@ InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
 }
 
 /*static*/ already_AddRefed<nsIWidget>
-nsIWidget::CreatePuppetWidget()
+nsIWidget::CreatePuppetWidget(PBrowserChild *aTabChild)
 {
   NS_ABORT_IF_FALSE(nsIWidget::UsePuppetWidgets(),
                     "PuppetWidgets not allowed in this configuration");
 
-  nsCOMPtr<nsIWidget> widget = new PuppetWidget();
+  nsCOMPtr<nsIWidget> widget = new PuppetWidget(aTabChild);
   return widget.forget();
 }
 
@@ -74,7 +76,8 @@ const size_t PuppetWidget::kMaxDimension = 4000;
 NS_IMPL_ISUPPORTS_INHERITED1(PuppetWidget, nsBaseWidget,
                              nsISupportsWeakReference)
 
-PuppetWidget::PuppetWidget()
+PuppetWidget::PuppetWidget(PBrowserChild *aTabChild)
+  : mTabChild(aTabChild)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 }
@@ -107,6 +110,10 @@ PuppetWidget::Create(nsIWidget        *aParent,
              ->CreateOffscreenSurface(gfxIntSize(1, 1),
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
+  mIMEComposing = PR_FALSE;
+  mIMELastReceivedSeqno = 0;
+  mIMELastBlurSeqno = 0;
+
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
     parent->SetChild(this);
@@ -130,7 +137,7 @@ PuppetWidget::CreateChild(const nsIntRect  &aRect,
 {
   bool isPopup = aInitData && aInitData->mWindowType == eWindowType_popup;
 
-  nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget();
+  nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);
   return ((widget &&
            NS_SUCCEEDED(widget->Create(isPopup ? nsnull: this, nsnull, aRect,
                                        aHandleEventFunction,
@@ -146,6 +153,7 @@ PuppetWidget::Destroy()
   mPaintTask.Revoke();
   mChild = nsnull;
   mLayerManager = nsnull;
+  mTabChild = nsnull;
   return NS_OK;
 }
 
@@ -243,6 +251,21 @@ PuppetWidget::Update()
   return DispatchPaintEvent();
 }
 
+void
+PuppetWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+{
+  if (nsnull == aPoint) {
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
+  }
+  else {
+    // use the point override if provided
+    event.refPoint.x = aPoint->x;
+    event.refPoint.y = aPoint->y;
+  }
+  event.time = PR_Now() / 1000;
+}
+
 NS_IMETHODIMP
 PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -253,10 +276,33 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   aStatus = nsEventStatus_eIgnore;
   if (mEventCallback) {
+    if (event->message == NS_COMPOSITION_START) {
+      mIMEComposing = PR_TRUE;
+    }
+    switch (event->eventStructType) {
+    case NS_COMPOSITION_EVENT:
+      mIMELastReceivedSeqno = static_cast<nsCompositionEvent*>(event)->seqno;
+      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+        return NS_OK;
+      break;
+    case NS_TEXT_EVENT:
+      mIMELastReceivedSeqno = static_cast<nsTextEvent*>(event)->seqno;
+      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+        return NS_OK;
+      break;
+    case NS_SELECTION_EVENT:
+      mIMELastReceivedSeqno = static_cast<nsSelectionEvent*>(event)->seqno;
+      if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
+        return NS_OK;
+      break;
+    }
     aStatus = (*mEventCallback)(event);
-  }
 
-  if (mChild) {
+    if (event->message == NS_COMPOSITION_END) {
+      mIMEComposing = PR_FALSE;
+    }
+  } else if (mChild) {
+    event->widget = mChild;
     mChild->DispatchEvent(event, aStatus);
   }
 
@@ -276,6 +322,158 @@ gfxASurface*
 PuppetWidget::GetThebesSurface()
 {
   return mSurface;
+}
+
+nsresult
+PuppetWidget::IMEEndComposition(PRBool aCancel)
+{
+  if (!mIMEComposing)
+    return NS_OK;
+
+  nsEventStatus status;
+  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+  InitEvent(textEvent, nsnull);
+  if (!mTabChild ||
+      !mTabChild->SendEndIMEComposition(aCancel, &textEvent.theText)) {
+    return NS_ERROR_FAILURE;
+  }
+  DispatchEvent(&textEvent, status);
+
+  nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
+  InitEvent(compEvent, nsnull);
+  DispatchEvent(&compEvent, status);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetWidget::ResetInputState()
+{
+  return IMEEndComposition(PR_FALSE);
+}
+
+NS_IMETHODIMP
+PuppetWidget::CancelComposition()
+{
+  return IMEEndComposition(PR_TRUE);
+}
+
+NS_IMETHODIMP
+PuppetWidget::SetIMEOpenState(PRBool aState)
+{
+  if (mTabChild &&
+      mTabChild->SendSetIMEOpenState(aState))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PuppetWidget::SetIMEEnabled(PRUint32 aState)
+{
+  if (mTabChild &&
+      mTabChild->SendSetIMEEnabled(aState))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PuppetWidget::GetIMEOpenState(PRBool *aState)
+{
+  if (mTabChild &&
+      mTabChild->SendGetIMEOpenState(aState))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PuppetWidget::GetIMEEnabled(PRUint32 *aState)
+{
+  if (mTabChild &&
+      mTabChild->SendGetIMEEnabled(aState))
+    return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PuppetWidget::OnIMEFocusChange(PRBool aFocus)
+{
+  if (!mTabChild)
+    return NS_ERROR_FAILURE;
+
+  if (aFocus) {
+    nsEventStatus status;
+    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+    InitEvent(queryEvent, nsnull);
+    // Query entire content
+    queryEvent.InitForQueryTextContent(0, PR_UINT32_MAX);
+    DispatchEvent(&queryEvent, status);
+
+    if (queryEvent.mSucceeded) {
+      mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
+    }
+  } else {
+    // ResetInputState might not have been called yet
+    ResetInputState();
+  }
+
+  PRUint32 chromeSeqno;
+  mIMEPreference.mWantUpdates = PR_FALSE;
+  mIMEPreference.mWantHints = PR_FALSE;
+  if (!mTabChild->SendNotifyIMEFocus(aFocus, &mIMEPreference, &chromeSeqno))
+    return NS_ERROR_FAILURE;
+
+  if (aFocus) {
+    if (!mIMEPreference.mWantUpdates && !mIMEPreference.mWantHints)
+      // call OnIMEFocusChange on blur but no other updates
+      return NS_SUCCESS_IME_NO_UPDATES;
+    OnIMESelectionChange(); // Update selection
+  } else {
+    mIMELastBlurSeqno = chromeSeqno;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetWidget::OnIMETextChange(PRUint32 aStart, PRUint32 aEnd, PRUint32 aNewEnd)
+{
+  if (!mTabChild)
+    return NS_ERROR_FAILURE;
+
+  if (mIMEPreference.mWantHints) {
+    nsEventStatus status;
+    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+    InitEvent(queryEvent, nsnull);
+    queryEvent.InitForQueryTextContent(0, PR_UINT32_MAX);
+    DispatchEvent(&queryEvent, status);
+
+    if (queryEvent.mSucceeded) {
+      mTabChild->SendNotifyIMETextHint(queryEvent.mReply.mString);
+    }
+  }
+  if (mIMEPreference.mWantUpdates) {
+    mTabChild->SendNotifyIMETextChange(aStart, aEnd, aNewEnd);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetWidget::OnIMESelectionChange(void)
+{
+  if (!mTabChild)
+    return NS_ERROR_FAILURE;
+
+  if (mIMEPreference.mWantUpdates) {
+    nsEventStatus status;
+    nsQueryContentEvent queryEvent(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+    InitEvent(queryEvent, nsnull);
+    DispatchEvent(&queryEvent, status);
+
+    if (queryEvent.mSucceeded) {
+      mTabChild->SendNotifyIMESelection(mIMELastReceivedSeqno,
+                                        queryEvent.GetSelectionStart(),
+                                        queryEvent.GetSelectionEnd());
+    }
+  }
+  return NS_OK;
 }
 
 nsresult

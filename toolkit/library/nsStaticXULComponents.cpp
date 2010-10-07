@@ -231,6 +231,12 @@
 #define JSCTYPES_MODULE
 #endif
 
+#if defined(MOZ_APP_COMPONENT_INCLUDE)
+#include MOZ_APP_COMPONENT_INCLUDE
+#else
+#define APP_COMPONENT_MODULES
+#endif
+
 #define XUL_MODULES                          \
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
@@ -279,6 +285,7 @@
     WINDOWSPROXY_MODULE                      \
     JSCTYPES_MODULE                          \
     MODULE(jsperf)                           \
+    APP_COMPONENT_MODULES                    \
     /* end of list */
 
 #define MODULE(_name) \

@@ -137,17 +137,22 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 
+#appmenu_offlineModeRecovery:not([checked=true]) {
+  display: none;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
 #urlbar-progress {
-  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-progress");
 }
 
 /* Some child nodes want to be ordered based on the locale's direction, while
    everything else should be ltr. */
+#urlbar-progress:-moz-locale-dir(rtl),
 .urlbar-input-box:-moz-locale-dir(rtl) {
   direction: rtl;
 }
@@ -158,11 +163,19 @@ html|*.urlbar-input {
 
 /* over-link in location bar */
 
+/* Delay transitions on mouseout.  (Mouseover transitions are delayed by a
+   timeout in urlbarBindings.xml.) */
+.urlbar-textbox-container:not([overlinkstate]),
+.urlbar-over-link-layer:not([overlinkstate]),
+.urlbar-textbox-container-children:not([overlinkstate]),
+.urlbar-over-link-box:not([overlinkstate]) {
+  -moz-transition-delay: 100ms;
+}
+
 .urlbar-over-link-layer[overlinkstate="fade-in"],
 .urlbar-textbox-container:not([overlinkstate]) {
   -moz-transition-property: color;
   -moz-transition-duration: 150ms;
-  -moz-transition-delay: 50ms;
   -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
 }
 
@@ -170,7 +183,6 @@ html|*.urlbar-input {
 .urlbar-over-link-layer:not([overlinkstate]) {
   -moz-transition-property: color;
   -moz-transition-duration: 150ms;
-  -moz-transition-delay: 50ms;
   -moz-transition-timing-function: linear;
   color: transparent;
 }
@@ -179,8 +191,6 @@ html|*.urlbar-input {
 .urlbar-textbox-container-children:not([overlinkstate]) {
   -moz-transition-property: opacity;
   -moz-transition-duration: 150ms;
-  -moz-transition-delay: 50ms;
-  -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
   opacity: 1;
 }
 
@@ -188,8 +198,6 @@ html|*.urlbar-input {
 .urlbar-over-link-box:not([overlinkstate]) {
   -moz-transition-property: opacity;
   -moz-transition-duration: 150ms;
-  -moz-transition-delay: 50ms;
-  -moz-transition-timing-function: linear;
   opacity: 0;
 }
 
@@ -315,13 +323,14 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   min-width: 1px;
 }
 
-/* Sync statusbar UI */
 %ifdef MOZ_SERVICES_SYNC
-#sync-notifications-box {
+/* Sync notification UI */
+#sync-notifications {
   -moz-binding: url("chrome://browser/content/syncNotification.xml#notificationbox");
+  overflow-y: visible !important;
 }
 
-#sync-notifications-box notification {
+#sync-notifications notification {
   -moz-binding: url("chrome://browser/content/syncNotification.xml#notification");
 }
 %endif
@@ -416,4 +425,15 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 
 #geolocation-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#geolocation-notification");
+}
+
+/* override hidden="true" for the status bar compatibility shim
+   in case it was persisted for the real status bar */
+#status-bar {
+  display: -moz-box;
+}
+
+/* Remove the resizer from the statusbar compatibility shim */
+#status-bar > .statusbar-resizerpanel {
+  display: none;
 }

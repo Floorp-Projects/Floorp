@@ -56,8 +56,8 @@
 #include <math.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -99,6 +99,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * Asserts to verify assumptions behind pn_ macros.
@@ -314,7 +315,7 @@ Parser::trace(JSTracer *trc)
 {
     JSObjectBox *objbox = traceListHead;
     while (objbox) {
-        JS_CALL_OBJECT_TRACER(trc, objbox->object, "parser.object");
+        MarkObject(trc, *objbox->object, "parser.object");
         objbox = objbox->traceLink;
     }
 }
@@ -982,7 +983,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
-    script = js_NewScriptFromCG(cx, &cg);
+    script = JSScript::NewScriptFromCG(cx, &cg);
     if (script && funbox && script != script->emptyScript())
         script->savedCallerFun = true;
 
@@ -1550,9 +1551,9 @@ static JSParseNode *
 MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *tc)
 {
     /*
-     * If dn is var, const, or let, and it has an initializer, then we must
-     * rewrite it to be an assignment node, whose freshly allocated left-hand
-     * side becomes a use of pn.
+     * If dn is arg, or in [var, const, let] and has an initializer, then we
+     * must rewrite it to be an assignment node, whose freshly allocated
+     * left-hand side becomes a use of pn.
      */
     if (dn->isBindingForm()) {
         JSParseNode *rhs = dn->expr();
@@ -2609,7 +2610,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
              * Make sure to deoptimize lexical dependencies that are polluted
              * by eval or with, to safely statically bind globals (see bug 561923).
              */
-            if ((funtc->flags & TCF_FUN_CALLS_EVAL) ||
+            if (funtc->callsEval() ||
                 (outer_ale && tc->innermostWith &&
                  ALE_DEFN(outer_ale)->pn_pos < tc->innermostWith->pn_pos)) {
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
@@ -2784,7 +2785,7 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunctio
                     list = ListNode::create(&funtc);
                     if (!list)
                         return false;
-                    list->pn_type = TOK_COMMA;
+                    list->pn_type = TOK_VAR;
                     list->makeEmpty();
                     *listp = list;
                 }
@@ -3362,7 +3363,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (!CheckStrictBinding(cx, tc, atom, pn))
         return false;
 
-    blockObj = tc->blockChain;
+    blockObj = tc->blockChain();
     ale = tc->decls.lookup(atom);
     if (ale && ALE_DEFN(ale)->pn_blockid == tc->blockid()) {
         const char *name = js_AtomToPrintableString(cx, atom);
@@ -3427,7 +3428,7 @@ PopStatement(JSTreeContext *tc)
     JSStmtInfo *stmt = tc->topStmt;
 
     if (stmt->flags & SIF_SCOPE) {
-        JSObject *obj = stmt->blockObj;
+        JSObject *obj = stmt->blockBox->object;
         JS_ASSERT(!obj->isClonedBlock());
 
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
@@ -3600,6 +3601,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
     if (stmt && stmt->type == STMT_WITH) {
         data->fresh = false;
+        pn->pn_dflags |= PND_DEOPTIMIZED;
         return true;
     }
 
@@ -4213,8 +4215,8 @@ CheckDestructuring(JSContext *cx, BindData *data,
      */
     if (data &&
         data->binder == BindLet &&
-        OBJ_BLOCK_COUNT(cx, tc->blockChain) == 0) {
-        ok = !!js_DefineNativeProperty(cx, tc->blockChain,
+        OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0) {
+        ok = !!js_DefineNativeProperty(cx, tc->blockChain(),
                                        ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                                        UndefinedValue(), NULL, NULL,
                                        JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -4578,7 +4580,7 @@ PushLexicalScope(JSContext *cx, TokenStream *ts, JSTreeContext *tc,
     if (!blockbox)
         return NULL;
 
-    js_PushBlockScope(tc, stmt, obj, -1);
+    js_PushBlockScope(tc, stmt, blockbox, -1);
     pn->pn_type = TOK_LEXICALSCOPE;
     pn->pn_op = JSOP_LEAVEBLOCK;
     pn->pn_objbox = blockbox;
@@ -5709,8 +5711,8 @@ Parser::statement()
         }
 
         if (stmt && (stmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(tc->blockChain == stmt->blockObj);
-            obj = tc->blockChain;
+            JS_ASSERT(tc->blockChainBox == stmt->blockBox);
+            obj = tc->blockChain();
         } else {
             if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
@@ -5760,9 +5762,9 @@ Parser::statement()
             JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
-            obj->setParent(tc->blockChain);
-            tc->blockChain = obj;
-            stmt->blockObj = obj;
+            obj->setParent(tc->blockChain());
+            tc->blockChainBox = blockbox;
+            stmt->blockBox = blockbox;
 
 #ifdef DEBUG
             pn1 = tc->blockNode;
@@ -6010,7 +6012,7 @@ Parser::variables(bool inLetHead)
      * this code will change soon.
      */
     if (let) {
-        JS_ASSERT(tc->blockChain == scopeStmt->blockObj);
+        JS_ASSERT(tc->blockChainBox == scopeStmt->blockBox);
         data.binder = BindLet;
         data.let.overflow = JSMSG_TOO_MANY_LOCALS;
     } else {
@@ -8502,78 +8504,79 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #endif
                    ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
             JSStmtInfo *stmt = js_LexicalLookup(tc, pn->pn_atom, NULL);
-            if (!stmt || stmt->type != STMT_WITH) {
-                JSDefinition *dn;
 
-                JSAtomListElement *ale = tc->decls.lookup(pn->pn_atom);
-                if (ale) {
-                    dn = ALE_DEFN(ale);
+            JSDefinition *dn;
+
+            JSAtomListElement *ale = tc->decls.lookup(pn->pn_atom);
+            if (ale) {
+                dn = ALE_DEFN(ale);
 #if JS_HAS_BLOCK_SCOPE
-                    /*
-                     * Skip out-of-scope let bindings along an ALE list or hash
-                     * chain. These can happen due to |let (x = x) x| block and
-                     * expression bindings, where the x on the right of = comes
-                     * from an outer scope. See bug 496532.
-                     */
-                    while (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc)) {
-                        do {
-                            ale = ALE_NEXT(ale);
-                        } while (ale && ALE_ATOM(ale) != pn->pn_atom);
-                        if (!ale)
-                            break;
-                        dn = ALE_DEFN(ale);
-                    }
-#endif
+                /*
+                 * Skip out-of-scope let bindings along an ALE list or hash
+                 * chain. These can happen due to |let (x = x) x| block and
+                 * expression bindings, where the x on the right of = comes
+                 * from an outer scope. See bug 496532.
+                 */
+                while (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc)) {
+                    do {
+                        ale = ALE_NEXT(ale);
+                    } while (ale && ALE_ATOM(ale) != pn->pn_atom);
+                    if (!ale)
+                        break;
+                    dn = ALE_DEFN(ale);
                 }
+#endif
+            }
 
+            if (ale) {
+                dn = ALE_DEFN(ale);
+            } else {
+                ale = tc->lexdeps.lookup(pn->pn_atom);
                 if (ale) {
                     dn = ALE_DEFN(ale);
                 } else {
-                    ale = tc->lexdeps.lookup(pn->pn_atom);
-                    if (ale) {
-                        dn = ALE_DEFN(ale);
-                    } else {
-                        /*
-                         * No definition before this use in any lexical scope.
-                         * Add a mapping in tc->lexdeps from pn->pn_atom to a
-                         * new node for the forward-referenced definition. This
-                         * placeholder definition node will be adopted when we
-                         * parse the real defining declaration form, or left as
-                         * a free variable definition if we never see the real
-                         * definition.
-                         */
-                        ale = MakePlaceholder(pn, tc);
-                        if (!ale)
-                            return NULL;
-                        dn = ALE_DEFN(ale);
+                    /*
+                     * No definition before this use in any lexical scope.
+                     * Add a mapping in tc->lexdeps from pn->pn_atom to a
+                     * new node for the forward-referenced definition. This
+                     * placeholder definition node will be adopted when we
+                     * parse the real defining declaration form, or left as
+                     * a free variable definition if we never see the real
+                     * definition.
+                     */
+                    ale = MakePlaceholder(pn, tc);
+                    if (!ale)
+                        return NULL;
+                    dn = ALE_DEFN(ale);
 
-                        /*
-                         * In case this is a forward reference to a function,
-                         * we pessimistically set PND_FUNARG if the next token
-                         * is not a left parenthesis.
-                         *
-                         * If the definition eventually parsed into dn is not a
-                         * function, this flag won't hurt, and if we do parse a
-                         * function with pn's name, then the PND_FUNARG flag is
-                         * necessary for safe context->display-based optimiza-
-                         * tion of the closure's static link.
-                         */
-                        JS_ASSERT(PN_TYPE(dn) == TOK_NAME);
-                        JS_ASSERT(dn->pn_op == JSOP_NOP);
-                        if (tokenStream.peekToken() != TOK_LP)
-                            dn->pn_dflags |= PND_FUNARG;
-                    }
+                    /*
+                     * In case this is a forward reference to a function,
+                     * we pessimistically set PND_FUNARG if the next token
+                     * is not a left parenthesis.
+                     *
+                     * If the definition eventually parsed into dn is not a
+                     * function, this flag won't hurt, and if we do parse a
+                     * function with pn's name, then the PND_FUNARG flag is
+                     * necessary for safe context->display-based optimiza-
+                     * tion of the closure's static link.
+                     */
+                    JS_ASSERT(PN_TYPE(dn) == TOK_NAME);
+                    JS_ASSERT(dn->pn_op == JSOP_NOP);
+                    if (tokenStream.peekToken() != TOK_LP)
+                        dn->pn_dflags |= PND_FUNARG;
                 }
-
-                JS_ASSERT(dn->pn_defn);
-                LinkUseToDef(pn, dn, tc);
-
-                /* Here we handle the backward function reference case. */
-                if (tokenStream.peekToken() != TOK_LP)
-                    dn->pn_dflags |= PND_FUNARG;
-
-                pn->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
             }
+
+            JS_ASSERT(dn->pn_defn);
+            LinkUseToDef(pn, dn, tc);
+
+            /* Here we handle the backward function reference case. */
+            if (tokenStream.peekToken() != TOK_LP)
+                dn->pn_dflags |= PND_FUNARG;
+
+            pn->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
+            if (stmt && stmt->type == STMT_WITH)
+                pn->pn_dflags |= PND_DEOPTIMIZED;
         }
 
 #if JS_HAS_XML_SUPPORT

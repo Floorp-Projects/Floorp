@@ -1483,9 +1483,10 @@ namespace nanojit
                     live.add(ins->oprnd3(), 0);
                     break;
 
+                case LIR_callv:
                 case LIR_calli:
-                case LIR_calld:
                 CASE64(LIR_callq:)
+                case LIR_calld:
                     for (int i = 0, argc = ins->argc(); i < argc; i++)
                         live.add(ins->arg(i), 0);
                     break;
@@ -1542,6 +1543,24 @@ namespace nanojit
 
     void LirNameMap::addNameWithSuffix(LIns* ins, const char *name, int suffix,
                                        bool ignoreOneSuffix) {
+        NanoAssert(!names.containsKey(ins));
+        const int N = 100;
+        char name2[N];
+        if (suffix == 1 && ignoreOneSuffix) {
+            VMPI_snprintf(name2, N, "%s", name);                // don't add '1' suffix
+        } else if (VMPI_isdigit(name[VMPI_strlen(name)-1])) {
+            VMPI_snprintf(name2, N, "%s_%d", name, suffix);     // use '_' to avoid confusion
+        } else {
+            VMPI_snprintf(name2, N, "%s%d", name, suffix);      // normal case
+        }
+
+        char *copy = new (alloc) char[VMPI_strlen(name2)+1];
+        VMPI_strcpy(copy, name2);
+        Entry *e = new (alloc) Entry(copy);
+        names.put(ins, e);
+    }
+
+    void LirNameMap::addName(LIns* ins, const char* name) {
         // The lookup may succeed, ie. we may already have a name for this
         // instruction.  This can happen because of CSE.  Eg. if we have this:
         //
@@ -1556,25 +1575,10 @@ namespace nanojit
         // name "foo2".
         //
         if (!names.containsKey(ins)) {
-            const int N = 100;
-            char name2[N];
-            if (suffix == 1 && ignoreOneSuffix) {
-                VMPI_snprintf(name2, N, "%s", name);                // don't add '1' suffix
-            } else if (VMPI_isdigit(name[VMPI_strlen(name)-1])) {
-                VMPI_snprintf(name2, N, "%s_%d", name, suffix);     // use '_' to avoid confusion
-            } else {
-                VMPI_snprintf(name2, N, "%s%d", name, suffix);      // normal case
-            }
-
-            char *copy = new (alloc) char[VMPI_strlen(name2)+1];
-            VMPI_strcpy(copy, name2);
-            Entry *e = new (alloc) Entry(copy);
-            names.put(ins, e);
+            Str* str = new (alloc) Str(alloc, name);
+            int suffix = namecounts.add(*str);
+            addNameWithSuffix(ins, name, suffix, /*ignoreOneSuffix*/true);
         }
-    }
-
-    void LirNameMap::addName(LIns* ins, const char* name) {
-        addNameWithSuffix(ins, name, namecounts.add(name), /*ignoreOneSuffix*/true);
     }
 
     const char* LirNameMap::createName(LIns* ins) {
@@ -1585,12 +1589,14 @@ namespace nanojit
             } else
 #endif
             {
-                addNameWithSuffix(ins, ins->callInfo()->_name, funccounts.add(ins->callInfo()),
-                                  /*ignoreOneSuffix*/false);
+                if (!names.containsKey(ins))
+                    addNameWithSuffix(ins, ins->callInfo()->_name, funccounts.add(ins->callInfo()),
+                                      /*ignoreOneSuffix*/false);
             }
         } else {
-            addNameWithSuffix(ins, lirNames[ins->opcode()], lircounts.add(ins->opcode()),
-                              /*ignoreOneSuffix*/false);
+            if (!names.containsKey(ins))
+                addNameWithSuffix(ins, lirNames[ins->opcode()], lircounts.add(ins->opcode()),
+                                  /*ignoreOneSuffix*/false);
 
         }
         return names.get(ins)->name;
@@ -1739,9 +1745,10 @@ namespace nanojit
                 VMPI_snprintf(s, n, "%s", lirNames[op]);
                 break;
 
+            case LIR_callv:
             case LIR_calli:
-            case LIR_calld:
-            CASE64(LIR_callq:) {
+            CASE64(LIR_callq:)
+            case LIR_calld: {
                 const CallInfo* call = i->callInfo();
                 int32_t argc = i->argc();
                 int32_t m = int32_t(n);     // Windows doesn't have 'ssize_t'
@@ -1956,7 +1963,8 @@ namespace nanojit
           CSE_ACC_CONST(    EMB_NUM_USED_ACCS + 0),
           CSE_ACC_MULTIPLE( EMB_NUM_USED_ACCS + 1),
           storesSinceLastLoad(ACCSET_NONE),
-          alloc(alloc)
+          alloc(alloc),
+          suspended(false)
     {
 
         m_findNL[LInsImmI] = &CseFilter::findImmI;
@@ -2137,6 +2145,7 @@ namespace nanojit
 
     void CseFilter::addNL(NLKind nlkind, LIns* ins, uint32_t k)
     {
+        if (suspended) return;
         NanoAssert(!m_listNL[nlkind][k]);
         m_usedNL[nlkind]++;
         m_listNL[nlkind][k] = ins;
@@ -2147,6 +2156,7 @@ namespace nanojit
 
     void CseFilter::addL(LIns* ins, uint32_t k)
     {
+        if (suspended) return;
         CseAcc cseAcc = miniAccSetToCseAcc(ins->miniAccSet(), ins->loadQual());
         NanoAssert(!m_listL[cseAcc][k]);
         m_usedL[cseAcc]++;
@@ -2427,7 +2437,7 @@ namespace nanojit
 
     LIns* CseFilter::ins0(LOpcode op)
     {
-        if (op == LIR_label)
+        if (op == LIR_label && !suspended)
             clearAll();
         return out->ins0(op);
     }
@@ -2483,7 +2493,8 @@ namespace nanojit
             if (storesSinceLastLoad != ACCSET_NONE) {
                 // Clear all normal (excludes CONST and MULTIPLE) loads
                 // aliased by stores and calls since the last time we were in
-                // this function.
+                // this function.  Aliased loads must be cleared even when CSE
+                // is suspended.
                 AccSet a = storesSinceLastLoad & ((1 << EMB_NUM_USED_ACCS) - 1);
                 while (a) {
                     int acc = msbSet32(a);
@@ -3390,6 +3401,14 @@ namespace nanojit
         return out->insImmD(d);
     }
 
+    static const char* argtypeNames[] = {
+        "void",     // ARGTYPE_V  = 0
+        "int32_t",  // ARGTYPE_I  = 1
+        "uint32_t", // ARGTYPE_UI = 2
+        "uint64_t", // ARGTYPE_Q  = 3
+        "double"    // ARGTYPE_D  = 4
+    };
+
     LIns* ValidateWriter::insCall(const CallInfo *ci, LIns* args0[])
     {
         ArgType argTypes[MAXARGS];
@@ -3398,6 +3417,27 @@ namespace nanojit
         LIns* args[MAXARGS];    // in left-to-right order, unlike args0[]
 
         LOpcode op = getCallOpcode(ci);
+        ArgType retType = ci->returnType();
+
+        if ((op == LIR_callv) != (retType == ARGTYPE_V) ||
+            (op == LIR_calli) != (retType == ARGTYPE_UI ||
+                                  retType == ARGTYPE_I) ||
+#ifdef NANOJIT_64BIT
+            (op == LIR_callq) != (retType == ARGTYPE_Q) ||
+#endif
+            (op == LIR_calld) != (retType == ARGTYPE_D)) {
+            NanoAssertMsgf(0,
+                "LIR structure error (%s): return type mismatch: opcode %s with %s return type",
+                whereInPipeline, lirNames[op], argtypeNames[retType]);
+        }
+
+        if (op == LIR_callv && ci->_isPure) {
+            // Since nobody can use the result of a void call, any pure call
+            // would just be dead.  This is probably a mistake.
+            NanoAssertMsgf(0,
+                "LIR structure error (%s): LIR_callv must only be used with nonpure functions.",
+                whereInPipeline);
+        }
 
         if (ci->_isPure && ci->_storeAccSet != ACCSET_NONE)
             errorAccSet(ci->_name, ci->_storeAccSet, "it should be ACCSET_NONE for pure functions");

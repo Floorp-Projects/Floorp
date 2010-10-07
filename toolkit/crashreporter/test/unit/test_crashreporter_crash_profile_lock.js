@@ -1,5 +1,11 @@
 function run_test()
 {
+  var isOSX = ("nsILocalFileMac" in Components.interfaces);
+  if (isOSX) {
+    dump("INFO | test_crashreporter_crash_profile_lock.js | Skipping test on mac, bug 599475")
+    return;
+  }
+
   if (!("@mozilla.org/toolkit/crash-reporter;1" in Components.classes)) {
     dump("INFO | test_crashreporter.js | Can't test crashreporter in a non-libxul build.\n");
     return;

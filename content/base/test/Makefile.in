@@ -260,6 +260,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug505783.html \
 		test_bug457746.html \
 		test_bug587931.html \
+		test_bug592829.html \
 		test_bug518104.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
@@ -347,11 +348,12 @@ _TEST_FILES2 = \
 		test_classList.html \
 		test_bug514487.html \
 		test_range_bounds.html \
-		test_bug543870.html \
-		file_bug543870_img.jpg \
-		file_bug543870_inner.html \
-		file_bug543870_doc.html \
-		file_bug543870_text.txt \
+		test_mozfiledataurl.html \
+		file_mozfiledataurl_audio.ogg \
+		file_mozfiledataurl_img.jpg \
+		file_mozfiledataurl_inner.html \
+		file_mozfiledataurl_doc.html \
+		file_mozfiledataurl_text.txt \
 		test_bug475156.html \
 		bug475156.sjs \
 		test_bug544642.html \
@@ -439,8 +441,15 @@ endif
 #		test_bug503473.html \
 #		file_bug503473-frame.sjs \
 
+_BROWSER_TEST_FILES = \
+		browser_bug593387.js \
+		$(NULL)
+
 libs:: $(_TEST_FILES1)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_TEST_FILES2)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

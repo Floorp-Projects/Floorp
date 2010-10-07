@@ -169,26 +169,49 @@ struct GlobalSlotArray {
 namespace JSC {
     class ExecutablePool;
 }
+
+#define JS_UNJITTABLE_SCRIPT (reinterpret_cast<void*>(1))
+
+enum JITScriptStatus {
+    JITScript_None,
+    JITScript_Invalid,
+    JITScript_Valid
+};
+
 namespace js {
 namespace mjit {
 
 struct JITScript;
 
-namespace ic {
-# if defined JS_POLYIC
-    struct PICInfo;
-# endif
-# if defined JS_MONOIC
-    struct MICInfo;
-    struct CallICInfo;
-# endif
-}
-struct CallSite;
 }
 }
 #endif
 
 struct JSScript {
+    /*
+     * Two successively less primitive ways to make a new JSScript.  The first
+     * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
+     * NewScriptFromCG, calls this optional debugger hook.
+     *
+     * The NewScript function can't know whether the script it creates belongs
+     * to a function, or is top-level or eval code, but the debugger wants access
+     * to the newly made script's function, if any -- so callers of NewScript
+     * are responsible for notifying the debugger after successfully creating any
+     * kind (function or other) of new JSScript.
+     *
+     * NB: NewScript always creates a new script; it never returns the empty
+     * script singleton (JSScript::emptyScript()). Callers who know they can use
+     * that read-only singleton are responsible for choosing it instead of calling
+     * NewScript with length and nsrcnotes equal to 1 and other parameters save
+     * cx all zero.
+     */
+    static JSScript *NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
+                               uint32 nobjects, uint32 nupvars, uint32 nregexps,
+                               uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
+                               uint32 nClosedArgs, uint32 nClosedVars);
+
+    static JSScript *NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
+
     /* FIXME: bug 586181 */
     JSCList         links;      /* Links for compartment script list */
     jsbytecode      *code;      /* bytecodes and their immediate operands */
@@ -216,6 +239,7 @@ struct JSScript {
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
     bool            usesEval:1;       /* script uses eval() */
+    bool            usesArguments:1;  /* script uses arguments */
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
@@ -229,6 +253,8 @@ struct JSScript {
     uint32          lineno;     /* base line number of script */
     uint16          nslots;     /* vars plus maximum stack depth */
     uint16          staticLevel;/* static level for display maintenance */
+    uint16          nClosedArgs; /* number of args which are closed over. */
+    uint16          nClosedVars; /* number of vars which are closed over. */
     JSPrincipals    *principals;/* principals for this script */
     union {
         /*
@@ -253,21 +279,72 @@ struct JSScript {
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
-#ifdef JS_METHODJIT
-    // Note: the other pointers in this group may be non-NULL only if 
-    // |execPool| is non-NULL.
-    void            *ncode;     /* native code compiled by the method JIT */
-    void            **nmap;     /* maps PCs to native code */
-    js::mjit::JITScript *jit;   /* Extra JIT info */
-# if defined JS_POLYIC
-    js::mjit::ic::PICInfo *pics; /* PICs in this script */
-# endif
-# if defined JS_MONOIC
-    js::mjit::ic::MICInfo *mics; /* MICs in this script. */
-    js::mjit::ic::CallICInfo *callICs; /* CallICs in this script. */
-# endif
 
-    bool isValidJitCode(void *jcode);
+    uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
+
+  public:
+#ifdef JS_METHODJIT
+    // Fast-cached pointers to make calls faster. These are also used to
+    // quickly test whether there is JIT code; a NULL value means no
+    // compilation has been attempted. A JS_UNJITTABLE_SCRIPT value means
+    // compilation failed. Any value is the arity-check entry point.
+    void *jitArityCheckNormal;
+    void *jitArityCheckCtor;
+
+    js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
+    js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
+
+    void **nmapNormal;
+    void **nmapCtor;
+
+    bool hasJITCode() {
+        return jitNormal || jitCtor;
+    }
+
+    void setNativeMap(bool constructing, void **map) {
+        if (constructing)
+            nmapCtor = map;
+        else
+            nmapNormal = map;
+    }
+
+    void **maybeNativeMap(bool constructing) {
+        return constructing ? nmapCtor : nmapNormal;
+    }
+
+    void **nativeMap(bool constructing) {
+        void **nmap = maybeNativeMap(constructing);
+        JS_ASSERT(nmap);
+        return nmap;
+    }
+
+    void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc) {
+        void **nmap = maybeNativeMap(constructing);
+        if (!nmap)
+            return NULL;
+        JS_ASSERT(pc >= code && pc < code + length);
+        return nmap[pc - code];
+    }
+
+    void *nativeCodeForPC(bool constructing, jsbytecode *pc) {
+        void **nmap = nativeMap(constructing);
+        JS_ASSERT(pc >= code && pc < code + length);
+        JS_ASSERT(nmap[pc - code]);
+        return nmap[pc - code];
+    }
+
+    js::mjit::JITScript *getJIT(bool constructing) {
+        return constructing ? jitCtor : jitNormal;
+    }
+
+    JITScriptStatus getJITStatus(bool constructing) {
+        void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;
+        if (addr == NULL)
+            return JITScript_None;
+        if (addr == JS_UNJITTABLE_SCRIPT)
+            return JITScript_Invalid;
+        return JITScript_Valid;
+    }
 #endif
 
     /* Script notes are allocated right after the code. */
@@ -362,16 +439,17 @@ struct JSScript {
         return const_cast<JSScript *>(&emptyScriptConst);
     }
 
-#ifdef JS_METHODJIT
-    /*
-     * Map the given PC to the corresponding native code address.
-     */
-    void *pcToNative(jsbytecode *pc) {
-        JS_ASSERT(nmap);
-        JS_ASSERT(nmap[pc - code]);
-        return nmap[pc - code];
+    uint32 getClosedArg(uint32 index) {
+        JS_ASSERT(index < nClosedArgs);
+        return closedSlots[index];
     }
-#endif
+
+    uint32 getClosedVar(uint32 index) {
+        JS_ASSERT(index < nClosedVars);
+        return closedSlots[nClosedArgs + index];
+    }
+
+    void copyClosedSlotsTo(JSScript *other);
 
   private:
     /*
@@ -447,31 +525,6 @@ js_MarkScriptFilenames(JSRuntime *rt);
 
 extern void
 js_SweepScriptFilenames(JSRuntime *rt);
-
-/*
- * Two successively less primitive ways to make a new JSScript.  The first
- * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
- * js_NewScriptFromCG, calls this optional debugger hook.
- *
- * The js_NewScript function can't know whether the script it creates belongs
- * to a function, or is top-level or eval code, but the debugger wants access
- * to the newly made script's function, if any -- so callers of js_NewScript
- * are responsible for notifying the debugger after successfully creating any
- * kind (function or other) of new JSScript.
- *
- * NB: js_NewScript always creates a new script; it never returns the empty
- * script singleton (JSScript::emptyScript()). Callers who know they can use
- * that read-only singleton are responsible for choosing it instead of calling
- * js_NewScript with length and nsrcnotes equal to 1 and other parameters save
- * cx all zero.
- */
-extern JSScript *
-js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
-             uint32 nobjects, uint32 nupvars, uint32 nregexps,
-             uint32 ntrynotes, uint32 nconsts, uint32 nglobals);
-
-extern JSScript *
-js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
 
 /*
  * New-script-hook calling is factored from js_NewScriptFromCG so that it

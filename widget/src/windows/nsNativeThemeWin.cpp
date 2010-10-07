@@ -485,7 +485,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      if (IsDisabled(aFrame)) {
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+      if (IsDisabled(aFrame, eventState)) {
         aState = TS_DISABLED;
         return NS_OK;
       } else if (IsOpenButton(aFrame) ||
@@ -522,7 +523,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           inputState = INDETERMINATE;
         }
 
-        if (IsDisabled(isXULCheckboxRadio ? aFrame->GetParent() : aFrame)) {
+        PRInt32 eventState = GetContentState(isXULCheckboxRadio ? aFrame->GetParent()
+                                                                : aFrame,
+                                             aWidgetType);
+        if (IsDisabled(aFrame, eventState)) {
           aState = TS_DISABLED;
         } else {
           aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
@@ -542,6 +546,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     }
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE: {
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+
       if (nsUXThemeData::sIsVistaOrLater) {
         /* Note: the NOSCROLL type has a rounded corner in each
          * corner.  The more specific HSCROLL, VSCROLL, HVSCROLL types
@@ -555,13 +561,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
         if (!aFrame) {
           aState = TFS_EDITBORDER_NORMAL;
-        } else if (IsDisabled(aFrame)) {
+        } else if (IsDisabled(aFrame, eventState)) {
           aState = TFS_EDITBORDER_DISABLED;
         } else if (IsReadOnly(aFrame)) {
           /* no special read-only state */
           aState = TFS_EDITBORDER_NORMAL;
         } else {
-          PRInt32 eventState = GetContentState(aFrame, aWidgetType);
           nsIContent* content = aFrame->GetContent();
 
           /* XUL textboxes don't get focused themselves, because they have child
@@ -581,7 +586,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         
         if (!aFrame)
           aState = TS_NORMAL;
-        else if (IsDisabled(aFrame))
+        else if (IsDisabled(aFrame, eventState))
           aState = TS_DISABLED;
         else if (IsReadOnly(aFrame))
           aState = TFS_READONLY;
@@ -623,7 +628,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      if (IsDisabled(aFrame)) {
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+      if (IsDisabled(aFrame, eventState)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -631,7 +637,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState = TS_ACTIVE;
         return NS_OK;
       }
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_HOVER) {
@@ -660,12 +666,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
       aPart = SP_BUTTON;
       aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP)*4;
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
         aState += TS_NORMAL;
-      else if (IsDisabled(aFrame))
+      else if (IsDisabled(aFrame, eventState))
         aState += TS_DISABLED;
       else {
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         nsIFrame *parent = aFrame->GetParent();
         PRInt32 parentState = GetContentState(parent, parent->GetStyleDisplay()->mAppearance);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
@@ -690,12 +696,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
       aPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
               SP_THUMBHOR : SP_THUMBVERT;
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
         aState = TS_NORMAL;
-      else if (IsDisabled(aFrame))
+      else if (IsDisabled(aFrame, eventState))
         aState = TS_DISABLED;
       else {
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the thumb, since the drag is not canceled
                                                 // when you move outside the thumb.
@@ -719,13 +725,13 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_SCALE_THUMB_VERTICAL: {
       aPart = (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL) ?
               TKP_THUMB : TKP_THUMBVERT;
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
         aState = TS_NORMAL;
-      else if (IsDisabled(aFrame)) {
+      else if (IsDisabled(aFrame, eventState)) {
         aState = TKP_DISABLED;
       }
       else {
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the thumb, since the drag is not canceled
                                                 // when you move outside the thumb.
@@ -743,9 +749,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_SPINNER_DOWN_BUTTON: {
       aPart = (aWidgetType == NS_THEME_SPINNER_UP_BUTTON) ?
               SPNP_UP : SPNP_DOWN;
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
         aState = TS_NORMAL;
-      else if (IsDisabled(aFrame))
+      else if (IsDisabled(aFrame, eventState))
         aState = TS_DISABLED;
       else
         aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
@@ -814,8 +821,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState = TS_NORMAL;
         return NS_OK;
       }
-      
-      if (IsDisabled(aFrame)) {
+
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+      if (IsDisabled(aFrame, eventState)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -849,6 +857,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_DROPDOWN: {
       nsIContent* content = aFrame->GetContent();
       PRBool isHTML = content && content->IsHTML();
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
       /* On vista, in HTML, we use CBP_DROPBORDER instead of DROPFRAME for HTML content;
        * this gives us the thin outline in HTML content, instead of the gradient-filled
@@ -858,14 +867,13 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       else
         aPart = CBP_DROPFRAME;
 
-      if (IsDisabled(aFrame)) {
+      if (IsDisabled(aFrame, eventState)) {
         aState = TS_DISABLED;
       } else if (IsReadOnly(aFrame)) {
         aState = TS_NORMAL;
       } else if (IsOpenButton(aFrame)) {
         aState = TS_ACTIVE;
       } else {
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (isHTML && eventState & NS_EVENT_STATE_FOCUS)
           aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
@@ -888,6 +896,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (isHTML || isMenulist)
         aFrame = parentFrame;
 
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       aPart = nsUXThemeData::sIsVistaOrLater ? CBP_DROPMARKER_VISTA : CBP_DROPMARKER;
 
       // For HTML controls with author styling, we should fall
@@ -896,7 +905,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (isHTML && IsWidgetStyled(aFrame->PresContext(), aFrame, NS_THEME_DROPDOWN))
         aPart = CBP_DROPMARKER;
 
-      if (IsDisabled(aFrame)) {
+      if (IsDisabled(aFrame, eventState)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -933,7 +942,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       }
 
       aState = TS_NORMAL;
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
       // Dropdown button active state doesn't need :hover.
       if (eventState & NS_EVENT_STATE_ACTIVE) {
@@ -968,6 +976,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRBool isOpen = PR_FALSE;
       PRBool isHover = PR_FALSE;
       nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
       isTopLevel = IsTopLevelMenu(aFrame);
 
@@ -987,7 +996,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState = MBI_NORMAL;
 
         // the disabled states are offset by 3
-        if (IsDisabled(aFrame))
+        if (IsDisabled(aFrame, eventState))
           aState += 3;
       } else {
         aPart = MENU_POPUPITEM;
@@ -998,7 +1007,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState = MPI_NORMAL;
 
         // the disabled states are offset by 2
-        if (IsDisabled(aFrame))
+        if (IsDisabled(aFrame, eventState))
           aState += 2;
       }
 
@@ -1009,17 +1018,20 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aState = 0;
       return NS_OK;
     case NS_THEME_MENUARROW:
-      aPart = MENU_POPUPSUBMENU;
-      aState = IsDisabled(aFrame) ? MSM_DISABLED : MSM_NORMAL;
-      return NS_OK;
+      {
+        aPart = MENU_POPUPSUBMENU;
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+        aState = IsDisabled(aFrame, eventState) ? MSM_DISABLED : MSM_NORMAL;
+        return NS_OK;
+      }
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
       {
         PRBool isChecked;
-        PRBool isDisabled;
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
+        // NOTE: we can probably use NS_EVENT_STATE_CHECKED
         isChecked = CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
-        isDisabled = CheckBooleanAttr(aFrame, nsWidgetAtoms::disabled);
 
         aPart = MENU_POPUPCHECK;
         aState = MC_CHECKMARKNORMAL;
@@ -1029,7 +1041,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState += 2;
 
         // the disabled states are offset by 1
-        if (isDisabled)
+        if (IsDisabled(aFrame, eventState))
           aState += 1;
 
         return NS_OK;
@@ -1237,10 +1249,10 @@ RENDER_AGAIN:
       if (isChecked)
       {
         int bgState = MCB_NORMAL;
-        PRBool isDisabled = IsDisabled(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
         // the disabled states are offset by 1
-        if (isDisabled)
+        if (IsDisabled(aFrame, eventState))
           bgState += 1;
 
         SIZE checkboxBGSize(GetCheckboxBGSize(theme, hdc));
@@ -2418,7 +2430,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       aFocused = PR_FALSE;
 
       contentState = GetContentState(aFrame, aWidgetType);
-      if (IsDisabled(aFrame))
+      if (IsDisabled(aFrame, contentState))
         aState |= DFCS_INACTIVE;
       else if (IsOpenButton(aFrame))
         aState |= DFCS_PUSHED;
@@ -2478,7 +2490,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         aFocused = PR_TRUE;
       }
 
-      if (IsDisabled(aFrame)) {
+      if (IsDisabled(aFrame, contentState)) {
         aState |= DFCS_INACTIVE;
       } else if (contentState & NS_EVENT_STATE_ACTIVE &&
                  contentState & NS_EVENT_STATE_HOVER) {
@@ -2494,6 +2506,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       PRBool isOpen = PR_FALSE;
       PRBool isContainer = PR_FALSE;
       nsIMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,
       // 1 is a top-level menu item. The state of the item is composed of
@@ -2510,7 +2523,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         isContainer = menuFrame->IsMenu();
       }
 
-      if (IsDisabled(aFrame))
+      if (IsDisabled(aFrame, eventState))
         aState |= DFCS_INACTIVE;
 
       if (isTopLevel) {
@@ -2528,7 +2541,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_MENURADIO:
     case NS_THEME_MENUARROW: {
       aState = 0;
-      if (IsDisabled(aFrame))
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+
+      if (IsDisabled(aFrame, eventState))
         aState |= DFCS_INACTIVE;
       if (IsMenuActive(aFrame, aWidgetType))
         aState |= DFCS_HOT;
@@ -2585,7 +2600,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (isHTML || isMenulist)
         aFrame = parentFrame;
 
-      if (IsDisabled(aFrame)) {
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+
+      if (IsDisabled(aFrame, eventState)) {
         aState |= DFCS_INACTIVE;
         return NS_OK;
       }
@@ -2603,8 +2620,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (isOpen && (isHTML || isMenulist))
         return NS_OK;
 
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
-
       // Dropdown button active state doesn't need :hover.
       if (eventState & NS_EVENT_STATE_ACTIVE)
         aState |= DFCS_PUSHED | DFCS_FLAT;
@@ -2616,7 +2631,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
-      PRInt32 contentState;
+      PRInt32 contentState = GetContentState(aFrame, aWidgetType);
 
       aPart = DFC_SCROLL;
       switch (aWidgetType) {
@@ -2632,12 +2647,11 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
           aState = DFCS_SCROLLRIGHT;
           break;
-      }      
-      
-      if (IsDisabled(aFrame))
+      }
+
+      if (IsDisabled(aFrame, contentState))
         aState |= DFCS_INACTIVE;
       else {
-        contentState = GetContentState(aFrame, aWidgetType);
 #ifndef WINCE
         if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
           aState |= DFCS_PUSHED | DFCS_FLAT;      
@@ -2648,7 +2662,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     }
     case NS_THEME_SPINNER_UP_BUTTON:
     case NS_THEME_SPINNER_DOWN_BUTTON: {
-      PRInt32 contentState;
+      PRInt32 contentState = GetContentState(aFrame, aWidgetType);
 
       aPart = DFC_SCROLL;
       switch (aWidgetType) {
@@ -2658,12 +2672,11 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         case NS_THEME_SPINNER_DOWN_BUTTON:
           aState = DFCS_SCROLLDOWN;
           break;
-      }      
-      
-      if (IsDisabled(aFrame))
+      }
+
+      if (IsDisabled(aFrame, contentState))
         aState |= DFCS_INACTIVE;
       else {
-        contentState = GetContentState(aFrame, aWidgetType);
         if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
           aState |= DFCS_PUSHED;
       }
@@ -2993,9 +3006,10 @@ RENDER_AGAIN:
     case NS_THEME_DROPDOWN_TEXTFIELD: {
       // Draw inset edge
       ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
       // Fill in background
-      if (IsDisabled(aFrame) ||
+      if (IsDisabled(aFrame, eventState) ||
           (aFrame->GetContent()->IsXUL() &&
            IsReadOnly(aFrame)))
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
@@ -3054,14 +3068,17 @@ RENDER_AGAIN:
 
       break;
     case NS_THEME_SCALE_THUMB_VERTICAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL: {
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
-      if (IsDisabled(aFrame)) {
+      if (IsDisabled(aFrame, eventState)) {
         DrawCheckedRect(hdc, widgetRect, COLOR_3DFACE, COLOR_3DHILIGHT,
                         (HBRUSH) COLOR_3DHILIGHT);
       }
 
       break;
+    }
     // Draw scrollbar track background
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL: {

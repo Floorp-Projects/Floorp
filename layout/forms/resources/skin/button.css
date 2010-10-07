@@ -109,10 +109,10 @@ input[type="reset"]:focus > xul|*.button-box {
 
 /* .......... disabled state .......... */
 
-button[disabled="true"],
-input[type="button"][disabled="true"],
-input[type="submit"][disabled="true"],
-input[type="reset"][disabled="true"] {
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled {
   -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
   -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
   -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
@@ -120,10 +120,10 @@ input[type="reset"][disabled="true"] {
   color: GrayText;
 }
 
-button[disabled="true"] > xul|*.button-box,
-input[type="button"][disabled="true"] > xul|*.button-box,
-input[type="submit"][disabled="true"] > xul|*.button-box,
-input[type="reset"][diasbled="true"] > xul|*.button-box {
+button:disabled > xul|*.button-box,
+input[type="button"]:disabled > xul|*.button-box,
+input[type="submit"]:disabled > xul|*.button-box,
+input[type="reset"]:disabled > xul|*.button-box {
   padding: 0px 4px 1px 3px !important;
 }
 

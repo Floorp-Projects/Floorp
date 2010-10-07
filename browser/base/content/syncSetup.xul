@@ -207,6 +207,7 @@
         <label value="&syncKeyEntry.label;"
                accesskey="&syncKeyEntry.accesskey;"
                control="weavePassphrase"/>
+        <spacer flex="1" />
         <label id="generatePassphraseButton"
                value="&syncKeyGenerate.label;"
                class="text-link inline-link"
@@ -217,22 +218,40 @@
                onkeyup="gSyncSetup.onPassphraseChange()"
                onchange="gSyncSetup.onPassphraseChange()"
                onfocus="this.select()"/>
-      <hbox id="passphraseFeedbackRow" align="center" hidden="true">
-        <spacer/>
-        <hbox>
-          <image class="statusIcon"/>
-          <label class="status" value=" "/>
+
+      <vbox id="passphraseFeedback" pack="center">
+        <hbox id="passphraseFeedbackRow" hidden="true" align="center">
+          <spacer/>
+          <hbox>
+            <image class="statusIcon"/>
+            <label class="status" value=" "/>
+          </hbox>
         </hbox>
-      </hbox>
+
+        <vbox id="passphraseStrengthRow" hidden="true" pack="end">
+          <hbox>
+            <label id="passphraseStrengthLabel"
+                   control="passphraseStrength"
+                   value="&syncKeyStrength.label;"/>
+            <progressmeter id="passphraseStrength"
+                           aria-labelledby="passphraseStrengthLabel"
+                           max="128"
+                           value="0"
+                           flex="1"/>
+          </hbox>
+          <hbox align="right" flex="1">
+            <label class="text-link inline-link"
+                   onclick="event.stopPropagation();
+                            gSyncUtils.openSyncKeyHelp();"
+                   value="&syncKeyHelp.label;"/>
+          </hbox>
+        </vbox>
+      </vbox>
     </groupbox>
 
     <groupbox align="center">
       <description>&syncKeyBackup.description;</description>
       <hbox>
-        <button label="&button.syncKeyBackup.email.label;"
-                accesskey="&button.syncKeyBackup.email.accesskey;"
-                oncommand="gSyncUtils.passphraseEmail('weavePassphrase');
-                           gSyncSetup.afterBackup();"/>
         <button label="&button.syncKeyBackup.print.label;"
                 accesskey="&button.syncKeyBackup.print.accesskey;"
                 oncommand="gSyncUtils.passphrasePrint('weavePassphrase');

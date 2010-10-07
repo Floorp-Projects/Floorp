@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Doug Turner <dougt@meer.net>  (Original Author)
  *  Nino D'Aversa <ninodaversa@gmail.com>
+ *  Mike Kristoffersen <moz@mikek.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,16 +41,122 @@
 #include "nsDOMClassInfo.h"
 
 ////////////////////////////////////////////////////
+// nsGeoPositionAddress
+////////////////////////////////////////////////////
+
+nsGeoPositionAddress::nsGeoPositionAddress(const nsAString &aStreetNumber,
+                                           const nsAString &aStreet,
+                                           const nsAString &aPremises,
+                                           const nsAString &aCity,
+                                           const nsAString &aCounty,
+                                           const nsAString &aRegion,
+                                           const nsAString &aCountry,
+                                           const nsAString &aCountryCode,
+                                           const nsAString &aPostalCode)
+    : mStreetNumber(aStreetNumber)
+    , mStreet(aStreet)
+    , mPremises(aPremises)
+    , mCity(aCity)
+    , mCounty(aCounty)
+    , mRegion(aRegion)
+    , mCountry(aCountry)
+    , mCountryCode(aCountryCode)
+    , mPostalCode(aPostalCode)
+{
+}
+
+nsGeoPositionAddress::~nsGeoPositionAddress()
+{
+}
+
+DOMCI_DATA(GeoPositionAddress, nsGeoPositionAddress)
+
+NS_INTERFACE_MAP_BEGIN(nsGeoPositionAddress)
+NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionAddress)
+NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionAddress)
+NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoPositionAddress)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_THREADSAFE_ADDREF(nsGeoPositionAddress)
+NS_IMPL_THREADSAFE_RELEASE(nsGeoPositionAddress)
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetStreetNumber(nsAString & aStreetNumber)
+{
+  aStreetNumber = mStreetNumber;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetStreet(nsAString & aStreet)
+{
+  aStreet = mStreet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetPremises(nsAString & aPremises)
+{
+  aPremises = mPremises;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetCity(nsAString & aCity)
+{
+  aCity = mCity;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetCounty(nsAString & aCounty)
+{
+  aCounty = mCounty;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetRegion(nsAString & aRegion)
+{
+  aRegion = mRegion;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetCountry(nsAString & aCountry)
+{
+  aCountry = mCountry;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetCountryCode(nsAString & aCountryCode)
+{
+  aCountryCode = mCountryCode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeoPositionAddress::GetPostalCode(nsAString & aPostalCode)
+{
+  aPostalCode = mPostalCode;
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////
 // nsGeoPositionCoords
 ////////////////////////////////////////////////////
 nsGeoPositionCoords::nsGeoPositionCoords(double aLat, double aLong,
                                          double aAlt, double aHError,
                                          double aVError, double aHeading,
-                                         double aSpeed) :
-    mLat(aLat), mLong(aLong),
-    mAlt(aAlt), mHError(aHError),
-    mVError(aVError), mHeading(aHeading),
-    mSpeed(aSpeed)
+                                         double aSpeed)
+  : mLat(aLat)
+  , mLong(aLong)
+  , mAlt(aAlt)
+  , mHError(aHError)
+  , mVError(aVError)
+  , mHeading(aHeading)
+  , mSpeed(aSpeed)
 {
 }
 
@@ -133,7 +240,23 @@ nsGeoPosition::nsGeoPosition(double aLat, double aLong,
                                       aSpeed);
     NS_ASSERTION(mCoords, "null mCoords in nsGeoPosition");
 }
-  
+
+nsGeoPosition::nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
+                             long long aTimestamp) :
+    mCoords(aCoords),
+    mTimestamp(aTimestamp)
+{
+}
+
+nsGeoPosition::nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
+                             nsIDOMGeoPositionAddress *aAddress,
+                             DOMTimeStamp aTimestamp) :
+  mTimestamp(aTimestamp),
+  mCoords(aCoords),
+  mAddress(aAddress)
+{
+}
+
 nsGeoPosition::~nsGeoPosition()
 {
 }
@@ -166,7 +289,7 @@ nsGeoPosition::GetCoords(nsIDOMGeoPositionCoords * *aCoords)
 NS_IMETHODIMP
 nsGeoPosition::GetAddress(nsIDOMGeoPositionAddress** aAddress)
 {
-  *aAddress = nsnull;
+  NS_IF_ADDREF(*aAddress = mAddress);
   return NS_OK;
 }
 

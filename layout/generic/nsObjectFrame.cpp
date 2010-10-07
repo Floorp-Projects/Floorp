@@ -459,7 +459,10 @@ public:
 
   PRBool UseLayers()
   {
-    return (mUsePluginLayers &&
+    PRBool useAsyncRendering;
+    return (mInstance &&
+            NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
+            useAsyncRendering &&
             (!mPluginWindow ||
              mPluginWindow->type == NPWindowTypeDrawable));
   }
@@ -593,7 +596,6 @@ private:
 
   nsRefPtr<gfxASurface> mLayerSurface;
   PRPackedBool          mWaitingForPaint;
-  PRPackedBool          mUsePluginLayers;
 };
 
   // Mac specific code to fix up port position and clip
@@ -2787,13 +2789,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #endif
 
   mWaitingForPaint = PR_FALSE;
-  mUsePluginLayers =
-    nsContentUtils::GetBoolPref("mozilla.plugins.use_layers",
-#ifdef MOZ_X11
-                                PR_TRUE); // Lets test plugin layers on X11 first
-#else
-                                PR_FALSE); // Lets test plugin layers on X11 first
-#endif
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
@@ -2879,10 +2874,6 @@ nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
   NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set once!");
 
   mInstance = aInstance;
-  PRBool useAsyncPainting = PR_FALSE;
-  if (mInstance &&
-      NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncPainting)))
-      mUsePluginLayers = useAsyncPainting;
 
   return NS_OK;
 }

@@ -411,7 +411,7 @@ public:
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
-  virtual nsresult Init() = 0;
+  virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor) = 0;
 
   // Resets all state related to decoding, emptying all buffers etc.
   virtual nsresult ResetDecode();

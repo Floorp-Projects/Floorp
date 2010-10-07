@@ -1,0 +1,10 @@
+i = immi -1;
+j = immi 3;
+k = immi 6;
+x = immd 1.1;
+y = immd 3.3;
+z = immd 4.4;
+
+res = calld callid1 cdecl i x y j k z
+retd res
+

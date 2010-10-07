@@ -2441,10 +2441,18 @@ ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
 - (void)setFill
 {
   CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  CGPatternDrawPatternCallback cb = [mWindow drawsContentsIntoWindowFrame] ?
+  CGPatternDrawPatternCallback cb;
+  float patternWidth;
+  NSView* view = [[[mWindow contentView] subviews] lastObject];
+  if (view && [view isKindOfClass:[ChildView class]] && [(ChildView*)view isUsingOpenGL]) {
+    cb = &RepeatedPatternDrawCallback;
+    patternWidth = sPatternWidth;
+  } else {
+    cb = [mWindow drawsContentsIntoWindowFrame] ?
                                       &ContentPatternDrawCallback : &RepeatedPatternDrawCallback;
+    patternWidth = [mWindow drawsContentsIntoWindowFrame] ? [mWindow frame].size.width : sPatternWidth;
+  }
   CGPatternCallbacks callbacks = {0, cb, NULL};
-  float patternWidth = [mWindow drawsContentsIntoWindowFrame] ? [mWindow frame].size.width : sPatternWidth;
   CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height), 
                                          CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
                                          kCGPatternTilingConstantSpacing, true, &callbacks);

@@ -49,9 +49,10 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(b38efb33-ec68-487a-bf9b-2920425fa408)]
+[scriptable, uuid(58db2166-36fc-482c-a9f8-84ad262537b2)]
 interface nsIDOMHTMLFieldSetElement : nsIDOMHTMLElement
 {
+           attribute boolean                disabled;
   readonly attribute nsIDOMHTMLFormElement  form;
            attribute DOMString              name;
 

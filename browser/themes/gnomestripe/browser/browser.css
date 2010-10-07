@@ -473,11 +473,11 @@ menuitem:not([type]) {
 }
 
 #bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbarFolderMenu {
+#BMB_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
 }
 
-#unsortedBookmarksFolderMenu {
+#BMB_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");  
 }
 
@@ -964,9 +964,18 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
   background-color: transparent;
 }
 
-.tab-progress[busy][stalled][value="0"],
-#urlbar-progress[busy][stalled][value="0"] {
-  /* TODO: add connecting state (bug 596812) */
+#urlbar-progress[value="0"] > .progress-remainder {
+  background-image: -moz-linear-gradient(left, rgba(255,255,255,0), rgb(255,255,255), rgba(255,255,255,0)) !important;
+  background-size: 10%;
+  background-repeat: no-repeat;
+  background-position: right;
+  -moz-transition-property: background-position;
+  -moz-transition-duration: 2s;
+  -moz-transition-timing-function: linear;
+}
+
+#urlbar-progress[value="0"][slideback] > .progress-remainder {
+  background-position: left;
 }
 
 .tab-progress > .progress-bar,
@@ -1389,28 +1398,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-color: Window;
 }
 
-#status-bar {
-  border-top: none;
-}
-
-statusbarpanel#statusbar-display {
-  -moz-padding-start: 0;
-}
-
-#security-button[level="high"],
-#security-button[level="low"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-
-#security-button[level="broken"] {
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-#page-report-button {
-  list-style-image: url("chrome://browser/skin/Info.png");
-  width: 20px;
-}
-
 /* Throbber */
 #navigator-throbber {
   width: 16px;
@@ -1504,7 +1491,11 @@ statusbarpanel#statusbar-display {
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-linear-gradient(rgba(255,0,0,.5), rgba(255,0,0,.5)) !important;
+  background-image: -moz-radial-gradient(40% 3px, circle farthest-corner, rgba(233,242,252,1) 2%, rgba(172,206,255,.75) 25%, rgba(87,151,201,.5) 40%, rgba(87,151,201,0) 80%);
+}
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]):hover {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.6) 2px, hsla(0,0%,75%,.2) 50%),
+                    -moz-radial-gradient(40% 3px, circle farthest-corner, rgba(233,242,252,1) 2%, rgba(172,206,255,.75) 25%, rgba(87,151,201,.5) 40%, rgba(87,151,201,0) 80%);
 }
 
 .tabbrowser-tab[pinned] {
@@ -1677,11 +1668,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   display: -moz-box; /* display chevron icon in text mode */
 }
 
-/* Popup blocking dialog */
-#pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
-  visibility: collapse;
-}
-
 #download-monitor {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
@@ -1783,4 +1769,18 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
+}
+
+/* Vertically-center the statusbar compatibility shim, because
+   toolbars, even in small-icon mode, are a bit taller than 
+   statusbars. */
+#status-bar {
+  margin-top: .3em;
+}
+
+/* Remove all borders from statusbarpanel children of
+   the statusbar. */
+#status-bar > statusbarpanel {
+  border-width: 0;
+  -moz-appearance: none;
 }

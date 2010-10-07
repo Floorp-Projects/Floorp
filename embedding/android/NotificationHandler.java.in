@@ -82,12 +82,13 @@ public class NotificationHandler
 
         Log.i("GeckoAppJava", "Handle notification ID " + notificationID);
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.cancel(notificationID);
-
         if (App.mAppContext != null) {
             // This should call the observer, if any
             App.mAppContext.handleNotification(action, alertName, alertCookie);
+        } else {
+            // The app is not running, just cancel this notification
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.cancel(notificationID);
         }
 
         if (App.ACTION_ALERT_CLICK.equals(action)) {

@@ -35,7 +35,7 @@ function run_test() {
     do_check_eq(Svc.Bookmark.getKeywordForBookmark(id), fxrecord.keyword);
 
     _("Have the store create a new record object. Verify that it has the same data.");
-    let newrecord = store.createRecord(fxrecord.id);
+    let newrecord = store.createRecord(fxrecord.id, "http://fake/uri");
     for each (let property in ["type", "bmkUri", "title", "keyword",
                                "parentName", "parentid"])
       do_check_eq(newrecord[property], fxrecord[property]);      

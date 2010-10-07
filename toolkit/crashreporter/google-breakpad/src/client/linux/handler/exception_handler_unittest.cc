@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/mman.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
@@ -41,6 +42,7 @@
 #include "common/linux/eintr_wrapper.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
+#include "google_breakpad/processor/minidump.h"
 #include "breakpad_googletest_includes.h"
 
 using namespace google_breakpad;
@@ -126,6 +128,443 @@ TEST(ExceptionHandlerTest, ChildCrash) {
   ASSERT_EQ(stat(minidump_filename.c_str(), &st), 0);
   ASSERT_GT(st.st_size, 0u);
   unlink(minidump_filename.c_str());
+  free(filename);
+}
+
+// Test that memory around the instruction pointer is written
+// to the dump as a MinidumpMemoryRegion.
+TEST(ExceptionHandlerTest, InstructionPointerMemory) {
+  int fds[2];
+  ASSERT_NE(pipe(fds), -1);
+
+  // These are defined here so the parent can use them to check the
+  // data from the minidump afterwards.
+  const u_int32_t kMemorySize = 256;  // bytes
+  const int kOffset = kMemorySize / 2;
+  // This crashes with SIGILL on x86/x86-64/arm.
+  const unsigned char instructions[] = { 0xff, 0xff, 0xff, 0xff };
+
+  const pid_t child = fork();
+  if (child == 0) {
+    close(fds[0]);
+    ExceptionHandler handler("/tmp", NULL, DoneCallback, (void*) fds[1],
+                             true);
+    // Get some executable memory.
+    char* memory =
+      reinterpret_cast<char*>(mmap(NULL,
+                                   kMemorySize,
+                                   PROT_READ | PROT_WRITE | PROT_EXEC,
+                                   MAP_PRIVATE | MAP_ANON,
+                                   -1,
+                                   0));
+    if (!memory)
+      exit(0);
+
+    // Write some instructions that will crash. Put them in the middle
+    // of the block of memory, because the minidump should contain 128
+    // bytes on either side of the instruction pointer.
+    memcpy(memory + kOffset, instructions, sizeof(instructions));
+    
+    // Now execute the instructions, which should crash.
+    typedef void (*void_function)(void);
+    void_function memory_function =
+      reinterpret_cast<void_function>(memory + kOffset);
+    memory_function();
+  }
+  close(fds[1]);
+
+  int status;
+  ASSERT_NE(HANDLE_EINTR(waitpid(child, &status, 0)), -1);
+  ASSERT_TRUE(WIFSIGNALED(status));
+  ASSERT_EQ(WTERMSIG(status), SIGILL);
+
+  struct pollfd pfd;
+  memset(&pfd, 0, sizeof(pfd));
+  pfd.fd = fds[0];
+  pfd.events = POLLIN | POLLERR;
+
+  const int r = HANDLE_EINTR(poll(&pfd, 1, 0));
+  ASSERT_EQ(r, 1);
+  ASSERT_TRUE(pfd.revents & POLLIN);
+
+  uint32_t len;
+  ASSERT_EQ(read(fds[0], &len, sizeof(len)), (ssize_t)sizeof(len));
+  ASSERT_LT(len, (uint32_t)2048);
+  char* filename = reinterpret_cast<char*>(malloc(len + 1));
+  ASSERT_EQ(read(fds[0], filename, len), len);
+  filename[len] = 0;
+  close(fds[0]);
+
+  const std::string minidump_filename = std::string("/tmp/") + filename +
+                                        ".dmp";
+
+  struct stat st;
+  ASSERT_EQ(stat(minidump_filename.c_str(), &st), 0);
+  ASSERT_GT(st.st_size, 0u);
+
+  // Read the minidump. Locate the exception record and the
+  // memory list, and then ensure that there is a memory region
+  // in the memory list that covers the instruction pointer from
+  // the exception record.
+  Minidump minidump(minidump_filename);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpException* exception = minidump.GetException();
+  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
+  ASSERT_TRUE(exception);
+  ASSERT_TRUE(memory_list);
+  ASSERT_LT(0, memory_list->region_count());
+
+  MinidumpContext* context = exception->GetContext();
+  ASSERT_TRUE(context);
+
+  u_int64_t instruction_pointer;
+  switch (context->GetContextCPU()) {
+  case MD_CONTEXT_X86:
+    instruction_pointer = context->GetContextX86()->eip;
+    break;
+  case MD_CONTEXT_AMD64:
+    instruction_pointer = context->GetContextAMD64()->rip;
+    break;
+  case MD_CONTEXT_ARM:
+    instruction_pointer = context->GetContextARM()->iregs[15];
+    break;
+  default:
+    FAIL() << "Unknown context CPU: " << context->GetContextCPU();
+    break;
+  }
+
+  MinidumpMemoryRegion* region =
+    memory_list->GetMemoryRegionForAddress(instruction_pointer);
+  ASSERT_TRUE(region);
+
+  EXPECT_EQ(kMemorySize, region->GetSize());
+  const u_int8_t* bytes = region->GetMemory();
+  ASSERT_TRUE(bytes);
+
+  u_int8_t prefix_bytes[kOffset];
+  u_int8_t suffix_bytes[kMemorySize - kOffset - sizeof(instructions)];
+  memset(prefix_bytes, 0, sizeof(prefix_bytes));
+  memset(suffix_bytes, 0, sizeof(suffix_bytes));
+  EXPECT_TRUE(memcmp(bytes, prefix_bytes, sizeof(prefix_bytes)) == 0);
+  EXPECT_TRUE(memcmp(bytes + kOffset, instructions, sizeof(instructions)) == 0);
+  EXPECT_TRUE(memcmp(bytes + kOffset + sizeof(instructions),
+                     suffix_bytes, sizeof(suffix_bytes)) == 0);
+
+  unlink(minidump_filename.c_str());
+  free(filename);
+}
+
+// Test that the memory region around the instruction pointer is
+// bounded correctly on the low end.
+TEST(ExceptionHandlerTest, InstructionPointerMemoryMinBound) {
+  int fds[2];
+  ASSERT_NE(pipe(fds), -1);
+
+  // These are defined here so the parent can use them to check the
+  // data from the minidump afterwards.
+  const u_int32_t kMemorySize = 256;  // bytes
+  const int kOffset = 0;
+  // This crashes with SIGILL on x86/x86-64/arm.
+  const unsigned char instructions[] = { 0xff, 0xff, 0xff, 0xff };
+
+  const pid_t child = fork();
+  if (child == 0) {
+    close(fds[0]);
+    ExceptionHandler handler("/tmp", NULL, DoneCallback, (void*) fds[1],
+                             true);
+    // Get some executable memory.
+    char* memory =
+      reinterpret_cast<char*>(mmap(NULL,
+                                   kMemorySize,
+                                   PROT_READ | PROT_WRITE | PROT_EXEC,
+                                   MAP_PRIVATE | MAP_ANON,
+                                   -1,
+                                   0));
+    if (!memory)
+      exit(0);
+
+    // Write some instructions that will crash. Put them in the middle
+    // of the block of memory, because the minidump should contain 128
+    // bytes on either side of the instruction pointer.
+    memcpy(memory + kOffset, instructions, sizeof(instructions));
+    
+    // Now execute the instructions, which should crash.
+    typedef void (*void_function)(void);
+    void_function memory_function =
+      reinterpret_cast<void_function>(memory + kOffset);
+    memory_function();
+  }
+  close(fds[1]);
+
+  int status;
+  ASSERT_NE(HANDLE_EINTR(waitpid(child, &status, 0)), -1);
+  ASSERT_TRUE(WIFSIGNALED(status));
+  ASSERT_EQ(WTERMSIG(status), SIGILL);
+
+  struct pollfd pfd;
+  memset(&pfd, 0, sizeof(pfd));
+  pfd.fd = fds[0];
+  pfd.events = POLLIN | POLLERR;
+
+  const int r = HANDLE_EINTR(poll(&pfd, 1, 0));
+  ASSERT_EQ(r, 1);
+  ASSERT_TRUE(pfd.revents & POLLIN);
+
+  uint32_t len;
+  ASSERT_EQ(read(fds[0], &len, sizeof(len)), (ssize_t)sizeof(len));
+  ASSERT_LT(len, (uint32_t)2048);
+  char* filename = reinterpret_cast<char*>(malloc(len + 1));
+  ASSERT_EQ(read(fds[0], filename, len), len);
+  filename[len] = 0;
+  close(fds[0]);
+
+  const std::string minidump_filename = std::string("/tmp/") + filename +
+                                        ".dmp";
+
+  struct stat st;
+  ASSERT_EQ(stat(minidump_filename.c_str(), &st), 0);
+  ASSERT_GT(st.st_size, 0u);
+
+  // Read the minidump. Locate the exception record and the
+  // memory list, and then ensure that there is a memory region
+  // in the memory list that covers the instruction pointer from
+  // the exception record.
+  Minidump minidump(minidump_filename);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpException* exception = minidump.GetException();
+  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
+  ASSERT_TRUE(exception);
+  ASSERT_TRUE(memory_list);
+  ASSERT_LT(0, memory_list->region_count());
+
+  MinidumpContext* context = exception->GetContext();
+  ASSERT_TRUE(context);
+
+  u_int64_t instruction_pointer;
+  switch (context->GetContextCPU()) {
+  case MD_CONTEXT_X86:
+    instruction_pointer = context->GetContextX86()->eip;
+    break;
+  case MD_CONTEXT_AMD64:
+    instruction_pointer = context->GetContextAMD64()->rip;
+    break;
+  case MD_CONTEXT_ARM:
+    instruction_pointer = context->GetContextARM()->iregs[15];
+    break;
+  default:
+    FAIL() << "Unknown context CPU: " << context->GetContextCPU();
+    break;
+  }
+
+  MinidumpMemoryRegion* region =
+    memory_list->GetMemoryRegionForAddress(instruction_pointer);
+  ASSERT_TRUE(region);
+
+  EXPECT_EQ(kMemorySize / 2, region->GetSize());
+  const u_int8_t* bytes = region->GetMemory();
+  ASSERT_TRUE(bytes);
+
+  u_int8_t suffix_bytes[kMemorySize / 2 - sizeof(instructions)];
+  memset(suffix_bytes, 0, sizeof(suffix_bytes));
+  EXPECT_TRUE(memcmp(bytes + kOffset, instructions, sizeof(instructions)) == 0);
+  EXPECT_TRUE(memcmp(bytes + kOffset + sizeof(instructions),
+                     suffix_bytes, sizeof(suffix_bytes)) == 0);
+
+  unlink(minidump_filename.c_str());
+  free(filename);
+}
+
+// Test that the memory region around the instruction pointer is
+// bounded correctly on the high end.
+TEST(ExceptionHandlerTest, InstructionPointerMemoryMaxBound) {
+  int fds[2];
+  ASSERT_NE(pipe(fds), -1);
+
+  // These are defined here so the parent can use them to check the
+  // data from the minidump afterwards.
+  // Use 4k here because the OS will hand out a single page even
+  // if a smaller size is requested, and this test wants to
+  // test the upper bound of the memory range.
+  const u_int32_t kMemorySize = 4096;  // bytes
+  // This crashes with SIGILL on x86/x86-64/arm.
+  const unsigned char instructions[] = { 0xff, 0xff, 0xff, 0xff };
+  const int kOffset = kMemorySize - sizeof(instructions);
+
+  const pid_t child = fork();
+  if (child == 0) {
+    close(fds[0]);
+    ExceptionHandler handler("/tmp", NULL, DoneCallback, (void*) fds[1],
+                             true);
+    // Get some executable memory.
+    char* memory =
+      reinterpret_cast<char*>(mmap(NULL,
+                                   kMemorySize,
+                                   PROT_READ | PROT_WRITE | PROT_EXEC,
+                                   MAP_PRIVATE | MAP_ANON,
+                                   -1,
+                                   0));
+    if (!memory)
+      exit(0);
+
+    // Write some instructions that will crash. Put them in the middle
+    // of the block of memory, because the minidump should contain 128
+    // bytes on either side of the instruction pointer.
+    memcpy(memory + kOffset, instructions, sizeof(instructions));
+    
+    // Now execute the instructions, which should crash.
+    typedef void (*void_function)(void);
+    void_function memory_function =
+      reinterpret_cast<void_function>(memory + kOffset);
+    memory_function();
+  }
+  close(fds[1]);
+
+  int status;
+  ASSERT_NE(HANDLE_EINTR(waitpid(child, &status, 0)), -1);
+  ASSERT_TRUE(WIFSIGNALED(status));
+  ASSERT_EQ(WTERMSIG(status), SIGILL);
+
+  struct pollfd pfd;
+  memset(&pfd, 0, sizeof(pfd));
+  pfd.fd = fds[0];
+  pfd.events = POLLIN | POLLERR;
+
+  const int r = HANDLE_EINTR(poll(&pfd, 1, 0));
+  ASSERT_EQ(r, 1);
+  ASSERT_TRUE(pfd.revents & POLLIN);
+
+  uint32_t len;
+  ASSERT_EQ(read(fds[0], &len, sizeof(len)), (ssize_t)sizeof(len));
+  ASSERT_LT(len, (uint32_t)2048);
+  char* filename = reinterpret_cast<char*>(malloc(len + 1));
+  ASSERT_EQ(read(fds[0], filename, len), len);
+  filename[len] = 0;
+  close(fds[0]);
+
+  const std::string minidump_filename = std::string("/tmp/") + filename +
+                                        ".dmp";
+
+  struct stat st;
+  ASSERT_EQ(stat(minidump_filename.c_str(), &st), 0);
+  ASSERT_GT(st.st_size, 0u);
+
+  // Read the minidump. Locate the exception record and the
+  // memory list, and then ensure that there is a memory region
+  // in the memory list that covers the instruction pointer from
+  // the exception record.
+  Minidump minidump(minidump_filename);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpException* exception = minidump.GetException();
+  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
+  ASSERT_TRUE(exception);
+  ASSERT_TRUE(memory_list);
+  ASSERT_LT(0, memory_list->region_count());
+
+  MinidumpContext* context = exception->GetContext();
+  ASSERT_TRUE(context);
+
+  u_int64_t instruction_pointer;
+  switch (context->GetContextCPU()) {
+  case MD_CONTEXT_X86:
+    instruction_pointer = context->GetContextX86()->eip;
+    break;
+  case MD_CONTEXT_AMD64:
+    instruction_pointer = context->GetContextAMD64()->rip;
+    break;
+  case MD_CONTEXT_ARM:
+    instruction_pointer = context->GetContextARM()->iregs[15];
+    break;
+  default:
+    FAIL() << "Unknown context CPU: " << context->GetContextCPU();
+    break;
+  }
+
+  MinidumpMemoryRegion* region =
+    memory_list->GetMemoryRegionForAddress(instruction_pointer);
+  ASSERT_TRUE(region);
+
+  const size_t kPrefixSize = 128;  // bytes
+  EXPECT_EQ(kPrefixSize + sizeof(instructions), region->GetSize());
+  const u_int8_t* bytes = region->GetMemory();
+  ASSERT_TRUE(bytes);
+
+  u_int8_t prefix_bytes[kPrefixSize];
+  memset(prefix_bytes, 0, sizeof(prefix_bytes));
+  EXPECT_TRUE(memcmp(bytes, prefix_bytes, sizeof(prefix_bytes)) == 0);
+  EXPECT_TRUE(memcmp(bytes + kPrefixSize,
+                     instructions, sizeof(instructions)) == 0);
+
+  unlink(minidump_filename.c_str());
+  free(filename);
+}
+
+// Ensure that an extra memory block doesn't get added when the
+// instruction pointer is not in mapped memory.
+TEST(ExceptionHandlerTest, InstructionPointerMemoryNullPointer) {
+  int fds[2];
+  ASSERT_NE(pipe(fds), -1);
+
+
+  const pid_t child = fork();
+  if (child == 0) {
+    close(fds[0]);
+    ExceptionHandler handler("/tmp", NULL, DoneCallback, (void*) fds[1],
+                             true);
+    // Try calling a NULL pointer.
+    typedef void (*void_function)(void);
+    void_function memory_function =
+      reinterpret_cast<void_function>(NULL);
+    memory_function();
+  }
+  close(fds[1]);
+
+  int status;
+  ASSERT_NE(HANDLE_EINTR(waitpid(child, &status, 0)), -1);
+  ASSERT_TRUE(WIFSIGNALED(status));
+  ASSERT_EQ(WTERMSIG(status), SIGSEGV);
+
+  struct pollfd pfd;
+  memset(&pfd, 0, sizeof(pfd));
+  pfd.fd = fds[0];
+  pfd.events = POLLIN | POLLERR;
+
+  const int r = HANDLE_EINTR(poll(&pfd, 1, 0));
+  ASSERT_EQ(r, 1);
+  ASSERT_TRUE(pfd.revents & POLLIN);
+
+  uint32_t len;
+  ASSERT_EQ(read(fds[0], &len, sizeof(len)), (ssize_t)sizeof(len));
+  ASSERT_LT(len, (uint32_t)2048);
+  char* filename = reinterpret_cast<char*>(malloc(len + 1));
+  ASSERT_EQ(read(fds[0], filename, len), len);
+  filename[len] = 0;
+  close(fds[0]);
+
+  const std::string minidump_filename = std::string("/tmp/") + filename +
+                                        ".dmp";
+
+  struct stat st;
+  ASSERT_EQ(stat(minidump_filename.c_str(), &st), 0);
+  ASSERT_GT(st.st_size, 0u);
+
+  // Read the minidump. Locate the exception record and the
+  // memory list, and then ensure that there is a memory region
+  // in the memory list that covers the instruction pointer from
+  // the exception record.
+  Minidump minidump(minidump_filename);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpException* exception = minidump.GetException();
+  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
+  ASSERT_TRUE(exception);
+  ASSERT_TRUE(memory_list);
+  ASSERT_EQ((unsigned int)1, memory_list->region_count());
+
+  unlink(minidump_filename.c_str());
+  free(filename);
 }
 
 static const unsigned kControlMsgSize =

@@ -40,28 +40,21 @@
  * mouses over a link.  See bug 587908.
  */
 
-const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/browser_overLinkInLocationBar.html";
-
 var gTestIter;
 
 // TESTS //////////////////////////////////////////////////////////////////////
 
 function smokeTestGenerator() {
-  let tab = openTestPage();
-  yield;
+  if (ensureOverLinkHidden())
+    yield;
 
-  let contentDoc = gBrowser.contentDocument;
-  let link = contentDoc.getElementById("link");
-
-  mouseover(link);
+  setOverLink("http://example.com/");
   yield;
   checkURLBar(true);
 
-  mouseout(link);
+  setOverLink("");
   yield;
   checkURLBar(false);
-
-  gBrowser.removeTab(tab);
 }
 
 function test() {
@@ -112,66 +105,36 @@ function checkURLBar(shouldShowOverLink) {
 }
 
 /**
- * Opens the test URL in a new foreground tab.  When the page has finished
- * loading, the test iterator is advanced, so you should yield after calling.
+ * Sets the over-link.  This assumes that aStr will cause the over-link to fade
+ * in or out.  When its transition has finished, the test iterator is
+ * incremented, so you should yield after calling.
  *
- * @return The opened <tab>.
+ * @param aStr
+ *        The over-link will be set to this string or cleared if this is falsey.
  */
-function openTestPage() {
-  gBrowser.addEventListener("load", function onLoad(event) {
-    if (event.target.URL == TEST_URL) {
-      gBrowser.removeEventListener("load", onLoad, true);
-      cont();
-    }
-  }, true);
-  return gBrowser.loadOneTab(TEST_URL, { inBackground: false });
-}
-
-/**
- * Sends a mouseover event to a given anchor node.  When the over-link fade-in
- * transition has completed, the test iterator is advanced, so you should yield
- * after calling.
- *
- * @param anchorNode
- *        An anchor node.
- */
-function mouseover(anchorNode) {
-  mouseAnchorNode(anchorNode, true);
-}
-
-/**
- * Sends a mouseout event to a given anchor node.  When the over-link fade-out
- * transition has completed, the test iterator is advanced, so you should yield
- * after calling.
- *
- * @param anchorNode
- *        An anchor node.
- */
-function mouseout(anchorNode) {
-  mouseAnchorNode(anchorNode, false);
-}
-
-/**
- * Helper for mouseover and mouseout.  Sends a mouse event to a given node.
- * When the over-link fade-in or -out transition has completed, the test
- * iterator is advanced, so you should yield after calling.
- *
- * @param node
- *        An anchor node in a content document.
- * @param over
- *        True for "mouseover" and false for "mouseout".
- */
-function mouseAnchorNode(node, over) {
+function setOverLink(aStr) {
   let overLink = gURLBar._overLinkBox;
   overLink.addEventListener("transitionend", function onTrans(event) {
-    if (event.target == overLink) {
+    if (event.target == overLink && event.propertyName == "opacity") {
       overLink.removeEventListener("transitionend", onTrans, false);
       cont();
     }
   }, false);
-  let offset = over ? 0 : -1;
-  let eventType = over ? "mouseover" : "mouseout";
-  EventUtils.synthesizeMouse(node, offset, offset,
-                             { type: eventType, clickCount: 0 },
-                             node.ownerDocument.defaultView);
+  gURLBar.setOverLink(aStr);
+}
+
+/**
+ * If the over-link is hidden, returns false.  Otherwise, hides the overlink and
+ * returns true.  When the overlink is hidden, the test iterator is incremented,
+ * so if this function returns true, you should yield after calling.
+ *
+ * @return True if you should yield and calling and false if not.
+ */
+function ensureOverLinkHidden() {
+  let overLink = gURLBar._overLinkBox;
+  if (window.getComputedStyle(overLink, null).opacity == 0)
+    return false;
+
+  setOverLink("");
+  return true;
 }

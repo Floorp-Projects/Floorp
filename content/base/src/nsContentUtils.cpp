@@ -269,12 +269,6 @@ PRBool nsContentUtils::sInitialized = PR_FALSE;
 nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>
   *nsContentUtils::sPrefCallbackTable = nsnull;
 
-#ifdef MOZ_IPC
-#ifdef ANDROID
-nsFrameLoader *nsContentUtils::sActiveFrameLoader = nsnull;
-#endif
-#endif
-
 static PLDHashTable sEventListenerManagersHash;
 
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
@@ -6255,17 +6249,6 @@ nsContentUtils::IsFocusedContent(nsIContent* aContent)
 
   return fm && fm->GetFocusedContent() == aContent;
 }
-
-#ifdef MOZ_IPC
-#ifdef ANDROID
-// static
-already_AddRefed<nsFrameLoader>
-nsContentUtils::GetActiveFrameLoader()
-{
-  return nsCOMPtr<nsFrameLoader>(sActiveFrameLoader).forget();
-}
-#endif
-#endif
 
 void nsContentUtils::RemoveNewlines(nsString &aString)
 {

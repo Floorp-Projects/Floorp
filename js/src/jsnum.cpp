@@ -53,7 +53,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsbuiltins.h"
@@ -408,7 +408,7 @@ ParseIntDoubleHelper(jsdouble d)
     if (d > 0)
         return floor(d);
     if (d < 0)
-    	return -floor(-d);
+        return -floor(-d);
     return 0;
 }
 

@@ -1,7 +1,9 @@
 // Load in the test harness
 var scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                              .getService(Components.interfaces.mozIJSSubScriptLoader);
-scriptLoader.loadSubScript("chrome://mochikit/content/browser/xpinstall/tests/harness.js", this);
+
+var rootDir = getRootDirectory(window.location.href);
+scriptLoader.loadSubScript(rootDir + "harness.js", this);
 
 // ----------------------------------------------------------------------------
 // Tests installing an unsigned add-on through a navigation. Should not be

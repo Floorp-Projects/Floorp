@@ -46,10 +46,12 @@ Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
 function WBORecord(uri) {
+  if (uri == null)
+    throw "WBOs must have a URI!";
+
   this.data = {};
   this.payload = {};
-  if (uri)
-    this.uri = uri;
+  this.uri = uri;
 }
 WBORecord.prototype = {
   _logName: "Record.WBO",
@@ -57,14 +59,14 @@ WBORecord.prototype = {
   // NOTE: baseUri must have a trailing slash, or baseUri.resolve() will omit
   //       the collection name
   get uri() {
-    return Utils.makeURI(this.baseUri.resolve(encodeURI(this.id)));
+    return Utils.makeURL(this.baseUri.resolve(encodeURI(this.id)));
   },
   set uri(value) {
     if (typeof(value) != "string")
       value = value.spec;
-    let foo = value.split('/');
-    this.id = foo.pop();
-    this.baseUri = Utils.makeURI(foo.join('/') + '/');
+    let parts = value.split('/');
+    this.id = parts.pop();
+    this.baseUri = Utils.makeURI(parts.join('/') + '/');
   },
 
   get sortindex() {
@@ -122,9 +124,8 @@ RecordManager.prototype = {
       if (!this.response.success)
         return null;
 
-      let record = new this._recordType();
+      let record = new this._recordType(url);
       record.deserialize(this.response);
-      record.uri = url;
 
       return this.set(url, record);
     }

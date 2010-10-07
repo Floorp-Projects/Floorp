@@ -60,9 +60,11 @@
 #include <string>
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <crt_externs.h>
 #include <fcntl.h>
 #include <mach/mach.h>
 #include <sys/types.h>
+#include <spawn.h>
 #include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
@@ -225,6 +227,20 @@ static const char* kSubprocessBlacklist[] = {
 
 
 #endif  // MOZ_IPC
+
+#ifdef XP_MACOSX
+static cpu_type_t pref_cpu_types[2] = {
+#if defined(__i386__)
+                                 CPU_TYPE_X86,
+#elif defined(__x86_64__)
+                                 CPU_TYPE_X86_64,
+#elif defined(__ppc__)
+                                 CPU_TYPE_POWERPC,
+#endif
+                                 CPU_TYPE_ANY };
+
+static posix_spawnattr_t spawnattr;
+#endif
 
 #ifdef XP_LINUX
 inline void
@@ -417,6 +433,28 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     return returnValue;
   }
 
+#ifdef XP_MACOSX
+  char* const my_argv[] = {
+    crashReporterPath,
+    minidumpPath,
+    NULL
+  };
+
+  char **env = NULL;
+  char ***nsEnv = _NSGetEnviron();
+  if (nsEnv)
+    env = *nsEnv;
+  int result = posix_spawnp(NULL,
+                            my_argv[0],
+                            NULL,
+                            &spawnattr,
+                            my_argv,
+                            env);
+
+  if (result != 0)
+    return false;
+
+#else // !XP_MACOSX
   pid_t pid = sys_fork();
 
   if (pid == -1)
@@ -429,7 +467,8 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                  crashReporterPath, minidumpPath, (char*)0);
     _exit(1);
   }
-#endif
+#endif // XP_MACOSX
+#endif // XP_UNIX
 
  return returnValue;
 }
@@ -556,6 +595,25 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   nsCString tempPath = NS_LITERAL_CSTRING("/tmp/");
 #else
 #error "Implement this for your platform"
+#endif
+
+#ifdef XP_MACOSX
+  // Initialize spawn attributes, since this calls malloc.
+  if (posix_spawnattr_init(&spawnattr) != 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Set spawn attributes.
+  size_t attr_count = NS_ARRAY_LENGTH(pref_cpu_types);
+  size_t attr_ocount = 0;
+  if (posix_spawnattr_setbinpref_np(&spawnattr,
+                                    attr_count,
+                                    pref_cpu_types,
+                                    &attr_ocount) != 0 ||
+      attr_ocount != attr_count) {
+    posix_spawnattr_destroy(&spawnattr);
+    return NS_ERROR_FAILURE;
+  }
 #endif
 
   // now set the exception handler
@@ -848,6 +906,10 @@ nsresult UnsetExceptionHandler()
     NS_Free(crashReporterPath);
     crashReporterPath = nsnull;
   }
+
+#ifdef XP_MACOSX
+  posix_spawnattr_destroy(&spawnattr);
+#endif
 
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;

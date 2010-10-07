@@ -54,6 +54,8 @@ public:
                                                        GLXDrawable,
                                                        GLXContext);
     PFNGLXMAKECURRENTPROC xMakeCurrent;
+    typedef GLXContext (GLAPIENTRY * PFNGLXGETCURRENTCONTEXT) ();
+    PFNGLXGETCURRENTCONTEXT xGetCurrentContext;
     typedef void* (GLAPIENTRY * PFNGLXGETPROCADDRESSPROC) (const char *);
     PFNGLXGETPROCADDRESSPROC xGetProcAddress;
     typedef XVisualInfo* (GLAPIENTRY * PFNGLXCHOOSEVISUALPROC) (Display*,

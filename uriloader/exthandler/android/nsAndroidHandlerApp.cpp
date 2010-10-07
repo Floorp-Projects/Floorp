@@ -39,16 +39,17 @@
 #include "AndroidBridge.h"
 
 
-NS_IMPL_ISUPPORTS1(nsAndroidHandlerApp, nsIHandlerApp)
+NS_IMPL_ISUPPORTS1(nsAndroidHandlerApp, nsISharingHandlerApp)
 
 
 nsAndroidHandlerApp::nsAndroidHandlerApp(const nsAString& aName,
                                          const nsAString& aDescription,
                                          const nsAString& aPackageName,
                                          const nsAString& aClassName,
-                                         const nsACString& aMimeType) :
+                                         const nsACString& aMimeType,
+                                         const nsAString& aAction) :
 mName(aName), mDescription(aDescription), mPackageName(aPackageName),
-  mClassName(aClassName), mMimeType(aMimeType)
+  mClassName(aClassName), mMimeType(aMimeType), mAction(aAction)
 {
 }
 
@@ -56,32 +57,37 @@ nsAndroidHandlerApp::~nsAndroidHandlerApp()
 {
 }
 
-nsresult nsAndroidHandlerApp::GetName(nsAString & aName)
+NS_IMETHODIMP
+nsAndroidHandlerApp::GetName(nsAString & aName)
 {
   aName.Assign(mName);
   return NS_OK;
 }
 
-nsresult nsAndroidHandlerApp::SetName(const nsAString & aName)
+NS_IMETHODIMP
+nsAndroidHandlerApp::SetName(const nsAString & aName)
 {
   mName.Assign(aName);
   return NS_OK;
 }
 
-nsresult nsAndroidHandlerApp::GetDetailedDescription(nsAString & aDescription)
+NS_IMETHODIMP
+nsAndroidHandlerApp::GetDetailedDescription(nsAString & aDescription)
 {
   aDescription.Assign(mDescription);
   return NS_OK;
 }
 
-nsresult nsAndroidHandlerApp::SetDetailedDescription(const nsAString & aDescription)
+NS_IMETHODIMP
+nsAndroidHandlerApp::SetDetailedDescription(const nsAString & aDescription)
 {
   mDescription.Assign(aDescription);
 
   return NS_OK;
 }
 
-nsresult nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *aRetval)
+NS_IMETHODIMP
+nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *aRetval)
 {
   nsCOMPtr<nsAndroidHandlerApp> aApp = do_QueryInterface(aHandlerApp);
   *aRetval = aApp && aApp->mName.Equals(mName) &&
@@ -89,7 +95,8 @@ nsresult nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *aRetval
   return NS_OK;
 }
 
-nsresult nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext)
+NS_IMETHODIMP
+nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext)
 {
   if (!mozilla::AndroidBridge::Bridge())
     return NS_ERROR_FAILURE;
@@ -97,7 +104,18 @@ nsresult nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor 
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
   return mozilla::AndroidBridge::Bridge()->
-    OpenUriExternal(uriSpec, mMimeType, mPackageName, mClassName) ? 
+    OpenUriExternal(uriSpec, mMimeType, mPackageName, mClassName, mAction) ? 
     NS_OK : NS_ERROR_FAILURE;
-
 }
+
+NS_IMETHODIMP
+nsAndroidHandlerApp::Share(const nsAString & data, const nsAString & title)
+{
+  if (!mozilla::AndroidBridge::Bridge())
+    return NS_ERROR_FAILURE;
+
+  return mozilla::AndroidBridge::Bridge()->
+    OpenUriExternal(NS_ConvertUTF16toUTF8(data), mMimeType, mPackageName, 
+                    mClassName, mAction) ? NS_OK : NS_ERROR_FAILURE;
+}
+

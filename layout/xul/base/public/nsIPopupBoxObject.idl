@@ -43,7 +43,7 @@ interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMEvent;
 
-[scriptable, uuid(e4c3845b-97d2-4fdf-860e-949746d15fb9)]
+[scriptable, uuid(548a9e3f-af78-42b0-a260-035ece15c19f)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -177,6 +177,12 @@ interface nsIPopupBoxObject : nsISupports
    * null.
    */
   readonly attribute nsIDOMNode triggerNode;
+
+  /**
+   * Retrieve the anchor that was specified to openPopup or for menupopups in a
+   * menu, the parent menu.
+   */
+  readonly attribute nsIDOMElement anchorNode;
 };
 
 %{C++

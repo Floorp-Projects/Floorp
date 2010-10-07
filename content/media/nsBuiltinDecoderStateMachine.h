@@ -148,7 +148,7 @@ public:
   ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
-  virtual nsresult Init();
+  virtual nsresult Init(nsDecoderStateMachine* aCloneDonor);
   State GetState()
   { 
     mDecoder->GetMonitor().AssertCurrentThreadIn();
@@ -243,6 +243,11 @@ public:
   void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
+  }
+
+  PRInt64 GetEndMediaTime() const {
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    return mEndTime;
   }
 
 protected:
@@ -476,9 +481,9 @@ protected:
   // Synchronised via the decoder monitor.
   PRPackedBool mBufferExhausted;
 
-  // PR_TRUE if mDuration has a value obtained from an HTTP header.
-  // Accessed on the state machine thread.
-  PRPackedBool mGotDurationFromHeader;
+  // PR_TRUE if mDuration has a value obtained from an HTTP header, or from
+  // the media index/metadata. Accessed on the state machine thread.
+  PRPackedBool mGotDurationFromMetaData;
     
   // PR_FALSE while decode threads should be running. Accessed on audio, 
   // state machine and decode threads. Syncrhonised by decoder monitor.

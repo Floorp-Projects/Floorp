@@ -377,6 +377,9 @@ cairo_d2d_finish_device(cairo_device_t *device)
 	if (FAILED(query->GetData(&done, sizeof(BOOL), 0))) {
 	    break;
 	}
+	if (FAILED(d2d_device->mD3D10Device->GetDeviceRemovedReason())) {
+	    break;
+	}
     }
 }
 
@@ -2641,26 +2644,123 @@ _cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
     return rv;
 }
 
+static cairo_int_status_t
+_cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
+			 cairo_d2d_surface_t *src,
+		 	 const cairo_matrix_t *transform,
+			 cairo_box_t *box,
+			 cairo_clip_t *clip,
+                         cairo_filter_t filter,
+			 float opacity)
+{
+    if (dst == src) {
+	// We cannot do self-blend.
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    cairo_int_status_t rv = CAIRO_INT_STATUS_SUCCESS;
+
+    _begin_draw_state(dst);
+    _cairo_d2d_set_clip(dst, clip);
+    _cairo_d2d_flush(src);
+    D2D1_SIZE_U sourceSize = src->surfaceBitmap->GetPixelSize();
+
+
+    double x1, x2, y1, y2;
+    if (box) {
+	_cairo_box_to_doubles(box, &x1, &y1, &x2, &y2);
+    } else {
+	x1 = y1 = 0;
+	x2 = dst->rt->GetSize().width;
+	y2 = dst->rt->GetSize().height;
+    }
+
+    if (clip) {
+	const cairo_rectangle_int_t *clipExtent = _cairo_clip_get_extents(clip);
+	x1 = MAX(x1, clipExtent->x);
+	x2 = MIN(x2, clipExtent->x + clipExtent->width);
+	y1 = MAX(y1, clipExtent->y);
+	y2 = MIN(y2, clipExtent->y + clipExtent->height);
+    }
+
+    // We should be in drawing state for this.
+    _begin_draw_state(dst);
+    _cairo_d2d_set_clip (dst, clip);
+    D2D1_RECT_F rectSrc;
+    rectSrc.left = (float)(x1 * transform->xx + transform->x0);
+    rectSrc.top = (float)(y1 * transform->yy + transform->y0);
+    rectSrc.right = (float)(x2 * transform->xx + transform->x0);
+    rectSrc.bottom = (float)(y2 * transform->yy + transform->y0);
+
+    if (rectSrc.left < 0 || rectSrc.top < 0 || rectSrc.right < 0 || rectSrc.bottom < 0 ||
+	rectSrc.right > sourceSize.width || rectSrc.bottom > sourceSize.height ||
+	rectSrc.left > sourceSize.width || rectSrc.top > sourceSize.height) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    D2D1_RECT_F rectDst;
+    rectDst.left = (float)x1;
+    rectDst.top = (float)y1;
+    rectDst.right = (float)x2;
+    rectDst.bottom = (float)y2;
+
+    // Bug 599658 - if the src rect is inverted in either axis D2D is fine with
+    // this but it does not actually invert the bitmap. This is an easy way
+    // of doing that.
+    D2D1_MATRIX_3X2_F matrix = D2D1::IdentityMatrix();
+    bool needsTransform = false;
+    if (rectSrc.left > rectSrc.right) {
+	rectDst.left = -rectDst.left;
+	rectDst.right = -rectDst.right;
+	matrix._11 = -1.0;
+	needsTransform = true;
+    }
+    if (rectSrc.top > rectSrc.bottom) {
+	rectDst.top = -rectDst.top;
+	rectDst.bottom = -rectDst.bottom;
+	matrix._22 = -1.0;
+	needsTransform = true;
+    }
+
+    D2D1_BITMAP_INTERPOLATION_MODE interpMode =
+      D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+
+    if (needsTransform) {
+	dst->rt->SetTransform(matrix);
+    }
+
+    if (filter == CAIRO_FILTER_NEAREST) {
+      interpMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+    }
+
+    dst->rt->DrawBitmap(src->surfaceBitmap,
+			rectDst,
+			opacity,
+			interpMode,
+			rectSrc);
+    if (needsTransform) {
+	dst->rt->SetTransform(D2D1::IdentityMatrix());
+    }
+
+    return rv;
+}
 /**
  * This function will text if we can use GPU mem cpy to execute an operation with
  * a surface pattern. If box is NULL it will operate on the entire dst surface.
  */
 static cairo_int_status_t
-_cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
-		    cairo_surface_t *src,
-		    cairo_box_t *box,
-		    const cairo_matrix_t *matrix,
-		    cairo_clip_t *clip,
-		    cairo_operator_t op)
+_cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
+		        cairo_surface_t *src,
+		        cairo_box_t *box,
+		        const cairo_matrix_t *matrix,
+		        cairo_clip_t *clip,
+		        cairo_operator_t op,
+                        cairo_filter_t filter,
+			float opacity = 1.0f)
 {
-    if (op != CAIRO_OPERATOR_SOURCE &&
-	!(op == CAIRO_OPERATOR_OVER && src->content == CAIRO_CONTENT_COLOR)) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (op == CAIRO_OPERATOR_OVER && src->content == CAIRO_CONTENT_COLOR) {
+	op = CAIRO_OPERATOR_SOURCE;
     }
-
-    cairo_point_int_t translation;
-    if ((box && !box_is_integer(box)) ||
-	!_cairo_matrix_is_integer_translation(matrix, &translation.x, &translation.y)) {
+    if (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -2668,7 +2768,24 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
     if (src->type != CAIRO_SURFACE_TYPE_D2D) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
+    cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
+    if (op == CAIRO_OPERATOR_OVER && matrix->xy == 0 && matrix->yx == 0) {
+	return _cairo_d2d_blend_surface(dst, d2dsrc, matrix, box, clip, filter, opacity);
+    }
     
+    if (op == CAIRO_OPERATOR_OVER || opacity != 1.0f) {
+	// Past this point we will never get into a situation where we can
+	// support OVER.
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    
+    cairo_point_int_t translation;
+    if ((box && !box_is_integer(box)) ||
+	!_cairo_matrix_is_integer_translation(matrix, &translation.x, &translation.y)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     cairo_rectangle_int_t rect;
     if (box) {
 	_cairo_box_round_to_rectangle(box, &rect);
@@ -2678,8 +2795,6 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
 	rect.height = dst->rt->GetPixelSize().height;
     }
     
-    cairo_d2d_surface_t *d2dsrc = reinterpret_cast<cairo_d2d_surface_t*>(src);
-
     if (d2dsrc->device != dst->device) {
 	// This doesn't work between different devices.
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2712,7 +2827,7 @@ _cairo_d2d_try_copy(cairo_d2d_surface_t *dst,
     }
 
     cairo_int_status_t rv = _cairo_d2d_copy_surface(dst, d2dsrc, &translation, region);
-    
+
     cairo_region_destroy(region);
     
     return rv;
@@ -2926,8 +3041,9 @@ _cairo_d2d_paint(void			*surface,
 	const cairo_surface_pattern_t *surf_pattern = 
 	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
 
-	status = _cairo_d2d_try_copy(d2dsurf, surf_pattern->surface,
-				     NULL, &source->matrix, clip, op);
+	status = _cairo_d2d_try_fastblit(d2dsurf, surf_pattern->surface,
+				         NULL, &source->matrix, clip,
+                                         op, source->filter);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    return status;
@@ -2986,6 +3102,61 @@ _cairo_d2d_mask(void			*surface,
 
     cairo_int_status_t status;
 
+    status = (cairo_int_status_t)_cairo_surface_mask_extents (&d2dsurf->base,
+		    op, source,
+		    mask,
+		    clip, &extents);
+    if (unlikely (status))
+	    return status;
+
+
+    D2D1_RECT_F rect = D2D1::RectF(0,
+				   0,
+				   (FLOAT)d2dsurf->rt->GetPixelSize().width,
+				   (FLOAT)d2dsurf->rt->GetPixelSize().height);
+
+    rect.left = (FLOAT)extents.x;
+    rect.right = (FLOAT)(extents.x + extents.width);
+    rect.top = (FLOAT)extents.y;
+    rect.bottom = (FLOAT)(extents.y + extents.height);
+
+    bool isSolidAlphaMask = false;
+    float solidAlphaValue = 1.0f;
+
+    if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
+	cairo_solid_pattern_t *solidPattern =
+	    (cairo_solid_pattern_t*)mask;
+	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
+	    isSolidAlphaMask = true;
+	    solidAlphaValue = solidPattern->color.alpha;
+	}
+    }
+
+    if (isSolidAlphaMask) {
+	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    const cairo_surface_pattern_t *surf_pattern = 
+		reinterpret_cast<const cairo_surface_pattern_t*>(source);
+	    cairo_box_t box;
+	    _cairo_box_from_rectangle(&box, &extents);
+	    cairo_int_status_t rv = _cairo_d2d_try_fastblit(d2dsurf,
+							    surf_pattern->surface,
+							    &box,
+							    &source->matrix,
+							    clip,
+							    op,
+                                                            source->filter,
+							    solidAlphaValue);
+	    if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
+		return rv;
+	    }
+	}
+    }
+
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source);
+    if (!brush) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
@@ -3004,44 +3175,16 @@ _cairo_d2d_mask(void			*surface,
     }
 #endif
 
-    status = (cairo_int_status_t)_cairo_surface_mask_extents (&d2dsurf->base,
-		    op, source,
-		    mask,
-		    clip, &extents);
-    if (unlikely (status))
-	    return status;
+    if (isSolidAlphaMask) {
+	brush->SetOpacity(solidAlphaValue);
+	target_rt->FillRectangle(rect,
+				 brush);
+	brush->SetOpacity(1.0);
 
-
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source);
-    if (!brush) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    D2D1_RECT_F rect = D2D1::RectF(0,
-				   0,
-				   (FLOAT)d2dsurf->rt->GetPixelSize().width,
-				   (FLOAT)d2dsurf->rt->GetPixelSize().height);
-
-    rect.left = (FLOAT)extents.x;
-    rect.right = (FLOAT)(extents.x + extents.width);
-    rect.top = (FLOAT)extents.y;
-    rect.bottom = (FLOAT)(extents.y + extents.height);
-
-
-    if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
-	cairo_solid_pattern_t *solidPattern =
-	    (cairo_solid_pattern_t*)mask;
-	if (solidPattern->content = CAIRO_CONTENT_ALPHA) {
-	    brush->SetOpacity((FLOAT)solidPattern->color.alpha);
-	    target_rt->FillRectangle(rect,
-				     brush);
-	    brush->SetOpacity(1.0);
-
-	    if (target_rt.get() != d2dsurf->rt.get()) {
-		return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
-	    }
-	    return CAIRO_INT_STATUS_SUCCESS;
+	if (target_rt.get() != d2dsurf->rt.get()) {
+	    return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
 	}
+	return CAIRO_INT_STATUS_SUCCESS;
     }
 
     RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, mask, true);
@@ -3171,8 +3314,9 @@ _cairo_d2d_fill(void			*surface,
     if (is_box && source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	const cairo_surface_pattern_t *surf_pattern = 
 	    reinterpret_cast<const cairo_surface_pattern_t*>(source);
-	cairo_int_status_t rv = _cairo_d2d_try_copy(d2dsurf, surf_pattern->surface,
-						    &box, &source->matrix, clip, op);
+	cairo_int_status_t rv = _cairo_d2d_try_fastblit(d2dsurf, surf_pattern->surface,
+						        &box, &source->matrix, clip, op,
+                                                        source->filter);
 
 	if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
 	    return rv;
@@ -3637,6 +3781,7 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 
     newSurf->device = d2d_device;
     cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
 
     return &newSurf->base;
    
@@ -3644,6 +3789,89 @@ FAIL_CREATEHANDLE:
     newSurf->~cairo_d2d_surface_t();
     free(newSurf);
     return _cairo_surface_create_in_error(_cairo_error(status));
+}
+
+cairo_surface_t *
+cairo_d2d_surface_create_for_texture(cairo_device_t *device,
+				     ID3D10Texture2D *texture,
+				     cairo_content_t content)
+{
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
+    cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
+    new (newSurf) cairo_d2d_surface_t();
+
+    D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
+    if (content == CAIRO_CONTENT_COLOR) {
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_COLOR);
+	alpha = D2D1_ALPHA_MODE_IGNORE;
+    } else {
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
+    }
+
+    D2D1_SIZE_U sizePixels;
+    HRESULT hr;
+
+    D3D10_TEXTURE2D_DESC desc;
+    RefPtr<IDXGISurface> dxgiSurface;
+    D2D1_BITMAP_PROPERTIES bitProps;
+    D2D1_RENDER_TARGET_PROPERTIES props;
+
+    texture->GetDesc(&desc);
+
+    sizePixels.width = desc.Width;
+    sizePixels.height = desc.Height;
+
+    newSurf->surface = texture;
+
+    /** Create the DXGI surface. */
+    hr = newSurf->surface->QueryInterface(IID_IDXGISurface, (void**)&dxgiSurface);
+    if (FAILED(hr)) {
+	goto FAIL_CREATE;
+    }
+
+    props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
+
+    if (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE)
+	props.usage = D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
+
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+						    props,
+						    &newSurf->rt);
+
+    if (FAILED(hr)) {
+	goto FAIL_CREATE;
+    }
+
+    bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
+				      alpha));
+
+    if (content != CAIRO_CONTENT_ALPHA) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+
+	if (FAILED(hr)) {
+	    goto FAIL_CREATE;
+	}
+    }
+
+    newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
+
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
+
+    return reinterpret_cast<cairo_surface_t*>(newSurf);
+
+FAIL_CREATE:
+    newSurf->~cairo_d2d_surface_t();
+    free(newSurf);
+    return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY));
 }
 
 void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t *clip)

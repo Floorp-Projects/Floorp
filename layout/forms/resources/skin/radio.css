@@ -44,7 +44,7 @@
 
 /* ..... disabled state ..... */
 
-input[type="radio"][disabled="true"] {
+input[type="radio"]:disabled {
   background-color: -moz-Dialog;
 }
 
@@ -89,6 +89,6 @@ input[type="radio"]:checked > xul|*.input-radio-check-box2 {
   list-style-image: url("chrome://forms/skin/radio-check.gif");
 }
 
-input[type="radio"][disabled="true"]:checked {
+input[type="radio"]:disabled:checked {
   list-style-image: url("chrome://forms/skin/radio-check-dis.gif") !important
 }

@@ -98,6 +98,15 @@ LightweightThemeConsumer.prototype = {
     }
 
 #ifdef XP_MACOSX
+
+    if (active && aData.accentcolor) {
+      root.setAttribute("activetitlebarcolor", aData.accentcolor);
+      root.setAttribute("inactivetitlebarcolor", aData.accentcolor);
+    } else {
+      root.removeAttribute("activetitlebarcolor");
+      root.removeAttribute("inactivetitlebarcolor");
+    }
+
     if (active)
       root.setAttribute("drawintitlebar", "true");
     else

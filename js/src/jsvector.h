@@ -41,6 +41,7 @@
 #define jsvector_h_
 
 #include "jstl.h"
+#include "jsprvtd.h"
 
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
@@ -466,6 +467,7 @@ Vector<T,N,AP>::~Vector()
  * curLength and check for overflow.
  */
 template <class T, size_t N, class AP>
+STATIC_POSTCONDITION(!return || newCap >= curLength + lengthInc)
 inline bool
 Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
                                      size_t &newCap)
@@ -621,6 +623,7 @@ Vector<T,N,AP>::growByUninitialized(size_t incr)
 }
 
 template <class T, size_t N, class AP>
+STATIC_POSTCONDITION(!return || ubound(this->begin()) >= newLength)
 inline bool
 Vector<T,N,AP>::resize(size_t newLength)
 {
