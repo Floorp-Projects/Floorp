@@ -254,6 +254,12 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
   }
   else {
     mValue = aValue;
+
+    if (mChild) {
+      mChild->SetText(mValue, PR_FALSE);
+    } else {
+      EnsureChildState();
+    }
   }
 
   return rv;
