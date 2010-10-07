@@ -3479,7 +3479,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 {
   // Forget all of the floats on the line
   aLine->FreeFloats(aState.mFloatCacheFreeList);
-  aState.mFloatCombinedArea.SetRect(0, 0, 0, 0);
+  aState.mFloatOverflowAreas.Clear();
 
   // We need to set this flag on the line if any of our reflow passes
   // are impacted by floats.
@@ -4257,24 +4257,28 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aLine->HasFloats()) {
     // Combine the float combined area (stored in aState) and the
     // value computed by the line layout code.
-    nsRect lineCombinedArea(aLine->GetCombinedArea());
+    nsOverflowAreas lineOverflowAreas;
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect &o = lineOverflowAreas.Overflow(otype);
+      o = aLine->GetOverflowArea(otype);
 #ifdef NOISY_COMBINED_AREA
-    ListTag(stdout);
-    printf(": lineCA=%d,%d,%d,%d floatCA=%d,%d,%d,%d\n",
-           lineCombinedArea.x, lineCombinedArea.y,
-           lineCombinedArea.width, lineCombinedArea.height,
-           aState.mFloatCombinedArea.x, aState.mFloatCombinedArea.y,
-           aState.mFloatCombinedArea.width,
-           aState.mFloatCombinedArea.height);
+      ListTag(stdout);
+      printf(": overflow %d lineCA=%d,%d,%d,%d floatCA=%d,%d,%d,%d\n",
+             otype,
+             o.x, o.y, o.width, o.height,
+             aState.mFloatOverflowAreas.Overflow(otype).x,
+             aState.mFloatOverflowAreas.Overflow(otype).y,
+             aState.mFloatOverflowAreas.Overflow(otype).width,
+             aState.mFloatOverflowAreas.Overflow(otype).height);
 #endif
-    lineCombinedArea.UnionRect(aState.mFloatCombinedArea, lineCombinedArea);
+      o.UnionRect(aState.mFloatOverflowAreas.Overflow(otype), o);
 
-    aLine->SetCombinedArea(lineCombinedArea);
 #ifdef NOISY_COMBINED_AREA
-    printf("  ==> final lineCA=%d,%d,%d,%d\n",
-           lineCombinedArea.x, lineCombinedArea.y,
-           lineCombinedArea.width, lineCombinedArea.height);
+      printf("  ==> final lineCA=%d,%d,%d,%d\n",
+             o.x, o.y, o.width, o.height);
 #endif
+    }
+    aLine->SetOverflowAreas(lineOverflowAreas);
   }
 
   // Apply break-after clearing if necessary

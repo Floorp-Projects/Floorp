@@ -845,10 +845,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   nsContainerFrame::PositionChildViews(aFloat);
 
   // Update the float combined area state
-  nsRect combinedArea = aFloat->GetOverflowRect() + origin;
-
   // XXX Floats should really just get invalidated here if necessary
-  mFloatCombinedArea.UnionRect(combinedArea, mFloatCombinedArea);
+  mFloatOverflowAreas.UnionWith(aFloat->GetOverflowAreas() + origin);
 
   // Place the float in the float manager
   // calculate region
