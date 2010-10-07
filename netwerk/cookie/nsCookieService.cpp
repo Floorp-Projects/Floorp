@@ -1479,9 +1479,11 @@ nsCookieService::GetCookieFromRow(T &aRow)
 void
 nsCookieService::AsyncReadComplete()
 {
-  NS_ASSERTION(mDBState == &mDefaultDBState, "not in default db state");
-  NS_ASSERTION(mDBState->pendingRead, "no pending read");
-  NS_ASSERTION(mDBState->readListener, "no read listener");
+  // We may be in the private browsing DB state, with a pending read on the
+  // default DB state. (This would occur if we started up in private browsing
+  // mode.) As long as we do all our operations on the default state, we're OK.
+  NS_ASSERTION(mDefaultDBState.pendingRead, "no pending read");
+  NS_ASSERTION(mDefaultDBState.readListener, "no read listener");
 
   // Merge the data read on the background thread with the data synchronously
   // read on the main thread. Note that transactions on the cookie table may
@@ -1495,7 +1497,8 @@ nsCookieService::AsyncReadComplete()
     if (mDefaultDBState.readSet.GetEntry(tuple.baseDomain))
       continue;
 
-    AddCookieToList(tuple.baseDomain, tuple.cookie, NULL, PR_FALSE);
+    AddCookieToList(tuple.baseDomain, tuple.cookie, &mDefaultDBState, NULL,
+      PR_FALSE);
   }
 
   mDefaultDBState.stmtReadDomain = nsnull;
@@ -1514,9 +1517,11 @@ nsCookieService::AsyncReadComplete()
 void
 nsCookieService::CancelAsyncRead(PRBool aPurgeReadSet)
 {
-  NS_ASSERTION(mDBState == &mDefaultDBState, "not in default db state");
-  NS_ASSERTION(mDBState->pendingRead, "no pending read");
-  NS_ASSERTION(mDBState->readListener, "no read listener");
+  // We may be in the private browsing DB state, with a pending read on the
+  // default DB state. (This would occur if we started up in private browsing
+  // mode.) As long as we do all our operations on the default state, we're OK.
+  NS_ASSERTION(mDefaultDBState.pendingRead, "no pending read");
+  NS_ASSERTION(mDefaultDBState.readListener, "no read listener");
 
   // Cancel the pending read, kill the read listener, and empty the array
   // of data already read in on the background thread.
@@ -1611,7 +1616,7 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
       break;
 
     nsCookie* newCookie = GetCookieFromRow(mDefaultDBState.stmtReadDomain);
-    AddCookieToList(aBaseDomain, newCookie, NULL, PR_FALSE);
+    AddCookieToList(aBaseDomain, newCookie, &mDefaultDBState, NULL, PR_FALSE);
     ++readCount;
   }
 
@@ -1675,7 +1680,7 @@ nsCookieService::EnsureReadComplete()
       continue;
 
     nsCookie* newCookie = GetCookieFromRow(stmt);
-    AddCookieToList(baseDomain, newCookie, NULL, PR_FALSE);
+    AddCookieToList(baseDomain, newCookie, &mDefaultDBState, NULL, PR_FALSE);
     ++readCount;
   }
 
@@ -1691,6 +1696,13 @@ nsCookieService::EnsureReadComplete()
 NS_IMETHODIMP
 nsCookieService::ImportCookies(nsIFile *aCookieFile)
 {
+  // Make sure we're in the default DB state. We don't want people importing
+  // cookies into a private browsing session!
+  if (mDBState != &mDefaultDBState) {
+    NS_WARNING("Trying to import cookies in a private browsing session!");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIInputStream> fileInputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), aCookieFile);
@@ -1708,7 +1720,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   PRInt32 numInts;
   PRInt64 expires;
   PRBool isDomain, isHttpOnly = PR_FALSE;
-  PRUint32 originalCookieCount = mDBState->cookieCount;
+  PRUint32 originalCookieCount = mDefaultDBState.cookieCount;
 
   PRInt64 currentTimeInUsec = PR_Now();
   PRInt64 currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
@@ -1745,8 +1757,8 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   // We will likely be adding a bunch of cookies to the DB, so we use async
   // batching with storage to make this super fast.
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  if (originalCookieCount == 0 && mDBState->dbConn) {
-    mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  if (originalCookieCount == 0 && mDefaultDBState.dbConn) {
+    mDefaultDBState.stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
   }
 
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
@@ -1819,7 +1831,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     lastAccessedCounter--;
 
     if (originalCookieCount == 0) {
-      AddCookieToList(baseDomain, newCookie, paramsArray);
+      AddCookieToList(baseDomain, newCookie, &mDefaultDBState, paramsArray);
     }
     else {
       AddInternal(baseDomain, newCookie, currentTimeInUsec, NULL, NULL, PR_TRUE);
@@ -1831,17 +1843,18 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     PRUint32 length;
     paramsArray->GetLength(&length);
     if (length) {
-      rv = mDBState->stmtInsert->BindParameters(paramsArray);
+      rv = mDefaultDBState.stmtInsert->BindParameters(paramsArray);
       NS_ASSERT_SUCCESS(rv);
       nsCOMPtr<mozIStoragePendingStatement> handle;
-      rv = mDBState->stmtInsert->ExecuteAsync(mInsertListener,
+      rv = mDefaultDBState.stmtInsert->ExecuteAsync(mInsertListener,
                                               getter_AddRefs(handle));
       NS_ASSERT_SUCCESS(rv);
     }
   }
 
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mDBState->cookieCount));
+  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported",
+    mDefaultDBState.cookieCount));
 
   return NS_OK;
 }
@@ -2249,7 +2262,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
 
   // Add the cookie to the db. We do not supply a params array for batching
   // because this might result in removals and additions being out of order.
-  AddCookieToList(aBaseDomain, aCookie, NULL);
+  AddCookieToList(aBaseDomain, aCookie, mDBState, NULL);
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
@@ -3308,27 +3321,28 @@ bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
 void
 nsCookieService::AddCookieToList(const nsCString               &aBaseDomain,
                                  nsCookie                      *aCookie,
+                                 DBState                       *aDBState,
                                  mozIStorageBindingParamsArray *aParamsArray,
                                  PRBool                         aWriteToDB)
 {
-  NS_ASSERTION(!(mDBState->dbConn && !aWriteToDB && aParamsArray),
+  NS_ASSERTION(!(aDBState->dbConn && !aWriteToDB && aParamsArray),
                "Not writing to the DB but have a params array?");
-  NS_ASSERTION(!(!mDBState->dbConn && aParamsArray),
+  NS_ASSERTION(!(!aDBState->dbConn && aParamsArray),
                "Do not have a DB connection but have a params array?");
 
-  nsCookieEntry *entry = mDBState->hostTable.PutEntry(aBaseDomain);
+  nsCookieEntry *entry = aDBState->hostTable.PutEntry(aBaseDomain);
   NS_ASSERTION(entry, "can't insert element into a null entry!");
 
   entry->GetCookies().AppendElement(aCookie);
-  ++mDBState->cookieCount;
+  ++aDBState->cookieCount;
 
   // keep track of the oldest cookie, for when it comes time to purge
-  if (aCookie->LastAccessed() < mDBState->cookieOldestTime)
-    mDBState->cookieOldestTime = aCookie->LastAccessed();
+  if (aCookie->LastAccessed() < aDBState->cookieOldestTime)
+    aDBState->cookieOldestTime = aCookie->LastAccessed();
 
   // if it's a non-session cookie and hasn't just been read from the db, write it out.
-  if (aWriteToDB && !aCookie->IsSession() && mDBState->dbConn) {
-    mozIStorageStatement *stmt = mDBState->stmtInsert;
+  if (aWriteToDB && !aCookie->IsSession() && aDBState->dbConn) {
+    mozIStorageStatement *stmt = aDBState->stmtInsert;
     nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
     if (!paramsArray) {
       stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
