@@ -96,6 +96,7 @@ _TEST_FILES = \
 		test_bug514732.html \
 		test_bug527306.html \
 		test_bug597333.html \
+		test_image_selection.html \
 		test_invalidate_during_plugin_paint.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \
@@ -116,6 +117,8 @@ _TEST_FILES = \
 		file_bug514732_1.html \
 		file_bug514732_helper.html \
 		test_bug522632.html \
+		$(srcdir)/../../reftests/backgrounds/blue-32x32.png \
+		$(srcdir)/../../reftests/backgrounds/fuchsia-32x32.png \
 		$(NULL)
 # disabled temporarily
 #		test_bug488417.html \
