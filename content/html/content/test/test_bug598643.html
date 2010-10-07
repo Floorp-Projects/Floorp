@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=598643
+-->
+<head>
+  <title>Test for Bug 598643</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=598643">Mozilla Bug 598643</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 598643 **/
+
+function createFileWithData(fileName, fileData)
+{
+  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
+  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+  testFile.append(fileName);
+  var outStream = Components.
+                  classes["@mozilla.org/network/file-output-stream;1"].
+                  createInstance(Components.interfaces.nsIFileOutputStream);
+  outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                 0666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
+
+  return testFile;
+}
+
+function testFileControl(aElement)
+{
+  aElement.type = 'file';
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var file = createFileWithData("file_bug598643", "file content");
+  aElement.value = file.path;
+
+  ok(aElement.validity.valid, "the file control should be valid");
+  ok(!aElement.validity.tooLong,
+     "the file control shouldn't suffer from being too long");
+}
+
+var types = [
+  // These types can be too long.
+  [ "text", "email", "password", "url", "search", "tel" ],
+  // These types can't be too long.
+  [ "radio", "checkbox", "submit", "button", "reset", "image", "hidden",  ],
+  // These types can't be too long but are not implemented yet.
+  [ "number", "range", "color", "datetime", "date", "month", "week", "time",
+    "datetime-local" ],
+];
+
+var input = document.createElement("input");
+input.maxLength = 1;
+input.value = "foo";
+
+// Too long types.
+for each (type in types[0]) {
+  input.type = type
+  ok(!input.validity.valid, "the element should be invalid [type=" + type + "]");
+  ok(input.validity.tooLong,
+     "the element should suffer from being too long [type=" + type + "]");
+}
+
+// Not too long types.
+for each (type in types[1]) {
+  input.type = type
+  ok(input.validity.valid, "the element should be valid [type=" + type + "]");
+  ok(!input.validity.tooLong,
+     "the element shouldn't suffer from being too long [type=" + type + "]");
+}
+
+// Not too long types but TODO.
+for each (type in types[2]) {
+  input.type = type
+  todo(input.validity.valid, "the element should be valid [type=" + type + "]");
+  todo(!input.validity.tooLong,
+     "the element shouldn't suffer from being too long [type=" + type + "]");
+}
+
+testFileControl(input);
+
+</script>
+</pre>
+</body>
+</html>

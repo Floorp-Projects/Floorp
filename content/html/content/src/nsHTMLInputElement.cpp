@@ -918,7 +918,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       states |= NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL |
                 NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
-    } else if (aName == nsGkAtoms::maxlength) {
+    } else if (MaxLengthApplies() && aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
     } else if (aName == nsGkAtoms::pattern) {
@@ -3711,7 +3711,8 @@ nsHTMLInputElement::SetCustomValidity(const nsAString& aError)
 PRBool
 nsHTMLInputElement::IsTooLong()
 {
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength) ||
+  if (!MaxLengthApplies() ||
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength) ||
       !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
     return PR_FALSE;
   }
