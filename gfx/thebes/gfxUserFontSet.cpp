@@ -328,7 +328,8 @@ SanitizeOpenTypeData(const PRUint8* aData, PRUint32 aLength,
     // limit output/expansion to 256MB
     ExpandingMemoryStream output(aIsCompressed ? aLength * 2 : aLength,
                                  1024 * 1024 * 256);
-    if (ots::Process(&output, aData, aLength)) {
+    if (ots::Process(&output, aData, aLength,
+        gfxPlatform::GetPlatform()->PreserveOTLTablesWhenSanitizing())) {
         aSaneLength = output.Tell();
         return static_cast<PRUint8*>(output.forget());
     } else {
