@@ -1153,6 +1153,8 @@ protected:
 
   PRPackedBool mViewportOverridden;
 
+  PRPackedBool mLastRootReflowHadUnconstrainedHeight;
+
   // This is used to protect ourselves from triggering reflow while in the
   // middle of frame construction and the like... it really shouldn't be
   // needed, one hopes, but it is for now.
@@ -7715,6 +7717,23 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
   // constrained height implies page/column breaking.
   nsSize reflowSize(size.width, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState reflowState(mPresContext, target, rcx, reflowSize);
+
+  if (rootFrame == target) {
+    // When the root frame is being reflowed with unconstrained height
+    // (which happens when we're called from
+    // DocumentViewerImpl::SizeToContent), we're effectively doing a
+    // vertical resize, since it changes the meaning of percentage
+    // heights even if no heights actually changed.  The same applies
+    // when we reflow again after that computation.  This is an unusual
+    // case, and isn't caught by nsHTMLReflowState::InitResizeFlags.
+    PRBool hasUnconstrainedHeight = size.height == NS_UNCONSTRAINEDSIZE;
+
+    if (hasUnconstrainedHeight || mLastRootReflowHadUnconstrainedHeight) {
+      reflowState.mFlags.mVResize = PR_TRUE;
+    }
+
+    mLastRootReflowHadUnconstrainedHeight = hasUnconstrainedHeight;
+  }
 
   // fix the computed height
   NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
