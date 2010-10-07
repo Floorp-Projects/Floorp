@@ -4288,13 +4288,13 @@ BEGIN_CASE(JSOP_SETMETHOD)
         JSAtom *atom;
         if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
             /*
-             * Fast property cache hit, only partially confirmed by
-             * testForSet. We know that the entry applies to regs.pc and
-             * that obj's shape matches.
+             * Property cache hit, only partially confirmed by testForSet. We
+             * know that the entry applies to regs.pc and that obj's shape
+             * matches.
              *
-             * The entry predicts either a new property to be added
-             * directly to obj by this set, or on an existing "own"
-             * property, or on a prototype property that has a setter.
+             * The entry predicts either a new property to be added directly to
+             * obj by this set, or on an existing "own" property, or on a
+             * prototype property that has a setter.
              */
             const Shape *shape = entry->vword.toShape();
             JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
@@ -4385,26 +4385,12 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 }
             }
             PCMETER(cache->setpcmisses++);
-            atom = NULL;
-        } else if (!atom) {
-            /*
-             * Slower property cache hit, fully confirmed by testForSet (in the
-             * slow path, via fullTest).
-             */
-            ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
-            const Shape *shape = NULL;
-            if (obj == obj2) {
-                shape = entry->vword.toShape();
-                JS_ASSERT(shape->writable());
-                JS_ASSERT(obj2->isExtensible());
-                NATIVE_SET(cx, obj, shape, entry, &rval);
-            }
-            if (shape)
-                break;
+
+            LOAD_ATOM(0, atom);
+        } else {
+            JS_ASSERT(atom);
         }
 
-        if (!atom)
-            LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
