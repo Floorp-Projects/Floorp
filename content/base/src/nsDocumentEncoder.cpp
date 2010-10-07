@@ -1071,16 +1071,26 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mSerializer->Flush(output);
  
-  if (NS_SUCCEEDED(rv)) {
-    aOutputString.Append(output.get(), output.Length());
-  }
   mCachedBuffer = nsStringBuffer::FromString(output);
+  // We have to be careful how we set aOutputString, because we don't
+  // want it to end up sharing mCachedBuffer if we plan to reuse it.
+  PRBool setOutput = PR_FALSE;
   // Try to cache the buffer.
-  if (mCachedBuffer && mCachedBuffer->StorageSize() == bufferSize &&
-      !mCachedBuffer->IsReadonly()) {
-    mCachedBuffer->AddRef();
-  } else {
-    mCachedBuffer = nsnull;
+  if (mCachedBuffer) {
+    if (mCachedBuffer->StorageSize() == bufferSize &&
+        !mCachedBuffer->IsReadonly()) {
+      mCachedBuffer->AddRef();
+    } else {
+      if (NS_SUCCEEDED(rv)) {
+        mCachedBuffer->ToString(output.Length(), aOutputString);
+        setOutput = PR_TRUE;
+      }
+      mCachedBuffer = nsnull;
+    }
+  }
+
+  if (!setOutput && NS_SUCCEEDED(rv)) {
+    aOutputString.Append(output.get(), output.Length());
   }
 
   return rv;
