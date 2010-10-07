@@ -93,20 +93,27 @@ interface nsIGfxInfo : nsISupports
   /*
    * A set of return values from GetFeatureStatus
    */
-  /* We don't have any information about this feature on this hardware */
-  const long FEATURE_STATUS_UNKNOWN = 0;
-  /* This feature is available and can be used */
-  const long FEATURE_AVAILABLE = 1;
-  /* This feature is not available */
-  const long FEATURE_NOT_AVAILABLE = 2;
-  /* This feature is available, but is blocked due to a blocklist entry */
-  const long FEATURE_BLOCKED = 3;
+  /* We don't explicitly block or discourage the feature. Which means we'll try getting it from the
+   * hardware, and see what happens. */
+  const long FEATURE_NO_INFO = 1;
+  /* This feature is blocked on this driver version. Updating driver will typically unblock it. */
+  const long FEATURE_BLOCKED_DRIVER_VERSION = 2;
+  /* This feature is blocked on this device, regardless of driver version.
+   * Typically means we hit too many driver crashes without a good reason to hope for them to
+   * get fixed soon. */
+  const long FEATURE_BLOCKED_DEVICE = 3;
   /* This feature is available and can be used, but is not suggested (e.g. shouldn't be used by default */
-  const long FEATURE_NOT_SUGGESTED = 4;
+  const long FEATURE_DISCOURAGED = 4;
 
   /**
    * Ask about a feature, and return the status of that feature
    */
   long getFeatureStatus(in long aFeature);
+
+  /*
+   * Ask about a feature, return the minimum driver version required for it if its status is
+   * FEATURE_BLOCKED_DRIVER_VERSION, otherwise return an empty string. 
+   */
+  DOMString getFeatureSuggestedDriverVersion(in long aFeature);
 };
 
