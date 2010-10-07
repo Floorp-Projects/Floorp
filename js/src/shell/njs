@@ -16,6 +16,7 @@ js_cmd = os.path.abspath(os.path.join(THIS_DIR, "js"))
 narc_jsdefs = os.path.join(NARC_JS_DIR, "jsdefs.js")
 narc_jslex = os.path.join(NARC_JS_DIR, "jslex.js")
 narc_jsparse = os.path.join(NARC_JS_DIR, "jsparse.js")
+narc_jsssa = os.path.join(NARC_JS_DIR, "jsssa.js")
 narc_jsexec = os.path.join(NARC_JS_DIR, "jsexec.js")
 
 def handler(signum, frame):
@@ -62,5 +63,5 @@ if __name__ == '__main__':
     if options.js_interactive:
         cmd += 'Narcissus.interpreter.repl();'
 
-    Popen([js_cmd, '-f', narc_jsdefs, '-f', narc_jslex, '-f', narc_jsparse, '-f', narc_jsexec, '-e', cmd]).wait()
+    Popen([js_cmd, '-f', narc_jsdefs, '-f', narc_jslex, '-f', narc_jsparse, '-f', narc_jsssa, '-f', narc_jsexec, '-e', cmd]).wait()
 
