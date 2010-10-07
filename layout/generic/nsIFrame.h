@@ -1586,6 +1586,11 @@ public:
    * that encloses the pixels that are actually drawn. We're allowed to be
    * conservative and currently we don't try very hard. The rectangle is
    * in appunits and relative to the origin of this frame.
+   *
+   * This probably only needs to include frame bounds, glyph bounds, and
+   * text decorations, but today it sometimes includes other things that
+   * contribute to visual overflow.
+   *
    * @param aContext a rendering context that can be used if we need
    * to do measurement
    */
