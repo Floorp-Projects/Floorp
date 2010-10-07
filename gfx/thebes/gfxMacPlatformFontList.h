@@ -70,6 +70,8 @@ public:
 
     virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
 
+    PRBool IsCFF();
+
 protected:
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFontRef,
@@ -81,6 +83,8 @@ protected:
     ATSFontRef mATSFontRef;
     PRPackedBool mATSFontRefInitialized;
     PRPackedBool mRequiresAAT;
+    PRPackedBool mIsCFF;
+    PRPackedBool mIsCFFInitialized;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {
