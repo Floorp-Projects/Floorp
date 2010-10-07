@@ -55,7 +55,7 @@ function end_test() {
 }
 
 
-function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote) {
+function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails) {
   if (aIsTheme || aIsEnabled || aIsRemote)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_enableItem"),
                        "'Enable' should be hidden");
@@ -90,6 +90,14 @@ function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote) {
   else
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_installItem"),
                        "'Install' should be hidden");
+                       
+  if (aIsDetails)
+    is_element_hidden(gManagerWindow.document.getElementById("menuitem_showDetails"), 
+                       "'Show More Information' should be hidden in details view");
+  else
+    is_element_visible(gManagerWindow.document.getElementById("menuitem_showDetails"), 
+                       "'Show More Information' should be visible in list view");
+
 }
 
 
@@ -100,7 +108,7 @@ add_test(function() {
   gContextMenu.addEventListener("popupshown", function() {
     gContextMenu.removeEventListener("popupshown", arguments.callee, false);
 
-    check_contextmenu(false, true, false);
+    check_contextmenu(false, true, false, false);
 
     gContextMenu.hidePopup();
     run_next_test();
@@ -118,7 +126,7 @@ add_test(function() {
   gContextMenu.addEventListener("popupshown", function() {
     gContextMenu.removeEventListener("popupshown", arguments.callee, false);
 
-    check_contextmenu(false, false, false);
+    check_contextmenu(false, false, false, false);
 
     gContextMenu.hidePopup();
     run_next_test();
@@ -138,7 +146,7 @@ add_test(function() {
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
   
-    check_contextmenu(true, true, false);
+    check_contextmenu(true, true, false, false);
   
       gContextMenu.hidePopup();
       run_next_test();
@@ -157,7 +165,7 @@ add_test(function() {
   gContextMenu.addEventListener("popupshown", function() {
     gContextMenu.removeEventListener("popupshown", arguments.callee, false);
 
-    check_contextmenu(true, false, false);
+    check_contextmenu(true, false, false, false);
 
     gContextMenu.hidePopup();
     run_next_test();
@@ -176,7 +184,7 @@ add_test(function() {
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
   
-      check_contextmenu(false, true, false);
+      check_contextmenu(false, true, false, true);
   
       gContextMenu.hidePopup();
       run_next_test();
@@ -197,7 +205,7 @@ add_test(function() {
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
   
-      check_contextmenu(false, false, false);
+      check_contextmenu(false, false, false, true);
   
       gContextMenu.hidePopup();
       run_next_test();
@@ -218,7 +226,7 @@ add_test(function() {
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
   
-      check_contextmenu(true, true, false);
+      check_contextmenu(true, true, false, true);
   
       gContextMenu.hidePopup();
       run_next_test();
@@ -239,7 +247,7 @@ add_test(function() {
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
   
-      check_contextmenu(true, false, false);
+      check_contextmenu(true, false, false, true);
   
       gContextMenu.hidePopup();
       run_next_test();
@@ -275,7 +283,7 @@ add_test(function() {
       gContextMenu.addEventListener("popupshown", function() {
         gContextMenu.removeEventListener("popupshown", arguments.callee, false);
     
-        check_contextmenu(false, false, true);
+        check_contextmenu(false, false, true, false);
     
         gContextMenu.hidePopup();
         run_next_test();
@@ -297,7 +305,7 @@ add_test(function() {
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
   
-      check_contextmenu(false, false, true);
+      check_contextmenu(false, false, true, true);
   
       gContextMenu.hidePopup();
       run_next_test();
