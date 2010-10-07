@@ -8565,6 +8565,12 @@ MOZ_HARFBUZZ_LIBS='$(DEPTH)/gfx/harfbuzz/src/$(LIB_PREFIX)mozharfbuzz.$(LIB_SUFF
 AC_SUBST(MOZ_HARFBUZZ_LIBS)
 
 dnl ========================================================
+dnl OTS
+dnl ========================================================
+MOZ_OTS_LIBS='$(DEPTH)/gfx/ots/src/$(LIB_PREFIX)mozots.$(LIB_SUFFIX)'
+AC_SUBST(MOZ_OTS_LIBS)
+
+dnl ========================================================
 dnl disable xul
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(xul,
