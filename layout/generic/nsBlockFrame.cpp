@@ -1015,7 +1015,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   // Drain & handle pushed floats
   DrainPushedFloats(state);
-  nsRect fcBounds;
+  nsOverflowAreas fcBounds;
   nsReflowStatus fcStatus = NS_FRAME_COMPLETE;
   rv = ReflowPushedFloats(state, fcBounds, fcStatus);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1105,7 +1105,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // Factor overflow container child bounds into the overflow area
   aMetrics.mOverflowAreas.UnionWith(ocBounds);
   // Factor pushed float child bounds into the overflow area
-  aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, fcBounds);
+  aMetrics.mOverflowAreas.UnionWith(fcBounds);
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
@@ -5802,8 +5802,8 @@ nsBlockFrame::FindTrailingClear()
 
 nsresult
 nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
-                                       nsRect&             aBounds,
-                                       nsReflowStatus&     aStatus)
+                                 nsOverflowAreas&    aOverflowAreas,
+                                 nsReflowStatus&     aStatus)
 {
   nsresult rv = NS_OK;
   for (nsIFrame* f = mFloats.FirstChild(), *next;
@@ -5841,7 +5841,7 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
         NS_MergeReflowStatusInto(&aStatus, NS_FRAME_OVERFLOW_INCOMPLETE);
     }
 
-    ConsiderChildOverflow(aBounds, f);
+    ConsiderChildOverflow(aOverflowAreas, f);
   }
 
   // If there are continued floats, then we may need to continue BR clearance
