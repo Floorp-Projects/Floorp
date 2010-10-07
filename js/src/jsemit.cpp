@@ -48,8 +48,8 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsbit.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -1514,13 +1514,18 @@ EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
 }
 
 static JSBool
-EmitBlockChain(JSContext *cx, JSCodeGenerator *cg)
+EmitKnownBlockChain(JSContext *cx, JSCodeGenerator *cg, JSObjectBox *box)
 {
-    JSObjectBox *box = cg->blockChainBox;
     if (box)
         return EmitIndexOp(cx, JSOP_BLOCKCHAIN, box->index, cg);
     else
         return js_Emit1(cx, cg, JSOP_NULLBLOCKCHAIN) >= 0;
+}
+
+static JSBool
+EmitBlockChain(JSContext *cx, JSCodeGenerator *cg)
+{
+    return EmitKnownBlockChain(cx, cg, cg->blockChainBox);
 }
 
 static ptrdiff_t
@@ -1541,7 +1546,14 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
     if (index < 0)
         return -1;
 
-    return EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, lastp);
+    ptrdiff_t result = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, lastp);
+    if (result < 0)
+        return result;
+
+    if (!EmitBlockChain(cx, cg))
+        return -1;
+
+    return result;
 }
 
 static JSBool
@@ -2032,6 +2044,39 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 }
 
 /*
+ * Try to convert a *NAME op to a *GNAME op, which optimizes access to
+ * undeclared globals. Return true if a conversion was made.
+ *
+ * This conversion is not made if we are in strict mode, because the
+ * access to an undeclared global would be an error.
+ */
+static bool
+TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)
+{
+    if (cg->compileAndGo() && 
+        cg->compiler()->globalScope->globalObj &&
+        !pn->isDeoptimized() &&
+        !(cg->flags & TCF_STRICT_MODE_CODE)) { 
+        switch (*op) {
+          case JSOP_NAME:     *op = JSOP_GETGNAME; break;
+          case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
+          case JSOP_INCNAME:  *op = JSOP_INCGNAME; break;
+          case JSOP_NAMEINC:  *op = JSOP_GNAMEINC; break;
+          case JSOP_DECNAME:  *op = JSOP_DECGNAME; break;
+          case JSOP_NAMEDEC:  *op = JSOP_GNAMEDEC; break;
+          case JSOP_SETCONST:
+          case JSOP_DELNAME:
+          case JSOP_FORNAME:
+            /* Not supported. */
+            return false;
+          default: JS_NOT_REACHED("gname");
+        }
+        return true;
+    }
+    return false;
+}
+
+/*
  * BindNameToSlot attempts to optimize name gets and sets to stack slot loads
  * and stores, given the compile-time information in cg and a TOK_NAME node pn.
  * It returns false on error, true on success.
@@ -2140,6 +2185,21 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_TRUE;
 
             JS_ASSERT(caller->isScriptFrame());
+
+            /*
+             * If this is an eval in the global scope, then unbound variables
+             * must be globals, so try to use GNAME ops.
+             */
+            if (caller->isGlobalFrame() && TryConvertToGname(cg, pn, &op)) {
+                ale = cg->atomList.add(cg->parser, atom);
+                if (!ale)
+                    return JS_FALSE;
+
+                pn->pn_op = op;
+                pn->pn_dflags |= PND_BOUND;
+                return JS_TRUE;
+            }
+
             if (!caller->isFunctionFrame())
                 return JS_TRUE;
 
@@ -2178,30 +2238,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return MakeUpvarForEval(pn, cg);
         }
 
-        /*
-         * Optimize accesses to undeclared globals, but only if we are in
-         * compile-and-go mode, the global is the same as the scope chain,
-         * and we are not in strict mode.
-         */
-        if (cg->compileAndGo() && 
-            cg->compiler()->globalScope->globalObj &&
-            !pn->isDeoptimized() &&
-            !(cg->flags & TCF_STRICT_MODE_CODE)) { 
-            switch (op) {
-              case JSOP_NAME:     op = JSOP_GETGNAME; break;
-              case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
-              case JSOP_INCNAME:  op = JSOP_INCGNAME; break;
-              case JSOP_NAMEINC:  op = JSOP_GNAMEINC; break;
-              case JSOP_DECNAME:  op = JSOP_DECGNAME; break;
-              case JSOP_NAMEDEC:  op = JSOP_GNAMEDEC; break;
-              case JSOP_SETCONST:
-              case JSOP_DELNAME:
-              case JSOP_FORNAME:
-                /* Not supported. */
-                return JS_TRUE;
-              default: JS_NOT_REACHED("gname");
-            }
-        }
+        /* Optimize accesses to undeclared globals. */
+        if (!TryConvertToGname(cg, pn, &op))
+            return JS_TRUE;
 
         ale = cg->atomList.add(cg->parser, atom);
         if (!ale)
@@ -3678,10 +3717,15 @@ bad:
 JSBool
 js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
+    CG_SWITCH_TO_PROLOG(cg);
+    JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
+    if (js_Emit1(cx, cg, JSOP_BEGIN) < 0)
+        return false;
+    CG_SWITCH_TO_MAIN(cg);
+
     if (cg->flags & TCF_FUN_IS_GENERATOR) {
-        /* JSOP_GENERATOR must be the first instruction. */
+        /* JSOP_GENERATOR must be the first real instruction. */
         CG_SWITCH_TO_PROLOG(cg);
-        JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return false;
         CG_SWITCH_TO_MAIN(cg);
@@ -4446,6 +4490,17 @@ EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
 JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
 JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
 
+class EmitLevelManager
+{
+private:
+    JSCodeGenerator *cg;
+    
+public:
+    EmitLevelManager(JSCodeGenerator *cg) : cg(cg) { cg->emitLevel++; }
+
+    ~EmitLevelManager() { cg->emitLevel--; }
+};
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -4463,6 +4518,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSOp op;
     TokenKind type;
     uint32 argc;
+    EmitLevelManager elm(cg);
 #if JS_HAS_SHARP_VARS
     jsint sharpnum;
 #endif
@@ -4470,7 +4526,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     ok = JS_TRUE;
-    cg->emitLevel++;
     pn->pn_offset = top = CG_OFFSET(cg);
 
     /* Emit notes to tell the current bytecode's source line number. */
@@ -4593,6 +4648,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 CG_SWITCH_TO_PROLOG(cg);
                 op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
                 EMIT_INDEX_OP(op, index);
+
                 /* Make blockChain determination quicker. */
                 if (EmitBlockChain(cx, cg) < 0)
                     return JS_FALSE;
@@ -5260,6 +5316,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         js_PushStatement(cg, &stmtInfo, STMT_WITH, CG_OFFSET(cg));
         if (js_Emit1(cx, cg, JSOP_ENTERWITH) < 0)
             return JS_FALSE;
+
+        /* Make blockChain determination quicker. */
+        if (EmitBlockChain(cx, cg) < 0)
+            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
         if (js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0)
@@ -5325,16 +5385,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         tryEnd = CG_OFFSET(cg);
 
+        JSObjectBox *prevBox = NULL;
         /* If this try has a catch block, emit it. */
         pn2 = pn->pn_kid2;
         lastCatch = NULL;
         if (pn2) {
-            JSObjectBox *prevBox = NULL;
             uintN count = 0;    /* previous catch block's population */
             
             /*
              * The emitted code for a catch block looks like:
              *
+             * blockchain
              * [throwing]                          only if 2nd+ catch block
              * [leaveblock]                        only if 2nd+ catch block
              * enterblock                          with SRC_CATCH
@@ -5360,6 +5421,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 JS_ASSERT(cg->stackDepth == depth);
                 guardJump = GUARDJUMP(stmtInfo);
                 if (guardJump != -1) {
+                    if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
+                        return JS_FALSE;
+                
                     /* Fix up and clean up previous catch block. */
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
 
@@ -5444,6 +5508,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * stack unbalanced.
          */
         if (lastCatch && lastCatch->pn_kid2) {
+            if (EmitKnownBlockChain(cx, cg, prevBox) < 0)
+                return JS_FALSE;
+            
             CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, GUARDJUMP(stmtInfo));
 
             /* Sync the stack to take into account pushed exception. */
@@ -5458,6 +5525,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 js_Emit1(cx, cg, JSOP_THROW) < 0) {
                 return JS_FALSE;
             }
+
+            if (EmitBlockChain(cx, cg) < 0)
+                return JS_FALSE;
         }
 
         JS_ASSERT(cg->stackDepth == depth);
@@ -5638,6 +5708,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (top + JSOP_RETURN_LENGTH != CG_OFFSET(cg)) {
             CG_BASE(cg)[top] = JSOP_SETRVAL;
             if (js_Emit1(cx, cg, JSOP_RETRVAL) < 0)
+                return JS_FALSE;
+            if (EmitBlockChain(cx, cg) < 0)
                 return JS_FALSE;
         }
         break;
@@ -6409,6 +6481,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
         if (EmitJump(cx, cg, JSOP_ENDFILTER, top - CG_OFFSET(cg)) < 0)
             return JS_FALSE;
+
+        /* Make blockChain determination quicker. */
+        if (EmitBlockChain(cx, cg) < 0)
+            return JS_FALSE;
         break;
 #endif
 
@@ -6843,7 +6919,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * MakeDefIntoUse in jsparse.cpp.
          */
         if (pn->pn_op == JSOP_NOP)
-            return JS_TRUE;
+            break;
         if (!EmitNameOp(cx, cg, pn, JS_FALSE))
             return JS_FALSE;
         break;
@@ -7044,7 +7120,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(0);
     }
 
-    if (ok && --cg->emitLevel == 0) {
+    /* cg->emitLevel == 1 means we're last on the stack, so finish up. */
+    if (ok && cg->emitLevel == 1) {
         if (cg->spanDeps)
             ok = OptimizeSpanDeps(cx, cg);
         if (!UpdateLineNumberNotes(cx, cg, pn->pn_pos.end.lineno))
