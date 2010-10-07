@@ -4354,14 +4354,24 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       PropagateScrollToViewport() == aContent;
   }
 
+  NS_ASSERTION(!propagatedScrollToViewport ||
+               !mPresShell->GetPresContext()->IsPaginated(),
+               "Shouldn't propagate scroll in paginated contexts");
+
   // If the frame is a block-level frame and is scrollable, then wrap it
-  // in a scroll frame.
+  // in a scroll frame.  Except we don't want to do that for paginated contexts
+  // for frames that are block-outside.
+  // The condition on skipping scrollframe construction in the
+  // paginated case needs to match code in ConstructNonScrollableBlock
+  // and in nsFrame::ApplyPaginatedOverflowClipping.
   // XXX Ignore tables for the time being
   // XXXbz it would be nice to combine this with the other block
   // case... Think about how do do this?
   if (aDisplay->IsBlockInside() &&
       aDisplay->IsScrollableOverflow() &&
-      !propagatedScrollToViewport) {
+      !propagatedScrollToViewport &&
+      (!mPresShell->GetPresContext()->IsPaginated() ||
+       !aDisplay->IsBlockOutside())) {
     static const FrameConstructionData sScrollableBlockData =
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructScrollableBlock);
     return &sScrollableBlockData;
@@ -4489,7 +4499,18 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
 
   if (aDisplay->IsAbsolutelyPositioned() ||
       aDisplay->IsFloating() ||
-      NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay) {
+      NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay ||
+      // This check just needs to be the same as the check for using scrollable
+      // blocks in FindDisplayData and the check for clipping in
+      // nsFrame::ApplyPaginatedOverflowClipping; we want a block formatting
+      // context root in paginated contexts for every block that would be
+      // scrollable in a non-paginated context.  Note that IsPaginated()
+      // implies that no propagation to viewport has taken place, so we don't
+      // need to check for propagation here.
+      (mPresShell->GetPresContext()->IsPaginated() &&
+       aDisplay->IsBlockInside() &&
+       aDisplay->IsScrollableOverflow() &&
+       aDisplay->IsBlockOutside())) {
     *aNewFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
   } else {
     *aNewFrame = NS_NewBlockFrame(mPresShell, styleContext);
