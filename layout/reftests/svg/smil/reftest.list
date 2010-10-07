@@ -108,6 +108,13 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-feImage-preserveAspectRatio-01.svg lime.svg
 == anim-svg-preserveAspectRatio-01.svg lime.svg
 
+# animate some string attributes:
+== anim-filter-href-01.svg lime.svg
+== anim-gradient-href-01.svg lime.svg
+== anim-image-href-01.svg lime.svg
+== anim-pattern-href-01.svg lime.svg
+asserts(6) == anim-use-href-01.svg lime.svg  # the asserts here are bug 563481
+
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
 == anim-remove-3.svg anim-standard-ref.svg
