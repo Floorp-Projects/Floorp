@@ -3057,7 +3057,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
 #ifdef PR_LOGGING
   PRUint32 initialCookieCount = mDBState->cookieCount;
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
-    ("PurgeCookies(): beginning purge with %ld cookies and %lld age",
+    ("PurgeCookies(): beginning purge with %ld cookies and %lld oldest age",
      mDBState->cookieCount, aCurrentTimeInUsec - mDBState->cookieOldestTime));
 #endif
 
@@ -3105,7 +3105,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   for (nsPurgeData::ArrayType::index_type i = purgeList.Length(); i--; ) {
     nsCookie *cookie = purgeList[i].Cookie();
     removedList->AppendElement(cookie, PR_FALSE);
-    COOKIE_LOGEVICTED(cookie, "Cookie expired or too old");
+    COOKIE_LOGEVICTED(cookie, "Cookie too old");
 
     RemoveCookieFromList(purgeList[i], paramsArray);
   }
@@ -3132,7 +3132,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
     ("PurgeCookies(): %ld expired; %ld purged; %ld remain; %lld oldest age",
      initialCookieCount - postExpiryCookieCount,
-     mDBState->cookieCount - postExpiryCookieCount,
+     postExpiryCookieCount - mDBState->cookieCount,
      mDBState->cookieCount,
      aCurrentTimeInUsec - mDBState->cookieOldestTime));
 }
