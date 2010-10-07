@@ -4287,8 +4287,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
         JSObject *obj2;
         JSAtom *atom;
         if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
-            JS_ASSERT(obj->isExtensible());
-
             /*
              * Fast property cache hit, only partially confirmed by
              * testForSet. We know that the entry applies to regs.pc and
@@ -4328,6 +4326,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     break;
                 }
             } else {
+                JS_ASSERT(obj->isExtensible());
+
                 if (obj->nativeEmpty()) {
                     /*
                      * We check that cx owns obj here and will continue to own
