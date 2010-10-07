@@ -709,7 +709,7 @@ nsHTMLButtonElement::IntrinsicState() const
     state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
   }
 
-  return state | NS_EVENT_STATE_OPTIONAL;
+  return state;
 }
 
 // nsIConstraintValidation
