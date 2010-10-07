@@ -931,6 +931,9 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   // make operations on the table asynchronous, for performance
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
 
+  // Use write-ahead-logging for performance.
+  mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA journal_mode = WAL"));
+
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_cookies ("
