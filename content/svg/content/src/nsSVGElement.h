@@ -155,6 +155,9 @@ public:
   // subclass has the useful implementation.
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
 
+  PRBool IsStringAnimatable(PRUint8 aAttrEnum) {
+    return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
+  }
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
@@ -176,6 +179,7 @@ public:
   virtual void DidAnimatePreserveAspectRatio();
   virtual void DidAnimateLengthList(PRUint8 aAttrEnum);
   virtual void DidAnimateTransform();
+  virtual void DidAnimateString(PRUint8 aAttrEnum);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
@@ -184,7 +188,7 @@ public:
   mozilla::SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
 
 #ifdef MOZ_SMIL
-  virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* aName);
+  virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName);
   void AnimationNeedsResample();
   void FlushAnimations();
 #endif
@@ -371,6 +375,7 @@ protected:
   struct StringInfo {
     nsIAtom**    mName;
     PRInt32      mNamespaceID;
+    PRPackedBool mIsAnimatable;
   };
 
   struct StringAttributesInfo {
