@@ -82,6 +82,7 @@
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+#include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -4581,7 +4582,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
 }
 END_CASE(JSOP_ENUMELEM)
 
-{
+{ // begin block around calling opcodes
     JSFunction *newfun;
     JSObject *callee;
     uint32 flags;
@@ -4626,8 +4627,28 @@ BEGIN_CASE(JSOP_NEW)
 }
 END_CASE(JSOP_NEW)
 
-BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_EVAL)
+{
+    argc = GET_ARGC(regs.pc);
+    vp = regs.sp - (argc + 2);
+
+    if (!IsFunctionObject(*vp, &callee))
+        goto call_using_invoke;
+
+    newfun = callee->getFunctionPrivate();
+    if (!IsBuiltinEvalFunction(newfun))
+        goto not_direct_eval;
+
+    Probes::enterJSFun(cx, newfun);
+    JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
+    Probes::exitJSFun(cx, newfun);
+    regs.sp = vp + 1;
+    if (!ok)
+        goto error;
+}
+END_CASE(JSOP_EVAL)
+
+BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_APPLY)
 {
     argc = GET_ARGC(regs.pc);
@@ -4636,6 +4657,7 @@ BEGIN_CASE(JSOP_APPLY)
     if (IsFunctionObject(*vp, &callee)) {
         newfun = callee->getFunctionPrivate();
 
+      not_direct_eval:
         /* Clear frame flags since this is not a constructor call. */
         flags = 0;
         if (newfun->isInterpreted())
@@ -4718,6 +4740,7 @@ BEGIN_CASE(JSOP_APPLY)
         goto end_call;
     }
 
+  call_using_invoke:
     bool ok;
     ok = Invoke(cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0);
     regs.sp = vp + 1;
@@ -4730,7 +4753,8 @@ BEGIN_CASE(JSOP_APPLY)
   end_call:;
 }
 END_CASE(JSOP_CALL)
-}
+
+} // end block around calling opcodes
 
 BEGIN_CASE(JSOP_SETCALL)
 {
