@@ -361,6 +361,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_PRODUCT;
     static nsHtml5ElementName* ELT_SETDIFF;
     static nsHtml5ElementName* ELT_SECTION;
+    static nsHtml5ElementName* ELT_SUMMARY;
     static nsHtml5ElementName* ELT_TENDSTO;
     static nsHtml5ElementName* ELT_UPLIMIT;
     static nsHtml5ElementName* ELT_ALTGLYPH;
@@ -368,7 +369,6 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_CLIPPATH;
     static nsHtml5ElementName* ELT_CODOMAIN;
     static nsHtml5ElementName* ELT_COLGROUP;
-    static nsHtml5ElementName* ELT_DATAGRID;
     static nsHtml5ElementName* ELT_EMPTYSET;
     static nsHtml5ElementName* ELT_FACTOROF;
     static nsHtml5ElementName* ELT_FIELDSET;
@@ -417,6 +417,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_DIVERGENCE;
     static nsHtml5ElementName* ELT_EULERGAMMA;
     static nsHtml5ElementName* ELT_EQUIVALENT;
+    static nsHtml5ElementName* ELT_FIGCAPTION;
     static nsHtml5ElementName* ELT_IMAGINARYI;
     static nsHtml5ElementName* ELT_MALIGNMARK;
     static nsHtml5ElementName* ELT_MUNDEROVER;
