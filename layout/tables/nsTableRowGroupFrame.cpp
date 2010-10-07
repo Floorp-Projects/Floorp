@@ -854,7 +854,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
     tableFrame->SetNeedToCollapse(PR_TRUE);
   }
 
-  nsRect overflowArea(0, 0, 0, 0);
+  nsOverflowAreas overflow;
 
   nsTableRowFrame* rowFrame= GetFirstRow();
   PRBool didCollapse = PR_FALSE;
@@ -863,7 +863,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
     yGroupOffset += rowFrame->CollapseRowIfNecessary(yGroupOffset,
                                                      aWidth, collapseGroup,
                                                      didCollapse);
-    ConsiderChildOverflow(overflowArea, rowFrame);
+    ConsiderChildOverflow(overflow, rowFrame);
     rowFrame = rowFrame->GetNextRow();
   }
 
@@ -885,10 +885,8 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
   }
   
   SetRect(groupRect);
-  overflowArea.UnionRect(nsRect(0, 0, groupRect.width, groupRect.height),
-                         overflowArea);
-  FinishAndStoreOverflow(&overflowArea, nsSize(groupRect.width,
-                                              groupRect.height));
+  overflow.UnionAllWith(nsRect(0, 0, groupRect.width, groupRect.height));
+  FinishAndStoreOverflow(overflow, nsSize(groupRect.width, groupRect.height));
   nsTableFrame::RePositionViews(this);
   nsTableFrame::InvalidateFrame(this, oldGroupRect, oldGroupOverflowRect,
                                 PR_FALSE);
