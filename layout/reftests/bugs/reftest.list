@@ -1373,7 +1373,6 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
 != 513318-2.xul 513318-2-ref.xul
-!= 513318-3.xul 513318-3-ref.xul
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 HTTP(..) == 518172-1b.html 518172-b-ref.html
