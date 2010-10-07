@@ -197,3 +197,8 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
+{
+  return NS_OK;
+}
