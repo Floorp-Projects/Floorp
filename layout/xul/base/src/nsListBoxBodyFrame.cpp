@@ -292,21 +292,22 @@ nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 
   // determine the real height for the scrollable area from the total number
   // of rows, since non-visible rows don't yet have frames
-  nsSize size = GetSize();
-  nsRect overflowRect = nsRect(nsPoint(0, 0), size);
+  nsRect rect(nsPoint(0, 0), GetSize());
+  nsOverflowAreas overflow(rect, rect);
   if (mLayoutManager) {
     nsIFrame* childFrame = mFrames.FirstChild();
     while (childFrame) {
-      ConsiderChildOverflow(overflowRect, childFrame);
+      ConsiderChildOverflow(overflow, childFrame);
       childFrame = childFrame->GetNextSibling();
     }
 
     nsSize prefSize = mLayoutManager->GetPrefSize(this, aBoxLayoutState);
-    if (prefSize.height > overflowRect.height) {
-      overflowRect.height = prefSize.height;
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = overflow.Overflow(otype);
+      o.height = NS_MAX(o.height, prefSize.height);
     }
   }
-  FinishAndStoreOverflow(&overflowRect, GetSize());
+  FinishAndStoreOverflow(overflow, GetSize());
 
   if (mScrolling)
     aBoxLayoutState.SetPaintingDisabled(PR_FALSE);

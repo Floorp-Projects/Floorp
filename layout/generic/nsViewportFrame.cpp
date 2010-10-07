@@ -336,8 +336,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // XXX Should we do something to clip our children to this?
-  aDesiredSize.mOverflowArea =
-    nsRect(nsPoint(0, 0), nsSize(aDesiredSize.width, aDesiredSize.height));
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

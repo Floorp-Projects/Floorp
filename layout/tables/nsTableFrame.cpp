@@ -1824,7 +1824,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   else {
     // Calculate the overflow area contribution from our children.
     for (nsIFrame* kid = GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
-      ConsiderChildOverflow(aDesiredSize.mOverflowArea, kid);
+      ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kid);
     }
   }
 
@@ -1852,11 +1852,11 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
     nsMargin bcMargin = GetExcludedOuterBCBorder();
     tableRect.Inflate(bcMargin);
   }
-  aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, tableRect);
+  aDesiredSize.mOverflowAreas.UnionAllWith(tableRect);
 
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     // Fulfill the promise InvalidateFrame makes.
-    Invalidate(aDesiredSize.mOverflowArea);
+    Invalidate(aDesiredSize.VisualOverflow());
   } else {
     CheckInvalidateSizeChange(aDesiredSize);
   }
@@ -2976,7 +2976,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
       DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
       // this might have changed the overflow area incorporate the childframe overflow area.
       for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-        ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
+        ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
       }
       desiredHeight = tableSpecifiedHeight;
     }
@@ -2993,8 +2993,7 @@ void ResizeCells(nsTableFrame& aTableFrame)
   nsRect tableRect = aTableFrame.GetRect();
   tableDesiredSize.width = tableRect.width;
   tableDesiredSize.height = tableRect.height;
-  tableDesiredSize.mOverflowArea = nsRect(0, 0, tableRect.width,
-                                          tableRect.height);
+  tableDesiredSize.SetOverflowAreasToDesiredBounds();
 
   for (PRUint32 rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
@@ -3003,19 +3002,17 @@ void ResizeCells(nsTableFrame& aTableFrame)
     nsHTMLReflowMetrics groupDesiredSize;
     groupDesiredSize.width = rowGroupRect.width;
     groupDesiredSize.height = rowGroupRect.height;
-    groupDesiredSize.mOverflowArea = nsRect(0, 0, groupDesiredSize.width,
-                                      groupDesiredSize.height);
+    groupDesiredSize.SetOverflowAreasToDesiredBounds();
+
     nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
     while (rowFrame) {
       rowFrame->DidResize();
-      rgFrame->ConsiderChildOverflow(groupDesiredSize.mOverflowArea, rowFrame);
+      rgFrame->ConsiderChildOverflow(groupDesiredSize.mOverflowAreas, rowFrame);
       rowFrame = rowFrame->GetNextRow();
     }
     rgFrame->FinishAndStoreOverflow(&groupDesiredSize);
-    // make the coordinates of |desiredSize.mOverflowArea| incorrect
-    // since it's about to go away:
-    groupDesiredSize.mOverflowArea.MoveBy(rgFrame->GetPosition());
-    tableDesiredSize.mOverflowArea.UnionRect(tableDesiredSize.mOverflowArea, groupDesiredSize.mOverflowArea);
+    tableDesiredSize.mOverflowAreas.UnionWith(groupDesiredSize.mOverflowAreas +
+                                              rgFrame->GetPosition());
   }
   aTableFrame.FinishAndStoreOverflow(&tableDesiredSize);
 }

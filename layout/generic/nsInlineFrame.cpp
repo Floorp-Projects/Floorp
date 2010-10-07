@@ -679,7 +679,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
   // For now our overflow area is zero. The real value will be
   // computed in |nsLineLayout::RelativePositionFrames|.
-  aMetrics.mOverflowArea.SetRect(0, 0, 0, 0);
+  aMetrics.mOverflowAreas.Clear();
 
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
