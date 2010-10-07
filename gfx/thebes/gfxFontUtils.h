@@ -227,10 +227,7 @@ public:
         }
         Block *block = mBlocks[blockIndex];
         if (!block) {
-            block = new Block;
-            if (NS_UNLIKELY(!block)) // OOM
-                return;
-            mBlocks[blockIndex] = block;
+            return;
         }
         block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] &= ~(1 << (aIndex & 0x7));
     }
@@ -248,22 +245,12 @@ public:
 
         for (PRUint32 i = startIndex; i <= endIndex; ++i) {
             const PRUint32 blockFirstBit = i * BLOCK_SIZE_BITS;
-            const PRUint32 blockLastBit = blockFirstBit + BLOCK_SIZE_BITS - 1;
 
             Block *block = mBlocks[i];
             if (!block) {
-                PRBool fullBlock = PR_FALSE;
-                if (aStart <= blockFirstBit && aEnd >= blockLastBit)
-                    fullBlock = PR_TRUE;
-
-                block = new Block(fullBlock ? 0xFF : 0);
-
-                if (NS_UNLIKELY(!block)) // OOM
-                    return;
-                mBlocks[i] = block;
-
-                if (fullBlock)
-                    continue;
+                // any nonexistent block is implicitly all clear,
+                // so there's no need to even create it
+                continue;
             }
 
             const PRUint32 start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
