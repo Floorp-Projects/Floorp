@@ -618,7 +618,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this,
                                                GetView(),
-                                               &desiredSize.mOverflowArea, 0);
+                                               desiredSize.VisualOverflow(), 0);
   }
 }
 

@@ -374,8 +374,7 @@ nsTableRowFrame::DidResize()
   nsHTMLReflowMetrics desiredSize;
   desiredSize.width = mRect.width;
   desiredSize.height = mRect.height;
-  desiredSize.mOverflowArea = nsRect(0, 0, desiredSize.width,
-                                     desiredSize.height);
+  desiredSize.SetOverflowAreasToDesiredBounds();
 
   while (childFrame) {
     nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
@@ -399,7 +398,7 @@ nsTableRowFrame::DidResize()
       
       // Always store the overflow, even if the height didn't change, since
       // we'll lose part of our overflow area otherwise.
-      ConsiderChildOverflow(desiredSize.mOverflowArea, cellFrame);
+      ConsiderChildOverflow(desiredSize.mOverflowAreas, cellFrame);
 
       // Note that if the cell's *content* needs to change in response
       // to this height, it will get a special height reflow.
@@ -409,7 +408,8 @@ nsTableRowFrame::DidResize()
   }
   FinishAndStoreOverflow(&desiredSize);
   if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(), &desiredSize.mOverflowArea, 0);
+    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(),
+                                               desiredSize.VisualOverflow(), 0);
   }
   // Let our base class do the usual work
 }
@@ -927,12 +927,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         
         desiredSize.width = cellDesiredSize.width;
         desiredSize.height = cellDesiredSize.height;
-        if (cellFrame->HasOverflowRect())
-          desiredSize.mOverflowArea = cellFrame->GetOverflowRect();
-        else
-          desiredSize.mOverflowArea.SetRect(0, 0, cellDesiredSize.width,
-                                            cellDesiredSize.height);
-        
+        desiredSize.mOverflowAreas = cellFrame->GetOverflowAreas();
+
         // if we are in a floated table, our position is not yet established, so we cannot reposition our views
         // the containing block will do this for us after positioning the table
         if (!aTableFrame.GetStyleDisplay()->IsFloating()) {
@@ -993,7 +989,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         aStatus = NS_FRAME_NOT_COMPLETE;
       }
     }
-    ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
     x += cellSpacingX;
   }
 
@@ -1030,8 +1026,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     }
     aDesiredSize.height = NS_MAX(cellMaxHeight, styleHeight);
   }
-  nsRect rowRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-  aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, rowRect);
+  aDesiredSize.UnionOverflowAreasWithDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
   return rv;
 }

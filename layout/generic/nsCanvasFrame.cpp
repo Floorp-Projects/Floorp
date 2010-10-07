@@ -548,9 +548,9 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       aDesiredSize.height = aReflowState.ComputedHeight();
     }
 
-    aDesiredSize.mOverflowArea.UnionRect(
-      nsRect(0, 0, aDesiredSize.width, aDesiredSize.height),
-      kidDesiredSize.mOverflowArea + kidPt);
+    aDesiredSize.SetOverflowAreasToDesiredBounds();
+    aDesiredSize.mOverflowAreas.UnionWith(
+      kidDesiredSize.mOverflowAreas + kidPt);
 
     if (mAbsoluteContainer.HasAbsoluteFrames()) {
       PRBool widthChanged = aDesiredSize.width != mRect.width;

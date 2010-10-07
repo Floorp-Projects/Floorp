@@ -957,10 +957,10 @@ nsTableOuterFrame::UpdateReflowMetrics(PRUint8              aCaptionSide,
   SetDesiredSize(aCaptionSide, aInnerMargin, aCaptionMargin,
                  aMet.width, aMet.height);
 
-  aMet.mOverflowArea = nsRect(0, 0, aMet.width, aMet.height);
-  ConsiderChildOverflow(aMet.mOverflowArea, mInnerTableFrame);
+  aMet.SetOverflowAreasToDesiredBounds();
+  ConsiderChildOverflow(aMet.mOverflowAreas, mInnerTableFrame);
   if (mCaptionFrame) {
-    ConsiderChildOverflow(aMet.mOverflowArea, mCaptionFrame);
+    ConsiderChildOverflow(aMet.mOverflowAreas, mCaptionFrame);
   }
   FinishAndStoreOverflow(&aMet);
 }

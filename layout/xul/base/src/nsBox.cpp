@@ -610,28 +610,29 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
   flags |= stateFlags;
 
-  nsRect rect(nsPoint(0, 0), GetSize());
+  nsRect visualOverflow;
 
   if (ComputesOwnOverflowArea()) {
-    rect = GetOverflowRect();
+    visualOverflow = GetVisualOverflowRect();
   }
   else {
+    nsRect rect(nsPoint(0, 0), GetSize());
+    nsOverflowAreas overflowAreas(rect, rect);
     if (!DoesClipChildren() && !IsCollapsed(aState)) {
       // See if our child frames caused us to overflow after being laid
       // out. If so, store the overflow area.  This normally can't happen
       // in XUL, but it can happen with the CSS 'outline' property and
       // possibly with other exotic stuff (e.g. relatively positioned
       // frames in HTML inside XUL).
-      nsIFrame* box = GetChildBox();
-      while (box) {
-        nsRect bounds = box->GetOverflowRect() + box->GetPosition();
-        rect.UnionRect(rect, bounds);
-
-        box = box->GetNextBox();
+      for (nsIFrame* kid = GetChildBox(); kid; kid = kid->GetNextBox()) {
+        nsOverflowAreas kidOverflow =
+          kid->GetOverflowAreas() + kid->GetPosition();
+        overflowAreas.UnionWith(kidOverflow);
       }
     }
 
-    FinishAndStoreOverflow(&rect, GetSize());
+    FinishAndStoreOverflow(overflowAreas, GetSize());
+    visualOverflow = overflowAreas.VisualOverflow();
   }
 
   nsIView* view = GetView();
@@ -642,7 +643,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
                              presContext, 
                              this,
                              view,
-                             &rect,
+                             visualOverflow,
                              flags);
   } 
 
