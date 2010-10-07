@@ -4959,6 +4959,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 
     case WM_RBUTTONUP:
+      if (mCustomNonClient &&
+          DispatchMouseEvent(NS_MOUSE_MOZHITTEST, wParam, lParam,
+                             PR_FALSE, nsMouseEvent::eLeftButton,
+                             MOUSE_INPUT_SOURCE())) {
+        // Blank area hit, throw up the system menu.
+        HMENU hMenu = GetSystemMenu(mWnd, FALSE);
+        if (hMenu) {
+          LPARAM param = lParamToScreen(lParam);
+          LPARAM cmd = TrackPopupMenu(hMenu,
+                                      (TPM_LEFTBUTTON|TPM_RETURNCMD|TPM_TOPALIGN|
+                                       (mIsRTL ? TPM_RIGHTALIGN : TPM_LEFTALIGN)),
+                                      GET_X_LPARAM(param), GET_Y_LPARAM(param),
+                                      0, mWnd, NULL);
+          if (cmd) {
+            PostMessage(mWnd, WM_SYSCOMMAND, cmd, 0);
+          }
+          result = PR_TRUE;
+          break;
+        }
+      }
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
@@ -5647,7 +5667,6 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
 
   return testResult;
 }
-
 
 #ifndef WINCE
 void nsWindow::PostSleepWakeNotification(const char* aNotification)
