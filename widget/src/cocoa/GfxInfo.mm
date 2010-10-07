@@ -182,14 +182,14 @@ GfxInfo::AddCrashReportAnnotations()
 NS_IMETHODIMP
 GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
 {
-  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
     PRUint32 r = mRendererIDs[i];
 
     if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
       if (r == kCGLRendererATIRadeonX1000ID)
-        status = nsIGfxInfo::FEATURE_BLOCKED;
+        status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
     }
   }
 
