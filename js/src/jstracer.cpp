@@ -12209,7 +12209,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PIC
         bool result = op(cx, obj, id, vp);
         if (!result)
             SetBuiltinError(cx);
-        return cx->traceState->builtinStatus == 0;
+        return cx->tracerState->builtinStatus == 0;
     }
 
     /* Try to hit in the cache. */
