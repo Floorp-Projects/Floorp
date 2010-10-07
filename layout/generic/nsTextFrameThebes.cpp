@@ -6075,7 +6075,7 @@ nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
        eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) ||
       (GetStateBits() & TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.
-    return GetOverflowRect();
+    return GetVisualOverflowRect();
   }
 
   gfxSkipCharsIterator iter = const_cast<nsTextFrame*>(this)->EnsureTextRun();
