@@ -1092,8 +1092,9 @@ EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN static
     return NULL;
 }
 
+/* ES5 15.1.2.1. */
 static JSBool
-obj_eval(JSContext *cx, uintN argc, Value *vp)
+eval(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc < 1) {
         vp->setUndefined();
@@ -1251,6 +1252,16 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
 #endif
 
     return ok;
+}
+
+namespace js {
+
+bool
+IsBuiltinEvalFunction(JSFunction *fun)
+{
+    return fun->maybeNative() == eval;
+}
+
 }
 
 #if JS_HAS_OBJ_WATCHPOINT
@@ -3508,10 +3519,8 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
-    if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom, obj_eval, 1,
-                           JSFUN_STUB_GSOPS)) {
+    if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom, eval, 1, JSFUN_STUB_GSOPS))
         return NULL;
-    }
 
     return proto;
 }
