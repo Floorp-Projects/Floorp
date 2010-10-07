@@ -605,9 +605,14 @@
   margin-bottom: 2em;
 }
 
+.detail-row[first-row="true"],
+.detail-row-complex[first-row="true"] {
+  border-top: none;
+}
+
 .detail-row,
 .detail-row-complex {
-  border-bottom: 1px solid grey;
+  border-top: 1px solid grey;
   -moz-box-align: center;
 }
 

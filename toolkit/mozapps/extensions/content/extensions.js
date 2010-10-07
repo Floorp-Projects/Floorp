@@ -1997,6 +1997,16 @@ var gDetailView = {
     }
 
     document.getElementById("detail-prefs").hidden = !aIsRemote && !aAddon.optionsURL;
+    
+    var gridRows = document.querySelectorAll("#detail-grid rows row");
+    for (var i = 0, first = true; i < gridRows.length; ++i) {
+      if (first && window.getComputedStyle(gridRows[i], null).getPropertyValue("display") != "none") {
+        gridRows[i].setAttribute("first-row", true);
+        first = false;
+      } else {
+        gridRows[i].removeAttribute("first-row");
+      }
+    }
 
     this.updateState();
 
