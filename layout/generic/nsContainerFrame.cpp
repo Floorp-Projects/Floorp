@@ -515,14 +515,12 @@ void
 nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
                                            nsIFrame*       aFrame,
                                            nsIView*        aView,
-                                           const nsRect*   aCombinedArea,
+                                           const nsRect&   aVisualOverflowArea,
                                            PRUint32        aFlags)
 {
   if (!aView) {
     return;
   }
-
-  NS_ASSERTION(aCombinedArea, "Combined area must be passed in now");
 
   // Make sure the view is sized and positioned correctly
   if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
@@ -532,7 +530,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
   if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
     nsIViewManager* vm = aView->GetViewManager();
 
-    vm->ResizeView(aView, *aCombinedArea, PR_TRUE);
+    vm->ResizeView(aView, aVisualOverflowArea, PR_TRUE);
   }
 }
 
