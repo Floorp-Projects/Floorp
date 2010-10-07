@@ -686,10 +686,7 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
 
   nsCOMPtr<nsIURI> URI;
   if (NS_SUCCEEDED(aPrincipal->GetURI(getter_AddRefs(URI))) && URI) {
-    PRBool isAbout;
-    mCanUseChromePersist =
-      (NS_SUCCEEDED(URI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
-      (NS_SUCCEEDED(URI->SchemeIs("about", &isAbout)) && isAbout);
+    mCanUseChromePersist = URICanUseChromePersist(URI);
   }
 
   return NS_OK;
@@ -794,8 +791,10 @@ nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
     PRUint32 cookieBehavior = nsContentUtils::GetIntPref(kCookiesBehavior);
     PRUint32 lifetimePolicy = nsContentUtils::GetIntPref(kCookiesLifetimePolicy);
 
-    // treat ask as reject always
-    if (cookieBehavior == BEHAVIOR_REJECT || lifetimePolicy == ASK_BEFORE_ACCEPT)
+    // Treat "ask every time" as "reject always".
+    // Chrome persistent pages can bypass this check.
+    if ((cookieBehavior == BEHAVIOR_REJECT || lifetimePolicy == ASK_BEFORE_ACCEPT) &&
+        !URICanUseChromePersist(subjectURI))
       return PR_FALSE;
 
     if (lifetimePolicy == ACCEPT_SESSION)
@@ -823,6 +822,15 @@ nsDOMStorage::CacheStoragePermissions()
 
   NS_ASSERTION(mSecurityChecker, "Has non-null mSecurityChecker");
   return mSecurityChecker->CanAccess(subjectPrincipal);
+}
+
+// static
+PRBool
+nsDOMStorage::URICanUseChromePersist(nsIURI* aURI) {
+  PRBool isAbout;
+  return
+    (NS_SUCCEEDED(aURI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("about", &isAbout)) && isAbout);
 }
 
 bool
