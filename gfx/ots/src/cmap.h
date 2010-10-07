@@ -22,7 +22,9 @@ struct OpenTypeCMAP {
       : subtable_3_0_4_data(NULL),
         subtable_3_0_4_length(0),
         subtable_3_1_4_data(NULL),
-        subtable_3_1_4_length(0) {
+        subtable_3_1_4_length(0),
+        subtable_0_5_14_data(NULL),
+        subtable_0_5_14_length(0) {
   }
 
   // Platform 3, Encoding 0, Format 4, MS Symbol table.
@@ -31,6 +33,9 @@ struct OpenTypeCMAP {
   // Platform 3, Encoding 1, Format 4, MS Unicode BMP table.
   const uint8_t *subtable_3_1_4_data;
   size_t subtable_3_1_4_length;
+  // Platform 0, Encoding 5, Format 14, Unicode Variation Sequences table.
+  const uint8_t *subtable_0_5_14_data;
+  size_t subtable_0_5_14_length;
 
   // Platform 3, Encoding 10, Format 12, MS Unicode UCS-4 table.
   std::vector<OpenTypeCMAPSubtableRange> subtable_3_10_12;
