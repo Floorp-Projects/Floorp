@@ -93,7 +93,7 @@ force_eviction(aNumberTotal, aNumberOld)
       // Sleep a while, to make sure the first batch of cookies is older than
       // the second (timer resolution varies on different platforms). This
       // delay must be measurably greater than the eviction age threshold.
-      sleep(1100);
+      sleep(2000);
     }
   }
 }
