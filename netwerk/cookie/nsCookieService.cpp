@@ -730,9 +730,10 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   }
 
   // open a connection to the cookie database, and only cache our connection
-  // and statements upon success. The connection is opened shared such that
-  // the main and background threads can operate on the db concurrently.
-  rv = mStorageService->OpenDatabase(cookieFile, getter_AddRefs(mDBState->dbConn));
+  // and statements upon success. The connection is opened unshared to eliminate
+  // cache contention between the main and background threads.
+  rv = mStorageService->OpenUnsharedDatabase(cookieFile,
+    getter_AddRefs(mDBState->dbConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Grow cookie db in 512KB increments
@@ -880,9 +881,6 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
 
   // make operations on the table asynchronous, for performance
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
-
-  // open in exclusive mode for performance
-  mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
 
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1548,7 +1546,7 @@ nsCookieService::GetSyncDBConn()
   mDefaultDBState.dbConn->GetDatabaseFile(getter_AddRefs(cookieFile));
   NS_ASSERTION(cookieFile, "no cookie file on connection");
 
-  mStorageService->OpenDatabase(cookieFile,
+  mStorageService->OpenUnsharedDatabase(cookieFile,
     getter_AddRefs(mDefaultDBState.syncConn));
   NS_ASSERTION(mDefaultDBState.syncConn, "can't open sync db connection");
   return mDefaultDBState.syncConn;
