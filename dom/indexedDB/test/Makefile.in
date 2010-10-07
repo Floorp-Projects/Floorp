@@ -80,7 +80,7 @@ TEST_FILES = \
   $(NULL)
 
 
-ifneq (mobile,$(MOZ_BUILD_APP))
+ifeq (browser,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
   browserHelpers.js \
   browser_permissionsPrompt.html \
