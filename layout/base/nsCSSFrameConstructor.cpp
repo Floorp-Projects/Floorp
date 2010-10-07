@@ -4358,9 +4358,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                !mPresShell->GetPresContext()->IsPaginated(),
                "Shouldn't propagate scroll in paginated contexts");
 
-  // If the frame is a block-level frame and is scrollable, then wrap it
-  // in a scroll frame.  Except we don't want to do that for paginated contexts
-  // for frames that are block-outside.
+  // If the frame is a block-level frame and is scrollable, then wrap it in a
+  // scroll frame.  Except we don't want to do that for paginated contexts for
+  // frames that are block-outside and aren't frames for native anonymous stuff.
   // The condition on skipping scrollframe construction in the
   // paginated case needs to match code in ConstructNonScrollableBlock
   // and in nsFrame::ApplyPaginatedOverflowClipping.
@@ -4371,7 +4371,8 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       aDisplay->IsScrollableOverflow() &&
       !propagatedScrollToViewport &&
       (!mPresShell->GetPresContext()->IsPaginated() ||
-       !aDisplay->IsBlockOutside())) {
+       !aDisplay->IsBlockOutside() ||
+       aContent->IsInNativeAnonymousSubtree())) {
     static const FrameConstructionData sScrollableBlockData =
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructScrollableBlock);
     return &sScrollableBlockData;
@@ -4510,7 +4511,8 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
       (mPresShell->GetPresContext()->IsPaginated() &&
        aDisplay->IsBlockInside() &&
        aDisplay->IsScrollableOverflow() &&
-       aDisplay->IsBlockOutside())) {
+       aDisplay->IsBlockOutside() &&
+       !aItem.mContent->IsInNativeAnonymousSubtree())) {
     *aNewFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
   } else {
     *aNewFrame = NS_NewBlockFrame(mPresShell, styleContext);
