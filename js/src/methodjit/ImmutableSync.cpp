@@ -45,7 +45,7 @@ using namespace js;
 using namespace js::mjit;
 
 ImmutableSync::ImmutableSync(JSContext *cx, const FrameState &frame)
-  : cx(cx), entries(NULL), frame(frame), generation(0)
+  : cx(cx), entries(NULL), frame(frame)
 {
 }
 
@@ -57,18 +57,19 @@ ImmutableSync::~ImmutableSync()
 bool
 ImmutableSync::init(uint32 nentries)
 {
-    entries = (SyncEntry *)cx->calloc(sizeof(SyncEntry) * nentries);
+    entries = (SyncEntry *)cx->malloc(sizeof(SyncEntry) * nentries);
     return !!entries;
 }
 
 void
-ImmutableSync::reset(Assembler *masm, Registers avail, FrameEntry *top, FrameEntry *bottom)
+ImmutableSync::reset(Assembler *masm, Registers avail, uint32 n,
+                     FrameEntry *bottom)
 {
     this->avail = avail;
+    this->nentries = n;
     this->masm = masm;
-    this->top = top;
     this->bottom = bottom;
-    this->generation++;
+    memset(entries, 0, sizeof(SyncEntry) * nentries);
     memset(regs, 0, sizeof(regs));
 }
 
@@ -91,9 +92,16 @@ ImmutableSync::allocReg()
 
         if (!regs[i]) {
             /* If the frame does not own this register, take it! */
-            FrameEntry *fe = frame.regstate[i].fe();
+            FrameEntry *fe = frame.regstate[i].fe;
             if (!fe)
                 return reg;
+
+            /*
+             * The Reifier does not own this register, but the frame does.
+             * This must mean that we've not yet processed this entry, and
+             * that it's data has not been clobbered.
+             */
+            JS_ASSERT(fe->trackerIndex() < nentries);
 
             evictFromFrame = i;
 
@@ -107,14 +115,18 @@ ImmutableSync::allocReg()
     }
 
     if (evictFromFrame != FrameState::InvalidIndex) {
-        FrameEntry *fe = frame.regstate[evictFromFrame].fe();
+        FrameEntry *fe = frame.regstate[evictFromFrame].fe;
         SyncEntry &e = entryFor(fe);
-        if (frame.regstate[evictFromFrame].type() == RematInfo::TYPE) {
+        if (frame.regstate[evictFromFrame].type == RematInfo::TYPE) {
             JS_ASSERT(!e.typeClobbered);
+            e.typeSynced = true;
             e.typeClobbered = true;
+            masm->storeTypeTag(fe->type.reg(), frame.addressOf(fe));
         } else {
             JS_ASSERT(!e.dataClobbered);
+            e.dataSynced = true;
             e.dataClobbered = true;
+            masm->storePayload(fe->data.reg(), frame.addressOf(fe));
         }
         return RegisterID(evictFromFrame);
     }
@@ -138,38 +150,39 @@ ImmutableSync::allocReg()
 inline ImmutableSync::SyncEntry &
 ImmutableSync::entryFor(FrameEntry *fe)
 {
-    JS_ASSERT(fe <= top);
-    SyncEntry &e = entries[frame.indexOfFe(fe)];
-    if (e.generation != generation)
-        e.reset(generation);
-    return e;
+    JS_ASSERT(fe->trackerIndex() < nentries);
+    return entries[fe->trackerIndex()];
 }
 
 void
 ImmutableSync::sync(FrameEntry *fe)
 {
-#ifdef DEBUG
-    top = fe;
-#endif
-
+    JS_ASSERT(nentries);
     if (fe->isCopy())
         syncCopy(fe);
     else
         syncNormal(fe);
+    nentries--;
 }
 
 bool
 ImmutableSync::shouldSyncType(FrameEntry *fe, SyncEntry &e)
 {
-    /* Registers are synced up-front. */
-    return !fe->type.synced() && !fe->type.inRegister();
+    if (fe->type.inRegister() && !e.typeClobbered)
+        return true;
+    if (e.hasTypeReg)
+        return true;
+    return frame.inTryBlock || fe >= bottom;
 }
 
 bool
 ImmutableSync::shouldSyncData(FrameEntry *fe, SyncEntry &e)
 {
-    /* Registers are synced up-front. */
-    return !fe->data.synced() && !fe->data.inRegister();
+    if (fe->data.inRegister() && !e.dataClobbered)
+        return true;
+    if (e.hasDataReg)
+        return true;
+    return frame.inTryBlock || fe >= bottom;
 }
 
 JSC::MacroAssembler::RegisterID
@@ -203,7 +216,8 @@ ImmutableSync::ensureDataReg(FrameEntry *fe, SyncEntry &e)
 void
 ImmutableSync::syncCopy(FrameEntry *fe)
 {
-    JS_ASSERT(fe >= bottom);
+    if (!frame.inTryBlock && fe < bottom)
+        return;
 
     FrameEntry *backing = fe->copyOf();
     SyncEntry &e = entryFor(backing);
@@ -240,7 +254,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         e.type = fe->getKnownType();
     }
 
-    if (shouldSyncData(fe, e)) {
+    if (!fe->data.synced() && !e.dataSynced && shouldSyncData(fe, e)) {
         if (fe->isConstant()) {
             masm->storeValue(fe->getValue(), addr);
             return;
@@ -248,7 +262,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         masm->storePayload(ensureDataReg(fe, e), addr);
     }
 
-    if (shouldSyncType(fe, e)) {
+    if (!fe->type.synced() && !e.typeSynced && shouldSyncType(fe, e)) {
         if (e.learnedType)
             masm->storeTypeTag(ImmType(e.type), addr);
         else
@@ -258,14 +272,14 @@ ImmutableSync::syncNormal(FrameEntry *fe)
     if (e.hasDataReg) {
         avail.putReg(e.dataReg);
         regs[e.dataReg] = NULL;
-    } else if (!e.dataClobbered && fe->data.inRegister() && frame.regstate[fe->data.reg()].fe()) {
+    } else if (!e.dataClobbered && fe->data.inRegister() && frame.regstate[fe->data.reg()].fe) {
         avail.putReg(fe->data.reg());
     }
 
     if (e.hasTypeReg) {
         avail.putReg(e.typeReg);
         regs[e.typeReg] = NULL;
-    } else if (!e.typeClobbered && fe->type.inRegister() && frame.regstate[fe->type.reg()].fe()) {
+    } else if (!e.typeClobbered && fe->type.inRegister() && frame.regstate[fe->type.reg()].fe) {
         avail.putReg(fe->type.reg());
     }
 }
