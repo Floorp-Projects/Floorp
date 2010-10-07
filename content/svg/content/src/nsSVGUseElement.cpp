@@ -59,7 +59,7 @@ nsSVGElement::LengthInfo nsSVGUseElement::sLengthInfo[4] =
 
 nsSVGElement::StringInfo nsSVGUseElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
@@ -514,6 +514,20 @@ nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum)
     UnlinkSource();
     TriggerReclone();
   }
+}
+
+void
+nsSVGUseElement::DidAnimateString(PRUint8 aAttrEnum)
+{
+  if (aAttrEnum == HREF) {
+    // we're changing our nature, clear out the clone information
+    mOriginal = nsnull;
+    UnlinkSource();
+    TriggerReclone();
+    return;
+  }
+
+  nsSVGUseElementBase::DidAnimateString(aAttrEnum);
 }
 
 nsSVGElement::StringAttributesInfo
