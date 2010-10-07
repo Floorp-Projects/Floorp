@@ -319,13 +319,16 @@ template <typename T>
 Arena<T> *
 Chunk::allocateArena(JSCompartment *comp, unsigned thingKind)
 {
-    JSRuntime *rt = info.runtime;
     JS_ASSERT(hasAvailableArenas());
     Arena<T> *arena = info.emptyArenaLists.getNext<T>(comp, thingKind);
     JS_ASSERT(arena);
     JS_ASSERT(arena->header()->isUsed);
     --info.numFree;
+
+    JSRuntime *rt = info.runtime;
     rt->gcBytes += sizeof(Arena<T>);
+    if (rt->gcBytes >= rt->gcTriggerBytes)
+        TriggerGC(rt);
     METER(rt->gcStats.nallarenas++);
     return arena;
 }
@@ -413,23 +416,9 @@ ReleaseGCChunk(JSRuntime *rt, Chunk *p)
 }
 
 static Chunk *
-PickChunk(JSContext *cx)
+PickChunk(JSRuntime *rt)
 {
-    JSRuntime *rt = cx->runtime;
     Chunk *chunk;
-    if (!JS_THREAD_DATA(cx)->waiveGCQuota && 
-        (rt->gcBytes >= rt->gcMaxBytes ||
-        rt->gcBytes > GC_HEAP_GROWTH_FACTOR * rt->gcNewArenaTriggerBytes)) {
-        /*
-         * FIXME bug 524051 We cannot run a last-ditch GC on trace for now, so
-         * just pretend we are out of memory which will throw us off trace and
-         * we will re-try this code path from the interpreter.
-         */
-        if (!JS_ON_TRACE(cx))
-            return NULL;
-        TriggerGC(cx->runtime);
-    }
-
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
         if (r.front()->hasAvailableArenas())
             return r.front();
@@ -477,22 +466,17 @@ static Arena<T> *
 AllocateArena(JSContext *cx, unsigned thingKind)
 {
     JSRuntime *rt = cx->runtime;
-    Chunk *chunk;
-    Arena<T> *arena;
-    {
-        AutoLockGC lock(rt);
-        if (cx->compartment->chunk && cx->compartment->chunk->hasAvailableArenas()) {
-            chunk = cx->compartment->chunk;
-        } else {
-            if (!(chunk = PickChunk(cx))) {
-                return NULL;
-            } else {
-                cx->compartment->chunk = chunk;
-            }
+    AutoLockGC lock(rt);
+    Chunk *chunk = cx->compartment->chunk;
+    if (!chunk || !chunk->hasAvailableArenas()) {
+        chunk = PickChunk(rt);
+        if (!chunk) {
+            TriggerGC(rt);
+            return NULL;
         }
-        arena = chunk->allocateArena<T>(cx->compartment, thingKind);
+        cx->compartment->chunk = chunk;
     }
-    return arena;
+    return chunk->allocateArena<T>(cx->compartment, thingKind);
 }
 
 JS_FRIEND_API(bool)
@@ -551,18 +535,13 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
     rt->gcEmptyArenaPoolLifespan = 30000;
 
-    /*
-     * By default the trigger factor gets maximum possible value. This
-     * means that GC will not be triggered by growth of GC memory (gcBytes).
-     */
-    rt->setGCTriggerFactor((uint32) -1);
+    rt->gcTriggerFactor = uint32(100.0f * GC_HEAP_GROWTH_FACTOR);
 
     /*
      * The assigned value prevents GC from running when GC memory is too low
      * (during JS engine start).
      */
     rt->setGCLastBytes(8192);
-    rt->gcNewArenaTriggerBytes = GC_ARENA_ALLOCATION_TRIGGER;
 
     METER(PodZero(&rt->gcStats));
     return true;
@@ -705,7 +684,7 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
 
     uint32 traceKind;
 #if defined JS_DUMP_CONSERVATIVE_GC_ROOTS || defined JS_GCMETER
-    ConservativeGCTest test = 
+    ConservativeGCTest test =
 #endif
     MarkIfGCThingWord(trc, w, traceKind);
 
@@ -1016,10 +995,13 @@ void
 JSRuntime::setGCLastBytes(size_t lastBytes)
 {
     gcLastBytes = lastBytes;
-    uint64 triggerBytes = uint64(lastBytes) * uint64(gcTriggerFactor / 100);
-    if (triggerBytes != size_t(triggerBytes))
-        triggerBytes = size_t(-1);
-    gcTriggerBytes = size_t(triggerBytes);
+
+    /* FIXME bug 603916 - we should unify the triggers here. */
+    float trigger1 = float(lastBytes) * float(gcTriggerFactor) / 100.0f;
+    float trigger2 = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) *
+                     GC_HEAP_GROWTH_FACTOR;
+    float maxtriger = Max(trigger1, trigger2);
+    gcTriggerBytes = (float(gcMaxBytes) < maxtriger) ? gcMaxBytes : size_t(maxtriger);
 }
 
 void
@@ -1031,22 +1013,6 @@ FreeLists::purge()
      */
     for (FreeCell ***p = finalizables; p != JS_ARRAY_END(finalizables); ++p)
         *p = NULL;
-}
-
-static inline bool
-IsGCThresholdReached(JSRuntime *rt)
-{
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal >= 1)
-        return true;
-#endif
-
-    /*
-     * Since the initial value of the gcLastBytes parameter is not equal to
-     * zero (see the js_InitGC function) the return value is false when
-     * the gcBytes value is close to zero at the JS engine start.
-     */
-    return rt->isGCMallocLimitReached() || rt->gcBytes >= rt->gcTriggerBytes;
 }
 
 struct JSShortString;
@@ -1069,6 +1035,38 @@ CheckAllocation(JSContext *cx)
 }
 #endif
 
+inline bool
+NeedLastDitchGC(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal >= 1)
+        return true;
+#endif
+    return !!rt->gcIsNeeded;
+}
+
+/*
+ * Return false only if the GC run but could not bring its memory usage under
+ * JSRuntime::gcMaxBytes.
+ */
+static bool
+RunLastDitchGC(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    METER(rt->gcStats.lastditch++);
+#ifdef JS_THREADSAFE
+    Conditionally<AutoUnlockDefaultCompartment>
+        unlockDefaultCompartmenIf(cx->compartment == rt->defaultCompartment &&
+                                  rt->defaultCompartmentIsLocked, cx);
+#endif
+    /* The last ditch GC preserves all atoms. */
+    AutoKeepAtoms keep(rt);
+    js_GC(cx, GC_NORMAL);
+
+    return rt->gcBytes < rt->gcMaxBytes;
+}
+
 template <typename T>
 inline bool
 RefillTypedFreeList(JSContext *cx, unsigned thingKind)
@@ -1076,31 +1074,17 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
     JSCompartment *compartment = cx->compartment;
     JS_ASSERT_IF(compartment->freeLists.finalizables[thingKind],
                  !*compartment->freeLists.finalizables[thingKind]);
-    JSRuntime *rt = cx->runtime;
 
-    ArenaList *arenaList;
-    Arena<T> *a;
-
-    JS_ASSERT(!rt->gcRunning);
-    if (rt->gcRunning)
+    JS_ASSERT(!cx->runtime->gcRunning);
+    if (cx->runtime->gcRunning)
         return false;
 
     bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
-    bool doGC = canGC && IsGCThresholdReached(rt);
-
-    arenaList = GetFinalizableArenaList(cx->compartment, thingKind);
     do {
-        if (doGC) {
-            JS_ASSERT(!JS_ON_TRACE(cx));
-#ifdef JS_THREADSAFE
-            Conditionally<AutoUnlockDefaultCompartment> unlockDefaultCompartmentIf(cx->compartment == cx->runtime->defaultCompartment &&
-                                                                           cx->runtime->defaultCompartmentIsLocked, cx);
-#endif
-            /* The last ditch GC preserves all atoms. */
-            AutoKeepAtoms keep(cx->runtime);
-            js_GC(cx, GC_NORMAL);
-            METER(cx->runtime->gcStats.retry++);
-            canGC = false;
+        if (canGC && JS_UNLIKELY(NeedLastDitchGC(cx))) {
+            if (!RunLastDitchGC(cx))
+                break;
+
             /*
              * The JSGC_END callback can legitimately allocate new GC
              * things and populate the free list. If that happens, just
@@ -1108,13 +1092,22 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
              */
             if (compartment->freeLists.finalizables[thingKind])
                 return true;
+            canGC = false;
         }
-        if ((a = (Arena<T> *) arenaList->getNextWithFreeList())) {
+
+        ArenaList *arenaList = GetFinalizableArenaList(compartment, thingKind);
+        Arena<T> *a = reinterpret_cast<Arena<T> *>(arenaList->getNextWithFreeList());
+        if (a) {
             JS_ASSERT(a->header()->freeList);
             JS_ASSERT(sizeof(T) == a->header()->thingSize);
             compartment->freeLists.populate(a, thingKind);
             return true;
         }
+
+        /*
+         * If the allocation fails rt->gcIsNeeded will be set and we will run
+         * the GC on the next loop iteration if the last ditch GC is allowed.
+         */
         a = AllocateArena<T>(cx, thingKind);
         if (a) {
             compartment->freeLists.populate(a, thingKind);
@@ -1122,13 +1115,11 @@ RefillTypedFreeList(JSContext *cx, unsigned thingKind)
             a->getMarkingDelay()->init();
             return true;
         }
-        if (!canGC) {
-            METER(cx->runtime->gcStats.fail++);
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        doGC = true;
-    } while (true);
+    } while (canGC);
+
+    METER(cx->runtime->gcStats.fail++);
+    js_ReportOutOfMemory(cx);
+    return false;
 }
 
 bool
@@ -1253,8 +1244,8 @@ namespace js {
  *
  * To implement such delayed marking of the children with minimal overhead for
  * the normal case of sufficient native stack, the code adds a field per
- * arena. The field marlingdelay->link links all arenas with delayed things 
- * into a stack list with the pointer to stack top in 
+ * arena. The field marlingdelay->link links all arenas with delayed things
+ * into a stack list with the pointer to stack top in
  * GCMarker::unmarkedArenaStackTop. delayMarkingChildren adds
  * arenas to the stack as necessary while markDelayedChildren pops the arenas
  * from the stack until it empties.
@@ -2267,10 +2258,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
             FinalizeArenaList<JSString>(*comp, cx, i);
     }
 
-    rt->gcNewArenaTriggerBytes = rt->gcBytes < GC_ARENA_ALLOCATION_TRIGGER ?
-                                 GC_ARENA_ALLOCATION_TRIGGER :
-                                 rt->gcBytes;
-
     TIMESTAMP(sweepStringEnd);
 
     SweepCompartments(cx, gckind);
@@ -2558,10 +2545,6 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     rt->setGCLastBytes(rt->gcBytes);
 }
 
-/*
- * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
- * rt->gcLock already held, so the lock should be kept on return.
- */
 void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
@@ -2593,24 +2576,20 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
          * on another thread.
          */
         if (JSGCCallback callback = rt->gcCallback) {
-            Conditionally<AutoUnlockGC> unlockIf(!!(gckind & GC_LOCK_HELD), rt);
             if (!callback(cx, JSGC_BEGIN) && gckind != GC_LAST_CONTEXT)
                 return;
         }
 
         {
             /* Lock out other GC allocator and collector invocations. */
-            Conditionally<AutoLockGC> lockIf(!(gckind & GC_LOCK_HELD), rt);
+            AutoLockGC lock(rt);
 
             GCUntilDone(cx, gckind  GCTIMER_ARG);
         }
 
         /* We re-sample the callback again as the finalizers can change it. */
-        if (JSGCCallback callback = rt->gcCallback) {
-            Conditionally<AutoUnlockGC> unlockIf(gckind & GC_LOCK_HELD, rt);
-
+        if (JSGCCallback callback = rt->gcCallback)
             (void) callback(cx, JSGC_END);
-        }
 
         /*
          * On shutdown, iterate until the JSGC_END callback stops creating
@@ -2710,7 +2689,7 @@ TraceRuntime(JSTracer *trc)
         JSContext *cx = trc->context;
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
-      
+
         if (rt->gcThread != cx->thread) {
             AutoGCSession gcsession(cx);
             AutoUnlockGC unlock(rt);

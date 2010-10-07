@@ -1125,8 +1125,7 @@ struct JSThreadData {
 
     /*
      * Flag indicating that we are waiving any soft limits on the GC heap
-     * because we want allocations to be infallible (except when we hit
-     * a hard quota).
+     * because we want allocations to be infallible (except when we hit OOM).
      */
     bool                waiveGCQuota;
 
@@ -1355,22 +1354,21 @@ struct JSRuntime {
     js::GCLocks         gcLocksHash;
     jsrefcount          gcKeepAtoms;
     size_t              gcBytes;
+    size_t              gcTriggerBytes;
     size_t              gcLastBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
-    size_t              gcNewArenaTriggerBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
     js::GCMarker        *gcMarkingTracer;
     uint32              gcTriggerFactor;
-    size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
 
     /*
-     * NB: do not pack another flag here by claiming gcPadding unless the new
-     * flag is written only by the GC thread.  Atomic updates to packed bytes
-     * are not guaranteed, so stores issued by one thread may be lost due to
-     * unsynchronized read-modify-write cycles on other threads.
+     * We can pack these flags as only the GC thread writes to them. Atomic
+     * updates to packed bytes are not guaranteed, so stores issued by one
+     * thread may be lost due to unsynchronized read-modify-write cycles on
+     * other threads.
      */
     bool                gcPoke;
     bool                gcMarkAndSweep;
