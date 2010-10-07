@@ -248,6 +248,28 @@ NS_IMETHODIMP TimerThread::Run()
 {
   nsAutoLock lock(mLock);
 
+  // We need to know how many microseconds give a positive PRIntervalTime. This
+  // is platform-dependent, we calculate it at runtime now.
+  // First we find a value such that PR_MicrosecondsToInterval(high) = 1
+  PRInt32 low = 0, high = 1;
+  while (PR_MicrosecondsToInterval(high) == 0)
+    high <<= 1;
+  // We now have
+  //    PR_MicrosecondsToInterval(low)  = 0
+  //    PR_MicrosecondsToInterval(high) = 1
+  // and we can proceed to find the critical value using binary search
+  while (high-low > 1) {
+    PRInt32 mid = (high+low) >> 1;
+    if (PR_MicrosecondsToInterval(mid) == 0)
+      low = mid;
+    else
+      high = mid;
+  }
+
+  // Half of the amount of microseconds needed to get positive PRIntervalTime.
+  // We use this to decide how to round our wait times later
+  PRInt32 halfMicrosecondsIntervalResolution = high >> 1;
+
   while (!mShutdown) {
     // Have to use PRIntervalTime here, since PR_WaitCondVar takes it
     PRIntervalTime waitFor;
@@ -324,9 +346,17 @@ NS_IMETHODIMP TimerThread::Run()
 
         // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer
         // is due now or overdue.
-        if (now >= timeout)
-          goto next;
-        waitFor = PR_MillisecondsToInterval((timeout - now).ToMilliseconds());
+        //
+        // Note that we can only sleep for integer values of a certain
+        // resolution. We use halfMicrosecondsIntervalResolution, calculated
+        // before, to do the optimal rounding (i.e., of how to decide what
+        // interval is so small we should not wait at all).
+        double microseconds = (timeout - now).ToMilliseconds()*1000;
+        if (microseconds < halfMicrosecondsIntervalResolution)
+          goto next; // round down; execute event now
+        waitFor = PR_MicrosecondsToInterval(microseconds);
+        if (waitFor == 0)
+          waitFor = 1; // round up, wait the minimum time we can wait
       }
 
 #ifdef DEBUG_TIMERS
