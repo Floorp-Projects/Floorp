@@ -525,7 +525,7 @@ stubs::GetElem(VMFrame &f)
         int32_t i = rref.toInt32();
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(i);
-            
+
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
                 copyFrom = obj->addressOfDenseArrayElement(idx);
@@ -617,7 +617,7 @@ stubs::SetElem(VMFrame &f)
     Value &objval = regs.sp[-3];
     Value &idval  = regs.sp[-2];
     Value retval  = regs.sp[-1];
-    
+
     JSObject *obj;
     jsid id;
 
@@ -930,35 +930,44 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         THROW();
 
     /*
-     * We deviate from 10.1.2 in ECMA 262 v3 and under eval use for function
-     * declarations JSObject::setProperty, not JSObject::defineProperty if the
-     * property already exists, to preserve the JSOP_PERMANENT attribute of
-     * existing properties and make sure that such properties cannot be deleted.
+     * We deviate from ES3 10.1.3, ES5 10.5, by using JSObject::setProperty not
+     * JSObject::defineProperty for a function declaration in eval code whose
+     * id is already bound to a JSPROP_PERMANENT property, to ensure that such
+     * properties can't be deleted.
      *
      * We also use JSObject::setProperty for the existing properties of Call
-     * objects with matching attributes to preserve the native getters and
-     * setters that store the value of the property in the interpreter frame,
-     * see bug 467495.
+     * objects with matching attributes to preserve the internal (JSPropertyOp)
+     * getters and setters that update the value of the property in the stack
+     * frame. See bug 467495.
      */
     doSet = false;
     if (prop) {
+        JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)));
         JS_ASSERT((attrs == JSPROP_ENUMERATE) == fp->isEvalFrame());
-        if (attrs == JSPROP_ENUMERATE ||
-            (parent == pobj &&
-             parent->isCall() &&
-             (old = ((Shape *) prop)->attributes(),
-              !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
-              (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs))) {
-            /*
-             * js_CheckRedeclaration must reject attempts to add a getter or
-             * setter to an existing property without a getter or setter.
-             */
-            JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
-            JS_ASSERT_IF(attrs != JSPROP_ENUMERATE, !(old & JSPROP_READONLY));
+
+        if (attrs == JSPROP_ENUMERATE) {
+            /* In eval code: assign rather than (re-)define, always. */
             doSet = true;
+        } else if (parent->isCall()) {
+            JS_ASSERT(parent == pobj);
+
+            uintN oldAttrs = ((Shape *) prop)->attributes();
+            JS_ASSERT(!(oldAttrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER)));
+
+            /*
+             * We may be processing a function sub-statement or declaration in
+             * function code: we assign rather than redefine if the essential
+             * JSPROP_PERMANENT (not [[Configurable]] in ES5 terms) attribute
+             * is not changing (note that JSPROP_ENUMERATE is set for all Call
+             * object properties).
+             */
+            JS_ASSERT(oldAttrs & attrs & JSPROP_ENUMERATE);
+            if (oldAttrs & JSPROP_PERMANENT)
+                doSet = true;
         }
         pobj->dropProperty(cx, prop);
     }
+
     Value rval = ObjectValue(*obj);
     ok = doSet
          ? parent->setProperty(cx, id, &rval, strict)
@@ -1112,7 +1121,7 @@ StubEqualityOp(VMFrame &f)
 
             /*
              * The string==string case is repeated because DefaultValue() can
-             * convert lval/rval to strings. 
+             * convert lval/rval to strings.
              */
             if (lval.isString() && rval.isString()) {
                 JSString *l = lval.toString();
@@ -1124,7 +1133,7 @@ StubEqualityOp(VMFrame &f)
                     !ValueToNumber(cx, rval, &r)) {
                     return false;
                 }
-                
+
                 if (EQ)
                     cond = JSDOUBLE_COMPARE(l, ==, r, false);
                 else
@@ -1447,7 +1456,7 @@ stubs::NewInitObject(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass); 
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         THROWV(NULL);
 
@@ -2222,7 +2231,7 @@ stubs::Iter(VMFrame &f, uint32 flags)
     JS_ASSERT(!f.regs.sp[-1].isPrimitive());
 }
 
-static void 
+static void
 InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
 {
     JSContext *cx = f.cx;
@@ -2539,7 +2548,7 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
     }
 
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
-    
+
     pc += JUMP_OFFSET_LEN;
     uint32 npairs = GET_UINT16(pc);
     pc += UINT16_LEN;

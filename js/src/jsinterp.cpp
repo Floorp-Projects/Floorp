@@ -179,7 +179,7 @@ js_GetBlockChain(JSContext *cx, JSStackFrame *fp)
     jsbytecode *start = script->code;
     /* Assume that imacros don't affect blockChain */
     jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
-    
+
     JS_ASSERT(pc >= start && pc < script->code + script->length);
 
     JSObject *blockChain = NULL;
@@ -195,7 +195,7 @@ js_GetBlockChain(JSContext *cx, JSStackFrame *fp)
             oplen = cs->length;
             if (oplen < 0)
                 oplen = js_GetVariableBytecodeLength(p);
-            
+
             if (op == JSOP_ENTERBLOCK)
                 blockChain = script->getObject(GET_INDEX(p));
             else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR)
@@ -232,7 +232,7 @@ js_GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
     JSScript *script = fp->script();
 
     JS_ASSERT(js_GetOpcode(cx, script, pc) == op);
-    
+
     JSObject *blockChain;
     JSOp opNext = js_GetOpcode(cx, script, pc + oplen);
     if (opNext == JSOP_BLOCKCHAIN) {
@@ -5366,36 +5366,44 @@ BEGIN_CASE(JSOP_DEFFUN)
         goto error;
 
     /*
-     * We deviate from 10.1.2 in ECMA 262 v3 and under eval use for function
-     * declarations JSObject::setProperty, not JSObject::defineProperty if the
-     * property already exists, to preserve the JSOP_PERMANENT attribute of
-     * existing properties and make sure that such properties cannot be deleted.
+     * We deviate from ES3 10.1.3, ES5 10.5, by using JSObject::setProperty not
+     * JSObject::defineProperty for a function declaration in eval code whose
+     * id is already bound to a JSPROP_PERMANENT property, to ensure that such
+     * properties can't be deleted.
      *
      * We also use JSObject::setProperty for the existing properties of Call
-     * objects with matching attributes to preserve the native getters and
-     * setters that store the value of the property in the interpreter frame,
-     * see bug 467495.
+     * objects with matching attributes to preserve the internal (JSPropertyOp)
+     * getters and setters that update the value of the property in the stack
+     * frame. See bug 467495.
      */
     bool doSet = false;
     if (prop) {
+        JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)));
         JS_ASSERT((attrs == JSPROP_ENUMERATE) == regs.fp->isEvalFrame());
-        uint32 old;
-        if (attrs == JSPROP_ENUMERATE ||
-            (parent == pobj &&
-             parent->isCall() &&
-             (old = ((Shape *) prop)->attributes(),
-              !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
-              (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs))) {
-            /*
-             * js_CheckRedeclaration must reject attempts to add a getter or
-             * setter to an existing property without a getter or setter.
-             */
-            JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
-            JS_ASSERT_IF(attrs != JSPROP_ENUMERATE, !(old & JSPROP_READONLY));
+
+        if (attrs == JSPROP_ENUMERATE) {
+            /* In eval code: assign rather than (re-)define, always. */
             doSet = true;
+        } else if (parent->isCall()) {
+            JS_ASSERT(parent == pobj);
+
+            uintN oldAttrs = ((Shape *) prop)->attributes();
+            JS_ASSERT(!(oldAttrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER)));
+
+            /*
+             * We may be processing a function sub-statement or declaration in
+             * function code: we assign rather than redefine if the essential
+             * JSPROP_PERMANENT (not [[Configurable]] in ES5 terms) attribute
+             * is not changing (note that JSPROP_ENUMERATE is set for all Call
+             * object properties).
+             */
+            JS_ASSERT(oldAttrs & attrs & JSPROP_ENUMERATE);
+            if (oldAttrs & JSPROP_PERMANENT)
+                doSet = true;
         }
         pobj->dropProperty(cx, prop);
     }
+
     Value rval = ObjectValue(*obj);
     ok = doSet
          ? parent->setProperty(cx, id, &rval, script->strictModeCode)
@@ -5543,7 +5551,7 @@ BEGIN_CASE(JSOP_LAMBDA)
                     JSObject *obj2 = &lref.toObject();
                     JS_ASSERT(obj2->getClass() == &js_ObjectClass);
 #endif
-                    
+
                     fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(pc2 - regs.pc)));
                     JS_FUNCTION_METER(cx, joinedinitmethod);
                     break;
