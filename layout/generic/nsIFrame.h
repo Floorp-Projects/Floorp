@@ -1062,19 +1062,22 @@ public:
   virtual nscolor GetCaretColorAt(PRInt32 aOffset);
 
  
-  PRBool IsThemed(nsITheme::Transparency* aTransparencyState = nsnull) {
+  PRBool IsThemed(nsITheme::Transparency* aTransparencyState = nsnull) const {
     return IsThemed(GetStyleDisplay(), aTransparencyState);
   }
   PRBool IsThemed(const nsStyleDisplay* aDisp,
-                  nsITheme::Transparency* aTransparencyState = nsnull) {
+                  nsITheme::Transparency* aTransparencyState = nsnull) const {
+    nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
     if (!aDisp->mAppearance)
       return PR_FALSE;
     nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
-    if(!theme || !theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance))
+    if(!theme ||
+       !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->mAppearance))
       return PR_FALSE;
     if (aTransparencyState) {
-      *aTransparencyState = theme->GetWidgetTransparency(this, aDisp->mAppearance);
+      *aTransparencyState =
+        theme->GetWidgetTransparency(mutable_this, aDisp->mAppearance);
     }
     return PR_TRUE;
   }

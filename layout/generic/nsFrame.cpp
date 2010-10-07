@@ -844,6 +844,19 @@ nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 /* virtual */ PRBool
 nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
 {
+  if (IsThemed()) {
+    // When we're themed, the native theme code draws the border and
+    // background, and therefore it doesn't make sense to tell other
+    // code that's interested in border-radius that we have any radii.
+    //
+    // In an ideal world, we might have a way for the them to tell us an
+    // border radius, but since we don't, we're better off assuming
+    // zero.
+    NS_FOR_CSS_HALF_CORNERS(corner) {
+      aRadii[corner] = 0;
+    }
+    return PR_FALSE;
+  }
   nsSize size = GetSize();
   return ComputeBorderRadii(GetStyleBorder()->mBorderRadius, size, size,
                             GetSkipSides(), aRadii);
