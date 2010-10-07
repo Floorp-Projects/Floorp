@@ -660,7 +660,7 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
          */
 
         if (target) {
-            frame.syncAndForgetEverything();
+            frame.forgetEverything();
 
             if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
                 (op == JSOP_NE && fused == JSOP_IFEQ)) {
@@ -907,7 +907,8 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
         type.setReg(frame.copyTypeIntoReg(fe));
     data.setReg(frame.copyDataIntoReg(fe));
 
-    frame.syncAndForgetEverything();
+    /* :FIXME: Can something more lightweight be used? */
+    frame.forgetEverything();
 
     Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_OR)
                                 ? Assembler::NonZero
@@ -994,7 +995,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
         if (op == JSOP_IFEQ)
             b = !b;
         if (b) {
-            frame.syncAndForgetEverything();
+            frame.forgetEverything();
             jumpAndTrace(masm.jump(), target);
         }
         return;
@@ -1014,7 +1015,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
         /* Short-circuit. */
         if ((op == JSOP_OR && b == JS_TRUE) ||
             (op == JSOP_AND && b == JS_FALSE)) {
-            frame.syncAndForgetEverything();
+            frame.forgetEverything();
             jumpAndTrace(masm.jump(), target);
         }
 
