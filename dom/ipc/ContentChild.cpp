@@ -54,10 +54,11 @@
 #include "nsTObserverArray.h"
 #include "nsIObserver.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 #include "nsWeakReference.h"
+#include "nsIScriptError.h"
+#include "nsIConsoleService.h"
 
 #include "History.h"
 #include "nsDocShellCID.h"
@@ -70,117 +71,14 @@
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "nsFrameMessageManager.h"
 
+#include "nsIGeolocationProvider.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
 
 namespace mozilla {
 namespace dom {
-
-class PrefObserver
-{
-public:
-    /**
-     * Pass |aHoldWeak=true| to force this to hold a weak ref to
-     * |aObserver|.  Otherwise, this holds a strong ref.
-     *
-     * XXX/cjones: what do domain and prefRoot mean?
-     */
-    PrefObserver(nsIObserver *aObserver, bool aHoldWeak,
-                 const nsCString& aPrefRoot, const nsCString& aDomain)
-        : mPrefRoot(aPrefRoot)
-        , mDomain(aDomain)
-    {
-        if (aHoldWeak) {
-            nsCOMPtr<nsISupportsWeakReference> supportsWeakRef = 
-                do_QueryInterface(aObserver);
-            if (supportsWeakRef)
-                mWeakObserver = do_GetWeakReference(aObserver);
-        } else {
-            mObserver = aObserver;
-        }
-    }
-
-    ~PrefObserver() {}
-
-    /**
-     * Return true if this observer can no longer receive
-     * notifications.
-     */
-    bool IsDead() const
-    {
-        nsCOMPtr<nsIObserver> observer = GetObserver();
-        return !observer;
-    }
-
-    /**
-     * Return true iff a request to remove observers matching
-     * <aObserver, aDomain, aPrefRoot> entails removal of this.
-     */
-    bool ShouldRemoveFrom(nsIObserver* aObserver,
-                          const nsCString& aPrefRoot,
-                          const nsCString& aDomain) const
-    {
-        nsCOMPtr<nsIObserver> observer = GetObserver();
-        return (observer == aObserver &&
-                mDomain == aDomain && mPrefRoot == aPrefRoot);
-    }
-
-    /**
-     * Return true iff this should be notified of changes to |aPref|.
-     */
-    bool Observes(const nsCString& aPref) const
-    {
-        nsCAutoString myPref(mPrefRoot);
-        myPref += mDomain;
-        return StringBeginsWith(aPref, myPref);
-    }
-
-    /**
-     * Notify this of a pref change that's relevant to our interests
-     * (see Observes() above).  Return false iff this no longer cares
-     * to observe any more pref changes.
-     */
-    bool Notify() const
-    {
-        nsCOMPtr<nsIObserver> observer = GetObserver();
-        if (!observer) {
-            return false;
-        }
-
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        nsCOMPtr<nsIPrefService> prefService =
-            do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefService) {
-            prefService->GetBranch(mPrefRoot.get(), 
-                                   getter_AddRefs(prefBranch));
-            observer->Observe(prefBranch, "nsPref:changed",
-                              NS_ConvertASCIItoUTF16(mDomain).get());
-        }
-        return true;
-    }
-
-private:
-    already_AddRefed<nsIObserver> GetObserver() const
-    {
-        nsCOMPtr<nsIObserver> observer =
-            mObserver ? mObserver : do_QueryReferent(mWeakObserver);
-        return observer.forget();
-    }
-
-    // We only either hold a strong or a weak reference to the
-    // observer, so only either mObserver or
-    // GetReferent(mWeakObserver) is ever non-null.
-    nsCOMPtr<nsIObserver> mObserver;
-    nsWeakPtr mWeakObserver;
-    nsCString mPrefRoot;
-    nsCString mDomain;
-
-    // disable these
-    PrefObserver(const PrefObserver&);
-    PrefObserver& operator=(const PrefObserver&);
-};
-
 class AlertObserver
 {
 public:
@@ -216,11 +114,63 @@ private:
     nsString mData;
 };
 
+class ConsoleListener : public nsIConsoleListener
+{
+public:
+    ConsoleListener(ContentChild* aChild)
+    : mChild(aChild) {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICONSOLELISTENER
+
+private:
+    ContentChild* mChild;
+    friend class ContentChild;
+};
+
+NS_IMPL_ISUPPORTS1(ConsoleListener, nsIConsoleListener)
+
+NS_IMETHODIMP
+ConsoleListener::Observe(nsIConsoleMessage* aMessage)
+{
+    if (!mChild)
+        return NS_OK;
+    
+    nsCOMPtr<nsIScriptError> scriptError = do_QueryInterface(aMessage);
+    if (scriptError) {
+        nsString msg, sourceName, sourceLine;
+        nsXPIDLCString category;
+        PRUint32 lineNum, colNum, flags;
+
+        nsresult rv = scriptError->GetErrorMessage(msg);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = scriptError->GetSourceName(sourceName);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = scriptError->GetSourceLine(sourceLine);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = scriptError->GetCategory(getter_Copies(category));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = scriptError->GetLineNumber(&lineNum);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = scriptError->GetColumnNumber(&colNum);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = scriptError->GetFlags(&flags);
+        NS_ENSURE_SUCCESS(rv, rv);
+        mChild->SendScriptError(msg, sourceName, sourceLine,
+                               lineNum, colNum, flags, category);
+        return NS_OK;
+    }
+
+    nsXPIDLString msg;
+    nsresult rv = aMessage->GetMessageMoz(getter_Copies(msg));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mChild->SendConsoleMessage(msg);
+    return NS_OK;
+}
 
 ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
-    : mDead(false)
 {
 }
 
@@ -249,6 +199,20 @@ ContentChild::Init(MessageLoop* aIOLoop,
     sSingleton = this;
 
     return true;
+}
+
+void
+ContentChild::InitXPCOM()
+{
+    nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    if (!svc) {
+        NS_WARNING("Couldn't acquire console service");
+        return;
+    }
+
+    mConsoleListener = new ConsoleListener(this);
+    if (NS_FAILED(svc->RegisterListener(mConsoleListener)))
+        NS_WARNING("Couldn't register console listener for child process");
 }
 
 PBrowserChild*
@@ -357,15 +321,14 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     QuickExit();
 #endif
 
-    // We might be holding the last ref to some of the observers in
-    // mPrefObserverArray.  Some of them try to unregister themselves
-    // in their dtors (sketchy).  To side-step uaf problems and so
-    // forth, we set this mDead flag.  Then, if during a Clear() a
-    // being-deleted observer tries to unregister itself, it hits the
-    // |if (mDead)| special case below and we're safe.
-    mDead = true;
-    mPrefObservers.Clear();
     mAlertObservers.Clear();
+    
+    nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    if (svc) {
+        svc->UnregisterListener(mConsoleListener);
+        mConsoleListener->mChild = nsnull;
+    }
+
     XRE_ShutdownChildProcess();
 }
 
@@ -397,47 +360,6 @@ ContentChild::QuickExit()
 }
 
 nsresult
-ContentChild::AddRemotePrefObserver(const nsCString& aDomain, 
-                                    const nsCString& aPrefRoot, 
-                                    nsIObserver* aObserver, 
-                                    PRBool aHoldWeak)
-{
-    if (aObserver) {
-        mPrefObservers.AppendElement(
-            new PrefObserver(aObserver, aHoldWeak, aPrefRoot, aDomain));
-    }
-    return NS_OK;
-}
-
-nsresult
-ContentChild::RemoveRemotePrefObserver(const nsCString& aDomain, 
-                                       const nsCString& aPrefRoot, 
-                                       nsIObserver* aObserver)
-{
-    if (mDead) {
-        // Silently ignore, we're about to exit.  See comment in
-        // ActorDestroy().
-        return NS_OK;
-    }
-
-    for (PRUint32 i = 0; i < mPrefObservers.Length();
-         /*we mutate the array during the loop; ++i iff no mutation*/) {
-        PrefObserver* observer = mPrefObservers[i];
-        if (observer->IsDead()) {
-            mPrefObservers.RemoveElementAt(i);
-            continue;
-        } else if (observer->ShouldRemoveFrom(aObserver, aPrefRoot, aDomain)) {
-            mPrefObservers.RemoveElementAt(i);
-            return NS_OK;
-        }
-        ++i;
-    }
-
-    NS_WARNING("RemoveRemotePrefObserver(): no observer was matched!");
-    return NS_ERROR_UNEXPECTED;
-}
-
-nsresult
 ContentChild::AddRemoteAlertObserver(const nsString& aData,
                                      nsIObserver* aObserver)
 {
@@ -447,28 +369,16 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
 }
 
 bool
-ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aPref)
+ContentChild::RecvPreferenceUpdate(const nsCString& aPref)
 {
-    for (PRUint32 i = 0; i < mPrefObservers.Length();
-         /*we mutate the array during the loop; ++i iff no mutation*/) {
-        PrefObserver* observer = mPrefObservers[i];
-        if (observer->Observes(aPref) &&
-            !observer->Notify()) {
-            // |observer| had a weak ref that went away, so it no
-            // longer cares about pref changes
-            mPrefObservers.RemoveElementAt(i);
-            continue;
-        }
-        ++i;
-    }
+    nsCOMPtr<nsIPrefServiceInternal> prefs = do_GetService("@mozilla.org/preferences-service;1");
+    prefs->ReadPrefBuffer(aPref);
     return true;
 }
 
 bool
 ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData)
 {
-    printf("ContentChild::RecvNotifyAlertsObserver %s\n", aType.get() );
-
     for (PRUint32 i = 0; i < mAlertObservers.Length();
          /*we mutate the array during the loop; ++i iff no mutation*/) {
         AlertObserver* observer = mAlertObservers[i];
@@ -502,6 +412,18 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
                         aMsg, PR_FALSE, aJSON, nsnull, nsnull);
   }
+  return true;
+}
+
+bool
+ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
+{
+  nsCOMPtr<nsIGeolocationUpdate> gs = do_GetService("@mozilla.org/geolocation/service;1");
+  if (!gs) {
+    return true;
+  }
+  nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
+  gs->Update(position);
   return true;
 }
 

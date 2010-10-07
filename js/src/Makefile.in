@@ -121,6 +121,7 @@ CPPSRCS		= \
 		jsarray.cpp \
 		jsatom.cpp \
 		jsbool.cpp \
+		jsclone.cpp \
 		jscntxt.cpp \
 		jsdate.cpp \
 		jsdbgapi.cpp \
@@ -132,6 +133,7 @@ CPPSRCS		= \
 		jsgc.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
+		jscompartment.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -176,6 +178,7 @@ INSTALLED_HEADERS = \
 		jsbit.h \
 		jsbool.h \
 		jsclist.h \
+		jsclone.h \
 		jscntxt.h \
 		jscompat.h \
 		jsdate.h \
@@ -185,8 +188,10 @@ INSTALLED_HEADERS = \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
+		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \
+		jscompartment.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
@@ -199,6 +204,7 @@ INSTALLED_HEADERS = \
 		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
+		jsopcodeinlines.h \
 		jsotypes.h \
 		jsparse.h \
 		jsproxy.h \
@@ -248,6 +254,7 @@ INSTALLED_HEADERS += \
 		avmplus.h	\
 		Fragmento.h	\
 		Native.h	\
+		NativeCommon.h	\
 		Native$(NANOJIT_ARCH).h \
 		njconfig.h  \
 		RegAlloc.h	\
@@ -563,11 +570,11 @@ endif
 ifdef ENABLE_TRACEJIT
 ifndef WINCE
 check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace_test.py \
 	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 
 check-valgrind::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 endif
@@ -686,6 +693,7 @@ endif
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
+ifeq ($(TARGET_CPU),sparc)
 # Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
 jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
 	$(REPORT_BUILD)
@@ -695,6 +703,7 @@ ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
 else
 	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv8plus.il $<
 endif # sparcv9
+endif # sparc
 endif # SOLARIS_SUNPRO_CXX
 
 ifeq ($(OS_ARCH),IRIX)
@@ -856,7 +865,7 @@ endif
 
 ifdef ENABLE_TRACEJIT
 # Imacro compilation.
-$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm
+$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm jsopcode.tbl
 	$(PYTHON) $< $(srcdir)/imacros.jsasm $(CURDIR)/imacros.c.out
 $(addsuffix .$(OBJ_SUFFIX),jstracer): $(CURDIR)/imacros.c.out
 

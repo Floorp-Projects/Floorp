@@ -43,6 +43,7 @@ VPATH       = \
   $(srcdir)/basic \
   $(srcdir)/opengl \
   $(srcdir)/d3d9 \
+  $(srcdir)/d3d10 \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -98,6 +99,20 @@ CPPSRCS += \
         CanvasLayerD3D9.cpp \
         DeviceManagerD3D9.cpp \
         Nv3DVUtils.cpp \
+        $(NULL)
+endif
+ifdef MOZ_ENABLE_D3D10_LAYER
+EXPORTS += \
+        LayerManagerD3D10.h \
+        $(NULL)
+
+CPPSRCS += \
+        LayerManagerD3D10.cpp \
+        ThebesLayerD3D10.cpp \
+        ContainerLayerD3D10.cpp \
+        ImageLayerD3D10.cpp \
+        ColorLayerD3D10.cpp \
+        CanvasLayerD3D10.cpp \
         $(NULL)
 endif
 endif

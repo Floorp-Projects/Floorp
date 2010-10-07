@@ -91,6 +91,7 @@
 #include "nsICapturePicker.h"
 #include "nsIFileURL.h"
 #include "nsDOMFile.h"
+#include "nsIEventStateManager.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -679,8 +680,8 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Disabled file controls don't pass mouse events to their children, so we
   // put an invisible item in the display list above the children
   // just to catch events
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) && 
-      IsVisibleForPainting(aBuilder)) {
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if ((eventStates & NS_EVENT_STATE_DISABLED) && IsVisibleForPainting(aBuilder)) {
     rv = aLists.Content()->AppendNewToTop(
         new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
     if (NS_FAILED(rv))

@@ -74,6 +74,7 @@
 #include "nsNetUtil.h"
 #endif
 #include "jsxdrapi.h"
+#include "jscompartment.h"
 #include "jsprf.h"
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -743,7 +744,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
         return NULL;
 
     JSCLContextHelper cx(this);
-    JSAutoCrossCompartmentCall ac;
+    JSAutoEnterCompartment ac;
     if (!ac.enter(cx, entry->global))
         return NULL;
 
@@ -941,8 +942,9 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
     JSPrincipals* jsPrincipals = nsnull;
     JSCLContextHelper cx(this);
+
     // preserve caller's compartment
-    JSAutoEnterCompartment ac1(cx, (JSCompartment *)NULL);
+    js::PreserveCompartment pc(cx);
     
 #ifndef XPCONNECT_STANDALONE
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
@@ -979,7 +981,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     rv = holder->GetJSObject(&global);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSAutoCrossCompartmentCall ac;
+    JSAutoEnterCompartment ac;
     if (!ac.enter(cx, global))
         return NS_ERROR_FAILURE;
 
@@ -1474,7 +1476,8 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     jsval symbols;
     if (targetObj) {
         JSCLContextHelper cxhelper(this);
-        JSAutoCrossCompartmentCall ac;
+
+        JSAutoEnterCompartment ac;
         if (!ac.enter(mContext, mod->global))
             return NULL;
 

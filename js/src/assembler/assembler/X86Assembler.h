@@ -307,7 +307,7 @@ private:
     class X86InstructionFormatter;
 public:
 
-#ifdef DEBUG
+#ifdef JS_METHODJIT_SPEW
     bool isOOLPath;
 #endif
 
@@ -355,7 +355,7 @@ public:
     };
 
     X86Assembler()
-#ifdef DEBUG
+#ifdef JS_METHODJIT_SPEW
       : isOOLPath(false)
 #endif
     {

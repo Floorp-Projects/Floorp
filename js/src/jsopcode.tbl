@@ -43,6 +43,8 @@
  * for a name of the form JSOP_UNUSED* and claim it.  Otherwise, always add at
  * the end of the table.
  *
+ * When changing the bytecode, don't forget to update JSXDR_BYTECODE_VERSION!
+ *
  * Includers must define an OPDEF macro of the following form:
  *
  * #define OPDEF(op,val,name,image,length,nuses,ndefs,prec,format) ...
@@ -488,7 +490,7 @@ OPDEF(JSOP_TYPEOFEXPR,    198,"typeofexpr",  NULL,    1,  1,  1, 15,  JOF_BYTE|J
  * Block-local scope support.
  */
 OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0, -1,  0,  JOF_OBJECT)
-OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3, -1,  0,  0,  JOF_UINT16)
+OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    5, -1,  0,  0,  JOF_UINT16)
 
 /* Jump to target if top of stack value is of primitive type. */
 OPDEF(JSOP_IFPRIMTOP,     201,"ifprimtop",   NULL,    3,  1,  1,  0,  JOF_JUMP|JOF_DETECTING)
@@ -517,7 +519,7 @@ OPDEF(JSOP_ENUMCONSTELEM, 207,"enumconstelem",NULL,   1,  3,  0,  3,  JOF_BYTE|J
  * Variant of JSOP_LEAVEBLOCK has a result on the stack above the locals,
  * which must be moved down when the block pops.
  */
-OPDEF(JSOP_LEAVEBLOCKEXPR,208,"leaveblockexpr",NULL,  3, -1,  1,  3,  JOF_UINT16)
+OPDEF(JSOP_LEAVEBLOCKEXPR,208,"leaveblockexpr",NULL,  5, -1,  1,  3,  JOF_UINT16)
 
 /*
  * Optimize common JSOP_{THIS,GET{ARG,LOCAL}} -> JSOP_GETPROP cliches.
@@ -611,5 +613,16 @@ OPDEF(JSOP_GLOBALDEC,     244,"globaldec",     NULL,  3,  0,  1, 15,  JOF_GLOBAL
 OPDEF(JSOP_CALLGLOBAL,    245,"callglobal",    NULL,  3,  0,  2, 19,  JOF_GLOBAL|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_FORGLOBAL,     246,"forglobal",     NULL,  3,  1,  1, 19,  JOF_GLOBAL|JOF_NAME|JOF_FOR|JOF_TMPSLOT)
 
-OPDEF(JSOP_DEFUPVAR,      247,"defupvar",      NULL,  3,  0,  0, 19,  JOF_LOCAL|JOF_NAME)
+/*
+ * These opcodes contain a reference to the current blockChain object.
+ * They are emitted directly after instructions, such as DEFFUN, that need fast access to
+ * the blockChain. The special NULLBLOCKCHAIN is needed because the JOF_OBJECT
+ * does not permit NULL object references, since it stores an index into a table of
+ * objects.
+ */
+OPDEF(JSOP_BLOCKCHAIN,    247,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
+OPDEF(JSOP_NULLBLOCKCHAIN,248,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
+OPDEF(JSOP_BEGIN,         249,"begin",         NULL,  1,  0,  0,  0,  JOF_BYTE|JOF_TMPSLOT)
+
+/* When adding bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */

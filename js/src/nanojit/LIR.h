@@ -509,13 +509,13 @@ namespace nanojit
     inline LOpcode getCallOpcode(const CallInfo* ci) {
         LOpcode op = LIR_callp;
         switch (ci->returnType()) {
-        case ARGTYPE_V: op = LIR_callp; break;
+        case ARGTYPE_V: op = LIR_callv; break;
         case ARGTYPE_I:
         case ARGTYPE_UI: op = LIR_calli; break;
-        case ARGTYPE_D: op = LIR_calld; break;
 #ifdef NANOJIT_64BIT
         case ARGTYPE_Q: op = LIR_callq; break;
 #endif
+        case ARGTYPE_D: op = LIR_calld; break;
         default:        NanoAssert(0);  break;
         }
         return op;
@@ -547,7 +547,7 @@ namespace nanojit
 
     inline RegisterMask rmask(Register r)
     {
-        return RegisterMask(1) << r;
+        return RegisterMask(1) << REGNUM(r);
     }
 
     //-----------------------------------------------------------------------
@@ -656,7 +656,7 @@ namespace nanojit
     private:
         // SharedFields: fields shared by all LIns kinds.
         //
-        // The .inReg, .reg, .inAr and .arIndex fields form a "reservation"
+        // The .inReg, .regnum, .inAr and .arIndex fields form a "reservation"
         // that is used temporarily during assembly to record information
         // relating to register allocation.  See class RegAlloc for more
         // details.  Note: all combinations of .inReg/.inAr are possible, ie.
@@ -668,7 +668,7 @@ namespace nanojit
         //
         struct SharedFields {
             uint32_t inReg:1;           // if 1, 'reg' is active
-            Register reg:7;
+            uint32_t regnum:7;
             uint32_t inAr:1;            // if 1, 'arIndex' is active
             uint32_t isResultLive:1;    // if 1, the instruction's result is live
 
@@ -758,7 +758,12 @@ namespace nanojit
         }
         Register deprecated_getReg() {
             NanoAssert(isExtant());
-            return ( isInReg() ? sharedFields.reg : deprecated_UnknownReg );
+            if (isInReg()) {
+                Register r = { sharedFields.regnum };
+                return r;
+            } else { 
+                return deprecated_UnknownReg;
+            }
         }
         uint32_t deprecated_getArIndex() {
             NanoAssert(isExtant());
@@ -782,11 +787,12 @@ namespace nanojit
         }
         Register getReg() {
             NanoAssert(isInReg());
-            return sharedFields.reg;
+            Register r = { sharedFields.regnum };
+            return r;
         }
         void setReg(Register r) {
             sharedFields.inReg = 1;
-            sharedFields.reg = r;
+            sharedFields.regnum = REGNUM(r);
         }
         void clearReg() {
             sharedFields.inReg = 0;
@@ -927,7 +933,8 @@ namespace nanojit
             return isCmpOpcode(opcode());
         }
         bool isCall() const {
-            return isop(LIR_calli) ||
+            return isop(LIR_callv) ||
+                   isop(LIR_calli) ||
 #if defined NANOJIT_64BIT
                    isop(LIR_callq) ||
 #endif
@@ -1675,10 +1682,36 @@ namespace nanojit
     private:
         Allocator& alloc;
 
-        template <class Key>
-        class CountMap: public HashMap<Key, int> {
+        // A small string-wrapper class, required because we need '==' to
+        // compare string contents, not string pointers, when strings are used
+        // as keys in CountMap.
+        struct Str {
+            Allocator& alloc;
+            char* s;
+
+            Str(Allocator& alloc_, const char* s_) : alloc(alloc_) {
+                s = new (alloc) char[1+strlen(s_)];
+                strcpy(s, s_);
+            }
+
+            bool operator==(const Str& str) const {
+                return (0 == strcmp(this->s, str.s));
+            }
+        };
+
+        // Similar to 'struct Str' -- we need to hash the string's contents,
+        // not its pointer.
+        template<class K> struct StrHash {
+            static size_t hash(const Str &k) {
+                // (const void*) cast is required by ARM RVCT 2.2
+                return murmurhash((const void*)k.s, strlen(k.s));
+            }
+        };
+
+        template <class Key, class H=DefaultHash<Key> >
+        class CountMap: public HashMap<Key, int, H> {
         public:
-            CountMap(Allocator& alloc) : HashMap<Key, int>(alloc) {}
+            CountMap(Allocator& alloc) : HashMap<Key, int, H>(alloc, 128) {}
             int add(Key k) {
                 int c = 1;
                 if (this->containsKey(k)) {
@@ -1691,7 +1724,7 @@ namespace nanojit
 
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
-        CountMap<const char *> namecounts;
+        CountMap<Str, StrHash<Str> > namecounts;
 
         void addNameWithSuffix(LIns* i, const char *s, int suffix, bool ignoreOneSuffix);
 
@@ -1963,6 +1996,12 @@ namespace nanojit
 
         Allocator& alloc;
 
+        // If true, we will not add new instructions to the CSE tables, but we
+        // will continue to CSE instructions that match existing table
+        // entries.  Load instructions will still be removed if aliasing
+        // stores are encountered.
+        bool suspended;
+
         CseAcc miniAccSetToCseAcc(MiniAccSet miniAccSet, LoadQual loadQual) {
             NanoAssert(miniAccSet.val < NUM_ACCS || miniAccSet.val == MINI_ACCSET_MULTIPLE.val);
             return (loadQual == LOAD_CONST) ? CSE_ACC_CONST :
@@ -2038,6 +2077,14 @@ namespace nanojit
         LIns* insCall(const CallInfo *call, LIns* args[]);
         LIns* insGuard(LOpcode op, LIns* cond, GuardRecord *gr);
         LIns* insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord *gr);
+
+        // These functions provide control over CSE in the face of control
+        // flow.  A suspend()/resume() pair may be put around a synthetic
+        // control flow diamond, preventing the inserted label from resetting
+        // the CSE state.  A suspend() call must be dominated by a resume()
+        // call, else incorrect code could result.
+        void suspend() { suspended = true; }
+        void resume() { suspended = false; }
     };
 
     class LirBuffer

@@ -1,0 +1,8 @@
+include fieldset/reftest.list
+include input/reftest.list
+include button/reftest.list
+include textarea/reftest.list
+include select/reftest.list
+include object/reftest.list
+include label/reftest.list
+include output/reftest.list

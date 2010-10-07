@@ -318,26 +318,12 @@ gfxContext::CurrentMatrix() const
     return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
 }
 
-static void NudgeToInteger(double *aVal)
-{
-    float f = float(*aVal);
-    float r = NS_roundf(f);
-    if (f == r) {
-        *aVal = r;
-    }
-}
-
 void
 gfxContext::NudgeCurrentMatrixToIntegers()
 {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
-    NudgeToInteger(&mat.xx);
-    NudgeToInteger(&mat.xy);
-    NudgeToInteger(&mat.yx);
-    NudgeToInteger(&mat.yy);
-    NudgeToInteger(&mat.x0);
-    NudgeToInteger(&mat.y0);
+    gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat)).NudgeToIntegers();
     cairo_set_matrix(mCairo, &mat);
 }
 

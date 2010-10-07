@@ -35,6 +35,7 @@
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Rob Campbell <rcampbell@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
+#   David Dahl <ddahl@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -488,6 +489,11 @@
                     stoplabel="&privateBrowsingCmd.stop.label;"
                     command="Tools:PrivateBrowsing"
                     key="key_privatebrowsing"/>
+          <menuitem label="&goOfflineCmd.label;"
+                    id="appmenu_offlineModeRecovery"
+                    type="checkbox"
+                    observes="workOfflineMenuitemState"
+                    oncommand="BrowserOffline.toggleOfflineStatus();"/>
           <menuseparator class="appmenu-menuseparator"/>
           <hbox>
             <menuitem id="appmenu-edit-label"
@@ -548,9 +554,9 @@
             </menu>
           </hbox>
           <menuseparator class="appmenu-menuseparator"/>
-          <menu id="appmenu_developer"
-                label="&developerMenu.label;">
-            <menupopup id="appmenu_developer_popup">
+          <menu id="appmenu_webDeveloper"
+                label="&appMenuWebDeveloper.label;">
+            <menupopup id="appmenu_webDeveloper_popup">
               <menuitem id="appmenu_webConsole"
                         label="&webConsoleCmd.label;"
                         type="checkbox"
@@ -568,16 +574,20 @@
                         command="View:PageSource"
                         key="key_viewSource"/>
               <menuseparator/>
-#define ID_PREFIX appmenu_
+#define ID_PREFIX appmenu_developer_
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
               <menuseparator/>
               <menuitem label="&goOfflineCmd.label;"
                         type="checkbox"
+                        observes="workOfflineMenuitemState"
                         oncommand="BrowserOffline.toggleOfflineStatus();"/>
             </menupopup>
           </menu>
           <menuseparator class="appmenu-menuseparator"/>
+#define ID_PREFIX appmenu_
+#include browser-charsetmenu.inc
+#undef ID_PREFIX
           <menuitem id="appmenu_fullScreen"
                     class="menuitem-tooltip"
                     label="&fullScreenCmd.label;"
@@ -603,7 +613,7 @@
                       key="manBookmarkKb"/>
             <menu id="appmenu_bookmarksMenu"
                   class="split-menuitem-menu">
-              <menupopup id="appmenu_bookmarksMenupopup"
+              <menupopup id="appmenu_bookmarksPopup"
                          placespopup="true"
                          context="placesContext"
                          openInTabs="children"
@@ -611,16 +621,9 @@
                          onclick="BookmarksEventHandler.onClick(event);"
                          onpopupshowing="BookmarksMenuButton.onPopupShowing(event);
                                          if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');
-                                         this.appendChild(document.getElementById('appmenu_unsortedBookmarks_seperator'));
-                                         this.appendChild(document.getElementById('appmenu_unsortedBookmarks'));"
+                                           new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
-                <menuseparator id="appmenu_unsortedBookmarks_seperator"/>
-                <menuitem id="appmenu_unsortedBookmarks"
-                          label="&appMenuUnsorted.label;"
-                          oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
-                          class="menuitem-iconic"/>
                 <menuitem id="appmenu_showAllBookmarks"
                           label="&showAllBookmarks.label;"
                           command="Browser:ShowAllBookmarks"
@@ -648,6 +651,25 @@
                              onclick="checkForMiddleClick(this, event);"/>
                 </menu>
                 <menuseparator/>
+                <menu id="appmenu_bookmarksToolbar"
+                      placesanonid="toolbar-autohide"
+                      class="menu-iconic bookmark-item"
+                      label="&personalbarCmd.label;"
+                      container="true">
+                  <menupopup id="appmenu_bookmarksToolbarPopup"
+                             placespopup="true"
+                             context="placesContext"
+                             onpopupshowing="if (!this.parentNode._placesView)
+                                               new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
+                </menu>
+                <menuseparator/>
+                <!-- Bookmarks menu items -->
+                <menuseparator builder="end"
+                               class="hide-if-empty-places-result"/>
+                <menuitem id="appmenu_unsortedBookmarks"
+                          label="&appMenuUnsorted.label;"
+                          oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
+                          class="menuitem-iconic"/>
               </menupopup>
             </menu>
           </hbox>
@@ -721,7 +743,7 @@
               <menu class="split-menuitem-menu"
                     label="&preferencesCmd.label;">
                 <menupopup id="appmenu_customizeMenu"
-                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleStatusbar'));">
+                           onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleTabsOnTop').previousSibling);">
                   <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                             label="&preferencesCmdUnix.label;"
@@ -730,10 +752,6 @@
 #endif
                             oncommand="openPreferences();"/>
                   <menuseparator/>
-                  <menuitem id="appmenu_toggleStatusbar"
-                            type="checkbox"
-                            command="cmd_toggleTaskbar"
-                            observes="toggle_taskbar"/>
                   <menuseparator/>
                   <menuitem id="appmenu_toggleTabsOnTop"
                             label="&viewTabsOnTop.label;"
@@ -761,6 +779,15 @@
                             label="&appMenuGettingStarted.label;"
                             oncommand="gBrowser.loadOneTab('http://www.mozilla.com/firefox/central/', {inBackground: false});"
                             onclick="checkForMiddleClick(this, event);"/>
+                  <menuitem id="appmenu_troubleshootingInfo"
+                            label="&helpTroubleshootingInfo.label;"
+                            oncommand="openTroubleshootingPage()"
+                            onclick="checkForMiddleClick(this,event);"/>
+                  <menuseparator/>
+                  <menuitem id="appmenu_safeMode"
+                            accesskey="&appMenuSafeMode.accesskey;"
+                            label="&appMenuSafeMode.label;"
+                            oncommand="safeModeRestart();"/>
                   <menuseparator/>
                   <menuitem id="appmenu_about"
                             label="&aboutProduct.label;"
@@ -940,7 +967,7 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
-          <progressmeter id="urlbar-progress" mode="normal"/>
+          <progressmeter id="urlbar-progress" mode="normal" value="0" collapsed="true"/>
           <toolbarbutton id="urlbar-go-button"
                          onclick="gURLBar.handleCommand(event);"
                          tooltiptext="&goEndCap.tooltip;"/>
@@ -994,6 +1021,23 @@
                                      if (!this.parentNode._placesView)
                                        new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                      tooltip="bhTooltip" popupsinherittooltip="true">
+            <menuitem id="BMB_viewBookmarksToolbar"
+                      placesanonid="view-toolbar"
+                      toolbarId="PersonalToolbar"
+                      type="checkbox"
+                      oncommand="onViewToolbarCommand(event)"
+                      label="&viewBookmarksToolbar.label;"/>
+            <menuseparator/>
+            <menuitem id="BMB_bookmarksShowAll"
+                      label="&showAllBookmarks.label;"
+                      command="Browser:ShowAllBookmarks"
+                      key="manBookmarkKb"/>
+            <menuseparator/>
+            <menuitem id="BMB_bookmarkThisPage"
+                      class="menuitem-iconic"
+                      label="&bookmarkThisPageCmd.label;"
+                      command="Browser:AddBookmarkAs"
+                      key="addBookmarkAsKb"/>
             <menuitem id="BMB_subscribeToPageMenuitem"
                       label="&subscribeToPageMenuitem.label;"
                       oncommand="return FeedHandler.subscribeToFeed(null, event);"
@@ -1007,47 +1051,26 @@
                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
                          onclick="checkForMiddleClick(this, event);"/>
             </menu>
-            <menuitem id="BMB_bookmarkAllTabs"
-                      label="&addCurPagesCmd.label;"
-                      command="Browser:BookmarkAllTabs"
-                      key="bookmarkAllTabsKb"/>
-            <menuitem id="BMB_bookmarksShowAll"
-                      label="&showAllBookmarks.label;"
-                      command="Browser:ShowAllBookmarks"
-                      key="manBookmarkKb"/>
             <menuseparator/>
-            <menuitem id="BMB_viewBookmarksToolbar"
-                      type="checkbox"
-                      oncommand="onViewToolbarCommand(event)"
-                      label="&viewBookmarksToolbar.label;"/>
-            <menuitem id="BMB_viewBookmarksSidebar"
-                      label="&viewBookmarksSidebar.label;"
-                      type="checkbox"
-                      oncommand="toggleSidebar('viewBookmarksSidebar');"
-                      key="viewBookmarksSidebarKb">
-              <observes element="viewBookmarksSidebar" attribute="checked"/>
-            </menuitem>
-            <menuseparator/>
-            <menu id="BMB_bookmarksToolbarFolderMenu"
+            <menu id="BMB_bookmarksToolbar"
+                  placesanonid="toolbar-autohide"
                   class="menu-iconic bookmark-item"
                   label="&personalbarCmd.label;"
                   container="true">
-              <menupopup id="BMB_bookmarksToolbarFolderPopup"
+              <menupopup id="BMB_bookmarksToolbarPopup"
                          placespopup="true"
                          context="placesContext"
                          onpopupshowing="if (!this.parentNode._placesView)
                                            new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
             </menu>
-            <menu id="BMB_unsortedBookmarksFolderMenu"
-                  class="menu-iconic bookmark-item"
-                  container="true">
-              <menupopup id="BMB_unsortedBookmarksFolderPopup"
-                         placespopup="true"
-                         context="placesContext"
-                         onpopupshowing="if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
-            </menu>
             <menuseparator/>
+            <!-- Bookmarks menu items -->
+            <menuseparator builder="end"
+                           class="hide-if-empty-places-result"/>
+            <menuitem id="BMB_unsortedBookmarks"
+                      label="&bookmarksMenuButton.unsorted.label;"
+                      oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
+                      class="menuitem-iconic"/>
           </menupopup>
         </toolbarbutton>
       </toolbaritem>
@@ -1282,41 +1305,16 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
-    <statusbar class="chromeclass-status" id="status-bar"
-#ifdef WINCE
-               hidden="true"
-#endif
-               >
-      <statusbarpanel id="statusbar-display" label="" flex="1"/>
-      <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
-                      tooltiptext="&downloadMonitor2.tooltip;" hidden="true"
-                      command="Tools:Downloads"/>
-      <statusbarpanel id="security-button" class="statusbarpanel-iconic"
-                      hidden="true"
-                      onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
-#ifdef MOZ_SERVICES_SYNC
-      <statusbarpanel id="sync-notifications-button"
-                      class="statusbarpanel-iconic-text"
-                      hidden="true"
-                      popup="sync-notifications-panel">
-      </statusbarpanel>
-      <panel id="sync-notifications-panel" position="before_end">
-          <notificationbox id="sync-notifications-box"/>
-      </panel>
-#endif
-      <statusbarpanel id="page-report-button" type="menu"
-                      class="statusbarpanel-menu-iconic"
-                      hidden="true"
-                      tooltiptext="&pageReportIcon.tooltip;">
-        <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
-          <menuitem observes="blockedPopupAllowSite"/>
-          <menuitem observes="blockedPopupEditSettings"/>
-          <menuitem observes="blockedPopupDontShowMessage"/>
-          <menuseparator observes="blockedPopupsSeparator"/>
-        </menupopup>
-      </statusbarpanel>
-    </statusbar>
+    <toolbar id="addon-bar" toolbarname="&addonBarCmd.label;" collapsed="true"
+             class="toolbar-primary chromeclass-toolbar"
+             context="toolbar-context-menu" toolboxid="navigator-toolbox"
+             mode="icons" iconsize="small" defaulticonsize="small"
+             lockiconsize="true"
+             customizable="true" align="right">
+      <statusbar id="status-bar"/>
+    </toolbar>
   </vbox>
+
 #ifndef XP_UNIX
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">

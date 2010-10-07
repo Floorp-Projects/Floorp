@@ -23,6 +23,7 @@
 # Contributor(s):
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Margaret Leibovic <margaret.leibovic@gmail.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,6 +58,9 @@
         id="aboutDialog"
         windowtype="Browser:About"
         onload="init(event);"
+#ifdef MOZ_UPDATER
+        onunload="onUnload(event);"
+#endif
 #ifdef XP_MACOSX
         inwindowmenu="false"
 #else
@@ -64,24 +68,47 @@
 #endif
         >
 
-  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
 
   <vbox>
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
       <vbox id="rightBox" flex="1">
-        <description id="version">
-#expand <label class="version-label" value="__MOZ_APP_VERSION__"/> <label class="version-label" id="released"/>
-        </description>
+#expand <label id="version" value="__MOZ_APP_VERSION__"/>
         <label id="distribution" class="text-blurb"/>
         <label id="distributionId" class="text-blurb"/>
+        <vbox id="updateBox">
 #ifdef MOZ_UPDATER
-        <hbox>
-          <button id="checkForUpdatesButton" oncommand="checkForUpdates();" align="start"/>
-          <spacer flex="1"/>
-        </hbox>
+          <deck id="updateDeck" orient="vertical">
+            <hbox id="updateButtonBox" align="center">
+              <button id="updateButton" align="start"
+                      oncommand="gAppUpdater.buttonOnCommand();"/>
+              <spacer flex="1"/>
+            </hbox>
+            <hbox id="checkingForUpdates" align="center">
+              <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+            </hbox>
+            <hbox id="checkingAddonCompat" align="center">
+              <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
+            </hbox>
+            <hbox id="downloading" align="center">
+              <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+            </hbox>
+            <hbox id="downloadFailed" align="center">
+              <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+            </hbox>
+            <hbox id="adminDisabled" align="center">
+              <label>&update.adminDisabled;</label>
+            </hbox>
+            <hbox id="noUpdatesFound" align="center">
+              <label>&update.noUpdatesFound;</label>
+            </hbox>
+            <hbox id="manualUpdate" align="center">
+              <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+            </hbox>
+          </deck>
 #endif
+        </vbox>
         <description class="text-blurb">
           &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end2;
         </description>

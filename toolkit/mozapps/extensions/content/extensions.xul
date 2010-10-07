@@ -113,8 +113,6 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_installFromFile"/>
-    <command id="cmd_back"/>
-    <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
@@ -140,12 +138,7 @@
   </commandset>
 
   <!-- main header -->
-  <hbox id="header" align="center">
-    <button id="back-btn" class="nav-button" command="cmd_back"
-            tooltiptext="&cmd.back.tooltip;"/>
-    <button id="forward-btn" class="nav-button" command="cmd_forward"
-            tooltiptext="&cmd.forward.tooltip;"/>
-    <spacer flex="1"/>
+  <hbox id="header" align="center" pack="end">
     <hbox id="updates-container" align="center">
       <image class="spinner"/>
       <label id="updates-noneFound" hidden="true"
@@ -387,7 +380,7 @@
         </vbox>
 
         <!-- detail view -->
-        <vbox id="detail-view" flex="1" class="view-pane">
+        <scrollbox id="detail-view" flex="1" class="view-pane addon-view" orient="vertical">
           <!-- global warnings -->
           <hbox class="global-warning-container global-warning">
             <image class="warning-icon"/>
@@ -410,7 +403,7 @@
                     command="cmd_enableUpdateSecurity"/>
             <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
           </hbox>
-          <scrollbox  flex="1" class="addon-view" orient="horizontal" pack="stretch" align="start">
+          <hbox flex="1">
             <spacer flex="1"/>
             <!-- "loading" splash screen -->
             <hbox class="loading" flex="1">
@@ -449,11 +442,12 @@
                 <image id="detail-icon" class="icon"/>
                 <vbox flex="1">
                   <vbox id="detail-summary">
-                    <hbox id="detail-name-container">
-                      <label id="detail-name"/>
+                    <hbox id="detail-name-container" align="start">
+                      <label id="detail-name" flex="1"/>
                       <label id="detail-version"/>
                       <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                       <label class="update-postfix" value="&addon.update.postfix;"/>
+                      <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->
                     </hbox>
                     <label id="detail-creator" class="creator"/>
                   </vbox>
@@ -559,8 +553,8 @@
               </hbox>
             </vbox>
             <spacer flex="1"/>
-          </scrollbox>
-        </vbox>
+          </hbox>
+        </scrollbox>
 
       </deck>
 

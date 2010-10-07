@@ -1694,23 +1694,6 @@ public:
    */
   static PRBool IsFocusedContent(nsIContent *aContent);
 
-#ifdef MOZ_IPC
-#ifdef ANDROID
-  static void SetActiveFrameLoader(nsFrameLoader *aFrameLoader)
-  {
-    sActiveFrameLoader = aFrameLoader;
-  }
-
-  static void ClearActiveFrameLoader(const nsFrameLoader *aFrameLoader)
-  {
-    if (sActiveFrameLoader == aFrameLoader)
-      sActiveFrameLoader = nsnull;
-  }
-
-  static already_AddRefed<nsFrameLoader> GetActiveFrameLoader();
-#endif
-#endif
-
 private:
 
   static PRBool InitializeEventTable();
@@ -1800,12 +1783,6 @@ private:
   static nsIInterfaceRequestor* sSameOriginChecker;
 
   static PRBool sIsHandlingKeyBoardEvent;
-
-#ifdef MOZ_IPC
-#ifdef ANDROID
-  static nsFrameLoader *sActiveFrameLoader;
-#endif
-#endif
 };
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \

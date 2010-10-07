@@ -91,32 +91,17 @@
               break;
             }
           }
-
-          // If the user has just closed the last notification, close the panel.
-          // FIXME: this is not quite right, because it might not have been
-          // the user that caused weave:notification:removed to get called.
-          // We need to differentiate between "notification removed" and "user
-          // closed the notification" and only close the panel if it was
-          // the user who closed the last notification.  Maybe we should make
-          // the notification's close method handle closing the panel,
-          // but should the notification box or its notifications really know
-          // they are located inside the panel?
-          var panel = document.getElementById("sync-notifications-panel");
-          if (panel.state == "open" &&
-            Notifications.notifications.length == 0)
-            panel.hidePopup();
         ]]></body>
       </method>
 
       <method name="_appendNotification">
         <parameter name="notification"/>
         <body><![CDATA[
-          var node = this.appendNotification(notification.title,
-                                             notification.description,
+          var node = this.appendNotification(notification.description,
+                                             notification.title,
                                              notification.iconURL,
                                              notification.priority,
                                              notification.buttons);
-          node.className = notification.constructor.name;
           node.notification = notification;
         ]]></body>
       </method>
@@ -126,23 +111,17 @@
 
   <binding id="notification" extends="chrome://global/content/bindings/notification.xml#notification">
     <content>
-      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type" align="start">
-        <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image" style="padding: 3px;"/>
-        <xul:vbox flex="1">
-          <xul:hbox anonid="details" align="center" flex="1">
-            <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
-            <xul:spacer flex="1"/>
-          </xul:hbox>
-          <xul:description xbl:inherits="xbl:text=value"/>
+      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+        <xul:hbox anonid="details" align="center" flex="1">
+          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
+          <xul:description anonid="messageText" class="messageText" xbl:inherits="xbl:text=label"/>
 
           <!-- The children are the buttons defined by the notification. -->
           <xul:hbox oncommand="document.getBindingParent(this)._doButtonCommand(event);">
-            <xul:spacer flex="1"/>
             <children/>
           </xul:hbox>
-
-        </xul:vbox>
-        <xul:spacer flex="1"/>
+          <xul:spacer flex="1"/>
+        </xul:hbox>
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
                            class="messageCloseButton tabbable"
                            xbl:inherits="hidden=hideclose"

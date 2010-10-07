@@ -62,6 +62,8 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
 #endif
 {
 public:
+  using nsIConstraintValidation::GetValidationMessage;
+
   nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                       PRUint32 aFromParser = 0);
   virtual ~nsHTMLObjectElement();
@@ -108,6 +110,8 @@ public:
 
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission *aFormSubmission);
+
+  virtual bool IsDisabled() const { return PR_FALSE; }
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();

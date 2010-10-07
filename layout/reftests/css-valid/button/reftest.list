@@ -7,3 +7,6 @@
 == button-reset.html button-ref.html
 == button-type-invalid.html button-ref.html
 == button-type-barred.html button-ref.html
+== button-disabled-fieldset-1.html button-fieldset-ref.html
+== button-disabled-fieldset-2.html button-fieldset-ref.html
+== button-fieldset-legend.html button-fieldset-legend-ref.html

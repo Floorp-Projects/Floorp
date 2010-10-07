@@ -235,9 +235,24 @@ nsStyledElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsStyledElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  RemoveFromIdTable();
+  nsIDocument* doc = nsnull;
+
+  if (HasFlag(NODE_HAS_ID)) {
+    doc = GetCurrentDoc();
+  }
 
   nsStyledElementBase::UnbindFromTree(aDeep, aNullParent);
+
+  // If we had a document (and an id), we should now inform the document that
+  // we are no longer a valid id.
+  // This is done _after_ the call to UnbindFromTree to make sure that id are
+  // removed from the inner-most elements to the top-most.
+  if (doc) {
+    nsIAtom* id = DoGetID();
+    if (id) {
+      doc->RemoveFromIdTable(this, id);
+    }
+  }
 }
 
 

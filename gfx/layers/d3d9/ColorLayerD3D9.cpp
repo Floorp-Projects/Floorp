@@ -53,19 +53,17 @@ ColorLayerD3D9::RenderLayer()
   // XXX we might be able to improve performance by using
   // IDirect3DDevice9::Clear
 
-  float quadTransform[4][4];
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
-  // Transform the quad to the size of the visible area.
-  memset(&quadTransform, 0, sizeof(quadTransform));
-  quadTransform[0][0] = (float)visibleRect.width;
-  quadTransform[1][1] = (float)visibleRect.height;
-  quadTransform[2][2] = 1.0f;
-  quadTransform[3][0] = (float)visibleRect.x;
-  quadTransform[3][1] = (float)visibleRect.y;
-  quadTransform[3][3] = 1.0f;
 
-  device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
-  device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
+  device()->SetVertexShaderConstantF(
+    CBvLayerQuad,
+    ShaderConstantRect(visibleRect.x,
+                       visibleRect.y,
+                       visibleRect.width,
+                       visibleRect.height),
+    1);
+
+  device()->SetVertexShaderConstantF(CBmLayerTransform, &mTransform._11, 4);
 
   float color[4];
   // color is premultiplied, so we need to adjust all channels

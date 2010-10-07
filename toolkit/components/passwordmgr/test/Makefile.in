@@ -41,7 +41,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = toolkit/components/passwordmgr/test
 
-include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 DIRS = \
@@ -69,7 +69,6 @@ MOCHI_TESTS = \
 		test_basic_form_pwonly.html \
 		test_bug_227640.html \
 		test_bug_242956.html \
-		test_privbrowsing.html \
 		test_bug_360493_1.html \
 		test_bug_360493_2.html \
 		test_bug_391514.html \
@@ -78,8 +77,6 @@ MOCHI_TESTS = \
 		test_master_password.html \
 		test_master_password_cleanup.html \
 		test_prompt_async.html \
-		test_notifications.html \
-		test_prompt.html \
 		test_xhr.html \
 		test_xml_load.html \
 		test_zzz_finish.html \
@@ -108,6 +105,19 @@ MOCHI_CONTENT = \
 		subtst_notifications_10.html \
 		subtst_prompt_async.html \
 		$(NULL)
+
+# Don't run these tests in suite
+ifndef MOZ_SUITE
+MOCHI_TESTS += \
+		test_privbrowsing.html \
+		test_prompt.html \
+		test_notifications.html \
+		$(NULL)
+else
+$(warning test_prompt.html is disabled until doorhanger notfications work. Bug 598360)
+$(warning test_notifications.html is disabled until doorhanger notfications work. Bug 598360)
+$(warning test_privbrowsing.html is disabled due to doorhangers, Bug 598360, and no privatebrowsing support)
+endif
 
 XPCSHELL_TESTS  = unit
 

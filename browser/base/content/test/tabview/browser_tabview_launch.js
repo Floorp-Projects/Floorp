@@ -45,26 +45,7 @@ function test() {
     if (tabViewShownCount == 1) {
       document.getElementById("menu_tabview").doCommand();
     } else if (tabViewShownCount == 2) {
-       var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                        getInterface(Components.interfaces.nsIDOMWindowUtils);
-      if (utils) {
-        var keyCode = 0;
-        var charCode;
-        var eventObject;
-        if (navigator.platform.indexOf("Mac") != -1) {
-          charCode = 160;
-          eventObject = { altKey: true };
-        } else {
-          charCode = 32;
-          eventObject = { ctrlKey: true };
-        }
-        var modifiers = EventUtils._parseModifiers(eventObject);
-        var keyDownDefaultHappened =
-            utils.sendKeyEvent("keydown", keyCode, charCode, modifiers);
-        utils.sendKeyEvent("keypress", keyCode, charCode, modifiers,
-                             !keyDownDefaultHappened);
-        utils.sendKeyEvent("keyup", keyCode, charCode, modifiers);
-      }
+      EventUtils.synthesizeKey("e", { accelKey: true });
     } else if (tabViewShownCount == 3) {
       window.removeEventListener("tabviewshown", onTabViewShown, false);
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);
@@ -72,9 +53,10 @@ function test() {
     }
   }
   let onTabViewShown = function() {
-    ok(TabView.isVisible(), "Tab View is visible");
+    // add the count to the message so we can track things more easily.
+    ok(TabView.isVisible(), "Tab View is visible. Count: " + tabViewShownCount);
     tabViewShownCount++
-    TabView.toggle();
+    executeSoon(function() { TabView.toggle(); });
   }
   window.addEventListener("tabviewshown", onTabViewShown, false);
   window.addEventListener("tabviewhidden", onTabViewHidden, false);

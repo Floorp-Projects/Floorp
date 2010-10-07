@@ -185,7 +185,8 @@ nsBuiltinDecoder::~nsBuiltinDecoder()
 }
 
 nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
-                            nsIStreamListener** aStreamListener)
+                            nsIStreamListener** aStreamListener,
+                            nsMediaDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (aStreamListener) {
@@ -212,7 +213,9 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(mDecoderStateMachine->Init())) {
+  nsBuiltinDecoder* cloneDonor = static_cast<nsBuiltinDecoder*>(aCloneDonor);
+  if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
+                                           cloneDonor->mDecoderStateMachine : nsnull))) {
     return NS_ERROR_FAILURE;
   }
   {
@@ -307,7 +310,7 @@ already_AddRefed<nsIPrincipal> nsBuiltinDecoder::GetCurrentPrincipal()
 
 void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
                                       PRUint32 aFrameBufferLength,
-                                      PRUint64 aTime)
+                                      float aTime)
 {
   // Auto manage the frame buffer's memory. If we return due to an error
   // here, this ensures we free the memory. Otherwise, we pass off ownership

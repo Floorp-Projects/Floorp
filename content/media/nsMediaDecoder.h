@@ -137,7 +137,8 @@ public:
   // the decoder, even if Load returns an error.
   // This is called at most once per decoder, after Init().
   virtual nsresult Load(nsMediaStream* aStream,
-                        nsIStreamListener **aListener) = 0;
+                        nsIStreamListener **aListener,
+                        nsMediaDecoder* aCloneDonor) = 0;
 
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded() = 0;

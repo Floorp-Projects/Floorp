@@ -426,8 +426,13 @@ nsFileDataProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
 
+  nsAutoString type;
+  rv = info->mFile->GetType(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   channel->SetOwner(owner);
   channel->SetOriginalURI(uri);
+  channel->SetContentType(NS_ConvertUTF16toUTF8(type));
   channel.forget(result);
   
   return NS_OK;

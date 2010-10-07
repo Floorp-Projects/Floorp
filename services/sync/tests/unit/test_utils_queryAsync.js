@@ -63,6 +63,16 @@ function run_test() {
   let r10 = Utils.queryAsync(c("SELECT value, fieldname FROM moz_formhistory"), "fieldname");
   do_check_eq(r10.length, 3);
 
+  _("Generate an execution error");
+  let r11, except, query = c("UPDATE moz_formhistory SET value = NULL WHERE fieldname = 'more'");
+  try {
+    r11 = Utils.queryAsync(query);
+  } catch(e) {
+    except = e;
+  }
+  do_check_true(!!except);
+  do_check_eq(except.result, 19); // constraint violation error
+
   _("Cleaning up");
   Utils.queryAsync(c("DELETE FROM moz_formhistory"));
 

@@ -86,6 +86,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
+#include "jsopcodeinlines.h"
 
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
@@ -103,6 +104,7 @@
 
 namespace nanojit {
 using namespace js;
+using namespace js::gc;
 
 /* Implement embedder-specific nanojit members. */
 
@@ -2297,7 +2299,7 @@ FlushJITCache(JSContext *cx)
 }
 
 static void
-TrashTree(JSContext* cx, TreeFragment* f);
+TrashTree(TreeFragment* f);
 
 template <class T>
 static T&
@@ -2430,7 +2432,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         lir->insParam(i, 1);
 #ifdef DEBUG
     for (int i = 0; i < NumSavedRegs; ++i)
-        addName(lirbuf->savedRegs[i], regNames[Assembler::savedRegs[i]]);
+        addName(lirbuf->savedRegs[i], regNames[REGNUM(Assembler::savedRegs[i])]);
 #endif
 
     lirbuf->state = addName(lir->insParam(0, 0), "state");
@@ -2513,7 +2515,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
             LIns *branch = lir->insBranch(LIR_jf, test, NULL);
             counterValue = lir->ins2(LIR_addi, counterValue, INS_CONST(1));
             lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
-            branch->setTarget(lir->ins0(LIR_label));
+            label(branch);
         }
 #endif
     }
@@ -2536,10 +2538,10 @@ TraceRecorder::~TraceRecorder()
     JS_ASSERT(traceMonitor->recorder != this);
 
     if (trashSelf)
-        TrashTree(cx, fragment->root);
+        TrashTree(fragment->root);
 
     for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
-        TrashTree(cx, whichTreesToTrash[i]);
+        TrashTree(whichTreesToTrash[i]);
 
     /* Purge the tempAlloc used during recording. */
     tempAlloc().reset();
@@ -2584,7 +2586,7 @@ TraceRecorder::finishSuccessfully()
 }
 
 /* This function aborts a recorder and any pending outer recorders. */
-JS_REQUIRES_STACK AbortableRecordingStatus
+JS_REQUIRES_STACK TraceRecorder::AbortResult
 TraceRecorder::finishAbort(const char* reason)
 {
     JS_ASSERT(traceMonitor->recorder == this);
@@ -2614,7 +2616,7 @@ TraceRecorder::finishAbort(const char* reason)
      * Otherwise, we may be throwing away another recorder's valid side exits.
      */
     if (fragment->root == fragment) {
-        TrashTree(cx, fragment->toTreeFragment());
+        TrashTree(fragment->toTreeFragment());
     } else {
         JS_ASSERT(numSideExitsBefore <= fragment->root->sideExits.length());
         fragment->root->sideExits.setLength(numSideExitsBefore);
@@ -2626,9 +2628,11 @@ TraceRecorder::finishAbort(const char* reason)
 
     localtm->recorder = NULL;
     delete this;
-    if (localtm->outOfMemory() || OverfullJITCache(localtm))
+    if (localtm->outOfMemory() || OverfullJITCache(localtm)) {
         ResetJIT(localcx, FR_OOM);
-    return ARECORD_ABORTED;
+        return JIT_RESET;
+    }
+    return NORMAL_ABORT;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -2920,46 +2924,67 @@ TraceMonitor::flush()
     needFlush = JS_FALSE;
 }
 
-static inline void
-MarkTree(JSTracer* trc, TreeFragment *f)
+inline bool
+HasUnreachableGCThings(TreeFragment *f)
 {
+    /*
+     * We do not check here for dead scripts as JSScript is not a GC thing.
+     * Instead PurgeScriptFragments is used to remove dead script fragments.
+     * See bug 584860.
+     */
+    if (IsAboutToBeFinalized(f->globalObj))
+        return true;
     Value* vp = f->gcthings.data();
-    unsigned len = f->gcthings.length();
-    while (len--) {
+    for (unsigned len = f->gcthings.length(); len; --len) {
         Value &v = *vp++;
-        JS_SET_TRACING_NAME(trc, "jitgcthing");
         JS_ASSERT(v.isMarkable());
-        Mark(trc, v.asGCThing(), v.gcKind());
+        if (IsAboutToBeFinalized(v.toGCThing()))
+            return true;
     }
     const Shape** shapep = f->shapes.data();
-    len = f->shapes.length();
-    while (len--) {
+    for (unsigned len = f->shapes.length(); len; --len) {
         const Shape* shape = *shapep++;
-        shape->trace(trc);
+        if (!shape->marked())
+            return true;
     }
+    return false;
 }
 
 void
-TraceMonitor::mark(JSTracer* trc)
+TraceMonitor::sweep()
 {
-    if (!trc->context->runtime->gcFlushCodeCaches) {
-        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            TreeFragment* f = vmfragments[i];
-            while (f) {
-                if (f->code())
-                    MarkTree(trc, f);
-                TreeFragment* peer = f->peer;
-                while (peer) {
-                    if (peer->code())
-                        MarkTree(trc, peer);
-                    peer = peer->peer;
-                }
-                f = f->next;
+    JS_ASSERT(!ontrace());
+    debug_only_print0(LC_TMTracer, "Purging fragments with dead things");
+
+    for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
+        TreeFragment** fragp = &vmfragments[i];
+        while (TreeFragment* frag = *fragp) {
+            TreeFragment* peer = frag;
+            do {
+                if (HasUnreachableGCThings(peer))
+                    break;
+                peer = peer->peer;
+            } while (peer);
+            if (peer) {
+                debug_only_printf(LC_TMTracer,
+                                  "TreeFragment peer %p has dead gc thing."
+                                  "Disconnecting tree %p with ip %p\n",
+                                  (void *) peer, (void *) frag, frag->ip);
+                JS_ASSERT(frag->root == frag);
+                *fragp = frag->next;
+                do {
+                    verbose_only( FragProfiling_FragFinalizer(frag, this); )
+                    TrashTree(frag);
+                    frag = frag->peer;
+                } while (frag);
+            } else {
+                fragp = &frag->next;
             }
         }
-        if (recorder)
-            MarkTree(trc, recorder->getTree());
     }
+
+    if (recorder && HasUnreachableGCThings(recorder->getTree()))
+        recorder->finishAbort("dead GC things");
 }
 
 /*
@@ -4330,9 +4355,6 @@ TraceRecorder::snapshot(ExitType exitType)
                                            nativeStackOffset(&cx->fp()->calleeValue()) / sizeof(double) :
                                            0;
     exit->exitType = exitType;
-    exit->block = fp->maybeBlockChain();
-    if (fp->hasBlockChain())
-        tree->gcthings.addUnique(ObjectValue(*fp->blockChain()));
     exit->pc = pc;
     exit->imacpc = fp->maybeImacropc();
     exit->sp_adj = (stackSlots * sizeof(double)) - tree->nativeStackBase;
@@ -5342,7 +5364,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
      * and we unwind the tree call stack. We store the first (innermost) tree call guard in state
      * and we will try to grow the outer tree the failing call was in starting at that guard.
      */
-    nested->setTarget(lir->ins0(LIR_label));
+    label(nested);
     LIns* done2 = lir->insBranch(LIR_jf,
                                  lir->insEqP_0(lir->insLoad(LIR_ldp,
                                                             lirbuf->state,
@@ -5360,9 +5382,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
                                                      sizeof(void*) == 4 ? 2 : 3))),
                    lirbuf->state,
                    offsetof(TracerState, rpAtLastTreeCall), ACCSET_OTHER);
-    LIns* label = lir->ins0(LIR_label);
-    done1->setTarget(label);
-    done2->setTarget(label);
+    label(done1, done2);
 
     /*
      * Keep updating outermostTreeExit so that TracerState always contains the most recent
@@ -5671,7 +5691,7 @@ TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
 }
 
 static void
-TrashTree(JSContext* cx, TreeFragment* f)
+TrashTree(TreeFragment* f)
 {
     JS_ASSERT(f == f->root);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", (void*)f);
@@ -5684,11 +5704,11 @@ TrashTree(JSContext* cx, TreeFragment* f)
     TreeFragment** data = f->dependentTrees.data();
     unsigned length = f->dependentTrees.length();
     for (unsigned n = 0; n < length; ++n)
-        TrashTree(cx, data[n]);
+        TrashTree(data[n]);
     data = f->linkedTrees.data();
     length = f->linkedTrees.length();
     for (unsigned n = 0; n < length; ++n)
-        TrashTree(cx, data[n]);
+        TrashTree(data[n]);
 }
 
 static void
@@ -5712,14 +5732,12 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     regs->pc = fi.pc;
     if (fi.imacpc)
         fp->setImacropc(fi.imacpc);
-    fp->setBlockChain(fi.block);
 
     /* Set argc/flags then mimic JSOP_CALL. */
     uintN argc = fi.get_argc();
     uint32 flags = fi.is_constructing ()
                    ? JSFRAME_CONSTRUCTING | JSFRAME_CONSTRUCTING
                    : 0;
-
 
     /* Get pointer to new/frame/slots, prepare arguments. */
     StackSpace &stack = cx->stack();
@@ -5900,7 +5918,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         return false;
     } else if (consensus == TypeConsensus_Undemotes) {
         /* The original tree is unconnectable, so trash it. */
-        TrashTree(cx, peer);
+        TrashTree(peer);
         return false;
     }
 
@@ -6106,7 +6124,9 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
         JS_ASSERT(entryFrameArgc(cx) == first->argc);
-        AbortRecording(cx, "No compatible inner tree");
+
+        if (AbortRecording(cx, "No compatible inner tree") == JIT_RESET)
+            return MONITOR_NOT_RECORDING;
 
         return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots));
     }
@@ -6173,10 +6193,13 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       case LOOP_EXIT:
         /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
         if (innermostNestedGuard) {
-            AbortRecording(cx, "Inner tree took different side exit, abort current "
-                              "recording and grow nesting tree");
-            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outer) ?
-                ARECORD_CONTINUE : ARECORD_ABORTED;
+            if (AbortRecording(cx, "Inner tree took different side exit, abort current "
+                                   "recording and grow nesting tree") == JIT_RESET) {
+                return ARECORD_ABORTED;
+            }
+            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outer)
+                   ? ARECORD_CONTINUE
+                   : ARECORD_ABORTED;
         }
 
         JS_ASSERT(oldInlineCallCount == inlineCallCount);
@@ -6189,23 +6212,31 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
       {
         /* Abort recording so the inner loop can become type stable. */
         JSObject* _globalObj = globalObj;
-        AbortRecording(cx, "Inner tree is trying to stabilize, abort outer recording");
-        return AttemptToStabilizeTree(localCx, _globalObj, lr, outer, outerFragment->argc) ?
-            ARECORD_CONTINUE : ARECORD_ABORTED;
+        if (AbortRecording(cx, "Inner tree is trying to stabilize, "
+                               "abort outer recording") == JIT_RESET) {
+            return ARECORD_ABORTED;
+        }
+        return AttemptToStabilizeTree(localCx, _globalObj, lr, outer, outerFragment->argc)
+               ? ARECORD_CONTINUE
+               : ARECORD_ABORTED;
       }
 
       case OVERFLOW_EXIT:
         traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
-      case CASE_EXIT: {
+      case CASE_EXIT:
         /* Abort recording the outer tree, extend the inner tree. */
-        AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
-        return AttemptToExtendTree(localCx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
-      }
+        if (AbortRecording(cx, "Inner tree is trying to grow, "
+                               "abort outer recording") == JIT_RESET) {
+            return ARECORD_ABORTED;
+        }
+        return AttemptToExtendTree(localCx, lr, NULL, outer)
+               ? ARECORD_CONTINUE
+               : ARECORD_ABORTED;
 
       case NESTED_EXIT:
-          JS_NOT_REACHED("NESTED_EXIT should be replaced by innermost side exit");
+        JS_NOT_REACHED("NESTED_EXIT should be replaced by innermost side exit");
       default:
         debug_only_printf(LC_TMTracer, "exit_type=%s\n", getExitName(lr->exitType));
         AbortRecording(cx, "Inner tree not suitable for calling");
@@ -6895,13 +6926,9 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     /*
      * Adjust sp and pc relative to the tree we exited from (not the tree we
      * entered into).  These are our final values for sp and pc since
-     * SynthesizeFrame has already taken care of all frames in between. But
-     * first we recover fp->blockChain, which comes from the side exit
-     * struct.
+     * SynthesizeFrame has already taken care of all frames in between.
      */
     JSStackFrame* const fp = cx->fp();
-
-    fp->setBlockChain(innermost->block);
 
     /*
      * If we are not exiting from an inlined frame, the state->sp is spbase.
@@ -7340,14 +7367,14 @@ TraceRecorder::monitorRecording(JSOp op)
     return status;
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason)
 {
 #ifdef DEBUG
     JS_ASSERT(TRACE_RECORDER(cx));
-    TRACE_RECORDER(cx)->finishAbort(reason);
+    return TRACE_RECORDER(cx)->finishAbort(reason);
 #else
-    TRACE_RECORDER(cx)->finishAbort("[no reason]");
+    return TRACE_RECORDER(cx)->finishAbort("[no reason]");
 #endif
 }
 
@@ -7812,6 +7839,11 @@ PurgeScriptFragments(JSContext* cx, JSScript* script)
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
+    /* A recorder script is being evaluated and can not be destroyed or GC-ed. */
+    JS_ASSERT_IF(tm->recorder, 
+                 JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
+
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &tm->vmfragments[i];
         while (TreeFragment* frag = *fragp) {
@@ -7827,7 +7859,7 @@ PurgeScriptFragments(JSContext* cx, JSScript* script)
                 *fragp = frag->next;
                 do {
                     verbose_only( FragProfiling_FragFinalizer(frag, tm); )
-                    TrashTree(cx, frag);
+                    TrashTree(frag);
                 } while ((frag = frag->peer) != NULL);
                 continue;
             }
@@ -8354,7 +8386,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
             guard(false, lir->ins2(LIR_andi,
                                    lir->ins2ImmI(LIR_eqi, d0, 0x80000000),
                                    lir->ins2ImmI(LIR_eqi, d1, -1)), exit);
-            gt->setTarget(lir->ins0(LIR_label));
+            label(gt);
         } else {
             if (d1->immI() == -1)
                 guard(false, lir->ins2ImmI(LIR_eqi, d0, 0x80000000), exit);
@@ -8387,7 +8419,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * the result is -0 in this case, which is not in the integer domain.
          */
         guard(false, lir->ins2ImmI(LIR_lti, d0, 0), exit);
-        branch->setTarget(lir->ins0(LIR_label));
+        label(branch);
         break;
       }
 #endif
@@ -8423,6 +8455,27 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     JS_ASSERT_IF(d0->isImmI() && d1->isImmI(),
                  result->isImmI() && result->immI() == jsint(r));
     return lir->ins1(LIR_i2d, result);
+}
+
+/* Inserts a label and updates 'branch' to branch to it, if 'branch' is non-NULL. */
+void
+TraceRecorder::label(LIns* br)
+{
+    if (br)
+        br->setTarget(lir->ins0(LIR_label));
+}
+
+/* Similar to the other label(), but for two branches. */
+void
+TraceRecorder::label(LIns* br1, LIns* br2)
+{
+    if (br1 || br2) {
+        LIns* label = lir->ins0(LIR_label);
+        if (br1)
+            br1->setTarget(label);
+        if (br2)
+            br2->setTarget(label);
+    }
 }
 
 LIns*
@@ -9679,6 +9732,13 @@ TraceRecorder::is_boxed_true(LIns *vaddr_ins, AccSet accSet)
     return lir->ins2(LIR_andi, bool_ins, payload_ins);
 }
 
+LIns*
+TraceRecorder::is_boxed_magic(LIns *vaddr_ins, JSWhyMagic why, AccSet accSet)
+{
+    LIns *tag_ins = lir->insLoad(LIR_ldi, vaddr_ins, sTagOffset, accSet);
+    return lir->ins2(LIR_eqi, tag_ins, INS_CONSTU(JSVAL_TAG_MAGIC));
+}
+
 void
 TraceRecorder::box_value_into(const Value &v, LIns *v_ins, LIns *dstaddr_ins, ptrdiff_t offset,
                               AccSet accSet)
@@ -9848,6 +9908,13 @@ TraceRecorder::is_boxed_true(LIns *vaddr_ins, AccSet accSet)
 {
     LIns *v_ins = lir->insLoad(LIR_ldq, vaddr_ins, 0, accSet);
     return lir->ins2(LIR_eqq, v_ins, lir->insImmQ(JSVAL_BITS(JSVAL_TRUE)));
+}
+
+LIns*
+TraceRecorder::is_boxed_magic(LIns *vaddr_ins, JSWhyMagic why, AccSet accSet)
+{
+    LIns *v_ins = lir->insLoad(LIR_ldq, vaddr_ins, 0, accSet);
+    return lir->ins2(LIR_eqq, v_ins, INS_CONSTQWORD(BUILD_JSVAL(JSVAL_TAG_MAGIC, why)));
 }
 
 LIns*
@@ -10309,14 +10376,16 @@ TraceRecorder::record_EnterFrame()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_LeaveFrame()
 {
-    debug_only_stmt(
-        debug_only_printf(LC_TMTracer,
-                          "LeaveFrame (back to %s), callDepth=%d\n",
-                          js_AtomToPrintableString(cx, cx->fp()->fun()->atom),
-                          callDepth);
-        );
+    debug_only_stmt(JSStackFrame *fp = cx->fp();)
 
-    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp()->script(),
+    debug_only_printf(LC_TMTracer,
+                      "LeaveFrame (back to %s), callDepth=%d\n",
+                      fp->isFunctionFrame()
+                      ? js_AtomToPrintableString(cx, fp->fun()->atom)
+                      : "global code",
+                      callDepth);
+
+    JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, fp->script(),
               cx->regs->pc)].length == JSOP_CALL_LENGTH);
 
     if (callDepth-- <= 0)
@@ -10374,7 +10443,8 @@ functionProbe(JSContext *cx, JSFunction *fun, JSBool enter)
     return true;
 }
 
-JS_DEFINE_CALLINFO_3(static, BOOL, functionProbe, CONTEXT, FUNCTION, BOOL, 0, 0)
+JS_DEFINE_CALLINFO_3(static, BOOL, functionProbe, CONTEXT, FUNCTION, BOOL,
+                     0, ACCSET_STORE_ANY)
 #endif
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10488,14 +10558,12 @@ TraceRecorder::record_JSOP_ARGUMENTS()
         lir->insStore(a_ins, mem_ins, 0, ACCSET_OTHER);
         LIns* br2 = lir->insBranch(LIR_j, NULL, NULL);
 
-        LIns* label1 = lir->ins0(LIR_label);
-        br1->setTarget(label1);
+        label(br1);
 
         LIns* call_ins = newArguments(callee_ins, strict);
         lir->insStore(call_ins, mem_ins, 0, ACCSET_OTHER);
 
-        LIns* label2 = lir->ins0(LIR_label);
-        br2->setTarget(label2);
+        label(br2);
 
         args_ins = lir->insLoad(LIR_ldp, mem_ins, 0, ACCSET_OTHER);
     }
@@ -10999,6 +11067,20 @@ TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
     guard(true, lir->insEqI_0(status_ins), STATUS_EXIT);
 }
 
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_BEGIN()
+{
+    JSStackFrame* fp = cx->fp();
+    if (fp->isConstructing()) {
+        LIns* callee_ins = get(&cx->fp()->calleeValue());
+        LIns* args[] = { callee_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
+        LIns* tv_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
+        guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
+        set(&fp->thisValue(), tv_ins);
+    }
+    return ARECORD_CONTINUE;
+}
+
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[], bool rooted)
 {
@@ -11308,7 +11390,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             clasp = &js_ObjectClass;
         JS_ASSERT(((jsuword) clasp & 3) == 0);
 
-        // Abort on |new Function|. js_NewInstance would allocate a regular-
+        // Abort on |new Function|. js_CreateThis would allocate a regular-
         // sized JSObject, not a Function-sized one. (The Function ctor would
         // deep-bail anyway but let's not go there.)
         if (clasp == &js_FunctionClass)
@@ -11327,7 +11409,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             args[0] = INS_CONSTOBJ(funobj);
             args[1] = INS_CONSTPTR(clasp);
             args[2] = cx_ins;
-            newobj_ins = lir->insCall(&js_NewInstanceFromTrace_ci, args);
+            newobj_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
             guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
 
             /*
@@ -11452,15 +11534,8 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
     }
 #endif
 
-    if (FUN_INTERPRETED(fun)) {
-        if (mode == JSOP_NEW) {
-            LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_NewInstanceFromTrace_ci, args);
-            guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
-            set(&tval, tv_ins);
-        }
+    if (FUN_INTERPRETED(fun))
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
-    }
 
     Native native = fun->maybeNative();
     Value* argv = &tval + 1;
@@ -12412,7 +12487,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
                                                       INS_CONSTWORD(JSString::ROPE_BIT))),
                               NULL);
     lir->insCall(&js_Flatten_ci, &str_ins);
-    br->setTarget(lir->ins0(LIR_label));
+    label(br);
 
     guard(true,
           lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
@@ -12425,59 +12500,60 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
 
 JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
 
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getUnitString(LIns* str_ins, LIns* idx_ins)
+{
+    LIns *chars_ins = getStringChars(str_ins);
+    LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
+                                lir->ins2(LIR_addp,
+                                          chars_ins,
+                                          lir->ins2ImmI(LIR_lshp, idx_ins, 1)),
+                                0, ACCSET_OTHER, LOAD_CONST);
+    guard(true, lir->ins2ImmI(LIR_ltui, ch_ins, UNIT_STRING_LIMIT), snapshot(MISMATCH_EXIT));
+    return lir->ins2(LIR_addp,
+                     INS_CONSTPTR(JSString::unitStringTable),
+                     lir->ins2ImmI(LIR_lshp,
+                                   lir->insUI2P(ch_ins),
+                                   (sizeof(JSString) == 16) ? 4 : 5));
+}
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode)
 {
     idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
                                     ACCSET_OTHER);
-    LIns *br = lir->insBranch(LIR_jt,
-                              lir->insEqP_0(lir->ins2(LIR_andp,
-                                                      length_ins,
-                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
-                              NULL);
-    lir->insCall(&js_Flatten_ci, &str_ins);
-    br->setTarget(lir->ins0(LIR_label));
 
-    LIns *phi_ins = NULL;
+    LIns *br1 = lir->insBranch(LIR_jt,
+                               lir->insEqP_0(lir->ins2(LIR_andp,
+                                                       length_ins,
+                                                       INS_CONSTWORD(JSString::ROPE_BIT))),
+                               NULL);
+    lir->insCall(&js_Flatten_ci, &str_ins);
+    label(br1);
+
+    LIns* inRange = lir->ins2(LIR_ltup,
+                              idx_ins,
+                              lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT));
+
+    LIns* ret;
     if (mode == JSOP_GETELEM) {
-        guard(true,
-              lir->ins2(LIR_ltup,
-                        idx_ins,
-                        lir->ins2ImmI(LIR_rshup,
-                                      length_ins,
-                                      JSString::FLAGS_LENGTH_SHIFT)),
-              MISMATCH_EXIT);
+        guard(true, inRange, MISMATCH_EXIT);
+
+        ret = getUnitString(str_ins, idx_ins);
     } else {
-        phi_ins = lir->insAlloc(sizeof(JSString *));
+        LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
         lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
 
-        br = lir->insBranch(LIR_jf,
-                            lir->ins2(LIR_ltup,
-                                      idx_ins,
-                                      lir->ins2ImmI(LIR_rshup,
-                                                    length_ins,
-                                                    JSString::FLAGS_LENGTH_SHIFT)),
-                            NULL);
+        LIns* br2 = lir->insBranch(LIR_jf, inRange, NULL);
+        LIns *unitstr_ins = getUnitString(str_ins, idx_ins);
+        lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
+        label(br2);
+
+        ret = lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
     }
-
-    LIns *chars_ins = getStringChars(str_ins);
-    LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
-                                lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
-                                ACCSET_OTHER, LOAD_CONST);
-    guard(true, lir->ins2ImmI(LIR_ltui, ch_ins, UNIT_STRING_LIMIT), snapshot(MISMATCH_EXIT));
-    LIns *unitstr_ins = lir->ins2(LIR_addp,
-                                  INS_CONSTPTR(JSString::unitStringTable),
-                                  lir->ins2ImmI(LIR_lshp,
-                                                lir->insUI2P(ch_ins),
-                                                (sizeof(JSString) == 16) ? 4 : 5));
-    if (mode == JSOP_GETELEM)
-        return unitstr_ins;
-
-    lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
-    br->setTarget(lir->ins0(LIR_label));
-
-    return lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
+    return ret;
 }
 
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I
@@ -12486,6 +12562,21 @@ static bool OkToTraceTypedArrays = true;
 #else
 static bool OkToTraceTypedArrays = false;
 #endif
+
+JS_REQUIRES_STACK void
+TraceRecorder::guardNotHole(LIns *argsobj_ins, LIns *idx_ins)
+{
+    // vp = &argsobj->fslots[JSSLOT_ARGS_DATA].slots[idx]
+    LIns* argsData_ins = stobj_get_fslot_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+    LIns* slotOffset_ins = lir->ins2(LIR_addp,
+                                     INS_CONSTWORD(offsetof(ArgumentsData, slots)),
+                                     lir->insUI2P(lir->ins2ImmI(LIR_muli, idx_ins, sizeof(Value))));
+    LIns* vp_ins = lir->ins2(LIR_addp, argsData_ins, slotOffset_ins);
+
+    guard(false,
+          addName(is_boxed_magic(vp_ins, JS_ARGS_HOLE, ACCSET_OTHER), "guard(not deleted arg)"),
+          MISMATCH_EXIT);
+}
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
@@ -12527,14 +12618,21 @@ TraceRecorder::record_JSOP_GETELEM()
     }
 
     if (obj->isArguments()) {
+        // Don't even try to record if out of range or reading a deleted arg
+        int32 int_idx = idx.toInt32();
+        if (int_idx < 0 || int_idx >= (int32)obj->getArgsInitialLength())
+            RETURN_STOP_A("cannot trace arguments with out of range index");
+        if (obj->getArgsElement(int_idx).isMagic(JS_ARGS_HOLE))
+            RETURN_STOP_A("reading deleted args element");
+
+        // Only trace reading arguments out of active, tracked frame
         unsigned depth;
         JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (afp) {
-            int32 int_idx = idx.toInt32();
-            if (int_idx < 0 || int_idx >= (int32)afp->numActualArgs())
-                RETURN_STOP_A("cannot trace arguments with out of range index");
             Value* vp = &afp->canonicalActualArg(int_idx);
             if (idx_ins->isImmD()) {
+                JS_ASSERT(int_idx == (int32)idx_ins->immD());
+                guardNotHole(obj_ins, INS_CONST(int_idx));
                 v_ins = get(vp);
             } else {
                 // If the index is not a constant expression, we generate LIR to load the value from
@@ -12550,6 +12648,8 @@ TraceRecorder::record_JSOP_GETELEM()
                       addName(lir->ins2(LIR_ltui, idx_ins, INS_CONSTU(afp->numActualArgs())),
                               "guard(upvar index in range)"),
                       MISMATCH_EXIT);
+
+                guardNotHole(obj_ins, idx_ins);
 
                 JSValueType type = getCoercedType(*vp);
 
@@ -12929,7 +13029,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         LIns* args[] = { idx_ins, obj_ins, cx_ins };
         LIns* res_ins = lir->insCall(&js_EnsureDenseArrayCapacity_ci, args);
         guard(false, lir->insEqI_0(res_ins), mismatchExit);
-        br->setTarget(lir->ins0(LIR_label));
+        label(br);
 
         // Get the address of the element.
         LIns *dslots_ins =
@@ -12957,7 +13057,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         LIns* res_ins2 = addName(lir->insCall(&js_Array_dense_setelem_hole_ci, args2),
                                  "hasNoIndexedProperties");
         guard(false, lir->insEqI_0(res_ins2), mismatchExit);
-        br2->setTarget(lir->ins0(LIR_label));
+        label(br2);
 
         // Right, actually set the element.
         box_value_into(v, v_ins, addr_ins, 0, ACCSET_OTHER);
@@ -13254,7 +13354,15 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
      * and does not call any TR::record_*CallComplete hook.
      */
     if (fun->u.i.script->isEmpty()) {
-        LIns* rval_ins = constructing ? stack(-1 - argc) : INS_UNDEFINED();
+        LIns* rval_ins;
+        if (constructing) {
+            LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
+            LIns* tv_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
+            guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
+            rval_ins = tv_ins;
+        } else {
+            rval_ins = INS_UNDEFINED();
+        }
         stack(-2 - argc, rval_ins);
         return RECORD_CONTINUE;
     }
@@ -13276,9 +13384,6 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
     JS_ASSERT(argc < FrameInfo::CONSTRUCTING_FLAG);
 
     tree->gcthings.addUnique(fval);
-    fi->block = fp->maybeBlockChain();
-    if (fp->hasBlockChain())
-        tree->gcthings.addUnique(ObjectValue(*fp->blockChain()));
     fi->pc = cx->regs->pc;
     fi->imacpc = fp->maybeImacropc();
     fi->spdist = cx->regs->sp - fp->slots();
@@ -13370,9 +13475,9 @@ TraceRecorder::record_JSOP_APPLY()
 
     /*
      * We don't trace apply and call with a primitive 'this', which is the
-     * first positional parameter.
+     * first positional parameter, unless 'this' is null.  That's ok.
      */
-    if (argc > 0 && !vp[2].isObject())
+    if (argc > 0 && !vp[2].isObjectOrNull())
         return record_JSOP_CALL();
 
     /*
@@ -13407,6 +13512,9 @@ TraceRecorder::record_JSOP_APPLY()
             JSStackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
                 RETURN_STOP_A("can't reach arguments object's frame");
+            if (aobj->isArgsLengthOverridden())
+                RETURN_STOP_A("can't trace arguments with overridden length");
+            guardArgsLengthNotAssigned(aobj_ins);
             length = afp->numActualArgs();
         } else {
             RETURN_STOP_A("arguments parameter of apply is not a dense array or argments object");
@@ -13799,7 +13907,7 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     LIns* dslots_ins =
         addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER), "dslots");
     vp = &obj->dslots[jsuint(idx)];
-	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
+    JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
                          lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
     v_ins = unbox_value(*vp, addr_ins, 0, branchExit);
@@ -14865,6 +14973,18 @@ TraceRecorder::record_JSOP_LINENO()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_BLOCKCHAIN()
+{
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NULLBLOCKCHAIN()
+{
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CONDSWITCH()
 {
     return ARECORD_CONTINUE;
@@ -14964,7 +15084,7 @@ TraceRecorder::record_JSOP_LAMBDA()
         if (FUN_OBJECT(fun)->getParent() != globalObj)
             RETURN_STOP_A("Null closure function object parent must be global object");
 
-        jsbytecode *pc2 = cx->regs->pc + JSOP_LAMBDA_LENGTH;
+        jsbytecode *pc2 = js_AdvanceOverBlockchain(cx->regs->pc + JSOP_LAMBDA_LENGTH);
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_INITMETHOD) {
@@ -15028,7 +15148,7 @@ TraceRecorder::record_JSOP_LAMBDA()
         return ARECORD_CONTINUE;
     }
 
-    if (cx->fp()->hasBlockChain())
+    if (js_GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns *proto_ins;
@@ -15054,7 +15174,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     if (FUN_OBJECT(fun)->getParent() != globalObj)
         return ARECORD_STOP;
 
-    if (cx->fp()->hasBlockChain())
+    if (js_GetBlockChainFast(cx, cx->fp(), JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH))
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns* args[] = {
@@ -15156,7 +15276,7 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
     // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = stobj_get_fslot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
     LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
-    guard(true, lir->insEqI_0(ovr_ins), snapshot(BRANCH_EXIT));
+    guard(true, lir->insEqI_0(ovr_ins), snapshot(MISMATCH_EXIT));
     return len_ins;
 }
 
@@ -15180,8 +15300,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     if (callDepth == 0) {
         LIns *br = lir->insBranch(LIR_jt, lir->insEqP_0(a_ins), NULL);
         guardArgsLengthNotAssigned(a_ins);
-        LIns *label = lir->ins0(LIR_label);
-        br->setTarget(label);
+        label(br);
     }
     stack(0, lir->insImmD(fp->numActualArgs()));
     return ARECORD_CONTINUE;
@@ -15744,12 +15863,6 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETARGPROP()
 {
     return getProp(argval(GET_ARGNO(cx->regs->pc)));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_DEFUPVAR()
-{
-    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus

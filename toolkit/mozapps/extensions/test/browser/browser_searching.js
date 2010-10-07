@@ -433,12 +433,12 @@ add_test(function() {
       list.ensureElementIsVisible(item);
       EventUtils.synthesizeMouse(item, 2, 2, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
-        var name = gManagerWindow.document.getElementById("detail-name").value;
+        var name = gManagerWindow.document.getElementById("detail-name").textContent;
         is(name, item.mAddon.name, "Name in detail view should be correct");
         var version = gManagerWindow.document.getElementById("detail-version").value;
         is(version, item.mAddon.version, "Version in detail view should be correct");
 
-        EventUtils.synthesizeMouse(gManagerWindow.document.getElementById("back-btn"),
+        EventUtils.synthesizeMouse(gManagerWindow.document.getElementById("category-search"),
                                    2, 2, { }, gManagerWindow);
         wait_for_view_load(gManagerWindow, run_next_double_click_test);
       });

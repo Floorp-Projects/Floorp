@@ -38,6 +38,10 @@
 
 #include "nsAlgorithm.h"
 #include "nsWebMBufferedParser.h"
+#include "nsTimeRanges.h"
+
+static const float NS_PER_S = 1e9;
+static const float MS_PER_S = 1e3;
 
 static PRUint32
 VIntLength(unsigned char aFirstByte, PRUint32* aMask)
@@ -197,4 +201,89 @@ void nsWebMBufferedParser::Append(const unsigned char* aBuffer, PRUint32 aLength
 
   NS_ASSERTION(p == aBuffer + aLength, "Must have parsed to end of data.");
   mCurrentOffset += aLength;
+}
+
+void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
+                                                    PRInt64 aStartOffset, PRInt64 aEndOffset,
+                                                    PRUint64 aTimecodeScale,
+                                                    PRInt64 aStartTimeOffsetNS)
+{
+  // Find the first nsWebMTimeDataOffset at or after aStartOffset.
+  PRUint32 start;
+  mTimeMapping.GreatestIndexLtEq(aStartOffset, start);
+  if (start == mTimeMapping.Length()) {
+    return;
+  }
+
+  // Find the first nsWebMTimeDataOffset at or before aEndOffset.
+  PRUint32 end;
+  if (!mTimeMapping.GreatestIndexLtEq(aEndOffset, end) && end > 0) {
+    // No exact match, so adjust end to be the first entry before
+    // aEndOffset.
+    end -= 1;
+  }
+
+  // Range is empty.
+  if (end <= start) {
+    return;
+  }
+
+  NS_ASSERTION(mTimeMapping[start].mOffset >= aStartOffset &&
+               mTimeMapping[end].mOffset <= aEndOffset,
+               "Computed time range must lie within data range.");
+  if (start > 0) {
+    NS_ASSERTION(mTimeMapping[start - 1].mOffset <= aStartOffset,
+                 "Must have found least nsWebMTimeDataOffset for start");
+  }
+  if (end < mTimeMapping.Length() - 1) {
+    NS_ASSERTION(mTimeMapping[end + 1].mOffset >= aEndOffset,
+                 "Must have found greatest nsWebMTimeDataOffset for end");
+  }
+
+  // The timestamp of the first media sample, in ns. We must subtract this
+  // from the ranges' start and end timestamps, so that those timestamps are
+  // normalized in the range [0,duration].
+
+  float startTime = (mTimeMapping[start].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
+  float endTime = (mTimeMapping[end].mTimecode * aTimecodeScale - aStartTimeOffsetNS) / NS_PER_S;
+  aBuffered->Add(startTime, endTime);
+}
+
+void nsWebMBufferedState::NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset)
+{
+  PRUint32 idx;
+  if (!mRangeParsers.GreatestIndexLtEq(aOffset, idx)) {
+    // If the incoming data overlaps an already parsed range, adjust the
+    // buffer so that we only reparse the new data.  It's also possible to
+    // have an overlap where the end of the incoming data is within an
+    // already parsed range, but we don't bother handling that other than by
+    // avoiding storing duplicate timecodes when the parser runs.
+    if (idx != mRangeParsers.Length() && mRangeParsers[idx].mStartOffset <= aOffset) {
+      // Complete overlap, skip parsing.
+      if (aOffset + aLength <= mRangeParsers[idx].mCurrentOffset) {
+        return;
+      }
+
+      // Partial overlap, adjust the buffer to parse only the new data.
+      PRInt64 adjust = mRangeParsers[idx].mCurrentOffset - aOffset;
+      NS_ASSERTION(adjust >= 0, "Overlap detection bug.");
+      aBuffer += adjust;
+      aLength -= PRUint32(adjust);
+    } else {
+      mRangeParsers.InsertElementAt(idx, nsWebMBufferedParser(aOffset));
+    }
+  }
+
+  mRangeParsers[idx].Append(reinterpret_cast<const unsigned char*>(aBuffer), aLength, mTimeMapping);
+
+  // Merge parsers with overlapping regions and clean up the remnants.
+  PRUint32 i = 0;
+  while (i + 1 < mRangeParsers.Length()) {
+    if (mRangeParsers[i].mCurrentOffset >= mRangeParsers[i + 1].mStartOffset) {
+      mRangeParsers[i + 1].mStartOffset = mRangeParsers[i].mStartOffset;
+      mRangeParsers.RemoveElementAt(i);
+    } else {
+      i += 1;
+    }
+  }
 }

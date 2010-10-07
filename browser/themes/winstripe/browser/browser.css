@@ -107,10 +107,6 @@
   -moz-appearance: toolbox;
 }
 
-statusbarpanel#statusbar-display {
-  -moz-padding-start: 0;
-}
-
 /* ::::: app menu button ::::: */
 
 #appmenu-button {
@@ -278,20 +274,19 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://browser/skin/Privacy-16.png");
 }
 
-#appmenu_unsortedBookmarks {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
-}
-
 #appmenu_addons {
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
 }
 
+#BMB_subscribeToPage:not([disabled]),
+#BMB_subscribeToPageMenu,
 #appmenu_subscribeToPage:not([disabled]),
 #appmenu_subscribeToPageMenu {
   list-style-image: url("chrome://browser/skin/feeds/feed-icons-16.png");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
+#BMB_bookmarkThisPage,
 #appmenu_bookmarkThisPage {
   list-style-image: url("chrome://browser/skin/places/bookmark.png");
   -moz-image-region: rect(0 16px 16px 0);
@@ -1102,9 +1097,18 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   background-color: transparent;
 }
 
-.tab-progress[busy][stalled][value="0"],
-#urlbar-progress[busy][stalled][value="0"] {
-  /* TODO: add connecting state (bug 596812) */
+#urlbar-progress[value="0"] > .progress-remainder {
+  background-image: -moz-linear-gradient(left, rgba(255,255,255,0), rgb(255,255,255), rgba(255,255,255,0)) !important;
+  background-size: 10%;
+  background-repeat: no-repeat;
+  background-position: right;
+  -moz-transition-property: background-position;
+  -moz-transition-duration: 2s;
+  -moz-transition-timing-function: linear;
+}
+
+#urlbar-progress[value="0"][slideback] > .progress-remainder {
+  background-position: left;
 }
 
 .tab-progress > .progress-bar,
@@ -1456,24 +1460,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-padding-start: 0px;
 }
 
-#status-bar {
-  border-top: none;
-}
-
-#security-button[level="high"],
-#security-button[level="low"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-
-#security-button[level="broken"] {
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-#page-report-button {
-  width: 20px;
-  list-style-image: url("chrome://browser/skin/Info.png");
-}
-
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
@@ -1575,7 +1561,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) {
-  background-image: -moz-linear-gradient(rgba(255,0,0,.5), rgba(255,0,0,.5)) !important;
+  background-image: -moz-radial-gradient(40% 3px, circle cover, rgba(255,255,255,1) 2%, rgba(186,221,251,.75) 25%, rgba(127,179,255,.5) 50%, rgba(127,179,255,.25));
+}
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]):hover {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%),
+                    -moz-radial-gradient(40% 3px, circle cover, rgba(255,255,255,1) 2%, rgba(186,221,251,.75) 25%, rgba(127,179,255,.5) 50%, rgba(127,179,255,.25));
 }
 
 .tab-icon-image {
@@ -1810,11 +1800,6 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   -moz-margin-end: 4px;
 }
 
-/* ::::: About Popup Blocking dialog ::::: */
-#pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
-  visibility: collapse;
-}
-
 /* Bookmarks toolbar */
 #PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
@@ -2015,12 +2000,14 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* Bookmarks roots menu-items */
 #bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbarFolderMenu {
+#appmenu_bookmarksToolbar,
+#BMB_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
   -moz-image-region: auto;
 }
 
-#BMB_unsortedBookmarksFolderMenu {
+#appmenu_unsortedBookmarks,
+#BMB_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
   -moz-image-region: auto;
 }
@@ -2185,4 +2172,22 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
+}
+
+/* Vertically-center the statusbar compatibility shim, because
+   toolbars, even in small-icon mode, are a bit taller than
+   statusbars. Also turn off the statusbar border. On Windows
+   we have to disable borders on statusbar *and* child statusbar
+   elements. */
+#status-bar {
+  margin-top: .3em;
+  border-width: 0;
+  -moz-appearance: none;
+}
+
+/* Remove all borders from statusbarpanel children of
+   the statusbar. */
+#status-bar > statusbarpanel {
+  border-width: 0;
+  -moz-appearance: none;
 }

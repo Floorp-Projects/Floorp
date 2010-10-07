@@ -2083,11 +2083,11 @@ nsWebSocketEstablishedConnection::Disconnect()
   NS_ASSERTION(NS_IsMainThread(), "Not running on main thread");
 
   {
-    MutexAutoLock lockDisconnect(mLockDisconnect);
-
     if (!mOwner) {
       return NS_OK;
     }
+ 
+    MutexAutoLock lockDisconnect(mLockDisconnect);
 
     // If mOwner is deleted when calling mOwner->DontKeepAliveAnyMore()
     // then this method can be called again, and we will get a deadlock.
@@ -3511,7 +3511,8 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   mPrincipal = aPrincipal;
   mScriptContext = aScriptContext;
   if (aOwnerWindow) {
-    mOwner = aOwnerWindow->GetCurrentInnerWindow();
+    mOwner = aOwnerWindow->IsOuterWindow() ?
+      aOwnerWindow->GetCurrentInnerWindow() : aOwnerWindow;
   }
   else {
     mOwner = nsnull;

@@ -107,6 +107,9 @@ var gPlayTests = [
   // Test playback of a webm file
   { name:"seek.webm", type:"video/webm", duration:3.966 },
 
+  // Test playback of a WebM file with non-zero start time.
+  { name:"split.webm", type:"video/webm", duration:1.967 },
+  
   // Test playback of a raw file
   { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
 
@@ -204,6 +207,7 @@ var gSeekTests = [
   { name:"320x240.ogv", type:"video/ogg", duration:0.233 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bug516323.indexed.ogv", type:"video/ogg", duration:4.208 },
+  { name:"split.webm", type:"video/webm", duration:1.967 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 

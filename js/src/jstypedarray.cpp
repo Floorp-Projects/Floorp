@@ -64,6 +64,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * ArrayBuffer
@@ -306,7 +307,7 @@ TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 {
     TypedArray *tarray = fromJSObject(obj);
     JS_ASSERT(tarray);
-    JS_CALL_OBJECT_TRACER(trc, tarray->bufferJS, "typedarray.buffer");
+    MarkObject(trc, *tarray->bufferJS, "typedarray.buffer");
 }
 
 JSBool
@@ -966,9 +967,11 @@ class TypedArrayTemplate
         obj->setSharedNonNativeMap();
         obj->clasp = fastClass();
         obj->setPrivate(tarray);
-
-        AutoIdVector props(cx);
-        return obj->preventExtensions(cx, &props);
+        
+        // FIXME bug 599008. make it ok to call preventExtensions here.
+        // Keeping the boolean signature of this method for now.
+        obj->flags |= JSObject::NOT_EXTENSIBLE;
+        return true;
     }
 
   public:

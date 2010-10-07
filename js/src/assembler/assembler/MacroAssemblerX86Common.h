@@ -37,6 +37,13 @@
 #include "X86Assembler.h"
 #include "AbstractMacroAssembler.h"
 
+#if WTF_COMPILER_MSVC
+#if WTF_CPU_X86_64
+/* for __cpuid */
+#include <intrin.h>
+#endif
+#endif
+
 namespace JSC {
 
 class MacroAssemblerX86Common : public AbstractMacroAssembler<X86Assembler> {
@@ -1078,12 +1085,17 @@ public:
         m_assembler.movzbl_rr(dest, dest);
     }
 
+    // As the SSE's were introduced in order, the presence of a later SSE implies
+    // the presence of an earlier SSE. For example, SSE4_2 support implies SSE2 support.
     enum SSECheckState {
         NotCheckedSSE = 0,
         NoSSE = 1,
-        HasSSE2 = 2,
-        HasSSE4_1 = 3, // implies HasSSE2
-        HasSSE4_2 = 4  // implies HasSSE4_1
+        HasSSE = 2,
+        HasSSE2 = 3,
+        HasSSE3 = 4,
+        HasSSSE3 = 5,
+        HasSSE4_1 = 6,
+        HasSSE4_2 = 7
     };
 
     static SSECheckState getSSEState()
@@ -1116,7 +1128,6 @@ private:
         volatile int flags_ecx = 0;
 #if WTF_COMPILER_MSVC
 #if WTF_CPU_X86_64
-        extern void __cpuid(int a[4], int b);
         int cpuinfo[4];
 
         __cpuid(cpuinfo, 1);
@@ -1131,6 +1142,19 @@ private:
         }
 #endif
 #elif WTF_COMPILER_GCC
+#if WTF_CPU_X86_64
+        asm (
+             "movl $0x1, %%eax;"
+             "pushq %%rbx;"
+             "cpuid;"
+             "popq %%rbx;"
+             "movl %%ecx, %0;"
+             "movl %%edx, %1;"
+             : "=g" (flags_ecx), "=g" (flags_edx)
+             :
+             : "%eax", "%ecx", "%edx"
+             );
+#else
         asm (
              "movl $0x1, %%eax;"
              "pushl %%ebx;"
@@ -1142,6 +1166,7 @@ private:
              :
              : "%eax", "%ecx", "%edx"
              );
+#endif
 #elif WTF_COMPILER_SUNPRO
         asm (
              "movl $0x1, %eax;"
@@ -1155,15 +1180,24 @@ private:
              : "%eax", "%ecx", "%edx"
              );
 #endif
+        static const int SSEFeatureBit = 1 << 25;
         static const int SSE2FeatureBit = 1 << 26;
+        static const int SSE3FeatureBit = 1 << 0;
+        static const int SSSE3FeatureBit = 1 << 9;
         static const int SSE41FeatureBit = 1 << 19;
         static const int SSE42FeatureBit = 1 << 20;
         if (flags_ecx & SSE42FeatureBit)
             s_sseCheckState = HasSSE4_2;
         else if (flags_ecx & SSE41FeatureBit)
             s_sseCheckState = HasSSE4_1;
+        else if (flags_ecx & SSSE3FeatureBit)
+            s_sseCheckState = HasSSSE3;
+        else if (flags_ecx & SSE3FeatureBit)
+            s_sseCheckState = HasSSE3;
         else if (flags_edx & SSE2FeatureBit)
             s_sseCheckState = HasSSE2;
+        else if (flags_edx & SSEFeatureBit)
+            s_sseCheckState = HasSSE;
         else
             s_sseCheckState = NoSSE;
     }
@@ -1171,13 +1205,29 @@ private:
 #if WTF_CPU_X86
 #if WTF_PLATFORM_MAC
 
-    // All X86 Macs are guaranteed to support at least SSE2,
+    // All X86 Macs are guaranteed to support at least SSE2
+    static bool isSSEPresent()
+    {
+        return true;
+    }
+
     static bool isSSE2Present()
     {
         return true;
     }
 
 #else // PLATFORM(MAC)
+
+    static bool isSSEPresent()
+    {
+        if (s_sseCheckState == NotCheckedSSE) {
+            setSSECheckState();
+        }
+        // Only check once.
+        ASSERT(s_sseCheckState != NotCheckedSSE);
+
+        return s_sseCheckState >= HasSSE;
+    }
 
     static bool isSSE2Present()
     {
@@ -1202,6 +1252,27 @@ private:
     }
 
 #endif
+    static bool isSSE3Present()
+    {
+        if (s_sseCheckState == NotCheckedSSE) {
+            setSSECheckState();
+        }
+        // Only check once.
+        ASSERT(s_sseCheckState != NotCheckedSSE);
+
+        return s_sseCheckState >= HasSSE3;
+    }
+
+    static bool isSSSE3Present()
+    {
+        if (s_sseCheckState == NotCheckedSSE) {
+            setSSECheckState();
+        }
+        // Only check once.
+        ASSERT(s_sseCheckState != NotCheckedSSE);
+
+        return s_sseCheckState >= HasSSSE3;
+    }
 
     static bool isSSE41Present()
     {

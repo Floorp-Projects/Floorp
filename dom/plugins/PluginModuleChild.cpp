@@ -1758,6 +1758,17 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
         return false;
     }
 
+#if defined(XP_MACOSX) && defined(__i386__)
+    // If an i386 Mac OS X plugin has selected the Carbon event model then
+    // we have to fail. We do not support putting Carbon event model plugins
+    // out of process. Note that Carbon is the default model so out of process
+    // plugins need to actively negotiate something else in order to work
+    // out of process.
+    if (childInstance->EventModel() == NPEventModelCarbon) {
+        *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+    }
+#endif
+
     return true;
 }
 

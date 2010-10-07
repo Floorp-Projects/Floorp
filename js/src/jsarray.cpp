@@ -79,7 +79,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -103,10 +103,12 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 /* 2^32 - 1 as a number and a string */
 #define MAXINDEX 4294967295u
@@ -454,6 +456,17 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole,
         !(*vp = obj->getDenseArrayElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
         *hole = JS_FALSE;
         return JS_TRUE;
+    }
+    if (obj->isArguments() &&
+        index < obj->getArgsInitialLength() &&
+        !(*vp = obj->getArgsElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
+        *hole = JS_FALSE;
+        JSStackFrame *fp = (JSStackFrame *)obj->getPrivate();
+        if (fp != JS_ARGUMENTS_OBJECT_ON_TRACE) {
+            if (fp)
+                *vp = fp->canonicalActualArg(index);
+            return JS_TRUE;
+        }
     }
 
     AutoIdRooter idr(cx);
@@ -2337,6 +2350,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
+    jsuint origlength = length;
 
     /* Convert the first argument into a starting index. */
     jsdouble d;
@@ -2450,6 +2464,9 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
         }
         length -= delta;
     }
+
+    if (length < origlength && !js_SuppressDeletedIndexProperties(cx, obj, length, origlength))
+        return JS_FALSE;
 
     /*
      * Copy from argv into the hole to complete the splice, and update length in
@@ -2682,7 +2699,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
             return JS_FALSE;
         }
         if (!hole && StrictlyEqual(cx, *vp, tosearch)) {
-			vp->setNumber(i);
+            vp->setNumber(i);
             return JS_TRUE;
         }
         if (i == stop)

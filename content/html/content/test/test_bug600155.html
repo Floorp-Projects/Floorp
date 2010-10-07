@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=600155
+-->
+<head>
+  <title>Test for Bug 600155</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=600155">Mozilla Bug 600155</a>
+<p id="display"></p>
+<div id='content' style='display:none;'>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 600155 **/
+
+var subjectForConstraintValidation = [ "button", "input", "select", "textarea" ];
+var content = document.getElementById('content');
+
+for each (var eName in subjectForConstraintValidation) {
+  var e = document.createElement(eName);
+  content.appendChild(e);
+  e.setAttribute("x-moz-errormessage", "foo");
+  if ("required" in e) {
+    e.required = true;
+  } else {
+    e.setCustomValidity("bar");
+  }
+
+  // At this point, the element is invalid.
+  is(e.validationMessage, "foo",
+     "the validation message should be the author one");
+
+  content.removeChild(e);
+}
+
+</script>
+</pre>
+</body>
+</html>

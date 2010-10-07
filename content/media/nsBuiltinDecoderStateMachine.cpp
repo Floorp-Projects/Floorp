@@ -152,7 +152,7 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mPositionChangeQueued(PR_FALSE),
   mAudioCompleted(PR_FALSE),
   mBufferExhausted(PR_FALSE),
-  mGotDurationFromHeader(PR_FALSE),
+  mGotDurationFromMetaData(PR_FALSE),
   mStopDecodeThreads(PR_TRUE),
   mEventManager(aDecoder)
 {
@@ -437,7 +437,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       // time.
       missingSamples = NS_MIN(static_cast<PRInt64>(PR_UINT32_MAX), missingSamples);
       audioDuration += PlaySilence(static_cast<PRUint32>(missingSamples),
-                                   channels, sampleTime);
+                                   channels, playedSamples);
     } else {
       audioDuration += PlayFromAudioQueue(sampleTime, channels);
     }
@@ -567,9 +567,13 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset
 }
 
 
-nsresult nsBuiltinDecoderStateMachine::Init()
+nsresult nsBuiltinDecoderStateMachine::Init(nsDecoderStateMachine* aCloneDonor)
 {
-  return mReader->Init();
+  nsBuiltinDecoderReader* cloneReader = nsnull;
+  if (aCloneDonor) {
+    cloneReader = static_cast<nsBuiltinDecoderStateMachine*>(aCloneDonor)->mReader;
+  }
+  return mReader->Init(cloneReader);
 }
 
 void nsBuiltinDecoderStateMachine::StopPlayback(eStopMode aMode)
@@ -1028,27 +1032,22 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                                 mediaTime);
           }
           if (NS_SUCCEEDED(res)){
-            PRInt64 audioTime = seekTime;
             SoundData* audio = HasAudio() ? mReader->mAudioQueue.PeekFront() : nsnull;
-            if (audio) {
-              audioTime = audio->mTime;
-              mPlayDuration = TimeDuration::FromMilliseconds(mAudioStartTime);
-            }
-            mAudioStartTime = (audioTime >= seekTime) ? seekTime : audioTime;
+            NS_ASSERTION(!audio || (audio->mTime <= seekTime &&
+                                    seekTime <= audio->mTime + audio->mDuration),
+                         "Seek target should lie inside the first audio block after seek");
+            PRInt64 startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
+            mAudioStartTime = startTime;
+            mPlayDuration = TimeDuration::FromMilliseconds(startTime);
             if (HasVideo()) {
               nsAutoPtr<VideoData> video(mReader->mVideoQueue.PeekFront());
               if (video) {
+                NS_ASSERTION(video->mTime <= seekTime && seekTime <= video->mEndTime,
+                             "Seek target should lie inside the first frame after seek");
                 RenderVideoFrame(video);
-                if (!audio) {
-                  NS_ASSERTION(video->mTime <= seekTime &&
-                               seekTime <= video->mEndTime,
-                               "Seek target should lie inside the first frame after seek");
-                  mPlayDuration = TimeDuration::FromMilliseconds(seekTime);
-                }
+                mReader->mVideoQueue.PopFront();
               }
-              mReader->mVideoQueue.PopFront();
             }
-            UpdatePlaybackPosition(seekTime);
           }
         }
         mDecoder->StartProgressUpdates();
@@ -1090,7 +1089,8 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         // data to begin playback, or if we've not downloaded a reasonable
         // amount of data inside our buffering time.
         TimeDuration elapsed = TimeStamp::Now() - mBufferingStart;
-        if ((!mDecoder->CanPlayThrough() || !HasAmpleDecodedData()) &&
+        PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
+        if (((!isLiveStream && !mDecoder->CanPlayThrough()) || !HasAmpleDecodedData()) &&
              elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
              stream->GetCachedDataEnd(mDecoder->mDecoderPosition) < mBufferingEndOffset &&
              !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
@@ -1283,7 +1283,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
     if (mVideoFrameEndTime != -1 || mAudioEndTime != -1) {
       // These will be non -1 if we've displayed a video frame, or played an audio sample.
       clock_time = NS_MIN(clock_time, NS_MAX(mVideoFrameEndTime, mAudioEndTime));
-      if (clock_time - mStartTime > mCurrentFrameTime) {
+      if (clock_time > GetMediaTime()) {
         // Only update the playback position if the clock time is greater
         // than the previous playback position. The audio clock can
         // sometimes report a time less than its previously reported in
@@ -1345,7 +1345,7 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   }
   if (startTime != 0) {
     mStartTime = startTime;
-    if (mGotDurationFromHeader) {
+    if (mGotDurationFromMetaData) {
       NS_ASSERTION(mEndTime != -1,
                    "We should have mEndTime as supplied duration here");
       // We were specified a duration from a Content-Duration HTTP header.
@@ -1421,6 +1421,8 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
   }
   mDecoder->StartProgressUpdates();
   const nsVideoInfo& info = mReader->GetInfo();
+
+  mGotDurationFromMetaData = (GetDuration() != -1);
 
   if (!info.mHasVideo && !info.mHasAudio) {
     mState = DECODER_STATE_SHUTDOWN;      

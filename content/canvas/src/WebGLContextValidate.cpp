@@ -450,6 +450,22 @@ WebGLContext::InitAndValidateGL()
         // gl_PointSize is always available in ES2 GLSL, but has to be
         // specifically enabled on desktop GLSL.
         gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
+
+        // we don't do the following glEnable(GL_POINT_SPRITE) on ATI cards on Windows, because bug 602183 shows that it causes
+        // crashes in the ATI/Windows driver; and point sprites on ATI seem like a lost cause anyway, see
+        //    http://www.gamedev.net/community/forums/topic.asp?topic_id=525643
+        // Also, if the ATI/Windows driver implements a recent GL spec version, this shouldn't be needed anyway.
+#ifdef XP_WIN
+        if (gl->Vendor() != gl::GLContext::VendorATI)
+#else
+        if (true)
+#endif
+        {
+            // gl_PointCoord is always available in ES2 GLSL and in newer desktop GLSL versions, but apparently
+            // not in OpenGL 2 and apparently not (due to a driver bug) on certain NVIDIA setups. See:
+            //   http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=261472
+            gl->fEnable(LOCAL_GL_POINT_SPRITE);
+        }
     }
 
     // Check the shader validator pref
