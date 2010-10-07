@@ -239,6 +239,7 @@ private:
                            nsILoadGroup **aLoadGroup);
   nscoord GetContinuationOffset() const;
   void GetDocumentCharacterSet(nsACString& aCharset) const;
+  bool ShouldDisplaySelection();
 
   /**
    * Recalculate mIntrinsicSize from the image.
