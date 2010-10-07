@@ -342,7 +342,7 @@ CacheRowHeightsForPrinting(nsPresContext*   aPresContext,
   }
 }
 
-NS_METHOD 
+nsresult
 nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
                                      nsHTMLReflowMetrics&   aDesiredSize,
                                      nsRowGroupReflowState& aReflowState,
