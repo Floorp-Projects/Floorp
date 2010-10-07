@@ -931,23 +931,24 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
 
     /*
      * We deviate from 10.1.2 in ECMA 262 v3 and under eval use for function
-     * declarations JSObject::setProperty, not JSObject::defineProperty, to
-     * preserve the JSOP_PERMANENT attribute of existing properties and make
-     * sure that such properties cannot be deleted.
+     * declarations JSObject::setProperty, not JSObject::defineProperty if the
+     * property already exists, to preserve the JSOP_PERMANENT attribute of
+     * existing properties and make sure that such properties cannot be deleted.
      *
      * We also use JSObject::setProperty for the existing properties of Call
      * objects with matching attributes to preserve the native getters and
      * setters that store the value of the property in the interpreter frame,
      * see bug 467495.
      */
-    doSet = (attrs == JSPROP_ENUMERATE);
-    JS_ASSERT_IF(doSet, fp->isEvalFrame());
+    doSet = false;
     if (prop) {
-        if (parent == pobj &&
-            parent->isCall() &&
-            (old = ((Shape *) prop)->attributes(),
-             !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
-             (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs)) {
+        JS_ASSERT((attrs == JSPROP_PERMANENT) == fp->isEvalFrame());
+        if (attrs == JSPROP_ENUMERATE ||
+            (parent == pobj &&
+             parent->isCall() &&
+             (old = ((Shape *) prop)->attributes(),
+              !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
+              (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs))) {
             /*
              * js_CheckRedeclaration must reject attempts to add a getter or
              * setter to an existing property without a getter or setter.
