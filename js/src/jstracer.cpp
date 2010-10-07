@@ -2432,7 +2432,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         lir->insParam(i, 1);
 #ifdef DEBUG
     for (int i = 0; i < NumSavedRegs; ++i)
-        addName(lirbuf->savedRegs[i], regNames[Assembler::savedRegs[i]]);
+        addName(lirbuf->savedRegs[i], regNames[REGNUM(Assembler::savedRegs[i])]);
 #endif
 
     lirbuf->state = addName(lir->insParam(0, 0), "state");

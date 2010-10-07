@@ -254,6 +254,7 @@ INSTALLED_HEADERS += \
 		avmplus.h	\
 		Fragmento.h	\
 		Native.h	\
+		NativeCommon.h	\
 		Native$(NANOJIT_ARCH).h \
 		njconfig.h  \
 		RegAlloc.h	\
