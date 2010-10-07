@@ -5922,9 +5922,9 @@ nsBlockFrame::GetSkipSides() const
 }
 
 #ifdef DEBUG
-static void ComputeCombinedArea(nsLineList& aLines,
-                                nscoord aWidth, nscoord aHeight,
-                                nsRect& aResult)
+static void ComputeVisualOverflowArea(nsLineList& aLines,
+                                      nscoord aWidth, nscoord aHeight,
+                                      nsRect& aResult)
 {
   nscoord xa = 0, ya = 0, xb = aWidth, yb = aHeight;
   for (nsLineList::iterator line = aLines.begin(), line_end = aLines.end();
@@ -5932,11 +5932,11 @@ static void ComputeCombinedArea(nsLineList& aLines,
        ++line) {
     // Compute min and max x/y values for the reflowed frame's
     // combined areas
-    nsRect lineCombinedArea(line->GetCombinedArea());
-    nscoord x = lineCombinedArea.x;
-    nscoord y = lineCombinedArea.y;
-    nscoord xmost = x + lineCombinedArea.width;
-    nscoord ymost = y + lineCombinedArea.height;
+    nsRect visOverflow(line->GetVisualOverflowArea());
+    nscoord x = visOverflow.x;
+    nscoord y = visOverflow.y;
+    nscoord xmost = x + visOverflow.width;
+    nscoord ymost = y + visOverflow.height;
     if (x < xa) {
       xa = x;
     }
@@ -6107,7 +6107,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (gNoisyDamageRepair) {
       depth = GetDepth();
       nsRect ca;
-      ::ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
+      ::ComputeVisualOverflowArea(mLines, mRect.width, mRect.height, ca);
       nsFrame::IndentBy(stdout, depth);
       ListTag(stdout);
       printf(": bounds=%d,%d,%d,%d dirty(absolute)=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
