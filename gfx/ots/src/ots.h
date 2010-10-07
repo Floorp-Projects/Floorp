@@ -101,6 +101,18 @@ class Buffer {
     return ReadU16(reinterpret_cast<uint16_t*>(value));
   }
 
+  bool ReadU24(uint32_t *value) {
+    if (offset_ + 4 > length_) {
+      return OTS_FAILURE();
+    }
+    *value = 0;
+    std::memcpy(reinterpret_cast<uint8_t*>(value) + 1,
+                buffer_ + offset_, 3);
+    *value = ntohl(*value);
+    offset_ += 3;
+    return true;
+  }
+
   bool ReadU32(uint32_t *value) {
     if (offset_ + 4 > length_) {
       return OTS_FAILURE();
