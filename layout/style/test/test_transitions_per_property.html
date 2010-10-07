@@ -357,26 +357,26 @@ function test_length_percent_calc_transition(prop) {
      + v2v + "'");
 
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "-moz-calc(100% + 200px)", "");
+  div.style.setProperty(prop, "-moz-calc(25% + 100px)", "");
   v1v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v1v), b + 2*c,
+  is(any_unit_to_num(v1v) * 4, b + 4*c,
      "computed value before transition for " + prop + ": '" + v1v + "'");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "300%", "");
+  div.style.setProperty(prop, "75%", "");
   v2v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v2v) * 2, -1*a + 3*b + 3*c,
+  is(any_unit_to_num(v2v) * 8, 5*a + 3*b + 6*c,
      "interpolation between calc() and percent for " + prop + ": '" +
      v2v + "'");
 
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "400px", "");
+  div.style.setProperty(prop, "150px", "");
   v1v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v1v), 4*c,
+  is(any_unit_to_num(v1v) * 2, c * 3,
      "computed value before transition for " + prop + ": '" + v1v + "'");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "-moz-calc(200% + 200px)", "");
+  div.style.setProperty(prop, "-moz-calc(50% + 50px)", "");
   v2v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v2v) * 2, a + b + 7*c,
+  is(any_unit_to_num(v2v) * 8, 7 * a + b + 10*c,
      "interpolation between length and calc() for " + prop + ": '" +
      v2v + "'");
 }
