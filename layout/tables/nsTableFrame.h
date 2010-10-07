@@ -512,13 +512,13 @@ public:
    *
    * @param aFrame The frame to invalidate
    * @param aOrigRect The original rect of aFrame (before the change).
-   * @param aOrigOverflowRect The original overflow rect of aFrame.
+   * @param aOrigVisualOverflow The original overflow rect of aFrame.
    * @param aIsFirstReflow True if the size/position change is due to the
    *                       first reflow of aFrame.
    */
   static void InvalidateFrame(nsIFrame* aFrame,
                               const nsRect& aOrigRect,
-                              const nsRect& aOrigOverflowRect,
+                              const nsRect& aOrigVisualOverflow,
                               PRBool aIsFirstReflow);
 
 protected:
@@ -608,7 +608,7 @@ protected:
                   nsIFrame*            aKidFrame,
                   nsHTMLReflowMetrics& aKidDesiredSize,
                   const nsRect&        aOriginalKidRect,
-                  const nsRect&        aOriginalKidOverflowRect);
+                  const nsRect&        aOriginalKidVisualOverflow);
    void PlaceRepeatedFooter(nsTableReflowState& aReflowState,
                             nsTableRowGroupFrame *aTfoot,
                             nscoord aFooterHeight);

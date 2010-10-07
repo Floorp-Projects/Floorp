@@ -1003,15 +1003,15 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
 
   nsRect origInnerRect = mInnerTableFrame->GetRect();
-  nsRect origInnerOverflowRect = mInnerTableFrame->GetOverflowRect();
+  nsRect origInnerVisualOverflow = mInnerTableFrame->GetVisualOverflowRect();
   PRBool innerFirstReflow =
     (mInnerTableFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   nsRect origCaptionRect;
-  nsRect origCaptionOverflowRect;
+  nsRect origCaptionVisualOverflow;
   PRBool captionFirstReflow;
   if (mCaptionFrame) {
     origCaptionRect = mCaptionFrame->GetRect();
-    origCaptionOverflowRect = mCaptionFrame->GetOverflowRect();
+    origCaptionVisualOverflow = mCaptionFrame->GetVisualOverflowRect();
     captionFirstReflow =
       (mCaptionFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   }
@@ -1121,10 +1121,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   innerRS->~nsHTMLReflowState();
 
   nsTableFrame::InvalidateFrame(mInnerTableFrame, origInnerRect,
-                                origInnerOverflowRect, innerFirstReflow);
+                                origInnerVisualOverflow, innerFirstReflow);
   if (mCaptionFrame) {
     nsTableFrame::InvalidateFrame(mCaptionFrame, origCaptionRect,
-                                  origCaptionOverflowRect, captionFirstReflow);
+                                  origCaptionVisualOverflow,
+                                  captionFirstReflow);
   }
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
