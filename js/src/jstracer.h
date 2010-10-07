@@ -949,7 +949,7 @@ class TraceRecorder
     /* Carry the return value from a native call to the record_NativeCallComplete. */
     nanojit::LIns*                  native_rval_ins;
 
-    /* Carry the return value of js_NewInstance to record_NativeCallComplete. */
+    /* Carry the return value of js_CreateThis to record_NativeCallComplete. */
     nanojit::LIns*                  newobj_ins;
 
     /* Carry the JSSpecializedNative used to generate a call to record_NativeCallComplete. */
@@ -1235,6 +1235,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
                                                    nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getUnitString(nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
     JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
                                                nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
                                                JSOp mode);
@@ -1284,6 +1285,7 @@ class TraceRecorder
     void unbox_any_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
                           nanojit::LIns** is_obj_ins, nanojit::AccSet accSet);
     nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet accSet);
+    nanojit::LIns* is_boxed_magic(nanojit::LIns* vaddr_ins, JSWhyMagic why, nanojit::AccSet accSet);
 
     nanojit::LIns* is_string_id(nanojit::LIns* id_ins);
     nanojit::LIns* unbox_string_id(nanojit::LIns* id_ins);
@@ -1326,6 +1328,7 @@ class TraceRecorder
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
     JS_REQUIRES_STACK nanojit::LIns* guardArgsLengthNotAssigned(nanojit::LIns* argsobj_ins);
+    JS_REQUIRES_STACK void guardNotHole(nanojit::LIns *argsobj_ins, nanojit::LIns *ids_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSObject* ctor,
                                                           nanojit::LIns*& proto_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSProtoKey key,

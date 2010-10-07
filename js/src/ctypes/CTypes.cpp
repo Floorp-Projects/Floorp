@@ -4289,6 +4289,7 @@ StructType::ConstructData(JSContext* cx,
   if (argc == fields->count()) {
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
       const FieldInfo& field = r.front().value;
+      STATIC_ASSUME(field.mIndex < fields->count());  /* Quantified invariant */
       if (!ImplicitConvert(cx, argv[field.mIndex], field.mType,
              buffer + field.mOffset,
              false, NULL))
@@ -5362,7 +5363,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   for (JSUint32 i = 0; i < cif->nargs; ++i)
     argv[i] = JSVAL_VOID;
 
-  js::AutoArrayRooter roots(cx, argv.length(), Valueify(argv.begin()));
+  js::AutoArrayRooter roots(cx, argv.length(), argv.begin());
   for (JSUint32 i = 0; i < cif->nargs; ++i) {
     // Convert each argument, and have any CData objects created depend on
     // the existing buffers.

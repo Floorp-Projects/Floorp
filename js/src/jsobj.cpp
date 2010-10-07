@@ -45,10 +45,10 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h" /* Added by JSIFY */
+#include "jsarena.h"
 #include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 #include "jsdhash.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -1017,29 +1017,35 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     bool indirectCall = (callerPC && *callerPC != JSOP_EVAL);
 
     /*
-     * This call to JSObject::wrappedObject is safe because of the security
-     * checks we do below. However, the control flow below is confusing, so we
-     * double check. There are two cases:
-     * - Direct call: This object is never used. So unwrapping can't hurt.
-     * - Indirect call: If this object isn't already the scope chain (which
-     *   we're guaranteed to be allowed to access) then we do a security
-     *   check.
+     * If the callee was originally a cross-compartment wrapper, this should
+     * be an indirect call.
      */
-    Value *argv = JS_ARGV(cx, vp);
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-    obj = obj->wrappedObject(cx);
-
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    if (!obj)
-        return JS_FALSE;
+    if (caller->scopeChain().compartment() != vp[0].toObject().compartment())
+        indirectCall = true;
 
     /*
      * Ban indirect uses of eval (nonglobal.eval = eval; nonglobal.eval(....))
      * that attempt to use a non-global object as the scope object.
+     *
+     * This ban is a bit silly, since we could just disregard the this-argument
+     * entirely and comply with ES5, which supports indirect eval. See bug
+     * 592664.
      */
     {
+        JSObject *obj = ComputeThisFromVp(cx, vp);
+        if (!obj)
+            return JS_FALSE;
+
+        /*
+         * This call to JSObject::wrappedObject is safe because the result is
+         * only used for this check.
+         */
+        obj = obj->wrappedObject(cx);
+
+        OBJ_TO_INNER_OBJECT(cx, obj);
+        if (!obj)
+            return JS_FALSE;
+
         JSObject *parent = obj->getParent();
         if (indirectCall || parent) {
             uintN flags = parent
@@ -1053,6 +1059,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
+    Value *argv = JS_ARGV(cx, vp);
     if (!argv[0].isString()) {
         *vp = argv[0];
         return JS_TRUE;
@@ -1102,16 +1109,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     if (indirectCall) {
         /* Pretend that we're top level. */
         staticLevel = 0;
-
-        if (!js_CheckPrincipalsAccess(cx, obj,
-                                      js_StackFramePrincipals(cx, caller),
-                                      cx->runtime->atomState.evalAtom)) {
-            return JS_FALSE;
-        }
-
-        /* NB: We know inner is a global object here. */
-        JS_ASSERT(!obj->getParent());
-        scopeobj = obj;
+        scopeobj = vp[0].toObject().getGlobal();
     } else {
         /*
          * Compile using the caller's current scope object.
@@ -1258,6 +1256,8 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         if (!script)
             return JS_FALSE;
     }
+
+    assertSameCompartment(cx, scopeobj, script);
 
     /*
      * Belt-and-braces: check that the lesser of eval's principals and the
@@ -2163,6 +2163,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         }
     }
 
+    bool callDelProperty = false;
+
     if (desc.isGenericDescriptor()) {
         /* 8.12.9 step 8, no validation required */
     } else if (desc.isDataDescriptor() != shape->isDataDescriptor()) {
@@ -2179,6 +2181,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                               rval);
             }
         }
+
+        callDelProperty = !shape->hasDefaultGetter() || !shape->hasDefaultSetter();
     } else {
         /* 8.12.9 step 11. */
         JS_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
@@ -2269,6 +2273,22 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
     *rval = true;
     obj2->dropProperty(cx, current);
+
+    /*
+     * Since "data" properties implemented using native C functions may rely on
+     * side effects during setting, we must make them aware that they have been
+     * "assigned"; deleting the property before redefining it does the trick.
+     * See bug 539766, where we ran into problems when we redefined
+     * arguments.length without making the property aware that its value had
+     * been changed (which would have happened if we had deleted it before
+     * redefining it or we had invoked its setter to change its value).
+     */
+    if (callDelProperty) {
+        Value dummy;
+        if (!CallJSPropertyOp(cx, obj2->getClass()->delProperty, obj2, desc.id, &dummy))
+            return false;
+    }
+
     return js_DefineProperty(cx, obj, desc.id, &v, getter, setter, attrs);
 }
 
@@ -2770,7 +2790,7 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSObject*
-js_NewInstance(JSContext *cx, JSObject *callee)
+js_CreateThis(JSContext *cx, JSObject *callee)
 {
     Class *clasp = callee->getClass();
 
@@ -2788,6 +2808,25 @@ js_NewInstance(JSContext *cx, JSObject *callee)
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
     return NewObject<WithProto::Class>(cx, newclasp, proto, parent);
+}
+
+JSObject *
+js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
+{
+    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent());
+}
+
+JSObject *
+js_CreateThisForFunction(JSContext *cx, JSObject *callee)
+{
+    Value protov;
+    if (!callee->getProperty(cx,
+                             ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                             &protov)) {
+        return NULL;
+    }
+    JSObject *proto = protov.isObject() ? &protov.toObject() : NULL;
+    return js_CreateThisForFunctionWithProto(cx, callee, proto);
 }
 
 #ifdef JS_TRACER
@@ -2840,7 +2879,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, ST
                      nanojit::ACCSET_STORE_ANY)
 
 JSObject* FASTCALL
-js_NewInstanceFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
+js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JS_ASSERT(ctor->isFunction());
@@ -2891,7 +2930,7 @@ js_NewInstanceFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
     return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
 }
 
-JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstanceFromTrace, CONTEXT, CLASS, OBJECT, 0,
+JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, CLASS, OBJECT, 0,
                      nanojit::ACCSET_STORE_ANY)
 
 #else  /* !JS_TRACER */
@@ -3122,6 +3161,8 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     JSObject *thisp = proto->thisObject(cx);
     if (!thisp)
         return NULL;
+
+    assertSameCompartment(cx, obj, thisp);
 
     obj->setWithThis(thisp);
     return obj;
@@ -4174,11 +4215,18 @@ js_CheckForStringIndex(jsid id)
     if (cp != end || (negative && index == 0))
         return id;
 
-    if (oldIndex < JSID_INT_MAX / 10 ||
-        (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10))) {
-        if (negative)
-            index = 0 - index;
-        id = INT_TO_JSID((jsint)index);
+    if (negative) {
+        if (oldIndex < -(JSID_INT_MIN / 10) ||
+            (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
+        {
+            id = INT_TO_JSID(jsint(-index));
+        }
+    } else {
+        if (oldIndex < JSID_INT_MAX / 10 ||
+            (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10)))
+        {
+            id = INT_TO_JSID(jsint(index));
+        }
     }
 
     return id;
@@ -4605,9 +4653,9 @@ cleanup:
     return ok;
 }
 
-int
-js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
-                           JSObject **objp, JSProperty **propp)
+static JS_ALWAYS_INLINE int
+js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                                 JSObject **objp, JSProperty **propp)
 {
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
@@ -4658,6 +4706,13 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     *objp = NULL;
     *propp = NULL;
     return protoIndex;
+}
+
+int
+js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                           JSObject **objp, JSProperty **propp)
+{
+    return js_LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
 }
 
 PropertyCacheEntry *
@@ -4843,9 +4898,9 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
     return obj;
 }
 
-JSBool
-js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
-             Value *vp)
+static JS_ALWAYS_INLINE JSBool
+js_NativeGetInline(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
+                   Value *vp)
 {
     LeaveTraceIfGlobalObject(cx, pobj);
 
@@ -4889,6 +4944,13 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, u
     }
 
     return true;
+}
+
+JSBool
+js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
+             Value *vp)
+{
+    return js_NativeGetInline(cx, obj, pobj, shape, getHow, vp);
 }
 
 JSBool
@@ -4966,8 +5028,9 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
     id = js_CheckForStringIndex(id);
 
     aobj = js_GetProtoIfDenseArray(obj);
-    protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags,
-                                            &obj2, &prop);
+    /* This call site is hot -- use the always-inlined variant of js_LookupPropertyWithFlags(). */
+    protoIndex = js_LookupPropertyWithFlagsInline(cx, aobj, id, cx->resolveFlags,
+                                                  &obj2, &prop);
     if (protoIndex < 0)
         return JS_FALSE;
 
@@ -5045,7 +5108,8 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
         JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2, shape);
     }
 
-    if (!js_NativeGet(cx, obj, obj2, shape, getHow, vp))
+    /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
+    if (!js_NativeGetInline(cx, obj, obj2, shape, getHow, vp))
         return JS_FALSE;
 
     JS_UNLOCK_OBJ(cx, obj2);
@@ -5060,18 +5124,25 @@ js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id,
     return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, shapeOut, holderOut);
 }
 
-extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+static JS_ALWAYS_INLINE JSBool
+js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
 {
     const Shape *shape;
     JSObject *holder;
     return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, &shape, &holder);
 }
 
+extern JSBool
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+{
+    return js_GetPropertyHelperInline(cx, obj, id, getHow, vp);
+}
+
 JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return js_GetPropertyHelper(cx, obj, id, JSGET_METHOD_BARRIER, vp);
+    /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
+    return js_GetPropertyHelperInline(cx, obj, id, JSGET_METHOD_BARRIER, vp);
 }
 
 JSBool

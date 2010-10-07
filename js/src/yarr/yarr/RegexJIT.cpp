@@ -994,7 +994,9 @@ class RegexGenerator : private MacroAssembler {
             parenthesesState.linkAlternativeBacktracks(this);
             if (term.invertOrCapture) {
                 store32(Imm32(-1), Address(output, (term.parentheses.subpatternId << 1) * sizeof(int)));
+#if DEBUG
                 store32(Imm32(-1), Address(output, ((term.parentheses.subpatternId << 1) + 1) * sizeof(int)));
+#endif
             }
 
             if (term.quantityType == QuantifierGreedy)
@@ -1213,21 +1215,26 @@ class RegexGenerator : private MacroAssembler {
         TermGenerationState state(disjunction, 0);
         state.resetAlternative();
 
-        // Plant a check to see if there is sufficient input available to run the first alternative.
-        // Jumping back to the label 'firstAlternative' will get to this check, jumping to
-        // 'firstAlternativeInputChecked' will jump directly to matching the alternative having
-        // skipped this check.
-
-        Label firstAlternative(this);
-
         // check availability for the next alternative
         int countCheckedForCurrentAlternative = 0;
         int countToCheckForFirstAlternative = 0;
         bool hasShorterAlternatives = false;
+        bool setRepeatAlternativeLabels = false;
         JumpList notEnoughInputForPreviousAlternative;
+        Label firstAlternative;
+        Label firstAlternativeInputChecked;
 
+        // The label 'firstAlternative' is used to plant a check to see if there is 
+        // sufficient input available to run the first repeating alternative.
+        // The label 'firstAlternativeInputChecked' will jump directly to matching 
+        // the first repeating alternative having skipped this check.
+        
         if (state.alternativeValid()) {
             PatternAlternative* alternative = state.alternative();
+            if (!alternative->onceThrough()) {
+                firstAlternative = Label(this);
+                setRepeatAlternativeLabels = true;
+            }
             countToCheckForFirstAlternative = alternative->m_minimumSize;
             state.checkedTotal += countToCheckForFirstAlternative;
             if (countToCheckForFirstAlternative)
@@ -1235,15 +1242,17 @@ class RegexGenerator : private MacroAssembler {
             countCheckedForCurrentAlternative = countToCheckForFirstAlternative;
         }
 
-        Label firstAlternativeInputChecked(this);
+        if (setRepeatAlternativeLabels)
+            firstAlternativeInputChecked = Label(this);
 
         while (state.alternativeValid()) {
-            // Track whether any alternatives are shorter than the first one.
-            hasShorterAlternatives = hasShorterAlternatives || (countCheckedForCurrentAlternative < countToCheckForFirstAlternative);
-
             PatternAlternative* alternative = state.alternative();
             optimizeAlternative(alternative);
 
+            // Track whether any alternatives are shorter than the first one.
+            if (!alternative->onceThrough())
+                hasShorterAlternatives = hasShorterAlternatives || (countCheckedForCurrentAlternative < countToCheckForFirstAlternative);
+            
             for (state.resetTerm(); state.termValid(); state.nextTerm())
                 generateTerm(state);
 
@@ -1270,47 +1279,75 @@ class RegexGenerator : private MacroAssembler {
             // if there are any more alternatives, plant the check for input before looping.
             if (state.alternativeValid()) {
                 PatternAlternative* nextAlternative = state.alternative();
-                int countToCheckForNextAlternative = nextAlternative->m_minimumSize;
-
-                if (countCheckedForCurrentAlternative > countToCheckForNextAlternative) { // CASE 1: current alternative was longer than the next one.
+                if (!setRepeatAlternativeLabels && !nextAlternative->onceThrough()) {
+                    // We have handled non-repeating alternatives, jump to next iteration 
+                    // and loop over repeating alternatives.
+                    state.jumpToBacktrack(jump(), this);
+                    
+                    countToCheckForFirstAlternative = nextAlternative->m_minimumSize;
+                    
                     // If we get here, there the last input checked failed.
                     notEnoughInputForPreviousAlternative.link(this);
-
-                    // Check if sufficent input available to run the next alternative 
-                    notEnoughInputForPreviousAlternative.append(jumpIfNoAvailableInput(countToCheckForNextAlternative - countCheckedForCurrentAlternative));
-                    // We are now in the correct state to enter the next alternative; this add is only required
-                    // to mirror and revert operation of the sub32, just below.
-                    add32(Imm32(countCheckedForCurrentAlternative - countToCheckForNextAlternative), index);
-
-                    // If we get here, there the last input checked passed.
+                    
                     state.linkAlternativeBacktracks(this);
-                    // No need to check if we can run the next alternative, since it is shorter -
-                    // just update index.
-                    sub32(Imm32(countCheckedForCurrentAlternative - countToCheckForNextAlternative), index);
-                } else if (countCheckedForCurrentAlternative < countToCheckForNextAlternative) { // CASE 2: next alternative is longer than the current one.
-                    // If we get here, there the last input checked failed.
-                    // If there is insufficient input to run the current alternative, and the next alternative is longer,
-                    // then there is definitely not enough input to run it - don't even check. Just adjust index, as if
-                    // we had checked.
-                    notEnoughInputForPreviousAlternative.link(this);
-                    add32(Imm32(countToCheckForNextAlternative - countCheckedForCurrentAlternative), index);
-                    notEnoughInputForPreviousAlternative.append(jump());
 
-                    // The next alternative is longer than the current one; check the difference.
-                    state.linkAlternativeBacktracks(this);
-                    notEnoughInputForPreviousAlternative.append(jumpIfNoAvailableInput(countToCheckForNextAlternative - countCheckedForCurrentAlternative));
-                } else { // CASE 3: Both alternatives are the same length.
-                    ASSERT(countCheckedForCurrentAlternative == countToCheckForNextAlternative);
+                    // Back up to start the looping alternatives.
+                    if (countCheckedForCurrentAlternative)
+                        sub32(Imm32(countCheckedForCurrentAlternative), index);
+                    
+                    firstAlternative = Label(this);
+                    
+                    state.checkedTotal = countToCheckForFirstAlternative;
+                    if (countToCheckForFirstAlternative)
+                        notEnoughInputForPreviousAlternative.append(jumpIfNoAvailableInput(countToCheckForFirstAlternative));
+                    
+                    countCheckedForCurrentAlternative = countToCheckForFirstAlternative;
+                    
+                    firstAlternativeInputChecked = Label(this);
 
-                    // If the next alterative is the same length as this one, then no need to check the input -
-                    // if there was sufficent input to run the current alternative then there is sufficient
-                    // input to run the next one; if not, there isn't.
-                    state.linkAlternativeBacktracks(this);
+                    setRepeatAlternativeLabels = true;
+                } else {
+                    int countToCheckForNextAlternative = nextAlternative->m_minimumSize;
+                    
+                    if (countCheckedForCurrentAlternative > countToCheckForNextAlternative) { // CASE 1: current alternative was longer than the next one.
+                        // If we get here, then the last input checked failed.
+                        notEnoughInputForPreviousAlternative.link(this);
+                        
+                        // Check if sufficent input available to run the next alternative 
+                        notEnoughInputForPreviousAlternative.append(jumpIfNoAvailableInput(countToCheckForNextAlternative - countCheckedForCurrentAlternative));
+                        // We are now in the correct state to enter the next alternative; this add is only required
+                        // to mirror and revert operation of the sub32, just below.
+                        add32(Imm32(countCheckedForCurrentAlternative - countToCheckForNextAlternative), index);
+                        
+                        // If we get here, then the last input checked passed.
+                        state.linkAlternativeBacktracks(this);
+                        // No need to check if we can run the next alternative, since it is shorter -
+                        // just update index.
+                        sub32(Imm32(countCheckedForCurrentAlternative - countToCheckForNextAlternative), index);
+                    } else if (countCheckedForCurrentAlternative < countToCheckForNextAlternative) { // CASE 2: next alternative is longer than the current one.
+                        // If we get here, then the last input checked failed.
+                        // If there is insufficient input to run the current alternative, and the next alternative is longer,
+                        // then there is definitely not enough input to run it - don't even check. Just adjust index, as if
+                        // we had checked.
+                        notEnoughInputForPreviousAlternative.link(this);
+                        add32(Imm32(countToCheckForNextAlternative - countCheckedForCurrentAlternative), index);
+                        notEnoughInputForPreviousAlternative.append(jump());
+                        
+                        // The next alternative is longer than the current one; check the difference.
+                        state.linkAlternativeBacktracks(this);
+                        notEnoughInputForPreviousAlternative.append(jumpIfNoAvailableInput(countToCheckForNextAlternative - countCheckedForCurrentAlternative));
+                    } else { // CASE 3: Both alternatives are the same length.
+                        ASSERT(countCheckedForCurrentAlternative == countToCheckForNextAlternative);
+                        
+                        // If the next alterative is the same length as this one, then no need to check the input -
+                        // if there was sufficent input to run the current alternative then there is sufficient
+                        // input to run the next one; if not, there isn't.
+                        state.linkAlternativeBacktracks(this);
+                    }
+                    state.checkedTotal -= countCheckedForCurrentAlternative;
+                    countCheckedForCurrentAlternative = countToCheckForNextAlternative;
+                    state.checkedTotal += countCheckedForCurrentAlternative;
                 }
-
-                state.checkedTotal -= countCheckedForCurrentAlternative;
-                countCheckedForCurrentAlternative = countToCheckForNextAlternative;
-                state.checkedTotal += countCheckedForCurrentAlternative;
             }
         }
         
@@ -1318,75 +1355,83 @@ class RegexGenerator : private MacroAssembler {
 
         state.checkedTotal -= countCheckedForCurrentAlternative;
 
-        // How much more input need there be to be able to retry from the first alternative?
-        // examples:
-        //   /yarr_jit/ or /wrec|pcre/
-        //     In these examples we need check for one more input before looping.
-        //   /yarr_jit|pcre/
-        //     In this case we need check for 5 more input to loop (+4 to allow for the first alterative
-        //     being four longer than the last alternative checked, and another +1 to effectively move
-        //     the start position along by one).
-        //   /yarr|rules/ or /wrec|notsomuch/
-        //     In these examples, provided that there was sufficient input to have just been matching for
-        //     the second alternative we can loop without checking for available input (since the second
-        //     alternative is longer than the first).  In the latter example we need to decrement index
-        //     (by 4) so the start position is only progressed by 1 from the last iteration.
-        int incrementForNextIter = (countToCheckForFirstAlternative - countCheckedForCurrentAlternative) + 1;
-
-        // First, deal with the cases where there was sufficient input to try the last alternative.
-        if (incrementForNextIter > 0) // We need to check for more input anyway, fall through to the checking below.
+        if (!setRepeatAlternativeLabels) {
+            // If there are no alternatives that need repeating (all are marked 'onceThrough') then just link
+            // the match failures to this point, and fall through to the return below.
             state.linkAlternativeBacktracks(this);
-        else if (m_pattern.m_body->m_hasFixedSize && !incrementForNextIter) // No need to update anything, link these backtracks straight to the to pof the loop!
-            state.linkAlternativeBacktracksTo(firstAlternativeInputChecked, this);
-        else { // no need to check the input, but we do have some bookkeeping to do first.
-            state.linkAlternativeBacktracks(this);
+            notEnoughInputForPreviousAlternative.link(this);
+        } else {
+            // How much more input need there be to be able to retry from the first alternative?
+            // examples:
+            //   /yarr_jit/ or /wrec|pcre/
+            //     In these examples we need check for one more input before looping.
+            //   /yarr_jit|pcre/
+            //     In this case we need check for 5 more input to loop (+4 to allow for the first alterative
+            //     being four longer than the last alternative checked, and another +1 to effectively move
+            //     the start position along by one).
+            //   /yarr|rules/ or /wrec|notsomuch/
+            //     In these examples, provided that there was sufficient input to have just been matching for
+            //     the second alternative we can loop without checking for available input (since the second
+            //     alternative is longer than the first).  In the latter example we need to decrement index
+            //     (by 4) so the start position is only progressed by 1 from the last iteration.
+            int incrementForNextIter = (countToCheckForFirstAlternative - countCheckedForCurrentAlternative) + 1;
 
-            // Where necessary update our preserved start position.
-            if (!m_pattern.m_body->m_hasFixedSize) {
-                move(index, regT0);
-                sub32(Imm32(countCheckedForCurrentAlternative - 1), regT0);
-                store32(regT0, Address(output));
+            // First, deal with the cases where there was sufficient input to try the last alternative.
+            if (incrementForNextIter > 0) // We need to check for more input anyway, fall through to the checking below.
+                state.linkAlternativeBacktracks(this);
+            else if (m_pattern.m_body->m_hasFixedSize && !incrementForNextIter) // No need to update anything, link these backtracks straight to the to pof the loop!
+                state.linkAlternativeBacktracksTo(firstAlternativeInputChecked, this);
+            else { // no need to check the input, but we do have some bookkeeping to do first.
+                state.linkAlternativeBacktracks(this);
+
+                // Where necessary update our preserved start position.
+                if (!m_pattern.m_body->m_hasFixedSize) {
+                    move(index, regT0);
+                    sub32(Imm32(countCheckedForCurrentAlternative - 1), regT0);
+                    store32(regT0, Address(output));
+                }
+
+                // Update index if necessary, and loop (without checking).
+                if (incrementForNextIter)
+                    add32(Imm32(incrementForNextIter), index);
+                jump().linkTo(firstAlternativeInputChecked, this);
             }
 
-            // Update index if necessary, and loop (without checking).
-            if (incrementForNextIter)
-                add32(Imm32(incrementForNextIter), index);
-            jump().linkTo(firstAlternativeInputChecked, this);
+            notEnoughInputForPreviousAlternative.link(this);
+            // Update our idea of the start position, if we're tracking this.
+            if (!m_pattern.m_body->m_hasFixedSize) {
+                if (countCheckedForCurrentAlternative - 1) {
+                    move(index, regT0);
+                    sub32(Imm32(countCheckedForCurrentAlternative - 1), regT0);
+                    store32(regT0, Address(output));
+                } else
+                    store32(index, Address(output));
+            }
+        
+            // Check if there is sufficent input to run the first alternative again.
+            jumpIfAvailableInput(incrementForNextIter).linkTo(firstAlternativeInputChecked, this);
+            // No - insufficent input to run the first alteranative, are there any other alternatives we
+            // might need to check?  If so, the last check will have left the index incremented by
+            // (countToCheckForFirstAlternative + 1), so we need test whether countToCheckForFirstAlternative
+            // LESS input is available, to have the effect of just progressing the start position by 1
+            // from the last iteration.  If this check passes we can just jump up to the check associated
+            // with the first alternative in the loop.  This is a bit sad, since we'll end up trying the
+            // first alternative again, and this check will fail (otherwise the check planted just above
+            // here would have passed).  This is a bit sad, however it saves trying to do something more
+            // complex here in compilation, and in the common case we should end up coallescing the checks.
+            //
+            // FIXME: a nice improvement here may be to stop trying to match sooner, based on the least
+            // of the minimum-alternative-lengths.  E.g. if I have two alternatives of length 200 and 150,
+            // and a string of length 100, we'll end up looping index from 0 to 100, checking whether there
+            // is sufficient input to run either alternative (constantly failing).  If there had been only
+            // one alternative, or if the shorter alternative had come first, we would have terminated
+            // immediately. :-/
+            if (hasShorterAlternatives)
+                jumpIfAvailableInput(-countToCheckForFirstAlternative).linkTo(firstAlternative, this);
+            // index will now be a bit garbled (depending on whether 'hasShorterAlternatives' is true,
+            // it has either been incremented by 1 or by (countToCheckForFirstAlternative + 1) ... 
+            // but since we're about to return a failure this doesn't really matter!)
         }
-
-        notEnoughInputForPreviousAlternative.link(this);
-        // Update our idea of the start position, if we're tracking this.
-        if (!m_pattern.m_body->m_hasFixedSize) {
-            if (countCheckedForCurrentAlternative - 1) {
-                move(index, regT0);
-                sub32(Imm32(countCheckedForCurrentAlternative - 1), regT0);
-                store32(regT0, Address(output));
-            } else
-                store32(index, Address(output));
-        }
-        // Check if there is sufficent input to run the first alternative again.
-        jumpIfAvailableInput(incrementForNextIter).linkTo(firstAlternativeInputChecked, this);
-        // No - insufficent input to run the first alteranative, are there any other alternatives we
-        // might need to check?  If so, the last check will have left the index incremented by
-        // (countToCheckForFirstAlternative + 1), so we need test whether countToCheckForFirstAlternative
-        // LESS input is available, to have the effect of just progressing the start position by 1
-        // from the last iteration.  If this check passes we can just jump up to the check associated
-        // with the first alternative in the loop.  This is a bit sad, since we'll end up trying the
-        // first alternative again, and this check will fail (otherwise the check planted just above
-        // here would have passed).  This is a bit sad, however it saves trying to do something more
-        // complex here in compilation, and in the common case we should end up coallescing the checks.
-        //
-        // FIXME: a nice improvement here may be to stop trying to match sooner, based on the least
-        // of the minimum-alternative-lengths.  E.g. if I have two alternatives of length 200 and 150,
-        // and a string of length 100, we'll end up looping index from 0 to 100, checking whether there
-        // is sufficient input to run either alternative (constantly failing).  If there had been only
-        // one alternative, or if the shorter alternative had come first, we would have terminated
-        // immediately. :-/
-        if (hasShorterAlternatives)
-            jumpIfAvailableInput(-countToCheckForFirstAlternative).linkTo(firstAlternative, this);
-        // index will now be a bit garbled (depending on whether 'hasShorterAlternatives' is true,
-        // it has either been incremented by 1 or by (countToCheckForFirstAlternative + 1) ... 
-        // but since we're about to return a failure this doesn't really matter!)
 
         if (m_pattern.m_body->m_callFrameSize)
             addPtr(Imm32(m_pattern.m_body->m_callFrameSize * sizeof(void*)), stackPointerRegister);
@@ -1422,6 +1467,9 @@ class RegexGenerator : private MacroAssembler {
         push(ARMRegisters::r4);
         push(ARMRegisters::r5);
         push(ARMRegisters::r6);
+#if WTF_CPU_ARM_TRADITIONAL
+        push(ARMRegisters::r8); // scratch register
+#endif
         move(ARMRegisters::r3, output);
 #elif WTF_CPU_MIPS
         // Do nothing.
@@ -1439,6 +1487,9 @@ class RegexGenerator : private MacroAssembler {
         pop(X86Registers::ebx);
         pop(X86Registers::ebp);
 #elif WTF_CPU_ARM
+#if WTF_CPU_ARM_TRADITIONAL
+        pop(ARMRegisters::r8); // scratch register
+#endif
         pop(ARMRegisters::r6);
         pop(ARMRegisters::r5);
         pop(ARMRegisters::r4);

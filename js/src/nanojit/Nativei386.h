@@ -41,6 +41,8 @@
 #ifndef __nanojit_Nativei386__
 #define __nanojit_Nativei386__
 
+#include "NativeCommon.h"
+
 #ifdef PERFM
 #define DOPROF
 #include "../vprof/vprof.h"
@@ -115,60 +117,63 @@ namespace nanojit
     // Bytes of icache to flush after patch
     const size_t LARGEST_BRANCH_PATCH = 16 * sizeof(NIns);
 
-    // These are used as register numbers in various parts of the code
-    typedef enum
-    {
-        // general purpose 32bit regs
-        EAX = 0, // return value, scratch
-        ECX = 1, // this/arg0, scratch
-        EDX = 2, // arg1, return-msw, scratch
-        EBX = 3,
-        ESP = 4, // stack pointer
-        EBP = 5, // frame pointer
-        ESI = 6,
-        EDI = 7,
+    static const Register
+        // General purpose 32 bit registers.  The names are rEAX, rEBX, etc,
+        // because EAX, EBX, et al clash with <sys/regset.h> on Solaris (sigh).
+        // See bug 570726 for details.
+        rEAX = { 0 }, // return value, scratch
+        rECX = { 1 }, // this/arg0, scratch
+        rEDX = { 2 }, // arg1, return-msw, scratch
+        rEBX = { 3 },
+        rESP = { 4 }, // stack pointer
+        rEBP = { 5 }, // frame pointer
+        rESI = { 6 },
+        rEDI = { 7 },
 
-        SP = ESP, // alias SP to ESP for convenience
-        FP = EBP, // alias FP to EBP for convenience
+        SP = rESP,    // alias SP to ESP for convenience
+        FP = rEBP,    // alias FP to EBP for convenience
 
         // SSE regs come before X87 so we prefer them
-        XMM0 = 8,
-        XMM1 = 9,
-        XMM2 = 10,
-        XMM3 = 11,
-        XMM4 = 12,
-        XMM5 = 13,
-        XMM6 = 14,
-        XMM7 = 15,
+        XMM0 = { 8 },
+        XMM1 = { 9 },
+        XMM2 = { 10 },
+        XMM3 = { 11 },
+        XMM4 = { 12 },
+        XMM5 = { 13 },
+        XMM6 = { 14 },
+        XMM7 = { 15 },
 
         // X87 regs
-        FST0 = 16,
+        FST0 = { 16 },
 
-        FirstReg = 0,
-        LastReg = 16,
-        deprecated_UnknownReg = 17,        // XXX: remove eventually, see bug 538924
-        UnspecifiedReg = 17
-    }
-    Register;
+        deprecated_UnknownReg = { 17 }, // XXX: remove eventually, see bug 538924
+        UnspecifiedReg = { 17 };
+
+    static const uint32_t FirstRegNum = 0;
+    static const uint32_t LastRegNum = 16;
 
     typedef int RegisterMask;
 
     static const int NumSavedRegs = 3;
-    static const RegisterMask SavedRegs   = 1<<EBX | 1<<EDI | 1<<ESI;
-    static const RegisterMask GpRegs      = SavedRegs | 1<<EAX | 1<<ECX | 1<<EDX;
-    static const RegisterMask XmmRegs     = 1<<XMM0 | 1<<XMM1 | 1<<XMM2 | 1<<XMM3 |
-                                            1<<XMM4 | 1<<XMM5 | 1<<XMM6 | 1<<XMM7;
-    static const RegisterMask x87Regs     = 1<<FST0;
+    static const RegisterMask SavedRegs   = 1<<REGNUM(rEBX) | 1<<REGNUM(rEDI) | 1<<REGNUM(rESI);
+    static const RegisterMask GpRegs      = SavedRegs | 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) |
+                                                        1<<REGNUM(rEDX);
+    static const RegisterMask XmmRegs     = 1<<REGNUM(XMM0) | 1<<REGNUM(XMM1) | 1<<REGNUM(XMM2) |
+                                            1<<REGNUM(XMM3) | 1<<REGNUM(XMM4) | 1<<REGNUM(XMM5) |
+                                            1<<REGNUM(XMM6) | 1<<REGNUM(XMM7);
+    static const RegisterMask x87Regs     = 1<<REGNUM(FST0);
     static const RegisterMask FpRegs      = x87Regs | XmmRegs;
-    static const RegisterMask ScratchRegs = 1<<EAX | 1<<ECX | 1<<EDX | FpRegs;
+    static const RegisterMask ScratchRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) | 1<<REGNUM(rEDX) |
+                                            FpRegs;
 
-    static const RegisterMask AllowableFlagRegs = 1<<EAX | 1<<ECX | 1<<EDX | 1<<EBX;
+    static const RegisterMask AllowableFlagRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) |
+                                                  1<<REGNUM(rEDX) | 1<<REGNUM(rEBX);
 
     static inline bool IsGpReg(Register r) {
-        return ((1<<r) & GpRegs) != 0;
+        return ((1<<REGNUM(r)) & GpRegs) != 0;
     }
     static inline bool IsXmmReg(Register r) {
-        return ((1<<r) & XmmRegs) != 0;
+        return ((1<<REGNUM(r)) & XmmRegs) != 0;
     }
 
     verbose_only( extern const char* regNames[]; )
@@ -212,28 +217,30 @@ namespace nanojit
         }; \
         void MODRMs(int32_t r, int32_t d, Register b, int32_t l, int32_t i); \
         void MODRMm(int32_t r, int32_t d, Register b); \
-        void MODRMSIB(Register reg, Register base, int32_t index, int32_t scale, int32_t disp); \
+        void MODRMsib(Register reg, Register base, Register index, int32_t scale, int32_t disp); \
         void MODRMdm(int32_t r, int32_t addr); \
+        /* d may be a register number or something else */ \
         void MODRM(int32_t d, int32_t s) { \
             NanoAssert(unsigned(d) < 8 && unsigned(s) < 8); \
             *(--_nIns) = uint8_t(3 << 6 | d << 3 | s); \
         }; \
         void ALU0(int32_t o); \
         void ALUm(int32_t c, int32_t r, int32_t d, Register b); \
-        void ALUdm(int32_t c, int32_t r, int32_t addr); \
-        void ALUsib(int32_t c, Register r, Register base, int32_t index, int32_t scale, int32_t disp); \
+        void ALUdm(int32_t c, Register r, int32_t addr); \
+        void ALUsib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
         void ALUm16(int32_t c, int32_t r, int32_t d, Register b); \
-        void ALU2dm(int32_t c, int32_t r, int32_t addr); \
-        void ALU2m(int32_t c, int32_t r, int32_t d, Register b); \
-        void ALU2sib(int32_t c, Register r, Register base, int32_t index, int32_t scale, int32_t disp); \
-        void ALU(int32_t c, int32_t d, int32_t s) { \
+        void ALU2dm(int32_t c, Register r, int32_t addr); \
+        void ALU2m(int32_t c, Register r, int32_t d, Register b); \
+        void ALU2sib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
+        /* d may be a register number or something else */ \
+        void ALU(int32_t c, int32_t d, Register s) { \
             underrunProtect(2); \
-            MODRM(d, s); \
+            MODRM(d, REGNUM(s)); \
             *(--_nIns) = uint8_t(c); \
         }; \
-        void ALUi(int32_t c, int32_t r, int32_t i); \
+        void ALUi(int32_t c, Register r, int32_t i); \
         void ALUmi(int32_t c, int32_t d, Register b, int32_t i); \
-        void ALU2(int32_t c, int32_t d, int32_t s); \
+        void ALU2(int32_t c, Register d, Register s); \
         void LAHF(); \
         void SAHF(); \
         void OR(Register l, Register r); \
@@ -264,11 +271,11 @@ namespace nanojit
         void CMPi(Register r, int32_t i); \
         void MR(Register d, Register s) { \
             count_mov(); \
-            ALU(0x8b, d, s); \
+            ALU(0x8b, REGNUM(d), s); \
             asm_output("mov %s,%s", gpn(d), gpn(s)); \
         }; \
         void LEA(Register r, int32_t d, Register b); \
-        void LEAmi4(Register r, int32_t d, int32_t i); \
+        void LEAmi4(Register r, int32_t d, Register i); \
         void CDQ(); \
         void INCLi(int32_t p); \
         void SETE( Register r); \
@@ -295,19 +302,19 @@ namespace nanojit
         void MRNO(Register d, Register s); \
         void LD(Register reg, int32_t disp, Register base); \
         void LDdm(Register reg, int32_t addr); \
-        void LDsib(Register reg, int32_t disp, Register base, int32_t index, int32_t scale); \
+        void LDsib(Register reg, int32_t disp, Register base, Register index, int32_t scale); \
         void LD16S(Register r, int32_t d, Register b); \
         void LD16Sdm(Register r, int32_t addr); \
-        void LD16Ssib(Register r, int32_t disp, Register base, int32_t index, int32_t scale); \
+        void LD16Ssib(Register r, int32_t disp, Register base, Register index, int32_t scale); \
         void LD16Z(Register r, int32_t d, Register b); \
         void LD16Zdm(Register r, int32_t addr); \
-        void LD16Zsib(Register r, int32_t disp, Register base, int32_t index, int32_t scale); \
+        void LD16Zsib(Register r, int32_t disp, Register base, Register index, int32_t scale); \
         void LD8Z(Register r, int32_t d, Register b); \
         void LD8Zdm(Register r, int32_t addr); \
-        void LD8Zsib(Register r, int32_t disp, Register base, int32_t ndex, int32_t scale); \
+        void LD8Zsib(Register r, int32_t disp, Register base, Register index, int32_t scale); \
         void LD8S(Register r, int32_t d, Register b); \
         void LD8Sdm(Register r, int32_t addr); \
-        void LD8Ssib(Register r, int32_t disp, Register base, int32_t index, int32_t scale); \
+        void LD8Ssib(Register r, int32_t disp, Register base, Register index, int32_t scale); \
         void LDi(Register r, int32_t i); \
         void ST8(Register base, int32_t disp, Register reg); \
         void ST16(Register base, int32_t disp, Register reg); \
@@ -363,8 +370,8 @@ namespace nanojit
         void JNGE(NIns* t); \
         void JO(NIns* t); \
         void JNO(NIns* t); \
-        void SSE(int32_t c, int32_t d, int32_t s); \
-        void SSEm(int32_t c, int32_t r, int32_t d, Register b); \
+        void SSE(int32_t c, Register d, Register s); \
+        void SSEm(int32_t c, Register r, int32_t d, Register b); \
         void LDSDm(Register r, const double* addr); \
         void SSE_LDSD(Register r, int32_t d, Register b); \
         void SSE_LDQ( Register r, int32_t d, Register b); \
@@ -390,7 +397,7 @@ namespace nanojit
         void FPUc(int32_t o); \
         void FPU(int32_t o, Register r) { \
             underrunProtect(2); \
-            *(--_nIns) = uint8_t((uint8_t(o) & 0xff) | (r & 7)); \
+            *(--_nIns) = uint8_t((uint8_t(o) & 0xff) | (REGNUM(r) & 7)); \
             *(--_nIns) = uint8_t((o >> 8) & 0xff); \
         }; \
         void FPUm(int32_t o, int32_t d, Register b); \

@@ -297,11 +297,13 @@ JSProxyHandler::trace(JSTracer *trc, JSObject *proxy)
 static bool
 GetTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     return handler->getProperty(cx, ATOM_TO_JSID(atom), fvalp);
 }
 
 static bool
-FundamentalTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
+GetFundamentalTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 {
     if (!GetTrap(cx, handler, atom, fvalp))
         return false;
@@ -316,7 +318,7 @@ FundamentalTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 }
 
 static bool
-DerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
+GetDerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 {
     JS_ASSERT(atom == ATOM(has) ||
               atom == ATOM(hasOwn) ||
@@ -490,7 +492,7 @@ JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, js
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    return FundamentalTrap(cx, handler, ATOM(getPropertyDescriptor), tvr.addr()) &&
+    return GetFundamentalTrap(cx, handler, ATOM(getPropertyDescriptor), tvr.addr()) &&
            Trap1(cx, handler, tvr.value(), id, tvr.addr()) &&
            ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
            ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
@@ -502,7 +504,7 @@ JSScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    return FundamentalTrap(cx, handler, ATOM(getOwnPropertyDescriptor), tvr.addr()) &&
+    return GetFundamentalTrap(cx, handler, ATOM(getOwnPropertyDescriptor), tvr.addr()) &&
            Trap1(cx, handler, tvr.value(), id, tvr.addr()) &&
            ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
            ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
@@ -515,7 +517,7 @@ JSScriptedProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
     AutoValueRooter fval(cx);
-    return FundamentalTrap(cx, handler, ATOM(defineProperty), fval.addr()) &&
+    return GetFundamentalTrap(cx, handler, ATOM(defineProperty), fval.addr()) &&
            MakePropertyDescriptorObject(cx, id, desc, tvr.addr()) &&
            Trap2(cx, handler, fval.value(), id, tvr.value(), tvr.addr());
 }
@@ -525,7 +527,7 @@ JSScriptedProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy, Auto
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    return FundamentalTrap(cx, handler, ATOM(getOwnPropertyNames), tvr.addr()) &&
+    return GetFundamentalTrap(cx, handler, ATOM(getOwnPropertyNames), tvr.addr()) &&
            Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
            ArrayToIdVector(cx, tvr.value(), props);
 }
@@ -535,7 +537,7 @@ JSScriptedProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *b
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    return FundamentalTrap(cx, handler, ATOM(delete), tvr.addr()) &&
+    return GetFundamentalTrap(cx, handler, ATOM(delete), tvr.addr()) &&
            Trap1(cx, handler, tvr.value(), id, tvr.addr()) &&
            ValueToBool(cx, tvr.value(), bp);
 }
@@ -545,7 +547,7 @@ JSScriptedProxyHandler::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    return FundamentalTrap(cx, handler, ATOM(enumerate), tvr.addr()) &&
+    return GetFundamentalTrap(cx, handler, ATOM(enumerate), tvr.addr()) &&
            Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
            ArrayToIdVector(cx, tvr.value(), props);
 }
@@ -554,7 +556,7 @@ bool
 JSScriptedProxyHandler::fix(JSContext *cx, JSObject *proxy, Value *vp)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
-    return FundamentalTrap(cx, handler, ATOM(fix), vp) &&
+    return GetFundamentalTrap(cx, handler, ATOM(fix), vp) &&
            Trap(cx, handler, *vp, 0, NULL, vp);
 }
 
@@ -563,7 +565,7 @@ JSScriptedProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    if (!DerivedTrap(cx, handler, ATOM(has), tvr.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(has), tvr.addr()))
         return false;
     if (!js_IsCallable(tvr.value()))
         return JSProxyHandler::has(cx, proxy, id, bp);
@@ -576,7 +578,7 @@ JSScriptedProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    if (!DerivedTrap(cx, handler, ATOM(hasOwn), tvr.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(hasOwn), tvr.addr()))
         return false;
     if (!js_IsCallable(tvr.value()))
         return JSProxyHandler::hasOwn(cx, proxy, id, bp);
@@ -594,7 +596,7 @@ JSScriptedProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, 
     AutoValueRooter tvr(cx, StringValue(str));
     Value argv[] = { ObjectOrNullValue(receiver), tvr.value() };
     AutoValueRooter fval(cx);
-    if (!DerivedTrap(cx, handler, ATOM(get), fval.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(get), fval.addr()))
         return false;
     if (!js_IsCallable(fval.value()))
         return JSProxyHandler::get(cx, proxy, receiver, id, vp);
@@ -611,7 +613,7 @@ JSScriptedProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, 
     AutoValueRooter tvr(cx, StringValue(str));
     Value argv[] = { ObjectOrNullValue(receiver), tvr.value(), *vp };
     AutoValueRooter fval(cx);
-    if (!DerivedTrap(cx, handler, ATOM(set), fval.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(set), fval.addr()))
         return false;
     if (!js_IsCallable(fval.value()))
         return JSProxyHandler::set(cx, proxy, receiver, id, vp);
@@ -623,7 +625,7 @@ JSScriptedProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVecto
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    if (!DerivedTrap(cx, handler, ATOM(enumerateOwn), tvr.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(enumerateOwn), tvr.addr()))
         return false;
     if (!js_IsCallable(tvr.value()))
         return JSProxyHandler::enumerateOwn(cx, proxy, props);
@@ -636,7 +638,7 @@ JSScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, Val
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    if (!DerivedTrap(cx, handler, ATOM(iterate), tvr.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(iterate), tvr.addr()))
         return false;
     if (!js_IsCallable(tvr.value()))
         return JSProxyHandler::iterate(cx, proxy, flags, vp);
@@ -1233,7 +1235,7 @@ callable_Call(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 callable_Construct(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *thisobj = js_NewInstance(cx, &JS_CALLEE(cx, vp).toObject());
+    JSObject *thisobj = js_CreateThis(cx, &JS_CALLEE(cx, vp).toObject());
     if (!thisobj)
         return false;
 

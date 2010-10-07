@@ -47,6 +47,7 @@
 #include "jsobj.h"
 #include "jsatom.h"
 #include "jsstr.h"
+#include "jsopcode.h"
 
 /*
  * The high two bits of JSFunction.flags encode whether the function is native
@@ -85,6 +86,9 @@
 #define JSFUN_JOINABLE      0x0001  /* function is null closure that does not
                                        appear to call itself via its own name
                                        or arguments.callee */
+
+#define JSFUN_PROTOTYPE     0x0800  /* function is Function.prototype for some
+                                       global object */
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
@@ -169,6 +173,8 @@ struct JSFunction : public JSObject
     bool isNative()          const { return !FUN_INTERPRETED(this); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+
+    bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 
     inline bool inStrictMode() const;
 
@@ -512,7 +518,7 @@ extern JSObject * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 
 extern JS_REQUIRES_STACK JSObject *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun);
+js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen);
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);

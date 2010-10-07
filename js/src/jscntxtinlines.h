@@ -139,6 +139,7 @@ StackSpace::isCurrentAndActive(JSContext *cx) const
            currentSegment == cx->getCurrentSegment();
 }
 
+STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
@@ -323,8 +324,6 @@ StackSpace::pushInvokeFrame(JSContext *cx, const CallArgs &args,
 {
     JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
-    JSStackFrame *fp = fg->regs_.fp;
-    fp->setPrev(cx->regs);
     if (JS_UNLIKELY(!currentSegment->inContext())) {
         cx->pushSegmentAndFrame(currentSegment, fg->regs_);
     } else {
@@ -390,8 +389,6 @@ StackSpace::pushInlineFrame(JSContext *cx, JSScript *script, JSStackFrame *fp,
 {
     JS_ASSERT(isCurrentAndActive(cx));
     JS_ASSERT(cx->regs == regs && script == fp->script());
-
-    fp->setPrev(regs);
 
     regs->fp = fp;
     regs->pc = script->code;
@@ -642,6 +639,7 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 
 #undef START_ASSERT_SAME_COMPARTMENT
 
+STATIC_PRECONDITION_ASSUME(ubound(vp) >= argc + 2)
 JS_ALWAYS_INLINE bool
 CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
@@ -657,6 +655,7 @@ CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
     return ok;
 }
 
+STATIC_PRECONDITION(ubound(vp) >= argc + 2)
 JS_ALWAYS_INLINE bool
 CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
