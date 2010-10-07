@@ -256,7 +256,11 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
     mValue = aValue;
 
     if (mChild) {
-      mChild->SetText(mValue, PR_FALSE);
+      if (mValue.IsEmpty()) {
+        doRemoveChild();
+      } else {
+        mChild->SetText(mValue, PR_FALSE);
+      }
     } else {
       EnsureChildState();
     }
