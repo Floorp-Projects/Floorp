@@ -998,12 +998,93 @@ EvalCacheHash(JSContext *cx, JSString *str)
     return &JS_SCRIPTS_TO_GC(cx)[h];
 }
 
+static JS_ALWAYS_INLINE JSScript *
+EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN staticLevel,
+                JSPrincipals *principals, JSObject *scopeobj, JSScript ***bucketp)
+{
+    /*
+     * Cache local eval scripts indexed by source qualified by scope.
+     *
+     * An eval cache entry should never be considered a hit unless its
+     * strictness matches that of the new eval code. The existing code takes
+     * care of this, because hits are qualified by the function from which
+     * eval was called, whose strictness doesn't change. Scripts produced by
+     * calls to eval from global code are not cached.
+     */
+    JSScript **bucket = EvalCacheHash(cx, str);
+    *bucketp = bucket;
+    uintN count = 0;
+    JSScript **scriptp = bucket;
+
+    EVAL_CACHE_METER(probe);
+    JSVersion version = cx->findVersion();
+    JSScript *script;
+    while ((script = *scriptp) != NULL) {
+        if (script->savedCallerFun &&
+            script->staticLevel == staticLevel &&
+            script->version == version &&
+            (script->principals == principals ||
+             (principals->subsume(principals, script->principals) &&
+              script->principals->subsume(script->principals, principals)))) {
+            /*
+             * Get the prior (cache-filling) eval's saved caller function.
+             * See Compiler::compileScript in jsparse.cpp.
+             */
+            JSFunction *fun = script->getFunction(0);
+
+            if (fun == caller->fun()) {
+                /*
+                 * Get the source string passed for safekeeping in the
+                 * atom map by the prior eval to Compiler::compileScript.
+                 */
+                JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
+
+                if (src == str || js_EqualStrings(src, str)) {
+                    /*
+                     * Source matches, qualify by comparing scopeobj to the
+                     * COMPILE_N_GO-memoized parent of the first literal
+                     * function or regexp object if any. If none, then this
+                     * script has no compiled-in dependencies on the prior
+                     * eval's scopeobj.
+                     */
+                    JSObjectArray *objarray = script->objects();
+                    int i = 1;
+
+                    if (objarray->length == 1) {
+                        if (script->regexpsOffset != 0) {
+                            objarray = script->regexps();
+                            i = 0;
+                        } else {
+                            EVAL_CACHE_METER(noscope);
+                            i = -1;
+                        }
+                    }
+                    if (i < 0 ||
+                        objarray->vector[i]->getParent() == scopeobj) {
+                        JS_ASSERT(staticLevel == script->staticLevel);
+                        EVAL_CACHE_METER(hit);
+                        *scriptp = script->u.nextToGC;
+                        script->u.nextToGC = NULL;
+                        return script;
+                    }
+                }
+            }
+        }
+
+        if (++count == EVAL_CACHE_CHAIN_LIMIT)
+            return NULL;
+        EVAL_CACHE_METER(step);
+        scriptp = &script->u.nextToGC;
+    }
+    return NULL;
+}
+
 static JSBool
 obj_eval(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc < 1) {
         vp->setUndefined();
-        return JS_TRUE;
+        return true;
     }
 
     JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
@@ -1011,7 +1092,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         /* Eval code needs to inherit principals from the caller. */
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_INDIRECT_CALL, js_eval_str);
-        return JS_FALSE;
+        return false;
     }
 
     jsbytecode *callerPC = caller->pc(cx);
@@ -1027,7 +1108,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     Value *argv = JS_ARGV(cx, vp);
     if (!argv[0].isString()) {
         *vp = argv[0];
-        return JS_TRUE;
+        return true;
     }
 
     /*
@@ -1040,15 +1121,9 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
             "Support for eval(code, scopeObject) has been removed. "
             "Use |with (scopeObject) eval(code);| instead.";
         if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
-            return JS_FALSE;
+            return false;
         caller->script()->warnedAboutTwoArgumentEval = true;
     }
-
-    /* From here on, control must exit through label out with ok set. */
-    MUST_FLOW_THROUGH("out");
-    uintN staticLevel = caller->script()->staticLevel + 1;
-
-    JSObject *scopeobj;
 
     /*
      * Per ES5, if we see an indirect call, then run in the global scope.
@@ -1056,12 +1131,15 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      * about what bindings may or may not exist in the current frame if it
      * doesn't see 'eval'.)
      */
+    uintN staticLevel;
+    JSObject *scopeobj;
     if (directCall) {
         /* Compile using the caller's current scope object. */
+        staticLevel = caller->script()->staticLevel + 1;
         scopeobj = js_GetScopeChainFast(cx, caller, JSOP_EVAL,
                                         JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
         if (!scopeobj)
-            return JS_FALSE;
+            return false;
 
         JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
     } else {
@@ -1073,7 +1151,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     /* Ensure we compile this eval with the right object in the scope chain. */
     JSObject *result = CheckScopeChainValidity(cx, scopeobj, js_eval_str);
     if (!result)
-        return JS_FALSE;
+        return false;
     JS_ASSERT(result == scopeobj);
 
     /*
@@ -1082,7 +1160,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
      */
     if (!js_CheckContentSecurityPolicy(cx)) {
         JS_ReportError(cx, "call to eval() blocked by CSP");
-        return  JS_FALSE;
+        return false;
     }
 
     JSObject *callee = &vp[0].toObject();
@@ -1111,86 +1189,13 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
             ok = js_ConsumeJSONText(cx, jp, chars+1, length-2);
             ok &= js_FinishJSONParse(cx, jp, NullValue());
             if (ok)
-                return JS_TRUE;
+                return true;
         }
     }
 
-    /*
-     * Cache local eval scripts indexed by source qualified by scope.
-     *
-     * An eval cache entry should never be considered a hit unless its
-     * strictness matches that of the new eval code. The existing code takes
-     * care of this, because hits are qualified by the function from which
-     * eval was called, whose strictness doesn't change. Scripts produced by
-     * calls to eval from global code are not cached.
-     */
-    JSScript **bucket = EvalCacheHash(cx, str);
-    if (directCall && caller->isFunctionFrame()) {
-        uintN count = 0;
-        JSScript **scriptp = bucket;
-
-        EVAL_CACHE_METER(probe);
-        JSVersion version = cx->findVersion();
-        while ((script = *scriptp) != NULL) {
-            if (script->savedCallerFun &&
-                script->staticLevel == staticLevel &&
-                script->version == version &&
-                (script->principals == principals ||
-                 (principals->subsume(principals, script->principals) &&
-                  script->principals->subsume(script->principals, principals)))) {
-                /*
-                 * Get the prior (cache-filling) eval's saved caller function.
-                 * See Compiler::compileScript in jsparse.cpp.
-                 */
-                JSFunction *fun = script->getFunction(0);
-
-                if (fun == caller->fun()) {
-                    /*
-                     * Get the source string passed for safekeeping in the
-                     * atom map by the prior eval to Compiler::compileScript.
-                     */
-                    JSString *src = ATOM_TO_STRING(script->atomMap.vector[0]);
-
-                    if (src == str || js_EqualStrings(src, str)) {
-                        /*
-                         * Source matches, qualify by comparing scopeobj to the
-                         * COMPILE_N_GO-memoized parent of the first literal
-                         * function or regexp object if any. If none, then this
-                         * script has no compiled-in dependencies on the prior
-                         * eval's scopeobj.
-                         */
-                        JSObjectArray *objarray = script->objects();
-                        int i = 1;
-
-                        if (objarray->length == 1) {
-                            if (script->regexpsOffset != 0) {
-                                objarray = script->regexps();
-                                i = 0;
-                            } else {
-                                EVAL_CACHE_METER(noscope);
-                                i = -1;
-                            }
-                        }
-                        if (i < 0 ||
-                            objarray->vector[i]->getParent() == scopeobj) {
-                            JS_ASSERT(staticLevel == script->staticLevel);
-                            EVAL_CACHE_METER(hit);
-                            *scriptp = script->u.nextToGC;
-                            script->u.nextToGC = NULL;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (++count == EVAL_CACHE_CHAIN_LIMIT) {
-                script = NULL;
-                break;
-            }
-            EVAL_CACHE_METER(step);
-            scriptp = &script->u.nextToGC;
-        }
-    }
+    JSScript **bucket = NULL;
+    if (directCall && caller->isFunctionFrame())
+        script = EvalCacheLookup(cx, str, caller, staticLevel, principals, scopeobj, &bucket);
 
     /*
      * We can't have a callerFrame (down in js_Execute's terms) if we're in
@@ -1205,7 +1210,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                                          chars, length,
                                          NULL, file, line, str, staticLevel);
         if (!script)
-            return JS_FALSE;
+            return false;
     }
 
     assertSameCompartment(cx, scopeobj, script);
@@ -1218,8 +1223,10 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                                          cx->runtime->atomState.evalAtom) &&
                 Execute(cx, scopeobj, script, callerFrame, JSFRAME_EVAL, vp);
 
-    script->u.nextToGC = *bucket;
-    *bucket = script;
+    if (bucket) {
+        script->u.nextToGC = *bucket;
+        *bucket = script;
+    }
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;
 #endif
