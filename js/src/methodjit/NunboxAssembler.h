@@ -47,13 +47,9 @@
 namespace js {
 namespace mjit {
 
-/* 
- * Don't use ImmTag. Use ImmType instead.
- * TODO: ImmTag should really just be for internal use...
- */
-class ImmTag : public JSC::MacroAssembler::Imm32
+/* Don't use ImmTag. Use ImmType instead. */
+struct ImmTag : JSC::MacroAssembler::Imm32
 {
-  public:
     ImmTag(JSValueTag mask)
       : Imm32(int32(mask))
     { }
@@ -63,6 +59,13 @@ struct ImmType : ImmTag
 {
     ImmType(JSValueType type)
       : ImmTag(JSVAL_TYPE_TO_TAG(type))
+    { }
+};
+
+struct ImmPayload : JSC::MacroAssembler::Imm32
+{
+    ImmPayload(uint32 payload)
+      : Imm32(payload)
     { }
 };
 
@@ -111,7 +114,7 @@ class Assembler : public BaseAssembler
     }
 
     template <typename T>
-    void storeTypeTag(ImmType imm, T address) {
+    void storeTypeTag(ImmTag imm, T address) {
         store32(imm, tagOf(address));
     }
 
@@ -131,7 +134,7 @@ class Assembler : public BaseAssembler
     }
 
     template <typename T>
-    void storePayload(Imm32 imm, T address) {
+    void storePayload(ImmPayload imm, T address) {
         store32(imm, payloadOf(address));
     }
 

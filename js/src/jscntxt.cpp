@@ -53,8 +53,8 @@
 #include "jsstdint.h"
 
 #include "jstypes.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsclist.h"
 #include "jsprf.h"
 #include "jsatom.h"
@@ -225,6 +225,7 @@ StackSpace::mark(JSTracer *trc)
      */
     Value *end = firstUnused();
     for (StackSegment *seg = currentSegment; seg; seg = seg->getPreviousInMemory()) {
+        STATIC_ASSERT(ubound(end) >= 0);
         if (seg->inContext()) {
             /* This may be the only pointer to the initialVarObj. */
             if (seg->hasInitialVarObj())

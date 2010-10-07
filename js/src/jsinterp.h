@@ -52,6 +52,7 @@
 
 struct JSFrameRegs
 {
+    STATIC_SKIP_INFERENCE
     js::Value       *sp;                  /* stack pointer */
     jsbytecode      *pc;                  /* program counter */
     JSStackFrame    *fp;                  /* active frame */
@@ -90,23 +91,14 @@ enum JSFrameFlags
     JSFRAME_UNDERFLOW_ARGS     =  0x4000, /* numActualArgs < numFormalArgs */
 
     /* Lazy frame initialization */
-    JSFRAME_HAS_IMACRO_PC      =  0x8000, /* frame has imacpc value available */
-    JSFRAME_HAS_CALL_OBJ       = 0x10000, /* frame has a callobj reachable from scopeChain_ */
-    JSFRAME_HAS_ARGS_OBJ       = 0x20000, /* frame has an argsobj in JSStackFrame::args */
-    JSFRAME_HAS_HOOK_DATA      = 0x40000, /* frame has hookData_ set */
-    JSFRAME_HAS_ANNOTATION     = 0x80000, /* frame has annotation_ set */
-
-    /*
-     * Whether the prevpc_ value is valid.  If not set, the ncode_ value is
-     * valid and prevpc_ can be recovered using it.
-     */
-    JSFRAME_HAS_PREVPC         = 0x100000,
-
-    /*
-     * For use by compiled functions, at function exit indicates whether rval_
-     * has been assigned to.  Otherwise the return value is carried in registers.
-     */
-    JSFRAME_RVAL_ASSIGNED      = 0x200000
+    JSFRAME_HAS_IMACRO_PC      =   0x8000, /* frame has imacpc value available */
+    JSFRAME_HAS_CALL_OBJ       =  0x10000, /* frame has a callobj reachable from scopeChain_ */
+    JSFRAME_HAS_ARGS_OBJ       =  0x20000, /* frame has an argsobj in JSStackFrame::args */
+    JSFRAME_HAS_HOOK_DATA      =  0x40000, /* frame has hookData_ set */
+    JSFRAME_HAS_ANNOTATION     =  0x80000, /* frame has annotation_ set */
+    JSFRAME_HAS_RVAL           = 0x100000, /* frame has rval_ set */
+    JSFRAME_HAS_SCOPECHAIN     = 0x200000, /* frame has scopeChain_ set */
+    JSFRAME_HAS_PREVPC         = 0x400000  /* frame has prevpc_ set */
 };
 
 /*
@@ -116,7 +108,7 @@ enum JSFrameFlags
 struct JSStackFrame
 {
   private:
-    uint32              flags_;         /* bits described by JSFrameFlags */
+    mutable uint32      flags_;         /* bits described by JSFrameFlags */
     union {                             /* describes what code is executing in a */
         JSScript        *script;        /*   global frame */
         JSFunction      *fun;           /*   function frame, pre GetScopeChain */
@@ -126,7 +118,7 @@ struct JSStackFrame
         JSObject        *obj;           /*   post GetArgumentsObject */
         JSScript        *script;        /* eval has no args, but needs a script */
     } args;
-    JSObject            *scopeChain_;   /* current scope chain */
+    mutable JSObject    *scopeChain_;   /* current scope chain */
     JSStackFrame        *prev_;         /* previous cx->regs->fp */
     void                *ncode_;        /* return address for method JIT */
 
@@ -144,6 +136,8 @@ struct JSStackFrame
     friend class js::StackSpace;
     friend class js::FrameRegsIter;
     friend struct JSContext;
+
+    inline void initPrev(JSContext *cx);
 
   public:
     /*
@@ -198,14 +192,13 @@ struct JSStackFrame
                               uint32 nactual, uint32 flags);
 
     /* Called by method-jit stubs and serve as a specification for jit-code. */
-    inline void initCallFrameCallerHalf(JSContext *cx, JSObject &scopeChain,
-                                        uint32 nactual, uint32 flags);
+    inline void initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flags);
     inline void initCallFrameEarlyPrologue(JSFunction *fun, void *ncode);
     inline void initCallFrameLatePrologue();
 
     /* Used for eval. */
-    inline void initEvalFrame(JSScript *script, JSStackFrame *prev,
-                              jsbytecode *prevpc, uint32 flags);
+    inline void initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev,
+                              uint32 flags);
     inline void initGlobalFrame(JSScript *script, JSObject &chain, uint32 flags);
 
     /* Used when activating generators. */
@@ -232,27 +225,7 @@ struct JSStackFrame
         return prev_;
     }
 
-    void setPrev(JSStackFrame *prev, jsbytecode *prevpc) {
-        JS_ASSERT(flags_ & JSFRAME_HAS_PREVPC);
-        prev_ = prev;
-        if (prev) {
-            prevpc_ = prevpc;
-            JS_ASSERT_IF(!prev->isDummyFrame() && !prev->hasImacropc(),
-                         uint32(prevpc - prev->script()->code) < prev->script()->length);
-        }
-    }
-
-    void setPrev(JSFrameRegs *regs) {
-        JS_ASSERT(flags_ & JSFRAME_HAS_PREVPC);
-        if (regs) {
-            prev_ = regs->fp;
-            prevpc_ = regs->pc;
-            JS_ASSERT_IF(!prev_->isDummyFrame() && !prev_->hasImacropc(),
-                         uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
-        } else {
-            prev_ = NULL;
-        }
-    }
+    inline void resetGeneratorPrev(JSContext *cx);
 
     /*
      * Frame slots
@@ -356,8 +329,13 @@ struct JSStackFrame
      * lazily created, so a given function frame may or may not have one.
      */
 
+    /* True if this frame has arguments. Contrast with hasArgsObj. */
+    bool hasArgs() const {
+        return isFunctionFrame() && !isEvalFrame();
+    }
+
     uintN numFormalArgs() const {
-        JS_ASSERT(isFunctionFrame() && !isEvalFrame());
+        JS_ASSERT(hasArgs());
         return fun()->nargs;
     }
 
@@ -367,12 +345,12 @@ struct JSStackFrame
     }
 
     js::Value *formalArgs() const {
-        JS_ASSERT(isFunctionFrame() && !isEvalFrame());
+        JS_ASSERT(hasArgs());
         return (js::Value *)this - numFormalArgs();
     }
 
     js::Value *formalArgsEnd() const {
-        JS_ASSERT(isFunctionFrame() && !isEvalFrame());
+        JS_ASSERT(hasArgs());
         return (js::Value *)this;
     }
 
@@ -390,6 +368,7 @@ struct JSStackFrame
     template <class Op> inline void forEachCanonicalActualArg(Op op);
     template <class Op> inline void forEachFormalArg(Op op);
 
+    /* True if we have created an arguments object for this frame; implies hasArgs(). */
     bool hasArgsObj() const {
         return !!(flags_ & JSFRAME_HAS_ARGS_OBJ);
     }
@@ -429,7 +408,7 @@ struct JSStackFrame
     }
 
     JSObject &constructorThis() const {
-        JS_ASSERT(isFunctionFrame() && !isEvalFrame());
+        JS_ASSERT(hasArgs());
         return formalArgs()[-1].toObject();
     }
 
@@ -496,6 +475,11 @@ struct JSStackFrame
      */
 
     JSObject &scopeChain() const {
+        JS_ASSERT_IF(!(flags_ & JSFRAME_HAS_SCOPECHAIN), isFunctionFrame());
+        if (!(flags_ & JSFRAME_HAS_SCOPECHAIN)) {
+            scopeChain_ = callee().getParent();
+            flags_ |= JSFRAME_HAS_SCOPECHAIN;
+        }
         return *scopeChain_;
     }
 
@@ -575,24 +559,23 @@ struct JSStackFrame
     /* Return value */
 
     const js::Value& returnValue() {
+        if (!(flags_ & JSFRAME_HAS_RVAL))
+            rval_.setUndefined();
         return rval_;
+    }
+
+    void markReturnValue() {
+        flags_ |= JSFRAME_HAS_RVAL;
     }
 
     void setReturnValue(const js::Value &v) {
         rval_ = v;
+        markReturnValue();
     }
 
     void clearReturnValue() {
         rval_.setUndefined();
-    }
-
-    js::Value* addressReturnValue() {
-        return &rval_;
-    }
-
-    void setAssignedReturnValue(const js::Value &v) {
-        flags_ |= JSFRAME_RVAL_ASSIGNED;
-        setReturnValue(v);
+        markReturnValue();
     }
 
     /* Native-code return address */
@@ -739,6 +722,7 @@ struct JSStackFrame
     }
 
     JSObject **addressOfScopeChain() {
+        JS_ASSERT(flags_ & JSFRAME_HAS_SCOPECHAIN);
         return &scopeChain_;
     }
 
@@ -972,7 +956,7 @@ extern JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0, uintN interpFlags = 0);
 
 extern JS_REQUIRES_STACK bool
-RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject &scopeChain);
+RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
@@ -1052,7 +1036,7 @@ GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
 # define JS_STATIC_INTERPRET
 
 extern JS_REQUIRES_STACK JSBool
-js_EnterWith(JSContext *cx, jsint stackIndex);
+js_EnterWith(JSContext *cx, jsint stackIndex, JSOp op, size_t oplen);
 
 extern JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx);

@@ -45,7 +45,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -210,7 +210,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
 
 namespace {
 
-struct PutArg
+struct STATIC_SKIP_INFERENCE PutArg
 {
     PutArg(Value *dst) : dst(dst) {}
     Value *dst;
@@ -518,15 +518,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          */
         uintN arg = uintN(JSID_TO_INT(id));
         if (arg < obj->getArgsInitialLength()) {
-            JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
-            if (fp) {
-                JS_ASSERT(fp->numActualArgs() == obj->getArgsInitialLength());
+            JS_ASSERT(!obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE));
+            if (JSStackFrame *fp = (JSStackFrame *) obj->getPrivate())
                 *vp = fp->canonicalActualArg(arg);
-            } else {
-                const Value &v = obj->getArgsElement(arg);
-                if (!v.isMagic(JS_ARGS_HOLE))
-                    *vp = v;
-            }
+            else
+                *vp = obj->getArgsElement(arg);
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
@@ -1086,7 +1082,7 @@ CopyValuesToCallObject(JSObject &callobj, uintN nargs, Value *argv, uintN nvars,
     /* Copy however many args fit into fslots. */
     uintN first = JSSLOT_PRIVATE + JSObject::CALL_RESERVED_SLOTS + 1;
     JS_ASSERT(first <= JS_INITIAL_NSLOTS);
-    
+
     Value *vp = &callobj.fslots[first];
     uintN len = Min(nargs, uintN(JS_INITIAL_NSLOTS) - first);
 
@@ -1724,38 +1720,38 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     if (!JSID_IS_ATOM(id))
-        return JS_TRUE;
+        return true;
 
     JSFunction *fun = obj->getFunctionPrivate();
 
-    /*
-     * No need to reflect fun.prototype in 'fun.prototype = ... '. Assert that
-     * fun is not a compiler-created function object, which must never leak to
-     * script or embedding code and then be mutated.
-     */
-    if ((flags & JSRESOLVE_ASSIGNING) && JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
-        JS_ASSERT(!IsInternalFunctionObject(obj));
-        return JS_TRUE;
-    }
-
-    /*
-     * Ok, check whether id is 'prototype' and bootstrap the function object's
-     * prototype property.
-     */
-    JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
-    if (id == ATOM_TO_JSID(atom)) {
-        JS_ASSERT(!IsInternalFunctionObject(obj));
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
+        /*
+         * Native or "built-in" functions do not have a .prototype property per
+         * ECMA-262 (all editions). Built-in constructor functions, e.g. Object
+         * and Function to name two conspicuous examples, do have a .prototype
+         * property, but it is created eagerly by js_InitClass (jsobj.cpp).
+         *
+         * ES5 15.3.4: the non-native function object named Function.prototype
+         * must not have a .prototype property.
+         *
+         * ES5 15.3.4.5: bound functions don't have a prototype property. The
+         * isNative() test covers this case because bound functions are native
+         * functions by definition/construction.
+         */
+        if (fun->isNative() || fun->isFunctionPrototype())
+            return true;
 
         /*
-         * Beware of the wacky case of a user function named Object -- trying
-         * to find a prototype for that will recur back here _ad perniciem_.
+         * Assert that fun is not a compiler-created function object, which
+         * must never leak to script or embedding code and then be mutated.
+         * Also assert that obj is not bound, per the ES5 15.3.4.5 ref above.
          */
-        if (fun->atom == CLASS_ATOM(cx, Object))
-            return JS_TRUE;
+        JS_ASSERT(!IsInternalFunctionObject(obj));
+        JS_ASSERT(!obj->isBoundFunction());
 
-        /* ES5 15.3.4.5: bound functions don't have a prototype property. */
-        if (obj->isBoundFunction())
-            return JS_TRUE;
+        /* No need to reflect fun.prototype in 'fun.prototype = ... '. */
+        if (flags & JSRESOLVE_ASSIGNING)
+            return true;
 
         /*
          * Make the prototype object an instance of Object with the same parent
@@ -1764,10 +1760,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         JSObject *parent = obj->getParent();
         JSObject *proto;
         if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
-            return JS_FALSE;
+            return false;
         proto = NewNativeClassInstance(cx, &js_ObjectClass, proto, parent);
         if (!proto)
-            return JS_FALSE;
+            return false;
 
         /*
          * ECMA (15.3.5.2) says that constructor.prototype is DontDelete for
@@ -1777,48 +1773,44 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
          * in js_InitClass, with the right attributes.
          */
         if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT))
-            return JS_FALSE;
+            return false;
 
         *objp = obj;
-        return JS_TRUE;
+        return true;
     }
 
-    atom = cx->runtime->atomState.lengthAtom;
-    if (id == ATOM_TO_JSID(atom)) {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
-        if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), Int32Value(fun->nargs),
+        if (!js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
                                      PropertyStub, PropertyStub,
                                      JSPROP_PERMANENT | JSPROP_READONLY, 0, 0, NULL)) {
-            return JS_FALSE;
+            return false;
         }
         *objp = obj;
-        return JS_TRUE;
+        return true;
     }
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(lazyFunctionDataProps); i++) {
         const LazyFunctionDataProp *lfp = &lazyFunctionDataProps[i];
 
-        atom = OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset);
-        if (id == ATOM_TO_JSID(atom)) {
+        if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset))) {
             JS_ASSERT(!IsInternalFunctionObject(obj));
 
-            if (!js_DefineNativeProperty(cx, obj,
-                                         ATOM_TO_JSID(atom), UndefinedValue(),
+            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
                                          fun_getProperty, PropertyStub,
                                          lfp->attrs, Shape::HAS_SHORTID,
                                          lfp->tinyid, NULL)) {
-                return JS_FALSE;
+                return false;
             }
             *objp = obj;
-            return JS_TRUE;
+            return true;
         }
     }
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(poisonPillProps); i++) {
         const PoisonPillProp &p = poisonPillProps[i];
 
-        atom = OFFSET_TO_ATOM(cx->runtime, p.atomOffset);
-        if (id == ATOM_TO_JSID(atom)) {
+        if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, p.atomOffset))) {
             JS_ASSERT(!IsInternalFunctionObject(obj));
 
             PropertyOp getter, setter;
@@ -1834,18 +1826,18 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 setter = PropertyStub;
             }
 
-            if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), UndefinedValue(),
+            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
                                          getter, setter,
                                          attrs, Shape::HAS_SHORTID,
                                          p.tinyid, NULL)) {
-                return JS_FALSE;
+                return false;
             }
             *objp = obj;
-            return JS_TRUE;
+            return true;
         }
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 #if JS_HAS_XDR
@@ -2292,7 +2284,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
 
 namespace {
 
-struct CopyNonHoleArgs
+struct STATIC_SKIP_INFERENCE CopyNonHoleArgs
 {
     CopyNonHoleArgs(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
     JSObject *aobj;
@@ -2862,6 +2854,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         return NULL;
+    fun->flags |= JSFUN_PROTOTYPE;
     fun->u.i.script = JSScript::emptyScript();
 
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
@@ -2988,13 +2981,13 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
                      CONTEXT, FUNCTION, OBJECT, 0, nanojit::ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK JSObject *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun)
+js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
 {
     /*
      * Flat closures can be partial, they may need to search enclosing scope
      * objects via JSOP_NAME, etc.
      */
-    JSObject *scopeChain = js_GetScopeChain(cx, cx->fp());
+    JSObject *scopeChain = js_GetScopeChainFast(cx, cx->fp(), op, oplen);
     if (!scopeChain)
         return NULL;
 

@@ -44,8 +44,8 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"

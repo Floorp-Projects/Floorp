@@ -318,7 +318,7 @@ JSCompartment::sweep(JSContext *cx)
 #if defined JS_METHODJIT && defined JS_MONOIC
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        if (script->jit)
+        if (script->hasJITCode())
             mjit::ic::SweepCallICs(script);
     }
 #endif
@@ -333,7 +333,7 @@ JSCompartment::purge(JSContext *cx)
     for (JSScript *script = (JSScript *)scripts.next;
          &script->links != &scripts;
          script = (JSScript *)script->links.next) {
-        if (script->jit) {
+        if (script->hasJITCode()) {
 # if defined JS_POLYIC
             mjit::ic::PurgePICs(cx, script);
 # endif

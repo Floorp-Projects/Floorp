@@ -524,14 +524,14 @@ mjit::Compiler::jsop_bitop(JSOp op)
         RegisterID rr = frame.tempRegForData(rhs);
 #endif
 
-        frame.pinReg(rr);
         if (lhs->isConstant()) {
+            frame.pinReg(rr);
             reg = frame.allocReg();
             masm.move(Imm32(lhs->getValue().toInt32()), reg);
+            frame.unpinReg(rr);
         } else {
             reg = frame.copyDataIntoReg(lhs);
         }
-        frame.unpinReg(rr);
         
         if (op == JSOP_LSH) {
             masm.lshift32(rr, reg);
@@ -1653,10 +1653,13 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
 #elif defined JS_CPU_X64
         RegisterID maskReg = frame.allocReg();
-        masm.move(Imm64(known->getKnownShiftedTag()), maskReg);
+        frame.pinReg(maskReg);
 
+        masm.move(ImmTag(known->getKnownTag()), maskReg);
         RegisterID r = frame.tempRegForType(test);
         masm.setPtr(cond, r, maskReg, result);
+
+        frame.unpinReg(maskReg);
         frame.freeReg(maskReg);
 #endif
         frame.popn(2);

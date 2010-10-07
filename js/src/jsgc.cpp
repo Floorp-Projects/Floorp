@@ -53,8 +53,8 @@
 #include <string.h>     /* for memset used when DEBUG */
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 #include "jsbit.h"
 #include "jsclist.h"
 #include "jsprf.h"
@@ -1569,7 +1569,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     if (fp->isScriptFrame())
         js_TraceScript(trc, fp->script());
 
-    MarkValue(trc, fp->thisValue(), "this");
     MarkValue(trc, fp->returnValue(), "rval");
 }
 
@@ -2675,6 +2674,11 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         return;
 
     RecordNativeStackTopForGC(cx);
+
+#ifdef DEBUG
+    int stackDummy;
+    JS_ASSERT(JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy));
+#endif
 
     GCTIMER_BEGIN();
 

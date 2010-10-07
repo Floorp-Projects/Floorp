@@ -559,7 +559,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCijmd] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
+    fprintf(gErrFile, "usage: js [-zKPswWxCijmd] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
@@ -660,6 +660,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 #ifdef MOZ_TRACEVIS
           case 'T':
 #endif
+          case 'g':
             ++i;
             break;
           default:;
@@ -859,6 +860,15 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             StartTraceVis(argv[i]);
             break;
 #endif
+#ifdef JS_THREADSAFE
+        case 'g':
+            if (++i == argc)
+                return usage();
+
+            PR_Sleep(PR_SecondsToInterval(atoi(argv[i])));
+            break;
+#endif
+
         default:
             return usage();
         }
@@ -1186,7 +1196,7 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        if (cx->fp()->script()->nmap == NULL) {
+        if (!cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
@@ -5322,6 +5332,17 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     return result;
 }
 
+static void
+MaybeOverrideOutFileFromEnv(const char* const envVar,
+                            FILE* defaultOut,
+                            FILE** outFile)
+{
+    const char* outPath = getenv(envVar);
+    if (!outPath || !*outPath || !(*outFile = fopen(outPath, "w"))) {
+        *outFile = defaultOut;
+    }
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -5370,8 +5391,8 @@ main(int argc, char **argv, char **envp)
     setbuf(stderr,0);
 #endif
 
-    gErrFile = stderr;
-    gOutFile = stdout;
+    MaybeOverrideOutFileFromEnv("JS_STDERR", stderr, &gErrFile);
+    MaybeOverrideOutFileFromEnv("JS_STDOUT", stdout, &gOutFile);
 
     argc--;
     argv++;
