@@ -2327,18 +2327,33 @@ nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
                                     PRUint8 aFullCorner,
                                     nsIDOMCSSValue** aValue)
 {
-  const nsStyleCoord& radiusX
+  nsStyleCoord radiusX
     = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, PR_FALSE));
-  const nsStyleCoord& radiusY
+  nsStyleCoord radiusY
     = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, PR_TRUE));
+
+  if (mInnerFrame) {
+    // We need to convert to absolute coordinates before doing the
+    // equality check below.
+    nscoord v;
+
+    v = StyleCoordToNSCoord(radiusX,
+                            &nsComputedDOMStyle::GetFrameBorderRectWidth,
+                            0, PR_TRUE);
+    radiusX.SetCoordValue(v);
+
+    v = StyleCoordToNSCoord(radiusY,
+                            &nsComputedDOMStyle::GetFrameBorderRectHeight,
+                            0, PR_TRUE);
+    radiusY.SetCoordValue(v);
+  }
 
   // for compatibility, return a single value if X and Y are equal
   if (radiusX == radiusY) {
     nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
     NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-    SetValueToCoord(val, radiusX, PR_TRUE,
-                    &nsComputedDOMStyle::GetFrameBorderRectWidth);
+    SetValueToCoord(val, radiusX, PR_TRUE);
 
     NS_ADDREF(*aValue = val);
     return NS_OK;
@@ -2361,10 +2376,8 @@ nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    SetValueToCoord(valX, radiusX, PR_TRUE,
-                    &nsComputedDOMStyle::GetFrameBorderRectWidth);
-    SetValueToCoord(valY, radiusY, PR_TRUE,
-                    &nsComputedDOMStyle::GetFrameBorderRectWidth);
+    SetValueToCoord(valX, radiusX, PR_TRUE);
+    SetValueToCoord(valY, radiusY, PR_TRUE);
 
     NS_ADDREF(*aValue = valueList);
     return NS_OK;
@@ -4041,6 +4054,19 @@ nsComputedDOMStyle::GetFrameBorderRectWidth(nscoord& aWidth)
   AssertFlushedPendingReflows();
 
   aWidth = mInnerFrame->GetSize().width;
+  return PR_TRUE;
+}
+
+PRBool
+nsComputedDOMStyle::GetFrameBorderRectHeight(nscoord& aHeight)
+{
+  if (!mInnerFrame) {
+    return PR_FALSE;
+  }
+
+  AssertFlushedPendingReflows();
+
+  aHeight = mInnerFrame->GetSize().height;
   return PR_TRUE;
 }
 
