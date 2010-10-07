@@ -184,6 +184,12 @@ public:
   static PRBool
   CanUseStorage(PRPackedBool* aSessionOnly);
 
+  // Check whether this URI can use chrome persist storage.  This kind of
+  // storage can bypass cookies limits, private browsing and uses the offline
+  // apps quota.
+  static PRBool
+  URICanUseChromePersist(nsIURI* aURI);
+  
   // Check whether storage may be used.  Updates mSessionOnly based on
   // the result of CanUseStorage.
   PRBool
