@@ -208,7 +208,7 @@ nsCanvasFrame::RemoveFrame(nsIAtom*        aListName,
   // Damage the area occupied by the deleted frame
   // The child of the canvas probably can't have an outline, but why bother
   // thinking about that?
-  Invalidate(aOldFrame->GetOverflowRect() + aOldFrame->GetPosition());
+  Invalidate(aOldFrame->GetVisualOverflowRect() + aOldFrame->GetPosition());
 
   // Remove the frame and destroy it
   mFrames.DestroyFrame(aOldFrame);
@@ -239,7 +239,9 @@ nsCanvasFrame::GetChildList(nsIAtom* aListName) const
 
 nsRect nsCanvasFrame::CanvasArea() const
 {
-  nsRect result(GetOverflowRect());
+  // Not clear which overflow rect we want here, but it probably doesn't
+  // matter.
+  nsRect result(GetVisualOverflowRect());
 
   nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
@@ -522,7 +524,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       // Note: Even though we request to be sized to our child's size, our
       // scroll frame ensures that we are always the size of the viewport.
       // Also note: GetPosition() on a CanvasFrame is always going to return
-      // (0, 0). We only want to invalidate GetRect() since GetOverflowRect()
+      // (0, 0). We only want to invalidate GetRect() since Get*OverflowRect()
       // could also include overflow to our top and left (out of the viewport)
       // which doesn't need to be painted.
       nsIFrame* viewport = PresContext()->GetPresShell()->GetRootFrame();

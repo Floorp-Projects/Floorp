@@ -443,7 +443,7 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
     return;
   }
   
-  nsRect r = aChild->GetOverflowRect();
+  nsRect r = aChild->GetVisualOverflowRect();
   r += aChild->GetPosition();
   aParent->Invalidate(r);
   r -= aChild->GetPosition();
@@ -603,8 +603,10 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // may have overflowing content that cares about the available height boundary.
     // (It may also have overflowing content that doesn't care about the available height
     // boundary, but if so, too bad, this optimization is defeated.)
+    // We want scrollable overflow here since this is a calculation that
+    // affects layout.
     PRBool skipResizeHeightShrink = shrinkingHeightOnly
-      && child->GetOverflowRect().YMost() <= aConfig.mColMaxHeight;
+      && child->GetScrollableOverflowRect().YMost() <= aConfig.mColMaxHeight;
 
     nscoord childContentBottom = 0;
     if (!reflowNext && (skipIncremental || skipResizeHeightShrink)) {

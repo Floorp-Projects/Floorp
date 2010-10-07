@@ -407,9 +407,12 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [state=%016llx]", mState);
   }
   nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
-  if (f->HasOverflowRect()) {
-    nsRect overflowArea = f->GetOverflowRect();
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+  if (f->HasOverflowAreas()) {
+    nsRect overflowArea = f->GetVisualOverflowRect();
+    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
+    overflowArea = f->GetScrollableOverflowRect();
+    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
   PRInt32 numInlineLines = 0;
@@ -3145,7 +3148,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // wrong places.  Invalidate the entire overflow rect at the new position.
     if (!mayNeedRetry && clearanceFrame &&
         frame->GetRect().y != passOriginalY) {
-      Invalidate(frame->GetOverflowRect() + frame->GetPosition());
+      Invalidate(frame->GetVisualOverflowRect() + frame->GetPosition());
     }
     
     NS_ENSURE_SUCCESS(rv, rv);
@@ -5828,7 +5831,7 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
       // Cache old bounds
       nsRect oldRect = f->GetRect();
-      nsRect oldOverflow = f->GetOverflowRect();
+      nsRect oldOverflow = f->GetVisualOverflowRect();
 
       // Reflow
       aState.FlowAndPlaceFloat(f);
@@ -5840,7 +5843,7 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
         dirtyRect.MoveBy(oldRect.x, oldRect.y);
         Invalidate(dirtyRect);
 
-        dirtyRect = f->GetOverflowRect();
+        dirtyRect = f->GetVisualOverflowRect();
         dirtyRect.MoveBy(rect.x, rect.y);
         Invalidate(dirtyRect);
       }
