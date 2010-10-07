@@ -4188,9 +4188,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // From here on, pfd->mBounds rectangles are incorrect because bidi
   // might have moved frames around!
-  nsRect combinedArea;
-  aLineLayout.RelativePositionFrames(combinedArea);  // XXXldb This returned width as -15, 2001-06-12, Bugzilla
-  aLine->SetCombinedArea(combinedArea);
+  nsOverflowAreas overflowAreas;
+  aLineLayout.RelativePositionFrames(overflowAreas);
+  aLine->SetOverflowAreas(overflowAreas);
   if (addedBullet) {
     aLineLayout.RemoveBulletFrame(mBullet);
   }
