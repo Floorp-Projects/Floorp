@@ -1377,11 +1377,15 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     /*
      * Resolve arguments so that we never store a particular Call object's
      * arguments object reference in a Call prototype's |arguments| slot.
+     *
+     * Include JSPROP_ENUMERATE for consistency with all other Call object
+     * properties; see JSFunction::addLocal and js::Interpret's JSOP_DEFFUN
+     * rebinding-Call-property logic.
      */
     if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
         if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
                                      GetCallArguments, SetCallArguments,
-                                     JSPROP_PERMANENT | JSPROP_SHARED,
+                                     JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE,
                                      0, 0, NULL, JSDNP_DONT_PURGE)) {
             return JS_FALSE;
         }
