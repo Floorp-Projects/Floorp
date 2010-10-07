@@ -3719,10 +3719,9 @@ void nsWindow::DispatchPendingEvents()
     // Find the top level window.
     HWND topWnd = GetTopLevelHWND(mWnd);
 
-    // Dispatch pending paints for topWnd and all its descendant windows.
+    // Dispatch pending paints for all topWnd's descendant windows.
     // Note: EnumChildWindows enumerates all descendant windows not just
-    // the children (but not the window itself).
-    nsWindow::DispatchStarvedPaints(topWnd, 0);
+    // it's children.
 #if !defined(WINCE)
     ::EnumChildWindows(topWnd, nsWindow::DispatchStarvedPaints, 0);
 #else
