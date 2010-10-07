@@ -45,7 +45,7 @@ using namespace mozilla::dom;
 
 nsSVGElement::StringInfo nsSVGMpathElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink },
+  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_FALSE }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Mpath)

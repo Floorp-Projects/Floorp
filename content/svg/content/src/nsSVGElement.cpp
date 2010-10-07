@@ -1933,6 +1933,19 @@ void nsSVGElement::SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue
           *info.mStringInfo[aAttrEnum].mName, aValue, PR_TRUE);
 }
 
+void
+nsSVGElement::DidAnimateString(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    StringAttributesInfo info = GetStringInfo();
+    frame->AttributeChanged(info.mStringInfo[aAttrEnum].mNamespaceID,
+                            *info.mStringInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsresult
 nsSVGElement::ParseNumberOptionalNumber(const nsAString& aValue,
                                         PRUint32 aIndex1, PRUint32 aIndex2)
@@ -2054,137 +2067,150 @@ nsSVGElement::RecompileScriptEventListeners()
 
 #ifdef MOZ_SMIL
 nsISMILAttr*
-nsSVGElement::GetAnimatedAttr(nsIAtom* aName)
+nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
 {
-  // Transforms:
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transformList;
-  if (aName == nsGkAtoms::transform) {
-    nsCOMPtr<nsIDOMSVGTransformable> transformable(
-            do_QueryInterface(static_cast<nsIContent*>(this)));
-    if (!transformable)
-      return nsnull;
-    nsresult rv = transformable->GetTransform(getter_AddRefs(transformList));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-  if (aName == nsGkAtoms::gradientTransform) {
-    nsCOMPtr<nsIDOMSVGGradientElement> gradientElement(
-            do_QueryInterface(static_cast<nsIContent*>(this)));
-    if (!gradientElement)
-      return nsnull;
-
-    nsresult rv = gradientElement->GetGradientTransform(getter_AddRefs(transformList));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-  if (aName == nsGkAtoms::patternTransform) {
-    nsCOMPtr<nsIDOMSVGPatternElement> patternElement(
-            do_QueryInterface(static_cast<nsIContent*>(this)));
-    if (!patternElement)
-      return nsnull;
-
-    nsresult rv = patternElement->GetPatternTransform(getter_AddRefs(transformList));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-  if (transformList) {
-    nsSVGAnimatedTransformList* list
-      = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
-    NS_ENSURE_TRUE(list, nsnull);
-
-    return new nsSVGTransformSMILAttr(list, this);
-  }
-
-  // Motion (fake 'attribute' for animateMotion)
-  if (aName == nsGkAtoms::mozAnimateMotionDummyAttr) {
-    return new SVGMotionSMILAttr(this);
-  }
-
-  // Lengths:
-  LengthAttributesInfo info = GetLengthInfo();
-  for (PRUint32 i = 0; i < info.mLengthCount; i++) {
-    if (aName == *info.mLengthInfo[i].mName) {
-      return info.mLengths[i].ToSMILAttr(this);
+  if (aNamespaceID == kNameSpaceID_None) {
+    // Transforms:
+    nsCOMPtr<nsIDOMSVGAnimatedTransformList> transformList;
+    if (aName == nsGkAtoms::transform) {
+      nsCOMPtr<nsIDOMSVGTransformable> transformable(
+              do_QueryInterface(static_cast<nsIContent*>(this)));
+      if (!transformable)
+        return nsnull;
+      nsresult rv = transformable->GetTransform(getter_AddRefs(transformList));
+      NS_ENSURE_SUCCESS(rv, nsnull);
     }
-  }
+    if (aName == nsGkAtoms::gradientTransform) {
+      nsCOMPtr<nsIDOMSVGGradientElement> gradientElement(
+              do_QueryInterface(static_cast<nsIContent*>(this)));
+      if (!gradientElement)
+        return nsnull;
 
-  // Numbers:
-  {
-    NumberAttributesInfo info = GetNumberInfo();
-    for (PRUint32 i = 0; i < info.mNumberCount; i++) {
-      // XXX this isn't valid for either of the two properties corresponding to
-      // attributes of type <number-optional-number> - see filter,
-      // feConvolveMatrix, feDiffuseLighting, feGaussianBlur, feMorphology and
-      // feTurbulence.
-      // The way to fix this is probably to handle them as 2-item number lists
-      // once we implement number list animation, and put the number list loop
-      // *above* this one at that time to catch those properties before we get
-      // here. The separate properties should then point into the list.
-      if (aName == *info.mNumberInfo[i].mName) {
-        return info.mNumbers[i].ToSMILAttr(this);
+      nsresult rv = gradientElement->GetGradientTransform(getter_AddRefs(transformList));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    if (aName == nsGkAtoms::patternTransform) {
+      nsCOMPtr<nsIDOMSVGPatternElement> patternElement(
+              do_QueryInterface(static_cast<nsIContent*>(this)));
+      if (!patternElement)
+        return nsnull;
+
+      nsresult rv = patternElement->GetPatternTransform(getter_AddRefs(transformList));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    if (transformList) {
+      nsSVGAnimatedTransformList* list
+        = static_cast<nsSVGAnimatedTransformList*>(transformList.get());
+      NS_ENSURE_TRUE(list, nsnull);
+
+      return new nsSVGTransformSMILAttr(list, this);
+    }
+
+    // Motion (fake 'attribute' for animateMotion)
+    if (aName == nsGkAtoms::mozAnimateMotionDummyAttr) {
+      return new SVGMotionSMILAttr(this);
+    }
+
+    // Lengths:
+    LengthAttributesInfo info = GetLengthInfo();
+    for (PRUint32 i = 0; i < info.mLengthCount; i++) {
+      if (aName == *info.mLengthInfo[i].mName) {
+        return info.mLengths[i].ToSMILAttr(this);
+      }
+    }
+
+    // Numbers:
+    {
+      NumberAttributesInfo info = GetNumberInfo();
+      for (PRUint32 i = 0; i < info.mNumberCount; i++) {
+        // XXX this isn't valid for either of the two properties corresponding to
+        // attributes of type <number-optional-number> - see filter,
+        // feConvolveMatrix, feDiffuseLighting, feGaussianBlur, feMorphology and
+        // feTurbulence.
+        // The way to fix this is probably to handle them as 2-item number lists
+        // once we implement number list animation, and put the number list loop
+        // *above* this one at that time to catch those properties before we get
+        // here. The separate properties should then point into the list.
+        if (aName == *info.mNumberInfo[i].mName) {
+          return info.mNumbers[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // Integers:
+    {
+      IntegerAttributesInfo info = GetIntegerInfo();
+      for (PRUint32 i = 0; i < info.mIntegerCount; i++) {
+        if (aName == *info.mIntegerInfo[i].mName) {
+          return info.mIntegers[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // Enumerations:
+    {
+      EnumAttributesInfo info = GetEnumInfo();
+      for (PRUint32 i = 0; i < info.mEnumCount; i++) {
+        if (aName == *info.mEnumInfo[i].mName) {
+          return info.mEnums[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // Booleans:
+    {
+      BooleanAttributesInfo info = GetBooleanInfo();
+      for (PRUint32 i = 0; i < info.mBooleanCount; i++) {
+        if (aName == *info.mBooleanInfo[i].mName) {
+          return info.mBooleans[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // Angles:
+    {
+      AngleAttributesInfo info = GetAngleInfo();
+      for (PRUint32 i = 0; i < info.mAngleCount; i++) {
+        if (aName == *info.mAngleInfo[i].mName) {
+          return info.mAngles[i].ToSMILAttr(this);
+        }
+      }
+    }
+
+    // viewBox:
+    if (aName == nsGkAtoms::viewBox) {
+      nsSVGViewBox *viewBox = GetViewBox();
+      return viewBox ? viewBox->ToSMILAttr(this) : nsnull;
+    }
+
+    // preserveAspectRatio:
+    if (aName == nsGkAtoms::preserveAspectRatio) {
+      nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
+      return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
+    }
+
+    // LengthLists:
+    {
+      LengthListAttributesInfo info = GetLengthListInfo();
+      for (PRUint32 i = 0; i < info.mLengthListCount; i++) {
+        if (aName == *info.mLengthListInfo[i].mName) {
+          NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
+          return info.mLengthLists[i].ToSMILAttr(this,
+                                                 PRUint8(i),
+                                                 info.mLengthListInfo[i].mAxis,
+                                                 info.mLengthListInfo[i].mCouldZeroPadList);
+        }
       }
     }
   }
 
-  // Integers:
+  // Strings
   {
-    IntegerAttributesInfo info = GetIntegerInfo();
-    for (PRUint32 i = 0; i < info.mIntegerCount; i++) {
-      if (aName == *info.mIntegerInfo[i].mName) {
-        return info.mIntegers[i].ToSMILAttr(this);
-      }
-    }
-  }
-
-  // Enumerations:
-  {
-    EnumAttributesInfo info = GetEnumInfo();
-    for (PRUint32 i = 0; i < info.mEnumCount; i++) {
-      if (aName == *info.mEnumInfo[i].mName) {
-        return info.mEnums[i].ToSMILAttr(this);
-      }
-    }
-  }
-
-  // Booleans:
-  {
-    BooleanAttributesInfo info = GetBooleanInfo();
-    for (PRUint32 i = 0; i < info.mBooleanCount; i++) {
-      if (aName == *info.mBooleanInfo[i].mName) {
-        return info.mBooleans[i].ToSMILAttr(this);
-      }
-    }
-  }
-
-  // Angles:
-  {
-    AngleAttributesInfo info = GetAngleInfo();
-    for (PRUint32 i = 0; i < info.mAngleCount; i++) {
-      if (aName == *info.mAngleInfo[i].mName) {
-        return info.mAngles[i].ToSMILAttr(this);
-      }
-    }
-  }
-
-  // viewBox:
-  if (aName == nsGkAtoms::viewBox) {
-    nsSVGViewBox *viewBox = GetViewBox();
-    return viewBox ? viewBox->ToSMILAttr(this) : nsnull;
-  }
-
-  // preserveAspectRatio:
-  if (aName == nsGkAtoms::preserveAspectRatio) {
-    nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
-    return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
-  }
-
-  // LengthLists:
-  {
-    LengthListAttributesInfo info = GetLengthListInfo();
-    for (PRUint32 i = 0; i < info.mLengthListCount; i++) {
-      if (aName == *info.mLengthListInfo[i].mName) {
-        NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
-        return info.mLengthLists[i].ToSMILAttr(this,
-                                               PRUint8(i),
-                                               info.mLengthListInfo[i].mAxis,
-                                               info.mLengthListInfo[i].mCouldZeroPadList);
+    StringAttributesInfo info = GetStringInfo();
+    for (PRUint32 i = 0; i < info.mStringCount; i++) {
+      if (aNamespaceID == info.mStringInfo[i].mNamespaceID &&
+          aName == *info.mStringInfo[i].mName) {
+        return info.mStrings[i].ToSMILAttr(this);
       }
     }
   }

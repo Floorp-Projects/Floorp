@@ -104,6 +104,7 @@ public:
   virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum);
+  virtual void DidAnimateString(PRUint8 aAttrEnum);
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
