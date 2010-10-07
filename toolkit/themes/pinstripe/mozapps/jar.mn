@@ -27,6 +27,7 @@ toolkit.jar:
   skin/classic/mozapps/extensions/pause.png                       (extensions/pause.png)
   skin/classic/mozapps/extensions/utilities.png                   (extensions/utilities.png)
   skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
+  skin/classic/mozapps/extensions/navigation.png                  (extensions/navigation.png)
   skin/classic/mozapps/extensions/warning-stripes.png             (extensions/warning-stripes.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
 * skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
