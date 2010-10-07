@@ -313,8 +313,8 @@ Narcissus.interpreter = (function() {
             return;
 
         for (var i = 0, j = ps.length; i < j; i++) {
-            // If the thing we're valuating is already equal to the thing we want
-            // to valuate it to, we have fully saturated (and have a cycle), and
+            // If the thing we're evaluating is already equal to the thing we want
+            // to evaluate it to, we have fully saturated (and have a cycle), and
             // thus we should break.
             if (ps[i].v === v)
                 break;
@@ -324,7 +324,7 @@ Narcissus.interpreter = (function() {
     }
 
     function execute(n, x) {
-        var a, f, i, j, r, s, t, u, v;
+        var a, c, f, i, j, r, s, t, u, v;
 
         switch (n.type) {
           case FUNCTION:
@@ -370,8 +370,9 @@ Narcissus.interpreter = (function() {
             // FALL THROUGH
 
           case BLOCK:
-            for (i = 0, j = n.length; i < j; i++)
-                execute(n[i], x);
+            c = n.children;
+            for (i = 0, j = c.length; i < j; i++)
+                execute(c[i], x);
             break;
 
           case IF:
@@ -405,7 +406,7 @@ Narcissus.interpreter = (function() {
                 }
                 if (u === s) {
                     for (;;) {                  // this loop exits switch_loop
-                        if (t.statements.length) {
+                        if (t.statements.children.length) {
                             try {
                                 execute(t.statements, x);
                             } catch (e if e === BREAK && x.target === n) {
@@ -532,11 +533,12 @@ Narcissus.interpreter = (function() {
 
           case VAR:
           case CONST:
-            for (i = 0, j = n.length; i < j; i++) {
-                u = n[i].initializer;
+            c = n.children;
+            for (i = 0, j = c.length; i < j; i++) {
+                u = c[i].initializer;
                 if (!u)
                     continue;
-                t = n[i].name;
+                t = c[i].name;
                 for (s = x.scope; s; s = s.parent) {
                     if (hasDirectProperty(s.object, t))
                         break;
@@ -565,16 +567,18 @@ Narcissus.interpreter = (function() {
             break;
 
           case COMMA:
-            for (i = 0, j = n.length; i < j; i++)
-                v = getValue(execute(n[i], x));
+            c = n.children;
+            for (i = 0, j = c.length; i < j; i++)
+                v = getValue(execute(c[i], x));
             break;
 
           case ASSIGN:
-            r = execute(n[0], x);
+            c = n.children;
+            r = execute(c[0], x);
             t = n.assignOp;
             if (t)
                 u = getValue(r);
-            v = getValue(execute(n[1], x));
+            v = getValue(execute(c[1], x));
             if (t) {
                 switch (t) {
                   case BITWISE_OR:  v = u | v; break;
@@ -590,73 +594,89 @@ Narcissus.interpreter = (function() {
                   case MOD:         v = u % v; break;
                 }
             }
-            putValue(r, v, n[0]);
+            putValue(r, v, c[0]);
             break;
 
           case HOOK:
-            v = getValue(execute(n[0], x)) ? getValue(execute(n[1], x))
-                                           : getValue(execute(n[2], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) ? getValue(execute(c[1], x))
+                                           : getValue(execute(c[2], x));
             break;
 
           case OR:
-            v = getValue(execute(n[0], x)) || getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) || getValue(execute(c[1], x));
             break;
 
           case AND:
-            v = getValue(execute(n[0], x)) && getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) && getValue(execute(c[1], x));
             break;
 
           case BITWISE_OR:
-            v = getValue(execute(n[0], x)) | getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) | getValue(execute(c[1], x));
             break;
 
           case BITWISE_XOR:
-            v = getValue(execute(n[0], x)) ^ getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) ^ getValue(execute(c[1], x));
             break;
 
           case BITWISE_AND:
-            v = getValue(execute(n[0], x)) & getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) & getValue(execute(c[1], x));
             break;
 
           case EQ:
-            v = getValue(execute(n[0], x)) == getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) == getValue(execute(c[1], x));
             break;
 
           case NE:
-            v = getValue(execute(n[0], x)) != getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) != getValue(execute(c[1], x));
             break;
 
           case STRICT_EQ:
-            v = getValue(execute(n[0], x)) === getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) === getValue(execute(c[1], x));
             break;
 
           case STRICT_NE:
-            v = getValue(execute(n[0], x)) !== getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) !== getValue(execute(c[1], x));
             break;
 
           case LT:
-            v = getValue(execute(n[0], x)) < getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) < getValue(execute(c[1], x));
             break;
 
           case LE:
-            v = getValue(execute(n[0], x)) <= getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) <= getValue(execute(c[1], x));
             break;
 
           case GE:
-            v = getValue(execute(n[0], x)) >= getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) >= getValue(execute(c[1], x));
             break;
 
           case GT:
-            v = getValue(execute(n[0], x)) > getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) > getValue(execute(c[1], x));
             break;
 
           case IN:
-            v = getValue(execute(n[0], x)) in getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) in getValue(execute(c[1], x));
             break;
 
           case INSTANCEOF:
-            t = getValue(execute(n[0], x));
-            u = getValue(execute(n[1], x));
+            c = n.children;
+            t = getValue(execute(c[0], x));
+            u = getValue(execute(c[1], x));
             if (isObject(u) && typeof u.__hasInstance__ === "function")
                 v = u.__hasInstance__(t);
             else
@@ -664,111 +684,122 @@ Narcissus.interpreter = (function() {
             break;
 
           case LSH:
-            v = getValue(execute(n[0], x)) << getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) << getValue(execute(c[1], x));
             break;
 
           case RSH:
-            v = getValue(execute(n[0], x)) >> getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) >> getValue(execute(c[1], x));
             break;
 
           case URSH:
-            v = getValue(execute(n[0], x)) >>> getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) >>> getValue(execute(c[1], x));
             break;
 
           case PLUS:
-            v = getValue(execute(n[0], x)) + getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) + getValue(execute(c[1], x));
             break;
 
           case MINUS:
-            v = getValue(execute(n[0], x)) - getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) - getValue(execute(c[1], x));
             break;
 
           case MUL:
-            v = getValue(execute(n[0], x)) * getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) * getValue(execute(c[1], x));
             break;
 
           case DIV:
-            v = getValue(execute(n[0], x)) / getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) / getValue(execute(c[1], x));
             break;
 
           case MOD:
-            v = getValue(execute(n[0], x)) % getValue(execute(n[1], x));
+            c = n.children;
+            v = getValue(execute(c[0], x)) % getValue(execute(c[1], x));
             break;
 
           case DELETE:
-            t = execute(n[0], x);
+            t = execute(n.children[0], x);
             v = !(t instanceof Reference) || delete t.base[t.propertyName];
             break;
 
           case VOID:
-            getValue(execute(n[0], x));
+            getValue(execute(n.children[0], x));
             break;
 
           case TYPEOF:
-            t = execute(n[0], x);
+            t = execute(n.children[0], x);
             if (t instanceof Reference)
                 t = t.base ? t.base[t.propertyName] : undefined;
             v = typeof t;
             break;
 
           case NOT:
-            v = !getValue(execute(n[0], x));
+            v = !getValue(execute(n.children[0], x));
             break;
 
           case BITWISE_NOT:
-            v = ~getValue(execute(n[0], x));
+            v = ~getValue(execute(n.children[0], x));
             break;
 
           case UNARY_PLUS:
-            v = +getValue(execute(n[0], x));
+            v = +getValue(execute(n.children[0], x));
             break;
 
           case UNARY_MINUS:
-            v = -getValue(execute(n[0], x));
+            v = -getValue(execute(n.children[0], x));
             break;
 
           case INCREMENT:
           case DECREMENT:
-            t = execute(n[0], x);
+            t = execute(n.children[0], x);
             u = Number(getValue(t));
             if (n.postfix)
                 v = u;
-            putValue(t, (n.type === INCREMENT) ? ++u : --u, n[0]);
+            putValue(t, (n.type === INCREMENT) ? ++u : --u, n.children[0]);
             if (!n.postfix)
                 v = u;
             break;
 
           case DOT:
-            r = execute(n[0], x);
+            c = n.children;
+            r = execute(c[0], x);
             t = getValue(r);
-            u = n[1].value;
-            v = new Reference(toObject(t, r, n[0]), u, n);
+            u = c[1].value;
+            v = new Reference(toObject(t, r, c[0]), u, n);
             break;
 
           case INDEX:
-            r = execute(n[0], x);
+            c = n.children;
+            r = execute(c[0], x);
             t = getValue(r);
-            u = getValue(execute(n[1], x));
-            v = new Reference(toObject(t, r, n[0]), String(u), n);
+            u = getValue(execute(c[1], x));
+            v = new Reference(toObject(t, r, c[0]), String(u), n);
             break;
 
           case LIST:
             // Curse ECMA for specifying that arguments is not an Array object!
             v = {};
-            for (i = 0, j = n.length; i < j; i++) {
-                u = getValue(execute(n[i], x));
+            c = n.children;
+            for (i = 0, j = c.length; i < j; i++) {
+                u = getValue(execute(c[i], x));
                 definitions.defineProperty(v, i, u, false, false, true);
             }
             definitions.defineProperty(v, "length", i, false, false, true);
             break;
 
           case CALL:
-            r = execute(n[0], x);
-            a = execute(n[1], x);
+            c = n.children;
+            r = execute(c[0], x);
+            a = execute(c[1], x);
             f = getValue(r);
             if (isPrimitive(f) || typeof f.__call__ !== "function") {
-                throw new TypeError(r + " is not callable",
-                                    n[0].filename, n[0].lineno);
+                throw new TypeError(r + " is not callable", c[0].filename, c[0].lineno);
             }
             t = (r instanceof Reference) ? r.base : null;
             if (t instanceof Activation)
@@ -778,36 +809,39 @@ Narcissus.interpreter = (function() {
 
           case NEW:
           case NEW_WITH_ARGS:
-            r = execute(n[0], x);
+            c = n.children;
+            r = execute(c[0], x);
             f = getValue(r);
             if (n.type === NEW) {
                 a = {};
                 definitions.defineProperty(a, "length", 0, false, false, true);
             } else {
-                a = execute(n[1], x);
+                a = execute(c[1], x);
             }
             if (isPrimitive(f) || typeof f.__construct__ !== "function") {
-                throw new TypeError(r + " is not a constructor",
-                                    n[0].filename, n[0].lineno);
+                throw new TypeError(r + " is not a constructor", c[0].filename, c[0].lineno);
             }
             v = f.__construct__(a, x);
             break;
 
           case ARRAY_INIT:
             v = [];
-            for (i = 0, j = n.length; i < j; i++) {
-                if (n[i])
-                    v[i] = getValue(execute(n[i], x));
+            c = n.children;
+            for (i = 0, j = c.length; i < j; i++) {
+                if (c[i])
+                    v[i] = getValue(execute(c[i], x));
             }
             v.length = j;
             break;
 
           case OBJECT_INIT:
             v = {};
-            for (i = 0, j = n.length; i < j; i++) {
-                t = n[i];
+            c = n.children;
+            for (i = 0, j = c.length; i < j; i++) {
+                t = c[i];
                 if (t.type === PROPERTY_INIT) {
-                    v[t[0].value] = getValue(execute(t[1], x));
+                    let c2 = t.children;
+                    v[c2[0].value] = getValue(execute(c2[1], x));
                 } else {
                     f = newFunction(t, x);
                     u = (t.type === GETTER) ? '__defineGetter__'
@@ -834,6 +868,9 @@ Narcissus.interpreter = (function() {
             break;
 
           case IDENTIFIER:
+            if (typeof n.resolve !== "function")
+                throw n;
+
             // Identifiers with forward pointers that weren't intervened can't be
             // lvalues, so we safely get the cached value directly.
             var resolved = n.resolve();
@@ -859,7 +896,7 @@ Narcissus.interpreter = (function() {
             break;
 
           case GROUP:
-            v = execute(n[0], x);
+            v = execute(n.children[0], x);
             break;
 
           default:
@@ -1132,6 +1169,22 @@ Narcissus.interpreter = (function() {
                 print(e.toString());
             } catch (e) {
                 print("internal Narcissus error");
+                if (typeof e === "object" && e.stack) {
+                    let st = String(e.stack).split(/\n/);
+                    // beautify stack trace:
+                    //   - eliminate blank lines
+                    //   - sanitize confusing trace lines for getters and js -e expressions
+                    //   - simplify source location reporting
+                    //   - indent
+                    for (let i = 0; i < st.length; i++) {
+                        let line = st[i].trim();
+                        if (line) {
+                            line = line.replace(/^(\(\))?@/, "<unknown>@");
+                            line = line.replace(/@(.*\/|\\)?([^\/\\]+:[0-9]+)/, " at $2");
+                            print("    in " + line);
+                        }
+                    }
+                }
                 throw e;
             }
         }
