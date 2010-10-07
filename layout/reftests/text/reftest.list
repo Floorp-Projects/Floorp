@@ -36,7 +36,7 @@ random-if(winWidget) HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-m
 == white-space-2.html white-space-2-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 random == wordwrap-02.html wordwrap-02-ref.html # bad fonts on test boxes
-random-if(gtk2Widget) fails-if(d2d) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes; bug 593160
+random-if(gtk2Widget) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html
