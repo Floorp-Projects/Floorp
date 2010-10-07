@@ -171,8 +171,11 @@ class OTSStream {
 //     partial output may have been written.
 //   input: the OpenType file
 //   length: the size, in bytes, of |input|
+//   preserve_otl_tables: whether to preserve OpenType Layout tables
+//                        (GDEF/GPOS/GSUB) without verification
 // -----------------------------------------------------------------------------
-bool Process(OTSStream *output, const uint8_t *input, size_t length);
+bool Process(OTSStream *output, const uint8_t *input, size_t length,
+             bool preserve_otl_tables = false);
 
 // Force to disable debug output even when the library is compiled with
 // -DOTS_DEBUG.

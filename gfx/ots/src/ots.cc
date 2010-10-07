@@ -142,8 +142,14 @@ const struct {
     ots::ots_vorg_should_serialise, ots::ots_vorg_free, false },
   { Tag("kern"), ots::ots_kern_parse, ots::ots_kern_serialise,
     ots::ots_kern_should_serialise, ots::ots_kern_free, false },
+  { Tag("GDEF"), ots::ots_gdef_parse, ots::ots_gdef_serialise,
+    ots::ots_gdef_should_serialise, ots::ots_gdef_free, false },
+  { Tag("GPOS"), ots::ots_gpos_parse, ots::ots_gpos_serialise,
+    ots::ots_gpos_should_serialise, ots::ots_gpos_free, false },
+  { Tag("GSUB"), ots::ots_gsub_parse, ots::ots_gsub_serialise,
+    ots::ots_gsub_should_serialise, ots::ots_gsub_free, false },
   // TODO(yusukes): Support GDEF, GPOS, GSUB, mort, base, and jstf tables.
-  { 0, NULL, NULL, NULL, NULL, false },
+  { 0, NULL, NULL, NULL, NULL, false }
 };
 
 bool IsValidVersionTag(uint32_t tag) {
@@ -581,11 +587,13 @@ void DisableDebugOutput() {
   g_debug_output = false;
 }
 
-bool Process(OTSStream *output, const uint8_t *data, size_t length) {
+bool Process(OTSStream *output, const uint8_t *data, size_t length, bool preserveOTL) {
   OpenTypeFile header;
   if (length < 4) {
     return OTS_FAILURE();
   }
+
+  header.preserve_otl = preserveOTL;
 
   bool result;
   if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == 'F') {

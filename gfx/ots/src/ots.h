@@ -177,7 +177,10 @@ class Buffer {
   F(post, POST) \
   F(prep, PREP) \
   F(vdmx, VDMX) \
-  F(vorg, VORG)
+  F(vorg, VORG) \
+  F(gdef, GDEF) \
+  F(gpos, GPOS) \
+  F(gsub, GSUB)
 
 #define F(name, capname) struct OpenType##capname;
 FOR_EACH_TABLE_TYPE
@@ -195,6 +198,10 @@ struct OpenTypeFile {
   uint16_t search_range;
   uint16_t entry_selector;
   uint16_t range_shift;
+
+  // This is used to tell the GDEF/GPOS/GSUB parsers whether to preserve the
+  // OpenType Layout tables (**without** any checking).
+  bool preserve_otl;
 
 #define F(name, capname) OpenType##capname *name;
 FOR_EACH_TABLE_TYPE

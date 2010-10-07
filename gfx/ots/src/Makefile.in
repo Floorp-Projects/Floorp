@@ -66,6 +66,9 @@ CPPSRCS	= \
   prep.cc \
   vdmx.cc \
   vorg.cc \
+  gdef.cc \
+  gpos.cc \
+  gsub.cc \
   $(NULL)
 
 EXPORTS = \
