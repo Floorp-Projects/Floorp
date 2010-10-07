@@ -137,6 +137,11 @@ private:
 
   void EnsureChildState();
 
+  /**
+   * Really removing the attribute child (unbind and release).
+   */
+  void doRemoveChild();
+
   nsString mValue;
   // XXX For now, there's only a single child - a text element
   // representing the value.  This is strong ref, but we use a raw
