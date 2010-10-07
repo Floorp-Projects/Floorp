@@ -1032,8 +1032,10 @@ class TraceRecorder
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
     JS_REQUIRES_STACK void importGlobalSlot(unsigned slot);
 
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
+    JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, ExitType exitType,
+                                            bool abortIfAlwaysExits = false);
+    JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, VMSideExit* exit,
+                                            bool abortIfAlwaysExits = false);
     JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
                                                nanojit::LIns* d1, VMSideExit* exit);
 
@@ -1118,7 +1120,7 @@ class TraceRecorder
     nanojit::LIns* i2d(nanojit::LIns* i);
     nanojit::LIns* d2i(nanojit::LIns* f, bool resultCanBeImpreciseIfFractional = false);
     nanojit::LIns* f2u(nanojit::LIns* f);
-    JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
+    JS_REQUIRES_STACK RecordingStatus makeNumberInt32(nanojit::LIns* d, nanojit::LIns** num_ins);
     JS_REQUIRES_STACK nanojit::LIns* stringify(const Value& v);
 
     JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins, bool strict);
@@ -1233,12 +1235,13 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
-    JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
-                                                   nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK RecordingStatus getCharCodeAt(JSString *str,
+                                                    nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
+                                                    nanojit::LIns** out_ins);
     JS_REQUIRES_STACK nanojit::LIns* getUnitString(nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
-    JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
-                                               nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
-                                               JSOp mode);
+    JS_REQUIRES_STACK RecordingStatus getCharAt(JSString *str,
+                                                nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
+                                                JSOp mode, nanojit::LIns** out_ins);
 
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                 const js::Shape* shape,
