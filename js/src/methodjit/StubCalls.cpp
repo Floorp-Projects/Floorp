@@ -942,7 +942,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      */
     doSet = false;
     if (prop) {
-        JS_ASSERT((attrs == JSPROP_PERMANENT) == fp->isEvalFrame());
+        JS_ASSERT((attrs == JSPROP_ENUMERATE) == fp->isEvalFrame());
         if (attrs == JSPROP_ENUMERATE ||
             (parent == pobj &&
              parent->isCall() &&
