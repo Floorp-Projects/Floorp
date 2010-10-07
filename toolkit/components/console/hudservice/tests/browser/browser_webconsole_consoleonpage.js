@@ -12,7 +12,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/HUDService.jsm");
+Cu.import("resource:///modules/HUDService.jsm");
 
 let hud;
 let hudId;

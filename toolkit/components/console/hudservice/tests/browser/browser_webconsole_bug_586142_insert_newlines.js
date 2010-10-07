@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const TEST_URI = "http://example.com/";
 
 XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
-  Cu.import("resource://gre/modules/HUDService.jsm");
+  Cu.import("resource:///modules/HUDService.jsm");
   return HUDService;
 });
 
