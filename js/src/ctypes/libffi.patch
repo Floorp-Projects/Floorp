@@ -111,7 +111,7 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
 diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
 --- a/js/src/ctypes/libffi/src/x86/ffi64.c
 +++ b/js/src/ctypes/libffi/src/x86/ffi64.c
-@@ -373,18 +373,18 @@ ffi_prep_cif_machdep (ffi_cif *cif)
+@@ -373,29 +373,29 @@ ffi_prep_cif_machdep (ffi_cif *cif)
  	  || gprcount + ngpr > MAX_GPR_REGS
  	  || ssecount + nsse > MAX_SSE_REGS)
  	{
@@ -120,9 +120,9 @@ diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86
  	  if (align < 8)
  	    align = 8;
  
-+	  bytes += cif->arg_types[i]->size;
- 	  bytes = ALIGN(bytes, align);
--	  bytes += cif->arg_types[i]->size;
+-	  bytes = ALIGN(bytes, align);
++	  bytes = ALIGN (bytes, align);
+ 	  bytes += cif->arg_types[i]->size;
  	}
        else
  	{
@@ -131,3 +131,15 @@ diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86
  	}
      }
    if (ssecount)
+     flags |= 1 << 11;
+   cif->flags = flags;
+-  cif->bytes = bytes;
++  cif->bytes = ALIGN (bytes, 8);
+ 
+   return FFI_OK;
+ }
+ 
+ void
+ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+ {
+   enum x86_64_reg_class classes[MAX_CLASSES];
