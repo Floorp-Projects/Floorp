@@ -672,6 +672,8 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationE
     return NS_OK;
   }
 
+  doRemoveChild();
+
   nsString nullString;
   SetDOMStringToNull(nullString);
   SetValue(nullString);
@@ -777,9 +779,7 @@ nsDOMAttribute::AttributeChanged(nsIDocument* aDocument,
   
   // Just blow away our mChild and recreate it if needed
   if (mChild) {
-    static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();
-    NS_RELEASE(mChild);
-    mFirstChild = nsnull;
+    doRemoveChild();
   }
   EnsureChildState();
 }
@@ -795,3 +795,12 @@ nsDOMAttribute::Shutdown()
 {
   sInitialized = PR_FALSE;
 }
+
+void
+nsDOMAttribute::doRemoveChild()
+{
+  static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();
+  NS_RELEASE(mChild);
+  mFirstChild = nsnull;
+}
+
