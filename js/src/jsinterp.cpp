@@ -5379,23 +5379,24 @@ BEGIN_CASE(JSOP_DEFFUN)
     bool doSet = false;
     if (prop) {
         JS_ASSERT((attrs == JSPROP_ENUMERATE) == regs.fp->isEvalFrame());
-        uint32 old;
-        if (attrs == JSPROP_ENUMERATE ||
-            (parent == pobj &&
-             parent->isCall() &&
-             (old = ((Shape *) prop)->attributes(),
-              !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
-              (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs))) {
-            /*
-             * js_CheckRedeclaration must reject attempts to add a getter or
-             * setter to an existing property without a getter or setter.
-             */
-            JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
-            JS_ASSERT_IF(attrs != JSPROP_ENUMERATE, !(old & JSPROP_READONLY));
-            doSet = true;
+        if (attrs == JSPROP_ENUMERATE || (parent == pobj && parent->isCall())) {
+            JS_ASSERT(pobj->isNative());
+            uintN oldAttrs = ((Shape *) prop)->attributes();
+
+            if (!(oldAttrs & (JSPROP_GETTER|JSPROP_SETTER)) &&
+                (oldAttrs & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs) {
+                /*
+                 * js_CheckRedeclaration must reject attempts to add a getter or
+                 * setter to an existing property without a getter or setter.
+                 */
+                JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
+                JS_ASSERT(!(oldAttrs & JSPROP_READONLY));
+                doSet = true;
+            }
         }
         pobj->dropProperty(cx, prop);
     }
+
     Value rval = ObjectValue(*obj);
     ok = doSet
          ? parent->setProperty(cx, id, &rval, script->strictModeCode)
