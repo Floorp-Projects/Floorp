@@ -477,8 +477,8 @@ protected:
   /** Reflow pushed floats
    */
   nsresult ReflowPushedFloats(nsBlockReflowState& aState,
-                                    nsRect&             aBounds,
-                                    nsReflowStatus&     aStatus);
+                              nsOverflowAreas&    aOverflowAreas,
+                              nsReflowStatus&     aStatus);
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */
