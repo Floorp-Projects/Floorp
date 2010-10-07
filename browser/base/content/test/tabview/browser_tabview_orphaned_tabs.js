@@ -76,23 +76,30 @@ function onTabViewWindowLoaded() {
     is(groupItem.getChildren().length, 1, "The group item has an item");
     is(contentWindow.GroupItems.getOrphanedTabs().length, 0, "No orphaned tabs");
     
-    // 4) check existence of stored group data for both tabs before finishing
-    let tabData = contentWindow.Storage.getTabData(tabOne);
-    ok(tabData && contentWindow.TabItems.storageSanity(tabData) && tabData.groupID, 
-       "Tab one has stored group data");
+    let checkAndFinish = function() {
+      // 4) check existence of stored group data for tab before finishing
+      let tabData = contentWindow.Storage.getTabData(tabItem.tab);
+      ok(tabData && contentWindow.TabItems.storageSanity(tabData) && tabData.groupID, 
+         "Tab two has stored group data");
 
+      // clean up and finish the test
+      newWin.gBrowser.removeTab(tabOne);
+      newWin.gBrowser.removeTab(tabItem.tab);
+      whenWindowObservesOnce(newWin, "domwindowclosed", function() {
+        finish();
+      });
+      newWin.close();
+    };
     let tabItem = groupItem.getChild(0);
-    let tabData = contentWindow.Storage.getTabData(tabItem.tab);
-    ok(tabData && contentWindow.TabItems.storageSanity(tabData) && tabData.groupID, 
-       "Tab two has stored group data");
-
-    // clean up and finish the test
-    newWin.gBrowser.removeTab(tabOne);
-    newWin.gBrowser.removeTab(tabItem.tab);
-    whenWindowObservesOnce(newWin, "domwindowclosed", function() {
-      finish();
-    });
-    newWin.close();
+    // the item may not be connected so subscriber would be used in that case.
+    if (tabItem.reconnected) {
+      checkAndFinish();
+    } else {
+      tabItem.addSubscriber(tabItem, "reconnected", function() {
+        tabItem.removeSubscriber(tabItem, "reconnected");
+        checkAndFinish();
+      });
+    }
   };
   newWin.addEventListener("tabviewhidden", onTabViewHidden, false);
 
