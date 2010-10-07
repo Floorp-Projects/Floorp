@@ -71,7 +71,7 @@ function testSelectionWhenMovingBetweenBoxes() {
   let contextMenu = document.getElementById(contextMenuId);
   ok(contextMenu != null, "the output node has a context menu");
 
-  let selectAllItem = contextMenu.childNodes[1];
+  let selectAllItem = contextMenu.querySelector("*[buttonType=\"selectAll\"]");
   ok(selectAllItem != null,
      "the context menu on the output node has a \"Select All\" item");
 

@@ -226,3 +226,22 @@ body {
   top: 0;
   left: 0;
 }
+
+#otherresults{
+  position: absolute;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.onTop{
+  z-index: 1010 !important;
+}
+
+.inlineMatch{
+  display: inline-block;
+}
+
+.inlineMatch>span{
+  display: inline-block;
+  overflow: hidden;
+}

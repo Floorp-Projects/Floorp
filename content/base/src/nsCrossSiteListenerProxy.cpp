@@ -155,7 +155,7 @@ NS_IMETHODIMP
 nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
                                          nsISupports* aContext)
 {
-  mRequestApproved = NS_SUCCEEDED(CheckRequestApproved(aRequest, PR_FALSE));
+  mRequestApproved = NS_SUCCEEDED(CheckRequestApproved(aRequest));
   if (!mRequestApproved) {
     if (nsXMLHttpRequest::sAccessControlCache) {
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -219,8 +219,7 @@ IsValidHTTPToken(const nsCSubstring& aToken)
 }
 
 nsresult
-nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
-                                               PRBool aIsRedirect)
+nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
 {
   // Check if this was actually a cross domain request
   if (!mHasBeenCrossSite) {
@@ -240,21 +239,6 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
   // Test that things worked on a HTTP level
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest);
   NS_ENSURE_TRUE(http, NS_ERROR_DOM_BAD_URI);
-
-  // Redirects aren't success-codes. But necko already checked that it was a
-  // valid redirect.
-  if (!aIsRedirect) {
-    PRBool succeeded;
-    rv = http->GetRequestSucceeded(&succeeded);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!succeeded) {
-      PRUint32 responseStatus;
-      rv = http->GetResponseStatus(&responseStatus);
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(mAllowedHTTPErrors.Contains(responseStatus),
-                     NS_ERROR_DOM_BAD_URI);
-    }
-  }
 
   // Check the Access-Control-Allow-Origin header
   nsCAutoString allowedOriginHeader;
@@ -286,13 +270,21 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
   }
 
   if (mIsPreflight) {
+    PRBool succeeded;
+    rv = http->GetRequestSucceeded(&succeeded);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!succeeded) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
+
     nsCAutoString headerVal;
     // The "Access-Control-Allow-Methods" header contains a comma separated
     // list of method names.
     http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Allow-Methods"),
                             headerVal);
     PRBool foundMethod = mPreflightMethod.EqualsLiteral("GET") ||
-      mPreflightMethod.EqualsLiteral("POST");
+                         mPreflightMethod.EqualsLiteral("HEAD") ||
+                         mPreflightMethod.EqualsLiteral("POST");
     nsCCharSeparatedTokenizer methodTokens(headerVal, ',');
     while(methodTokens.hasMoreTokens()) {
       const nsDependentCSubstring& method = methodTokens.nextToken();
@@ -379,7 +371,7 @@ nsCrossSiteListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 {
   nsresult rv;
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
-    rv = CheckRequestApproved(aOldChannel, PR_TRUE);
+    rv = CheckRequestApproved(aOldChannel);
     if (NS_FAILED(rv)) {
       if (nsXMLHttpRequest::sAccessControlCache) {
         nsCOMPtr<nsIURI> oldURI;

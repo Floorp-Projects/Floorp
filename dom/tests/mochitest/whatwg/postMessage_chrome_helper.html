@@ -3,25 +3,32 @@
 <head>
   <title>postMessage chrome message receiver</title>
   <script type="application/javascript">
+    var gPrePath = "";
+
     function receiveMessage(evt)
     {
-      // Content cannot post to chrome without privileges
-      window.parent.postMessage("SHOULD NOT GET THIS!", "*");
+      if (evt.data.substring(0,9) == "chrome://") {
+        gPrePath = evt.data;
+        respond("path-is-set");
+      } else {
+        // Content cannot post to chrome without privileges
+        window.parent.postMessage("SHOULD NOT GET THIS!", "*");
 
-      var msg = "post-to-content-response";
+        var msg = "post-to-content-response";
 
-      if (evt.source !== null)
-        msg += " wrong-source(" + evt.source + ")";
-      if (!evt.isTrusted)
-        msg += " unexpected-untrusted-event";
-      if (evt.type !== "message")
-        msg += " wrong-type(" + evt.type + ")";
-      if (evt.origin !== "chrome://mochikit")
-        msg += " wrong-origin(" + evt.origin + ")";
-      if (evt.data !== "post-to-content")
-        msg += " wrong-message(" + evt.data + ")";
+        if (evt.source !== null)
+          msg += " wrong-source(" + evt.source + ")";
+        if (!evt.isTrusted)
+          msg += " unexpected-untrusted-event";
+        if (evt.type !== "message")
+          msg += " wrong-type(" + evt.type + ")";
+        if (evt.origin !== gPrePath)
+          msg += " wrong-origin(" + evt.origin + ")";
+        if (evt.data !== "post-to-content")
+          msg += " wrong-message(" + evt.data + ")";
 
-      respond(msg);
+        respond(msg);
+      }
     }
     
     function respond(msg)

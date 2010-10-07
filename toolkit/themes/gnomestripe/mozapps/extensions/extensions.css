@@ -46,43 +46,6 @@
   border-radius: 5px;
 }
 
-.nav-button {
-  -moz-appearance: toolbarbutton;
-  min-width: 0;
-}
-
-#back-btn:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
-}
-
-#forward-btn:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
-}
-
-#back-btn:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
-}
-
-#forward-btn:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
-}
-
-#back-btn[disabled="true"]:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
-}
-
-#forward-btn[disabled="true"]:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
-}
-
-#back-btn[disabled="true"]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
-}
-
-#forward-btn[disabled="true"]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
-}
-
 /*** global warnings ***/
 
 .global-warning {
@@ -541,7 +504,6 @@
 }
 
 .detail-view-container {
-  overflow: auto;
   padding: 2em;
   font-size: 110%;
 }
@@ -575,13 +537,13 @@
 
 #detail-desc-container {
   margin-bottom: 2em;
-  /* This is necessary to fix layout issues with multi-line descriptions, see
-     bug 592712*/
-  outline: solid transparent;
 }
 
 #detail-desc {
   -moz-margin-start: 6px;
+  /* This is necessary to fix layout issues with multi-line descriptions, see
+     bug 592712*/
+  outline: solid transparent;
   white-space: pre-wrap;
 }
 

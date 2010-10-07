@@ -62,6 +62,7 @@
 #include "nsHTMLReflowState.h"
 #include "prenv.h"
 
+#include "nsSVGUtils.h"
 #include "nsBidiUtils.h"
 
 #include "imgIRequest.h"
@@ -378,11 +379,11 @@ nsChangeHint nsStylePadding::MaxDifference()
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   : mHaveBorderImageWidth(PR_FALSE)
-  , mComputedBorder(0, 0, 0, 0)
-  , mBorderImage(nsnull)
 #ifdef DEBUG
   , mImageTracked(false)
 #endif
+  , mComputedBorder(0, 0, 0, 0)
+  , mBorderImage(nsnull)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
   nscoord medium =
@@ -1865,7 +1866,39 @@ nsStyleBackground::Layer::SetInitialValues()
   mImage.SetNull();
 }
 
-PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
+PRBool
+nsStyleBackground::Layer::RenderingMightDependOnFrameSize() const
+{
+  // Do we even have an image?
+  if (mImage.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  // Does our position or size depend on frame size?
+  if (mPosition.DependsOnFrameSize() ||
+      mSize.DependsOnFrameSize(mImage.GetType())) {
+    return PR_TRUE;
+  }
+
+  // Are we an SVG image with a viewBox attribute?
+  if (mImage.GetType() == eStyleImageType_Image) {
+    nsCOMPtr<imgIContainer> imageContainer;
+    mImage.GetImageData()->GetImage(getter_AddRefs(imageContainer));
+    if (imageContainer &&
+        imageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
+      nsIFrame* rootFrame = imageContainer->GetRootLayoutFrame();
+      if (rootFrame &&
+          nsSVGUtils::RootSVGElementHasViewbox(rootFrame->GetContent())) {
+        return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
+nsStyleBackground::Layer::operator==(const Layer& aOther) const
 {
   return mAttachment == aOther.mAttachment &&
          mClip == aOther.mClip &&

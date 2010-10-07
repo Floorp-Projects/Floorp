@@ -40,6 +40,8 @@
 #ifndef __nanojit_NativeX64__
 #define __nanojit_NativeX64__
 
+#include "NativeCommon.h"
+
 #ifndef NANOJIT_64BIT
 #error "NANOJIT_64BIT must be defined for X64 backend"
 #endif
@@ -66,49 +68,48 @@ namespace nanojit
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
 
-    enum Register {
-        RAX = 0, // 1st int return, # of sse varargs
-        RCX = 1, // 4th int arg
-        RDX = 2, // 3rd int arg 2nd return
-        RBX = 3, // saved
-        RSP = 4, // stack ptr
-        RBP = 5, // frame ptr, saved, sib reqd
-        RSI = 6, // 2nd int arg
-        RDI = 7, // 1st int arg
-        R8  = 8, // 5th int arg
-        R9  = 9, // 6th int arg
-        R10 = 10, // scratch
-        R11 = 11, // scratch
-        R12 = 12, // saved
-        R13 = 13, // saved, sib reqd like rbp
-        R14 = 14, // saved
-        R15 = 15, // saved
+    static const Register RAX = { 0 };      // 1st int return, # of sse varargs
+    static const Register RCX = { 1 };      // 4th int arg
+    static const Register RDX = { 2 };      // 3rd int arg 2nd return
+    static const Register RBX = { 3 };      // saved
+    static const Register RSP = { 4 };      // stack ptr
+    static const Register RBP = { 5 };      // frame ptr, saved, sib reqd
+    static const Register RSI = { 6 };      // 2nd int arg
+    static const Register RDI = { 7 };      // 1st int arg
+    static const Register R8  = { 8 };      // 5th int arg
+    static const Register R9  = { 9 };      // 6th int arg
+    static const Register R10 = { 10 };     // scratch
+    static const Register R11 = { 11 };     // scratch
+    static const Register R12 = { 12 };     // saved
+    static const Register R13 = { 13 };     // saved, sib reqd like rbp
+    static const Register R14 = { 14 };     // saved
+    static const Register R15 = { 15 };     // saved
 
-        XMM0  = 16, // 1st double arg, return
-        XMM1  = 17, // 2nd double arg, return
-        XMM2  = 18, // 3rd double arg
-        XMM3  = 19, // 4th double arg
-        XMM4  = 20, // 5th double arg
-        XMM5  = 21, // 6th double arg
-        XMM6  = 22, // 7th double arg
-        XMM7  = 23, // 8th double arg
-        XMM8  = 24, // scratch
-        XMM9  = 25, // scratch
-        XMM10 = 26, // scratch
-        XMM11 = 27, // scratch
-        XMM12 = 28, // scratch
-        XMM13 = 29, // scratch
-        XMM14 = 30, // scratch
-        XMM15 = 31, // scratch
+    static const Register XMM0  = { 16 };   // 1st double arg, return
+    static const Register XMM1  = { 17 };   // 2nd double arg, return
+    static const Register XMM2  = { 18 };   // 3rd double arg
+    static const Register XMM3  = { 19 };   // 4th double arg
+    static const Register XMM4  = { 20 };   // 5th double arg
+    static const Register XMM5  = { 21 };   // 6th double arg
+    static const Register XMM6  = { 22 };   // 7th double arg
+    static const Register XMM7  = { 23 };   // 8th double arg
+    static const Register XMM8  = { 24 };   // scratch
+    static const Register XMM9  = { 25 };   // scratch
+    static const Register XMM10 = { 26 };   // scratch
+    static const Register XMM11 = { 27 };   // scratch
+    static const Register XMM12 = { 28 };   // scratch
+    static const Register XMM13 = { 29 };   // scratch
+    static const Register XMM14 = { 30 };   // scratch
+    static const Register XMM15 = { 31 };   // scratch
 
-        FP = RBP,
+    static const Register FP = RBP;
+    static const Register RZero = { 0 };  // useful in a few places in codegen
 
-        FirstReg = RAX,
-        LastReg = XMM15,
+    static const uint32_t FirstRegNum = 0;
+    static const uint32_t LastRegNum = 31;
 
-        deprecated_UnknownReg = 32,        // XXX: remove eventually, see bug 538924
-        UnspecifiedReg = 32
-    };
+    static const Register deprecated_UnknownReg = { 32 }; // XXX: remove eventually, see bug 538924
+    static const Register UnspecifiedReg = { 32 };
 
 /*
  * Micro-templating variable-length opcodes, idea first
@@ -329,24 +330,28 @@ namespace nanojit
     static const RegisterMask GpRegs = 0xffff;
     static const RegisterMask FpRegs = 0xffff0000;
 #ifdef _WIN64
-    static const RegisterMask SavedRegs = 1<<RBX | 1<<RSI | 1<<RDI | 1<<R12 | 1<<R13 | 1<<R14 | 1<<R15;
+    static const RegisterMask SavedRegs = 1<<REGNUM(RBX) | 1<<REGNUM(RSI) | 1<<REGNUM(RDI) |
+                                          1<<REGNUM(R12) | 1<<REGNUM(R13) | 1<<REGNUM(R14) |
+                                          1<<REGNUM(R15);
     static const int NumSavedRegs = 7; // rbx, rsi, rdi, r12-15
     static const int NumArgRegs = 4;
 #else
-    static const RegisterMask SavedRegs = 1<<RBX | 1<<R12 | 1<<R13 | 1<<R14 | 1<<R15;
+    static const RegisterMask SavedRegs = 1<<REGNUM(RBX) | 1<<REGNUM(R12) | 1<<REGNUM(R13) |
+                                          1<<REGNUM(R14) | 1<<REGNUM(R15);
     static const int NumSavedRegs = 5; // rbx, r12-15
     static const int NumArgRegs = 6;
 #endif
     // Warning:  when talking about single byte registers, RSP/RBP/RSI/RDI are
     // actually synonyms for AH/CH/DH/BH.  So this value means "any
     // single-byte GpReg except AH/CH/DH/BH".
-    static const int SingleByteStoreRegs = GpRegs & ~(1<<RSP | 1<<RBP | 1<<RSI | 1<<RDI);
+    static const RegisterMask SingleByteStoreRegs = GpRegs & ~(1<<REGNUM(RSP) | 1<<REGNUM(RBP) |
+                                                               1<<REGNUM(RSI) | 1<<REGNUM(RDI));
 
     static inline bool IsFpReg(Register r) {
-        return ((1<<r) & FpRegs) != 0;
+        return ((1<<REGNUM(r)) & FpRegs) != 0;
     }
     static inline bool IsGpReg(Register r) {
-        return ((1<<r) & GpRegs) != 0;
+        return ((1<<REGNUM(r)) & GpRegs) != 0;
     }
 
     verbose_only( extern const char* regNames[]; )
@@ -373,10 +378,10 @@ namespace nanojit
         void emit_target64(size_t underrun, uint64_t op, NIns* target); \
         void emitrr(uint64_t op, Register r, Register b);\
         void emitrxb(uint64_t op, Register r, Register x, Register b);\
-        void emitxb(uint64_t op, Register x, Register b) { emitrxb(op, (Register)0, x, b); }\
+        void emitxb(uint64_t op, Register x, Register b) { emitrxb(op, RZero, x, b); }\
         void emitrr8(uint64_t op, Register r, Register b);\
-        void emitr(uint64_t op, Register b) { emitrr(op, (Register)0, b); }\
-        void emitr8(uint64_t op, Register b) { emitrr8(op, (Register)0, b); }\
+        void emitr(uint64_t op, Register b) { emitrr(op, RZero, b); }\
+        void emitr8(uint64_t op, Register b) { emitrr8(op, RZero, b); }\
         void emitprr(uint64_t op, Register r, Register b);\
         void emitrm8(uint64_t op, Register r, int32_t d, Register b);\
         void emitrm(uint64_t op, Register r, int32_t d, Register b);\
@@ -386,7 +391,7 @@ namespace nanojit
         void emitrr_imm(uint64_t op, Register r, Register b, int32_t imm);\
         void emitr_imm64(uint64_t op, Register r, uint64_t imm);\
         void emitrxb_imm(uint64_t op, Register r, Register x, Register b, int32_t imm);\
-        void emitr_imm(uint64_t op, Register r, int32_t imm) { emitrr_imm(op, (Register)0, r, imm); }\
+        void emitr_imm(uint64_t op, Register r, int32_t imm) { emitrr_imm(op, RZero, r, imm); }\
         void emitr_imm8(uint64_t op, Register b, int32_t imm8);\
         void emitxm_abs(uint64_t op, Register r, int32_t addr32);\
         void emitxm_rel(uint64_t op, Register r, NIns* addr64);\

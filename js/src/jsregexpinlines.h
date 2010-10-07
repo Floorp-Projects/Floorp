@@ -107,6 +107,7 @@ class RegExp
 #endif
     }
 
+    static bool isMetaChar(jschar c);
     static bool hasMetaChars(const jschar *chars, size_t length);
 
     /*
@@ -439,18 +440,25 @@ RegExp::compile(JSContext *cx)
 }
 
 inline bool
+RegExp::isMetaChar(jschar c)
+{
+    switch (c) {
+      /* Taken from the PatternCharacter production in 15.10.1. */
+      case '^': case '$': case '\\': case '.': case '*': case '+':
+      case '?': case '(': case ')': case '[': case ']': case '{':
+      case '}': case '|':
+        return true;
+      default:
+        return false;
+    }
+}
+
+inline bool
 RegExp::hasMetaChars(const jschar *chars, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
-        jschar c = chars[i];
-        switch (c) {
-          /* Taken from the PatternCharacter production in 15.10.1. */
-          case '^': case '$': case '\\': case '.': case '*': case '+':
-          case '?': case '(': case ')': case '[': case ']': case '{':
-          case '}': case '|':
+        if (isMetaChar(chars[i]))
             return true;
-          default:;
-        }
     }
     return false;
 }

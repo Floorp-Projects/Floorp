@@ -283,6 +283,22 @@ template void JS_FASTCALL stubs::SetName<false>(VMFrame &f, JSAtom *origAtom);
 
 template<JSBool strict>
 void JS_FASTCALL
+stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    Value rval = f.regs.sp[-1];
+    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
+        THROW();
+    f.regs.sp[-2] = rval;
+}
+
+template void JS_FASTCALL stubs::SetPropNoCache<true>(VMFrame &f, JSAtom *origAtom);
+template void JS_FASTCALL stubs::SetPropNoCache<false>(VMFrame &f, JSAtom *origAtom);
+
+template<JSBool strict>
+void JS_FASTCALL
 stubs::SetGlobalNameDumb(VMFrame &f, JSAtom *atom)
 {
     JSContext *cx = f.cx;
@@ -515,24 +531,17 @@ stubs::GetElem(VMFrame &f)
                 copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
-
-                /* Reload retval from the stack in the rare hole case. */
-                copyFrom = &regs.sp[-1];
             }
         } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
 
             if (arg < obj->getArgsInitialLength()) {
-                JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
-                if (afp) {
-                    copyFrom = &afp->canonicalActualArg(arg);
+                copyFrom = obj->addressOfArgsElement(arg);
+                if (!copyFrom->isMagic()) {
+                    if (JSStackFrame *afp = (JSStackFrame *) obj->getPrivate())
+                        copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }
-
-                copyFrom = obj->addressOfArgsElement(arg);
-                if (!copyFrom->isMagic())
-                    goto end_getelem;
-                /* Otherwise, fall to getProperty(). */
             }
         }
         if (JS_LIKELY(INT_FITS_IN_JSID(i)))
@@ -870,17 +879,9 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
-        /*
-         * Inline js_GetScopeChain a bit to optimize for the case of a
-         * top-level function.
-         */
-        if (!fp->hasBlockChain()) {
-            obj2 = &fp->scopeChain();
-        } else {
-            obj2 = js_GetScopeChain(cx, fp);
-            if (!obj2)
-                THROW();
-        }
+        obj2 = js_GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        if (!obj2)
+            THROW();
     }
 
     /*
@@ -1526,7 +1527,8 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         if (!obj)
             THROWV(NULL);
     } else {
-        JSObject *parent = js_GetScopeChain(f.cx, f.fp());
+        JSObject *parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
+                                                JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             THROWV(NULL);
 
@@ -1543,7 +1545,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_DEFLOCALFUN_FC, JSOP_DEFLOCALFUN_FC_LENGTH);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -1575,7 +1577,7 @@ stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
         return obj;
     }
     return Lambda(f, fun);
@@ -1588,7 +1590,7 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
             return obj;
         }
     }
@@ -1607,7 +1609,7 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
          * we don't need to clone that compiler- created function
          * object for identity/mutation reasons.
          */
-        int iargc = GET_ARGC(f.regs.pc + JSOP_LAMBDA_LENGTH);
+        int iargc = GET_ARGC(f.regs.pc);
 
         /*
          * Note that we have not yet pushed obj as the final argument,
@@ -1637,7 +1639,7 @@ stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        jsbytecode *pc2 = f.regs.pc + JSOP_LAMBDA_LENGTH + JSOP_NULL_LENGTH;
+        jsbytecode *pc2 = f.regs.pc + JSOP_NULL_LENGTH;
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
@@ -1655,7 +1657,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun)) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = js_GetScopeChain(f.cx, f.fp());
+        parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
         if (!parent)
             THROWV(NULL);
     }
@@ -2388,7 +2390,7 @@ stubs::Throw(VMFrame &f)
 JSObject * JS_FASTCALL
 stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -2457,7 +2459,9 @@ void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     JSFrameRegs &regs = f.regs;
+#ifdef DEBUG
     JSStackFrame *fp = f.fp();
+#endif
 
     JS_ASSERT(obj->isStaticBlock());
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
@@ -2469,7 +2473,6 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 
 #ifdef DEBUG
     JSContext *cx = f.cx;
-    JS_ASSERT(fp->maybeBlockChain() == obj->getParent());
 
     /*
      * The young end of fp->scopeChain() may omit blocks if we haven't closed
@@ -2491,19 +2494,17 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
             JS_ASSERT(parent);
     }
 #endif
-
-    fp->setBlockChain(obj);
 }
 
 void JS_FASTCALL
-stubs::LeaveBlock(VMFrame &f)
+stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp();
 
 #ifdef DEBUG
-    JS_ASSERT(fp->blockChain()->getClass() == &js_BlockClass);
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain());
+    JS_ASSERT(blockChain->isStaticBlock());
+    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, blockChain);
 
     JS_ASSERT(blockDepth <= StackDepth(fp->script()));
 #endif
@@ -2513,14 +2514,11 @@ stubs::LeaveBlock(VMFrame &f)
      * the stack into the clone, and pop it off the chain.
      */
     JSObject *obj = &fp->scopeChain();
-    if (obj->getProto() == fp->blockChain()) {
+    if (obj->getProto() == blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
             THROW();
     }
-
-    /* Pop the block chain, too.  */
-    fp->setBlockChain(fp->blockChain()->getParent());
 }
 
 void * JS_FASTCALL
@@ -2528,14 +2526,15 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     jsbytecode *jpc = pc;
     JSScript *script = f.fp()->script();
+    void **nmap = script->nativeMap(f.fp()->isConstructing());
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
 
     if (!lval.isPrimitive()) {
         ptrdiff_t offs = (pc + GET_JUMP_OFFSET(pc)) - script->code;
-        JS_ASSERT(script->nmap[offs]);
-        return script->nmap[offs];
+        JS_ASSERT(nmap[offs]);
+        return nmap[offs];
     }
 
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
@@ -2555,8 +2554,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
                 JSString *rhs = rval.toString();
                 if (rhs == str || js_EqualStrings(str, rhs)) {
                     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                    JS_ASSERT(script->nmap[offs]);
-                    return script->nmap[offs];
+                    JS_ASSERT(nmap[offs]);
+                    return nmap[offs];
                 }
             }
             pc += JUMP_OFFSET_LEN;
@@ -2568,8 +2567,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (rval.isNumber() && d == rval.toNumber()) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(script->nmap[offs]);
-                return script->nmap[offs];
+                JS_ASSERT(nmap[offs]);
+                return nmap[offs];
             }
             pc += JUMP_OFFSET_LEN;
         }
@@ -2579,16 +2578,16 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (lval == rval) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(script->nmap[offs]);
-                return script->nmap[offs];
+                JS_ASSERT(nmap[offs]);
+                return nmap[offs];
             }
             pc += JUMP_OFFSET_LEN;
         }
     }
 
     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(jpc)) - script->code;
-    JS_ASSERT(script->nmap[offs]);
-    return script->nmap[offs];
+    JS_ASSERT(nmap[offs]);
+    return nmap[offs];
 }
 
 void * JS_FASTCALL
@@ -2596,7 +2595,6 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 {
     jsbytecode * const originalPC = origPc;
     jsbytecode *pc = originalPC;
-    JSScript *script = f.fp()->script();
     uint32 jumpOffset = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
 
@@ -2634,10 +2632,13 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     }
 
 finally:
+    JSScript *script = f.fp()->script();
+    void **nmap = script->nativeMap(f.fp()->isConstructing());
+
     /* Provide the native address. */
     ptrdiff_t offset = (originalPC + jumpOffset) - script->code;
-    JS_ASSERT(script->nmap[offset]);
-    return script->nmap[offset];
+    JS_ASSERT(nmap[offset]);
+    return nmap[offset];
 }
 
 void JS_FASTCALL

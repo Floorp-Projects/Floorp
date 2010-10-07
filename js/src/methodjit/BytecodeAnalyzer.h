@@ -65,10 +65,17 @@ namespace js
         OpcodeStatus *ops;
         Vector<jsbytecode *, 16, ContextAllocPolicy> doList;
 
+        /* Whether there are POPV/SETRVAL bytecodes which can write to the frame's rval. */
+        bool usesRval;
+
+        /* Whether there are NAME bytecodes which can access the frame's scope chain. */
+        bool usesScope;
+
       public:
         BytecodeAnalyzer(JSContext *cx, JSScript *script)
           : cx(cx), script(script), ops(NULL),
-            doList(ContextAllocPolicy(cx))
+            doList(ContextAllocPolicy(cx)),
+            usesRval(false), usesScope(false)
         {
         }
         ~BytecodeAnalyzer();
@@ -77,6 +84,9 @@ namespace js
         bool addEdge(jsbytecode *pc, int32 offset, uint32 stackDepth);
 
       public:
+
+        bool usesReturnValue() const { return usesRval; }
+        bool usesScopeChain() const { return usesScope; }
 
         inline const OpcodeStatus & operator [](uint32 offs) const {
             JS_ASSERT(offs < script->length);

@@ -75,6 +75,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
+#include "jstypedarray.h"
 #include "jsxml.h"
 #include "jsperf.h"
 
@@ -558,7 +559,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCij] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] "
+    fprintf(gErrFile, "usage: js [-zKPswWxCijmd] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
@@ -659,6 +660,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 #ifdef MOZ_TRACEVIS
           case 'T':
 #endif
+          case 'g':
             ++i;
             break;
           default:;
@@ -836,6 +838,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             gMaxStackSize = atoi(argv[i]);
             break;
 
+        case 'd':
+            js_SetDebugMode(cx, JS_TRUE);
+            break;
+
         case 'z':
             obj = split_setup(cx, JS_FALSE);
             if (!obj)
@@ -854,6 +860,15 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             StartTraceVis(argv[i]);
             break;
 #endif
+#ifdef JS_THREADSAFE
+        case 'g':
+            if (++i == argc)
+                return usage();
+
+            PR_Sleep(PR_SecondsToInterval(atoi(argv[i])));
+            break;
+#endif
+
         default:
             return usage();
         }
@@ -1181,7 +1196,7 @@ AssertJit(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
     if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
-        if (cx->fp()->script()->nmap == NULL) {
+        if (!cx->fp()->script()->getJIT(cx->fp()->isConstructing())) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
             return JS_FALSE;
         }
@@ -3161,7 +3176,7 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         return NULL;
 
     {
-        JSAutoCrossCompartmentCall ac;
+        JSAutoEnterCompartment ac;
         if (!ac.enter(cx, obj))
             return NULL;
 
@@ -3222,7 +3237,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     {
-        JSAutoCrossCompartmentCall ac;
+        JSAutoEnterCompartment ac;
         if (JSCrossCompartmentWrapper::isCrossCompartmentWrapper(sobj)) {
             sobj = sobj->unwrap();
             if (!ac.enter(cx, sobj))
@@ -4095,8 +4110,6 @@ Snarl(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-
-
 JSBool
 Wrap(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -4113,6 +4126,49 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
         return false;
 
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(wrapped));
+    return true;
+}
+
+JSBool
+Serialize(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    uint64 *datap;
+    size_t nbytes;
+    if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes))
+        return false;
+
+    JSObject *arrayobj = js_CreateTypedArray(cx, TypedArray::TYPE_UINT8, nbytes);
+    if (!arrayobj) {
+        JS_free(cx, datap);
+        return false;
+    }
+    TypedArray *array = TypedArray::fromJSObject(arrayobj);
+    JS_ASSERT((uintptr_t(array->data) & 7) == 0);
+    memcpy(array->data, datap, nbytes);
+    JS_free(cx, datap);
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(arrayobj));
+    return true;
+}
+
+JSBool
+Deserialize(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    JSObject *obj;
+    if (!JSVAL_IS_OBJECT(v) || !js_IsTypedArray((obj = JSVAL_TO_OBJECT(v)))) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
+        return false;
+    }
+    TypedArray *array = TypedArray::fromJSObject(obj);
+    if ((uintptr_t(array->data) & 7) != 0) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_BAD_ALIGNMENT);
+        return false;
+    }
+
+    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength, &v))
+        return false;
+    JS_SET_RVAL(cx, vp, v);
     return true;
 }
 
@@ -4212,6 +4268,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("elapsed",        Elapsed,        0,0),
     JS_FN("parent",         Parent,         1,0),
     JS_FN("wrap",           Wrap,           1,0),
+    JS_FN("serialize",      Serialize,      1,0),
+    JS_FN("deserialize",    Deserialize,    1,0),
     JS_FS_END
 };
 
@@ -4337,7 +4395,9 @@ static const char *const shell_help_messages[] = {
 "  A negative value (default) means that the execution time is unlimited.",
 "elapsed()                Execution time elapsed for the current context.",
 "parent(obj)              Returns the parent of obj.\n",
-"wrap(obj)                Wrap an object into a noop wrapper.\n"
+"wrap(obj)                Wrap an object into a noop wrapper.\n",
+"serialize(sd)            Serialize sd using JS_WriteStructuredClone. Returns a TypedArray.\n",
+"deserialize(a)           Deserialize data generated by serialize.\n"
 };
 
 /* Help messages must match shell functions. */
@@ -5148,12 +5208,14 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
+NewGlobalObject(JSContext *cx)
 {
     JSObject *glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
     if (!glob)
         return NULL;
-    if (!call.enter(cx, glob))
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, glob))
         return NULL;
 
 #ifdef LAZY_STANDARD_CLASSES
@@ -5193,10 +5255,13 @@ int
 shell(JSContext *cx, int argc, char **argv, char **envp)
 {
     JSAutoRequest ar(cx);
-    JSAutoCrossCompartmentCall ac;
 
-    JSObject *glob = NewGlobalObject(cx, ac);
+    JSObject *glob = NewGlobalObject(cx);
     if (!glob)
+        return 1;
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, glob))
         return 1;
 
     JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
@@ -5235,8 +5300,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     class ShellWorkerHooks : public js::workers::WorkerHooks {
     public:
         JSObject *newGlobalObject(JSContext *cx) {
-            JSAutoCrossCompartmentCall ac;
-            return NewGlobalObject(cx, ac);
+            return NewGlobalObject(cx);
         }
     };
     ShellWorkerHooks hooks;
@@ -5266,6 +5330,17 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 #endif  /* JSDEBUGGER */
 
     return result;
+}
+
+static void
+MaybeOverrideOutFileFromEnv(const char* const envVar,
+                            FILE* defaultOut,
+                            FILE** outFile)
+{
+    const char* outPath = getenv(envVar);
+    if (!outPath || !*outPath || !(*outFile = fopen(outPath, "w"))) {
+        *outFile = defaultOut;
+    }
 }
 
 int
@@ -5316,8 +5391,8 @@ main(int argc, char **argv, char **envp)
     setbuf(stderr,0);
 #endif
 
-    gErrFile = stderr;
-    gOutFile = stdout;
+    MaybeOverrideOutFileFromEnv("JS_STDERR", stderr, &gErrFile);
+    MaybeOverrideOutFileFromEnv("JS_STDOUT", stdout, &gOutFile);
 
     argc--;
     argv++;
@@ -5343,8 +5418,6 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = shell(cx, argc, argv, envp);
-
-    JS_CommenceRuntimeShutDown(rt);
 
     DestroyContext(cx, true);
 

@@ -105,7 +105,7 @@ function pathHandler(metadata, response) {
     var macutils = Components.classes["@mozilla.org/xpcom/mac-utils;1"]
                              .getService(Components.interfaces.nsIMacUtils);
     if (macutils.isUniversalBinary)
-      ABI = "Universal-gcc3";
+      ABI += "-u-" + macutils.architecturesInBinary;
   }
   do_check_eq(metadata.queryString,
               "xpcshell@tests.mozilla.org&1&XPCShell&1&2007010101&" +

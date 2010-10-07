@@ -47,26 +47,6 @@
   border-radius: 5px;
 }
 
-.nav-button {
-  list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
-  min-width: 0;
-  -moz-margin-end: 0;
-}
-
-.nav-button[disabled="true"] .button-icon {
-  opacity: 0.4;
-}
-
-#back-btn:-moz-locale-dir(ltr),
-#forward-btn:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0, 18px, 18px, 0);
-}
-
-#back-btn:-moz-locale-dir(rtl),
-#forward-btn:-moz-locale-dir(ltr) {
-  -moz-image-region: rect(0, 36px, 18px, 18px);
-}
-
 /*** global warnings ***/
 
 .global-warning {
@@ -558,7 +538,6 @@
 }
 
 .detail-view-container {
-  overflow: auto;
   padding: 2em;
   font-size: 110%;
 }
@@ -592,13 +571,13 @@
 
 #detail-desc-container {
   margin-bottom: 2em;
-  /* This is necessary to fix layout issues with multi-line descriptions, see
-     bug 592712*/
-  outline: solid transparent;
 }
 
 #detail-desc {
   -moz-margin-start: 6px;
+  /* This is necessary to fix layout issues with multi-line descriptions, see
+     bug 592712*/
+  outline: solid transparent;
   white-space: pre-wrap;
 }
 

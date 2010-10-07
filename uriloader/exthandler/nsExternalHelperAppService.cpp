@@ -148,6 +148,10 @@
 #include "ExternalHelperAppChild.h"
 #endif
 
+#ifdef ANDROID
+#include "AndroidBridge.h"
+#endif
+
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
 
@@ -581,7 +585,9 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
 #endif
+#ifdef MOZ_RAW
   { VIDEO_RAW, "yuv", "Raw YUV Video" },
+#endif
   { AUDIO_WAV, "wav", "Waveform Audio" },
 };
 

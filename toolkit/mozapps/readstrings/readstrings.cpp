@@ -179,7 +179,7 @@ ReadStrings(const NS_tchar *path,
   if (fseek(fp, 0, SEEK_SET) != 0)
     return READ_ERROR;
 
-  int rd = fread(fileContents, sizeof(char), flen, fp);
+  size_t rd = fread(fileContents, sizeof(char), flen, fp);
   if (rd != flen)
     return READ_ERROR;
 

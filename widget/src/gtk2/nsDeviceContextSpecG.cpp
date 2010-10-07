@@ -99,7 +99,7 @@ public:
   nsresult  InitializeGlobalPrinters();
 
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
-  PRInt32   GetNumPrinters()
+  PRUint32  GetNumPrinters()
     { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
   nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar **aDefaultPrinterName);
@@ -716,14 +716,14 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
     return rv;
   }
 
-  PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+  PRUint32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
   nsTArray<nsString> *printers = new nsTArray<nsString>(numPrinters);
   if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  int count = 0;
+  PRUint32 count = 0;
   while( count < numPrinters )
   {
     printers->AppendElement(*GlobalPrinters::GetInstance()->GetStringAt(count++));

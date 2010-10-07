@@ -53,7 +53,7 @@
 #endif
 
 #include "jsprvtd.h"
-#include "jsarena.h" /* Added by JSIFY */
+#include "jsarena.h"
 #include "jsclist.h"
 #include "jslong.h"
 #include "jsatom.h"
@@ -244,7 +244,7 @@ namespace mjit {
 
     struct ThreadData
     {
-        JSC::ExecutableAllocator *execPool;
+        JSC::ExecutableAllocator *execAlloc;
 
         // Trampolines for JIT code.
         Trampolines trampolines;
@@ -883,6 +883,7 @@ JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
  */
 class FrameRegsIter
 {
+    JSContext         *cx;
     StackSegment      *curseg;
     JSStackFrame      *curfp;
     Value             *cursp;
@@ -1031,11 +1032,15 @@ struct TraceMonitor {
     FragStatsMap*           profTab;
 #endif
 
+    bool ontrace() const {
+        return !!tracecx;
+    }
+
     /* Flush the JIT cache. */
     void flush();
 
-    /* Mark all objects baked into native code in the code cache. */
-    void mark(JSTracer *trc);
+    /* Sweep any cache entry pointing to dead GC things. */
+    void sweep();
 
     bool outOfMemory() const;
 };
@@ -1048,9 +1053,9 @@ struct TraceMonitor {
  * executing.  cx must be a context on the current thread.
  */
 #ifdef JS_TRACER
-# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).tracecx != NULL)
+# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).ontrace())
 #else
-# define JS_ON_TRACE(cx)            JS_FALSE
+# define JS_ON_TRACE(cx)            false
 #endif
 
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
@@ -1113,8 +1118,6 @@ struct JSThreadData {
      * towards rt->interruptCounter.
      */
     volatile int32      interruptFlags;
-
-    JSGCFreeLists       gcFreeLists;
 
     /* Keeper of the contiguous stack used by all contexts in this thread. */
     js::StackSpace      stackSpace;
@@ -1278,100 +1281,15 @@ typedef struct JSPropertyTreeEntry {
     js::Shape           *child;
 } JSPropertyTreeEntry;
 
-
-namespace js {
-
-struct GCPtrHasher
-{
-    typedef void *Lookup;
-
-    static HashNumber hash(void *key) {
-        return HashNumber(uintptr_t(key) >> JS_GCTHING_ZEROBITS);
-    }
-
-    static bool match(void *l, void *k) {
-        return l == k;
-    }
-};
-
-typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
-
-struct RootInfo {
-    RootInfo() {}
-    RootInfo(const char *name, JSGCRootType type) : name(name), type(type) {}
-    const char *name;
-    JSGCRootType type;
-};
-
-typedef js::HashMap<void *,
-                    RootInfo,
-                    js::DefaultHasher<void *>,
-                    js::SystemAllocPolicy> RootedValueMap;
-
-/* If HashNumber grows, need to change WrapperHasher. */
-JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-
-struct WrapperHasher
-{
-    typedef Value Lookup;
-
-    static HashNumber hash(Value key) {
-        uint64 bits = JSVAL_BITS(Jsvalify(key));
-        return (uint32)bits ^ (uint32)(bits >> 32);
-    }
-
-    static bool match(const Value &l, const Value &k) {
-        return l == k;
-    }
-};
-
-typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
-
-class AutoValueVector;
-class AutoIdVector;
-
-} /* namespace js */
-
-struct JSCompartment {
-    JSRuntime *rt;
-    JSPrincipals *principals;
-    void *data;
-    bool marked;
-    js::WrapperMap crossCompartmentWrappers;
-    bool debugMode;
-
-    /* List all scripts in this compartment. */
-    JSCList scripts;
-
-    JSCompartment(JSRuntime *cx);
-    ~JSCompartment();
-
-    bool init();
-
-    bool wrap(JSContext *cx, js::Value *vp);
-    bool wrap(JSContext *cx, JSString **strp);
-    bool wrap(JSContext *cx, JSObject **objp);
-    bool wrapId(JSContext *cx, jsid *idp);
-    bool wrap(JSContext *cx, js::PropertyOp *op);
-    bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
-    bool wrap(JSContext *cx, js::AutoIdVector &props);
-    bool wrapException(JSContext *cx);
-
-    void sweep(JSContext *cx);
-
-#ifdef JS_METHODJIT
-    bool addScript(JSContext *cx, JSScript *script);
-    void removeScript(JSScript *script);
-#endif
-    void purge(JSContext *cx);
-};
-
 typedef void
 (* JSActivityCallback)(void *arg, JSBool active);
 
 struct JSRuntime {
     /* Default compartment. */
     JSCompartment       *defaultCompartment;
+#ifdef JS_THREADSAFE
+    bool                defaultCompartmentIsLocked;
+#endif
 
     /* List of compartments (protected by the GC lock). */
     js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> compartments;
@@ -1416,12 +1334,6 @@ struct JSRuntime {
     /* Garbage collector state, used by jsgc.c. */
     js::GCChunkSet      gcChunkSet;
 
-    /* GC chunks with at least one free arena. */
-    js::GCChunkInfoVector gcFreeArenaChunks;
-#ifdef DEBUG
-    JSGCArena           *gcEmptyArenaList;
-#endif
-    JSGCArenaList       gcArenaList[FINALIZE_LIMIT];
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
     jsrefcount          gcKeepAtoms;
@@ -1436,7 +1348,6 @@ struct JSRuntime {
     uint32              gcTriggerFactor;
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
-    volatile JSBool     gcFlushCodeCaches;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
@@ -1566,6 +1477,9 @@ struct JSRuntime {
      * an override is set on the context.
      */
     JSSecurityCallbacks *securityCallbacks;
+
+    /* Structured data callbacks are runtime-wide. */
+    const JSStructuredCloneCallbacks *structuredCloneCallbacks;
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
@@ -1737,8 +1651,8 @@ struct JSRuntime {
 #endif
 
 #ifdef JS_GCMETER
-    JSGCStats           gcStats;
-    JSGCArenaStats      gcArenaStats[FINALIZE_LIMIT];
+    js::gc::JSGCStats           gcStats;
+    js::gc::JSGCArenaStats      globalArenaStats[js::gc::FINALIZE_LIMIT];
 #endif
 
 #ifdef DEBUG
@@ -2179,6 +2093,9 @@ struct JSContext
 
     /* Undoes calls to suspendActiveSegment. */
     void restoreSegment();
+
+    /* Get the frame whose prev() is fp, which may be in any segment. */
+    inline JSStackFrame *computeNextFrame(JSStackFrame *fp);
 
     /*
      * Perform a linear search of all frames in all segments in the given context
@@ -2867,9 +2784,7 @@ class AutoEnumStateRooter : private AutoGCRooter
     Value *addr() { return &stateValue; }
 
   protected:
-    void trace(JSTracer *trc) {
-        JS_CALL_OBJECT_TRACER(trc, obj, "js::AutoEnumStateRooter.obj");
-    }
+    void trace(JSTracer *trc);
 
     JSObject * const obj;
 
@@ -2909,6 +2824,42 @@ private:
 public:
     explicit AutoUnlockGC(JSRuntime *rt) : rt(rt) { JS_UNLOCK_GC(rt); }
     ~AutoUnlockGC() { JS_LOCK_GC(rt); }
+};
+
+class AutoLockDefaultCompartment {
+  private:
+      JSContext *cx;
+  public:
+    AutoLockDefaultCompartment(JSContext *cx) : cx(cx) {
+        JS_LOCK(cx, &cx->runtime->atomState.lock);
+#ifdef JS_THREADSAFE
+        cx->runtime->defaultCompartmentIsLocked = true;
+#endif
+    }
+    ~AutoLockDefaultCompartment() {
+        JS_UNLOCK(cx, &cx->runtime->atomState.lock);
+#ifdef JS_THREADSAFE
+        cx->runtime->defaultCompartmentIsLocked = false;
+#endif
+    }
+};
+
+class AutoUnlockDefaultCompartment {
+  private:
+      JSContext *cx;
+  public:
+    AutoUnlockDefaultCompartment(JSContext *cx) : cx(cx) {
+        JS_UNLOCK(cx, &cx->runtime->atomState.lock);
+#ifdef JS_THREADSAFE
+        cx->runtime->defaultCompartmentIsLocked = false;
+#endif
+    }
+    ~AutoUnlockDefaultCompartment() {
+        JS_LOCK(cx, &cx->runtime->atomState.lock);
+#ifdef JS_THREADSAFE
+        cx->runtime->defaultCompartmentIsLocked = true;
+#endif
+    }
 };
 
 class AutoKeepAtoms {
@@ -3157,7 +3108,7 @@ js_ReportAllocationOverflow(JSContext *cx);
     JS_BEGIN_MACRO                                                            \
         int stackDummy_;                                                      \
                                                                               \
-        if (!JS_CHECK_STACK_SIZE(cx, stackDummy_)) {                          \
+        if (!JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy_)) {             \
             js_ReportOverRecursed(cx);                                        \
             onerror;                                                          \
         }                                                                     \
@@ -3206,16 +3157,6 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
                                     spindex, v, fallback, arg1, arg2))
 
 extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
-
-/*
- * See JS_SetThreadStackLimit in jsapi.c, where we check that the stack
- * grows in the expected direction.
- */
-#if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) < (cx)->stackLimit)
-#else
-# define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) > (cx)->stackLimit)
-#endif
 
 #ifdef JS_THREADSAFE
 # define JS_ASSERT_REQUEST_DEPTH(cx)  (JS_ASSERT((cx)->thread),               \
@@ -3267,7 +3208,7 @@ namespace js {
 
 /* These must be called with GC lock taken. */
 
-void
+JS_FRIEND_API(void)
 TriggerOperationCallback(JSContext *cx);
 
 void

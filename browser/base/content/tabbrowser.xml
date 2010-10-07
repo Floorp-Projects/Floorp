@@ -70,8 +70,10 @@
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
           <xul:notificationbox flex="1">
-            <xul:browser flex="1" type="content-primary" message="true" disablehistory="true"
-                         xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+            <xul:stack flex="1" anonid="browserStack">
+              <xul:browser type="content-primary" message="true" disablehistory="true"
+                           xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+            </xul:stack>
           </xul:notificationbox>
         </xul:tabpanels>
       </xul:tabbox>
@@ -276,7 +278,7 @@
         <parameter name="aBrowser"/>
         <body>
           <![CDATA[
-            return (aBrowser || this.mCurrentBrowser).parentNode;
+            return (aBrowser || this.mCurrentBrowser).parentNode.parentNode;
           ]]>
         </body>
       </method>
@@ -341,7 +343,7 @@
             mBrowser: aBrowser,
             mBlank: aStartsBlank,
 
-            // cache flags for correct status bar update after tab switching
+            // cache flags for correct status UI update after tab switching
             mStateFlags: 0,
             mStatus: 0,
             mMessage: "",
@@ -432,7 +434,6 @@
                     this.mTab.setAttribute("busy", "true");
                     this.mTab.setAttribute("progresspercent", "0");
                     this._startStalledTimer();
-                    this.mTabBrowser.updateIcon(this.mTab);
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
 
@@ -461,7 +462,6 @@
                 this.mTab.removeAttribute("progresspercent");
                 this.mTab.removeAttribute("stalled");
                 this._cancelStalledTimer();
-                this.mTabBrowser.updateIcon(this.mTab);
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -600,7 +600,13 @@
                                                             aURI, false);
             }
 
-            this.updateIcon(aTab);
+            if ((browser.mIconURL || "") != aTab.getAttribute("image")) {
+              if (browser.mIconURL)
+                aTab.setAttribute("image", browser.mIconURL);
+              else
+                aTab.removeAttribute("image");
+              this._tabAttrModified(aTab);
+            }
 
             this._callProgressListeners(browser, "onLinkIconAvailable", [browser.mIconURL]);
           ]]>
@@ -613,20 +619,6 @@
           <![CDATA[
             let browser = aTab ? this.getBrowserForTab(aTab) : this.selectedBrowser;
             return browser.mIconURL;
-          ]]>
-        </body>
-      </method>
-
-      <method name="updateIcon">
-        <parameter name="aTab"/>
-        <body>
-          <![CDATA[
-            var browser = this.getBrowserForTab(aTab);
-            if (!aTab.hasAttribute("busy") && browser.mIconURL)
-              aTab.setAttribute("image", browser.mIconURL);
-            else
-              aTab.removeAttribute("image");
-            this._tabAttrModified(aTab);
           ]]>
         </body>
       </method>
@@ -648,31 +640,29 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            var docURIObject = browser.contentDocument.documentURIObject; 
+            var docURIObject = browser.contentDocument.documentURIObject;
+            var icon = null;
             if (browser.contentDocument instanceof ImageDocument) {
               if (Services.prefs.getBoolPref("browser.chrome.site_icons")) {
+                let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
                 try {
-                  let sz = Services.prefs.getIntPref("browser.chrome.image_icons.max_size");
-                  if (!sz)
-                    return;
-
-                  var req = browser.contentDocument.imageRequest;
-                  if (!req || !req.image ||
-                      req.image.width > sz ||
-                      req.image.height > sz)
-                    return;
-
-                  this.setIcon(aTab, browser.currentURI);
+                  let req = browser.contentDocument.imageRequest;
+                  if (req &&
+                      req.image &&
+                      req.image.width <= sz &&
+                      req.image.height <= sz)
+                    icon = browser.currentURI;
                 } catch (e) { }
               }
             }
             // Use documentURIObject in the check for shouldLoadFavIcon so that we
             // do the right thing with about:-style error pages.  Bug 453442
             else if (this.shouldLoadFavIcon(docURIObject)) {
-              var url = docURIObject.prePath + "/favicon.ico";
+              let url = docURIObject.prePath + "/favicon.ico";
               if (!this.isFailedIcon(url))
-                this.setIcon(aTab, url);
+                icon = url;
             }
+            this.setIcon(aTab, icon);
           ]]>
         </body>
       </method>
@@ -888,6 +878,9 @@
       <method name="_tabAttrModified">
         <parameter name="aTab"/>
         <body><![CDATA[
+          if (this._removingTabs.indexOf(aTab) > -1)
+            return;
+
           // This event should be dispatched when any of these attributes change:
           // label, crop, busy, image, selected
           var event = document.createEvent("Events");
@@ -969,7 +962,6 @@
               this.mCurrentTab.setAttribute("busy", "true");
               this.mIsBusy = true;
               this.setTabTitleLoading(this.mCurrentTab);
-              this.updateIcon(this.mCurrentTab);
             } else {
               this.setIcon(this.mCurrentTab, this.mCurrentBrowser.mIconURL);
             }
@@ -1192,13 +1184,20 @@
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
+            // Create the browserStack container
+            var stack = document.createElementNS(
+                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                    "stack");
+            stack.setAttribute("anonid", "browserStack");
+            stack.appendChild(b);
+            stack.setAttribute("flex", "1");
+
             // Add the Message and the Browser to the box
             var notificationbox = document.createElementNS(
                                     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                     "notificationbox");
             notificationbox.setAttribute("flex", "1");
-            notificationbox.appendChild(b);
-            b.setAttribute("flex", "1");
+            notificationbox.appendChild(stack);
 
             var position = this.tabs.length - 1;
             var uniqueId = "panel" + Date.now() + position;
@@ -1580,12 +1579,12 @@
             // (see below), which would be hindered by the potentially expensive
             // browser removal. So we remove the browser and the panel in two
             // steps.
-            var panel = browser.parentNode;
+            var panel = browser.parentNode.parentNode;
 
             // This will unload the document. An unload handler could remove
             // dependant tabs, so it's important that the tabbrowser is now in
             // a consistent state (tab removed, tab positions updated, etc.).
-            panel.removeChild(browser);
+            panel.removeChild(browser.parentNode);
 
             // As the browser is removed, the removal of a dependent document can
             // cause the whole window to close. So at this point, it's possible
@@ -1713,7 +1712,6 @@
               this.setTabTitleLoading(aOurTab);
             else
               this.setTabTitle(aOurTab);
-            this.updateIcon(aOurTab);
 
             // If the tab was already selected (this happpens in the scenario
             // of replaceTabWithWindow), notify onLocationChange, etc.
@@ -2358,7 +2356,7 @@
 
       <constructor>
         <![CDATA[
-          this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild;
+          this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild.firstChild;
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
 

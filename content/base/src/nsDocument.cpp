@@ -1431,6 +1431,8 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptObject);
+  
+  NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI, mPrincipal,
@@ -1443,31 +1445,34 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 {
   *aReturn = NULL;
 
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = NS_NewHTMLDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLDocument> HTMLdoc = do_QueryInterface(doc);
-  HTMLdoc->SetCompatibilityMode(eCompatibility_FullStandards);
-
   nsCOMPtr<nsIDOMDocumentType> doctype;
   // Indicate that there is no internal subset (not just an empty one)
   nsAutoString voidString;
   voidString.SetIsVoid(true);
-  rv = NS_NewDOMDocumentType(getter_AddRefs(doctype),
-                             NULL, // aNodeInfoManager
-                             mPrincipal, // aPrincipal
-                             nsGkAtoms::html, // aName
-                             NULL, // aEntities
-                             NULL, // aNotations
-                             EmptyString(), // aPublicId
-                             EmptyString(), // aSystemId
-                             voidString); // aInternalSubset
+  nsresult rv = NS_NewDOMDocumentType(getter_AddRefs(doctype),
+                                      NULL, // aNodeInfoManager
+                                      mPrincipal, // aPrincipal
+                                      nsGkAtoms::html, // aName
+                                      NULL, // aEntities
+                                      NULL, // aNotations
+                                      EmptyString(), // aPublicId
+                                      EmptyString(), // aSystemId
+                                      voidString); // aInternalSubset
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> doctypeAsContent = do_QueryInterface(doctype);
-  rv = doc->AppendChildTo(doctypeAsContent, false);
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+
+  NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
+                                                       
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(),
+                                      doctype, mDocumentURI, mBaseURI,
+                                      mPrincipal, scriptHandlingObject,
+                                      getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
 
   nsCOMPtr<nsIContent> root;
   rv = doc->CreateElem(NS_LITERAL_STRING("html"), NULL, kNameSpaceID_XHTML,
@@ -1505,14 +1510,6 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   rv = root->AppendChildTo(body, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
-    do_QueryReferent(mScriptObject);
-  doc->SetScriptHandlingObject(scriptHandlingObject);
-
-  // created documents are immediately "complete" (ready to use)
-  doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
-
-  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(doc);
   document.forget(aReturn);
 
   return NS_OK;
@@ -2399,6 +2396,44 @@ nsresult nsDocument::CheckFrameOptions()
     if (thisWindow == topWindow)
       return NS_OK;
 
+    // Find the top docshell in our parent chain that doesn't have the system
+    // principal and use it for the principal comparison.  Finding the top
+    // content-type docshell doesn't work because some chrome documents are
+    // loaded in content docshells (see bug 593387).
+    nsIPrincipal* thisPrincipal = NodePrincipal();
+    nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem,
+                                  curDocShellItem = thisDocShellItem;
+    nsCOMPtr<nsIDocument> topDoc;
+    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
+    if (!ssm)
+      return NS_ERROR_CONTENT_BLOCKED;
+
+    // Traverse up the parent chain to the top docshell that doesn't have
+    // a system principal
+    curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem));
+    while (parentDocShellItem) {
+      PRBool system = PR_FALSE;
+      topDoc = do_GetInterface(parentDocShellItem);
+      if (topDoc) {
+        if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),
+                                                &system)) && system) {
+          break;
+        }
+      }
+      else {
+        return NS_ERROR_CONTENT_BLOCKED;
+      }
+      curDocShellItem = parentDocShellItem;
+      curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem));
+    }
+
+    // If this document has the top non-SystemPrincipal docshell it is not being
+    // framed or it is being framed by a chrome document, which we allow.
+    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
+    if (curDocShellItem == thisDocShellItem)
+      return NS_OK;
+
     // If the value of the header is DENY, then the document
     // should never be permitted to load as a subdocument.
     if (xfoHeaderValue.LowerCaseEqualsLiteral("deny")) {
@@ -2411,11 +2446,10 @@ nsresult nsDocument::CheckFrameOptions()
       nsCOMPtr<nsIURI> uri = static_cast<nsIDocument*>(this)->GetDocumentURI();
       nsCOMPtr<nsIDOMDocument> topDOMDoc;
       topWindow->GetDocument(getter_AddRefs(topDOMDoc));
-      nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDOMDoc);
+      topDoc = do_QueryInterface(topDOMDoc);
       if (topDoc) {
         nsCOMPtr<nsIURI> topUri = topDoc->GetDocumentURI();
-        nsresult rv = nsContentUtils::GetSecurityManager()->
-          CheckSameOriginURI(uri, topUri, PR_TRUE);
+        nsresult rv = ssm->CheckSameOriginURI(uri, topUri, PR_TRUE);
 
         if (NS_FAILED(rv)) {
           framingAllowed = false;

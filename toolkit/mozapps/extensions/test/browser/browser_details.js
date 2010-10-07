@@ -141,7 +141,7 @@ function end_test() {
 // Opens and tests the details view for add-on 1
 add_test(function() {
   open_details("addon1@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 1", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 1", "Name should be correct");
     is_element_visible(get("detail-version"), "Version should not be hidden");
     is(get("detail-version").value, "2.1", "Version should be correct");
     is(get("detail-icon").src, "chrome://foo/skin/icon64.png", "Icon should be correct");
@@ -239,7 +239,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 2
 add_test(function() {
   open_details("addon2@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 2", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 2", "Name should be correct");
     is_element_visible(get("detail-version"), "Version should not be hidden");
     is(get("detail-version").value, "2.2", "Version should be correct");
     is(get("detail-icon").src, "chrome://foo/skin/icon.png", "Icon should be correct");
@@ -287,7 +287,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 3
 add_test(function() {
   open_details("addon3@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 3", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 3", "Name should be correct");
     is_element_hidden(get("detail-version"), "Version should be hidden");
     is(get("detail-icon").src, "", "Icon should be correct");
 
@@ -362,7 +362,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 4
 add_test(function() {
   open_details("addon4@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 4", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 4", "Name should be correct");
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_visible(get("detail-enable"), "Enable button should be visible");
@@ -430,7 +430,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 5
 add_test(function() {
   open_details("addon5@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 5", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 5", "Name should be correct");
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");
@@ -453,7 +453,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 6
 add_test(function() {
   open_details("addon6@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 6", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 6", "Name should be correct");
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");
@@ -513,7 +513,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 7
 add_test(function() {
   open_details("addon7@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 7", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 7", "Name should be correct");
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_visible(get("detail-enable"), "Enable button should be visible");
@@ -575,7 +575,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 8
 add_test(function() {
   open_details("addon8@tests.mozilla.org", "extension", function() {
-    is(get("detail-name").value, "Test add-on 8", "Name should be correct");
+    is(get("detail-name").textContent, "Test add-on 8", "Name should be correct");
 
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");

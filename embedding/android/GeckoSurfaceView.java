@@ -116,11 +116,8 @@ class GeckoSurfaceView
 
             Log.i("GeckoAppJava", "surfaceChanged: fmt: " + format + " dim: " + width + " " + height);
 
-            // XXX This code doesn't seem to actually get hit
-            if (!GeckoAppShell.sGeckoRunning) {
-                GeckoAppShell.setInitialSize(width, height);
+            if (!GeckoAppShell.sGeckoRunning)
                 return;
-            }
 
             GeckoEvent e = new GeckoEvent(GeckoEvent.SIZE_CHANGED, width, height, -1, -1);
             GeckoAppShell.sendEventToGecko(e);

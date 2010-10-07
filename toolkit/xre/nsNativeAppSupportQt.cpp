@@ -38,9 +38,14 @@
 
 #include <stdlib.h>
 #include "nsNativeAppSupportBase.h"
+#include "nsString.h"
 
 #ifdef MOZ_ENABLE_LIBCONIC
 #include <glib-object.h>
+#endif
+
+#if (MOZ_PLATFORM_MAEMO == 5)
+#include <libosso.h>
 #endif
 
 class nsNativeAppSupportQt : public nsNativeAppSupportBase
@@ -48,6 +53,10 @@ class nsNativeAppSupportQt : public nsNativeAppSupportBase
 public:
   NS_IMETHOD Start(PRBool* aRetVal);
   NS_IMETHOD Stop(PRBool* aResult);
+#if (MOZ_PLATFORM_MAEMO == 5)
+  // Osso context must be initialized for maemo5 otherwise we will be killed in ~20 seconds
+  osso_context_t *m_osso_context;
+#endif
 };
 
 NS_IMETHODIMP
@@ -60,6 +69,35 @@ nsNativeAppSupportQt::Start(PRBool* aRetVal)
   g_type_init();
 #endif
 
+#if (MOZ_PLATFORM_MAEMO == 5)
+  /* Initialize maemo application
+
+     The initalization name will be of the form "Vendor.Name".
+     If a Vendor isn't given, then we will just use "Name".
+
+     Note that this value must match your X-Osso-Service name
+     defined in your desktop file.  If it doesn't, the OSSO
+     system will happily kill your process.
+  */
+  nsCAutoString applicationName;
+  if (gAppData->vendor) {
+      applicationName.Append(gAppData->vendor);
+      applicationName.Append(".");
+  }
+  applicationName.Append(gAppData->name);
+  ToLowerCase(applicationName);
+
+  m_osso_context = osso_initialize(applicationName.get(),
+                                   gAppData->version ? gAppData->version : "1.0",
+                                   PR_TRUE,
+                                   nsnull);
+
+  /* Check that initilialization was ok */
+  if (m_osso_context == nsnull) {
+      return NS_ERROR_FAILURE;
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -68,6 +106,13 @@ nsNativeAppSupportQt::Stop(PRBool* aResult)
 {
   NS_ENSURE_ARG(aResult);
   *aResult = PR_TRUE;
+
+#if (MOZ_PLATFORM_MAEMO == 5)
+  if (m_osso_context) {
+    osso_deinitialize(m_osso_context);
+    m_osso_context = nsnull;
+  }
+#endif
 
   return NS_OK;
 }

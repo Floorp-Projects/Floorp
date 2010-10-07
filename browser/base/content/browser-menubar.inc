@@ -113,6 +113,7 @@
                           label="&goOfflineCmd.label;"
                           accesskey="&goOfflineCmd.accesskey;"
                           type="checkbox"
+                          observes="workOfflineMenuitemState"
                           oncommand="BrowserOffline.toggleOfflineStatus();"/>
                 <menuitem id="menu_FileQuitItem"
 #ifdef XP_WIN
@@ -209,6 +210,7 @@
                   accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup">
                 <menuitem id="menu_tabview"
+                          key="key_tabview"
                           label="&viewTabGroups.label;"
                           accesskey="&viewTabGroups.accesskey;"
                           command="Browser:ToggleTabView"/>
@@ -229,16 +231,6 @@
                               command="cmd_CustomizeToolbars"/>
                   </menupopup>
                 </menu>
-                <menuitem id="toggle_taskbar"
-                          label="&taskbarCmd.label;"
-                          accesskey="&taskbarCmd.accesskey;"
-                          type="checkbox"
-                          command="cmd_toggleTaskbar"
-#ifndef WINCE
-                          checked="true" />
-#else
-                          checked="false" />
-#endif
                 <menu id="viewSidebarMenuMenu"
                       label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">

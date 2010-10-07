@@ -112,25 +112,25 @@ js::Class NW_NoCall_Class = {
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_CONSTRUCT_PROTOTYPE,
-    js::Valueify(XPC_NW_AddProperty),
-    js::Valueify(XPC_NW_DelProperty),
-    js::Valueify(XPC_NW_GetProperty),
-    js::Valueify(XPC_NW_SetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_AddProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_DelProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_GetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_SetProperty),
     XPC_NW_Enumerate,
     (JSResolveOp)XPC_NW_NewResolve,
-    js::Valueify(XPC_NW_Convert),
+    JS_VALUEIFY(js::ConvertOp, XPC_NW_Convert),
     XPC_NW_Finalize,
     nsnull,   // reserved0
-    js::Valueify(XPC_NW_CheckAccess),
+    JS_VALUEIFY(js::CheckAccessOp, XPC_NW_CheckAccess),
     nsnull,   // call
-    js::Valueify(XPC_NW_Construct),
+    JS_VALUEIFY(js::CallOp, XPC_NW_Construct),
     nsnull,   // xdrObject
-    js::Valueify(XPC_NW_HasInstance),
+    JS_VALUEIFY(js::HasInstanceOp, XPC_NW_HasInstance),
     JS_CLASS_TRACE(XPC_NW_Trace),
 
     // ClassExtension
     {
-      js::Valueify(XPC_NW_Equality),
+      JS_VALUEIFY(js::EqualityOp, XPC_NW_Equality),
       nsnull, // outerObject
       nsnull, // innerObject
       XPC_NW_Iterator,
@@ -144,25 +144,25 @@ js::Class NW_Call_Class = {
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_CONSTRUCT_PROTOTYPE,
-    js::Valueify(XPC_NW_AddProperty),
-    js::Valueify(XPC_NW_DelProperty),
-    js::Valueify(XPC_NW_GetProperty),
-    js::Valueify(XPC_NW_SetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_AddProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_DelProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_GetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_NW_SetProperty),
     XPC_NW_Enumerate,
     (JSResolveOp)XPC_NW_NewResolve,
-    js::Valueify(XPC_NW_Convert),
+    JS_VALUEIFY(js::ConvertOp, XPC_NW_Convert),
     XPC_NW_Finalize,
     nsnull,   // reserved0
-    js::Valueify(XPC_NW_CheckAccess),
-    js::Valueify(XPC_NW_Call),
-    js::Valueify(XPC_NW_Construct),
+    JS_VALUEIFY(js::CheckAccessOp, XPC_NW_CheckAccess),
+    JS_VALUEIFY(js::CallOp, XPC_NW_Call),
+    JS_VALUEIFY(js::CallOp, XPC_NW_Construct),
     nsnull,   // xdrObject
-    js::Valueify(XPC_NW_HasInstance),
+    JS_VALUEIFY(js::HasInstanceOp, XPC_NW_HasInstance),
     JS_CLASS_TRACE(XPC_NW_Trace),
 
     // ClassExtension
     {
-      js::Valueify(XPC_NW_Equality),
+      JS_VALUEIFY(js::EqualityOp, XPC_NW_Equality),
       nsnull, // outerObject
       nsnull, // innerObject
       XPC_NW_Iterator,

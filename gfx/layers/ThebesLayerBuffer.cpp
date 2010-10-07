@@ -106,10 +106,22 @@ ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
   pattern->SetFilter(filter);
 #endif
 
+  gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
+
   // Transform from user -> buffer space.
   gfxMatrix transform;
   transform.Scale(aXRes, aYRes);
   transform.Translate(-quadrantTranslation);
+
+  // in common cases the matrix after scaling by 1/aRes is close to 1.0,
+  // so we want to make it 1.0 in both cases
+  transform.Scale(1.0 / aXRes, 1.0 / aYRes);
+  transform.NudgeToIntegers();
+
+  gfxMatrix ctxMatrix = aTarget->CurrentMatrix();
+  ctxMatrix.Scale(1.0 / aXRes, 1.0 / aYRes);
+  ctxMatrix.NudgeToIntegers();
+  aTarget->SetMatrix(ctxMatrix);
 
   pattern->SetMatrix(transform);
   aTarget->SetPattern(pattern);

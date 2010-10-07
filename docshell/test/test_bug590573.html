@@ -13,77 +13,96 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=590573
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=590573">Mozilla Bug 590573</a>
 
-<iframe id='iframe' width='100px' height='100px' src='file_bug590573_1.html'></iframe>
-
-<div>iframe's scrollY=<span id='iframeScrollLabel'></span></div>
-
-<script>
+<script type='application/javascript;version=1.7'>
 SimpleTest.waitForExplicitFinish();
 
-setTimeout(updateIframeScroll, 100);
-function updateIframeScroll()
-{
-  document.getElementById('iframeScrollLabel').innerHTML =
-    document.getElementById('iframe').contentWindow.scrollY;
-  setTimeout(updateIframeScroll, 100);
-}
-
 // Listen to the first callback, since this indicates that the page loaded.
-var iframe1PopstateCallbackEnabled = true;
-function iframe1Popstate()
+var page1PopstateCallbackEnabled = true;
+function page1Popstate()
 {
-  if (iframe1PopstateCallbackEnabled) {
-    iframe1PopstateCallbackEnabled = false;
-    dump('Got iframe1 popstate.\n');
-    iframeLoad();
+  if (page1PopstateCallbackEnabled) {
+    page1PopstateCallbackEnabled = false;
+    dump('Got page1 popstate.\n');
+    pageLoad();
   }
   else {
-    dump('Ignoring iframe1 popstate.\n');
+    dump('Ignoring page1 popstate.\n');
   }
 }
 
-var iframe2PopstateCallbackEnabled = false;
-function iframe2Popstate()
+var page2PopstateCallbackEnabled = false;
+function page2Popstate()
 {
-  if (iframe2PopstateCallbackEnabled) {
-    iframe2PopstateCallbackEnabled = false;
-    dump('Got iframe2 popstate.\n');
-    iframeLoad();
+  if (page2PopstateCallbackEnabled) {
+    page2PopstateCallbackEnabled = false;
+    dump('Got page2 popstate.\n');
+    pageLoad();
   }
   else {
-    dump('Ignoring iframe2 popstate.\n');
+    dump('Ignoring page2 popstate.\n');
   }
 }
+
+function dumpSHistory(theWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  const Ci = Components.interfaces;
+  let sh = theWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .sessionHistory;
+  if (!sh) {
+    dump(" window has no shistory.\n");
+    return;
+  }
+
+  dump(" count: " + sh.count + "\n");
+  dump(" index: " + sh.index + "\n");
+  dump(" requestedIndex: " + sh.requestedIndex + "\n");
+
+  for (let i = 0; i < sh.count; i++) {
+    let shentry = sh.getEntryAtIndex(i, false);
+    dump(" " + i + ": " + shentry.URI.spec + '\n');
+    shentry.QueryInterface(Ci.nsISHContainer);
+    for (let j = 0; j < shentry.childCount; j++) {
+      let child = shentry.GetChildAt(j);
+      dump("   child " + j + ": " + child.URI.spec + '\n');
+    }
+  }
+
+  return sh;
+}
+
+var popup = window.open('file_bug590573_1.html');
 
 var loads = 0;
-function iframeLoad()
+function pageLoad()
 {
-  var iframe = document.getElementById('iframe');
-  var iframeCw = iframe.contentWindow;
-
   loads++;
-  dump('iframeLoad(loads=' + loads + ')\n');
+  dump('pageLoad(loads=' + loads + ', page location=' + popup.location + ')\n');
+
+  dumpSHistory(window);
 
   if (loads == 1) {
-    is(iframeCw.scrollY, 0, "test 1");
-    iframeCw.scroll(0, 100);
+    is(popup.scrollY, 0, "test 1");
+    popup.scroll(0, 100);
 
-    iframeCw.history.pushState('', '', '?pushed');
-    is(iframeCw.scrollY, 100, "test 2");
-    iframeCw.scroll(0, 200); // set state-2's position to 200
+    popup.history.pushState('', '', '?pushed');
+    is(popup.scrollY, 100, "test 2");
+    popup.scroll(0, 200); // set state-2's position to 200
 
-    iframeCw.history.back();
-    is(iframeCw.scrollY, 100, "test 3");
-    iframeCw.scroll(0, 150); // set original page's position to 150
+    popup.history.back();
+    is(popup.scrollY, 100, "test 3");
+    popup.scroll(0, 150); // set original page's position to 150
 
-    iframeCw.history.forward();
-    is(iframeCw.scrollY, 200, "test 4");
+    popup.history.forward();
+    is(popup.scrollY, 200, "test 4");
 
-    iframeCw.history.back();
-    is(iframeCw.scrollY, 150, "test 5");
+    popup.history.back();
+    is(popup.scrollY, 150, "test 5");
 
-    iframeCw.history.forward();
-    is(iframeCw.scrollY, 200, "test 6");
+    popup.history.forward();
+    is(popup.scrollY, 200, "test 6");
 
     // At this point, the history looks like:
     //   PATH                         POSITION
@@ -94,51 +113,52 @@ function iframeLoad()
     // navigations involved.  First, we need to spin the event loop so that the
     // navigation doesn't replace our current history entry.
 
-    setTimeout(iframeLoad, 0);
+    setTimeout(pageLoad, 0);
   }
   else if (loads == 2) {
-    iframe2PopstateCallbackEnabled = true;
-    iframeCw.location = 'file_bug590573_2.html';
+    page2PopstateCallbackEnabled = true;
+    popup.location = 'file_bug590573_2.html';
   }
   else if (loads == 3) {
-    ok(iframeCw.location.href.match('file_bug590573_2.html$'),
-       "Location was " + iframeCw.location +
+    ok(popup.location.href.match('file_bug590573_2.html$'),
+       "Location was " + popup.location +
        " but should end with file_bug590573_2.html");
 
-    is(iframeCw.scrollY, 0, "test 7");
-    iframeCw.scroll(0, 300);
+    is(popup.scrollY, 0, "test 7");
+    popup.scroll(0, 300);
 
     // We need to spin the event loop again before we go back, otherwise the
     // scroll positions don't get updated properly.
-    setTimeout(iframeLoad, 0);
+    setTimeout(pageLoad, 0);
   }
   else if (loads == 4) {
-    iframe1PopstateCallbackEnabled = true;
-    iframeCw.history.back();
+    page1PopstateCallbackEnabled = true;
+    popup.history.back();
   }
   else if (loads == 5) {
     // Spin the event loop again so that we get the right scroll positions.
-    setTimeout(iframeLoad, 0);
+    setTimeout(pageLoad, 0);
   }
   else if (loads == 6) {
-    is(iframeCw.location.search, "?pushed");
-    ok(iframeCw.document.getElementById('div1'), 'Iframe should have div1.');
+    is(popup.location.search, "?pushed");
+    ok(popup.document.getElementById('div1'), 'page should have div1.');
 
-    is(iframeCw.scrollY, 200, "test 8");
-    iframeCw.history.back();
-    is(iframeCw.scrollY, 150, "test 9");
-    iframeCw.history.forward();
-    is(iframeCw.scrollY, 200, "test 10");
+    is(popup.scrollY, 200, "test 8");
+    popup.history.back();
+    is(popup.scrollY, 150, "test 9");
+    popup.history.forward();
+    is(popup.scrollY, 200, "test 10");
 
     // Spin one last time...
-    setTimeout(iframeLoad, 0);
+    setTimeout(pageLoad, 0);
   }
   else if (loads == 7) {
-    iframe2PopstateCallbackEnabled = true;
-    iframeCw.history.forward();
+    page2PopstateCallbackEnabled = true;
+    popup.history.forward();
   }
   else if (loads == 8) {
-    is(iframeCw.scrollY, 300, "test 11");
+    is(popup.scrollY, 300, "test 11");
+    popup.close();
     SimpleTest.finish();
   }
   else {

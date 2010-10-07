@@ -578,6 +578,17 @@
                                                 "anonid", "textbox-input-box");
           var cxmenu = document.getAnonymousElementByAttribute(textBox,
                                             "anonid", "input-box-contextmenu");
+          var pasteAndSearch;
+          cxmenu.addEventListener("popupshowing", function() {
+            if (!pasteAndSearch)
+              return;
+            var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
+            var enabled = controller.isCommandEnabled("cmd_paste");
+            if (enabled)
+              pasteAndSearch.removeAttribute("disabled");
+            else
+              pasteAndSearch.setAttribute("disabled", "true");
+          }, false);
 
           var element, label, akey;
 
@@ -592,9 +603,10 @@
             element = document.createElementNS(kXULNS, "menuitem");
             label = this._stringBundle.getString("cmd_pasteAndSearch");
             element.setAttribute("label", label);
-            element.setAttribute("cmd", "cmd_paste");
+            element.setAttribute("anonid", "paste-and-search");
             element.setAttribute("oncommand", "goDoCommand('cmd_paste'); document.getElementById('searchbar').handleSearchCommand();");
             cxmenu.insertBefore(element, insertLocation.nextSibling);
+            pasteAndSearch = element;
           }
 
           element = document.createElementNS(kXULNS, "menuitem");

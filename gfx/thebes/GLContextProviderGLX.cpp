@@ -98,6 +98,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xDestroyPixmap, { "glXDestroyPixmap", NULL } },
         { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
         { (PRFuncPtr*) &xCreateContext, { "glXCreateContext", NULL } },
+        { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
         { NULL, { NULL } }
     };
 
@@ -136,9 +137,9 @@ GLXLibrary::EnsureInitialized()
     if (gGLXVersion < 0x0103)
         return PR_FALSE;
 
-    gIsATI = vendor && strstr(vendor, "ATI");
-    gIsChromium = (vendor && strstr(vendor, "Chromium")) ||
-        (serverVersion && strstr(serverVersionStr, "Chromium"));
+    gIsATI = vendor && DoesVendorStringMatch(vendor, "ATI");
+    gIsChromium = (vendor && DoesVendorStringMatch(vendor, "Chromium")) ||
+        (serverVersion && DoesVendorStringMatch(serverVersionStr, "Chromium"));
 
     mInitialized = PR_TRUE;
     return PR_TRUE;
@@ -225,10 +226,7 @@ TRY_AGAIN_NO_SHARING:
 
     ~GLContextGLX()
     {
-        if (mOffscreenFBO) {
-            MakeCurrent();
-            DeleteOffscreenFBO();
-        }
+        MarkDestroyed();
 
         sGLXLibrary.xDeleteContext(mDisplay, mContext);
 
@@ -254,8 +252,19 @@ TRY_AGAIN_NO_SHARING:
 
     PRBool MakeCurrent(PRBool aForce = PR_FALSE)
     {
-        Bool succeeded = sGLXLibrary.xMakeCurrent(mDisplay, mDrawable, mContext);
-        NS_ASSERTION(succeeded, "Failed to make GL context current!");
+        PRBool succeeded = PR_TRUE;
+
+        // With the ATI FGLRX driver, glxMakeCurrent is very slow even when the context doesn't change.
+        // (This is not the case with other drivers such as NVIDIA).
+        // So avoid calling it more than necessary. Since GLX documentation says that:
+        //     "glXGetCurrentContext returns client-side information.
+        //      It does not make a round trip to the server."
+        // I assume that it's not worth using our own TLS slot here.
+        if (aForce || sGLXLibrary.xGetCurrentContext() != mContext) {
+            succeeded = sGLXLibrary.xMakeCurrent(mDisplay, mDrawable, mContext);
+            NS_ASSERTION(succeeded, "Failed to make GL context current!");
+        }
+
         return succeeded;
     }
 
@@ -697,10 +706,6 @@ GLContextProviderGLX::CreateForNativePixmapSurface(gfxASurface *aSurface)
                                                                      NULL,
                                                                      PR_FALSE,
                                                                      xs);
-    
-    if (!glContext->Init()) {
-        return nsnull;
-    }
 
     return glContext.forget();
 }

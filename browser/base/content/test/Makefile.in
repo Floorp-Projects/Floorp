@@ -152,6 +152,9 @@ _BROWSER_FILES = \
                  browser_bug581947.js \
                  browser_bug585830.js \
                  browser_bug592338.js \
+                 browser_bug594131.js \
+                 browser_bug595507.js \
+                 browser_bug596687.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
@@ -213,7 +216,6 @@ _BROWSER_FILES = \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
                  browser_overLinkInLocationBar.js \
-                 browser_overLinkInLocationBar.html \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

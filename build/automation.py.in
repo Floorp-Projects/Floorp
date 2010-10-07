@@ -212,6 +212,8 @@ class Automation(object):
                  universal_newlines=False,
                  startupinfo=None,
                  creationflags=0):
+      args = automationutils.wrapCommand(args)
+      print "args: %s" % args
       subprocess.Popen.__init__(self, args, bufsize, executable,
                                 stdin, stdout, stderr,
                                 preexec_fn, close_fds,
@@ -573,6 +575,12 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
+
+    # Don't do this for Mac since it makes the Mac OS X 10.5 (32-bit)
+    # trace-malloc leak test hang.  (It doesn't make the 10.6 (64-bit)
+    # leak test hang, though.)
+    if not self.IS_MAC:
+      env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
     return env
 
   if IS_WIN32:

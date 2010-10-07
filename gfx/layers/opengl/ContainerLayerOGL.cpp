@@ -144,17 +144,6 @@ ContainerLayerOGL::GetFirstChildOGL()
   return static_cast<LayerOGL*>(mFirstChild->ImplData());
 }
 
-static inline GLint GetYCoordOfRectStartingFromBottom(GLint y, GLint height, GLint viewportHeight)
-{
-#ifdef XP_MACOSX
-    (void) height;
-    (void) viewportHeight;
-    return y;
-#else
-    return viewportHeight - height - y;
-#endif
-}
-
 void
 ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                const nsIntPoint& aOffset)
@@ -168,8 +157,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   nsIntPoint childOffset(aOffset);
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
-  GLint savedScissor[4];
-  gl()->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, savedScissor);
+  gl()->PushScissorRect();
 
   float opacity = GetOpacity();
   bool needsFramebuffer = (opacity != 1.0) || !mTransform.IsIdentity();
@@ -180,44 +168,38 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                       &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
-    mOGLManager->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
-    mOGLManager->gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
-    mOGLManager->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+
+    gl()->PushViewportRect();
+    mOGLManager->SetupPipeline(visibleRect.width, visibleRect.height);
+
+    gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
+    gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
+    gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
     frameBuffer = aPreviousFrameBuffer;
   }
-
-  GLint viewport[4];
-  gl()->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
 
   /**
    * Render this container's contents.
    */
   LayerOGL *layerToRender = GetFirstChildOGL();
   while (layerToRender) {
+    nsIntRect scissorRect(visibleRect);
+
     const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
     if (clipRect) {
-      if (needsFramebuffer) {
-        gl()->fScissor(clipRect->x - visibleRect.x,
-                       GetYCoordOfRectStartingFromBottom(clipRect->y - visibleRect.y, clipRect->height, viewport[3]),
-                       clipRect->width,
-                       clipRect->height);
-      } else {
-        gl()->fScissor(clipRect->x,
-                       GetYCoordOfRectStartingFromBottom(clipRect->y, clipRect->height, viewport[3]),
-                       clipRect->width,
-                       clipRect->height);
-      }
-    } else {
-      if (needsFramebuffer) {
-        gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
-      } else {
-        gl()->fScissor(visibleRect.x,
-                       GetYCoordOfRectStartingFromBottom(visibleRect.y, visibleRect.height, viewport[3]),
-                       visibleRect.width,
-                       visibleRect.height);
-      }
+      scissorRect = *clipRect;
     }
+
+    if (needsFramebuffer) {
+      scissorRect.MoveBy(- visibleRect.TopLeft());
+    }
+
+    if (aPreviousFrameBuffer == 0) {
+      gl()->FixWindowCoordinateRect(scissorRect, mOGLManager->GetWigetSize().height);
+    }
+
+    gl()->fScissor(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
 
@@ -227,10 +209,16 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                 : nsnull;
   }
 
-  gl()->fScissor(savedScissor[0], savedScissor[1], savedScissor[2], savedScissor[3]);
+  gl()->PopScissorRect();
 
   if (needsFramebuffer) {
     // Unbind the current framebuffer and rebind the previous one.
+    
+    // Restore the viewport
+    gl()->PopViewportRect();
+    nsIntRect viewport = gl()->ViewportRect();
+    mOGLManager->SetupPipeline(viewport.width, viewport.height);
+
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);
 

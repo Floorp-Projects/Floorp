@@ -2,10 +2,10 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<window title="NPAPI Private Mode Tests"
+<window title="NPAPI Set Undefined Value Test"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <title>NPAPI Private Mode Tests</title>
+  <title>NPAPI Set Undefined Value Test</title>
   <script type="application/javascript" 
    src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"

@@ -55,17 +55,33 @@ public class DataWorkerThread extends Thread
 	private RunDataThread theParent = null;
 	private Socket socket	= null;
 	boolean bListening	= true;
+	PrintWriter out = null;
+	SimpleDateFormat sdf = null;
 
 	public DataWorkerThread(RunDataThread theParent, Socket workerSocket)
 		{
 		super("DataWorkerThread");
 		this.theParent = theParent;
 		this.socket = workerSocket;
+		this.sdf = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
 		}
 
 	public void StopListening()
 		{
 		bListening = false;
+		}
+	
+	public void SendString(String strToSend)
+		{
+		if (this.out != null)
+			{
+			Calendar cal = Calendar.getInstance();
+			String strOut = sdf.format(cal.getTime());
+			strOut += " " + strToSend + "\r\n";
+		
+			out.write(strOut);
+			out.flush();
+			}
 		}
 
 	private String readLine(BufferedInputStream in)
@@ -135,13 +151,12 @@ public class DataWorkerThread extends Thread
 				{
 				OutputStream cmdOut = socket.getOutputStream();
 				InputStream cmdIn = socket.getInputStream();
-				PrintWriter out = new PrintWriter(cmdOut, true);
+				this.out = new PrintWriter(cmdOut, true);
 				BufferedInputStream in = new BufferedInputStream(cmdIn);
 				String inputLine, outputLine;
 				DoCommand dc = new DoCommand(theParent.svc);
 				
 	    		Calendar cal = Calendar.getInstance();
-	    		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
 	    		sRet = sdf.format(cal.getTime());
 	    		sRet += " trace output";
 

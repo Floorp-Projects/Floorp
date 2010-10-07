@@ -192,7 +192,6 @@ public:
                               const bool&     aPreventDefault);
     virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
     virtual bool RecvTextEvent(const nsTextEvent& event);
-    virtual bool RecvQueryContentEvent(const nsQueryContentEvent& event);
     virtual bool RecvSelectionEvent(const nsSelectionEvent& event);
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);

@@ -224,7 +224,8 @@ public:
   enum LayersBackend {
     LAYERS_BASIC = 0,
     LAYERS_OPENGL,
-    LAYERS_D3D9
+    LAYERS_D3D9,
+    LAYERS_D3D10
   };
 
   LayerManager() : mDestroyed(PR_FALSE)

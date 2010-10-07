@@ -45,8 +45,8 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    JS_BIT(JS_HASH_BITS - (ht)->shift)

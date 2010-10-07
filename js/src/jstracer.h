@@ -401,7 +401,6 @@ struct FrameInfo;
 
 struct VMSideExit : public nanojit::SideExit
 {
-    JSObject* block;
     jsbytecode* pc;
     jsbytecode* imacpc;
     intptr_t sp_adj;
@@ -950,7 +949,7 @@ class TraceRecorder
     /* Carry the return value from a native call to the record_NativeCallComplete. */
     nanojit::LIns*                  native_rval_ins;
 
-    /* Carry the return value of js_NewInstance to record_NativeCallComplete. */
+    /* Carry the return value of js_CreateThis to record_NativeCallComplete. */
     nanojit::LIns*                  newobj_ins;
 
     /* Carry the JSSpecializedNative used to generate a call to record_NativeCallComplete. */
@@ -1114,6 +1113,8 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
                                          nanojit::LIns* s0, nanojit::LIns* s1);
 
+    void label(nanojit::LIns* br);
+    void label(nanojit::LIns* br1, nanojit::LIns* br2);
     nanojit::LIns* i2d(nanojit::LIns* i);
     nanojit::LIns* d2i(nanojit::LIns* f, bool resultCanBeImpreciseIfFractional = false);
     nanojit::LIns* f2u(nanojit::LIns* f);
@@ -1234,6 +1235,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
                                                    nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getUnitString(nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
     JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
                                                nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
                                                JSOp mode);
@@ -1283,6 +1285,7 @@ class TraceRecorder
     void unbox_any_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
                           nanojit::LIns** is_obj_ins, nanojit::AccSet accSet);
     nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet accSet);
+    nanojit::LIns* is_boxed_magic(nanojit::LIns* vaddr_ins, JSWhyMagic why, nanojit::AccSet accSet);
 
     nanojit::LIns* is_string_id(nanojit::LIns* id_ins);
     nanojit::LIns* unbox_string_id(nanojit::LIns* id_ins);
@@ -1325,6 +1328,7 @@ class TraceRecorder
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
     JS_REQUIRES_STACK nanojit::LIns* guardArgsLengthNotAssigned(nanojit::LIns* argsobj_ins);
+    JS_REQUIRES_STACK void guardNotHole(nanojit::LIns *argsobj_ins, nanojit::LIns *ids_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSObject* ctor,
                                                           nanojit::LIns*& proto_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSProtoKey key,
@@ -1405,7 +1409,9 @@ class TraceRecorder
     /* The destructor should only be called through finish*, not directly. */
     ~TraceRecorder();
     JS_REQUIRES_STACK AbortableRecordingStatus finishSuccessfully();
-    JS_REQUIRES_STACK AbortableRecordingStatus finishAbort(const char* reason);
+
+    enum AbortResult { NORMAL_ABORT, JIT_RESET };
+    JS_REQUIRES_STACK AbortResult finishAbort(const char* reason);
 
     friend class ImportBoxedStackSlotVisitor;
     friend class ImportUnboxedStackSlotVisitor;
@@ -1422,10 +1428,11 @@ class TraceRecorder
     friend MonitorResult MonitorLoopEdge(JSContext*, uintN&);
     friend TracePointAction MonitorTracePoint(JSContext*, uintN &inlineCallCount,
                                               bool &blacklist);
-    friend void AbortRecording(JSContext*, const char*);
+    friend AbortResult AbortRecording(JSContext*, const char*);
     friend class BoxArg;
+    friend void TraceMonitor::sweep();
 
-public:
+  public:
     static bool JS_REQUIRES_STACK
     startRecorder(JSContext*, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
@@ -1508,7 +1515,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount);
 extern JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool& blacklist);
 
-extern JS_REQUIRES_STACK void
+extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
 
 extern void

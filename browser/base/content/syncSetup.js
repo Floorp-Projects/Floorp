@@ -321,6 +321,7 @@ var gSyncSetup = {
 
     el = document.getElementById("generatePassphraseButton");
     el.hidden = true;
+    document.getElementById("passphraseStrengthRow").hidden = true;
     let feedback = document.getElementById("passphraseFeedbackRow");
     this._setFeedback(feedback, true, "");
   },
@@ -344,6 +345,23 @@ var gSyncSetup = {
 
     let feedback = document.getElementById("passphraseFeedbackRow");
     this._setFeedback(feedback, valid, str);
+    if (!valid)
+      return valid;
+
+    // Display passphrase strength
+    let pp = document.getElementById("weavePassphrase").value;
+    let bits = Weave.Utils.passphraseStrength(pp);
+    let meter = document.getElementById("passphraseStrength");
+    meter.value = bits;
+    // The generated 20 character passphrase has an entropy of 94 bits
+    // which we consider "strong".
+    if (bits > 94)
+      meter.className = "strong";
+    else if (bits > 47)
+      meter.className = "medium";
+    else
+      meter.className = "";
+    document.getElementById("passphraseStrengthRow").hidden = false;
     return valid;
   },
 
@@ -726,10 +744,12 @@ var gSyncSetup = {
 
         if (stm.step())
           daysOfHistory = stm.getInt32(0);
+        // Support %S for historical reasons (see bug 600141)
         document.getElementById("historyCount").value =
           PluralForm.get(daysOfHistory,
                          this._stringBundle.GetStringFromName("historyDaysCount.label"))
-                             .replace("%S", daysOfHistory);
+                    .replace("%S", daysOfHistory)
+                    .replace("#1", daysOfHistory);
 
         // bookmarks
         let bookmarks = 0;
@@ -741,17 +761,21 @@ var gSyncSetup = {
         stm.params.tag = Weave.Svc.Bookmark.tagsFolder;
         if (stm.executeStep())
           bookmarks = stm.row.bookmarks;
+        // Support %S for historical reasons (see bug 600141)
         document.getElementById("bookmarkCount").value =
           PluralForm.get(bookmarks,
                          this._stringBundle.GetStringFromName("bookmarksCount.label"))
-                             .replace("%S", bookmarks);
+                    .replace("%S", bookmarks)
+                    .replace("#1", bookmarks);
 
         // passwords
         let logins = Weave.Svc.Login.getAllLogins({});
+        // Support %S for historical reasons (see bug 600141)
         document.getElementById("passwordCount").value =
           PluralForm.get(logins.length,
                          this._stringBundle.GetStringFromName("passwordsCount.label"))
-                             .replace("%S", logins.length);
+                    .replace("%S", logins.length)
+                    .replace("#1", logins.length);
         this._case1Setup = true;
         break;
       case 2:
@@ -776,10 +800,12 @@ var gSyncSetup = {
             appendNode(name);
         }
         if (count > 5) {
+          // Support %S for historical reasons (see bug 600141)
           let label =
             PluralForm.get(count - 5,
                            this._stringBundle.GetStringFromName("additionalClientCount.label"))
-                               .replace("%S", count - 5);
+                      .replace("%S", count - 5)
+                      .replace("#1", count - 5);
           appendNode(label);
         }
         this._case2Setup = true;

@@ -2329,10 +2329,6 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
     if (!mParentWidget) {
       initDataPtr = &initData;
       initData.mWindowType = eWindowType_invisible;
-
-      initData.mContentType =
-        nsContentUtils::IsInChromeDocshell(mDocument) ?
-          eContentTypeUI : eContentTypeContent;
     } else {
       initDataPtr = nsnull;
     }

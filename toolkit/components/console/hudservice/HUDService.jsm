@@ -254,8 +254,8 @@ ResponseListener.prototype =
    *
    * If aRequest is an nsIHttpChannel then the response header is stored on the
    * httpActivity object. Also, the response body is set on the httpActivity
-   * object and the HUDService.lastFinishedRequestCallback is called if there
-   * is one.
+   * object (if the user has turned on response content logging) and the
+   * HUDService.lastFinishedRequestCallback is called if there is one.
    *
    * @param nsIRequest aRequest
    * @param nsISupports aContext
@@ -269,7 +269,13 @@ ResponseListener.prototype =
     catch (ex) { }
 
     this.setResponseHeader(aRequest);
-    this.httpActivity.response.body = this.receivedData;
+
+    if (HUDService.saveRequestAndResponseBodies) {
+      this.httpActivity.response.body = this.receivedData;
+    }
+    else {
+      this.httpActivity.response.bodyDiscarded = true;
+    }
 
     if (HUDService.lastFinishedRequestCallback) {
       HUDService.lastFinishedRequestCallback(this.httpActivity);
@@ -1036,7 +1042,7 @@ NetworkPanel.prototype =
 
       case this._DISPLAYED_REQUEST_HEADER:
         // Process the request body if there is one.
-        if (request.body) {
+        if (!request.bodyDiscarded && request.body) {
           // Check if we send some form data. If so, display the form data special.
           if (this._isRequestBodyFormData) {
             this._displayRequestForm();
@@ -1062,7 +1068,10 @@ NetworkPanel.prototype =
       case this._DISPLAYED_RESPONSE_HEADER:
         // Check if the transition is done.
         if (timing.TRANSACTION_CLOSE && response.isDone) {
-          if (this._responseIsImage) {
+          if (response.bodyDiscarded) {
+            this._callIsDone();
+          }
+          else if (this._responseIsImage) {
             this._displayResponseImage();
             this._callIsDone();
           }
@@ -1240,6 +1249,12 @@ HUD_SERVICE.prototype =
   filterPrefs: {},
 
   /**
+   * Whether to save the bodies of network requests and responses. Disabled by
+   * default to save memory.
+   */
+  saveRequestAndResponseBodies: false,
+
+  /**
    * Event handler to get window errors
    * TODO: a bit of a hack but is able to associate
    * errors thrown in a window's scope we do not know
@@ -1335,7 +1350,7 @@ HUD_SERVICE.prototype =
   activateHUDForContext: function HS_activateHUDForContext(aContext)
   {
     var window = aContext.linkedBrowser.contentWindow;
-    var id = aContext.linkedBrowser.parentNode.getAttribute("id");
+    var id = aContext.linkedBrowser.parentNode.parentNode.getAttribute("id");
     this.registerActiveContext(id);
     HUDService.windowInitializer(window);
   },
@@ -1533,7 +1548,7 @@ HUD_SERVICE.prototype =
         result = 'concat("' + word.replace(/"/g, "\", '\"', \"") + '")';
       }
 
-      results.push("contains(., " + result + ")");
+      results.push("contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), " + result.toLowerCase() + ")");
     }
 
     return (results.length === 0) ? "true()" : results.join(" and ");
@@ -2251,6 +2266,11 @@ HUD_SERVICE.prototype =
 
             switch (aActivitySubtype) {
               case activityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
+                if (!self.saveRequestAndResponseBodies) {
+                  httpActivity.request.bodyDiscarded = true;
+                  break;
+                }
+
                 let gBrowser = HUDService.currentContext().gBrowser;
 
                 let sentBody = NetworkHelper.readPostTextFromRequest(
@@ -2613,8 +2633,12 @@ HUD_SERVICE.prototype =
     var nodes = hud.parentNode.childNodes;
 
     for (var i = 0; i < nodes.length; i++) {
-      if (nodes[i].contentWindow) {
-        return nodes[i].contentWindow;
+      var node = nodes[i];
+
+      if (node.localName == "stack" &&
+          node.firstChild &&
+          node.firstChild.contentWindow) {
+        return node.firstChild.contentWindow;
       }
     }
     throw new Error("HS_getContentWindowFromHUD: Cannot get contentWindow");
@@ -3200,6 +3224,17 @@ HeadsUpDisplay.prototype = {
     let id = this.hudId + "-output-contextmenu";
     menuPopup.setAttribute("id", id);
 
+    let saveBodiesItem = this.makeXULNode("menuitem");
+    saveBodiesItem.setAttribute("label", this.getStr("saveBodies.label"));
+    saveBodiesItem.setAttribute("accesskey",
+                                 this.getStr("saveBodies.accesskey"));
+    saveBodiesItem.setAttribute("type", "checkbox");
+    saveBodiesItem.setAttribute("buttonType", "saveBodies");
+    saveBodiesItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
+    menuPopup.appendChild(saveBodiesItem);
+
+    menuPopup.appendChild(this.makeXULNode("menuseparator"));
+
     let copyItem = this.makeXULNode("menuitem");
     copyItem.setAttribute("label", this.getStr("copyCmd.label"));
     copyItem.setAttribute("accesskey", this.getStr("copyCmd.accesskey"));
@@ -3219,7 +3254,9 @@ HeadsUpDisplay.prototype = {
     menuPopup.appendChild(this.makeXULNode("menuseparator"));
 
     let clearItem = this.makeXULNode("menuitem");
-    clearItem.setAttribute("label", this.getStr("itemClear"));
+    clearItem.setAttribute("label", this.getStr("clearConsoleCmd.label"));
+    clearItem.setAttribute("accesskey",
+                           this.getStr("clearConsoleCmd.accesskey"));
     clearItem.setAttribute("hudId", this.hudId);
     clearItem.setAttribute("buttonType", "clear");
     clearItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
@@ -4787,6 +4824,11 @@ HeadsUpDisplayUICommands = {
         let commandController = chromeWindow.commandController;
         commandController.selectAll(outputNode);
         break;
+      case "saveBodies": {
+        let checked = aButton.getAttribute("checked") === "true";
+        HUDService.saveRequestAndResponseBodies = checked;
+        break;
+      }
     }
   },
 

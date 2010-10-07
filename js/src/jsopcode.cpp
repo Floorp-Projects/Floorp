@@ -50,8 +50,8 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -82,6 +82,7 @@
 #include "jsautooplen.h"
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * Index limit must stay within 32 bits.
@@ -422,6 +423,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_UINT16PAIR:
         i = (jsint)GET_UINT16(pc);
         fprintf(fp, " %d", i);
+        pc += UINT16_LEN;
         /* FALL THROUGH */
 
       case JOF_UINT16:
@@ -4108,6 +4110,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * arrange to advance over the call to this lambda.
                      */
                     pc += len;
+                    if (*pc == JSOP_BLOCKCHAIN) {
+                        pc += JSOP_BLOCKCHAIN_LENGTH;
+                    } else if (*pc == JSOP_NULLBLOCKCHAIN) {
+                        pc += JSOP_NULLBLOCKCHAIN_LENGTH;
+                    } else {
+                        JS_NOT_REACHED("should see block chain operation");
+                    }
                     LOCAL_ASSERT(*pc == JSOP_NULL);
                     pc += JSOP_NULL_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);

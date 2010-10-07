@@ -45,6 +45,7 @@
 #include "nsDisplayList.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
+#include "nsIEventStateManager.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
@@ -86,9 +87,9 @@ nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 PRBool
 nsButtonFrameRenderer::isDisabled() 
 {
-  // get the content
-  return mFrame->GetContent()->HasAttr(kNameSpaceID_None,
-                                       nsGkAtoms::disabled);
+  // NOTE: we might want to remove this method to prevent calling too often
+  // IntrinsicState().
+  return (mFrame->GetContent()->IntrinsicState() & NS_EVENT_STATE_DISABLED) != 0;
 }
 
 class nsDisplayButtonBoxShadowOuter : public nsDisplayItem {

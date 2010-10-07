@@ -1153,8 +1153,6 @@ NS_IMETHODIMP nsWebBrowser::Create()
       nsWidgetInitData  widgetInit;
 
       widgetInit.clipChildren = PR_TRUE;
-      widgetInit.mContentType = (mContentType == typeChrome || 
-        mContentType == typeChromeWrapper)? eContentTypeUI: eContentTypeContent;
 
       widgetInit.mWindowType = eWindowType_child;
       nsIntRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);

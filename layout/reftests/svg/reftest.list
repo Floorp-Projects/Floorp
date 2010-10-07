@@ -1,9 +1,13 @@
 # svg-as-an-image tests
+include as-image/reftest.list
+
+# <image> tests
 include image/reftest.list
 
 # sizing tests
 include sizing/reftest.list
 
+# filter tests
 include filters/reftest.list
 
 # smil / animation tests
@@ -95,9 +99,6 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == gradient-live-01c.svg gradient-live-01-ref.svg
 == gradient-live-01d.svg gradient-live-01-ref.svg
 fails == inline-in-xul-basic-01.xul pass.svg
-== image-fill-01.svg pass.svg
-== image-scaling-01.svg pass.svg
-== image-scaling-02.svg pass.svg
 == invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg

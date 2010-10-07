@@ -102,25 +102,25 @@ js::Class SOWClass = {
     "SystemOnlyWrapper",
     JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots),
-    js::Valueify(XPC_SOW_AddProperty),
-    js::Valueify(XPC_SOW_DelProperty),
-    js::Valueify(XPC_SOW_GetProperty),
-    js::Valueify(XPC_SOW_SetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SOW_AddProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SOW_DelProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SOW_GetProperty),
+    JS_VALUEIFY(js::PropertyOp, XPC_SOW_SetProperty),
     XPC_SOW_Enumerate,
     (JSResolveOp)XPC_SOW_NewResolve,
-    js::Valueify(XPC_SOW_Convert),
+    JS_VALUEIFY(js::ConvertOp, XPC_SOW_Convert),
     nsnull,   // finalize
     nsnull,   // reserved0
-    js::Valueify(XPC_SOW_CheckAccess),
+    JS_VALUEIFY(js::CheckAccessOp, XPC_SOW_CheckAccess),
     nsnull,   // call
     nsnull,   // construct
     nsnull,   // xdrObject
-    js::Valueify(XPC_SOW_HasInstance),
+    JS_VALUEIFY(js::HasInstanceOp, XPC_SOW_HasInstance),
     nsnull,   // mark
 
     // ClassExtension
     {
-      js::Valueify(XPC_SOW_Equality),
+      JS_VALUEIFY(js::EqualityOp, XPC_SOW_Equality),
       nsnull, // outerObject
       nsnull, // innerObject
       XPC_SOW_Iterator,

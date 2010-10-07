@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=596001
+-->
+<head>
+  <title>Test for Bug 596001</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=596001">Mozilla Bug 596001</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="src">a&#9;b</textarea>
+<textarea id="dst"></textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 596001 **/
+
+function testTab(prefix, callback) {
+  var src = document.getElementById("src");
+  var dst = document.getElementById("dst");
+  dst.value = prefix;
+  src.focus();
+  src.select();
+  SimpleTest.waitForClipboard("a\tb",
+    function() {
+      synthesizeKey("c", {accelKey: true});
+    },
+    function() {
+      dst.focus();
+      synthesizeKey("v", {accelKey: true});
+      is(dst.value, prefix + src.value, "The value should be pasted verbatim");
+      callback();
+    },
+    callback
+  );
+}
+
+testTab("", function() {
+  testTab("foo", function() {
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

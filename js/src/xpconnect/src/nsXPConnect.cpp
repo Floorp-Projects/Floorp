@@ -512,17 +512,6 @@ nsXPConnect::ToParticipant(void *p)
     return this;
 }
 
-void
-nsXPConnect::CommenceShutdown()
-{
-#ifdef DEBUG
-    fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
-#endif
-    // Tell the JS engine that we are about to destroy the runtime.
-    JSRuntime* rt = mRuntime->GetJSRuntime();
-    JS_CommenceRuntimeShutDown(rt);
-}
-
 NS_IMETHODIMP
 nsXPConnect::RootAndUnlinkJSObjects(void *p)
 {
@@ -959,7 +948,9 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
     SaveFrame sf(aJSContext);
 
-    JSAutoEnterCompartment autoCompartment(ccx, aGlobalJSObj);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(ccx, aGlobalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     xpc_InitJSxIDClassObjects();
 
@@ -1019,17 +1010,17 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         if(!tempGlobal)
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        JSAutoEnterCompartment autocompartment(cx, tempGlobal);
-
         *global = tempGlobal;
         *compartment = tempGlobal->getCompartment(cx);
+
+        js::SwitchToCompartment sc(cx, *compartment);
 
         JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(origin));
         map.Put(origin, *compartment);
     }
     else
     {
-        JSAutoEnterCompartment autocompartment(cx, *compartment);
+        js::SwitchToCompartment sc(cx, *compartment);
 
         tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
@@ -1077,7 +1068,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                          aPrincipal, &tempGlobal, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSAutoEnterCompartment autocompartment(ccx, compartment);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(ccx, tempGlobal))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
     if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))
@@ -2235,6 +2228,22 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs,
     return NS_OK;
 }
 
+char*
+nsXPConnect::DebugPrintJSStack(PRBool showArgs,
+                               PRBool showLocals,
+                               PRBool showThisProps)
+{
+    JSContext* cx;
+    if(NS_FAILED(Peek(&cx)))
+        printf("failed to peek into nsIThreadJSContextStack service!\n");
+    else if(!cx)
+        printf("there is no JSContext on the nsIThreadJSContextStack!\n");
+    else
+        return xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps);
+
+    return nsnull;
+}
+
 /* void debugDumpEvalInJSStackFrame (in PRUint32 aFrameNumber, in string aSourceText); */
 NS_IMETHODIMP
 nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSourceText)
@@ -2743,6 +2752,15 @@ JS_EXPORT_API(void) DumpJSStack()
         xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
     else
         printf("failed to get XPConnect service!\n");
+}
+
+JS_EXPORT_API(char*) PrintJSStack()
+{
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+    return (NS_SUCCEEDED(rv) && xpc) ? 
+        xpc->DebugPrintJSStack(PR_TRUE, PR_TRUE, PR_FALSE) :
+        nsnull;
 }
 
 JS_EXPORT_API(void) DumpJSEval(PRUint32 frameno, const char* text)

@@ -89,8 +89,9 @@ SetTransformFor(ContainerLayer* aContainer, nsIFrame* aContainedFrame,
   // we set a compensating translation that moves the content document
   // pixels to where the user wants them to be.
   nsIntPoint scrollCompensation =
-    (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel) -
-     aMetrics.mViewportScrollOffset);
+    (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel));
+  scrollCompensation.x -= aMetrics.mViewportScrollOffset.x * aConfig.mXScale;
+  scrollCompensation.y -= aMetrics.mViewportScrollOffset.y * aConfig.mYScale;
   translation -= scrollCompensation;
 
   gfxMatrix transform;
@@ -146,11 +147,11 @@ RenderFrameParent::ShadowLayersUpdated()
 
   nsIFrame* docFrame = mFrameLoader->GetPrimaryFrameOfOwningContent();
   if (!docFrame) {
-    // Bad, but nothing we can do about it (XXX/cjones: or is there?).
-    // When the new frame is created, we'll probably still be the
-    // current render frame and will get to draw our content then.
-    // Or, we're shutting down and this update goes to /dev/null.
-    NS_WARNING("RenderFrameParent just received a layer update, but our <browser> doesn't have an nsIFrame so we can't invalidate for the update");
+    // Bad, but nothing we can do about it (XXX/cjones: or is there?
+    // maybe bug 589337?).  When the new frame is created, we'll
+    // probably still be the current render frame and will get to draw
+    // our content then.  Or, we're shutting down and this update goes
+    // to /dev/null.
     return;
   }
 
@@ -253,10 +254,7 @@ RenderFrameParent::AllocPLayers()
   }    
 
   BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
-  ShadowLayersParent* slp = new ShadowLayersParent(bslm);
-  bslm->SetForwarder(nsnull);   // clear the previous forwarder
-  bslm->SetForwarder(slp);
-  return slp;
+  return new ShadowLayersParent(bslm);
 }
 
 bool

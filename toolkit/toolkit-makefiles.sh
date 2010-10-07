@@ -1004,10 +1004,15 @@ fi
 if [ "$MOZ_TREE_CAIRO" ] ; then
   add_makefiles "
     gfx/cairo/Makefile
-    gfx/cairo/libpixman/src/Makefile
     gfx/cairo/cairo/src/Makefile
     gfx/cairo/cairo/src/cairo-features.h
   "
+  if [ "$MOZ_TREE_PIXMAN" ] ; then
+    add_makefiles "
+      gfx/cairo/libpixman/src/Makefile
+    "
+  fi
+
 fi
 
 if [ "$MOZ_UNIVERSALCHARDET" ] ; then

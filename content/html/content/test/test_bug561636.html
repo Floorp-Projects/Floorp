@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=561636
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body>
+<body onload="runTest();">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=561636">Mozilla Bug 561636</a>
 <p id="display"></p>
 <iframe style='width:50px; height: 50px;' name='t'></iframe>
@@ -40,19 +40,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=561636
 
 /** Test for Bug 561636 **/
 
-var formSubmitted = [ false, false ];
-var invalidHandled = false;
+SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var os = Components.classes['@mozilla.org/observer-service;1']
-                   .getService(Components.interfaces.nsIObserverService);
-var observers = os.enumerateObservers("invalidformsubmit");
+function runTest()
+{
+  var formSubmitted = [ false, false ];
+  var invalidHandled = false;
 
-// The following test should not be done if there is no observer for
-// "invalidformsubmit" because the form submission will not be canceled in that
-// case.
-if (observers.hasMoreElements()) {
-  SimpleTest.waitForExplicitFinish();
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var os = Components.classes['@mozilla.org/observer-service;1']
+                     .getService(Components.interfaces.nsIObserverService);
+  var observers = os.enumerateObservers("invalidformsubmit");
+
+  // The following test should not be done if there is no observer for
+  // "invalidformsubmit" because the form submission will not be canceled in that
+  // case.
+  if (!observers.hasMoreElements()) {
+    SimpleTest.finish();
+    return;
+  }
 
   // Initialize
   document.forms[0].addEventListener('submit', function(aEvent) {
@@ -78,6 +84,9 @@ if (observers.hasMoreElements()) {
     ok(!formSubmitted[1], "Form 2 should not have been submitted because invalid");
     ok(!formSubmitted[2], "Form 3 should not have been submitted because invalid");
     ok(formSubmitted[3], "Form 4 should have been submitted because valid");
+
+    // Next test.
+    document.forms[4].submit();
   }, false);
 
   document.forms[4].elements[0].addEventListener('invalid', function(aEvent) {
@@ -101,8 +110,6 @@ if (observers.hasMoreElements()) {
   var c = document.getElementById('c');
   c.focus(); synthesizeKey("VK_RETURN", {type: "keypress"});
   document.getElementById('s2').click();
-
-  document.forms[3].submit();
 }
 
 </script>

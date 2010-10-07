@@ -45,7 +45,7 @@
 #include "jstl.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "assembler/assembler/RepatchBuffer.h"
+#include "assembler/assembler/LinkBuffer.h"
 #include "assembler/moco/MocoStubs.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MachineRegs.h"
@@ -91,11 +91,11 @@ struct ImmIntPtr : public JSC::MacroAssembler::ImmPtr
 class BaseAssembler : public JSC::MacroAssembler
 {
     struct CallPatch {
-        CallPatch(ptrdiff_t distance, void *fun)
-          : distance(distance), fun(fun)
+        CallPatch(Call cl, void *fun)
+          : call(cl), fun(fun)
         { }
 
-        ptrdiff_t distance;
+        Call call;
         JSC::FunctionPtr fun;
     };
 
@@ -145,6 +145,14 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegiste
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
 #endif
 
+    bool addressUsesRegister(Address address, RegisterID reg) {
+        return address.base == reg;
+    }
+
+    bool addressUsesRegister(BaseIndex address, RegisterID reg) {
+        return (address.base == reg) || (address.index == reg);
+    }
+
     size_t distanceOf(Label l) {
         return differenceBetween(startLabel, l);
     }
@@ -155,6 +163,11 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 
     void loadShape(RegisterID obj, RegisterID shape) {
         load32(Address(obj, offsetof(JSObject, objShape)), shape);
+    }
+
+    Jump guardShape(RegisterID obj, uint32 shape) {
+        return branch32(NotEqual, Address(obj, offsetof(JSObject, objShape)),
+                        Imm32(shape));
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {
@@ -297,7 +310,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 
         /* regs->sp = sp */
         storePtr(ClobberInCall,
-                 FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, sp)));
+                 FrameAddress(offsetof(VMFrame, regs.sp)));
+
+        /* regs->fp = fp */
+        storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
     }
 
     void setupVMFrame() {
@@ -310,8 +326,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 
     Call call(void *fun) {
         Call cl = JSC::MacroAssembler::call();
-
-        callPatches.append(CallPatch(differenceBetween(startLabel, cl), fun));
+        callPatches.append(CallPatch(cl, fun));
         return cl;
     }
 
@@ -319,40 +334,31 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         return MacroAssembler::call(reg);
     }
 
-    void restoreReturnAddress()
-    {
-#ifndef JS_CPU_ARM
-        /* X86 and X64's "ret" instruction expects a return address on the stack. */
-        push(Address(JSFrameReg, JSStackFrame::offsetOfncode()));
-#else
-        /* ARM returns either using its link register (LR) or directly from the stack, but masm.ret()
-         * always emits a return to LR. */
-        load32(Address(JSFrameReg, JSStackFrame::offsetOfncode()), JSC::ARMRegisters::lr);
-#endif
-    }
-
-    void saveReturnAddress(RegisterID reg)
-    {
-        storePtr(reg, Address(JSFrameReg, JSStackFrame::offsetOfncode()));
-    }
-
-    void finalize(uint8 *ncode) {
-        JSC::JITCode jc(ncode, size());
-        JSC::CodeBlock cb(jc);
-        JSC::RepatchBuffer repatchBuffer(&cb);
-
+    void finalize(JSC::LinkBuffer &linker) {
         for (size_t i = 0; i < callPatches.length(); i++) {
-            JSC::MacroAssemblerCodePtr cp(ncode + callPatches[i].distance);
-            repatchBuffer.relink(JSC::CodeLocationCall(cp), callPatches[i].fun);
+            CallPatch &patch = callPatches[i];
+            linker.link(patch.call, JSC::FunctionPtr(patch.fun));
         }
     }
 };
+
+/* Return f<true> if the script is strict mode code, f<false> otherwise. */
+#define STRICT_VARIANT(f)                                                     \
+    (FunctionTemplateConditional(script->strictModeCode,                      \
+                                 f<true>, f<false>))
 
 /* Save some typing. */
 static const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = BaseAssembler::JSReturnReg_Type;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = BaseAssembler::JSReturnReg_Data;
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = BaseAssembler::JSParamReg_Argc;
+
+struct FrameFlagsAddress : JSC::MacroAssembler::Address
+{
+    FrameFlagsAddress()
+      : Address(JSFrameReg, JSStackFrame::offsetOfFlags())
+    {}
+};
 
 } /* namespace mjit */
 } /* namespace js */

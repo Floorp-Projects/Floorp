@@ -320,6 +320,7 @@ class XPCShellTests(object):
       Simple wrapper to launch a process.
       On a remote system, this is more complex and we need to overload this function.
     """
+    cmd = wrapCommand(cmd)
     proc = Popen(cmd, stdout=stdout, stderr=stderr, 
                 env=env, cwd=cwd)
     return proc

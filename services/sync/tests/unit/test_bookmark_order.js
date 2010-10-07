@@ -45,7 +45,7 @@ function run_test() {
   check([]);
 
   function $B(name, parent, pred) {
-    let bookmark = new Bookmark();
+    let bookmark = new Bookmark("http://weave.server/my-bookmark");
     bookmark.id = name;
     bookmark.title = name;
     bookmark.bmkUri = "http://uri/";
@@ -56,7 +56,7 @@ function run_test() {
   }
 
   function $F(name, parent, pred) {
-    let folder = new BookmarkFolder();
+    let folder = new BookmarkFolder("http://weave.server/my-bookmark-folder");
     folder.id = name;
     folder.title = name;
     folder.parentid = parent || "unfiled";

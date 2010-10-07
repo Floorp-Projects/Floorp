@@ -89,7 +89,7 @@ check::
 	$(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy $(DIST)/bin
 endif
 
-default alldep all:: $(topsrcdir)/configure config.status
+default alldep all:: $(topsrcdir)/configure $(topsrcdir)/js/src/configure config.status js/src/config.status
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
 	$(RM) -rf $(DIST)/private
@@ -104,10 +104,24 @@ $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	@echo "but your build might not succeed."
 	@exit 1
 
+$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in
+	@echo "STOP!  js/src/configure.in has changed, and your js/src/configure is out of date."
+	@echo "Please rerun autoconf in js/src and re-configure your build directory."
+	@echo "To ignore this message, touch 'js/src/configure' in the source directory,"
+	@echo "but your build might not succeed."
+	@exit 1
+
 config.status: $(topsrcdir)/configure
 	@echo "STOP!  configure has changed and needs to be run in this build directory."
 	@echo "Please rerun configure."
 	@echo "To ignore this message, touch 'config.status' in the build directory,"
+	@echo "but your build might not succeed."
+	@exit 1
+
+js/src/config.status: $(topsrcdir)/js/src/configure
+	@echo "STOP!  js/src/configure has changed and needs to be run in this build directory."
+	@echo "Please rerun js/src/configure."
+	@echo "To ignore this message, touch 'js/src/config.status' in the build directory,"
 	@echo "but your build might not succeed."
 	@exit 1
 
@@ -120,9 +134,6 @@ export::
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
 include $(topsrcdir)/testing/testsuite-targets.mk
-else
-# OS X Universal builds will want to call this, so stub it out
-package-tests:
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -148,7 +159,7 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 # need to pass arch flags for universal builds
 ifdef UNIVERSAL_BINARY
-MAKE_SYM_STORE_ARGS := -c -a "ppc i386" --vcs-info
+MAKE_SYM_STORE_ARGS := -c -a "i386 x86_64" --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/universal
 else
 MAKE_SYM_STORE_ARGS := -c -a $(OS_TEST) --vcs-info

@@ -137,9 +137,15 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
     JS_SetContextPrivate(mCx, this);
     JSObject* implGlobal =
       JS_NewCompartmentAndGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass), NULL);
+    if (!implGlobal)
+        return false;
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mCx, implGlobal))
+        return false;
+
     jsval ctypes;
-    if (!implGlobal ||
-        !JS_InitStandardClasses(mCx, implGlobal) ||
+    if (!JS_InitStandardClasses(mCx, implGlobal) ||
 #ifdef BUILD_CTYPES
         !JS_InitCTypesClass(mCx, implGlobal) ||
         !JS_GetProperty(mCx, implGlobal, "ctypes", &ctypes) ||
@@ -173,6 +179,12 @@ JetpackChild::RecvSendMessage(const nsString& messageName,
                               const nsTArray<Variant>& data)
 {
   JSAutoRequest request(mCx);
+
+  JSObject *global = JS_GetGlobalObject(mCx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(mCx, global))
+    return false;
+
   return JetpackActorCommon::RecvMessage(mCx, messageName, data, NULL);
 }
 
@@ -181,9 +193,14 @@ JetpackChild::RecvEvalScript(const nsString& code)
 {
   JSAutoRequest request(mCx);
 
-  js::AutoValueRooter ignored(mCx);
-  (void) JS_EvaluateUCScript(mCx, JS_GetGlobalObject(mCx), code.get(),
-                             code.Length(), "", 1, ignored.jsval_addr());
+  JSObject *global = JS_GetGlobalObject(mCx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(mCx, global))
+    return false;
+
+  jsval ignored;
+  (void) JS_EvaluateUCScript(mCx, global, code.get(),
+                             code.Length(), "", 1, &ignored);
   return true;
 }
 
@@ -431,7 +448,7 @@ JetpackChild::CreateSandbox(JSContext* cx, uintN argc, jsval* vp)
   if (!obj)
     return JS_FALSE;
 
-  JSAutoCrossCompartmentCall ac;
+  JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj))
     return JS_FALSE;
 
@@ -462,7 +479,7 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
   if (!str)
     return JS_FALSE;
 
-  JSAutoCrossCompartmentCall ac;
+  JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj))
     return JS_FALSE;
 

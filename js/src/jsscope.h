@@ -291,6 +291,7 @@ struct Shape : public JSObjectMap
     friend struct ::JSObject;
     friend struct ::JSFunction;
     friend class js::PropertyTree;
+    friend bool HasUnreachableGCThings(TreeFragment *f);
 
   protected:
     mutable js::PropertyTable *table;
@@ -808,6 +809,7 @@ struct JSScopeStats {
     jsrefcount          redundantPuts;
     jsrefcount          putFails;
     jsrefcount          changes;
+    jsrefcount          changePuts;
     jsrefcount          changeFails;
     jsrefcount          compresses;
     jsrefcount          grows;

@@ -30,8 +30,9 @@ function run_test() {
   crypto.addUnwrappedKey(pubkey, symkey);
 
   _("Changing the HMAC to force a mismatch");
-  let goodHMAC = crypto.keyring[pubkey.uri.spec].hmac;
-  crypto.keyring[pubkey.uri.spec].hmac = "failme!";
+  let relUri = crypto.uri.getRelativeSpec(pubkey.uri);
+  let goodHMAC = crypto.keyring[relUri].hmac;
+  crypto.keyring[relUri].hmac = "failme!";
   let error = "";
   try {
     crypto.getKey(privkey, passphrase);
@@ -42,6 +43,6 @@ function run_test() {
   do_check_eq(error, "Key SHA256 HMAC mismatch: failme!");
 
   _("Switching back to the correct HMAC and trying again");
-  crypto.keyring[pubkey.uri.spec].hmac = goodHMAC;
+  crypto.keyring[relUri].hmac = goodHMAC;
   crypto.getKey(privkey, passphrase);
 }

@@ -728,7 +728,8 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
 {
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if (eventStates & NS_EVENT_STATE_DISABLED) {
     return;
   }
 
@@ -926,7 +927,9 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if (eventStates & NS_EVENT_STATE_DISABLED) {
     return NS_OK;
   }
 
@@ -1382,8 +1385,8 @@ void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
                                         nsPoint aPt)
 {
   /* Do we need to do anything? */
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) ||
-      mFocused != this)
+  PRInt32 eventStates = mContent->IntrinsicState();
+  if ((eventStates & NS_EVENT_STATE_DISABLED) || mFocused != this)
     return;
 
   aRenderingContext.PushState();

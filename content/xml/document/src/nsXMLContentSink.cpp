@@ -871,15 +871,14 @@ nsXMLContentSink::GetCurrentContent()
   if (mContentStack.Length() == 0) {
     return nsnull;
   }
-  return GetCurrentStackNode().mContent;
+  return GetCurrentStackNode()->mContent;
 }
 
-StackNode &
+StackNode*
 nsXMLContentSink::GetCurrentStackNode()
 {
   PRInt32 count = mContentStack.Length();
-  NS_ASSERTION(count > 0, "Bogus Length()");
-  return mContentStack[count-1];
+  return count != 0 ? &mContentStack[count-1] : nsnull;
 }
 
 
@@ -1116,11 +1115,14 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
 
   FlushText();
 
-  StackNode & sn = GetCurrentStackNode();
+  StackNode* sn = GetCurrentStackNode();
+  if (!sn) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsCOMPtr<nsIContent> content;
-  sn.mContent.swap(content);
-  PRUint32 numFlushed = sn.mNumFlushed;
+  sn->mContent.swap(content);
+  PRUint32 numFlushed = sn->mNumFlushed;
 
   PopContent();
   NS_ASSERTION(content, "failed to pop content");

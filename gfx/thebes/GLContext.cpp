@@ -223,7 +223,7 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fPolygonOffset, { "PolygonOffset", NULL } },
         { (PRFuncPtr*) &fReadPixels, { "ReadPixels", NULL } },
         { (PRFuncPtr*) &fSampleCoverage, { "SampleCoverage", NULL } },
-        { (PRFuncPtr*) &fScissor, { "Scissor", NULL } },
+        { (PRFuncPtr*) &priv_fScissor, { "Scissor", NULL } },
         { (PRFuncPtr*) &fStencilFunc, { "StencilFunc", NULL } },
         { (PRFuncPtr*) &fStencilFuncSeparate, { "StencilFuncSeparate", "StencilFuncSeparateEXT", NULL } },
         { (PRFuncPtr*) &fStencilMask, { "StencilMask", NULL } },
@@ -262,7 +262,7 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fVertexAttrib2fv, { "VertexAttrib2fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib3fv, { "VertexAttrib3fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib4fv, { "VertexAttrib4fv", NULL } },
-        { (PRFuncPtr*) &fViewport, { "Viewport", NULL } },
+        { (PRFuncPtr*) &priv_fViewport, { "Viewport", NULL } },
         { (PRFuncPtr*) &fCompileShader, { "CompileShader", NULL } },
         { (PRFuncPtr*) &fCopyTexImage2D, { "CopyTexImage2D", NULL } },
         { (PRFuncPtr*) &fCopyTexSubImage2D, { "CopyTexSubImage2D", NULL } },
@@ -314,6 +314,32 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 
     if (mInitialized) {
         InitExtensions();
+
+        GLint v[4];
+
+        fGetIntegerv(LOCAL_GL_SCISSOR_BOX, v);
+        mScissorStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
+
+        fGetIntegerv(LOCAL_GL_VIEWPORT, v);
+        mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
+
+        const char *glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
+        mVendor = DoesVendorStringMatch(glVendorString, "Intel")  ? VendorIntel
+                : DoesVendorStringMatch(glVendorString, "NVIDIA") ? VendorNVIDIA
+                : DoesVendorStringMatch(glVendorString, "ATI")    ? VendorATI
+                : VendorOther;
+
+#ifdef DEBUG
+        static bool once = false;
+        if (!once) {
+            once = true;
+            printf_stderr("OpenGL vendor recognized as: %s\n", mVendor == VendorIntel ? "Intel"
+                                                             : mVendor == VendorNVIDIA ? "NVIDIA"
+                                                             : mVendor == VendorATI ? "ATI"
+                                                             : mVendor == VendorOther ? "<other>"
+                                                             : "!!! bad mVendor value !!!");
+        }
+#endif
     }
 
     return mInitialized;
@@ -344,7 +370,11 @@ GLContext::InitExtensions()
     const GLubyte *extensions = fGetString(LOCAL_GL_EXTENSIONS);
     char *exts = strdup((char *)extensions);
 
+#ifdef DEBUG
     static bool once = false;
+#else
+    const bool once = true;
+#endif
 
     if (!once) {
         printf_stderr("GL extensions: %s\n", exts);
@@ -374,7 +404,9 @@ GLContext::InitExtensions()
 
     free(exts);
 
+#ifdef DEBUG
     once = true;
+#endif
 }
 
 PRBool
@@ -532,6 +564,26 @@ BasicTextureImage::EndUpdate()
     }
     mUpdateContext = NULL;
     return PR_TRUE;         // mTexture is bound
+}
+
+void
+BasicTextureImage::Resize(const nsIntSize& aSize)
+{
+    NS_ASSERTION(!mUpdateContext, "Resize() while in update?");
+
+    mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+
+    mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                            0,
+                            LOCAL_GL_RGBA,
+                            aSize.width,
+                            aSize.height,
+                            0,
+                            LOCAL_GL_RGBA,
+                            LOCAL_GL_UNSIGNED_BYTE,
+                            NULL);
+
+    mTextureInited = PR_TRUE;
 }
 
 PRBool
@@ -779,9 +831,20 @@ GLContext::UpdateActualFormat()
 void
 GLContext::MarkDestroyed()
 {
+    if (IsDestroyed())
+        return;
+
     MakeCurrent();
     DeleteOffscreenFBO();
-    memset(&mFunctionListStartSentinel, 0, &mFunctionListEndSentinel - &mFunctionListStartSentinel);
+
+    fDeleteProgram(mBlitProgram);
+    mBlitProgram = 0;
+    fDeleteFramebuffers(1, &mBlitFramebuffer);
+    mBlitFramebuffer = 0;
+
+    // must be last!  casts are so we can get a byte size count
+    memset(&mFunctionListStartSentinel, 0,
+           (unsigned char*)&mFunctionListEndSentinel - (unsigned char*)&mFunctionListStartSentinel);
 }
 
 already_AddRefed<gfxImageSurface>
@@ -793,7 +856,7 @@ GLContext::ReadTextureImage(GLuint aTexture,
 
     nsRefPtr<gfxImageSurface> isurf;
 
-    GLint oldrb, oldfb, oldprog, oldvp[4], oldPackAlignment;
+    GLint oldrb, oldfb, oldprog, oldPackAlignment;
     GLint success;
 
     GLuint rb = 0, fb = 0;
@@ -826,8 +889,9 @@ GLContext::ReadTextureImage(GLuint aTexture,
     fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &oldrb);
     fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &oldfb);
     fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &oldprog);
-    fGetIntegerv(LOCAL_GL_VIEWPORT, oldvp);
     fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &oldPackAlignment);
+
+    PushViewportRect(nsIntRect(0, 0, aSize.width, aSize.height));
 
     fGenRenderbuffers(1, &rb);
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
@@ -874,8 +938,6 @@ GLContext::ReadTextureImage(GLuint aTexture,
 
     fUniform1i(fGetUniformLocation(prog, "uTexture"), 0);
 
-    fViewport(0, 0, aSize.width, aSize.height);
-
     fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 
     fDisableVertexAttribArray(1);
@@ -908,7 +970,8 @@ GLContext::ReadTextureImage(GLuint aTexture,
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, oldrb);
     fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, oldfb);
     fUseProgram(oldprog);
-    fViewport(oldvp[0], oldvp[1], oldvp[2], oldvp[3]);
+
+    PopViewportRect();
 
     return isurf.forget();
 }
@@ -974,6 +1037,187 @@ GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
     }
 
     fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
+}
+
+void
+GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
+                            TextureImage *aDst, const nsIntRect& aDstRect)
+{
+    NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
+    NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
+
+    fDisable(LOCAL_GL_SCISSOR_TEST);
+    fDisable(LOCAL_GL_BLEND);
+
+    SetBlitFramebufferForDestTexture(aDst->Texture());
+
+    DEBUG_GL_ERROR_CHECK(this);
+
+    UseBlitProgram();
+
+    DEBUG_GL_ERROR_CHECK(this);
+
+    nsIntSize srcSize = aSrc->GetSize();
+    nsIntSize dstSize = aDst->GetSize();
+
+    PushViewportRect(nsIntRect(0, 0, dstSize.width, dstSize.height));
+
+    float sx0 = float(aSrcRect.x) / float(srcSize.width);
+    float sy0 = float(aSrcRect.y) / float(srcSize.height);
+    float sx1 = float(aSrcRect.x + aSrcRect.width) / float(srcSize.width);
+    float sy1 = float(aSrcRect.y + aSrcRect.height) / float(srcSize.height);
+
+    float dx0 = 2.0 * float(aDstRect.x) / float(dstSize.width) - 1.0;
+    float dy0 = 2.0 * float(aDstRect.y) / float(dstSize.height) - 1.0;
+    float dx1 = 2.0 * float(aDstRect.x + aDstRect.width) / float(dstSize.width) - 1.0;
+    float dy1 = 2.0 * float(aDstRect.y + aDstRect.height) / float(dstSize.height) - 1.0;
+
+    float quadTriangleCoords[] = {
+        dx0, dy1,
+        dx0, dy0,
+        dx1, dy1,
+        dx1, dy0
+    };
+
+    float texCoords[] = {
+        sx0, sy1,
+        sx0, sy0,
+        sx1, sy1,
+        sx1, sy0
+    };
+
+    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, aSrc->Texture());
+
+    fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+
+    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, quadTriangleCoords);
+    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, texCoords);
+
+    fEnableVertexAttribArray(0);
+    fEnableVertexAttribArray(1);
+
+    DEBUG_GL_ERROR_CHECK(this);
+
+    fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+
+    DEBUG_GL_ERROR_CHECK(this);
+
+    fDisableVertexAttribArray(0);
+    fDisableVertexAttribArray(1);
+
+    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, NULL);
+    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, NULL);
+
+    SetBlitFramebufferForDestTexture(0);
+
+    fEnable(LOCAL_GL_SCISSOR_TEST);
+    fEnable(LOCAL_GL_BLEND);
+
+    PopViewportRect();
+}
+
+void
+GLContext::UseBlitProgram()
+{
+    if (mBlitProgram) {
+        fUseProgram(mBlitProgram);
+        return;
+    }
+
+    mBlitProgram = fCreateProgram();
+
+    GLuint shaders[2];
+    shaders[0] = fCreateShader(LOCAL_GL_VERTEX_SHADER);
+    shaders[1] = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
+
+    const char *blitVSSrc = 
+        "attribute vec2 aVertex;"
+        "attribute vec2 aTexCoord;"
+        "varying vec2 vTexCoord;"
+        "void main() {"
+        "  vTexCoord = aTexCoord;"
+        "  gl_Position = vec4(aVertex, 0.0, 1.0);"
+        "}";
+    const char *blitFSSrc = "#ifdef GL_ES\nprecision mediump float;\n#endif\n"
+        "uniform sampler2D uSrcTexture;"
+        "varying vec2 vTexCoord;"
+        "void main() {"
+        "  gl_FragColor = texture2D(uSrcTexture, vTexCoord);"
+        "}";
+
+    fShaderSource(shaders[0], 1, (const GLchar**) &blitVSSrc, NULL);
+    fShaderSource(shaders[1], 1, (const GLchar**) &blitFSSrc, NULL);
+
+    for (int i = 0; i < 2; ++i) {
+        GLint success, len = 0;
+
+        fCompileShader(shaders[i]);
+        fGetShaderiv(shaders[i], LOCAL_GL_COMPILE_STATUS, &success);
+        NS_ASSERTION(success, "Shader compilation failed!");
+
+        if (!success) {
+            nsCAutoString log;
+            fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
+            log.SetCapacity(len);
+            fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
+            log.SetLength(len);
+
+            printf_stderr("Shader %d compilation failed:\n%s\n", nsPromiseFlatCString(log).get());
+            return;
+        }
+
+        fAttachShader(mBlitProgram, shaders[i]);
+        fDeleteShader(shaders[i]);
+    }
+
+    fBindAttribLocation(mBlitProgram, 0, "aVertex");
+    fBindAttribLocation(mBlitProgram, 1, "aTexCoord");
+
+    fLinkProgram(mBlitProgram);
+
+    GLint success, len = 0;
+    fGetProgramiv(mBlitProgram, LOCAL_GL_LINK_STATUS, &success);
+    NS_ASSERTION(success, "Shader linking failed!");
+
+    if (!success) {
+        nsCAutoString log;
+        fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
+        log.SetCapacity(len);
+        fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
+        log.SetLength(len);
+
+        printf_stderr("Program linking failed:\n%s\n", nsPromiseFlatCString(log).get());
+        return;
+    }
+
+    fUseProgram(mBlitProgram);
+    fUniform1i(fGetUniformLocation(mBlitProgram, "uSrcTexture"), 0);
+}
+
+void
+GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
+{
+    if (!mBlitFramebuffer) {
+        fGenFramebuffers(1, &mBlitFramebuffer);
+    }
+
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBlitFramebuffer);
+    fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                          LOCAL_GL_COLOR_ATTACHMENT0,
+                          LOCAL_GL_TEXTURE_2D,
+                          aTexture,
+                          0);
+
+    if (aTexture) {
+        GLenum status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+
+        // Note: if you are hitting this assertion, it is likely that
+        // your texture is not texture complete -- that is, you
+        // allocated a texture name, but didn't actually define its
+        // size via a call to TexImage2D.
+        NS_ASSERTION(status == LOCAL_GL_FRAMEBUFFER_COMPLETE, "Framebuffer not complete!");
+    }
 }
 
 #ifdef DEBUG

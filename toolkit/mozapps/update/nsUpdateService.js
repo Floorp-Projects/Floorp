@@ -51,6 +51,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+const PREF_APP_UPDATE_ALTWINDOWTYPE       = "app.update.altwindowtype";
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
@@ -723,6 +724,9 @@ UpdatePatch.prototype = {
     var patch = updates.createElementNS(URI_UPDATE_NS, "patch");
     patch.setAttribute("type", this.type);
     patch.setAttribute("URL", this.URL);
+    // finalURL is not available until after the download has started
+    if (this.finalURL)
+      patch.setAttribute("finalURL", this.finalURL);
     patch.setAttribute("hashFunction", this.hashFunction);
     patch.setAttribute("hashValue", this.hashValue);
     patch.setAttribute("size", this.size);
@@ -2529,7 +2533,13 @@ Downloader.prototype = {
    */
   onStartRequest: function Downloader_onStartRequest(request, context) {
     if (request instanceof Ci.nsIIncrementalDownload)
-      LOG("Downloader:onStartRequest - spec: " + request.URI.spec);
+      LOG("Downloader:onStartRequest - original URI spec: " + request.URI.spec +
+          ", final URI spec: " + request.finalURI.spec);
+    // Always set finalURL in onStartRequest since it can change.
+    this._patch.finalURL = request.finalURI.spec;
+    var um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    um.saveUpdates();
 
     var listenerCount = this._listeners.length;
     for (var i = 0; i < listenerCount; ++i)
@@ -2593,8 +2603,8 @@ Downloader.prototype = {
    */
   onStopRequest: function  Downloader_onStopRequest(request, context, status) {
     if (request instanceof Ci.nsIIncrementalDownload)
-      LOG("Downloader:onStopRequest - spec: " + request.URI.spec +
-          ", status: " + status);
+      LOG("Downloader:onStopRequest - original URI spec: " + request.URI.spec +
+          ", final URI spec: " + request.finalURI.spec + ", status: " + status);
 
     var state = this._patch.state;
     var shouldShowPrompt = false;
@@ -2608,6 +2618,14 @@ Downloader.prototype = {
         // that UI will notify.
         if (this.background)
           shouldShowPrompt = true;
+
+#ifdef ANDROID
+        // Give read permissions to everyone so the .APK file is accessible by
+        // the system installer (bug 596662).
+        let patchFile = getUpdatesDir().QueryInterface(Ci.nsILocalFile);
+        patchFile.append(FILE_UPDATE_ARCHIVE);
+        patchFile.permissions = FileUtils.PERMS_FILE;
+#endif
 
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
@@ -2762,6 +2780,9 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   checkForUpdates: function UP_checkForUpdates() {
+    if (this._getAltUpdateWindow())
+      return;
+
     this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, UPDATE_WINDOW_NAME,
                  null, null);
   },
@@ -2771,7 +2792,7 @@ UpdatePrompt.prototype = {
    */
   showUpdateAvailable: function UP_showUpdateAvailable(update) {
     if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
-        this._getUpdateWindow())
+        this._getUpdateWindow() || this._getAltUpdateWindow())
       return;
 
     var stringsPrefix = "updateAvailable_" + update.type + ".";
@@ -2788,6 +2809,9 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateDownloaded: function UP_showUpdateDownloaded(update, background) {
+    if (this._getAltUpdateWindow())
+      return;
+
     if (background) {
       if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false))
         return;
@@ -2835,7 +2859,8 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateError: function UP_showUpdateError(update) {
-    if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false))
+    if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
+        this._getAltUpdateWindow())
       return;
 
     // In some cases, we want to just show a simple alert dialog:
@@ -2873,6 +2898,18 @@ UpdatePrompt.prototype = {
    */
   _getUpdateWindow: function UP__getUpdateWindow() {
     return Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME);
+  },
+
+  /**
+   * Returns an alternative update window if present. When a window with this
+   * windowtype is open the application update service won't open the normal
+   * application update user interface window.
+   */
+  _getAltUpdateWindow: function UP__getAltUpdateWindow() {
+    let windowType = getPref("getCharPref", PREF_APP_UPDATE_ALTWINDOWTYPE, null);
+    if (!windowType)
+      return null;
+    return Services.wm.getMostRecentWindow(windowType);
   },
 
   /**

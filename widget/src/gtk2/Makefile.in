@@ -142,6 +142,8 @@ CPPSRCS		+= nsNativeThemeGTK.cpp
 DEFINES		+= -DNATIVE_THEME_SUPPORT
 endif
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
