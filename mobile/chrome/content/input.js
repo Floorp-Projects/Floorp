@@ -90,12 +90,11 @@ const kStateActive = 0x00000001;
  * There is a default dragger in case a scrollable element is dragged --- see
  * the defaultDragger prototype property.
  */
-function MouseModule(owner, browserViewContainer) {
-  this._owner = owner;
-  this._browserViewContainer = browserViewContainer;
+function MouseModule() {
   this._dragData = new DragData(kTapRadius);
 
   this._dragger = null;
+  this._inputField = null;
 
   this._downUpEvents = [];
   this._targetScrollInterface = null;
@@ -220,6 +219,14 @@ MouseModule.prototype = {
         this._doDragStart(aEvent);
       }
     }
+
+    // When panning starts over an input field, focus should not change
+    let inputField = this._getTargetInputField(aEvent.originalTarget);
+    if (inputField && this._dragger) {
+      this._inputField = inputField;
+      aEvent.preventDefault();
+      aEvent.stopPropagation();
+    }
   },
 
   /** Send tap up event and any necessary full taps. */
@@ -261,6 +268,15 @@ MouseModule.prototype = {
       if (generatesClick)
         aEvent.target.addEventListener("click", this, true);
     }
+
+    // Move the caret to the end of the target input field and focus it
+    if (this._inputField && !this._dragData.isPan()) {
+      let inputField = this._inputField;
+      let textLength = inputField.textLength;
+      inputField.setSelectionRange(textLength, textLength);
+      inputField.focus();
+    }
+    this._inputField = null;
   },
 
   /**
@@ -308,6 +324,7 @@ MouseModule.prototype = {
     if (!dragData.isPan()) {
       // There was no pan, so just stop dragger.
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
+      this._dragger = null;
     } else {
       // Start kinetic pan.
       let [sX, sY] = dragData.panPosition();
@@ -354,6 +371,7 @@ MouseModule.prototype = {
     let dragData = this._dragData;
     if (!dragData.dragging) {
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
+      this._dragger = null;
       let event = document.createEvent("Events");
       event.initEvent("PanFinished", true, false);
       document.dispatchEvent(event);
@@ -444,6 +462,22 @@ MouseModule.prototype = {
     this._singleClickTimeout.clear();
     this._longClickTimeout.clear();
     this._downUpEvents.splice(0);
+  },
+
+  /* XXXvn this can potentially be moved into ScrollUtils */
+  _getTargetInputField: function _getTargetInputField(aTarget) {
+    let focusedElement = document.commandDispatcher.focusedElement;
+    let parentNode = aTarget.parentNode;
+
+    let inputField = null;
+    if (aTarget.mozIsTextField && aTarget.mozIsTextField(false) && focusedElement != aTarget)
+      inputField = aEventTarget;
+    else if (parentNode.mozIsTextField && parentNode.mozIsTextField(false) && focusedElement != parentNode)
+      inputField = parentNode;
+    else if (aTarget instanceof XULElement && aTarget.inputField)
+      inputField = aTarget.inputField;
+
+    return inputField;
   },
 
   toString: function toString() {
