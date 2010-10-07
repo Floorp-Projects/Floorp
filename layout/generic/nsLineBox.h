@@ -410,15 +410,27 @@ public:
   // overflow area of its parent block.  The combined area should be
   // used for painting-related things, but should never be used for
   // layout (except for handling of 'overflow').
-  void SetCombinedArea(const nsRect& aCombinedArea);
-  nsRect GetCombinedArea() {
-    return mData ? mData->mCombinedArea : mBounds;
+  void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
+  nsRect GetOverflowArea(nsOverflowType aType) {
+    return mData ? mData->mOverflowAreas.Overflow(aType) : mBounds;
   }
+  nsOverflowAreas GetOverflowAreas() {
+    if (mData) {
+      return mData->mOverflowAreas;
+    }
+    return nsOverflowAreas(mBounds, mBounds);
+  }
+  nsRect GetVisualOverflowArea()
+    { return GetOverflowArea(eVisualOverflow); }
+  nsRect GetScrollableOverflowArea()
+    { return GetOverflowArea(eScrollableOverflow); }
 
   void SlideBy(nscoord aDY) {
     mBounds.y += aDY;
     if (mData) {
-      mData->mCombinedArea.y += aDY;
+      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+        mData->mOverflowAreas.Overflow(otype).y += aDY;
+      }
     }
   }
 
@@ -517,9 +529,9 @@ public:
   };
 
   struct ExtraData {
-    ExtraData(const nsRect& aBounds) : mCombinedArea(aBounds) {
+    ExtraData(const nsRect& aBounds) : mOverflowAreas(aBounds, aBounds) {
     }
-    nsRect mCombinedArea;
+    nsOverflowAreas mOverflowAreas;
   };
 
   struct ExtraBlockData : public ExtraData {
