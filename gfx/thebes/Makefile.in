@@ -122,6 +122,7 @@ EXPORTS += \
 	gfxQPainterSurface.h \
 	gfxQtNativeRenderer.h \
 	gfxQtPlatform.h \
+	gfxPDFSurface.h \
 	$(NULL)
 
 ifdef MOZ_X11
@@ -350,6 +351,7 @@ CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
+CPPSRCS +=	gfxPDFSurface.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
