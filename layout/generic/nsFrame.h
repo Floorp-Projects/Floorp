@@ -402,9 +402,9 @@ public:
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
 
-  // incorporate the child overflow area into the parent overflow area
-  // if the child does not have a overflow use the child area
-  void ConsiderChildOverflow(nsRect&   aOverflowArea,
+  // Incorporate the child overflow areas into aOverflowAreas.
+  // If the child does not have a overflow, use the child area.
+  void ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                              nsIFrame* aChildFrame);
 
   virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const;

@@ -455,17 +455,17 @@ typedef PRBool nsDidReflowStatus;
 #define NS_FRAME_REFLOW_FINISHED     PR_TRUE
 
 /**
- * The overflow rect may be stored as four 1-byte deltas each strictly
- * LESS THAN 0xff, for the four edges of the rectangle, or the four bytes
- * may be read as a single 32-bit "overflow-rect type" value including
- * at least one 0xff byte as an indicator that the value does NOT
- * represent four deltas.
+ * When there is no scrollable overflow rect, the visual overflow rect
+ * may be stored as four 1-byte deltas each strictly LESS THAN 0xff, for
+ * the four edges of the rectangle, or the four bytes may be read as a
+ * single 32-bit "overflow-rect type" value including at least one 0xff
+ * byte as an indicator that the value does NOT represent four deltas.
  * If all four deltas are zero, this means that no overflow rect has
  * actually been set (this is the initial state of newly-created frames).
  */
 #define NS_FRAME_OVERFLOW_DELTA_MAX     0xfe // max delta we can store
 
-#define NS_FRAME_OVERFLOW_NONE    0x00000000 // there is no overflow rect;
+#define NS_FRAME_OVERFLOW_NONE    0x00000000 // there are no overflow rects;
                                              // code relies on this being
                                              // the all-zero value
 
@@ -784,22 +784,17 @@ public:
    * we don't bother as the cost of the allocation has already been paid.)
    */
   void SetRect(const nsRect& aRect) {
-    if (HasOverflowRect() && mOverflow.mType != NS_FRAME_OVERFLOW_LARGE) {
-      nsRect r = GetOverflowRect();
+    if (mOverflow.mType != NS_FRAME_OVERFLOW_LARGE &&
+        mOverflow.mType != NS_FRAME_OVERFLOW_NONE) {
+      nsOverflowAreas overflow = GetOverflowAreas();
       mRect = aRect;
-      SetOverflowRect(r);
+      SetOverflowAreas(overflow);
     } else {
       mRect = aRect;
     }
   }
   void SetSize(const nsSize& aSize) {
-    if (HasOverflowRect() && mOverflow.mType != NS_FRAME_OVERFLOW_LARGE) {
-      nsRect r = GetOverflowRect();
-      mRect.SizeTo(aSize);
-      SetOverflowRect(r);
-    } else {
-      mRect.SizeTo(aSize);
-    }
+    SetRect(nsRect(mRect.TopLeft(), aSize));
   }
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
 
@@ -834,6 +829,11 @@ public:
   static void DestroyPoint(void* aPropertyValue)
   {
     delete static_cast<nsPoint*>(aPropertyValue);
+  }
+
+  static void DestroyOverflowAreas(void* aPropertyValue)
+  {
+    delete static_cast<nsOverflowAreas*>(aPropertyValue);
   }
 
 #ifdef _MSC_VER
@@ -2055,21 +2055,48 @@ public:
   void InvalidateFrameSubtree();
 
   /**
-   * Invalidate the overflow area for this frame. Invalidates this
-   * frame's overflow rect. Does not necessarily cause ThebesLayers for
-   * descendant frames to be repainted; only this frame can be relied on
-   * to be repainted.
+   * Invalidates this frame's visual overflow rect. Does not necessarily
+   * cause ThebesLayers for descendant frames to be repainted; only this
+   * frame can be relied on to be repainted.
    */
   void InvalidateOverflowRect();
 
   /**
-   * Computes a rect that encompasses everything that might be painted by
+   * Returns a rect that encompasses everything that might be painted by
    * this frame.  This includes this frame, all its descendent frames, this
    * frame's outline, and descentant frames' outline, but does not include
    * areas clipped out by the CSS "overflow" and "clip" properties.
    *
-   * HasOverflowRect() (below) will return PR_TRUE when this overflow rect
-   * has been explicitly set, even if it matches mRect.
+   * HasOverflowRects() (below) will return PR_TRUE when this overflow
+   * rect has been explicitly set, even if it matches mRect.
+   * XXX Note: because of a space optimization using the formula above,
+   * during reflow this function does not give accurate data if
+   * FinishAndStoreOverflow has been called but mRect hasn't yet been
+   * updated yet.  FIXME: This actually isn't true, but it should be.
+   *
+   * The visual overflow rect should NEVER be used for things that
+   * affect layout.  The scrollable overflow rect is permitted to affect
+   * layout.
+   *
+   * @return the rect relative to this frame's origin, but after
+   * CSS transforms have been applied (i.e. not really this frame's coordinate
+   * system, and may not contain the frame's border-box, e.g. if there
+   * is a CSS transform scaling it down)
+   */
+  nsRect GetVisualOverflowRect() const {
+    return GetOverflowRect(eVisualOverflow);
+  }
+
+  /**
+   * Returns a rect that encompasses the area of this frame that the
+   * user should be able to scroll to reach.  This is similar to
+   * GetVisualOverflowRect, but does not include outline or shadows, and
+   * may in the future include more margins than visual overflow does.
+   * It does not include areas clipped out by the CSS "overflow" and
+   * "clip" properties.
+   *
+   * HasOverflowRects() (below) will return PR_TRUE when this overflow
+   * rect has been explicitly set, even if it matches mRect.
    * XXX Note: because of a space optimization using the formula above,
    * during reflow this function does not give accurate data if
    * FinishAndStoreOverflow has been called but mRect hasn't yet been
@@ -2080,41 +2107,36 @@ public:
    * system, and may not contain the frame's border-box, e.g. if there
    * is a CSS transform scaling it down)
    */
-  nsRect GetOverflowRect() const;
+  nsRect GetScrollableOverflowRect() const {
+    return GetOverflowRect(eScrollableOverflow);
+  }
+
+  nsRect GetOverflowRect(nsOverflowType aType) const;
+
+  nsOverflowAreas GetOverflowAreas() const;
 
   /**
-   * Computes a rect that encompasses everything that might be painted by
-   * this frame.  This includes this frame, all its descendent frames, this
-   * frame's outline, and descentant frames' outline, but does not include
-   * areas clipped out by the CSS "overflow" and "clip" properties.
-   *
-   * HasOverflowRect() (below) will return PR_TRUE when this overflow rect
-   * is different from nsRect(0, 0, GetRect().width, GetRect().height).
-   * XXX Note: because of a space optimization using the formula above,
-   * during reflow this function does not give accurate data if
-   * FinishAndStoreOverflow has been called but mRect hasn't yet been
-   * updated yet.
+   * Same as GetScrollableOverflowRect, except relative to the parent
+   * frame.
    *
    * @return the rect relative to the parent frame, in the parent frame's
    * coordinate system
    */
-  nsRect GetOverflowRectRelativeToParent() const;
+  nsRect GetScrollableOverflowRectRelativeToParent() const;
 
   /**
-   * Computes a rect that encompasses everything that might be painted by
-   * this frame.  This includes this frame, all its descendent frames, this
-   * frame's outline, and descentant frames' outline, but does not include
-   * areas clipped out by the CSS "overflow" and "clip" properties.
+   * Like GetVisualOverflowRect, except in this frame's
+   * coordinate system (before transforms are applied).
    *
    * @return the rect relative to this frame, before any CSS transforms have
    * been applied, i.e. in this frame's coordinate system
    */
-  nsRect GetOverflowRectRelativeToSelf() const;
+  nsRect GetVisualOverflowRectRelativeToSelf() const;
 
   /**
-   * Store the overflow area in the frame's mOverflow.mDeltas fields or
-   * as a frame property in the frame manager so that it can be retrieved
-   * later without reflowing the frame.
+   * Store the overflow area in the frame's mOverflow.mVisualDeltas
+   * fields or as a frame property in the frame manager so that it can
+   * be retrieved later without reflowing the frame.
    */
   void FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize);
 
@@ -2126,14 +2148,14 @@ public:
    * Returns whether the frame has an overflow rect that is different from
    * its border-box.
    */
-  PRBool HasOverflowRect() const {
+  PRBool HasOverflowAreas() const {
     return mOverflow.mType != NS_FRAME_OVERFLOW_NONE;
   }
 
   /**
-   * Removes any stored overflow rect from the frame.
+   * Removes any stored overflow rects (visual and scrollable) from the frame.
    */
-  void ClearOverflowRect();
+  void ClearOverflowRects();
 
   /**
    * Determine whether borders should not be painted on certain sides of the
@@ -2539,9 +2561,9 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   /**
    * Same thing as nsFrame::CheckInvalidateSizeChange, but more flexible.  The
    * implementation of this method must not depend on the mRect or
-   * GetOverflowRect() of the frame!  Note that it's safe to assume in this
-   * method that the frame origin didn't change.  If it did, whoever moved the
-   * frame will invalidate as needed anyway.
+   * GetVisualOverflowRect() of the frame!  Note that it's safe to
+   * assume in this method that the frame origin didn't change.  If it
+   * did, whoever moved the frame will invalidate as needed anyway.
    */
   void CheckInvalidateSizeChange(const nsRect& aOldRect,
                                  const nsRect& aOldOverflowRect,
@@ -2589,9 +2611,9 @@ protected:
       PRUint8 mTop;
       PRUint8 mRight;
       PRUint8 mBottom;
-    } mDeltas;
+    } mVisualDeltas;
   } mOverflow;
-  
+
   // Helpers
   /**
    * For frames that have top-level windows (top-level viewports,
@@ -2685,8 +2707,22 @@ protected:
    nsresult PeekOffsetParagraph(nsPeekOffsetStruct *aPos);
 
 private:
-  nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
-  void SetOverflowRect(const nsRect& aRect);
+  nsOverflowAreas* GetOverflowAreasProperty();
+  nsRect GetVisualOverflowFromDeltas() const {
+    NS_ABORT_IF_FALSE(mOverflow.mType != NS_FRAME_OVERFLOW_LARGE,
+                      "should not be called when overflow is in a property");
+    // Calculate the rect using deltas from the frame's border rect.
+    // Note that the mOverflow.mDeltas fields are unsigned, but we will often
+    // need to return negative values for the left and top, so take care
+    // to cast away the unsigned-ness.
+    return nsRect(-(PRInt32)mOverflow.mVisualDeltas.mLeft,
+                  -(PRInt32)mOverflow.mVisualDeltas.mTop,
+                  mRect.width + mOverflow.mVisualDeltas.mRight +
+                                mOverflow.mVisualDeltas.mLeft,
+                  mRect.height + mOverflow.mVisualDeltas.mBottom +
+                                 mOverflow.mVisualDeltas.mTop);
+  }
+  void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
   nsPoint GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const;
 
 #ifdef NS_DEBUG
