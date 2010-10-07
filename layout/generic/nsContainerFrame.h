@@ -277,7 +277,7 @@ public:
    */
   nsresult ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
                                            const nsHTMLReflowState& aReflowState,
-                                           nsRect&                  aOverflowRect,
+                                           nsOverflowAreas&         aOverflowRects,
                                            PRUint32                 aFlags,
                                            nsReflowStatus&          aStatus);
 
