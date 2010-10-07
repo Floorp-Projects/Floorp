@@ -46,7 +46,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
   try {
-    Cu.import("resource://gre/modules/HUDService.jsm");
+    Cu.import("resource:///modules/HUDService.jsm");
   }
   catch (ex) {
     dump(ex + "\n");
@@ -56,7 +56,7 @@ XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
 
 XPCOMUtils.defineLazyGetter(this, "ConsoleUtils", function () {
   try {
-    Cu.import("resource://gre/modules/HUDService.jsm");
+    Cu.import("resource:///modules/HUDService.jsm");
   }
   catch (ex) {
     dump(ex + "\n");

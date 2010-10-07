@@ -47,6 +47,8 @@ endif
 
 tier_app_dirs += $(MOZ_BRANDING_DIRECTORY)
 
+tier_app_dirs += toolkit/components/console/hudservice
+
 tier_app_dirs += browser
 
 installer:
