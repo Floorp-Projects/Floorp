@@ -4397,18 +4397,33 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
 
 /*
  * Emit a guard for condition (cond), expecting to evaluate to boolean result
- * (expected) and using the supplied side exit if the conditon doesn't hold.
+ * (expected) and using the supplied side exit if the condition doesn't hold.
+ *
+ * Callers shouldn't generate guards that always exit (which can occur due to
+ * optimization of the guard condition) because it's bad for both compile-time
+ * speed (all the code generated after the guard is dead) and run-time speed
+ * (fragment that always exit are slow).  This function has two modes for
+ * handling an always-exit guard;  which mode is used depends on the value of
+ * abortIfAlwaysExits:
+ *
+ * - abortIfAlwaysExits == false:  This is the default mode.  If the guard
+ *   will always exit, we assert (in debug builds) as a signal that we are
+ *   generating bad traces.  (In optimized builds that lack assertions the
+ *   guard will be generated correctly, so the code will be slow but safe.) In
+ *   this mode, the caller is responsible for not generating an always-exit
+ *   guard.  The return value will always be RECORD_CONTINUE, so the caller
+ *   need not check it.
+ *
+ * - abortIfAlwaysExits == true:  If the guard will always exit, we abort
+ *   recording and return RECORD_STOP;  otherwise we generate the guard
+ *   normally and return RECORD_CONTINUE.  This mode can be used when the
+ *   caller doesn't know ahead of time whether the guard will always exit.  In
+ *   this mode, the caller must check the return value.
  */
-JS_REQUIRES_STACK void
-TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit,
+                     bool abortIfAlwaysExits/* = false */)
 {
-    debug_only_printf(LC_TMRecorder,
-                      "    About to try emitting guard code for "
-                      "SideExit=%p exitType=%s\n",
-                      (void*)exit, getExitName(exit->exitType));
-
-    GuardRecord* guardRec = createGuardRecord(exit);
-
     if (exit->exitType == LOOP_EXIT)
         tree->sideExits.add(exit);
 
@@ -4417,12 +4432,42 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
         cond = cond->isI() ? lir->insEqI_0(cond) : lir->insEqP_0(cond);
     }
 
-    LIns* guardIns =
-        lir->insGuard(expected ? LIR_xf : LIR_xt, cond, guardRec);
-    if (!guardIns) {
-        debug_only_print0(LC_TMRecorder,
-                          "    redundant guard, eliminated, no codegen\n");
+    if ((cond->isImmI(0) && expected) || (cond->isImmI(1) && !expected)) {
+        if (abortIfAlwaysExits) {
+            /* The guard always exits, the caller must check for an abort. */
+            RETURN_STOP("Constantly false guard detected");
+        }
+        /*
+         * If this assertion fails, first decide if you want recording to
+         * abort in the case where the guard always exits.  If not, find a way
+         * to detect that case and avoid calling guard().  Otherwise, change
+         * the invocation of guard() so it passes in abortIfAlwaysExits=true,
+         * and have the caller check the return value, eg. using
+         * CHECK_STATUS().  (In optimized builds, we'll fall through to the
+         * insGuard() below and an always-exits guard will be inserted, which
+         * is correct but sub-optimal.)
+         */
+        JS_ASSERT(0);
     }
+
+    /*
+     * Nb: if the guard is never taken, no instruction will be created and
+     * insGuard() will return NULL.  This is a good thing.
+     * */
+    lir->insGuard(expected ? LIR_xf : LIR_xt, cond, createGuardRecord(exit));
+    return RECORD_CONTINUE;
+}
+
+/*
+ * Emit a guard for condition (cond), expecting to evaluate to boolean result
+ * (expected) and generate a side exit with type exitType to jump to if the
+ * condition does not hold.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType,
+                     bool abortIfAlwaysExits/* = false */)
+{
+    return guard(expected, cond, snapshot(exitType), abortIfAlwaysExits);
 }
 
 /*
@@ -4479,17 +4524,6 @@ TraceRecorder::copy(VMSideExit* copy)
     TreevisLogExit(cx, exit);
 #endif
     return exit;
-}
-
-/*
- * Emit a guard for condition (cond), expecting to evaluate to boolean result
- * (expected) and generate a side exit with type exitType to jump to if the
- * condition does not hold.
- */
-JS_REQUIRES_STACK void
-TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
-{
-    guard(expected, cond, snapshot(exitType));
 }
 
 /*
@@ -8533,21 +8567,22 @@ TraceRecorder::f2u(LIns* f)
     return lir->insCall(&js_DoubleToUint32_ci, &f);
 }
 
-JS_REQUIRES_STACK LIns*
-TraceRecorder::makeNumberInt32(LIns* f)
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::makeNumberInt32(LIns* d, LIns** out)
 {
-    JS_ASSERT(f->isD());
-    LIns* x;
-    if (!isPromote(f)) {
-        // This means "convert double to int if it's integral, otherwise
-        // exit".  We first convert the double to an int, then convert it back
-        // and exit if the two doubles don't match.
-        x = d2i(f, /* resultCanBeImpreciseIfFractional = */true);
-        guard(true, lir->ins2(LIR_eqd, f, lir->ins1(LIR_i2d, x)), MISMATCH_EXIT);
-    } else {
-        x = demote(lir, f);
+    JS_ASSERT(d->isD());
+    if (isPromote(d)) {
+        *out = demote(lir, d);
+        return RECORD_CONTINUE;
     }
-    return x;
+
+    // This means "convert double to int if it's integral, otherwise
+    // exit".  We first convert the double to an int, then convert it back
+    // and exit if the two doubles don't match.  If 'f' is a non-integral
+    // immediate we'll end up aborting.
+    *out = d2i(d, /* resultCanBeImpreciseIfFractional = */true);
+    return guard(true, lir->ins2(LIR_eqd, d, i2d(*out)), MISMATCH_EXIT,
+                 /* abortIfAlwaysExits = */true);
 }
 
 JS_REQUIRES_STACK LIns*
@@ -11265,9 +11300,14 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             if (vp[1].isString()) {
                 JSString *str = vp[1].toString();
                 if (native == js_str_charAt) {
+                    jsdouble i = vp[2].toNumber();
+                    if (i < 0 || i >= str->length())
+                        RETURN_STOP("charAt out of bounds");
                     LIns* str_ins = get(&vp[1]);
                     LIns* idx_ins = get(&vp[2]);
-                    set(&vp[0], getCharAt(str, str_ins, idx_ins, mode));
+                    LIns* char_ins;
+                    CHECK_STATUS(getCharAt(str, str_ins, idx_ins, mode, &char_ins));
+                    set(&vp[0], char_ins);
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
                 } else if (native == js_str_charCodeAt) {
@@ -11276,7 +11316,9 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                         RETURN_STOP("charCodeAt out of bounds");
                     LIns* str_ins = get(&vp[1]);
                     LIns* idx_ins = get(&vp[2]);
-                    set(&vp[0], getCharCodeAt(str, str_ins, idx_ins));
+                    LIns* charCode_ins;
+                    CHECK_STATUS(getCharCodeAt(str, str_ins, idx_ins, &charCode_ins));
+                    set(&vp[0], charCode_ins);
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
                 }
@@ -11649,7 +11691,9 @@ TraceRecorder::record_JSOP_DELELEM()
 
     enterDeepBailCall();
     if (hasInt32Repr(idx)) {
-        LIns* args[] = { strictModeCode_ins, makeNumberInt32(get(&idx)), get(&lval), cx_ins };
+        LIns* num_ins;
+        CHECK_STATUS_A(makeNumberInt32(get(&idx), &num_ins));
+        LIns* args[] = { strictModeCode_ins, num_ins, get(&lval), cx_ins };
         rval_ins = lir->insCall(&DeleteIntKey_ci, args);
     } else if (idx.isString()) {
         LIns* args[] = { strictModeCode_ins, get(&idx), get(&lval), cx_ins };
@@ -12312,7 +12356,7 @@ JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByIndex, CONTEXT, OBJECT, INT
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::getPropertyByIndex(LIns* obj_ins, LIns* index_ins, Value* outp)
 {
-    index_ins = makeNumberInt32(index_ins);
+    CHECK_STATUS(makeNumberInt32(index_ins, &index_ins));
 
     // See note in getPropertyByName about vp.
     enterDeepBailCall();
@@ -12475,10 +12519,11 @@ TraceRecorder::getStringChars(LIns* str_ins)
                                 ACCSET_OTHER), "chars");
 }
 
-JS_REQUIRES_STACK LIns*
-TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns** out)
 {
-    idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
+    CHECK_STATUS(makeNumberInt32(idx_ins, &idx_ins));
+    idx_ins = lir->insUI2P(idx_ins);
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
                                     ACCSET_OTHER);
     LIns *br = lir->insBranch(LIR_jt,
@@ -12493,9 +12538,10 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
           lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
           snapshot(MISMATCH_EXIT));
     LIns *chars_ins = getStringChars(str_ins);
-    return i2d(lir->insLoad(LIR_ldus2ui,
+    *out = i2d(lir->insLoad(LIR_ldus2ui,
                             lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
                             ACCSET_OTHER, LOAD_CONST));
+    return RECORD_CONTINUE;
 }
 
 JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
@@ -12518,10 +12564,11 @@ TraceRecorder::getUnitString(LIns* str_ins, LIns* idx_ins)
                                    (sizeof(JSString) == 16) ? 4 : 5));
 }
 
-JS_REQUIRES_STACK LIns*
-TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode)
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode, LIns** out)
 {
-    idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
+    CHECK_STATUS(makeNumberInt32(idx_ins, &idx_ins));
+    idx_ins = lir->insUI2P(idx_ins);
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
                                     ACCSET_OTHER);
 
@@ -12537,11 +12584,10 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode)
                               idx_ins,
                               lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT));
 
-    LIns* ret;
     if (mode == JSOP_GETELEM) {
         guard(true, inRange, MISMATCH_EXIT);
 
-        ret = getUnitString(str_ins, idx_ins);
+        *out = getUnitString(str_ins, idx_ins);
     } else {
         LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
         lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
@@ -12551,9 +12597,9 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode)
         lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
         label(br2);
 
-        ret = lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
+        *out = lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
     }
-    return ret;
+    return RECORD_CONTINUE;
 }
 
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I
@@ -12596,7 +12642,9 @@ TraceRecorder::record_JSOP_GETELEM()
         int i = asInt32(idx);
         if (size_t(i) >= lval.toString()->length())
             RETURN_STOP_A("Invalid string index in JSOP_GETELEM");
-        set(&lval, getCharAt(lval.toString(), obj_ins, idx_ins, JSOP_GETELEM));
+        LIns* char_ins;
+        CHECK_STATUS_A(getCharAt(lval.toString(), obj_ins, idx_ins, JSOP_GETELEM, &char_ins));
+        set(&lval, char_ins);
         return ARECORD_CONTINUE;
     }
 
@@ -12638,7 +12686,7 @@ TraceRecorder::record_JSOP_GETELEM()
                 // If the index is not a constant expression, we generate LIR to load the value from
                 // the native stack area. The guard on js_ArgumentClass above ensures the up-to-date
                 // value has been written back to the native stack area.
-                idx_ins = makeNumberInt32(idx_ins);
+                CHECK_STATUS_A(makeNumberInt32(idx_ins, &idx_ins));
 
                 /*
                  * For small nactual,
@@ -12832,7 +12880,7 @@ JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, InitPropertyByIndex, CONTEXT, OBJECT, IN
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, Value* rvalp, bool init)
 {
-    index_ins = makeNumberInt32(index_ins);
+    CHECK_STATUS(makeNumberInt32(index_ins, &index_ins));
 
     if (init) {
         LIns* rval_ins = box_value_for_native_call(*rvalp, get(rvalp));
@@ -12891,7 +12939,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         // The index was on the stack and is therefore a LIR float; force it to
         // be an integer.                              
-        idx_ins = makeNumberInt32(idx_ins);
+        CHECK_STATUS_A(makeNumberInt32(idx_ins, &idx_ins));
 
         // Ensure idx >= 0 && idx < length (by using uint32)
         lir->insGuard(LIR_xf,
@@ -13006,7 +13054,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         // The index was on the stack and is therefore a LIR float. Force it to
         // be an integer.
-        idx_ins = makeNumberInt32(idx_ins);
+        CHECK_STATUS_A(makeNumberInt32(idx_ins, &idx_ins));
 
         if (MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32) {
             /*
@@ -13874,7 +13922,8 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     JSObject* obj = &oval.toObject();
     LIns* obj_ins = get(&oval);
     jsint idx = ival.toInt32();
-    LIns* idx_ins = makeNumberInt32(get(&ival));
+    LIns* idx_ins;
+    CHECK_STATUS(makeNumberInt32(get(&ival), &idx_ins));
 
     /*
      * Arrays have both a length and a capacity, but we only need to check
@@ -13938,7 +13987,8 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     JSObject* obj = &oval.toObject();
     LIns* obj_ins = get(&oval);
     jsint idx = ival.toInt32();
-    LIns* idx_ins = makeNumberInt32(get(&ival));
+    LIns* idx_ins;
+    CHECK_STATUS_A(makeNumberInt32(get(&ival), &idx_ins));
     LIns* pidx_ins = lir->insUI2P(idx_ins);
 
     js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
@@ -14856,7 +14906,9 @@ TraceRecorder::record_JSOP_IN()
     if (lval.isInt32()) {
         if (!js_Int32ToId(cx, lval.toInt32(), &id))
             RETURN_ERROR_A("OOM converting left operand of JSOP_IN to string");
-        LIns* args[] = { makeNumberInt32(get(&lval)), obj_ins, cx_ins };
+        LIns* num_ins;
+        CHECK_STATUS_A(makeNumberInt32(get(&lval), &num_ins));
+        LIns* args[] = { num_ins, obj_ins, cx_ins };
         x = lir->insCall(&js_HasNamedPropertyInt32_ci, args);
     } else if (lval.isString()) {
         if (!js_ValueToStringId(cx, lval, &id))
