@@ -6471,6 +6471,12 @@ public class Tokenizer implements Locator {
                     handleNcrValue(returnState);
                     state = returnState;
                     continue;
+                case CDATA_RSQB:
+                    tokenHandler.characters(Tokenizer.RSQB_RSQB, 0, 1);
+                    break eofloop;
+                case CDATA_RSQB_RSQB:
+                    tokenHandler.characters(Tokenizer.RSQB_RSQB, 0, 2);
+                    break eofloop;
                 case DATA:
                 default:
                     break eofloop;
