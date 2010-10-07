@@ -2228,8 +2228,8 @@ ComputeIsJITBroken()
                 "SPH-D700",     // Samsung i9000, Epic device
                 NULL
             };
-            for (const char* hw = blacklist[0]; hw; ++hw) {
-                if (line.npos != line.find(hw)) {
+            for (const char** hw = &blacklist[0]; *hw; ++hw) {
+                if (line.npos != line.find(*hw)) {
                     broken = true;
                     break;
                 }
