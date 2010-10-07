@@ -305,24 +305,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID,nscolor &aColor)
 
 #ifdef NS_LOOKANDFEEL_DEBUG
 static const char *metricToString[] = {
-    "eMetric_WindowTitleHeight",
-    "eMetric_WindowBorderWidth",
-    "eMetric_WindowBorderHeight",
-    "eMetric_Widget3DBorder",
-    "eMetric_TextFieldBorder",
-    "eMetric_TextFieldHeight",
-    "eMetric_TextVerticalInsidePadding",
-    "eMetric_TextShouldUseVerticalInsidePadding",
-    "eMetric_TextHorizontalInsideMinimumPadding", 
-    "eMetric_TextShouldUseHorizontalInsideMinimumPadding",
-    "eMetric_ButtonHorizontalInsidePaddingNavQuirks",  
-    "eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks", 
-    "eMetric_CheckboxSize",
-    "eMetric_RadioboxSize",
-    "eMetric_ListShouldUseHorizontalInsideMinimumPadding",
-    "eMetric_ListHorizontalInsideMinimumPadding", 
-    "eMetric_ListShouldUseVerticalInsidePadding",
-    "eMetric_ListVerticalInsidePadding",
     "eMetric_CaretBlinkTime",
     "eMetric_CaretWidth",
     "eMetric_ShowCaretDuringSelection",
@@ -333,7 +315,6 @@ static const char *metricToString[] = {
     "eMetric_DragThresholdX",
     "eMetric_DragThresholdY",
     "eMetric_UseAccessibilityTheme",
-    "eMetric_IsScreenReaderActive",
     "eMetric_ScrollArrowStyle",
     "eMetric_ScrollSliderStyle",
     "eMetric_ScrollButtonLeftMouseButtonAction",
@@ -371,78 +352,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
   QStyle* qStyle = qApp->style();
 
   switch (aID) {
-    case eMetric_WindowTitleHeight:
-      aMetric = qStyle->pixelMetric(QStyle::PM_TitleBarHeight);
-      break;
-
-    case eMetric_WindowBorderWidth:
-      // There was once code in nsDeviceContextQt::GetSystemAttribute to
-      // use the border width obtained from a widget in its Init method.
-      break;
-
-    case eMetric_WindowBorderHeight:
-      // There was once code in nsDeviceContextQt::GetSystemAttribute to
-      // use the border width obtained from a widget in its Init method.
-      break;
-
-    case eMetric_Widget3DBorder:
-      aMetric = 4;
-      break;
-
-    case eMetric_TextFieldHeight:
-      aMetric = 15;
-      break;
-
-    case eMetric_TextFieldBorder:
-      aMetric = 2;
-      break;
-
-    case eMetric_TextVerticalInsidePadding:
-      aMetric = 0;
-      break;
-
-    case eMetric_TextShouldUseVerticalInsidePadding:
-      aMetric = 0;
-      break;
-
-    case eMetric_TextHorizontalInsideMinimumPadding:
-      aMetric = 15;
-      break;
-
-    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-      aMetric = 1;
-      break;
-
-    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-      aMetric = 10;
-      break;
-
-    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-      aMetric = 8;
-      break;
-
-    case eMetric_CheckboxSize:
-    case eMetric_RadioboxSize:
-      aMetric = 15;
-      aMetric = qStyle->pixelMetric(QStyle::PM_CheckListButtonSize);
-      break;
-
-    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-      aMetric = 15;
-      break;
-
-    case eMetric_ListHorizontalInsideMinimumPadding:
-      aMetric = 15;
-      break;
-
-    case eMetric_ListShouldUseVerticalInsidePadding:
-      aMetric = 1;
-      break;
-
-    case eMetric_ListVerticalInsidePadding:
-      aMetric = 1;
-      break;
-
     case eMetric_CaretBlinkTime:
       aMetric = 500;
       break;
@@ -507,14 +416,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
 
 #ifdef NS_LOOKANDFEEL_DEBUG
 static const char *floatMetricToString[] = {
-    "eMetricFloat_TextFieldVerticalInsidePadding",
-    "eMetricFloat_TextFieldHorizontalInsidePadding",
-    "eMetricFloat_TextAreaVerticalInsidePadding",
-    "eMetricFloat_TextAreaHorizontalInsidePadding",
-    "eMetricFloat_ListVerticalInsidePadding",
-    "eMetricFloat_ListHorizontalInsidePadding",
-    "eMetricFloat_ButtonVerticalInsidePadding",
-    "eMetricFloat_ButtonHorizontalInsidePadding",
     "eMetricFloat_IMEUnderlineRelativeSize"
 };
 #endif
@@ -532,38 +433,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
   res = NS_OK;
 
   switch (aID) {
-    case eMetricFloat_TextFieldVerticalInsidePadding:
-      aMetric = 0.25f;
-      break;
-
-    case eMetricFloat_TextFieldHorizontalInsidePadding:
-      aMetric = 0.95f; // large number on purpose so minimum padding is used
-      break;
-
-    case eMetricFloat_TextAreaVerticalInsidePadding:
-      aMetric = 0.40f;
-      break;
-
-    case eMetricFloat_TextAreaHorizontalInsidePadding:
-      aMetric = 0.40f; // large number on purpose so minimum padding is used
-      break;
-
-    case eMetricFloat_ListVerticalInsidePadding:
-      aMetric = 0.10f;
-      break;
-
-    case eMetricFloat_ListHorizontalInsidePadding:
-      aMetric = 0.40f;
-      break;
-
-    case eMetricFloat_ButtonVerticalInsidePadding:
-      aMetric = 0.25f;
-      break;
-
-    case eMetricFloat_ButtonHorizontalInsidePadding:
-      aMetric = 0.25f;
-      break;
-
     case eMetricFloat_IMEUnderlineRelativeSize:
       aMetric = 1.0f;
       break;

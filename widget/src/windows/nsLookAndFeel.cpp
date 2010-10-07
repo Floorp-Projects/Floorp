@@ -355,62 +355,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   res = NS_OK;
 
   switch (aID) {
-    case eMetric_WindowTitleHeight:
-        aMetric = ::GetSystemMetrics(SM_CYCAPTION);
-        break;
-#ifndef WINCE
-    case eMetric_WindowBorderWidth:
-        aMetric = ::GetSystemMetrics(SM_CXFRAME);
-        break;
-    case eMetric_WindowBorderHeight:
-        aMetric = ::GetSystemMetrics(SM_CYFRAME);
-        break;
-#endif
-    case eMetric_Widget3DBorder:
-        aMetric = ::GetSystemMetrics(SM_CXEDGE);
-        break;
-    case eMetric_TextFieldBorder:
-        aMetric = 3;
-        break;
-    case eMetric_TextFieldHeight:
-        aMetric = 24;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-        aMetric = 10;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-        aMetric = 8;
-        break;
-    case eMetric_CheckboxSize:
-        aMetric = 12;
-        break;
-    case eMetric_RadioboxSize:
-        aMetric = 12;
-        break;
-    case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
-    case eMetric_TextVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_TextShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 1;
-        break;
-    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
-        break;
-    case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
-    case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_ListVerticalInsidePadding:
-        aMetric = 0;
-        break;
     case eMetric_CaretBlinkTime:
         aMetric = (PRInt32)::GetCaretBlinkTime();
         break;
@@ -459,11 +403,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
         aMetric = ((contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0);
         break;
-    case eMetric_IsScreenReaderActive:
-        // This will default to the Windows' default
-        // (off by default) on error.
-        aMetric = GetSystemParam(SPI_GETSCREENREADER, 0);
-      break;
 #endif
     case eMetric_ScrollArrowStyle:
         aMetric = eMetric_ScrollArrowStyleSingle;
@@ -628,30 +567,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   res = NS_OK;
 
   switch (aID) {
-    case eMetricFloat_TextFieldVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_TextFieldHorizontalInsidePadding:
-        aMetric = 1.025f;
-        break;
-    case eMetricFloat_TextAreaVerticalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_TextAreaHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ListVerticalInsidePadding:
-        aMetric = 0.10f;
-        break;
-    case eMetricFloat_ListHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ButtonVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_ButtonHorizontalInsidePadding:
-        aMetric = 0.25f;
-        break;
     case eMetricFloat_IMEUnderlineRelativeSize:
         aMetric = 1.0f;
         break;
