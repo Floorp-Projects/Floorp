@@ -597,7 +597,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   if (prevCanvasFrame) {
     ReflowOverflowContainerChildren(aPresContext, aReflowState,
-                                    aDesiredSize.mOverflowArea, 0,
+                                    aDesiredSize.mOverflowAreas, 0,
                                     aStatus);
   }
 

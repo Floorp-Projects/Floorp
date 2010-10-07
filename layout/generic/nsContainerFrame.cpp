@@ -856,7 +856,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
 nsresult
 nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
                                                   const nsHTMLReflowState& aReflowState,
-                                                  nsRect&                  aOverflowRect,
+                                                  nsOverflowAreas&         aOverflowRects,
                                                   PRUint32                 aFlags,
                                                   nsReflowStatus&          aStatus)
 {
@@ -993,7 +993,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       if (aReflowState.mFloatManager)
         nsBlockFrame::RecoverFloatsFor(frame, *aReflowState.mFloatManager);
     }
-    ConsiderChildOverflow(aOverflowRect, frame);
+    ConsiderChildOverflow(aOverflowRects, frame);
   }
 
   return NS_OK;
