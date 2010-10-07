@@ -1,0 +1,79 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=589436
+-->
+<head>
+  <title>Test for non-animated strings</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=589436">Mozilla Bug 589436</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120px" height="120px"
+     onload="this.pauseAnimations()">
+  <defs>
+    <path id="moveFarAway"      d="M300,300 h0"/>
+    <path id="moveToUpperLeft"  d="M100,100 h0"/>
+  </defs>
+  <script id="script" xlink:href="">
+    <animate attributeName="xlink:href" from="" to="animated" dur="0.5s" begin="1s"
+      fill="freeze" id="animate"/>
+  </script>
+  <rect class="test" x="0" y="0" width="50" height="50">
+    <animateMotion begin="1" dur="1" fill="freeze">
+      <mpath id="mpath" xlink:href="#moveFarAway">
+        <animate attributeName="xlink:href" from="#moveFarAway" to="#moveToUpperLeft" dur="0.5s" begin="1s"
+          fill="freeze"/>
+      </mpath>
+    </animateMotion>
+  </rect>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test some strings are not animatable **/
+
+/* Global Variables */
+var svg = document.getElementById("svg");
+var script = document.getElementById('script');
+var mpath = document.getElementById('mpath');
+var animate = document.getElementById('animate');
+
+SimpleTest.waitForExplicitFinish();
+
+function main() {
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  // Sanity check: check initial values
+  is(script.href.baseVal, "", "Unexpected initial script baseVal");
+  is(script.href.animVal, "", "Unexpected initial script animVal");
+  is(mpath.href.baseVal, "#moveFarAway", "Unexpected initial mpath baseVal");
+  is(mpath.href.animVal, "#moveFarAway", "Unexpected initial mpath animVal");
+
+  // Move to the end of the animation - should make no difference
+  svg.setCurrentTime(2);
+
+  is(script.href.baseVal, "", "Unexpected value for script baseVal after animation");
+  is(script.href.animVal, "", "Unexpected value for script animVal after animation");
+  is(mpath.href.baseVal, "#moveFarAway", "Unexpected value for mpath baseVal after animation");
+  is(mpath.href.animVal, "#moveFarAway", "Unexpected value for mpath animVal after animation");
+
+  SimpleTest.finish();
+}
+
+if (animate && animate.targetElement) {
+  window.addEventListener("load", main, false);
+} else {
+  ok(true); // Skip tests but don't report 'todo' either
+  SimpleTest.finish();
+}
+]]>
+</script>
+</pre>
+</body>
+</html>
