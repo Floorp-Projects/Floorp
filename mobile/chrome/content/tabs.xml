@@ -9,10 +9,10 @@
   <binding id="documenttab">
     <content>
       <xul:stack anonid="page" class="documenttab-container" flex="1">
-        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" width="106" height="64" moz-opaque="true" empty="true"
+        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" width="104" height="65" moz-opaque="true" empty="true"
           onclick="document.getBindingParent(this)._onClick()"/>
-        <xul:hbox class="documenttab-reload" left="0" top="0" width="122" height="80" onclick="document.getBindingParent(this)._onUndo();"/>
-        <xul:hbox class="documenttab-close-container" left="0" top="10" height="64" width="55" align="center" onclick="document.getBindingParent(this)._onClose()">
+        <xul:hbox class="documenttab-reload" left="0" top="0" width="104" height="65" onclick="document.getBindingParent(this)._onUndo();"/>
+        <xul:hbox class="documenttab-close-container" left="0" top="0" height="65" width="55" align="center" onclick="document.getBindingParent(this)._onClose()">
           <xul:image anonid="close" class="documenttab-close" mousethrough="always"/>
         </xul:hbox>
       </xul:stack>
@@ -60,8 +60,8 @@
         <parameter name="height"/>
         <body>
           <![CDATA[
-            const tabWidth = 106;
-            const tabHeight = 64;
+            const tabWidth = 104;
+            const tabHeight = 65;
 
             let ratio = tabHeight / tabWidth;
             height = width * ratio;
@@ -180,10 +180,13 @@
           <![CDATA[
             let firstBox = this.children.firstChild.getBoundingClientRect();
             let lastBox = this.children.lastChild.getBoundingClientRect();
-            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.style.height / firstBox.height));
+
+            // XXX we can do better than using a constant here
+            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.getBoundingClientRect().height / (firstBox.heigth + 4)));
             if (this._columnsCount != columnsCount) {
               let width = Math.max(lastBox.right - firstBox.left, firstBox.right - lastBox.left);
-              this.children.style.width = width + "px";
+              // XXX we can do better than using a constant
+              this.children.style.width = (width + 20) + "px";
               this._columnsCount = columnsCount;
             }
           ]]>
