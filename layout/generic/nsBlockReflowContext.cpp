@@ -313,12 +313,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 #endif
 
-  if (!mFrame->HasOverflowRect()) {
-    // Provide overflow area for child that doesn't have any
-    mMetrics.mOverflowArea.x = 0;
-    mMetrics.mOverflowArea.y = 0;
-    mMetrics.mOverflowArea.width = mMetrics.width;
-    mMetrics.mOverflowArea.height = mMetrics.height;
+  if (!mFrame->HasOverflowAreas()) {
+    mMetrics.SetOverflowAreasToDesiredBounds();
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus) ||

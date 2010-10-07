@@ -67,7 +67,7 @@ public:
   virtual PRBool IsCollapsed(nsBoxLayoutState& aBoxLayoutState);
 
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         PRBool aRemoveOverflowArea = PR_FALSE);
+                         PRBool aRemoveOverflowAreas = PR_FALSE);
 
   NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding);

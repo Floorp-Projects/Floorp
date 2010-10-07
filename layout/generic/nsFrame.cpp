@@ -1640,7 +1640,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->GetSelectedFramesOnly() &&
       (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-    dirty = aChild->GetOverflowRect();
+    dirty = aChild->GetVisualOverflowRect();
   } else if (!(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
     // No need to descend into aChild to catch placeholders for visible
     // positioned stuff. So see if we can short-circuit frame traversal here.
@@ -1652,7 +1652,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // area even if the scrollframe itself doesn't.
     if (aChild != aBuilder->GetIgnoreScrollFrame()) {
       nsRect childDirty;
-      if (!childDirty.IntersectRect(dirty, aChild->GetOverflowRect()))
+      if (!childDirty.IntersectRect(dirty, aChild->GetVisualOverflowRect()))
         return NS_OK;
       // Usually we could set dirty to childDirty now but there's no
       // benefit, and it can be confusing. It can especially confuse
@@ -4198,14 +4198,14 @@ nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
 void
 nsIFrame::InvalidateFrameSubtree()
 {
-  Invalidate(GetOverflowRectRelativeToSelf());
+  Invalidate(GetVisualOverflowRectRelativeToSelf());
   FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
 }
 
 void
 nsIFrame::InvalidateOverflowRect()
 {
-  Invalidate(GetOverflowRectRelativeToSelf());
+  Invalidate(GetVisualOverflowRectRelativeToSelf());
 }
 
 NS_DECLARE_FRAME_PROPERTY(DeferInvalidatesProperty, nsIFrame::DestroyRegion)
@@ -4314,6 +4314,11 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
 
       nscoord offset = outline->mOutlineOffset;
       nscoord inflateBy = NS_MAX(width + offset, 0);
+      // FIXME (bug 599652): We probably want outline to be drawn around
+      // something smaller than the visual overflow rect (perhaps the
+      // scrollable overflow rect is correct).  When we change that, we
+      // need to keep this code (and the storing of properties just
+      // above) in sync with GetOutlineInnerRect in nsCSSRendering.cpp.
       r.Inflate(inflateBy, inflateBy);
       *aAnyOutlineOrEffects = PR_TRUE;
     }
@@ -4414,7 +4419,7 @@ nsIFrame::GetVisualOverflowRectRelativeToSelf() const
 void
 nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
 {
-  nsIFrame::CheckInvalidateSizeChange(mRect, GetOverflowRect(),
+  nsIFrame::CheckInvalidateSizeChange(mRect, GetVisualOverflowRect(),
       nsSize(aNewDesiredSize.width, aNewDesiredSize.height));
 }
 
@@ -4433,7 +4438,7 @@ InvalidateRectForFrameSizeChange(nsIFrame* aFrame, const nsRect& aRect)
 
 void
 nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
-                                    const nsRect& aOldOverflowRect,
+                                    const nsRect& aOldVisualOverflowRect,
                                     const nsSize& aNewDesiredSize)
 {
   if (aNewDesiredSize == aOldRect.Size())
@@ -4458,10 +4463,11 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutlineOrEffects;
   nsRect r = ComputeOutlineAndEffectsRect(this, &anyOutlineOrEffects,
-                                          aOldOverflowRect, aNewDesiredSize,
+                                          aOldVisualOverflowRect,
+                                          aNewDesiredSize,
                                           PR_FALSE);
   if (anyOutlineOrEffects) {
-    r.UnionRect(aOldOverflowRect, r);
+    r.UnionRect(aOldVisualOverflowRect, r);
     InvalidateRectForFrameSizeChange(this, r);
     return;
   }
@@ -4599,9 +4605,12 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsFrame* f = const_cast<nsFrame*>(this);
-  if (f->HasOverflowRect()) {
-    nsRect overflowArea = f->GetOverflowRect();
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+  if (f->HasOverflowAreas()) {
+    nsRect overflowArea = f->GetVisualOverflowRect();
+    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
+    overflowArea = f->GetScrollableOverflowRect();
+    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
   fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
@@ -8116,19 +8125,32 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       printf(" status=0x%x", aStatus);
     }
-    if (aFrame->HasOverflowRect()) {
-      DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
-      DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
-      DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
-      DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
-      printf(" o=(%s,%s) %s x %s", x, y, width, height);
+    if (aFrame->HasOverflowAreas()) {
+      DR_state->PrettyUC(aMetrics.VisualOverflow().x, x);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().y, y);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().width, width);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().height, height);
+      printf(" vis-o=(%s,%s) %s x %s", x, y, width, height);
 
-      nsRect storedOverflow = aFrame->GetOverflowRect();
+      nsRect storedOverflow = aFrame->GetVisualOverflowRect();
       DR_state->PrettyUC(storedOverflow.x, x);
       DR_state->PrettyUC(storedOverflow.y, y);
       DR_state->PrettyUC(storedOverflow.width, width);
       DR_state->PrettyUC(storedOverflow.height, height);
-      printf(" sto=(%s,%s) %s x %s", x, y, width, height);
+      printf(" vis-sto=(%s,%s) %s x %s", x, y, width, height);
+
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().x, x);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().y, y);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().width, width);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().height, height);
+      printf(" scr-o=(%s,%s) %s x %s", x, y, width, height);
+
+      storedOverflow = aFrame->GetScrollableOverflowRect();
+      DR_state->PrettyUC(storedOverflow.x, x);
+      DR_state->PrettyUC(storedOverflow.y, y);
+      DR_state->PrettyUC(storedOverflow.width, width);
+      DR_state->PrettyUC(storedOverflow.height, height);
+      printf(" scr-sto=(%s,%s) %s x %s", x, y, width, height);
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {

@@ -7603,7 +7603,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           if ((child->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) &&
               (aChange & nsChangeHint_RepaintFrame)) {
             FrameLayerBuilder::InvalidateThebesLayerContents(child,
-              child->GetOverflowRectRelativeToSelf());
+              child->GetVisualOverflowRectRelativeToSelf());
           }
           UpdateViewsForTree(child, aViewManager, aFrameManager, aChange);
         }
@@ -7658,13 +7658,13 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
       aFrame->MarkLayersActive();
-      aFrame->InvalidateLayer(aFrame->GetOverflowRectRelativeToSelf(),
+      aFrame->InvalidateLayer(aFrame->GetVisualOverflowRectRelativeToSelf(),
                               nsDisplayItem::TYPE_OPACITY);
     }
     
     if (aChange & nsChangeHint_UpdateTransformLayer) {
       aFrame->MarkLayersActive();
-      aFrame->InvalidateLayer(aFrame->GetOverflowRectRelativeToSelf(),
+      aFrame->InvalidateLayer(aFrame->GetVisualOverflowRectRelativeToSelf(),
                               nsDisplayItem::TYPE_TRANSFORM);
     }
   }

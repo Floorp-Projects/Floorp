@@ -1907,7 +1907,7 @@ nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
 PRBool
 nsTableRowGroupFrame::FrameCursorData::AppendFrame(nsIFrame* aFrame)
 {
-  nsRect overflowRect = aFrame->GetOverflowRect();
+  nsRect overflowRect = aFrame->GetVisualOverflowRect();
   if (overflowRect.IsEmpty())
     return PR_TRUE;
   nscoord overflowAbove = -overflowRect.y;

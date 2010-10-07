@@ -268,7 +268,7 @@ nsIFrame::GetClientRect(nsRect& aClientRect)
 }
 
 void
-nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOverflowArea)
+nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOverflowAreas)
 {
     NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetBounds Size < 0");
 
@@ -288,9 +288,9 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
 
     // Nuke the overflow area. The caller is responsible for restoring
     // it if necessary.
-    if (aRemoveOverflowArea && HasOverflowRect()) {
+    if (aRemoveOverflowAreas) {
       // remove the previously stored overflow area
-      ClearOverflowRect();
+      ClearOverflowRects();
     }
 
     if (!(flags & NS_FRAME_NO_MOVE_VIEW))
@@ -661,7 +661,7 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
   if (aDamageRect)
     damageRect = *aDamageRect;
   else
-    damageRect = GetOverflowRect();
+    damageRect = GetVisualOverflowRect();
 
   Invalidate(damageRect);
   // nsStackLayout, at least, expects us to repaint descendants even

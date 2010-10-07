@@ -399,7 +399,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Store position and overflow rect so taht we can invalidate the correct
   // area if the position changes
-  nsRect oldOverflowRect(aKidFrame->GetOverflowRect() +
+  nsRect oldOverflowRect(aKidFrame->GetVisualOverflowRect() +
                          aKidFrame->GetPosition());
   nsRect oldRect = aKidFrame->GetRect();
 

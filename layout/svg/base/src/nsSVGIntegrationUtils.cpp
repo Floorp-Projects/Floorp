@@ -74,7 +74,7 @@ GetPreEffectsOverflowRect(nsIFrame* aFrame)
     (aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
   if (r)
     return *r;
-  return aFrame->GetOverflowRect();
+  return aFrame->GetVisualOverflowRect();
 }
 
 struct BBoxCollector : public nsLayoutUtils::BoxCallback {
@@ -152,7 +152,7 @@ nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative.
-    return aFrame->GetOverflowRect();
+    return aFrame->GetVisualOverflowRect();
   }
 
   PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();

@@ -358,7 +358,7 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 NS_IMETHODIMP
