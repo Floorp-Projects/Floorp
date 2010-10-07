@@ -17,3 +17,7 @@ random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.htm
 HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 == boxshadow-skiprect.html boxshadow-skiprect-ref.html
+
+== overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
+== overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
+== overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
