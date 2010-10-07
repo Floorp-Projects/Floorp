@@ -549,4 +549,9 @@ class GeckoAppShell
         notificationManager.cancel(notificationID);
     }
 
+    public static int getDpi() {
+         DisplayMetrics metrics = new DisplayMetrics();
+         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+         return metrics.densityDpi;
+    }
 }
