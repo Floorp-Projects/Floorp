@@ -4910,8 +4910,24 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                              PR_FALSE, nsMouseEvent::eLeftButton,
                              MOUSE_INPUT_SOURCE())) {
         // Blank area hit, throw up the system menu.
+        GetSystemMenu(mWnd, TRUE); // reset the system menu
         HMENU hMenu = GetSystemMenu(mWnd, FALSE);
         if (hMenu) {
+          // update the options
+          switch(mSizeMode) {
+            case nsSizeMode_Fullscreen:
+            case nsSizeMode_Maximized:
+              EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
+              EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_GRAYED);
+              EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
+              break;
+            case nsSizeMode_Minimized:
+              EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_GRAYED);
+              break;
+            case nsSizeMode_Normal:
+              EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
+              break;
+          }
           LPARAM cmd =
             TrackPopupMenu(hMenu,
                            (TPM_LEFTBUTTON|TPM_RIGHTBUTTON|
