@@ -450,6 +450,7 @@ private:
   PRBool GetFrameBoundsWidthForTransform(nscoord &aWidth);
   PRBool GetFrameBoundsHeightForTransform(nscoord &aHeight);
   PRBool GetFrameBorderRectWidth(nscoord& aWidth);
+  PRBool GetFrameBorderRectHeight(nscoord& aHeight);
 
   struct ComputedStyleMapEntry
   {
