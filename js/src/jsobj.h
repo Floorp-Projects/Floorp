@@ -1720,12 +1720,11 @@ namespace js {
 extern bool
 SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
 
-}
-
-namespace js {
-
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
+
+extern bool
+IsBuiltinEvalFunction(JSFunction *fun);
 
 }
 #endif /* jsobj_h___ */

@@ -1155,8 +1155,11 @@ mjit::Compiler::generateMethod()
             frame.pushSynced();
           END_CASE(JSOP_CALLNAME)
 
-          BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
+            jsop_eval();
+          END_CASE(JSOP_EVAL)
+
+          BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_APPLY)
           {
             JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
@@ -4301,6 +4304,14 @@ mjit::Compiler::jsop_instanceof()
         firstSlow.getJump().linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(Changes(1));
     return true;
+}
+
+void
+mjit::Compiler::jsop_eval()
+{
+    JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
+    inlineCallHelper(GET_ARGC(PC), false);
+    JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
 }
 
 /*
