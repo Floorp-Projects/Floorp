@@ -555,12 +555,10 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     if (mAbsoluteContainer.HasAbsoluteFrames()) {
       PRBool widthChanged = aDesiredSize.width != mRect.width;
       PRBool heightChanged = aDesiredSize.height != mRect.height;
-      nsRect absPosBounds;
       mAbsoluteContainer.Reflow(this, aPresContext, aReflowState, aStatus,
                                 aDesiredSize.width, aDesiredSize.height,
                                 PR_TRUE, widthChanged, heightChanged,
-                                &absPosBounds);
-      aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, absPosBounds);
+                                &aDesiredSize.mOverflowAreas);
     }
 
     // Handle invalidating fixed-attachment backgrounds propagated to the

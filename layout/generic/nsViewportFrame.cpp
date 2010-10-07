@@ -326,7 +326,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   rv = mFixedContainer.Reflow(this, aPresContext, reflowState, aStatus,
                               reflowState.ComputedWidth(),
                               reflowState.ComputedHeight(),
-                              PR_FALSE, PR_TRUE, PR_TRUE); // XXX could be optimized
+                              PR_FALSE, PR_TRUE, PR_TRUE, // XXX could be optimized
+                              nsnull /* ignore overflow */);
 
   // If we were dirty then do a repaint
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
