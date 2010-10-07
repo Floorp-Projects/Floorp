@@ -631,7 +631,7 @@ var gViewController = {
 
     cmd_showItemDetails: {
       isEnabled: function(aAddon) {
-        return !!aAddon;
+        return !!aAddon && (gViewController.currentViewObj != gDetailView);
       },
       doCommand: function(aAddon) {
         gViewController.loadView("addons://detail/" +
