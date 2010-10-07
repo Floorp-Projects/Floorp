@@ -312,21 +312,12 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
 
-  NS_ABORT_IF_FALSE(!mImage || HaveProxyWithObserver(nsnull) ||
-                    mImage->GetAnimationConsumers() == 0,
-    "How can we have an image with animation consumers, but no observer?");
-
   // This will remove our animation consumers, so after removing
   // this proxy, we don't end up without proxies with observers, but still
   // have animation consumers.
   proxy->ClearAnimationConsumers();
 
   mObservers.RemoveElement(proxy);
-
-  // Check that after our changes, we are still in a consistent state
-  NS_ABORT_IF_FALSE(!mImage || HaveProxyWithObserver(nsnull) ||
-                    mImage->GetAnimationConsumers() == 0,
-    "How can we have an image with animation consumers, but no observer?");
 
   // Let the status tracker do its thing before we potentially call Cancel()
   // below, because Cancel() may result in OnStopRequest being called back
