@@ -192,6 +192,7 @@ pref("gfx.color_management.rendering_intent", 0);
 pref("gfx.3d_video.enabled", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
+pref("gfx.downloadable_fonts.sanitize", true);
 
 pref("gfx.font_rendering.harfbuzz.level", 1);
 

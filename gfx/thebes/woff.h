@@ -42,7 +42,7 @@
 
 #ifdef _MSC_VER /* MS VC lacks inttypes.h
                    but we can make do with a few definitons here */
-typedef char           int8_t;
+typedef signed char    int8_t;
 typedef short          int16_t;
 typedef int            int32_t;
 typedef unsigned char  uint8_t;
@@ -81,8 +81,9 @@ enum {
                                             any DSIG may be invalid */
   eWOFF_warn_unpadded_table = 0x1000,    /* sfnt not correctly padded,
                                             any DSIG may be invalid */
-  eWOFF_warn_removed_DSIG = 0x2000       /* removed digital signature
+  eWOFF_warn_removed_DSIG = 0x2000,      /* removed digital signature
                                             while fixing checksum errors */
+  eWOFF_warn_no_such_table = 0x4000      /* specified table not present */
 };
 
 /* Note: status parameters must be initialized to eWOFF_ok before calling
@@ -164,6 +165,23 @@ void woffDecodeToBuffer(const uint8_t * woffData, uint32_t woffLen,
  */
 const uint8_t * woffDecode(const uint8_t * woffData, uint32_t woffLen,
                            uint32_t * sfntLen, uint32_t * status);
+
+
+/*****************************************************************************
+ * Returns the size of buffer needed for a specific table (or zero on error).
+ */
+uint32_t woffGetTableSize(const uint8_t * woffData, uint32_t woffLen,
+                          uint32_t tag, uint32_t * pStatus);
+
+
+/*****************************************************************************
+ * Gets a table from a WOFF font to a caller-supplied buffer of size bufferLen.
+ * Returns the actual size of the decoded table in pTableLen
+ * (must be <= bufferLen, otherwise an error will be returned).
+ */
+void woffGetTableToBuffer(const uint8_t * woffData, uint32_t woffLen,
+                          uint32_t tag, uint8_t * buffer, uint32_t bufferLen,
+                          uint32_t * pTableLen, uint32_t * pStatus);
 
 
 /*****************************************************************************
