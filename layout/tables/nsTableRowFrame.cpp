@@ -1161,7 +1161,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   
   rowRect.y -= aRowOffset;
   rowRect.width  = aWidth;
-  nsRect overflowArea(0, 0, 0, 0);
+  nsOverflowAreas overflow;
   nscoord shift = 0;
   nscoord cellSpacingX = tableFrame->GetCellSpacingX();
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
@@ -1280,11 +1280,12 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 
         // XXXbz This looks completely bogus in the cases when we didn't
         // collapse the cell!
-        nsRect cellOverflow = nsRect(0, 0, cRect.width, cRect.height);
-        cellFrame->FinishAndStoreOverflow(&cellOverflow, nsSize(cRect.width,
-                                              cRect.height));
+        nsRect cellBounds(0, 0, cRect.width, cRect.height);
+        nsOverflowAreas cellOverflow(cellBounds, cellBounds);
+        cellFrame->FinishAndStoreOverflow(cellOverflow,
+                                          nsSize(cRect.width, cRect.height));
         nsTableFrame::RePositionViews(cellFrame);
-        ConsiderChildOverflow(overflowArea, cellFrame);
+        ConsiderChildOverflow(overflow, cellFrame);
                 
         if (aRowOffset == 0) {
           nsTableFrame::InvalidateFrame(cellFrame, oldCellRect,
@@ -1296,10 +1297,8 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   }
 
   SetRect(rowRect);
-  overflowArea.UnionRect(nsRect(0,0,rowRect.width, rowRect.height),
-                         overflowArea);
-  FinishAndStoreOverflow(&overflowArea, nsSize(rowRect.width,
-                                              rowRect.height));
+  overflow.UnionAllWith(nsRect(0,0,rowRect.width, rowRect.height));
+  FinishAndStoreOverflow(overflow, nsSize(rowRect.width, rowRect.height));
 
   nsTableFrame::RePositionViews(this);
   nsTableFrame::InvalidateFrame(this, oldRect, oldOverflowRect, PR_FALSE);

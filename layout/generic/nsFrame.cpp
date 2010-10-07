@@ -6059,14 +6059,19 @@ IsInlineFrame(nsIFrame *aFrame)
 }
 
 void 
-nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
+nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
+                                 nsSize aNewSize)
 {
+  nsRect bounds(nsPoint(0, 0), aNewSize);
+
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
-  NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
-               aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
-               "Computed overflow area must contain frame bounds");
+  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+    NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
+                 aOverflowAreas.Overflow(otype).Contains(nsRect(nsPoint(0,0), aNewSize)),
+                 "Computed overflow area must contain frame bounds");
+  }
 
   // If we clip our children, clear accumulated overflow area. The
   // children are actually clipped to the padding-box, but since the
@@ -6078,7 +6083,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
                "If one overflow is clip, the other should be too");
   if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
     // The contents are actually clipped to the padding area 
-    *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
+    aOverflowAreas.SetAllTo(bounds);
   }
 
   // Overflow area must always include the frame's top-left and bottom-right,
@@ -6086,33 +6091,43 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   // Pending a real fix for bug 426879, don't do this for inline frames
   // with zero width.
   if (aNewSize.width != 0 || !IsInlineFrame(this)) {
-    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
-                                         nsRect(nsPoint(0, 0), aNewSize));
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = aOverflowAreas.Overflow(otype);
+      o.UnionRectIncludeEmpty(o, bounds);
+    }
   }
 
   // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
   // so we add theme background overflow here so it's not clipped.
   if (!IsBoxWrapped() && IsThemed(disp)) {
-    nsRect r(nsPoint(0, 0), aNewSize);
+    nsRect r(bounds);
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
                             disp->mAppearance, &r)) {
-      aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea, r);
+      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+        nsRect& o = aOverflowAreas.Overflow(otype);
+        o.UnionRectIncludeEmpty(o, r);
+      }
     }
   }
-  
+
+  // Nothing in here should affect scrollable overflow.
   PRBool hasOutlineOrEffects;
-  *aOverflowArea =
+  aOverflowAreas.VisualOverflow() =
     ComputeOutlineAndEffectsRect(this, &hasOutlineOrEffects,
-                                 *aOverflowArea, aNewSize, PR_TRUE);
+                                 aOverflowAreas.VisualOverflow(), aNewSize,
+                                 PR_TRUE);
 
   // Absolute position clipping
   PRBool didHaveAbsPosClip = (GetStateBits() & NS_FRAME_HAS_CLIP) != 0;
   nsRect absPosClipRect;
   PRBool hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect, aNewSize);
   if (hasAbsPosClip) {
-    aOverflowArea->IntersectRect(*aOverflowArea, absPosClipRect);
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = aOverflowAreas.Overflow(otype);
+      o.IntersectRect(o, absPosClipRect);
+    }
     AddStateBits(NS_FRAME_HAS_CLIP);
   } else {
     RemoveStateBits(NS_FRAME_HAS_CLIP);
@@ -6121,32 +6136,30 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   /* If we're transformed, transform the overflow rect by the current transformation. */
   PRBool hasTransform = IsTransformed();
   if (hasTransform) {
-    Properties().
-      Set(nsIFrame::PreTransformBBoxProperty(), new nsRect(*aOverflowArea));
+    Properties().Set(nsIFrame::PreTransformBBoxProperty(),
+                     new nsRect(aOverflowAreas.VisualOverflow()));
     /* Since our size might not actually have been computed yet, we need to make sure that we use the
      * correct dimensions by overriding the stored bounding rectangle with the value the caller has
      * ensured us we'll use.
      */
     nsRect newBounds(nsPoint(0, 0), aNewSize);
-    *aOverflowArea = nsDisplayTransform::TransformRect(*aOverflowArea, this, nsPoint(0, 0), &newBounds);
-  }
-
-  PRBool overflowChanged;
-  if (!aOverflowArea->IsExactEqual(nsRect(nsPoint(0, 0), aNewSize))) {
-    overflowChanged = !aOverflowArea->IsExactEqual(GetOverflowRect());
-    SetOverflowRect(*aOverflowArea);
-  }
-  else {
-    if (HasOverflowRect()) {
-      // remove the previously stored overflow area 
-      ClearOverflowRect();
-      overflowChanged = PR_TRUE;
-    } else {
-      overflowChanged = PR_FALSE;
+    // Transform affects both overflow areas.
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = aOverflowAreas.Overflow(otype);
+      o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
     }
   }
 
-  if (overflowChanged) {
+  PRBool visualOverflowChanged =
+    GetVisualOverflowRect() != aOverflowAreas.VisualOverflow();
+
+  if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {
+    SetOverflowAreas(aOverflowAreas);
+  } else {
+    ClearOverflowRects();
+  }
+
+  if (visualOverflowChanged) {
     if (hasOutlineOrEffects) {
       // When there's an outline or box-shadow or SVG effects,
       // changes to those styles might require repainting of the old and new
@@ -6159,7 +6172,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       // If there is no outline or other effects now, then we don't have
       // to do anything here since removing those styles can't require
       // repainting of areas that weren't in the old overflow area.
-      Invalidate(*aOverflowArea);
+      Invalidate(aOverflowAreas.VisualOverflow());
     } else if (hasAbsPosClip || didHaveAbsPosClip) {
       // If we are (or were) clipped by the 'clip' property, and our
       // overflow area changes, it might be because the clipping changed.
@@ -6167,7 +6180,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       // repaint the old overflow area, so if the overflow area has
       // changed (in particular, if it grows), we have to repaint the
       // new area here.
-      Invalidate(*aOverflowArea);
+      Invalidate(aOverflowAreas.VisualOverflow());
     } else if (hasTransform) {
       // When there's a transform, changes to that style might require
       // repainting of the old and new overflow areas in the widget.
@@ -6184,7 +6197,8 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       // the transform will go away and the frame contents will change
       // ThebesLayers, forcing it to be invalidated, so it doesn't matter
       // that we didn't reach here.
-      InvalidateLayer(*aOverflowArea, nsDisplayItem::TYPE_TRANSFORM);
+      InvalidateLayer(aOverflowAreas.VisualOverflow(),
+                      nsDisplayItem::TYPE_TRANSFORM);
     }
   }
 }
@@ -6813,7 +6827,7 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
   nsSize size(GetSize());
   desiredSize.mOverflowArea.UnionRect(desiredSize.mOverflowArea,
                                       nsRect(nsPoint(0, 0), size));
-  FinishAndStoreOverflow(&desiredSize.mOverflowArea, size);
+  FinishAndStoreOverflow(desiredSize.mOverflowAreas, size);
 
   SyncLayout(aState);
 
