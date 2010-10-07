@@ -1101,7 +1101,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // Compute our final size
   nscoord bottomEdgeOfChildren;
   ComputeFinalSize(aReflowState, state, aMetrics, &bottomEdgeOfChildren);
-  ComputeCombinedArea(aReflowState, aMetrics, bottomEdgeOfChildren);
+  ComputeOverflowAreas(aReflowState, aMetrics, bottomEdgeOfChildren);
   // Factor overflow container child bounds into the overflow area
   aMetrics.mOverflowAreas.UnionWith(ocBounds);
   // Factor pushed float child bounds into the overflow area
@@ -1429,14 +1429,15 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 }
 
 void
-nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics&     aMetrics,
-                                  nscoord                  aBottomEdgeOfChildren)
+nsBlockFrame::ComputeOverflowAreas(const nsHTMLReflowState& aReflowState,
+                                   nsHTMLReflowMetrics&     aMetrics,
+                                   nscoord                  aBottomEdgeOfChildren)
 {
-  // Compute the combined area of our children
+  // Compute the overflow areas of our children
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
-  nsRect area(0, 0, aMetrics.width, aMetrics.height);
+  nsRect bounds(0, 0, aMetrics.width, aMetrics.height);
+  nsOverflowAreas areas(bounds, bounds);
 
   if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflowX) {
     PRBool inQuirks = (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks);
@@ -1446,21 +1447,21 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
 
       // Text-shadow overflows
       if (!inQuirks && line->IsInline()) {
-        nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(line->GetCombinedArea(),
-                                                                   this);
-        area.UnionRect(area, shadowRect);
+        nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(
+                              line->GetVisualOverflowArea(), this);
+        areas.VisualOverflow().UnionRect(areas.VisualOverflow(), shadowRect);
       }
 
-      area.UnionRect(area, line->GetCombinedArea());
+      areas.UnionWith(line->GetOverflowAreas());
     }
 
     // Factor the bullet in; normally the bullet will be factored into
-    // the line-box's combined area. However, if the line is a block
+    // the line-box's overflow areas. However, if the line is a block
     // line then it won't; if there are no lines, it won't. So just
     // factor it in anyway (it can't hurt if it was already done).
-    // XXXldb Can we just fix GetCombinedArea instead?
+    // XXXldb Can we just fix GetOverflowArea instead?
     if (mBullet) {
-      area.UnionRect(area, mBullet->GetRect());
+      areas.UnionAllWith(mBullet->GetRect());
     }
 
     // Factor in the bottom edge of the children. Child frames
@@ -1475,14 +1476,20 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
       // to the bottom edge of the children
       bottomEdgeOfContents += aReflowState.mComputedPadding.bottom;
     }
-    area.height = NS_MAX(area.YMost(), bottomEdgeOfContents) - area.y;
+    // REVIEW: For now, we do this for both visual and scrollable area,
+    // although when we make scrollable overflow area not be a subset of
+    // visual, we can change this.
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = areas.Overflow(otype);
+      o.height = NS_MAX(o.YMost(), bottomEdgeOfContents) - o.y;
+    }
   }
 #ifdef NOISY_COMBINED_AREA
   ListTag(stdout);
   printf(": ca=%d,%d,%d,%d\n", area.x, area.y, area.width, area.height);
 #endif
 
-  aMetrics.mOverflowArea = area;
+  aMetrics.mOverflowAreas = areas;
 }
 
 nsresult
