@@ -234,6 +234,8 @@
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
+static const char kStorageEnabled[] = "dom.storage.enabled";
+
 using namespace mozilla::dom;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -7666,6 +7668,12 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
   nsIDocShell* docShell = GetDocShell();
 
   if (!principal || !docShell) {
+    *aSessionStorage = nsnull;
+    return NS_OK;
+  }
+
+  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+    *aSessionStorage = nsnull;
     return NS_OK;
   }
 
@@ -7728,6 +7736,11 @@ nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
   NS_ENSURE_ARG_POINTER(aGlobalStorage);
 
 #ifdef MOZ_STORAGE
+  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+    *aGlobalStorage = nsnull;
+    return NS_OK;
+  }
+
   if (!sGlobalStorageList) {
     nsresult rv = NS_NewDOMStorageList(&sGlobalStorageList);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -7748,6 +7761,11 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   FORWARD_TO_INNER(GetLocalStorage, (aLocalStorage), NS_ERROR_UNEXPECTED);
 
   NS_ENSURE_ARG(aLocalStorage);
+
+  if (!nsContentUtils::GetBoolPref(kStorageEnabled)) {
+    *aLocalStorage = nsnull;
+    return NS_OK;
+  }
 
   if (!mLocalStorage) {
     *aLocalStorage = nsnull;
