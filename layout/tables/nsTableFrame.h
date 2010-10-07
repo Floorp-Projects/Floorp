@@ -549,10 +549,10 @@ protected:
                                   nsTableRowGroupFrame* aFrame,
                                   nscoord* aDesiredHeight);
 
-  NS_METHOD ReflowChildren(nsTableReflowState&  aReflowState,
-                           nsReflowStatus&      aStatus,
-                           nsIFrame*&           aLastChildReflowed,
-                           nsRect&              aOverflowArea);
+  nsresult ReflowChildren(nsTableReflowState&  aReflowState,
+                          nsReflowStatus&      aStatus,
+                          nsIFrame*&           aLastChildReflowed,
+                          nsOverflowAreas&     aOverflowAreas);
 
   // This calls the col group and column reflow methods, which do two things:
   //  (1) set all the dimensions to 0
