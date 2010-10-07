@@ -344,7 +344,7 @@ namespace nanojit
     inline void Assembler::LDdm(R reg, I32 addr) {
         count_ld();
         ALUdm(0x8b, reg, addr);
-        asm_output("mov %s,0(%lx)", gpn(reg), (unsigned long)addr);
+        asm_output("mov %s,0(%p)", gpn(reg), (void*)addr);
     }
 
 #define SIBIDX(n)    "1248"[n]
@@ -567,7 +567,7 @@ namespace nanojit
         IMM32(tt);
         *(--_nIns) = JMP32;
         asm_output("jmp %p", t);
-        verbose_only( verbose_outputf("%010lx:", (unsigned long)_nIns); )
+        verbose_only( verbose_outputf("%p:", (void*)_nIns); )
     }
 
     inline void Assembler::JMP_indirect(R r) {
