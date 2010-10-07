@@ -698,7 +698,8 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState,
   // 'overflow' either.
   // This needs to happen before SyncFrameViewAfterReflow so
   // HasOverflowRect() will return the correct value.
-  scrolledFrame->FinishAndStoreOverflow(&scrolledArea,
+  nsOverflowAreas overflow(scrolledArea, scrolledArea);
+  scrolledFrame->FinishAndStoreOverflow(overflow,
                                         scrolledFrame->GetSize());
 
   // Note that making the view *exactly* the size of the scrolled area

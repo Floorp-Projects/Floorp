@@ -1990,20 +1990,19 @@ nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*> (GetFirstInFlow());
   nscoord width = firstInFlow->GetCollapsedWidth(aBorderPadding);
   nscoord rgWidth = width - 2 * GetCellSpacingX();
-  nsRect overflowArea(0, 0, 0, 0);
+  nsOverflowAreas overflow;
   // Walk the list of children
   for (PRUint32 childX = 0; childX < rowGroups.Length(); childX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[childX];
     NS_ASSERTION(rgFrame, "Must have row group frame here");
     yTotalOffset += rgFrame->CollapseRowGroupIfNecessary(yTotalOffset, rgWidth);
-    ConsiderChildOverflow(overflowArea, rgFrame);
+    ConsiderChildOverflow(overflow, rgFrame);
   }
 
   aDesiredSize.height -= yTotalOffset;
   aDesiredSize.width   = width;
-  overflowArea.UnionRect(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height),
-                         overflowArea);
-  FinishAndStoreOverflow(&overflowArea,
+  overflow.UnionAllWith(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
+  FinishAndStoreOverflow(overflow,
                          nsSize(aDesiredSize.width, aDesiredSize.height));
 }
 
@@ -3012,15 +3011,13 @@ void ResizeCells(nsTableFrame& aTableFrame)
       rgFrame->ConsiderChildOverflow(groupDesiredSize.mOverflowArea, rowFrame);
       rowFrame = rowFrame->GetNextRow();
     }
-    rgFrame->FinishAndStoreOverflow(&groupDesiredSize.mOverflowArea,
-                                    nsSize(groupDesiredSize.width, groupDesiredSize.height));
+    rgFrame->FinishAndStoreOverflow(&groupDesiredSize);
     // make the coordinates of |desiredSize.mOverflowArea| incorrect
     // since it's about to go away:
     groupDesiredSize.mOverflowArea.MoveBy(rgFrame->GetPosition());
     tableDesiredSize.mOverflowArea.UnionRect(tableDesiredSize.mOverflowArea, groupDesiredSize.mOverflowArea);
   }
-  aTableFrame.FinishAndStoreOverflow(&tableDesiredSize.mOverflowArea,
-                                     nsSize(tableDesiredSize.width, tableDesiredSize.height));
+  aTableFrame.FinishAndStoreOverflow(&tableDesiredSize);
 }
 
 void
