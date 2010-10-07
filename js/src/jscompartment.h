@@ -91,10 +91,6 @@ struct JSCompartment {
     bool wrapException(JSContext *cx);
 
     void sweep(JSContext *cx);
-#ifdef JS_METHODJIT
-    bool addScript(JSContext *cx, JSScript *script);
-    void removeScript(JSScript *script);
-#endif
     void purge(JSContext *cx);
     void finishArenaLists();
     bool arenaListsAreEmpty();
