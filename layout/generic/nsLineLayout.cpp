@@ -2598,7 +2598,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
       if (pfd->GetFlag(PFD_ISTEXTFRAME)) {
         if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
           nsTextFrame* f = static_cast<nsTextFrame*>(frame);
-          r = f->RecomputeOverflowRect();
+          r = f->RecomputeOverflow();
         }
         frame->FinishAndStoreOverflow(r, frame->GetSize());
       }

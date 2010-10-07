@@ -241,7 +241,7 @@ public:
   // placeholders or inlines containing such).
   struct TrimOutput {
     // true if we trimmed some space or changed metrics in some other way.
-    // In this case, we should call RecomputeOverflowRect on this frame.
+    // In this case, we should call RecomputeOverflow on this frame.
     PRPackedBool mChanged;
     // true if the last character is not justifiable so should be subtracted
     // from the count of justifiable characters in the frame, since the last
@@ -257,7 +257,7 @@ public:
                                    PRUint32 aSkippedStartOffset = 0,
                                    PRUint32 aSkippedMaxLength = PR_UINT32_MAX);
 
-  nsRect RecomputeOverflowRect();
+  nsOverflowAreas RecomputeOverflow();
 
   void AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
                                 nsIFrame::InlineMinWidthData *aData);
@@ -400,7 +400,7 @@ protected:
   
   void UnionTextDecorationOverflow(nsPresContext* aPresContext,
                                    PropertyProvider& aProvider,
-                                   nsRect* aOverflowRect);
+                                   nsRect* aVisualOverflowRect);
 
   void DrawText(gfxContext* aCtx,
                 const gfxPoint& aTextBaselinePt,
