@@ -21,6 +21,16 @@ FOO<!-- BAR --!>BAZ
 |     "BAZ"
 
 #data
+FOO<!-- BAR --   >BAZ
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO"
+|     <!--  BAR --   >BAZ -->
+
+#data
 FOO<!-- BAR -- <QUX> -- MUX -->BAZ
 #errors
 #document
@@ -41,6 +51,16 @@ FOO<!-- BAR -- <QUX> -- MUX --!>BAZ
 |     "FOO"
 |     <!--  BAR -- <QUX> -- MUX  -->
 |     "BAZ"
+
+#data
+FOO<!-- BAR -- <QUX> -- MUX -- >BAZ
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     "FOO"
+|     <!--  BAR -- <QUX> -- MUX -- >BAZ -->
 
 #data
 FOO<!---->BAZ

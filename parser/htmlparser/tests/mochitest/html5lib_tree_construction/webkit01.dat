@@ -401,3 +401,137 @@ console.log("FOO<span>BAR</span>BAZ");
 |   " "
 |   <body>
 |     "ddd"
+
+#data
+<kbd><table></kbd><col><select><tr>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <kbd>
+|       <select>
+|       <table>
+|         <colgroup>
+|           <col>
+|         <tbody>
+|           <tr>
+
+#data
+<kbd><table></kbd><col><select><tr></table><div>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <kbd>
+|       <select>
+|       <table>
+|         <colgroup>
+|           <col>
+|         <tbody>
+|           <tr>
+|       <div>
+
+#data
+<a><li><style></style><title></title></a>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|     <li>
+|       <a>
+|         <style>
+|         <title>
+
+#data
+<font></p><p><meta><title></title></font>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <font>
+|       <p>
+|     <p>
+|       <font>
+|         <meta>
+|         <title>
+
+#data
+<a><center><title></title><a>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|     <center>
+|       <a>
+|         <title>
+|       <a>
+
+#data
+<svg><title><div>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       <svg title>
+|         <div>
+
+#data
+<svg><title><rect><div>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       <svg title>
+|         <rect>
+|           <div>
+
+#data
+<svg><title><svg><div>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       <svg title>
+|         <svg svg>
+|         <div>
+
+#data
+<img <="" FAIL>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <img>
+|       <=""
+|       fail=""
+
+#data
+<ul><li><div id='foo'/>A</li><li>B<div>C</div></li></ul>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <ul>
+|       <li>
+|         <div>
+|           id="foo"
+|           "A"
+|       <li>
+|         "B"
+|         <div>
+|           "C"
