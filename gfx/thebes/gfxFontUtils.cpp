@@ -921,21 +921,6 @@ nsresult gfxFontUtils::MakeUniqueUserFontName(nsAString& aName)
 // need byte aligned structs
 #pragma pack(1)
 
-struct SFNTHeader {
-    AutoSwap_PRUint32    sfntVersion;            // Fixed, 0x00010000 for version 1.0.
-    AutoSwap_PRUint16    numTables;              // Number of tables.
-    AutoSwap_PRUint16    searchRange;            // (Maximum power of 2 <= numTables) x 16.
-    AutoSwap_PRUint16    entrySelector;          // Log2(maximum power of 2 <= numTables).
-    AutoSwap_PRUint16    rangeShift;             // NumTables x 16-searchRange.        
-};
-
-struct TableDirEntry {
-    AutoSwap_PRUint32    tag;                    // 4 -byte identifier.
-    AutoSwap_PRUint32    checkSum;               // CheckSum for this table.
-    AutoSwap_PRUint32    offset;                 // Offset from beginning of TrueType font file.
-    AutoSwap_PRUint32    length;                 // Length of this table.        
-};
-
 // name table stores set of name record structures, followed by
 // large block containing all the strings.  name record offset and length
 // indicates the offset and length within that block.
