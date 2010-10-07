@@ -216,6 +216,7 @@ _BROWSER_FILES = \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
                  browser_overLinkInLocationBar.js \
+                 browser_aboutHome.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
