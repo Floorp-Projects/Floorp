@@ -98,7 +98,7 @@ LayerManagerD3D10::Initialize()
 
   mDevice = cairo_d2d_device_get_device(device);
 
-  UINT size = 4;
+  UINT size = sizeof(ID3D10Effect*);
   if (FAILED(mDevice->GetPrivateData(sEffect, &size, mEffect.StartAssignment()))) {
     D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
 	GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateEffectFromMemory");
@@ -121,7 +121,7 @@ LayerManagerD3D10::Initialize()
     mDevice->SetPrivateDataInterface(sEffect, mEffect);
   }
 
-  size = 4;
+  size = sizeof(ID3D10InputLayout*);
   if (FAILED(mDevice->GetPrivateData(sInputLayout, &size, mInputLayout.StartAssignment()))) {
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
@@ -144,7 +144,7 @@ LayerManagerD3D10::Initialize()
     mDevice->SetPrivateDataInterface(sInputLayout, mInputLayout);
   }
 
-  size = 4;
+  size = sizeof(ID3D10Buffer*);
   if (FAILED(mDevice->GetPrivateData(sVertexBuffer, &size, mVertexBuffer.StartAssignment()))) {
     Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
     CD3D10_BUFFER_DESC bufferDesc(sizeof(vertices), D3D10_BIND_VERTEX_BUFFER);
