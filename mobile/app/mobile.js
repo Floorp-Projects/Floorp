@@ -354,7 +354,7 @@ pref("content.sink.initial_perf_time", 0);
 
 pref("javascript.options.mem.gc_frequency", 300);
 
-pref("dom.max_chrome_script_run_time", 30);
+pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 pref("dom.max_script_run_time", 20);
 
 // JS error console
