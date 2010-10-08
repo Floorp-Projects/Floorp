@@ -138,6 +138,10 @@ function run_test()
 {
   do_test_pending();
 
+  // Since we are checking frecency, we have to disable some stuff that could
+  // change values during test run.  On idle-daily frecencies are updated.
+  Services.obs.removeObserver(PlacesUtils.history, "idle-daily");
+
   // Set the preference for the timer to a really large value, so it won't
   // run before the test finishes.
   prefs.setIntPref(PREF_SYNC_INTERVAL, SYNC_INTERVAL);
