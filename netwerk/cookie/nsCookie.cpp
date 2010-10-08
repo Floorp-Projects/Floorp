@@ -75,27 +75,26 @@ StrBlockCopy(const nsACString &aSource1,
  * creation helper
  ******************************************************************************/
 
-// This is a counter that keeps track of the last used creation time, each time
-// we create a new nsCookie. This is nominally the time (in microseconds) the
-// cookie was created, but is guaranteed to be monotonically increasing for
-// cookies added at runtime after the database has been read in. This is
-// necessary to enforce ordering among cookies whose creation times would
-// otherwise overlap, since it's possible two cookies may be created at the same
-// time, or that the system clock isn't monotonic.
-static PRInt64 gLastCreationTime;
+// This is a counter that keeps track of the last used creation id, each time we
+// create a new nsCookie. The creation id is nominally the time (in microseconds)
+// the cookie was created. This id also corresponds to the row id used in the
+// sqlite database, which must be unique. However, since it's possible two cookies
+// may be created at the same time, or the system clock isn't monotonic, we must
+// check each id to enforce monotonicity.
+static PRInt64 gLastCreationID;
 
 PRInt64
-nsCookie::GenerateUniqueCreationTime(PRInt64 aCreationTime)
+nsCookie::GenerateCreationID(PRInt64 aCreationTime)
 {
   // Check if the creation time given to us is greater than the running maximum
   // (it should always be monotonically increasing).
-  if (aCreationTime > gLastCreationTime) {
-    gLastCreationTime = aCreationTime;
+  if (aCreationTime > gLastCreationID) {
+    gLastCreationID = aCreationTime;
     return aCreationTime;
   }
 
   // Make up our own.
-  return ++gLastCreationTime;
+  return ++gLastCreationID;
 }
 
 nsCookie *
@@ -105,7 +104,7 @@ nsCookie::Create(const nsACString &aName,
                  const nsACString &aPath,
                  PRInt64           aExpiry,
                  PRInt64           aLastAccessed,
-                 PRInt64           aCreationTime,
+                 PRInt64           aCreationID,
                  PRBool            aIsSession,
                  PRBool            aIsSecure,
                  PRBool            aIsHttpOnly)
@@ -126,14 +125,13 @@ nsCookie::Create(const nsACString &aName,
   StrBlockCopy(aName, aValue, aHost, aPath,
                name, value, host, path, end);
 
-  // If the creationTime given to us is higher than the running maximum, update
-  // our maximum.
-  if (aCreationTime > gLastCreationTime)
-    gLastCreationTime = aCreationTime;
+  // If the creationID given to us is higher than the running maximum, update it.
+  if (aCreationID > gLastCreationID)
+    gLastCreationID = aCreationID;
 
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
-                              aExpiry, aLastAccessed, aCreationTime,
+                              aExpiry, aLastAccessed, aCreationID,
                               aIsSession, aIsSecure, aIsHttpOnly);
 }
 
@@ -155,7 +153,7 @@ NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure)     { *aIsSecure = IsSecu
 NS_IMETHODIMP nsCookie::GetIsHttpOnly(PRBool *aHttpOnly)   { *aHttpOnly = IsHttpOnly(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = 0;              return NS_OK; }
 NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = 0;              return NS_OK; }
-NS_IMETHODIMP nsCookie::GetCreationTime(PRInt64 *aCreation){ *aCreation = CreationTime(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetCreationTime(PRInt64 *aCreation){ *aCreation = CreationID(); return NS_OK; }
 NS_IMETHODIMP nsCookie::GetLastAccessed(PRInt64 *aTime)    { *aTime = LastAccessed();   return NS_OK; }
 
 // compatibility method, for use with the legacy nsICookie interface.
