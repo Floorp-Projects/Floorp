@@ -271,8 +271,16 @@ var Browser = {
       let oldWidth = window.cachedWidth || w;
       window.cachedWidth = w;
 
-      for (let i = Browser.tabs.length - 1; i >= 0; i--)
-        Browser.tabs[i].updateViewportSize(w / oldWidth);
+      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+        let tab = Browser.tabs[i];
+        let oldContentWindowWidth = tab.browser.contentWindowWidth;
+        tab.updateViewportSize();
+
+        // If the viewport width is still the same, the page layout has not
+        // changed, so we can keep keep the same content on-screen.
+        if (tab.browser.contentWindowWidth == oldContentWindowWidth)
+          tab.restoreViewportPosition(oldWidth, w);
+      }
 
       // XXX page scrollbox jumps to a strange value on resize. Scrolling it will
       // bound it to a sane place, but not where we were when the resize began :(
@@ -2355,20 +2363,28 @@ Tab.prototype = {
 
   /**
    * Update browser size when the metadata or the window size changes.
-   * If the window size changes, aRatio = (new width / old width).
    */
-  updateViewportSize: function updateViewportSize(aRatio) {
+  updateViewportSize: function updateViewportSize() {
     let browser = this._browser;
     if (!browser)
       return;
 
     let screenW = window.innerWidth;
     let screenH = window.innerHeight;
+    let viewportW, viewportH;
 
     let metadata = this.metadata;
-    if (!metadata.autoSize) {
-      let viewportW = metadata.width;
-      let viewportH = metadata.height;
+    if (metadata.autoSize) {
+      viewportW = screenW;
+      viewportH = screenH;
+      if (metadata.defaultZoom != 1.0) {
+        let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
+        viewportW /= dpiScale;
+        viewportH /= dpiScale;
+      }
+    } else {
+      viewportW = metadata.width;
+      viewportH = metadata.height;
 
       // If (scale * width) < device-width, increase the width (bug 561413).
       let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
@@ -2386,32 +2402,22 @@ Tab.prototype = {
         viewportW = kDefaultBrowserWidth;
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
-
-      browser.setWindowSize(viewportW, viewportH);
-
-      if (aRatio) {
-        let pos = browser.getPosition();
-
-        // zoom to keep the same portion of the document visible
-        let oldScale = browser.scale;
-        let newScale = this.clampZoomLevel(oldScale * aRatio);
-        browser.scale = newScale;
-
-        // ...and keep the same top-left corner of the visible rect
-        let scaleRatio = newScale / oldScale;
-        browser.scrollTo(pos.x * scaleRatio, pos.y * scaleRatio);
-      }
-    } else {
-      let w = screenW;
-      let h = screenH;
-      if (metadata.defaultZoom != 1.0) {
-        let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
-        w /= dpiScale;
-        h /= dpiScale;
-      }
-
-      browser.setWindowSize(w, h);
     }
+    browser.setWindowSize(viewportW, viewportH);
+  },
+
+  restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
+    let browser = this._browser;
+    let pos = browser.getPosition();
+
+    // zoom to keep the same portion of the document visible
+    let oldScale = browser.scale;
+    let newScale = this.clampZoomLevel(oldScale * aNewWidth / aOldWidth);
+    browser.scale = newScale;
+
+    // ...and keep the same top-left corner of the visible rect
+    let scaleRatio = newScale / oldScale;
+    browser.scrollTo(pos.x * scaleRatio, pos.y * scaleRatio);
   },
 
   startLoading: function startLoading() {
@@ -2495,9 +2501,9 @@ Tab.prototype = {
     }
   },
 
-  clampZoomLevel: function clampZoomLevel(zl) {
+  clampZoomLevel: function clampZoomLevel(aScale) {
     let browser = this._browser;
-    let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
+    let bounded = Util.clamp(aScale, ZoomManager.MIN, ZoomManager.MAX);
 
     let md = this.metadata;
     if (md && md.minZoom)
