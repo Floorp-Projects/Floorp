@@ -37,6 +37,7 @@
 
 #include "mozilla/jetpack/JetpackParent.h"
 #include "mozilla/jetpack/Handle.h"
+#include "base/process_util.h"
 
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -60,6 +61,9 @@ JetpackParent::~JetpackParent()
 {
   if (mSubprocess)
     Destroy();
+
+  if (OtherProcess())
+    base::CloseProcessHandle(OtherProcess());
 }
 
 NS_IMPL_ISUPPORTS1(JetpackParent, nsIJetpack)
@@ -240,6 +244,16 @@ JetpackParent::DeallocPHandle(PHandleParent* actor)
 {
   delete actor;
   return true;
+}
+
+void
+JetpackParent::OnChannelConnected(int32 pid) 
+{
+  ProcessHandle handle;
+  if (!base::OpenPrivilegedProcessHandle(pid, &handle))
+    NS_RUNTIMEABORT("can't open handle to child process");
+
+  SetOtherProcess(handle);
 }
 
 } // namespace jetpack
