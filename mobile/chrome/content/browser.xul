@@ -443,7 +443,7 @@
                 </setting>
 #ifdef MOZ_SERVICES_SYNC
                 <settings id="prefs-sync" label="&sync.title;">
-                  <setting id="sync-account" type="string" title="&sync.account;"/>
+                  <setting id="sync-account" type="string" title="&sync.account2;"/>
                   <setting id="sync-pass" type="string" inputtype="password" title="&sync.password;"/>
                   <setting id="sync-secret" type="string" inputtype="string" title="&sync.syncKey;"/>
                   <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
