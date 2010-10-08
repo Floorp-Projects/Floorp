@@ -774,7 +774,6 @@ protected:
   // Used by A, AREA, LINK, and STYLE.
   already_AddRefed<nsIURI> GetHrefURIForAnchors() const;
 
-private:
   /**
    * Returns whether this element is an editable root. There are two types of
    * editable roots:
@@ -787,6 +786,7 @@ private:
    */
   PRBool IsEditableRoot() const;
 
+private:
   void ChangeEditableState(PRInt32 aChange);
 };
 

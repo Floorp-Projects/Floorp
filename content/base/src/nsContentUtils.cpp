@@ -6250,6 +6250,42 @@ nsContentUtils::IsFocusedContent(const nsIContent* aContent)
   return fm && fm->GetFocusedContent() == aContent;
 }
 
+bool
+nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
+{
+  nsIDocument* doc = aContent->GetCurrentDoc();
+  if (!doc) {
+    return false;
+  }
+
+  // XXXbz should this use GetOwnerDoc() for GetSubDocumentFor?
+  // sXBL/XBL2 issue!
+  nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
+  if (!subDoc) {
+    return false;
+  }
+
+  nsCOMPtr<nsISupports> container = subDoc->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  if (!docShell) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (!contentViewer) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContentViewer> zombieViewer;
+  contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+
+  // If there are 2 viewers for the current docshell, that
+  // means the current document is a zombie document.
+  // Only navigate into the subdocument if it's not a zombie.
+  return !zombieViewer;
+}
+
 void nsContentUtils::RemoveNewlines(nsString &aString)
 {
   // strip CR/LF and null
