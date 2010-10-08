@@ -1963,7 +1963,7 @@ nsCanvasRenderingContext2D::DrawPath(Style style, gfxRect *dirtyRect)
     PRBool doUseIntermediateSurface = PR_FALSE;
     
     if (mSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
-      if (style == STYLE_FILL) {
+      if (style != STYLE_FILL) {
         // D2D does all operators correctly even if transparent areas of SOURCE
         // affect dest. We need to use an intermediate surface for STROKE because
         // we can't clip to the actual stroke shape easily, but prefer a geometric
