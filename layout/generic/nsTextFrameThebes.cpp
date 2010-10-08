@@ -5471,8 +5471,8 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   } else {
     // If we're at the end of a line, look at the next continuation
     iter.SetOriginalOffset(startOffset);
-    if (iter.GetSkippedOffset() <= PRUint32(trimmed.GetEnd()) &&
-        !(iter.GetSkippedOffset() < PRUint32(trimmed.GetEnd()) &&
+    if (startOffset <= PRUint32(trimmed.GetEnd()) &&
+        !(startOffset < PRUint32(trimmed.GetEnd()) &&
           GetStyleText()->NewlineIsSignificant() &&
           iter.GetSkippedOffset() < mTextRun->GetLength() &&
           mTextRun->GetChar(iter.GetSkippedOffset()) == '\n')) {
