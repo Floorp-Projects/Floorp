@@ -2370,7 +2370,7 @@ nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
     GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
     GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
 
-    mForm->RemoveElement(this, aNotify);
+    mForm->RemoveElement(this, true, aNotify);
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, nameVal);
@@ -2569,7 +2569,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->RemoveElementFromTable(this, tmp);
       }
 
-      mForm->RemoveElement(this, aNotify);
+      mForm->RemoveElement(this, false, aNotify);
 
       // Removing the element from the form can make it not be the default
       // control anymore.  Go ahead and notify on that change, though we might
@@ -2627,7 +2627,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->AddElementToTable(this, tmp);
       }
 
-      mForm->AddElement(this, aNotify);
+      mForm->AddElement(this, false, aNotify);
 
       // Adding the element to the form can make it be the default control .
       // Go ahead and notify on that change.
@@ -2940,7 +2940,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     SetFlags(ADDED_TO_FORM);
 
     // Notify only if we just found this mForm.
-    mForm->AddElement(this, !hadForm);
+    mForm->AddElement(this, true, !hadForm);
 
     if (!nameVal.IsEmpty()) {
       mForm->AddElementToTable(this, nameVal);
