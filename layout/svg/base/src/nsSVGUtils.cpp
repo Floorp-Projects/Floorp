@@ -1324,7 +1324,8 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame)
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire ‘text’ element in all
     // cases.
-    nsSVGTextContainerFrame* metrics = do_QueryFrame(aFrame);
+    nsSVGTextContainerFrame* metrics = do_QueryFrame(
+      GetFirstNonAAncestorFrame(aFrame));
     if (metrics) {
       while (aFrame->GetType() != nsGkAtoms::svgTextFrame) {
         aFrame = aFrame->GetParent();
