@@ -555,7 +555,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: close
   // Closes the groupItem, removing (but not closing) all of its children.
   close: function GroupItem_close() {
-    this.removeAll();
+    this.removeAll({dontClose: true});
     GroupItems.unregister(this);
 
     if (this.hidden) {
@@ -811,9 +811,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   //   a - The item to add. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
-  //   dropPos - An object with left and top properties referring to the location dropped at.  Optional.
-  //   options - An object with optional settings for this call. Currently this includes dontArrange
-  //       and immediately
+  //   dropPos - An object with left and top properties referring to the 
+  //             location dropped at.  Optional.
+  //   options - An optional object with settings for this call. See below.
+  //
+  // Possible options:
+  //   dontArrange - Don't rearrange the children for the new item
+  //   immediately - Don't animate
   add: function GroupItem_add(a, dropPos, options) {
     try {
       var item;
@@ -931,8 +935,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   //   a - The item to remove. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
-  //   options - An object with optional settings for this call. Currently this includes
-  //             dontArrange and immediately
+  //   options - An optional object with settings for this call. See below.
+  //
+  // Possible options: 
+  //   dontArrange - don't rearrange the remaining items
+  //   dontClose - don't close the group even if it normally would
+  //   immediately - don't animate
   remove: function GroupItem_remove(a, options) {
     try {
       var $el;
@@ -988,11 +996,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: removeAll
   // Removes all of the groupItem's children.
-  removeAll: function GroupItem_removeAll() {
-    var self = this;
-    var toRemove = this._children.concat();
+  // The optional "options" param is passed to each remove call. 
+  removeAll: function GroupItem_removeAll(options) {
+    let self = this;
+    let newOptions = {dontArrange: true};
+    if (options)
+      Utils.extend(newOptions, options);
+      
+    let toRemove = this._children.concat();
     toRemove.forEach(function(child) {
-      self.remove(child, {dontArrange: true});
+      self.remove(child, newOptions);
     });
   },
   
@@ -1727,14 +1740,14 @@ let GroupItems = {
 
       if (groupItemsData) {
         if (groupItemsData.nextID)
-          this.nextID = groupItemsData.nextID;
+          this.nextID = Math.max(this.nextID, groupItemsData.nextID);
         if (groupItemsData.activeGroupId)
           activeGroupId = groupItemsData.activeGroupId;
       }
 
       if (groupItemData) {
         for (var id in groupItemData) {
-          var groupItem = groupItemData[id];
+          let groupItem = groupItemData[id];
           if (this.groupItemStorageSanity(groupItem)) {
             var options = {
               dontPush: true,
@@ -1757,6 +1770,24 @@ let GroupItems = {
     } catch(e) {
       Utils.log("error in recons: "+e);
     }
+  },
+
+  // ----------
+  // Function: load
+  // Loads the storage data for groups. 
+  // Returns true if there was global group data.
+  load: function GroupItems_load() {
+    var toClose = this.groupItems.concat();
+    toClose.forEach(function(groupItem) {
+      groupItem.close();
+    });
+
+    let groupItemsData = Storage.readGroupItemsData(gWindow);
+    let groupItemData = Storage.readGroupItemData(gWindow);
+    this.reconstitute(groupItemsData, groupItemData);
+    this.killNewTabGroup(); // temporary?
+    
+    return (groupItemsData && !Utils.isEmptyObject(groupItemsData));
   },
 
   // ----------
