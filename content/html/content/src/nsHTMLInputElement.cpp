@@ -303,9 +303,7 @@ AsyncClickHandler::Run()
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  PRBool multi;
-  rv = mInput->GetMultiple(&multi);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool multi = mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
 
   rv = filePicker->Init(win, title, multi ?
                         (PRInt16)nsIFilePicker::modeOpenMultiple :

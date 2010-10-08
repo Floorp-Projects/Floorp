@@ -80,23 +80,18 @@ nsHTMLSelectListAccessible::GetStateInternal(PRUint32 *aState,
   //   nsIAccessibleStates::STATE_MULTISELECTABLE
   //   nsIAccessibleStates::STATE_EXTSELECTABLE
 
-  nsCOMPtr<nsIDOMHTMLSelectElement> select(do_QueryInterface(mContent));
-  if (select) {
-    if (*aState & nsIAccessibleStates::STATE_FOCUSED) {
-      // Treat first focusable option node as actual focus, in order
-      // to avoid confusing JAWS, which needs focus on the option
-      nsCOMPtr<nsIContent> focusedOption =
-        nsHTMLSelectOptionAccessible::GetFocusedOption(mContent);
-      if (focusedOption) { // Clear focused state since it is on option
-        *aState &= ~nsIAccessibleStates::STATE_FOCUSED;
-      }
+  if (*aState & nsIAccessibleStates::STATE_FOCUSED) {
+    // Treat first focusable option node as actual focus, in order
+    // to avoid confusing JAWS, which needs focus on the option
+    nsCOMPtr<nsIContent> focusedOption =
+      nsHTMLSelectOptionAccessible::GetFocusedOption(mContent);
+    if (focusedOption) { // Clear focused state since it is on option
+      *aState &= ~nsIAccessibleStates::STATE_FOCUSED;
     }
-    PRBool multiple;
-    select->GetMultiple(&multiple);
-    if ( multiple )
-      *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE |
-                 nsIAccessibleStates::STATE_EXTSELECTABLE;
   }
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
+    *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE |
+               nsIAccessibleStates::STATE_EXTSELECTABLE;
 
   return NS_OK;
 }
@@ -122,19 +117,15 @@ nsHTMLSelectListAccessible::IsSelect()
 bool
 nsHTMLSelectListAccessible::SelectAll()
 {
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElm(do_QueryInterface(mContent));
-  PRBool isMultiple = PR_FALSE;
-  selectElm->GetMultiple(&isMultiple);
-  return isMultiple ? nsAccessibleWrap::SelectAll() : false;
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+           nsAccessibleWrap::SelectAll() : false;
 }
 
 bool
 nsHTMLSelectListAccessible::UnselectAll()
 {
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElm(do_QueryInterface(mContent));
-  PRBool isMultiple = PR_FALSE;
-  selectElm->GetMultiple(&isMultiple);
-  return isMultiple ? nsAccessibleWrap::UnselectAll() : false;
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+           nsAccessibleWrap::UnselectAll() : false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
