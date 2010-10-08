@@ -130,6 +130,13 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         mRunToCompletionDepth = 0;
 
     mIsAlive = false;
+
+    if (obs) {
+        nsString context = NS_LITERAL_STRING("");
+        if (AbnormalShutdown == why)
+            context.AssignLiteral("abnormal");
+        obs->NotifyObservers(nsnull, "ipc:content-shutdown", context.get());
+    }
 }
 
 TabParent*
