@@ -2425,36 +2425,9 @@ nsGenericHTMLFrameElement::IsHTMLFocusable(PRBool aWithMouse,
     return PR_TRUE;
   }
 
-  // If there is no subdocument, docshell or content viewer, it's not tabbable
-  PRBool isFocusable = PR_FALSE;
-  nsIDocument *doc = GetCurrentDoc();
-  if (doc) {
-    // XXXbz should this use GetOwnerDoc() for GetSubDocumentFor?
-    // sXBL/XBL2 issue!
-    nsIDocument *subDoc = doc->GetSubDocumentFor(this);
-    if (subDoc) {
-      nsCOMPtr<nsISupports> container = subDoc->GetContainer();
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-      if (docShell) {
-        nsCOMPtr<nsIContentViewer> contentViewer;
-        docShell->GetContentViewer(getter_AddRefs(contentViewer));
-        if (contentViewer) {
-          isFocusable = PR_TRUE;
-          nsCOMPtr<nsIContentViewer> zombieViewer;
-          contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-          if (zombieViewer) {
-            // If there are 2 viewers for the current docshell, that 
-            // means the current document is a zombie document.
-            // Only navigate into the frame/iframe if it's not a zombie.
-            isFocusable = PR_FALSE;
-          }
-        }
-      }
-    }
-  }
+  *aIsFocusable = nsContentUtils::IsSubDocumentTabbable(this);
 
-  *aIsFocusable = isFocusable;
-  if (!isFocusable && aTabIndex) {
+  if (!*aIsFocusable && aTabIndex) {
     *aTabIndex = -1;
   }
 
