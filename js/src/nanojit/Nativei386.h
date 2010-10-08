@@ -166,7 +166,7 @@ namespace nanojit
     static const RegisterMask ScratchRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) | 1<<REGNUM(rEDX) |
                                             FpRegs;
 
-    static const RegisterMask AllowableFlagRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) |
+    static const RegisterMask AllowableByteRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) |
                                                   1<<REGNUM(rEDX) | 1<<REGNUM(rEBX);
 
     static inline bool IsGpReg(Register r) {
@@ -217,7 +217,7 @@ namespace nanojit
         }; \
         void MODRMs(int32_t r, int32_t d, Register b, int32_t l, int32_t i); \
         void MODRMm(int32_t r, int32_t d, Register b); \
-        void MODRMsib(Register reg, Register base, Register index, int32_t scale, int32_t disp); \
+        void MODRMsib(int32_t reg, Register base, Register index, int32_t scale, int32_t disp); \
         void MODRMdm(int32_t r, int32_t addr); \
         /* d may be a register number or something else */ \
         void MODRM(int32_t d, int32_t s) { \
@@ -228,6 +228,7 @@ namespace nanojit
         void ALUm(int32_t c, int32_t r, int32_t d, Register b); \
         void ALUdm(int32_t c, Register r, int32_t addr); \
         void ALUsib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
+        void ALUsib16(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
         void ALUm16(int32_t c, int32_t r, int32_t d, Register b); \
         void ALU2dm(int32_t c, Register r, int32_t addr); \
         void ALU2m(int32_t c, Register r, int32_t d, Register b); \
@@ -317,11 +318,17 @@ namespace nanojit
         void LD8Ssib(Register r, int32_t disp, Register base, Register index, int32_t scale); \
         void LDi(Register r, int32_t i); \
         void ST8(Register base, int32_t disp, Register reg); \
+        void ST8sib(int32_t disp, Register base, Register index, int32_t scale, Register reg); \
         void ST16(Register base, int32_t disp, Register reg); \
+        void ST16sib(int32_t disp, Register base, Register index, int32_t scale, Register reg); \
         void ST(Register base, int32_t disp, Register reg); \
+        void STsib(int32_t disp, Register base, Register index, int32_t scale, Register reg); \
         void ST8i(Register base, int32_t disp, int32_t imm); \
+        void ST8isib(int32_t disp, Register base, Register index, int32_t scale, int32_t imm); \
         void ST16i(Register base, int32_t disp, int32_t imm); \
+        void ST16isib(int32_t disp, Register base, Register index, int32_t scale, int32_t imm); \
         void STi(Register base, int32_t disp, int32_t imm); \
+        void STisib(int32_t disp, Register base, Register index, int32_t scale, int32_t imm); \
         void RET(); \
         void NOP(); \
         void INT3(); \
