@@ -237,20 +237,24 @@ var gSyncSetup = {
     return true;
   },
 
-  onEmailChange: function () {
+  onEmailInput: function () {
+    // Check account validity when the user stops typing for 1 second.
+    if (this._checkAccountTimer)
+      window.clearTimeout(this._checkAccountTimer);
+    this._checkAccountTimer = window.setTimeout(function () {
+      gSyncSetup.checkAccount();
+    }, 1000);
+  },
+
+  checkAccount: function() {
+    delete this._checkAccountTimer;
     let value = document.getElementById("weaveEmail").value;
     if (!value) {
       this.status.email = false;
       this.checkFields();
       return;
     }
-    // Do this async to avoid blocking the widget while we go to the server.
-    window.setTimeout(function() {
-      gSyncSetup.checkAccount(value);
-    }, 0);
-  },
 
-  checkAccount: function(value) {
     let re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     let feedback = document.getElementById("emailFeedbackRow");
     let valid = re.test(value);
@@ -432,6 +436,14 @@ var gSyncSetup = {
       return true;
 
     switch (this.wizard.pageIndex) {
+      case NEW_ACCOUNT_START_PAGE:
+        // If the user selects Next (e.g. by hitting enter) when we haven't
+        // executed the delayed checks yet, execute them immediately.
+        if (this._checkAccountTimer)
+          this.checkAccount();
+        if (this._checkServerTimer)
+          this.checkServer();
+        return this.wizard.canAdvance;
       case NEW_ACCOUNT_CAPTCHA_PAGE:
         let doc = this.captchaBrowser.contentDocument;
         let getField = function getField(field) {
@@ -628,29 +640,45 @@ var gSyncSetup = {
 
     document.getElementById("serverRow").hidden = this._usingMainServers;
     document.getElementById("TOSRow").hidden = !this._usingMainServers;
+
+    if (!this._usingMainServers) {
+      this.checkServer();
+      return;
+    }
+
+    Weave.Svc.Prefs.reset("serverURL");
+    this.checkAccount();
+    this.status.server = true;
+    document.getElementById("serverFeedbackRow").hidden = true;
+    this.checkFields();
+  },
+
+  onServerInput: function () {
+    // Check custom server validity when the user stops typing for 1 second.
+    if (this._checkServerTimer)
+      window.clearTimeout(this._checkServerTimer);
+    this._checkServerTimer = window.setTimeout(function () {
+      gSyncSetup.checkServer();
+    }, 1000);
+  },
+
+  checkServer: function () {
+    delete this._checkServerTimer;
+    let el = document.getElementById("weaveServerURL");
     let valid = false;
     let feedback = document.getElementById("serverFeedbackRow");
-
-    if (this._usingMainServers) {
-      Weave.Svc.Prefs.reset("serverURL");
-      valid = true;
-      feedback.hidden = true;
+    let str = "";
+    if (el.value) {
+      valid = this._validateServer(el, true);
+      let str = valid ? "" : "serverInvalid.label";
+      this._setFeedbackMessage(feedback, valid, str);
     }
-    else {
-      let el = document.getElementById("weaveServerURL");
-      let str = "";
-      if (el.value) {
-        valid = this._validateServer(el, true);
-        let str = valid ? "" : "serverInvalid.label";
-        this._setFeedbackMessage(feedback, valid, str);
-      }
-      else
-        this._setFeedbackMessage(feedback, true);
-    }
+    else
+      this._setFeedbackMessage(feedback, true);
 
     // Recheck account against the new server.
     if (valid)
-      this.onEmailChange();
+      this.checkAccount();
 
     this.status.server = valid;
     this.checkFields();
