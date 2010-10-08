@@ -48,6 +48,7 @@
 #include "nsTArray.h"
 #include "nsIObserver.h"
 #include "nsIIdleService.h"
+#include "nsCategoryCache.h"
 
 /**
  * Class we can use to store an observer with its associated idle time
@@ -106,6 +107,11 @@ private:
    * Function that is called back once a day.
    */
   static void DailyCallback(nsITimer* aTimer, void* aClosure);
+
+  /**
+   * Cache of observers for the "idle-daily" category.
+   */
+  nsCategoryCache<nsIObserver> mCategoryObservers;
 };
 
 class nsIdleService : public nsIIdleService
