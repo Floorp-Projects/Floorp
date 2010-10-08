@@ -864,14 +864,14 @@ public:
    * @note Classes redefining this method should not call ContentStatesChanged
    * but they should pass aStates instead.
    */
-  virtual void FieldSetDisabledChanged(PRInt32 aStates);
+  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
 
-  void FieldSetFirstLegendChanged() {
+  void FieldSetFirstLegendChanged(PRBool aNotify) {
     UpdateFieldSet();
 
     // The disabled state may have change because the element might not be in
     // the first legend anymore.
-    FieldSetDisabledChanged(0);
+    FieldSetDisabledChanged(0, aNotify);
   }
 
   /**
