@@ -98,7 +98,7 @@
   <script type="application/javascript;version=1.8"><![CDATA[
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
     let gChromeWin = null;
-    
+
     function getChromeWin() {
       if (!gChromeWin) {
         gChromeWin = window
@@ -128,8 +128,8 @@
         let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
         stream.init(aFile, 0x01, 0, 0);
         let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
-  
-        let fileSize = stream.available();  
+
+        let fileSize = stream.available();
         cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
         let data = {};
         cvstream.readString(fileSize, data);
@@ -138,7 +138,7 @@
         return content.replace(/\r\n?/g, "\n");
       }
       catch (ex) { Cu.reportError(ex); }
-  
+
       return null;
     }
 
@@ -163,7 +163,7 @@
       let allPageURLs = [];
 
       let list = document.getElementById("recentTabs");
-      
+
       let tabs = data.windows[0].tabs;
       for (let i=0; i<tabs.length; i++) {
         let tabData = tabs[i];
@@ -280,11 +280,11 @@
         let loading = document.getElementById("loadingAddons");
         loading.parentNode.removeChild(loading);
 
-        for (let i=0; i<aAddons.length; i++) {  
+        for (let i=0; i<aAddons.length; i++) {
           let outer = document.createElement("div");
           outer.setAttribute("role", "button");
           outer.setAttribute("addonID", aAddons[i].id);
-  
+
           let addonName = aAddons[i].name;
           outer.addEventListener("click", function() {
             goToAddons(addonName);
@@ -294,25 +294,25 @@
           img.className = "favicon";
           img.setAttribute("src", aAddons[i].iconURL);
           outer.appendChild(img);
-  
+
           let inner = document.createElement("div");
           inner.className = "inner";
-  
+
           let titlePart = document.createElement("span");
           titlePart.textContent = aAddons[i].name;
           titlePart.className = "title";
           inner.appendChild(titlePart);
-  
+
           let versionPart = document.createElement("span");
           versionPart.textContent = aAddons[i].version;
           versionPart.className = "version";
           inner.appendChild(versionPart);
-  
+
           outer.appendChild(inner);
           list.appendChild(outer);
         }
       },
-    
+
       searchFailed: function searchFailed() {
         let loading = document.getElementById("newAddons");
         loading.parentNode.removeChild(loading);

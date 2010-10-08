@@ -105,7 +105,7 @@ html {
 /* Make room for the image */
 .section-box > div > div,
 .section-row > div > div {
-  margin-left: 48px;
+  -moz-margin-start: 48px;
 }
 
 .section-box .title {
@@ -113,14 +113,17 @@ html {
 }
 
 .section-box .openall {
-  text-align: right;
   font-size: 18px;
   padding: 12px 8px;
   color: black;
 }
 
+body[dir="ltr"] .section-box .openall {
+  text-align: right;
+}
+
 .section-box .version {
-  margin-left: 12px;
+  -moz-margin-start: 12px;
   font-size: 18px;
   color: gray;
 }
@@ -132,15 +135,26 @@ html {
 .section-box .favicon {
   border: none;
   top: 8px;
-  left: 12px;
   width: 32px;
   height: 32px;
   position: absolute;
   pointer-events: none;
 }
 
-#newAddons > div:not(.loading) {
+body[dir="ltr"] .section-box .favicon {
+  left: 12px;
+}
+
+body[dir="ltr"] .section-box .favicon {
+  right: 12px;
+}
+
+body[dir="ltr"] #newAddons > div:not(.loading) {
   background: url("images/arrowright-16.png") 99% center no-repeat;
+}
+
+body[dir="rtl"] #newAddons > div:not(.loading) {
+  background: url("images/arrowleft-16.png") 1% center no-repeat;
 }
 
 #remoteTabs[disabled=true] {
@@ -174,10 +188,17 @@ html {
 .section-row .favicon {
   border: none;
   top: 0;
-  left: 4px;
   width: 32px;
   height: 32px;
   position: absolute;
+}
+
+body[dir="ltr"] {
+  left: 4px;
+}
+
+body[dir="rtl"] {
+  right: 4px;
 }
 
 .loading > img {
