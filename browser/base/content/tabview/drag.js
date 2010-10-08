@@ -118,8 +118,8 @@ Drag.prototype = {
 
     // OH SNAP!
 
-    // if we aren't holding down the meta key...
-    if (!Keys.meta) {
+    // if we aren't holding down the meta key or have trenches disabled...
+    if (!Keys.meta && !Trenches.disabled) {
       // snappable = true if we aren't a tab on top of something else, and
       // there's no active drop site...
       let snappable = !(this.item.isATabItem &&
