@@ -217,7 +217,7 @@
                 onclosetab="BrowserUI.closeTab(this)"
                 onclosereloadtab="this._container.removeTab(this)"/>
           <hbox id="tabs-controls">
-            <toolbarbutton id="newtab-button" class="button-control" command="cmd_newTab"/>
+            <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
           </hbox>
         </vbox>
       </vbox>
@@ -231,10 +231,10 @@
               <box id="toolbar-moveable-container">
                 <toolbar id="toolbar-main" class="panel-dark window-width">
 #ifdef MOZ_PLATFORM_MAEMO
-                  <toolbarbutton id="tool-app-switch" oncommand="BrowserUI.switchTask();"/>
+                  <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
 #endif
                   <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
-                    <box id="identity-box" class="urlbar-cap-button"
+                    <box id="identity-box"
                          onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                          onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
                       <box id="urlbar-image-box" mousethrough="always">
@@ -258,14 +258,15 @@
                              ontextentered="BrowserUI.goToURI();"
                              readonly="true"
                              clickSelectsAll="true"/>
-                    <hbox id="urlbar-icons" class="urlbar-cap-button" observes="bcast_urlbarState">
-                      <toolbarbutton id="tool-reload" oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-                      <toolbarbutton id="tool-stop" command="cmd_stop"/>
-                      <toolbarbutton id="tool-search" command="cmd_opensearch"/>
+                    <hbox id="urlbar-icons" observes="bcast_urlbarState">
+                      <toolbarbutton id="tool-reload" class="urlbar-cap-button"
+                                     oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+                      <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+                      <toolbarbutton id="tool-search" class="urlbar-cap-button" command="cmd_opensearch"/>
                     </hbox>
                   </hbox>
 #ifndef ANDROID
-                  <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
+                  <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
 #endif
                 </toolbar>
               </box>
@@ -304,11 +305,11 @@
         <spacer class="toolbar-height" mousethrough="always"/>
 
         <vbox id="browser-controls" style="overflow: -moz-hidden-unscrollable;" class="panel-dark" flex="1">
-          <toolbarbutton id="tool-star" class="button-control" command="cmd_star"/>
-          <toolbarbutton id="tool-back" class="button-control" command="cmd_back"/>
-          <toolbarbutton id="tool-forward" class="button-control" command="cmd_forward"/>
+          <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
+          <toolbarbutton id="tool-back" class="browser-control-button button-image" command="cmd_back"/>
+          <toolbarbutton id="tool-forward" class="browser-control-button button-image" command="cmd_forward"/>
           <toolbarspring/>
-          <toolbarbutton id="tool-panel-open" class="button-control" command="cmd_panel"/>
+          <toolbarbutton id="tool-panel-open" class="page-button button-image" command="cmd_panel"/>
         </vbox>
       </vbox>
     </scrollbox>
@@ -373,14 +374,14 @@
     </vbox>
 
     <vbox id="panel-container" class="panel-dark window-width window-height" style="-moz-stack-sizing: ignore" left="10000" hidden="true">
-      <hbox id="panel-controls" class="panel-row-header" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
-        <toolbarbutton id="tool-preferences" type="radio" group="1" checked="true" linkedpanel="prefs-container"/>
-        <toolbarbutton id="tool-downloads" type="radio" group="1" linkedpanel="downloads-container"/>
-        <toolbarbutton id="tool-addons" type="radio" group="1" linkedpanel="addons-container"/>
-        <toolbarbutton id="tool-console" type="radio" group="1" hidden="true" linkedpanel="console-container"/>
+      <hbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
+        <toolbarbutton id="tool-preferences" type="radio" group="1" checked="true" class="panel-button button-image" linkedpanel="prefs-container"/>
+        <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button button-image" linkedpanel="downloads-container"/>
+        <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>
+        <toolbarbutton id="tool-console" type="radio" group="1" hidden="true" class="panel-button button-image" linkedpanel="console-container"/>
 #ifndef ANDROID
         <spacer flex="1"/>
-        <toolbarbutton id="tool-panel-close" command="cmd_panel"/>
+        <toolbarbutton id="tool-panel-close" class="button-image" command="cmd_panel"/>
 #endif
       </hbox>
       <vbox flex="1">
@@ -499,7 +500,7 @@
 
     <vbox id="awesome-panels" hidden="true">
       <!-- Awesome header row -->
-      <hbox id="awesome-header" class="panel-row-header">
+      <hbox id="awesome-header">
         <toolbarbutton type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all show-text" checked="true"/>
         <toolbarbutton type="radio" group="awesome-header" label="&bookmarksHeader.label;" command="cmd_bookmarks" class="choice-bookmarks show-text"/>
         <toolbarbutton type="radio" group="awesome-header" label="&historyHeader.label;" command="cmd_history" class="choice-history show-text"/>
