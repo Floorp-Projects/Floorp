@@ -100,8 +100,6 @@
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
-#include "nsFileControlFrame.h"
-#include "nsTextControlFrame.h"
 #include "nsIFilePicker.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIPrivateBrowsingService.h"
@@ -305,9 +303,6 @@ AsyncClickHandler::Run()
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  nsFileControlFrame* frame =
-    static_cast<nsFileControlFrame*>(mInput->GetPrimaryFrame());
-
   PRBool multi;
   rv = mInput->GetMultiple(&multi);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -317,19 +312,22 @@ AsyncClickHandler::Run()
                         (PRInt16)nsIFilePicker::modeOpen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We want to get the file filter from the accept attribute and we add the
-  // |filterAll| filter to be sure the user has a valid fallback.
-  PRUint32 filter = 0;
-  if (frame)
-    filter = frame->GetFileFilterFromAccept();
-  filePicker->AppendFilters(filter | nsIFilePicker::filterAll);
+  if (mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
+    PRInt32 filters = mInput->GetFiltersFromAccept();
 
-  // If the accept attribute asks for a filter, it has to be the default one.
-  if (filter) {
-    // We have two filters: |filterAll| and another one. |filterAll| is
-    // always the first one (index=0) so we can assume the one we want to be
-    // the default is at index 1.
-    filePicker->SetFilterIndex(1);
+    if (filters) {
+      // We add |filterAll| to be sure the user always has a sane fallback.
+      filePicker->AppendFilters(filters | nsIFilePicker::filterAll);
+
+      // If the accept attribute asked for a filter, we need to make it default.
+      // |filterAll| will always use index=0 so we need to set index=1 as the
+      // current filter.
+      filePicker->SetFilterIndex(1);
+    } else {
+      filePicker->AppendFilters(nsIFilePicker::filterAll);
+    }
+  } else {
+    filePicker->AppendFilters(nsIFilePicker::filterAll);
   }
 
   // Set default directry and filename
@@ -4411,5 +4409,34 @@ nsHTMLInputElement::FieldSetDisabledChanged(PRInt32 aStates)
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates);
+}
+
+PRInt32
+nsHTMLInputElement::GetFiltersFromAccept()
+{
+  NS_ASSERTION(HasAttr(kNameSpaceID_None, nsGkAtoms::accept),
+               "You should not call GetFileFiltersFromAccept if the element"
+               " has no accept attribute!");
+
+  PRInt32 filters = 0;
+  nsAutoString accept;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
+
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
+    tokenizer(accept, ',');
+
+  while (tokenizer.hasMoreTokens()) {
+    const nsDependentSubstring token = tokenizer.nextToken();
+
+    if (token.EqualsLiteral("image/*")) {
+      filters |= nsIFilePicker::filterImages;
+    } else if (token.EqualsLiteral("audio/*")) {
+      filters |= nsIFilePicker::filterAudio;
+    } else if (token.EqualsLiteral("video/*")) {
+      filters |= nsIFilePicker::filterVideo;
+    }
+  }
+
+  return filters;
 }
 

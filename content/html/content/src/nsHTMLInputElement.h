@@ -279,6 +279,19 @@ public:
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType);
 
+  /**
+   * Returns the filter which should be used for the file picker according to
+   * the accept attribute value.
+   *
+   * See:
+   * http://dev.w3.org/html5/spec/forms.html#attr-input-accept
+   *
+   * @return Filters to use on the file picker with AppendFilters, 0 if none.
+   *
+   * @note You should not call this function if the element has no @accept.
+   */
+  PRInt32 GetFiltersFromAccept();
+
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
