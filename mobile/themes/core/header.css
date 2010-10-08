@@ -38,7 +38,7 @@
 body {
   font-family: helvetica,arial,clean,sans-serif;
   color: #69645c;
-  background: white url("images/aboutBackground.jpg") top center repeat-x;
+  background: white url("images/aboutBackground.png") top center repeat-x;
 }
 
 #wrapper {
