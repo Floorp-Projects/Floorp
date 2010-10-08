@@ -257,6 +257,17 @@ LayerManagerD3D9::CreateOptimalSurface(const gfxIntSize &aSize,
 }
 
 void
+LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
+{
+  // We could choose to abort here when hr == E_OUTOFMEMORY.
+  nsCString msg;
+  msg.Append(aMsg);
+  msg.AppendLiteral(" Error code: ");
+  msg.AppendInt(aCode);
+  NS_WARNING(msg.BeginReading());
+}
+
+void
 LayerManagerD3D9::Render()
 {
   if (!mSwapChain->PrepareForRendering()) {
