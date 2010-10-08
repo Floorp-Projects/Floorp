@@ -1540,8 +1540,10 @@ nsFrameLoader::UpdateViewportConfig(const ViewportConfig& aNewConfig)
   // it if found.
   nsIFrame* frame = GetPrimaryFrameOfOwningContent();
   if (!frame) {
-    // XXX should this be a silent failure?
-    return NS_ERROR_NOT_AVAILABLE;
+    // Oops, don't have a frame right now.  That's OK; the viewport
+    // config persists and will apply to the next frame we get, if we
+    // ever get one.
+    return NS_OK;
   }
 
   // XXX could be clever here and compute a smaller invalidation
