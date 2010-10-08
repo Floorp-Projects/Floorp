@@ -958,8 +958,7 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
                                                              mBaseLineNumber(0),
                                                              mLineExtent(0),
                                                              mPPLineMap(0),
-                                                             mFirstPC(0),
-                                                             mEndPC(0)
+                                                             mFirstPC(0)
 {
     DEBUG_CREATE ("jsdScript", gScriptCount);
 
@@ -973,7 +972,6 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
         mBaseLineNumber = JSD_GetScriptBaseLineNumber(mCx, mScript);
         mLineExtent = JSD_GetScriptLineExtent(mCx, mScript);
         mFirstPC = JSD_GetClosestPC(mCx, mScript, 0);
-        mEndPC = JSD_GetEndPC(mCx, mScript);
         JSD_UnlockScriptSubsystem(mCx);
         
         mValid = PR_TRUE;
@@ -1474,25 +1472,6 @@ jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
         return NS_ERROR_INVALID_ARG;
     }
     
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdScript::GetFirstValidPC(PRUint32 *_rval)
-{
-    ASSERT_VALID_EPHEMERAL;
-    jsbytecode *pc = (jsbytecode *) mFirstPC;
-    if (*pc == JSOP_BEGIN)
-        ++pc;
-    *_rval = PRUint32(pc);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdScript::GetEndValidPC(PRUint32 *_rval)
-{
-    ASSERT_VALID_EPHEMERAL;
-    *_rval = PRUint32(mEndPC);
     return NS_OK;
 }
 
