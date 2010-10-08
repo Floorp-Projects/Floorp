@@ -89,7 +89,7 @@ nsHTMLSelectListAccessible::GetStateInternal(PRUint32 *aState,
       *aState &= ~nsIAccessibleStates::STATE_FOCUSED;
     }
   }
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
+  if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple))
     *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE |
                nsIAccessibleStates::STATE_EXTSELECTABLE;
 
@@ -117,14 +117,14 @@ nsHTMLSelectListAccessible::IsSelect()
 bool
 nsHTMLSelectListAccessible::SelectAll()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+  return mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple) ?
            nsAccessibleWrap::SelectAll() : false;
 }
 
 bool
 nsHTMLSelectListAccessible::UnselectAll()
 {
-  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ?
+  return mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple) ?
            nsAccessibleWrap::UnselectAll() : false;
 }
 
