@@ -204,6 +204,8 @@ deb: $(PP_DEB_FILES) $(DIST)/branding/$(MOZ_APP_NAME)_scalable.png \
 installer: deb
 	@echo Installer DEB created!
 
+# relative to $(DIST)
+UPLOAD_EXTRA_FILES += ../mobile/$(DEB_PKG_NAME)
 endif
 
 ifeq ($(OS_ARCH),WINCE)
@@ -237,6 +239,3 @@ endif
 	  rm setup.ini
 
 endif
-
-# relative to $(DIST)
-UPLOAD_EXTRA_FILES += ../mobile/$(DEB_PKG_NAME)
