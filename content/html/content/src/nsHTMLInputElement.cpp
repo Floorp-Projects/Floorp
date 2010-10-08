@@ -313,7 +313,7 @@ AsyncClickHandler::Run()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
-    PRInt32 filters = mInput->GetFiltersFromAccept();
+    PRInt32 filters = mInput->GetFilterFromAccept();
 
     if (filters) {
       // We add |filterAll| to be sure the user always has a sane fallback.
@@ -4412,13 +4412,13 @@ nsHTMLInputElement::FieldSetDisabledChanged(PRInt32 aStates)
 }
 
 PRInt32
-nsHTMLInputElement::GetFiltersFromAccept()
+nsHTMLInputElement::GetFilterFromAccept()
 {
   NS_ASSERTION(HasAttr(kNameSpaceID_None, nsGkAtoms::accept),
                "You should not call GetFileFiltersFromAccept if the element"
                " has no accept attribute!");
 
-  PRInt32 filters = 0;
+  PRInt32 filter = 0;
   nsAutoString accept;
   GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
 
@@ -4428,15 +4428,25 @@ nsHTMLInputElement::GetFiltersFromAccept()
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring token = tokenizer.nextToken();
 
+    PRInt32 tokenFilter = 0;
     if (token.EqualsLiteral("image/*")) {
-      filters |= nsIFilePicker::filterImages;
+      tokenFilter = nsIFilePicker::filterImages;
     } else if (token.EqualsLiteral("audio/*")) {
-      filters |= nsIFilePicker::filterAudio;
+      tokenFilter = nsIFilePicker::filterAudio;
     } else if (token.EqualsLiteral("video/*")) {
-      filters |= nsIFilePicker::filterVideo;
+      tokenFilter = nsIFilePicker::filterVideo;
+    }
+
+    if (tokenFilter) {
+      // We do not want to set more than one filter so if we found two different
+      // kwown tokens, we will return 0 (no filter).
+      if (filter && filter != tokenFilter) {
+        return 0;
+      }
+      filter = tokenFilter;
     }
   }
 
-  return filters;
+  return filter;
 }
 
