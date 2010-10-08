@@ -23,6 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377624
   <input id='g' type='file' accept="image/*, audio/* ,video/*">
   <input id='h' type='file' accept="foo/baz,image/*,bogus/duh">
   <input id='i' type='file' accept="mime/type;parameter,video/*">
+  <input id='j' type='file' accept="audio/*, audio/*, audio/*">
   <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
 </div>
 <pre id="test">
@@ -123,17 +124,13 @@ factory = {
 var testData = [["a", FilePickerService.prototype.filterImages, 1],
                 ["b", FilePickerService.prototype.filterAudio, 1],
                 ["c", FilePickerService.prototype.filterVideo, 1],
-                ["d", FilePickerService.prototype.filterImages +
-                      FilePickerService.prototype.filterAudio, 1],
-                ["e", FilePickerService.prototype.filterImages +
-                      FilePickerService.prototype.filterVideo, 1],
-                ["f", FilePickerService.prototype.filterAudio +
-                      FilePickerService.prototype.filterVideo, 1],
-                ["g", FilePickerService.prototype.filterImages +
-                      FilePickerService.prototype.filterAudio +
-                      FilePickerService.prototype.filterVideo, 1],
+                ["d", 0, 0],
+                ["e", 0, 0],
+                ["f", 0, 0],
+                ["g", 0, 0],
                 ["h", FilePickerService.prototype.filterImages, 1],
                 ["i", FilePickerService.prototype.filterVideo, 1],
+                ["j", FilePickerService.prototype.filterAudio, 1],
                 ["z", 0, 0]];
 
 testData.forEach(function (datum) {

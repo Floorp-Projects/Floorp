@@ -286,11 +286,13 @@ public:
    * See:
    * http://dev.w3.org/html5/spec/forms.html#attr-input-accept
    *
-   * @return Filters to use on the file picker with AppendFilters, 0 if none.
+   * @return Filter to use on the file picker with AppendFilters, 0 if none.
    *
    * @note You should not call this function if the element has no @accept.
+   * @note This will only filter for one type of file. If more than one filter
+   * is specified by the accept attribute they will *all* be ignored.
    */
-  PRInt32 GetFiltersFromAccept();
+  PRInt32 GetFilterFromAccept();
 
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
