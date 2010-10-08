@@ -2976,12 +2976,15 @@ nsGenericHTMLFormElement::UpdateFieldSet()
 }
 
 void
-nsGenericHTMLFormElement::FieldSetDisabledChanged(PRInt32 aStates)
+nsGenericHTMLFormElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
 {
+  if (!aNotify) {
+    return;
+  }
+
   aStates |= NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
 
   nsIDocument* doc = GetCurrentDoc();
-  // TODO: should we use aNotify ?!
   if (doc) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, aStates);
