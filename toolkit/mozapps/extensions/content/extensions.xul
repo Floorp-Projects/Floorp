@@ -202,39 +202,41 @@
 
   <hbox flex="1">
 
-      <!-- category list -->
-      <richlistbox id="categories" persist="last-selected">
-        <richlistitem id="category-search" value="addons://search/"
-                      class="category"
-                      name="&view.search.label;" disabled="true"/>
-        <richlistitem id="category-discover" value="addons://discover/"
-                      class="category"
-                      name="&view.discover.label;"/>
-        <richlistitem id="category-languages" value="addons://list/locale"
-                      class="category"
-                      name="&view.locales.label;"
-                      hidden="true" persist="hidden"/>
-        <richlistitem id="category-searchengines"
-                      value="addons://list/searchengine"
-                      class="category"
-                      name="&view.searchengines.label;"
-                      hidden="true" persist="hidden"/>
-        <richlistitem id="category-extensions" value="addons://list/extension"
-                      class="category"
-                      name="&view.features.label;"/>
-        <richlistitem id="category-themes" value="addons://list/theme"
-                      class="category"
-                      name="&view.appearance2.label;"/>
-        <richlistitem id="category-plugins" value="addons://list/plugin"
-                      class="category"
-                      name="&view.plugins.label;"/>
-        <richlistitem id="category-availableUpdates" value="addons://updates/available"
-                      class="category"
-                      name="&view.availableUpdates.label;" disabled="true"/>
-        <richlistitem id="category-recentUpdates" value="addons://updates/recent"
-                      class="category"
-                      name="&view.recentUpdates.label;" disabled="true"/>
-      </richlistbox>
+    <!-- category list -->
+    <richlistbox id="categories" persist="last-selected">
+      <richlistitem id="category-search" value="addons://search/"
+                    class="category"
+                    name="&view.search.label;" disabled="true"/>
+      <richlistitem id="category-discover" value="addons://discover/"
+                    class="category"
+                    name="&view.discover.label;"/>
+      <richlistitem id="category-languages" value="addons://list/locale"
+                    class="category"
+                    name="&view.locales.label;"
+                    hidden="true" persist="hidden"/>
+      <richlistitem id="category-searchengines"
+                    value="addons://list/searchengine"
+                    class="category"
+                    name="&view.searchengines.label;"
+                    hidden="true" persist="hidden"/>
+      <richlistitem id="category-extensions" value="addons://list/extension"
+                    class="category"
+                    name="&view.features.label;"/>
+      <richlistitem id="category-themes" value="addons://list/theme"
+                    class="category"
+                    name="&view.appearance2.label;"/>
+      <richlistitem id="category-plugins" value="addons://list/plugin"
+                    class="category"
+                    name="&view.plugins.label;"/>
+      <richlistitem id="category-availableUpdates" value="addons://updates/available"
+                    class="category"
+                    name="&view.availableUpdates.label;" disabled="true"/>
+      <richlistitem id="category-recentUpdates" value="addons://updates/recent"
+                    class="category"
+                    name="&view.recentUpdates.label;" disabled="true"/>
+    </richlistbox>
+
+    <box id="view-port-container" flex="1">
 
       <!-- view port -->
       <deck id="view-port" flex="1">
@@ -566,6 +568,7 @@
 
       </deck>
 
+    </box>
   </hbox>
 
 </page>

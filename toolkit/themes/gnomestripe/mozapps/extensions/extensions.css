@@ -39,7 +39,9 @@
   margin: 20px 20px;
 }
 
-#view-port {
+#view-port-container {
+  /* Needed to allow the radius to clip the inner content, see bug 595656 */
+  overflow: hidden;
   background-color: -moz-field;
   color: -moz-fieldtext;
   border: 1px solid threedshadow;
