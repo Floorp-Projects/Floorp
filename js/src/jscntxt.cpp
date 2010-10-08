@@ -2211,6 +2211,7 @@ ComputeIsJITBroken()
                 "SGH-I897",     // Samsung i9000, Captivate device
                 "SCH-I500",     // Samsung i9000, Fascinate device
                 "SPH-D700",     // Samsung i9000, Epic device
+                "GT-I9000",     // Samsung i9000, UK/Europe device
                 NULL
             };
             for (const char** hw = &blacklist[0]; *hw; ++hw) {
