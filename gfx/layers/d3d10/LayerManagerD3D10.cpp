@@ -195,6 +195,9 @@ LayerManagerD3D10::Initialize()
     return false;
   }
 
+  // We need this because we don't want DXGI to respond to Alt+Enter.
+  dxgiFactory->MakeWindowAssociation(swapDesc.OutputWindow, DXGI_MWA_NO_WINDOW_CHANGES);
+
   return true;
 }
 
