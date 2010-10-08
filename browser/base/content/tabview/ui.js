@@ -172,24 +172,21 @@ let UI = {
       // ___ add tab action handlers
       this._addTabActionHandlers();
 
-      // ___ Storage
-      GroupItems.pauseArrange();
+      // ___ groups
       GroupItems.init();
-
-      let firstTime = true;
-      if (gPrefBranch.prefHasUserValue("experienced_first_run"))
-        firstTime = !gPrefBranch.getBoolPref("experienced_first_run");
-      let groupItemsData = Storage.readGroupItemsData(gWindow);
-      let groupItemData = Storage.readGroupItemData(gWindow);
-      GroupItems.reconstitute(groupItemsData, groupItemData);
-      GroupItems.killNewTabGroup(); // temporary?
+      GroupItems.pauseArrange();
+      let hasGroupItemsData = GroupItems.load();
 
       // ___ tabs
       TabItems.init();
       TabItems.pausePainting();
 
       // if first time in Panorama or no group data:
-      if (firstTime || !groupItemsData || Utils.isEmptyObject(groupItemsData))
+      let firstTime = true;
+      if (gPrefBranch.prefHasUserValue("experienced_first_run"))
+        firstTime = !gPrefBranch.getBoolPref("experienced_first_run");
+
+      if (firstTime || !hasGroupItemsData)
         this.reset(firstTime);
 
       // ___ resizing
@@ -524,6 +521,10 @@ let UI = {
     function srObserver(aSubject, aTopic, aData) {
       if (aTopic != "sessionstore-browser-state-restored")
         return;
+        
+      let hasGroupItemsData = GroupItems.load();
+      if (!hasGroupItemsData)
+        self.reset(false);
         
       // if we're transitioning into/out of private browsing, update appropriately
       if (self._privateBrowsing.transitionStage == 1)
