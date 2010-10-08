@@ -1440,12 +1440,20 @@ GCMarker::markDelayedChildren()
 {
     while (Arena<Cell> *a = unmarkedArenaStackTop) {
         /*
-         * The following assert verifies that the current arena belongs to the
-         * unmarked stack, since DelayMarkingChildren ensures that even for
-         * the stack's bottom, prevUnmarked != 0 but rather points to
-         * itself.
+         * markingDelay->link == current arena indicates last arena on stack.
+         * If marking gets delayed at the same arena again, the arena is pushed 
+         * again in delayMarkingChildren. markingDelay->link has to be cleared, 
+         * otherwise the arena is not pushed again.
          */
         MarkingDelay *markingDelay = a->getMarkingDelay();
+        unmarkedArenaStackTop = (markingDelay->link != a)
+            ? markingDelay->link
+            : NULL;
+        markingDelay->link = NULL;
+#ifdef DEBUG
+        markLaterCount -= Arena<FreeCell>::ThingsPerArena;
+#endif
+
         switch (a->header()->thingKind) {
             case FINALIZE_OBJECT:
                 reinterpret_cast<Arena<JSObject> *>(a)->markDelayedChildren(this);
@@ -1473,22 +1481,7 @@ GCMarker::markDelayedChildren()
                 break;
 #endif
             default:
-                JS_ASSERT(false);
-        }
-
-        /*
-         * Pop the arena off the stack. If we try to mark a thing on the same
-         * arena and that marking gets delayed, the arena will be put back
-         * into the worklist.
-         */
-        if (unmarkedArenaStackTop == a) {
-            unmarkedArenaStackTop = (markingDelay->link != a)
-                ? markingDelay->link
-                : NULL;
-            markingDelay->link = NULL;
-#ifdef DEBUG
-            markLaterCount -= Arena<FreeCell>::ThingsPerArena;
-#endif
+                JS_NOT_REACHED("wrong thingkind");
         }
     }
     JS_ASSERT(markLaterCount == 0);
