@@ -63,6 +63,9 @@ pref("zoom.dpiScale", 150);
 /* use custom widget for html:select */
 pref("ui.use_native_popup_windows", true);
 
+/* use long press to display a context menu */
+pref("ui.click_hold_context_menus", true);
+
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
 pref("browser.cache.disk.capacity", 0); // kilobytes
