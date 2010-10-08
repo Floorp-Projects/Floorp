@@ -126,9 +126,7 @@ private:
     NS_NORETURN void QuickExit();
 
     nsTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
-    nsTArray<nsAutoPtr<PrefObserver> > mPrefObservers;
     nsRefPtr<ConsoleListener> mConsoleListener;
-    bool mDead;
 
     static ContentChild* sSingleton;
 
