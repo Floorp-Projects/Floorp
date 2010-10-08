@@ -320,12 +320,16 @@ MouseModule.prototype = {
   _doDragStop: function _doDragStop() {
     this._dragData.endDrag();
 
+    // Note: it is possible for kinetic scrolling to be active from a
+    // mousedown/mouseup event previous to this one. In this case, we
+    // want the kinetic panner to tell our drag interface to stop.
+
     let dragData = this._dragData;
-    if (!dragData.isPan()) {
-      // There was no pan, so just stop dragger.
+    if (!dragData.isPan() && !this._kinetic.isActive()) {
+      // There was no pan and no kinetic scrolling, so just stop dragger.
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
       this._dragger = null;
-    } else {
+    } else if (dragData.isPan()) {
       // Start kinetic pan.
       let [sX, sY] = dragData.panPosition();
       let dX = dragData.prevPanX - sX;
