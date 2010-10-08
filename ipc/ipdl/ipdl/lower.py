@@ -2816,6 +2816,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _runtimeAbort("`OnError' called on non-toplevel actor"))
         self.cls.addstmts([ onerror, Whitespace.NL ])
 
+        # OnChannelConnected()
+        onconnected = MethodDefn(MethodDecl('OnChannelConnected'))
+        if not ptype.isToplevel():
+            onconnected.addstmt(
+                _runtimeAbort("'OnConnected' called on non-toplevel actor"))
+
+        self.cls.addstmts([ onconnected, Whitespace.NL ])
         # FIXME/bug 535053: only manager protocols and non-manager
         # protocols with union types need Lookup().  we'll give it to
         # all for the time being (simpler)
@@ -2844,6 +2851,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ processnative, Whitespace.NL ])
 
         if ptype.isToplevel() and self.side is 'parent':
+            ## void SetOtherProcess(ProcessHandle pid)
+            otherprocessvar = ExprVar('aOtherProcess')
+            setotherprocess = MethodDefn(MethodDecl(
+                    'SetOtherProcess',
+                    params=[ Decl(Type('ProcessHandle'), otherprocessvar.name)]))
+            setotherprocess.addstmt(StmtExpr(ExprAssn(p.otherProcessVar(), otherprocessvar)))
+            self.cls.addstmts([
+                    setotherprocess,
+                    Whitespace.NL])
+
             ## bool GetMinidump(nsIFile** dump)
             self.cls.addstmt(Label.PROTECTED)
 
