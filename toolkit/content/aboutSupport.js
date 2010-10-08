@@ -153,9 +153,13 @@ function populateGraphicsSection() {
   let bundle = Services.strings.createBundle("chrome://global/locale/aboutSupport.properties");
   let graphics_tbody = document.getElementById("graphics-tbody");
 
+  var gfxInfo = null;
   try {
     // nsIGfxInfo is currently only implemented on Windows
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+  } catch(e) {}
+
+  if (gfxInfo) {
     let trGraphics = [];
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("adapterDescription")),
@@ -191,7 +195,12 @@ function populateGraphicsSection() {
     var d2dEnabled = gfxInfo.D2DEnabled;
     var d2dMessage = d2dEnabled;
     if (!d2dEnabled) {
-      var d2dStatus = gfxInfo.getFeatureStatus(gfxgfxInfoInfo.FEATURE_DIRECT2D);
+      var d2dStatus = -1; // different from any status value defined in the IDL
+      try {
+        d2dStatus = gfxInfo.getFeatureStatus(gfxInfo.FEATURE_DIRECT2D);
+      } catch(e) {
+        window.dump(e + '\n');
+      }  
       if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DEVICE ||
           d2dStatus == gfxInfo.FEATURE_DISCOURAGED)
       {
@@ -199,9 +208,14 @@ function populateGraphicsSection() {
       }
       else if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DRIVER_VERSION)
       {
-        var d2dSuggestedDriverVersion = gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
+        var d2dSuggestedDriverVersion = null;
+        try {
+          gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
+        } catch(e) {
+          window.dump(e + '\n');
+        }
         if (d2dSuggestedDriverVersion) {
-          d2dMessage += bundle.GetStringFromName("tryNewerDriverVersion").replace("%1", d2dSuggestedDriverVersion);
+          d2dMessage = bundle.GetStringFromName("tryNewerDriverVersion").replace("%1", d2dSuggestedDriverVersion);
         }
       }
     }
@@ -217,8 +231,7 @@ function populateGraphicsSection() {
 
     appendChildren(graphics_tbody, trGraphics);
 
-  } catch (e) {
-  }
+  } // end if (gfxInfo)
 
   let windows = Services.ww.getWindowEnumerator();
   let acceleratedWindows = 0;
