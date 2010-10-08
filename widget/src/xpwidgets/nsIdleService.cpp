@@ -91,6 +91,13 @@ nsIdleServiceDaily::Observe(nsISupports *,
   (void)observerService->NotifyObservers(nsnull,
                                          OBSERVER_TOPIC_IDLE_DAILY,
                                          nsnull);
+
+  // Notify the category observers.
+  const nsCOMArray<nsIObserver> &entries = mCategoryObservers.GetEntries();
+  for (PRInt32 i = 0; i < entries.Count(); ++i) {
+    (void)entries[i]->Observe(nsnull, OBSERVER_TOPIC_IDLE_DAILY, nsnull);
+  }
+
   // Stop observing idle for today.
   if (NS_SUCCEEDED(mIdleService->RemoveIdleObserver(this, MAX_IDLE_POLL_INTERVAL))) {
     mObservesIdle = false;
@@ -114,6 +121,7 @@ nsIdleServiceDaily::nsIdleServiceDaily(nsIdleService* aIdleService)
   : mIdleService(aIdleService)
   , mObservesIdle(false)
   , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
+  , mCategoryObservers(OBSERVER_TOPIC_IDLE_DAILY)
 {
   // Check time of the last idle-daily notification.  If it was more than 24
   // hours ago listen for idle, otherwise set a timer for 24 hours from now.
