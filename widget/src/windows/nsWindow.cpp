@@ -5605,15 +5605,15 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
   PRBool left   = PR_FALSE;
   PRBool right  = PR_FALSE;
 
-  if (my >= winRect.top && my <=
+  if (my >= winRect.top && my <
       (winRect.top + mVertResizeMargin + (mCaptionHeight - mNonClientOffset.top)))
     top = PR_TRUE;
-  else if (my <= winRect.bottom && my >= (winRect.bottom - mVertResizeMargin))
+  else if (my < winRect.bottom && my >= (winRect.bottom - mVertResizeMargin))
     bottom = PR_TRUE;
 
-  if (mx >= winRect.left && mx <= (winRect.left + mHorResizeMargin))
+  if (mx >= winRect.left && mx < (winRect.left + mHorResizeMargin))
     left = PR_TRUE;
-  else if (mx <= winRect.right && mx >= (winRect.right - mHorResizeMargin))
+  else if (mx < winRect.right && mx >= (winRect.right - mHorResizeMargin))
     right = PR_TRUE;
 
   if (top) {
