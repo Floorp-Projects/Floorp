@@ -1,5 +1,13 @@
 #tool-feedback {
-  list-style-image: url("chrome://feedback/skin/beta-64.png");
+  list-style-image: url("chrome://feedback/skin/beta-32.png");
+  background: url(chrome://browser/skin/images/toolbarbutton-default-64.png) no-repeat !important;
+  width: 64px;
+  height: 64px;
+}
+
+#tool-feedback:not([disabled="true"]):hover:active,
+#tool-feedback[checked="true"] {
+  background: url(chrome://browser/skin/images/toolbarbutton-active-64.png) no-repeat !important;
 }
 
 #feedback-feedback-happy {
