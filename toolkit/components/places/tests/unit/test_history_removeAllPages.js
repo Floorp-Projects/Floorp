@@ -237,6 +237,10 @@ os.addObserver(syncObserver, kSyncFinished, false);
 
 // main
 function run_test() {
+  // Since we are checking frecency, we have to disable some stuff that could
+  // change values during test run.  On idle-daily frecencies are updated.
+  Services.obs.removeObserver(PlacesUtils.history, "idle-daily");
+
   // Add a livemark with a visited and an unvisited child
   add_fake_livemark();
 
