@@ -106,11 +106,11 @@ richlistitem .prefvalue {
   border-color: transparent !important;
 }
 
-#editor-setting[type="string"] [anonid="input-container"] {
+#editor-setting[type="string"] .setting-input {
   -moz-box-flex: 4;
 }
 
-#editor-setting[type="string"] [anonid="input-container"] > textbox {
+#editor-setting[type="string"] .setting-input > textbox {
   -moz-box-flex: 1;
 }
 

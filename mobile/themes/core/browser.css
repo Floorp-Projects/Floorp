@@ -1340,6 +1340,21 @@ pageaction:hover:active > vbox > .pageaction-desc {
   -moz-box-align: center;
 }
 
+/* Put setting textboxes on a separate row in portrait */
+@media (max-width: 499px) {
+  .setting-integer,
+  .setting-string {
+    -moz-box-align: start;
+    -moz-box-orient: vertical;
+  }
+
+  .setting-integer > .setting-input > textbox,
+  .setting-string > .setting-input > textbox {
+    width: 499px; /* textboxes seem to need a width in order to flex */
+    -moz-box-flex: 1;
+  }
+}
+
 .options-box {
   -moz-margin-start: 28px;  /* sized based on the 32px addon image */
 }
