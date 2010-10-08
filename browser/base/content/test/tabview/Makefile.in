@@ -45,9 +45,12 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
                  browser_tabview_apptabs.js \
+                 browser_tabview_bug580412.js \
                  browser_tabview_bug587040.js \
                  browser_tabview_bug587990.js \
+                 browser_tabview_bug590606.js \
                  browser_tabview_bug591706.js \
+                 browser_tabview_bug594176.js \
                  browser_tabview_bug595191.js \
                  browser_tabview_bug595518.js \
                  browser_tabview_bug595943.js \
@@ -56,6 +59,7 @@ _BROWSER_FILES = \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
                  browser_tabview_multiwindow_search.js \
+                 browser_tabview_orphaned_tabs.js \
                  browser_tabview_search.js \
                  browser_tabview_snapping.js \
                  browser_tabview_undo_group.js \
