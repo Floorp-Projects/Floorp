@@ -719,28 +719,6 @@ nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
          (*aCallback)(tokenizer.nextToken(), aClosure));
 }
 
-PRBool FileFilterCallback(const nsAString& aVal, void* aClosure)
-{
-  PRInt32* filter = (PRInt32*)aClosure;
-
-  if (aVal.EqualsLiteral("image/*")) {
-    *filter |= nsIFilePicker::filterImages;
-  } else if (aVal.EqualsLiteral("audio/*")) {
-    *filter |= nsIFilePicker::filterAudio;
-  } else if (aVal.EqualsLiteral("video/*")) {
-    *filter |= nsIFilePicker::filterVideo;
-  }
-
-  return PR_TRUE;
-}
-
-PRInt32
-nsFileControlFrame::GetFileFilterFromAccept() const
-{
-  PRInt32 filterVal = 0;
-  this->ParseAcceptAttribute(&FileFilterCallback, (void*)&filterVal);
-  return filterVal;
-}
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation
 
