@@ -140,7 +140,7 @@
           <xul:label class="hide-on-select download-retry-failed normal" value="&downloadFailed.label;" xbl:inherits="state" />
           <xul:button class="show-on-select download-retry" label="&downloadRetry.label;"
                       oncommand="DownloadsView.retryDownload(document.getBindingParent(this));"/>
-          <xul:button class="show-on-select download-remove" label="&downloadRemove.label;"
+          <xul:button class="show-on-select download-remove" label="&downloadDelete.label;"
                       oncommand="DownloadsView.removeDownload(document.getBindingParent(this));"/>
         </xul:hbox>
       </xul:vbox>
@@ -164,7 +164,7 @@
           <xul:spacer flex="1"/>
           <xul:button anonid="open-button" label="&downloadOpen2.label;"
                       oncommand="DownloadsView.openDownload(document.getBindingParent(this));"/>
-          <xul:button anonid="remove-button" label="&downloadRemove.label;"
+          <xul:button anonid="remove-button" label="&downloadDelete.label;"
                       oncommand="DownloadsView.removeDownload(document.getBindingParent(this));"/>
         </xul:hbox>
       </xul:vbox>
