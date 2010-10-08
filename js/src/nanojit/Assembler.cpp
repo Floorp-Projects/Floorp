@@ -78,6 +78,7 @@ namespace nanojit
         , _branchStateMap(alloc)
         , _patches(alloc)
         , _labels(alloc)
+        , _noise(NULL)
     #if NJ_USES_IMMD_POOL
         , _immDPool(alloc)
     #endif
