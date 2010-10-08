@@ -359,6 +359,8 @@ namespace nanojit
             void        evict(LIns* vic);
             RegisterMask hint(LIns* ins);
 
+            void        getBaseIndexScale(LIns* addp, LIns** base, LIns** index, int* scale);
+
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
                                   verbose_only(, size_t &nBytes));
 

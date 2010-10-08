@@ -113,7 +113,7 @@ namespace nanojit
         }
     }
 
-    inline void Assembler::MODRMsib(R reg, R base, R index, I32 scale, I32 disp) {
+    inline void Assembler::MODRMsib(I32 reg, R base, R index, I32 scale, I32 disp) {
         if (disp != 0 || base == rEBP) {
             if (isS8(disp)) {
                 *(--_nIns) = int8_t(disp);
@@ -123,11 +123,11 @@ namespace nanojit
         }
         *(--_nIns) = uint8_t(scale << 6 | REGNUM(index) << 3 | REGNUM(base));
         if (disp == 0 && base != rEBP) {
-            *(--_nIns) = uint8_t(REGNUM(reg) << 3 | 4);
+            *(--_nIns) = uint8_t(reg << 3 | 4);
         } else if (isS8(disp)) {
-            *(--_nIns) = uint8_t(1 << 6 | REGNUM(reg) << 3 | 4);
+            *(--_nIns) = uint8_t(1 << 6 | reg << 3 | 4);
         } else {
-            *(--_nIns) = uint8_t(2 << 6 | REGNUM(reg) << 3 | 4);
+            *(--_nIns) = uint8_t(2 << 6 | reg << 3 | 4);
         }
     }
 
@@ -156,8 +156,15 @@ namespace nanojit
 
     inline void Assembler::ALUsib(I32 c, R r, R base, R index, I32 scale, I32 disp) {
         underrunProtect(7);
-        MODRMsib(r, base, index, scale, disp);
+        MODRMsib(REGNUM(r), base, index, scale, disp);
         *(--_nIns) = uint8_t(c);
+    }
+
+    inline void Assembler::ALUsib16(I32 c, R r, R base, R index, I32 scale, I32 disp) {
+        underrunProtect(8);
+        MODRMsib(REGNUM(r), base, index, scale, disp);
+        *(--_nIns) = uint8_t(c);
+        *(--_nIns) = 0x66;
     }
 
     inline void Assembler::ALUm16(I32 c, I32 r, I32 d, R b) {
@@ -183,7 +190,7 @@ namespace nanojit
 
     inline void Assembler::ALU2sib(I32 c, Register r, R base, R index, I32 scale, I32 disp) {
         underrunProtect(8);
-        MODRMsib(r, base, index, scale, disp);
+        MODRMsib(REGNUM(r), base, index, scale, disp);
         *(--_nIns) = uint8_t(c);
         *(--_nIns) = uint8_t(c>>8);
     }
@@ -454,16 +461,39 @@ namespace nanojit
         asm_output("mov8 %d(%s),%s", disp, base==UnspecifiedReg ? "0" : gpn(base), gpn(reg));
     }
 
+    // Quirk of x86-32: reg must be a/b/c/d for byte stores here.
+    inline void Assembler::ST8sib(I32 disp, R base, R index, I32 scale, R reg) {
+        count_st();
+        NanoAssert(REGNUM(reg) < 4);
+        ALUsib(0x88, reg, base, index, scale, disp);
+        asm_output("mov8 %d(%s+%s*%c),%s", disp, base==UnspecifiedReg ? "0" : gpn(base),
+                                           gpn(index), SIBIDX(scale), gpn(reg));
+    }
+
     inline void Assembler::ST16(R base, I32 disp, R reg) {
         count_st();
         ALUm16(0x89, REGNUM(reg), disp, base);
         asm_output("mov16 %d(%s),%s", disp, base==UnspecifiedReg ? "0" : gpn(base), gpn(reg));
     }
 
+    inline void Assembler::ST16sib(I32 disp, R base, R index, I32 scale, R reg) {
+        count_st();
+        ALUsib16(0x89, reg, base, index, scale, disp);
+        asm_output("mov16 %d(%s+%s*%c),%s", disp, base==UnspecifiedReg ? "0" : gpn(base),
+                                            gpn(index), SIBIDX(scale), gpn(reg));
+    }
+
     inline void Assembler::ST(R base, I32 disp, R reg) {
         count_st();
         ALUm(0x89, REGNUM(reg), disp, base);
         asm_output("mov %d(%s),%s", disp, base==UnspecifiedReg ? "0" : gpn(base), gpn(reg));
+    }
+
+    inline void Assembler::STsib(I32 disp, R base, R index, I32 scale, R reg) {
+        count_st();
+        ALUsib(0x89, reg, base, index, scale, disp);
+        asm_output("mov %d(%s+%s*%c),%s", disp, base==UnspecifiedReg ? "0" : gpn(base),
+                                          gpn(index), SIBIDX(scale), gpn(reg));
     }
 
     inline void Assembler::ST8i(R base, I32 disp, I32 imm) {
@@ -473,6 +503,15 @@ namespace nanojit
         MODRMm(0, disp, base);
         *(--_nIns) = 0xc6;
         asm_output("mov8 %d(%s),%d", disp, gpn(base), imm);
+    }
+
+    inline void Assembler::ST8isib(I32 disp, R base, R index, I32 scale, I32 imm) {
+        count_st();
+        underrunProtect(8);
+        IMM8(imm);
+        MODRMsib(0, base, index, scale, disp);
+        *(--_nIns) = 0xc6;
+        asm_output("mov8 %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
     }
 
     inline void Assembler::ST16i(R base, I32 disp, I32 imm) {
@@ -485,6 +524,16 @@ namespace nanojit
         asm_output("mov16 %d(%s),%d", disp, gpn(base), imm);
     }
 
+    inline void Assembler::ST16isib(I32 disp, R base, R index, I32 scale, I32 imm) {
+        count_st();
+        underrunProtect(10);
+        IMM16(imm);
+        MODRMsib(0, base, index, scale, disp);
+        *(--_nIns) = 0xc7;
+        *(--_nIns) = 0x66;
+        asm_output("mov16 %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
+    }
+
     inline void Assembler::STi(R base, I32 disp, I32 imm) {
         count_st();
         underrunProtect(11);
@@ -492,6 +541,15 @@ namespace nanojit
         MODRMm(0, disp, base);
         *(--_nIns) = 0xc7;
         asm_output("mov %d(%s),%d", disp, gpn(base), imm);
+    }
+
+    inline void Assembler::STisib(I32 disp, R base, R index, I32 scale, I32 imm) {
+        count_st();
+        underrunProtect(11);
+        IMM32(imm);
+        MODRMsib(0, base, index, scale, disp);
+        *(--_nIns) = 0xc7;
+        asm_output("mov %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
     }
 
     inline void Assembler::RET()   { count_ret(); ALU0(0xc3); asm_output("ret"); }
@@ -865,7 +923,7 @@ namespace nanojit
         // new comparison operations being added.
         for (LOpcode op = LOpcode(0); op < LIR_sentinel; op = LOpcode(op+1))
             if (isCmpOpcode(op))
-                nHints[op] = AllowableFlagRegs;
+                nHints[op] = AllowableByteRegs;
     }
 
     void Assembler::nBeginAssembly() {
@@ -1216,53 +1274,70 @@ namespace nanojit
     void Assembler::asm_store32(LOpcode op, LIns* value, int dr, LIns* base)
     {
         if (value->isImmI()) {
-            Register rb = getBaseReg(base, dr, GpRegs);
-            int c = value->immI();
-            switch (op) {
-                case LIR_sti2c:
-                    ST8i(rb, dr, c);
-                    break;
-                case LIR_sti2s:
-                    ST16i(rb, dr, c);
-                    break;
-                case LIR_sti:
-                    STi(rb, dr, c);
-                    break;
-                default:
-                    NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
-                    break;
-            }
-        }
-        else
-        {
-            // Quirk of x86-32: reg must be a/b/c/d for single-byte stores.
-            const RegisterMask SrcRegs =
-                (op == LIR_sti2c) ?
-                (1<<REGNUM(rEAX) | 1<<REGNUM(rECX) | 1<<REGNUM(rEDX) | 1<<REGNUM(rEBX)) :
-                GpRegs;
+            if (base->opcode() == LIR_addp) {
+                LIns* index;
+                int scale;
+                getBaseIndexScale(base, &base, &index, &scale);
 
-            Register ra, rb;
-            if (base->isImmI()) {
-                // absolute address
-                rb = UnspecifiedReg;
-                dr += base->immI();
-                ra = findRegFor(value, SrcRegs);
+                Register rb, ri;
+                getBaseReg2(GpRegs, index, ri, GpRegs, base, rb, dr);
+
+                int c = value->immI();
+                switch (op) {
+                case LIR_sti2c: ST8isib( dr, rb, ri, scale, c); break;
+                case LIR_sti2s: ST16isib(dr, rb, ri, scale, c); break;
+                case LIR_sti:   STisib(  dr, rb, ri, scale, c); break;
+                default:        NanoAssert(0);                  break;
+                }
             } else {
-                getBaseReg2(SrcRegs, value, ra, GpRegs, base, rb, dr);
+                Register rb = getBaseReg(base, dr, GpRegs);
+                int c = value->immI();
+                switch (op) {
+                case LIR_sti2c: ST8i( rb, dr, c);   break;
+                case LIR_sti2s: ST16i(rb, dr, c);   break;
+                case LIR_sti:   STi(  rb, dr, c);   break;
+                default:        NanoAssert(0);      break;
+                }
             }
-            switch (op) {
-                case LIR_sti2c:
-                    ST8(rb, dr, ra);
-                    break;
-                case LIR_sti2s:
-                    ST16(rb, dr, ra);
-                    break;
-                case LIR_sti:
-                    ST(rb, dr, ra);
-                    break;
-                default:
-                    NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
-                    break;
+
+        } else {
+            // Quirk of x86-32: reg must be a/b/c/d for single-byte stores.
+            const RegisterMask SrcRegs = (op == LIR_sti2c) ? AllowableByteRegs : GpRegs;
+
+            Register rv, rb;
+            if (base->opcode() == LIR_addp) {
+                LIns* index;
+                int scale;
+                getBaseIndexScale(base, &base, &index, &scale);
+
+                Register rb, ri, rv;
+                getBaseReg2(SrcRegs, value, rv, GpRegs, base, rb, dr);
+                ri = (index == value) ? rv
+                   : (index == base)  ? rb
+                   : findRegFor(index, GpRegs & ~(rmask(rb)|rmask(rv)));
+
+                switch (op) {
+                case LIR_sti2c: ST8sib( dr, rb, ri, scale, rv); break;
+                case LIR_sti2s: ST16sib(dr, rb, ri, scale, rv); break;
+                case LIR_sti:   STsib(  dr, rb, ri, scale, rv); break;
+                default:        NanoAssert(0);                  break;
+                }
+
+            } else {
+                if (base->isImmI()) {
+                    // absolute address
+                    rb = UnspecifiedReg;
+                    dr += base->immI();
+                    rv = findRegFor(value, SrcRegs);
+                } else {
+                    getBaseReg2(SrcRegs, value, rv, GpRegs, base, rb, dr);
+                }
+                switch (op) {
+                case LIR_sti2c: ST8( rb, dr, rv);   break;
+                case LIR_sti2s: ST16(rb, dr, rv);   break;
+                case LIR_sti:   ST(  rb, dr, rv);   break;
+                default:        NanoAssert(0);      break;
+                }
             }
         }
     }
@@ -1586,7 +1661,7 @@ namespace nanojit
     void Assembler::asm_condd(LIns* ins)
     {
         LOpcode opcode = ins->opcode();
-        Register r = prepareResultReg(ins, AllowableFlagRegs);
+        Register r = prepareResultReg(ins, AllowableByteRegs);
 
         // SETcc only sets low 8 bits, so extend
         MOVZX8(r,r);
@@ -1616,7 +1691,7 @@ namespace nanojit
     {
         LOpcode op = ins->opcode();
 
-        Register r = prepareResultReg(ins, AllowableFlagRegs);
+        Register r = prepareResultReg(ins, AllowableByteRegs);
 
         // SETcc only sets low 8 bits, so extend
         MOVZX8(r,r);
@@ -1874,126 +1949,64 @@ namespace nanojit
             intptr_t addr = base->immI();
             addr += d;
             switch (op) {
-                case LIR_lduc2ui:
-                    LD8Zdm(rr, addr);
-                    break;
-                case LIR_ldc2i:
-                    LD8Sdm(rr, addr);
-                    break;
-                case LIR_ldus2ui:
-                    LD16Zdm(rr, addr);
-                    break;
-                case LIR_lds2i:
-                    LD16Sdm(rr, addr);
-                    break;
-                case LIR_ldi:
-                    LDdm(rr, addr);
-                    break;
-                default:
-                    NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
-                    break;
+            case LIR_lduc2ui: LD8Zdm( rr, addr);    break;
+            case LIR_ldc2i:   LD8Sdm( rr, addr);    break;
+            case LIR_ldus2ui: LD16Zdm(rr, addr);    break;
+            case LIR_lds2i:   LD16Sdm(rr, addr);    break;
+            case LIR_ldi:     LDdm(   rr, addr);    break;
+            default:          NanoAssert(0);        break;
             }
 
             freeResourcesOf(ins);
 
         } else if (base->opcode() == LIR_addp) {
             // Search for add(X,Y).
-            LIns *lhs = base->oprnd1();
-            LIns *rhs = base->oprnd2();
-
-            // If we have this:
-            //
-            //   W = ld (add(X, shl(Y, Z)))[d] , where int(1) <= Z <= int(3)
-            //
-            // we assign lhs=X, rhs=Y, scale=Z, and generate this:
-            //
-            //   mov rW, [rX+rY*(2^rZ)]
-            //
-            // Otherwise, we must have this:
-            //
-            //   W = ld (add(X, Y))[d]
-            //
-            // which we treat like this:
-            //
-            //   W = ld (add(X, shl(Y, 0)))[d]
-            //
+            LIns* index;
             int scale;
-            if (rhs->opcode() == LIR_lshp && rhs->oprnd2()->isImmI()) {
-                scale = rhs->oprnd2()->immI();
-                if (scale >= 1 && scale <= 3)
-                    rhs = rhs->oprnd1();
-                else
-                    scale = 0;
-            } else {
-                scale = 0;
-            }
+            getBaseIndexScale(base, &base, &index, &scale);
 
-            // If 'lhs' isn't in a register, it can be clobbered by 'ins'.
-            // Likewise for 'rhs', but we try it with 'lhs' first.
-            Register ra, rb;
-            // @todo -- If LHS and/or RHS is const, we could eliminate a register use.
-            if (!lhs->isInReg()) {
-                ra = rr;
-                rb = findRegFor(rhs, GpRegs & ~(rmask(ra)));
+            // If 'base' isn't in a register, it can be clobbered by 'ins'.
+            // Likewise for 'rhs', but we try it with 'base' first.
+            Register rb, ri;
+            // @todo -- If base and/or index is const, we could eliminate a register use.
+            if (!base->isInReg()) {
+                rb = rr;
+                ri = findRegFor(index, GpRegs & ~(rmask(rb)));
 
             } else {
-                ra = lhs->getReg();
-                NanoAssert(ra != rr);
-                rb = rhs->isInReg() ? findRegFor(rhs, GpRegs & ~(rmask(ra))) : rr;
+                rb = base->getReg();
+                NanoAssert(rb != rr);
+                ri = index->isInReg() ? findRegFor(index, GpRegs & ~(rmask(rb))) : rr;
             }
 
             switch (op) {
-                case LIR_lduc2ui:
-                    LD8Zsib(rr, d, ra, rb, scale);
-                    break;
-                case LIR_ldc2i:
-                    LD8Ssib(rr, d, ra, rb, scale);
-                    break;
-                case LIR_ldus2ui:
-                    LD16Zsib(rr, d, ra, rb, scale);
-                    break;
-                case LIR_lds2i:
-                    LD16Ssib(rr, d, ra, rb, scale);
-                    break;
-                case LIR_ldi:
-                    LDsib(rr, d, ra, rb, scale);
-                    break;
-                default:
-                    NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
-                    break;
+            case LIR_lduc2ui: LD8Zsib( rr, d, rb, ri, scale);   break;
+            case LIR_ldc2i:   LD8Ssib( rr, d, rb, ri, scale);   break;
+            case LIR_ldus2ui: LD16Zsib(rr, d, rb, ri, scale);   break;
+            case LIR_lds2i:   LD16Ssib(rr, d, rb, ri, scale);   break;
+            case LIR_ldi:     LDsib(   rr, d, rb, ri, scale);   break;
+            default:          NanoAssert(0);                    break;
             }
 
             freeResourcesOf(ins);
-            if (!lhs->isInReg()) {
-                NanoAssert(ra == rr);
-                findSpecificRegForUnallocated(lhs, ra);
-            } else if (!rhs->isInReg()) {
+            if (!base->isInReg()) {
                 NanoAssert(rb == rr);
-                findSpecificRegForUnallocated(rhs, rb);
+                findSpecificRegForUnallocated(base, rb);
+            } else if (!index->isInReg()) {
+                NanoAssert(ri == rr);
+                findSpecificRegForUnallocated(index, ri);
             }
 
         } else {
             Register ra = getBaseReg(base, d, GpRegs);
 
             switch (op) {
-                case LIR_lduc2ui:
-                    LD8Z(rr, d, ra);
-                    break;
-                case LIR_ldc2i:
-                    LD8S(rr, d, ra);
-                    break;
-                case LIR_ldus2ui:
-                    LD16Z(rr, d, ra);
-                    break;
-                case LIR_lds2i:
-                    LD16S(rr, d, ra);
-                    break;
-                case LIR_ldi:
-                    LD(rr, d, ra);
-                    break;
-                default:
-                    NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
-                    break;
+            case LIR_lduc2ui: LD8Z( rr, d, ra); break;
+            case LIR_ldc2i:   LD8S( rr, d, ra); break;
+            case LIR_ldus2ui: LD16Z(rr, d, ra); break;
+            case LIR_lds2i:   LD16S(rr, d, ra); break;
+            case LIR_ldi:     LD(   rr, d, ra); break;
+            default:          NanoAssert(0);    break;
             }
 
             freeResourcesOf(ins);
