@@ -10,8 +10,8 @@ function child() {
 function parent() {
   x = "failure2";
 }
-/* First op in parent. */
-trap(parent, 0, "child()");
+/* First op in parent: because of JSOP_BEGIN, it is op 1. */
+trap(parent, 1, "child()");
 
 function success() {
   x = "success";
