@@ -184,6 +184,8 @@ namespace nanojit
     class Noise
     {
         public:
+            virtual ~Noise() {}
+
             // produce a random number from 0-maxValue for the JIT to use in attack mitigation
             virtual uint32_t getValue(uint32_t maxValue) = 0;
     };
