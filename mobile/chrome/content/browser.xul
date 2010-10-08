@@ -399,7 +399,7 @@
                 <richlistitem id="addons-repo" class="section-header" nohighlight="true">
                   <label value="&addonsRepo.label;" flex="1"/>
                   <textbox id="addons-search-text" emptytext="&addonsSearch2.emptytext;" type="search" searchbutton="false"
-                           oncommand="ExtensionsView.getAddonsFromRepo(this.value);"/>
+                           oncommand="ExtensionsView.getAddonsFromRepo(this.value);" onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.blur();"/>
                 </richlistitem>
               </richlistbox>
             </notificationbox>
