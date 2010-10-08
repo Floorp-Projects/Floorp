@@ -159,7 +159,7 @@ public:
   virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();
 
-  virtual void FieldSetDisabledChanged(PRInt32 aStates);
+  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
 
   // nsIContent
   virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);

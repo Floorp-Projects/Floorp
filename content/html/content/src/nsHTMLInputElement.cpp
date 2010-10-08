@@ -4400,13 +4400,13 @@ nsHTMLInputElement::OnValueChanged(PRBool aNotify)
 }
 
 void
-nsHTMLInputElement::FieldSetDisabledChanged(PRInt32 aStates)
+nsHTMLInputElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
-  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates);
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
 }
 
 PRInt32
