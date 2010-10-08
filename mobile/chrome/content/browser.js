@@ -610,10 +610,10 @@ var Browser = {
     tab.chromeTab.dispatchEvent(event);
     tab.browser.messageManager.sendAsyncMessage("Browser:TabClose");
 
-    this.selectedTab = nextTab;
-
     tab.destroy();
     this._tabs.splice(tabIndex, 1);
+
+    this.selectedTab = nextTab;
   },
 
   get selectedTab() {
@@ -624,8 +624,15 @@ var Browser = {
     if (tab instanceof XULElement)
       tab = this.getTabFromChrome(tab);
 
-    if (!tab || this._selectedTab == tab)
+    if (!tab)
       return;
+
+    if (this._selectedTab == tab) {
+      // Deck does not update its selectedIndex when children
+      // are removed. See bug 602708
+      Elements.browsers.selectedPanel = tab.browser;
+      return;
+    }
 
     TapHighlightHelper.hide();
 
@@ -2550,9 +2557,7 @@ Tab.prototype = {
       this._listener = null;
       this._loading = false;
 
-      Util.executeSoon(function() {
-        Elements.browsers.removeChild(browser);
-      });
+      Elements.browsers.removeChild(browser);
     }
   },
 
