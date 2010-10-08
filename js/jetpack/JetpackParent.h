@@ -65,6 +65,8 @@ public:
   JetpackParent(JSContext* cx);
   ~JetpackParent();
 
+  void OnChannelConnected(int32 pid);
+
 protected:
   NS_OVERRIDE virtual bool RecvSendMessage(const nsString& messageName,
                                            const InfallibleTArray<Variant>& data);
