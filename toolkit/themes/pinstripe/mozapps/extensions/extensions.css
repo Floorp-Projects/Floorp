@@ -43,7 +43,9 @@
   margin: 20px;
 }
 
-#view-port {
+#view-port-container {
+  /* Needed to allow the radius to clip the inner content, see bug 595656 */
+  overflow: hidden;
   background-color: #d2d7df;
   border: 1px solid black;
   border-radius: 5px;
