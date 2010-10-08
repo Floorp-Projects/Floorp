@@ -1000,7 +1000,7 @@ EvalCacheHash(JSContext *cx, JSString *str)
 
 static JS_ALWAYS_INLINE JSScript *
 EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN staticLevel,
-                JSPrincipals *principals, JSObject *scopeobj, JSScript ***bucketp)
+                JSPrincipals *principals, JSObject *scopeobj, JSScript **bucket)
 {
     /*
      * Cache local eval scripts indexed by source qualified by scope.
@@ -1011,8 +1011,6 @@ EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN static
      * eval was called, whose strictness doesn't change. Scripts produced by
      * calls to eval from global code are not cached.
      */
-    JSScript **bucket = EvalCacheHash(cx, str);
-    *bucketp = bucket;
     uintN count = 0;
     JSScript **scriptp = bucket;
 
@@ -1193,9 +1191,9 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    JSScript **bucket = NULL;
+    JSScript **bucket = EvalCacheHash(cx, str);
     if (directCall && caller->isFunctionFrame())
-        script = EvalCacheLookup(cx, str, caller, staticLevel, principals, scopeobj, &bucket);
+        script = EvalCacheLookup(cx, str, caller, staticLevel, principals, scopeobj, bucket);
 
     /*
      * We can't have a callerFrame (down in js_Execute's terms) if we're in
@@ -1223,10 +1221,8 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
                                          cx->runtime->atomState.evalAtom) &&
                 Execute(cx, scopeobj, script, callerFrame, JSFRAME_EVAL, vp);
 
-    if (bucket) {
-        script->u.nextToGC = *bucket;
-        *bucket = script;
-    }
+    script->u.nextToGC = *bucket;
+    *bucket = script;
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;
 #endif
