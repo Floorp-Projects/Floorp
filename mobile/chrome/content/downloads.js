@@ -377,10 +377,14 @@ var DownloadsView = {
   },
 
   removeDownload: function dv_removeDownload(aItem) {
-    this._dlmgr.removeDownload(aItem.getAttribute("downloadID"));
+    let strings = Elements.browserBundle;
     let f = this._getLocalFile(aItem.getAttribute("file"));
-    if (f.exists())
-      f.remove(false);
+    let res = Services.prompt.confirm(null, strings.getString("downloadsDeleteTitle"), f.leafName);
+    if(res) {
+      this._dlmgr.removeDownload(aItem.getAttribute("downloadID"));
+      if (f.exists())
+          f.remove(false);
+    }
   },
 
   cancelDownload: function dv_cancelDownload(aItem) {
