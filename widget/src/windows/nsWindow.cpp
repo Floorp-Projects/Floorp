@@ -540,8 +540,7 @@ nsWindow::Create(nsIWidget *aParent,
                           nsnull : aParent;
 
   mIsTopWidgetWindow = (nsnull == baseParent);
-  mBounds.width = aRect.width;
-  mBounds.height = aRect.height;
+  mBounds = aRect;
 
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);

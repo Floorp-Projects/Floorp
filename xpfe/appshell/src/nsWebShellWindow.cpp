@@ -95,6 +95,9 @@
 #include "nsIObserverService.h"
 #include "prprf.h"
 
+#include "nsIScreenManager.h"
+#include "nsIScreen.h"
+
 #include "nsIContent.h" // for menus
 
 // For calculating size
@@ -162,6 +165,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   mIsHiddenWindow = aIsHiddenWindow;
 
+  PRInt32 initialX = 0, initialY = 0;
   nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(aOpener));
   if (base) {
     rv = base->GetPositionAndSize(&mOpenerScreenRect.x,
@@ -170,12 +174,16 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                   &mOpenerScreenRect.height);
     if (NS_FAILED(rv)) {
       mOpenerScreenRect.Empty();
+    } else {
+      initialX = mOpenerScreenRect.x;
+      initialY = mOpenerScreenRect.y;
+      ConstrainToOpenerScreen(&initialX, &initialY);
     }
   }
 
   // XXX: need to get the default window size from prefs...
   // Doesn't come from prefs... will come from CSS/XUL/RDF
-  nsIntRect r(mOpenerScreenRect.x, mOpenerScreenRect.y, aInitialWidth, aInitialHeight);
+  nsIntRect r(initialX, initialY, aInitialWidth, aInitialHeight);
   
   // Create top level window
   mWindow = do_CreateInstance(kWindowCID, &rv);
@@ -771,6 +779,33 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
 
   return PR_FALSE;
 } // ExecuteCloseHandler
+
+void nsWebShellWindow::ConstrainToOpenerScreen(PRInt32* aX, PRInt32* aY)
+{
+  if (mOpenerScreenRect.IsEmpty()) {
+    *aX = *aY = 0;
+    return;
+  }
+
+  PRInt32 left, top, width, height;
+  // Constrain initial positions to the same screen as opener
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (screenmgr) {
+    nsCOMPtr<nsIScreen> screen;
+    screenmgr->ScreenForRect(mOpenerScreenRect.x, mOpenerScreenRect.y,
+                             mOpenerScreenRect.width, mOpenerScreenRect.height,
+                             getter_AddRefs(screen));
+    if (screen) {
+      screen->GetAvailRect(&left, &top, &width, &height);
+      if (*aX < left || *aY > left + width) {
+        *aX = left;
+      }
+      if (*aY < top || *aY > top + height) {
+        *aY = top;
+      }
+    }
+  }
+}
 
 // nsIBaseWindow
 NS_IMETHODIMP nsWebShellWindow::Destroy()
