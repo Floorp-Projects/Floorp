@@ -466,11 +466,13 @@ protected:
    * Is this a combobox?
    */
   PRBool IsCombobox() {
-    PRBool isMultiple = PR_TRUE;
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+      return PR_FALSE;
+    }
+
     PRInt32 size = 1;
     GetSize(&size);
-    GetMultiple(&isMultiple);
-    return !isMultiple && size <= 1;
+    return size <= 1;
   }
 
   /**
