@@ -1455,8 +1455,8 @@
       <children includes="vbox"/>
       <xul:hbox class="content-navigator-box panel-dark" pack="end">
         <children includes="textbox|arrowscrollbox"/>
-        <xul:toolbarbutton anonid="previous-button" class="content-navigator-item button-image previous-button" xbl:inherits="command=previous"/>
-        <xul:toolbarbutton anonid="next-button" class="content-navigator-item button-image next-button" xbl:inherits="command=next"/>
+        <xul:toolbarbutton anonid="previous-button" class="content-navigator-item previous-button" xbl:inherits="command=previous"/>
+        <xul:toolbarbutton anonid="next-button" class="content-navigator-item next-button" xbl:inherits="command=next"/>
       </xul:hbox>
     </content>
 

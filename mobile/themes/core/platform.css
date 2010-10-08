@@ -58,10 +58,6 @@ label {
 }
 
 /* Override any OS inverse themes */
-richlistbox {
-  -moz-user-focus: ignore;
-}
-
 richlistbox,
 textbox {
   color: black;
@@ -90,18 +86,18 @@ textbox[isempty="true"] {
 /* panels ------------------------------------------------------------------ */
 .panel-dark {
   color: white;
-  background-color: #36373b;
+  background: rgb(94,97,102);
 }
 
 /* sidebars spacer --------------------------------------------------------- */
 .sidebar-spacer {
-  background-color: #36373b;
+  background-color: #767973;
 }
 
 /* dialog popups ----------------------------------------------------------- */
 .dialog-dark {
   color: #fff;
-  background-color: #36373b;
+  background-color: #767973;
   border-width: 4px 3px 4px 3px;
   border-style: solid;
   -moz-border-top-colors: black #4a4b4f;
@@ -133,7 +129,7 @@ dialog > .prompt-header {
   padding: 8px;
   font-size: 18px !important;
   -moz-border-radius: 8px 8px 0 0;
-  background-color: #36373b;
+  background-color: #767973;
   border-style: solid;
   border-width: 4px 3px 2px 3px;
   -moz-border-top-colors: black #4a4b4f;
@@ -189,7 +185,7 @@ button {
 }
 
 button[type="checkbox"][checked="true"],
-button:not([disabled="true"]):active:hover {
+button:not([disabled="true"]):hover:active {
   -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
 }
 
@@ -220,8 +216,8 @@ notification button {
 }
 
 button.button-dark[type="checkbox"][checked="true"],
-button.button-dark:not([disabled="true"]):active:hover,
-notification button:not([disabled="true"]):active:hover {
+button.button-dark:not([disabled="true"]):hover:active,
+notification button:not([disabled="true"]):hover:active {
   -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
 }
 
@@ -305,7 +301,7 @@ toolbarbutton.button-dark {
 }
 
 toolbarbutton.button-dark[type="checkbox"][checked="true"],
-toolbarbutton.button-dark:not([disabled="true"]):active:hover {
+toolbarbutton.button-dark:not([disabled="true"]):hover:active {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 10 repeat repeat;
 }
 
@@ -318,15 +314,6 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   color: #fff !important;
   background: none !important;
   padding: 2px 4px !important;
-}
-
-/* image buttons ----------------------------------------------------------- */
-.button-image {
-  padding: 0 !important;
-  background: #36373b !important;
-  border: none !important;
-  min-width: 0 !important; /* the image drives the size */
-  min-height: 0 !important; /* the image drives the size */
 }
 
 /* checkbox buttons ----------------------------------------------------------- */
@@ -366,7 +353,7 @@ radiogroup {
 }
 
 radio {
-  color: #36373b;
+  color: #767973;
   min-width: 48px !important; /* button size */
   min-height: 48px !important;
   padding: 2px !important;
@@ -381,7 +368,7 @@ radio .radio-icon, radio .radio-check {
   display: none;
 }
 
-radio:not([disabled=true]):active:hover,
+radio:not([disabled=true]):hover:active,
 radio[selected] {
   color: #000;
   -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat;
@@ -395,12 +382,12 @@ radio:first-child:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
 }
 
-radio:not([disabled=true]):first-child:active:hover,
+radio:not([disabled=true]):first-child:hover:active,
 radio:first-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
 }
 
-radio:not([disabled=true]):first-child:active:hover:-moz-locale-dir(rtl),
+radio:not([disabled=true]):first-child:hover:active:-moz-locale-dir(rtl),
 radio:first-child[selected]:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
 }
@@ -413,12 +400,12 @@ radio:last-child:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
 }
 
-radio:not([disabled=true]):last-child:active:hover,
+radio:not([disabled=true]):last-child:hover:active,
 radio:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
 }
 
-radio:not([disabled=true]):last-child:active:hover:-moz-locale-dir(rtl),
+radio:not([disabled=true]):last-child:hover:active:-moz-locale-dir(rtl),
 radio:last-child[selected]:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
 }
@@ -427,7 +414,7 @@ radio:first-child:last-child {
   -moz-border-image: url("chrome://browser/skin/images/toggleboth-inactive-64.png") 8 repeat repeat;
 }
 
-radio:not([disabled=true]):first-child:last-child:active:hover,
+radio:not([disabled=true]):first-child:last-child:hover:active,
 radio:first-child:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggleboth-active-64.png") 8 repeat repeat;
 }
@@ -480,7 +467,7 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-inactive-64.png") 8 repeat repeat;
 }
 
-.toggle-dark:not([disabled=true]) radio:active:hover,
+.toggle-dark:not([disabled=true]) radio:hover:active,
 .toggle-dark radio[selected] {
   color: #fff;
   -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-active-64.png") 8 repeat repeat;
@@ -494,12 +481,12 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
 }
 
-.toggle-dark:not([disabled=true]) radio:first-child:active:hover,
+.toggle-dark:not([disabled=true]) radio:first-child:hover:active,
 .toggle-dark radio:first-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
 }
 
-.toggle-dark:not([disabled=true]) radio:first-child:active:hover:-moz-locale-dir(rtl),
+.toggle-dark:not([disabled=true]) radio:first-child:hover:active:-moz-locale-dir(rtl),
 .toggle-dark radio:first-child[selected]:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
 }
@@ -512,12 +499,12 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
 }
 
-.toggle-dark:not([disabled=true]) radio:last-child:active:hover,
+.toggle-dark:not([disabled=true]) radio:last-child:hover:active,
 .toggle-dark radio:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
 }
 
-.toggle-dark:not([disabled=true]) radio:last-child:active:hover:-moz-locale-dir(rtl),
+.toggle-dark:not([disabled=true]) radio:last-child:hover:active:-moz-locale-dir(rtl),
 .toggle-dark radio:last-child[selected]:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
 }
@@ -526,13 +513,14 @@ radio.checkbox-radio-off:not([selected]) .radio-label-box {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-64.png") 8 repeat repeat;
 }
 
-.toggle-dark:not([disabled=true]) radio:first-child:last-child:active:hover,
+.toggle-dark:not([disabled=true]) radio:first-child:last-child:hover:active,
 .toggle-dark radio:first-child:last-child[selected] {
   -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 8 repeat repeat;
 }
 
 /* richlistbox ------------------------------------------------------------- */
 richlistbox {
+  -moz-user-focus: ignore;
   margin: 0;
 }
 
@@ -573,7 +561,7 @@ richlistitem[selected="true"] {
   background-color: white;
 }
 
-richlistitem:active:not([selected="true"]):not([nohighlight="true"]) {
+richlistitem::hover:active:not([selected="true"]):not([nohighlight="true"]) {
   background-color: #8db8d8;
 }
 
@@ -606,11 +594,11 @@ richlistitem[typeName="message"] {
 
 /* colorpicker ------------------------------------------------------------- */
 colorpicker > panel {
-  background-color: #36373b;
+  background-color: #767973;
 }
 
 colorpicker > vbox {
-  background-color: #36373b;
+  background-color: #767973;
 }
 
 /* textbox ----------------------------------------------------------------- */
@@ -641,7 +629,7 @@ menulist {
   -moz-appearance: none !important;
 }
 
-menulist:not([disabled="true"]):active:hover {
+menulist:not([disabled="true"]):hover:active {
   -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
 }
 
@@ -655,7 +643,7 @@ menulist.button-dark {
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
 }
 
-menulist.button-dark:not([disabled="true"]):active:hover {
+menulist.button-dark:not([disabled="true"]):hover:active {
   -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
 }
 
@@ -703,4 +691,80 @@ progressmeter {
 
 .progress-bar {
   background-color: #8db8d8;
+}
+
+/*.panel-row-header ------------------------------------------------------------ */
+.panel-row-header {
+  border-bottom: 4px solid rgb(101,121,227);
+  background-color: rgb(94,97,102);
+  padding: 0 !important;
+}
+
+.panel-row-button {
+  -moz-appearance: none;
+  background-color: rgb(94,97,102);
+  color: white;
+  border: 0px solid transparent !important;
+  -moz-border-start: 1px solid rgba(255,255,255,0.2) !important;
+  -moz-border-end: 1px solid rgba(0,0,0,0.2) !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  -moz-padding-start: 2px !important;
+  -moz-padding-end: 2px !important;
+  -moz-box-flex: 1;
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
+}
+
+.panel-row-button:hover:active {
+  background-color: rgb(94,97,102);
+}
+
+.panel-row-button:first-child {
+  -moz-border-start-width: 0 !important;
+}
+
+.panel-row-button:last-child {
+  -moz-border-end-width: 0 !important;
+}
+
+@media (max-width: 499px) {
+  .panel-row-button {
+    -moz-box-orient: vertical;
+  }
+
+  .panel-row-button .toolbarbutton-text {
+    font-size: 14px !important;
+  }
+}
+
+.panel-row-button .toolbarbutton-text {
+  text-align: left;
+  text-shadow: rgba(0,0,0,0.3) 0 2px;
+}
+
+.panel-row-button .toolbarbutton-text:-moz-locale-dir(rtl) {
+  text-align: right;
+}
+
+.panel-row-button[disabled="true"] {
+  pointer-events: none;
+}
+
+.panel-row-button[disabled="true"] .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+.panel-row-button[disabled="true"] .toolbarbutton-text {
+  color: #aaa;
+}
+
+.panel-row-button[checked="true"] {
+  color: white !important;
+  background-color: rgb(94,97,102) !important;
+}
+
+.panel-row-button[checked="true"],
+.panel-row-button[disabled="true"] {
+  pointer-events: none;
 }
