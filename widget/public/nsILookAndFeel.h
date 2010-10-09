@@ -303,8 +303,26 @@ public:
     /**
      * If this metric != 0, support window dragging on the menubar.
      */
-    eMetric_MenuBarDrag
+    eMetric_MenuBarDrag,
+    /**
+     * Return the appropriate WindowsThemeIdentifier for the current theme.
+     */
+    eMetric_WindowsThemeIdentifier
   } nsMetricID;
+
+  /**
+   * Windows themes we currently detect.
+   */
+  enum WindowsThemeIdentifier {
+    eWindowsTheme_Generic = 0, // unrecognized theme
+    eWindowsTheme_Classic,
+    eWindowsTheme_Aero,
+    eWindowsTheme_LunaBlue,
+    eWindowsTheme_LunaOlive,
+    eWindowsTheme_LunaSilver,
+    eWindowsTheme_Royale,
+    eWindowsTheme_Zune
+  };
 
   enum {
     eMetric_ScrollArrowStartBackward = 0x1000,

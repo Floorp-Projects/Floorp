@@ -447,6 +447,8 @@ nsWindow::nsWindow() : nsBaseWidget()
 
     // Init titlebar button info for custom frames.
     nsUXThemeData::InitTitlebarInfo();
+    // Init theme data
+    nsUXThemeData::UpdateNativeThemeInfo();
   } // !sInstanceCount
 
   mIdleService = nsnull;
@@ -4541,6 +4543,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     {
       // Update non-client margin offsets 
       UpdateNonClientMargins();
+      nsUXThemeData::UpdateNativeThemeInfo();
 
       DispatchStandardEvent(NS_THEMECHANGED);
 
