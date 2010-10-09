@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=591815
+-->
+<head>
+  <title>Test for Bug 591815</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="setTimeout(runTest, 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=591815">Mozilla Bug 591815</a>
+<p id="display"></p>
+<div id="content">
+  <div id="wrapper">
+    <!-- 20x20 of red -->
+    <img id="image" ondragstart="fail();"
+         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC"/>
+  </div>
+</div>
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 591815 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function fail() {
+  ok(false, "drag started but should not have");
+}
+
+function runTest() {
+  var image = document.getElementById("image");
+  var wrapper = document.getElementById("wrapper");
+  var preventDefault = function(event) {
+    event.preventDefault();
+  };
+  wrapper.addEventListener('mousedown', preventDefault, false);
+
+  synthesizeMouse(image, 3, 3, { type: "mousedown"});
+  synthesizeMouse(image, 53, 53, { type: "mousemove"});
+  synthesizeMouse(image, 53, 53, { type: "mouseup"});
+
+  wrapper.removeEventListener('mousedown', preventDefault, false);
+
+  var relocateElementAndPreventDefault = function(event) {
+    document.body.appendChild(wrapper);
+    event.preventDefault();
+  }
+  wrapper.addEventListener('mousedown', relocateElementAndPreventDefault, false);
+
+  synthesizeMouse(image, 3, 3, { type: "mousedown"});
+  synthesizeMouse(image, 53, 53, { type: "mousemove"});
+  synthesizeMouse(image, 53, 53, { type: "mouseup"});
+
+  wrapper.removeEventListener('mousedown', relocateElementAndPreventDefault, false);
+
+  ok(true, "passed the test");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+
