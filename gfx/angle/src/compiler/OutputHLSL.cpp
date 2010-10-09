@@ -96,7 +96,7 @@ int OutputHLSL::vectorSize(const TType &type) const
 
 void OutputHLSL::header()
 {
-    EShLanguage language = mContext.language;
+    ShShaderType shaderType = mContext.shaderType;
     TInfoSinkBase &out = mHeader;
 
     for (StructDeclarations::iterator structDeclaration = mStructDeclarations.begin(); structDeclaration != mStructDeclarations.end(); structDeclaration++)
@@ -109,7 +109,7 @@ void OutputHLSL::header()
         out << *constructor;
     }
 
-    if (language == EShLangFragment)
+    if (shaderType == SH_FRAGMENT_SHADER)
     {
         TString uniforms;
         TString varyings;
@@ -791,11 +791,11 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
         {
             if (node->getLeft()->isMatrix())
             {
-                switch (node->getLeft()->getSize())
+                switch (node->getLeft()->getNominalSize())
                 {
-                  case 2 * 2: mUsesEqualMat2 = true; break;
-                  case 3 * 3: mUsesEqualMat3 = true; break;
-                  case 4 * 4: mUsesEqualMat4 = true; break;
+                  case 2: mUsesEqualMat2 = true; break;
+                  case 3: mUsesEqualMat3 = true; break;
+                  case 4: mUsesEqualMat4 = true; break;
                   default: UNREACHABLE();
                 }
             }
@@ -804,7 +804,7 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
                 switch (node->getLeft()->getBasicType())
                 {
                   case EbtFloat:
-                    switch (node->getLeft()->getSize())
+                    switch (node->getLeft()->getNominalSize())
                     {
                       case 2: mUsesEqualVec2 = true; break;
                       case 3: mUsesEqualVec3 = true; break;
@@ -813,7 +813,7 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
                     }
                     break;
                   case EbtInt:
-                    switch (node->getLeft()->getSize())
+                    switch (node->getLeft()->getNominalSize())
                     {
                       case 2: mUsesEqualIVec2 = true; break;
                       case 3: mUsesEqualIVec3 = true; break;
@@ -822,7 +822,7 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
                     }
                     break;
                   case EbtBool:
-                    switch (node->getLeft()->getSize())
+                    switch (node->getLeft()->getNominalSize())
                     {
                       case 2: mUsesEqualBVec2 = true; break;
                       case 3: mUsesEqualBVec3 = true; break;
@@ -933,9 +933,9 @@ bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
       case EOpFract:            outputTriplet(visit, "frac(", "", ")");      break;
       case EOpLength:           outputTriplet(visit, "length(", "", ")");    break;
       case EOpNormalize:        outputTriplet(visit, "normalize(", "", ")"); break;
-//    case EOpDPdx:             outputTriplet(visit, "ddx(", "", ")");       break;
-//    case EOpDPdy:             outputTriplet(visit, "ddy(", "", ")");       break;
-//    case EOpFwidth:           outputTriplet(visit, "fwidth(", "", ")");    break;        
+      case EOpDFdx:             outputTriplet(visit, "ddx(", "", ")");       break;
+      case EOpDFdy:             outputTriplet(visit, "ddy(", "", ")");       break;
+      case EOpFwidth:           outputTriplet(visit, "fwidth(", "", ")");    break;        
       case EOpAny:              outputTriplet(visit, "any(", "", ")");       break;
       case EOpAll:              outputTriplet(visit, "all(", "", ")");       break;
       default: UNREACHABLE();
@@ -946,7 +946,7 @@ bool OutputHLSL::visitUnary(Visit visit, TIntermUnary *node)
 
 bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
 {
-    EShLanguage language = mContext.language;
+    ShShaderType shaderType = mContext.shaderType;
     TInfoSinkBase &out = mBody;
 
     switch (node->getOp())
@@ -1288,7 +1288,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpVectorNotEqual:   outputTriplet(visit, "(", " != ", ")");                break;
       case EOpMod:
         {
-            switch (node->getSequence()[0]->getAsTyped()->getSize())   // Number of components in the first argument
+            switch (node->getSequence()[0]->getAsTyped()->getNominalSize())   // Number of components in the first argument
             {
               case 1: mUsesMod1 = true; break;
               case 2: mUsesMod2 = true; break;
@@ -1317,7 +1317,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpCross:         outputTriplet(visit, "cross(", ", ", ")");         break;
       case EOpFaceForward:
         {
-            switch (node->getSequence()[0]->getAsTyped()->getSize())   // Number of components in the first argument
+            switch (node->getSequence()[0]->getAsTyped()->getNominalSize())   // Number of components in the first argument
             {
             case 1: mUsesFaceforward1 = true; break;
             case 2: mUsesFaceforward2 = true; break;
@@ -1553,7 +1553,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
                     if (symbol && constant)
                     {
-                        if (constant->getBasicType() == EbtInt && constant->getSize() == 1)
+                        if (constant->getBasicType() == EbtInt && constant->getNominalSize() == 1)
                         {
                             index = symbol;
                             initial = constant->getUnionArrayPointer()[0].getIConst();
@@ -1575,7 +1575,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
             if (constant)
             {
-                if (constant->getBasicType() == EbtInt && constant->getSize() == 1)
+                if (constant->getBasicType() == EbtInt && constant->getNominalSize() == 1)
                 {
                     comparator = test->getOp();
                     limit = constant->getUnionArrayPointer()[0].getIConst();
@@ -1597,7 +1597,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
             if (constant)
             {
-                if (constant->getBasicType() == EbtInt && constant->getSize() == 1)
+                if (constant->getBasicType() == EbtInt && constant->getNominalSize() == 1)
                 {
                     int value = constant->getUnionArrayPointer()[0].getIConst();
 
@@ -1848,8 +1848,8 @@ void OutputHLSL::addConstructor(const TType &type, const TString &name, const TI
 
     TType ctorType = type;
     ctorType.clearArrayness();
-    ctorType.changePrecision(EbpHigh);
-    ctorType.changeQualifier(EvqTemporary);
+    ctorType.setPrecision(EbpHigh);
+    ctorType.setQualifier(EvqTemporary);
 
     TString ctorName = type.getStruct() ? decorate(name) : name;
 

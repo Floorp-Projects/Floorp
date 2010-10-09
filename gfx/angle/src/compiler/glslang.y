@@ -40,48 +40,26 @@ compiler/tools. Remove it when we can exclusively use the newer version.
 #define YY_DECL int yylex(YYSTYPE* pyylval, void* parseContextLocal)
 extern void yyerror(const char*);
 
-#define FRAG_VERT_ONLY(S, L) {                                                  \
-    if (parseContext->language != EShLangFragment &&                             \
-        parseContext->language != EShLangVertex) {                               \
-        parseContext->error(L, " supported in vertex/fragment shaders only ", S, "", "");   \
-        parseContext->recover();                                                            \
-    }                                                                           \
+#define FRAG_VERT_ONLY(S, L) {  \
+    if (parseContext->shaderType != SH_FRAGMENT_SHADER &&  \
+        parseContext->shaderType != SH_VERTEX_SHADER) {  \
+        parseContext->error(L, " supported in vertex/fragment shaders only ", S, "", "");  \
+        parseContext->recover();  \
+    }  \
 }
 
-#define VERTEX_ONLY(S, L) {                                                     \
-    if (parseContext->language != EShLangVertex) {                               \
-        parseContext->error(L, " supported in vertex shaders only ", S, "", "");            \
-        parseContext->recover();                                                            \
-    }                                                                           \
+#define VERTEX_ONLY(S, L) {  \
+    if (parseContext->shaderType != SH_VERTEX_SHADER) {  \
+        parseContext->error(L, " supported in vertex shaders only ", S, "", "");  \
+        parseContext->recover();  \
+    }  \
 }
 
-#define FRAG_ONLY(S, L) {                                                       \
-    if (parseContext->language != EShLangFragment) {                             \
-        parseContext->error(L, " supported in fragment shaders only ", S, "", "");          \
-        parseContext->recover();                                                            \
-    }                                                                           \
-}
-
-#define PACK_ONLY(S, L) {                                                       \
-    if (parseContext->language != EShLangPack) {                                 \
-        parseContext->error(L, " supported in pack shaders only ", S, "", "");              \
-        parseContext->recover();                                                            \
-    }                                                                           \
-}
-
-#define UNPACK_ONLY(S, L) {                                                     \
-    if (parseContext->language != EShLangUnpack) {                               \
-        parseContext->error(L, " supported in unpack shaders only ", S, "", "");            \
-        parseContext->recover();                                                            \
-    }                                                                           \
-}
-
-#define PACK_UNPACK_ONLY(S, L) {                                                \
-    if (parseContext->language != EShLangUnpack &&                               \
-        parseContext->language != EShLangPack) {                                 \
-        parseContext->error(L, " supported in pack/unpack shaders only ", S, "", "");       \
-        parseContext->recover();                                                            \
-    }                                                                           \
+#define FRAG_ONLY(S, L) {  \
+    if (parseContext->shaderType != SH_FRAGMENT_SHADER) {  \
+        parseContext->error(L, " supported in fragment shaders only ", S, "", "");  \
+        parseContext->recover();  \
+    }  \
 }
 %}
 %union {
@@ -311,7 +289,7 @@ postfix_expression
                 $$->setType(TType($1->getBasicType(), $1->getPrecision(), EvqTemporary, $1->getNominalSize(), $1->isMatrix()));
 
             if ($1->getType().getQualifier() == EvqConst)
-                $$->getTypePointer()->changeQualifier(EvqConst);
+                $$->getTypePointer()->setQualifier(EvqConst);
         } else if ($1->isMatrix() && $1->getType().getQualifier() == EvqConst)
             $$->setType(TType($1->getBasicType(), $1->getPrecision(), EvqConst, $1->getNominalSize()));
         else if ($1->isMatrix())
@@ -389,7 +367,7 @@ postfix_expression
             }
         } else if ($1->getBasicType() == EbtStruct) {
             bool fieldFound = false;
-            TTypeList* fields = $1->getType().getStruct();
+            const TTypeList* fields = $1->getType().getStruct();
             if (fields == 0) {
                 parseContext->error($2.line, "structure has no fields", "Internal Error", "");
                 parseContext->recover();
@@ -413,7 +391,7 @@ postfix_expression
                             $$->setType(*(*fields)[i].type);
                             // change the qualifier of the return type, not of the structure field
                             // as the structure definition is shared between various structures.
-                            $$->getTypePointer()->changeQualifier(EvqConst);
+                            $$->getTypePointer()->setQualifier(EvqConst);
                         }
                     } else {
                         ConstantUnion *unionArray = new ConstantUnion[1];
@@ -501,9 +479,12 @@ function_call
             fnCandidate = parseContext->findFunction($1.line, fnCall, &builtIn);
             if (fnCandidate) {
                 //
-                // A declared function.  But, it might still map to a built-in
-                // operation.
+                // A declared function.
                 //
+                if (builtIn && !fnCandidate->getExtension().empty() &&
+                    parseContext->extensionErrorCheck($1.line, fnCandidate->getExtension())) {
+                    parseContext->recover();
+                }
                 op = fnCandidate->getBuiltInOp();
                 if (builtIn && op != EOpNull) {
                     //
@@ -537,16 +518,14 @@ function_call
                     $$->getAsAggregate()->setName(fnCandidate->getMangledName());
 
                     TQualifier qual;
-                    TQualifierList& qualifierList = $$->getAsAggregate()->getQualifier();
                     for (int i = 0; i < fnCandidate->getParamCount(); ++i) {
-                        qual = (*fnCandidate)[i].type->getQualifier();
+                        qual = fnCandidate->getParam(i).type->getQualifier();
                         if (qual == EvqOut || qual == EvqInOut) {
                             if (parseContext->lValueErrorCheck($$->getLine(), "assign", $$->getAsAggregate()->getSequence()[i]->getAsTyped())) {
                                 parseContext->error($1.intermNode->getLine(), "Constant value cannot be passed for 'out' or 'inout' parameters.", "Error", "");
                                 parseContext->recover();
                             }
                         }
-                        qualifierList.push_back(qual);
                     }
                 }
                 $$->setType(fnCandidate->getReturnType());
@@ -625,19 +604,16 @@ function_identifier
         // Constructor
         //
         if ($1.array) {
-            if (parseContext->extensionErrorCheck($1.line, "GL_3DL_array_objects")) {
-                parseContext->recover();
-                $1.setArray(false);
-            }
+            // Constructors for arrays are not allowed.
+            parseContext->error($1.line, "cannot construct this type", "array", "");
+            parseContext->recover();
+            $1.setArray(false);
         }
 
+        TOperator op = EOpNull;
         if ($1.userDef) {
-            TString tempString = "";
-            TType type($1);
-            TFunction *function = new TFunction(&tempString, type, EOpConstructStruct);
-            $$ = function;
+            op = EOpConstructStruct;
         } else {
-            TOperator op = EOpNull;
             switch ($1.type) {
             case EbtFloat:
                 if ($1.matrix) {
@@ -671,18 +647,19 @@ function_identifier
                 case 4:       FRAG_VERT_ONLY("bvec4", $1.line); op = EOpConstructBVec4; break;
                 }
                 break;
+            default: break;
             }
             if (op == EOpNull) {
-                parseContext->error($1.line, "cannot construct this type", TType::getBasicString($1.type), "");
+                parseContext->error($1.line, "cannot construct this type", getBasicString($1.type), "");
                 parseContext->recover();
                 $1.type = EbtFloat;
                 op = EOpConstructFloat;
             }
-            TString tempString = "";
-            TType type($1);
-            TFunction *function = new TFunction(&tempString, type, op);
-            $$ = function;
         }
+        TString tempString;
+        TType type($1);
+        TFunction *function = new TFunction(&tempString, type, op);
+        $$ = function;
     }
     | IDENTIFIER {
         if (parseContext->reservedErrorCheck($1.line, *$1.string))
@@ -851,8 +828,7 @@ equality_expression
             ConstantUnion *unionArray = new ConstantUnion[1];
             unionArray->setBConst(false);
             $$ = parseContext->intermediate.addConstantUnion(unionArray, TType(EbtBool, EbpUndefined, EvqConst), $2.line);
-        } else if (($1->isArray() || $3->isArray()) && parseContext->extensionErrorCheck($2.line, "GL_3DL_array_objects"))
-            parseContext->recover();
+        }
     }
     | equality_expression NE_OP relational_expression {
         $$ = parseContext->intermediate.addBinaryMath(EOpNotEqual, $1, $3, $2.line, parseContext->symbolTable);
@@ -862,8 +838,7 @@ equality_expression
             ConstantUnion *unionArray = new ConstantUnion[1];
             unionArray->setBConst(false);
             $$ = parseContext->intermediate.addConstantUnion(unionArray, TType(EbtBool, EbpUndefined, EvqConst), $2.line);
-        } else if (($1->isArray() || $3->isArray()) && parseContext->extensionErrorCheck($2.line, "GL_3DL_array_objects"))
-            parseContext->recover();
+        }
     }
     ;
 
@@ -949,8 +924,7 @@ assignment_expression
             parseContext->assignError($2.line, "assign", $1->getCompleteString(), $3->getCompleteString());
             parseContext->recover();
             $$ = $1;
-        } else if (($1->isArray() || $3->isArray()) && parseContext->extensionErrorCheck($2.line, "GL_3DL_array_objects"))
-            parseContext->recover();
+        }
     }
     ;
 
@@ -994,7 +968,7 @@ declaration
         
         for (int i = 0; i < function.getParamCount(); i++)
         {
-            TParameter &param = function[i];
+            const TParameter &param = function.getParam(i);
             if (param.name != 0)
             {
                 TVariable *variable = new TVariable(param.name, *param.type);
@@ -1007,12 +981,12 @@ declaration
             }
         }
         
-        prototype->setOperator(EOpPrototype);
+        prototype->setOp(EOpPrototype);
         $$ = prototype;
     }
     | init_declarator_list SEMICOLON {
         if ($1.intermAggregate)
-            $1.intermAggregate->setOperator(EOpDeclaration);
+            $1.intermAggregate->setOp(EOpDeclaration);
         $$ = $1.intermAggregate;
     }
     | PRECISION precision_qualifier type_specifier_no_prec SEMICOLON {
@@ -1038,8 +1012,8 @@ function_prototype
                 parseContext->recover();
             }
             for (int i = 0; i < prevDec->getParamCount(); ++i) {
-                if ((*prevDec)[i].type->getQualifier() != (*$1)[i].type->getQualifier()) {
-                    parseContext->error($2.line, "overloaded functions must have the same parameter qualifiers", (*$1)[i].type->getQualifierString(), "");
+                if (prevDec->getParam(i).type->getQualifier() != $1->getParam(i).type->getQualifier()) {
+                    parseContext->error($2.line, "overloaded functions must have the same parameter qualifiers", $1->getParam(i).type->getQualifierString(), "");
                     parseContext->recover();
                 }
             }
@@ -1272,75 +1246,6 @@ init_declarator_list
             $$.intermAggregate = parseContext->intermediate.growAggregate($1.intermNode, parseContext->intermediate.addSymbol(0, *$3.string, type, $3.line), $3.line);
         }
     }
-    | init_declarator_list COMMA IDENTIFIER LEFT_BRACKET RIGHT_BRACKET EQUAL initializer {
-        if (parseContext->structQualifierErrorCheck($3.line, $1.type))
-            parseContext->recover();
-
-        $$ = $1;
-
-        TVariable* variable = 0;
-        if (parseContext->arrayTypeErrorCheck($4.line, $1.type) || parseContext->arrayQualifierErrorCheck($4.line, $1.type))
-            parseContext->recover();
-        else {
-            $1.type.setArray(true, $7->getType().getArraySize());
-            if (parseContext->arrayErrorCheck($4.line, *$3.string, $1.type, variable))
-                parseContext->recover();
-        }
-
-        if (parseContext->extensionErrorCheck($$.line, "GL_3DL_array_objects"))
-            parseContext->recover();
-        else {
-            TIntermNode* intermNode;
-            if (!parseContext->executeInitializer($3.line, *$3.string, $1.type, $7, intermNode, variable)) {
-                //
-                // build the intermediate representation
-                //
-                if (intermNode)
-                    $$.intermAggregate = parseContext->intermediate.growAggregate($1.intermNode, intermNode, $6.line);
-                else
-                    $$.intermAggregate = $1.intermAggregate;
-            } else {
-                parseContext->recover();
-                $$.intermAggregate = 0;
-            }
-        }
-    }
-    | init_declarator_list COMMA IDENTIFIER LEFT_BRACKET constant_expression RIGHT_BRACKET EQUAL initializer {
-        if (parseContext->structQualifierErrorCheck($3.line, $1.type))
-            parseContext->recover();
-
-        $$ = $1;
-
-        TVariable* variable = 0;
-        if (parseContext->arrayTypeErrorCheck($4.line, $1.type) || parseContext->arrayQualifierErrorCheck($4.line, $1.type))
-            parseContext->recover();
-        else {
-            int size;
-            if (parseContext->arraySizeErrorCheck($4.line, $5, size))
-                parseContext->recover();
-            $1.type.setArray(true, size);
-            if (parseContext->arrayErrorCheck($4.line, *$3.string, $1.type, variable))
-                parseContext->recover();
-        }
-
-        if (parseContext->extensionErrorCheck($$.line, "GL_3DL_array_objects"))
-            parseContext->recover();
-        else {
-            TIntermNode* intermNode;
-            if (!parseContext->executeInitializer($3.line, *$3.string, $1.type, $8, intermNode, variable)) {
-                //
-                // build the intermediate representation
-                //
-                if (intermNode)
-                    $$.intermAggregate = parseContext->intermediate.growAggregate($1.intermNode, intermNode, $7.line);
-                else
-                    $$.intermAggregate = $1.intermAggregate;
-            } else {
-                parseContext->recover();
-                $$.intermAggregate = 0;
-            }
-        }
-    }
     | init_declarator_list COMMA IDENTIFIER EQUAL initializer {
         if (parseContext->structQualifierErrorCheck($3.line, $1.type))
             parseContext->recover();
@@ -1531,18 +1436,14 @@ fully_specified_type
         $$ = $1;
 
         if ($1.array) {
-            if (parseContext->extensionErrorCheck($1.line, "GL_3DL_array_objects")) {
-                parseContext->recover();
-                $1.setArray(false);
-            }
+            parseContext->error($1.line, "not supported", "first-class array", "");
+            parseContext->recover();
+            $1.setArray(false);
         }
     }
     | type_qualifier type_specifier  {
-        if ($2.array && parseContext->extensionErrorCheck($2.line, "GL_3DL_array_objects")) {
-            parseContext->recover();
-            $2.setArray(false);
-        }
-        if ($2.array && parseContext->arrayQualifierErrorCheck($2.line, $1)) {
+        if ($2.array) {
+            parseContext->error($2.line, "not supported", "first-class array", "");
             parseContext->recover();
             $2.setArray(false);
         }
@@ -1575,7 +1476,7 @@ type_qualifier
     | VARYING {
         if (parseContext->globalErrorCheck($1.line, parseContext->symbolTable.atGlobalLevel(), "varying"))
             parseContext->recover();
-        if (parseContext->language == EShLangVertex)
+        if (parseContext->shaderType == SH_VERTEX_SHADER)
             $$.setBasic(EbtVoid, EvqVaryingOut, $1.line);
         else
             $$.setBasic(EbtVoid, EvqVaryingIn, $1.line);
@@ -1583,7 +1484,7 @@ type_qualifier
     | INVARIANT VARYING {
         if (parseContext->globalErrorCheck($1.line, parseContext->symbolTable.atGlobalLevel(), "invariant varying"))
             parseContext->recover();
-        if (parseContext->language == EShLangVertex)
+        if (parseContext->shaderType == SH_VERTEX_SHADER)
             $$.setBasic(EbtVoid, EvqInvariantVaryingOut, $1.line);
         else
             $$.setBasic(EbtVoid, EvqInvariantVaryingIn, $1.line);
@@ -1795,19 +1696,24 @@ struct_declaration
         }
         for (unsigned int i = 0; i < $$->size(); ++i) {
             //
-            // Careful not to replace already know aspects of type, like array-ness
+            // Careful not to replace already known aspects of type, like array-ness
             //
-            (*$$)[i].type->setType($1.type, $1.size, $1.matrix, $1.userDef);
+            TType* type = (*$$)[i].type;
+            type->setBasicType($1.type);
+            type->setNominalSize($1.size);
+            type->setMatrix($1.matrix);
 
             // don't allow arrays of arrays
-            if ((*$$)[i].type->isArray()) {
+            if (type->isArray()) {
                 if (parseContext->arrayTypeErrorCheck($1.line, $1))
                     parseContext->recover();
             }
             if ($1.array)
-                (*$$)[i].type->setArraySize($1.arraySize);
-            if ($1.userDef)
-                (*$$)[i].type->setTypeName($1.userDef->getTypeName());
+                type->setArraySize($1.arraySize);
+            if ($1.userDef) {
+                type->setStruct($1.userDef->getStruct());
+                type->setTypeName($1.userDef->getTypeName());
+            }
         }
     }
     ;
@@ -1873,7 +1779,7 @@ compound_statement
     : LEFT_BRACE RIGHT_BRACE { $$ = 0; }
     | LEFT_BRACE { parseContext->symbolTable.push(); } statement_list { parseContext->symbolTable.pop(); } RIGHT_BRACE {
         if ($3 != 0)
-            $3->setOperator(EOpSequence);
+            $3->setOp(EOpSequence);
         $$ = $3;
     }
     ;
@@ -1890,7 +1796,7 @@ compound_statement_no_new_scope
     }
     | LEFT_BRACE statement_list RIGHT_BRACE {
         if ($2)
-            $2->setOperator(EOpSequence);
+            $2->setOp(EOpSequence);
         $$ = $2;
     }
     ;
@@ -2065,8 +1971,8 @@ external_declaration
 
 function_definition
     : function_prototype {
-        TFunction& function = *($1.function);
-        TFunction* prevDec = static_cast<TFunction*>(parseContext->symbolTable.find(function.getMangledName()));
+        TFunction* function = $1.function;
+        TFunction* prevDec = static_cast<TFunction*>(parseContext->symbolTable.find(function->getMangledName()));
         //
         // Note:  'prevDec' could be 'function' if this is the first time we've seen function
         // as it would have just been put in the symbol table.  Otherwise, we're looking up
@@ -2076,7 +1982,7 @@ function_definition
             //
             // Then this function already has a body.
             //
-            parseContext->error($1.line, "function already has a body", function.getName().c_str(), "");
+            parseContext->error($1.line, "function already has a body", function->getName().c_str(), "");
             parseContext->recover();
         }
         prevDec->setDefined();
@@ -2084,13 +1990,13 @@ function_definition
         //
         // Raise error message if main function takes any parameters or return anything other than void
         //
-        if (function.getName() == "main") {
-            if (function.getParamCount() > 0) {
-                parseContext->error($1.line, "function cannot take any parameter(s)", function.getName().c_str(), "");
+        if (function->getName() == "main") {
+            if (function->getParamCount() > 0) {
+                parseContext->error($1.line, "function cannot take any parameter(s)", function->getName().c_str(), "");
                 parseContext->recover();
             }
-            if (function.getReturnType().getBasicType() != EbtVoid) {
-                parseContext->error($1.line, "", function.getReturnType().getBasicString(), "main function cannot return a value");
+            if (function->getReturnType().getBasicType() != EbtVoid) {
+                parseContext->error($1.line, "", function->getReturnType().getBasicString(), "main function cannot return a value");
                 parseContext->recover();
             }
         }
@@ -2115,8 +2021,8 @@ function_definition
         // knows where to find parameters.
         //
         TIntermAggregate* paramNodes = new TIntermAggregate;
-        for (int i = 0; i < function.getParamCount(); i++) {
-            TParameter& param = function[i];
+        for (int i = 0; i < function->getParamCount(); i++) {
+            const TParameter& param = function->getParam(i);
             if (param.name != 0) {
                 TVariable *variable = new TVariable(param.name, *param.type);
                 //
@@ -2127,10 +2033,6 @@ function_definition
                     parseContext->recover();
                     delete variable;
                 }
-                //
-                // Transfer ownership of name pointer to symbol table.
-                //
-                param.name = 0;
 
                 //
                 // Add the parameter to the HIL
