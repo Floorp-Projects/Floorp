@@ -2527,7 +2527,10 @@ NS_IMETHODIMP
 nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
                            nsIFrame::Cursor& aCursor)
 {
-  if (mView) {
+  // Check the GetScriptHandlingObject so we don't end up running code when
+  // the document is a zombie.
+  PRBool dummy;
+  if (mView && GetContent()->GetCurrentDoc()->GetScriptHandlingObject(dummy)) {
     PRInt32 row;
     nsTreeColumn* col;
     nsIAtom* child;
