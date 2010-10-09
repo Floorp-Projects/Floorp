@@ -450,42 +450,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 #endif
         break;
     case eMetric_WindowsDefaultTheme:
-        aMetric = 0;
-#ifndef WINCE
-        if (nsUXThemeData::getCurrentThemeName) {
-          WCHAR themeFileName[MAX_PATH + 1] = {L'\0'};
-          HRESULT hresult =
-            nsUXThemeData::getCurrentThemeName(themeFileName, MAX_PATH,
-                                                            NULL, 0, NULL, 0);
-
-          // WIN2K and earlier will not have getCurrentThemeName defined, so
-          // they will never make it this far.  Unless we want to save 6.0
-          // users a handful of clock cycles by skipping checks for the
-          // 5.x themes (or vice-versa), we can use a single loop for all
-          // the different Windows versions.
-          if (hresult == S_OK && nsWindow::GetWindowsVersion() <= WIN7_VERSION) {
-            LPCWSTR defThemes[] = {
-              L"luna.msstyles",
-              L"aero.msstyles"
-            };
-
-            LPWSTR curTheme = wcsrchr(themeFileName, L'\\');
-            curTheme = curTheme ? curTheme + 1 : themeFileName;
-
-            for (unsigned i = 0; i < NS_ARRAY_LENGTH(defThemes); ++i) {
-              if (!lstrcmpiW(curTheme, defThemes[i])) {
-                aMetric = 1;
-              }
-            }
-          } else {
-            res = NS_ERROR_NOT_IMPLEMENTED;
-          }
-        }
-        else
-#endif /* WINCE */
-        {
-          res = NS_ERROR_NOT_IMPLEMENTED;
-        }
+        aMetric = nsUXThemeData::IsDefaultWindowTheme();
+        break;
+    case eMetric_WindowsThemeIdentifier:
+        aMetric = nsUXThemeData::GetNativeThemeId();
         break;
     case eMetric_MacGraphiteTheme:
     case eMetric_MaemoClassic:
