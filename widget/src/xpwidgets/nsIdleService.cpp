@@ -179,7 +179,9 @@ nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIdleService
 
-nsIdleService::nsIdleService() : mLastIdleReset(0), mLastHandledActivity(0)
+nsIdleService::nsIdleService() : mLastIdleReset(0)
+                               , mLastHandledActivity(0)
+                               , mPolledIdleTimeIsValid(false)
 {
   mDailyIdle = new nsIdleServiceDaily(this);
 }
@@ -239,13 +241,18 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, PRUint32 aTime)
 void
 nsIdleService::ResetIdleTimeOut()
 {
-  mLastIdleReset = PR_IntervalToSeconds(PR_IntervalNow());
   // A zero in mLastIdleReset indicates that this function has never been
   // called.
+  bool calledBefore = mLastIdleReset != 0;
+  mLastIdleReset = PR_IntervalToSeconds(PR_IntervalNow());
   if (!mLastIdleReset) mLastIdleReset = 1;
 
   // Now check if this changes anything
-  CheckAwayState(true);
+  // Note that if we have never been called before, we cannot do the
+  // optimization of passing true to CheckAwayState, which avoids
+  // calculating the timer (because if we have never been called before,
+  // we need to recalculate the timer and start it there).
+  CheckAwayState(calledBefore);
 }
 
 NS_IMETHODIMP
@@ -258,12 +265,11 @@ nsIdleService::GetIdleTime(PRUint32* idleTime)
 
   // Polled idle time in ms
   PRUint32 polledIdleTimeMS;
-  bool polledIdleTimeIsValid;
 
-  polledIdleTimeIsValid = PollIdleTime(&polledIdleTimeMS);
+  mPolledIdleTimeIsValid = PollIdleTime(&polledIdleTimeMS);
 
   // If we don't have any valid data, then we are not in idle - pr. definition.
-  if (!polledIdleTimeIsValid && 0 == mLastIdleReset) {
+  if (!mPolledIdleTimeIsValid && 0 == mLastIdleReset) {
     *idleTime = 0;
     return NS_OK;
   }
@@ -279,7 +285,7 @@ nsIdleService::GetIdleTime(PRUint32* idleTime)
     PR_IntervalToSeconds(PR_IntervalNow()) - mLastIdleReset;
 
   // If we did't get pulled data, return the time since last idle reset.
-  if (!polledIdleTimeIsValid) {
+  if (!mPolledIdleTimeIsValid) {
     // We need to convert to ms before returning the time.
     *idleTime = timeSinceReset * 1000;
     return NS_OK;
@@ -326,6 +332,11 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
   // Get the idle time (in seconds).
   PRUint32 idleTime;
   if (NS_FAILED(GetIdleTime(&idleTime))) {
+    return;
+  }
+
+  // If we have no valid data about the idle time, stop
+  if (!mPolledIdleTimeIsValid && 0 == mLastIdleReset) {
     return;
   }
 
