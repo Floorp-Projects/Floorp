@@ -1050,3 +1050,5 @@ pref("devtools.inspector.enabled", false);
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
 
+// Whether the Panorama should animate going in/out of tabs
+pref("browser.panorama.animate_zoom", true);
