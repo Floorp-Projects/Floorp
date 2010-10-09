@@ -2192,44 +2192,6 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags)
   request->mFlags = aFlags;
 }
 
-void
-nsPresContext::NotifyInvalidateRegion(const nsRegion& aRegion,
-                                      nsPoint aOffset, PRUint32 aFlags)
-{
-  const nsRect* r;
-  for (nsRegionRectIterator iter(aRegion); (r = iter.Next());) {
-    NotifyInvalidation(*r + aOffset, aFlags);
-  }
-}
-
-void
-nsPresContext::NotifyInvalidateForScrolling(const nsRegion& aBlitRegion,
-                                            const nsRegion& aInvalidateRegion)
-{
-  nsPresContext* pc = this;
-  PRUint32 crossDocFlags = 0;
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  nsPoint offset(0,0);
-  while (pc) {
-    if (pc->MayHavePaintEventListener()) {
-      pc->NotifyInvalidateRegion(aBlitRegion, offset,
-                                 nsIFrame::INVALIDATE_REASON_SCROLL_BLIT | crossDocFlags);
-      pc->NotifyInvalidateRegion(aInvalidateRegion, offset,
-                                 nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT | crossDocFlags);
-    }
-    crossDocFlags = nsIFrame::INVALIDATE_CROSS_DOC;
-
-    nsIFrame* rootParentFrame = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
-    if (!rootParentFrame)
-      break;
-
-    pc = rootParentFrame->PresContext();
-    nsIFrame* nextRootFrame = pc->PresShell()->FrameManager()->GetRootFrame();
-    offset += rootFrame->GetOffsetTo(nextRootFrame);
-    rootFrame = nextRootFrame;
-  }
-}
-
 PRBool
 nsPresContext::HasCachedStyleData()
 {
