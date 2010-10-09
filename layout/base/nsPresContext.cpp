@@ -2357,8 +2357,11 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
 PRBool
 nsPresContext::IsRootContentDocument()
 {
-  // We are a root content document if: we are not chrome, we are a
-  // subdocument, and our parent is chrome.
+  // We are a root content document if: we are not a resource doc, we are
+  // not chrome, and we either have no parent or our parent is chrome.
+  if (mDocument->IsResourceDoc()) {
+    return PR_FALSE;
+  }
   if (IsChrome()) {
     return PR_FALSE;
   }
@@ -2370,11 +2373,11 @@ nsPresContext::IsRootContentDocument()
   }
   view = view->GetParent(); // anonymous inner view
   if (!view) {
-    return PR_FALSE;
+    return PR_TRUE;
   }
   view = view->GetParent(); // subdocumentframe's view
   if (!view) {
-    return PR_FALSE;
+    return PR_TRUE;
   }
 
   nsIFrame* f = static_cast<nsIFrame*>(view->GetClientData());
