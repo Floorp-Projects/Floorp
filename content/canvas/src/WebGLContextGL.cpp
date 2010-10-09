@@ -1999,8 +1999,8 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
 {
     NS_ENSURE_TRUE(intParamPtr || floatParamPtr, NS_ERROR_FAILURE);
 
-    WebGLint intParam   = intParamPtr   ? *intParamPtr   : WebGLint(*floatParamPtr);
-    WebGLint floatParam = floatParamPtr ? *floatParamPtr : WebGLfloat(*intParamPtr);
+    WebGLint intParam = intParamPtr ? *intParamPtr : WebGLint(*floatParamPtr);
+    WebGLfloat floatParam = floatParamPtr ? *floatParamPtr : WebGLfloat(*intParamPtr);
 
     if (!ValidateTextureTargetEnum(target, "texParameter: target"))
         return NS_OK;
@@ -3163,29 +3163,33 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
     if (shader->NeedsTranslation() && mShaderValidation) {
         ShHandle compiler = 0;
         int debugFlags = 0;
-        EShLanguage lang = (shader->ShaderType() == LOCAL_GL_VERTEX_SHADER) ?
-            EShLangVertex : EShLangFragment;
+        ShBuiltInResources resources;
+        memset(&resources, 0, sizeof(ShBuiltInResources));
 
-        TBuiltInResource resources;
+        resources.MaxVertexAttribs = mGLMaxVertexAttribs;
+        resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
+        resources.MaxVaryingVectors = mGLMaxVaryingVectors;
+        resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
+        resources.MaxCombinedTextureImageUnits = mGLMaxTextureUnits;
+        resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
+        resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
+        resources.MaxDrawBuffers = 1;
 
-        resources.maxVertexAttribs = mGLMaxVertexAttribs;
-        resources.maxVertexUniformVectors = mGLMaxVertexUniformVectors;
-        resources.maxVaryingVectors = mGLMaxVaryingVectors;
-        resources.maxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
-        resources.maxCombinedTextureImageUnits = mGLMaxTextureUnits;
-        resources.maxTextureImageUnits = mGLMaxTextureImageUnits;
-        resources.maxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
-        resources.maxDrawBuffers = 1;
-
-        compiler = ShConstructCompiler(lang, EShSpecWebGL, &resources);
+        compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
+                                       SH_WEBGL_SPEC,
+                                       &resources);
 
         nsPromiseFlatCString src(shader->Source());
         const char *s = src.get();
 
-        if (!ShCompile(compiler, &s, 1, EShOptNone, debugFlags)) {
-            const char* info = ShGetInfoLog(compiler);
-            if (info) {
-                shader->SetTranslationFailure(nsDependentCString(info));
+        if (!ShCompile(compiler, &s, 1, SH_OBJECT_CODE)) {
+            int len = 0;
+            ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
+
+            if (len) {
+                nsCAutoString info(len);
+                ShGetInfoLog(compiler, info.BeginWriting());
+                shader->SetTranslationFailure(info);
             } else {
                 shader->SetTranslationFailure(NS_LITERAL_CSTRING("Internal error: failed to get shader info log"));
             }
@@ -3198,10 +3202,21 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
          * why we ran it through the above, but we don't want the desktop GLSL.
          */
         if (!gl->IsGLES2()) {
-            s = ShGetObjectCode(compiler);
+            int len = 0;
+            ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &len);
+
+            nsCAutoString translatedSrc(len);
+
+            ShGetObjectCode(compiler, translatedSrc.BeginWriting());
+
+            nsPromiseFlatCString translatedSrc2(translatedSrc);
+            const char *ts = translatedSrc2.get();
+
+            gl->fShaderSource(shadername, 1, &ts, NULL);
+        } else {
+            gl->fShaderSource(shadername, 1, &s, NULL);
         }
 
-        gl->fShaderSource(shadername, 1, &s, NULL);
         shader->SetTranslationSuccess();
 
         ShDestruct(compiler);
