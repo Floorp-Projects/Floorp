@@ -65,7 +65,7 @@
           let data = {
             target: this,
             json: {
-              types: ["link-saveable", "link-shareable"],
+              types: ["link-shareable"],
               label: value,
               linkTitle: value,
               linkURL: url
@@ -494,7 +494,7 @@
           let data = {
             target: this,
             json: {
-              types: ["edit-bookmark", "link-saveable", "link-shareable"],
+              types: ["edit-bookmark", "link-shareable"],
               label: this.name,
               linkTitle: this.name,
               linkURL: this.spec
