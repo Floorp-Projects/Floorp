@@ -127,13 +127,9 @@ private:
 
     virtual bool RecvReadPrefs(nsCString* prefs);
 
-    virtual bool RecvTestPermission(const IPC::URI&  aUri,
-                                    const nsCString& aType,
-                                    const PRBool&    aExact,
-                                    PRUint32*        retValue);
-
     void EnsurePrefService();
-    void EnsurePermissionService();
+
+    virtual bool RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions);
 
     virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
@@ -177,7 +173,6 @@ private:
 
     bool mIsAlive;
     nsCOMPtr<nsIPrefServiceInternal> mPrefService; 
-    nsCOMPtr<nsIPermissionManager> mPermissionService; 
 };
 
 } // namespace dom

@@ -81,8 +81,13 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../netwerk/base/src \
 		-I$(srcdir)/../src/base \
 		-I$(srcdir)/../../xpcom/base \
+		-I$(topsrcdir)/extensions/cookie \
 		$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
+
+ifdef MOZ_PERMISSIONS
+DEFINES += -DMOZ_PERMISSIONS
+endif
 
 CXXFLAGS += $(TK_CFLAGS)
