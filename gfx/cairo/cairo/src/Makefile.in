@@ -210,7 +210,9 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += cairo-qt-surface.cpp
+CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) 
 EXPORTS_cairo += cairo-qt.h
+EXPORTS_cairo += $(PDF_EXPORTS)
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 

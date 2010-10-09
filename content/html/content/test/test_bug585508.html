@@ -33,8 +33,6 @@ var methodTestData = [
   [ "get", "post" ],
   // Invalid values.
   [ "", " ", "foo" ],
-  // TODO values, see bug 583289 and bug 583288.
-  [ "delete", "put" ],
 ];
 
 function checkAttribute(form, attrName, idlName, data)
@@ -61,15 +59,6 @@ function checkAttribute(form, attrName, idlName, data)
        "getAttribute should return the content attribute");
     is(form[idlName], data[0][0], "When getting, " + idlName + " IDL attribute " +
        "should return the default value if the content attribute value isn't known");
-  }
-
-  // TODO values.
-  for (i in data[3]) {
-    form.setAttribute(attrName, data[3][i]);
-    is(form.getAttribute(attrName), data[3][i],
-       "getAttribute should return the content attribute");
-    todo_is(form[idlName], data[3][i], "When getting, " + idlName + " IDL attribute " +
-       "should be equal to the content attribute if the value is known");
   }
 }
 

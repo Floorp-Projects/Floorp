@@ -80,8 +80,7 @@ LayerManagerD3D9::Initialize()
   if (gfxInfo) {
     PRInt32 status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-      if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
-          status != nsIGfxInfo::FEATURE_AVAILABLE)
+      if (status != nsIGfxInfo::FEATURE_NO_INFO)
       {
         NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
         return PR_FALSE;
@@ -255,6 +254,17 @@ LayerManagerD3D9::CreateOptimalSurface(const gfxIntSize &aSize,
 #else
   return LayerManager::CreateOptimalSurface(aSize, aFormat);
 #endif
+}
+
+void
+LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
+{
+  // We could choose to abort here when hr == E_OUTOFMEMORY.
+  nsCString msg;
+  msg.Append(aMsg);
+  msg.AppendLiteral(" Error code: ");
+  msg.AppendInt(aCode);
+  NS_WARNING(msg.BeginReading());
 }
 
 void

@@ -54,33 +54,6 @@
 namespace mozilla {
 namespace net {
 
-class ChildChannelEvent
-{
- public:
-  ChildChannelEvent() { MOZ_COUNT_CTOR(Callback); }
-  virtual ~ChildChannelEvent() { MOZ_COUNT_DTOR(Callback); }
-  virtual void Run() = 0;
-};
-
-// Ensures any incoming IPDL msgs are queued during its lifetime, and flushes
-// the queue when it goes out of scope.
-class AutoEventEnqueuer 
-{
-public:
-  AutoEventEnqueuer(HttpChannelChild* channel) : mChannel(channel) 
-  {
-    mChannel->BeginEventQueueing();
-  }
-  ~AutoEventEnqueuer() 
-  { 
-    mChannel->EndEventQueueing();
-    mChannel->FlushEventQueue(); 
-  }
-private:
-    HttpChannelChild *mChannel;
-};
-
-
 //-----------------------------------------------------------------------------
 // HttpChannelChild
 //-----------------------------------------------------------------------------
@@ -93,7 +66,6 @@ HttpChannelChild::HttpChannelChild()
   , mSuspendCount(0)
   , mIPCOpen(false)
   , mKeptAlive(false)
-  , mQueuePhase(PHASE_UNQUEUED)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 }
@@ -206,7 +178,7 @@ HttpChannelChild::FlushEventQueue()
     mQueuePhase = PHASE_UNQUEUED;
 }
 
-class StartRequestEvent : public ChildChannelEvent
+class StartRequestEvent : public ChannelEvent
 {
  public:
   StartRequestEvent(HttpChannelChild* child,
@@ -320,7 +292,7 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
     Cancel(rv);
 }
 
-class DataAvailableEvent : public ChildChannelEvent
+class DataAvailableEvent : public ChannelEvent
 {
  public:
   DataAvailableEvent(HttpChannelChild* child,
@@ -388,7 +360,7 @@ HttpChannelChild::OnDataAvailable(const nsCString& data,
   }
 }
 
-class StopRequestEvent : public ChildChannelEvent
+class StopRequestEvent : public ChannelEvent
 {
  public:
   StopRequestEvent(HttpChannelChild* child,
@@ -450,7 +422,7 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
   }
 }
 
-class ProgressEvent : public ChildChannelEvent
+class ProgressEvent : public ChannelEvent
 {
  public:
   ProgressEvent(HttpChannelChild* child,
@@ -505,7 +477,7 @@ HttpChannelChild::OnProgress(const PRUint64& progress,
   }
 }
 
-class StatusEvent : public ChildChannelEvent
+class StatusEvent : public ChannelEvent
 {
  public:
   StatusEvent(HttpChannelChild* child,
@@ -557,7 +529,7 @@ HttpChannelChild::OnStatus(const nsresult& status,
   }
 }
 
-class CancelEvent : public ChildChannelEvent
+class CancelEvent : public ChannelEvent
 {
  public:
   CancelEvent(HttpChannelChild* child, const nsresult& status)
@@ -608,7 +580,33 @@ HttpChannelChild::OnCancel(const nsresult& status)
     PHttpChannelChild::Send__delete__(this);
 }
 
-class Redirect1Event : public ChildChannelEvent
+class DeleteSelfEvent : public ChannelEvent
+{
+ public:
+  DeleteSelfEvent(HttpChannelChild* child) : mChild(child) {}
+  void Run() { mChild->DeleteSelf(); }
+ private:
+  HttpChannelChild* mChild;
+};
+
+bool
+HttpChannelChild::RecvDeleteSelf()
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new DeleteSelfEvent(this));
+  } else {
+    DeleteSelf();
+  }
+  return true;
+}
+
+void
+HttpChannelChild::DeleteSelf()
+{
+  Send__delete__(this);
+}
+
+class Redirect1Event : public ChannelEvent
 {
  public:
   Redirect1Event(HttpChannelChild* child,
@@ -692,7 +690,7 @@ HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
     OnRedirectVerifyCallback(rv);
 }
 
-class Redirect3Event : public ChildChannelEvent
+class Redirect3Event : public ChannelEvent
 {
  public:
   Redirect3Event(HttpChannelChild* child) : mChild(child) {}

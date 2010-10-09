@@ -358,7 +358,7 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayXULTextBox::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 NS_IMETHODIMP
@@ -956,11 +956,15 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 
     const nsStyleText* textStyle = GetStyleText();
     if (textStyle->mTextShadow) {
+      nsRect bounds(nsPoint(0, 0), GetSize());
+      nsOverflowAreas overflow(bounds, bounds);
+      // Our scrollable overflow is our bounds; our visual overflow may
+      // extend beyond that.
       nsPoint origin(0,0);
       nsRect textRect = CalcTextRect(*aBoxLayoutState.GetRenderingContext(), origin);
-      nsRect overflowRect(nsLayoutUtils::GetTextShadowRectsUnion(textRect, this));
-      overflowRect.UnionRect(overflowRect, nsRect(nsPoint(0, 0), GetSize()));
-      FinishAndStoreOverflow(&overflowRect, GetSize());
+      nsRect &vis = overflow.VisualOverflow();
+      vis.UnionRect(vis, nsLayoutUtils::GetTextShadowRectsUnion(textRect, this));
+      FinishAndStoreOverflow(overflow, GetSize());
     }
     return rv;
 }

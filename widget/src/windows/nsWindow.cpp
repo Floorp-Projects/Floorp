@@ -3719,10 +3719,9 @@ void nsWindow::DispatchPendingEvents()
     // Find the top level window.
     HWND topWnd = GetTopLevelHWND(mWnd);
 
-    // Dispatch pending paints for topWnd and all its descendant windows.
+    // Dispatch pending paints for all topWnd's descendant windows.
     // Note: EnumChildWindows enumerates all descendant windows not just
-    // the children (but not the window itself).
-    nsWindow::DispatchStarvedPaints(topWnd, 0);
+    // it's children.
 #if !defined(WINCE)
     ::EnumChildWindows(topWnd, nsWindow::DispatchStarvedPaints, 0);
 #else
@@ -4906,21 +4905,56 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                   contextMenukey ?
                                     nsMouseEvent::eLeftButton :
                                     nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
+      if (lParam != -1 && !result && mCustomNonClient &&
+          DispatchMouseEvent(NS_MOUSE_MOZHITTEST, wParam, pos,
+                             PR_FALSE, nsMouseEvent::eLeftButton,
+                             MOUSE_INPUT_SOURCE())) {
+        // Blank area hit, throw up the system menu.
+        GetSystemMenu(mWnd, TRUE); // reset the system menu
+        HMENU hMenu = GetSystemMenu(mWnd, FALSE);
+        if (hMenu) {
+          // update the options
+          switch(mSizeMode) {
+            case nsSizeMode_Fullscreen:
+            case nsSizeMode_Maximized:
+              EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
+              EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_GRAYED);
+              EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
+              break;
+            case nsSizeMode_Minimized:
+              EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_GRAYED);
+              break;
+            case nsSizeMode_Normal:
+              EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
+              break;
+          }
+          LPARAM cmd =
+            TrackPopupMenu(hMenu,
+                           (TPM_LEFTBUTTON|TPM_RIGHTBUTTON|
+                            TPM_RETURNCMD|TPM_TOPALIGN|
+                            (mIsRTL ? TPM_RIGHTALIGN : TPM_LEFTALIGN)),
+                           GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
+                           0, mWnd, NULL);
+          if (cmd) {
+            PostMessage(mWnd, WM_SYSCOMMAND, cmd, 0);
+          }
+          result = PR_TRUE;
+        }
+      }
     }
     break;
 
     case WM_LBUTTONDBLCLK:
       result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
       break;
 
     case WM_MBUTTONDOWN:
-    {
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
-    }
-    break;
+      break;
 
     case WM_MBUTTONUP:
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, PR_FALSE,
@@ -4931,6 +4965,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_MBUTTONDBLCLK:
       result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
       break;
 
     case WM_NCMBUTTONDOWN:
@@ -4952,12 +4987,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_RBUTTONDOWN:
-    {
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
-    }
-    break;
+      break;
 
     case WM_RBUTTONUP:
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, PR_FALSE,
@@ -4968,6 +5001,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_RBUTTONDBLCLK:
       result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, PR_FALSE,
                                   nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
       break;
 
     case WM_NCRBUTTONDOWN:
@@ -4988,6 +5022,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
                                   PR_FALSE, nsMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
+      DispatchPendingEvents();
+      break;
 
     case WM_APPCOMMAND:
     {
@@ -5648,7 +5684,6 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
 
   return testResult;
 }
-
 
 #ifndef WINCE
 void nsWindow::PostSleepWakeNotification(const char* aNotification)

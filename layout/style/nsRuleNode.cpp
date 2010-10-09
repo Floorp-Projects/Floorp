@@ -6639,8 +6639,17 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     &marginData.mBorderWidth.mBottom,
     &marginData.mBorderColor.mLeft,
     &marginData.mBorderStyle.mLeft,
-    &marginData.mBorderWidth.mLeft
-    // XXX add &marginData.mBorder{Start,End}{Width,Color,Style}
+    &marginData.mBorderWidth.mLeft,
+    &marginData.mBorderStartColor,
+    &marginData.mBorderStartStyle,
+    &marginData.mBorderStartWidth,
+    &marginData.mBorderEndColor,
+    &marginData.mBorderEndStyle,
+    &marginData.mBorderEndWidth,
+    &marginData.mBorderRadius.mTopLeft,
+    &marginData.mBorderRadius.mTopRight,
+    &marginData.mBorderRadius.mBottomRight,
+    &marginData.mBorderRadius.mBottomLeft
   };
 
   nsCSSValue* paddingValues[] = {

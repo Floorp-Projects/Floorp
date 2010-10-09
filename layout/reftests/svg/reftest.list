@@ -45,6 +45,7 @@ include svg-integration/reftest.list
 == dynamic-filter-contents-01.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-gradient-contents-02.svg pass.svg
+== dynamic-inner-svg-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
 == dynamic-marker-01.svg pass.svg
 == dynamic-marker-02.svg dynamic-marker-02-ref.svg
@@ -195,6 +196,6 @@ random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fai
 == viewport-percent-graphic-user-01.svg pass.svg
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
-fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
+== svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml
 fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg

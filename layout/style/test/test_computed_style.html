@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for miscellaneous computed style issues</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for miscellaneous computed style issues **/
+
+var frame_container = document.getElementById("display");
+var noframe_container = document.getElementById("content");
+
+(function test_bug_595650() {
+  // Test handling of horizontal and vertical percentages for border-radius
+  // and -moz-outline-radius.
+  var p = document.createElement("p");
+  p.setAttribute("style", "width: 256px; height: 128px");
+  p.style.borderTopLeftRadius = "1.5625%"; /* 1/64 == 4px 2px */
+  p.style.borderTopRightRadius = "5px";
+  p.style.borderBottomRightRadius = "5px 3px";
+  p.style.borderBottomLeftRadius = "1.5625% 3.125%" /* 1/64 1/32 == 4px 4px */
+  p.style.MozOutlineRadiusTopleft = "1.5625%"; /* 1/64 == 4px 2px */
+  p.style.MozOutlineRadiusTopright = "5px";
+  p.style.MozOutlineRadiusBottomright = "5px 3px";
+  p.style.MozOutlineRadiusBottomleft = "1.5625% 3.125%" /* 1/64 1/32 == 4px 4px */
+  var cs = getComputedStyle(p, "");
+
+  frame_container.appendChild(p);
+  is(cs.borderTopLeftRadius, "4px 2px",
+     "computed value of % border-radius, with frame");
+  is(cs.borderTopRightRadius, "5px",
+     "computed value of px border-radius, with frame");
+  is(cs.borderBottomRightRadius, "5px 3px",
+     "computed value of px border-radius, with frame");
+  is(cs.borderBottomLeftRadius, "4px",
+     "computed value of % border-radius, with frame");
+  is(cs.MozOutlineRadiusTopleft, "4px 2px",
+     "computed value of % outline-radius, with frame");
+  is(cs.MozOutlineRadiusTopright, "5px",
+     "computed value of px outline-radius, with frame");
+  is(cs.MozOutlineRadiusBottomright, "5px 3px",
+     "computed value of px outline-radius, with frame");
+  is(cs.MozOutlineRadiusBottomleft, "4px",
+     "computed value of % outline-radius, with frame");
+
+  noframe_container.appendChild(p);
+  is(cs.borderTopLeftRadius, "1.5625%",
+     "computed value of % border-radius, without frame");
+  is(cs.borderTopRightRadius, "5px",
+     "computed value of px border-radius, without frame");
+  is(cs.borderBottomRightRadius, "5px 3px",
+     "computed value of px border-radius, without frame");
+  is(cs.borderBottomLeftRadius, "1.5625% 3.125%",
+     "computed value of % border-radius, without frame");
+  is(cs.MozOutlineRadiusTopleft, "1.5625%",
+     "computed value of % outline-radius, without frame");
+  is(cs.MozOutlineRadiusTopright, "5px",
+     "computed value of px outline-radius, without frame");
+  is(cs.MozOutlineRadiusBottomright, "5px 3px",
+     "computed value of px outline-radius, without frame");
+  is(cs.MozOutlineRadiusBottomleft, "1.5625% 3.125%",
+     "computed value of % outline-radius, without frame");
+
+  p.parentNode.removeChild(p);
+})();
+
+(function test_bug_595651() {
+  // Test that clamping of border-radius is reflected in computed style.
+  var p = document.createElement("p");
+  p.setAttribute("style", "width: 190px; height: 90px; border: 5px solid;");
+  p.style.borderRadius = "1000px";
+  var cs = getComputedStyle(p, "");
+
+  frame_container.appendChild(p);
+  is(cs.borderTopLeftRadius, "50px",
+     "computed value of clamped border radius (top left)");
+  is(cs.borderTopRightRadius, "50px",
+     "computed value of clamped border radius (top right)");
+  is(cs.borderBottomRightRadius, "50px",
+     "computed value of clamped border radius (bottom right)");
+  is(cs.borderBottomLeftRadius, "50px",
+     "computed value of clamped border radius (bottom left)");
+
+  p.style.overflowY = "scroll";
+  is(cs.borderTopLeftRadius, "50px",
+     "computed value of clamped border radius (top left, overflow-y)");
+  is(cs.borderTopRightRadius, "5px",
+     "computed value of clamped border radius (top right, overflow-y)");
+  is(cs.borderBottomRightRadius, "5px",
+     "computed value of clamped border radius (bottom right, overflow-y)");
+  is(cs.borderBottomLeftRadius, "50px",
+     "computed value of clamped border radius (bottom left, overflow-y)");
+
+  p.style.overflowY = "hidden";
+  p.style.overflowX = "scroll";
+  is(cs.borderTopLeftRadius, "50px",
+     "computed value of clamped border radius (top left, overflow-x)");
+  is(cs.borderTopRightRadius, "50px",
+     "computed value of clamped border radius (top right, overflow-x)");
+  is(cs.borderBottomRightRadius, "5px",
+     "computed value of clamped border radius (bottom right, overflow-x)");
+  is(cs.borderBottomLeftRadius, "5px",
+     "computed value of clamped border radius (bottom left, overflow-x)");
+
+  p.parentNode.removeChild(p);
+})();
+
+</script>
+</pre>
+</body>
+</html>

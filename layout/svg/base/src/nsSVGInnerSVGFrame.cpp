@@ -157,6 +157,30 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
   nsSVGInnerSVGFrameBase::NotifySVGChanged(aFlags);
 }
 
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                     nsIAtom* aAttribute,
+                                     PRInt32  aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::width ||
+        aAttribute == nsGkAtoms::height ||
+        aAttribute == nsGkAtoms::preserveAspectRatio ||
+        aAttribute == nsGkAtoms::viewBox) {
+      nsSVGUtils::UpdateGraphic(this);
+    } else if (aAttribute == nsGkAtoms::transform ||
+               aAttribute == nsGkAtoms::x ||
+               aAttribute == nsGkAtoms::y) {
+      // make sure our cached transform matrix gets (lazily) updated
+      mCanvasTM = nsnull;
+
+      nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 {

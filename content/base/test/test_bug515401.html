@@ -69,6 +69,14 @@ verifyBase("base/", "from markup");
 // Modify existing <base>
 basehref.href = "base2/";
 verifyBase("base2/", "modify existing");
+is(basehref.href, pre + "base2/", "HTMLBaseElement.href resolves correctly");
+
+// Modify existing <base> to absolute url
+basehref.href = "http://www.example.com/foo/bar.html";
+is(document.baseURI, "http://www.example.com/foo/bar.html", "document base when setting absolute url");
+is(a.href, "http://www.example.com/foo/dest.html", "link href when setting absolute url");
+is(basehref.href, "http://www.example.com/foo/bar.html",
+   "HTMLBaseElement.href resolves correctly when setting absolute url");
 
 // Remove href on existing element
 basehref.removeAttribute("href");

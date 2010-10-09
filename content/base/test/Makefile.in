@@ -422,6 +422,10 @@ _TEST_FILES2 = \
 		file_x-frame-options_page.sjs \
 		test_createHTMLDocument.html \
 		test_bug578096.html \
+		test_bug598877.html \
+		test_bug600466.html \
+		test_bug600468.html \
+		test_bug600471.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

@@ -138,11 +138,8 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                   PRBool                   aConstrainHeight,
                                   PRBool                   aCBWidthChanged,
                                   PRBool                   aCBHeightChanged,
-                                  nsRect*                  aChildBounds)
+                                  nsOverflowAreas*         aOverflowAreas)
 {
-  // Initialize OUT parameter
-  if (aChildBounds)
-    aChildBounds->SetRect(0, 0, 0, 0);
   nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
   PRBool reflowAll = aReflowState.ShouldReflowAllKids();
@@ -157,7 +154,8 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
                           aContainingBlockWidth, aContainingBlockHeight,
-                          aConstrainHeight, kidFrame, kidStatus, aChildBounds);
+                          aConstrainHeight, kidFrame, kidStatus,
+                          aOverflowAreas);
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
       if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus)) {
         // Need a continuation
@@ -184,9 +182,8 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
     }
     else {
       tracker.Skip(kidFrame, reflowStatus);
-      if (aChildBounds) {
-        aChildBounds->UnionRect(*aChildBounds, kidFrame->GetOverflowRect() +
-                                               kidFrame->GetPosition());
+      if (aOverflowAreas) {
+        aDelegatingFrame->ConsiderChildOverflow(*aOverflowAreas, kidFrame);
       }
     }
 
@@ -376,7 +373,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                PRBool                   aConstrainHeight,
                                                nsIFrame*                aKidFrame,
                                                nsReflowStatus&          aStatus,
-                                               nsRect*                  aChildBounds)
+                                               nsOverflowAreas*         aOverflowAreas)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -402,7 +399,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Store position and overflow rect so taht we can invalidate the correct
   // area if the position changes
-  nsRect oldOverflowRect(aKidFrame->GetOverflowRect() +
+  nsRect oldOverflowRect(aKidFrame->GetVisualOverflowRect() +
                          aKidFrame->GetPosition());
   nsRect oldRect = aKidFrame->GetRect();
 
@@ -486,9 +483,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   if (view) {
     // Size and position the view and set its opacity, visibility, content
     // transparency, and clip
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
-                                               view,
-                                               &kidDesiredSize.mOverflowArea);
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
+                                               kidDesiredSize.VisualOverflow());
   } else {
     nsContainerFrame::PositionChildViews(aKidFrame);
   }
@@ -526,9 +522,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
 #endif
 
-  if (aChildBounds)
-    aChildBounds->UnionRect(*aChildBounds, kidDesiredSize.mOverflowArea +
-                                           rect.TopLeft());
+  if (aOverflowAreas) {
+    aOverflowAreas->UnionWith(kidDesiredSize.mOverflowAreas + rect.TopLeft());
+  }
 
   return rv;
 }

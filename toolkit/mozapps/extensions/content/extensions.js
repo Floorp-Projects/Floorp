@@ -235,6 +235,19 @@ var gEventManager = {
     contextMenu.addEventListener("popupshowing", function() {
       var addon = gViewController.currentViewObj.getSelectedAddon();
       contextMenu.setAttribute("addontype", addon.type);
+      
+      var menuSep = document.getElementById("addonitem-menuseparator");
+      var countEnabledMenuCmds = 0;
+      for (var i = 0; i < contextMenu.children.length; i++) {
+        if (contextMenu.children[i].nodeName == "menuitem" && 
+          gViewController.isCommandEnabled(contextMenu.children[i].command)) {
+            countEnabledMenuCmds++;
+        }
+      }
+      
+      // with only one menu item, we hide the menu separator
+      menuSep.hidden = (countEnabledMenuCmds <= 1);
+      
     }, false);
   },
 
@@ -531,6 +544,28 @@ var gViewController = {
   },
 
   commands: {
+    cmd_back: {
+      isEnabled: function() {
+        return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .canGoBack;
+      },
+      doCommand: function() {
+        window.history.back();
+      }
+    },
+
+    cmd_forward: {
+      isEnabled: function() {
+        return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .canGoForward;
+      },
+      doCommand: function() {
+        window.history.forward();
+      }
+    },
+
     cmd_restartApp: {
       isEnabled: function() true,
       doCommand: function() {
@@ -609,7 +644,7 @@ var gViewController = {
 
     cmd_showItemDetails: {
       isEnabled: function(aAddon) {
-        return !!aAddon;
+        return !!aAddon && (gViewController.currentViewObj != gDetailView);
       },
       doCommand: function(aAddon) {
         gViewController.loadView("addons://detail/" +
@@ -1975,6 +2010,16 @@ var gDetailView = {
     }
 
     document.getElementById("detail-prefs").hidden = !aIsRemote && !aAddon.optionsURL;
+    
+    var gridRows = document.querySelectorAll("#detail-grid rows row");
+    for (var i = 0, first = true; i < gridRows.length; ++i) {
+      if (first && window.getComputedStyle(gridRows[i], null).getPropertyValue("display") != "none") {
+        gridRows[i].setAttribute("first-row", true);
+        first = false;
+      } else {
+        gridRows[i].removeAttribute("first-row");
+      }
+    }
 
     this.updateState();
 

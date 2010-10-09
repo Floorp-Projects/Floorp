@@ -85,10 +85,10 @@ protected:
     void InitMetrics();
     void InitMetricsFromATSMetrics();
 
-    // Get width and glyph ID for a character; requires that
-    // mFUnitsConvFactor has been set before this is called
+    // Get width and glyph ID for a character; uses aConvFactor
+    // to convert font units as returned by CG to actual dimensions
     gfxFloat GetCharWidth(CFDataRef aCmap, PRUnichar aUniChar,
-                          PRUint32 *aGlyphID);
+                          PRUint32 *aGlyphID, gfxFloat aConvFactor);
 
     static void DestroyBlobFunc(void* aUserData);
 

@@ -309,64 +309,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
   switch (aID) 
   {
-    case eMetric_WindowTitleHeight:
-      // 2*horizontal scrollbar height
-      aMetric = 28;
-      break;
-    case eMetric_WindowBorderWidth:
-      aMetric = 2;
-      break;
-    case eMetric_WindowBorderHeight:
-      aMetric = 2;
-      break;
-    case eMetric_Widget3DBorder:
-      aMetric = 5;
-      break;
-    case eMetric_TextFieldBorder:
-      aMetric = 3;
-      break;
-    case eMetric_TextFieldHeight:
-      aMetric = 24;
-      break;
-    case eMetric_TextVerticalInsidePadding:
-      aMetric = 0;
-      break;    
-    case eMetric_TextShouldUseVerticalInsidePadding:
-      aMetric = 0;
-      break;
-    case eMetric_TextHorizontalInsideMinimumPadding:
-      aMetric = 3;
-      break;
-    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-      aMetric = 1;
-      break;    
-    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-      aMetric = 10;
-      break;
-    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-      aMetric = 8;
-      break;
-    case eMetric_CheckboxSize:
-      aMetric = 12;
-      break;
-    case eMetric_RadioboxSize:
-      aMetric = 12;
-      break;
-
-    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-      aMetric = 0;
-      break;
-    case eMetric_ListHorizontalInsideMinimumPadding:
-      aMetric = 3;
-      break;
-      
-    case eMetric_ListShouldUseVerticalInsidePadding:
-      aMetric = 0;
-      break;
-    case eMetric_ListVerticalInsidePadding:
-      aMetric = 0;
-      break;
-      
     case eMetric_CaretBlinkTime:
       aMetric = 500;
       break;
@@ -462,30 +404,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   res = NS_OK;
 
   switch (aID) {
-    case eMetricFloat_TextFieldVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_TextFieldHorizontalInsidePadding:
-        aMetric = 0.95f;
-        break;
-    case eMetricFloat_TextAreaVerticalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_TextAreaHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ListVerticalInsidePadding:
-        aMetric = 0.10f;
-        break;
-    case eMetricFloat_ListHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ButtonVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_ButtonHorizontalInsidePadding:
-        aMetric = 0.25f;
-        break;
     case eMetricFloat_IMEUnderlineRelativeSize:
         aMetric = 1.0f;
         break;

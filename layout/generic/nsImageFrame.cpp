@@ -857,7 +857,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
+  aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
   // Now that that's all done, check whether we're resizing... if we are,
@@ -1311,12 +1311,26 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
+  if (ShouldDisplaySelection()) {
+    rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
+                                 nsISelectionDisplay::DISPLAY_IMAGES);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
+}
+
+bool
+nsImageFrame::ShouldDisplaySelection()
+{
   // XXX what on EARTH is this code for?
   nsresult result;
   nsPresContext* presContext = PresContext();
   PRInt16 displaySelection = presContext->PresShell()->GetSelectionFlags();
   if (!(displaySelection & nsISelectionDisplay::DISPLAY_IMAGES))
-    return NS_OK;//no need to check the blue border, we cannot be drawn selected
+    return false;//no need to check the blue border, we cannot be drawn selected
 //insert hook here for image selection drawing
 #if IMAGE_EDITOR_CHECK
   //check to see if this frame is in an editor context
@@ -1354,7 +1368,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                 range->GetEndContainer(getter_AddRefs(rangeNode));
                 range->GetEndOffset(&rangeOffset);
                 if ((rangeNode == parentNode) && (rangeOffset == (thisOffset +1))) //+1 since that would mean this whole content is selected only
-                  return NS_OK; //do not allow nsFrame do draw any further selection
+                  return false; //do not allow nsFrame do draw any further selection
               }
             }
           }
@@ -1363,14 +1377,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 #endif
-  
-  rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
-                               nsISelectionDisplay::DISPLAY_IMAGES);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
-
-  return NS_OK;
+  return true;
 }
 
 NS_IMETHODIMP

@@ -505,38 +505,6 @@ private:
     static guint DragMotionTimerCallback (gpointer aClosure);
     static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
 
-    /* Key Down event is DOM Virtual Key driven, needs 256 bits. */
-    PRUint32 mKeyDownFlags[8];
-
-    /* Helper methods for DOM Key Down event suppression. */
-    PRUint32* GetFlagWord32(PRUint32 aKeyCode, PRUint32* aMask) {
-        /* Mozilla DOM Virtual Key Code is from 0 to 224. */
-        NS_ASSERTION((aKeyCode <= 0xFF), "Invalid DOM Key Code");
-        aKeyCode &= 0xFF;
-
-        /* 32 = 2^5 = 0x20 */
-        *aMask = PRUint32(1) << (aKeyCode & 0x1F);
-        return &mKeyDownFlags[(aKeyCode >> 5)];
-    }
-
-    PRBool IsKeyDown(PRUint32 aKeyCode) {
-        PRUint32 mask;
-        PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
-        return ((*flag) & mask) != 0;
-    }
-
-    void SetKeyDownFlag(PRUint32 aKeyCode) {
-        PRUint32 mask;
-        PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
-        *flag |= mask;
-    }
-
-    void ClearKeyDownFlag(PRUint32 aKeyCode) {
-        PRUint32 mask;
-        PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
-        *flag &= ~mask;
-    }
-
     void DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent);
 
     /**
