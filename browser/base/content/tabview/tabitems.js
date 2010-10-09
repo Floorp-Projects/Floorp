@@ -525,12 +525,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var tab = this.tab;
 
       function onZoomDone() {
-        TabItems.resumePainting();
-
-        $tabEl
-          .css(orig.css())
-          .removeClass("front");
-
         UI.goToTab(tab);
 
         if (isNewBlankTab)
@@ -547,9 +541,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // right animation function so that you don't see a change in percieved
       // animation speed.
       var scaleCheat = 1.7;
-      TabItems.pausePainting();
-      $tabEl
-        .addClass("front")
+
+      let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
+      if (animateZoom) {
+        TabItems.pausePainting();
+        $tabEl.addClass("front")
         .animate({
           top:    orig.top    * (1 - 1/scaleCheat),
           left:   orig.left   * (1 - 1/scaleCheat),
@@ -558,8 +554,18 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         }, {
           duration: 230,
           easing: 'fast',
-          complete: onZoomDone
+          complete: function() {
+            TabItems.resumePainting();
+    
+            $tabEl
+              .css(orig.css())
+              .removeClass("front");
+
+            onZoomDone();
+          }
         });
+      } else
+        setTimeout(onZoomDone, 0);
     }
   },
 
@@ -577,28 +583,36 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     box.width -= this.sizeExtra.x;
     box.height -= this.sizeExtra.y;
 
-    TabItems.pausePainting();
-
     var self = this;
-    $tab.animate({
-      left: box.left,
-      top: box.top,
-      width: box.width,
-      height: box.height
-    }, {
-      duration: 300,
-      easing: 'cubic-bezier', // note that this is legal easing, even without parameters
-      complete: function() { // note that this will happen on the DOM thread
-        self.setZoomPrep(false);
+    
+    let onZoomDone = function onZoomDone() {
+      self.setZoomPrep(false);
 
-        GroupItems.setActiveOrphanTab(null);
+      GroupItems.setActiveOrphanTab(null);
 
-        TabItems.resumePainting();
-
-        if (typeof complete == "function")
-          complete();
-      }
-    });
+      if (typeof complete == "function")
+        complete();
+    };
+    
+    let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
+    if (animateZoom) {
+      TabItems.pausePainting();
+      $tab.animate({
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        height: box.height
+      }, {
+        duration: 300,
+        easing: 'cubic-bezier', // note that this is legal easing, even without parameters
+        complete: function() {
+          TabItems.resumePainting();
+          onZoomDone();
+        }
+      });
+    } else {
+      onZoomDone();
+    }
   },
 
   // ----------
@@ -607,11 +621,13 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // where the tab fills a large portion of the screen in anticipation of
   // the zoom out animation.
   setZoomPrep: function TabItem_setZoomPrep(value) {
+    let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
+
     var $div = iQ(this.container);
     var data;
 
     var box = this.getBounds();
-    if (value) {
+    if (value && animateZoom) {
       this._zoomPrep = true;
 
       // The divide by two part here is a clever way to speed up the zoom-out code.
