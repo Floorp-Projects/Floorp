@@ -129,10 +129,6 @@ struct JSStackFrame
     void                *hookData_;     /* closure returned by call hook */
     void                *annotation_;   /* perhaps remove with bug 546848 */
 
-#if JS_BITS_PER_WORD == 32
-    void                *padding;
-#endif
-
     friend class js::StackSpace;
     friend class js::FrameRegsIter;
     friend struct JSContext;
