@@ -446,16 +446,19 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f)
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
-    MakeContextCurrent();
-    gl->fReadPixels(0, 0, mWidth, mHeight,
-                    LOCAL_GL_BGRA,
-                    LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
-                    surf->Data());
-
+    gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
     gfxUtils::PremultiplyImageSurface(surf);
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
     pat->SetFilter(f);
+
+    // Pixels from ReadPixels will be "upside down" compared to
+    // what cairo wants, so draw with a y-flip and a translte to
+    // flip them.
+    gfxMatrix m;
+    m.Translate(gfxPoint(0.0, mHeight));
+    m.Scale(1.0, -1.0);
+    pat->SetMatrix(m);
 
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
