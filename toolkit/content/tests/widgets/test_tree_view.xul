@@ -25,9 +25,9 @@ var view =
 {
   value: "",
   rowCount: 8,
-  getCellText: function(row, column) { return ((typeof treeData) != "undefined") ? treeData[row % 4][column.index] : ""; },
+  getCellText: function(row, column) { return treeData[row % 4][column.index]; },
   getCellValue: function(row, column) { return this.value; },
-  setCellText: function(row, column, val) { if ((typeof treeData) != "undefined") treeData[row % 4][column.index] = val; },
+  setCellText: function(row, column, val) { treeData[row % 4][column.index] = val; },
   setCellValue: function(row, column, val) { this.value = val; },
   setTree: function(tree) { this.tree = tree; },
   isContainer: function(row) { return false; },
@@ -37,7 +37,7 @@ var view =
   isSorted: function(row) { return false; },
   isSelectable: function(row, column) { return true; },
   isEditable: function(row, column) { return row != 2 || column.index != 1; },
-  getProgressMode: function(row, column) { return ((typeof Components) != "undefined") ? Components.interfaces.nsITreeView.PROGRESS_NORMAL : null; },
+  getProgressMode: function(row, column) { return Components.interfaces.nsITreeView.PROGRESS_NORMAL; },
   getParentIndex: function(row, column) { return -1; },
   getLevel: function(row) { return 0; },
   hasNextSibling: function(row, column) { return row != this.rowCount - 1; },
@@ -47,9 +47,6 @@ var view =
   getCellProperties: function(row, column, props) { },
   getColumnProperties: function(column, props)
   {
-    if ((typeof netscape) == "undefined")
-      return;
-
     if (!column.index) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       var atomService = Components.classes["@mozilla.org/atom-service;1"].
@@ -63,9 +60,6 @@ var view =
 function getCustomTreeViewCellInfo()
 {
   var obj = { rows: [] };
-
-  if ((typeof view) == "undefined" || (typeof treeData) == "undefined")
-    return;
 
   for (var row = 0; row < view.rowCount; row++) {
     var cellInfo = [ ];
