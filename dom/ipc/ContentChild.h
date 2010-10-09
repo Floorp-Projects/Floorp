@@ -112,6 +112,8 @@ public:
 
     virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere);
 
+    virtual bool RecvAddPermission(const IPC::Permission& permission);
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);

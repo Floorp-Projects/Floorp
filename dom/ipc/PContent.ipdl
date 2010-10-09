@@ -52,6 +52,7 @@ using ChromePackage;
 using ResourceMapping;
 using OverrideMapping;
 using IPC::URI;
+using IPC::Permission;
 
 namespace mozilla {
 namespace dom {
@@ -81,6 +82,9 @@ child:
 
     GeolocationUpdate(GeoPosition somewhere);
 
+    // nsIPermissionManager messages
+    AddPermission(Permission permission);
+
 parent:
     PNecko();
 
@@ -94,9 +98,6 @@ parent:
 
     // PrefService messages
     sync ReadPrefs() returns (nsCString retValue);
-
-    // PermissionsManager messages
-    sync TestPermission(URI uri, nsCString type, PRBool exact) returns (PRUint32 retValue);
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
@@ -119,6 +120,9 @@ parent:
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                 PRUint32 lineNumber, PRUint32 colNumber, PRUint32 flags,
                 nsCString category); 
+
+    // nsIPermissionManager messages
+    sync ReadPermissions() returns (Permission[] permissions);
 
 both:
      AsyncMessage(nsString aMessage, nsString aJSON);
