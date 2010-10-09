@@ -73,6 +73,7 @@ CPPSRCS	= \
 		nsDragService.cpp \
 		nsNativeThemeQt.cpp \
 		mozqwidget.cpp \
+		mozSwipeGesture.cpp \
 		nsSound.cpp \
 		nsFilePicker.cpp \
 		nsPrintOptionsQt.cpp \
