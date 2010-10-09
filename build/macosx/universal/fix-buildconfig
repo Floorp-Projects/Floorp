@@ -126,9 +126,9 @@ sub fixBuildconfig($$$) {
   # Insert a <hr> between the two files.
   push (@linesNew, '<hr> </hr>');
 
-  # Copy the second file's content beginning after its leading <h1> and <p>.
+  # Copy the second file's content beginning after its leading <h1>.
   while ($line = shift(@lines2)) {
-    if ($line eq '<p> </p>') {
+    if ($line eq '<h1>about:buildconfig</h1>') {
       last;
     }
   }
