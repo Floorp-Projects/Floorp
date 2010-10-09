@@ -326,7 +326,10 @@ Item.prototype = {
   // ----------
   // Function: pushAway
   // Pushes all other items away so none overlap this Item.
-  pushAway: function Item_pushAway() {
+  //
+  // Parameters:
+  //  immediately - boolean for doing the pushAway without animation
+  pushAway: function Item_pushAway(immediately) {
     var buffer = Math.floor(Items.defaultGutter / 2);
 
     var items = Items.getTopLevelItems();
@@ -499,7 +502,7 @@ Item.prototype = {
       var data = item.pushAwayData;
       var bounds = data.bounds;
       if (!bounds.equals(data.startBounds)) {
-        item.setBounds(bounds);
+        item.setBounds(bounds, immediately);
       }
     });
   },
@@ -558,7 +561,10 @@ Item.prototype = {
   // ----------
   // Function: snap
   // The snap function used during groupItem creation via drag-out
-  snap: function Item_snap() {
+  //
+  // Parameters:
+  //  immediately - bool for having the drag do the final positioning without animation
+  snap: function Item_snap(immediately) {
     // make the snapping work with a wider range!
     var defaultRadius = Trenches.defaultRadius;
     Trenches.defaultRadius = 2 * defaultRadius; // bump up from 10 to 20!
@@ -567,7 +573,7 @@ Item.prototype = {
     var FauxDragInfo = new Drag(this,event,false,true);
     // false == isDragging, true == isFauxDrag
     FauxDragInfo.snap('none',false);
-    FauxDragInfo.stop();
+    FauxDragInfo.stop(immediately);
 
     Trenches.defaultRadius = defaultRadius;
   },
@@ -730,13 +736,11 @@ Item.prototype = {
   droppable: function Item_droppable(value) {
     try {
       var $container = iQ(this.container);
-      if (value)
-        $container.addClass('iq-droppable');
-      else {
+      if (value) {
         Utils.assert(this.dropOptions, 'dropOptions');
-
+        $container.addClass('iq-droppable');
+      } else
         $container.removeClass('iq-droppable');
-      }
     } catch(e) {
       Utils.log(e);
     }

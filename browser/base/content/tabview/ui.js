@@ -249,13 +249,17 @@ let UI = {
     GroupItems.groupItems.forEach(function(group) {
       group.close();
     });
-
-    let groupItem = new GroupItem([], {bounds: box});
+    
+    let options = {
+      bounds: box,
+      immediately: true
+    };
+    let groupItem = new GroupItem([], options);
     let items = TabItems.getItems();
     items.forEach(function(item) {
       if (item.parent)
         item.parent.remove(item);
-      groupItem.add(item);
+      groupItem.add(item, null, {immediately: true});
     });
     
     if (firstTime) {
@@ -888,6 +892,9 @@ let UI = {
   _resize: function UI__resize(force) {
     if (typeof force == "undefined")
       force = false;
+
+    if (!this._pageBounds)
+      return;
 
     // If TabView isn't focused and is not showing, don't perform a resize.
     // This resize really slows things down.
