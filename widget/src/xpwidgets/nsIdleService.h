@@ -215,6 +215,12 @@ private:
    * Callback function that is called when the internal timer expires.
    */
   static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
+
+  /**
+   * Whether the idle time calculated in the last call to GetIdleTime is
+   * actually valid (see nsIdleService.idl - we return 0 when it isn't).
+   */
+  bool mPolledIdleTimeIsValid;
 };
 
 #endif // nsIdleService_h__
