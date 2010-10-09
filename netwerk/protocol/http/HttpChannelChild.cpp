@@ -662,9 +662,8 @@ HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
     newHttpChannelChild->HttpBaseChannel::Init(uri, mCaps,
                                                mConnectionInfo->ProxyInfo());
   if (NS_FAILED(rv)) {
-    // Cancel the channel and veto the redirect.
-    Cancel(rv);
-    SendRedirect2Result(rv, mRedirectChannelChild->mRequestHeaders);
+    // Veto redirect.  nsHttpChannel decides to cancel or continue. 
+    SendRedirect2Result(rv, newHttpChannelChild->mRequestHeaders);
     return;
   }
 
@@ -675,9 +674,8 @@ HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
   PRBool preserveMethod = (mResponseHead->Status() == 307);
   rv = SetupReplacementChannel(uri, newHttpChannelChild, preserveMethod);
   if (NS_FAILED(rv)) {
-    // Cancel the channel and veto the redirect.
-    Cancel(rv);
-    SendRedirect2Result(rv, mRedirectChannelChild->mRequestHeaders);
+    // Veto redirect.  nsHttpChannel decides to cancel or continue.
+    SendRedirect2Result(rv, newHttpChannelChild->mRequestHeaders);
     return;
   }
 
@@ -723,7 +721,10 @@ HttpChannelChild::Redirect3Complete()
   rv = mRedirectChannelChild->CompleteRedirectSetup(mListener, 
                                                     mListenerContext);
   if (NS_FAILED(rv))
-    Cancel(rv);
+    NS_WARNING("CompleteRedirectSetup failed, HttpChannelChild already open?");
+
+  // Release ref to new channel.
+  mRedirectChannelChild = nsnull;
 }
 
 nsresult
@@ -734,6 +735,13 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+  /*
+   * No need to check for cancel: we don't get here if nsHttpChannel canceled
+   * before AsyncOpen(); if it's canceled after that, OnStart/Stop will just
+   * get called with error code as usual.  So just setup mListener and make the
+   * channel reflect AsyncOpen'ed state.
+   */
 
   // notify "http-on-modify-request" observers
   gHttpHandler->OnModifyRequest(this);
