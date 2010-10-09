@@ -48,12 +48,15 @@
 //
 // Parameters:
 //   tab - a xul:tab
-function TabItem(tab) {
+function TabItem(tab, options) {
   Utils.assert(tab, "tab");
 
   this.tab = tab;
   // register this as the tab's tabItem
   this.tab.tabItem = this;
+
+  if (!options)
+    options = {};
 
   // ___ set up div
   var $div = iQ('<div>')
@@ -95,6 +98,10 @@ function TabItem(tab) {
 
   // ___ superclass setup
   this._init($div[0]);
+
+  // ___ reconnect to data from Storage
+  this._hasBeenDrawn = false;
+  let reconnected = TabItems.reconnect(this);
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
@@ -163,7 +170,6 @@ function TabItem(tab) {
   };
 
   this.draggable();
-  this.droppable(true);
 
   // ___ more div setup
   $div.mousedown(function(e) {
@@ -193,17 +199,20 @@ function TabItem(tab) {
     .addClass('expander')
     .appendTo($div);
 
-  // ___ additional setup
-  this.reconnected = false;
-  this._hasBeenDrawn = false;
-  this.setResizable(true);
-
   this._updateDebugBounds();
 
   TabItems.register(this);
-
-  if (!TabItems.reconnect(this))
-    GroupItems.newTab(this);
+  
+  if (!this.reconnected) {
+    GroupItems.newTab(this, options);
+  }
+  
+  // tabs which were not reconnected at all or were not immediately added
+  // to a group get the same treatment.
+  if (!this.reconnected || (reconnected && !reconnected.addedToGroup) ) {
+    this.setResizable(true, options.immediately);
+    this.droppable(true);
+  }
 };
 
 TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
@@ -363,9 +372,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       if (css.fontSize && !this.inStack()) {
         if (css.fontSize < fontSizeRange.min)
-          $title.fadeOut();
+          immediately ? $title.hide() : $title.fadeOut();
         else
-          $title.fadeIn();
+          immediately ? $title.show() : $title.fadeIn();
       }
 
       if (css.width) {
@@ -469,17 +478,16 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // If value is true, makes this item resizable, otherwise non-resizable.
   // Shows/hides a visible resize handle as appropriate.
-  setResizable: function TabItem_setResizable(value) {
+  setResizable: function TabItem_setResizable(value, immediately) {
     var $resizer = iQ('.expander', this.container);
 
-    this.resizeOptions.minWidth = TabItems.minTabWidth;
-    this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
-
     if (value) {
-      $resizer.fadeIn();
+      this.resizeOptions.minWidth = TabItems.minTabWidth;
+      this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
+      immediately ? $resizer.show() : $resizer.fadeIn();
       this.resizable(true);
     } else {
-      $resizer.fadeOut();
+      immediately ? $resizer.hide() : $resizer.fadeOut();
       this.resizable(false);
     }
   },
@@ -710,7 +718,7 @@ let TabItems = {
       if (tab.ownerDocument.defaultView != gWindow || tab.pinned)
         return;
 
-      self.link(tab);
+      self.link(tab, {immediately: true});
       self.update(tab);
     });
   },
@@ -833,12 +841,12 @@ let TabItems = {
   // ----------
   // Function: link
   // Takes in a xul:tab, creates a TabItem for it and adds it to the scene. 
-  link: function TabItems_link(tab){
+  link: function TabItems_link(tab, options) {
     try {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(!tab.pinned, "shouldn't be an app tab");
       Utils.assertThrow(!tab.tabItem, "shouldn't already be linked");
-      new TabItem(tab); // sets tab.tabItem to itself
+      new TabItem(tab, options); // sets tab.tabItem to itself
     } catch(e) {
       Utils.log(e);
     }
@@ -1013,7 +1021,7 @@ let TabItems = {
       let tabData = Storage.getTabData(item.tab);
       if (tabData && this.storageSanity(tabData)) {
         if (item.parent)
-          item.parent.remove(item);
+          item.parent.remove(item, {immediately: true});
 
         item.setBounds(tabData.bounds, true);
 
@@ -1023,7 +1031,7 @@ let TabItems = {
         if (tabData.groupID) {
           var groupItem = GroupItems.groupItem(tabData.groupID);
           if (groupItem) {
-            groupItem.add(item);
+            groupItem.add(item, null, {immediately: true});
 
             // if it matches the selected tab or no active tab and the browser 
             // tab is hidden, the active group item would be set.
@@ -1045,7 +1053,7 @@ let TabItems = {
         }
 
         item.reconnected = true;
-        found = true;
+        found = {addedToGroup: tabData.groupID};
       } else {
         // if it's not a blank tab or it belongs to a group, it would mean 
         // the item is reconnected.
