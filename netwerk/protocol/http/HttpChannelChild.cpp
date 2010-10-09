@@ -663,7 +663,7 @@ HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
                                                mConnectionInfo->ProxyInfo());
   if (NS_FAILED(rv)) {
     // Veto redirect.  nsHttpChannel decides to cancel or continue. 
-    SendRedirect2Result(rv, newHttpChannelChild->mRequestHeaders);
+    SendRedirect2Verify(rv, newHttpChannelChild->mRequestHeaders);
     return;
   }
 
@@ -675,7 +675,7 @@ HttpChannelChild::Redirect1Begin(PHttpChannelChild* newChannel,
   rv = SetupReplacementChannel(uri, newHttpChannelChild, preserveMethod);
   if (NS_FAILED(rv)) {
     // Veto redirect.  nsHttpChannel decides to cancel or continue.
-    SendRedirect2Result(rv, newHttpChannelChild->mRequestHeaders);
+    SendRedirect2Verify(rv, newHttpChannelChild->mRequestHeaders);
     return;
   }
 
@@ -743,9 +743,6 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
    * channel reflect AsyncOpen'ed state.
    */
 
-  // notify "http-on-modify-request" observers
-  gHttpHandler->OnModifyRequest(this);
-
   mIsPending = PR_TRUE;
   mWasOpened = PR_TRUE;
   mListener = listener;
@@ -773,7 +770,12 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   // Must not be called until after redirect observers called.
   mRedirectChannelChild->SetOriginalURI(mRedirectOriginalURI);
 
-  return SendRedirect2Result(result, mRedirectChannelChild->mRequestHeaders);
+  // After we verify redirect, nsHttpChannel may hit the network: must give
+  // "http-on-modify-request" observers the chance to cancel before that.
+  if (NS_SUCCEEDED(result))
+    gHttpHandler->OnModifyRequest(mRedirectChannelChild);
+
+  return SendRedirect2Verify(result, mRedirectChannelChild->mRequestHeaders);
 }
 
 //-----------------------------------------------------------------------------
