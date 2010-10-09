@@ -233,7 +233,7 @@ HttpChannelParentListener::AsyncOnChannelRedirect(
                                                responseHead ? *responseHead 
                                                             : nsHttpResponseHead());
 
-  // mActiveChannel gets the response in RecvRedirect2Result and forwards it
+  // mActiveChannel gets the response in RecvRedirect2Verify and forwards it
   // to this wrapper through OnContentRedirectResultReceived
 
   return NS_OK;

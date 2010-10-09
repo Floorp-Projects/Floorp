@@ -255,7 +255,7 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
 }
 
 bool
-HttpChannelParent::RecvRedirect2Result(const nsresult& result, 
+HttpChannelParent::RecvRedirect2Verify(const nsresult& result, 
                                        const RequestHeaderTuples& changedHeaders)
 {
   if (mChannelListener)

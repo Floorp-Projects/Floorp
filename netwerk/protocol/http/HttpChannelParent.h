@@ -103,7 +103,7 @@ protected:
   virtual bool RecvSuspend();
   virtual bool RecvResume();
   virtual bool RecvCancel(const nsresult& status);
-  virtual bool RecvRedirect2Result(const nsresult& result,
+  virtual bool RecvRedirect2Verify(const nsresult& result,
                                    const RequestHeaderTuples& changedHeaders);
   virtual bool RecvUpdateAssociatedContentSecurity(const PRInt32& high,
                                                    const PRInt32& low,
