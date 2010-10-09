@@ -77,6 +77,11 @@
 
 #include "nsIGeolocationProvider.h"
 
+#ifdef MOZ_PERMISSIONS
+#include "nsPermission.h"
+#include "nsPermissionManager.h"
+#endif
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -433,6 +438,28 @@ ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
   }
   nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
   gs->Update(position);
+  return true;
+}
+
+bool
+ContentChild::RecvAddPermission(const IPC::Permission& permission)
+{
+#if MOZ_PERMISSIONS
+  nsPermissionManager *permissionManager =
+    (nsPermissionManager*)nsPermissionManager::GetSingleton();
+  NS_ABORT_IF_FALSE(permissionManager, 
+                   "We have no permissionManager in the Content process !");
+
+  permissionManager->AddInternal(nsCString(permission.host),
+                                 nsCString(permission.type),
+                                 permission.capability,
+                                 0,
+                                 permission.expireType,
+                                 permission.expireTime,
+                                 nsPermissionManager::eNotify,
+                                 nsPermissionManager::eNoDBOperation);
+#endif
+
   return true;
 }
 

@@ -64,6 +64,11 @@
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
 
+#ifdef MOZ_PERMISSIONS
+#include "nsPermission.h"
+#include "nsPermissionManager.h"
+#endif
+
 #include "mozilla/dom/ExternalHelperAppParent.h"
 
 using namespace mozilla::ipc;
@@ -198,23 +203,6 @@ ContentParent::RecvReadPrefs(nsCString* prefs)
     return true;
 }
 
-bool
-ContentParent::RecvTestPermission(const IPC::URI&  aUri,
-                                   const nsCString& aType,
-                                   const PRBool&    aExact,
-                                   PRUint32*        retValue)
-{
-    EnsurePermissionService();
-
-    nsCOMPtr<nsIURI> uri(aUri);
-    if (aExact) {
-        mPermissionService->TestExactPermission(uri, aType.get(), retValue);
-    } else {
-        mPermissionService->TestPermission(uri, aType.get(), retValue);
-    }
-    return true;
-}
-
 void
 ContentParent::EnsurePrefService()
 {
@@ -226,16 +214,47 @@ ContentParent::EnsurePrefService()
     }
 }
 
-void
-ContentParent::EnsurePermissionService()
+bool
+ContentParent::RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions)
 {
-    nsresult rv;
-    if (!mPermissionService) {
-        mPermissionService = do_GetService(
-            NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), 
-                     "We lost permissionService in the Chrome process !");
+#ifdef MOZ_PERMISSIONS
+    nsPermissionManager *permissionManager =
+        (nsPermissionManager*)nsPermissionManager::GetSingleton();
+    NS_ABORT_IF_FALSE(permissionManager,
+                 "We have no permissionManager in the Chrome process !");
+
+    nsISimpleEnumerator *enumerator;
+    nsresult rv = permissionManager->GetEnumerator(&enumerator);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
+    while(1) {
+        PRBool hasMore;
+        enumerator->HasMoreElements(&hasMore);
+        if (!hasMore)
+            break;
+        nsISupports *supp;
+        enumerator->GetNext((nsISupports**)&supp);
+        nsCOMPtr<nsIPermission> perm = do_QueryInterface(supp);
+
+        nsCString host;
+        perm->GetHost(host);
+        nsCString type;
+        perm->GetType(type);
+        PRUint32 capability;
+        perm->GetCapability(&capability);
+        PRUint32 expireType;
+        perm->GetExpireType(&expireType);
+        PRInt64 expireTime;
+        perm->GetExpireTime(&expireTime);
+
+        aPermissions->AppendElement(IPC::Permission(host, type, capability,
+                                                    expireType, expireTime));
     }
+
+    // Ask for future changes
+    permissionManager->ChildRequestPermissions();
+#endif
+
+    return true;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
