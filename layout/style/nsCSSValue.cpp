@@ -1279,6 +1279,9 @@ nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
                          nsIDocument* aDocument)
   : URL(aURI, aString, aReferrer, aOriginPrincipal)
 {
+  if (aDocument->GetOriginalDocument()) {
+    aDocument = aDocument->GetOriginalDocument();
+  }
   if (mURI &&
       nsContentUtils::CanLoadImage(mURI, aDocument, aDocument,
                                    aOriginPrincipal)) {
