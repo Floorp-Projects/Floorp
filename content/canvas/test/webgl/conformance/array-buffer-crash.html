@@ -17,8 +17,16 @@ found in the LICENSE file.
 
 description('Test ArrayBuffer.byteLength');
 
-<!-- The following used to cause a crash in Chrome -->
-new ArrayBuffer().byteLength;
+// The following used to cause a crash in Chrome.
+
+// Note that because the argument to ArrayBuffer's constructor is not
+// optional, an implementation might throw an exception on the expression
+// below rather than implicitly passing undefined. Either way is acceptable
+// from the point of view of this test, but implementations must not crash.
+try {
+  new ArrayBuffer().byteLength;
+} catch (e) {
+}
 
 testPassed("new ArrayBuffer().byteLength did not crash");
 successfullyParsed = true;
