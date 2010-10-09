@@ -272,7 +272,10 @@ Drag.prototype = {
   // ----------
   // Function: stop
   // Called in response to an <Item> draggable "stop" event.
-  stop: function Drag_stop() {
+  //
+  // Parameters:
+  //  immediately - bool for doing the pushAway immediately, without animation
+  stop: function Drag_stop(immediately) {
     Trenches.hideGuides();
     this.item.isDragging = false;
 
@@ -288,7 +291,7 @@ Drag.prototype = {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
 
-      this.item.pushAway();
+      this.item.pushAway(immediately);
     }
 
     Trenches.disactivate();
