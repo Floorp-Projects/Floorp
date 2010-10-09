@@ -661,28 +661,30 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationE
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> child = mChild;
-  nsMutationGuard::DidMutate();
-  mozAutoDocUpdate updateBatch(GetOwnerDoc(), UPDATE_CONTENT_MODEL, aNotify);
-  nsMutationGuard guard;
+  {
+    nsCOMPtr<nsIContent> child = mChild;
+    nsMutationGuard::DidMutate();
+    mozAutoDocUpdate updateBatch(GetOwnerDoc(), UPDATE_CONTENT_MODEL, aNotify);
+    nsMutationGuard guard;
+  
+    mozAutoSubtreeModified subtree(nsnull, nsnull);
+    if (aNotify &&
+        nsContentUtils::HasMutationListeners(mChild,
+                                             NS_EVENT_BITS_MUTATION_NODEREMOVED,
+                                             this)) {
+      mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
+      mutation.mRelatedNode =
+        do_QueryInterface(static_cast<nsIAttribute*>(this));
+      subtree.UpdateTarget(GetOwnerDoc(), this);
+      nsEventDispatcher::Dispatch(mChild, nsnull, &mutation);
+    }
+    if (guard.Mutated(0) && mChild != child) {
+      return NS_OK;
+    }
 
-  mozAutoSubtreeModified subtree(nsnull, nsnull);
-  if (aNotify &&
-      nsContentUtils::HasMutationListeners(mChild,
-                                           NS_EVENT_BITS_MUTATION_NODEREMOVED,
-                                           this)) {
-    mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
-    mutation.mRelatedNode =
-      do_QueryInterface(static_cast<nsIAttribute*>(this));
-    subtree.UpdateTarget(GetOwnerDoc(), this);
-    nsEventDispatcher::Dispatch(mChild, nsnull, &mutation);
+    doRemoveChild();
   }
-  if (guard.Mutated(0) && mChild != child) {
-    return NS_OK;
-  }
-
-  doRemoveChild();
 
   nsString nullString;
   SetDOMStringToNull(nullString);
