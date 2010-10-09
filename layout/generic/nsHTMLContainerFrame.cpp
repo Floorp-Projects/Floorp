@@ -152,7 +152,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 class nsDisplayTextShadow : public nsDisplayItem {
@@ -324,7 +324,7 @@ nsRect
 nsDisplayTextShadow::GetBounds(nsDisplayListBuilder* aBuilder)
 {
   // Shadows are always painted in the overflow rect
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 nsresult

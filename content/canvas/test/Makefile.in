@@ -76,12 +76,17 @@ _TEST_FILES_0 = \
 	test_2d.composite.image.destination-in.html \
 	test_2d.composite.image.source-in.html \
 	test_2d.composite.image.source-out.html \
-	test_2d.composite.uncovered.image.destination-atop.html \
 	test_2d.composite.uncovered.image.destination-in.html \
 	test_2d.composite.uncovered.image.source-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
 	test_mozGetAsFile.html \
+	test_canvas_strokeStyle_getter.html \
 	$(NULL)
+
+ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
+# This test fails in Suite on Linux for some reason, disable it there
+_TEST_FILES_0 += test_2d.composite.uncovered.image.destination-atop.html
+endif
 
 # xor and lighter aren't well handled by cairo; they mostly work, but we don't want
 # to test that

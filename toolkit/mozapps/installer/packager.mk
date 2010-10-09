@@ -597,6 +597,7 @@ upload:
 		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
 		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt) \
+		$(call QUOTED_WILDCARD,$(DIST)/$(LANGPACK)) \
 		$(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 ifndef MOZ_PKG_SRCDIR

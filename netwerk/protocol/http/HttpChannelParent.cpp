@@ -188,6 +188,11 @@ HttpChannelParent::RecvSetPriority(const PRUint16& priority)
 {
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   httpChan->SetPriority(priority);
+
+  if (mChannelListener && mChannelListener->mRedirectChannel &&
+      mChannelListener->mRedirectChannel != this)
+    return mChannelListener->mRedirectChannel->RecvSetPriority(priority);
+  
   return true;
 }
 

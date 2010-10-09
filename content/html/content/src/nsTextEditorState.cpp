@@ -584,6 +584,8 @@ public:
    */
   void SetFrame(nsTextControlFrame *aFrame){mFrame = aFrame;}
 
+  void SettingValue(PRBool aValue) { mSettingValue = aValue; }
+
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSISELECTIONLISTENER
@@ -620,6 +622,11 @@ protected:
    * notification (when this state changes we update undo and redo menus)
    */
   PRPackedBool    mHadRedoItems;
+  /**
+   * Whether we're in the process of a SetValue call, and should therefore
+   * refrain from calling OnValueChanged.
+   */
+  PRPackedBool mSettingValue;
 };
 
 
@@ -633,6 +640,7 @@ nsTextInputListener::nsTextInputListener(nsITextControlElement* aTxtCtrlElement)
 , mSelectionWasCollapsed(PR_TRUE)
 , mHadUndoItems(PR_FALSE)
 , mHadRedoItems(PR_FALSE)
+, mSettingValue(PR_FALSE)
 {
 }
 
@@ -842,7 +850,9 @@ nsTextInputListener::EditAction()
   // Fire input event
   mFrame->FireOnInput();
 
-  mTxtCtrlElement->OnValueChanged(PR_TRUE);
+  if (!mSettingValue) {
+    mTxtCtrlElement->OnValueChanged(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -1114,11 +1124,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   // Use async reflow and painting for text widgets to improve
   // performance.
-
-  // XXX: Using editor async updates exposes bugs 158782, 151882,
-  //      and 165130, so we're disabling it for now, until they
-  //      can be addressed.
-  // editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
+  editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
 
   PRBool shouldInitializeEditor = PR_FALSE;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
@@ -1719,6 +1725,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
         flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
         mEditor->SetFlags(flags);
 
+        mTextListener->SettingValue(PR_TRUE);
+
         // Also don't enforce max-length here
         PRInt32 savedMaxLength;
         plaintextEditor->GetMaxTextLength(&savedMaxLength);
@@ -1729,6 +1737,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
         } else {
           plaintextEditor->InsertText(insertValue);
         }
+
+        mTextListener->SettingValue(PR_FALSE);
+
         if (!weakFrame.IsAlive()) {
           // If the frame was destroyed because of a flush somewhere inside
           // InsertText, mBoundFrame here will be false.  But it's also possible

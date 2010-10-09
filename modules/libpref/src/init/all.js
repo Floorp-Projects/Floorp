@@ -192,6 +192,12 @@ pref("gfx.color_management.rendering_intent", 0);
 pref("gfx.3d_video.enabled", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
+pref("gfx.downloadable_fonts.sanitize", true);
+#ifdef XP_MACOSX
+pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
+#else
+pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
+#endif
 
 pref("gfx.font_rendering.harfbuzz.level", 1);
 

@@ -11,7 +11,7 @@
 // Tests that appropriately-localized timestamps are printed.
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/HUDService.jsm");
+Cu.import("resource:///modules/HUDService.jsm");
 
 function test() {
   const TEST_TIMESTAMP = 12345678;

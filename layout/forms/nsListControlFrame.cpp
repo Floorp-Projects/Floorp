@@ -389,7 +389,7 @@ nsListControlFrame::InvalidateFocus()
     // Invalidating from the containerFrame because that's where our focus
     // is drawn.
     // The origin of the scrollport is the origin of containerFrame.
-    nsRect invalidateArea = containerFrame->GetOverflowRect();
+    nsRect invalidateArea = containerFrame->GetVisualOverflowRect();
     nsRect emptyFallbackArea(0, 0, GetScrollPortRect().width, CalcFallbackRowHeight());
     invalidateArea.UnionRect(invalidateArea, emptyFallbackArea);
     containerFrame->Invalidate(invalidateArea);
@@ -1187,27 +1187,6 @@ nsListControlFrame::Init(nsIContent*     aContent,
   mLastDropdownBackstopColor = PresContext()->DefaultBackgroundColor();
 
   return result;
-}
-
-PRBool
-nsListControlFrame::GetMultiple(nsIDOMHTMLSelectElement* aSelect) const
-{
-  PRBool multiple = PR_FALSE;
-  nsresult rv = NS_OK;
-  if (aSelect) {
-    rv = aSelect->GetMultiple(&multiple);
-  } else {
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = 
-       do_QueryInterface(mContent);
-  
-    if (selectElement) {
-      rv = selectElement->GetMultiple(&multiple);
-    }
-  }
-  if (NS_SUCCEEDED(rv)) {
-    return multiple;
-  }
-  return PR_FALSE;
 }
 
 already_AddRefed<nsIContent> 

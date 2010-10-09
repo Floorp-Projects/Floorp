@@ -2272,22 +2272,8 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
     if (aScrollToAnchor)
       region = nsISelectionController::SELECTION_ANCHOR_REGION;
 
-    PRBool syncScroll = PR_TRUE;
-    PRUint32 flags = 0;
-
-    if (NS_SUCCEEDED(GetFlags(&flags)))
-    {
-      // If the editor is relying on asynchronous reflows, we have
-      // to use asynchronous requests to scroll, so that the scrolling happens
-      // after reflow requests are processed.
-      // XXXbz why not just always do async scroll?
-      syncScroll = !(flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
-    }
-
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                    region, syncScroll);
+                                    region, PR_FALSE);
   }
 
   return NS_OK;
@@ -4217,11 +4203,6 @@ nsresult nsEditor::EndUpdateViewBatch()
       // the reflows we caused will get processed before the invalidates.
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
         updateFlag = NS_VMREFRESH_DEFERRED;
-      } else if (presShell) {
-        // Flush out layout.  Need to do this because if we have no invalidates
-        // to flush the viewmanager code won't flush our reflow here, and we
-        // have selection code that does sync caret scrolling in this case.
-        presShell->FlushPendingNotifications(Flush_Layout);
       }
       mBatch.EndUpdateViewBatch(updateFlag);
     }

@@ -122,7 +122,7 @@ nsHTMLFieldSetElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRUint32 length = mElements->Length(PR_TRUE);
     for (PRUint32 i=0; i<length; ++i) {
       static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
-        ->FieldSetDisabledChanged(0);
+        ->FieldSetDisabledChanged(0, aNotify);
     }
   }
 
@@ -204,7 +204,7 @@ nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (firstLegendHasChanged) {
-    NotifyElementsForFirstLegendChange();
+    NotifyElementsForFirstLegendChange(aNotify);
   }
 
   return rv;
@@ -232,14 +232,14 @@ nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (firstLegendHasChanged) {
-    NotifyElementsForFirstLegendChange();
+    NotifyElementsForFirstLegendChange(aNotify);
   }
 
   return rv;
 }
 
 void
-nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange()
+nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(PRBool aNotify)
 {
   /**
    * NOTE: this could be optimized if only call when the fieldset is currently
@@ -255,7 +255,7 @@ nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange()
   PRUint32 length = mElements->Length(PR_TRUE);
   for (PRUint32 i=0; i<length; ++i) {
     static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
-      ->FieldSetFirstLegendChanged();
+      ->FieldSetFirstLegendChanged(aNotify);
   }
 }
 

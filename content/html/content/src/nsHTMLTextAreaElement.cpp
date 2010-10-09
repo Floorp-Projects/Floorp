@@ -131,7 +131,7 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void FieldSetDisabledChanged(PRInt32 aStates);
+  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
 
   virtual PRInt32 IntrinsicState() const;
 
@@ -1177,17 +1177,22 @@ nsHTMLTextAreaElement::SetCustomValidity(const nsAString& aError)
 PRBool
 nsHTMLTextAreaElement::IsTooLong()
 {
-  if (!mValueChanged) {
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength) || !mValueChanged) {
     return PR_FALSE;
   }
 
   PRInt32 maxLength = -1;
-  PRInt32 textLength = -1;
-
   GetMaxLength(&maxLength);
+
+  // Maxlength of -1 means parsing error.
+  if (maxLength == -1) {
+    return PR_FALSE;
+  }
+
+  PRInt32 textLength = -1;
   GetTextLength(&textLength);
 
-  return maxLength >= 0 && textLength > maxLength;
+  return textLength > maxLength;
 }
 
 PRBool
@@ -1390,12 +1395,12 @@ nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
 }
 
 void
-nsHTMLTextAreaElement::FieldSetDisabledChanged(PRInt32 aStates)
+nsHTMLTextAreaElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
-  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates);
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
 }
 

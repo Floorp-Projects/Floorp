@@ -998,6 +998,122 @@ failure:
   return NULL;
 }
 
+/* functions to get size and data of a single table */
+
+uint32_t woffGetTableSize(const uint8_t * woffData, uint32_t woffLen,
+                          uint32_t tag, uint32_t * pStatus)
+{
+  uint32_t status = eWOFF_ok;
+  const woffHeader * header;
+  uint16_t numTables;
+  uint16_t tableIndex;
+  const woffDirEntry * woffDir;
+
+  if (pStatus && WOFF_FAILURE(*pStatus)) {
+    return 0;
+  }
+
+  status = sanityCheck(woffData, woffLen);
+  if (WOFF_FAILURE(status)) {
+    FAIL(status);
+  }
+
+  header = (const woffHeader *) (woffData);
+
+  numTables = READ16BE(header->numTables);
+  woffDir = (const woffDirEntry *) (woffData + sizeof(woffHeader));
+
+  for (tableIndex = 0; tableIndex < numTables; ++tableIndex) {
+    uint32_t thisTag;
+    thisTag = READ32BE(woffDir[tableIndex].tag);
+    if (thisTag < tag) {
+      continue;
+    }
+    if (thisTag > tag) {
+      break;
+    }
+    return READ32BE(woffDir[tableIndex].origLen);
+  }
+
+  status = eWOFF_warn_no_such_table;
+
+failure:
+  if (pStatus) {
+    *pStatus = status;
+  }
+  return 0;
+}
+
+void woffGetTableToBuffer(const uint8_t * woffData, uint32_t woffLen,
+                          uint32_t tag, uint8_t * buffer, uint32_t bufferLen,
+                          uint32_t * pTableLen, uint32_t * pStatus)
+{
+  uint32_t status = eWOFF_ok;
+  const woffHeader * header;
+  uint16_t numTables;
+  uint16_t tableIndex;
+  const woffDirEntry * woffDir;
+
+  if (pStatus && WOFF_FAILURE(*pStatus)) {
+    return;
+  }
+
+  status = sanityCheck(woffData, woffLen);
+  if (WOFF_FAILURE(status)) {
+    FAIL(status);
+  }
+
+  header = (const woffHeader *) (woffData);
+
+  numTables = READ16BE(header->numTables);
+  woffDir = (const woffDirEntry *) (woffData + sizeof(woffHeader));
+
+  for (tableIndex = 0; tableIndex < numTables; ++tableIndex) {
+    uint32_t thisTag, origLen, compLen, sourceOffset;
+    thisTag = READ32BE(woffDir[tableIndex].tag);
+    if (thisTag < tag) {
+      continue;
+    }
+    if (thisTag > tag) {
+      break;
+    }
+
+    /* found the required table: decompress it (checking for overflow) */
+    origLen = READ32BE(woffDir[tableIndex].origLen);
+    if (origLen > bufferLen) {
+      FAIL(eWOFF_buffer_too_small);
+    }
+
+    compLen = READ32BE(woffDir[tableIndex].compLen);
+    sourceOffset = READ32BE(woffDir[tableIndex].offset);
+
+    if (compLen < origLen) {
+      uLongf destLen = origLen;
+      if (uncompress((Bytef *)(buffer), &destLen,
+                     (const Bytef *)(woffData + sourceOffset),
+                     compLen) != Z_OK || destLen != origLen) {
+        FAIL(eWOFF_compression_failure);
+      }
+    } else {
+      memcpy(buffer, woffData + sourceOffset, origLen);
+    }
+
+    if (pTableLen) {
+      *pTableLen = origLen;
+    }
+
+    return;
+  }
+
+  status = eWOFF_warn_no_such_table;
+
+failure:
+  if (pStatus) {
+    *pStatus = status;
+  }
+}
+
+
 #ifndef WOFF_MOZILLA_CLIENT
 
 const uint8_t *

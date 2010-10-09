@@ -71,7 +71,7 @@ nsSVGElement::EnumInfo nsSVGGradientElement::sEnumInfo[2] =
 
 nsSVGElement::StringInfo nsSVGGradientElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
 };
 
 //----------------------------------------------------------------------

@@ -209,7 +209,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
     aMetrics.height = NS_MAX(0, aMetrics.height);
   }
 
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
+  aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
   if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {

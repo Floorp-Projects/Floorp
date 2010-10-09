@@ -80,13 +80,16 @@ nsSVGAnimateMotionElement::AnimationFunction()
   return mAnimationFunction;
 }
 
-nsIAtom*
-nsSVGAnimateMotionElement::GetTargetAttributeName() const
+PRBool
+nsSVGAnimateMotionElement::GetTargetAttributeName(PRInt32 *aNamespaceID,
+                                                  nsIAtom **aLocalName) const
 {
   // <animateMotion> doesn't take an attributeName, since it doesn't target an
   // 'attribute' per se.  We'll use a unique dummy attribute-name so that our
   // nsSMILTargetIdentifier logic (which requires a attribute name) still works.
-  return nsGkAtoms::mozAnimateMotionDummyAttr;
+  *aNamespaceID = kNameSpaceID_None;
+  *aLocalName = nsGkAtoms::mozAnimateMotionDummyAttr;
+  return PR_TRUE;
 }
 
 nsSMILTargetAttrType

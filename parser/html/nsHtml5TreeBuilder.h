@@ -187,7 +187,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
     void accumulateCharacters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
-    void accumulateCharacter(PRUnichar c);
     void requestSuspension();
     nsIContent** createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
     nsIContent** createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
@@ -210,6 +209,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent** node);
   public:
+    PRBool cdataSectionAllowed();
     void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks);
   protected:
     nsIContent** currentNode();

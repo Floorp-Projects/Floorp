@@ -74,6 +74,12 @@ mochitest-plain:
 	$(RUN_MOCHITEST)
 	$(CHECK_TEST_ERROR)
 
+# Allow mochitest-1 ... mochitest-5 for developer ease
+mochitest-1 mochitest-2 mochitest-3 mochitest-4 mochitest-5: mochitest-%:
+	echo "mochitest: $* / 5"
+	$(RUN_MOCHITEST) --chunk-by-dir=4 --total-chunks=5 --this-chunk=$*
+	$(CHECK_TEST_ERROR)
+
 mochitest-chrome:
 	$(RUN_MOCHITEST) --chrome
 	$(CHECK_TEST_ERROR)

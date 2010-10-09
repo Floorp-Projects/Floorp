@@ -10,7 +10,7 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/HUDService.jsm");
+Cu.import("resource:///modules/HUDService.jsm");
 
 const TEST_URI = "http://example.com/";
 

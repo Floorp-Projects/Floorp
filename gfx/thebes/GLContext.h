@@ -189,7 +189,7 @@ public:
      */
     virtual void Resize(const nsIntSize& aSize) {
         nsIntRegion r(nsIntRect(0, 0, aSize.width, aSize.height));
-        gfxContext *dummy = BeginUpdate(r);
+        BeginUpdate(r);
         EndUpdate();
     }
 
