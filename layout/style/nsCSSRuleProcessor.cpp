@@ -103,6 +103,10 @@ static PRBool gSupportVisitedPseudo = PR_TRUE;
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
 
+#ifdef XP_WIN
+PRUint8 nsCSSRuleProcessor::sWinThemeId = nsILookAndFeel::eWindowsTheme_Generic;
+#endif
+
 /**
  * A struct representing a given CSS rule and a particular selector
  * from that rule's selector list.
@@ -1036,6 +1040,36 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::maemo_classic);
   }
 
+#ifdef XP_WIN
+  if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsThemeIdentifier,
+                                          metricResult))) {
+    nsCSSRuleProcessor::SetWindowsThemeIdentifier(static_cast<PRUint8>(metricResult));
+    switch(metricResult) {
+      case nsILookAndFeel::eWindowsTheme_Aero:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_aero);
+        break;
+      case nsILookAndFeel::eWindowsTheme_LunaBlue:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_blue);
+        break;
+      case nsILookAndFeel::eWindowsTheme_LunaOlive:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_olive);
+        break;
+      case nsILookAndFeel::eWindowsTheme_LunaSilver:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_luna_silver);
+        break;
+      case nsILookAndFeel::eWindowsTheme_Royale:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_royale);
+        break;
+      case nsILookAndFeel::eWindowsTheme_Zune:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_zune);
+        break;
+      case nsILookAndFeel::eWindowsTheme_Generic:
+        sSystemMetrics->AppendElement(nsGkAtoms::windows_theme_generic);
+        break;
+    }
+  }
+#endif
+
   return PR_TRUE;
 }
 
@@ -1062,6 +1096,16 @@ nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
   }
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
+
+#ifdef XP_WIN
+/* static */ PRUint8
+nsCSSRuleProcessor::GetWindowsThemeIdentifier()
+{
+  if (!sSystemMetrics)
+    InitSystemMetrics();
+  return sWinThemeId;
+}
+#endif
 
 RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                                      Element* aElement, 

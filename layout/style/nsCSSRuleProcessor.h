@@ -125,6 +125,14 @@ public:
   }
 #endif
 
+#ifdef XP_WIN
+  // Cached theme identifier for the moz-windows-theme media query.
+  static PRUint8 GetWindowsThemeIdentifier();
+  static void SetWindowsThemeIdentifier(PRUint8 aId) { 
+    sWinThemeId = aId;
+  }
+#endif
+
 private:
   static PRBool CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData);
 
@@ -142,6 +150,10 @@ private:
   
   // type of stylesheet using this processor
   PRUint8 mSheetType;  // == nsStyleSet::sheetType
+
+#ifdef XP_WIN
+  static PRUint8 sWinThemeId;
+#endif
 };
 
 #endif /* nsCSSRuleProcessor_h_ */
