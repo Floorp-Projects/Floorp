@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "mozSwipeGesture.h"
 #include <QTouchEvent>
+#include <QGraphicsWidget>
 #include <prtypes.h>
 #include <nsIDOMSimpleGestureEvent.h>
 #include <math.h>
@@ -65,6 +66,11 @@ MozSwipeGestureRecognizer::recognize(QGesture* aState,
     MozSwipeGesture* swipe = static_cast<MozSwipeGesture *>(aState);
 
     QGestureRecognizer::Result result = QGestureRecognizer::Ignore;
+
+    QGraphicsWidget* widget = qobject_cast<QGraphicsWidget*>(aWatched);
+    if (!widget) {
+        return result;
+    }
 
     switch (aEvent->type()) {
         case QEvent::TouchBegin:
@@ -98,7 +104,7 @@ MozSwipeGestureRecognizer::recognize(QGesture* aState,
             if (ev->touchPoints().count() == 2) {
                swipe->mSwipeState = MozSwipeGesture::STARTED;
                QList <QTouchEvent::TouchPoint> touchPoints = ev->touchPoints();
-               if (!swipe->Update(touchPoints[0], touchPoints[1])) {
+               if (!swipe->Update(touchPoints[0], touchPoints[1], widget->size())) {
                    result = QGestureRecognizer::CancelGesture;
                    swipe->mSwipeState = MozSwipeGesture::CANCELLED;
                }
@@ -141,40 +147,45 @@ int MozSwipeGesture::Direction()
 
 bool
 MozSwipeGesture::Update(const QTouchEvent::TouchPoint& aFirstPoint,
-                        const QTouchEvent::TouchPoint& aSecondPoint)
+                        const QTouchEvent::TouchPoint& aSecondPoint,
+                        const QSizeF& aSize)
 {
     // Check that fingers are not too far away
-    QPointF distance = aFirstPoint.pos() - aSecondPoint.pos();
-    if (distance.manhattanLength() > MAX_FINGER_DISTANCE) {
+    QPointF fingerDistance = aFirstPoint.pos() - aSecondPoint.pos();
+    if (fingerDistance.manhattanLength() > MAX_FINGER_DISTANCE) {
         return false;
     }
 
-    QPointF startPositions[]   = {aFirstPoint.startNormalizedPos(),
-                                  aSecondPoint.startNormalizedPos()
-                                 };
-    QPointF currentPositions[] = {aFirstPoint.normalizedPos(),
-                                  aSecondPoint.normalizedPos()
-                                 };
-
-    float xDistance = fabs(currentPositions[0].x()-startPositions[0].x());
-    float yDistance = fabs(currentPositions[0].y()-startPositions[0].y());
-
-    QPointF startFingerDistance = aFirstPoint.startPos()-aSecondPoint.startPos();
-    QPointF fingerDistance = aFirstPoint.pos()-aSecondPoint.pos();
-
     // Check that fingers doesn't move too much from the original distance
-    if ((startFingerDistance-fingerDistance).manhattanLength()
+    QPointF startFingerDistance = aFirstPoint.startPos() - aSecondPoint.startPos();
+    if ((startFingerDistance - fingerDistance).manhattanLength()
          > FINGER_DISTANCE_MISTAKE) {
         return false;
     }
 
+    QPointF startPosition = aFirstPoint.startNormalizedPos();
+    QPointF currentPosition = aFirstPoint.normalizedPos();
+
+    float xDistance = fabs(currentPosition.x() - startPosition.x());
+    float yDistance = fabs(currentPosition.y() - startPosition.y());
+
+    startPosition = aFirstPoint.startPos();
+    currentPosition = aFirstPoint.pos();
+
+    if (!aSize.isEmpty()) {
+        xDistance = fabs(currentPosition.x() - startPosition.x())
+                    / aSize.width();
+        yDistance = fabs(currentPosition.y() - startPosition.y())
+                    / aSize.height();
+    }
+
     mVerticalDirection = nsIDOMSimpleGestureEvent::DIRECTION_UP;
-    if (currentPositions[0].y() > startPositions[0].y()) {
+    if (currentPosition.y() > startPosition.y()) {
         mVerticalDirection = nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
     }
 
     mHorizontalDirection = nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
-    if (currentPositions[0].x() > startPositions[0].y()) {
+    if (currentPosition.x() > startPosition.x()) {
         mHorizontalDirection = nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
     }
 
@@ -193,7 +204,7 @@ MozSwipeGesture::Update(const QTouchEvent::TouchPoint& aFirstPoint,
     }
 
     // Use center of touchpoints as hotspot
-    QPointF hotspot = aFirstPoint.scenePos() + aSecondPoint.scenePos();
+    QPointF hotspot = aFirstPoint.pos() + aSecondPoint.pos();
     hotspot /= 2;
     setHotSpot(hotspot);
     return true;
