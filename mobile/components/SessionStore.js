@@ -330,6 +330,17 @@ SessionStore.prototype = {
     }
 
     this._windows[aWindow.__SSID].selected = index + 1; // 1-based
+
+    // Restore the resurrected browser
+    // * currently we only load the last URL into the browser
+    if (aBrowser.__SS_restore) {
+      let data = aBrowser.__SS_data;
+      if (data.entries.length > 0)
+        aBrowser.loadURI(data.entries[0].url, null, null);
+
+      delete aBrowser.__SS_restore;
+    }
+
     this._updateCrashReportURL(aWindow);
   },
 

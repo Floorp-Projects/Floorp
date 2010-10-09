@@ -326,19 +326,16 @@ var Browser = {
     window.controllers.appendController(BrowserUI);
 
     var os = Services.obs;
-    os.addObserver(gXPInstallObserver, "addon-install-blocked", false);
-    os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
-
-    // clear out tabs the user hasn't touched lately on memory crunch
+    os.addObserver(XPInstallObserver, "addon-install-blocked", false);
+    os.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
+    os.addObserver(ContentCrashObserver, "ipc:content-shutdown", false);
     os.addObserver(MemoryObserver, "memory-pressure", false);
-
-    // search engine changes
     os.addObserver(BrowserSearch, "browser-search-engine-modified", false);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
     Elements.browsers.addEventListener("command", this._handleContentCommand, true);
-    Elements.browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
+    Elements.browsers.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
 
     // Login Manager and Form History initialization
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -459,8 +456,9 @@ var Browser = {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     var os = Services.obs;
-    os.removeObserver(gXPInstallObserver, "addon-install-blocked");
-    os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+    os.removeObserver(XPInstallObserver, "addon-install-blocked");
+    os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
+    os.removeObserver(ContentCrashObserver, "ipc:content-shutdown");
     os.removeObserver(MemoryObserver, "memory-pressure");
     os.removeObserver(BrowserSearch, "browser-search-engine-modified");
 
@@ -529,7 +527,7 @@ var Browser = {
     else {
       let params = aParams || {};
       let flags = params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-      getBrowser().loadURIWithFlags(aURI, flags, params.referrerURI, params.charset, params.postData);
+      browser.loadURIWithFlags(aURI, flags, params.referrerURI, params.charset, params.postData);
     }
   },
 
@@ -1783,7 +1781,7 @@ function getIdentityHandler() {
 /**
  * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
  */
-const gPopupBlockerObserver = {
+var PopupBlockerObserver = {
   onUpdatePageReport: function onUpdatePageReport(aEvent)
   {
     var cBrowser = Browser.selectedBrowser;
@@ -1823,17 +1821,17 @@ const gPopupBlockerObserver = {
             {
               label: strings.getString("popupButtonAllowOnce"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.showPopupsForSite(); }
+              callback: function() { PopupBlockerObserver.showPopupsForSite(); }
             },
             {
               label: strings.getString("popupButtonAlwaysAllow2"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.allowPopupsForSite(true); }
+              callback: function() { PopupBlockerObserver.allowPopupsForSite(true); }
             },
             {
               label: strings.getString("popupButtonNeverWarn2"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.allowPopupsForSite(false); }
+              callback: function() { PopupBlockerObserver.allowPopupsForSite(false); }
             }
           ];
 
@@ -1883,7 +1881,7 @@ const gPopupBlockerObserver = {
   }
 };
 
-const gXPInstallObserver = {
+var XPInstallObserver = {
   observe: function xpi_observer(aSubject, aTopic, aData)
   {
     var brandBundle = document.getElementById("bundle_brand");
@@ -1947,9 +1945,9 @@ const gXPInstallObserver = {
   }
 };
 
-const gSessionHistoryObserver = {
-  observe: function sho_observe(subject, topic, data) {
-    if (topic != "browser:purge-session-history")
+var SessionHistoryObserver = {
+  observe: function sho_observe(aSubject, aTopic, aData) {
+    if (aTopic != "browser:purge-session-history")
       return;
 
     let back = document.getElementById("cmd_back");
@@ -1961,6 +1959,44 @@ const gSessionHistoryObserver = {
     if (urlbar) {
       // Clear undo history of the URL bar
       urlbar.editor.transactionManager.clear();
+    }
+  }
+};
+
+var ContentCrashObserver = {
+  observe: function cco_observe(aSubject, aTopic, aData) {
+    if (aTopic != "ipc:content-shutdown" && aData != "abnormal")
+      return;
+
+    // Spin through the open tabs and resurrect the out-of-process tabs. Resurrection
+    // does not auto-reload the content. We delay load the content as needed.
+    Browser.tabs.forEach(function(aTab) {
+      if (aTab.browser.getAttribute("remote") == "true")
+        aTab.resurrect();
+    })
+
+    // Ask the user if we should reload or close the current tab. Other tabs
+    // will be reloaded when selected.
+    let title = Elements.browserBundle.getString("tabs.crashWarningTitle");
+    let message = Elements.browserBundle.getString("tabs.crashWarningMsg");
+    let reloadText = Elements.browserBundle.getString("tabs.crashReload");
+    let closeText = Elements.browserBundle.getString("tabs.crashClose");
+    let buttons = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
+                  (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+                  (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+
+    this._waitingToClose = true;
+    let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, null, { value: false });
+    if (reload) {
+      // Fire a TabSelect event to kick start the restore process
+      let event = document.createEvent("Events");
+      event.initEvent("TabSelect", true, false);
+      event.lastTab = null;
+      Browser.selectedTab.chromeTab.dispatchEvent(event);
+    } else {
+      // Close this tab, it could be the reason we crashed. The undo-close-tab
+      // system will pick it up.
+      Browser.closeTab(Browser.selectedTab);
     }
   }
 };
@@ -2436,15 +2472,7 @@ Tab.prototype = {
 
   create: function create(aURI, aParams) {
     this._chromeTab = document.getElementById("tabs").addTab();
-    let browser = this._createBrowser(aURI);
-
-    // Attach a separate progress listener to the browser
-    let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |
-                Ci.nsIWebProgress.NOTIFY_SECURITY |
-                Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
-                Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT;
-    this._listener = new ProgressController(this);
-    browser.webProgress.addProgressListener(this._listener, flags);
+    let browser = this._createBrowser(aURI, null);
 
     let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     browser.loadURIWithFlags(aURI, flags, aParams.referrerURI, aParams.charset, aParams.postData);
@@ -2455,8 +2483,28 @@ Tab.prototype = {
     this._chromeTab = null;
     this._destroyBrowser();
   },
+  
+  resurrect: function resurrect() {
+    let dead = this._browser;
 
-  _createBrowser: function _createBrowser(aURI) {
+    // Hold onto the session store data
+    let session = { data: dead.__SS_data, extra: dead.__SS_extdata };
+
+    // We need this data to correctly create and position the new browser
+    let currentURI = dead.currentURI.spec;
+    let sibling = dead.nextSibling;
+
+    // Destory and re-create the browser
+    this._destroyBrowser();
+    let browser = this._createBrowser(currentURI, sibling);
+
+    // Reattach session store data and flag this browser so it is restored on select
+    browser.__SS_data = session.data;
+    browser.__SS_extdata = session.extra;
+    browser.__SS_restore = true;
+  },
+
+  _createBrowser: function _createBrowser(aURI, aInsertBefore) {
     if (this._browser)
       throw "Browser already exists";
 
@@ -2472,16 +2520,23 @@ Tab.prototype = {
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 
     // Append the browser to the document, which should start the page load
-    Elements.browsers.appendChild(browser);
+    Elements.browsers.insertBefore(browser, aInsertBefore);
 
     // stop about:blank from loading
     browser.stop();
-
 
     let self = this;
     browser.messageManager.addMessageListener("MozScrolledAreaChanged", function() {
       self.updateDefaultZoomLevel();
     });
+
+    // Attach a separate progress listener to the browser
+    let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |
+                Ci.nsIWebProgress.NOTIFY_SECURITY |
+                Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
+                Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT;
+    this._listener = new ProgressController(this);
+    browser.webProgress.addProgressListener(this._listener, flags);
 
    return browser;
   },
