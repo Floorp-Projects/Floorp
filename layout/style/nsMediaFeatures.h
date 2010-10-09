@@ -68,8 +68,8 @@ struct nsMediaFeature {
         eIntRatio,   // values are eCSSUnit_Array of two eCSSUnit_Integer
         eResolution, // values are in eCSSUnit_Inch (for dpi) or
                      //   eCSSUnit_Centimeter (for dpcm)
-        eEnumerated  // values are eCSSUnit_Enumerated (uses keyword table)
-
+        eEnumerated, // values are eCSSUnit_Enumerated (uses keyword table)
+        eIdent       // values are eCSSUnit_Ident
         // Note that a number of pieces of code (both for parsing and
         // for matching of valueless expressions) assume that all numeric
         // value types cannot be negative.  The parsing code also does

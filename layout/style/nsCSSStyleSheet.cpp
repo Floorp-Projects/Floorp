@@ -316,6 +316,17 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
         cmp = DoCompare(actual.GetIntValue(), required.GetIntValue());
       }
       break;
+    case nsMediaFeature::eIdent:
+      {
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Ident,
+                     "bad actual value");
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_Ident,
+                     "bad required value");
+        NS_ASSERTION(mFeature->mRangeType == nsMediaFeature::eMinMaxNotAllowed,
+                     "bad range"); 
+        cmp = !(actual == required); // string comparison
+      }
+      break;
   }
   switch (mRange) {
     case nsMediaExpression::eMin:
@@ -477,6 +488,11 @@ nsMediaQuery::AppendToString(nsAString& aString) const
               nsCSSProps::ValueToKeyword(expr.mValue.GetIntValue(),
                                          feature->mData.mKeywordTable),
               aString);
+          break;
+        case nsMediaFeature::eIdent:
+          NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Ident,
+                       "bad unit");
+          aString.Append(expr.mValue.GetStringBufferValue());
           break;
       }
     }
