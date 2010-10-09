@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=586662
+-->
+
+<head>
+  <title>Test for Bug 586662</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=586662">Mozilla Bug 586662</a>
+  <p id="display"><textarea onkeypress="this.style.overflow = 'hidden'"></textarea></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var t = document.querySelector("textarea");
+  t.focus();
+  synthesizeKey("a", {});
+  is(getComputedStyle(t, null).overflow, "hidden", "The event handler should be executed");
+  is(t.value, "a", "The key entry should result in a character being added to the field");
+
+  var win = window.open("file_bug586662.html", "_blank",
+                        "width=600,height=600,scrollbars=yes");
+  SimpleTest.waitForFocus(function() {
+    // Make sure that focusing the textarea will cause the page to scroll
+    var ed = win.document.getElementById("editor");
+    ed.focus();
+    setTimeout(function() {
+      isnot(win.scrollY, 0, "Page is scrolled down");
+      // Scroll back up
+      win.scrollTo(0, 0);
+      setTimeout(function() {
+        is(win.scrollY, 0, "Page is scrolled back up");
+        // Make sure that typing something into the textarea will cause the
+        // page to scroll down
+        synthesizeKey("a", {}, win);
+        setTimeout(function() {
+          isnot(win.scrollY, 0, "Page is scrolled down again");
+
+          win.close();
+          SimpleTest.finish();
+        }, 0);
+      }, 0);
+    }, 0);
+  }, win);
+});
+
+   </script>
+  </pre>
+</body>
+</html>

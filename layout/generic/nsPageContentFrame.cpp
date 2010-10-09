@@ -117,13 +117,17 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     // in the percentage padding case)
     kidReflowState.mStylePadding->GetPadding(padding);
 
-    // First check the combined area
-    if (frame->HasOverflowRect()) {
+    // This is for shrink-to-fit, and therefore we want to use the
+    // scrollable overflow, since the purpose of shrink to fit is to
+    // make the content that ought to be reachable (represented by the
+    // scrollable overflow) fit in the page.
+    if (frame->HasOverflowAreas()) {
       // The background covers the content area and padding area, so check
       // for children sticking outside the child frame's padding edge
-      if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {
+      nscoord xmost = aDesiredSize.ScrollableOverflow().XMost();
+      if (xmost > aDesiredSize.width) {
         mPD->mPageContentXMost =
-          aDesiredSize.mOverflowArea.XMost() +
+          xmost +
           kidReflowState.mStyleBorder->GetActualBorderWidth(NS_SIDE_RIGHT) +
           padding.right;
       }
@@ -140,7 +144,8 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   mFixedContainer.Reflow(this, aPresContext, aReflowState, fixedStatus,
                          aReflowState.availableWidth,
                          aReflowState.availableHeight,
-                         PR_FALSE, PR_TRUE, PR_TRUE); // XXX could be optimized
+                         PR_FALSE, PR_TRUE, PR_TRUE, // XXX could be optimized
+                         nsnull /* ignore overflow */);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size

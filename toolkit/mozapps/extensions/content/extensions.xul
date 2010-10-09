@@ -49,6 +49,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="addons-page" title="&addons.windowTitle;" disablechrome="true"
+      role="application"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
@@ -85,7 +86,7 @@
       <menuitem id="menuitem_uninstallItem" command="cmd_uninstallItem"
                 label="&cmd.uninstallAddon.label;"
                 accesskey="&cmd.uninstallAddon.accesskey;"/>
-      <menuseparator/>
+      <menuseparator id="addonitem-menuseparator" />
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
 #ifdef XP_WIN
                 label="&cmd.preferencesWin.label;"
@@ -113,6 +114,8 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_installFromFile"/>
+    <command id="cmd_back"/>
+    <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
@@ -138,7 +141,12 @@
   </commandset>
 
   <!-- main header -->
-  <hbox id="header" align="center" pack="end">
+  <hbox id="header" align="center">
+    <button id="back-btn" class="nav-button" command="cmd_back"
+            tooltiptext="&cmd.back.tooltip;"/>
+    <button id="forward-btn" class="nav-button" command="cmd_forward"
+            tooltiptext="&cmd.forward.tooltip;"/>
+    <spacer flex="1"/>
     <hbox id="updates-container" align="center">
       <image class="spinner"/>
       <label id="updates-noneFound" hidden="true"
@@ -194,39 +202,41 @@
 
   <hbox flex="1">
 
-      <!-- category list -->
-      <richlistbox id="categories" persist="last-selected">
-        <richlistitem id="category-search" value="addons://search/"
-                      class="category"
-                      name="&view.search.label;" disabled="true"/>
-        <richlistitem id="category-discover" value="addons://discover/"
-                      class="category"
-                      name="&view.discover.label;"/>
-        <richlistitem id="category-languages" value="addons://list/locale"
-                      class="category"
-                      name="&view.locales.label;"
-                      hidden="true" persist="hidden"/>
-        <richlistitem id="category-searchengines"
-                      value="addons://list/searchengine"
-                      class="category"
-                      name="&view.searchengines.label;"
-                      hidden="true" persist="hidden"/>
-        <richlistitem id="category-extensions" value="addons://list/extension"
-                      class="category"
-                      name="&view.features.label;"/>
-        <richlistitem id="category-themes" value="addons://list/theme"
-                      class="category"
-                      name="&view.appearance2.label;"/>
-        <richlistitem id="category-plugins" value="addons://list/plugin"
-                      class="category"
-                      name="&view.plugins.label;"/>
-        <richlistitem id="category-availableUpdates" value="addons://updates/available"
-                      class="category"
-                      name="&view.availableUpdates.label;" disabled="true"/>
-        <richlistitem id="category-recentUpdates" value="addons://updates/recent"
-                      class="category"
-                      name="&view.recentUpdates.label;" disabled="true"/>
-      </richlistbox>
+    <!-- category list -->
+    <richlistbox id="categories" persist="last-selected">
+      <richlistitem id="category-search" value="addons://search/"
+                    class="category"
+                    name="&view.search.label;" disabled="true"/>
+      <richlistitem id="category-discover" value="addons://discover/"
+                    class="category"
+                    name="&view.discover.label;"/>
+      <richlistitem id="category-languages" value="addons://list/locale"
+                    class="category"
+                    name="&view.locales.label;"
+                    hidden="true" persist="hidden"/>
+      <richlistitem id="category-searchengines"
+                    value="addons://list/searchengine"
+                    class="category"
+                    name="&view.searchengines.label;"
+                    hidden="true" persist="hidden"/>
+      <richlistitem id="category-extensions" value="addons://list/extension"
+                    class="category"
+                    name="&view.features.label;"/>
+      <richlistitem id="category-themes" value="addons://list/theme"
+                    class="category"
+                    name="&view.appearance2.label;"/>
+      <richlistitem id="category-plugins" value="addons://list/plugin"
+                    class="category"
+                    name="&view.plugins.label;"/>
+      <richlistitem id="category-availableUpdates" value="addons://updates/available"
+                    class="category"
+                    name="&view.availableUpdates.label;" disabled="true"/>
+      <richlistitem id="category-recentUpdates" value="addons://updates/recent"
+                    class="category"
+                    name="&view.recentUpdates.label;" disabled="true"/>
+    </richlistbox>
+
+    <box id="view-port-container" flex="1">
 
       <!-- view port -->
       <deck id="view-port" flex="1">
@@ -558,6 +568,7 @@
 
       </deck>
 
+    </box>
   </hbox>
 
 </page>

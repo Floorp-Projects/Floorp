@@ -52,6 +52,9 @@ _TEST_FILES = 	test_bug319374.xhtml \
 		test_bug511487.html \
 		test_bug551412.html \
 		test_bug551654.html \
+		test_bug566629.html \
+		test_bug566629.xhtml \
+		test_exslt_regex.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

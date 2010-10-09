@@ -233,7 +233,17 @@ public:
     /**
      * Whether to allow downloadable fonts via @font-face rules
      */
-    virtual PRBool DownloadableFontsEnabled();
+    PRBool DownloadableFontsEnabled();
+
+    /**
+     * Whether to sanitize downloaded fonts using the OTS library
+     */
+    PRBool SanitizeDownloadedFonts();
+
+    /**
+     * Whether to preserve OpenType layout tables when sanitizing
+     */
+    PRBool PreserveOTLTablesWhenSanitizing();
 
     /**
      * Whether to use the harfbuzz shaper (depending on script complexity).
@@ -355,6 +365,8 @@ protected:
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
                                                
     PRBool  mAllowDownloadableFonts;
+    PRBool  mDownloadableFontsSanitize;
+    PRBool  mSanitizePreserveOTLTables;
 
     // whether to use the HarfBuzz layout engine
     PRInt8  mUseHarfBuzzLevel;

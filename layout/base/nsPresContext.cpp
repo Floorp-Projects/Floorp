@@ -2542,7 +2542,7 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
   closure.mRootFrame = mShell->FrameManager()->GetRootFrame();
   closure.mRootAPD = closure.mRootFrame->PresContext()->AppUnitsPerDevPixel();
   closure.mChangedSubtree = aChangedSubtree;
-  closure.mChangedRect = aChangedSubtree->GetOverflowRect() +
+  closure.mChangedRect = aChangedSubtree->GetVisualOverflowRect() +
       aChangedSubtree->GetOffsetToCrossDoc(closure.mRootFrame);
   PRInt32 subtreeAPD = aChangedSubtree->PresContext()->AppUnitsPerDevPixel();
   closure.mChangedRect =

@@ -46,7 +46,7 @@ load 410860-1.xml
 load 416734-1.html
 load 418928-1.html
 load 420620-1.html
-asserts(2) load 424276-1.html # bug 462897
+load 424276-1.html
 load 426987-1.html
 load 443538-1.svg
 load 448615-1.html

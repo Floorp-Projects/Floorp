@@ -242,6 +242,30 @@ gfxFontEntry::GetFontTable(PRUint32 aTag)
     return nsnull;
 }
 
+void
+gfxFontEntry::PreloadFontTable(PRUint32 aTag, nsTArray<PRUint8>& aTable)
+{
+    if (!mFontTableCache.IsInitialized()) {
+        // This is intended for use with downloaded fonts, to cache the layout
+        // tables for harfbuzz, so initialize the cache for 3 entries to allow
+        // for GDEF/GSUB/GPOS.
+        mFontTableCache.Init(3);
+    }
+
+    FontTableCacheEntry *entry = nsnull;
+    if (mFontTableCache.Get(aTag, &entry)) {
+        // this should never happen - it's a logic error in the calling code
+        // (so ignore the fact that we'll leak the elements of aTable here)
+        NS_NOTREACHED("can't preload table, already present in cache!");
+        return;
+    }
+
+    // this adopts the buffer elements of aTable
+    entry = new FontTableCacheEntry(aTable, aTag, mFontTableCache);
+    if (!mFontTableCache.Put(aTag, entry)) {
+        NS_WARNING("failed to cache font table!");
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -2209,6 +2233,13 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     PRUint32 runStart = 0, runLimit = aLength;
     PRInt32 runScript = HB_SCRIPT_LATIN;
     while (scriptRuns.Next(runStart, runLimit, runScript)) {
+        if (runScript <= HB_SCRIPT_INHERITED) {
+            // For unresolved "common" or "inherited" runs, default to Latin
+            // for now.
+            // (Should we somehow use the language or locale to try and infer
+            // a better default?)
+            runScript = HB_SCRIPT_LATIN;
+        }
         InitTextRun(aContext, aTextRun, aString, aLength,
                     runStart, runLimit, runScript);
     }

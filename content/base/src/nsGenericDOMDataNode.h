@@ -230,7 +230,7 @@ public:
   virtual void SaveSubtreeState();
 
 #ifdef MOZ_SMIL
-  virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* /*aName*/)
+  virtual nsISMILAttr* GetAnimatedAttr(PRInt32 /*aNamespaceID*/, nsIAtom* /*aName*/)
   {
     return nsnull;
   }

@@ -614,7 +614,7 @@ function NetworkPanel(aParent, aHttpActivity)
 
   // Create the browser that displays the NetworkPanel XHTML.
   this.browser = createAndAppendElement(this.panel, "browser", {
-    src: "chrome://global/content/NetworkPanel.xhtml",
+    src: "chrome://browser/content/NetworkPanel.xhtml",
     disablehistory: "true",
     flex: "1"
   });

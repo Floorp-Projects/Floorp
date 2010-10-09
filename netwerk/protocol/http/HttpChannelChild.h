@@ -45,6 +45,7 @@
 
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/PHttpChannelChild.h"
+#include "mozilla/net/ChannelEventQueue.h"
 
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
@@ -74,6 +75,7 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIApplicationCacheChannel
                        , public nsIAsyncVerifyRedirectCallback
                        , public nsIAssociatedContentSecurity
+                       , public ChannelEventQueue
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -139,6 +141,7 @@ protected:
                           const PRUint32& redirectFlags,
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
+  bool RecvDeleteSelf();
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nsnull);
 
@@ -161,24 +164,8 @@ private:
   bool mIPCOpen;
   bool mKeptAlive;
 
-  // Workaround for Necko re-entrancy dangers. We buffer IPDL messages in a
-  // queue if still dispatching previous one(s) to listeners/observers.
-  // Otherwise synchronous XMLHttpRequests and/or other code that spins the
-  // event loop (ex: IPDL rpc) could cause listener->OnDataAvailable (for
-  // instance) to be called before mListener->OnStartRequest has completed.
-  void BeginEventQueueing();
-  void EndEventQueueing();
   void FlushEventQueue();
-  void EnqueueEvent(ChildChannelEvent* callback);
   bool ShouldEnqueue();
-
-  nsTArray<nsAutoPtr<ChildChannelEvent> > mEventQueue;
-  enum {
-    PHASE_UNQUEUED,
-    PHASE_QUEUEING,
-    PHASE_FINISHED_QUEUEING,
-    PHASE_FLUSHING
-  } mQueuePhase;
 
   void OnStartRequest(const nsHttpResponseHead& responseHead,
                           const PRBool& useResponseHead,
@@ -199,6 +186,7 @@ private:
                       const PRUint32& redirectFlags,
                       const nsHttpResponseHead& responseHead);
   void Redirect3Complete();
+  void DeleteSelf();
 
   friend class AutoEventEnqueuer;
   friend class StartRequestEvent;
@@ -209,43 +197,18 @@ private:
   friend class CancelEvent;
   friend class Redirect1Event;
   friend class Redirect3Event;
+  friend class DeleteSelfEvent;
 };
 
 //-----------------------------------------------------------------------------
 // inline functions
 //-----------------------------------------------------------------------------
 
-inline void
-HttpChannelChild::BeginEventQueueing()
-{
-  if (mQueuePhase != PHASE_UNQUEUED)
-    return;
-  // Store incoming IPDL messages for later.
-  mQueuePhase = PHASE_QUEUEING;
-}
-
-inline void
-HttpChannelChild::EndEventQueueing()
-{
-  if (mQueuePhase != PHASE_QUEUEING)
-    return;
-
-  mQueuePhase = PHASE_FINISHED_QUEUEING;
-}
-
-
 inline bool
 HttpChannelChild::ShouldEnqueue()
 {
-  return mQueuePhase != PHASE_UNQUEUED || mSuspendCount;
+  return ChannelEventQueue::ShouldEnqueue() || mSuspendCount;
 }
-
-inline void
-HttpChannelChild::EnqueueEvent(ChildChannelEvent* callback)
-{
-  mEventQueue.AppendElement(callback);
-}
-
 
 } // namespace net
 } // namespace mozilla

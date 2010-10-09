@@ -94,7 +94,8 @@ public:
   virtual PRBool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
   virtual PRBool HasAnimAttr(nsIAtom* aAttName) const;
   virtual Element* GetTargetElementContent();
-  virtual nsIAtom* GetTargetAttributeName() const;
+  virtual PRBool GetTargetAttributeName(PRInt32* aNamespaceID,
+                                        nsIAtom** aLocalName) const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
   virtual nsSMILTimedElement& TimedElement();
   virtual nsSMILTimeContainer* GetTimeContainer();

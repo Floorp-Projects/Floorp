@@ -3938,7 +3938,7 @@ public:
 #endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    return mFrame->GetOverflowRect() + ToReferenceFrame();
+    return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
@@ -4104,11 +4104,12 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
 void
 nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
                                          PropertyProvider& aProvider,
-                                         nsRect* aOverflowRect)
+                                         nsRect* aVisualOverflowRect)
 {
   // Text-shadow overflows
-  nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(*aOverflowRect, this);
-  aOverflowRect->UnionRect(*aOverflowRect, shadowRect);
+  nsRect shadowRect =
+    nsLayoutUtils::GetTextShadowRectsUnion(*aVisualOverflowRect, this);
+  aVisualOverflowRect->UnionRect(*aVisualOverflowRect, shadowRect);
 
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
@@ -4118,14 +4119,14 @@ nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
     fm->GetMaxAscent(fontAscent);
     fm->GetMaxHeight(fontHeight);
     nsRect fontRect(0, mAscent - fontAscent, GetSize().width, fontHeight);
-    aOverflowRect->UnionRect(*aOverflowRect, fontRect);
+    aVisualOverflowRect->UnionRect(*aVisualOverflowRect, fontRect);
   }
 
   // When this frame is not selected, the text-decoration area must be in
   // frame bounds.
   nsRect decorationRect;
   if (!(GetStateBits() & NS_FRAME_SELECTED_CONTENT) ||
-      !CombineSelectionUnderlineRect(aPresContext, *aOverflowRect))
+      !CombineSelectionUnderlineRect(aPresContext, *aVisualOverflowRect))
     return;
   AddStateBits(TEXT_SELECTION_UNDERLINE_OVERFLOWED);
 }
@@ -6074,7 +6075,7 @@ nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
        eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) ||
       (GetStateBits() & TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.
-    return GetOverflowRect();
+    return GetVisualOverflowRect();
   }
 
   gfxSkipCharsIterator iter = const_cast<nsTextFrame*>(this)->EnsureTextRun();
@@ -6581,10 +6582,10 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // Handle text that runs outside its normal bounds.
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
-  aMetrics.mOverflowArea.UnionRect(boundingBox,
-                                   nsRect(0, 0, aMetrics.width, aMetrics.height));
+  aMetrics.SetOverflowAreasToDesiredBounds();
+  aMetrics.VisualOverflow().UnionRect(aMetrics.VisualOverflow(), boundingBox);
 
-  UnionTextDecorationOverflow(presContext, provider, &aMetrics.mOverflowArea);
+  UnionTextDecorationOverflow(presContext, provider, &aMetrics.VisualOverflow());
 
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
@@ -6695,7 +6696,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     }
   }
 
-  Invalidate(aMetrics.mOverflowArea);
+  Invalidate(aMetrics.VisualOverflow());
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);
@@ -6812,12 +6813,15 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIRenderingContext* aRC)
   return result;
 }
 
-nsRect
-nsTextFrame::RecomputeOverflowRect()
+nsOverflowAreas
+nsTextFrame::RecomputeOverflow()
 {
+  nsRect bounds(nsPoint(0, 0), GetSize());
+  nsOverflowAreas result(bounds, bounds);
+
   gfxSkipCharsIterator iter = EnsureTextRun();
   if (!mTextRun)
-    return nsRect(nsPoint(0,0), GetSize());
+    return result;
 
   PropertyProvider provider(this, iter);
   provider.InitializeForDisplay(PR_TRUE);
@@ -6828,13 +6832,12 @@ nsTextFrame::RecomputeOverflowRect()
                           gfxFont::LOOSE_INK_EXTENTS, nsnull,
                           &provider);
 
-  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
-  boundingBox.UnionRect(boundingBox,
-                        nsRect(nsPoint(0,0), GetSize()));
+  nsRect &vis = result.VisualOverflow();
+  vis.UnionRect(vis, RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent));
 
-  UnionTextDecorationOverflow(PresContext(), provider, &boundingBox);
+  UnionTextDecorationOverflow(PresContext(), provider, &vis);
 
-  return boundingBox;
+  return result;
 }
 
 static PRUnichar TransformChar(const nsStyleText* aStyle, gfxTextRun* aTextRun,
@@ -7060,9 +7063,14 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
     }
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
-  if (HasOverflowRect()) {
-    nsRect overflowArea = GetOverflowRect();
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+  if (HasOverflowAreas()) {
+    nsRect overflowArea = GetVisualOverflowRect();
+    fprintf(out, " [vis-overflow=%d,%d,%d,%d]",
+            overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
+    overflowArea = GetScrollableOverflowRect();
+    fprintf(out, " [scr-overflow=%d,%d,%d,%d]",
+            overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
   fprintf(out, " sc=%p", static_cast<void*>(mStyleContext));

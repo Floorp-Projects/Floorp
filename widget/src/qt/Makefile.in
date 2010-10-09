@@ -75,6 +75,10 @@ CPPSRCS	= \
 		mozqwidget.cpp \
 		nsSound.cpp \
 		nsFilePicker.cpp \
+		nsPrintOptionsQt.cpp \
+		nsPrintSettingsQt.cpp \
+		nsPrintDialogQt.cpp \
+		nsDeviceContextSpecQt.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a

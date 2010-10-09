@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage enable preference test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function setDOMStorageEnabled(enabled)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+              .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref("dom.storage.enabled", enabled);
+}
+
+function checkException(func, exc)
+{
+  var exceptionThrew = false;
+  try {
+    func();
+  }
+  catch (ex) {
+    exceptionThrew = true;
+    is(ex.name, exc, "Expected "+exc+" exception");
+  }
+  ok(exceptionThrew, "Exception "+exc+" threw");
+}
+
+function startTest()
+{
+  setDOMStorageEnabled(true);
+
+  is(typeof(window.localStorage), "object", "Storage is present");
+  var storage = window.localStorage;
+
+  setDOMStorageEnabled(false);
+
+  is(window.localStorage, null, "Storage is null");
+
+  checkException(function() {storage.setItem("test", "value");}, "NS_ERROR_DOM_SECURITY_ERR");
+
+  setDOMStorageEnabled(true);
+
+  is(typeof(window.localStorage), "object", "Storage is present again");
+  storage.setItem("test", "value");
+  ok(storage.getItem("test"), "value", "value can be set");
+}
+
+function cleanup()
+{
+  setDOMStorageEnabled(true);
+  window.localStorage.clear();
+  SimpleTest.finish();
+}
+
+function doTest()
+{
+  try
+  {
+    startTest();
+  }
+  catch(exc)
+  {
+    ok(false, exc+" was threw during the test")
+  }
+  finally
+  {
+    cleanup();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="doTest();">
+
+</body>
+</html>

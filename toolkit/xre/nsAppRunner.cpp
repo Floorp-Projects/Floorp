@@ -2397,14 +2397,12 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
   *aCachesOK = (NS_FAILED(rv) || !buf.EqualsLiteral("1"));
   
-#ifdef DEBUG
   PRBool purgeCaches = PR_FALSE;
   if (aFlagFile) {
     aFlagFile->Exists(&purgeCaches);
   }
 
   *aCachesOK = !purgeCaches && *aCachesOK;
-#endif
   return PR_TRUE;
 }
 
@@ -3356,7 +3354,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
      // Re-register components to catch potential changes.
      // We only offer this in debug builds, though.
      nsCOMPtr<nsILocalFile> flagFile;
-#ifdef DEBUG
+
      rv = NS_ERROR_FILE_NOT_FOUND;
      nsCOMPtr<nsIFile> fFlagFile;
      if (gAppData->directory) {
@@ -3366,7 +3364,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
      if (flagFile) {
        flagFile->AppendNative(FILE_INVALIDATE_CACHES);
      }
- #endif
+
     PRBool cachesOK;
     PRBool versionOK = CheckCompatibility(profD, version, osABI, 
                                           dirProvider.GetGREDir(),
@@ -3415,11 +3413,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                    dirProvider.GetGREDir(), gAppData->directory);
     }
 
-#ifdef DEBUG
     if (flagFile) {
       flagFile->Remove(PR_TRUE);
     }
-#endif
+
     PRBool appInitiatedRestart = PR_FALSE;
 
     MOZ_SPLASHSCREEN_UPDATE(30);

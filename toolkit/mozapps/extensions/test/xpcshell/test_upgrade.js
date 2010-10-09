@@ -75,7 +75,7 @@ function run_test() {
     }],
     name: "Test Addon 4",
   }, globalDir);
-  dest.lastModifiedTime = gInstallTime;
+  setExtensionModifiedTime(dest, gInstallTime);
 
   do_test_pending();
 
@@ -133,7 +133,7 @@ function run_test_2() {
     }],
     name: "Test Addon 4",
   }, globalDir);
-  dest.lastModifiedTime = gInstallTime;
+  setExtensionModifiedTime(dest, gInstallTime);
 
   restartManager("2");
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -172,7 +172,7 @@ function run_test_3() {
     }],
     name: "Test Addon 4",
   }, globalDir);
-  dest.lastModifiedTime = gInstallTime;
+  setExtensionModifiedTime(dest, gInstallTime);
 
   // Simulates a simple Build ID change, the platform deletes extensions.ini
   // whenever the application is changed.

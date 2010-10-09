@@ -165,8 +165,14 @@ nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
   if (content) {
     content->RemoveMutationObserver(this);
   }
-  
+
   mAttrMap = aMap;
+
+  // If we have a new content, we sholud start listening to it.
+  content = GetContentInternal();
+  if (content) {
+    content->AddMutationObserver(this);
+  }
 }
 
 nsIContent*
@@ -254,6 +260,16 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
   }
   else {
     mValue = aValue;
+
+    if (mChild) {
+      if (mValue.IsEmpty()) {
+        doRemoveChild();
+      } else {
+        mChild->SetText(mValue, PR_FALSE);
+      }
+    } else {
+      EnsureChildState();
+    }
   }
 
   return rv;
@@ -666,6 +682,8 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationE
     return NS_OK;
   }
 
+  doRemoveChild();
+
   nsString nullString;
   SetDOMStringToNull(nullString);
   SetValue(nullString);
@@ -771,9 +789,7 @@ nsDOMAttribute::AttributeChanged(nsIDocument* aDocument,
   
   // Just blow away our mChild and recreate it if needed
   if (mChild) {
-    static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();
-    NS_RELEASE(mChild);
-    mFirstChild = nsnull;
+    doRemoveChild();
   }
   EnsureChildState();
 }
@@ -789,3 +805,12 @@ nsDOMAttribute::Shutdown()
 {
   sInitialized = PR_FALSE;
 }
+
+void
+nsDOMAttribute::doRemoveChild()
+{
+  static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();
+  NS_RELEASE(mChild);
+  mFirstChild = nsnull;
+}
+

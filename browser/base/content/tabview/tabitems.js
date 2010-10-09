@@ -1030,10 +1030,16 @@ let TabItems = {
 
         item.reconnected = true;
         found = true;
-      } else
-        item.reconnected = item.tab.linkedBrowser.currentURI.spec != 'about:blank';
-
+      } else {
+        // if it's not a blank tab or it belongs to a group, it would mean 
+        // the item is reconnected.
+        item.reconnected = 
+          (item.tab.linkedBrowser.currentURI.spec != 'about:blank' || item.parent);
+      }
       item.save();
+
+      if (item.reconnected)
+        item._sendToSubscribers("reconnected");
     } catch(e) {
       Utils.log(e);
     }
