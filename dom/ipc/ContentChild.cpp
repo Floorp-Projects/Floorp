@@ -42,7 +42,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_QT
-#include <QApplication>
+#include "nsQAppInstance.h"
 #endif
 
 #include "ContentChild.h"
@@ -194,7 +194,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 
 #ifdef MOZ_WIDGET_QT
     // sigh, seriously
-    QApplication qapp(NULL, NULL, false);
+    nsQAppInstance::AddRef();
 #endif
 
 #ifdef MOZ_X11
