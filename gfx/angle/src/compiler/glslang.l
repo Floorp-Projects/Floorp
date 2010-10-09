@@ -274,7 +274,7 @@ int yy_input(char* buf, int max_size)
 //
 // Returns 0 for success, as per yyparse().
 //
-int PaParseStrings(char* argv[], int strLen[], int argc, TParseContext& parseContextLocal)
+int PaParseStrings(const char* const argv[], const int strLen[], int argc, TParseContext& parseContextLocal)
 {
     int argv0len;
     

@@ -152,6 +152,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\Compiler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\debug.cpp"
 				>
 			</File>
@@ -259,6 +263,10 @@
 			</File>
 			<File
 				RelativePath=".\SymbolTable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableInfo.cpp"
 				>
 			</File>
 			<Filter
@@ -401,6 +409,10 @@
 			</File>
 			<File
 				RelativePath=".\unistd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableInfo.h"
 				>
 			</File>
 			<Filter

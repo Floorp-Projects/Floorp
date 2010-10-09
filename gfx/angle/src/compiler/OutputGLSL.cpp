@@ -374,6 +374,10 @@ bool TOutputGLSL::visitUnary(Visit visit, TIntermUnary* node)
         case EOpLength: writeTriplet(visit, "length(", NULL, ")"); break;
         case EOpNormalize: writeTriplet(visit, "normalize(", NULL, ")"); break;
 
+        case EOpDFdx: writeTriplet(visit, "dFdx(", NULL, ")"); break;
+        case EOpDFdy: writeTriplet(visit, "dFdy(", NULL, ")"); break;
+        case EOpFwidth: writeTriplet(visit, "fwidth(", NULL, ")"); break;
+
         case EOpAny: writeTriplet(visit, "any(", NULL, ")"); break;
         case EOpAll: writeTriplet(visit, "all(", NULL, ")"); break;
 

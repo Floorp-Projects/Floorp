@@ -140,6 +140,23 @@ IDirect3DSurface9 *Framebuffer::getRenderTarget()
     return NULL;
 }
 
+IDirect3DSurface9 *Framebuffer::getDepthStencil()
+{
+    Renderbuffer *depthstencilbuffer = mDepthbufferPointer.get();
+    
+    if (!depthstencilbuffer)
+    {
+        depthstencilbuffer = mStencilbufferPointer.get();
+    }
+
+    if (depthstencilbuffer)
+    {
+        return depthstencilbuffer->getDepthStencil();
+    }
+
+    return NULL;
+}
+
 unsigned int Framebuffer::getDepthbufferSerial()
 {
     Renderbuffer *depthbuffer = mDepthbufferPointer.get();
@@ -147,6 +164,18 @@ unsigned int Framebuffer::getDepthbufferSerial()
     if (depthbuffer)
     {
         return depthbuffer->getSerial();
+    }
+
+    return 0;
+}
+
+unsigned int Framebuffer::getStencilbufferSerial()
+{
+    Renderbuffer *stencilbuffer = mStencilbufferPointer.get();
+
+    if (stencilbuffer)
+    {
+        return stencilbuffer->getSerial();
     }
 
     return 0;
@@ -224,10 +253,43 @@ GLuint Framebuffer::getStencilbufferHandle()
     return mStencilbufferPointer.id();
 }
 
+bool Framebuffer::hasStencil()
+{
+    if (mStencilbufferType != GL_NONE)
+    {
+        DepthStencilbuffer *stencilbufferObject = getStencilbuffer();
+
+        if (stencilbufferObject)
+        {
+            return stencilbufferObject->getStencilSize() > 0;
+        }
+    }
+
+    return false;
+}
+
+bool Framebuffer::isMultisample()
+{
+    // If the framebuffer is not complete, attachment samples may be mismatched, and it
+    // cannot be used as a multisample framebuffer. If it is complete, it is required to
+    // have a color attachment, and all its attachments must have the same number of samples,
+    // so the number of samples for the colorbuffer will indicate whether the framebuffer is
+    // multisampled.
+    if (completeness() == GL_FRAMEBUFFER_COMPLETE && getColorbuffer()->getSamples() > 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 GLenum Framebuffer::completeness()
 {
     int width = 0;
     int height = 0;
+    int samples = -1;
 
     if (mColorbufferType != GL_NONE)
     {
@@ -243,8 +305,23 @@ GLenum Framebuffer::completeness()
             return GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
         }
 
+        if (IsTextureTarget(mColorbufferType))
+        {
+            if (IsCompressed(colorbuffer->getFormat()))
+            {
+                return GL_FRAMEBUFFER_UNSUPPORTED;
+            }
+
+            if (colorbuffer->isFloatingPoint() && (!getContext()->supportsFloatRenderableTextures() || 
+                                                   !getContext()->supportsHalfFloatRenderableTextures()))
+            {
+                return GL_FRAMEBUFFER_UNSUPPORTED;
+            }
+        }
+
         width = colorbuffer->getWidth();
         height = colorbuffer->getHeight();
+        samples = colorbuffer->getSamples();
     }
     else
     {
@@ -277,6 +354,23 @@ GLenum Framebuffer::completeness()
         {
             return GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
         }
+
+        if (samples == -1)
+        {
+            samples = depthbuffer->getSamples();
+        }
+        else if (samples != depthbuffer->getSamples())
+        {
+            return GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_ANGLE;
+        }
+        
+        if (IsTextureTarget(mDepthbufferType))
+        {
+            if (IsCompressed(depthbuffer->getFormat()))
+            {
+                return GL_FRAMEBUFFER_UNSUPPORTED;
+            }
+        }
     }
 
     if (mStencilbufferType != GL_NONE)
@@ -301,6 +395,23 @@ GLenum Framebuffer::completeness()
         else if (width != stencilbuffer->getWidth() || height != stencilbuffer->getHeight())
         {
             return GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
+        }
+
+        if (samples == -1)
+        {
+            samples = stencilbuffer->getSamples();
+        }
+        else if (samples != stencilbuffer->getSamples())
+        {
+            return GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_ANGLE;
+        }
+        
+        if (IsTextureTarget(mStencilbufferType))
+        {
+            if (IsCompressed(stencilbuffer->getFormat()))
+            {
+                return GL_FRAMEBUFFER_UNSUPPORTED;
+            }
         }
     }
 
@@ -328,6 +439,18 @@ DefaultFramebuffer::DefaultFramebuffer(Colorbuffer *color, DepthStencilbuffer *d
     Renderbuffer *depthStencilRenderbuffer = new Renderbuffer(0, depthStencil);
     mDepthbufferPointer.set(depthStencilRenderbuffer);
     mStencilbufferPointer.set(depthStencilRenderbuffer);
+}
+
+int Framebuffer::getSamples()
+{
+    if (completeness() == GL_FRAMEBUFFER_COMPLETE)
+    {
+        return getColorbuffer()->getSamples();
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 GLenum DefaultFramebuffer::completeness()

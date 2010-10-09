@@ -201,6 +201,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Fence.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Framebuffer.cpp"
 				>
 			</File>
@@ -276,6 +280,10 @@
 			</File>
 			<File
 				RelativePath=".\Context.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Fence.h"
 				>
 			</File>
 			<File
