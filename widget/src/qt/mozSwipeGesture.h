@@ -71,7 +71,8 @@ private:
     MozSwipeGesture();
 
     bool Update(const QTouchEvent::TouchPoint& aFirstPoint,
-                const QTouchEvent::TouchPoint& aSecondPoint);
+                const QTouchEvent::TouchPoint& aSecondPoint,
+                const QSizeF& aSize);
 
     int mHorizontalDirection;
     int mVerticalDirection;
