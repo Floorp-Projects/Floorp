@@ -1838,7 +1838,9 @@ nsWindow::OnGestureEvent(QGestureEvent* event, PRBool &handled) {
         QPinchGesture* pinch = static_cast<QPinchGesture*>(gesture);
         handled = PR_TRUE;
 
-        nsIntPoint centerPoint(pinch->centerPoint().x(), pinch->centerPoint().y());
+        QPointF mappedCenterPoint =
+            mWidget->mapFromScene(event->mapToGraphicsScene(pinch->centerPoint()));
+        nsIntPoint centerPoint(mappedCenterPoint.x(), mappedCenterPoint.y());
 
         if (pinch->state() == Qt::GestureStarted) {
             event->accept();
