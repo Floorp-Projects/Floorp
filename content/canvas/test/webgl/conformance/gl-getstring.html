@@ -33,6 +33,9 @@ if (!gl) {
   debug("");
   checkPrefix("WebGL 1.0", "VERSION");
   checkPrefix("WebGL GLSL ES 1.0", "SHADING_LANGUAGE_VERSION");
+  shouldBeNonNull("gl.getParameter(gl.VENDOR)");
+  shouldBeNonNull("gl.getParameter(gl.RENDERER)");
+  shouldBe("gl.getError()", "gl.NO_ERROR");
 }
 
 function checkPrefix(expected, enum_val) {

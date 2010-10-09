@@ -51,6 +51,7 @@ var locationA = contextA.getUniformLocation(programA1, 'u_modelViewProjMatrix');
 var locationB = contextB.getUniformLocation(programB, 'u_modelViewProjMatrix');
 var locationSx = contextA.getUniformLocation(programS, "u_struct.x");
 var locationArray0 = contextA.getUniformLocation(programS, "u_array[0]");
+var locationArray1 = contextA.getUniformLocation(programS, "u_array[1]");
 var locationVec4 = contextA.getUniformLocation(programV, "fval4");
 
 var vec = [1, 2, 3, 4];
@@ -65,9 +66,11 @@ shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.uniformMatrix4fv(nu
 shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.useProgram(programS)");
 shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.uniform1i(locationSx, 3)");
 shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.uniform1f(locationArray0, 4.0)");
+shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.uniform1f(locationArray1, 5.0)");
 
 shouldBe("contextA.getUniform(programS, locationSx)", "3");
 shouldBe("contextA.getUniform(programS, locationArray0)", "4.0");
+shouldBe("contextA.getUniform(programS, locationArray1)", "5.0");
 
 shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.useProgram(programV)");
 shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.uniform4fv(locationVec4, vec)");

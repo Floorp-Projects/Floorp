@@ -41,8 +41,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 description('Verify that constructing a typed array view with no arguments and fetching its length does not crash');
 
-<!-- The following used to cause a crash in both Safari and Chrome -->
-new Uint32Array().length;
+
+// The following used to cause a crash in both Safari and Chrome.
+
+// Note that because the argument to ArrayBuffer's constructor is not
+// optional, an implementation might throw an exception on the expression
+// below rather than implicitly passing undefined. Either way is acceptable
+// from the point of view of this test, but implementations must not crash.
+try {
+  new Uint32Array().length;
+} catch (e) {
+}
 
 testPassed("new Uint32Array().length did not crash");
 successfullyParsed = true;
