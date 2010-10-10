@@ -58,6 +58,12 @@ class WrapperFactory {
         return HasWrapperFlag(wrapper, IS_XRAY_WRAPPER_FLAG);
     }
 
+    // Prepare a given object for wrapping in a new compartment.
+    static JSObject *PrepareForWrapping(JSContext *cx,
+                                        JSObject *scope,
+                                        JSObject *obj,
+                                        uintN flags);
+
     // Rewrap an object that is about to cross compartment boundaries.
     static JSObject *Rewrap(JSContext *cx,
                             JSObject *obj,

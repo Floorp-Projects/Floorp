@@ -562,6 +562,14 @@ typedef JSObject *
 (* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                          uintN flags);
 
+/*
+ * Callback used by the wrap hook to ask the embedding to prepare an object
+ * for wrapping in a context. This might include unwrapping other wrappers
+ * or even finding a more suitable object for the new compartment.
+ */
+typedef JSObject *
+(* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags);
+
 typedef enum {
     JSCOMPARTMENT_NEW, /* XXX Does it make sense to have a NEW? */
     JSCOMPARTMENT_DESTROY

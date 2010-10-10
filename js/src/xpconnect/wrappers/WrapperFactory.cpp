@@ -45,6 +45,7 @@
 #include "FilteringWrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
+#include "XPCWrapper.h"
 
 #include "xpcprivate.h"
 
@@ -66,15 +67,77 @@ JSWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 CrossOriginWrapper XrayWrapperWaivedWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
 JSObject *
+WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags)
+{
+    // Here are the rules for wrapping:
+    // We should never get a proxy here (the JS engine unwraps those for us).
+    JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
+
+    // As soon as an object is wrapped in a security wrapper, it morphs to be
+    // a fat wrapper. (see also: bug XXX).
+    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
+        return nsnull;
+
+    // We only hand out outer objects to script.
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+
+    // Now, our object is ready to be wrapped, but several objects (notably
+    // nsJSIIDs) have a wrapper per scope. If we are about to wrap one of
+    // those objects in a security wrapper, then we need to hand back the
+    // wrapper for the new scope instead. So...
+    if (!IS_WN_WRAPPER(obj))
+        return obj;
+
+    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+
+    // We know that DOM objects only allow one object, we can return early.
+    if (wn->GetProto()->ClassIsDOMObject())
+        return obj;
+
+    XPCCallContext ccx(JS_CALLER, cx, obj);
+    if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
+        // We have a precreate hook. This object might enforce that we only
+        // ever create JS object for it.
+        JSObject *originalScope = scope;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->
+            PreCreate(wn->Native(), cx, scope, &scope);
+        NS_ENSURE_SUCCESS(rv, obj);
+
+        // If the handed back scope differs from the passed-in scope and is in
+        // a separate compartment, then this object is explicitly requesting
+        // that we don't create a second JS object for it: create a security
+        // wrapper.
+        if (originalScope->getCompartment() != scope->getCompartment())
+            return obj;
+
+        // Note: this penalizes objects that only have one wrapper, but are
+        // being accessed across compartments. We would really prefer to
+        // replace the above code with a test that says "do you only have one
+        // wrapper?"
+    }
+
+    // The object we're looking at might allow us to create a new wrapped
+    // native in the new scope. Try it and continue wrapping on the
+    // possibly-new object.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, scope))
+        return obj;
+    jsval v;
+    nsresult rv =
+        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nsnull,
+                                                           &NS_GET_IID(nsISupports), PR_FALSE,
+                                                           &v, nsnull);
+    NS_ENSURE_SUCCESS(rv, obj);
+    return JSVAL_TO_OBJECT(v);
+}
+
+JSObject *
 WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
                        uintN flags)
 {
     NS_ASSERTION(!obj->isWrapper() || obj->getClass()->ext.innerObject,
                  "wrapped object passed to rewrap");
     NS_ASSERTION(JS_GET_CLASS(cx, obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
-
-    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
-        return nsnull;
 
     JSCompartment *origin = obj->getCompartment();
     JSCompartment *target = cx->compartment;
