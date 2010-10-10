@@ -86,6 +86,9 @@ class WrapperFactory {
 
     // Wrap a location object.
     static JSObject *WrapLocationObject(JSContext *cx, JSObject *obj);
+
+    // Wrap wrapped object into a waiver wrapper and then re-wrap it.
+    static bool WaiveXrayAndWrap(JSContext *cx, jsval *vp);
 };
 
 extern JSWrapper WaiveXrayWrapperWrapper;
