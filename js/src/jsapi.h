@@ -937,7 +937,9 @@ extern JS_PUBLIC_API(JSCompartmentCallback)
 JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallback(JSRuntime *rt, JSWrapObjectCallback callback);
+JS_SetWrapObjectCallbacks(JSRuntime *rt,
+                          JSWrapObjectCallback callback,
+                          JSPreWrapCallback precallback);
 
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);

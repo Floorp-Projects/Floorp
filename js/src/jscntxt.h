@@ -1691,6 +1691,7 @@ struct JSRuntime {
 #endif
 
     JSWrapObjectCallback wrapObjectCallback;
+    JSPreWrapCallback    preWrapObjectCallback;
 
     JSC::ExecutableAllocator *regExpAllocator;
 
