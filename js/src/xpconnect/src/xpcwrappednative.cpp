@@ -43,7 +43,6 @@
 
 #include "xpcprivate.h"
 #include "nsCRT.h"
-#include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
 #include "nsWrapperCache.h"
 #include "xpclog.h"
@@ -52,6 +51,7 @@
 #include "xpcquickstubs.h"
 #include "jsproxy.h"
 #include "AccessCheck.h"
+#include "WrapperFactory.h"
 
 /***************************************************************************/
 
@@ -445,8 +445,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             needsXOW = JS_TRUE;
         rv = NS_OK;
 
-        NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
-                     "Parent should never be an XPCNativeWrapper here");
+        NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
+                     "Xray wrapper being used to parent XPCWrappedNative?");
 
         if(!ac.enter(ccx, parent))
             return NS_ERROR_FAILURE;
@@ -577,8 +577,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
-                 "XPCNativeWrapper being used to parent XPCWrappedNative?");
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
+                 "Xray wrapper being used to parent XPCWrappedNative?");
 
     if(!wrapper->Init(ccx, parent, isGlobal, &sciWrapper))
     {
@@ -757,9 +757,8 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(existingJSObject
-                                                    ->getParent()),
-                 "XPCNativeWrapper being used to parent XPCWrappedNative?");
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(existingJSObject->getParent()),
+                 "Xray wrapper being used to parent XPCWrappedNative?");
 
     JSAutoEnterCompartment ac;
     if(!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject))
@@ -1384,10 +1383,6 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
         if(JSObject* wrapper = wnxow->GetXOW())
         {
             wrapper->getClass()->finalize(cx, wrapper);
-            NS_ASSERTION(!XPCWrapper::UnwrapGeneric(cx,
-                                                    &XPCCrossOriginWrapper::XOWClass,
-                                                    wrapper),
-                         "finalize didn't do its job");
         }
     }
 
@@ -1540,14 +1535,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     if(aOldScope != aNewScope)
     {
         // Oh, so now we need to move the wrapper to a different scope.
-
-        // First notify any XOWs.
-        if(wrapper)
-        {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-            xpc->UpdateXOWs(ccx, wrapper, nsIXPConnect::XPC_XOW_CLEARSCOPE);
-        }
-
         AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
         AutoMarkingWrappedNativeProtoPtr newProto(ccx);
 
@@ -1575,11 +1562,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
         if(wrapper)
         {
-            if(!XPCCrossOriginWrapper::WrapperMoved(ccx, wrapper, aNewScope))
-            {
-                return NS_ERROR_FAILURE;
-            }
-
             Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
             Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
 

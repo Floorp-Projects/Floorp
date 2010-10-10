@@ -1521,14 +1521,6 @@ public:
     JSBool
     IsValid() const {return mRuntime != nsnull;}
 
-    /**
-     * Figures out what type of wrapper to create for obj if it were injected
-     * into 'this's scope.
-     */
-    XPCWrapper::WrapperType
-    GetWrapperFor(JSContext *cx, JSObject *obj, XPCWrapper::WrapperType hint,
-                  XPCWrappedNative **wn);
-
     static JSBool
     IsDyingScope(XPCWrappedNativeScope *scope);
 

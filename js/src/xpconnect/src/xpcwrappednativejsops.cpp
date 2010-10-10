@@ -42,7 +42,6 @@
 /* JavaScript JSClasses and JSOps for our Wrapped Native JS Objects. */
 
 #include "xpcprivate.h"
-#include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
 
 /***************************************************************************/
@@ -772,24 +771,10 @@ XPC_WN_NoHelper_Resolve(JSContext *cx, JSObject *obj, jsid id)
 nsISupports *
 XPC_GetIdentityObject(JSContext *cx, JSObject *obj)
 {
-    XPCWrappedNative *wrapper;
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
 
-    if(XPCNativeWrapper::IsNativeWrapper(obj))
-        // Note: It's okay to use SafeGetWrappedNative here since we only do
-        // identity checking on the returned object.
-        wrapper = XPCNativeWrapper::SafeGetWrappedNative(obj);
-    else
-        wrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-
-    if(!wrapper) {
-        JSObject *unsafeObj = XPCSafeJSObjectWrapper::GetUnsafeObject(cx, obj);
-        if(unsafeObj)
-            return XPC_GetIdentityObject(cx, unsafeObj);
-
-        return nsnull;
-    }
-
-    return wrapper->GetIdentityObject();
+    return wrapper ? wrapper->GetIdentityObject() : nsnull;
 }
 
 JSBool
@@ -816,16 +801,6 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
         nsresult rv = si->GetCallback()->Equality(wrapper, cx, obj, v, bp);
         if(NS_FAILED(rv))
             return Throw(rv, cx);
-
-        if(!*bp && !JSVAL_IS_PRIMITIVE(v) &&
-           JSVAL_TO_OBJECT(v)->getClass() == &XPCSafeJSObjectWrapper::SJOWClass)
-        {
-            v = OBJECT_TO_JSVAL(XPCSafeJSObjectWrapper::GetUnsafeObject(cx, JSVAL_TO_OBJECT(v)));
-
-            rv = si->GetCallback()->Equality(wrapper, cx, obj, v, bp);
-            if(NS_FAILED(rv))
-                return Throw(rv, cx);
-        }
     }
     else if(!JSVAL_IS_PRIMITIVE(v))
     {
@@ -1405,22 +1380,7 @@ XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSObject *obj)
 void
 XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
 {
-    // We're likely to enter this JSOp with a wrapper prototype
-    // object. In that case we won't find a wrapper, so we'll just
-    // call into js_ObjectOps.clear(), which is exactly what we want.
-
-    // If our scope is cleared, make sure we clear the scope of our
-    // native wrapper as well.
-    XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-
-    if(wrapper && wrapper->IsValid())
-    {
-        XPCNativeWrapper::ClearWrappedNativeScopes(cx, wrapper);
-
-        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        xpc->UpdateXOWs(cx, wrapper, nsIXPConnect::XPC_XOW_CLEARSCOPE);
-    }
+    // XXX Clear XrayWrappers?
 }
 
 namespace {
