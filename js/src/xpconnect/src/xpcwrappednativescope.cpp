@@ -693,6 +693,12 @@ XPCWrappedNativeScope::SystemIsBeingShutDown(JSContext* cx)
         if(cur->mComponents)
             cur->mComponents->SystemIsBeingShutDown();
 
+        JSAutoEnterCompartment ac;
+
+        // XXX: What if we have no global in the scope???
+        if (cur->mGlobalJSObject)
+            ac.enter(cx, cur->mGlobalJSObject);
+
         // Walk the protos first. Wrapper shutdown can leave dangling
         // proto pointers in the proto map.
         cur->mWrappedNativeProtoMap->
