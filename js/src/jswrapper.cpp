@@ -239,6 +239,14 @@ JSWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, 
     GET(JSProxyHandler::construct(cx, wrapper, argc, argv, rval));
 }
 
+bool
+JSWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
+{
+    const jsid id = JSID_VOID;
+    JSBool b;
+    GET(JS_HasInstance(cx, wrappedObject(wrapper), Jsvalify(*vp), &b) && Cond(b, bp));
+}
+
 JSString *
 JSWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
 {
@@ -602,6 +610,19 @@ JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN arg
     call.leave();
     return call.origin->wrap(cx, rval) &&
            call.origin->wrapException(cx);
+}
+
+bool
+JSCrossCompartmentWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
+{
+    AutoCompartment call(cx, wrappedObject(wrapper));
+    if (!call.enter())
+        return false;
+
+    Value v = *vp;
+    if (!call.destination->wrap(cx, &v))
+        return false;
+    return JSWrapper::hasInstance(cx, wrapper, &v, bp);
 }
 
 JSString *

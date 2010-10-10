@@ -284,6 +284,15 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
     return ExternalInvoke(cx, thisobj, fval, argc, argv, rval);
 }
 
+bool
+JSProxyHandler::hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp)
+{
+    JS_ASSERT(OperationInProgress(cx, proxy));
+    js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
+                        JSDVG_SEARCH_STACK, ObjectValue(*proxy), NULL);
+    return false;
+}
+
 void
 JSProxyHandler::finalize(JSContext *cx, JSObject *proxy)
 {
@@ -920,6 +929,17 @@ proxy_Finalize(JSContext *cx, JSObject *obj)
         obj->getProxyHandler()->finalize(cx, obj);
 }
 
+static JSBool
+proxy_HasInstance(JSContext *cx, JSObject *proxy, const Value *v, JSBool *bp)
+{
+    AutoPendingProxyOperation pending(cx, proxy);
+    bool b;
+    if (!proxy->getProxyHandler()->hasInstance(cx, proxy, v, &b))
+        return false;
+    *bp = !!b;
+    return true;
+}
+
 JS_FRIEND_API(Class) ObjectProxyClass = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(3),
@@ -936,7 +956,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
     NULL,           /* call        */
     NULL,           /* construct   */
     NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
+    proxy_HasInstance, /* hasInstance */
     NULL,           /* mark        */
     JS_NULL_CLASS_EXT,
     {
@@ -1022,8 +1042,6 @@ proxy_TypeOf_fun(JSContext *cx, JSObject *obj)
     return JSTYPE_FUNCTION;
 }
 
-#define proxy_HasInstance js_FunctionClass.hasInstance
-
 JS_FRIEND_API(Class) FunctionProxyClass = {
     "Proxy",
     Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(5),
@@ -1040,7 +1058,7 @@ JS_FRIEND_API(Class) FunctionProxyClass = {
     proxy_Call,
     proxy_Construct,
     NULL,           /* xdrObject   */
-    proxy_HasInstance,
+    js_FunctionClass.hasInstance,
     NULL,           /* mark */
     JS_NULL_CLASS_EXT,
     {
