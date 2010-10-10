@@ -61,6 +61,9 @@ class XrayWrapper : public Base {
     XrayWrapper(uintN flags);
     virtual ~XrayWrapper();
 
+    bool resolveWrappedJSObject(JSContext *cx, JSObject *wrapper, jsid id,
+                                bool set, js::PropertyDescriptor *desc);
+
     /* Fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                        bool set, js::PropertyDescriptor *desc);
