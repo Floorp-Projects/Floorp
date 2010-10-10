@@ -1715,6 +1715,10 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // If all went well, convert val to a string if one is wanted.
   if (ok) {
     JSAutoRequest ar(mContext);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mContext, (JSObject *)aScopeObject)) {
+      stack->Pop(nsnull);
+    }
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   }
   else {
