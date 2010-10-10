@@ -48,12 +48,14 @@ sandbox.getCOW = getCOW;
 const TEST_API = ['is', 'isnot', 'ok', 'todo_is', 'todo_isnot', 'todo'];
 TEST_API.forEach(function(name) { sandbox[name] = window[name]; });
 
-sandbox.alienObject = test_utils.getCOWForObject(sandbox, {
+sandbox.alienObject = {
   __exposedProps__: {funProp: 'r'},
   funProp: function foo(x) {
     return x + 1;
   }
-});
+};
+
+sandbox.chromeGet = function (obj, prop) { return obj[prop]; };
 
 function COWTests() {
     // This function is actually decompiled and run inside a
@@ -85,8 +87,9 @@ function COWTests() {
             strictCOW[name];
             ok(false, "COWs didn't restrict access to " + uneval(name));
         } catch (e) {
-            ok(/SECURITY_MANAGER/.test(e),
-               "not able to access arbitrary property " + uneval(name));
+            ok(/Permission denied/.test(e.message),
+               "should get 'Permission denied' trying to access arbitrary property " +
+               uneval(name) + ", got: " + e.message);
         }
     });
 
@@ -102,18 +105,18 @@ function COWTests() {
              "obj should not throw");
     }
 
-    var writable = { __exposedProps__: {foo: 'w'}};
+    var writable = getCOW({ __exposedProps__: {foo: 'w'}});
     try {
-        getCOW(writable).foo = 5;
-        is(writable.foo, 5, "writing to a writable exposed prop works");
+        writable.foo = 5;
+        is(chromeGet(writable, "foo"), 5, "writing to a writable exposed prop works");
     } catch (e) {
         ok(false, "writing to a writable exposed prop shouldn't throw " + e);
     }
     try {
-        getCOW(writable).foo;
+        writable.foo;
         ok(false, "reading from a write-only exposed prop should fail");
     } catch (e) {
-        ok(/SECURITY_MANAGER/.test(e),
+        ok(/Permission denied/.test(e),
            "reading from a write-only exposed prop should fail");
     }
 
@@ -130,7 +133,7 @@ function COWTests() {
         getCOW(readable).foo = 1;
         ok(false, "writing to a read-only exposed prop should fail");
     } catch (e) {
-        ok(/SECURITY_MANAGER/.test(e),
+        ok(/Permission denied/.test(e),
            "writing to a read-only exposed prop should fail");
     }
 
@@ -138,7 +141,7 @@ function COWTests() {
         delete getCOW(readable).foo;
         ok(false, "deleting a read-only exposed prop shouldn't work");
     } catch (e) {
-        ok(/SECURITY_MANAGER/.test(e),
+        ok(/Permission denied/.test(e),
            "deleting a read-only exposed prop should throw error");
     }
 
