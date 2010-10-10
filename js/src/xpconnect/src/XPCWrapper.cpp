@@ -46,7 +46,6 @@
 #include "jswrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
-#include "WrapperFactory.h"
 
 namespace XPCWrapper {
 
@@ -66,7 +65,7 @@ JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
   if (wrapper->isProxy()) {
-    if (xpc::WrapperFactory::IsScriptAccessOnly(cx, wrapper))
+    if (xpc::AccessCheck::isScriptAccessOnly(cx, wrapper))
       return nsnull;
     return wrapper->unwrap();
   }
