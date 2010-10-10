@@ -414,17 +414,20 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
 
     Access access = NO_ACCESS;
 
-    jsval v;
-    if (!JS_LookupPropertyById(cx, hallpass, id, &v)) {
+    JSPropertyDescriptor desc;
+    if (!JS_GetPropertyDescriptorById(cx, hallpass, id, JSRESOLVE_QUALIFIED, &desc)) {
         return false; // Error
     }
+    if (desc.obj == NULL || !(desc.attrs & JSPROP_ENUMERATE)) {
+        return true; // Deny
+    }
 
-    if (!JSVAL_IS_STRING(v)) {
+    if (!JSVAL_IS_STRING(desc.value)) {
         JS_ReportError(cx, "property must be a string");
         return false;
     }
 
-    JSString *str = JSVAL_TO_STRING(v);
+    JSString *str = JSVAL_TO_STRING(desc.value);
     const jschar *chars = JS_GetStringChars(str);
     size_t length = JS_GetStringLength(str);
     for (size_t i = 0; i < length; ++i) {
