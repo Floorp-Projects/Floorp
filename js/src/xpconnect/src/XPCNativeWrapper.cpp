@@ -888,9 +888,7 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
   }
 
-  // NB: This relies on the fact that the only wrappers to use ProxyExtra are
-  // Xray wrappers.
-  if (!obj->getProxyExtra().isUndefined()) {
+  if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
     return JS_GetProperty(cx, obj, "wrappedJSObject", vp);
   }
 
