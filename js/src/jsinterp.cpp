@@ -4698,7 +4698,7 @@ BEGIN_CASE(JSOP_APPLY)
         JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(newfun, vp[1]));
 
         Probes::enterJSFun(cx, newfun);
-        JSBool ok = newfun->u.n.native(cx, argc, vp);
+        JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
         Probes::exitJSFun(cx, newfun);
         regs.sp = vp + 1;
         if (!ok)
