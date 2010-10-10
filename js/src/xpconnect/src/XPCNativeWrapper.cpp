@@ -42,6 +42,7 @@
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
 #include "jsdbgapi.h"
+#include "WrapperFactory.h"
 
 static JSBool
 XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
@@ -750,119 +751,6 @@ XPC_NW_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
   return JS_TRUE;
 }
 
-static JSBool
-XPCNativeWrapperCtor(JSContext *cx, uintN argc, jsval *vp)
-{
-  JSBool constructing = JS_FALSE;
-
-  JSObject *givenThis;
-  if (JS_IsConstructing_PossiblyWithGivenThisObject(cx, vp, &givenThis)) {
-    constructing = JS_TRUE;
-    if (givenThis) {
-      // This is the XPCNativeWrapper prototype
-      JS_ASSERT(givenThis->getProto() != NULL);
-      JS_ASSERT(XPCNativeWrapper::IsNativeWrapper(givenThis));
-      JS_ASSERT(!XPCNativeWrapper::IsNativeWrapper(givenThis->getProto()));
-
-      if (!JS_SetPrivate(cx, givenThis, nsnull) ||
-          !JS_SetReservedSlot(cx, givenThis, 0, JSVAL_ZERO)) {
-        return JS_FALSE;
-      }
-
-      JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(givenThis));
-      return JS_TRUE;
-    }
-  }
-
-  if (argc < 1) {
-    return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
-  }
-
-  jsval *argv = JS_ARGV(cx, vp);
-  jsval native = argv[0];
-
-  if (JSVAL_IS_PRIMITIVE(native)) {
-    if (constructing) {
-      return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
-    }
-
-    JS_SET_RVAL(cx, vp, native);
-    return JS_TRUE;
-  }
-
-  JSObject *nativeObj = JSVAL_TO_OBJECT(native);
-
-  // First, if this is another type of security wrapper, unwrap it to see what
-  // we're really dealing with.
-  nativeObj = UnsafeUnwrapSecurityWrapper(cx, nativeObj);
-  if (!nativeObj) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-  native = OBJECT_TO_JSVAL(nativeObj);
-
-  // Now, figure out if we're allowed to create an XPCNativeWrapper around it.
-  JSObject *scope = JS_GetScopeChain(cx);
-  if (!scope) {
-    return JS_FALSE;
-  }
-
-  XPCWrappedNativeScope *xpcscope =
-    XPCWrappedNativeScope::FindInJSObjectScope(cx, scope);
-  NS_ASSERTION(xpcscope, "what crazy scope are we in?");
-
-  XPCWrappedNative *wrappedNative;
-  WrapperType type = xpcscope->GetWrapperFor(cx, nativeObj, XPCNW_EXPLICIT,
-                                             &wrappedNative);
-
-  if (type != NONE && !(type & XPCNW_EXPLICIT)) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  // We might have to morph.
-  if (!wrappedNative) {
-    wrappedNative =
-      XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, nativeObj);
-
-    if (!wrappedNative) {
-      return ThrowException(NS_ERROR_INVALID_ARG, cx);
-    }
-  }
-
-  // Prevent wrapping a double-wrapped JS object in an
-  // XPCNativeWrapper!
-  nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs =
-    do_QueryWrappedNative(wrappedNative);
-
-  if (xpcwrappedjs) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  if (argc == 2 && !JSVAL_IS_PRIMITIVE(argv[1])) {
-    // An object was passed as the second argument to the
-    // constructor. In this case we check that the object we're
-    // wrapping is an instance of the assumed constructor that we
-    // got. If not, throw an exception.
-    JSBool hasInstance;
-    if (!JS_HasInstance(cx, JSVAL_TO_OBJECT(argv[1]), native, &hasInstance)) {
-      return ThrowException(NS_ERROR_UNEXPECTED, cx);
-    }
-
-    if (!hasInstance) {
-      return ThrowException(NS_ERROR_INVALID_ARG, cx);
-    }
-  }
-
-  if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wrappedNative, vp)) {
-    return JS_FALSE;
-  }
-
-  if (!(type & SOW)) {
-    return JS_TRUE;
-  }
-
-  return SystemOnlyWrapper::MakeSOW(cx, JSVAL_TO_OBJECT(*vp));
-}
-
 static void
 XPC_NW_Trace(JSTracer *trc, JSObject *obj)
 {
@@ -1012,39 +900,51 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
   return GetwrappedJSObject(cx, wn->GetFlatJSObject(), vp);
 }
 
-static JSFunctionSpec static_functions[] = {
-  JS_FN("unwrap", UnwrapNW, 1, 0),
-  JS_FS_END
-};
+static JSBool
+XrayWrapperConstructor(JSContext *cx, uintN argc, jsval *vp)
+{
+  if (argc == 0) {
+    return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
+  }
+
+  if (JSVAL_IS_PRIMITIVE(vp[2])) {
+    return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+  }
+
+  JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
+  if (!obj->isProxy()) {
+    *vp = OBJECT_TO_JSVAL(obj);
+    return JS_TRUE;
+  }
+
+  if (obj->isWrapper()) {
+    uintN flags;
+    obj = obj->unwrap(&flags);
+    if (!(flags & xpc::WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG)) {
+      *vp = OBJECT_TO_JSVAL(obj);
+      return JS_TRUE;
+    }
+  }
+
+  *vp = OBJECT_TO_JSVAL(obj);
+  return JS_WrapValue(cx, vp);
+}
 
 // static
 PRBool
 XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
                                              JSObject *aGlobalObject)
 {
-  JSObject *class_obj =
-    ::JS_InitClass(ccx, aGlobalObject, nsnull,
-                   js::Jsvalify(&internal::NW_Call_Class),
-                   XPCNativeWrapperCtor, 0, nsnull, nsnull,
-                   nsnull, static_functions);
-  if (!class_obj) {
-    NS_WARNING("can't initialize the XPCNativeWrapper class");
-    return PR_FALSE;
-  }
-  
-  // Make sure our prototype chain is empty and that people can't mess
-  // with XPCNativeWrapper.prototype.
-  ::JS_SetPrototype(ccx, class_obj, nsnull);
-  if (!::JS_FreezeObject(ccx, class_obj)) {
-    NS_WARNING("Failed to seal XPCNativeWrapper.prototype");
+  JSObject *xpcnativewrapper =
+    JS_DefineFunction(ccx, aGlobalObject, "XPCNativeWrapper",
+                      XrayWrapperConstructor, 1,
+                      JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_STUB_GSOPS);
+  if (!xpcnativewrapper) {
     return PR_FALSE;
   }
 
-  JSBool found;
-  return ::JS_SetPropertyAttributes(ccx, aGlobalObject,
-                                    internal::NW_Call_Class.name,
-                                    JSPROP_READONLY | JSPROP_PERMANENT,
-                                    &found);
+  return JS_DefineFunction(ccx, xpcnativewrapper, "unwrap", UnwrapNW, 1,
+                           JSPROP_READONLY | JSPROP_PERMANENT) != nsnull;
 }
 
 // static
