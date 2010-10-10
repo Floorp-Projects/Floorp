@@ -533,6 +533,27 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     if (!Policy::enter(cx, wrapper, &id, set ? JSWrapper::SET : JSWrapper::GET, &priv))
         return false;
 
+    // Redirect access straight to the wrapper if we are transparent.
+    if (Transparent(cx, wrapper)) {
+        Policy::leave(cx, wrapper, priv);
+
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        {
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, wnObject))
+                return false;
+
+            if (!JS_GetPropertyDescriptorById(cx, wnObject, id,
+                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              desc))
+                return false;
+        }
+
+        desc->obj = wrapper;
+        return cx->compartment->wrap(cx, desc_in);
+    }
+
     bool ok = ResolveNativeProperty(cx, wrapper, holder, id, false, desc);
     Policy::leave(cx, wrapper, priv);
     if (!ok || desc->obj)
@@ -550,25 +571,6 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
             return false;
         desc->value = OBJECT_TO_JSVAL(toString);
         return true;
-    }
-
-    // Redirect access straight to the wrapper if we are transparent.
-    if (Transparent(cx, wrapper)) {
-        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
-
-        {
-            JSAutoEnterCompartment ac;
-            if (!ac.enter(cx, wnObject))
-                return false;
-
-            if (!JS_GetPropertyDescriptorById(cx, wnObject, id,
-                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
-                                              desc))
-                return false;
-        }
-
-        desc->obj = wrapper;
-        return cx->compartment->wrap(cx, desc_in);
     }
 
     return JS_GetPropertyDescriptorById(cx, holder, id,
