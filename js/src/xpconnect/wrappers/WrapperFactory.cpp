@@ -282,4 +282,29 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
     return wrapperObj;
 }
 
+bool
+WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
+{
+    if (!JSVAL_IS_OBJECT(*vp))
+        return true;
+
+    JSObject *obj = JSVAL_TO_OBJECT(*vp)->unwrap();
+
+    // We have to make sure that if we're wrapping an outer window, that
+    // the .wrappedJSObject also wraps the outer window.
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return false;
+
+    {
+        js::SwitchToCompartment sc(cx, obj->compartment());
+        obj = JSWrapper::New(cx, obj, NULL, obj->getParent(), &WaiveXrayWrapperWrapper);
+        if (!obj)
+            return false;
+    }
+
+    *vp = OBJECT_TO_JSVAL(obj);
+    return JS_WrapValue(cx, vp);
+}
+
 }
