@@ -84,8 +84,9 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     // Now, our object is ready to be wrapped, but several objects (notably
     // nsJSIIDs) have a wrapper per scope. If we are about to wrap one of
     // those objects in a security wrapper, then we need to hand back the
-    // wrapper for the new scope instead. So...
-    if (!IS_WN_WRAPPER(obj))
+    // wrapper for the new scope instead. Also, global objects don't move
+    // between scopes so for those we also want to return the wrapper. So...
+    if (!IS_WN_WRAPPER(obj) || !obj->getParent())
         return obj;
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
