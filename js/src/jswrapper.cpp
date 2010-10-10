@@ -76,7 +76,7 @@ JSObject::unwrap(uintN *flagsp)
 {
     JSObject *wrapped = this;
     uintN flags = 0;
-    if (wrapped->isWrapper()) {
+    while (wrapped->isWrapper()) {
         flags |= static_cast<JSWrapper *>(wrapped->getProxyHandler())->flags();
         wrapped = wrapped->getProxyPrivate().toObjectOrNull();
     }
