@@ -146,7 +146,18 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     JSWrapper *wrapper;
     if (AccessCheck::isChrome(target)) {
         if (AccessCheck::isChrome(origin)) {
-            wrapper = &JSCrossCompartmentWrapper::singleton;
+            // Same origin we use a transparent wrapper, unless the compartment asks
+            // for an Xray.
+            if (static_cast<xpc::CompartmentPrivate*>(target->data)->preferXrays &&
+                IS_WN_WRAPPER(obj)) {
+                typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
+                wrapper = &Xray::singleton;
+                xrayHolder = Xray::createHolder(cx, obj, parent);
+                if (!xrayHolder)
+                    return nsnull;
+            } else {
+                wrapper = &JSCrossCompartmentWrapper::singleton;
+            }
         } else if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
             // If we waived the X-ray wrapper for this object, wrap it into a
             // special wrapper to transitively maintain the X-ray waiver.
@@ -177,8 +188,18 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                                         ExposedPropertiesOnly>::singleton;
         }
     } else if (AccessCheck::isSameOrigin(origin, target)) {
-        // Same origin we use a transparent wrapper;
-        wrapper = &JSCrossCompartmentWrapper::singleton;
+        // Same origin we use a transparent wrapper, unless the compartment asks
+        // for an Xray.
+        if (static_cast<xpc::CompartmentPrivate*>(target->data)->preferXrays &&
+            IS_WN_WRAPPER(obj)) {
+            typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
+            wrapper = &Xray::singleton;
+            xrayHolder = Xray::createHolder(cx, obj, parent);
+            if (!xrayHolder)
+                return nsnull;
+        } else {
+            wrapper = &JSCrossCompartmentWrapper::singleton;
+        }
     } else {
         // Cross origin we want to disallow scripting and limit access to
         // a predefined set of properties. XrayWrapper adds a property

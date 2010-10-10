@@ -942,7 +942,8 @@ static JSClass xpcTempGlobalClass = {
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        const nsACString &origin, nsIPrincipal *principal,
-                       JSObject **global, JSCompartment **compartment)
+                       bool preferXrays, JSObject **global,
+                       JSCompartment **compartment)
 {
     XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
     nsCAutoString local_origin(origin);
@@ -971,7 +972,9 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 
         js::SwitchToCompartment sc(cx, *compartment);
 
-        JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(local_origin));
+        xpc::CompartmentPrivate *priv =
+            new xpc::CompartmentPrivate(ToNewCString(local_origin), preferXrays);
+        JS_SetCompartmentPrivate(cx, *compartment, priv);
         map.Put(local_origin, *compartment);
     }
     else
@@ -1039,7 +1042,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     JSObject* tempGlobal;
 
     nsresult rv = xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, origin,
-                                         aPrincipal, &tempGlobal, &compartment);
+                                         aPrincipal, false, &tempGlobal,
+                                         &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoEnterCompartment ac;
@@ -1902,7 +1906,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     jsval rval = JSVAL_VOID;
     AUTO_MARK_JSVAL(ccx, &rval);
 
-    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal);
+    nsresult rv = xpc_CreateSandboxObject(cx, &rval, principal, NULL, false);
     NS_ASSERTION(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
                  "Bad return value from xpc_CreateSandboxObject()!");
 
