@@ -665,7 +665,7 @@ nsOuterWindowProxy::obj_toString(JSContext *cx, JSObject *proxy)
 {
     JS_ASSERT(proxy->isProxy());
 
-    return JS_NewStringCopyZ(cx, "[object WindowProxy]");
+    return JS_NewStringCopyZ(cx, "[object Window]");
 }
 
 nsOuterWindowProxy
