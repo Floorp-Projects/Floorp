@@ -316,7 +316,7 @@ nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
 nsNativeTheme::TreeSortDirection
 nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
 {
-  if (!aFrame)
+  if (!aFrame || !aFrame->GetContent())
     return eTreeSortDirection_Natural;
 
   static nsIContent::AttrValuesArray strings[] =
