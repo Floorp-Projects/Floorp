@@ -1145,7 +1145,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
-        JS_SetWrapObjectCallback(mJSRuntime, xpc::WrapperFactory::Rewrap);
+        JS_SetWrapObjectCallbacks(mJSRuntime,
+                                  xpc::WrapperFactory::Rewrap,
+                                  xpc::WrapperFactory::PrepareForWrapping);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
 
         mJSRuntime->setActivityCallback(ActivityCallback, this);

@@ -1148,10 +1148,13 @@ JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback)
 }
 
 JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallback(JSRuntime *rt, JSWrapObjectCallback callback)
+JS_SetWrapObjectCallbacks(JSRuntime *rt,
+                          JSWrapObjectCallback callback,
+                          JSPreWrapCallback precallback)
 {
     JSWrapObjectCallback old = rt->wrapObjectCallback;
     rt->wrapObjectCallback = callback;
+    rt->preWrapObjectCallback = precallback;
     return old;
 }
 

@@ -134,6 +134,24 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         }
     }
 
+    /*
+     * Wrappers should really be parented to the wrapped parent of the wrapped
+     * object, but in that case a wrapped global object would have a NULL
+     * parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead
+,
+     * we parent all wrappers to the global object in their home compartment.
+     * This loses us some transparency, and is generally very cheesy.
+     */
+    JSObject *global;
+    if (cx->hasfp()) {
+        global = cx->fp()->scopeChain().getGlobal();
+    } else {
+        global = cx->globalObject;
+        OBJ_TO_INNER_OBJECT(cx, global);
+        if (!global)
+            return false;
+    }
+
     /* Unwrap incoming objects. */
     if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
@@ -145,10 +163,16 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         /* Don't unwrap an outer window proxy. */
         if (!obj->getClass()->ext.innerObject) {
             obj = vp->toObject().unwrap(&flags);
+            vp->setObject(*obj);
+            if (obj->getCompartment() == this)
+                return true;
+
+            if (cx->runtime->preWrapObjectCallback)
+                obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
+            if (!obj)
+                return false;
 
             vp->setObject(*obj);
-
-            /* If the wrapped object is already in this compartment, we are done. */
             if (obj->getCompartment() == this)
                 return true;
         } else {
@@ -156,12 +180,13 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             vp->setObject(*obj);
         }
 
-        OBJ_TO_OUTER_OBJECT(cx, obj);
-        if (!obj)
-            return false;
-
-        JS_ASSERT(obj->getCompartment() == vp->toObject().getCompartment());
-        vp->setObject(*obj);
+#ifdef DEBUG
+        {
+            JSObject *outer = obj;
+            OBJ_TO_OUTER_OBJECT(cx, outer);
+            JS_ASSERT(outer && outer == obj);
+        }
+#endif
     }
 
     /* If we already have a wrapper for this value, use it. */
@@ -195,23 +220,6 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     JSObject *proto = obj->getProto();
     if (!wrap(cx, &proto))
         return false;
-
-    /*
-     * Wrappers should really be parented to the wrapped parent of the wrapped
-     * object, but in that case a wrapped global object would have a NULL
-     * parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead,
-     * we parent all wrappers to the global object in their home compartment.
-     * This loses us some transparency, and is generally very cheesy.
-     */
-    JSObject *global;
-    if (cx->hasfp()) {
-        global = cx->fp()->scopeChain().getGlobal();
-    } else {
-        global = cx->globalObject;
-        OBJ_TO_INNER_OBJECT(cx, global);
-        if (!global)
-            return false;
-    }
 
     /*
      * We hand in the original wrapped object into the wrap hook to allow
