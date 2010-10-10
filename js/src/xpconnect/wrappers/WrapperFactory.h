@@ -45,7 +45,8 @@ namespace xpc {
 class WrapperFactory {
   public:
     enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0),
-           IS_XRAY_WRAPPER_FLAG = (1<<1) };
+           IS_XRAY_WRAPPER_FLAG = (1<<1),
+           SCRIPT_ACCESS_ONLY_FLAG = (1<<2) };
 
     // Return true if any of any of the nested wrappers have the flag set.
     static bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
@@ -57,6 +58,8 @@ class WrapperFactory {
     static bool IsXrayWrapper(JSObject *wrapper) {
         return HasWrapperFlag(wrapper, IS_XRAY_WRAPPER_FLAG);
     }
+
+    static bool IsScriptAccessOnly(JSContext *cx, JSObject *wrapper);
 
     // Prepare a given object for wrapping in a new compartment.
     static JSObject *PrepareForWrapping(JSContext *cx,

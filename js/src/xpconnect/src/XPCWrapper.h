@@ -314,7 +314,7 @@ MaybePreserveWrapper(JSContext *cx, XPCWrappedNative *wn, uintN flags)
 inline JSBool
 IsSecurityWrapper(JSObject *wrapper)
 {
-  return !!wrapper->getClass()->ext.wrappedObject;
+  return wrapper->isWrapper() || !!wrapper->getClass()->ext.wrappedObject;
 }
 
 /**
