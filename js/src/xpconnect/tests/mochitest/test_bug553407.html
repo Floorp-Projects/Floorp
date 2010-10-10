@@ -21,8 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=517163
 /** Test for Bug 553407 **/
 is(typeof new XPCNativeWrapper(location), "object", "XPCNativeWrapper(location) is an object")
 is(typeof new XPCNativeWrapper(XMLHttpRequest), "function", "XPCNativeWrapper(XMLHttpRequest) is a function")
-is(typeof new XPCNativeWrapper(location).wrappedJSObject, "object", "XPCNativeWrapper(location).wrappedJSObject is an object")
-is(typeof new XPCNativeWrapper(XMLHttpRequest).wrappedJSObject, "function", "XPCNativeWrapper(XMLHttpRequest).wrappedJSObject is a function")
+// We no longer support .wrappedJSObject on NW since for same-origin there is no wrapper in between.
+// is(typeof new XPCNativeWrapper(location).wrappedJSObject, "object", "XPCNativeWrapper(location).wrappedJSObject is an object")
+// is(typeof new XPCNativeWrapper(XMLHttpRequest).wrappedJSObject, "function", "XPCNativeWrapper(XMLHttpRequest).wrappedJSObject is a function")
 ok("a".replace("a", new XPCNativeWrapper(location)).indexOf("mochi.test") >= 0, "XPCNativeWrappers can be used as the replacement value for .replace");
 
 </script>
