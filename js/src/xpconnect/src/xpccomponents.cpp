@@ -3669,8 +3669,10 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         JSString *str = nsnull;
 
         if (!ac.enter(sandcx->GetJSContext(), sandbox)) {
-            // XXX HELP!
-            NS_ABORT();
+            if (stack) {
+                stack->Pop(nsnull);
+            }
+            return NS_ERROR_FAILURE;
         }
 
         JSBool ok =
@@ -3729,11 +3731,12 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         } else {
             // Convert the result into something safe for our caller.
             JSAutoRequest req(cx);
+            JSAutoEnterCompartment ac;
             if (str) {
                 v = STRING_TO_JSVAL(str);
             }
 
-            if (!JS_WrapValue(cx, &v)) {
+            if (!ac.enter(cx, callingScope) || !JS_WrapValue(cx, &v)) {
                 rv = NS_ERROR_FAILURE;
             }
 
