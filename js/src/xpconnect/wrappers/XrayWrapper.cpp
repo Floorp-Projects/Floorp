@@ -44,6 +44,7 @@
 #include "WrapperFactory.h"
 
 #include "jscntxt.h"
+#include "jsiter.h"
 
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
@@ -484,7 +485,7 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
         return false;
 
     if (existing_desc.obj && (existing_desc.attrs & JSPROP_PERMANENT))
-        return true; // XXX throw?
+        return true; // silently ignore attempt to overwrite native property
 
     JSPropertyDescriptor *jsdesc = Jsvalify(desc);
     if (!(jsdesc->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
@@ -503,15 +504,20 @@ bool
 XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                                js::AutoIdVector &props)
 {
-    // XXX implement me.
-    return true;
+    JSObject *holder = GetHolder(wrapper);
+    return js::GetPropertyNames(cx, holder, JSITER_OWNONLY | JSITER_HIDDEN, &props);
 }
 
 template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    // XXX implement me.
+    JSObject *holder = GetHolder(wrapper);
+    jsval v;
+    JSBool b;
+    if (!JS_DeletePropertyById2(cx, holder, id, &v) || !JS_ValueToBoolean(cx, v, &b))
+        return false;
+    *bp = !!b;
     return true;
 }
 
@@ -519,8 +525,8 @@ template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
-    // XXX implement me.
-    return true;
+    JSObject *holder = GetHolder(wrapper);
+    return js::GetPropertyNames(cx, holder, 0, &props);
 }
 
 template <typename Base, typename Policy>
@@ -604,7 +610,6 @@ CrossCompartmentXray::enter(JSContext *cx, JSObject *wrapper, jsid *idp,
         return false;
 
     *priv = call;
-    // XXX wrap id
     return true;
 }
 
