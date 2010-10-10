@@ -161,8 +161,10 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
 
 template<> SOW SOW::singleton(0);
 template<> COW COW::singleton(0);
-template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
-template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
+template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                              WrapperFactory::PARTIALLY_TRANSPARENT);
+template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                                  WrapperFactory::PARTIALLY_TRANSPARENT);
 template<> LW  LW::singleton(0);
 template<> XLW XLW::singleton(0);
 

@@ -6576,7 +6576,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSString *str = JSID_TO_STRING(id);
 
-  {
+  if (!xpc::WrapperFactory::IsXrayWrapper(obj) ||
+      xpc::WrapperFactory::IsPartiallyTransparent(obj)) {
     nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
 
     PRInt32 count = 0;

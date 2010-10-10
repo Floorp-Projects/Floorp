@@ -498,7 +498,7 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     }
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (UniversalXPConnect()) {
+    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         {
@@ -538,7 +538,7 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     JSPropertyDescriptor *jsdesc = Jsvalify(desc);
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (UniversalXPConnect()) {
+    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
@@ -578,7 +578,7 @@ XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
     JSObject *holder = GetHolder(wrapper);
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (UniversalXPConnect()) {
+    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
@@ -600,7 +600,7 @@ XrayWrapper<Base, Policy>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bo
     JSBool b;
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (UniversalXPConnect()) {
+    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
@@ -626,7 +626,7 @@ XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoI
     JSObject *holder = GetHolder(wrapper);
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (UniversalXPConnect()) {
+    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;

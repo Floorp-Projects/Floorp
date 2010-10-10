@@ -34,6 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     let wrap = $('ifr').contentWindow.wrappedJSObject;
     ok(!('obj' in XPCNativeWrapper(wrap)), "XPCNativeWrapper constructor works");
     let iwin = $('ifr').contentWindow;
+    is(iwin.document.ELEMENT_NODE, 1, 'constants work through XrayWrapper');
+    is(iwin.document.nodeName, "#document", 'attributes work through XrayWrappe
 
     location.foopy = 3;
 
