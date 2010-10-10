@@ -48,7 +48,6 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindow.h"
 #include "xpcJSWeakReference.h"
-#include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
 #include "jsproxy.h"
 
@@ -2725,22 +2724,8 @@ MethodWrapper(JSContext *cx, uintN argc, jsval *vp)
 
     jsval *argv = JS_ARGV(cx, vp);
     jsval v;
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v) ||
-        !JS_CallFunctionValue(cx, thisobj, v, argc, argv, vp)) {
-        return JS_FALSE;
-    }
-
-    if (JSVAL_IS_PRIMITIVE(*vp))
-       return JS_TRUE;
-
-    XPCWrappedNative *wn =
-        XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp));
-    if (!wn) {
-        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
-        return JS_FALSE;
-    }
-
-    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, vp);
+    return JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v) &&
+           JS_CallFunctionValue(cx, thisobj, v, argc, argv, vp);
 }
 
 /* void lookupMethod (); */
@@ -3125,48 +3110,10 @@ sandbox_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-sandbox_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-    uintN attrs;
-    return JS_CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
-}
-
-static JSBool
-sandbox_setProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
-{
-    if (!JSVAL_IS_OBJECT(*vp)) {
-        return JS_TRUE;
-    }
-
-    JSObject *pobj = JSVAL_TO_OBJECT(*vp);
-    if (pobj) {
-        if (pobj->getClass() == &XPCCrossOriginWrapper::XOWClass &&
-            !XPCWrapper::RewrapObject(cx, obj, pobj,
-                                      XPCWrapper::XPCNW_EXPLICIT, vp)) {
-            return JS_FALSE;
-        }
-    }
-
-    return JS_SetPrototype(cx, obj, JSVAL_TO_OBJECT(*vp));
-}
-
-static JSBool
 sandbox_resolve(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool resolved;
-    if (!JS_ResolveStandardClass(cx, obj, id, &resolved)) {
-        return JS_FALSE;
-    }
-    if (resolved) {
-        return JS_TRUE;
-    }
-
-    if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTO)) {
-        return JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, sandbox_getProto,
-                                     sandbox_setProto, JSPROP_SHARED);
-    }
-
-    return JS_TRUE;
+    return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
 static void

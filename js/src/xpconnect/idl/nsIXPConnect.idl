@@ -399,7 +399,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(227ab41e-24dc-42a6-9e7b-e3a62132d781)]
+[uuid(74b5811e-92d1-468a-a59a-47760200370f)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -736,44 +736,6 @@ interface nsIXPConnect : nsISupports
                                          in PRBool returnStringOnly);
 
     /**
-     * Wrap a jsval in a cross origin wrapper.
-     * @param aJSContext A context to use to create objects.
-     * @param aParent The parent to create the wrapper with.
-     * @param aWrappedObj The object to wrap.
-     */
-    [noscript] jsval getXOWForObject(in JSContextPtr aJSContext,
-                                     in JSObjectPtr aParent,
-                                     in JSObjectPtr aWrappedObj);
-
-    /**
-     * Wrap a jsval in a chrome object wrapper.
-     * @param aJSContext A context to use to create objects.
-     * @param aParent The parent to create the wrapper with.
-     * @param aWrappedObj The object to wrap.
-     */
-    [noscript] jsval getCOWForObject(in JSContextPtr aJSContext,
-                                     in JSObjectPtr aParent,
-                                     in JSObjectPtr aWrappedObj);
-
-    /**
-     * Tells updateXOWs to clear the scope of all of the XOWs it finds.
-     */
-    const PRUint32 XPC_XOW_CLEARSCOPE = 1;
-    const PRUint32 XPC_XOW_NAVIGATED = 2;
-
-    /**
-     * Performs an operation over all of |object|'s XOWs such as clearing
-     * their scopes or updating their concept of the current principal.
-     *
-     * @param aJSContext A context to use to perform JS operations.
-     * @param aObject Which XPCWrappedNative we should find the XOWs for.
-     * @param aWay What operation to perform.
-     */
-    [noscript] void updateXOWs(in JSContextPtr aJSContext,
-                               in nsIXPConnectWrappedNative aObject,
-                               in PRUint32 aWay);
-
-    /**
      * Root JS objects held by aHolder.
      * @param aHolder The object that hold the JS objects that should be rooted.
      * @param aTrace The tracer for aHolder.
@@ -839,37 +801,6 @@ interface nsIXPConnect : nsISupports
         in PRUint32 interfaceCount,
         [array, size_is(interfaceCount)] in nsIIDPtr interfaceArray);
 
-    /**
-     * Returns a XPCNativeWrapper, XPCSafeJSObjectWrapper, or
-     * XPCCrossOriginWrapper for the given object based on the principal, scope,
-     * and filename flags that are passed in.
-     *
-     * Note: In C++, the out jsval parameter must already be a strong GC root.
-     *
-     * @param aJSContext
-     *     A JSContext.
-     * @param aObject
-     *     The object to wrap.
-     * @param aScope
-     *     The scope to be used in the event that we create a
-     *     XPCCrossOriginWrapper. Can be null.
-     * @param aPrincipal
-     *     The principal that should be used for the wrapper. If this parameter
-     *     is given then aFilenameFlags will not be calculated and will be
-     *     assumed to be 0 unless another value is given. If this parameter is
-     *     null then aFilenameFlags will be calculated and the value of that
-     *     argument will be ignored.
-     * @param aFilenameFlags
-     *     The filename flags from the script that will use this wrapper. See
-     *     above (aPrincipal) for details.
-     */
-    [noscript] jsval getWrapperForObject(
-        in JSContextPtr aJSContext,
-        in JSObjectPtr aObject,
-        in JSObjectPtr aScope,
-        in nsIPrincipal aPrincipal,
-        in unsigned long aFilenameFlags);
-
 %{C++
 #ifndef XPCONNECT_STANDALONE
     /**
@@ -885,9 +816,6 @@ interface nsIXPConnect : nsISupports
                                     PRBool showLocals,
                                     PRBool showThisProps) = 0;
 %}
-
-    [notxpcom] void getNativeWrapperGetPropertyOp(out JSPropertyOp getProperty);
-    [notxpcom] void getXrayWrapperPropertyHolderGetPropertyOp(out JSPropertyOp getProperty);
 
     /**
      * Creates a JS object holder around aObject that will hold the object
