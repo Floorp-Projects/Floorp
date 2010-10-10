@@ -49,7 +49,7 @@
 #include "jsclist.h"
 #include "jsxml.h"
 
-struct JSCompartment {
+struct JS_FRIEND_API(JSCompartment) {
     JSRuntime       *rt;
     JSPrincipals    *principals;
     js::gc::Chunk   *chunk;

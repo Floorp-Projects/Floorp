@@ -79,6 +79,7 @@ class JS_FRIEND_API(JSProxyHandler) {
     virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, js::Value *vp);
     virtual bool construct(JSContext *cx, JSObject *proxy,
                                           uintN argc, js::Value *argv, js::Value *rval);
+    virtual bool hasInstance(JSContext *cx, JSObject *proxy, const js::Value *vp, bool *bp);
     virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
     virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
     virtual void finalize(JSContext *cx, JSObject *proxy);
