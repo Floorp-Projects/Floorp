@@ -49,6 +49,7 @@ _CHROME_FILES = \
 		bug503926.xul \
 		test_bug503926.xul \
 		test_bug533596.xul \
+		test_doublewrappedcompartments.xul \
 		test_evalInSandbox.xul \
 		test_sandboxImport.xul \
 		test_wrappers.xul \

@@ -49,6 +49,7 @@ _TEST_FILES =	bug500931_helper.html \
 		bug92773_helper.html \
 		bug504877_helper.html \
 		chrome_wrappers_helper.html \
+		file_doublewrappedcompartments.html \
 		file_evalInSandbox.html \
 		test_bug92773.html \
 		test_bug361111.xul \
