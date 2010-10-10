@@ -3894,6 +3894,13 @@ ConstructSlimWrapper(XPCCallContext &ccx,
         return JS_FALSE;
     }
 
+    if(ccx.GetJSContext()->compartment != parent->compartment())
+    {
+        SLIM_LOG_NOT_CREATED(ccx, identityObj, "wrong compartment");
+
+        return JS_FALSE;
+    }
+
     JSAutoEnterCompartment ac;
     if(!ac.enter(ccx, parent))
     {
