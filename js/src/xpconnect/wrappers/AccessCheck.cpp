@@ -332,6 +332,9 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
         if (flags & WrapperFactory::SOW_FLAG)
             return !isSystemOnlyAccessPermitted(cx);
 
+        if (flags & WrapperFactory::PARTIALLY_TRANSPARENT)
+            return !XrayUtils::IsTransparent(cx, wrapper);
+
         nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
         if (!ssm)
             return true;
