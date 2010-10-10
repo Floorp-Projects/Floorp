@@ -266,6 +266,11 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         }
     } else if (member->IsAttribute()) {
         // This is a getter/setter. Clone a function for it.
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
         if (!member->NewFunctionObject(ccx, iface, wnObject, &fval)) {
             JS_ReportError(cx, "Failed to clone function object for native getter/setter");
             return false;
@@ -279,6 +284,10 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
         // for it. This avoids keeping garbage alive through that slot.
         desc->attrs |= JSPROP_SHARED;
     } else {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
         // This is a method. Clone a function for it.
         if (!member->NewFunctionObject(ccx, iface, wnObject, &desc->value)) {
             JS_ReportError(cx, "Failed to clone function object for native function");
@@ -751,6 +760,8 @@ XrayWrapper<Base, Policy>::createHolder(JSContext *cx, JSObject *wrappedNative, 
     if (!holder)
         return nsnull;
 
+    JS_ASSERT(IS_WN_WRAPPER(wrappedNative) ||
+              wrappedNative->getClass()->ext.innerObject);
     holder->setSlot(JSSLOT_WN_OBJ, ObjectValue(*wrappedNative));
     holder->setSlot(JSSLOT_RESOLVING, PrivateValue(NULL));
     return holder;
