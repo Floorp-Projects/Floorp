@@ -241,32 +241,4 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
     return wrapperObj;
 }
 
-bool
-WrapperFactory::IsScriptAccessOnly(JSContext *cx, JSObject *wrapper)
-{
-    JS_ASSERT(wrapper->isWrapper());
-
-    uintN flags;
-    JSObject *obj = wrapper->unwrap(&flags);
-
-    // If the wrapper indicates script-only access, we are done.
-    if (flags & SCRIPT_ACCESS_ONLY_FLAG)
-        return true;
-
-    // In addition, chrome objects can explicitly opt-in by setting .scriptOnly to true.
-    if (wrapper->getProxyHandler() == &FilteringWrapper<JSCrossCompartmentWrapper,
-        CrossOriginAccessiblePropertiesOnly>::singleton) {
-        jsid scriptOnlyId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_SCRIPTONLY);
-        jsval scriptOnly;
-        if (JS_LookupPropertyById(cx, obj, scriptOnlyId, &scriptOnly) &&
-            scriptOnly == JSVAL_TRUE)
-            return true; // script-only
-    }
-
-    // Allow non-script access to same-origin location objects and any other
-    // objects.
-    return IsLocationObject(obj) &&
-           !xpc::AccessCheck::isLocationObjectSameOrigin(cx, wrapper);
-}
-
 }

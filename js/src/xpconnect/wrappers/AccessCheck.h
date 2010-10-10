@@ -56,6 +56,8 @@ class AccessCheck {
 
     static bool needsSystemOnlyWrapper(JSObject *obj);
 
+    static bool isScriptAccessOnly(JSContext *cx, JSObject *wrapper);
+
     static void deny(JSContext *cx, jsid id);
 };
 
