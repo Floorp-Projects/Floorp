@@ -2904,14 +2904,12 @@ JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_PUBLIC_API(void *)
 JS_GetPrivate(JSContext *cx, JSObject *obj)
 {
-    assertSameCompartment(cx, obj);
     return obj->getPrivate();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 {
-    assertSameCompartment(cx, obj);
     obj->setPrivate(data);
     return true;
 }
