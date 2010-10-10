@@ -31,6 +31,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
   {
     ok(window instanceof Object, "window is instanceof Object");
 
+    let wrap = $('ifr').contentWindow.wrappedJSObject;
+    ok(!('obj' in XPCNativeWrapper(wrap)), "XPCNativeWrapper constructor works");
+    let iwin = $('ifr').contentWindow;
+
     location.foopy = 3;
 
     var xow_answer = [];
@@ -80,9 +84,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     is(for_each_answer.sort().toString(),
        for_each_expected.sort().toString(),
        'wrapper iterators are properly iterators');
-
-    let wrap = $('ifr').contentWindow.wrappedJSObject;
-    let iwin = $('ifr').contentWindow;
 
     let sjow_answer = [];
     let (obj = { a: 3, next:1 }) {
@@ -207,8 +208,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
   }
   ]]></script>
   <iframe type="content"
-    src="file_wrappers-2.html"
-    onload="go()"
-    id="ifr">
+          src="http://mochi.test:8888/tests/js/src/xpconnect/tests/mochitest/file_wrappers-2.html"
+          onload="go()"
+          id="ifr">
   </iframe>
 </window>
