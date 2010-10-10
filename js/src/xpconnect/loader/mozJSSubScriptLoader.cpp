@@ -207,6 +207,10 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 #endif  
     }
 
+    // Remember an object out of the calling compartment so that we
+    // can properly wrap the result later.
+    JSObject *result_obj = target_obj;
+
     // Innerize the target_obj so that we compile the loaded script in the
     // correct (inner) scope.
     if (JSObjectOp op = target_obj->getClass()->ext.innerObject)
@@ -383,6 +387,14 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         ok = JS_EvaluateScriptForPrincipals (cx, target_obj, jsPrincipals,
                                              buf, len, uriStr.get(), 1, rval);
     }
+
+    {
+        JSAutoEnterCompartment rac;
+
+        if (!rac.enter(cx, result_obj) || !JS_WrapValue(cx, rval))
+            return NS_ERROR_UNEXPECTED; 
+    }
+
     /* repent for our evil deeds */
     JS_SetErrorReporter (cx, er);
 

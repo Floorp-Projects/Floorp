@@ -1364,7 +1364,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     }
  
     JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, targetObject)) {
+    if (targetObject && !ac.enter(cx, targetObject)) {
         NS_ERROR("can't enter compartment");
         return NS_ERROR_FAILURE;
     }
@@ -1372,7 +1372,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     JSObject *globalObj = nsnull;
     rv = ImportInto(registryLocation, targetObject, cc, &globalObj);
 
-    if (!JS_WrapObject(cx, &globalObj)) {
+    if (globalObj && !JS_WrapObject(cx, &globalObj)) {
         NS_ERROR("can't wrap return value");
         return NS_ERROR_FAILURE;
     }
