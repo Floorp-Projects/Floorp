@@ -288,11 +288,25 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
         }
 
     case nsXPTType::T_JSVAL :
-        JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(uint64));
-        *d = **((jsval**)s);
-        if (!JS_WrapValue(cx, d))
-            return JS_FALSE;
-        break;
+        {
+            JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(uint64));
+            *d = **((jsval**)s);
+
+            JSAutoEnterCompartment ac;
+            XPCCallContext &ccx = lccx.GetXPCCallContext();
+            if(ccx.GetXPCContext()->CallerTypeIsNative())
+            {
+                JSObject *jsscope = ccx.GetCallee();
+                if(!jsscope || !JS_ObjectIsFunction(ccx, jsscope))
+                    jsscope = JS_GetGlobalForObject(ccx, scope);
+                if(!ac.enter(ccx, jsscope))
+                    return JS_FALSE;
+            }
+
+            if(!JS_WrapValue(cx, d))
+                return JS_FALSE;
+            break;
+        }
 
     default:
         if(!type.IsPointer())

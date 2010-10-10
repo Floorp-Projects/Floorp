@@ -425,7 +425,9 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
     {
         // It's not a JSObject (or it's a JSArray or a JSObject representing an
         // nsID).  Just pass through the underlying data.
-        if (!JS_WrapValue(lccx.GetJSContext(), &realVal))
+        JSAutoEnterCompartment ac;
+        JSContext *cx = lccx.GetJSContext();
+        if(!ac.enter(cx, scope) || !JS_WrapValue(cx, &realVal))
             return JS_FALSE;
         *pJSVal = realVal;
         return JS_TRUE;
@@ -438,7 +440,9 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
                      type == nsIDataType::VTYPE_INTERFACE_IS,
                      "Weird variant");
 
-        if (!JS_WrapValue(lccx.GetJSContext(), &realVal))
+        JSAutoEnterCompartment ac;
+        JSContext *cx = lccx.GetJSContext();
+        if(!ac.enter(cx, scope) || !JS_WrapValue(cx, &realVal))
             return JS_FALSE;
         *pJSVal = realVal;
         return JS_TRUE;
