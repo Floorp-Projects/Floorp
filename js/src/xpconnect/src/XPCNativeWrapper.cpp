@@ -882,22 +882,20 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
-  if (!IsNativeWrapper(JSVAL_TO_OBJECT(v))) {
+  JSObject *obj = JSVAL_TO_OBJECT(v);
+  if (!obj->isWrapper()) {
     JS_SET_RVAL(cx, vp, v);
     return JS_TRUE;
   }
 
-  XPCWrappedNative *wn;
-  if (!XPCNativeWrapper::GetWrappedNative(cx, JSVAL_TO_OBJECT(v), &wn)) {
-    return JS_FALSE;
+  // NB: This relies on the fact that the only wrappers to use ProxyExtra are
+  // Xray wrappers.
+  if (!obj->getProxyExtra().isUndefined()) {
+    return JS_GetProperty(cx, obj, "wrappedJSObject", vp);
   }
 
-  if (!wn) {
-    JS_SET_RVAL(cx, vp, JSVAL_NULL);
-    return JS_TRUE;
-  }
-
-  return GetwrappedJSObject(cx, wn->GetFlatJSObject(), vp);
+  JS_SET_RVAL(cx, vp, v);
+  return JS_TRUE;
 }
 
 static JSBool

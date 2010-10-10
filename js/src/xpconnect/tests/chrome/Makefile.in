@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _CHROME_FILES = \
+		test_bug448587.xul \
 		test_bug500931.xul \
 		bug503926.xul \
 		test_bug503926.xul \

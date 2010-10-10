@@ -39,9 +39,11 @@ function go() {
     }
 
     var xhr = new XMLHttpRequest();
+/* XXX
     var orsc = new XPCSafeJSObjectWrapper(function(){});
     xhr.onreadystatechange = orsc;
     // we only can test that the above didn't throw (which it shouldn't).
+*/
 
     try {
         xhr.onreadystatechange = ifr.contentWindow;
