@@ -55,7 +55,6 @@ _CHROME_FILES = \
 		test_wrappers.xul \
 		test_wrappers-2.xul \
 		test_bug484459.xul \
-		file_wrappers-2.html \
 		test_cows.xul \
 		$(NULL)
 
