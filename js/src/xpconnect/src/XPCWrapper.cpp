@@ -45,6 +45,8 @@
 #include "nsPIDOMWindow.h"
 #include "jswrapper.h"
 #include "XrayWrapper.h"
+#include "AccessCheck.h"
+#include "WrapperFactory.h"
 
 namespace XPCWrapper {
 
@@ -64,10 +66,8 @@ JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
   if (wrapper->isProxy()) {
-    if (wrapper->getProxyHandler() != &JSCrossCompartmentWrapper::singleton) {
-      // XXX Security check!
-    }
-
+    if (xpc::WrapperFactory::IsScriptAccessOnly(cx, wrapper))
+      return nsnull;
     return wrapper->unwrap();
   }
 

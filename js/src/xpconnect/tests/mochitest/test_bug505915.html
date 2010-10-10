@@ -16,9 +16,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=505915
   
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script type="application/javascript;version=1.7">
 
 /** Test for Bug 505915 **/
+window.addEventListener("message", function () { gen.next() }, false);
 
 function go() {
     var ifr = $('ifr');
@@ -48,7 +49,50 @@ function go() {
            "threw a security exception instead of an invalid child exception");
     }
 
+    // Location is always wrapped, so test it separately.
+
+    ifr.onload = null;
+    var path = "/tests/js/src/xpconnect/tests/mochitest/file_bug505915.html";
+
+    ifr.contentWindow.location = "http://mochi.test:8888/" + path;
+    yield;
+    try {
+        document.documentElement.appendChild(ifr.contentWindow.location);
+        ok(false, "weird behavior");
+    } catch (e) {
+        ok(!/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
+           "didn't throw a security exception");
+    }
+    oldLocation = ifr.contentWindow.location;
+    ifr.contentWindow.location = "http://example.org/" + path;
+    yield;
+    try {
+        document.documentElement.appendChild(oldLocation);
+        ok(false, "weird behavior");
+    } catch (e) {
+        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
+           "threw a security exception instead of an invalid child exception");
+    }
+    try {
+        document.documentElement.appendChild(ifr.contentWindow.location);
+        ok(false, "weird behavior");
+    } catch (e) {
+        ok(/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
+           "threw a security exception instead of an invalid child exception");
+    }
+    oldLocation = ifr.contentWindow.location;
+    ifr.contentWindow.location = "http://mochi.test:8888/" + path;
+    yield;
+    try {
+        document.documentElement.appendChild(oldLocation);
+        ok(false, "weird behavior");
+    } catch (e) {
+        ok(!/NS_ERROR_XPC_SECURITY_MANAGER_VETO/.test(e),
+           "didn't throw a security exception");
+    }
+
     SimpleTest.finish();
+    yield;
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -56,7 +100,7 @@ SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 
-<iframe id="ifr" onload="go()" src="http://example.org/"></iframe>
+<iframe id="ifr" onload="gen = go(); gen.next();" src="http://example.org/"></iframe>
 
 </body>
 </html>

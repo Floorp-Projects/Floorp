@@ -52,7 +52,7 @@ class AccessCheck {
     static bool isCrossOriginAccessPermitted(JSContext *cx, JSObject *obj, jsid id,
                                              JSWrapper::Action act);
     static bool isSystemOnlyAccessPermitted(JSContext *cx);
-    static bool isLocationObjectSameOrigin(JSContext *cx, JSObject *obj);
+    static bool isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper);
 
     static bool needsSystemOnlyWrapper(JSObject *obj);
 
