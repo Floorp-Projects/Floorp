@@ -563,14 +563,14 @@ JSObject::setMethodObj(JSObject& obj)
     fslots[JSSLOT_FUN_METHOD_OBJ].setObject(obj);
 }
 
-inline NativeIterator *
+inline js::NativeIterator *
 JSObject::getNativeIterator() const
 {
-    return (NativeIterator *) getPrivate();
+    return (js::NativeIterator *) getPrivate();
 }
 
 inline void
-JSObject::setNativeIterator(NativeIterator *ni)
+JSObject::setNativeIterator(js::NativeIterator *ni)
 {
     setPrivate(ni);
 }

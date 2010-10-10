@@ -372,6 +372,8 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
     return true;
 }
 
+namespace js {
+
 bool
 VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 {
@@ -389,10 +391,12 @@ VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
     return true;
 }
 
-bool
+JS_FRIEND_API(bool)
 GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
     return Snapshot<KeyEnumeration>(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
+}
+
 }
 
 static inline bool
@@ -559,6 +563,8 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
     return true;
 }
 
+namespace js {
+
 bool
 VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props, Value *vp)
 {
@@ -723,6 +729,8 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     if (shapes.length() == 2)
         JS_THREAD_DATA(cx)->lastNativeIterator = iterobj;
     return true;
+}
+
 }
 
 static JSObject *
