@@ -233,6 +233,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
         scope = JS_GetScopeChain(cx);
 
     nsIPrincipal *subject;
+    nsIPrincipal *object;
 
     {
         JSAutoEnterCompartment ac;
@@ -243,11 +244,17 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
         subject = xpc->GetPrincipal(JS_GetGlobalForObject(cx, scope), PR_TRUE);
     }
 
-    nsIPrincipal *objprin =
-        xpc->GetPrincipal(JS_GetGlobalForObject(cx, obj), PR_TRUE);
+    {
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(cx, obj))
+            return false;
+
+        object = xpc->GetPrincipal(JS_GetGlobalForObject(cx, obj), PR_TRUE);
+    }
 
     PRBool subsumes;
-    if (NS_SUCCEEDED(subject->Subsumes(objprin, &subsumes)) && subsumes)
+    if (NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes)
         return true;
 
     return (act == JSWrapper::SET)
