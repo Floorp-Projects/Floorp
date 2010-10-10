@@ -5573,8 +5573,24 @@ nsGlobalWindow::CallerInnerWindow()
     return nsnull;
   }
 
-  JSObject *scope = ::JS_GetScopeChain(cx);
+  JSObject *scope = nsnull;
+  JSStackFrame *fp = nsnull;
+  JS_FrameIterator(cx, &fp);
+  if (fp) {
+    while (fp->isDummyFrame()) {
+      if (!JS_FrameIterator(cx, &fp))
+        break;
+    }
+
+    if (fp)
+      scope = &fp->scopeChain();
+  }
+
   if (!scope)
+    scope = JS_GetScopeChain(cx);
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, scope))
     return nsnull;
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
