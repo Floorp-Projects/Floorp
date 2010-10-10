@@ -6574,8 +6574,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSString *str = JSID_TO_STRING(id);
 
-  // Don't resolve named frames on native wrappers
-  if (!ObjectIsNativeWrapper(cx, obj)) {
+  {
     nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
 
     PRInt32 count = 0;
