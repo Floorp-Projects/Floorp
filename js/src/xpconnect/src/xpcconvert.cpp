@@ -44,7 +44,6 @@
 
 #include "xpcprivate.h"
 #include "nsString.h"
-#include "XPCNativeWrapper.h"
 #include "nsIAtom.h"
 #include "XPCWrapper.h"
 #include "nsJSPrincipals.h"

@@ -60,7 +60,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(8707ed93-3277-42a5-a235-533aa661a263)]
+[scriptable, uuid(43fd9eb5-9e08-4d60-a305-3f87b1d5c398)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -469,17 +469,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
-
-  /**
-   * Creates a ChromeObjectWrapper for the object and returns it.
-   *
-   * @param scope The JavaScript object whose scope we'll use as the
-   *        parent of the wrapper.
-   * @param objToWrap The JavaScript object to wrap.
-   * @return the wrapped object.
-   */
-
-  void getCOWForObject(/* scope, objToWrap */);
 
   /**
    * Get IME open state. TRUE means 'Open', otherwise, 'Close'.
