@@ -3980,6 +3980,35 @@ ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
   return jsPrincipals;
 }
 
+static JSObject*
+DOMReadStructuredClone(JSContext* cx,
+                       JSStructuredCloneReader* reader,
+                       uint32 tag,
+                       uint32 data)
+{
+  // We don't currently support any extensions to structured cloning.
+  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  return nsnull;
+}
+
+static JSBool
+DOMWriteStructuredClone(JSContext* cx,
+                        JSStructuredCloneWriter* writer,
+                        JSObject* obj)
+{
+  // We don't currently support any extensions to structured cloning.
+  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  return JS_FALSE;
+}
+
+static void
+DOMStructuredCloneError(JSContext* cx,
+                        uint32 errorid)
+{
+  // We don't currently support any extensions to structured cloning.
+  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+}
+
 //static
 nsresult
 nsJSRuntime::Init()
@@ -4017,6 +4046,14 @@ nsJSRuntime::Init()
   NS_ASSERTION(callbacks, "SecMan should have set security callbacks!");
 
   callbacks->findObjectPrincipals = ObjectPrincipalFinder;
+
+  // Set up the structured clone callbacks.
+  static JSStructuredCloneCallbacks cloneCallbacks = {
+    DOMReadStructuredClone,
+    DOMWriteStructuredClone,
+    DOMStructuredCloneError
+  };
+  JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 
   // Set these global xpconnect options...
   nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
