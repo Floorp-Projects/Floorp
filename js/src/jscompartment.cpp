@@ -52,7 +52,8 @@ using namespace js;
 using namespace js::gc;
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(false)
+  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(false),
+    anynameObject(NULL), functionNamespaceObject(NULL)
 {
     JS_INIT_CLIST(&scripts);
 }
