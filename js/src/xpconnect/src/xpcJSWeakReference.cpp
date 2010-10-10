@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -130,12 +131,9 @@ xpcJSWeakReference::Get()
             // re-wrapping because things are implicitly rewrapped by
             // xpcconvert. However, because we're doing this directly
             // through the native call context, we need to call
-            // nsXPConnect::GetWrapperForObject. But it takes a lot of
-            // arguments! It turns out that the thisObject hook on XPConnect
-            // objects does the right thing though, so...
+            // JS_WrapObject().
 
-            if (obj->getOps()->thisObject &&
-                !(obj = obj->getOps()->thisObject(cx, obj)))
+            if (!JS_WrapObject(cx, &obj))
             {
                 return NS_ERROR_FAILURE;
             }
