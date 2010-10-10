@@ -85,10 +85,6 @@ JSObject::unwrap(uintN *flagsp)
     return wrapped;
 }
 
-JSWrapper::JSWrapper(void *family) : JSProxyHandler(&sWrapperFamily), mFlags(0)
-{
-}
-
 JSWrapper::JSWrapper(uintN flags) : JSProxyHandler(&sWrapperFamily), mFlags(flags)
 {
 }
@@ -363,10 +359,6 @@ AutoCompartment::leave()
 }
 
 /* Cross compartment wrappers. */
-
-JSCrossCompartmentWrapper::JSCrossCompartmentWrapper(void *family) : JSWrapper((uintN)0)
-{
-}
 
 JSCrossCompartmentWrapper::JSCrossCompartmentWrapper(uintN flags) : JSWrapper(flags)
 {

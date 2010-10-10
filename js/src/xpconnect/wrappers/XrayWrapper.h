@@ -59,7 +59,7 @@ extern const uint32 JSSLOT_PROXY_OBJ;
 template <typename Base, typename Policy>
 class XrayWrapper : public Base {
   public:
-    XrayWrapper(int flags);
+    XrayWrapper(uintN flags);
     virtual ~XrayWrapper();
 
     /* Fundamental proxy traps. */

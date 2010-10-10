@@ -345,7 +345,8 @@ wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
 }
 
 template <typename Base, typename Policy>
-XrayWrapper<Base, Policy>::XrayWrapper(int flags) : Base(JSWrapper::getWrapperFamily())
+XrayWrapper<Base, Policy>::XrayWrapper(uintN flags)
+  : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG)
 {
 }
 
