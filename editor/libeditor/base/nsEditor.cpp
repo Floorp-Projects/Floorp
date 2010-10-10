@@ -311,7 +311,7 @@ nsEditor::PostCreate()
   NotifyDocumentListeners(eDocumentCreated);
   NotifyDocumentListeners(eDocumentStateChanged);
   
-  // update nsTextStateManager if we have focus
+  // update nsTextStateManager and caret if we have focus
   if (HasFocus()) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     NS_ASSERTION(fm, "no focus manager?");
@@ -324,6 +324,11 @@ nsEditor::PostCreate()
 
       nsIMEStateManager::OnTextStateBlur(pc, nsnull);
       nsIMEStateManager::OnTextStateFocus(pc, focusedContent);
+
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
+      if (target) {
+        InitializeSelection(target);
+      }
     }
   }
   return NS_OK;
