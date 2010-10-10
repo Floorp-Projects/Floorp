@@ -979,12 +979,14 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
     bool entered() const { return call != NULL; }
 
     ~JSAutoEnterCompartment() {
-        if (call)
+        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
             JS_LeaveCrossCompartmentCall(call);
     }
 
     void swap(JSAutoEnterCompartment &other) {
         JSCrossCompartmentCall *tmp = call;
+        if (tmp == reinterpret_cast<JSCrossCompartmentCall*>(1))
+            tmp = NULL;
         call = other.call;
         other.call = tmp;
     }
