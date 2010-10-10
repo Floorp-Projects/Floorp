@@ -177,6 +177,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             if (obj->getCompartment() == this)
                 return true;
         } else {
+            if (cx->runtime->preWrapObjectCallback)
+                obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
+
             JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
             vp->setObject(*obj);
         }

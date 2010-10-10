@@ -64,14 +64,29 @@ JSWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 // chrome, we wrap them into a special cross-compartment wrapper
 // that transitively extends the waiver to all properties we get
 // off it.
-CrossOriginWrapper XrayWrapperWaivedWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
+CrossOriginWrapper CrossOriginWrapper::singleton(0);
+
+static JSObject *
+DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
+{
+    if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
+        js::SwitchToCompartment sc(cx, obj->compartment());
+        return JSWrapper::New(cx, obj, NULL, obj->getParent(),
+                              &WaiveXrayWrapperWrapper);
+    }
+    return obj;
+}
 
 JSObject *
 WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags)
 {
+    // Don't unwrap an outer window, just double wrap it if needed.
+    if (obj->getClass()->ext.innerObject)
+        return DoubleWrap(cx, obj, flags);
+
     // Here are the rules for wrapping:
     // We should never get a proxy here (the JS engine unwraps those for us).
-    JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
+    JS_ASSERT(!obj->isWrapper());
 
     // As soon as an object is wrapped in a security wrapper, it morphs to be
     // a fat wrapper. (see also: bug XXX).
@@ -87,13 +102,13 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     // wrapper for the new scope instead. Also, global objects don't move
     // between scopes so for those we also want to return the wrapper. So...
     if (!IS_WN_WRAPPER(obj) || !obj->getParent())
-        return obj;
+        return DoubleWrap(cx, obj, flags);
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
 
     // We know that DOM objects only allow one object, we can return early.
     if (wn->GetProto()->ClassIsDOMObject())
-        return obj;
+        return DoubleWrap(cx, obj, flags);
 
     XPCCallContext ccx(JS_CALLER, cx, obj);
     if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
@@ -102,14 +117,14 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         JSObject *originalScope = scope;
         nsresult rv = wn->GetScriptableInfo()->GetCallback()->
             PreCreate(wn->Native(), cx, scope, &scope);
-        NS_ENSURE_SUCCESS(rv, obj);
+        NS_ENSURE_SUCCESS(rv, DoubleWrap(cx, obj, flags));
 
         // If the handed back scope differs from the passed-in scope and is in
         // a separate compartment, then this object is explicitly requesting
         // that we don't create a second JS object for it: create a security
         // wrapper.
         if (originalScope->getCompartment() != scope->getCompartment())
-            return obj;
+            return DoubleWrap(cx, obj, flags);
 
         // Note: this penalizes objects that only have one wrapper, but are
         // being accessed across compartments. We would really prefer to
@@ -122,21 +137,27 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     // possibly-new object.
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, scope))
-        return obj;
+        return nsnull;
+
     jsval v;
     nsresult rv =
         nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nsnull,
                                                            &NS_GET_IID(nsISupports), PR_FALSE,
                                                            &v, nsnull);
-    NS_ENSURE_SUCCESS(rv, obj);
-    return JSVAL_TO_OBJECT(v);
+    if (NS_SUCCEEDED(rv))
+        obj = JSVAL_TO_OBJECT(v);
+
+    return DoubleWrap(cx, obj, flags);
 }
 
 JSObject *
 WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
                        uintN flags)
 {
-    NS_ASSERTION(!obj->isWrapper() || obj->getClass()->ext.innerObject,
+    NS_ASSERTION(!obj->isWrapper() ||
+                 (obj->isWrapper() &&
+                  obj->getProxyHandler() == &WaiveXrayWrapperWrapper) ||
+                 obj->getClass()->ext.innerObject,
                  "wrapped object passed to rewrap");
     NS_ASSERTION(JS_GET_CLASS(cx, obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
 
@@ -162,7 +183,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         } else if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
             // If we waived the X-ray wrapper for this object, wrap it into a
             // special wrapper to transitively maintain the X-ray waiver.
-            wrapper = &XrayWrapperWaivedWrapper;
+            wrapper = &CrossOriginWrapper::singleton;
         } else {
             // Native objects must be wrapped into an X-ray wrapper.
             if (!obj->getGlobal()->isSystem() &&

@@ -341,8 +341,6 @@ holder_enumerate(JSContext *cx, JSObject *holder)
     return true;
 }
 
-extern CrossOriginWrapper XrayWrapperWaivedWrapper;
-
 static JSBool
 wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
 {
@@ -359,11 +357,17 @@ wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
     OBJ_TO_OUTER_OBJECT(cx, wn);
     if (!wn)
         return false;
-    JSObject *obj = JSWrapper::New(cx, wn, NULL, holder->getParent(), &XrayWrapperWaivedWrapper);
-    if (!obj)
-        return false;
+
+    JSObject *obj;
+    {
+        SwitchToCompartment sc(cx, wn->compartment());
+        obj = JSWrapper::New(cx, wn, NULL, holder->getParent(), &WaiveXrayWrapperWrapper);
+        if (!obj)
+            return false;
+    }
     *vp = OBJECT_TO_JSVAL(obj);
-    return true;
+
+    return JS_WrapValue(cx, vp);
 }
 
 static JSBool
@@ -432,6 +436,9 @@ class AutoLeaveHelper
 static bool
 Transparent(JSContext *cx, JSObject *wrapper)
 {
+    if (WrapperFactory::HasWaiveXrayFlag(wrapper))
+        return true;
+
     if (!WrapperFactory::IsPartiallyTransparent(wrapper))
         return false;
 
@@ -527,7 +534,7 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     if (!Policy::enter(cx, wrapper, &id, set ? JSWrapper::SET : JSWrapper::GET, &priv))
         return false;
 
-    // Redirect access straight to the wrapper if we are transparent.
+    // Redirect access straight to the wrapper if we should be transparent.
     if (Transparent(cx, wrapper)) {
         Policy::leave(cx, wrapper, priv);
 
@@ -588,7 +595,7 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     JSObject *holder = GetHolder(wrapper);
     JSPropertyDescriptor *jsdesc = Jsvalify(desc);
 
-    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    // Redirect access straight to the wrapper if we should be transparent.
     if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
@@ -628,7 +635,7 @@ XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
 {
     JSObject *holder = GetHolder(wrapper);
 
-    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    // Redirect access straight to the wrapper if we should be transparent.
     if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
@@ -676,7 +683,7 @@ XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoI
 {
     JSObject *holder = GetHolder(wrapper);
 
-    // Redirect access straight to the wrapper if we are transparent.
+    // Redirect access straight to the wrapper if we should be transparent.
     if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
