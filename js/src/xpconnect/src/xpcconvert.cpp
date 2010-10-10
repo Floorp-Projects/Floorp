@@ -1383,6 +1383,13 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
             flat = locationWrapper;
         }
+        else
+        {
+            OBJ_TO_OUTER_OBJECT(cx, flat);
+            NS_ASSERTION(flat, "bad outer object hook!");
+            NS_ASSERTION(flat->getCompartment() == cx->compartment,
+                         "bad compartment");
+        }
     }
 
     *d = OBJECT_TO_JSVAL(flat);
