@@ -52,6 +52,9 @@ namespace XrayUtils {
 
 extern JSClass HolderClass;
 
+bool
+IsTransparent(JSContext *cx, JSObject *wrapper);
+
 }
 
 // NB: Base *must* derive from JSProxyHandler
