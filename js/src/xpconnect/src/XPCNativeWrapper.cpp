@@ -908,7 +908,7 @@ XrayWrapperConstructor(JSContext *cx, uintN argc, jsval *vp)
   }
 
   JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
-  if (!xpc::WrapperFactory::IsXrayWrapper(obj)) {
+  if (!obj->isWrapper()) {
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
   }
