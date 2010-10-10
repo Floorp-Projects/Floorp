@@ -296,44 +296,14 @@ struct JSScript {
     js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
     js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
 
-    void **nmapNormal;
-    void **nmapCtor;
-
     bool hasJITCode() {
         return jitNormal || jitCtor;
     }
 
-    void setNativeMap(bool constructing, void **map) {
-        if (constructing)
-            nmapCtor = map;
-        else
-            nmapNormal = map;
-    }
-
-    void **maybeNativeMap(bool constructing) {
-        return constructing ? nmapCtor : nmapNormal;
-    }
-
-    void **nativeMap(bool constructing) {
-        void **nmap = maybeNativeMap(constructing);
-        JS_ASSERT(nmap);
-        return nmap;
-    }
-
-    void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc) {
-        void **nmap = maybeNativeMap(constructing);
-        if (!nmap)
-            return NULL;
-        JS_ASSERT(pc >= code && pc < code + length);
-        return nmap[pc - code];
-    }
-
-    void *nativeCodeForPC(bool constructing, jsbytecode *pc) {
-        void **nmap = nativeMap(constructing);
-        JS_ASSERT(pc >= code && pc < code + length);
-        JS_ASSERT(nmap[pc - code]);
-        return nmap[pc - code];
-    }
+    // These methods are implemented in MethodJIT.h.
+    inline void **nativeMap(bool constructing);
+    inline void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc);
+    inline void *nativeCodeForPC(bool constructing, jsbytecode *pc);
 
     js::mjit::JITScript *getJIT(bool constructing) {
         return constructing ? jitCtor : jitNormal;
