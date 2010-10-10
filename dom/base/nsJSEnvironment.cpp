@@ -102,6 +102,7 @@
 #include "nsITimelineService.h"
 #include "nsDOMScriptObjectHolder.h"
 #include "prmem.h"
+#include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
 
 #ifdef MOZ_JSDEBUGGER
@@ -3386,6 +3387,9 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
     ac.enterAndIgnoreErrors(mContext, obj);
 
     JS_ClearScope(mContext, obj);
+    if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
+      JS_ClearScope(mContext, &obj->getProxyExtra().toObject());
+    }
     if (!obj->getParent()) {
       JS_ClearRegExpStatics(mContext, obj);
     }
