@@ -1150,9 +1150,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         {
             if(!XPCNativeWrapper::AttachNewConstructorObject(ccx, globalJSObj))
                 return UnexpectedFailure(NS_ERROR_FAILURE);
-
-            if(!XPCSafeJSObjectWrapper::AttachNewConstructorObject(ccx, globalJSObj))
-                return UnexpectedFailure(NS_ERROR_FAILURE);
         }
     }
 

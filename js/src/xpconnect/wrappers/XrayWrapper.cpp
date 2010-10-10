@@ -319,7 +319,7 @@ holder_enumerate(JSContext *cx, JSObject *holder)
     return true;
 }
 
-extern JSCrossCompartmentWrapper XrayWrapperWaivedWrapper;
+extern CrossOriginWrapper XrayWrapperWaivedWrapper;
 
 static JSBool
 wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
