@@ -41,6 +41,7 @@
 #include "AccessCheck.h"
 #include "CrossOriginWrapper.h"
 #include "XrayWrapper.h"
+#include "WrapperFactory.h"
 
 #include "XPCWrapper.h"
 
@@ -160,8 +161,8 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
 
 template<> SOW SOW::singleton(0);
 template<> COW COW::singleton(0);
-template<> XOW XOW::singleton(0);
-template<> NNXOW NNXOW::singleton(0);
+template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
+template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG);
 template<> LW  LW::singleton(0);
 template<> XLW XLW::singleton(0);
 

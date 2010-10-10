@@ -65,6 +65,7 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug503926.html \
 		test_bug504877.html \
 		test_bug505915.html \
+		file_bug505915.html \
 		test_bug517163.html \
 		test_bug553407.html \
 		test_bug560351.html \

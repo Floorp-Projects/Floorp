@@ -64,19 +64,15 @@ AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
 }
 
 bool
-AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *obj)
+AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
 {
-    JSCompartment *compartment = obj->compartment();
-
-    obj = obj->unwrap()->getParent();
+    JSObject *obj = wrapper->unwrap()->getParent();
     if (!obj->getClass()->ext.innerObject) {
         obj = obj->unwrap();
         JS_ASSERT(obj->getClass()->ext.innerObject);
     }
     OBJ_TO_INNER_OBJECT(cx, obj);
-    if (!obj)
-        return false;
-    return isSameOrigin(compartment, obj->compartment());
+    return obj && isSameOrigin(wrapper->compartment(), obj->compartment());
 }
 
 bool
