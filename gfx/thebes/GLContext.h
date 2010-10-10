@@ -348,7 +348,7 @@ struct THEBES_API ContextFormat {
     int colorBits() const { return red + green + blue; }
 };
 
-class GLContext
+class THEBES_API GLContext
     : public LibrarySymbolLoader
 {
     THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
