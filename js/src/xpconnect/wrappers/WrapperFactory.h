@@ -44,13 +44,18 @@ namespace xpc {
 
 class WrapperFactory {
   public:
-    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0) };
+    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0),
+           IS_XRAY_WRAPPER_FLAG = (1<<1) };
 
     // Return true if any of any of the nested wrappers have the flag set.
-    bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
+    static bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
         uintN flags = 0;
         wrapper->unwrap(&flags);
         return !!(flags & flag);
+    }
+
+    static bool IsXrayWrapper(JSObject *wrapper) {
+        return HasWrapperFlag(wrapper, IS_XRAY_WRAPPER_FLAG);
     }
 
     // Rewrap an object that is about to cross compartment boundaries.
