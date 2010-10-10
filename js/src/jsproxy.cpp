@@ -180,7 +180,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     }
     desc.obj = proxy;
     desc.value = *vp;
-    desc.attrs = 0;
+    desc.attrs = JSPROP_ENUMERATE;
     desc.getter = NULL;
     desc.setter = NULL;
     desc.shortid = 0;
