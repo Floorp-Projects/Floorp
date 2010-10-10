@@ -52,14 +52,14 @@ function runTest()
   });
 
   // stopPropagation should not prevent the browser link handling from occuring
-  frames[1].stopMode = true;
+  frames[1].wrappedJSObject.stopMode = true;
   var body = document.getElementById("contentchild").contentDocument.body;
   expectLink(body, "http://www.mozilla.org", "http://www.mozilla.org",
              [ [ { type: "text/uri-list", data: "http://www.mozilla.org" } ] ],
              "text/x-moz-url drop on browser with stopPropagation drop event");
 
   // canceling the event, however, should prevent the link from being handled
-  frames[1].cancelMode = true;
+  frames[1].wrappedJSObject.cancelMode = true;
   expectLink(body, "", "",
              [ [ { type: "text/uri-list", data: "http://www.example.org" } ] ],
              "text/x-moz-url drop on browser with cancelled drop event");
