@@ -58,13 +58,15 @@ _BROWSER_FILES = \
                  browser_tabview_exit_button.js \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
-                 browser_tabview_multiwindow_search.js \
                  browser_tabview_orphaned_tabs.js \
                  browser_tabview_search.js \
                  browser_tabview_snapping.js \
                  browser_tabview_undo_group.js \
                  browser_tabview_firstrun_pref.js \
                  $(NULL)
+
+# compartments: test disabled
+#                 browser_tabview_multiwindow_search.js \
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
