@@ -329,6 +329,9 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
 
     // If the wrapper indicates script-only access, we are done.
     if (flags & WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG) {
+        if (flags & WrapperFactory::SOW_FLAG)
+            return !isSystemOnlyAccessPermitted(cx);
+
         nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
         if (!ssm)
             return true;
