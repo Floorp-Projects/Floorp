@@ -247,8 +247,13 @@ CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
         return JS_TRUE;
 
     XPCCompartmentMap& map = self->GetCompartmentMap();
+    nsAutoPtr<xpc::CompartmentPrivate> priv(
+        static_cast<xpc::CompartmentPrivate*>(JS_SetCompartmentPrivate(cx, compartment, nsnull)));
+    if (!priv)
+        return JS_TRUE;
+
     nsAdoptingCString origin;
-    origin.Adopt(static_cast<char *>(JS_SetCompartmentPrivate(cx, compartment, nsnull)));
+    origin.Adopt(static_cast<char *>(priv->origin));
 
 #ifdef DEBUG
     {

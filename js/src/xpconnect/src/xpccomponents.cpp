@@ -50,6 +50,9 @@
 #include "xpcJSWeakReference.h"
 #include "XPCWrapper.h"
 #include "jsproxy.h"
+#include "WrapperFactory.h"
+#include "XrayWrapper.h"
+#include "nsNullPrincipal.h"
 
 #ifdef MOZ_JSLOADER
 #include "mozJSComponentLoader.h"
@@ -3163,7 +3166,8 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_utils_Sandbox)
 
 #ifndef XPCONNECT_STANDALONE
 nsresult
-xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
+xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSObject *proto,
+                        bool bypassXray)
 {
     // Create the sandbox global object
     nsresult rv;
@@ -3202,11 +3206,20 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
     nsCAutoString origin("sandbox:");
     origin.Append(principalorigin);
 
+    nsRefPtr<nsNullPrincipal> nullPrincipal = new nsNullPrincipal();
+    rv = nullPrincipal->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nullPrincipal->GetOrigin(getter_Copies(principalorigin));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    origin.Append(principalorigin);
+
     JSCompartment *compartment;
     JSObject *sandbox;
 
-    rv = xpc_CreateGlobalObject(cx, &SandboxClass, origin, principal, &sandbox,
-                                &compartment);
+    rv = xpc_CreateGlobalObject(cx, &SandboxClass, origin, principal,
+                                !bypassXray, &sandbox, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     js::AutoObjectRooter tvr(cx, sandbox);
@@ -3215,6 +3228,24 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
+
+        if (proto) {
+            bool ok = JS_WrapObject(cx, &proto);
+            if (!ok)
+                return NS_ERROR_XPC_UNEXPECTED;
+
+            if (xpc::WrapperFactory::IsXrayWrapper(proto) && bypassXray) {
+                jsval v;
+                if (!JS_GetProperty(cx, proto, "wrappedJSObject", &v))
+                    return NS_ERROR_XPC_UNEXPECTED;
+
+                proto = JSVAL_TO_OBJECT(v);
+            }
+
+            ok = JS_SetPrototype(cx, sandbox, proto);
+            if (!ok)
+                return NS_ERROR_XPC_UNEXPECTED;
+        }
 
         // Pass on ownership of sop to |sandbox|.
         if (!JS_SetPrivate(cx, sandbox, sop.forget().get())) {
@@ -3345,7 +3376,23 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
             return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
     }
 
-    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop);
+    JSObject *proto = nsnull;
+    bool bypassXray = false;
+    if (argc > 1) {
+        if (!JSVAL_IS_OBJECT(argv[1]))
+            return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+
+        proto = JSVAL_TO_OBJECT(argv[1]);
+
+        if (argc > 2) {
+            if (!JSVAL_IS_BOOLEAN(argv[2]))
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+
+            bypassXray = JSVAL_TO_BOOLEAN(argv[2]);
+        }
+    }
+
+    rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, bypassXray);
 
     if (NS_FAILED(rv)) {
         return ThrowAndFail(rv, cx, _retval);
