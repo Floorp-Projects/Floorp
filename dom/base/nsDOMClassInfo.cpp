@@ -43,6 +43,7 @@
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jsdbgapi.h"
+#include "WrapperFactory.h"
 
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
@@ -1621,8 +1622,6 @@ jsid nsDOMClassInfo::sOnafterscriptexecute_id = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
-JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
-JSPropertyOp nsDOMClassInfo::sXrayWrapperPropertyHolderGetPropertyOp = nsnull;
 
 /**
  * Set our JSClass pointer for the Object class
@@ -1918,22 +1917,7 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
 PRBool
 nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
 {
-#ifdef DEBUG
-  {
-    nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-
-    NS_PRECONDITION(!scx || !scx->IsContextInitialized() ||
-                    sXPCNativeWrapperGetPropertyOp,
-                    "Must know what the XPCNativeWrapper class GetProperty op is!");
-  }
-#endif
-
-  if (obj->isWrapper())
-    return PR_TRUE;
-
-  JSPropertyOp op = obj->getJSClass()->getProperty;
-  return !!op && (op == sXPCNativeWrapperGetPropertyOp ||
-                  op == sXrayWrapperPropertyHolderGetPropertyOp);
+  return xpc::WrapperFactory::IsXrayWrapper(obj);
 }
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)

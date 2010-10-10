@@ -177,24 +177,6 @@ public:
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
-  static JSPropertyOp GetXPCNativeWrapperGetPropertyOp() {
-    return sXPCNativeWrapperGetPropertyOp;
-  }
-
-  static void SetXPCNativeWrapperGetPropertyOp(JSPropertyOp getPropertyOp) {
-    NS_ASSERTION(!sXPCNativeWrapperGetPropertyOp,
-                 "Double set of sXPCNativeWrapperGetPropertyOp");
-    sXPCNativeWrapperGetPropertyOp = getPropertyOp;
-  }
-
-  static JSPropertyOp GetXrayWrapperPropertyHolderGetPropertyOp() {
-    return sXrayWrapperPropertyHolderGetPropertyOp;
-  }
-
-  static void SetXrayWrapperPropertyHolderGetPropertyOp(JSPropertyOp getPropertyOp) {
-    sXrayWrapperPropertyHolderGetPropertyOp = getPropertyOp;
-  }
-
   static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 
   static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
