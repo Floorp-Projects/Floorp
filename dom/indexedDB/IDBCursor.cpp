@@ -465,6 +465,8 @@ IDBCursor::Update(const jsval &aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  nsresult rv;
+
   if (mType != OBJECTSTORE) {
     NS_NOTYETIMPLEMENTED("Implement me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -483,12 +485,7 @@ IDBCursor::Update(const jsval &aValue,
 
   JSAutoRequest ar(aCx);
 
-  js::AutoValueRooter clone(aCx);
-  nsresult rv = nsContentUtils::CreateStructuredClone(aCx, aValue,
-                                                      clone.jsval_addr());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  js::AutoValueRooter clone(aCx, aValue);
 
   if (!mObjectStore->KeyPath().IsEmpty()) {
     // Make sure the object given has the correct keyPath value set on it or
@@ -505,6 +502,9 @@ IDBCursor::Update(const jsval &aValue,
     if (JSVAL_IS_VOID(prop.jsval_value())) {
       rv = IDBObjectStore::GetJSValFromKey(key, aCx, prop.jsval_addr());
       NS_ENSURE_SUCCESS(rv, rv);
+
+      ok = JS_StructuredClone(aCx, clone.jsval_value(), clone.jsval_addr());
+      NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       ok = JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(clone.jsval_value()),
                                keyPathChars, keyPathLen, prop.jsval_value(), nsnull,
