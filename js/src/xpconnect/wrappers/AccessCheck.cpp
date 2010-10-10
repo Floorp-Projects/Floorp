@@ -214,6 +214,42 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     if (IsWindow(name) && IsFrameId(cx, obj, id))
         return true;
 
+    nsIXPConnect *xpc = nsXPConnect::GetRuntimeInstance()->GetXPConnect();
+
+    JSObject *scope = nsnull;
+    JSStackFrame *fp = nsnull;
+    JS_FrameIterator(cx, &fp);
+    if (fp) {
+        while (fp->isDummyFrame()) {
+            if (!JS_FrameIterator(cx, &fp))
+                break;
+        }
+
+        if (fp)
+            scope = &fp->scopeChain();
+    }
+
+    if (!scope)
+        scope = JS_GetScopeChain(cx);
+
+    nsIPrincipal *subject;
+
+    {
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(cx, scope))
+            return false;
+
+        subject = xpc->GetPrincipal(JS_GetGlobalForObject(cx, scope), PR_TRUE);
+    }
+
+    nsIPrincipal *objprin =
+        xpc->GetPrincipal(JS_GetGlobalForObject(cx, obj), PR_TRUE);
+
+    PRBool subsumes;
+    if (NS_SUCCEEDED(subject->Subsumes(objprin, &subsumes)) && subsumes)
+        return true;
+
     return (act == JSWrapper::SET)
            ? nsContentUtils::IsCallerTrustedForWrite()
            : nsContentUtils::IsCallerTrustedForRead();
