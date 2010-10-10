@@ -132,6 +132,8 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     }
     if (!(desc.attrs & JSPROP_SHARED))
         *vp = desc.value;
+    else
+        vp->setUndefined();
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
     return CallJSPropertyOp(cx, desc.getter, proxy, id, vp);
