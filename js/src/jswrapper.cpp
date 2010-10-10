@@ -79,6 +79,8 @@ JSObject::unwrap(uintN *flagsp)
     while (wrapped->isWrapper()) {
         flags |= static_cast<JSWrapper *>(wrapped->getProxyHandler())->flags();
         wrapped = wrapped->getProxyPrivate().toObjectOrNull();
+        if (wrapped->getClass()->ext.innerObject)
+            break;
     }
     if (flagsp)
         *flagsp = flags;
