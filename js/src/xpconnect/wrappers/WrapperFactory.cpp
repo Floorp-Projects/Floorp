@@ -95,6 +95,8 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
     // We only hand out outer objects to script.
     OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return nsnull;
 
     // Now, our object is ready to be wrapped, but several objects (notably
     // nsJSIIDs) have a wrapper per scope. If we are about to wrap one of
