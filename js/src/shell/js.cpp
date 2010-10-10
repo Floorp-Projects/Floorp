@@ -191,6 +191,7 @@ FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 #ifdef JS_THREADSAFE
 JSObject *gWorkers = NULL;
+js::workers::ThreadPool *gWorkerThreadPool = NULL;
 #endif
 
 static JSBool reportWarnings = JS_TRUE;
@@ -1142,8 +1143,8 @@ Quit(JSContext *cx, uintN argc, jsval *vp)
 
     gQuitting = JS_TRUE;
 #ifdef JS_THREADSAFE
-    if (gWorkers)
-        js::workers::terminateAll(cx, gWorkers);
+    if (gWorkerThreadPool)
+        js::workers::terminateAll(JS_GetRuntime(cx), gWorkerThreadPool);
 #endif
     return JS_FALSE;
 }
@@ -3809,13 +3810,8 @@ CancelExecution(JSRuntime *rt)
     if (gExitCode == 0)
         gExitCode = EXITCODE_TIMEOUT;
 #ifdef JS_THREADSAFE
-    if (gWorkers) {
-        JSContext *cx = JS_NewContext(rt, 8192);
-        if (cx) {
-            js::workers::terminateAll(cx, gWorkers);
-            JS_DestroyContextNoGC(cx);
-        }
-    }
+    if (gWorkerThreadPool)
+        js::workers::terminateAll(rt, gWorkerThreadPool);
 #endif
     JS_TriggerAllOperationCallbacks(rt);
 
@@ -5305,7 +5301,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     };
     ShellWorkerHooks hooks;
     if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
-        !js::workers::init(cx, &hooks, glob, &gWorkers)) {
+        (gWorkerThreadPool = js::workers::init(cx, &hooks, glob, &gWorkers)) == NULL) {
         return 1;
     }
 #endif
@@ -5313,7 +5309,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
     int result = ProcessArgs(cx, glob, argv, argc);
 
 #ifdef JS_THREADSAFE
-    js::workers::finish(cx, gWorkers);
+    js::workers::finish(cx, gWorkerThreadPool);
     JS_RemoveObjectRoot(cx, &gWorkers);
     if (result == 0)
         result = gExitCode;
