@@ -1542,8 +1542,7 @@ nsDOMWorker::PostMessageInternal(PRBool aToInner)
   JSAutoStructuredCloneBuffer buffer(cx);
 
   if (!buffer.write(argv[0])) {
-    NS_WARNING("Failed to serialize!");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
   nsRefPtr<nsDOMWorkerMessageEvent> message = new nsDOMWorkerMessageEvent();

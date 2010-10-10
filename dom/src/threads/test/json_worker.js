@@ -315,6 +315,9 @@ function onmessage(event) {
       postMessage(messages[index].value);
     }
     catch (e) {
+      if (e.result != 2152923154) {
+        throw "Exception of the wrong type: " + e.result;
+      }
       exception = e;
     }
 
