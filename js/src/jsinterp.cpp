@@ -1859,15 +1859,15 @@ namespace reprmeter {
 }
 #endif /* JS_REPRMETER */
 
-#define PUSH_COPY(v)             *regs.sp++ = v
+#define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_NULL()              regs.sp++->setNull()
 #define PUSH_UNDEFINED()         regs.sp++->setUndefined()
 #define PUSH_BOOLEAN(b)          regs.sp++->setBoolean(b)
 #define PUSH_DOUBLE(d)           regs.sp++->setDouble(d)
 #define PUSH_INT32(i)            regs.sp++->setInt32(i)
-#define PUSH_STRING(s)           regs.sp++->setString(s)
-#define PUSH_OBJECT(obj)         regs.sp++->setObject(obj)
-#define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObjectOrNull(obj)
+#define PUSH_STRING(s)           do { regs.sp++->setString(s); assertSameCompartment(cx, regs.sp[-1]); } while (0)
+#define PUSH_OBJECT(obj)         do { regs.sp++->setObject(obj); assertSameCompartment(cx, regs.sp[-1]); } while (0)
+#define PUSH_OBJECT_OR_NULL(obj) do { regs.sp++->setObjectOrNull(obj); assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp->setReturnValue(*--regs.sp)
@@ -4093,6 +4093,7 @@ BEGIN_CASE(JSOP_GETXPROP)
         } while (0);
 
         regs.sp[-1] = rval;
+        assertSameCompartment(cx, regs.sp[-1]);
         JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
         len = JSOP_GETPROP_LENGTH + i;
     }
@@ -4170,6 +4171,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             NATIVE_GET(cx, &objv.toObject(), obj2, shape, JSGET_NO_METHOD_BARRIER, &rval);
         }
         regs.sp[-1] = rval;
+        assertSameCompartment(cx, regs.sp[-1]);
         PUSH_COPY(lval);
         goto end_callprop;
     }
@@ -4192,6 +4194,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         }
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
+        assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
     } else {
         JS_ASSERT(!objv.toObject().getOps()->getProperty);
         if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
@@ -4201,6 +4204,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         }
         regs.sp[-1] = lval;
         regs.sp[-2] = rval;
+        assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
     }
 
   end_callprop:
@@ -4472,6 +4476,7 @@ BEGIN_CASE(JSOP_GETELEM)
   end_getelem:
     regs.sp--;
     regs.sp[-1] = *copyFrom;
+    assertSameCompartment(cx, regs.sp[-1]);
 }
 END_CASE(JSOP_GETELEM)
 
@@ -5846,6 +5851,7 @@ BEGIN_CASE(JSOP_SETTER)
     if (js_CodeSpec[op2].ndefs > js_CodeSpec[op2].nuses) {
         JS_ASSERT(js_CodeSpec[op2].ndefs == js_CodeSpec[op2].nuses + 1);
         regs.sp[-1] = rval;
+        assertSameCompartment(cx, regs.sp[-1]);
     }
     len = js_CodeSpec[op2].length;
     DO_NEXT_OP(len);
