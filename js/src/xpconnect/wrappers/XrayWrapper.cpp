@@ -427,8 +427,11 @@ class AutoLeaveHelper
 };
 
 static bool
-UniversalXPConnect()
+Transparent(JSContext *cx, JSObject *wrapper)
 {
+    if (!WrapperFactory::IsPartiallyTransparent(wrapper))
+        return false;
+
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (ssm) {
@@ -436,6 +439,49 @@ UniversalXPConnect()
         if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) && privileged)
             return true;
     }
+
+    JSObject *scope = nsnull;
+    JSStackFrame *fp = nsnull;
+    JS_FrameIterator(cx, &fp);
+    if (fp) {
+        while (fp->isDummyFrame()) {
+            if (!JS_FrameIterator(cx, &fp))
+                break;
+        }
+
+        if (fp)
+            scope = &fp->scopeChain();
+    }
+
+    if (!scope)
+        scope = JS_GetScopeChain(cx);
+
+    nsIPrincipal *subject;
+    nsIPrincipal *object;
+
+    nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
+    {
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(cx, scope))
+            return false;
+
+        subject = xpc->GetPrincipal(JS_GetGlobalForObject(cx, scope), PR_TRUE);
+    }
+
+    {
+        JSAutoEnterCompartment ac;
+
+        JSObject *obj = wrapper->unwrap();
+        if (!ac.enter(cx, obj))
+            return false;
+
+        object = xpc->GetPrincipal(JS_GetGlobalForObject(cx, obj), PR_TRUE);
+    }
+
+    PRBool subsumes;
+    if (NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes)
+        return true;
     return false;
 }
 
@@ -497,8 +543,8 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
-    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
+    // Redirect access straight to the wrapper if we are transparent.
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         {
@@ -538,7 +584,7 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     JSPropertyDescriptor *jsdesc = Jsvalify(desc);
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
@@ -578,7 +624,7 @@ XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
     JSObject *holder = GetHolder(wrapper);
 
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
@@ -599,8 +645,8 @@ XrayWrapper<Base, Policy>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bo
     jsval v;
     JSBool b;
 
-    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
@@ -625,8 +671,8 @@ XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoI
 {
     JSObject *holder = GetHolder(wrapper);
 
-    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
-    if (WrapperFactory::IsPartiallyTransparent(wrapper) && UniversalXPConnect()) {
+    // Redirect access straight to the wrapper if we are transparent.
+    if (Transparent(cx, wrapper)) {
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         JSAutoEnterCompartment ac;
