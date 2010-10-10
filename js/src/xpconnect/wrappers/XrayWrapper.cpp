@@ -177,6 +177,10 @@ holder_set(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 {
     NS_ASSERTION(wrapper->isProxy(), "bad this object in set");
     JSObject *holder = GetHolder(wrapper);
+    if (IsResolving(holder, id)) {
+        return true;
+    }
+
     JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
@@ -427,14 +431,14 @@ bool
 XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                  bool set, PropertyDescriptor *desc_in)
 {
-    if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
-        return false;
-
-    AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
-
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
 
     if (id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
+        if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
+            return false;
+
+        AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
+
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         desc->getter = wrappedJSObject_getter;
@@ -449,6 +453,11 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         desc->obj = NULL;
         return true;
     }
+
+    if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
+        return false;
+
+    AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
 
     ResolvingId resolving(holder, id);
 
