@@ -52,11 +52,14 @@
 #include "jsscript.h"
 #include "nsThreadUtilsInternal.h"
 #include "dom_quickstubs.h"
+#include "nsNullPrincipal.h"
+#include "nsIURI.h"
 
 #include "jstypedarray.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
+#include "AccessCheck.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,
@@ -942,8 +945,16 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        JSObject **global, JSCompartment **compartment)
 {
     XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
+    nsCAutoString local_origin(origin);
+    if(local_origin.EqualsLiteral("file://") && principal)
+    {
+        nsCOMPtr<nsIURI> uri;
+        principal->GetURI(getter_AddRefs(uri));
+        uri->GetSpec(local_origin);
+    }
+
     JSObject *tempGlobal;
-    if(!map.Get(origin, compartment))
+    if(!map.Get(local_origin, compartment))
     {
         JSPrincipals *principals = nsnull;
         if(principal)
@@ -960,12 +971,32 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 
         js::SwitchToCompartment sc(cx, *compartment);
 
-        JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(origin));
-        map.Put(origin, *compartment);
+        JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(local_origin));
+        map.Put(local_origin, *compartment);
     }
     else
     {
         js::SwitchToCompartment sc(cx, *compartment);
+
+#ifdef DEBUG
+        if(principal)
+        {
+            nsIPrincipal *cprincipal = xpc::AccessCheck::getPrincipal(*compartment);
+            PRBool equals;
+            nsresult rv = cprincipal->Equals(principal, &equals);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "bad Equals implementation");
+            if(!equals)
+            {
+                nsCOMPtr<nsIURI> domain;
+                cprincipal->GetDomain(getter_AddRefs(domain));
+                if(!domain)
+                {
+                    principal->GetDomain(getter_AddRefs(domain));
+                    NS_ASSERTION(!domain, "bad mixing");
+                }
+            }
+        }
+#endif
 
         tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
