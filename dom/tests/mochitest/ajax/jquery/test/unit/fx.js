@@ -78,7 +78,7 @@ test("stop()", function() {
 
 test("stop() - several in queue", function() {
 // Merge from jquery test 1.3.2
-	expect(3);
+	expect(2);
 	stop();
 
 	var $foo = $("#nothiddendiv");
