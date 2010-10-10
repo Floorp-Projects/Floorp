@@ -46,6 +46,7 @@ function browserWindowsCount() {
 
 function test() {
   /** Test for Bug 484108 **/
+  requestLongerTimeout(2);
   is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
