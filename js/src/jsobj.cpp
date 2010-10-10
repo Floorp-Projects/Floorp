@@ -6139,6 +6139,8 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         shape = obj->lastProperty();
         while (shape->previous() && shape->slot != slot)
             shape = shape->previous();
+        if (shape->slot != slot)
+            shape = NULL;
     } else {
         shape = NULL;
     }
