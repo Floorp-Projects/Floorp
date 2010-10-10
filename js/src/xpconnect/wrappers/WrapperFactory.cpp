@@ -198,22 +198,16 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             }
         }
     } else if (AccessCheck::isChrome(origin)) {
-        // If an object that needs a system only wrapper crosses into content
-        // from chrome, we have to wrap it into a system only wrapper on the
-        // fly. In this case we don't need to restrict to exposed properties
-        // since only privileged content will be allowed to touch it anyway.
+        wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
+                                    ExposedPropertiesOnly>::singleton;
+    } else if (AccessCheck::isSameOrigin(origin, target)) {
+        // Same origin we use a transparent wrapper, unless the compartment asks
+        // for an Xray or the wrapper needs a SOW.
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
-        } else {
-            wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
-                                        ExposedPropertiesOnly>::singleton;
-        }
-    } else if (AccessCheck::isSameOrigin(origin, target)) {
-        // Same origin we use a transparent wrapper, unless the compartment asks
-        // for an Xray.
-        if (static_cast<xpc::CompartmentPrivate*>(target->data)->preferXrays &&
-            IS_WN_WRAPPER(obj)) {
+        } else if (static_cast<xpc::CompartmentPrivate*>(target->data)->preferXrays &&
+                   IS_WN_WRAPPER(obj)) {
             typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
             wrapper = &Xray::singleton;
             xrayHolder = Xray::createHolder(cx, obj, parent);
@@ -223,6 +217,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             wrapper = &JSCrossCompartmentWrapper::singleton;
         }
     } else {
+        NS_ASSERTION(!AccessCheck::needsSystemOnlyWrapper(obj),
+                     "bad object exposed across origins");
+
         // Cross origin we want to disallow scripting and limit access to
         // a predefined set of properties. XrayWrapper adds a property
         // (.wrappedJSObject) which allows bypassing the XrayWrapper, but
@@ -305,6 +302,16 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_WrapValue(cx, vp);
+}
+
+JSObject *
+WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
+{
+    JSObject *wrapperObj =
+        JSWrapper::New(cx, obj, obj->getProto(), NULL,
+                       &FilteringWrapper<JSWrapper,
+                                         OnlyIfSubjectIsSystem>::singleton);
+    return wrapperObj;
 }
 
 }
