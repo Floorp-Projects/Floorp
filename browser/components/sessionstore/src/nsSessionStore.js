@@ -1690,7 +1690,7 @@ SessionStoreService.prototype = {
     aTabData._formDataSaved = true;
     if (aBrowser.currentURI.spec == "about:config")
       aTabData.entries[tabIndex].formdata = {
-        "#textbox": aBrowser.contentDocument.getElementById("textbox").wrappedJSObject.value
+        "#textbox": aBrowser.contentDocument.getElementById("textbox").value
       };
   },
 
@@ -2836,11 +2836,6 @@ SessionStoreService.prototype = {
     // away before the loading completed (except for in-page navigation)
     if (hasExpectedURL(aEvent.originalTarget, aBrowser.__SS_restore_data.url)) {
       var content = aEvent.originalTarget.defaultView;
-      if (aBrowser.currentURI.spec == "about:config") {
-        // unwrap the document for about:config because otherwise the properties
-        // of the XBL bindings - as the textbox - aren't accessible (see bug 350718)
-        content = content.wrappedJSObject;
-      }
       restoreTextDataAndScrolling(content, aBrowser.__SS_restore_data, "");
       aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
 
