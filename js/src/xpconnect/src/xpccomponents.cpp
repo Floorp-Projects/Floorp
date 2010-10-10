@@ -2715,19 +2715,6 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
     return NS_OK;
 }
 
-static JSBool
-MethodWrapper(JSContext *cx, uintN argc, jsval *vp)
-{
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-    if (!thisobj)
-        return JS_FALSE;
-
-    jsval *argv = JS_ARGV(cx, vp);
-    jsval v;
-    return JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v) &&
-           JS_CallFunctionValue(cx, thisobj, v, argc, argv, vp);
-}
-
 /* void lookupMethod (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::LookupMethod()
@@ -2833,38 +2820,34 @@ nsXPCComponents_Utils::LookupMethod()
     if(!iface)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // get (and perhaps lazily create) the member's cloned function
     jsval funval;
-    if(!member->NewFunctionObject(inner_cc, iface, wrapper->GetFlatJSObject(),
-                                  &funval))
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
+    JSFunction *oldfunction;
+
+    {
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(inner_cc, wrapper->GetFlatJSObject())) {
+            return NS_ERROR_UNEXPECTED;
+        }
+
+        // get (and perhaps lazily create) the member's cloned function
+        if(!member->NewFunctionObject(inner_cc, iface, wrapper->GetFlatJSObject(),
+                                      &funval))
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+        oldfunction = JS_ValueToFunction(inner_cc, funval);
+        NS_ASSERTION(oldfunction, "Function is not a function");
+    }
 
     // Stick the function in the return value. This roots it.
     *retval = funval;
 
     // Callers of this method are implicitly buying into
-    // XPCNativeWrapper-like protection. The easiest way
-    // to enforce this is to use our own wrapper.
-    // Note: We use the outer call context to ensure that we wrap
-    // the function in the right scope.
-    NS_ASSERTION(JSVAL_IS_OBJECT(funval), "Function is not an object");
-    JSContext *outercx;
-    cc->GetJSContext(&outercx);
-    JSFunction *oldfunction = JS_ValueToFunction(outercx, funval);
-    NS_ASSERTION(oldfunction, "Function is not a function");
-
-    JSFunction *f = JS_NewFunction(outercx, MethodWrapper,
-                                   JS_GetFunctionArity(oldfunction), 0,
-                                   JS_GetScopeChain(outercx),
-                                   JS_GetFunctionName(oldfunction));
-    if(!f)
-        return NS_ERROR_FAILURE;
-
-    JSObject *funobj = JS_GetFunctionObject(f);
-    if(!JS_SetReservedSlot(outercx, funobj, 0, funval))
-        return NS_ERROR_FAILURE;
-
-    *retval = OBJECT_TO_JSVAL(funobj);
+    // XPCNativeWrapper-like protection. The easiest way to enforce
+    // this is to let the JS engine wrap the function.
+    if (!JS_WrapValue(inner_cc, retval)) {
+        return NS_ERROR_UNEXPECTED;
+    }
 
     // Tell XPConnect that we returned the function through the call context.
     cc->SetReturnValueWasSet(PR_TRUE);
