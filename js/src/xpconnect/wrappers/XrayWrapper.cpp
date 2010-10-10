@@ -344,6 +344,39 @@ wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
     return true;
 }
 
+static JSBool
+XrayToString(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *wrapper = JS_THIS_OBJECT(cx, vp);
+    if (!wrapper->isWrapper() || !WrapperFactory::IsXrayWrapper(wrapper)) {
+        JS_ReportError(cx, "XrayToString called on an incompatible object");
+        return false;
+    }
+    JSObject *holder = GetHolder(wrapper);
+    JSObject *wrappednative = GetWrappedNativeObjectFromHolder(cx, holder);
+    XPCWrappedNative *wn = GetWrappedNative(wrappednative);
+
+    XPCCallContext ccx(JS_CALLER, cx, wrappednative);
+    char *wrapperStr = wn->ToString(ccx);
+    if (!wrapperStr) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    nsAutoString result(NS_LITERAL_STRING("[object XrayWrapper "));
+    result.AppendASCII(wrapperStr);
+    JS_smprintf_free(wrapperStr);
+    result.Append(']');
+
+    JSString *str = JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(result.get()),
+                                        result.Length());
+    if (!str)
+        return false;
+
+    *vp = STRING_TO_JSVAL(str);
+    return true;
+}
+
 template <typename Base, typename Policy>
 XrayWrapper<Base, Policy>::XrayWrapper(uintN flags)
   : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG)
@@ -391,7 +424,7 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         desc->getter = wrappedJSObject_getter;
         desc->setter = NULL;
-        desc->shortid = NULL;
+        desc->shortid = 0;
         desc->value = JSVAL_VOID;
         return true;
     }
@@ -412,6 +445,20 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     Policy::leave(cx, wrapper, priv);
     if (!ok || desc->obj)
         return ok;
+
+    if (id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING)) {
+        desc->obj = wrapper;
+        desc->attrs = 0;
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->shortid = 0;
+
+        JSObject *toString = JS_NewFunction(cx, XrayToString, 0, 0, holder, "toString");
+        if (!toString)
+            return false;
+        desc->value = OBJECT_TO_JSVAL(toString);
+        return true;
+    }
 
     return JS_GetPropertyDescriptorById(cx, holder, id,
                                         (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
