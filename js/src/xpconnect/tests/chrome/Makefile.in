@@ -53,11 +53,14 @@ _CHROME_FILES = \
 		test_evalInSandbox.xul \
 		test_sandboxImport.xul \
 		test_wrappers.xul \
-		test_wrappers-2.xul \
 		test_bug484459.xul \
 		test_cows.xul \
 		test_bug517163.xul \
 		$(NULL)
+
+# Disabled until this test gets updated to test the new proxy based
+# wrappers.
+#		test_wrappers-2.xul \
 
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
