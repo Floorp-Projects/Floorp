@@ -46,7 +46,8 @@ class WrapperFactory {
   public:
     enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0),
            IS_XRAY_WRAPPER_FLAG = (1<<1),
-           SCRIPT_ACCESS_ONLY_FLAG = (1<<2) };
+           SCRIPT_ACCESS_ONLY_FLAG = (1<<2),
+           PARTIALLY_TRANSPARENT = (1<<3) };
 
     // Return true if any of any of the nested wrappers have the flag set.
     static bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
@@ -57,6 +58,10 @@ class WrapperFactory {
 
     static bool IsXrayWrapper(JSObject *wrapper) {
         return HasWrapperFlag(wrapper, IS_XRAY_WRAPPER_FLAG);
+    }
+
+    static bool IsPartiallyTransparent(JSObject *wrapper) {
+        return HasWrapperFlag(wrapper, PARTIALLY_TRANSPARENT);
     }
 
     // Prepare a given object for wrapping in a new compartment.
