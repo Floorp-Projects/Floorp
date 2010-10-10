@@ -77,6 +77,16 @@ struct JS_FRIEND_API(JSCompartment) {
     /* List all scripts in this compartment. */
     JSCList scripts;
 
+    /*
+     * Weak references to lazily-created, well-known XML singletons.
+     *
+     * NB: Singleton objects must be carefully disconnected from the rest of
+     * the object graph usually associated with a JSContext's global object,
+     * including the set of standard class objects.  See jsxml.c for details.
+     */
+    JSObject            *anynameObject;
+    JSObject            *functionNamespaceObject;
+
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
 
