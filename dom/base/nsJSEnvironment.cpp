@@ -2571,19 +2571,6 @@ nsJSContext::InitContext()
 
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  if (!nsDOMClassInfo::GetXPCNativeWrapperGetPropertyOp()) {
-    JSPropertyOp getProperty;
-    xpc->GetNativeWrapperGetPropertyOp(&getProperty);
-    nsDOMClassInfo::SetXPCNativeWrapperGetPropertyOp(getProperty);
-  }
-
-  if (!nsDOMClassInfo::GetXrayWrapperPropertyHolderGetPropertyOp()) {
-    JSPropertyOp getProperty;
-    xpc->GetXrayWrapperPropertyHolderGetPropertyOp(&getProperty);
-    nsDOMClassInfo::SetXrayWrapperPropertyHolderGetPropertyOp(getProperty);
-  }
-
   return NS_OK;
 }
 
