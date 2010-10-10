@@ -33,14 +33,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         var win = $('ifr').contentWindow;
         var sandbox = new Cu.Sandbox(win);
         is(utils.getClassName(sandbox),
-           "XPCSafeJSObjectWrapper",
+           "Proxy",
            "sandbox was wrapped correctly");
         sandbox.__proto__ = new XPCNativeWrapper(win);
 
         is(utils.getClassName(Cu.evalInSandbox("this.document", sandbox)),
-           "XPCSafeJSObjectWrapper",
+           "Proxy",
            "return value was rewrapped correctly");
-        ok(Cu.evalInSandbox("(this.document + '').indexOf('XPCNativeWrapper') >= 0", sandbox),
+        ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
            "wrappers inside eIS are XPCNativeWrappers");
 
         SimpleTest.finish();

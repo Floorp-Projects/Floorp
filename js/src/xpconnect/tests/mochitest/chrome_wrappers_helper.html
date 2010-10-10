@@ -15,10 +15,10 @@
             }
             function run_test(ok, xpcnw, sjow) {
                 // both wrappers should point to our window: XOW
-                check_wrapper(ok, ok, "Function", "functions are wrapped properly")
+                check_wrapper(ok, ok, "Proxy", "functions are wrapped properly")
                 check_parent(ok, ok, window, "ok is parented correctly");
-                check_wrapper(ok, xpcnw, "XPCCrossOriginWrapper", "XPCNWs are transformed correctly");
-                check_wrapper(ok, sjow, "XPCCrossOriginWrapper", "SJOWs are transformed correctly");
+                check_wrapper(ok, xpcnw, "Proxy", "XPCNWs are transformed correctly");
+                check_wrapper(ok, sjow, "Proxy", "SJOWs are transformed correctly");
 
                 ok(defprop1 === 1, "defprop1 exists");
                 window.defprop1 = 2;

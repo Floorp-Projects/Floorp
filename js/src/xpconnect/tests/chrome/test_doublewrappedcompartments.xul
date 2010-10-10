@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         is(typeof readystatechange.QueryInterface, 'function', 'double wrapped');
 
         ok(unwrapped.testme(readystatechange),
-           'content didn't get a proxy, but another double wrapped object');
+           'content didn\'t get a proxy, but another double wrapped object');
         SimpleTest.finish();
       }
 
