@@ -187,6 +187,7 @@ struct CallSite;
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
+    void            **nmap;     /* pc -> JIT code map, sparse */
 
     js::mjit::CallSite *callSites;
     uint32          nCallSites;
@@ -267,6 +268,31 @@ struct CallSite
 } /* namespace mjit */
 
 } /* namespace js */
+
+inline void *
+JSScript::maybeNativeCodeForPC(bool constructing, jsbytecode *pc)
+{
+    js::mjit::JITScript *jit = getJIT(constructing);
+    if (!jit)
+        return NULL;
+    JS_ASSERT(pc >= code && pc < code + length);
+    return jit->nmap[pc - code];
+}
+
+inline void **
+JSScript::nativeMap(bool constructing)
+{
+    return getJIT(constructing)->nmap;
+}
+
+inline void *
+JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
+{
+    void **nmap = nativeMap(constructing);
+    JS_ASSERT(pc >= code && pc < code + length);
+    JS_ASSERT(nmap[pc - code]);
+    return nmap[pc - code];
+}
 
 #ifdef _MSC_VER
 extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);

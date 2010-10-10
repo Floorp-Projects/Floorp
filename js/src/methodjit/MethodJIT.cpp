@@ -835,7 +835,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitArityCheckNormal = NULL;
         cx->free(script->jitNormal);
         script->jitNormal = NULL;
-        script->nmapNormal = NULL;
     }
 
     if (script->jitCtor) {
@@ -843,7 +842,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitArityCheckCtor = NULL;
         cx->free(script->jitCtor);
         script->jitCtor = NULL;
-        script->nmapCtor = NULL;
     }
 }
 

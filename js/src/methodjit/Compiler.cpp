@@ -590,7 +590,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
 
-    script->setNativeMap(isConstructing, nmap);
+    jit->nmap = nmap;
     *jitp = jit;
 
     return Compile_Okay;
