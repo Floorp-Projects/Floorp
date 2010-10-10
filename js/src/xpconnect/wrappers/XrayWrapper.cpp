@@ -56,12 +56,6 @@ using namespace js;
 static const uint32 JSSLOT_WN_OBJ = JSSLOT_PRIVATE;
 static const uint32 JSSLOT_RESOLVING = JSSLOT_PRIVATE + 1;
 
-namespace XrayUtils {
-
-const uint32 JSSLOT_PROXY_OBJ = JSSLOT_PRIVATE + 2;
-
-}
-
 class ResolvingId
 {
   public:
@@ -113,7 +107,7 @@ namespace XrayUtils {
 
 JSClass HolderClass = {
     "NativePropertyHolder",
-    JSCLASS_HAS_RESERVED_SLOTS(3),
+    JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
     holder_enumerate,       JS_ResolveStub,  JS_ConvertStub,  NULL,
     NULL,                   NULL,            NULL,            NULL,
