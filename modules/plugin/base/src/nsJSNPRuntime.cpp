@@ -637,6 +637,11 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
 
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
+
   AutoJSExceptionReporter reporter(cx);
 
   jsval v;
@@ -671,6 +676,11 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
 
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
+
   AutoJSExceptionReporter reporter(cx);
 
   if (method != NPIdentifier_VOID) {
@@ -783,6 +793,10 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier id)
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
   AutoJSExceptionReporter reporter(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
 
   if (NPIdentifierIsString(id)) {
     JSString *str = NPIdentifierToString(id);
@@ -822,6 +836,10 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier id,
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
   AutoJSExceptionReporter reporter(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
 
   jsval v;
   return (GetProperty(cx, npjsobj->mJSObj, id, &v) &&
@@ -853,6 +871,10 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier id,
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
   AutoJSExceptionReporter reporter(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
 
   jsval v = NPVariantToJSVal(npp, cx, value);
   js::AutoValueRooter tvr(cx, v);
@@ -898,6 +920,10 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier id)
   JSAutoRequest ar(cx);
   AutoJSExceptionReporter reporter(cx);
   jsval deleted = JSVAL_FALSE;
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
 
   if (NPIdentifierIsString(id)) {
     JSString *str = NPIdentifierToString(id);
@@ -973,6 +999,10 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
   AutoJSExceptionReporter reporter(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, npjsobj->mJSObj))
+    return PR_FALSE;
 
   JSIdArray *ida = ::JS_Enumerate(cx, npjsobj->mJSObj);
   if (!ida) {
@@ -1077,12 +1107,15 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
     cx = GetJSContext(npp);
 
     if (!cx) {
-      NS_ERROR("Unable to find a JSContext in "
-               "nsJSObjWrapper::GetNewOrUsed()!");
+      NS_ERROR("Unable to find a JSContext in nsJSObjWrapper::GetNewOrUsed()!");
 
       return nsnull;
     }
   }
+
+  // No need to enter the right compartment here as we only get the
+  // class and private from the JSObject, neither of which cares about
+  // compartments.
 
   JSClass *clazz = JS_GET_CLASS(cx, obj);
 
