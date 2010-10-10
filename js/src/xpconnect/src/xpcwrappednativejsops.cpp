@@ -186,6 +186,10 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
             jsid id = ccx.GetRuntime()->
                     GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
 
+            JSAutoEnterCompartment ac;
+            if(!ac.enter(ccx, mainObj))
+                return NULL;
+
             jsval val;
             if(JS_GetPropertyById(ccx, mainObj, id, &val) &&
                !JSVAL_IS_PRIMITIVE(val))
@@ -258,7 +262,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, uintN argc, jsval *vp)
         }
     }
     *vp = OBJECT_TO_JSVAL(realObject);
-    return JS_TRUE;
+    return JS_WrapValue(cx, vp);
 }
 
 /***************************************************************************/
