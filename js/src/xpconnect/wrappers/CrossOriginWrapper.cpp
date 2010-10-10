@@ -37,11 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CrossOriginWrapper.h"
-
 #include "nsJSPrincipals.h"
 
 #include "XPCWrapper.h"
+
+#include "CrossOriginWrapper.h"
+#include "WrapperFactory.h"
 
 namespace xpc {
 
@@ -57,6 +58,30 @@ static nsIPrincipal *
 GetCompartmentPrincipal(JSCompartment *compartment)
 {
     return static_cast<nsJSPrincipals *>(compartment->principals)->nsIPrincipalPtr;
+}
+
+bool
+CrossOriginWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                          bool set, js::PropertyDescriptor *desc)
+{
+    return JSCrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, set, desc) &&
+           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(&desc->value));
+}
+
+bool
+CrossOriginWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+                                          bool set, js::PropertyDescriptor *desc)
+{
+    return JSCrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, set, desc) &&
+           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(&desc->value));
+}
+
+bool
+CrossOriginWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
+                        js::Value *vp)
+{
+    return JSCrossCompartmentWrapper::get(cx, wrapper, receiver, id, vp) &&
+           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(vp));
 }
 
 bool

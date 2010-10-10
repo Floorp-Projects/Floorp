@@ -342,32 +342,11 @@ holder_enumerate(JSContext *cx, JSObject *holder)
 }
 
 static JSBool
-wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
+wrappedJSObject_getter(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 {
-    if (holder->isWrapper())
-        holder = GetHolder(holder);
+    *vp = OBJECT_TO_JSVAL(wrapper);
 
-    // If the caller intentionally waives the X-ray wrapper we usually
-    // apply for wrapped natives, use a special wrapper to make sure the
-    // membrane will not automatically apply an X-ray wrapper.
-    JSObject *wn = GetWrappedNativeObjectFromHolder(cx, holder);
-
-    // We have to make sure that if we're wrapping an outer window, that
-    // the .wrappedJSObject also wraps the outer window.
-    OBJ_TO_OUTER_OBJECT(cx, wn);
-    if (!wn)
-        return false;
-
-    JSObject *obj;
-    {
-        SwitchToCompartment sc(cx, wn->compartment());
-        obj = JSWrapper::New(cx, wn, NULL, holder->getParent(), &WaiveXrayWrapperWrapper);
-        if (!obj)
-            return false;
-    }
-    *vp = OBJECT_TO_JSVAL(obj);
-
-    return JS_WrapValue(cx, vp);
+    return WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 static JSBool
