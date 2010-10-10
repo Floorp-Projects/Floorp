@@ -1187,8 +1187,10 @@ bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
     JS_ASSERT(!call);
-    if (cx->compartment == target->getCompartment())
+    if (cx->compartment == target->getCompartment()) {
+        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
         return true;
+    }
     call = JS_EnterCrossCompartmentCall(cx, target);
     return call != NULL;
 }
