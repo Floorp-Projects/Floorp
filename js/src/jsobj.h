@@ -231,7 +231,11 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);
 
+namespace js {
+
 struct NativeIterator;
+
+}
 
 const uint32 JS_INITIAL_NSLOTS = 3;
 
@@ -909,8 +913,8 @@ struct JSObject : js::gc::Cell {
      * Iterator-specific getters and setters.
      */
 
-    inline NativeIterator *getNativeIterator() const;
-    inline void setNativeIterator(NativeIterator *);
+    inline js::NativeIterator *getNativeIterator() const;
+    inline void setNativeIterator(js::NativeIterator *);
 
     /*
      * XML-related getters and setters.

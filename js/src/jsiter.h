@@ -64,6 +64,8 @@
  */
 #define JSITER_ACTIVE     0x1000
 
+namespace js {
+
 struct NativeIterator {
     JSObject  *obj;
     void      *props_array;
@@ -137,7 +139,7 @@ struct NativeIterator {
 bool
 VectorToIdArray(JSContext *cx, js::AutoIdVector &props, JSIdArray **idap);
 
-bool
+JS_FRIEND_API(bool)
 GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector *props);
 
 bool
@@ -155,6 +157,8 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVe
  */
 bool
 EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
+
+}
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
