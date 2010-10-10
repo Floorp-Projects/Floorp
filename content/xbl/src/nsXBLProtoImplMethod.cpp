@@ -151,7 +151,7 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
     JSAutoRequest ar(cx);
     JSAutoEnterCompartment ac;
 
-    if (!ac.enter(cx, mJSMethodObject)) {
+    if (!ac.enter(cx, globalObject)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -312,6 +312,10 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   JSObject* thisObject = JSVAL_TO_OBJECT(v);
 
   JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, thisObject))
+    return NS_ERROR_UNEXPECTED;
 
   // Clone the function object, using thisObject as the parent so "this" is in
   // the scope chain of the resulting function (for backwards compat to the

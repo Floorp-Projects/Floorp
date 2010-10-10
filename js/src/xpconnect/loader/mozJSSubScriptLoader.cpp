@@ -217,6 +217,14 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         fprintf (stderr, "Final global: %p\n", target_obj);
 #endif
     }
+    else if (target_obj->isWrapper())
+    {
+        target_obj = target_obj->unwrap();
+    }
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, target_obj))
+        return NS_ERROR_UNEXPECTED;
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
