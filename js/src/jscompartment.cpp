@@ -334,8 +334,13 @@ JSCompartment::sweep(JSContext *cx)
     chunk = NULL;
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        if (IsAboutToBeFinalized(e.front().value.toGCThing()))
+        JS_ASSERT_IF(IsAboutToBeFinalized(e.front().key.toGCThing()) &&
+                     !IsAboutToBeFinalized(e.front().value.toGCThing()),
+                     e.front().key.isString());
+        if (IsAboutToBeFinalized(e.front().key.toGCThing()) ||
+            IsAboutToBeFinalized(e.front().value.toGCThing())) {
             e.removeFront();
+        }
     }
 
 #if defined JS_METHODJIT && defined JS_MONOIC
