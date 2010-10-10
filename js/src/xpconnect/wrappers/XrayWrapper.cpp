@@ -426,6 +426,19 @@ class AutoLeaveHelper
     JSObject *wrapper;
 };
 
+static bool
+UniversalXPConnect()
+{
+    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (ssm) {
+        PRBool privileged;
+        if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) && privileged)
+            return true;
+    }
+    return false;
+}
+
 template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
@@ -484,6 +497,25 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
+    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    if (UniversalXPConnect()) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        {
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, wnObject))
+                return false;
+
+            if (!JS_GetPropertyDescriptorById(cx, wnObject, id,
+                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              desc))
+                return false;
+        }
+
+        desc->obj = wrapper;
+        return cx->compartment->wrap(cx, desc_in);
+    }
+
     return JS_GetPropertyDescriptorById(cx, holder, id,
                                         (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
                                         desc);
@@ -503,6 +535,23 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
                                           js::PropertyDescriptor *desc)
 {
     JSObject *holder = GetHolder(wrapper);
+    JSPropertyDescriptor *jsdesc = Jsvalify(desc);
+
+    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    if (UniversalXPConnect()) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
+        if (!cx->compartment->wrap(cx, desc))
+            return false;
+
+        return JS_DefinePropertyById(cx, wnObject, id, jsdesc->value, jsdesc->getter, jsdesc->setter,
+                                     jsdesc->attrs);
+    }
+
     PropertyDescriptor existing_desc;
     if (!getOwnPropertyDescriptor(cx, wrapper, id, true, &existing_desc))
         return false;
@@ -510,7 +559,6 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
     if (existing_desc.obj && (existing_desc.attrs & JSPROP_PERMANENT))
         return true; // silently ignore attempt to overwrite native property
 
-    JSPropertyDescriptor *jsdesc = Jsvalify(desc);
     if (!(jsdesc->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
         if (!desc->getter)
             jsdesc->getter = holder_get;
@@ -528,6 +576,18 @@ XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                                js::AutoIdVector &props)
 {
     JSObject *holder = GetHolder(wrapper);
+
+    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    if (UniversalXPConnect()) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
+        return js::GetPropertyNames(cx, wnObject, JSITER_OWNONLY | JSITER_HIDDEN, &props);
+    }
+
     return js::GetPropertyNames(cx, holder, JSITER_OWNONLY | JSITER_HIDDEN, &props);
 }
 
@@ -538,6 +598,21 @@ XrayWrapper<Base, Policy>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bo
     JSObject *holder = GetHolder(wrapper);
     jsval v;
     JSBool b;
+
+    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    if (UniversalXPConnect()) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
+        if (!JS_DeletePropertyById2(cx, wnObject, id, &v) || !JS_ValueToBoolean(cx, v, &b))
+            return false;
+        *bp = !!b;
+        return true;
+    }
+
     if (!JS_DeletePropertyById2(cx, holder, id, &v) || !JS_ValueToBoolean(cx, v, &b))
         return false;
     *bp = !!b;
@@ -549,6 +624,18 @@ bool
 XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
     JSObject *holder = GetHolder(wrapper);
+
+    // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
+    if (UniversalXPConnect()) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
+        return js::GetPropertyNames(cx, wnObject, 0, &props);
+    }
+
     return js::GetPropertyNames(cx, holder, 0, &props);
 }
 
