@@ -56,7 +56,7 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    gCurrentTest._currentTab = Browser.addTab(testURL_01, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_01);
 
     // Wait for the tab to load, then do the test
     waitFor(gCurrentTest.onPageReady, pageLoaded(testURL_01));
@@ -109,7 +109,7 @@ gTests.push({
 
     // Send the string and press return
     EventUtils.synthesizeString(testURL_02, window);
-    EventUtils.synthesizeKey("VK_RETURN", {}, window)
+    EventUtils.synthesizeKey("VK_RETURN", {}, window);
 
     // Wait for the tab to load, then do the test
     waitFor(gCurrentTest.onPageFinish, pageLoaded(testURL_02));
@@ -162,7 +162,7 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    gCurrentTest._currentTab = Browser.addTab(testURL_03, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_03);
 
     // Wait for the tab to load, then do the test
     messageManager.addMessageListener("pageshow", function() {
@@ -176,7 +176,7 @@ gTests.push({
     let urlbarEdit = document.getElementById("urlbar-edit");
     is(urlbarEdit.value, "English Title Page", "The title must be displayed in urlbar");
     Browser.closeTab(gCurrentTest._currentTab);
-    gCurrentTest._currentTab = Browser.addTab(testURL_04, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_04);
 
     messageManager.addMessageListener("pageshow", function() {
     if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_04) {
@@ -191,7 +191,7 @@ gTests.push({
     Browser.closeTab(gCurrentTest._currentTab);
 
     // Check whether title appears after a pageload
-    gCurrentTest._currentTab = Browser.addTab(testURL_01, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_01);
     messageManager.addMessageListener("pageshow", function() {
     if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_01) {
       messageManager.removeMessageListener("pageshow", arguments.callee);
@@ -234,7 +234,7 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    gCurrentTest._currentTab = Browser.addTab(testURL_04, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_04);
     messageManager.addMessageListener("pageshow", function() {
 
     if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_04) {
@@ -248,7 +248,7 @@ gTests.push({
     is(favicon.src, "", "The default favicon must be loaded");
     Browser.closeTab(gCurrentTest._currentTab);
 
-    gCurrentTest._currentTab = Browser.addTab(testURL_03, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_03);
     messageManager.addMessageListener("pageshow", function() {
     if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_03) {
       messageManager.removeMessageListener("pageshow", arguments.callee);
@@ -274,7 +274,7 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    gCurrentTest._currentTab = Browser.addTab(testURL_01, true);
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_01);
     waitFor(gCurrentTest.onPageReady, pageLoaded(testURL_01));
   },
 

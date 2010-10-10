@@ -113,12 +113,12 @@ var BrowserUI = {
   },
 
   _titleChanged: function(aBrowser) {
-    var browser = Browser.selectedBrowser;
+    let browser = Browser.selectedBrowser;
     if (browser && aBrowser != browser)
       return;
 
-    var url = this.getDisplayURI(browser);
-    var caption = browser.contentTitle || url;
+    let url = this.getDisplayURI(browser);
+    let caption = browser.contentTitle || url;
 
     if (Util.isURLEmpty(url))
       caption = "";
@@ -198,7 +198,7 @@ var BrowserUI = {
   },
 
   _setURI: function _setURI(aCaption) {
-    if (this.isAutoCompleteOpen())
+    if (this._edit.hasAttribute("open"))
       this._edit.defaultValue = aCaption;
     else
       this._edit.value = aCaption;
@@ -220,25 +220,31 @@ var BrowserUI = {
           urlString = "";
         this._edit.value = urlString;
       }
-
-      // If the urlbar readOnly state is set to false or if the window is in
-      // portrait then we refresh the IME state to display the VKB if any
-      if (!this._edit.readOnly || Util.isPortrait()) {
-        // This is a workaround needed to cycle focus for the IME state
-        // to be set properly (bug 488420)
-        this._edit.blur();
-        gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
-      }
-
-      this._edit.readOnly = false;
     }
     else if (!aEdit) {
       this._updateToolbar();
     }
   },
 
-  updateAwesomeHeader: function updateAwesomeHeader(aVisible) {
-    document.getElementById("awesome-header").hidden = aVisible;
+  updateAwesomeHeader: function updateAwesomeHeader(aString) {
+    // During an awesome search we always show the popup_autocomplete/AllPagesList
+    // panel since this looks in every places and the rationale behind typing
+    // is to find something, whereever it is.
+    if (this.activePanel != AllPagesList) {
+      let inputField = this._edit;
+      let oldClickSelectsAll = inputField.clickSelectsAll;
+      inputField.clickSelectsAll = false;
+
+      this.activePanel = AllPagesList;
+
+      // changing the searchString property call updateAwesomeHeader again
+      inputField.controller.searchString = aString;
+      inputField.readOnly = false;
+      inputField.clickSelectsAll = oldClickSelectsAll;
+      return;
+    }
+
+    document.getElementById("awesome-header").hidden = (aString != "");
   },
 
   _closeOrQuit: function _closeOrQuit() {
@@ -269,11 +275,17 @@ var BrowserUI = {
       aPanel.open();
     } else {
       container.hidden = true;
-      BrowserUI.showToolbar(false);
+      this.showToolbar(false);
+      document.getElementById("awesome-header").hidden = false;
     }
+
+    this._edit.readOnly = !(aPanel == AllPagesList && Util.isPortrait());
+    if (this._edit.readOnly)
+      this._edit.blur();
 
     if (this._activePanel)
       this._activePanel.close();
+
     this._activePanel = aPanel;
   },
 
@@ -423,6 +435,10 @@ var BrowserUI = {
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
 
+    // listening mousedown to let devices with an hardware keyboard do direct
+    // input to the awesome bar
+    window.addEventListener("keydown", this, true);
+
     // listening escape to dismiss dialog on VK_ESCAPE
     window.addEventListener("keypress", this, true);
 
@@ -566,22 +582,18 @@ var BrowserUI = {
   },
 
   closeAutoComplete: function closeAutoComplete(aResetInput) {
-    if (!this.isAutoCompleteOpen())
-      return;
+    if (this.isAutoCompleteOpen()) {
+      if (aResetInput)
+        this._edit.popup.close();
+      else
+        this._edit.popup.closePopup();
+    }
 
-    if (aResetInput)
-      this._edit.popup.close();
-    else
-      this._edit.popup.closePopup();
-
-    // Because the controller is not detached during a blur event for Meego
-    // compatibility with the VKB, we need to detach it manually
-    this._edit.detachController();
     this.activePanel = null;
   },
 
   isAutoCompleteOpen: function isAutoCompleteOpen() {
-    return this._edit.popup.popupOpen;
+    return this.activePanel == AllPagesList;
   },
 
   doOpenSearch: function doOpenSearch(aName) {
@@ -787,6 +799,14 @@ var BrowserUI = {
           document.getElementById("tabs").removeClosedTab();
         break;
       // Window events
+      case "keydown":
+        // If there is no VKB the user won't be able to enter any letter,
+        // but if the urlbar receive a keydown when it is readOnly this
+        // could be because of a hardware keyboard or a user generated event.
+        // In this case we want the text to be taken into account.
+        if (this.activePanel && this._edit.readOnly)
+          this._edit.readOnly = false;
+        break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
           this.handleEscape(aEvent);
@@ -806,7 +826,11 @@ var BrowserUI = {
         break;
       // URL textbox events
       case "click":
-        this.doCommand("cmd_openLocation");
+        // if there is an already opened panel, keep it active (bug 596614).
+        if (this.activePanel && this._edit.readOnly)
+          this._edit.readOnly = false;
+        else if (!this.activePanel)
+          this.doCommand("cmd_openLocation");
         break;
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
@@ -828,7 +852,6 @@ var BrowserUI = {
         break;
       case "popuphidden":
         this._edit.removeAttribute("open");
-        this._edit.readOnly = true;
         break;
     }
   },
@@ -1437,7 +1460,9 @@ var AwesomePanel = function(aElementId, aCommandId) {
   this.panel = document.getElementById(aElementId),
 
   this.open = function aw_open() {
-    BrowserUI.pushDialog(this);
+    if (!BrowserUI.activePanel)
+      BrowserUI.pushDialog(this);
+
     command.setAttribute("checked", "true");
     this.panel.hidden = false;
 
@@ -1459,19 +1484,17 @@ var AwesomePanel = function(aElementId, aCommandId) {
     if (this.panel.close)
       this.panel.close();
 
-    this.panel.blur();
     this.panel.hidden = true;
     command.removeAttribute("checked", "true");
-    BrowserUI.popDialog();
+    if (!BrowserUI.activePanel)
+      BrowserUI.popDialog();
   },
 
   this.openLink = function aw_openLink(aEvent) {
     let item = aEvent.originalTarget;
     let uri = item.getAttribute("url") || item.getAttribute("uri");
-    if (uri != "") {
+    if (uri != "")
       BrowserUI.goToURI(uri);
-      BrowserUI.activePanel = null;
-    }
   }
 };
 

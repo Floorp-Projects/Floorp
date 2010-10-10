@@ -252,11 +252,11 @@
                              completeselectedindex="true"
                              minresultsforpopup="0"
                              oncontextmenu="event.preventDefault();"
-                             onsearchbegin="BrowserUI.updateAwesomeHeader(this.controller.searchString != '');"
+                             onsearchbegin="BrowserUI.updateAwesomeHeader(this.controller.searchString);"
                              emptytext="&urlbar.emptytext;"
                              flex="1"
-                             ontextentered="BrowserUI.goToURI();"
                              readonly="true"
+                             ontextentered="BrowserUI.goToURI();"
                              clickSelectsAll="true"/>
                     <hbox id="urlbar-icons" observes="bcast_urlbarState">
                       <toolbarbutton id="tool-reload" class="urlbar-cap-button"
@@ -513,7 +513,9 @@
       <vbox id="popup_autocomplete" class="panel-dark" flex="1" onshow="BrowserUI._edit.showHistoryPopup();" hidden="true"/>
       <placelist id="bookmarks-items" type="bookmarks" onopen="BookmarkList.openLink(event);" onhide="BrowserUI.updateStar();" flex="1" hidden="true"/>
       <historylist id="history-items" onopen="HistoryList.openLink(event);" flex="1" hidden="true"/>
+#ifdef MOZ_SERVICES_SYNC
       <remotetabslist id="remotetabs-items" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
+#endif
     </vbox>
 
     <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">

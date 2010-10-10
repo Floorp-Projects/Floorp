@@ -248,7 +248,7 @@ toolbarbutton.urlbar-cap-button {
   -moz-border-radius: 0;
 }
 
-#urlbar-edit:not([open]):hover:active {
+#urlbar-edit:not([readonly="true"]):not([open]):hover:active {
   background-color: #8db8d8;
 }
 
