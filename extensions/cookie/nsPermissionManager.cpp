@@ -172,7 +172,9 @@ NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISu
 
 nsPermissionManager::nsPermissionManager()
  : mLargestID(0)
+#ifdef MOZ_IPC
  , mUpdateChildProcess(PR_FALSE)
+#endif
 {
 }
 
