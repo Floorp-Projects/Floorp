@@ -460,6 +460,16 @@ Transparent(JSContext *cx, JSObject *wrapper)
     return false;
 }
 
+namespace XrayUtils {
+
+bool
+IsTransparent(JSContext *cx, JSObject *wrapper)
+{
+    return Transparent(cx, wrapper);
+}
+
+}
+
 template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::resolveWrappedJSObject(JSContext *cx, JSObject *wrapper,
