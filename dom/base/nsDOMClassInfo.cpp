@@ -44,6 +44,7 @@
 #include "jsobj.h"
 #include "jsdbgapi.h"
 #include "WrapperFactory.h"
+#include "AccessCheck.h"
 
 #include "nscore.h"
 #include "nsDOMClassInfo.h"
@@ -5290,7 +5291,8 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  if (id == sWrappedJSObject_id) {
+  if (id == sWrappedJSObject_id &&
+      xpc::AccessCheck::isChrome(cx->compartment)) {
     OBJ_TO_OUTER_OBJECT(cx, obj);
     *vp = OBJECT_TO_JSVAL(obj);
     return NS_SUCCESS_I_DID_SOMETHING;
