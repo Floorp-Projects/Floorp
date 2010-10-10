@@ -5307,6 +5307,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (id == sWrappedJSObject_id) {
+    OBJ_TO_OUTER_OBJECT(cx, obj);
     *vp = OBJECT_TO_JSVAL(obj);
     return NS_SUCCESS_I_DID_SOMETHING;
   }
