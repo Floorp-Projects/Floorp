@@ -158,6 +158,9 @@ holder_get(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
     JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
     if (NATIVE_HAS_FLAG(wn, WantGetProperty)) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, holder))
+            return false;
         JSBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->GetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv)) {
@@ -178,6 +181,9 @@ holder_set(JSContext *cx, JSObject *wrapper, jsid id, jsval *vp)
 
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
     if (NATIVE_HAS_FLAG(wn, WantSetProperty)) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, holder))
+            return false;
         JSBool retval = true;
         nsresult rv = wn->GetScriptableCallback()->SetProperty(wn, cx, wrapper, id, vp, &retval);
         if (NS_FAILED(rv)) {
@@ -303,7 +309,15 @@ static JSBool
 holder_enumerate(JSContext *cx, JSObject *holder)
 {
     // Ask the native wrapper for all its ids
-    JSIdArray *ida = JS_Enumerate(cx, GetWrappedNativeObjectFromHolder(cx, holder));
+    JSIdArray *ida;
+    {
+        JSObject *wrappednative = GetWrappedNativeObjectFromHolder(cx, holder);
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wrappednative))
+            return false;
+        ida = JS_Enumerate(cx, wrappednative);
+    }
+
     if (!ida)
         return false;
 
