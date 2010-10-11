@@ -91,14 +91,15 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
  * allowed.
  */
 
+#ifdef __SUNPRO_CC
 /*
  * Sun Studio C++ compiler has a bug
  * "sizeof expression not accepted as size of array parameter"
+ * It happens when js_static_assert() function is declared inside functions.
  * The bug number is 6688515. It is not public yet.
- * Turn off this assert for Sun Studio until this bug is fixed.
+ * Therefore, for Sun Studio, declare js_static_assert as an array instead.
  */
-#ifdef __SUNPRO_CC
-#define JS_STATIC_ASSERT(cond)
+#define JS_STATIC_ASSERT(cond) extern char js_static_assert[(cond) ? 1 : -1]
 #else
 #ifdef __COUNTER__
     #define JS_STATIC_ASSERT_GLUE1(x,y) x##y
