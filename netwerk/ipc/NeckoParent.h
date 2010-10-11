@@ -60,6 +60,8 @@ protected:
   virtual bool DeallocPHttpChannel(PHttpChannelParent*);
   virtual PCookieServiceParent* AllocPCookieService();
   virtual bool DeallocPCookieService(PCookieServiceParent*);
+  virtual PWyciwygChannelParent* AllocPWyciwygChannel();
+  virtual bool DeallocPWyciwygChannel(PWyciwygChannelParent*);
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const PRUint16& flags);
 };

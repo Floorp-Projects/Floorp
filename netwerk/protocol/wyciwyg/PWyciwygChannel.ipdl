@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Michal Novotny <michal.novotny@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,42 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_NeckoChild_h
-#define mozilla_net_NeckoChild_h
+include protocol PNecko;
 
-#include "mozilla/net/PNeckoChild.h"
-#include "mozilla/net/NeckoCommon.h"
+include "mozilla/net/NeckoMessageUtils.h";
+
+using IPC::URI;
 
 namespace mozilla {
 namespace net {
 
-// Header file contents
-class NeckoChild :
-  public PNeckoChild
+//-------------------------------------------------------------------
+protocol PWyciwygChannel
 {
-public:
-  NeckoChild();
-  virtual ~NeckoChild();
+  manager PNecko;
 
-  static void InitNeckoChild();
-  static void DestroyNeckoChild();
+parent:
+  __delete__();
 
-protected:
-  virtual PHttpChannelChild* AllocPHttpChannel(PBrowserChild* iframeEmbedding);
-  virtual bool DeallocPHttpChannel(PHttpChannelChild*);
-  virtual PCookieServiceChild* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceChild*);
-  virtual PWyciwygChannelChild* AllocPWyciwygChannel();
-  virtual bool DeallocPWyciwygChannel(PWyciwygChannelChild*);
+  Init(URI uri);
+  AsyncOpen(URI      originalURI,
+            PRUint32 loadFlags);
+
+  // methods corresponding to those of nsIWyciwygChannel
+  WriteToCacheEntry(nsString data);
+  CloseCacheEntry(nsresult reason);
+  SetCharsetAndSource(PRInt32 source, nsCString charset);
+  SetSecurityInfo(nsCString securityInfo);
+
+child:
+  OnStartRequest(nsresult  statusCode,
+                 PRInt32   contentLength,
+                 PRInt32   source,
+                 nsCString charset,
+                 nsCString securityInfo);
+
+  OnDataAvailable(nsCString data,
+                  PRUint32  offset);
+
+  OnStopRequest(nsresult statusCode);
 };
 
-/**
- * Reference to the PNecko Child protocol.
- * Null if this is not a content process.
- */
-extern PNeckoChild *gNeckoChild;
 
 } // namespace net
 } // namespace mozilla
-
-#endif // mozilla_net_NeckoChild_h
