@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that the console object still exists after a page reload.
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", onLoad, false);
 }
 
-function testOpenWebConsole()
-{
+function onLoad() {
+  browser.removeEventListener("DOMContentLoaded", onLoad, false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
-
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
+  browser.addEventListener("DOMContentLoaded", testPageReload, false);
+  content.location.reload();
 }
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+function testPageReload() {
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  browser.removeEventListener("DOMContentLoaded", testPageReload, false);
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  let hudId = HUDService.displaysIndex()[0];
+  let console = browser.contentWindow.wrappedJSObject.console;
+
+  is(typeof console, "object", "window.console is an object, after page reload");
+  is(typeof console.log, "function", "console.log is a function");
+  is(typeof console.info, "function", "console.info is a function");
+  is(typeof console.warn, "function", "console.warn is a function");
+  is(typeof console.error, "function", "console.error is a function");
+  is(typeof console.exception, "function", "console.exception is a function");
 
   finishTest();
 }
+

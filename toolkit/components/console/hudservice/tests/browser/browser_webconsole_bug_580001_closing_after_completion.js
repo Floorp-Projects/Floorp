@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests to ensure that errors don't appear when the console is closed while a
+// completion is being performed.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testClosingAfterCompletion,
+                           false);
 }
 
-function testOpenWebConsole()
-{
+function testClosingAfterCompletion() {
+  browser.removeEventListener("DOMContentLoaded",
+                              testClosingAfterCompletion, false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
+  hudBox = HUDService.getHeadsUpDisplay(hudId);
+  let inputNode = hudBox.querySelector(".jsterm-input-node");
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
+  let errorWhileClosing = false;
+  function errorListener(evt) {
+    browser.removeEventListener("error", errorListener, false);
+    errorWhileClosing = true;
+  }
+
+  browser.addEventListener("error", errorListener, false);
+
+  // Focus the inputNode and perform the keycombo to close the WebConsole.
+  inputNode.focus();
+  EventUtils.synthesizeKey("k", { accelKey: true, shiftKey: true });
+
+  // We can't test for errors right away, because the error occures after a
+  // setTimeout(..., 0) in the WebConsole code.
+  executeSoon(function() {
+    is(errorWhileClosing, false, "no error while closing the WebConsole");
+    finishTest();
+  });
 }
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
-
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
-
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
-
-  finishTest();
-}

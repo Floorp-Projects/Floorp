@@ -10,7 +10,8 @@
     <script type="text/javascript"><!--
       var button = document.getElementsByTagName("button")[0];
 
-      button.addEventListener("click", function () {
+      button.addEventListener("click", function clicker () {
+        button.removeEventListener("click", clicker, false);
         fooBazBaz.bar();
       }, false);
     // --></script>

@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that any output created from calls to the console API comes after the
+// echoed JavaScript.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testOutputOrder, false);
 }
 
-function testOpenWebConsole()
-{
+function testOutputOrder() {
+  browser.removeEventListener("DOMContentLoaded", testOutputOrder, false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
-}
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  outputNode = jsterm.outputNode;
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+  jsterm.clearOutput();
+  jsterm.execute("console.log('foo', 'bar');");
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  let nodes = outputNode.querySelectorAll(".hud-msg-node");
+  is(nodes.length, 3, "3 children in output");
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  let executedStringFirst =
+    /console\.log\('foo', 'bar'\);/.test(nodes[0].textContent);
+
+  let outputSecond =
+    /foo bar/.test(nodes[1].textContent);
+
+  ok(executedStringFirst && outputSecond, "executed string comes first");
+
+  jsterm.clearOutput();
+  jsterm.history.splice(0);   // workaround for bug 592552
 
   finishTest();
 }
+

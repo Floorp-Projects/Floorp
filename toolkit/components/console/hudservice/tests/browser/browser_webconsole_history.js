@@ -19,8 +19,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Julian Viereck <jviereck@mozilla.com>
+ *  David Dahl <ddahl@mozilla.com>
  *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,44 +38,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Tests the console history feature accessed via the up and down arrow keys.
+
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testInputExpansion, false);
+  browser.addEventListener("DOMContentLoaded", testHistory, false);
 }
 
-function testInputExpansion() {
-  browser.removeEventListener("DOMContentLoaded", testInputExpansion, false);
+function testHistory() {
+  browser.removeEventListener("DOMContentLoaded", testHistory, false);
 
   openConsole();
 
   hudId = HUDService.displaysIndex()[0];
-  hudBox = HUDService.getHeadsUpDisplay(hudId);
-  let input = hudBox.querySelector(".jsterm-input-node");
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let input = jsterm.inputNode;
 
-  input.focus();
+  let executeList = ["document", "window", "window.location"];
 
-  is(input.getAttribute("multiline"), "true", "multiline is enabled");
+  for each (var item in executeList) {
+    input.value = item;
+    jsterm.execute();
+  }
 
-  let ordinaryHeight = input.clientHeight;
+  for (var i = executeList.length - 1; i != -1; i--) {
+    jsterm.historyPeruse(true);
+    is (input.value, executeList[i], "check history previous idx:" + i);
+  }
 
-  // Tests if the inputNode expands.
-  input.value = "hello\nworld\n";
-  let length = input.value.length;
-  input.selectionEnd = length;
-  input.selectionStart = length;
-  // Performs an "d". This will trigger/test for the input event that should
-  // change the height of the inputNode.
-  EventUtils.synthesizeKey("d", {});
-  ok(input.clientHeight > ordinaryHeight, "the input expanded");
+  jsterm.historyPeruse(true);
+  is (input.value, executeList[0], "test that item is still index 0");
 
-  // Test if the inputNode shrinks again.
-  input.value = "";
-  EventUtils.synthesizeKey("d", {});
-  is(input.clientHeight, ordinaryHeight, "the input's height is normal again");
+  jsterm.historyPeruse(true);
+  is (input.value, executeList[0], "test that item is still still index 0");
 
-  input = length = null;
+
+  for (var i = 1; i < executeList.length; i++) {
+    jsterm.historyPeruse(false);
+    is (input.value, executeList[i], "check history next idx:" + i);
+  }
+
+  jsterm.historyPeruse(false);
+  is (input.value, "", "check input is empty again");
+
+  // Simulate pressing Arrow_Down a few times and then if Arrow_Up shows
+  // the previous item from history again.
+  jsterm.historyPeruse(false);
+  jsterm.historyPeruse(false);
+  jsterm.historyPeruse(false);
+
+  is (input.value, "", "check input is still empty");
+
+  let idxLast = executeList.length - 1;
+  jsterm.historyPeruse(true);
+  is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
+
+  jsterm.clearOutput();
+  jsterm.history.splice(0);   // workaround for bug 592552
 
   finishTest();
 }
