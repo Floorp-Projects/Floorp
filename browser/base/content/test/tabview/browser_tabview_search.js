@@ -38,25 +38,37 @@
 
 let newTabs = [];
 
+// ----------
 function test() {
   waitForExplicitFinish();
 
-  let tabOne = gBrowser.addTab();
-  let tabTwo = gBrowser.addTab("http://mochi.test:8888/");
-
-  let browser = gBrowser.getBrowserForTab(tabTwo);
-  let onLoad = function() {
-    browser.removeEventListener("load", onLoad, true);
-    
-    // show the tab view
-    window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-    ok(!TabView.isVisible(), "Tab View is hidden");
-    TabView.toggle();
-  }
-  browser.addEventListener("load", onLoad, true);
+  // set up our tabs
+  let urlBase = "http://mochi.test:8888/browser/browser/base/content/test/tabview/";
+  let tabOne = gBrowser.addTab(urlBase + "search1.html");
+  let tabTwo = gBrowser.addTab(urlBase + "search2.html");
   newTabs = [ tabOne, tabTwo ];
+
+  // make sure our tabs are loaded so their titles are right
+  let stillToLoad = 0; 
+  let onLoad = function() {
+    this.removeEventListener("load", onLoad, true);
+    
+    stillToLoad--; 
+    if (!stillToLoad) {    
+      // show the tab view
+      window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
+      ok(!TabView.isVisible(), "Tab View is hidden");
+      TabView.toggle();
+    }
+  }
+  
+  newTabs.forEach(function(tab) {
+    stillToLoad++; 
+    gBrowser.getBrowserForTab(tab).addEventListener("load", onLoad, true);
+  });
 }
 
+// ----------
 function onTabViewWindowLoaded() {
   window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
   ok(TabView.isVisible(), "Tab View is visible");
@@ -78,49 +90,46 @@ function onTabViewWindowLoaded() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, searchButton, contentWindow);
 }
 
+// ----------
 function searchTest(contentWindow) {
   let searchBox = contentWindow.document.getElementById("searchbox");
 
-  // get the titles of tabs.
-  let tabNames = [];
+  // force an update to make sure the correct titles are in the TabItems
   let tabItems = contentWindow.TabItems.getItems();
-
   ok(tabItems.length == 3, "Have three tab items");
-  
-  tabItems.forEach(function(tab) {
-    tabNames.push(tab.nameEl.innerHTML);
+  tabItems.forEach(function(tabItem) {
+    contentWindow.TabItems._update(tabItem.tab);
   });
-  ok(tabNames[0] && tabNames[0].length > 2, 
-     "The title of tab item is longer than 2 chars")
 
   // empty string
   searchBox.setAttribute("value", "");
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 0,
+  is(new contentWindow.TabMatcher(
+      searchBox.getAttribute("value")).matched().length, 0,
      "Match nothing if it's an empty string");
 
   // one char
-  searchBox.setAttribute("value", tabNames[0].charAt(0));
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 0,
+  searchBox.setAttribute("value", "s");
+  is(new contentWindow.TabMatcher(
+      searchBox.getAttribute("value")).matched().length, 0,
      "Match nothing if the length of search term is less than 2");
 
   // the full title
-  searchBox.setAttribute("value", tabNames[2]);
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 1,
+  searchBox.setAttribute("value", "search test 1");
+  is(new contentWindow.TabMatcher(
+      searchBox.getAttribute("value")).matched().length, 1,
      "Match something when the whole title exists");
   
-  // part of titled
-  searchBox.setAttribute("value", tabNames[0].substr(1));
+  // part of title
+  searchBox.setAttribute("value", "search");
   contentWindow.performSearch();
-  ok(new contentWindow.TabMatcher(
-      searchBox.getAttribute("value")).matched().length == 2,
+  is(new contentWindow.TabMatcher(
+      searchBox.getAttribute("value")).matched().length, 2,
      "Match something when a part of title exists");
 
   cleanup(contentWindow);
 }
 
+// ----------
 function cleanup(contentWindow) {       
   contentWindow.hideSearch(null);     
   let onTabViewHidden = function() {
