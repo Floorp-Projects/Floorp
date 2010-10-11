@@ -44,6 +44,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/net/WyciwygChannelChild.h"
 
 namespace mozilla {
 namespace net {
@@ -126,6 +127,24 @@ NeckoChild::DeallocPCookieService(PCookieServiceChild* cs)
 
   CookieServiceChild *p = static_cast<CookieServiceChild*>(cs);
   p->Release();
+  return true;
+}
+
+PWyciwygChannelChild*
+NeckoChild::AllocPWyciwygChannel()
+{
+  WyciwygChannelChild *p = new WyciwygChannelChild();
+  p->AddIPDLReference();
+  return p;
+}
+
+bool
+NeckoChild::DeallocPWyciwygChannel(PWyciwygChannelChild* channel)
+{
+  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPWyciwygChannel called by non-child!");
+
+  WyciwygChannelChild *p = static_cast<WyciwygChannelChild*>(channel);
+  p->ReleaseIPDLReference();
   return true;
 }
 

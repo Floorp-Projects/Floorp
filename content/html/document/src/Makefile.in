@@ -54,8 +54,6 @@ CPPSRCS		= \
 		nsImageDocument.cpp \
 		nsMediaDocument.cpp \
 		nsPluginDocument.cpp \
-		nsWyciwygChannel.cpp \
-		nsWyciwygProtocolHandler.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA
