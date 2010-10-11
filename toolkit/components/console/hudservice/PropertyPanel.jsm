@@ -461,7 +461,8 @@ function PropertyPanel(aParent, aDocument, aTitle, aObject, aButtons)
     aButtons.forEach(function(button) {
       let buttonNode = appendChild(aDocument, footer, "button", {
         label: button.label,
-        accesskey: button.accesskey || ""
+        accesskey: button.accesskey || "",
+        class: button.class || "",
       });
       buttonNode.addEventListener("command", button.oncommand, false);
     });
