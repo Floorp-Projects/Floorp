@@ -1323,11 +1323,7 @@ public:
 #endif
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
-  {
-    // FIXME: Consider border-radius.
-    aOutFrames->AppendElement(mFrame);
-  }
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
@@ -1431,11 +1427,7 @@ public:
 #endif
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
-  {
-    // FIXME: Consider border-radius.
-    aOutFrames->AppendElement(mFrame);
-  }
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   NS_DISPLAY_DECL_NAME("EventReceiver", TYPE_EVENT_RECEIVER)
 };
 
