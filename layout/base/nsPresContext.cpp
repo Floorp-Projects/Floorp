@@ -2651,8 +2651,13 @@ nsRootPresContext::UpdatePluginGeometry()
 }
 
 void
-nsRootPresContext::ForcePluginGeometryUpdate()
+nsRootPresContext::SynchronousPluginGeometryUpdate()
 {
+  if (!mNeedsToUpdatePluginGeometry) {
+    // Nothing to do
+    return;
+  }
+
   // Force synchronous paint
   nsIPresShell* shell = GetPresShell();
   if (!shell)
@@ -2684,8 +2689,10 @@ nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
     mNeedsToUpdatePluginGeometry = PR_TRUE;
 
     // Dispatch a Gecko event to ensure plugin geometry gets updated
+    // XXX this really should be done through the refresh driver, once
+    // all painting happens in the refresh driver
     nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &nsRootPresContext::ForcePluginGeometryUpdate);
+      NS_NewRunnableMethod(this, &nsRootPresContext::SynchronousPluginGeometryUpdate);
     NS_DispatchToMainThread(event);
 
     mUpdatePluginGeometryForFrame = aFrame;
