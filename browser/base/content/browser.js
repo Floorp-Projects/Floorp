@@ -5868,6 +5868,11 @@ var IndexedDBPromptHelper = {
 
 function WindowIsClosing()
 {
+  if (TabView.isVisible()) {
+    TabView.hide();
+    return false;
+  }
+
   var reallyClose = closeWindow(false, warnAboutClosingWindow);
   if (!reallyClose)
     return false;
