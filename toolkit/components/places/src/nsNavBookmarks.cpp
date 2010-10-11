@@ -939,28 +939,8 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   rv = aURI->GetSpec(url);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // prevent place: queries from showing up in the URL bar autocomplete results
-  PRBool isBookmark = !IsQueryURI(url);
-
-  if (isBookmark) {
-    // if it is a livemark item (the parent is a livemark), 
-    // we pass in false for isBookmark.  otherwise, unvisited livemark 
-    // items will appear in URL autocomplete before we visit them.
-    PRBool parentIsLivemark;
-    nsCOMPtr<nsILivemarkService> lms = 
-      do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = lms->IsLivemark(aFolder, &parentIsLivemark);
-    NS_ENSURE_SUCCESS(rv, rv);
- 
-    isBookmark = !parentIsLivemark;
-  }
-  
-  // when we created the moz_place entry for the new bookmark 
-  // (a side effect of calling GetUrlIdFor()) frecency -1;
-  // now we re-calculate the frecency for this moz_place entry. 
-  rv = history->UpdateFrecency(childID, isBookmark);
+  // Re-calculate the frecency for this moz_place entry since it was set to -1.
+  rv = history->UpdateFrecency(childID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1072,12 +1052,9 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (itemType == TYPE_BOOKMARK) {
-    // UpdateFrecency needs to know whether placeId is still bookmarked.
-    // Although we removed aItemId, placeId may still be bookmarked elsewhere;
-    // IsRealBookmark will know.
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    rv = history->UpdateFrecency(placeId, IsRealBookmark(placeId));
+    rv = history->UpdateFrecency(placeId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = UpdateKeywordsHashForRemovedBookmark(aItemId);
@@ -1642,13 +1619,9 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
     folderChildrenInfo child = folderChildrenArray[i];
     if (child.itemType == TYPE_BOOKMARK) {
       PRInt64 placeId = child.placeId;
-
-      // UpdateFrecency needs to know whether placeId is still bookmarked.
-      // Although we removed a child of aFolderId that bookmarked it, it may
-      // still be bookmarked elsewhere; IsRealBookmark will know.
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-      rv = history->UpdateFrecency(placeId, IsRealBookmark(placeId));
+      rv = history->UpdateFrecency(placeId);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = UpdateKeywordsHashForRemovedBookmark(child.itemId);
@@ -2519,20 +2492,12 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI* aNewURI)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Upon changing the URI for a bookmark, update the frecency for the new place.
-  // UpdateFrecency needs to know whether placeId is bookmarked (as opposed
-  // to a livemark item).  Bookmarking it is exactly what we did above.
-  rv = history->UpdateFrecency(placeId, PR_TRUE /* isBookmarked */);
+  rv = history->UpdateFrecency(placeId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Upon changing the URI for a bookmark, update the frecency for the old place.
-  // UpdateFrecency again needs to know whether oldPlaceId is bookmarked.  It may
-  // no longer be, so we need to figure out whether it still is.  Our strategy
-  // is: find all bookmarks corresponding to oldPlaceId that are not livemark
-  // items, i.e., whose parents are not livemarks.  If any such bookmarks exist,
-  // oldPlaceId is still bookmarked.
-
-  rv = history->UpdateFrecency(oldPlaceId, IsRealBookmark(oldPlaceId));
+  // Upon changing the URI for a bookmark, update the frecency for the old
+  // place as well.
+  rv = history->UpdateFrecency(oldPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
