@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that commands run by the user are executed in content space.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testExecutionScope, false);
 }
 
-function testOpenWebConsole()
-{
+function testExecutionScope() {
+  browser.removeEventListener("DOMContentLoaded", testExecutionScope,
+                              false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
+  let hudId = HUDService.displaysIndex()[0];
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
-}
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+  jsterm.clearOutput();
+  jsterm.execute("location;");
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
+  log(nodes[0].textContent);
+  is(nodes.length, 1, "Three children in output");
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  is(/location;/.test(nodes[0].textContent), true,
+     "'location;' written to output");
+
+  ok(nodes[0].textContent.indexOf(TEST_URI),
+    "command was executed in the window scope");
+
+  jsterm.clearOutput();
+  jsterm.history.splice(0);   // workaround for bug 592552
 
   finishTest();
 }
+

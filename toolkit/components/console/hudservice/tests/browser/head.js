@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +35,76 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-function test()
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "HUDService", function () {
+  Cu.import("resource:///modules/HUDService.jsm");
+  try {
+    return HUDService;
+  }
+  catch (ex) {
+    dump(ex + "\n");
+  }
+});
+
+function log(aMsg)
 {
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+  dump("*** WebConsoleTest: " + aMsg + "\n");
 }
 
-function testOpenWebConsole()
+let tab, browser, hudId, hud, hudBox, filterBox, outputNode, cs;
+
+let win = gBrowser.selectedBrowser;
+
+function addTab(aURL)
 {
-  openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
-
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
-
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
+  gBrowser.selectedTab = gBrowser.addTab();
+  content.location = aURL;
+  tab = gBrowser.selectedTab;
+  browser = gBrowser.getBrowserForTab(tab);
 }
 
-function testWarning()
+function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
-
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
-
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
-
-  finishTest();
+  var message = aOutputNode.textContent.indexOf(aMatchString);
+  if (message > -1) {
+    ok(true, aSuccessErrObj.success);
+    return;
+  }
+  ok(false, aSuccessErrObj.err);
 }
+
+function openConsole()
+{
+  HUDService.activateHUDForContext(tab);
+}
+
+function finishTest()
+{
+  finish();
+}
+
+function tearDown()
+{
+  try {
+    HUDService.deactivateHUDForContext(gBrowser.selectedTab);
+  }
+  catch (ex) {
+    log(ex);
+  }
+  gBrowser.removeCurrentTab();
+  tab = browser = hudId = hud = filterBox = outputNode = cs = null;
+}
+
+registerCleanupFunction(tearDown);
+
+waitForExplicitFinish();
+
+// removed tests:
+// browser_webconsole_bug_580030_errors_after_page_reload.js \
+// browser_webconsole_bug_595350_multiple_windows_and_tabs.js \

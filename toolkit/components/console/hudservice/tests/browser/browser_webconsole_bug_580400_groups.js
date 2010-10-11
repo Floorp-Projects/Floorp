@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that console groups behave properly.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testGroups, false);
 }
 
-function testOpenWebConsole()
-{
+function testGroups() {
+  browser.removeEventListener("DOMContentLoaded", testGroups, false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
+  let hudId = HUDService.displaysIndex()[0];
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
-}
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+  let timestamp0 = Date.now();
+  jsterm.execute("0");
+  is(outputNode.querySelectorAll(".hud-group").length, 1,
+    "one group exists after the first console message");
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  jsterm.execute("1");
+  let timestamp1 = Date.now();
+  if (timestamp1 - timestamp0 < 5000) {
+    is(outputNode.querySelectorAll(".hud-group").length, 1,
+      "only one group still exists after the second console message");
+  }
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  HUD.HUDBox.lastTimestamp = 0;   // a "far past" value
+  jsterm.execute("2");
+  is(outputNode.querySelectorAll(".hud-group").length, 2,
+    "two groups exist after the third console message");
+
+  jsterm.clearOutput();
+  jsterm.history.splice(0);   // workaround for bug 592552
 
   finishTest();
 }
+

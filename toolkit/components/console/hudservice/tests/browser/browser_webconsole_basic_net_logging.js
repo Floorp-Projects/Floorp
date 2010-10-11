@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that the page's resources are displayed in the console as they're
+// loaded
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+const TEST_NETWORK_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-network.html" + "?_date=" + Date.now();
+
+function test() {
+  addTab(TEST_NETWORK_URI);
+  browser.addEventListener("DOMContentLoaded", onLoad, false);
 }
 
-function testOpenWebConsole()
-{
+function onLoad() {
+  browser.removeEventListener("DOMContentLoaded", onLoad, false);
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
-
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
-
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
+  // Now reload with the console visible.
+  // HUDService.clearDisplay(hudId);
+  browser.addEventListener("DOMContentLoaded", testBasicNetLogging,
+                            false);
+  browser.contentWindow.wrappedJSObject.document.location = TEST_NETWORK_URI;
 }
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+function testBasicNetLogging() {
+  browser.removeEventListener("DOMContentLoaded", testBasicNetLogging,
+                              false);
+  hudBox = HUDService.getHeadsUpDisplay(hudId);
+  outputNode = hudBox.querySelector(".hud-output-node");
+  log(outputNode);
+  let testOutput = [];
+  let nodes = outputNode.querySelectorAll(".hud-msg-node");
+  log(nodes);
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  executeSoon(function (){
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
-
-  finishTest();
+    ok(nodes.length == 2, "2 children in output");
+    ok(nodes[0].textContent.indexOf("test-network") > -1, "found test-network");
+    // TODO: Need to figure out why these 2 are never logged - see bug 603251
+    // ok(testOutput[1].indexOf("testscript") > -1, "found testscript");
+    // ok(testOutput[2].indexOf("test-image") > -1, "found test-image");
+    ok(nodes[1].textContent.indexOf("network console") > -1, "found network console");
+    finishTest();
+  });
 }
+
+

@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that the recordEntry() method of the console store works.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testStorageRecordEntry,
+                              false);
 }
 
-function testOpenWebConsole()
-{
+function testStorageRecordEntry() {
+  browser.removeEventListener("DOMContentLoaded", testStorageRecordEntry,
+                              false);
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
+  let cs = HUDService.storage;
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
-}
+  cs.createDisplay("foo");
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+  var config = {
+    logLevel: "network",
+    message: "HumminaHummina!",
+    activity: {
+      stage: "barStage",
+      data: "bar bar bar bar"
+    }
+  };
+  var entry = cs.recordEntry("foo", config);
+  var res = entry.id;
+  ok(entry.id != null, "Entry.id is: " + res);
+  ok(cs.displayIndexes["foo"].length == 1,
+     "We added one entry.");
+  entry = cs.getEntry(res);
+  ok(entry.id > -1,
+     "We got an entry through the global interface");
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
-
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
-
+  cs.removeDisplay("foo");
+  cs = null;
   finishTest();
 }
+
