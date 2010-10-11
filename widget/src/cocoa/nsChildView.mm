@@ -1734,8 +1734,11 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
     // it from here.  See bug 592563.
     child->Show(!config.mClipRegion.IsEmpty());
 
-    PRBool repaint = child->mView &&
+    PRBool repaint = PR_FALSE;
+#ifndef NP_NO_QUICKDRAW
+    repaint = child->mView &&
       [(ChildView*)child->mView pluginDrawingModel] == NPDrawingModelQuickDraw;
+#endif
     child->Resize(
         config.mBounds.x, config.mBounds.y,
         config.mBounds.width, config.mBounds.height,
