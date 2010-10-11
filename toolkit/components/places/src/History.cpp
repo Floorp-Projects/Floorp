@@ -346,10 +346,7 @@ public:
     NS_WARN_IF_FALSE(bookmarks, "Could not get bookmarks service");
     if (history && bookmarks) {
       // Update frecency *after* the visit info is in the db
-      nsresult rv = history->UpdateFrecency(
-        mData->placeId,
-        bookmarks->IsRealBookmark(mData->placeId)
-      );
+      nsresult rv = history->UpdateFrecency(mData->placeId);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not update frecency");
 
       // Notify nsNavHistory observers of visit, but only for certain types of
