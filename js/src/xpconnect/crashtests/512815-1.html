@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom() {
+  var ns = document.createElementNS("http://www.w3.org/1999/xhtml", "script");
+  var nt = document.createTextNode("bang();");
+  ns.appendChild(nt);
+  document.getElementById("v").appendChild(ns);
+}
+
+function bang()
+{
+  var scriptElement = document.getElementById("v").lastElementChild;
+  "" + scriptElement;
+}
+
+</script>
+</head>
+<body onload="boom();"><div id="v"></div></body>
+</html>
