@@ -1537,6 +1537,8 @@ var XPIProvider = {
             newAddon = loadManifestFromZipFile(file);
           else
             newAddon = loadManifestFromDir(file);
+          // Carry over the userDisabled setting for add-ons that just appeared
+          newAddon.userDisabled = aOldAddon.userDisabled;
         }
 
         // The ID in the manifest that was loaded must match the ID of the old
@@ -3936,7 +3938,6 @@ var XPIDatabase = {
     // Any errors in here should rollback the transaction
     try {
       this.removeAddonMetadata(aOldAddon);
-      aNewAddon.userDisabled = aOldAddon.userDisabled;
       aNewAddon.installDate = aOldAddon.installDate;
       aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
       this.addAddonMetadata(aNewAddon, aDescriptor);
@@ -4218,6 +4219,8 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
       this.loadManifest(function() {
         XPIDatabase.getVisibleAddonForID(self.addon.id, function(aAddon) {
           self.existingAddon = aAddon;
+          if (aAddon)
+            self.addon.userDisabled = aAddon.userDisabled;
           self.addon.updateDate = Date.now();
           self.addon.installDate = aAddon ? aAddon.installDate : self.addon.updateDate;
 
@@ -4866,6 +4869,8 @@ AddonInstall.prototype = {
     let self = this;
     XPIDatabase.getVisibleAddonForID(this.addon.id, function(aAddon) {
       self.existingAddon = aAddon;
+      if (aAddon)
+        self.addon.userDisabled = aAddon.userDisabled;
       self.addon.updateDate = Date.now();
       self.addon.installDate = aAddon ? aAddon.installDate : self.addon.updateDate;
       self.state = AddonManager.STATE_DOWNLOADED;
