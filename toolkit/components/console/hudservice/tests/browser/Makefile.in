@@ -89,6 +89,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_582201_duplicate_errors.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
+	browser_webconsole_bug_583816_tab_focus.js \
 	head.js \
 	$(NULL)
 

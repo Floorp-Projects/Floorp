@@ -4286,20 +4286,19 @@ JSTerm.prototype = {
             // If there are more than one possible completion, pressing tab
             // means taking the next completion, shift_tab means taking
             // the previous completion.
+            var completionResult;
             if (aEvent.shiftKey) {
-              self.complete(self.COMPLETE_BACKWARD);
+              completionResult = self.complete(self.COMPLETE_BACKWARD);
             }
             else {
-              self.complete(self.COMPLETE_FORWARD);
+              completionResult = self.complete(self.COMPLETE_FORWARD);
             }
-            var bool = aEvent.cancelable;
-            if (bool) {
+            if (completionResult) {
+              if (aEvent.cancelable) {
               aEvent.preventDefault();
             }
-            else {
-              // noop
-            }
             aEvent.target.focus();
+            }
             break;
           case 8:
             // backspace key
@@ -4410,7 +4409,8 @@ JSTerm.prototype = {
    *          the inputNode.value is set to this value and the selection is set
    *          from the current cursor position to the end of the completed text.
    *
-   * @returns void
+   * @returns boolean true if there existed a completion for the current input,
+   *          or false otherwise.
    */
   complete: function JSTF_complete(type)
   {
@@ -4418,7 +4418,7 @@ JSTerm.prototype = {
     let inputValue = inputNode.value;
     // If the inputNode has no value, then don't try to complete on it.
     if (!inputValue) {
-      return;
+      return false;
     }
     let selStart = inputNode.selectionStart, selEnd = inputNode.selectionEnd;
 
@@ -4432,7 +4432,7 @@ JSTerm.prototype = {
     // Only complete if the selection is at the end of the input.
     if (selEnd != inputValue.length) {
       this.lastCompletion = null;
-      return;
+      return false;
     }
 
     // Remove the selected text from the inputValue.
@@ -4460,7 +4460,7 @@ JSTerm.prototype = {
       // Look up possible completion values.
       let completion = this.propertyProvider(this.sandbox.window, inputValue);
       if (!completion) {
-        return;
+        return false;
       }
       matches = completion.matches;
       matchIndexToUse = 0;
@@ -4500,7 +4500,11 @@ JSTerm.prototype = {
       else {
         inputNode.setSelectionRange(selEnd, selEnd);
       }
+
+      return completionStr ? true : false;
     }
+
+    return false;
   }
 };
 
