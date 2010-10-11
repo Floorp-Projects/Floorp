@@ -645,7 +645,8 @@ public:
      * Call ReadPixels into an existing gfxImageSurface for the given bounds.
      * The image surface must be using image format RGBA32 or RGB24.
      */
-    void ReadPixelsIntoImageSurface(GLint aX, GLint aY, GLsizei aWidth, GLsizei aHeight,
+    void THEBES_API ReadPixelsIntoImageSurface(GLint aX, GLint aY,
+                                    GLsizei aWidth, GLsizei aHeight,
                                     gfxImageSurface *aDest);
 
     /**
