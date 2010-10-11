@@ -93,18 +93,18 @@ function installSearchResult(aCallback) {
   searchBox.value = "foo" + gSearchCount;
   gSearchCount++;
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     let remote = gManagerWindow.document.getElementById("search-filter-remote")
-    EventUtils.synthesizeMouse(remote, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(remote, { }, gManagerWindow);
 
     let item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
     ok(!!item, "Should see the search result in the list");
 
     let status = get_node(item, "install-status");
-    EventUtils.synthesizeMouse(get_node(status, "install-remote"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote"), {}, gManagerWindow);
 
     item.mInstall.addListener({
       onInstallEnded: function() {
@@ -145,7 +145,7 @@ function check_undo_install() {
   is_element_visible(get_node(item, "pending"), "Pending message should be visible");
   is(get_node(item, "pending").textContent, "Install Tests will be installed after you restart " + gApp + ".", "Pending message should be correct");
 
-  EventUtils.synthesizeMouse(get_node(item, "undo"), 2, 2, {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo"), {}, gManagerWindow);
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 
@@ -163,7 +163,7 @@ function check_undo_upgrade() {
   is_element_visible(get_node(item, "pending"), "Pending message should be visible");
   is(get_node(item, "pending").textContent, "Install Tests will be updated after you restart " + gApp + ".", "Pending message should be correct");
 
-  EventUtils.synthesizeMouse(get_node(item, "undo"), 2, 2, {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo"), {}, gManagerWindow);
 
   is(get_list_item_count(), 1, "Should be only one item in the list");
 

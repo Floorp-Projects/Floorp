@@ -24,7 +24,7 @@ function open_details(aId, aType, aCallback) {
     while (item) {
       if ("mAddon" in item && item.mAddon.id == aId) {
         list.ensureElementIsVisible(item);
-        EventUtils.synthesizeMouse(item, 2, 2, { clickCount: 2 }, gManagerWindow);
+        EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
         wait_for_view_load(gManagerWindow, aCallback);
         return;
       }
@@ -172,10 +172,10 @@ add_test(function() {
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
     ok(get("detail-autoUpdate").childNodes[1].selected, "Updates ahould be automatic");
     is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").lastChild, 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").lastChild, {}, gManagerWindow);
     ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").firstChild, {}, gManagerWindow);
     ok(get("detail-autoUpdate").firstChild.selected, "Updates should be automatic");
 //XXX Disabled due to bug 596172
 //    is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
@@ -191,7 +191,7 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     // Disable it
-    EventUtils.synthesizeMouse(get("detail-disable"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-disable"), {}, gManagerWindow);
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_visible(get("detail-enable"), "Enable button should be visible");
     is_element_hidden(get("detail-disable"), "Disable button should be hidden");
@@ -219,7 +219,7 @@ add_test(function() {
       is(get("detail-pending").textContent, "Test add-on 1 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
       // Undo disabling
-      EventUtils.synthesizeMouse(get("detail-undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get("detail-undo"), {}, gManagerWindow);
       is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
       is_element_hidden(get("detail-enable"), "Enable button should be hidden");
       is_element_visible(get("detail-disable"), "Disable button should be visible");
@@ -318,16 +318,16 @@ add_test(function() {
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
     ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").childNodes[1], 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").childNodes[1], {}, gManagerWindow);
     ok(get("detail-autoUpdate").childNodes[1].selected, "Updates should be automatic");
     is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").lastChild, 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").lastChild, {}, gManagerWindow);
     ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
 
     info("Setting " + PREF_AUTOUPDATE_DEFAULT + " to true");
     Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, true);
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").firstChild, {}, gManagerWindow);
     ok(get("detail-autoUpdate").firstChild.selected, "Updates should be default");
     is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
 
@@ -335,10 +335,10 @@ add_test(function() {
     Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, false);
     ok(get("detail-autoUpdate").firstChild.selected, "Updates should be default");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").childNodes[1], 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").childNodes[1], {}, gManagerWindow);
     ok(get("detail-autoUpdate").childNodes[1].selected, "Updates should be automatic");
     is_element_hidden(get("detail-findUpdates"), "Check for updates should be hidden");
-    EventUtils.synthesizeMouse(get("detail-autoUpdate").firstChild, 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-autoUpdate").firstChild, {}, gManagerWindow);
     ok(get("detail-autoUpdate").firstChild.selected, "Updates should be default");
     is_element_visible(get("detail-findUpdates"), "Check for updates should be visible");
     Services.prefs.clearUserPref(PREF_AUTOUPDATE_DEFAULT);
@@ -379,7 +379,7 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     // Enable it
-    EventUtils.synthesizeMouse(get("detail-enable"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-enable"), {}, gManagerWindow);
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");
     is_element_visible(get("detail-disable"), "Disable button should be visible");
@@ -407,7 +407,7 @@ add_test(function() {
       is(get("detail-pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
       // Undo enabling
-      EventUtils.synthesizeMouse(get("detail-undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get("detail-undo"), {}, gManagerWindow);
       is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
       is_element_visible(get("detail-enable"), "Enable button should be visible");
       is_element_hidden(get("detail-disable"), "Disable button should be hidden");
@@ -467,7 +467,7 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     // Disable it
-    EventUtils.synthesizeMouse(get("detail-disable"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-disable"), {}, gManagerWindow);
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_visible(get("detail-enable"), "Enable button should be visible");
     is_element_hidden(get("detail-disable"), "Disable button should be hidden");
@@ -493,7 +493,7 @@ add_test(function() {
       is_element_hidden(get("detail-pending"), "Pending message should be visible");
 
       // Enable it
-      EventUtils.synthesizeMouse(get("detail-enable"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get("detail-enable"), {}, gManagerWindow);
       is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
       is_element_hidden(get("detail-enable"), "Enable button should be hidden");
       is_element_visible(get("detail-disable"), "Disable button should be visible");
@@ -527,7 +527,7 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     // Enable it
-    EventUtils.synthesizeMouse(get("detail-enable"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-enable"), {}, gManagerWindow);
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable"), "Enable button should be hidden");
     is_element_visible(get("detail-disable"), "Disable button should be visible");
@@ -555,7 +555,7 @@ add_test(function() {
       is(get("detail-pending").textContent, "Test add-on 7 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
       // Undo enabling
-      EventUtils.synthesizeMouse(get("detail-undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get("detail-undo"), {}, gManagerWindow);
       is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
       is_element_visible(get("detail-enable"), "Enable button should be visible");
       is_element_hidden(get("detail-disable"), "Disable button should be hidden");
@@ -592,7 +592,7 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     // Disable it
-    EventUtils.synthesizeMouse(get("detail-disable"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get("detail-disable"), {}, gManagerWindow);
     is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
     is_element_visible(get("detail-enable"), "Enable button should be visible");
     is_element_hidden(get("detail-disable"), "Disable button should be hidden");
@@ -620,7 +620,7 @@ add_test(function() {
       is(get("detail-pending").textContent, "Test add-on 8 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
       // Undo disabling
-      EventUtils.synthesizeMouse(get("detail-undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get("detail-undo"), {}, gManagerWindow);
       is_element_hidden(get("detail-prefs"), "Preferences button should be hidden");
       is_element_hidden(get("detail-enable"), "Enable button should be hidden");
       is_element_visible(get("detail-disable"), "Disable button should be visible");
