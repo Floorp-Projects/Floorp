@@ -388,7 +388,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           proportion = widthRange.proportion(css.width); // between 0 and 1
         } else {
           $fav.css({top:4,left:4});
-          widthRange = new Range(60, 70);
+          widthRange = new Range(40, 45);
           proportion = widthRange.proportion(css.width); // between 0 and 1
           $close.show().css({opacity:proportion});
           if (proportion <= .1)
