@@ -385,7 +385,7 @@ protected:
     }
   }
 
-  const char* mTopic;
+  const char* const mTopic;
   bool mDoubleEnqueue;
 };
 
@@ -394,6 +394,46 @@ NS_IMPL_ISUPPORTS2(
 , mozIStorageCompletionCallback
 , nsIRunnable
 )
+
+
+// Used to notify a topic to system observers on async execute completion.
+class AsyncStatementCallbackNotifier : public AsyncStatementCallback
+{
+public:
+  AsyncStatementCallbackNotifier(const char* aTopic)
+    : mTopic(aTopic)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_ASYNCSTATEMENTCALLBACK
+private:
+  const char* mTopic;
+};
+
+NS_IMPL_ISUPPORTS1(AsyncStatementCallbackNotifier,
+                   mozIStorageStatementCallback)
+
+NS_IMETHODIMP
+AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  NS_ASSERTION(PR_FALSE, "You cannot use AsyncStatementCallbackNotifier to get a resultset");
+  return NS_OK;
+}
 
 } // anonymouse namespace
 
@@ -4626,10 +4666,7 @@ nsNavHistory::RemoveAllPages()
   // We must do this before deleting visits.
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "UPDATE moz_places SET frecency = -MAX(visit_count, 1) "
-    "WHERE id IN("
-      "SELECT h.id FROM moz_places h "
-      "WHERE EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
-    ")"));
+    "WHERE id IN(SELECT b.fk FROM moz_bookmarks b WHERE b.fk NOTNULL)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Expire visits, then let the paranoid functions do the cleanup for us.
@@ -7104,23 +7141,41 @@ void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 nsresult
 nsNavHistory::UpdateFrecency(PRInt64 aPlaceId)
 {
-  mozStorageStatementScoper frecencyScoper(mDBUpdateFrecency);
-  nsresult rv = mDBUpdateFrecency->BindInt64ByName(
-    NS_LITERAL_CSTRING("page_id"), aPlaceId
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBUpdateFrecency->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(mDBUpdateFrecency && mDBUpdateHiddenOnFrecency);
 
-  mozStorageStatementScoper hiddenScoper(mDBUpdateHiddenOnFrecency);
-  rv = mDBUpdateHiddenOnFrecency->BindInt64ByName(
-    NS_LITERAL_CSTRING("page_id"), aPlaceId
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBUpdateHiddenOnFrecency->Execute();
+#define ASYNC_BIND(_stmt) \
+  PR_BEGIN_MACRO \
+    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray; \
+    nsresult rv = _stmt->NewBindingParamsArray(getter_AddRefs(paramsArray)); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    nsCOMPtr<mozIStorageBindingParams> params; \
+    rv = paramsArray->NewBindingParams(getter_AddRefs(params)); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    rv = params->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    rv = paramsArray->AddParams(params); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    rv = _stmt->BindParameters(paramsArray); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+  PR_END_MACRO
+
+  ASYNC_BIND(mDBUpdateFrecency);
+  ASYNC_BIND(mDBUpdateHiddenOnFrecency);
+
+  mozIStorageBaseStatement *stmts[] = {
+    mDBUpdateFrecency
+  , mDBUpdateHiddenOnFrecency
+  };
+
+  nsCOMPtr<AsyncStatementCallbackNotifier> callback =
+    new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  nsresult rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), callback,
+                                      getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+#undef ASYNC_BIND
 }
 
 
@@ -7140,15 +7195,18 @@ nsNavHistory::FixInvalidFrecencies()
   // Note, we are not limiting ourselves to places with visits because we may
   // not have any if the place is a bookmark and we expired or deleted all the
   // visits.
-  nsCOMPtr<mozIStorageStatement> invalidFrecencies;
+  nsCOMPtr<mozIStorageStatement> fixInvalidFrecenciesStmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_places "
       "SET frecency = CALCULATE_FRECENCY(id) "
       "WHERE frecency < 0"),
-    getter_AddRefs(invalidFrecencies));
+    getter_AddRefs(fixInvalidFrecenciesStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = invalidFrecencies->Execute();
+  nsCOMPtr<AsyncStatementCallbackNotifier> callback =
+    new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = fixInvalidFrecenciesStmt->ExecuteAsync(callback, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -7156,45 +7214,6 @@ nsNavHistory::FixInvalidFrecencies()
 
 
 #ifdef MOZ_XUL
-
-namespace {
-
-// Used to notify a topic to system observers on async execute completion.
-class AutoCompleteStatementCallbackNotifier : public AsyncStatementCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_ASYNCSTATEMENTCALLBACK
-};
-
-NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
-                   mozIStorageStatementCallback)
-
-NS_IMETHODIMP
-AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
-{
-  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  if (observerService) {
-    (void)observerService->NotifyObservers(nsnull,
-                                           TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED,
-                                           nsnull);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AutoCompleteStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
-{
-  NS_ASSERTION(PR_FALSE, "You cannot use AutoCompleteStatementCallbackNotifier to get async statements resultset");
-  return NS_OK;
-}
-
-} // anonymous namespace
 
 nsresult
 nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
@@ -7222,8 +7241,8 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We do the update asynchronously and we do not care about failures.
-  nsCOMPtr<AutoCompleteStatementCallbackNotifier> callback =
-    new AutoCompleteStatementCallbackNotifier();
+  nsCOMPtr<AsyncStatementCallbackNotifier> callback =
+    new AsyncStatementCallbackNotifier(TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED);
   nsCOMPtr<mozIStoragePendingStatement> canceler;
   rv = stmt->ExecuteAsync(callback, getter_AddRefs(canceler));
   NS_ENSURE_SUCCESS(rv, rv);

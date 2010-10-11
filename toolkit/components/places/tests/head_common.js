@@ -460,6 +460,57 @@ function check_JSON_backup() {
 
 
 /**
+ * Waits for a frecency update then calls back.
+ *
+ * @param aUrl
+ *        Address of the page we are waiting frecency for.
+ * @param aValidator
+ *        Validator function for the current frecency. If it returns true we
+ *        have the expected frecency, otherwise we wait for next update.
+ * @param aCallback
+ *        function invoked when frecency update finishes.
+ * @param aCbScope
+ *        "this" scope for the callback
+ * @param aCbArguments
+ *        array of arguments to be passed to the callback
+ *
+ * @note since frecency is something that can be changed by a bunch of stuff
+ *       like adding and removing visits, bookmarks we use a polling strategy.
+ */
+function waitForFrecency(aUrl, aValidator, aCallback, aCbScope, aCbArguments) {
+  Services.obs.addObserver(function (aSubject, aTopic, aData) {
+    let frecency = frecencyForUrl(aUrl);
+    if (!aValidator(frecency)) {
+      return;
+    }
+    Services.obs.removeObserver(arguments.callee, aTopic);
+    aCallback.apply(aCbScope, aCbArguments);
+  }, "places-frecency-updated", false);
+}
+
+/**
+ * Returns the frecency of a url.
+ *
+ * @param  aURL
+ *         the URL to get frecency for.
+ * @return the frecency value.
+ */
+function frecencyForUrl(aUrl)
+{
+  let stmt = DBConn().createStatement(
+    "SELECT frecency FROM moz_places WHERE url = ?1"
+  );
+  stmt.bindUTF8StringParameter(0, aUrl);
+  if (!stmt.executeStep())
+    throw "No result for frecency.";
+  let frecency = stmt.getInt32(0);
+  stmt.finalize();
+
+  return frecency;
+}
+
+
+/**
  * Compares two times in usecs, considering eventual platform timers skews.
  *
  * @param aTimeBefore
