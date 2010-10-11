@@ -1047,6 +1047,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //   options - passed to <Items.arrange> or <_stackArrange>
   arrange: function GroupItem_arrange(options) {
+    if (GroupItems._arrangePaused) {
+      GroupItems.pushArrange(this, options);
+      return;
+    }
     if (this.expanded) {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
@@ -1490,6 +1494,8 @@ let GroupItems = {
   _activeGroupItem: null,
   _activeOrphanTab: null,
   _cleanupFunctions: [],
+  _arrangePaused: false,
+  _arrangesPending: [],
 
   // ----------
   // Function: init
@@ -1519,6 +1525,51 @@ let GroupItems = {
 
     // additional clean up
     this.groupItems = null;
+  },
+
+  // ----------
+  // Function: pauseArrange
+  // Bypass arrange() calls and collect for resolution in
+  // resumeArrange()
+  pauseArrange: function GroupItems_pauseArrange() {
+    Utils.assert(this._arrangePaused == false, 
+      "pauseArrange has been called while already paused");
+    Utils.assert(this._arrangesPending.length == 0, 
+      "There are bypassed arrange() calls that haven't been resolved");
+    this._arrangePaused = true;
+  },
+
+  // ----------
+  // Function: pushArrange
+  // Push an arrange() call and its arguments onto an array
+  // to be resolved in resumeArrange()
+  pushArrange: function GroupItems_pushArrange(groupItem, options) {
+    Utils.assert(this._arrangePaused, 
+      "Ensure pushArrange() called while arrange()s aren't paused"); 
+    let i;
+    for (i = 0; i < this._arrangesPending.length; i++)
+      if (this._arrangesPending[i].groupItem === groupItem)
+        break;
+    let arrangeInfo = {
+      groupItem: groupItem,
+      options: options
+    };
+    if (i < this._arrangesPending.length)
+      this._arrangesPending[i] = arrangeInfo;
+    else
+      this._arrangesPending.push(arrangeInfo);
+  },
+
+  // ----------
+  // Function: resumeArrange
+  // Resolve bypassed and collected arrange() calls
+  resumeArrange: function GroupItems_resumeArrange() {
+    for (let i = 0; i < this._arrangesPending.length; i++) {
+      let g = this._arrangesPending[i];
+      g.groupItem.arrange(g.options);
+    }
+    this._arrangesPending = [];
+    this._arrangePaused = false;
   },
 
   // ----------

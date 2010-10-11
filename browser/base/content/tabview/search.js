@@ -132,7 +132,7 @@ var TabUtils = {
   // Function: favURLOf
   // Given a <TabItem> or a <xul:tab> returns the URL of tab's favicon.
   faviconURLOf: function TabUtils_faviconURLOf(tab) {
-    return tab.image != undefined ? tab.image : tab.favEl.src;
+    return tab.image != undefined ? tab.image : tab.favImgEl.src;
   },
   
   // ---------
