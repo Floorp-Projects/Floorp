@@ -70,8 +70,10 @@ function TabItem(tab, options) {
 
   this.canvasSizeForced = false;
   this.isShowingCachedData = false;
-  this.favEl = (iQ('.favicon>img', $div))[0];
+  this.favEl = (iQ('.favicon', $div))[0];
+  this.favImgEl = (iQ('.favicon>img', $div))[0];
   this.nameEl = (iQ('.tab-title', $div))[0];
+  this.thumbEl = (iQ('.thumb', $div))[0];
   this.canvasEl = (iQ('.thumb canvas', $div))[0];
   this.cachedThumbEl = (iQ('img.cached-thumb', $div))[0];
 
@@ -194,6 +196,7 @@ function TabItem(tab, options) {
   iQ("<div>")
     .addClass('close')
     .appendTo($div);
+  this.closeEl = (iQ(".close", $div))[0];
 
   iQ("<div>")
     .addClass('expander')
@@ -322,10 +325,10 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.bounds.copy(rect);
     else {
       var $container = iQ(this.container);
-      var $title = iQ('.tab-title', $container);
-      var $thumb = iQ('.thumb', $container);
-      var $close = iQ('.close', $container);
-      var $fav   = iQ('.favicon', $container);
+      var $title = iQ(this.nameEl);
+      var $thumb = iQ(this.thumbEl);
+      var $close = iQ(this.closeEl);
+      var $fav   = iQ(this.favEl);
       var css = {};
 
       const fontSizeRange = new Range(8,15);
@@ -802,8 +805,8 @@ let TabItems = {
       if (iconUrl == null)
         iconUrl = Utils.defaultFaviconURL;
 
-      if (iconUrl != tabItem.favEl.src)
-        tabItem.favEl.src = iconUrl;
+      if (iconUrl != tabItem.favImgEl.src)
+        tabItem.favImgEl.src = iconUrl;
 
       // ___ URL
       let tabUrl = tab.linkedBrowser.currentURI.spec;
