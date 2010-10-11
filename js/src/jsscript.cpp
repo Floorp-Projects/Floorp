@@ -1647,8 +1647,10 @@ class DisablePrincipalsTranscoding {
     JSPrincipalsTranscoder temp;
 
   public:
-    DisablePrincipalsTranscoding(JSContext *cx) {
-        callbacks = JS_GetRuntimeSecurityCallbacks(cx->runtime);
+    DisablePrincipalsTranscoding(JSContext *cx)
+      : callbacks(JS_GetRuntimeSecurityCallbacks(cx->runtime)),
+        temp(NULL)
+    {
         if (callbacks) {
             temp = callbacks->principalsTranscoder;
             callbacks->principalsTranscoder = NULL;
