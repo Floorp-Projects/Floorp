@@ -55,13 +55,17 @@ namespace places {
 class AsyncStatementCallback : public mozIStorageStatementCallback
 {
 public:
-  // Implement the error handler for asynchronous statements.
-  NS_IMETHOD HandleError(mozIStorageError *aError);
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  AsyncStatementCallback() {}
+
+protected:
+  virtual ~AsyncStatementCallback() {}
 };
 
 /**
- * Macro to use in place of NS_DECL_MOZISTORAGESTATEMENTCALLBACK to declare the
- * methods this class does not implement.
+ * Macros to use in place of NS_DECL_MOZISTORAGESTATEMENTCALLBACK to declare the
+ * methods this class assumes silent or notreached.
  */
 #define NS_DECL_ASYNCSTATEMENTCALLBACK \
   NS_IMETHOD HandleResult(mozIStorageResultSet *); \
