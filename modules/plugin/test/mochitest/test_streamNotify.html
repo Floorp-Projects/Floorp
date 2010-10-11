@@ -9,7 +9,7 @@
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  var pending = 6;
+  var pending = 5;
   function testDone() {
     dump("testDone: " + pending + "\n")
     --pending;
@@ -49,10 +49,9 @@
                       testDone();
                     }), "streamTest GET bad DNS");
 
-    ok(p.streamTest("http://localhost:-8/", false, null,
+    ok(!p.streamTest("http://localhost:-8/", false, null,
                     function(r, t) {
-                      is(r, 1, "Shouldn't load invalid URI");
-                      testDone();
+                      ok(false, "Shouldn't get callback from malformed URI");
                     }), "streamTest GET invalid URL");
 
     ok(p.streamTest("javascript:'Hello';", false, null,
@@ -80,14 +79,9 @@
                       testDone();
                     }), "streamTest GET data: URI");
 
-/*
- * XXX/bsmedberg: disable this test as well, since the pluginhost is broken
- * and the testplugin is double-deleting the urlnotify context.
-
     ok(!p.streamTest("data:malformed?", false, null,
                      function(r, t) {
                        todo(false, "Shouldn't get callback for invalid data: URI");
                      }), "streamTest GET bad data: URI");
- */
   }
   </script>
