@@ -3977,6 +3977,8 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
+
+  virtual PRBool HasText() { return PR_TRUE; }
 };
 
 void

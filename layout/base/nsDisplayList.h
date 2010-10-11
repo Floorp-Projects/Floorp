@@ -659,6 +659,12 @@ public:
     return mToReferenceFrame;
   }
 
+  /**
+   * Checks if this display item (or any children) contains text that might 
+   * be rendered with subpixel antialiasing.
+   */
+  virtual PRBool HasText() { return PR_FALSE; }
+
 protected:
   friend class nsDisplayList;
   
@@ -1115,6 +1121,14 @@ public:
     mPaint(mFrame, aCtx, mVisibleRect, ToReferenceFrame());
   }
   NS_DISPLAY_DECL_NAME(mName, mType)
+
+  virtual PRBool HasText() {
+    if (mType == nsDisplayItem::TYPE_HEADER_FOOTER) {
+      return PR_TRUE;
+    } else {
+      return PR_FALSE;
+    }
+  }
 protected:
   PaintCallback mPaint;
 #ifdef DEBUG
@@ -1467,6 +1481,8 @@ public:
     return PR_FALSE;
   }
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
+
+  virtual PRBool HasText();
                                     
   virtual nsDisplayList* GetList() { return &mList; }
   
@@ -1750,6 +1766,8 @@ public:
 #endif
 
   NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM);
+
+  virtual PRBool HasText() { return mStoredList.HasText(); }
 
 #ifdef NS_DEBUG
   nsDisplayWrapList* GetStoredList() { return &mStoredList; }

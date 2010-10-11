@@ -202,6 +202,8 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
+
+  virtual PRBool HasText() { return PR_TRUE; }
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,

@@ -1160,6 +1160,16 @@ PRBool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
   return PR_TRUE;
 }
 
+PRBool nsDisplayWrapList::HasText()
+{
+  for (nsDisplayItem* i = mList.GetBottom(); i; i = i->GetAbove()) {
+    if (i->HasText()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 static nsresult
 WrapDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, nsDisplayWrapper* aWrapper) {
