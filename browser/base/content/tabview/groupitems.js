@@ -1321,47 +1321,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!this.locked.bounds)
       this.draggable();
 
-    iQ(container)
-      .mousedown(function(e) {
-        self._mouseDown = {
-          location: new Point(e.clientX, e.clientY),
-          className: e.target.className
-        };
-      })
-      .mouseup(function(e) {
-        if (!self._mouseDown || !self._mouseDown.location || !self._mouseDown.className)
-          return;
-
-        // Don't zoom in on clicks inside of the controls.
-        var className = self._mouseDown.className;
-        if (className.indexOf('title-shield') != -1 ||
-           className.indexOf('name') != -1 ||
-           className.indexOf('close') != -1 ||
-           className.indexOf('newTabButton') != -1 ||
-           className.indexOf('appTabTray') != -1 ||
-           className.indexOf('appTabIcon') != -1 ||
-           className.indexOf('stackExpander') != -1) {
-          return;
-        }
-
-        var location = new Point(e.clientX, e.clientY);
-
-        if (location.distance(self._mouseDown.location) > 1.0)
-          return;
-
-        // Zoom into the last-active tab when the groupItem
-        // is clicked, but only for non-stacked groupItems.
-        var activeTab = self.getActiveTab();
-        if (!self._isStacked) {
-          if (activeTab)
-            activeTab.zoomIn();
-          else if (self.getChild(0))
-            self.getChild(0).zoomIn();
-        }
-
-        self._mouseDown = null;
-    });
-
     this.droppable(true);
 
     this.$expander.click(function() {
