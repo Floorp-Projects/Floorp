@@ -1774,6 +1774,7 @@ HUD_SERVICE.prototype =
     }
     delete displays[id];
     delete this.displayRegistry[id];
+    delete this.uriRegistry[uri];
   },
 
   /**
