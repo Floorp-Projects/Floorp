@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that adding text to one of the output labels doesn't cause errors.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testTextNodeInsertion,
+                           false);
 }
 
-function testOpenWebConsole()
-{
+// Test for bug 588730: Adding a text node to an existing label element causes
+// warnings
+function testTextNodeInsertion() {
+  browser.removeEventListener("DOMContentLoaded", testTextNodeInsertion,
+                              false);
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
+  hudBox = HUDService.getHeadsUpDisplay(hudId);
+  let outputNode = hudBox.querySelector(".hud-output-node");
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
+  let label = document.createElementNS(
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "label");
+  outputNode.appendChild(label);
+
+  let error = false;
+  let listener = {
+    observe: function(aMessage) {
+      let messageText = aMessage.message;
+      if (messageText.indexOf("JavaScript Warning") !== -1) {
+        error = true;
+      }
+    }
+  };
+
+  let nsIConsoleServiceClass = Cc["@mozilla.org/consoleservice;1"];
+  let nsIConsoleService =
+    nsIConsoleServiceClass.getService(Ci.nsIConsoleService);
+  nsIConsoleService.registerListener(listener);
+
+  // This shouldn't fail.
+  label.appendChild(document.createTextNode("foo"));
+
+  executeSoon(function() {
+    nsIConsoleService.unregisterListener(listener);
+    ok(!error, "no error when adding text nodes as children of labels");
+
+    finishTest();
+  });
 }
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
-
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
-
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
-
-  finishTest();
-}

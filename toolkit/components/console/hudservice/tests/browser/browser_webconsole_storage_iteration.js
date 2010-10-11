@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Test that the iterator API of the console message store works.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testStorageIteration, false);
 }
 
-function testOpenWebConsole()
-{
+function testStorageIteration() {
+  browser.removeEventListener("DOMContentLoaded", testStorageIteration,
+                              false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
+  let cs = HUDService.storage;
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
-}
+  // Must have enough entries present to avoid exhausting the iterators below.
+  cs.createDisplay("foo");
+  for (let i = 0; i < 300; i++) {
+    cs.recordEntry("foo", { logLevel: "network", message: "foo" });
+  }
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+  var id = "foo";
+  var it = cs.displayStore(id);
+  var entry = it.next();
+  var entry2 = it.next();
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  let entries = [];
+  for (var i = 0; i < 100; i++) {
+    let _entry = it.next();
+    entries.push(_entry);
+  }
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  ok(entries.length == 100, "entries length == 100");
 
+  let entries2 = [];
+
+  for (var i = 0; i < 100; i++){
+    let _entry = it.next();
+    entries2.push(_entry);
+  }
+
+  ok(entries[0].id != entries2[0].id,
+     "two distinct pages of log entries");
+
+  cs.removeDisplay("foo");
+  cs = null;
+  
   finishTest();
 }
+

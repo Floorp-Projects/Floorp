@@ -19,8 +19,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Julian Viereck <jviereck@mozilla.com>
+ *  David Dahl <ddahl@mozilla.com>
  *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,44 +38,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Tests that console logging via the console API produces nodes of the correct
+// CSS classes.
+
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testInputExpansion, false);
+  browser.addEventListener("DOMContentLoaded", testLogNodeClasses, false);
 }
 
-function testInputExpansion() {
-  browser.removeEventListener("DOMContentLoaded", testInputExpansion, false);
+function testLogNodeClasses() {
+  browser.removeEventListener("DOMContentLoaded", testLogNodeClasses,
+                              false);
 
   openConsole();
 
   hudId = HUDService.displaysIndex()[0];
+  let console = browser.contentWindow.wrappedJSObject.console;
   hudBox = HUDService.getHeadsUpDisplay(hudId);
-  let input = hudBox.querySelector(".jsterm-input-node");
+  outputNode = hudBox.querySelector(".hud-output-node");
 
-  input.focus();
+  ok(console, "console exists");
+  console.log("I am a log message");
+  console.error("I am an error");
+  console.info("I am an info message");
+  console.warn("I am a warning  message");
 
-  is(input.getAttribute("multiline"), "true", "multiline is enabled");
+  let domLogEntries =
+    outputNode.childNodes;
 
-  let ordinaryHeight = input.clientHeight;
+  let count = outputNode.childNodes.length;
+  ok(count > 0, "LogCount: " + count);
 
-  // Tests if the inputNode expands.
-  input.value = "hello\nworld\n";
-  let length = input.value.length;
-  input.selectionEnd = length;
-  input.selectionStart = length;
-  // Performs an "d". This will trigger/test for the input event that should
-  // change the height of the inputNode.
-  EventUtils.synthesizeKey("d", {});
-  ok(input.clientHeight > ordinaryHeight, "the input expanded");
+  let klasses = ["hud-group",
+                 "hud-msg-node hud-log",
+                 "hud-msg-node hud-warn",
+                 "hud-msg-node hud-info",
+                 "hud-msg-node hud-error",
+                 "hud-msg-node hud-exception",
+                 "hud-msg-node hud-network"];
 
-  // Test if the inputNode shrinks again.
-  input.value = "";
-  EventUtils.synthesizeKey("d", {});
-  is(input.clientHeight, ordinaryHeight, "the input's height is normal again");
+  function verifyClass(klass) {
+    let len = klasses.length;
+    for (var i = 0; i < len; i++) {
+      if (klass == klasses[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-  input = length = null;
+  for (var i = 0; i < count; i++) {
+    let klass = domLogEntries[i].getAttribute("class");
+    ok(verifyClass(klass),
+       "Log Node class verified: " + klass);
+  }
 
   finishTest();
 }

@@ -20,7 +20,9 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
+ *  Julian Viereck <jviereck@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +38,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
+// Tests that the correct CSS styles are applied to the lines of console
+// output.
 
-function test()
-{
-  addTab(TEST_REPLACED_API_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee,
-                                true);
-    testOpenWebConsole();
-  }, true);
+const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testJSInputAndOutputStyling,
+                           false);
 }
 
-function testOpenWebConsole()
-{
+function testJSInputAndOutputStyling() {
+  browser.removeEventListener("DOMContentLoaded",
+                              testJSInputAndOutputStyling, false);
+
   openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
-  testWarning();
-}
+  let jsterm = HUDService.hudWeakReferences[hudId].get().jsterm;
 
-function testWarning()
-{
-  const successMsg = "Found the warning message";
-  const errMsg = "Could not find the warning message about the replaced API";
+  jsterm.clearOutput();
+  jsterm.execute("2 + 2");
 
-  var display = HUDService.getDisplayByURISpec(content.location.href);
-  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+  let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
+  let jsInputNode = nodes[0];
+  isnot(jsInputNode.textContent.indexOf("2 + 2"), -1,
+    "JS input node contains '2 + 2'");
+  isnot(jsInputNode.getAttribute("class").indexOf("jsterm-input-line"), -1,
+    "JS input node is of the CSS class 'jsterm-input-line'");
 
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  let jsOutputNodes = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  isnot(jsOutputNodes[0].textContent.indexOf("4"), -1, "JS output node contains '4'");
+  isnot(jsOutputNodes[0].getAttribute("class").indexOf("jsterm-output-line"), -1,
+    "JS output node is of the CSS class 'jsterm-output-line'");
+
+  jsterm.clearOutput();
+  jsterm.history.splice(0);   // workaround for bug 592552
 
   finishTest();
 }
+
