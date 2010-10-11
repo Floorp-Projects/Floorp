@@ -618,9 +618,13 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
                 *port = -1;
             }
             else {
+                const char* nondigit = NS_strspnp("0123456789", buf.get());
+                if (nondigit && *nondigit)
+                    return NS_ERROR_MALFORMED_URI;
+
                 PRInt32 err;
                 *port = buf.ToInteger(&err);
-                if (NS_FAILED(err))
+                if (NS_FAILED(err) || *port <= 0)
                     return NS_ERROR_MALFORMED_URI;
             }
         }
