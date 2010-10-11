@@ -884,24 +884,6 @@ ContainerState::PopThebesLayerData()
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
 }
 
-static PRBool
-IsText(nsDisplayItem* aItem) {
-  switch (aItem->GetType()) {
-  case nsDisplayItem::TYPE_TEXT:
-  case nsDisplayItem::TYPE_BULLET:
-  case nsDisplayItem::TYPE_HEADER_FOOTER:
-#ifdef MOZ_MATHML
-  case nsDisplayItem::TYPE_MATHML_CHAR_FOREGROUND:
-#endif
-#ifdef MOZ_XUL
-  case nsDisplayItem::TYPE_XUL_TEXT_BOX:
-#endif
-    return PR_TRUE;
-  default:
-    return PR_FALSE;
-  }
-}
-
 void
 ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
                                             nsDisplayItem* aItem,
@@ -941,7 +923,7 @@ ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
     if (tmp.GetNumRects() <= 4) {
       mOpaqueRegion = tmp;
     }
-  } else if (IsText(aItem)) {
+  } else if (aItem->HasText()) {
     mHasText = PR_TRUE;
     if (!mOpaqueRegion.Contains(aVisibleRect)) {
       mHasTextOverTransparent = PR_TRUE;
