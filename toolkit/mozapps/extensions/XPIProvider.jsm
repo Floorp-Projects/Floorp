@@ -4800,7 +4800,7 @@ AddonInstall.prototype = {
         let binary = this.crypto.finish(false);
         let hash = [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
         this.crypto = null;
-        if (this.hash && hash != this.hash) {
+        if (this.hash && hash.toLowerCase() != this.hash.toLowerCase()) {
           this.downloadFailed(AddonManager.ERROR_INCORRECT_HASH,
                               "Downloaded file hash (" + hash +
                               ") did not match provided hash (" + this.hash + ")");
