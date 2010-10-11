@@ -82,13 +82,13 @@ NS_NewSVGMatrix(nsIDOMSVGMatrix** result,
 already_AddRefed<nsIDOMSVGMatrix>
 NS_NewSVGMatrix(const gfxMatrix &aMatrix);
 
-#define NS_ENSURE_NATIVE_MATRIX(obj, retval)                 \
-  {                                                          \
-    nsresult rv;                                             \
-    if (retval)                                              \
-      *retval = nsnull;                                      \
-    nsCOMPtr<nsISVGValue> val = do_QueryInterface(obj, &rv); \
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);  \
+#define NS_ENSURE_NATIVE_MATRIX(obj, retval)            \
+  {                                                     \
+    nsCOMPtr<nsISVGValue> val = do_QueryInterface(obj); \
+    if (!val) {                                         \
+      *retval = nsnull;                                 \
+      return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;           \
+    }                                                   \
   }
 
 #endif //__NS_SVGMATRIX_H__
