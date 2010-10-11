@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+<head>
+
+<script type="text/javascript">
+
+var i = 0;
+function mmf()
+{
+  if (++i == 2) {
+    document.body.innerHTML = "<marquee>";
+    document.documentElement.removeAttribute("class");
+  }
+}
+
+function init()
+{
+  document.documentElement.offsetHeight;
+  for (var j = 0; j < 2; ++j) {
+    var iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+    iframe.addEventListener("load", mmf, false);
+    document.body.appendChild(iframe);
+  }
+}
+
+</script>
+</head>
+<body onload="setTimeout(init, 0);"></body>
+</html>
