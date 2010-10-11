@@ -228,3 +228,9 @@ dialog {
 pageaction {
   -moz-binding: url("chrome://browser/content/bindings/pageaction.xml#pageaction");
 }
+
+/* Disable context menus in textboxes */
+.textbox-input-box,
+.textbox-input-box[spellcheck="true"] {
+  -moz-binding: none;
+}
