@@ -854,7 +854,7 @@ AddonInstallListener.prototype = {
       error += aInstall.error;
     else if (aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
       error += "Blocklisted";
-    else if (!aInstall.addon.isCompatible)
+    else if (!aInstall.addon.isCompatible || !aInstall.addon.isPlatformCompatible)
       error += "Incompatible";
     else
       return; // no need to show anything in this case
