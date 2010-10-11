@@ -3187,7 +3187,8 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
 
             if (len) {
-                nsCAutoString info(len);
+                nsCAutoString info;
+                info.SetLength(len);
                 ShGetInfoLog(compiler, info.BeginWriting());
                 shader->SetTranslationFailure(info);
             } else {
@@ -3205,8 +3206,8 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             int len = 0;
             ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &len);
 
-            nsCAutoString translatedSrc(len);
-
+            nsCAutoString translatedSrc;
+            translatedSrc.SetLength(len);
             ShGetObjectCode(compiler, translatedSrc.BeginWriting());
 
             nsPromiseFlatCString translatedSrc2(translatedSrc);
