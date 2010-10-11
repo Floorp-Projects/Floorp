@@ -996,7 +996,8 @@ public:
    *                            app units.
    *   @param aImage            The image.
    *   @param aDest             The top-left where the image should be drawn
-   *   @param aDirty            Pixels outside this area may be skipped.
+   *   @param aDirty            If non-null, then pixels outside this area may
+   *                            be skipped.
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    *   @param aSourceArea       If non-null, this area is extracted from
    *                            the image and drawn at aDest. It's
@@ -1005,8 +1006,9 @@ public:
    */
   static nsresult DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
                                           imgIContainer*       aImage,
+                                          GraphicsFilter       aGraphicsFilter,
                                           const nsPoint&       aDest,
-                                          const nsRect&        aDirty,
+                                          const nsRect*        aDirty,
                                           PRUint32             aImageFlags,
                                           const nsRect*        aSourceArea = nsnull);
 
