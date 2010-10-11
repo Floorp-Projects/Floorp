@@ -982,7 +982,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     };
 
     var rects = Items.arrange(null, bb, options);
-    return (rects[0].width < TabItems.minTabWidth * 1.35);
+    return (rects[0].width < 55);
   },
 
   // ----------
