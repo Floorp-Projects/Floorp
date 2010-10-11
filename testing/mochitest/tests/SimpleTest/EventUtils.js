@@ -230,6 +230,14 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
   }
 }
 
+// Call synthesizeMouse with coordinates at the center of aTarget.
+function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
+{
+  var rect = aTarget.getBoundingClientRect();
+  synthesizeMouse(aTarget, rect.width / 2, rect.height / 2, aEvent,
+                  aWindow);
+}
+
 /**
  * Synthesize a mouse scroll event on a target. The actual client point is determined
  * by taking the aTarget's client box and offseting it by aOffsetX and
