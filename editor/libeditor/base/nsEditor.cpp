@@ -2320,8 +2320,8 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
       res = (*aInOutNode)->GetChildNodes(getter_AddRefs(children));
       if (NS_SUCCEEDED(res)) {
         nsCOMPtr<nsIDOMNode> possibleMozBRNode;
-        res = children->Item(*aInOutOffset, getter_AddRefs(possibleMozBRNode));
-        if (NS_SUCCEEDED(res) && nsTextEditUtils::IsMozBR(possibleMozBRNode)) {
+        children->Item(*aInOutOffset, getter_AddRefs(possibleMozBRNode));
+        if (possibleMozBRNode && nsTextEditUtils::IsMozBR(possibleMozBRNode)) {
           nsCOMPtr<nsIDOMNode> possibleTextNode;
           res = children->Item(*aInOutOffset - 1, getter_AddRefs(possibleTextNode));
           if (NS_SUCCEEDED(res)) {
