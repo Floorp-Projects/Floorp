@@ -83,7 +83,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouse(aManager.document.getElementById("category-plugins"), 2, 2, { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -107,8 +107,8 @@ add_test(function() {
             info("Part 5");
             is_in_list(aManager, "addons://list/extension", false, true);
 
-            EventUtils.synthesizeMouse(get_addon_element(aManager, "test1@tests.mozilla.org"),
-                                       2, 2, { clickCount: 2 }, aManager);
+            EventUtils.synthesizeMouseAtCenter(get_addon_element(aManager, "test1@tests.mozilla.org"),
+                                               { clickCount: 2 }, aManager);
 
             wait_for_view_load(aManager, function(aManager) {
               info("Part 6");
@@ -187,7 +187,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/plugin", false, false);
 
-    EventUtils.synthesizeMouse(aManager.document.getElementById("category-extensions"), 2, 2, { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-extensions"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -316,8 +316,8 @@ add_test(function() {
       is_in_search(aManager, "bar", true, false);
       check_all_in_list(aManager, ["test2@tests.mozilla.org", "test3@tests.mozilla.org"]);
 
-      EventUtils.synthesizeMouse(get_addon_element(aManager, "test2@tests.mozilla.org"),
-                                 2, 2, { clickCount: 2 }, aManager);
+      EventUtils.synthesizeMouseAtCenter(get_addon_element(aManager, "test2@tests.mozilla.org"),
+                                         { clickCount: 2 }, aManager);
 
       wait_for_view_load(aManager, function(aManager) {
         info("Part 3");
@@ -358,8 +358,8 @@ add_test(function() {
       is_in_search(aManager, "bar", true, false);
       check_all_in_list(aManager, ["test2@tests.mozilla.org", "test3@tests.mozilla.org"]);
 
-      EventUtils.synthesizeMouse(get_addon_element(aManager, "test2@tests.mozilla.org"),
-                                 2, 2, { clickCount: 2 }, aManager);
+      EventUtils.synthesizeMouseAtCenter(get_addon_element(aManager, "test2@tests.mozilla.org"),
+                                         { clickCount: 2 }, aManager);
 
       wait_for_view_load(aManager, function(aManager) {
         info("Part 3");
@@ -409,7 +409,7 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouse(aManager.document.getElementById("category-plugins"), 2, 2, { }, aManager);
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -444,8 +444,8 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouse(get_addon_element(aManager, "test1@tests.mozilla.org"),
-                               2, 2, { clickCount: 2 }, aManager);
+    EventUtils.synthesizeMouseAtCenter(get_addon_element(aManager, "test1@tests.mozilla.org"),
+                                       { clickCount: 2 }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -481,15 +481,15 @@ add_test(function() {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
-    EventUtils.synthesizeMouse(get_addon_element(aManager, "test1@tests.mozilla.org"),
-                               2, 2, { clickCount: 2 }, aManager);
+    EventUtils.synthesizeMouseAtCenter(get_addon_element(aManager, "test1@tests.mozilla.org"),
+                                       { clickCount: 2 }, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
       is_in_detail(aManager, "addons://list/extension", true, false);
 
-      EventUtils.synthesizeMouse(aManager.document.getElementById("detail-uninstall"),
-                                 2, 2, { }, aManager);
+      EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("detail-uninstall"),
+                                         { }, aManager);
 
       wait_for_view_load(aManager, function() {
         // TODO until bug 590661 is fixed the back button will be enabled

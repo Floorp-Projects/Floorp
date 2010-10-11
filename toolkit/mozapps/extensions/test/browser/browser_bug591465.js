@@ -302,12 +302,12 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = SEARCH_QUERY;
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     var filter = gManagerWindow.document.getElementById("search-filter-remote");
-    EventUtils.synthesizeMouse(filter, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
     executeSoon(function() {
       
       var el = get_addon_element(gManagerWindow, "remote1@tests.mozilla.org");

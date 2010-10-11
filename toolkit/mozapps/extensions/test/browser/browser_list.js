@@ -133,7 +133,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Disabling");
-    EventUtils.synthesizeMouse(get_node(addon, "disable-btn"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(addon, "disable-btn"), {}, gManagerWindow);
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
     is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
     is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
@@ -170,7 +170,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Enabling");
-    EventUtils.synthesizeMouse(get_node(addon, "enable-btn"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(addon, "enable-btn"), {}, gManagerWindow);
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
     is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
     is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
@@ -221,7 +221,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Enabling");
-    EventUtils.synthesizeMouse(get_node(addon, "enable-btn"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(addon, "enable-btn"), {}, gManagerWindow);
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
     is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
     is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
@@ -271,7 +271,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Disabling");
-    EventUtils.synthesizeMouse(get_node(addon, "disable-btn"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(addon, "disable-btn"), {}, gManagerWindow);
     is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
 
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
@@ -305,7 +305,7 @@ add_test(function() {
     is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
     info("Disabling");
-    EventUtils.synthesizeMouse(get_node(addon, "disable-btn"), 2, 2, {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(addon, "disable-btn"), {}, gManagerWindow);
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
     is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
     is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
@@ -371,7 +371,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouse(get_node(addon, "undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
       is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
@@ -408,7 +408,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on 2 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouse(get_node(addon, "undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
       is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
@@ -438,7 +438,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouse(get_node(addon, "undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
       is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
@@ -471,7 +471,7 @@ add_test(function() {
       is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
       info("Enabling");
-      EventUtils.synthesizeMouse(get_node(addon, "enable-btn"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "enable-btn"), {}, gManagerWindow);
       is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
 
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
@@ -503,7 +503,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on 7 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouse(get_node(addon, "undo"), 2, 2, {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
       is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");

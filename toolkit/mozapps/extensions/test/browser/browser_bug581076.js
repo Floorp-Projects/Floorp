@@ -35,7 +35,7 @@ function search(aRemoteSearch, aCallback) {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = SEARCH_QUERY;
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
@@ -43,7 +43,7 @@ function search(aRemoteSearch, aCallback) {
       var filter = gManagerWindow.document.getElementById("search-filter-remote");
     else
       var filter = gManagerWindow.document.getElementById("search-filter-local");
-    EventUtils.synthesizeMouse(filter, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
 
     executeSoon(aCallback);
   });
