@@ -113,6 +113,8 @@ using namespace mozilla::layers;
 using namespace mozilla::dom;
 namespace css = mozilla::css;
 
+typedef gfxPattern::GraphicsFilter GraphicsFilter;
+
 /**
  * A namespace class for static layout utilities.
  */
@@ -2833,13 +2835,13 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   return aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
 }
 
-gfxPattern::GraphicsFilter
+GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  gfxPattern::GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
+  GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
 #else
-  gfxPattern::GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
+  GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
 #endif
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
@@ -3038,7 +3040,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 static nsresult
 DrawImageInternal(nsIRenderingContext* aRenderingContext,
                   imgIContainer*       aImage,
-                  gfxPattern::GraphicsFilter aGraphicsFilter,
+                  GraphicsFilter       aGraphicsFilter,
                   const nsRect&        aDest,
                   const nsRect&        aFill,
                   const nsPoint&       aAnchor,
@@ -3072,7 +3074,7 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
 /* static */ void
 nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
                                 gfxDrawable*         aDrawable,
-                                gfxPattern::GraphicsFilter aFilter,
+                                GraphicsFilter       aFilter,
                                 const nsRect&        aDest,
                                 const nsRect&        aFill,
                                 const nsPoint&       aAnchor,
@@ -3149,7 +3151,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
 /* static */ nsresult
 nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                imgIContainer*       aImage,
-                               gfxPattern::GraphicsFilter aGraphicsFilter,
+                               GraphicsFilter       aGraphicsFilter,
                                const nsRect&        aDest,
                                const nsRect&        aDirty,
                                PRUint32             aImageFlags,
@@ -3231,7 +3233,7 @@ nsLayoutUtils::ComputeSizeForDrawing(imgIContainer *aImage,
 /* static */ nsresult
 nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
                          imgIContainer*       aImage,
-                         gfxPattern::GraphicsFilter aGraphicsFilter,
+                         GraphicsFilter       aGraphicsFilter,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,

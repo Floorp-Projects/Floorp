@@ -76,6 +76,8 @@ class gfxDrawable;
  */
 class nsLayoutUtils
 {
+  typedef gfxPattern::GraphicsFilter GraphicsFilter;
+
 public:
 
   /**
@@ -927,7 +929,7 @@ public:
   /**
    * Gets the graphics filter for the frame
    */
-  static gfxPattern::GraphicsFilter GetGraphicsFilterForFrame(nsIFrame* aFrame);
+  static GraphicsFilter GetGraphicsFilterForFrame(nsIFrame* aFrame);
 
   /* N.B. The only difference between variants of the Draw*Image
    * functions below is the type of the aImage argument.
@@ -950,7 +952,7 @@ public:
    */
   static nsresult DrawImage(nsIRenderingContext* aRenderingContext,
                             imgIContainer*       aImage,
-                            gfxPattern::GraphicsFilter aGraphicsFilter,
+                            GraphicsFilter       aGraphicsFilter,
                             const nsRect&        aDest,
                             const nsRect&        aFill,
                             const nsPoint&       aAnchor,
@@ -980,7 +982,7 @@ public:
    */
   static void DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
                                gfxDrawable*         aDrawable,
-                               gfxPattern::GraphicsFilter aFilter,
+                               GraphicsFilter       aFilter,
                                const nsRect&        aDest,
                                const nsRect&        aFill,
                                const nsPoint&       aAnchor,
@@ -1025,7 +1027,7 @@ public:
    */
   static nsresult DrawSingleImage(nsIRenderingContext* aRenderingContext,
                                   imgIContainer*       aImage,
-                                  gfxPattern::GraphicsFilter aGraphicsFilter,
+                                  GraphicsFilter       aGraphicsFilter,
                                   const nsRect&        aDest,
                                   const nsRect&        aDirty,
                                   PRUint32             aImageFlags,
