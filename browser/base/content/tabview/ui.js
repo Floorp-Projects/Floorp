@@ -171,6 +171,7 @@ let UI = {
 
       // ___ Storage
 
+      GroupItems.pauseArrange();
       GroupItems.init();
 
       let firstTime = true;
@@ -221,9 +222,11 @@ let UI = {
       // initialized.
       let event = document.createEvent("Events");
       event.initEvent("tabviewframeinitialized", true, false);
-      dispatchEvent(event);
+      dispatchEvent(event);      
     } catch(e) {
       Utils.log(e);
+    } finally {
+      GroupItems.resumeArrange();
     }
   },
 
