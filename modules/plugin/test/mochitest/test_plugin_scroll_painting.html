@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that scrolling a windowless plugin doesn't force us to repaint it</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+  <embed id="plugin" type="application/x-test" style="width:50px; height:10px; margin-top:20px;"></embed>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var container = document.documentElement;
+container.scrollTop = 0;
+var plugin = document.getElementById("plugin");
+var pluginTop;
+var beforeScrollPaintCount;
+
+function waitForScroll() {
+  if (plugin.getEdge(1) >= pluginTop) {
+    setTimeout(waitForScroll, 0);
+    return;
+  }
+
+  is(plugin.getPaintCount(), beforeScrollPaintCount, "plugin should not paint due to scrolling");
+  SimpleTest.finish();
+}
+
+function waitForInitialScroll() {
+  if (plugin.getEdge(1) >= pluginTop) {
+    setTimeout(waitForInitialScroll, 0);
+    return;
+  }
+
+  pluginTop = plugin.getEdge(1);
+  beforeScrollPaintCount = plugin.getPaintCount();
+  container.scrollTop = 20;
+  waitForScroll();
+}
+
+function runTest() {
+  document.body.offsetTop;
+  pluginTop = plugin.getEdge(1);
+  container.scrollTop = 10;
+  waitForInitialScroll();
+}
+</script>
+
+<div style="height:4000px;"></div>
+
+</body>
+</html>
