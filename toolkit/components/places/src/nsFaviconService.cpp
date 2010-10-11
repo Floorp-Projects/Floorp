@@ -97,8 +97,7 @@ class ExpireFaviconsStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
   ExpireFaviconsStatementCallbackNotifier(bool* aFaviconsExpirationRunning);
-  NS_DECL_ISUPPORTS
-  NS_DECL_ASYNCSTATEMENTCALLBACK
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
 
 private:
   bool* mFaviconsExpirationRunning;
@@ -1058,9 +1057,6 @@ nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
 ////////////////////////////////////////////////////////////////////////////////
 //// ExpireFaviconsStatementCallbackNotifier
 
-NS_IMPL_ISUPPORTS1(ExpireFaviconsStatementCallbackNotifier,
-                   mozIStorageStatementCallback)
-
 ExpireFaviconsStatementCallbackNotifier::ExpireFaviconsStatementCallbackNotifier(
   bool* aFaviconsExpirationRunning)
 : mFaviconsExpirationRunning(aFaviconsExpirationRunning)
@@ -1086,13 +1082,5 @@ ExpireFaviconsStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
                                            nsnull);
   }
 
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-ExpireFaviconsStatementCallbackNotifier::HandleResult(mozIStorageResultSet* aResultSet)
-{
-  NS_ASSERTION(PR_FALSE, "You cannot use this statement callback to get async statements resultset");
   return NS_OK;
 }
