@@ -69,6 +69,7 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINESTEDURI
+    NS_DECL_NSIIPCSERIALIZABLE
 
     // Overrides for various methods nsSimpleURI implements follow.
   

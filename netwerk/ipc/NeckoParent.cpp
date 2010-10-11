@@ -42,6 +42,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/CookieServiceParent.h"
+#include "mozilla/net/WyciwygChannelParent.h"
 
 #include "nsHTMLDNSPrefetch.h"
 
@@ -83,6 +84,22 @@ bool
 NeckoParent::DeallocPCookieService(PCookieServiceParent* cs)
 {
   delete cs;
+  return true;
+}
+
+PWyciwygChannelParent*
+NeckoParent::AllocPWyciwygChannel()
+{
+  WyciwygChannelParent *p = new WyciwygChannelParent();
+  p->AddRef();
+  return p;
+}
+
+bool
+NeckoParent::DeallocPWyciwygChannel(PWyciwygChannelParent* channel)
+{
+  WyciwygChannelParent *p = static_cast<WyciwygChannelParent *>(channel);
+  p->Release();
   return true;
 }
 

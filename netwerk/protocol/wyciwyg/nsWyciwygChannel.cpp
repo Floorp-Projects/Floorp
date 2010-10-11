@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsWyciwyg.h"
 #include "nsWyciwygChannel.h"
 #include "nsIServiceManager.h"
 #include "nsILoadGroup.h"
@@ -47,11 +48,6 @@
 #include "nsICacheSession.h"
 #include "nsIParser.h"
 #include "nsThreadUtils.h"
-
-PRLogModuleInfo * gWyciwygLog = nsnull;
-
-#define wyciwyg_TYPE "text/html"
-#define LOG(args)  PR_LOG(gWyciwygLog, 4, args)
 
 // nsWyciwygChannel methods 
 nsWyciwygChannel::nsWyciwygChannel()
@@ -152,6 +148,10 @@ NS_IMETHODIMP
 nsWyciwygChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
   mLoadGroup = aLoadGroup;
+  NS_QueryNotificationCallbacks(mCallbacks,
+                                mLoadGroup,
+                                NS_GET_IID(nsIProgressEventSink),
+                                getter_AddRefs(mProgressSink));
   return NS_OK;
 }
 
@@ -226,7 +226,10 @@ NS_IMETHODIMP
 nsWyciwygChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
-  mProgressSink = do_GetInterface(mCallbacks);
+  NS_QueryNotificationCallbacks(mCallbacks,
+                                mLoadGroup,
+                                NS_GET_IID(nsIProgressEventSink),
+                                getter_AddRefs(mProgressSink));
   return NS_OK;
 }
 
@@ -241,7 +244,7 @@ nsWyciwygChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsWyciwygChannel::GetContentType(nsACString &aContentType)
 {
-  aContentType.AssignLiteral(wyciwyg_TYPE);
+  aContentType.AssignLiteral(WYCIWYG_TYPE);
   return NS_OK;
 }
 
@@ -267,7 +270,8 @@ nsWyciwygChannel::SetContentCharset(const nsACString &aContentCharset)
 NS_IMETHODIMP
 nsWyciwygChannel::GetContentLength(PRInt32 *aContentLength)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aContentLength = mContentLength;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -287,15 +291,17 @@ nsWyciwygChannel::Open(nsIInputStream ** aReturn)
 NS_IMETHODIMP
 nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
+  LOG(("nsWyciwygChannel::AsyncOpen [this=%x]\n", this));
+
+#ifndef MOZ_IPC
   // The only places creating wyciwyg: channels should be
   // HTMLDocument::OpenCommon and session history.  Both should be setting an
   // owner.
   NS_PRECONDITION(mOwner, "Must have a principal");
-  
-  LOG(("nsWyciwygChannel::AsyncOpen [this=%x]\n", this));
+  NS_ENSURE_STATE(mOwner);
+#endif
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
-  NS_ENSURE_STATE(mOwner);
   NS_ENSURE_ARG_POINTER(listener);
 
   nsCAutoString spec;

@@ -43,7 +43,6 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "prlog.h"
 
 #include "nsIWyciwygChannel.h"
 #include "nsILoadGroup.h"

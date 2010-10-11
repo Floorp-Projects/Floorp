@@ -49,12 +49,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
 
-    // nsWyciwygProtocolHandler methods:
     nsWyciwygProtocolHandler();
     virtual ~nsWyciwygProtocolHandler();
-
-    // Define a Create method to be used with a factory:
-//    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 };
 
 #endif /* nsWyciwygProtocolHandler_h___ */

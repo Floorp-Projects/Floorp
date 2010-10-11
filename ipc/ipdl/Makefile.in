@@ -65,6 +65,7 @@ IPDLDIRS =  \
   layout/ipc \
   netwerk/ipc  \
   netwerk/protocol/http  \
+  netwerk/protocol/wyciwyg \
   netwerk/cookie  \
   $(NULL)
 ##-----------------------------------------------------------------------------

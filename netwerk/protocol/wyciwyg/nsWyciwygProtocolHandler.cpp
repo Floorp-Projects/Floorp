@@ -37,24 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsWyciwyg.h"
 #include "nsWyciwygChannel.h"
 #include "nsWyciwygProtocolHandler.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsNetCID.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/net/NeckoChild.h"
+#endif
+
+using namespace mozilla::net;
+#ifdef MOZ_IPC
+#include "mozilla/net/WyciwygChannelChild.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsWyciwygProtocolHandler::nsWyciwygProtocolHandler() 
 {
-
 #if defined(PR_LOGGING)
-  gWyciwygLog = PR_NewLogModule("nsWyciwygChannel");
+  if (!gWyciwygLog)
+    gWyciwygLog = PR_NewLogModule("nsWyciwygChannel");
 #endif
+
+  LOG(("Creating nsWyciwygProtocolHandler [this=%x].\n", this));
 }
 
 nsWyciwygProtocolHandler::~nsWyciwygProtocolHandler() 
 {
+  LOG(("Deleting nsWyciwygProtocolHandler [this=%x]\n", this));
 }
 
 NS_IMPL_ISUPPORTS1(nsWyciwygProtocolHandler, nsIProtocolHandler)
@@ -107,20 +120,44 @@ nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
+#ifdef MOZ_IPC
+  if (mozilla::net::IsNeckoChild())
+    mozilla::net::NeckoChild::InitNeckoChild();
+#endif // MOZ_IPC
+
   NS_ENSURE_ARG_POINTER(url);
   nsresult rv;
-    
-  nsWyciwygChannel* channel = new nsWyciwygChannel();
-  if (!channel)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(channel);
-  rv = channel->Init(url);
+
+  nsCOMPtr<nsIWyciwygChannel> channel;
+#ifdef MOZ_IPC
+  if (IsNeckoChild()) {
+    NS_ENSURE_TRUE(gNeckoChild != nsnull, NS_ERROR_FAILURE);
+
+    WyciwygChannelChild *wcc = static_cast<WyciwygChannelChild *>(
+                                 gNeckoChild->SendPWyciwygChannelConstructor());
+    if (!wcc)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    channel = wcc;
+    rv = wcc->Init(url);
+    if (NS_FAILED(rv))
+      PWyciwygChannelChild::Send__delete__(wcc);
+  } else
+#endif
+  {
+    nsWyciwygChannel *wc = new nsWyciwygChannel();
+    if (!wc)
+      return NS_ERROR_OUT_OF_MEMORY;
+    channel = wc;
+    rv = wc->Init(url);
+  }
+
+  *result = channel.forget().get();
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
+    NS_RELEASE(*result);
     return rv;
   }
 
-  *result = channel;
   return NS_OK;
 }
 

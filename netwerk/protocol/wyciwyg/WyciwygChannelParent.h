@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Michal Novotny <michal.novotny@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,42 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_NeckoChild_h
-#define mozilla_net_NeckoChild_h
+#ifndef mozilla_net_WyciwygChannelParent_h
+#define mozilla_net_WyciwygChannelParent_h
 
-#include "mozilla/net/PNeckoChild.h"
+#include "mozilla/net/PWyciwygChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "nsIStreamListener.h"
+
+#include "nsIWyciwygChannel.h"
 
 namespace mozilla {
 namespace net {
 
-// Header file contents
-class NeckoChild :
-  public PNeckoChild
+class WyciwygChannelParent : public PWyciwygChannelParent
+                           , public nsIStreamListener
 {
 public:
-  NeckoChild();
-  virtual ~NeckoChild();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 
-  static void InitNeckoChild();
-  static void DestroyNeckoChild();
+  WyciwygChannelParent();
+  virtual ~WyciwygChannelParent();
 
 protected:
-  virtual PHttpChannelChild* AllocPHttpChannel(PBrowserChild* iframeEmbedding);
-  virtual bool DeallocPHttpChannel(PHttpChannelChild*);
-  virtual PCookieServiceChild* AllocPCookieService();
-  virtual bool DeallocPCookieService(PCookieServiceChild*);
-  virtual PWyciwygChannelChild* AllocPWyciwygChannel();
-  virtual bool DeallocPWyciwygChannel(PWyciwygChannelChild*);
-};
+  virtual bool RecvInit(const IPC::URI& uri);
+  virtual bool RecvAsyncOpen(const IPC::URI& original,
+                             const PRUint32& loadFlags);
+  virtual bool RecvWriteToCacheEntry(const nsString& data);
+  virtual bool RecvCloseCacheEntry(const nsresult& reason);
+  virtual bool RecvSetCharsetAndSource(const PRInt32& source,
+                                       const nsCString& charset);
+  virtual bool RecvSetSecurityInfo(const nsCString& securityInfo);
 
-/**
- * Reference to the PNecko Child protocol.
- * Null if this is not a content process.
- */
-extern PNeckoChild *gNeckoChild;
+  virtual void ActorDestroy(ActorDestroyReason why);
+
+  nsCOMPtr<nsIWyciwygChannel> mChannel;
+  bool mIPCClosed;
+};
 
 } // namespace net
 } // namespace mozilla
 
-#endif // mozilla_net_NeckoChild_h
+#endif // mozilla_net_WyciwygChannelParent_h

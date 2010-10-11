@@ -269,6 +269,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
 #include "nsDataHandler.h"
 #endif
 
+#ifdef NECKO_PROTOCOL_wyciwyg
+#include "nsWyciwygProtocolHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsURIChecker.h"
@@ -721,6 +726,9 @@ NS_DEFINE_NAMED_CID(NS_DEVICEPROTOCOLHANDLER_CID);
 #ifdef NECKO_PROTOCOL_viewsource
 NS_DEFINE_NAMED_CID(NS_VIEWSOURCEHANDLER_CID);
 #endif
+#ifdef NECKO_PROTOCOL_wyciwyg
+NS_DEFINE_NAMED_CID(NS_WYCIWYGPROTOCOLHANDLER_CID);
+#endif
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 #elif defined(MOZ_WIDGET_COCOA)
@@ -841,6 +849,9 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
     { &kNS_VIEWSOURCEHANDLER_CID, false, NULL, nsViewSourceHandlerConstructor },
+#endif
+#ifdef NECKO_PROTOCOL_wyciwyg
+    { &kNS_WYCIWYGPROTOCOLHANDLER_CID, false, NULL, nsWyciwygProtocolHandlerConstructor },
 #endif
 #if defined(XP_WIN)
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsNotifyAddrListenerConstructor },
@@ -969,6 +980,9 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #endif
 #ifdef NECKO_PROTOCOL_viewsource
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source", &kNS_VIEWSOURCEHANDLER_CID },
+#endif
+#ifdef NECKO_PROTOCOL_wyciwyg
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg", &kNS_WYCIWYGPROTOCOLHANDLER_CID },
 #endif
 #if defined(XP_WIN)
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },
