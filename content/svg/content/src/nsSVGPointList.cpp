@@ -48,6 +48,15 @@
 #include "nsCOMArray.h"
 #include "nsContentUtils.h"
 
+#define NS_ENSURE_NATIVE_POINT(obj, retval)             \
+  {                                                     \
+    nsCOMPtr<nsISVGValue> val = do_QueryInterface(obj); \
+    if (!val) {                                         \
+      *retval = nsnull;                                 \
+      return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;           \
+    }                                                   \
+  }
+
 nsresult
 nsSVGPointList::Create(const nsAString& aValue,
                        nsISVGValue** aResult)
@@ -277,10 +286,7 @@ NS_IMETHODIMP nsSVGPointList::Clear()
 NS_IMETHODIMP nsSVGPointList::Initialize(nsIDOMSVGPoint *newItem,
                                          nsIDOMSVGPoint **_retval)
 {
-  if (!newItem) {
-    *_retval = nsnull;
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-  }
+  NS_ENSURE_NATIVE_POINT(newItem, _retval);
   Clear();
   return AppendItem(newItem, _retval);
 }
@@ -303,9 +309,7 @@ NS_IMETHODIMP nsSVGPointList::InsertItemBefore(nsIDOMSVGPoint *newItem,
                                                PRUint32 index,
                                                nsIDOMSVGPoint **_retval)
 {
-  // null check when implementing - this method can be used by scripts!
-  // if (!newItem)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  NS_ENSURE_NATIVE_POINT(newItem, _retval);
 
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -316,9 +320,7 @@ NS_IMETHODIMP nsSVGPointList::ReplaceItem(nsIDOMSVGPoint *newItem,
                                           PRUint32 index,
                                           nsIDOMSVGPoint **_retval)
 {
-  // null check when implementing - this method can be used by scripts!
-  // if (!newItem)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  NS_ENSURE_NATIVE_POINT(newItem, _retval);
 
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -348,9 +350,8 @@ NS_IMETHODIMP nsSVGPointList::AppendItem(nsIDOMSVGPoint *newItem,
   // is removed from its previous list before it is inserted into this
   // list'. We don't do that. Should we?
   
+  NS_ENSURE_NATIVE_POINT(newItem, _retval);
   *_retval = newItem;
-  if (!newItem)
-    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   AppendElement(newItem);
   NS_ADDREF(*_retval);
   return NS_OK;
