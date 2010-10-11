@@ -1464,7 +1464,7 @@ ContentCustomKeySender.prototype = {
       browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
         type: aEvent.type,
         keyCode: aEvent.keyCode,
-        charCode: aEvent.charCode,
+        charCode: (aEvent.type != "keydown") ? aEvent.charCode : null,
         modifiers: this._parseModifiers(aEvent)
       });
     }
