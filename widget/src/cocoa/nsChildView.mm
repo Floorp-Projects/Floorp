@@ -1716,40 +1716,34 @@ NS_IMETHODIMP nsChildView::Update()
 
 #pragma mark -
 
-void nsChildView::ApplyConfiguration(nsIWidget* aExpectedParent,
-                                     const nsIWidget::Configuration& aConfiguration,
-                                     PRBool aRepaint)
-{
-#ifdef DEBUG
-  nsWindowType kidType;
-  aConfiguration.mChild->GetWindowType(kidType);
-#endif
-  NS_ASSERTION(kidType == eWindowType_plugin,
-               "Configured widget is not a plugin type");
-  NS_ASSERTION(aConfiguration.mChild->GetParent() == aExpectedParent,
-               "Configured widget is not a child of the right widget");
-
-  // nsIWidget::Show() doesn't get called on plugin widgets unless we call
-  // it from here.  See bug 592563.
-  nsChildView* child = static_cast<nsChildView*>(aConfiguration.mChild);
-  child->Show(!aConfiguration.mClipRegion.IsEmpty());
-
-  child->Resize(
-      aConfiguration.mBounds.x, aConfiguration.mBounds.y,
-      aConfiguration.mBounds.width, aConfiguration.mBounds.height,
-      aRepaint);
-
-  // Store the clip region here in case GetPluginClipRect needs it.
-  child->StoreWindowClipRegion(aConfiguration.mClipRegion);
-}
-
 nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
   for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-    nsChildView::ApplyConfiguration(this, aConfigurations[i], PR_TRUE);
+    const Configuration& config = aConfigurations[i];
+    nsChildView* child = static_cast<nsChildView*>(config.mChild);
+#ifdef DEBUG
+    nsWindowType kidType;
+    child->GetWindowType(kidType);
+#endif
+    NS_ASSERTION(kidType == eWindowType_plugin,
+                 "Configured widget is not a plugin type");
+    NS_ASSERTION(child->GetParent() == this,
+                 "Configured widget is not a child of the right widget");
+
+    // nsIWidget::Show() doesn't get called on plugin widgets unless we call
+    // it from here.  See bug 592563.
+    child->Show(!config.mClipRegion.IsEmpty());
+
+    child->Resize(
+        config.mBounds.x, config.mBounds.y,
+        config.mBounds.width, config.mBounds.height,
+        PR_TRUE);
+
+    // Store the clip region here in case GetPluginClipRect needs it.
+    child->StoreWindowClipRegion(config.mClipRegion);
   }
   return NS_OK;
-}  
+}
 
 // Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
