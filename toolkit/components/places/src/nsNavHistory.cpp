@@ -223,8 +223,6 @@ static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQu
 class VacuumDBListener : public AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS
-
   VacuumDBListener(nsIPrefBranch* aBranch)
     : mPrefBranch(aBranch)
   {
@@ -248,8 +246,6 @@ public:
 private:
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
 };
-
-NS_IMPL_ISUPPORTS1(VacuumDBListener, mozIStorageStatementCallback)
 
 } // anonymous namespace
 
@@ -405,14 +401,11 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_ASYNCSTATEMENTCALLBACK
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
+
 private:
   const char* mTopic;
 };
-
-NS_IMPL_ISUPPORTS1(AsyncStatementCallbackNotifier,
-                   mozIStorageStatementCallback)
 
 NS_IMETHODIMP
 AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
@@ -425,13 +418,6 @@ AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
     (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
-{
-  NS_ASSERTION(PR_FALSE, "You cannot use AsyncStatementCallbackNotifier to get a resultset");
   return NS_OK;
 }
 
