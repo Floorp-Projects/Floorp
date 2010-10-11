@@ -164,21 +164,8 @@ let SecurityUI = {
     }
 
     return result;
-  },
-
-  init: function() {
-    addMessageListener("SecurityUI:Init", this);
-  },
-
-  receiveMessage: function(aMessage) {
-    const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
-    let securityUI = Cc[SECUREBROWSERUI_CONTRACTID].createInstance(Ci.nsISecureBrowserUI);
-    securityUI.init(content);
   }
 };
-
-SecurityUI.init();
-
 
 let WebNavigation =  {
   _webNavigation: docShell.QueryInterface(Ci.nsIWebNavigation),
