@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<window xmlns:html="http://www.w3.org/1999/xhtml" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="Testcase bug 311661 - Evil xul testcase, using display:table-row causes crash [@ nsTableRowGroupFrame::GetFirstRow]">
+<window xmlns:html="http://www.w3.org/1999/xhtml" class="reftest-wait" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="Testcase bug 311661 - Evil xul testcase, using display:table-row causes crash [@ nsTableRowGroupFrame::GetFirstRow]">
 <html:script><![CDATA[
 function doe() {
 document.documentElement.getElementsByTagName('*')[1].style.display='table-row';
@@ -19,8 +19,10 @@ function clickbutton()
   ev.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   var button = document.getElementById('button');
   button.dispatchEvent(ev);
+
+  setTimeout(function() { document.documentElement.className = "" }, 500);
 }
-clickbutton();
+window.addEventListener("load", clickbutton, false);
 </html:script>
 
 </window>
