@@ -593,10 +593,15 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   if (!pluginHost) return NPERR_GENERIC_ERROR;
 
   nsCOMPtr<nsIPluginStreamListener> listener;
+  // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
+  // the listener's destructor will do the notification while we are about to
+  // return a failure code.
+  // Call SetCallNotify(true) bellow after we are sure we cannot return a failure 
+  // code.
   if (!target)
     ((nsNPAPIPluginInstance*)inst)->NewNotifyStream(getter_AddRefs(listener),
                                                     notifyData,
-                                                    bDoNotify, relativeURL);
+                                                    PR_FALSE, relativeURL);
 
   switch (type) {
   case eNPPStreamTypeInternal_Get:
@@ -614,6 +619,15 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     }
   default:
     NS_ERROR("how'd I get here");
+  }
+
+  if (listener) {
+    // SetCallNotify(bDoNotify) here, see comment above.
+    // XXX Not sure of this cast here, we should probably have an interface API
+    // for this.
+    nsNPAPIPluginStreamListener* npAPIPluginStreamListener = 
+      static_cast<nsNPAPIPluginStreamListener*>(listener.get());
+    npAPIPluginStreamListener->SetCallNotify(bDoNotify);
   }
 
   return NPERR_NO_ERROR;
