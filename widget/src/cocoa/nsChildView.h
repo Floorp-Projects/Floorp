@@ -398,10 +398,6 @@ public:
   static PRUint32 GetCurrentInputEventCount();
   static void UpdateCurrentInputEventCount();
 
-  static void ApplyConfiguration(nsIWidget* aExpectedParent,
-                                 const nsIWidget::Configuration& aConfiguration,
-                                 PRBool aRepaint);
-
   nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
   NSView<mozView>* GetEditorView();
 
