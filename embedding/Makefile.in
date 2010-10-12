@@ -54,7 +54,7 @@ DIRS += test
 endif
 
 ifeq ($(OS_TARGET),Android)
-TOOL_DIRS = android
+DIRS += android
 endif
 
 include $(topsrcdir)/config/rules.mk
