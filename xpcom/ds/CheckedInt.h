@@ -288,6 +288,22 @@ template<typename T> inline T is_div_valid(T x, T y)
                         y != 0;
 }
 
+// this is just to shut up msvc warnings about negating unsigned ints.
+template<typename T, bool is_signed = integer_traits<T>::is_signed>
+struct opposite_if_signed_impl
+{
+    static T run(T x) { return -x; }
+};
+template<typename T>
+struct opposite_if_signed_impl<T, false>
+{
+    static T run(T x) { return x; }
+};
+template<typename T>
+inline T opposite_if_signed(T x) { return opposite_if_signed_impl<T>::run(x); }
+
+
+
 } // end namespace CheckedInt_internal
 
 
@@ -353,7 +369,7 @@ protected:
                 // evaluating nested arithmetic expressions.
 
     template<typename U>
-    CheckedInt(U value, PRBool isValid) : mValue(value), mIsValid(isValid)
+    CheckedInt(U value, T isValid) : mValue(value), mIsValid(isValid)
     {
         CheckedInt_internal::integer_type_manually_recorded_info<T>
             ::TYPE_NOT_SUPPORTED_BY_CheckedInt();
@@ -370,7 +386,7 @@ public:
       */
     template<typename U>
     CheckedInt(U value)
-        : mValue(value),
+        : mValue(T(value)),
           mIsValid(CheckedInt_internal::is_in_range<T>(value))
     {
         CheckedInt_internal::integer_type_manually_recorded_info<T>
@@ -392,7 +408,7 @@ public:
       */
     PRBool valid() const
     {
-        return mIsValid;
+        return PRBool(mIsValid);
     }
 
     /** \returns the sum. Checks for overflow. */
@@ -415,7 +431,9 @@ public:
     /** \returns the opposite value. Checks for overflow. */
     CheckedInt operator -() const
     {
-        T result = -value();
+        // circumvent msvc warning about - applied to unsigned int.
+        // if we're unsigned, the only valid case anyway is 0 in which case - is a no-op.
+        T result = CheckedInt_internal::opposite_if_signed(value());
         /* give the compiler a good chance to perform RVO */
         return CheckedInt(result,
                           mIsValid & CheckedInt_internal::is_sub_valid(T(0), value(), result));
