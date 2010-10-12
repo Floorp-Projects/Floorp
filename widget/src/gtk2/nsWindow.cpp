@@ -44,7 +44,6 @@
 #endif
 
 #include "prlink.h"
-
 #include "nsWindow.h"
 #include "nsGTKToolkit.h"
 #include "nsIDeviceContext.h"
