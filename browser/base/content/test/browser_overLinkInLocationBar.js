@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Drew Willcoxon <adw@mozilla.com>
+ *   Drew Willcoxon <adw@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,29 +60,25 @@ let gTests = [
   },
 
   function hostPathLabels() {
-    setOverLink("http://example.com/");
+    updateOverLink("http://example.com/");
     hostLabelIs("http://example.com/");
     pathLabelIs("");
 
-    setOverLink("http://example.com/foo");
+    updateOverLink("http://example.com/foo");
     hostLabelIs("http://example.com/");
     pathLabelIs("foo");
 
-    setOverLink("javascript:popup('http://example.com/')");
+    updateOverLink("javascript:popup('http://example.com/')");
     hostLabelIs("");
     pathLabelIs("javascript:popup('http://example.com/')");
 
-    setOverLink("javascript:popup('http://example.com/foo')");
+    updateOverLink("javascript:popup('http://example.com/foo')");
     hostLabelIs("");
     pathLabelIs("javascript:popup('http://example.com/foo')");
 
-    setOverLink("about:home");
+    updateOverLink("about:home");
     hostLabelIs("");
     pathLabelIs("about:home");
-
-    // Clean up after ourselves.
-    if (ensureOverLinkHidden())
-      yield;
   }
 
 ];
@@ -183,6 +179,18 @@ function setOverLinkWait(str) {
  */
 function setOverLink(str) {
   gURLBar.setOverLink(str);
+}
+
+/**
+ * Calls gURLBar._updateOverLink(str), which updates the over-link but does not
+ * change its visibility.
+ *
+ * @param str
+ *        The over-link will be set to this string.  Note that setting this to
+ *        falsey doesn't make sense for this function.
+ */
+function updateOverLink(str) {
+  gURLBar._updateOverLink(str);
 }
 
 /**
