@@ -400,11 +400,6 @@ MockProvider.prototype = {
    *         The add-on to add
    */
   addAddon: function MP_addAddon(aAddon) {
-    var oldAddons = this.addons.filter(function(aOldAddon) aOldAddon.id == aAddon.id);
-    var oldAddon = oldAddons.length > 0 ? oldAddons[0] : null;
-
-    this.addons = this.addons.filter(function(aOldAddon) aOldAddon.id != aAddon.id);
-
     this.addons.push(aAddon);
     aAddon._provider = this;
 
@@ -414,7 +409,7 @@ MockProvider.prototype = {
     let requiresRestart = (aAddon.operationsRequiringRestart &
                            AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             oldAddon, requiresRestart)
+                                             null, requiresRestart)
   },
 
   /**
