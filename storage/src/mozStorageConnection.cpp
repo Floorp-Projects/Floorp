@@ -1109,10 +1109,15 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler **_oldHandler)
 NS_IMETHODIMP
 Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseName)
 {
+  // Bug 597215: Disk space is extremely limited on Android
+  // so don't preallocate space. This is also not effective
+  // on log structured file systems used by Android devices
+#ifndef ANDROID
   (void)::sqlite3_file_control(mDBConn,
                                aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get() : NULL,
                                SQLITE_FCNTL_CHUNK_SIZE,
                                &aChunkSize);
+#endif
   return NS_OK;
 }
 
