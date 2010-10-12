@@ -1425,14 +1425,14 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 #endif
 
   // setup the original channel's content type
-  (void)aChannel->SetContentType(NS_LITERAL_CSTRING("application/xhtml+xml"));
+  (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
 
   // Otherwise, lets use the html listing
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   nsXPIDLCString contractID;
-  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "application/xhtml+xml",
+  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "text/html",
                                 getter_Copies(contractID));
   if (NS_FAILED(rv))
     return rv;
@@ -1443,11 +1443,11 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsIStreamListener> listener;
 
   if (viewSource) {
-    rv = factory->CreateInstance("view-source", aChannel, aLoadGroup, "application/xhtml+xml; x-view-type=view-source",
+    rv = factory->CreateInstance("view-source", aChannel, aLoadGroup, "text/html; x-view-type=view-source",
                                  aContainer, aExtraInfo, getter_AddRefs(listener),
                                  aDocViewerResult);
   } else {
-    rv = factory->CreateInstance("view", aChannel, aLoadGroup, "application/xhtml+xml",
+    rv = factory->CreateInstance("view", aChannel, aLoadGroup, "text/html",
                                  aContainer, aExtraInfo, getter_AddRefs(listener),
                                  aDocViewerResult);
   }
