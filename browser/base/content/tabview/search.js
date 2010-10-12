@@ -324,7 +324,8 @@ SearchEventHandlerClass.prototype = {
   init: function () {
     var self = this;
     iQ("#searchbox")[0].focus(); 
-    iQ("#search").hide().click(function(event) {
+    iQ("#search").hide();
+    iQ("#searchshade").hide().click(function(event) {
       if ( event.target.id != "searchbox")
         hideSearch();
     });
@@ -462,6 +463,7 @@ var TabHandlers = {
   
   _hideHandler: function(event){
     iQ("#search").fadeOut();
+    iQ("#searchshade").fadeOut();
     TabHandlers._mouseDownLocation = {x:event.clientX, y:event.clientY};
   },
   
@@ -475,6 +477,7 @@ var TabHandlers = {
       return;
     }
 
+    iQ("#searchshade").show();    
     iQ("#search").show();
     iQ("#searchbox")[0].focus();
     // Marshal the search.
@@ -490,6 +493,7 @@ function createSearchTabMacher() {
 
 function hideSearch(event){
   iQ("#searchbox").val("");
+  iQ("#searchshade").hide();
   iQ("#search").hide();
 
   iQ("#searchbutton").css({ opacity:.8 });
@@ -528,10 +532,12 @@ function performSearch() {
 
 function ensureSearchShown(event){
   var $search = iQ("#search");
+  var $searchShade = iQ("#searchshade");
   var $searchbox = iQ("#searchbox");
   iQ("#searchbutton").css({ opacity: 1 });
 
   if (!isSearchEnabled()) {
+    $searchShade.show();
     $search.show();
     var mainWindow = gWindow.document.getElementById("main-window");
     mainWindow.setAttribute("activetitlebarcolor", "#717171");       
@@ -544,7 +550,6 @@ function ensureSearchShown(event){
     setTimeout(function focusSearch() {
       $searchbox[0].focus();
       $searchbox[0].val = '0';
-      $searchbox.css({"z-index":"1015"});
       if (event != null)
         $searchbox.val(String.fromCharCode(event.charCode));        
 
@@ -563,5 +568,4 @@ var SearchEventHandler = new SearchEventHandlerClass();
 
 // Features to add:
 // (1) Make sure this looks good on Windows. Bug 594429
-// (2) Make sure that we don't put the matched tab over the search box. Bug 594433
-// (3) Group all of the highlighted tabs into a group? Bug 594434
+// (2) Group all of the highlighted tabs into a group? Bug 594434
