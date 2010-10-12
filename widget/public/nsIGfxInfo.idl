@@ -104,6 +104,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_BLOCKED_DEVICE = 3;
   /* This feature is available and can be used, but is not suggested (e.g. shouldn't be used by default */
   const long FEATURE_DISCOURAGED = 4;
+  /* This feature is blocked on this OS version. */
+  const long FEATURE_BLOCKED_OS_VERSION = 5;
 
   /**
    * Ask about a feature, and return the status of that feature
