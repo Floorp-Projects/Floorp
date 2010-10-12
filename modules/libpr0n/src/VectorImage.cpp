@@ -381,8 +381,13 @@ VectorImage::GetFrame(PRUint32 aWhichFrame,
                       PRUint32 aFlags,
                       gfxASurface** _retval)
 {
-  NS_NOTYETIMPLEMENTED("VectorImage::GetFrame");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(_retval);
+  nsRefPtr<gfxImageSurface> surface;
+  nsresult rv = CopyFrame(aWhichFrame, aFlags, getter_AddRefs(surface));
+  if (NS_SUCCEEDED(rv)) {
+    *_retval = surface.forget().get();
+  }
+  return rv;
 }
 
 //******************************************************************************
@@ -393,14 +398,56 @@ VectorImage::CopyFrame(PRUint32 aWhichFrame,
                        PRUint32 aFlags,
                        gfxImageSurface** _retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
+  // XXXdholbert NOTE: Currently assuming FRAME_CURRENT for simplicity.
+  // Could handle FRAME_FIRST by saving helper-doc current time, seeking
+  // to time 0, rendering, and then seeking to saved time.
   if (aWhichFrame > FRAME_MAX_VALUE)
     return NS_ERROR_INVALID_ARG;
 
   if (mError)
     return NS_ERROR_FAILURE;
 
-  NS_NOTYETIMPLEMENTED("VectorImage::CopyFrame");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Look up height & width
+  // ----------------------
+  nsIntSize imageIntSize;
+  if (!mSVGDocumentWrapper->GetWidthOrHeight(SVGDocumentWrapper::eWidth,
+                                             imageIntSize.width) ||
+      !mSVGDocumentWrapper->GetWidthOrHeight(SVGDocumentWrapper::eHeight,
+                                             imageIntSize.height)) {
+    // We'll get here if our SVG doc has a percent-valued width or height.
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a surface that we'll ultimately return
+  // ---------------------------------------------
+  // Make our surface the size of what will ultimately be drawn to it.
+  // (either the full image size, or the restricted region)
+  gfxIntSize surfaceSize;
+  if (mHaveRestrictedRegion) {
+    surfaceSize.width = mRestrictedRegion.width;
+    surfaceSize.height = mRestrictedRegion.height;
+  } else {
+    surfaceSize.width = imageIntSize.width;
+    surfaceSize.height = imageIntSize.height;
+  }
+
+  nsRefPtr<gfxImageSurface> surface =
+    new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
+  nsRefPtr<gfxContext> context = new gfxContext(surface);
+
+  // Draw to our surface!
+  // --------------------
+  nsresult rv = Draw(context, gfxPattern::FILTER_NEAREST, gfxMatrix(),
+                     gfxRect(gfxPoint(0,0), gfxIntSize(imageIntSize.width,
+                                                       imageIntSize.height)),
+                     nsIntRect(nsIntPoint(0,0), imageIntSize),
+                     imageIntSize, aFlags);
+  if (NS_SUCCEEDED(rv)) {
+    *_retval = surface.forget().get();
+  }
+
+  return rv;
 }
 
 //******************************************************************************
