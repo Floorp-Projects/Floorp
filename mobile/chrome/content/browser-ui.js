@@ -2526,6 +2526,16 @@ var ContextCommands = {
     SharingUI.show(ContextHelper.popupState.mediaURL, null);
   },
 
+  playMedia: function cc_playVideo() {
+    let browser = ContextHelper.popupState.target;
+    browser.messageManager.sendAsyncMessage("Browser:MediaCommand", { command: "play"});
+  },
+
+  pauseMedia: function cc_playVideo() {
+    let browser = ContextHelper.popupState.target;
+    browser.messageManager.sendAsyncMessage("Browser:MediaCommand", { command: "pause" });
+  },
+
   editBookmark: function cc_editBookmark() {
     let target = ContextHelper.popupState.target;
     target.startEditing();

@@ -291,7 +291,6 @@ function Content() {
   addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseDown", this);
   addMessageListener("Browser:MouseUp", this);
-  addMessageListener("Browser:MouseCancel", this);
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
 
@@ -398,11 +397,9 @@ Content.prototype = {
           this._sendMouseEvent("mousedown", element, x, y);
           this._sendMouseEvent("mouseup", element, x, y);
         }
+        ContextHandler.reset();
         break;
       }
-
-      case "Browser:MouseCancel":
-        break;
 
       case "Browser:SaveAs":
         if (json.type != Ci.nsIPrintSettings.kOutputFormatPDF)
@@ -651,9 +648,27 @@ var ContextHandler = {
 
   init: function ch_init() {
     addEventListener("contextmenu", this, false);
+    addEventListener("pagehide", this, false);
+    addMessageListener("Browser:MediaCommand", this, false);
+    this.popupNode = null;
+  },
+
+  reset: function ch_reset() {
+    this.popupNode = null;
   },
 
   handleEvent: function ch_handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "contextmenu":
+        this.onContextMenu(aEvent);
+        break;
+      case "pagehide":
+        this.reset();
+        break;
+    }
+  },
+
+  onContextMenu: function ch_onContextMenu(aEvent) {
     if (aEvent.getPreventDefault())
       return;
 
@@ -666,7 +681,7 @@ var ContextHandler = {
       mediaURL: ""
     };
 
-    let popupNode = aEvent.originalTarget;
+    let popupNode = this.popupNode = aEvent.originalTarget;
 
     // Do checks for nodes that never have children.
     if (popupNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
@@ -674,9 +689,11 @@ var ContextHandler = {
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
         state.types.push("image");
         state.label = state.mediaURL = popupNode.currentURI.spec;
-      } else if (popupNode instanceof Ci.nsIDOMHTMLVideoElement) {
-        state.types.push("video");
-        state.label = state.mediaURL = popupNode.src;
+      } else if (popupNode instanceof Ci.nsIDOMHTMLMediaElement) {
+        state.label = state.mediaURL = (popupNode.currentSrc || popupNode.src);
+        state.types.push((popupNode.paused || popupNode.ended) ? "media-paused" : "media-playing");
+        if (popupNode instanceof Ci.nsIDOMHTMLVideoElement)
+          state.types.push("video");
       }
     }
 
@@ -708,6 +725,15 @@ var ContextHandler = {
     state.messageId = this.messageId;
 
     sendAsyncMessage("Browser:ContextMenu", state);
+  },
+
+  receiveMessage: function ch_receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "Browser:MediaCommand":
+        if (this.popupNode instanceof Ci.nsIDOMHTMLMediaElement)
+          this.popupNode[aMessage.json.command]();
+        break;
+    }
   },
 
   /**
