@@ -1308,7 +1308,9 @@
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
-    <toolbar id="addon-bar" toolbarname="&addonBarCmd.label;" collapsed="true"
+    <toolbar id="addon-bar"
+             toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"
+             collapsed="true"
              class="toolbar-primary chromeclass-toolbar"
              context="toolbar-context-menu" toolboxid="navigator-toolbox"
              mode="icons" iconsize="small" defaulticonsize="small"
