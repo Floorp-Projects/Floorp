@@ -157,10 +157,10 @@ void
 RecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
                            const gfxIntSize& aSize)
 {
+  MutexAutoLock lock(mLock);
+
   if (!aTexture->IsAllocated())
     return;
-
-  MutexAutoLock lock(mLock);
 
   if (!mRecycledTextures[aType].IsEmpty() && aSize != mRecycledTextureSizes[aType]) {
     mRecycledTextures[aType].Clear();
