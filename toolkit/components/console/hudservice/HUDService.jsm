@@ -1348,9 +1348,9 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Activate a HeadsUpDisplay for the current window
+   * Activate a HeadsUpDisplay for the given tab context.
    *
-   * @param nsIDOMWindow aContext
+   * @param Element aContext the tab element.
    * @returns void
    */
   activateHUDForContext: function HS_activateHUDForContext(aContext)
@@ -1362,23 +1362,24 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Deactivate a HeadsUpDisplay for the current window
+   * Deactivate a HeadsUpDisplay for the given tab context.
    *
    * @param nsIDOMWindow aContext
    * @returns void
    */
   deactivateHUDForContext: function HS_deactivateHUDForContext(aContext)
   {
-    var gBrowser = HUDService.currentContext().gBrowser;
-    var window = aContext.linkedBrowser.contentWindow;
-    var browser = gBrowser.getBrowserForDocument(window.top.document);
-    var tabId = gBrowser.getNotificationBox(browser).getAttribute("id");
-    var hudId = "hud_" + tabId;
-    var displayNode = this.getHeadsUpDisplay(hudId);
+    let window = aContext.linkedBrowser.contentWindow;
+    let nBox = aContext.ownerDocument.defaultView.
+      getNotificationBox(window);
+    let hudId = "hud_" + nBox.id;
+    let displayNode = nBox.querySelector("#" + hudId);
 
+    if (hudId in this.displayRegistry && displayNode) {
     this.unregisterActiveContext(hudId);
-    this.unregisterDisplay(hudId);
+      this.unregisterDisplay(displayNode);
     window.focus();
+    }
   },
 
   /**

@@ -92,6 +92,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_583816_tab_focus.js \
 	browser_webconsole_bug_594477_clickable_output.js \
 	browser_webconsole_bug_589162_css_filter.js \
+	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
 	head.js \
 	$(NULL)
 
