@@ -44,23 +44,68 @@ var gTestIter;
 
 // TESTS //////////////////////////////////////////////////////////////////////
 
-function smokeTestGenerator() {
-  if (ensureOverLinkHidden())
+let gTests = [
+
+  function smokeTestGenerator() {
+    if (ensureOverLinkHidden())
+      yield;
+
+    setOverLinkWait("http://example.com/");
     yield;
+    checkURLBar(true);
 
-  setOverLink("http://example.com/");
-  yield;
-  checkURLBar(true);
+    setOverLinkWait("");
+    yield;
+    checkURLBar(false);
+  },
 
-  setOverLink("");
-  yield;
-  checkURLBar(false);
-}
+  function hostPathLabels() {
+    setOverLink("http://example.com/");
+    hostLabelIs("http://example.com/");
+    pathLabelIs("");
+
+    setOverLink("http://example.com/foo");
+    hostLabelIs("http://example.com/");
+    pathLabelIs("foo");
+
+    setOverLink("javascript:popup('http://example.com/')");
+    hostLabelIs("");
+    pathLabelIs("javascript:popup('http://example.com/')");
+
+    setOverLink("javascript:popup('http://example.com/foo')");
+    hostLabelIs("");
+    pathLabelIs("javascript:popup('http://example.com/foo')");
+
+    setOverLink("about:home");
+    hostLabelIs("");
+    pathLabelIs("about:home");
+
+    // Clean up after ourselves.
+    if (ensureOverLinkHidden())
+      yield;
+  }
+
+];
 
 function test() {
   waitForExplicitFinish();
-  gTestIter = smokeTestGenerator();
-  cont();
+  runNextTest();
+}
+
+function runNextTest() {
+  let nextTest = gTests.shift();
+  if (nextTest) {
+    dump("Running next test: " + nextTest.name + "\n");
+    gTestIter = nextTest();
+
+    // If the test is a generator, advance it.  Otherwise, we just ran the test.
+    if (gTestIter)
+      cont();
+    else
+      runNextTest();
+  }
+  else
+    finish();
 }
 
 // HELPERS ////////////////////////////////////////////////////////////////////
@@ -74,7 +119,13 @@ function cont() {
     gTestIter.next();
   }
   catch (err if err instanceof StopIteration) {
-    finish();
+    runNextTest();
+  }
+  catch (err) {
+    // Depending on who calls us, sometimes exceptions are eaten by event
+    // handlers...  Make sure we fail.
+    ok(false, "Exception: " + err);
+    throw err;
   }
 }
 
@@ -105,14 +156,14 @@ function checkURLBar(shouldShowOverLink) {
 }
 
 /**
- * Sets the over-link.  This assumes that aStr will cause the over-link to fade
+ * Sets the over-link.  This assumes that str will cause the over-link to fade
  * in or out.  When its transition has finished, the test iterator is
  * incremented, so you should yield after calling.
  *
- * @param aStr
+ * @param str
  *        The over-link will be set to this string or cleared if this is falsey.
  */
-function setOverLink(aStr) {
+function setOverLinkWait(str) {
   let overLink = gURLBar._overLinkBox;
   overLink.addEventListener("transitionend", function onTrans(event) {
     if (event.target == overLink && event.propertyName == "opacity") {
@@ -120,7 +171,18 @@ function setOverLink(aStr) {
       cont();
     }
   }, false);
-  gURLBar.setOverLink(aStr);
+  gURLBar.setOverLink(str);
+}
+
+/**
+ * Sets the over-link but unlike setOverLinkWait does not assume that a
+ * transition will occur and therefore does not wait.
+ *
+ * @param str
+ *        The over-link will be set to this string or cleared if this is falsey.
+ */
+function setOverLink(str) {
+  gURLBar.setOverLink(str);
 }
 
 /**
@@ -132,9 +194,33 @@ function setOverLink(aStr) {
  */
 function ensureOverLinkHidden() {
   let overLink = gURLBar._overLinkBox;
-  if (window.getComputedStyle(overLink, null).opacity == 0)
+  if (window.getComputedStyle(overLink, null).opacity == 0) {
+    setOverLink("");
     return false;
+  }
 
-  setOverLink("");
+  setOverLinkWait("");
   return true;
+}
+
+/**
+ * Asserts that the over-link host label is a given string.
+ *
+ * @param str
+ *        The host label should be this string.
+ */
+function hostLabelIs(str) {
+  let host = gURLBar._overLinkHostLabel;
+  is(host.value, str, "Over-link host label should be correct");
+}
+
+/**
+ * Asserts that the over-link path label is a given string.
+ *
+ * @param str
+ *        The path label should be this string.
+ */
+function pathLabelIs(str) {
+  let path = gURLBar._overLinkPathLabel;
+  is(path.value, str, "Over-link path label should be correct");
 }
