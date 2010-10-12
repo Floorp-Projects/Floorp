@@ -116,6 +116,9 @@ const SEARCH_DELAY = 200;
 // "devtools.hud.loglimit" preference.
 const DEFAULT_LOG_LIMIT = 200;
 
+// The maximum number of bytes a Network ResponseListener can hold.
+const RESPONSE_BODY_LIMIT = 1048576; // 1 MB
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -218,7 +221,12 @@ ResponseListener.prototype =
     binaryOutputStream = new BinaryOutputStream(storageStream.getOutputStream(0));
 
     let data = NetUtil.readInputStreamToString(aInputStream, aCount);
+
+    if (HUDService.saveRequestAndResponseBodies &&
+        this.receivedData.length < RESPONSE_BODY_LIMIT) {
     this.receivedData += data;
+    }
+
     binaryOutputStream.writeBytes(data, aCount);
 
     let newInputStream = storageStream.newInputStream(0);
@@ -289,7 +297,9 @@ ResponseListener.prototype =
       }
     });
     this.httpActivity.response.isDone = true;
+    this.httpActivity.response.listener = null;
     this.httpActivity = null;
+    this.receivedData = "";
   },
 
   QueryInterface: XPCOMUtils.generateQI([
