@@ -491,13 +491,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
-#define JSFUN_THISP_FLAGS(f)  (f)
-#define JSFUN_THISP_TEST(f,t) ((f) & t)
-
-#define JSFUN_THISP_STRING    0x0100    /* |this| may be a primitive string */
-#define JSFUN_THISP_NUMBER    0x0200    /* |this| may be a primitive number */
-#define JSFUN_THISP_BOOLEAN   0x0400    /* |this| may be a primitive boolean */
-#define JSFUN_THISP_PRIMITIVE 0x0700    /* |this| may be any primitive value */
+#define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
 
 #define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
