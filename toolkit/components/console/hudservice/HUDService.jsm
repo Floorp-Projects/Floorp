@@ -4688,8 +4688,12 @@ LogMessage.prototype = {
 
     this.messageNode.appendChild(messageTxtNode);
 
-    var klass = "hud-msg-node hud-" + this.level;
-    this.messageNode.setAttribute("class", klass);
+    this.messageNode.classList.add("hud-msg-node");
+    this.messageNode.classList.add("hud-" + this.level);
+
+    if (this.activityObject.category == "CSS Parser") {
+      this.messageNode.classList.add("hud-cssparser");
+    }
 
     var self = this;
 
