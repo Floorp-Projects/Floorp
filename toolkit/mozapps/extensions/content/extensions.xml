@@ -844,12 +844,50 @@
     <implementation>
       <constructor><![CDATA[
         this._installStatus.mControl = this;
+        this._installStatus.mAddon = this.mAddon;
 
         this.setAttribute("contextmenu", "addonitem-popup");
 
         this._showStatus("none");
+        this._updateDates();
+        this._updateState();
 
-        this._initWithAddon(this.mAddon);
+        var iconURL = this.mAddon.iconURL;
+        if (iconURL)
+          this._icon.src = iconURL;
+
+        if (this.mAddon.version)
+          this._version.value = this.mAddon.version;
+        else
+          this._version.hidden = true;
+
+        this._creator.setCreator(this.mAddon.creator);
+
+        if (this.mAddon.description)
+          this._description.value = this.mAddon.description;
+        else
+          this._description.hidden = true;
+
+        if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
+            (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
+             !AddonManager.autoUpdateDefault)) {
+          var self = this;
+          AddonManager.getAllInstalls(function(aInstallsList) {
+            // This can return after the binding has been destroyed,
+            // so try to detect that and return early
+            if (!("onNewInstall" in self))
+              return;
+            for (let i = 0; i < aInstallsList.length; i++) {
+              let install = aInstallsList[i];
+              if (install.existingAddon &&
+                  install.existingAddon.id == self.mAddon.id &&
+                  install.state == AddonManager.STATE_AVAILABLE) {
+                self.onNewInstall(install);
+                self.onIncludeUpdateChanged();
+              }
+            }
+          });
+        }
 
         gEventManager.registerAddonListener(this, this.mAddon.id);
       ]]></constructor>
@@ -998,63 +1036,6 @@
         ]]></setter>
       </property>
 
-      <method name="_initWithAddon">
-        <parameter name="aAddon"/>
-        <body><![CDATA[
-          this.mAddon = aAddon;
-
-          this._installStatus.mAddon = this.mAddon;
-          this._updateDates();
-          this._updateState();
-
-          this.setAttribute("name", aAddon.name);
-
-          if (aAddon.size)
-            this.setAttribute("size", aAddon.size);
-          else
-            this.removeAttribute("size");
-
-          var iconURL = this.mAddon.iconURL;
-          if (iconURL)
-            this._icon.src = iconURL;
-          else
-            this._icon.src = null;
-
-          if (this.mAddon.version)
-            this._version.value = this.mAddon.version;
-          else
-            this._version.hidden = true;
-
-          this._creator.setCreator(this.mAddon.creator);
-
-          if (this.mAddon.description)
-            this._description.value = this.mAddon.description;
-          else
-            this._description.hidden = true;
-
-          if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
-              (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
-               !AddonManager.autoUpdateDefault)) {
-            var self = this;
-            AddonManager.getAllInstalls(function(aInstallsList) {
-              // This can return after the binding has been destroyed,
-              // so try to detect that and return early
-              if (!("onNewInstall" in self))
-                return;
-              for (let i = 0; i < aInstallsList.length; i++) {
-                let install = aInstallsList[i];
-                if (install.existingAddon &&
-                    install.existingAddon.id == self.mAddon.id &&
-                    install.state == AddonManager.STATE_AVAILABLE) {
-                  self.onNewInstall(install);
-                  self.onIncludeUpdateChanged();
-                }
-              }
-            });
-          }
-        ]]></body>
-      </method>
-
       <method name="_showStatus">
         <parameter name="aType"/>
         <body><![CDATA[
@@ -1085,13 +1066,10 @@
                                  );
           }
 
-          if (this.mAddon.updateDate) {
+          if (this.mAddon.updateDate)
             this._dateUpdated.value = formatDate(this.mAddon.updateDate);
-            this.setAttribute("dateUpdated", this.mAddon.updateDate.getTime() / 1000);
-          } else {
+          else
             this._dateUpdated.value = this._dateUpdated.getAttribute("unknown");
-            this.removeAttribute("dateUpdated");
-          }
         ]]></body>
       </method>
 
@@ -1434,23 +1412,6 @@
         ]]></body>
       </method>
 
-      <method name="onExternalInstall">
-        <parameter name="aAddon"/>
-        <parameter name="aExistingAddon"/>
-        <parameter name="aNeedsRestart"/>
-        <body><![CDATA[
-          if (aExistingAddon.id != this.mAddon.id)
-            return;
-
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!aNeedsRestart)
-            this._initWithAddon(aAddon);
-          else
-            this._updateState();
-        ]]></body>
-      </method>
-
       <method name="onNewInstall">
         <parameter name="aInstall"/>
         <body><![CDATA[
@@ -1483,15 +1444,8 @@
       </method>
 
       <method name="onInstallEnded">
-        <parameter name="aInstall"/>
-        <parameter name="aAddon"/>
         <body><![CDATA[
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!(aAddon.pendingOperations & AddonManager.PENDING_INSTALL))
-            this._initWithAddon(aAddon);
-          else
-            this._updateState();
+          this._updateState();
         ]]></body>
       </method>
     </implementation>
@@ -1505,6 +1459,7 @@
 
 
   <!-- Addon - uninstalled - An uninstalled addon that can be re-installed. -->
+  <!-- XXXunf this doesn't take into account restart-less uninstalls. bug 561263 -->
   <binding id="addon-uninstalled"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
@@ -1565,51 +1520,6 @@
         <body><![CDATA[
           if (!this.isPending("uninstall"))
             this.removeAttribute("pending");
-        ]]></body>
-      </method>
-
-      <method name="onExternalInstall">
-        <parameter name="aAddon"/>
-        <parameter name="aExistingAddon"/>
-        <parameter name="aNeedsRestart"/>
-        <body><![CDATA[
-          if (aExistingAddon.id != this.mAddon.id)
-            return;
-
-          // Make sure any newly installed add-on has the correct disabled state
-          if (this.hasAttribute("wasDisabled"))
-            aAddon.userDisabled = this.getAttribute("wasDisabled") == "true";
-
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!aNeedsRestart)
-            this.mAddon = aAddon;
-
-          this.removeAttribute("restartrequired");
-          this.removeAttribute("pending");
-        ]]></body>
-      </method>
-
-      <method name="onInstallStarted">
-        <parameter name="aInstall"/>
-        <body><![CDATA[
-          // Make sure any newly installed add-on has the correct disabled state
-          if (this.hasAttribute("wasDisabled"))
-            aInstall.addon.userDisabled = this.getAttribute("wasDisabled") == "true";
-        ]]></body>
-      </method>
-
-      <method name="onInstallEnded">
-        <parameter name="aInstall"/>
-        <parameter name="aAddon"/>
-        <body><![CDATA[
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!(aAddon.pendingOperations & AddonManager.PENDING_INSTALL))
-            this.mAddon = aAddon;
-
-          this.removeAttribute("restartrequired");
-          this.removeAttribute("pending");
         ]]></body>
       </method>
     </implementation>
