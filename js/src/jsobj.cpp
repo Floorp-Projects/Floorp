@@ -835,17 +835,32 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
 
 }
 
+/* ES5 15.2.4.2.  Note steps 1 and 2 are errata. */
 static JSBool
 obj_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
+    Value &thisv = vp[1];
+
+    /* ES5 15.2.4.2 step 1. */
+    if (thisv.isUndefined()) {
+        vp->setString(ATOM_TO_STRING(cx->runtime->atomState.objectUndefinedAtom));
+        return true;
+    }
+
+    /* ES5 15.2.4.2 step 2. */
+    if (thisv.isNull()) {
+        vp->setString(ATOM_TO_STRING(cx->runtime->atomState.objectNullAtom));
+        return true;
+    }
+
+    /* ES5 15.2.4.2 step 3. */
+    if (!thisv.isObject() && !js_PrimitiveToObject(cx, &thisv))
         return false;
 
-    JSString *str = js::obj_toStringHelper(cx, obj);
+    /* ES5 15.2.4.2 steps 4-5. */
+    JSString *str = js::obj_toStringHelper(cx, &thisv.toObject());
     if (!str)
         return false;
-
     vp->setString(str);
     return true;
 }
@@ -2692,7 +2707,7 @@ static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,                0,0),
+    JS_FN(js_toString_str,             obj_toString,                0,JSFUN_PRIMITIVE_THIS),
     JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
     JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
 #if JS_HAS_OBJ_WATCHPOINT
