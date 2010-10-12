@@ -967,7 +967,6 @@
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
-          <progressmeter id="urlbar-progress" mode="normal" value="0" collapsed="true"/>
           <toolbarbutton id="urlbar-go-button"
                          onclick="gURLBar.handleCommand(event);"
                          tooltiptext="&goEndCap.tooltip;"/>

@@ -3941,8 +3941,6 @@ var XULBrowserWindow = {
   statusText: "",
   isBusy: false,
 
-  _progressCollapseTimer: 0,
-
   QueryInterface: function (aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
         aIID.equals(Ci.nsIWebProgressListener2) ||
@@ -3953,10 +3951,6 @@ var XULBrowserWindow = {
     throw Cr.NS_NOINTERFACE;
   },
 
-  get statusMeter () {
-    delete this.statusMeter;
-    return this.statusMeter = document.getElementById("urlbar-progress");
-  },
   get stopCommand () {
     delete this.stopCommand;
     return this.stopCommand = document.getElementById("Browser:Stop");
@@ -3988,7 +3982,6 @@ var XULBrowserWindow = {
   destroy: function () {
     // XXXjag to avoid leaks :-/, see bug 60729
     delete this.throbberElement;
-    delete this.statusMeter;
     delete this.stopCommand;
     delete this.reloadCommand;
     delete this.statusText;
@@ -4022,15 +4015,7 @@ var XULBrowserWindow = {
   onProgressChange: function (aWebProgress, aRequest,
                               aCurSelfProgress, aMaxSelfProgress,
                               aCurTotalProgress, aMaxTotalProgress) {
-    // Check this._busyUI to be safe, because we don't want to update
-    // the progress meter when restoring a page from bfcache.
-    if (aMaxTotalProgress > 0 && this._busyUI) {
-      // This is highly optimized.  Don't touch this code unless
-      // you are intimately familiar with the cost of setting
-      // attrs on XUL elements. -- hyatt
-      let percentage = (aCurTotalProgress * 100) / aMaxTotalProgress;
-      this.statusMeter.value = percentage;
-    }
+    // Do nothing.
   },
 
   onProgressChange64: function (aWebProgress, aRequest,
@@ -4059,15 +4044,6 @@ var XULBrowserWindow = {
         // Turn the throbber on.
         if (this.throbberElement)
           this.throbberElement.setAttribute("busy", "true");
-
-        // Turn the status meter on.
-        this.statusMeter.value = 0;  // be sure to clear the progress bar
-        if (this._progressCollapseTimer) {
-          clearTimeout(this._progressCollapseTimer);
-          this._progressCollapseTimer = 0;
-        }
-        else
-          this.statusMeter.collapsed = false;
 
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
@@ -4129,12 +4105,7 @@ var XULBrowserWindow = {
       if (this._busyUI) {
         this._busyUI = false;
 
-        // Turn the progress meter and throbber off.
-        this._progressCollapseTimer = setTimeout(function (self) {
-          self.statusMeter.collapsed = true;
-          self._progressCollapseTimer = 0;
-        }, 100, this);
-
+        // Turn the throbber off.
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
 
@@ -4381,7 +4352,6 @@ var XULBrowserWindow = {
     if (loadingDone)
       return;
     this.onStatusChange(gBrowser.webProgress, null, 0, aMessage);
-    this.onProgressChange(gBrowser.webProgress, 0, 0, aTotalProgress, 1);
   },
 
   startDocumentLoad: function XWB_startDocumentLoad(aRequest) {
