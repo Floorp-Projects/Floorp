@@ -856,7 +856,7 @@ Class js_StringClass = {
 static JSString *
 NormalizeThis(JSContext *cx, Value *vp)
 {
-    if (vp[1].isNull() && (!ComputeThisFromVp(cx, vp) || vp[1].isNull()))
+    if (vp[1].isNullOrUndefined() && !ComputeThisFromVp(cx, vp))
         return NULL;
 
     /*
@@ -2100,7 +2100,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         InvokeSessionGuard &session = rdata.session;
         if (!session.started()) {
             Value lambdav = ObjectValue(*lambda);
-            if (!rdata.session.start(cx, lambdav, NullValue(), argc))
+            if (!session.start(cx, lambdav, UndefinedValue(), argc))
                 return false;
         }
 
@@ -2409,7 +2409,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     CallArgs &args = rdata.singleShot;
     args.callee().setObject(*rdata.lambda);
-    args.thisv().setNull();
+    args.thisv().setUndefined();
 
     Value *sp = args.argv();
     sp[0].setString(matchStr);

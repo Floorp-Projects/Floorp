@@ -5926,12 +5926,14 @@ js_PrimitiveToObject(JSContext *cx, Value *vp)
     JS_ASSERT(v.isPrimitive());
 
     Class *clasp;
-    if (v.isNumber())
+    if (v.isNumber()) {
         clasp = &js_NumberClass;
-    else if (v.isString())
+    } else if (v.isString()) {
         clasp = &js_StringClass;
-    else
+    } else {
+        JS_ASSERT(v.isBoolean());
         clasp = &js_BooleanClass;
+    }
 
     JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (!obj)

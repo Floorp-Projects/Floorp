@@ -2258,15 +2258,20 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     }
 
     Value *argv = vp + 2;
+    Value thisv;
     if (argc == 0) {
         /* Call fun with its global object as the 'this' param if no args. */
-        obj = NULL;
+        thisv.setUndefined();
     } else {
         /* Otherwise convert the first arg to 'this' and skip over it. */
-        if (argv[0].isObject())
-            obj = &argv[0].toObject();
-        else if (!js_ValueToObjectOrNull(cx, argv[0], &obj))
-            return JS_FALSE;
+        if (argv[0].isNullOrUndefined()) {
+            thisv.setUndefined();
+        } else {
+            if (!js_ValueToObjectOrNull(cx, argv[0], &obj))
+                return JS_FALSE;
+            JS_ASSERT(obj);
+            thisv.setObject(*obj);
+        }
         argc--;
         argv++;
     }
@@ -2276,9 +2281,9 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return JS_FALSE;
 
-    /* Push fval, obj, and the args. */
+    /* Push fval, thisv, and the args. */
     args.callee() = fval;
-    args.thisv().setObjectOrNull(obj);
+    args.thisv() = thisv;
     memcpy(args.argv(), argv, argc * sizeof *argv);
 
     bool ok = Invoke(cx, args, 0);
@@ -2360,11 +2365,17 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
+
     /* Convert the first arg to 'this' and skip over it. */
-    if (vp[2].isObject())
-        obj = &vp[2].toObject();
-    else if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
-        return JS_FALSE;
+    Value thisv;
+    if (vp[2].isNullOrUndefined()) {
+        thisv.setUndefined();
+    } else {
+        if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
+            return JS_FALSE;
+        JS_ASSERT(obj);
+        thisv.setObject(*obj);
+    }
 
     LeaveTrace(cx);
 
@@ -2377,7 +2388,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 
     /* Push fval, obj, and aobj's elements as args. */
     args.callee() = fval;
-    args.thisv().setObjectOrNull(obj);
+    args.thisv() = thisv;
 
     /* Steps 7-8. */
     if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
@@ -2525,15 +2536,15 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
          *       very shortly when this-boxing only occurs for non-strict
          *       functions, callee-side, in bug 514570.
          */
-        JSObject *boundThisObj;
-        if (boundThis.isObjectOrNull()) {
-            boundThisObj = boundThis.toObjectOrNull();
+        if (boundThis.isNullOrUndefined()) {
+            args.thisv().setUndefined();
         } else {
+            JSObject *boundThisObj;
             if (!js_ValueToObjectOrNull(cx, boundThis, &boundThisObj))
                 return false;
+            JS_ASSERT(boundThisObj);
+            args.thisv().setObject(*boundThisObj);
         }
-
-        args.thisv() = ObjectOrNullValue(boundThisObj);
     }
 
     if (constructing ? !InvokeConstructor(cx, args) : !Invoke(cx, args, 0))

@@ -236,6 +236,15 @@ class Assembler : public BaseAssembler
         return branchPtr(cond, Registers::ValueReg, Imm64(JSVAL_BITS(JSVAL_NULL)));
     }
 
+    Jump testUndefined(Assembler::Condition cond, RegisterID reg) {
+        return branchPtr(cond, reg, ImmTag(JSVAL_SHIFTED_TAG_UNDEFINED));
+    }
+
+    Jump testUndefined(Assembler::Condition cond, Address address) {
+        loadValue(address, Registers::ValueReg);
+        return branchPtr(cond, Registers::ValueReg, Imm64(JSVAL_BITS(JSVAL_VOID)));
+    }
+
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {
         return branchPtr(cond, reg, ImmTag(JSVAL_SHIFTED_TAG_INT32));
     }

@@ -215,6 +215,14 @@ class Assembler : public BaseAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_NULL));
     }
 
+    Jump testUndefined(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_UNDEFINED));
+    }
+
+    Jump testUndefined(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_UNDEFINED));
+    }
+
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {
         return branch32(cond, reg, ImmTag(JSVAL_TAG_INT32));
     }

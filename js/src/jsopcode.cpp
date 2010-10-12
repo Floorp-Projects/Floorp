@@ -4117,8 +4117,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
                         JS_NOT_REACHED("should see block chain operation");
                     }
-                    LOCAL_ASSERT(*pc == JSOP_NULL);
-                    pc += JSOP_NULL_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_PUSH);
+                    pc += JSOP_PUSH_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
