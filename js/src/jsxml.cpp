@@ -339,8 +339,8 @@ static void
 anyname_finalize(JSContext* cx, JSObject* obj)
 {
     /* Make sure the next call to js_GetAnyName doesn't try to use obj. */
-    if (cx->compartment->anynameObject == obj)
-        cx->compartment->anynameObject = NULL;
+    if (obj->compartment()->anynameObject == obj)
+        obj->compartment()->anynameObject = NULL;
 }
 
 static JSBool
