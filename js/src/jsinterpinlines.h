@@ -40,7 +40,12 @@
 #ifndef jsinterpinlines_h__
 #define jsinterpinlines_h__
 
+#include "jsapi.h"
+#include "jsbool.h"
+#include "jsinterp.h"
+#include "jsnum.h"
 #include "jsprobes.h"
+#include "jsstr.h"
 #include "methodjit/MethodJIT.h"
 
 inline void
@@ -561,6 +566,62 @@ InvokeSessionGuard::invoke(JSContext *cx) const
 
     /* Don't clobber callee with rval; rval gets read from fp->rval. */
     return ok;
+}
+
+namespace detail {
+
+template<typename T> class PrimitiveBehavior { };
+
+template<>
+class PrimitiveBehavior<JSString *> {
+  public:
+    static inline bool isType(const Value &v) { return v.isString(); }
+    static inline JSString *extract(const Value &v) { return v.toString(); }
+    static inline Class *getClass() { return &js_StringClass; }
+};
+
+template<>
+class PrimitiveBehavior<bool> {
+  public:
+    static inline bool isType(const Value &v) { return v.isBoolean(); }
+    static inline bool extract(const Value &v) { return v.toBoolean(); }
+    static inline Class *getClass() { return &js_BooleanClass; }
+};
+
+template<>
+class PrimitiveBehavior<double> {
+  public:
+    static inline bool isType(const Value &v) { return v.isNumber(); }
+    static inline double extract(const Value &v) { return v.toNumber(); }
+    static inline Class *getClass() { return &js_NumberClass; }
+};
+
+} // namespace detail
+
+template <typename T>
+bool
+GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
+{
+    typedef detail::PrimitiveBehavior<T> Behavior;
+
+    const Value &thisv = vp[1];
+    if (Behavior::isType(thisv)) {
+        *v = Behavior::extract(thisv);
+        return true;
+    }
+
+    if (thisv.isObjectOrNull()) {
+        JSObject *obj = thisv.toObjectOrNull();
+        if (!obj || obj->getClass() != Behavior::getClass()) {
+            obj = ComputeThisFromVp(cx, vp);
+            if (!InstanceOf(cx, obj, Behavior::getClass(), vp + 2))
+                return false;
+        }
+        *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
+        return true;
+    }
+
+    return ReportIncompatibleMethod(cx, vp, Behavior::getClass());
 }
 
 }

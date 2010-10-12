@@ -410,21 +410,6 @@ js_GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
     return js_GetScopeChainFull(cx, fp, js_GetBlockChainFast(cx, fp, op, oplen));
 }
 
-JSBool
-js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, const Value **vpp)
-{
-    const Value *p = &vp[1];
-    if (p->isObjectOrNull()) {
-        JSObject *obj = ComputeThisFromVp(cx, vp);
-        if (!InstanceOf(cx, obj, clasp, vp + 2))
-            return JS_FALSE;
-        *vpp = &obj->getPrimitiveThis();
-    } else {
-        *vpp = p;
-    }
-    return JS_TRUE;
-}
-
 /* Some objects (e.g., With) delegate 'this' to another object. */
 static inline JSObject *
 CallThisObjectHook(JSContext *cx, JSObject *obj, Value *argv)
@@ -462,6 +447,47 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
 }
 
 namespace js {
+
+bool
+ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
+{
+    Value &thisv = vp[1];
+
+#ifdef DEBUG
+    if (thisv.isObject()) {
+        JS_ASSERT(thisv.toObject().getClass() != clasp);
+    } else if (thisv.isString()) {
+        JS_ASSERT(clasp != &js_StringClass);
+    } else if (thisv.isNumber()) {
+        JS_ASSERT(clasp != &js_NumberClass);
+    } else if (thisv.isBoolean()) {
+        JS_ASSERT(clasp != &js_BooleanClass);
+    } else {
+        JS_ASSERT(thisv.isUndefined() || thisv.isNull());
+    }
+#endif
+
+    if (JSFunction *fun = js_ValueToFunction(cx, &vp[0], 0)) {
+        const char *name = thisv.isObject()
+                           ? thisv.toObject().getClass()->name
+                           : thisv.isString()
+                           ? "string"
+                           : thisv.isNumber()
+                           ? "number"
+                           : thisv.isBoolean()
+                           ? "boolean"
+                           : thisv.isNull()
+                           ? js_null_str
+                           : thisv.isUndefined()
+                           ? js_undefined_str
+                           : "value";
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO,
+                             clasp->name, JS_GetFunctionName(fun),
+                             name);
+    }
+    return false;
+}
 
 bool
 ComputeThisFromArgv(JSContext *cx, Value *argv)

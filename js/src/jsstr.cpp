@@ -79,9 +79,8 @@
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 #include "jsregexpinlines.h"
-#include "jscntxtinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -861,10 +860,13 @@ NormalizeThis(JSContext *cx, Value *vp)
         return NULL;
 
     /*
-     * js_GetPrimitiveThis seems to do a bunch of work (like calls to
-     * JS_THIS_OBJECT) which we don't need in the common case (where
-     * vp[1] is a String object) here.  Note that vp[1] can still be a
-     * primitive value at this point.
+     * String.prototype.{toString,toSource,valueOf} throw a TypeError if the
+     * this-argument is not a string or a String object. So those methods use
+     * js::GetPrimitiveThis which provides that behavior.
+     *
+     * By standard, the rest of the String methods must ToString the
+     * this-argument rather than throw a TypeError. So those methods use
+     * NORMALIZE_THIS (and thus NormalizeThis) instead.
      */
     if (vp[1].isObject()) {
         JSObject *obj = &vp[1].toObject();
@@ -904,23 +906,26 @@ static JSBool
 str_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
-    size_t i, j, k, n;
-    char buf[16];
-    const jschar *s;
-    jschar *t;
+    if (!GetPrimitiveThis(cx, vp, &str))
+        return false;
 
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
-        return JS_FALSE;
-    str = js_QuoteString(cx, primp->toString(), '"');
+    str = js_QuoteString(cx, str, '"');
     if (!str)
-        return JS_FALSE;
-    j = JS_snprintf(buf, sizeof buf, "(new %s(", js_StringClass.name);
+        return false;
+
+    char buf[16];
+    size_t j = JS_snprintf(buf, sizeof buf, "(new String(");
+
+    const jschar *s;
+    size_t k;
     str->getCharsAndLength(s, k);
-    n = j + k + 2;
-    t = (jschar *) cx->malloc((n + 1) * sizeof(jschar));
+
+    size_t n = j + k + 2;
+    jschar *t = (jschar *) cx->malloc((n + 1) * sizeof(jschar));
     if (!t)
-        return JS_FALSE;
+        return false;
+
+    size_t i;
     for (i = 0; i < j; i++)
         t[i] = buf[i];
     for (j = 0; j < k; i++, j++)
@@ -928,13 +933,14 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     t[i++] = ')';
     t[i++] = ')';
     t[i] = 0;
+
     str = js_NewString(cx, t, n);
     if (!str) {
         cx->free(t);
-        return JS_FALSE;
+        return false;
     }
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 #endif /* JS_HAS_TOSOURCE */
@@ -942,10 +948,10 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_str_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
+    JSString *str;
+    if (!GetPrimitiveThis(cx, vp, &str))
         return false;
-    *vp = *primp;
+    vp->setString(str);
     return true;
 }
 
@@ -3022,20 +3028,18 @@ JS_DEFINE_TRCINFO_1(str_concat,
     (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
-#define GENERIC           JSFUN_GENERIC_NATIVE
-#define PRIMITIVE         JSFUN_THISP_PRIMITIVE
-#define GENERIC_PRIMITIVE (GENERIC | PRIMITIVE)
+static const uint16 GENERIC_PRIMITIVE = JSFUN_GENERIC_NATIVE | JSFUN_PRIMITIVE_THIS;
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN("quote",             str_quote,             0,GENERIC_PRIMITIVE),
-    JS_FN(js_toSource_str,     str_toSource,          0,JSFUN_THISP_STRING),
+    JS_FN(js_toSource_str,     str_toSource,          0,JSFUN_PRIMITIVE_THIS),
 #endif
 
     /* Java-like methods. */
-    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING),
-    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
-    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
+    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
@@ -3065,19 +3069,19 @@ static JSFunctionSpec string_methods[] = {
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    JS_FN("bold",              str_bold,              0,PRIMITIVE),
-    JS_FN("italics",           str_italics,           0,PRIMITIVE),
-    JS_FN("fixed",             str_fixed,             0,PRIMITIVE),
-    JS_FN("fontsize",          str_fontsize,          1,PRIMITIVE),
-    JS_FN("fontcolor",         str_fontcolor,         1,PRIMITIVE),
-    JS_FN("link",              str_link,              1,PRIMITIVE),
-    JS_FN("anchor",            str_anchor,            1,PRIMITIVE),
-    JS_FN("strike",            str_strike,            0,PRIMITIVE),
-    JS_FN("small",             str_small,             0,PRIMITIVE),
-    JS_FN("big",               str_big,               0,PRIMITIVE),
-    JS_FN("blink",             str_blink,             0,PRIMITIVE),
-    JS_FN("sup",               str_sup,               0,PRIMITIVE),
-    JS_FN("sub",               str_sub,               0,PRIMITIVE),
+    JS_FN("bold",              str_bold,              0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("italics",           str_italics,           0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("fixed",             str_fixed,             0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("fontsize",          str_fontsize,          1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("fontcolor",         str_fontcolor,         1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("link",              str_link,              1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("anchor",            str_anchor,            1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("strike",            str_strike,            0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("small",             str_small,             0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("big",               str_big,               0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("blink",             str_blink,             0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("sup",               str_sup,               0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("sub",               str_sub,               0,JSFUN_PRIMITIVE_THIS),
 #endif
 
     JS_FS_END
