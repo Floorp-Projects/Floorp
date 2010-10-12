@@ -577,6 +577,13 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
+  if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
+      gfxWindowsPlatform::WindowsOSVersion() < gfxWindowsPlatform::kWindowsXP)
+  {
+    *aStatus = FEATURE_BLOCKED_OS_VERSION;
+    return NS_OK;
+  }
+
   PRUint32 adapterVendor = 0;
   PRUint32 adapterDeviceID = 0;
   nsAutoString adapterDriverVersionString;
