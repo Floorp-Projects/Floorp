@@ -55,7 +55,11 @@ else
    ifeq (,$(filter-out gtk2 qt, $(MOZ_WIDGET_TOOLKIT)))
       MOZ_PKG_FORMAT  = BZ2
    else
-      MOZ_PKG_FORMAT  = TGZ
+      ifeq (Android,$(OS_TARGET))
+          MOZ_PKG_FORMAT = APK
+      else
+          MOZ_PKG_FORMAT = TGZ
+      endif
    endif
 endif
 endif
@@ -146,6 +150,67 @@ INNER_MAKE_PACKAGE	= rm -f app.7z && \
   chmod 0755 $(PACKAGE)
 INNER_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) && \
   mv core $(MOZ_PKG_DIR)
+endif
+ifeq ($(MOZ_PKG_FORMAT),APK)
+
+# we have custom stuff for Android
+MOZ_OMNIJAR =
+
+JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
+include $(topsrcdir)/config/android-common.mk
+
+JARSIGNER ?= echo
+
+DIST_FILES = \
+  resources.arsc \
+  AndroidManifest.xml \
+  chrome \
+  components \
+  defaults \
+  modules \
+  res \
+  lib \
+  extensions \
+  application.ini \
+  platform.ini \
+  greprefs.js \
+  browserconfig.properties \
+  blocklist.xml \
+  chrome.manifest \
+  update.locale \
+  $(NULL)
+
+NON_DIST_FILES = \
+  classes.dex \
+  $(NULL)
+
+UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
+
+include $(topsrcdir)/ipc/app/defs.mk
+
+ifdef MOZ_IPC
+DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
+endif
+
+PKG_SUFFIX      = .apk
+INNER_MAKE_PACKAGE	= \
+  rm -f $(_ABS_DIST)/gecko.ap_ && \
+  ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
+    rm -rf lib && \
+    mkdir -p lib/armeabi && \
+    cp lib*.so lib/armeabi && \
+    $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) ) && \
+  rm -f $(_ABS_DIST)/gecko.apk && \
+  $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
+  cp $(_ABS_DIST)/gecko.apk $(_ABS_DIST)/gecko-unsigned-unaligned.apk && \
+  $(JARSIGNER) $(_ABS_DIST)/gecko.apk && \
+  $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE)
+INNER_UNMAKE_PACKAGE	= \
+  mkdir $(MOZ_PKG_DIR) && \
+  cd $(MOZ_PKG_DIR) && \
+  $(UNZIP) $(UNPACKAGE) && \
+  mv lib/armeabi/*.so . && \
+  rm -rf lib
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
