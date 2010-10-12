@@ -3507,7 +3507,7 @@ SessionStoreService.prototype = {
    * @returns aString that has been updated with the new title
    */
   _replaceLoadingTitle : function sss_replaceLoadingTitle(aString, aTabbrowser, aTab) {
-    if (aString == aTabbrowser.mStringBundle.getString("tabs.loading")) {
+    if (aString == aTabbrowser.mStringBundle.getString("tabs.connecting")) {
       aTabbrowser.setTabTitle(aTab);
       [aString, aTab.label] = [aTab.label, aString];
     }
