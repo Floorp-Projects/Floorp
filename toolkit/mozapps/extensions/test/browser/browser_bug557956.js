@@ -23,8 +23,7 @@ const URI_EXTENSION_UPDATE_DIALOG = "chrome://mozapps/content/extensions/update.
  */
 
 function test() {
-  ok(true, "Test disabled due to timeouts");
-  return;
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   run_next_test();
