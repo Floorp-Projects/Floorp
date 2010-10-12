@@ -371,7 +371,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 #endif
         if (callname) {
             f.regs.sp++;
-            f.regs.sp[-1].setNull();
+            f.regs.sp[-1].setUndefined();
         }
         return obj;
     }
@@ -416,14 +416,15 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
             (clasp = thisp->getClass()) == &js_CallClass ||
             clasp == &js_BlockClass ||
             clasp == &js_DeclEnvClass) {
-            thisp = NULL;
+            f.regs.sp++;
+            f.regs.sp[-1].setUndefined();
         } else {
             thisp = thisp->thisObject(cx);
             if (!thisp)
                 return NULL;
+            f.regs.sp++;
+            f.regs.sp[-1].setObject(*thisp);
         }
-        f.regs.sp++;
-        f.regs.sp[-1].setObjectOrNull(thisp);
     }
     return obj;
 }
@@ -2161,7 +2162,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         JSObject *funobj;
         if (!IsFunctionObject(rval, &funobj) ||
-            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), lval)) {
+            !PrimitiveThisTest(funobj->getFunctionPrivate(), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 THROW();
         }

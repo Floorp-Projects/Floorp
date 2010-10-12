@@ -2816,12 +2816,17 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
 
     Value thisv;
     if (argc > 1 && !REDUCE_MODE(mode)) {
-        JSObject *thisp;
-        if (!js_ValueToObjectOrNull(cx, argv[1], &thisp))
-            return JS_FALSE;
-        thisv.setObjectOrNull(thisp);
+        if (argv[1].isNullOrUndefined()) {
+            thisv.setUndefined();
+        } else {
+            JSObject *thisObj;
+            if (!js_ValueToObjectOrNull(cx, argv[1], &thisObj))
+                return JS_FALSE;
+            JS_ASSERT(thisObj);
+            thisv.setObject(*thisObj);
+        }
     } else {
-        thisv.setNull();
+        thisv.setUndefined();
     }
 
     /*

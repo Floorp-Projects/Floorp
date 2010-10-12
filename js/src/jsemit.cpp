@@ -6525,12 +6525,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * interpose the lambda-initialized method read barrier -- see the code
          * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
          *
-         * Then (or in a call case that has no explicit reference-base object)
-         * we emit JSOP_NULL as a placeholder local GC root to hold the |this|
-         * parameter: in the operator new case, the newborn instance; in the
-         * base-less call case, a cookie meaning "use the global object as the
-         * |this| value" (or in ES5 strict mode, "use undefined", so we should
-         * use JSOP_PUSH instead of JSOP_NULL -- see bug 514570).
+         * Then (or in a call case that has no explicit reference-base
+         * object) we emit JSOP_PUSH to produce the |this| slot required
+         * for calls (which non-strict mode functions will box into the
+         * global object).
          */
         pn2 = pn->pn_head;
         switch (pn2->pn_type) {
@@ -6552,22 +6550,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn2->pn_op == JSOP_XMLNAME) {
                 if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, cg))
                     return JS_FALSE;
-                callop = true;          /* suppress JSOP_NULL after */
+                callop = true;          /* suppress JSOP_PUSH after */
                 break;
             }
 #endif
             /* FALL THROUGH */
           default:
-            /*
-             * Push null as a placeholder for the global object, per ECMA-262
-             * 11.2.3 step 6.
-             */
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
-            callop = false;             /* trigger JSOP_NULL after */
+            callop = false;             /* trigger JSOP_PUSH after */
             break;
         }
-        if (!callop && js_Emit1(cx, cg, JSOP_NULL) < 0)
+        if (!callop && js_Emit1(cx, cg, JSOP_PUSH) < 0)
             return JS_FALSE;
 
         /* Remember start of callable-object bytecode for decompilation hint. */
