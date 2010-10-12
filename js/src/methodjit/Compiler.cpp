@@ -2845,7 +2845,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
 
     masm.loadFunctionPrivate(funReg, temp);
     masm.load16(Address(temp, offsetof(JSFunction, flags)), temp);
-    Jump noPrim = masm.branchTest32(Assembler::Zero, temp, Imm32(JSFUN_THISP_STRING));
+    Jump noPrim = masm.branchTest32(Assembler::Zero, temp, Imm32(JSFUN_PRIMITIVE_THIS));
     {
         stubcc.linkExit(noPrim, Uses(2));
         stubcc.leave();

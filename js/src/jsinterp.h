@@ -799,20 +799,25 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp);
 extern JSObject *
 js_GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
 
-/*
- * Given a context and a vector of [callee, this, args...] for a function that
- * was specified with a JSFUN_THISP_PRIMITIVE flag, get the primitive value of
- * |this| into *thisvp. In doing so, if |this| is an object, insist it is an
- * instance of clasp and extract its private slot value to return via *thisvp.
- *
- * NB: this function loads and uses *vp before storing *thisvp, so the two may
- * alias the same Value.
- */
-extern JSBool
-js_GetPrimitiveThis(JSContext *cx, js::Value *vp, js::Class *clasp,
-                    const js::Value **vpp);
-
 namespace js {
+
+/*
+ * Report an error that the this value passed as |this| in the given arguments
+ * vector is not compatible with the specified class.
+ */
+bool
+ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
+
+/*
+ * Given a context and a vector of [callee, this, args...] for a function
+ * whose JSFUN_PRIMITIVE_THIS flag is set, set |*v| to the primitive value
+ * of |this|. If |this| is an object, insist that it be an instance of the
+ * appropriate wrapper class for T, and set |*v| to its private slot value.
+ * If |this| is a primitive, unbox it into |*v| if it's of the required
+ * type, and throw an error otherwise.
+ */
+template <typename T>
+bool GetPrimitiveThis(JSContext *cx, Value *vp, T *v);
 
 inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp);
@@ -840,13 +845,11 @@ ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
+/* Return true if |fun| would accept |v| as its |this|, without being wrapped. */
 JS_ALWAYS_INLINE bool
 PrimitiveThisTest(JSFunction *fun, const Value &v)
 {
-    uint16 flags = fun->flags;
-    return (v.isString() && !!(flags & JSFUN_THISP_STRING)) ||
-           (v.isNumber() && !!(flags & JSFUN_THISP_NUMBER)) ||
-           (v.isBoolean() && !!(flags & JSFUN_THISP_BOOLEAN));
+    return !v.isPrimitive() || fun->acceptsPrimitiveThis();
 }
 
 /*

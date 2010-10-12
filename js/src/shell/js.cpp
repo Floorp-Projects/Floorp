@@ -1940,9 +1940,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 
             SHOW_FLAG(LAMBDA);
             SHOW_FLAG(HEAVYWEIGHT);
-            SHOW_FLAG(THISP_STRING);
-            SHOW_FLAG(THISP_NUMBER);
-            SHOW_FLAG(THISP_BOOLEAN);
+            SHOW_FLAG(PRIMITIVE_THIS);
             SHOW_FLAG(EXPR_CLOSURE);
             SHOW_FLAG(TRCINFO);
 
