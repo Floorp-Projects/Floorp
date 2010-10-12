@@ -1169,12 +1169,66 @@ function run_test_18() {
                   a2.uninstall();
                   restartManager();
 
-                  end_test();
+                  run_test_19();
                 });
               }
             });
             aInstall.install();
           }, "application/x-xpinstall");
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Checks that metadata is downloaded for new installs and is visible before and
+// after restart
+function run_test_19() {
+  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
+  Services.prefs.setCharPref("extensions.getAddons.get.url",
+                             "http://localhost:4444/data/test_install.xml");
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function(aInstall, aAddon) {
+        do_check_eq(aAddon.fullDescription, "Repository description");
+
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_eq(a2.fullDescription, "Repository description");
+
+          a2.uninstall();
+          restartManager();
+
+          run_test_20();
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Do the same again to make sure it works when the data is already in the cache
+function run_test_20() {
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function(aInstall, aAddon) {
+        do_check_eq(aAddon.fullDescription, "Repository description");
+
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_eq(a2.fullDescription, "Repository description");
+
+          a2.uninstall();
+          restartManager();
+
+          Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
+          end_test();
         });
       }
     });

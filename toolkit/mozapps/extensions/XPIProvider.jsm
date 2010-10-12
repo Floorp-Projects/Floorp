@@ -4562,6 +4562,25 @@ AddonInstall.prototype = {
    *         XPI is incorrectly signed
    */
   loadManifest: function AI_loadManifest(aCallback) {
+    function addRepositoryData(aAddon) {
+      // Try to load from the existing cache first
+      AddonRepository.getCachedAddonByID(aAddon.id, function(aRepoAddon) {
+        if (aRepoAddon) {
+          aAddon._repositoryAddon = aRepoAddon;
+          aCallback();
+          return;
+        }
+
+        // It wasn't there so try to re-download it
+        AddonRepository.cacheAddons([aAddon.id], function() {
+          AddonRepository.getCachedAddonByID(aAddon.id, function(aRepoAddon) {
+            aAddon._repositoryAddon = aRepoAddon;
+            aCallback();
+          });
+        });
+      });
+    }
+
     let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
                     createInstance(Ci.nsIZipReader);
     try {
@@ -4599,7 +4618,10 @@ AddonInstall.prototype = {
     }
 
     if (this.addon.type == "multipackage") {
-      this.loadMultipackageManifests(zipreader, aCallback);
+      let self = this;
+      this.loadMultipackageManifests(zipreader, function() {
+        addRepositoryData(self.addon);
+      });
       return;
     }
 
@@ -4618,7 +4640,7 @@ AddonInstall.prototype = {
     //if (newIcon)
     //  this.iconURL = newIcon;
 
-    aCallback();
+    addRepositoryData(this.addon);
   },
 
   observe: function AI_observe(aSubject, aTopic, aData) {
