@@ -43,14 +43,11 @@ var Feedback = {
     // A simple frame script to fill in the referrer page
     messageManager.loadFrameScript("data:,addMessageListener('Feedback:InitPage', function(m) { content.document.getElementById('id_url').value = m.json.referrer; });", true);
 
-    // Try to delay the widget initialization during startup
-    messageManager.addMessageListener("DOMContentLoaded", function() {
-      // We only want to delay one time
-      messageManager.removeMessageListener("DOMContentLoaded", arguments.callee, true);
-
-      // We unhide the panelUI so the XBL and settings can initialize
+    // Delay the widget initialization during startup.
+    window.addEventListener("UIReadyDelayed", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
       document.getElementById("feedback-container").hidden = false;
-    });
+    }, false);
   },
 
   openFeedback: function(aURL) {

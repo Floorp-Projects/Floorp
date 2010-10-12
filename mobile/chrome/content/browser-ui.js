@@ -445,14 +445,22 @@ var BrowserUI = {
     // listening AppCommand to handle special keys
     window.addEventListener("AppCommand", this, true);
 
-    // Push the panel initialization out of the startup path
-    // (Using a message because we have no good way to delay-init [Bug 535366])
+    // We can delay some initialization until after startup.  We wait until
+    // the first page is shown, then dispatch a UIReadyDelayed event.
     messageManager.addMessageListener("pageshow", function() {
       if (getBrowser().currentURI.spec == "about:blank")
         return;
 
-      // We only want to delay one time
       messageManager.removeMessageListener("pageshow", arguments.callee, true);
+
+      let event = document.createEvent("Events");
+      event.initEvent("UIReadyDelayed", true, false);
+      window.dispatchEvent(event);
+    });
+
+    // Delay the panel UI and Sync initialization.
+    window.addEventListener("UIReadyDelayed", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
 
       // We unhide the panelUI so the XBL and settings can initialize
       Elements.panelUI.hidden = false;
@@ -473,7 +481,7 @@ var BrowserUI = {
       // Init the sync system
       WeaveGlue.init();
 #endif
-    });
+    }, false);
 
     FormHelperUI.init();
     FindHelperUI.init();
