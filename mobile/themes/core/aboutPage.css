@@ -45,6 +45,21 @@
   margin: -24px 20px 0 118px;
 }
 
+#update {
+  float: right;
+  padding: 8px;
+  margin-top: -32px;
+}
+
+#update-message-checking,
+#update-message-none,
+#update-message-found {
+  display: none;
+  float: right;
+  padding: 8px;
+  margin-top: -32px;
+}
+
 #aboutLinks {
   background-color: white;
   padding: 5px;
