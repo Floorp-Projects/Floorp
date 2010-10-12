@@ -40,6 +40,7 @@ EXPORTS	= \
 	gfxUserFontSet.h \
 	GLDefs.h \
 	GLContext.h \
+	GLContextSymbols.h \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
 	nsCoreAnimationSupport.h \
