@@ -351,6 +351,8 @@ struct JSAtomState
     JSAtom              *nameAtom;
     JSAtom              *nextAtom;
     JSAtom              *noSuchMethodAtom;
+    JSAtom              *objectNullAtom;
+    JSAtom              *objectUndefinedAtom;
     JSAtom              *protoAtom;
     JSAtom              *setAtom;
     JSAtom              *sourceAtom;
