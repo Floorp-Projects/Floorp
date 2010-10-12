@@ -280,7 +280,7 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER(method, args, err_rval)                              \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
+    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return err_rval;                                                        \
@@ -292,7 +292,7 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER_VOID(method, args)                                   \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
+    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return;                                                                 \
@@ -305,12 +305,12 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER_CHROME(method, args, err_rval)                       \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
+    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return err_rval;                                                        \
     }                                                                         \
-    return ((nsGlobalChromeWindow *)outer)->method args;                      \
+    return ((nsGlobalChromeWindow *)outer.get())->method args;                \
   }                                                                           \
   PR_END_MACRO
 
@@ -328,12 +328,12 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
+    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return err_rval;                                                        \
     }                                                                         \
-    return ((nsGlobalModalWindow *)outer)->method args;                       \
+    return ((nsGlobalModalWindow *)outer.get())->method args;                 \
   }                                                                           \
   PR_END_MACRO
 
@@ -1656,8 +1656,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     Thaw();
   }
-
-  // XXX Brain transplant outer window JSObject and create new one!
 
   NS_ASSERTION(!GetCurrentInnerWindow() ||
                GetCurrentInnerWindow()->GetExtantDocument() == mDocument,
