@@ -41,6 +41,7 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
+#include "nsIMutationObserver2.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsIEventListenerManager.h"
@@ -66,6 +67,8 @@ using namespace mozilla::dom;
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
+// NOTE: AttributeChildRemoved doesn't use this macro but has a very similar use.
+// If you change how this macro behave please update AttributeChildRemoved.
 #define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
   PR_BEGIN_MACRO                                                  \
   nsINode* node = content_;                                       \
@@ -189,6 +192,32 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
                              (document, container, aChild, aIndexInContainer,
                               aPreviousSibling));
+}
+
+void
+nsNodeUtils::AttributeChildRemoved(nsINode* aAttribute,
+                                   nsIContent* aChild)
+{
+  NS_PRECONDITION(aAttribute->IsNodeOfType(nsINode::eATTRIBUTE),
+                  "container must be a nsIAttribute");
+
+  // This is a variant of IMPL_MUTATION_NOTIFICATION.
+  do {
+    nsINode::nsSlots* slots = aAttribute->GetExistingSlots();
+    if (slots && !slots->mMutationObservers.IsEmpty()) {
+      // This is a variant of NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS.
+      nsTObserverArray<nsIMutationObserver*>::ForwardIterator iter_ =
+        slots->mMutationObservers;
+      nsCOMPtr<nsIMutationObserver2> obs_;
+      while (iter_.HasMore()) {
+        obs_ = do_QueryInterface(iter_.GetNext());
+        if (obs_) {
+          obs_->AttributeChildRemoved(aAttribute, aChild);
+        }
+      }
+    }
+    aAttribute = aAttribute->GetNodeParent();
+  } while (aAttribute);
 }
 
 void

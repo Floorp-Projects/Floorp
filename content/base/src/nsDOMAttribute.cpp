@@ -263,7 +263,7 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
 
     if (mChild) {
       if (mValue.IsEmpty()) {
-        doRemoveChild();
+        doRemoveChild(true);
       } else {
         mChild->SetText(mValue, PR_FALSE);
       }
@@ -683,7 +683,7 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationE
       return NS_OK;
     }
 
-    doRemoveChild();
+    doRemoveChild(aNotify);
   }
 
   nsString nullString;
@@ -791,7 +791,7 @@ nsDOMAttribute::AttributeChanged(nsIDocument* aDocument,
   
   // Just blow away our mChild and recreate it if needed
   if (mChild) {
-    doRemoveChild();
+    doRemoveChild(true);
   }
   EnsureChildState();
 }
@@ -809,8 +809,12 @@ nsDOMAttribute::Shutdown()
 }
 
 void
-nsDOMAttribute::doRemoveChild()
+nsDOMAttribute::doRemoveChild(bool aNotify)
 {
+  if (aNotify) {
+    nsNodeUtils::AttributeChildRemoved(this, mChild);
+  }
+
   static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();
   NS_RELEASE(mChild);
   mFirstChild = nsnull;

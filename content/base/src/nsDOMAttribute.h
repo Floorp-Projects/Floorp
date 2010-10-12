@@ -140,7 +140,7 @@ private:
   /**
    * Really removing the attribute child (unbind and release).
    */
-  void doRemoveChild();
+  void doRemoveChild(bool aNotify);
 
   nsString mValue;
   // XXX For now, there's only a single child - a text element

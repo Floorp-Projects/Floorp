@@ -208,6 +208,7 @@ DOMCI_DATA(NodeIterator, nsNodeIterator)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMNodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIMutationObserver2)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeIterator)
     NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NodeIterator)
 NS_INTERFACE_MAP_END
@@ -345,3 +346,11 @@ void nsNodeIterator::ContentRemoved(nsIDocument *aDocument,
     mPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
     mWorkingPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
 }
+
+void nsNodeIterator::AttributeChildRemoved(nsINode* aAttribute,
+                                           nsIContent* aChild)
+{
+  mPointer.AdjustAfterRemoval(mRoot, aAttribute, aChild, 0);
+  mWorkingPointer.AdjustAfterRemoval(mRoot, aAttribute, aChild, 0);
+}
+
