@@ -57,8 +57,13 @@
 /**
  * When we store overflow areas as an array of scrollable and visual
  * overflow, we use these indices.
+ *
+ * eOverflowType_LENGTH is needed (for gcc 4.5.*, at least) to ensure
+ * that 2 is a valid value of nsOverflowType for use in
+ * NS_FOR_FRAME_OVERFLOW_TYPES.
  */
-enum nsOverflowType { eVisualOverflow, eScrollableOverflow };
+enum nsOverflowType { eVisualOverflow, eScrollableOverflow,
+                      eOverflowType_LENGTH };
 
 #define NS_FOR_FRAME_OVERFLOW_TYPES(var_)                                     \
   for (nsOverflowType var_ = nsOverflowType(0); var_ < 2;                     \
