@@ -3534,15 +3534,10 @@
       <![CDATA[
         var tab = event.target.tab;
         if (tab) {
-          var statusText = tab.linkedBrowser.currentURI.spec;
-          if (statusText == "about:blank") {
-            // XXXhack: Passing a space here (and not "")
-            // to make sure the the browser implementation would
-            // still consider it a hovered link.
-            statusText = " ";
-          }
-
-          XULBrowserWindow.setOverLink(statusText, null);
+          let overLink = tab.linkedBrowser.currentURI.spec;
+          if (overLink == "about:blank")
+            overLink = "";
+          XULBrowserWindow.setOverLink(overLink, null);
         }
       ]]></handler>
 
