@@ -3081,7 +3081,7 @@ public:
             JS_ASSERT(p == fp->addressOfScopeChain());
             if (frameobj->isCall() &&
                 !frameobj->getPrivate() &&
-                &fp->callee() == &frameobj->getCallObjCallee())
+                fp->maybeCallee() == frameobj->getCallObjCallee())
             {
                 JS_ASSERT(&fp->scopeChain() == JSStackFrame::sInvalidScopeChain);
                 frameobj->setPrivate(fp);

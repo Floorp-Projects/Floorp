@@ -2071,8 +2071,22 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
  * Try to convert a *NAME op to a *GNAME op, which optimizes access to
  * undeclared globals. Return true if a conversion was made.
  *
- * This conversion is not made if we are in strict mode, because the
- * access to an undeclared global would be an error.
+ * This conversion is not made if we are in strict mode.  In eval code nested
+ * within (strict mode) eval code, access to an undeclared "global" might
+ * merely be to a binding local to that outer eval:
+ *
+ *   "use strict";
+ *   var x = "global";
+ *   eval('var x = "eval"; eval("x");'); // 'eval', not 'global'
+ *
+ * Outside eval code, access to an undeclared global is a strict mode error:
+ *
+ *   "use strict";
+ *   function foo()
+ *   {
+ *     undeclared = 17; // throws ReferenceError
+ *   }
+ *   foo();
  */
 static bool
 TryConvertToGname(JSCodeGenerator *cg, JSParseNode *pn, JSOp *op)

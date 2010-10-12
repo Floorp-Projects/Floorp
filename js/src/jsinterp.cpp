@@ -921,6 +921,9 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (!cx->stack().getExecuteFrame(cx, script, &frame))
         return false;
 
+    /* Initialize fixed slots (GVAR ops expect NULL). */
+    SetValueRangeToNull(frame.fp()->slots(), script->nfixed);
+
     /* Initialize frame and locals. */
     JSObject *initialVarObj;
     if (prev) {
@@ -953,14 +956,25 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
             return false;
         frame.fp()->globalThis().setObject(*thisp);
 
-        initialVarObj = (cx->options & JSOPTION_VAROBJFIX)
-                        ? chain->getGlobal()
-                        : chain;
+        initialVarObj = (cx->options & JSOPTION_VAROBJFIX) ? chain->getGlobal() : chain;
+    }
+
+    /*
+     * Strict mode eval code receives its own, fresh lexical environment; thus
+     * strict mode eval can't mutate its calling frame's binding set.
+     */
+    if (script->strictModeCode) {
+        initialVarObj = NewCallObject(cx, &script->bindings, *initialVarObj, NULL);
+        if (!initialVarObj)
+            return false;
+        initialVarObj->setPrivate(frame.fp());
+
+        /* Clear the Call object propagated from the previous frame, if any. */
+        if (frame.fp()->hasCallObj())
+            frame.fp()->clearCallObj();
+        frame.fp()->setScopeChainAndCallObj(*initialVarObj);
     }
     JS_ASSERT(!initialVarObj->getOps()->defineProperty);
-
-    /* Initialize fixed slots (GVAR ops expect NULL). */
-    SetValueRangeToNull(frame.fp()->slots(), script->nfixed);
 
 #if JS_HAS_SHARP_VARS
     JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
