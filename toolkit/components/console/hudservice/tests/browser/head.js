@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,14 +70,50 @@ function addTab(aURL)
   browser = gBrowser.getBrowserForTab(tab);
 }
 
-function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
+/**
+ * Check if a log entry exists in the HUD output node.
+ *
+ * @param {Element} aOutputNode
+ *        the HUD output node.
+ * @param {string} aMatchString
+ *        the string you want to check if it exists in the output node.
+ * @param {boolean} [aOnlyVisible=false]
+ *        find only messages that are visible, not hidden by the filter.
+ * @param {boolean} [aFailIfFound=false]
+ *        fail the test if the string is found in the output node.
+ */
+function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj, aOnlyVisible,
+                      aFailIfFound)
 {
-  var message = aOutputNode.textContent.indexOf(aMatchString);
+  let found = true;
+  let notfound = false;
+  let foundMsg = aSuccessErrObj.success;
+  let notfoundMsg = aSuccessErrObj.err;
+
+  if (aFailIfFound) {
+    found = false;
+    notfound = true;
+    foundMsg = aSuccessErrObj.err;
+    notfoundMsg = aSuccessErrObj.success;
+  }
+
+  let selector = ".hud-group > *";
+
+  // Skip entries that are hidden by the filter.
+  if (aOnlyVisible) {
+    selector += ":not(.hud-filtered-by-type)";
+  }
+
+  let msgs = aOutputNode.querySelectorAll(selector);
+  for (let i = 0, n = msgs.length; i < n; i++) {
+    let message = msgs[i].textContent.indexOf(aMatchString);
   if (message > -1) {
-    ok(true, aSuccessErrObj.success);
+      ok(found, foundMsg);
     return;
   }
-  ok(false, aSuccessErrObj.err);
+  }
+
+  ok(notfound, notfoundMsg);
 }
 
 function openConsole()
