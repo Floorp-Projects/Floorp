@@ -121,16 +121,10 @@ FrameState::evictReg(RegisterID reg)
     FrameEntry *fe = regstate[reg].fe();
 
     if (regstate[reg].type() == RematInfo::TYPE) {
-        if (!fe->type.synced()) {
-            syncType(fe, addressOf(fe), masm);
-            fe->type.sync();
-        }
+        ensureTypeSynced(fe, masm);
         fe->type.setMemory();
     } else {
-        if (!fe->data.synced()) {
-            syncData(fe, addressOf(fe), masm);
-            fe->data.sync();
-        }
+        ensureDataSynced(fe, masm);
         fe->data.setMemory();
     }
 }
@@ -441,23 +435,34 @@ FrameState::sync(Assembler &masm, Uses uses) const
         return;
 
     /* Sync all registers up-front. */
-    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
-        RegisterID reg = RegisterID(i);
+    Registers allRegs(Registers::AvailRegs);
+    while (!allRegs.empty()) {
+        RegisterID reg = allRegs.takeAnyReg();
         FrameEntry *fe = regstate[reg].usedBy();
         if (!fe)
             continue;
 
         JS_ASSERT(fe->isTracked());
 
+#if defined JS_PUNBOX64
+        /* Sync entire FE to prevent loads. */
+        ensureFeSynced(fe, masm);
+
+        /* Take the other register in the pair, if one exists. */
+        if (regstate[reg].type() == RematInfo::DATA && fe->type.inRegister())
+            allRegs.takeReg(fe->type.reg());
+        else if (regstate[reg].type() == RematInfo::TYPE && fe->data.inRegister())
+            allRegs.takeReg(fe->data.reg());
+#elif defined JS_NUNBOX32
+        /* Sync register if unsynced. */
         if (regstate[reg].type() == RematInfo::DATA) {
             JS_ASSERT(fe->data.reg() == reg);
-            if (!fe->data.synced())
-                syncData(fe, addressOf(fe), masm);
+            ensureDataSynced(fe, masm);
         } else {
             JS_ASSERT(fe->type.reg() == reg);
-            if (!fe->type.synced())
-                syncType(fe, addressOf(fe), masm);
+            ensureTypeSynced(fe, masm);
         }
+#endif
     }
 
     /*
@@ -473,51 +478,37 @@ FrameState::sync(Assembler &masm, Uses uses) const
         if (!fe->isTracked())
             continue;
 
-        Address address = addressOf(fe);
+        FrameEntry *backing = fe;
 
         if (!fe->isCopy()) {
-            /*
-             * If this |fe| has registers, track them as available. They've
-             * already been synced. Otherwise, see if a constant needs to be
-             * synced.
-             */
             if (fe->data.inRegister())
                 avail.putReg(fe->data.reg());
-            else if (!fe->data.synced())
-                syncData(fe, address, masm);
-
             if (fe->type.inRegister())
                 avail.putReg(fe->type.reg());
-            else if (!fe->type.synced())
-                syncType(fe, address, masm);
         } else {
-            FrameEntry *backing = fe->copyOf();
-            JS_ASSERT(backing != fe);
+            backing = fe->copyOf();
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
 
-            /*
-             * If the copy is backed by something not in a register, fall back
-             * to a slower sync algorithm.
-             */
-            if ((!fe->type.synced() && !backing->type.inRegister()) ||
-                (!fe->data.synced() && !backing->data.inRegister())) {
+            /* Fall back to a slower sync algorithm if load required. */
+            if ((!fe->type.synced() && backing->type.inMemory()) ||
+                (!fe->data.synced() && backing->data.inMemory())) {
                 syncFancy(masm, avail, fe, bottom);
                 return;
             }
-
-            if (!fe->type.synced()) {
-                /* :TODO: we can do better, the type is learned for all copies. */
-                if (fe->isTypeKnown()) {
-                    //JS_ASSERT(fe->getTypeTag() == backing->getTypeTag());
-                    masm.storeTypeTag(ImmType(fe->getKnownType()), address);
-                } else {
-                    masm.storeTypeTag(backing->type.reg(), address);
-                }
-            }
-
-            if (!fe->data.synced())
-                masm.storePayload(backing->data.reg(), address);
         }
+
+        /* If a part still needs syncing, it is either a copy or constant. */
+#if defined JS_PUNBOX64
+        /* All register-backed FEs have been entirely synced up-front. */
+        if (!fe->type.inRegister() && !fe->data.inRegister())
+            ensureFeSynced(fe, masm);
+#elif defined JS_NUNBOX32
+        /* All components held in registers have been already synced. */
+        if (!fe->data.inRegister())
+            ensureDataSynced(fe, masm);
+        if (!fe->type.inRegister())
+            ensureTypeSynced(fe, masm);
+#endif
     }
 }
 
@@ -536,19 +527,35 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
 
         JS_ASSERT(fe->isTracked());
 
+#if defined JS_PUNBOX64
+        /* Don't use syncFe(), since that may clobber more registers. */
+        ensureFeSynced(fe, masm);
+
+        if (!fe->type.synced())
+            fe->type.sync();
+        if (!fe->data.synced())
+            fe->data.sync();
+
+        /* Take the other register in the pair, if one exists. */
         if (regstate[reg].type() == RematInfo::DATA) {
             JS_ASSERT(fe->data.reg() == reg);
-            if (!fe->data.synced()) {
-                syncData(fe, addressOf(fe), masm);
-                fe->data.sync();
-            }
+            if (fe->type.inRegister() && search.hasReg(fe->type.reg()))
+                search.takeReg(fe->type.reg());
         } else {
             JS_ASSERT(fe->type.reg() == reg);
-            if (!fe->type.synced()) {
-                syncType(fe, addressOf(fe), masm);
-                fe->type.sync();
-            }
+            if (fe->data.inRegister() && search.hasReg(fe->data.reg()))
+                search.takeReg(fe->data.reg());
         }
+#elif defined JS_NUNBOX32
+        /* Sync this register. */
+        if (regstate[reg].type() == RematInfo::DATA) {
+            JS_ASSERT(fe->data.reg() == reg);
+            syncData(fe);
+        } else {
+            JS_ASSERT(fe->type.reg() == reg);
+            syncType(fe);
+        }
+#endif
     }
 
     uint32 maxvisits = tracker.nentries;
@@ -563,31 +570,18 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
         if (fe >= spStop)
             continue;
 
-        Address address = addressOf(fe);
-        FrameEntry *backing = fe;
+        syncFe(fe);
 
-        if (fe->isCopy())
-            backing = fe->copyOf();
-
-        if (!fe->data.synced()) {
-            if (backing != fe && backing->data.inMemory())
-                tempRegForData(backing);
-            syncData(backing, address, masm);
-            fe->data.sync();
-            if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
-                forgetReg(fe->data.reg());
-                fe->data.setMemory();
-            }
+        /* Forget registers. */
+        if (fe->data.inRegister() && kill.hasReg(fe->data.reg()) &&
+            !regstate[fe->data.reg()].isPinned()) {
+            forgetReg(fe->data.reg());
+            fe->data.setMemory();
         }
-        if (!fe->type.synced()) {
-            if (backing != fe && backing->type.inMemory())
-                tempRegForType(backing);
-            syncType(backing, address, masm);
-            fe->type.sync();
-            if (fe->type.inRegister() && kill.hasReg(fe->type.reg())) {
-                forgetReg(fe->type.reg());
-                fe->type.setMemory();
-            }
+        if (fe->type.inRegister() && kill.hasReg(fe->type.reg()) &&
+            !regstate[fe->type.reg()].isPinned()) {
+            forgetReg(fe->type.reg());
+            fe->type.setMemory();
         }
     }
 
@@ -669,8 +663,7 @@ FrameState::copyDataIntoReg(FrameEntry *fe, RegisterID hint)
     RegisterID reg = fe->data.reg();
     if (reg == hint) {
         if (freeRegs.empty()) {
-            if (!fe->data.synced())
-                syncData(fe, addressOf(fe), masm);
+            ensureDataSynced(fe, masm);
             fe->data.setMemory();
         } else {
             reg = allocReg();
@@ -698,8 +691,7 @@ FrameState::copyDataIntoReg(Assembler &masm, FrameEntry *fe)
     if (fe->data.inRegister()) {
         RegisterID reg = fe->data.reg();
         if (freeRegs.empty()) {
-            if (!fe->data.synced())
-                syncData(fe, addressOf(fe), masm);
+            ensureDataSynced(fe, masm);
             fe->data.setMemory();
             regstate[reg].forget();
         } else {
@@ -731,8 +723,7 @@ FrameState::copyTypeIntoReg(FrameEntry *fe)
     if (fe->type.inRegister()) {
         RegisterID reg = fe->type.reg();
         if (freeRegs.empty()) {
-            if (!fe->type.synced())
-                syncType(fe, addressOf(fe), masm);
+            ensureTypeSynced(fe, masm);
             fe->type.setMemory();
             regstate[reg].forget();
         } else {
@@ -784,13 +775,9 @@ FrameState::copyEntryIntoFPReg(Assembler &masm, FrameEntry *fe, FPRegisterID fpr
     if (fe->isCopy())
         fe = fe->copyOf();
 
-    /* The entry must be synced to memory. */
-    if (!fe->data.synced())
-        syncData(fe, addressOf(fe), masm);
-    if (!fe->type.synced())
-        syncType(fe, addressOf(fe), masm);
-
+    ensureFeSynced(fe, masm);
     masm.loadDouble(addressOf(fe), fpreg);
+
     return fpreg;
 }
 
@@ -810,8 +797,7 @@ FrameState::ownRegForType(FrameEntry *fe)
 
         if (freeRegs.empty()) {
             /* For now... just steal the register that already exists. */
-            if (!backing->type.synced())
-                syncType(backing, addressOf(backing), masm);
+            ensureTypeSynced(backing, masm);
             reg = backing->type.reg();
             backing->type.setMemory();
             regstate[reg].forget();
@@ -854,8 +840,7 @@ FrameState::ownRegForData(FrameEntry *fe)
 
         if (freeRegs.empty()) {
             /* For now... just steal the register that already exists. */
-            if (!backing->data.synced())
-                syncData(backing, addressOf(backing), masm);
+            ensureDataSynced(backing, masm);
             reg = backing->data.reg();
             backing->data.setMemory();
             regstate[reg].forget();
@@ -1106,33 +1091,14 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         return;
 
     /* Ensure that the local variable remains synced. */
-    if (local->isCopy()) {
-        FrameEntry *backing = local->copyOf();
-        if (!local->data.synced()) {
-            if (backing->data.inMemory())
-                tempRegForData(backing);
-            syncData(backing, addressOf(local), masm);
-        }
-        if (!local->type.synced()) {
-            if (backing->type.inMemory())
-                tempRegForType(backing);
-            syncType(backing, addressOf(local), masm);
-        }
-    } else {
-        if (!local->data.synced()) {
-            syncData(local, addressOf(local), masm);
-            local->data.sync();
-        }
-        if (!local->type.synced()) {
-            syncType(local, addressOf(local), masm);
-            local->type.sync();
-        }
-        if (closed)
-            forgetEntry(local);
-    }
+    syncFe(local);
 
-    if (closed)
+    if (closed) {
+        /* If the FE can have registers, free them before resetting. */
+        if (!local->isCopy())
+            forgetEntry(local);
         local->resetSynced();
+    }
 }
 
 void
@@ -1336,7 +1302,7 @@ FrameState::unpinEntry(const ValueRemat &vr)
 }
 
 void
-FrameState::syncEntry(Assembler &masm, FrameEntry *fe, const ValueRemat &vr)
+FrameState::ensureValueSynced(Assembler &masm, FrameEntry *fe, const ValueRemat &vr)
 {
 #if defined JS_PUNBOX64
     if (!vr.isDataSynced || !vr.isTypeSynced)
