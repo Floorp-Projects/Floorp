@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Drew Willcoxon <adw@mozilla.com>
+ *   Drew Willcoxon <adw@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +47,9 @@ var gTestIter;
 let gTests = [
 
   function smokeTestGenerator() {
+    // Make sure the location bar is not focused.
+    gBrowser.contentWindow.focus();
+
     if (ensureOverLinkHidden())
       yield;
 
@@ -60,29 +63,25 @@ let gTests = [
   },
 
   function hostPathLabels() {
-    setOverLink("http://example.com/");
+    updateOverLink("http://example.com/");
     hostLabelIs("http://example.com/");
     pathLabelIs("");
 
-    setOverLink("http://example.com/foo");
+    updateOverLink("http://example.com/foo");
     hostLabelIs("http://example.com/");
     pathLabelIs("foo");
 
-    setOverLink("javascript:popup('http://example.com/')");
+    updateOverLink("javascript:popup('http://example.com/')");
     hostLabelIs("");
     pathLabelIs("javascript:popup('http://example.com/')");
 
-    setOverLink("javascript:popup('http://example.com/foo')");
+    updateOverLink("javascript:popup('http://example.com/foo')");
     hostLabelIs("");
     pathLabelIs("javascript:popup('http://example.com/foo')");
 
-    setOverLink("about:home");
+    updateOverLink("about:home");
     hostLabelIs("");
     pathLabelIs("about:home");
-
-    // Clean up after ourselves.
-    if (ensureOverLinkHidden())
-      yield;
   }
 
 ];
@@ -164,9 +163,22 @@ function checkURLBar(shouldShowOverLink) {
  *        The over-link will be set to this string or cleared if this is falsey.
  */
 function setOverLinkWait(str) {
+  dump("Setting over-link and waiting: " + str + "\n");
+
   let overLink = gURLBar._overLinkBox;
+  let opacity = window.getComputedStyle(overLink, null).opacity;
+  dump("Opacity is " + opacity + "\n");
+
+  ok(str || opacity != 0,
+     "Test assumption: either showing or if hiding, not already hidden");
+  ok(!str || opacity != 1,
+     "Test assumption: either hiding or if showing, not already shown");
+
   overLink.addEventListener("transitionend", function onTrans(event) {
+    dump("transitionend received: " + (event.target == overLink) + " " +
+         event.propertyName + "\n");
     if (event.target == overLink && event.propertyName == "opacity") {
+      dump("target transitionend received\n");
       overLink.removeEventListener("transitionend", onTrans, false);
       cont();
     }
@@ -182,7 +194,30 @@ function setOverLinkWait(str) {
  *        The over-link will be set to this string or cleared if this is falsey.
  */
 function setOverLink(str) {
+  dump("Setting over-link but not waiting: " + str + "\n");
+
+  let overLink = gURLBar._overLinkBox;
+  let opacity = window.getComputedStyle(overLink, null).opacity;
+  dump("Opacity is " + opacity + "\n");
+
+  ok(str || opacity == 0,
+     "Test assumption: either showing or if hiding, already hidden");
+  ok(!str || opacity == 1,
+     "Test assumption: either hiding or if showing, already shown");
+
   gURLBar.setOverLink(str);
+}
+
+/**
+ * Calls gURLBar._updateOverLink(str), which updates the over-link but does not
+ * change its visibility.
+ *
+ * @param str
+ *        The over-link will be set to this string.  Note that setting this to
+ *        falsey doesn't make sense for this function.
+ */
+function updateOverLink(str) {
+  gURLBar._updateOverLink(str);
 }
 
 /**
@@ -193,11 +228,14 @@ function setOverLink(str) {
  * @return True if you should yield and calling and false if not.
  */
 function ensureOverLinkHidden() {
+  dump("Ensuring over-link is hidden" + "\n");
+
   let overLink = gURLBar._overLinkBox;
-  if (window.getComputedStyle(overLink, null).opacity == 0) {
-    setOverLink("");
+  let opacity = window.getComputedStyle(overLink, null).opacity;
+  dump("Opacity is " + opacity + "\n");
+
+  if (opacity == 0)
     return false;
-  }
 
   setOverLinkWait("");
   return true;

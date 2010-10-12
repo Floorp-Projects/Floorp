@@ -118,6 +118,7 @@
         this.inputField.addEventListener("mouseout", this, false);
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
+        this._overLinkBox.addEventListener("transitionend", this, false);
 
         const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         var textBox = document.getAnonymousElementByAttribute(this,
@@ -160,6 +161,7 @@
         this.inputField.removeEventListener("mouseout", this, false);
         this.inputField.removeEventListener("overflow", this, false);
         this.inputField.removeEventListener("underflow", this, false);
+        this._overLinkBox.removeEventListener("transitionend", this, false);
       ]]></destructor>
 
       <field name="_value"></field>
@@ -529,6 +531,12 @@
               this._contentIsCropped = false;
               this._hideURLTooltip();
               break;
+            case "transitionend":
+              if (aEvent.target == this._overLinkBox &&
+                  aEvent.propertyName == "opacity") {
+                this._overLinkTransitioning = false;
+              }
+              break;
           }
         ]]></body>
       </method>
@@ -595,7 +603,11 @@
                                                 "textbox-container");
       ]]></field>
 
-      <field name="_overLinkDelay" readonly="true"><![CDATA[
+      <field name="_overLinkInDelay" readonly="true"><![CDATA[
+        100
+      ]]></field>
+
+      <field name="_overLinkOutDelay" readonly="true"><![CDATA[
         100
       ]]></field>
 
@@ -606,7 +618,7 @@
       <method name="setOverLink">
         <parameter name="aURL"/>
         <body><![CDATA[
-          // If the over-link is already scheduled to fade-in, cancel it.
+          // If the over-link is already scheduled to appear or hide, cancel it.
           if (this._overLinkDelayTimer) {
             clearTimeout(this._overLinkDelayTimer);
             delete this._overLinkDelayTimer;
@@ -614,12 +626,39 @@
 
           // Hide the over-link if aURL is falsey or if the URL bar is focused.
           if (!aURL || this.focused) {
-            // Over-link is fading in or showing.  Fade out.
-            if (this.hasAttribute("overlinkstate"))
-              this.removeAttribute("overlinkstate");
+            this._overLinkDelayTimer = setTimeout(function overLinkOut(self) {
+              delete self._overLinkDelayTimer;
+              let style = window.getComputedStyle(self._overLinkBox, null);
+              self._overLinkTransitioning = style.opacity != 0;
+              self.removeAttribute("overlinkstate");
+            }, this._overLinkOutDelay, this);
             return;
           }
 
+          // If it's in transition, update and show it immediately.
+          if (this._overLinkTransitioning) {
+            this._updateOverLink(aURL);
+            this._overLinkTransitioning = false;
+            this.setAttribute("overlinkstate", "showing");
+            return;
+          }
+
+          // Delay the update if it's hidden or shown.  We delay when shown in
+          // part for performance reasons: otherwise mousing over the bookmarks
+          // menu for example is very laggy.
+          this._overLinkDelayTimer = setTimeout(function overLinkIn(self) {
+            delete self._overLinkDelayTimer;
+            self._updateOverLink(aURL);
+            let style = window.getComputedStyle(self._overLinkBox, null);
+            self._overLinkTransitioning = style.opacity != 1;
+            self.setAttribute("overlinkstate", "fade-in");
+          }, this._overLinkInDelay, this);
+        ]]></body>
+      </method>
+
+      <method name="_updateOverLink">
+        <parameter name="aURL"/>
+        <body><![CDATA[
           // Get the width of the bar before we go modifying it.
           var barWidth = this._stack.boxObject.width;
 
@@ -662,21 +701,6 @@
           }
 
           this._originLabel.value = this.value;
-
-          // Finally, show the over-link.
-          if (window.getComputedStyle(overLink, null).opacity != 0) {
-            // It's currently becoming transparent, becoming opaque, or is
-            // opaque.  Show it immediately.
-            this.setAttribute("overlinkstate", "showing");
-          }
-          else {
-            // It's not showing at all.  Start fade-in after some delay.
-            this._overLinkDelayTimer =
-              setTimeout(function overLinkDelayTimer(self) {
-                delete self._overLinkDelayTimer;
-                self.setAttribute("overlinkstate", "fade-in");
-              }, this._overLinkDelay, this);
-          }
         ]]></body>
       </method>
     </implementation>
