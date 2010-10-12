@@ -109,7 +109,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
 
     // We know that DOM objects only allow one object, we can return early.
-    if (wn->GetProto()->ClassIsDOMObject())
+    if (wn->HasProto() && wn->GetProto()->ClassIsDOMObject())
         return DoubleWrap(cx, obj, flags);
 
     XPCCallContext ccx(JS_CALLER, cx, obj);
