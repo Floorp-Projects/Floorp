@@ -168,12 +168,12 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     JSObject *xrayHolder = nsnull;
 
     JSWrapper *wrapper;
+    CompartmentPrivate *targetdata = static_cast<CompartmentPrivate *>(target->data);
     if (AccessCheck::isChrome(target)) {
         if (AccessCheck::isChrome(origin)) {
             // Same origin we use a transparent wrapper, unless the compartment asks
             // for an Xray.
-            if (static_cast<xpc::CompartmentPrivate*>(target->data)->preferXrays &&
-                IS_WN_WRAPPER(obj)) {
+            if (targetdata && targetdata->preferXrays && IS_WN_WRAPPER(obj)) {
                 typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
                 wrapper = &Xray::singleton;
                 xrayHolder = Xray::createHolder(cx, obj, parent);
@@ -208,8 +208,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
-        } else if (static_cast<xpc::CompartmentPrivate*>(target->data)->preferXrays &&
-                   IS_WN_WRAPPER(obj)) {
+        } else if (targetdata && targetdata->preferXrays && IS_WN_WRAPPER(obj)) {
             typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
             wrapper = &Xray::singleton;
             xrayHolder = Xray::createHolder(cx, obj, parent);
