@@ -9698,8 +9698,7 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
   // not the 'this' parameter that the JS engine passes in. Pass in
   // the real this parameter from JS (argv[-1]) here.
   JSAutoRequest ar(cx);
-  *_retval = ::JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(argv[-1]),
-                                    OBJECT_TO_JSVAL(pi_obj), argc, argv, vp);
+  *_retval = ::JS::Call(cx, argv[-1], pi_obj, argc, argv, vp);
 
   return NS_OK;
 }
