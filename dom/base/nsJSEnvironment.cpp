@@ -173,6 +173,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 // CC will be called if there are at least NS_MAX_SUSPECT_CHANGES new suspected
 // objects.
 #define NS_MAX_SUSPECT_CHANGES      100
+// When CCIfUserInactive(PR_FALSE, PR_TRUE) is called, CC is called 
+// if there are at least NS_MIN_INACTIVE_SUSPECT_CHANGES new suspected objects. 
+#define NS_MIN_INACTIVE_SUSPECT_CHANGES 1000
 
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
@@ -3527,10 +3530,14 @@ nsJSContext::CC(nsICycleCollectorListener *aListener)
   sCCSuspectChanges = 0;
   // nsCycleCollector_collect() no longer forces a JS garbage collection,
   // so we have to do it ourselves here.
-  nsContentUtils::XPConnect()->GarbageCollect();
+  if (nsContentUtils::XPConnect()) {
+    nsContentUtils::XPConnect()->GarbageCollect();
+  }
   sCollectedObjectsCounts = nsCycleCollector_collect(aListener);
   sCCSuspectedCount = nsCycleCollector_suspectedCount();
-  sSavedGCCount = JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER);
+  if (nsJSRuntime::sRuntime) {
+    sSavedGCCount = JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER);
+  }
 #ifdef DEBUG_smaug
   printf("Collected %u objects, %u suspected objects, took %lldms\n",
          sCollectedObjectsCounts, sCCSuspectedCount,
@@ -3601,11 +3608,22 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
 
 //static
 void
-nsJSContext::CCIfUserInactive()
+nsJSContext::CCIfUserInactive(PRBool aOrMaybeCC,
+                              PRBool aOnlyIfNewSuspectedObjects)
 {
   if (sUserIsActive) {
-    MaybeCC(PR_TRUE);
-  } else {
+    if (aOrMaybeCC) {
+      MaybeCC(PR_TRUE);
+    }
+  } else if (!aOnlyIfNewSuspectedObjects ||
+             ((nsCycleCollector_suspectedCount() - sCCSuspectedCount) >
+              NS_MIN_INACTIVE_SUSPECT_CHANGES)) {
+#ifdef DEBUG_smaug
+    if (aOnlyIfNewSuspectedObjects) {
+      printf("CCIfUserInactive, %u suspected changes\n",
+             nsCycleCollector_suspectedCount() - sCCSuspectedCount);
+    }
+#endif
     IntervalCC();
   }
 }
@@ -3817,7 +3835,7 @@ nsJSRuntime::Startup()
   sDelayedCCollectCount = 0;
   sCCollectCount = 0;
   sUserIsActive = PR_FALSE;
-  sPreviousCCTime = 0;
+  sPreviousCCTime = PR_Now();
   sCollectedObjectsCounts = 0;
   sSavedGCCount = 0;
   sCCSuspectChanges = 0;
