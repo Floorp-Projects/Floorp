@@ -3817,7 +3817,7 @@ nsJSRuntime::Startup()
   sDelayedCCollectCount = 0;
   sCCollectCount = 0;
   sUserIsActive = PR_FALSE;
-  sPreviousCCTime = PR_Now();
+  sPreviousCCTime = 0;
   sCollectedObjectsCounts = 0;
   sSavedGCCount = 0;
   sCCSuspectChanges = 0;
