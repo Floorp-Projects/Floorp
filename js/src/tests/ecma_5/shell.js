@@ -1,41 +1,120 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/
+ */
+
+
+/*
+ * Return true if both of these return true:
+ * - LENIENT_PRED applied to CODE
+ * - STRICT_PRED applied to CODE with a use strict directive added to the front
  *
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * Run STRICT_PRED first, for testing code that affects the global environment
+ * in loose mode, but fails in strict mode.
+ */
+function testLenientAndStrict(code, lenient_pred, strict_pred) {
+  return (strict_pred("'use strict'; " + code) && 
+          lenient_pred(code));
+}
+
+/*
+ * completesNormally(CODE) returns true if evaluating CODE (as eval
+ * code) completes normally (rather than throwing an exception).
+ */
+function completesNormally(code) {
+  try {
+    eval(code);
+    return true;
+  } catch (exception) {
+    return false;
+  }
+}
+
+/*
+ * returns(VALUE)(CODE) returns true if evaluating CODE (as eval code)
+ * completes normally (rather than throwing an exception), yielding a value
+ * strictly equal to VALUE.
+ */
+function returns(value) {
+  return function(code) {
+    try {
+      return eval(code) === value;
+    } catch (exception) {
+      return false;
+    }
+  }
+}
+
+/*
+ * returnsCopyOf(VALUE)(CODE) returns true if evaluating CODE (as eval code)
+ * completes normally (rather than throwing an exception), yielding a value
+ * that is deepEqual to VALUE.
+ */
+function returnsCopyOf(value) {
+  return function(code) {
+    try {
+      return deepEqual(eval(code), value);
+    } catch (exception) {
+      return false;
+    }
+  }
+}
+
+/*
+ * raisesException(EXCEPTION)(CODE) returns true if evaluating CODE (as
+ * eval code) throws an exception object that is an instance of EXCEPTION,
+ * and returns false if it throws any other error or evaluates
+ * successfully. For example: raises(TypeError)("0()") == true.
+ */
+function raisesException(exception) {
+  return function (code) {
+    try {
+      eval(code);
+      return false;
+    } catch (actual) {
+      return actual instanceof exception;
+    }
+  };
+};
+
+/*
+ * parsesSuccessfully(CODE) returns true if CODE parses as function
+ * code without an error.
+ */
+function parsesSuccessfully(code) {
+  try {
+    Function(code);
+    return true;
+  } catch (exception) {
+    return false;
+  }
+};
+
+/*
+ * parseRaisesException(EXCEPTION)(CODE) returns true if parsing CODE
+ * as function code raises EXCEPTION.
+ */
+function parseRaisesException(exception) {
+  return function (code) {
+    try {
+      Function(code);
+      return false;
+    } catch (actual) {
+      return actual instanceof exception;
+    }
+  };
+};
+
+/*
+ * Return the result of applying uneval to VAL, and replacing all runs
+ * of whitespace with a single horizontal space (poor man's
+ * tokenization).
+ */
+function clean_uneval(val) {
+  return uneval(val).replace(/\s+/g, ' ');
+}
 
 /*
  * Return true if A is equal to B, where equality on arrays and objects

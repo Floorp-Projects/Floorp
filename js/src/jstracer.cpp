@@ -10055,29 +10055,44 @@ TraceRecorder::getThis(LIns*& this_ins)
     }
 
     JS_ASSERT(fp->callee().getGlobal() == globalObj);    
-    const Value& thisv = fp->thisValue();
+    Value& thisv = fp->thisValue();
 
-    if (!thisv.isUndefined()) {
+    if (fp->fun()->inStrictMode() || thisv.isObject()) {
         /*
-         * fp->argv[-1] has already been computed. Since the type-specialization
-         * of traces distinguishes between |undefined| and objects, the same will be
-         * true at run time (or we won't get this far).
+         * fp->thisValue() has already been computed. Since the
+         * type-specialization of traces distinguishes between computed and
+         * uncomputed |this|, the same will be true at run time (or we
+         * won't get this far).
          */
         this_ins = get(&fp->thisValue());
         return RECORD_CONTINUE;
     }
 
+    /* Don't bother tracing calls on wrapped primitive |this| values. */
+    if (!thisv.isNullOrUndefined())
+        RETURN_STOP("wrapping primitive |this|");
+
     /*
-     * Compute 'this' now. The result is globalObj->thisObject(),
-     * which is trace-constant. getThisObject writes back to fp->argv[-1],
-     * so do the same on trace.
+     * Compute 'this' now. The result is globalObj->thisObject(), which is
+     * trace-constant. getThisObject writes back to fp->thisValue(), so do
+     * the same on trace.
      */
-    JSObject *obj = fp->computeThisObject(cx);
-    if (!obj)
-        RETURN_ERROR("getThisObject failed");
-    JS_ASSERT(&fp->thisValue().toObject() == obj);
-    this_ins = INS_CONSTOBJ(obj);
-    set(&fp->thisValue(), this_ins);
+    if (!fp->computeThis(cx))
+        RETURN_ERROR("computeThis failed");
+
+    /* thisv is a reference, so it'll see the newly computed |this|. */
+#ifdef DEBUG
+    /*
+     * Check that thisv is our global. It could be a XPCCrossOriginWrapper around an outer
+     * window object whose inner object is our global, so follow all the links as needed.
+     */
+    JS_ASSERT(thisv.isObject());
+    JSObject *thisObj = thisv.toObject().wrappedObject(cx);
+    OBJ_TO_INNER_OBJECT(cx, thisObj);
+    JS_ASSERT(thisObj == globalObj);
+#endif
+    this_ins = INS_CONSTOBJ(globalObj);
+    set(&thisv, this_ins);
     return RECORD_CONTINUE;
 }
 
@@ -15903,10 +15918,14 @@ TraceRecorder::record_JSOP_GETTHISPROP()
     CHECK_STATUS_A(getThis(this_ins));
 
     /*
-     * It's safe to just use cx->fp->thisv here because getThis() returns
+     * It's safe to just use cx->fp->thisValue() here because getThis() returns
      * ARECORD_STOP or ARECORD_ERROR if thisv is not available.
      */
-    CHECK_STATUS_A(getProp(&cx->fp()->thisValue().toObject(), this_ins));
+    const Value &thisv = cx->fp()->thisValue();
+    if (!thisv.isObject())
+        RETURN_STOP_A("primitive this for GETTHISPROP");
+
+    CHECK_STATUS_A(getProp(&thisv.toObject(), this_ins));
     return ARECORD_CONTINUE;
 }
 

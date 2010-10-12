@@ -1233,12 +1233,15 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
     return js_GetCallObject(cx, fp);
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
+JS_PUBLIC_API(JSBool)
+JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv)
 {
     if (fp->isDummyFrame())
-        return NULL;
-    return fp->computeThisObject(cx);
+        return false;
+    if (!fp->computeThis(cx))
+        return false;
+    *thisv = Jsvalify(fp->thisValue());
+    return true;
 }
 
 JS_PUBLIC_API(JSFunction *)
