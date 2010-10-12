@@ -880,7 +880,15 @@ struct JSObject : js::gc::Cell {
 
   private:
     /*
-     * Reserved slot structure for Arguments objects:
+     * Reserved slot structure for Call objects:
+     *
+     * private               - the stack frame corresponding to the Call object
+     *                         until js_PutCallObject or its on-trace analog
+     *                         is called, null thereafter
+     * JSSLOT_CALL_CALLEE    - callee function for the stack frame, or null if
+     *                         the stack frame is for strict mode eval code
+     * JSSLOT_CALL_ARGUMENTS - arguments object for non-strict mode eval stack
+     *                         frames (not valid for strict mode eval frames)
      */
     static const uint32 JSSLOT_CALL_CALLEE = 0;
     static const uint32 JSSLOT_CALL_ARGUMENTS = 1;
@@ -892,9 +900,13 @@ struct JSObject : js::gc::Cell {
     /* The stack frame for this Call object, if the frame is still active. */
     inline JSStackFrame *maybeCallObjStackFrame() const;
 
-    inline JSObject &getCallObjCallee() const;
+    /*
+     * The callee function if this Call object was created for a function
+     * invocation, or null if it was created for a strict mode eval frame.
+     */
+    inline JSObject *getCallObjCallee() const;
     inline JSFunction *getCallObjCalleeFunction() const; 
-    inline void setCallObjCallee(JSObject &callee);
+    inline void setCallObjCallee(JSObject *callee);
 
     inline const js::Value &getCallObjArguments() const;
     inline void setCallObjArguments(const js::Value &v);

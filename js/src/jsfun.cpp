@@ -941,12 +941,16 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return CheckForEscapingClosure(cx, obj, vp);
 }
 
-static JSObject *
-NewCallObject(JSContext *cx, JSFunction *fun, JSObject &scopeChain, JSObject &callee)
-{
-    Bindings &bindings = fun->script()->bindings;
+namespace js {
 
-    size_t argsVars = bindings.countArgsAndVars();
+/*
+ * Construct a call object for the given bindings.  The callee is the function
+ * on behalf of which the call object is being created.
+ */
+JSObject *
+NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject *callee)
+{
+    size_t argsVars = bindings->countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
     gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
 
@@ -956,7 +960,7 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject &scopeChain, JSObject &ca
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
     callobj->init(cx, &js_CallClass, NULL, &scopeChain, NULL, false);
-    callobj->setMap(bindings.lastShape());
+    callobj->setMap(bindings->lastShape());
 
     /* This must come after callobj->lastProp has been set. */
     if (!callobj->ensureInstanceReservedSlots(cx, argsVars))
@@ -975,6 +979,8 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject &scopeChain, JSObject &ca
     callobj->setCallObjCallee(callee);
     return callobj;
 }
+
+} // namespace js
 
 static inline JSObject *
 NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
@@ -1029,7 +1035,8 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    JSObject *callobj = NewCallObject(cx, fp->fun(), fp->scopeChain(), fp->callee());
+    JSObject *callobj =
+        NewCallObject(cx, &fp->fun()->script()->bindings, fp->scopeChain(), &fp->callee());
     if (!callobj)
         return NULL;
 
@@ -1049,7 +1056,8 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
 {
     JS_ASSERT(!js_IsNamedLambda(fun));
     JS_ASSERT(scopeChain);
-    return NewCallObject(cx, fun, *scopeChain, *callee);
+    JS_ASSERT(callee);
+    return NewCallObject(cx, &fun->script()->bindings, *scopeChain, callee);
 }
 
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT,
@@ -1208,7 +1216,10 @@ GetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
-    *vp = obj->getCallObjCallee().getFlatClosureUpvar(i);
+    JSObject *callee = obj->getCallObjCallee();
+    JS_ASSERT(callee);
+
+    *vp = callee->getFlatClosureUpvar(i);
     return true;
 }
 
@@ -1218,7 +1229,10 @@ SetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
-    Value *upvarp = &obj->getCallObjCallee().getFlatClosureUpvar(i);
+    JSObject *callee = obj->getCallObjCallee();
+    JS_ASSERT(callee);
+
+    Value *upvarp = &callee->getFlatClosureUpvar(i);
     GC_POKE(cx, *upvarp);
     *upvarp = *vp;
     return true;
@@ -1296,9 +1310,15 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JS_ASSERT(!obj->getProto());
 
     if (!JSID_IS_ATOM(id))
-        return JS_TRUE;
+        return true;
 
-    JS_ASSERT(!obj->getCallObjCalleeFunction()->script()->bindings.hasBinding(cx, JSID_TO_ATOM(id)));
+    JSObject *callee = obj->getCallObjCallee();
+#ifdef DEBUG
+    if (callee) {
+        JSScript *script = callee->getFunctionPrivate()->script();
+        JS_ASSERT(!script->bindings.hasBinding(cx, JSID_TO_ATOM(id)));
+    }
+#endif
 
     /*
      * Resolve arguments so that we never store a particular Call object's
@@ -1308,19 +1328,19 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * properties; see js::Bindings::add and js::Interpret's JSOP_DEFFUN
      * rebinding-Call-property logic.
      */
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.argumentsAtom)) {
+    if (callee && id == ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom)) {
         if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
                                      GetCallArguments, SetCallArguments,
                                      JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE,
                                      0, 0, NULL, JSDNP_DONT_PURGE)) {
-            return JS_FALSE;
+            return false;
         }
         *objp = obj;
-        return JS_TRUE;
+        return true;
     }
 
     /* Control flow reaches here only if id was not resolved. */
-    return JS_TRUE;
+    return true;
 }
 
 static void
