@@ -1972,35 +1972,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
         }
       }
 #endif
-
-      gfxTextRun* oldTextRun = f->GetTextRun();
-      if (oldTextRun && f->GetContentLength() == 0) {
-#ifdef DEBUG
-        if (oldTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
-          NS_ASSERTION(f != oldTextRun->GetUserData(),
-                       "Unexpected start frame in simple flow text run");
-        } else {
-          TextRunUserData* userData =
-            static_cast<TextRunUserData*>(oldTextRun->GetUserData());
-          for (PRUint32 i = 0; i < PRUint32(userData->mMappedFlowCount); ++i) {
-            NS_ASSERTION(f != userData->mMappedFlows[i].mStartFrame,
-                         "Unexpected start frame in multiflow text run");
-          }
-        }
-#endif
-        // empty text frame - just switch to the new textrun, see bug 571995.
-        oldTextRun = nsnull;
-      }
-
-      if (oldTextRun) {
-#ifdef DEBUG
-        for (PRUint32 i = 0; i < mBreakSinks.Length(); ++i) {
-          NS_ASSERTION(oldTextRun != mBreakSinks[i]->mTextRun,
-                       "old text run is still in use");
-        }
-#endif
-        f->ClearTextRun();
-      }
+      f->ClearTextRun();
       f->SetTextRun(aTextRun);
     }
     // Set this bit now; we can't set it any earlier because
