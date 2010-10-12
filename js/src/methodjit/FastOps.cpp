@@ -1653,13 +1653,11 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
 #elif defined JS_CPU_X64
         RegisterID maskReg = frame.allocReg();
-        frame.pinReg(maskReg);
-
         masm.move(ImmTag(known->getKnownTag()), maskReg);
+
         RegisterID r = frame.tempRegForType(test);
         masm.setPtr(cond, r, maskReg, result);
 
-        frame.unpinReg(maskReg);
         frame.freeReg(maskReg);
 #endif
         frame.popn(2);
