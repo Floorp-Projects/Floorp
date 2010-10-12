@@ -89,6 +89,11 @@
 #include "common/memory.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/guid_creator.h"
+#include "common/linux/eintr_wrapper.h"
+
+#ifndef PR_SET_PTRACER
+#define PR_SET_PTRACER 0x59616d61
+#endif
 
 // A wrapper for the tgkill syscall: send a signal to a specific thread.
 static int tgkill(pid_t tgid, pid_t tid, int sig) {
@@ -289,6 +294,11 @@ struct ThreadArgument {
 // static
 int ExceptionHandler::ThreadEntry(void *arg) {
   const ThreadArgument *thread_arg = reinterpret_cast<ThreadArgument*>(arg);
+
+  // Block here until the crashing process unblocks us when
+  // we're allowed to use ptrace
+  thread_arg->handler->WaitForContinueSignal();
+
   return thread_arg->handler->DoDump(thread_arg->pid, thread_arg->context,
                                      thread_arg->context_size) == false;
 }
@@ -343,13 +353,34 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
   thread_arg.context = context;
   thread_arg.context_size = sizeof(*context);
 
+  // We need to explicitly enable ptrace of parent processes on some
+  // kernels, but we need to know the PID of the cloned process before we
+  // can do this. Create a pipe here which we can use to block the
+  // cloned process after creating it, until we have explicitly enabled ptrace
+  if(sys_pipe(fdes) == -1) {
+    // Creating the pipe failed. We'll log an error but carry on anyway,
+    // as we'll probably still get a useful crash report. All that will happen
+    // is the write() and read() calls will fail with EBADF
+    static const char no_pipe_msg[] = "ExceptionHandler::GenerateDump \
+                                       sys_pipe failed:";
+    sys_write(2, no_pipe_msg, sizeof(no_pipe_msg) - 1);
+    sys_write(2, strerror(errno), strlen(strerror(errno)));
+    sys_write(2, "\n", 1);
+  }
+
   const pid_t child = sys_clone(
       ThreadEntry, stack, CLONE_FILES | CLONE_FS | CLONE_UNTRACED,
       &thread_arg, NULL, NULL, NULL);
   int r, status;
+  // Allow the child to ptrace us
+  prctl(PR_SET_PTRACER, child, 0, 0, 0);
+  SendContinueSignalToChild();
   do {
     r = sys_waitpid(child, &status, __WALL);
   } while (r == -1 && errno == EINTR);
+
+  sys_close(fdes[0]);
+  sys_close(fdes[1]);
 
   if (r == -1) {
     static const char msg[] = "ExceptionHandler::GenerateDump waitpid failed:";
@@ -365,6 +396,35 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
                         callback_context_, success);
 
   return success;
+}
+
+// This function runs in a compromised context: see the top of the file.
+void ExceptionHandler::SendContinueSignalToChild() {
+  static const char okToContinueMessage = 'a';
+  int r;
+  r = HANDLE_EINTR(sys_write(fdes[1], &okToContinueMessage, sizeof(char)));
+  if(r == -1) {
+    static const char msg[] = "ExceptionHandler::SendContinueSignalToChild \
+                               sys_write failed:";
+    sys_write(2, msg, sizeof(msg) - 1);
+    sys_write(2, strerror(errno), strlen(strerror(errno)));
+    sys_write(2, "\n", 1);
+  }
+}
+
+// This function runs in a compromised context: see the top of the file.
+// Runs on the cloned process.
+void ExceptionHandler::WaitForContinueSignal() {
+  int r;
+  char receivedMessage;
+  r = HANDLE_EINTR(sys_read(fdes[0], &receivedMessage, sizeof(char)));
+  if(r == -1) {
+    static const char msg[] = "ExceptionHandler::WaitForContinueSignal \
+                               sys_read failed:";
+    sys_write(2, msg, sizeof(msg) - 1);
+    sys_write(2, strerror(errno), strlen(strerror(errno)));
+    sys_write(2, "\n", 1);
+  }
 }
 
 // This function runs in a compromised context: see the top of the file.
