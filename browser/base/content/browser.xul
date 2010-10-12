@@ -783,6 +783,10 @@
                             label="&helpTroubleshootingInfo.label;"
                             oncommand="openTroubleshootingPage()"
                             onclick="checkForMiddleClick(this,event);"/>
+                  <menuitem id="appmenu_feedbackPage"
+                            label="&helpFeedbackPage.label;"
+                            oncommand="openFeedbackPage()"
+                            onclick="checkForMiddleClick(this, event);"/>
                   <menuseparator/>
                   <menuitem id="appmenu_safeMode"
                             accesskey="&appMenuSafeMode.accesskey;"
