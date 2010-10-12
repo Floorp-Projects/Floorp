@@ -947,7 +947,93 @@ function check_test_13(install) {
     AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
       do_check_eq(a2.version, "2.0");
 
-      end_test();
+      run_test_14();
     });
   });
+}
+
+// Check that cancelling the install from onDownloadStarted actually cancels it
+function run_test_14() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_eq(install.file, null);
+
+    prepare_test({ }, [
+      "onDownloadStarted"
+    ], check_test_14);
+    install.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_14(install) {
+  prepare_test({ }, [
+    "onDownloadCancelled"
+  ]);
+
+  install.cancel();
+
+  ensure_test_completed();
+
+  install.addListener({
+    onDownloadProgress: function() {
+      do_throw("Download should not have continued");
+    },
+    onDownloadEnded: function() {
+      do_throw("Download should not have continued");
+    }
+  });
+
+  // Allow the listener to return to see if it continues downloading. The
+  // The listener only really tests if we give it time to see progress, the
+  // file check isn't ideal either
+  do_execute_soon(function() {
+    do_check_eq(install.file, null);
+
+    run_test_15();
+  });
+}
+
+// Checks that cancelling the install from onDownloadEnded actually cancels it
+function run_test_15() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_eq(install.file, null);
+
+    prepare_test({ }, [
+      "onDownloadStarted",
+      "onDownloadEnded"
+    ], check_test_15);
+    install.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_15(install) {
+  prepare_test({ }, [
+    "onDownloadCancelled"
+  ]);
+
+  install.cancel();
+
+  ensure_test_completed();
+
+  install.addListener({
+    onInstallStarted: function() {
+      do_throw("Install should not have continued");
+    }
+  });
+
+  // Allow the listener to return to see if it starts installing
+  do_execute_soon(end_test);
 }
