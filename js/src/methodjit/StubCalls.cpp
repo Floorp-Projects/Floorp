@@ -64,6 +64,8 @@
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
+#include "jsfuninlines.h"
+
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -581,30 +583,31 @@ stubs::CallElem(VMFrame &f)
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
-    /* Fetch the left part and resolve it to a non-null object. */
-    JSObject *obj = ValueToObject(cx, &regs.sp[-2]);
-    if (!obj)
+    /* Find the object on which to look for |this|'s properties. */
+    Value thisv = regs.sp[-2];
+    JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
+    if (!thisObj)
         THROW();
 
-    /* Fetch index and convert it to id suitable for use with obj. */
+    /* Fetch index and convert it to id suitable for use with thisObj. */
     jsid id;
-    if (!FetchElementId(f, obj, regs.sp[-1], id, &regs.sp[-2]))
+    if (!FetchElementId(f, thisObj, regs.sp[-1], id, &regs.sp[-2]))
         THROW();
 
     /* Get or set the element. */
-    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
+    if (!js_GetMethod(cx, thisObj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(regs.sp[-2].isUndefined())) {
+    if (JS_UNLIKELY(regs.sp[-2].isUndefined()) && thisv.isObject()) {
         regs.sp[-2] = regs.sp[-1];
-        regs.sp[-1].setObject(*obj);
+        regs.sp[-1].setObject(*thisObj);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     } else
 #endif
     {
-        regs.sp[-1].setObject(*obj);
+        regs.sp[-1] = thisv;
     }
 }
 
@@ -1417,17 +1420,9 @@ stubs::Trap(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::This(VMFrame &f)
 {
-    JSObject *obj = f.fp()->computeThisObject(f.cx);
-    if (!obj)
+    if (!f.fp()->computeThis(f.cx))
         THROW();
-    f.regs.sp[-1].setObject(*obj);
-}
-
-void JS_FASTCALL
-stubs::ComputeThis(VMFrame &f)
-{
-    if (!f.fp()->computeThisObject(f.cx))
-        THROW();
+    f.regs.sp[-1] = f.fp()->thisValue();
 }
 
 void JS_FASTCALL
@@ -2123,75 +2118,44 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         regs.sp++;
         regs.sp[-2] = rval;
         regs.sp[-1] = lval;
-        goto end_callprop;
-    }
-
-    /*
-     * Cache miss: use the immediate atom that was loaded for us under
-     * PropertyCache::test.
-     */
-    jsid id;
-    id = ATOM_TO_JSID(origAtom);
-
-    regs.sp++;
-    regs.sp[-1].setNull();
-    if (lval.isObject()) {
-        if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(!aobj->getOps()->getProperty)
-                          ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                          : JSGET_NO_METHOD_BARRIER,
-                          &rval)) {
-            THROW();
-        }
-        regs.sp[-1] = objv;
-        regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(!objv.toObject().getOps()->getProperty);
-        if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
-                                  JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
-                                  &rval)) {
-            THROW();
-        }
-        regs.sp[-1] = lval;
-        regs.sp[-2] = rval;
-    }
+        /*
+         * Cache miss: use the immediate atom that was loaded for us under
+         * PropertyCache::test.
+         */
+        jsid id;
+        id = ATOM_TO_JSID(origAtom);
 
-  end_callprop:
-    /* Wrap primitive lval in object clothing if necessary. */
-    if (lval.isPrimitive()) {
-        /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-        JSObject *funobj;
-        if (!IsFunctionObject(rval, &funobj) ||
-            !PrimitiveThisTest(funobj->getFunctionPrivate(), lval)) {
-            if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
+        regs.sp++;
+        regs.sp[-1].setNull();
+        if (lval.isObject()) {
+            if (!js_GetMethod(cx, &objv.toObject(), id,
+                              JS_LIKELY(!aobj->getOps()->getProperty)
+                              ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                              : JSGET_NO_METHOD_BARRIER,
+                              &rval)) {
                 THROW();
+            }
+            regs.sp[-1] = objv;
+            regs.sp[-2] = rval;
+        } else {
+            JS_ASSERT(!objv.toObject().getOps()->getProperty);
+            if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
+                                      JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
+                                      &rval)) {
+                THROW();
+            }
+            regs.sp[-1] = lval;
+            regs.sp[-2] = rval;
         }
     }
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined())) {
+    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
         regs.sp[-2].setString(ATOM_TO_STRING(origAtom));
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     }
 #endif
-}
-
-void JS_FASTCALL
-stubs::WrapPrimitiveThis(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    const Value &funv = f.regs.sp[-2];
-    const Value &thisv = f.regs.sp[-1];
-
-    JS_ASSERT(thisv.isPrimitive());
-
-    /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-    JSObject *funobj;
-    if (!IsFunctionObject(funv, &funobj) ||
-        !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), thisv)) {
-        if (!js_PrimitiveToObject(cx, &f.regs.sp[-1]))
-            THROW();
-    }
 }
 
 void JS_FASTCALL
@@ -2652,7 +2616,10 @@ finally:
 void JS_FASTCALL
 stubs::Unbrand(VMFrame &f)
 {
-    JSObject *obj = &f.regs.sp[-1].toObject();
+    const Value &thisv = f.regs.sp[-1];
+    if (!thisv.isObject())
+        return;
+    JSObject *obj = &thisv.toObject();
     if (obj->isNative() && !obj->unbrand(f.cx))
         THROW();
 }

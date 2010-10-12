@@ -423,7 +423,7 @@ struct JSStackFrame
         return formalArgs()[-1];
     }
 
-    inline JSObject *computeThisObject(JSContext *cx);
+    inline bool computeThis(JSContext *cx);
 
     /*
      * Callee

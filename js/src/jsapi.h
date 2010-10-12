@@ -334,6 +334,7 @@ static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
     jsid id;
+    JS_ASSERT(str);
     JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
     JSID_BITS(id) = (size_t)str;

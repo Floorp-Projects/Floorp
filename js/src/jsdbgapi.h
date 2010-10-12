@@ -251,8 +251,8 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp);
 
-extern JS_PUBLIC_API(JSObject *)
-JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);
+extern JS_PUBLIC_API(JSBool)
+JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);

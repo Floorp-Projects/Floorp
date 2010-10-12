@@ -202,7 +202,13 @@ BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64 *slot)
 {
     jsval_layout l;
     JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
+    JS_ASSERT_IF(type == JSVAL_TYPE_STRING ||
+                 type == JSVAL_TYPE_OBJECT ||
+                 type == JSVAL_TYPE_NONFUNOBJ ||
+                 type == JSVAL_TYPE_FUNOBJ,
+                 *(uint32 *)slot != 0);
     l.s.tag = JSVAL_TYPE_TO_TAG(type & 0xF);
+    /* A 32-bit value in a 64-bit slot always occupies the low-addressed end. */
     l.s.payload.u32 = *(uint32 *)slot;
     return l;
 }
@@ -300,6 +306,11 @@ BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64 *slot)
     uint32 shift = isI32 * 32;
     uint64 mask = ((uint64)-1) >> shift;
     uint64 payload = *slot & mask;
+    JS_ASSERT_IF(type == JSVAL_TYPE_STRING ||
+                 type == JSVAL_TYPE_OBJECT ||
+                 type == JSVAL_TYPE_NONFUNOBJ ||
+                 type == JSVAL_TYPE_FUNOBJ,
+                 payload != 0);
     l.asBits = payload | JSVAL_TYPE_TO_SHIFTED_TAG(type & 0xF);
     return l;
 }
@@ -366,7 +377,6 @@ class Value
 
     JS_ALWAYS_INLINE
     void setObject(JSObject &obj) {
-        JS_ASSERT(&obj != NULL);
         data = OBJECT_TO_JSVAL_IMPL(&obj);
     }
 

@@ -2838,27 +2838,6 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     frame.pushTypedPayload(JSVAL_TYPE_STRING, strReg);
     frame.forgetType(frame.peek(-1));
 
-    RegisterID temp = frame.allocReg();
-    RegisterID funReg = frame.copyDataIntoReg(funFe);
-    Jump notFun1 = frame.testObject(Assembler::NotEqual, funFe);
-    Jump notFun2 = masm.testFunction(Assembler::NotEqual, funReg);
-
-    masm.loadFunctionPrivate(funReg, temp);
-    masm.load16(Address(temp, offsetof(JSFunction, flags)), temp);
-    Jump noPrim = masm.branchTest32(Assembler::Zero, temp, Imm32(JSFUN_PRIMITIVE_THIS));
-    {
-        stubcc.linkExit(noPrim, Uses(2));
-        stubcc.leave();
-        stubcc.call(stubs::WrapPrimitiveThis);
-    }
-
-    frame.freeReg(funReg);
-    frame.freeReg(temp);
-    notFun2.linkTo(masm.label(), &masm);
-    notFun1.linkTo(masm.label(), &masm);
-    
-    stubcc.rejoin(Changes(1));
-
     return true;
 }
 
@@ -3313,20 +3292,15 @@ void
 mjit::Compiler::jsop_this()
 {
     Address thisvAddr(JSFrameReg, JSStackFrame::offsetOfThis(fun));
-    if (0 && !script->strictModeCode) {
-        Jump null = masm.testUndefined(Assembler::Equal, thisvAddr);
-        stubcc.linkExit(null, Uses(1));
-        stubcc.leave();
-        stubcc.call(stubs::ComputeThis);
-        stubcc.rejoin(Changes(1));
-
-        RegisterID reg = frame.allocReg();
-        masm.loadPayload(thisvAddr, reg);
-        frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
-    } else {
-        frame.push(thisvAddr);
-        Jump null = frame.testUndefined(Assembler::Equal, frame.peek(-1));
-        stubcc.linkExit(null, Uses(1));
+    frame.push(thisvAddr);
+    /* 
+     * In strict mode code, we don't wrap 'this'.
+     * In direct-call eval code, we wrapped 'this' before entering the eval.
+     * In global code, 'this' is always an object.
+     */
+    if (fun && !script->strictModeCode) {
+        Jump notObj = frame.testObject(Assembler::NotEqual, frame.peek(-1));
+        stubcc.linkExit(notObj, Uses(1));
         stubcc.leave();
         stubcc.call(stubs::This);
         stubcc.rejoin(Changes(1));
