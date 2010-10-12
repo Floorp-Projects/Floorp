@@ -903,77 +903,6 @@ toolbar[mode="icons"] #zoom-in-button {
   margin: 0;
 }
 
-/* urlbar progress */
-
-.tab-progress,
-#urlbar-progress {
-  -moz-appearance: none;
-  height: 3px;
-  margin: -2px 0 -1px;
-}
-
-#urlbar-progress[value="0"] > .progress-remainder {
-  background-image: -moz-linear-gradient(left, rgba(255,255,255,0), rgb(255,255,255), rgba(255,255,255,0)) !important;
-  background-size: 10%;
-  background-repeat: no-repeat;
-  background-position: right;
-  -moz-transition-property: background-position;
-  -moz-transition-duration: 2s;
-  -moz-transition-timing-function: linear;
-}
-
-#urlbar-progress[value="0"][slideback] > .progress-remainder {
-  background-position: left;
-}
-
-.tab-progress > .progress-bar,
-#urlbar-progress > .progress-bar {
-  -moz-appearance: none;
-  border: 0;
-  border-top: 1px solid rgba(0,0,0,.4);
-  border-bottom: 1px solid rgba(0,0,0,.3);
-  -moz-background-origin: border;
-  background-image: -moz-linear-gradient(left, rgb(107,160,193), rgb(169,223,251));
-}
-
-.tab-progress > .progress-bar:-moz-window-inactive,
-#urlbar-progress > .progress-bar:-moz-window-inactive {
-  border-top: 1px solid rgba(0,0,0,.2);
-  border-bottom: 1px solid rgba(0,0,0,.1);
-  background-image: -moz-linear-gradient(left, rgb(150,150,150), rgb(210,210,210));
-}
-
-.tab-progress > .progress-bar:-moz-locale-dir(rtl),
-#urlbar-progress > .progress-bar:-moz-locale-dir(rtl) {
-  background-image: -moz-linear-gradient(right, rgb(107,160,193), rgb(169,223,251));
-}
-
-.tab-progress > .progress-bar:-moz-window-inactive:-moz-locale-dir(rtl),
-#urlbar-progress > .progress-bar:-moz-window-inactive:-moz-locale-dir(rtl) {
-  background-image: -moz-linear-gradient(right, rgb(150,150,150), rgb(210,210,210));
-}
-
-.tab-progress > .progress-remainder,
-#urlbar-progress > .progress-remainder {
-  border-top: 1px solid rgba(0,0,0,.1);
-  border-bottom: 1px solid rgba(0,0,0,.1);
-  background-color: rgba(0,0,0,.3);
-}
-
-.urlbar-contents {
-  -moz-margin-end: -2px;
-}
-
-.urlbar-history-dropmarker {
-  -moz-margin-end: 2px;
-}
-
-/* tab progress */
-
-#tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab > .tab-stack > .tab-progress-container {
-  -moz-box-pack: end;
-}
-
 /* ----- AUTOCOMPLETE ----- */
 
 #treecolAutoCompleteImage {
@@ -1536,10 +1465,19 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0;
 }
 
+.tab-throbber,
 .tab-icon-image {
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://global/skin/tree/item.png");
+}
+
+.tab-throbber {
+  list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
+}
+
+.tab-throbber[progress] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
 }
 
 .tabbrowser-tab:not(:hover) > * > * > .tab-icon-image:not([selected="true"]) {
