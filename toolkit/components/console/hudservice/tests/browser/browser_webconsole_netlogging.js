@@ -70,6 +70,7 @@ function testNetworkLogging()
     is(httpActivity.method, "GET", "Method is correct");
     ok(!("body" in httpActivity.request), "No request body was stored");
     ok(!("body" in httpActivity.response), "No response body was stored");
+    ok(!httpActivity.response.listener, "No response listener is stored");
 
     // Turn on logging of request bodies and check again.
     // HUDService.saveRequestAndResponseBodies = true;
