@@ -192,7 +192,10 @@ function populateGraphicsSection() {
       createElement("td", gfxInfo.adapterDriverDate),
     ]));
 
-    var d2dEnabled = gfxInfo.D2DEnabled;
+    var d2dEnabled = false;
+    try {
+      d2dEnabled = gfxInfo.D2DEnabled;
+    } catch(e) {}
     var d2dMessage = d2dEnabled;
     if (!d2dEnabled) {
       var d2dStatus = -1; // different from any status value defined in the IDL
@@ -224,9 +227,13 @@ function populateGraphicsSection() {
       createElement("td", d2dMessage),
     ]));
 
+    var dwEnabled = false;
+    try {
+      dwEnabled = gfxInfo.DWriteEnabled;
+    } catch(e) {}
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("directWriteEnabled")),
-      createElement("td", gfxInfo.DWriteEnabled),
+      createElement("td", dwEnabled),
     ]));
 
     appendChildren(graphics_tbody, trGraphics);
