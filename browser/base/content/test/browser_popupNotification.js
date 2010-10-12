@@ -450,8 +450,44 @@ var tests = [
       gBrowser.selectedTab = this.oldSelectedTab;
     }
   },
-  // Test that nested icon nodes correctly activate popups
+  // Test that setting persistWhileVisible allows a visible notification to
+  // persist across location changes
   { // Test #14
+    run: function () {
+      this.oldSelectedTab = gBrowser.selectedTab;
+      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+
+      let self = this;
+      loadURI("http://example.com/", function() {
+        self.notifyObj = new basicNotification();
+        self.notifyObj.addOptions({
+          persistWhileVisible: true
+        });
+        self.notification = showNotification(self.notifyObj);
+      });
+    },
+    onShown: function (popup) {
+      this.complete = false;
+
+      let self = this;
+      loadURI("http://example.org/", function() {
+        loadURI("http://example.com/", function() {
+
+          // Notification should persist across location changes
+          self.complete = true;
+          dismissNotification(popup);
+        });
+      });
+    },
+    onHidden: function (popup) {
+      ok(this.complete, "Should only have hidden the notification after it was dismissed");
+      this.notification.remove();
+      gBrowser.removeTab(gBrowser.selectedTab);
+      gBrowser.selectedTab = this.oldSelectedTab;
+    }
+  },
+  // Test that nested icon nodes correctly activate popups
+  { // Test #15
     run: function() {
       // Add a temporary box as the anchor with a button
       this.box = document.createElement("box");
@@ -479,7 +515,7 @@ var tests = [
     }
   },
   // Test that popupnotifications without popups have anchor icons shown
-  { // Test #15
+  { // Test #16
     run: function() {
       let notifyObj = new basicNotification();
       notifyObj.anchorID = "geo-notification-icon";
