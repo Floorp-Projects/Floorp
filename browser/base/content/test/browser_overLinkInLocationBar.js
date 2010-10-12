@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Drew Willcoxon <adw@mozilla.com> (Original Author)
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,64 +44,23 @@ var gTestIter;
 
 // TESTS //////////////////////////////////////////////////////////////////////
 
-let gTests = [
-
-  function smokeTestGenerator() {
-    if (ensureOverLinkHidden())
-      yield;
-
-    setOverLinkWait("http://example.com/");
+function smokeTestGenerator() {
+  if (ensureOverLinkHidden())
     yield;
-    checkURLBar(true);
 
-    setOverLinkWait("");
-    yield;
-    checkURLBar(false);
-  },
+  setOverLink("http://example.com/");
+  yield;
+  checkURLBar(true);
 
-  function hostPathLabels() {
-    updateOverLink("http://example.com/");
-    hostLabelIs("http://example.com/");
-    pathLabelIs("");
-
-    updateOverLink("http://example.com/foo");
-    hostLabelIs("http://example.com/");
-    pathLabelIs("foo");
-
-    updateOverLink("javascript:popup('http://example.com/')");
-    hostLabelIs("");
-    pathLabelIs("javascript:popup('http://example.com/')");
-
-    updateOverLink("javascript:popup('http://example.com/foo')");
-    hostLabelIs("");
-    pathLabelIs("javascript:popup('http://example.com/foo')");
-
-    updateOverLink("about:home");
-    hostLabelIs("");
-    pathLabelIs("about:home");
-  }
-
-];
+  setOverLink("");
+  yield;
+  checkURLBar(false);
+}
 
 function test() {
   waitForExplicitFinish();
-  runNextTest();
-}
-
-function runNextTest() {
-  let nextTest = gTests.shift();
-  if (nextTest) {
-    dump("Running next test: " + nextTest.name + "\n");
-    gTestIter = nextTest();
-
-    // If the test is a generator, advance it.  Otherwise, we just ran the test.
-    if (gTestIter)
-      cont();
-    else
-      runNextTest();
-  }
-  else
-    finish();
+  gTestIter = smokeTestGenerator();
+  cont();
 }
 
 // HELPERS ////////////////////////////////////////////////////////////////////
@@ -115,13 +74,7 @@ function cont() {
     gTestIter.next();
   }
   catch (err if err instanceof StopIteration) {
-    runNextTest();
-  }
-  catch (err) {
-    // Depending on who calls us, sometimes exceptions are eaten by event
-    // handlers...  Make sure we fail.
-    ok(false, "Exception: " + err);
-    throw err;
+    finish();
   }
 }
 
@@ -152,14 +105,14 @@ function checkURLBar(shouldShowOverLink) {
 }
 
 /**
- * Sets the over-link.  This assumes that str will cause the over-link to fade
+ * Sets the over-link.  This assumes that aStr will cause the over-link to fade
  * in or out.  When its transition has finished, the test iterator is
  * incremented, so you should yield after calling.
  *
- * @param str
+ * @param aStr
  *        The over-link will be set to this string or cleared if this is falsey.
  */
-function setOverLinkWait(str) {
+function setOverLink(aStr) {
   let overLink = gURLBar._overLinkBox;
   overLink.addEventListener("transitionend", function onTrans(event) {
     if (event.target == overLink && event.propertyName == "opacity") {
@@ -167,30 +120,7 @@ function setOverLinkWait(str) {
       cont();
     }
   }, false);
-  gURLBar.setOverLink(str);
-}
-
-/**
- * Sets the over-link but unlike setOverLinkWait does not assume that a
- * transition will occur and therefore does not wait.
- *
- * @param str
- *        The over-link will be set to this string or cleared if this is falsey.
- */
-function setOverLink(str) {
-  gURLBar.setOverLink(str);
-}
-
-/**
- * Calls gURLBar._updateOverLink(str), which updates the over-link but does not
- * change its visibility.
- *
- * @param str
- *        The over-link will be set to this string.  Note that setting this to
- *        falsey doesn't make sense for this function.
- */
-function updateOverLink(str) {
-  gURLBar._updateOverLink(str);
+  gURLBar.setOverLink(aStr);
 }
 
 /**
@@ -202,33 +132,9 @@ function updateOverLink(str) {
  */
 function ensureOverLinkHidden() {
   let overLink = gURLBar._overLinkBox;
-  if (window.getComputedStyle(overLink, null).opacity == 0) {
-    setOverLink("");
+  if (window.getComputedStyle(overLink, null).opacity == 0)
     return false;
-  }
 
-  setOverLinkWait("");
+  setOverLink("");
   return true;
-}
-
-/**
- * Asserts that the over-link host label is a given string.
- *
- * @param str
- *        The host label should be this string.
- */
-function hostLabelIs(str) {
-  let host = gURLBar._overLinkHostLabel;
-  is(host.value, str, "Over-link host label should be correct");
-}
-
-/**
- * Asserts that the over-link path label is a given string.
- *
- * @param str
- *        The path label should be this string.
- */
-function pathLabelIs(str) {
-  let path = gURLBar._overLinkPathLabel;
-  is(path.value, str, "Over-link path label should be correct");
 }
