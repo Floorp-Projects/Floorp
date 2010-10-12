@@ -2814,20 +2814,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     if (length == 0)
         return JS_TRUE;
 
-    Value thisv;
-    if (argc > 1 && !REDUCE_MODE(mode)) {
-        if (argv[1].isNullOrUndefined()) {
-            thisv.setUndefined();
-        } else {
-            JSObject *thisObj;
-            if (!js_ValueToObjectOrNull(cx, argv[1], &thisObj))
-                return JS_FALSE;
-            JS_ASSERT(thisObj);
-            thisv.setObject(*thisObj);
-        }
-    } else {
-        thisv.setUndefined();
-    }
+    Value thisv = (argc > 1 && !REDUCE_MODE(mode)) ? argv[1] : UndefinedValue();
 
     /*
      * For all but REDUCE, we call with 3 args (value, index, array). REDUCE

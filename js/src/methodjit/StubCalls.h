@@ -48,7 +48,6 @@ namespace mjit {
 namespace stubs {
 
 void JS_FASTCALL This(VMFrame &f);
-void JS_FASTCALL ComputeThis(VMFrame &f);
 JSObject * JS_FASTCALL NewInitArray(VMFrame &f);
 JSObject * JS_FASTCALL NewInitObject(VMFrame &f);
 JSObject * JS_FASTCALL NewArray(VMFrame &f, uint32 len);
@@ -103,7 +102,6 @@ void JS_FASTCALL Throw(VMFrame &f);
 void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutActivationObjects(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
-void JS_FASTCALL WrapPrimitiveThis(VMFrame &f);
 #if JS_MONOIC
 void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::MICInfo *mic);
 #else

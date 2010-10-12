@@ -320,12 +320,24 @@ JSStackFrame::clearMissingArgs()
         SetValueRangeToUndefined(formalArgs() + numActualArgs(), formalArgsEnd());
 }
 
-inline JSObject *
-JSStackFrame::computeThisObject(JSContext *cx)
+inline bool
+JSStackFrame::computeThis(JSContext *cx)
 {
     js::Value &thisv = thisValue();
-    if (JS_LIKELY(!thisv.isPrimitive()))
-        return &thisv.toObject();
+    if (thisv.isObject())
+        return true;
+    if (isFunctionFrame()) {
+        if (fun()->acceptsPrimitiveThis())
+            return true;
+        /*
+         * Eval function frames have their own |this| slot, which is a copy of the function's
+         * |this| slot. If we lazily wrap a primitive |this| in an eval function frame, the
+         * eval's frame will get the wrapper, but the function's frame will not. To prevent
+         * this, we always wrap a function's |this| before pushing an eval frame, and should
+         * thus never see an unwrapped primitive in a non-strict eval function frame.
+         */
+        JS_ASSERT(!isEvalFrame());
+    }
     if (!js::ComputeThisFromArgv(cx, &thisv + 1))
         return NULL;
     JS_ASSERT(IsSaneThisObject(thisv.toObject()));
@@ -622,6 +634,42 @@ GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
     }
 
     return ReportIncompatibleMethod(cx, vp, Behavior::getClass());
+}
+
+/*
+ * Return an object on which we should look for the properties of |value|.
+ * This helps us implement the custom [[Get]] method that ES5's GetValue
+ * algorithm uses for primitive values, without actually constructing the
+ * temporary object that the specification does.
+ * 
+ * For objects, return the object itself. For string, boolean, and number
+ * primitive values, return the appropriate constructor's prototype. For
+ * undefined and null, throw an error and return NULL, attributing the
+ * problem to the value at |spindex| on the stack.
+ */
+JS_ALWAYS_INLINE JSObject *
+ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
+{
+    if (v.isObject())
+        return &v.toObject();
+
+    JSProtoKey protoKey;
+    if (v.isString()) {
+        protoKey = JSProto_String;
+    } else if (v.isNumber()) {
+        protoKey = JSProto_Number;
+    } else if (v.isBoolean()) {
+        protoKey = JSProto_Boolean;
+    } else {
+        JS_ASSERT(v.isNull() || v.isUndefined());
+        js_ReportIsNullOrUndefined(cx, spindex, v, NULL);
+        return NULL;
+    }
+
+    JSObject *pobj;
+    if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
+        return NULL;
+    return pobj;
 }
 
 }

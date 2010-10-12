@@ -677,10 +677,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     /* Invoke native functions. */
     JSFunction *fun = callee.getFunctionPrivate();
     JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !fun->isConstructor());
-    if (fun->isNative()) {
-        JS_ASSERT(args.thisv().isObject() || args.thisv().isUndefined() || PrimitiveThisTest(fun, args.thisv()));
+    if (fun->isNative())
         return CallJSNative(cx, fun->u.n.native, args.argc(), args.base());
-    }
 
     /* Handle the empty-script special case. */
     JSScript *script = fun->script();
@@ -4016,18 +4014,21 @@ BEGIN_CASE(JSOP_LOCALINC)
 }
 
 BEGIN_CASE(JSOP_THIS)
-    if (!regs.fp->computeThisObject(cx))
+    if (!regs.fp->computeThis(cx))
         goto error;
     PUSH_COPY(regs.fp->thisValue());
 END_CASE(JSOP_THIS)
 
 BEGIN_CASE(JSOP_UNBRANDTHIS)
 {
-    JSObject *obj = regs.fp->computeThisObject(cx);
-    if (!obj)
+    if (!regs.fp->computeThis(cx))
         goto error;
-    if (obj->isNative() && !obj->unbrand(cx))
-        goto error;
+    Value &thisv = regs.fp->thisValue();
+    if (thisv.isObject()) {
+        JSObject *obj = &thisv.toObject();
+        if (obj->isNative() && !obj->unbrand(cx))
+            goto error;
+    }
 }
 END_CASE(JSOP_UNBRANDTHIS)
 
@@ -4037,12 +4038,11 @@ END_CASE(JSOP_UNBRANDTHIS)
     jsint i;
 
 BEGIN_CASE(JSOP_GETTHISPROP)
-    obj = regs.fp->computeThisObject(cx);
-    if (!obj)
+    if (!regs.fp->computeThis(cx))
         goto error;
     i = 0;
-    PUSH_NULL();
-    goto do_getprop_with_obj;
+    PUSH_COPY(regs.fp->thisValue());
+    goto do_getprop_body;
 
 BEGIN_CASE(JSOP_GETARGPROP)
 {
@@ -4072,7 +4072,6 @@ BEGIN_CASE(JSOP_GETXPROP)
   do_getprop_with_lval:
     VALUE_TO_OBJECT(cx, vp, obj);
 
-  do_getprop_with_obj:
     {
         Value rval;
         do {
@@ -4199,53 +4198,40 @@ BEGIN_CASE(JSOP_CALLPROP)
         regs.sp[-1] = rval;
         assertSameCompartment(cx, regs.sp[-1]);
         PUSH_COPY(lval);
-        goto end_callprop;
-    }
-
-    /*
-     * Cache miss: use the immediate atom that was loaded for us under
-     * PropertyCache::test.
-     */
-    jsid id;
-    id = ATOM_TO_JSID(atom);
-
-    PUSH_NULL();
-    if (lval.isObject()) {
-        if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(!aobj->getOps()->getProperty)
-                          ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                          : JSGET_NO_METHOD_BARRIER,
-                          &rval)) {
-            goto error;
-        }
-        regs.sp[-1] = objv;
-        regs.sp[-2] = rval;
-        assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
     } else {
-        JS_ASSERT(!objv.toObject().getOps()->getProperty);
-        if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
-                                  JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
-                                  &rval)) {
-            goto error;
-        }
-        regs.sp[-1] = lval;
-        regs.sp[-2] = rval;
-        assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
-    }
+        /*
+         * Cache miss: use the immediate atom that was loaded for us under
+         * PropertyCache::test.
+         */
+        jsid id;
+        id = ATOM_TO_JSID(atom);
 
-  end_callprop:
-    /* Wrap primitive lval in object clothing if necessary. */
-    if (lval.isPrimitive()) {
-        /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-        JSObject *funobj;
-        if (!IsFunctionObject(rval, &funobj) ||
-            !PrimitiveThisTest(funobj->getFunctionPrivate(), lval)) {
-            if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
+        PUSH_NULL();
+        if (lval.isObject()) {
+            if (!js_GetMethod(cx, &objv.toObject(), id,
+                              JS_LIKELY(!aobj->getOps()->getProperty)
+                              ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                              : JSGET_NO_METHOD_BARRIER,
+                              &rval)) {
                 goto error;
+            }
+            regs.sp[-1] = objv;
+            regs.sp[-2] = rval;
+            assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
+        } else {
+            JS_ASSERT(!objv.toObject().getOps()->getProperty);
+            if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
+                                      JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
+                                      &rval)) {
+                goto error;
+            }
+            regs.sp[-1] = lval;
+            regs.sp[-2] = rval;
+            assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
         }
     }
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined())) {
+    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
         LOAD_ATOM(0, atom);
         regs.sp[-2].setString(ATOM_TO_STRING(atom));
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
@@ -4508,28 +4494,31 @@ END_CASE(JSOP_GETELEM)
 
 BEGIN_CASE(JSOP_CALLELEM)
 {
-    /* Fetch the left part and resolve it to a non-null object. */
-    JSObject *obj;
-    FETCH_OBJECT(cx, -2, obj);
+    /* Find the object on which to look for |this|'s properties. */
+    Value thisv = regs.sp[-2];
+    JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
+    if (!thisObj)
+        goto error;
 
     /* Fetch index and convert it to id suitable for use with obj. */
     jsid id;
-    FETCH_ELEMENT_ID(obj, -1, id);
+    FETCH_ELEMENT_ID(thisObj, -1, id);
 
-    /* Get or set the element. */
-    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
+    /* Get the method. */
+    if (!js_GetMethod(cx, thisObj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
         goto error;
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(regs.sp[-2].isUndefined())) {
+    if (JS_UNLIKELY(regs.sp[-2].isUndefined()) && thisv.isObject()) {
+        /* For js_OnUnknownMethod, sp[-2] is the index, and sp[-1] is the object missing it. */
         regs.sp[-2] = regs.sp[-1];
-        regs.sp[-1].setObject(*obj);
+        regs.sp[-1].setObject(*thisObj);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     } else
 #endif
     {
-        regs.sp[-1].setObject(*obj);
+        regs.sp[-1] = thisv;
     }
 }
 END_CASE(JSOP_CALLELEM)
@@ -4720,8 +4709,6 @@ BEGIN_CASE(JSOP_APPLY)
             JS_ASSERT(op == JSOP_BEGIN);
             DO_OP();
         }
-
-        JS_ASSERT(vp[1].isObject() || vp[1].isUndefined() || PrimitiveThisTest(newfun, vp[1]));
 
         Probes::enterJSFun(cx, newfun);
         JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
