@@ -626,7 +626,7 @@
           // Determine the pre-path and path of the over-link.  Include the
           // path's leading slash in the pre-path so that if the path is
           // truncated its leading slash is visible.
-          var re = new RegExp("([a-z0-9+.-]+://[^/]+/)(.*)");
+          var re = new RegExp("^([a-z0-9+.-]+://[^/]+/)(.*)$");
           var match = re.exec(aURL);
           var host = match ? match[1] : "";
           var path = match ? match[2] : aURL;
