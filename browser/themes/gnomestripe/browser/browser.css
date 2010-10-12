@@ -952,71 +952,6 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
   margin: 0;
 }
 
-/* urlbar progress */
-
-.tab-progress,
-#urlbar-progress {
-  -moz-appearance: none;
-  min-height: 0px;
-  height: 3px;
-  border: 0;
-  margin: -2px 0 -1px;
-  background-color: transparent;
-}
-
-#urlbar-progress[value="0"] > .progress-remainder {
-  background-image: -moz-linear-gradient(left, rgba(255,255,255,0), rgb(255,255,255), rgba(255,255,255,0)) !important;
-  background-size: 10%;
-  background-repeat: no-repeat;
-  background-position: right;
-  -moz-transition-property: background-position;
-  -moz-transition-duration: 2s;
-  -moz-transition-timing-function: linear;
-}
-
-#urlbar-progress[value="0"][slideback] > .progress-remainder {
-  background-position: left;
-}
-
-.tab-progress > .progress-bar,
-#urlbar-progress > .progress-bar {
-  -moz-appearance: none;
-  min-width: 3px;
-  border-top: 1px solid rgba(100,100,100,.1);
-  border-bottom: 1px solid rgba(0,0,0,.2);
-  background-color: Highlight;
-  background-image: -moz-linear-gradient(left, rgba(255,255,255,.1) 50%,
-                                               rgba(255,255,255,.4) 90%,
-                                               rgba(255,255,255,.8));
-}
-
-.tab-progress > .progress-bar:-moz-locale-dir(rtl),
-#urlbar-progress > .progress-bar:-moz-locale-dir(rtl) {
-  background-image: -moz-linear-gradient(right, rgba(255,255,255,.1) 50%,
-                                                rgba(255,255,255,.4) 90%,
-                                                rgba(255,255,255,.8));
-}
-
-.tab-progress > .progress-remainder,
-#urlbar-progress > .progress-remainder {
-  border-top: 1px solid rgba(100,100,100,.1);
-  border-bottom: 1px solid rgba(0,0,0,.2);
-  background-image: -moz-linear-gradient(right, ThreeDShadow 80%, ThreeDLightShadow);
-}
-
-.tab-progress > .progress-remainder:-moz-locale-dir(rtl),
-#urlbar-progress > .progress-remainder:-moz-locale-dir(rtl) {
-  background-image: -moz-linear-gradient(left, ThreeDShadow 80%, ThreeDLightShadow);
-}
-
-.urlbar-contents {
-  -moz-margin-end: -2px;
-}
-
-.urlbar-history-dropmarker {
-  -moz-margin-end: 2px;
-}
-
 /* Favicon */
 #page-proxy-favicon,
 #urlbar-throbber {
@@ -1506,6 +1441,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   outline: 1px dotted;
 }
 
+.tab-throbber,
 .tab-icon-image {
   width: 16px;
   height: 16px;
@@ -1514,6 +1450,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
+.tab-throbber {
+  list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
+}
+
+.tab-throbber[progress] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
+}
+
+.tab-throbber[pinned],
 .tab-icon-image[pinned],
 .tabs-newtab-button > .toolbarbutton-icon {
   -moz-margin-start: 2px;

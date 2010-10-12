@@ -37,14 +37,14 @@ tabbrowser {
   min-width: 1px;
 }
 
-.tab-progress:not([fadein]):not([pinned]),
+.tab-throbber:not([fadein]):not([pinned]),
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),
 .tab-close-button:not([fadein]):not([pinned]) {
   opacity: 0 !important;
 }
 
-.tab-progress,
+.tab-throbber,
 .tab-label,
 .tab-icon-image,
 .tab-close-button {
@@ -146,13 +146,8 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
-#urlbar-progress {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-progress");
-}
-
 /* Some child nodes want to be ordered based on the locale's direction, while
    everything else should be ltr. */
-#urlbar-progress:-moz-locale-dir(rtl),
 .urlbar-input-box:-moz-locale-dir(rtl) {
   direction: rtl;
 }

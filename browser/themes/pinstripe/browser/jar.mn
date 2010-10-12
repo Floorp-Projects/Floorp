@@ -108,6 +108,8 @@ browser.jar:
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
+  skin/classic/browser/tabbrowser/connecting.png                         (tabbrowser/connecting.png)
+  skin/classic/browser/tabbrowser/loading.png                            (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png                     (tabbrowser/tab-arrow-left.png)
   skin/classic/browser/tabbrowser/tab-arrow-right.png                    (tabbrowser/tab-arrow-right.png)
   skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png              (tabbrowser/tabbrowser-tabs-bkgnd.png)

@@ -353,8 +353,6 @@
             mRequestCount: 0,
 
             destroy: function () {
-              this._cancelStalledTimer();
-              this.mTab.removeAttribute("stalled");
               delete this.mTab;
               delete this.mBrowser;
               delete this.mTabBrowser;
@@ -373,10 +371,8 @@
               if (this.mBlank)
                 return;
 
-              if (this.mTotalProgress) {
-                let value = Math.ceil(this.mTotalProgress * 100);
-                this.mTab.setAttribute("progresspercent", value);
-              }
+              if (this.mTotalProgress)
+                this.mTab.setAttribute("progress", "true");
 
               this._callProgressListeners("onProgressChange",
                                           [aWebProgress, aRequest,
@@ -432,8 +428,6 @@
                 if (!this.mBlank) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
-                    this.mTab.setAttribute("progresspercent", "0");
-                    this._startStalledTimer();
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
 
@@ -459,9 +453,7 @@
                   this.mBlank = false;
 
                 this.mTab.removeAttribute("busy");
-                this.mTab.removeAttribute("progresspercent");
-                this.mTab.removeAttribute("stalled");
-                this._cancelStalledTimer();
+                this.mTab.removeAttribute("progress");
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -565,20 +557,6 @@
                   aIID.equals(Components.interfaces.nsISupports))
                 return this;
               throw Components.results.NS_NOINTERFACE;
-            },
-
-            _startStalledTimer: function () {
-              this._cancelStalledTimer();
-              this._stalledTimer = setTimeout(function (self) { 
-                self.mTab.setAttribute("stalled", "true");
-              }, 700, this);
-            },
-
-            _cancelStalledTimer: function () {
-              if (this._stalledTimer) {
-                clearTimeout(this._stalledTimer);
-                this._stalledTimer = 0;
-              }
             }
           });
         ]]>
@@ -3324,12 +3302,11 @@
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:stack class="tab-stack" flex="1">
-        <xul:vbox class="tab-progress-container">
-          <xul:progressmeter class="tab-progress" mode="normal"
-                             xbl:inherits="value=progresspercent,busy,stalled,fadein,selected"/>
-        </xul:vbox>
         <xul:hbox class="tab-content" align="center">
-          <xul:image xbl:inherits="validate,src=image,fadein,pinned,busy,stalled,selected"
+          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected"
+                     class="tab-throbber"
+                     role="presentation"/>
+          <xul:image xbl:inherits="validate,src=image,fadein,pinned,selected"
                      class="tab-icon-image"
                      role="presentation"/>
           <xul:label flex="1"
