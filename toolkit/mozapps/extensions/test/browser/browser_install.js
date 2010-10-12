@@ -11,6 +11,7 @@ var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gSearchCount = 0;
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   // Turn on searching for this test
