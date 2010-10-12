@@ -5150,32 +5150,31 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
   if (nonDeadKeyPress && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
-    if (![theEvent isARepeat]) {
-      NSResponder* firstResponder = [[self window] firstResponder];
+    NSResponder* firstResponder = [[self window] firstResponder];
 
-      nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
-      [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+    nsKeyEvent geckoKeydown(PR_TRUE, NS_KEY_DOWN, nsnull);
+    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeydown];
 
 #ifndef NP_NO_CARBON
-      EventRecord carbonEvent;
-      if (mPluginEventModel == NPEventModelCarbon) {
-        ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-        geckoEvent.pluginEvent = &carbonEvent;
-      }
+    EventRecord carbonEvent;
+    if (mPluginEventModel == NPEventModelCarbon) {
+      ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
+      geckoKeydown.pluginEvent = &carbonEvent;
+    }
 #endif
 
-      mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
-      if (!mGeckoChild)
-        return mKeyDownHandled;
+    mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoKeydown);
+    if (!mGeckoChild) {
+      return mKeyDownHandled;
+    }
 
-      // The key down event may have shifted the focus, in which
-      // case we should not fire the key press.
-      if (firstResponder != [[self window] firstResponder]) {
-        PRBool handled = mKeyDownHandled;
-        mCurKeyEvent = nil;
-        mKeyDownHandled = PR_FALSE;
-        return handled;
-      }
+    // The key down event may have shifted the focus, in which
+    // case we should not fire the key press.
+    if (firstResponder != [[self window] firstResponder]) {
+      PRBool handled = mKeyDownHandled;
+      mCurKeyEvent = nil;
+      mKeyDownHandled = PR_FALSE;
+      return handled;
     }
 
     // If this is the context menu key command, send a context menu key event.
@@ -5192,18 +5191,18 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       return handled;
     }
 
-    nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
-    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, nsnull);
+    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeypress];
 
     // if this is a non-letter keypress, or the control key is down,
     // dispatch the keydown to gecko, so that we trap delete,
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
-    if ((!geckoEvent.isChar || geckoEvent.isControl) &&
+    if ((!geckoKeypress.isChar || geckoKeypress.isControl) &&
         !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
       if (mKeyDownHandled)
-        geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+        geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoKeypress);
       mKeyPressSent = YES;
       if (!mGeckoChild)
         return (mKeyDownHandled || mKeyPressHandled);
@@ -5225,16 +5224,17 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing &&
       !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
-    nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
-    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+    nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, nsnull);
+    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeypress];
 
     // If we called interpretKeyEvents and this isn't normal character input
     // then IME probably ate the event for some reason. We do not want to
     // send a key press event in that case.
-    if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(geckoEvent))) {
-      if (mKeyDownHandled)
-        geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    if (!(interpretKeyEventsCalled && IsNormalCharInputtingEvent(geckoKeypress))) {
+      if (mKeyDownHandled) {
+        geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+      }
+      mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoKeypress);
     }
   }
 
