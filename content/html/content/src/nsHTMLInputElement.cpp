@@ -1117,7 +1117,7 @@ nsHTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
     if (doc) {
       Element* elem = doc->GetElementById(dataListId);
 
-      if (elem) {
+      if (elem && elem->IsHTML(nsGkAtoms::datalist)) {
         CallQueryInterface(elem, aValue);
         return NS_OK;
       }
