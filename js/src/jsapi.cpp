@@ -4956,6 +4956,22 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
     return ok;
 }
 
+namespace JS {
+
+JS_PUBLIC_API(bool)
+Call(JSContext *cx, jsval thisv, jsval fval, uintN argc, jsval *argv, jsval *rval)
+{
+    JSBool ok;
+
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, thisv, fval, JSValueArray(argv, argc));
+    ok = ExternalInvoke(cx, Valueify(thisv), Valueify(fval), argc, Valueify(argv), Valueify(rval));
+    LAST_FRAME_CHECKS(cx, ok);
+    return ok;
+}
+
+} // namespace JS
+
 JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 {

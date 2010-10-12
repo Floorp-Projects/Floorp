@@ -2596,6 +2596,39 @@ extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunction(cx, thisObj, fun, argc, argv, rval);
+}
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, const char *name, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunctionName(cx, thisObj, name, argc, argv, rval);
+}
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, jsval fun, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunctionValue(cx, thisObj, fun, argc, argv, rval);
+}
+
+extern JS_PUBLIC_API(bool)
+Call(JSContext *cx, jsval thisv, jsval fun, uintN argc, jsval *argv, jsval *rval);
+
+static inline bool
+Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsval *rval) {
+    return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
+}
+
+} // namespace JS
+
+JS_BEGIN_EXTERN_C
+#endif // __cplusplus
+
 /*
  * These functions allow setting an operation callback that will be called
  * from the thread the context is associated with some time after any thread
