@@ -1208,7 +1208,7 @@ mjit::Compiler::generateMethod()
           {
             jsop_getarg(GET_SLOTNO(PC));
             if (op == JSOP_CALLARG)
-                frame.push(NullValue());
+                frame.push(UndefinedValue());
           }
           END_CASE(JSOP_GETARG)
 
@@ -1497,7 +1497,7 @@ mjit::Compiler::generateMethod()
             frame.freeReg(reg);
             frame.push(Address(reg, index * sizeof(Value)));
             if (op == JSOP_CALLFCSLOT)
-                frame.push(NullValue());
+                frame.push(UndefinedValue());
           }
           END_CASE(JSOP_CALLFCSLOT)
 
@@ -1536,7 +1536,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLGNAME)
             jsop_getgname(fullAtomIndex(PC));
             if (op == JSOP_CALLGNAME)
-                frame.push(NullValue());
+                frame.push(UndefinedValue());
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
@@ -1571,7 +1571,7 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::GetUpvar);
             frame.pushSynced();
             if (op == JSOP_CALLUPVAR)
-                frame.push(NullValue());
+                frame.push(UndefinedValue());
           }
           END_CASE(JSOP_CALLUPVAR)
 
@@ -1607,7 +1607,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_CALLLOCAL)
             frame.pushLocal(GET_SLOTNO(PC));
-            frame.push(NullValue());
+            frame.push(UndefinedValue());
           END_CASE(JSOP_CALLLOCAL)
 
           BEGIN_CASE(JSOP_INT8)
@@ -1682,7 +1682,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
             if (op == JSOP_CALLGLOBAL)
-                frame.push(NullValue());
+                frame.push(UndefinedValue());
           END_CASE(JSOP_GETGLOBAL)
 
           BEGIN_CASE(JSOP_SETGLOBAL)
@@ -3314,7 +3314,7 @@ mjit::Compiler::jsop_this()
 {
     Address thisvAddr(JSFrameReg, JSStackFrame::offsetOfThis(fun));
     if (0 && !script->strictModeCode) {
-        Jump null = masm.testNull(Assembler::Equal, thisvAddr);
+        Jump null = masm.testUndefined(Assembler::Equal, thisvAddr);
         stubcc.linkExit(null, Uses(1));
         stubcc.leave();
         stubcc.call(stubs::ComputeThis);
@@ -3325,7 +3325,7 @@ mjit::Compiler::jsop_this()
         frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
     } else {
         frame.push(thisvAddr);
-        Jump null = frame.testNull(Assembler::Equal, frame.peek(-1));
+        Jump null = frame.testUndefined(Assembler::Equal, frame.peek(-1));
         stubcc.linkExit(null, Uses(1));
         stubcc.leave();
         stubcc.call(stubs::This);

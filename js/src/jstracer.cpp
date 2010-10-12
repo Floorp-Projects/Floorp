@@ -7063,12 +7063,6 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     JS_ASSERT(state.eos == state.stackBase + MAX_NATIVE_STACK_SLOTS);
     JSObject* globalObj = outermostTree->globalObj;
     FlushNativeGlobalFrame(cx, globalObj, state.eos, ngslots, gslots, globalTypeMap);
-#ifdef DEBUG
-    /* Verify that our state restoration worked. */
-    for (JSStackFrame* fp = cx->fp(); fp; fp = fp->prev()) {
-        JS_ASSERT_IF(fp->isFunctionFrame(), fp->thisValue().isObjectOrNull());
-    }
-#endif
 
 #ifdef JS_JIT_SPEW
     if (innermost->exitType != TIMEOUT_EXIT)
@@ -10063,10 +10057,10 @@ TraceRecorder::getThis(LIns*& this_ins)
     JS_ASSERT(fp->callee().getGlobal() == globalObj);    
     const Value& thisv = fp->thisValue();
 
-    if (!thisv.isNull()) {
+    if (!thisv.isUndefined()) {
         /*
          * fp->argv[-1] has already been computed. Since the type-specialization
-         * of traces distinguishes between null and objects, the same will be
+         * of traces distinguishes between |undefined| and objects, the same will be
          * true at run time (or we won't get this far).
          */
         this_ins = get(&fp->thisValue());
@@ -13139,7 +13133,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         NameResult nr;
         CHECK_STATUS_A(scopeChainProp(obj, vp, ins, nr));
         stack(0, ins);
-        stack(1, INS_NULL());
+        stack(1, INS_UNDEFINED());
         return ARECORD_CONTINUE;
     }
 
@@ -13153,7 +13147,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         RETURN_STOP_A("callee is not an object");
 
     stack(0, INS_CONSTOBJ(&pcval.toFunObj()));
-    stack(1, INS_NULL());
+    stack(1, INS_UNDEFINED());
     return ARECORD_CONTINUE;
 }
 
@@ -13282,7 +13276,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLUPVAR()
 {
     CHECK_STATUS_A(record_JSOP_GETUPVAR());
-    stack(1, INS_NULL());
+    stack(1, INS_UNDEFINED());
     return ARECORD_CONTINUE;
 }
 
@@ -13306,7 +13300,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLFCSLOT()
 {
     CHECK_STATUS_A(record_JSOP_GETFCSLOT());
-    stack(1, INS_NULL());
+    stack(1, INS_UNDEFINED());
     return ARECORD_CONTINUE;
 }
 
@@ -15954,7 +15948,7 @@ TraceRecorder::record_JSOP_CALLLOCAL()
 {
     uintN slot = GET_SLOTNO(cx->regs->pc);
     stack(0, var(slot));
-    stack(1, INS_NULL());
+    stack(1, INS_UNDEFINED());
     return ARECORD_CONTINUE;
 }
 
@@ -15963,7 +15957,7 @@ TraceRecorder::record_JSOP_CALLARG()
 {
     uintN slot = GET_ARGNO(cx->regs->pc);
     stack(0, arg(slot));
-    stack(1, INS_NULL());
+    stack(1, INS_UNDEFINED());
     return ARECORD_CONTINUE;
 }
 
@@ -16167,7 +16161,7 @@ TraceRecorder::record_JSOP_CALLGLOBAL()
 
     Value &v = globalObj->getSlotRef(slot);
     stack(0, get(&v));
-    stack(1, INS_NULL());
+    stack(1, INS_UNDEFINED());
     return ARECORD_CONTINUE;
 }
 

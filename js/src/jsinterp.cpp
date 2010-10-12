@@ -498,7 +498,7 @@ ComputeThisFromArgv(JSContext *cx, Value *argv)
      */
     JS_ASSERT(!argv[-1].isMagic());
 
-    if (argv[-1].isNull())
+    if (argv[-1].isNullOrUndefined())
         return ComputeGlobalThis(cx, argv);
 
     if (!argv[-1].isObject())
@@ -678,7 +678,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     JSFunction *fun = callee.getFunctionPrivate();
     JS_ASSERT_IF(flags & JSINVOKE_CONSTRUCT, !fun->isConstructor());
     if (fun->isNative()) {
-        JS_ASSERT(args.thisv().isObjectOrNull() || PrimitiveThisTest(fun, args.thisv()));
+        JS_ASSERT(args.thisv().isObject() || args.thisv().isUndefined() || PrimitiveThisTest(fun, args.thisv()));
         return CallJSNative(cx, fun->u.n.native, args.argc(), args.base());
     }
 
@@ -4239,7 +4239,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
         JSObject *funobj;
         if (!IsFunctionObject(rval, &funobj) ||
-            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), lval)) {
+            !PrimitiveThisTest(funobj->getFunctionPrivate(), lval)) {
             if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
                 goto error;
         }
@@ -4721,7 +4721,7 @@ BEGIN_CASE(JSOP_APPLY)
             DO_OP();
         }
 
-        JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveThisTest(newfun, vp[1]));
+        JS_ASSERT(vp[1].isObject() || vp[1].isUndefined() || PrimitiveThisTest(newfun, vp[1]));
 
         Probes::enterJSFun(cx, newfun);
         JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
@@ -4766,15 +4766,17 @@ END_CASE(JSOP_SETCALL)
             (clasp = thisp->getClass()) == &js_CallClass ||                 \
             clasp == &js_BlockClass ||                                      \
             clasp == &js_DeclEnvClass) {                                    \
-            /* Normal case: thisp is global or an activation record. */     \
-            /* Callee determines |this|. */                                 \
-            thisp = NULL;                                                   \
+            /* Push the ImplicitThisValue for the Environment Record */     \
+            /* associated with obj. See ES5 sections 10.2.1.1.6 and  */     \
+            /* 10.2.1.2.6 (ImplicitThisValue) and section 11.2.3     */     \
+            /* (Function Calls). */                                         \
+            PUSH_UNDEFINED();                                               \
         } else {                                                            \
             thisp = thisp->thisObject(cx);                                  \
             if (!thisp)                                                     \
                 goto error;                                                 \
+            PUSH_OBJECT(*thisp);                                            \
         }                                                                   \
-        PUSH_OBJECT_OR_NULL(thisp);                                         \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_GETGNAME)
@@ -4819,7 +4821,7 @@ BEGIN_CASE(JSOP_CALLNAME)
                   clasp == &js_DeclEnvClass);
 #endif
         if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-            PUSH_NULL();
+            PUSH_UNDEFINED();
         len = JSOP_NAME_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -5180,7 +5182,7 @@ BEGIN_CASE(JSOP_CALLARG)
     METER_SLOT_OP(op, slot);
     PUSH_COPY(argv[slot]);
     if (op == JSOP_CALLARG)
-        PUSH_NULL();
+        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETARG)
 
@@ -5206,7 +5208,7 @@ BEGIN_CASE(JSOP_CALLLOCAL)
     uint32 slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < script->nslots);
     PUSH_COPY(regs.fp->slots()[slot]);
-    PUSH_NULL();
+    PUSH_UNDEFINED();
 }
 END_CASE(JSOP_CALLLOCAL)
 
@@ -5230,7 +5232,7 @@ BEGIN_CASE(JSOP_CALLUPVAR)
     PUSH_COPY(rval);
 
     if (op == JSOP_CALLUPVAR)
-        PUSH_NULL();
+        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETUPVAR)
 
@@ -5272,7 +5274,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
         goto error;
 
     if (op == JSOP_CALLUPVAR_DBG)
-        PUSH_NULL();
+        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETUPVAR_DBG)
 
@@ -5286,7 +5288,7 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
     JS_ASSERT(index < obj->getFunctionPrivate()->u.i.nupvars);
     PUSH_COPY(obj->getFlatClosureUpvar(index));
     if (op == JSOP_CALLFCSLOT)
-        PUSH_NULL();
+        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETFCSLOT)
 
@@ -5299,7 +5301,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
     JS_ASSERT(obj->containsSlot(slot));
     PUSH_COPY(obj->getSlot(slot));
     if (op == JSOP_CALLGLOBAL)
-        PUSH_NULL();
+        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETGLOBAL)
 

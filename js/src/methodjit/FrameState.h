@@ -660,43 +660,49 @@ class FrameState
     void discardFe(FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is null. Condition should
+     * Helper function. Tests if a slot's type is null. Condition must
      * be Equal or NotEqual.
      */
     inline Jump testNull(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is an integer. Condition should
+     * Helper function. Tests if a slot's type is undefined. Condition must
+     * be Equal or NotEqual.
+     */
+    inline Jump testUndefined(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
+     * Helper function. Tests if a slot's type is an integer. Condition must
      * be Equal or NotEqual.
      */
     inline Jump testInt32(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is a double. Condition should
+     * Helper function. Tests if a slot's type is a double. Condition must
      * be Equal or Not Equal.
      */
     inline Jump testDouble(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is a boolean. Condition should
+     * Helper function. Tests if a slot's type is a boolean. Condition must
      * be Equal or NotEqual.
      */
     inline Jump testBoolean(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is a string. Condition should
+     * Helper function. Tests if a slot's type is a string. Condition must
      * be Equal or NotEqual.
      */
     inline Jump testString(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is a non-funobj. Condition should
+     * Helper function. Tests if a slot's type is a non-funobj. Condition must
      * be Equal or NotEqual.
      */
     inline Jump testObject(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is primitve. Condition should
+     * Helper function. Tests if a slot's type is primitive. Condition must
      * be Equal or NotEqual.
      */
     inline Jump testPrimitive(Assembler::Condition cond, FrameEntry *fe);
