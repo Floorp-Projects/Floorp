@@ -280,7 +280,7 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER(method, args, err_rval)                              \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
+    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return err_rval;                                                        \
@@ -292,7 +292,7 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER_VOID(method, args)                                   \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
+    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return;                                                                 \
@@ -305,12 +305,12 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER_CHROME(method, args, err_rval)                       \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
+    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return err_rval;                                                        \
     }                                                                         \
-    return ((nsGlobalChromeWindow *)outer.get())->method args;                \
+    return ((nsGlobalChromeWindow *)outer)->method args;                      \
   }                                                                           \
   PR_END_MACRO
 
@@ -328,12 +328,12 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
-    nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();                \
+    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
     if (!outer) {                                                             \
       NS_WARNING("No outer window available!");                               \
       return err_rval;                                                        \
     }                                                                         \
-    return ((nsGlobalModalWindow *)outer.get())->method args;                 \
+    return ((nsGlobalModalWindow *)outer)->method args;                       \
   }                                                                           \
   PR_END_MACRO
 
@@ -833,7 +833,7 @@ nsGlobalWindow::~nsGlobalWindow()
 
   printf("--DOMWINDOW == %d (%p) [serial = %d] [outer = %p] [url = %s]\n",
          gRefCnt, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-         mSerial, static_cast<void*>(mOuterWindow), url.get());
+         mSerial, static_cast<void*>(mOuterWindow.get()), url.get());
 #endif
 
 #ifdef PR_LOGGING
@@ -864,10 +864,6 @@ nsGlobalWindow::~nsGlobalWindow()
 
     nsGlobalWindow *w;
     while ((w = (nsGlobalWindow *)PR_LIST_HEAD(this)) != this) {
-      NS_ASSERTION(w->mOuterWindow == this, "Uh, bad outer window pointer?");
-
-      w->mOuterWindow = nsnull;
-
       PR_REMOVE_AND_INIT_LINK(w);
     }
   } else {
@@ -1230,6 +1226,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgumentsLast)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInnerWindowHolder)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOuterWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
@@ -1266,6 +1263,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mArgumentsLast)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInnerWindowHolder)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOuterWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpenerScriptPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
@@ -7253,7 +7251,7 @@ nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
     // Need the cast to be able to call the protected method on a
     // superclass. We could make the method public instead, but it's really
     // better this way.
-    static_cast<nsGlobalWindow*>(mOuterWindow)->
+    static_cast<nsGlobalWindow*>(mOuterWindow.get())->
       SetChromeEventHandlerInternal(aChromeEventHandler);
   }
 }
