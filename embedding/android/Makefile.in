@@ -76,16 +76,13 @@ DEFINES += \
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  $(MOZ_APP_NAME).apk  \
   $(PROCESSEDJAVAFILES) \
   gecko.ap_  \
-  gecko-unaligned.apk  \
-  gecko-unsigned-unaligned.apk \
   res/values/strings.xml \
   R.java \
   $(NULL)
 
-GARBAGE_DIRS += res libs dist classes
+GARBAGE_DIRS += classes
 
 DIRS = utils
 
@@ -103,36 +100,6 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml
   $(NULL)
 
-NATIVE_LIBS = $(shell cat $(DIST)/bin/dependentlibs.list) libxpcom.so libnssckbi.so libfreebl3.so libmozutils.so
-FULL_LIBS = $(addprefix libs/armeabi/,$(NATIVE_LIBS))
-
-# We'll strip all the libs by default, due to size, but we might
-# want to have a non-stripped version for debugging.  We should
-# really pull out debuginfo and stuff.
-ifdef NO_STRIP
-DO_STRIP=echo not stripping
-else
-DO_STRIP=$(STRIP)
-endif
-
-# The set of files/directories from the dist/bin dir that we'll make available in the apk
-# some directories not listed due to special handling
-DIST_LINK_FILES = \
-  modules \
-  res \
-  application.ini \
-  platform.ini \
-  greprefs.js \
-  browserconfig.properties \
-  blocklist.xml \
-  chrome.manifest \
-  extensions \
-  $(NULL)
-
-ifdef MOZ_IPC
-DIST_LINK_FILES += $(MOZ_CHILD_PROCESS_NAME)
-endif
-
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
@@ -142,8 +109,6 @@ include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
-
-tools:: $(MOZ_APP_NAME).apk
 
 # Note that we're going to set up a dependency directly between embed_android.dex and the java files
 # Instead of on the .class files, since more than one .class file might be produced per .java file
@@ -182,39 +147,6 @@ R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml $(L
 gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml $(LOCALIZED_STRINGS_XML)
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
-libs/armeabi/%: $(DIST)/lib/%
-	@$(NSINSTALL) -D libs/armeabi
-	@cp -L -v $< $@
-	@$(DO_STRIP) $@
-
-# Bug 567873 - Android packaging should use standard packaging code
-dist: FORCE
-	$(NSINSTALL) -D dist/components
-	rm -rf dist/components/*
-	@(for f in $(DIST)/bin/components/* ; do $(NSINSTALL) $$f dist/components ; done)
-	$(NSINSTALL) -D dist/chrome
-	rm -rf dist/chrome/*
-	@(for f in $(DIST)/bin/chrome/* ; do $(NSINSTALL) $$f dist/chrome ; done)
-	$(NSINSTALL) -D dist/defaults
-	rm -rf dist/defaults/*
-	@(for f in $(DIST)/bin/defaults/* ; do $(NSINSTALL) $$f dist/defaults ; done )
-	@(for f in $(DIST_LINK_FILES) ; do if [ -e $(DIST)/bin/$$f ] ; then echo $$f ; ln -sf ../$(DIST)/bin/$$f dist ; fi ; done)
-ifdef MOZ_UPDATER
-	$(NSINSTALL) $(DIST)/bin/update.locale dist
-endif
-
-gecko-unsigned-unaligned.apk: gecko.ap_ classes.dex dist $(FULL_LIBS)
-	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z gecko.ap_ -f classes.dex -nf `pwd`/libs -rf dist
-
-gecko-unaligned.apk: gecko-unsigned-unaligned.apk
-	cp gecko-unsigned-unaligned.apk $@
-ifdef JARSIGNER
-	$(JARSIGNER) $@
-endif
-
-$(MOZ_APP_NAME).apk: gecko-unaligned.apk
-	$(ZIPALIGN) -f -v 4 gecko-unaligned.apk $@
-
 res/values/strings.xml: FORCE
 	mkdir -p res/values
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
@@ -222,3 +154,7 @@ res/values/strings.xml: FORCE
 	  -DSTRINGSPATH="$(DEFAULT_STRINGSPATH)" \
 	  $(srcdir)/strings.xml.in \
 	  > $@
+
+libs:: gecko.ap_ classes.dex
+	$(INSTALL) classes.dex $(FINAL_TARGET)
+	$(UNZIP) -o gecko.ap_ -d $(FINAL_TARGET)
