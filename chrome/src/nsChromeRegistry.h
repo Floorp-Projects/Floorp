@@ -118,10 +118,9 @@ protected:
   static void LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
                                     const char* aMsg, ...);
 
-  virtual nsresult GetBaseURIFromPackage(const nsCString& aPackage,
-                                         const nsCString& aProvider,
-                                         const nsCString& aPath,
-                                         nsIURI* *aResult) = 0;
+  virtual nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
+                                        const nsCString& aProvider,
+                                        const nsCString& aPath) = 0;
   virtual nsresult GetFlagsFromPackage(const nsCString& aPackage,
                                        PRUint32* aFlags) = 0;
 
