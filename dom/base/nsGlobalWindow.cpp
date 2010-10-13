@@ -3064,15 +3064,15 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::CreateBlobURL(nsIDOMFile* aFile, nsAString& aURL)
+nsGlobalWindow::CreateBlobURL(nsIDOMBlob* aBlob, nsAString& aURL)
 {
-  FORWARD_TO_INNER(CreateBlobURL, (aFile, aURL), NS_ERROR_UNEXPECTED);
+  FORWARD_TO_INNER(CreateBlobURL, (aBlob, aURL), NS_ERROR_UNEXPECTED);
 
   NS_ENSURE_STATE(mDoc);
 
-  NS_ENSURE_ARG_POINTER(aFile);
+  NS_ENSURE_ARG_POINTER(aBlob);
 
-  nsresult rv = aFile->GetInternalUrl(mDoc->NodePrincipal(), aURL);
+  nsresult rv = aBlob->GetInternalUrl(mDoc->NodePrincipal(), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDoc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));

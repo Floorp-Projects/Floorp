@@ -402,6 +402,7 @@ DOMCI_CLASS(CommandEvent)
 DOMCI_CLASS(OfflineResourceList)
 
 DOMCI_CLASS(FileList)
+DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 DOMCI_CLASS(FileException)
 DOMCI_CLASS(FileError)
