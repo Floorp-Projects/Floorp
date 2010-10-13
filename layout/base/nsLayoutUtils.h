@@ -156,6 +156,11 @@ public:
   static PRBool IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame,
                                       nsIAtom* aPseudoElement);
 
+#ifdef DEBUG
+  // TODO: remove, see bug 598468.
+  static bool gPreventAssertInCompareTreePosition;
+#endif // DEBUG
+
   /**
    * CompareTreePosition determines whether aContent1 comes before or
    * after aContent2 in a preorder traversal of the content tree.

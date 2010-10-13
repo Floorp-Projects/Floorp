@@ -113,6 +113,11 @@ using namespace mozilla::layers;
 using namespace mozilla::dom;
 namespace css = mozilla::css;
 
+#ifdef DEBUG
+// TODO: remove, see bug 598468.
+bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
+#endif // DEBUG
+
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
 
 /**
@@ -524,7 +529,11 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
 
   // content1Ancestor != content2Ancestor, so they must be siblings with the same parent
   nsINode* parent = content1Ancestor->GetNodeParent();
-  NS_ASSERTION(parent, "no common ancestor at all???");
+#ifdef DEBUG
+  // TODO: remove the uglyness, see bug 598468.
+  NS_ASSERTION(gPreventAssertInCompareTreePosition || parent,
+               "no common ancestor at all???");
+#endif // DEBUG
   if (!parent) { // different documents??
     return 0;
   }
