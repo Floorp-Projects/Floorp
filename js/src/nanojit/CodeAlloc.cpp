@@ -279,6 +279,11 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
     }
 
+#elif defined NANOJIT_ARM && defined DARWIN
+    void CodeAlloc::flushICache(void *, size_t) {
+        VMPI_debugBreak();
+    }
+
 #elif defined AVMPLUS_MAC && defined NANOJIT_PPC
 
 #  ifdef NANOJIT_64BIT
