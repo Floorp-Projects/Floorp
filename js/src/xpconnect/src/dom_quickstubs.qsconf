@@ -411,7 +411,16 @@ members = [
     'nsIDOMXPathResult.singleNodeValue',
     'nsIDOMNSXPathExpression.evaluateWithContext',
 
-    # dom/interfaces/xul - None.
+    # dom/interfaces/xul
+    'nsIDOMXULElement.*',
+
+    # layout/xul/base/public
+    'nsIBoxObject.x',
+    'nsIBoxObject.y',
+    'nsIBoxObject.screenX',
+    'nsIBoxObject.screenY',
+    'nsIBoxObject.width',
+    'nsIBoxObject.height',
 
     # XHR
     'nsIXMLHttpRequest.*',
