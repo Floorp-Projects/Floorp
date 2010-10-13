@@ -1192,6 +1192,7 @@ TokenStream::getTokenInternal()
                                                            JSMSG_DEPRECATED_OCTAL)) {
                                     goto error;
                                 }
+                                setOctalCharacterEscape();
                             }
                             if ('0' <= c && c < '8') {
                                 val = 8 * val + JS7_UNDEC(c);
