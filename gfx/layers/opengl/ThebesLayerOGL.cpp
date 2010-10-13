@@ -166,13 +166,13 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   float xres = mLayer->GetXResolution();
   float yres = mLayer->GetYResolution();
 
-  nsIntRegionRectIterator iter(mLayer->GetVisibleRegion());
+  nsIntRegionRectIterator iter(mLayer->GetEffectiveVisibleRegion());
   while (const nsIntRect *iterRect = iter.Next()) {
     nsIntRect quadRect = *iterRect;
     program->Activate();
     program->SetLayerQuadRect(quadRect);
     program->SetLayerOpacity(mLayer->GetOpacity());
-    program->SetLayerTransform(mLayer->GetTransform());
+    program->SetLayerTransform(mLayer->GetEffectiveTransform());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
     DEBUG_GL_ERROR_CHECK(gl());

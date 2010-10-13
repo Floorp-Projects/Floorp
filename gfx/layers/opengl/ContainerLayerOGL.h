@@ -51,8 +51,6 @@ public:
   ContainerLayerOGL(LayerManagerOGL *aManager);
   ~ContainerLayerOGL();
 
-  nsIntRect GetVisibleRect() { return mVisibleRegion.GetBounds(); }
-
   void InsertAfter(Layer* aChild, Layer* aAfter);
 
   void RemoveChild(Layer* aChild);
