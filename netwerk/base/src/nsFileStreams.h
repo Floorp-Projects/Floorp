@@ -137,6 +137,33 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class nsPartialFileInputStream : public nsFileInputStream,
+                                 public nsIPartialFileInputStream
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIPARTIALFILEINPUTSTREAM
+
+    NS_IMETHOD Tell(PRInt64 *aResult);
+    NS_IMETHOD Available(PRUint32 *aResult);
+    NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32* aResult);
+    NS_IMETHOD Seek(PRInt32 aWhence, PRInt64 aOffset);
+
+    static nsresult
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+private:
+    PRUint32 TruncateSize(PRUint32 aSize) {
+          return (PRUint32)PR_MIN(mLength - mPosition, (PRUint64)aSize);
+    }
+
+    PRUint64 mStart;
+    PRUint64 mLength;
+    PRUint64 mPosition;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class nsFileOutputStream : public nsFileStream,
                            public nsIFileOutputStream
 {
