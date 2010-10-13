@@ -683,12 +683,25 @@ nsSMILTimedElement::Rewind()
 {
   NS_ABORT_IF_FALSE(mAnimationElement,
       "Got rewind request before being attached to an animation element");
-  NS_ABORT_IF_FALSE(mSeekState == SEEK_NOT_SEEKING,
-      "Got rewind request whilst already seeking");
 
-  mSeekState = mElementState == STATE_ACTIVE ?
-               SEEK_BACKWARD_FROM_ACTIVE :
-               SEEK_BACKWARD_FROM_INACTIVE;
+  // It's possible to get a rewind request whilst we're already in the middle of
+  // a backwards seek. This can happen when we're performing tree surgery and
+  // seeking containers at the same time because we can end up requesting
+  // a local rewind on an element after binding it to a new container and then
+  // performing a rewind on that container as a whole without sampling in
+  // between.
+  //
+  // However, it should currently be impossible to get a rewind in the middle of
+  // a forwards seek since forwards seeks are detected and processed within the
+  // same (re)sample.
+  if (mSeekState == SEEK_NOT_SEEKING) {
+    mSeekState = mElementState == STATE_ACTIVE ?
+                 SEEK_BACKWARD_FROM_ACTIVE :
+                 SEEK_BACKWARD_FROM_INACTIVE;
+  }
+  NS_ABORT_IF_FALSE(mSeekState == SEEK_BACKWARD_FROM_INACTIVE ||
+                    mSeekState == SEEK_BACKWARD_FROM_ACTIVE,
+                    "Rewind in the middle of a forwards seek?");
 
   // Set the STARTUP state first so that if we get any callbacks we won't waste
   // time recalculating the current interval
@@ -1114,11 +1127,23 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
     mEndSpecs[j]->ResolveReferences(aContextNode);
   }
 
-  // Clear any previous milestone since it might be been processed whilst we
-  // were not bound to the tree.
-  mPrevRegisteredMilestone = sMaxMilestone;
+  // If this element was already in play then we may need to do a local rewind.
+  nsSMILTime containerTime = GetTimeContainer()->GetCurrentTime();
+  PRBool localRewind =
+    mElementState != STATE_STARTUP && mCurrentInterval &&
+    mCurrentInterval->Begin()->Time().GetMillis() > containerTime;
 
-  RegisterMilestone();
+  if (localRewind) {
+    Rewind();
+    // Put the time container in the seeking state -- this is necessary so we
+    // don't generate unnecessary events whilst doing the backwards seek.
+    GetTimeContainer()->SetCurrentTime(containerTime);
+  } else {
+    // Otherwise, re-register any previous milestone since it might be been
+    // processed whilst we were not bound to the tree.
+    mPrevRegisteredMilestone = sMaxMilestone;
+    RegisterMilestone();
+  }
 }
 
 void
