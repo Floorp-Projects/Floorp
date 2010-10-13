@@ -279,9 +279,6 @@
 #include "nsUnicodeToISO2022CN.h"
 #include "gbku.h"
 
-#define DECODER_NAME_BASE "Unicode Decoder-"
-#define ENCODER_NAME_BASE "Unicode Encoder-"
-
 NS_CONVERTER_REGISTRY_START
 NS_UCONV_REG_UNREG("ISO-8859-1", NS_ISO88591TOUNICODE_CID, NS_UNICODETOISO88591_CID)
 NS_UCONV_REG_UNREG("windows-1252", NS_CP1252TOUNICODE_CID, NS_UNICODETOCP1252_CID)
@@ -459,9 +456,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022CNToUnicode)
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
-
-#define DECODER_NAME_BASE "Unicode Decoder-"
-#define ENCODER_NAME_BASE "Unicode Encoder-"
 
 // ucvja
 const PRUint16 g_uf0201Mapping[] = {
