@@ -123,7 +123,7 @@ private:
   /**
    * An asynchronous statement to query if a URI is visited or not.
    *
-   * @note this should only be accessed by GetIsVisistedStatement.
+   * @note this should only be accessed by GetIsVisistedStatement and Shutdown.
    */
   nsCOMPtr<mozIStorageAsyncStatement> mIsVisitedStatement;
 
