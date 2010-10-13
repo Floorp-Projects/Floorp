@@ -1290,7 +1290,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-bottom-right-radius: 2px;
 }
 
-#urlbar > toolbarbutton:active:hover {
+#urlbar > toolbarbutton:not([disabled]):active:hover {
   padding-left: 4px;
   border-left: none;
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
@@ -1312,7 +1312,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 14px, 14px, 0px);
 }
 
-#urlbar-reload-button:hover {
+#urlbar-reload-button:not([disabled]):hover {
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
@@ -1328,10 +1328,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #urlbar-stop-button:hover {
   background-image: -moz-linear-gradient(rgb(244,156,128), rgb(215,101,77) 49%, rgb(194,66,48) 51%, rgb(170,41,23));
-}
-
-#urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: .5;
 }
 
 /* star button */
