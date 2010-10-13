@@ -1493,6 +1493,15 @@
           MenuListHelperUI.show(this);
         ]]>
       </handler>
+
+      <handler event="command" phase="capturing">
+        <![CDATA[
+          // The dropmark (button) fires a command event too. Don't forward that.
+          // Just forward the menuitem command events, which the toolkit version does.
+          if (event.target.parentNode.parentNode != this)
+            event.stopPropagation();
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
