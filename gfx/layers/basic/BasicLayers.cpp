@@ -676,7 +676,13 @@ public:
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
-                     float aOpacity);
+                     float aOpacity)
+  {
+    PaintColorTo(mColor, mOpacity, aContext);
+  }
+
+  static void PaintColorTo(gfxRGBA aColor, float aOpacity,
+                           gfxContext* aContext);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -685,13 +691,11 @@ protected:
   }
 };
 
-void
-BasicColorLayer::Paint(gfxContext* aContext,
-                       LayerManager::DrawThebesLayerCallback aCallback,
-                       void* aCallbackData,
-                       float aOpacity)
+/*static*/ void
+BasicColorLayer::PaintColorTo(gfxRGBA aColor, float aOpacity,
+                              gfxContext* aContext)
 {
-  aContext->SetColor(mColor);
+  aContext->SetColor(aColor);
   aContext->Paint(aOpacity);
 }
 
@@ -2042,6 +2046,29 @@ BasicShadowImageLayer::Paint(gfxContext* aContext,
   BasicImageLayer::PaintContext(pat, mSize, aOpacity, aContext);
 }
 
+class BasicShadowColorLayer : public ShadowColorLayer,
+                              BasicImplData
+{
+public:
+  BasicShadowColorLayer(BasicShadowLayerManager* aLayerManager) :
+    ShadowColorLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowColorLayer);
+  }
+  virtual ~BasicShadowColorLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowColorLayer);
+  }
+
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData,
+                     float aOpacity)
+  {
+    BasicColorLayer::PaintColorTo(mColor, aOpacity, aContext);
+  }
+};
+
 class BasicShadowCanvasLayer : public ShadowCanvasLayer,
                                BasicImplData
 {
@@ -2224,6 +2251,14 @@ BasicShadowLayerManager::CreateShadowImageLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ShadowImageLayer> layer = new BasicShadowImageLayer(this);
+  return layer.forget();
+}
+
+already_AddRefed<ShadowColorLayer>
+BasicShadowLayerManager::CreateShadowColorLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ShadowColorLayer> layer = new BasicShadowColorLayer(this);
   return layer.forget();
 }
 

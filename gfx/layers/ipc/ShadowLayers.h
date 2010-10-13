@@ -59,6 +59,7 @@ class PLayersParent;
 class ShadowableLayer;
 class ShadowThebesLayer;
 class ShadowImageLayer;
+class ShadowColorLayer;
 class ShadowCanvasLayer;
 class SurfaceDescriptor;
 class ThebesBuffer;
@@ -342,6 +343,8 @@ public:
   /** CONSTRUCTION PHASE ONLY */
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer() = 0;
   /** CONSTRUCTION PHASE ONLY */
+  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer() = 0;
+  /** CONSTRUCTION PHASE ONLY */
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer() = 0;
 
   static void PlatformSyncBeforeReplyUpdate();
@@ -586,6 +589,21 @@ public:
 protected:
   ShadowImageLayer(LayerManager* aManager, void* aImplData)
     : ImageLayer(aManager, aImplData)
+  {}
+};
+
+
+class ShadowColorLayer : public ShadowLayer,
+                         public ColorLayer
+{
+public:
+  virtual ShadowLayer* AsShadowLayer() { return this; }
+
+  MOZ_LAYER_DECL_NAME("ShadowColorLayer", TYPE_SHADOW)
+
+protected:
+  ShadowColorLayer(LayerManager* aManager, void* aImplData)
+    : ColorLayer(aManager, aImplData)
   {}
 };
 
