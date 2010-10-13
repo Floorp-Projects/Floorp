@@ -675,6 +675,8 @@ JSObject::finish(JSContext *cx)
 #endif
     if (hasSlotsArray())
         freeSlotsArray(cx);
+    if (emptyShapes)
+        cx->free(emptyShapes);
 #ifdef JS_THREADSAFE
     js_FinishTitle(cx, &title);
 #endif

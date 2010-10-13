@@ -6587,9 +6587,9 @@ js_DumpObject(JSObject *obj)
     fprintf(stderr, "\n");
 
     if (obj->isDenseArray()) {
-        uint slots = JS_MIN(obj->getArrayLength(), obj->getDenseArrayCapacity());
+        unsigned slots = JS_MIN(obj->getArrayLength(), obj->getDenseArrayCapacity());
         fprintf(stderr, "elements\n");
-        for (uint i = 0; i < slots; i++) {
+        for (unsigned i = 0; i < slots; i++) {
             fprintf(stderr, " %3d: ", i);
             dumpValue(obj->getDenseArrayElement(i));
             fprintf(stderr, "\n");
@@ -6619,9 +6619,9 @@ js_DumpObject(JSObject *obj)
         fprintf(stderr, "private %p\n", obj->getPrivate());
 
     fprintf(stderr, "slots:\n");
-    uint reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
-    uint slots = obj->slotSpan();
-    for (uint i = 0; i < slots; i++) {
+    unsigned reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
+    unsigned slots = obj->slotSpan();
+    for (unsigned i = 0; i < slots; i++) {
         fprintf(stderr, " %3d ", i);
         if (i < reservedEnd)
             fprintf(stderr, "(reserved) ");
