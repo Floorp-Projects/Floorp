@@ -1121,8 +1121,8 @@ BasicLayerManager::SetRoot(Layer* aLayer)
 static PRBool
 NeedsState(Layer* aLayer)
 {
-  return aLayer->GetClipRect() != nsnull ||
-         !aLayer->GetTransform().IsIdentity();
+  return aLayer->GetEffectiveClipRect() != nsnull ||
+         !aLayer->GetEffectiveTransform().IsIdentity();
 }
 
 static inline int
@@ -1149,25 +1149,24 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
  if (needsSaveRestore) {
     mTarget->Save();
 
-    if (aLayer->GetClipRect()) {
-      const nsIntRect& r = *aLayer->GetClipRect();
+    if (const nsIntRect* r = aLayer->GetEffectiveClipRect()) {
       mTarget->NewPath();
-      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height), PR_TRUE);
+      mTarget->Rectangle(gfxRect(r->x, r->y, r->width, r->height), PR_TRUE);
       mTarget->Clip();
     }
 
     gfxMatrix transform;
     // XXX we need to add some kind of 3D transform support, possibly
     // using pixman?
-    NS_ASSERTION(aLayer->GetTransform().Is2D(),
+    NS_ASSERTION(aLayer->GetEffectiveTransform().Is2D(),
                  "Only 2D transforms supported currently");
-    aLayer->GetTransform().Is2D(&transform);
+    aLayer->GetEffectiveTransform().Is2D(&transform);
     mTarget->Multiply(transform);
 
     if (needsGroup && children > 1) {
       // If we need to call PushGroup, we should clip to the smallest possible
       // area first to minimize the size of the temporary surface.
-      ClipToContain(mTarget, aLayer->GetVisibleRegion().GetBounds());
+      ClipToContain(mTarget, aLayer->GetEffectiveVisibleRegion().GetBounds());
 
       gfxASurface::gfxContentType type = aLayer->CanUseOpaqueSurface()
           ? gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;

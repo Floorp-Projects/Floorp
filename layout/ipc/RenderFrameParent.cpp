@@ -268,12 +268,6 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                                &shadowXScale, &shadowYScale);
     TransformShadowTreeTo(shadowRoot, aVisibleRect,
                           shadowTranslation, shadowXScale, shadowYScale);
-    // FIXME/bug 602431: this is dead code that will be obsoleted in
-    // favor of the above transformations
-    gfxMatrix transform;
-    transform.Translate(gfxPoint(shadowTranslation.x, shadowTranslation.y));
-    transform.Scale(shadowXScale, shadowYScale);
-    mContainer->SetTransform(gfx3DMatrix::From2D(transform));
     mContainer->SetClipRect(nsnull);
   }
 
