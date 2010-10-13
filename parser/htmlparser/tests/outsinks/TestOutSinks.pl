@@ -64,6 +64,13 @@ if ($status != 0) {
   $errmsg = "$errmsg simplecopy.out";
 }
 
+print "Testing simple formatted copy case ...\n";
+$status = system("./TestOutput -i text/html -o text/plain -f 2 -w 0 -c OutTestData/simplecopy-formatted.out OutTestData/simple.html");
+if ($status != 0) {
+  print "Simple formatted copy test failed.\n";
+  $errmsg = "$errmsg simplecopy-formatted.out";
+}
+
 print "Testing simple html to plaintext formatting ...\n";
 $status = system("./TestOutput -i text/html -o text/plain -f 34 -w 70 -c OutTestData/simplefmt.out OutTestData/simple.html");
 if ($status != 0) {
@@ -114,9 +121,8 @@ if ($status != 0) {
 }
 
 if ($errmsg ne "") {
-  print "\nERROR: DOM SERIALIZER TEST FAILED: $errmsg\n";
-  print "See http://www.mozilla.org/editor/serializer-tests.html for help.\n";
+  print "\nTEST-UNEXPECTED-FAIL | $errmsg\n";
   exit 1
 } else {
-  print "DOM SERIALIZER TESTS SUCCEEDED\n";
+  print "\nTEST-PASS | TestOutSink\n";
 }
