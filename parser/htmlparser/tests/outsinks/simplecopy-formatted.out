@@ -1,0 +1,22 @@
+
+  Simple html page
+
+Here is a link to the mozilla.org <http://www.mozilla.org> page. Here is some _underlined and *bold*ened_ified text plus some <angle bracket entities>.
+
+Here is a line ending with a space followed by a line break. Plaintext output should contain only one space (and no line breaks) between "space" and "followed".
+
+Here is a /list/:
+
+  * An item
+  * A nested ordered list:
+  *
+     1. item one
+     2. item two
+  * last item
+
+Here is a paragraph after the list.
+
+Here is a blockquote:
+
+    The quick brown fox jumped over the lazy dog 
+

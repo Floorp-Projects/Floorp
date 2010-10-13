@@ -61,6 +61,7 @@ TEST_FILES      = \
 		plainnowrap.out \
 		simple.html \
 		simplecopy.out \
+		simplecopy-formatted.out \
 		simplefmt.out \
 		entityxif.xif \
 		entityxif.out \
@@ -85,9 +86,9 @@ libs::
 	$(INSTALL) -m 555 $(srcdir)/TestOutSinks.pl $(DIST)/bin
 	$(INSTALL) $(addprefix $(srcdir)/, $(TEST_FILES)) $(DIST)/bin/OutTestData
 
-install:: 
-	$(SYSINSTALL) -m 555 $(srcdir)/TestOutSinks.pl $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) $(addprefix $(srcdir)/, $(TEST_FILES)) $(DESTDIR)$(mozappdir)/OutTestData
+check:: 
+	@$(EXIT_ON_ERROR) \
+	  ( cd $(DIST)/bin && $(PERL) ./TestOutSinks.pl )
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
