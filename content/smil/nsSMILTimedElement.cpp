@@ -202,9 +202,6 @@ nsSMILTimedElement::nsSMILTimedElement()
 
 nsSMILTimedElement::~nsSMILTimedElement()
 {
-  // Put us in a consistent state in case we get any callbacks
-  mElementState = STATE_POSTACTIVE;
-
   // Unlink all instance times from dependent intervals
   for (PRUint32 i = 0; i < mBeginInstances.Length(); ++i) {
     mBeginInstances[i]->Unlink();
@@ -218,10 +215,8 @@ nsSMILTimedElement::~nsSMILTimedElement()
   // Notify anyone listening to our intervals that they're gone
   // (We shouldn't get any callbacks from this because all our instance times
   // are now disassociated with any intervals)
-  if (mCurrentInterval) {
-    mCurrentInterval->Unlink();
-    mCurrentInterval = nsnull;
-  }
+  mElementState = STATE_POSTACTIVE;
+  ResetCurrentInterval();
 
   for (PRInt32 i = mOldIntervals.Length() - 1; i >= 0; --i) {
     mOldIntervals[i]->Unlink();
@@ -703,14 +698,7 @@ nsSMILTimedElement::Rewind()
                     mSeekState == SEEK_BACKWARD_FROM_ACTIVE,
                     "Rewind in the middle of a forwards seek?");
 
-  // Set the STARTUP state first so that if we get any callbacks we won't waste
-  // time recalculating the current interval
-  mElementState = STATE_STARTUP;
-  mCurrentRepeatIteration = 0;
-
-  // Clear the intervals and instance times except those instance times we can't
-  // regenerate (DOM calls etc.)
-  RewindTiming();
+  ClearIntervalProgress();
 
   UnsetBeginSpec(RemoveNonDynamic);
   UnsetEndSpec(RemoveNonDynamic);
@@ -1116,6 +1104,13 @@ nsSMILTimedElement::IsTimeDependent(const nsSMILTimedElement& aOther) const
 void
 nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
 {
+  // If we were already active then clear all our timing information and start
+  // afresh
+  if (mElementState != STATE_STARTUP) {
+    mSeekState = SEEK_NOT_SEEKING;
+    Rewind();
+  }
+
   // Resolve references to other parts of the tree
   PRUint32 count = mBeginSpecs.Length();
   for (PRUint32 i = 0; i < count; ++i) {
@@ -1127,23 +1122,9 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
     mEndSpecs[j]->ResolveReferences(aContextNode);
   }
 
-  // If this element was already in play then we may need to do a local rewind.
-  nsSMILTime containerTime = GetTimeContainer()->GetCurrentTime();
-  PRBool localRewind =
-    mElementState != STATE_STARTUP && mCurrentInterval &&
-    mCurrentInterval->Begin()->Time().GetMillis() > containerTime;
-
-  if (localRewind) {
-    Rewind();
-    // Put the time container in the seeking state -- this is necessary so we
-    // don't generate unnecessary events whilst doing the backwards seek.
-    GetTimeContainer()->SetCurrentTime(containerTime);
-  } else {
-    // Otherwise, re-register any previous milestone since it might be been
-    // processed whilst we were not bound to the tree.
-    mPrevRegisteredMilestone = sMaxMilestone;
-    RegisterMilestone();
-  }
+  // Register new milestone
+  mPrevRegisteredMilestone = sMaxMilestone;
+  RegisterMilestone();
 }
 
 void
@@ -1269,13 +1250,13 @@ nsSMILTimedElement::ClearSpecs(TimeValueSpecList& aSpecs,
 }
 
 void
-nsSMILTimedElement::RewindTiming()
+nsSMILTimedElement::ClearIntervalProgress()
 {
-  if (mCurrentInterval) {
-    mCurrentInterval->Unlink();
-    mCurrentInterval = nsnull;
-  }
+  mElementState = STATE_STARTUP;
+  mCurrentRepeatIteration = 0;
+  ResetCurrentInterval();
 
+  // Remove old intervals
   for (PRInt32 i = mOldIntervals.Length() - 1; i >= 0; --i) {
     mOldIntervals[i]->Unlink();
   }
@@ -1893,8 +1874,7 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
 
     if (mElementState == STATE_ACTIVE || mElementState == STATE_WAITING) {
       mElementState = STATE_POSTACTIVE;
-      mCurrentInterval->Unlink();
-      mCurrentInterval = nsnull;
+      ResetCurrentInterval();
     }
   }
 }
