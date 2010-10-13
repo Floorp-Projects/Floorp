@@ -1244,7 +1244,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-bottom-right-radius: 2px;
 }
 
-#urlbar > toolbarbutton:active:hover {
+#urlbar > toolbarbutton:not([disabled]):active:hover {
   padding-left: 4px;
   border-left: none;
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
@@ -1266,7 +1266,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 14px, 14px, 0px);
 }
 
-#urlbar-reload-button:hover {
+#urlbar-reload-button:not([disabled]):hover {
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(137,183,233), rgb(79,130,195));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
@@ -1282,11 +1282,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #urlbar-stop-button:hover {
   background-image: -moz-linear-gradient(rgb(237,120,120), rgb(216,92,92));
-}
-
-
-#urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: .5;
 }
 
 /* Star button */
