@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gfxSharedImageSurface.h"
+#ifdef MOZ_IPC
+# include "gfxSharedImageSurface.h"
+#endif
 
 #include "CanvasLayerOGL.h"
 
