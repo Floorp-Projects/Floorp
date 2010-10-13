@@ -113,6 +113,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jSetClipboardText = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setClipboardText", "(Ljava/lang/String;)V");
     jShowAlertNotification = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jAlertsProgressListener_OnProgress = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
+    jAlertsProgressListener_OnCancel = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnCancel", "(Ljava/lang/String;)V");
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
 
 
@@ -477,6 +478,18 @@ AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& aAlertName,
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jAlertsProgressListener_OnProgress,
                                   jstrName, aProgress, aProgressMax, jstrText);
 }
+
+void
+AndroidBridge::AlertsProgressListener_OnCancel(const nsAString& aAlertName)
+{
+    ALOG("AlertsProgressListener_OnCancel");
+
+    AutoLocalJNIFrame jniFrame;
+
+    jstring jstrName = mJNIEnv->NewString(nsPromiseFlatString(aAlertName).get(), aAlertName.Length());
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jAlertsProgressListener_OnCancel, jstrName);
+}
+
 
 int
 AndroidBridge::GetDPI()
