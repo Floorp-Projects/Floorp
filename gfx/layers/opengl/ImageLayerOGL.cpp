@@ -406,7 +406,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         yuvImage->mSize.width,
                                         yuvImage->mSize.height));
-    program->SetLayerTransform(mTransform);
+    program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetOpacity());
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
@@ -437,7 +437,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         cairoImage->mSize.width,
                                         cairoImage->mSize.height));
-    program->SetLayerTransform(mTransform);
+    program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);

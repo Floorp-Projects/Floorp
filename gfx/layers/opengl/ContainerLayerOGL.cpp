@@ -155,12 +155,13 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   GLuint frameBuffer;
 
   nsIntPoint childOffset(aOffset);
-  nsIntRect visibleRect = mVisibleRegion.GetBounds();
+  nsIntRect visibleRect = GetEffectiveVisibleRegion().GetBounds();
+  const gfx3DMatrix& transform = GetEffectiveTransform();
 
   gl()->PushScissorRect();
 
   float opacity = GetOpacity();
-  bool needsFramebuffer = (opacity != 1.0) || !mTransform.IsIdentity();
+  bool needsFramebuffer = (opacity != 1.0) || !transform.IsIdentity();
   if (needsFramebuffer) {
     mOGLManager->CreateFBOWithTexture(visibleRect.width,
                                       visibleRect.height,
@@ -186,7 +187,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   while (layerToRender) {
     nsIntRect scissorRect(visibleRect);
 
-    const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
+    const nsIntRect *clipRect = layerToRender->GetLayer()->GetEffectiveClipRect();
     if (clipRect) {
       scissorRect = *clipRect;
     }
@@ -230,7 +231,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     rgb->Activate();
     rgb->SetLayerQuadRect(visibleRect);
-    rgb->SetLayerTransform(mTransform);
+    rgb->SetLayerTransform(transform);
     rgb->SetLayerOpacity(opacity);
     rgb->SetRenderOffset(aOffset);
     rgb->SetTextureUnit(0);
