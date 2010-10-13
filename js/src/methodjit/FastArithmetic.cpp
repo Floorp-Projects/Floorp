@@ -1008,8 +1008,8 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         JaegerSpew(JSpew_Insns, " ---- BEGIN STUB CALL CODE ---- \n");
 
         /* The lhs/rhs need to be synced in the stub call path. */
-        frame.ensureValueSynced(stubcc.masm, lhs, lvr);
-        frame.ensureValueSynced(stubcc.masm, rhs, rvr);
+        frame.syncEntry(stubcc.masm, lhs, lvr);
+        frame.syncEntry(stubcc.masm, rhs, rvr);
 
         /* Call the stub, adjusting for the two values just pushed. */
         stubcc.call(stub, frame.stackDepth() + script->nfixed + 2);
