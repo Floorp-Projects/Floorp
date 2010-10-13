@@ -38,7 +38,11 @@
 #include <assert.h>
 #include <elf.h>
 #include <fcntl.h>
+#if defined(__ANDROID__)
+#include "client/linux/android_link.h"
+#else
 #include <link.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -71,7 +75,7 @@ FileID::FileID(const char* path) {
     reinterpret_cast<const ElfW(Ehdr)*>(elf_base);
   if (my_strncmp(elf_base, ELFMAG, SELFMAG) != 0)
     return false;
-#if __ELF_NATIVE_CLASS == 32
+#if __ELF_NATIVE_CLASS == 32 || ELFSIZE == 32
 #define ELFCLASS ELFCLASS32
 #else
 #define ELFCLASS ELFCLASS64

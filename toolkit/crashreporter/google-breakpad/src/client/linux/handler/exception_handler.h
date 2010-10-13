@@ -33,9 +33,11 @@
 #include <vector>
 #include <string>
 
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 
+#include "client/linux/android_ucontext.h"
 #include "client/linux/crash_generation/crash_generation_client.h"
 #include "processor/scoped_ptr.h"
 
