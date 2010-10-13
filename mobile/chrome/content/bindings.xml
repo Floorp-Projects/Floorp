@@ -164,7 +164,6 @@
       <!-- Used by the badges implementation -->
       <field name="_badges">[]</field>
       <field name="_badgesTimeout">-1</field>
-      <field name="_eTLDService">Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);</field>
 
       <!-- nsIAutocompleteInput -->
       <property name="overrideValue"
@@ -372,19 +371,6 @@
         ]]></body>
       </method>
 
-      <method name="_getEffectiveHost">
-        <parameter name="aURI"/>
-        <body><![CDATA[
-          let host = null;
-          try {
-            host = aURI.host;
-            return this._eTLDService.getBaseDomainFromHost(host);
-          } catch (e) {}
-
-          return host ? host : aURI.spec;
-        ]]></body>
-      </method>
-
       <method name="registerBadgeHandler">
         <parameter name="aURL"/>
         <parameter name="aHandler"/>
@@ -392,8 +378,7 @@
           if (!aHandler)
             return false;
 
-          let effectiveHost = this._getEffectiveHost(Services.io.newURI(aURL, null, null));
-          this._badges[effectiveHost] = aHandler;
+          this._badges[aURL] = aHandler;
           return true;
         ]]></body>
       </method>
@@ -401,9 +386,8 @@
       <method name="unregisterBagdeHandler">
         <parameter name="aURL"/>
         <body><![CDATA[
-          let effectiveHost = this._getEffectiveHost(Services.io.newURI(aURL, null, null));
-          if (this._badges[effectiveHost])
-            delete this._badges[effectiveHost];
+          if (this._badges[aURL])
+            delete this._badges[aURL];
         ]]></body>
       </method>
 
@@ -420,28 +404,27 @@
               if (!item.hasAttribute("url"))
                 continue;
 
-              let currentURL = item.getAttribute("url");
-              let itemHost = self._getEffectiveHost(Services.io.newURI(currentURL, null, null));
+              let itemURL = item.getAttribute("url");
+              let itemURI = Services.io.newURI(itemURL, null, null);
 
 #ifdef MOZ_SERVICES_SYNC
               // check if the tab is in the remote list
               for (let i = 0; i < remoteItems.length; i++) {
-                let remoteURI = remoteItems[i].uri;
-                if (remoteURI) {
-                  let itemHost = Services.io.newURI(currentURL, null, null);
-                  let remoteHost = Services.io.newURI(remoteURI, null, null);
-                  if (itemHost.equals(remoteHost))
+                let remoteURL = remoteItems[i].uri;
+                if (remoteURL) {
+                  let remoteURI = Services.io.newURI(remoteURL, null, null);
+                  if (itemURI.equals(remoteURI))
                     item.setAttribute("remote", "true");
                 }
               }
 #endif
 
-              for (let badgeHost in self._badges) {
-                if (itemHost == badgeHost) {
+              for (let badgeURL in self._badges) {
+                if (itemURL.indexOf(badgeURL) == 0) {
                   // wrap the item to prevent setting a badge on a wrong item
                   let wrapper = {
                     set: function(aBadge) {
-                      if (item.getAttribute("url") != currentURL)
+                      if (item.getAttribute("url") != itemURL)
                         return;
 
                       if (!aBadge || aBadge == "")
@@ -451,7 +434,7 @@
                     }
                   };
 
-                  let handler = self._badges[badgeHost];
+                  let handler = self._badges[badgeURL];
                   handler.updateBadge ? handler.updateBadge(wrapper) : handler(wrapper);
                   break;
                 }
