@@ -4437,19 +4437,26 @@ var CombinedStopReload = {
     if (!this._initialized)
       return;
 
+    this.reload.removeAttribute("displaystop");
+
     if (!aDelay || this._stopClicked) {
       this._stopClicked = false;
       this._cancelTransition();
-      this.reload.removeAttribute("displaystop");
+      this.reload.disabled = XULBrowserWindow.reloadCommand
+                                             .getAttribute("disabled") == "true";
       return;
     }
 
     if (this._timer)
       return;
 
+    // Temporarily disable the reload button to prevent the user from
+    // accidentally reloading the page when intending to click the stop button
+    this.reload.disabled = true;
     this._timer = setTimeout(function (self) {
       self._timer = 0;
-      self.reload.removeAttribute("displaystop");
+      self.reload.disabled = XULBrowserWindow.reloadCommand
+                                             .getAttribute("disabled") == "true";
     }, 650, this);
   },
 
