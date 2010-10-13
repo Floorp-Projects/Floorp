@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfxSharedImageSurface.h"
+
 #include "CanvasLayerOGL.h"
 
 #include "gfxImageSurface.h"
@@ -277,3 +279,97 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   mUpdatedRect.Empty();
 }
+
+
+#ifdef MOZ_IPC
+
+ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
+  : ShadowCanvasLayer(aManager, nsnull)
+  , LayerOGL(aManager)
+{
+  mImplData = static_cast<LayerOGL*>(this);
+}
+ 
+ShadowCanvasLayerOGL::~ShadowCanvasLayerOGL()
+{}
+
+void
+ShadowCanvasLayerOGL::Initialize(const Data& aData)
+{
+  mDeadweight = static_cast<gfxSharedImageSurface*>(aData.mSurface);
+  gfxSize sz = mDeadweight->GetSize();
+  mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
+                                       mDeadweight->GetContentType(),
+                                       LOCAL_GL_CLAMP_TO_EDGE);
+}
+
+already_AddRefed<gfxSharedImageSurface>
+ShadowCanvasLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
+{
+  if (!mDestroyed && mTexImage) {
+    // XXX this is always just ridiculously slow
+
+    gfxSize sz = aNewFront->GetSize();
+    nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
+    // NB: this gfxContext must not escape EndUpdate() below
+    nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(updateRegion);
+
+    dest->SetOperator(gfxContext::OPERATOR_SOURCE);
+    dest->DrawSurface(aNewFront, aNewFront->GetSize());
+
+    mTexImage->EndUpdate();
+  }
+
+  return aNewFront;
+}
+
+void
+ShadowCanvasLayerOGL::DestroyFrontBuffer()
+{
+  mTexImage = nsnull;
+  if (mDeadweight) {
+    mOGLManager->DestroySharedSurface(mDeadweight, mAllocator);
+    mDeadweight = nsnull;
+  }
+}
+
+void
+ShadowCanvasLayerOGL::Destroy()
+{
+  if (!mDestroyed) {
+    mDestroyed = PR_TRUE;
+    mTexImage = nsnull;
+  }
+}
+
+Layer*
+ShadowCanvasLayerOGL::GetLayer()
+{
+  return this;
+}
+
+void
+ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                                  const nsIntPoint& aOffset)
+{
+  mOGLManager->MakeCurrent();
+
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
+  ColorTextureLayerProgram *program = mOGLManager->GetBGRALayerProgram();
+
+  ApplyFilter(mFilter);
+
+  program->Activate();
+  program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
+  program->SetLayerTransform(mTransform);
+  program->SetLayerOpacity(GetOpacity());
+  program->SetRenderOffset(aOffset);
+  program->SetTextureUnit(0);
+
+  mOGLManager->BindAndDrawQuad(program);
+
+  DEBUG_GL_ERROR_CHECK(gl());
+}
+
+#endif  // MOZ_IPC
