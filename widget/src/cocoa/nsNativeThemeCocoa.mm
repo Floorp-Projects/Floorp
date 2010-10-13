@@ -110,6 +110,39 @@ extern "C" {
 
 @end
 
+// Workaround for Bug 542048
+// On 64-bit, NSSearchFieldCells don't draw focus rings.
+#if defined(__x86_64__)
+
+static void DrawFocusRing(NSRect rect, float radius)
+{
+  NSSetFocusRingStyle(NSFocusRingOnly);
+  NSBezierPath* path = [NSBezierPath bezierPath];
+  rect = NSInsetRect(rect, radius, radius);
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
+  [path closePath];
+  [path fill];
+}
+
+@interface SearchFieldCellWithFocusRing : NSSearchFieldCell {} @end
+
+@implementation SearchFieldCellWithFocusRing
+
+- (void)drawWithFrame:(NSRect)rect inView:(NSView*)controlView
+{
+  [super drawWithFrame:rect inView:controlView];
+  if ([self showsFirstResponder]) {
+    DrawFocusRing(rect, NSHeight(rect) / 2);
+  }
+}
+
+@end
+  
+#endif
+
 // Copied from nsLookAndFeel.h
 // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
 static const int kThemeScrollBarArrowsBoth = 2;
@@ -211,7 +244,11 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
+#if defined(__x86_64__)
+  mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
+#else
   mSearchFieldCell = [[NSSearchFieldCell alloc] initTextCell:@""];
+#endif
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mSearchFieldCell setBezeled:YES];
   [mSearchFieldCell setEditable:YES];
