@@ -297,6 +297,7 @@ private:
 
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
+  nsTArray<nsRefPtr<nsScriptLoadRequest> > mNonAsyncExternalScriptInsertedRequests;
   nsTArray<nsRefPtr<nsScriptLoadRequest> > mAsyncRequests;
   nsTArray<nsRefPtr<nsScriptLoadRequest> > mDeferRequests;
   nsTArray<nsRefPtr<nsScriptLoadRequest> > mXSLTRequests;

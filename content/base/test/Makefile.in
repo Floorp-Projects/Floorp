@@ -431,6 +431,8 @@ _TEST_FILES2 = \
 		test_bug601803.html \
 		file_bug601803a.html \
 		file_bug601803b.html \
+		test_bug602838.html \
+		script_bug602838.sjs \
 		test_bug604660.html \
 		file_bug604660-1.xml \
 		file_bug604660-2.xsl \
