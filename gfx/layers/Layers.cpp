@@ -38,6 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+# include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
+
 #include "ImageLayers.h"
 #include "Layers.h"
 #include "gfxPlatform.h"
@@ -200,7 +204,49 @@ Layer::CanUseOpaqueSurface()
     parent->CanUseOpaqueSurface();
 }
 
+
+#ifdef MOZ_IPC
+// NB: eventually these methods will be defined unconditionally, and
+// can be moved into Layers.h
+const nsIntRect*
+Layer::GetEffectiveClipRect()
+{
+  if (ShadowLayer* shadow = AsShadowLayer()) {
+    return shadow->GetShadowClipRect();
+  }
+  return GetClipRect();
+}
+
+const nsIntRegion&
+Layer::GetEffectiveVisibleRegion()
+{
+  if (ShadowLayer* shadow = AsShadowLayer()) {
+    return shadow->GetShadowVisibleRegion();
+  }
+  return GetVisibleRegion();
+}
+
+const gfx3DMatrix&
+Layer::GetEffectiveTransform()
+{
+  if (ShadowLayer* shadow = AsShadowLayer()) {
+    return shadow->GetShadowTransform();
+  }
+  return GetTransform();
+}
+
+#else
+
+const nsIntRect* Layer::GetEffectiveClipRect() { return GetClipRect(); }
+const nsIntRegion& Layer::GetEffectiveVisibleRegion() { return GetVisibleRegion(); }
+const gfx3DMatrix& Layer::GetEffectiveTransform() { return GetTransform(); }
+
+#endif  // MOZ_IPC
+
+
 #ifdef MOZ_LAYERS_HAVE_LOG
+
+static nsACString& PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer);
 
 void
 Layer::Dump(FILE* aFile, const char* aPrefix)
@@ -259,6 +305,8 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
   aTo += nsPrintfCString(64, "%s%s (0x%p)", mManager->Name(), Name(), this);
+
+  ::PrintInfo(aTo, AsShadowLayer());
 
   if (mUseClipRect) {
     AppendToString(aTo, mClipRect, " [clip=", "]");
@@ -404,6 +452,28 @@ LayerManager::IsLogEnabled()
                     "layer manager must be created before logging is allowed");
   return PR_LOG_TEST(sLog, PR_LOG_DEBUG);
 }
+
+# ifdef MOZ_IPC
+static nsACString&
+PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
+{
+  if (!aShadowLayer) {
+    return aTo;
+  }
+  if (const nsIntRect* clipRect = aShadowLayer->GetShadowClipRect()) {
+    AppendToString(aTo, *clipRect, " [shadow-clip=", "]");
+  }
+  if (!aShadowLayer->GetShadowTransform().IsIdentity()) {
+    AppendToString(aTo, aShadowLayer->GetShadowTransform(), " [shadow-transform=", "]");
+  }
+  if (!aShadowLayer->GetShadowVisibleRegion().IsEmpty()) {
+    AppendToString(aTo, aShadowLayer->GetShadowVisibleRegion(), " [shadow-visible=", "]");
+  }
+  return aTo;
+}
+# else
+static nsACString& PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer) {}
+# endif  // MOZ_IPC
 
 #else  // !MOZ_LAYERS_HAVE_LOG
 

@@ -152,7 +152,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       nsRefPtr<ShadowThebesLayer> layer =
         layer_manager()->CreateShadowThebesLayer();
-      layer->SetParent(this);
+      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateThebesLayer())->Bind(layer);
       break;
     }
@@ -168,7 +168,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       nsRefPtr<ShadowImageLayer> layer =
         layer_manager()->CreateShadowImageLayer();
-      layer->SetParent(this);
+      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateImageLayer())->Bind(layer);
       break;
     }
@@ -184,7 +184,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       nsRefPtr<ShadowCanvasLayer> layer = 
         layer_manager()->CreateShadowCanvasLayer();
-      layer->SetParent(this);
+      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
     }
