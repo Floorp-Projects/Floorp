@@ -6556,12 +6556,8 @@ DumpShape(const Shape &shape)
 JS_FRIEND_API(void)
 js_DumpObject(JSObject *obj)
 {
-    uint32 i, slots;
-    Class *clasp;
-    jsuint reservedEnd;
-
     fprintf(stderr, "object %p\n", (void *) obj);
-    clasp = obj->getClass();
+    Class *clasp = obj->getClass();
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
 
     fprintf(stderr, "flags:");
@@ -6591,9 +6587,9 @@ js_DumpObject(JSObject *obj)
     fprintf(stderr, "\n");
 
     if (obj->isDenseArray()) {
-        slots = JS_MIN(obj->getArrayLength(), obj->getDenseArrayCapacity());
+        uint slots = JS_MIN(obj->getArrayLength(), obj->getDenseArrayCapacity());
         fprintf(stderr, "elements\n");
-        for (i = 0; i < slots; i++) {
+        for (uint i = 0; i < slots; i++) {
             fprintf(stderr, " %3d: ", i);
             dumpValue(obj->getDenseArrayElement(i));
             fprintf(stderr, "\n");
@@ -6623,9 +6619,9 @@ js_DumpObject(JSObject *obj)
         fprintf(stderr, "private %p\n", obj->getPrivate());
 
     fprintf(stderr, "slots:\n");
-    reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
-    slots = obj->slotSpan();
-    for (; i < slots; i++) {
+    uint reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
+    uint slots = obj->slotSpan();
+    for (uint i = 0; i < slots; i++) {
         fprintf(stderr, " %3d ", i);
         if (i < reservedEnd)
             fprintf(stderr, "(reserved) ");
