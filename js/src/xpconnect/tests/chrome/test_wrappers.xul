@@ -23,12 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 
   /** Test for Bug 533596 **/
 
-  function test() {
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
-    is(utils.getClassName(this), "Proxy", "this gets properly wrapped");
-  }
-
   function go() {
     var win = $('ifr').contentWindow;
     var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -39,12 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     is(utils.getClassName(win.location), "Proxy", "deep wrapping works");
     is(win.location.href, "http://example.org/tests/js/src/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
        "can still get strings out");
-
-    {
-        let local = test;
-        eval();
-        local();
-    }
 
     var unsafeWin = win.wrappedJSObject;
     is(utils.getClassName(unsafeWin), "Proxy", "can get a Proxy");
