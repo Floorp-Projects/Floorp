@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=599584
+-->
+<head>
+  <title>Test for Bug 599584</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=599584">Mozilla Bug 599584</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe src="iframe_bug599584.html"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 599584 **/
+SimpleTest.waitForExplicitFinish();
+var alreadyRan = false;
+
+function startTest() {
+  if (alreadyRan) {
+    // Make the test finish only once when it fails.
+    return;
+  }
+  alreadyRan = true;
+  setTimeout(function () {
+    var iframe = document.getElementsByTagName("iframe")[0];
+    is(iframe.contentWindow.location.search, "", "Should not have navigated with query string.");
+    SimpleTest.finish();
+  }, 1500);
+}
+
+</script>
+</pre>
+</body>
+</html>
+
