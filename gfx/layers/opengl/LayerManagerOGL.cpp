@@ -69,6 +69,7 @@ int LayerManagerOGLProgram::sCurrentProgramKey = 0;
  */
 LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
   : mWidget(aWidget)
+  , mWidgetSize(-1, -1)
   , mBackBufferFBO(0)
   , mBackBufferTexture(0)
   , mBackBufferSize(-1, -1)
@@ -917,6 +918,53 @@ void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
     gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
   }
 }
+
+#ifdef MOZ_IPC
+
+already_AddRefed<ShadowThebesLayer>
+LayerManagerOGL::CreateShadowThebesLayer()
+{
+  return nsnull;
+}
+
+already_AddRefed<ShadowContainerLayer>
+LayerManagerOGL::CreateShadowContainerLayer()
+{
+  return nsnull;
+}
+
+already_AddRefed<ShadowImageLayer>
+LayerManagerOGL::CreateShadowImageLayer()
+{
+  return nsnull;
+}
+
+already_AddRefed<ShadowColorLayer>
+LayerManagerOGL::CreateShadowColorLayer()
+{
+  return nsnull;
+}
+
+already_AddRefed<ShadowCanvasLayer>
+LayerManagerOGL::CreateShadowCanvasLayer()
+{
+  return nsnull;
+}
+
+#else
+
+already_AddRefed<ShadowThebesLayer>
+LayerManagerOGL::CreateShadowThebesLayer() { return nsnull; }
+already_AddRefed<ShadowContainerLayer>
+LayerManagerOGL::CreateShadowContainerLayer() { return nsnull; }
+already_AddRefed<ShadowImageLayer>
+LayerManagerOGL::CreateShadowImageLayer() { return nsnull; }
+already_AddRefed<ShadowColorLayer>
+LayerManagerOGL::CreateShadowColorLayer() { return nsnull; }
+already_AddRefed<ShadowCanvasLayer>
+LayerManagerOGL::CreateShadowCanvasLayer() { return nsnull; }
+
+#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */
