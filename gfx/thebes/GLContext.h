@@ -737,7 +737,7 @@ protected:
     // this should be thread-local, but that is slightly annoying to implement because on Mac
     // we don't have any __thread-like keyword. So for now, MOZ_GL_DEBUG assumes (and asserts)
     // that only the main thread is doing OpenGL calls.
-    static GLContext* sCurrentGLContext;
+    static THEBES_API GLContext* sCurrentGLContext;
 #endif
 
     void UpdateActualFormat();
