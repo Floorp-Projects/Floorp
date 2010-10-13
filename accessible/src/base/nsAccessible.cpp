@@ -688,6 +688,9 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 
   PRInt32 intrinsicState = mContent->IntrinsicState();
 
+  if (intrinsicState & NS_EVENT_STATE_INVALID)
+    *aState |= nsIAccessibleStates::STATE_INVALID;
+
   if (intrinsicState & NS_EVENT_STATE_REQUIRED)
     *aState |= nsIAccessibleStates::STATE_REQUIRED;
 
