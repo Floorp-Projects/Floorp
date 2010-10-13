@@ -162,6 +162,8 @@ public:
                                            PRInt64 aProgressMax,
                                            const nsAString& aAlertText);
 
+    void AlertsProgressListener_OnCancel(const nsAString& aAlertName);
+
     int GetDPI();
 
     struct AutoLocalJNIFrame {
@@ -225,6 +227,7 @@ protected:
     jmethodID jSetClipboardText;
     jmethodID jShowAlertNotification;
     jmethodID jAlertsProgressListener_OnProgress;
+    jmethodID jAlertsProgressListener_OnCancel;
     jmethodID jGetDpi;
 
     // stuff we need for CallEglCreateWindowSurface

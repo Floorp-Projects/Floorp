@@ -517,6 +517,15 @@ class GeckoAppShell
             notification.updateProgress(aAlertText, aProgress, aProgressMax);
     }
 
+    public static void alertsProgressListener_OnCancel(String aAlertName) {
+        Log.i("GeckoAppJava", "GeckoAppShell.alertsProgressListener_OnCancel('" + aAlertName + "'");
+
+        removeObserver(aAlertName);
+
+        int notificationID = aAlertName.hashCode();
+        removeNotification(notificationID);
+    }
+
     public static void handleNotification(String aAction, String aAlertName, String aAlertCookie) {
         int notificationID = aAlertName.hashCode();
 
