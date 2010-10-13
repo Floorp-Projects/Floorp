@@ -448,7 +448,7 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
 
 namespace js {
 
-bool
+void
 ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
 {
     Value &thisv = vp[1];
@@ -486,7 +486,6 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
                              clasp->name, JS_GetFunctionName(fun),
                              name);
     }
-    return false;
 }
 
 bool

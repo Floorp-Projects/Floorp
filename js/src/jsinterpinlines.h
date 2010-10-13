@@ -633,7 +633,8 @@ GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
         return true;
     }
 
-    return ReportIncompatibleMethod(cx, vp, Behavior::getClass());
+    ReportIncompatibleMethod(cx, vp, Behavior::getClass());
+    return false;
 }
 
 /*

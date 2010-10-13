@@ -2822,7 +2822,9 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     frame.shift(-1);
 
     /* 4) Test if the function can take a primitive. */
+#ifdef DEBUG
     FrameEntry *funFe = frame.peek(-2);
+#endif
     JS_ASSERT(!funFe->isTypeKnown());
 
     /*
