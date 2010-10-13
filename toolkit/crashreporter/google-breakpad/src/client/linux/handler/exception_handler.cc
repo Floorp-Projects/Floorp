@@ -73,12 +73,18 @@
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
+#if !defined(__ANDROID__)
 #include <sys/signal.h>
+#endif
 #include <sys/syscall.h>
+#if !defined(__ANDROID__)
 #include <sys/ucontext.h>
 #include <sys/user.h>
+#endif
 #include <sys/wait.h>
+#if !defined(__ANDROID__)
 #include <ucontext.h>
+#endif
 #include <unistd.h>
 
 #include <algorithm>
@@ -186,7 +192,7 @@ bool ExceptionHandler::InstallHandlers() {
   stack.ss_sp = signal_stack;
   stack.ss_size = kSigStackSize;
 
-  if (sigaltstack(&stack, NULL) == -1)
+  if (sys_sigaltstack(&stack, NULL) == -1)
     return false;
 
   struct sigaction sa;
@@ -310,7 +316,7 @@ bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
     return false;
 
   // Allow ourselves to be dumped.
-  prctl(PR_SET_DUMPABLE, 1);
+  sys_prctl(PR_SET_DUMPABLE, 1);
   CrashContext context;
   memcpy(&context.siginfo, info, sizeof(siginfo_t));
   memcpy(&context.context, uc, sizeof(struct ucontext));

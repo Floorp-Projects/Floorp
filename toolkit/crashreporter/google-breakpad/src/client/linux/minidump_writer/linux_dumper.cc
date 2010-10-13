@@ -45,7 +45,9 @@
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
+#if !defined(__ANDROID__)
 #include <link.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/ptrace.h>
@@ -117,10 +119,15 @@ inline bool IsMappedFileOpenUnsafe(
 bool GetThreadRegisters(ThreadInfo* info) {
   pid_t tid = info->tid;
 
-  if (sys_ptrace(PTRACE_GETREGS, tid, NULL, &info->regs) == -1 ||
-      sys_ptrace(PTRACE_GETFPREGS, tid, NULL, &info->fpregs) == -1) {
+  if (sys_ptrace(PTRACE_GETREGS, tid, NULL, &info->regs) == -1) {
     return false;
   }
+
+#if !defined(__ANDROID__)
+  if (sys_ptrace(PTRACE_GETFPREGS, tid, NULL, &info->fpregs) == -1) {
+    return false;
+  }
+#endif
 
 #if defined(__i386)
   if (sys_ptrace(PTRACE_GETFPXREGS, tid, NULL, &info->fpxregs) == -1)
@@ -425,7 +432,7 @@ bool LinuxDumper::ThreadInfoGet(ThreadInfo* info) {
 #elif defined(__x86_64)
   memcpy(&stack_pointer, &info->regs.rsp, sizeof(info->regs.rsp));
 #elif defined(__ARM_EABI__)
-  memcpy(&stack_pointer, &info->regs.uregs[R13], sizeof(info->regs.uregs[R13]));
+  memcpy(&stack_pointer, &info->regs.ARM_sp, sizeof(info->regs.ARM_sp));
 #else
 #error "This code hasn't been ported to your platform yet."
 #endif
