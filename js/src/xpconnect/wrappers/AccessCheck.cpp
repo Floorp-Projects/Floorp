@@ -60,9 +60,17 @@ GetCompartmentPrincipal(JSCompartment *compartment)
 bool
 AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
 {
+    nsIPrincipal *aprin = GetCompartmentPrincipal(a);
+    nsIPrincipal *bprin = GetCompartmentPrincipal(b);
+
+    // If either a or b doesn't have principals, we don't have enough
+    // information to tell. Seeing as how this is Gecko, we are default-unsafe
+    // in this case.
+    if (!aprin || !bprin)
+        return true;
+
     PRBool cond;
-    return NS_SUCCEEDED(GetCompartmentPrincipal(a)->Equals(GetCompartmentPrincipal(b), &cond)) &&
-           cond;
+    return NS_SUCCEEDED(aprin->Equals(bprin, &cond)) && cond;
 }
 
 bool
