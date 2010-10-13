@@ -578,6 +578,7 @@ js_dmod(jsdouble a, jsdouble b);
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_hole)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewPreallocatedArray)
+JS_DECLARE_CALLINFO(js_InitializerArray)
 JS_DECLARE_CALLINFO(js_ArrayCompPush_tn)
 JS_DECLARE_CALLINFO(js_EnsureDenseArrayCapacity)
 
@@ -614,7 +615,7 @@ JS_DECLARE_CALLINFO(js_NumberToString)
 /* Defined in jsobj.cpp. */
 JS_DECLARE_CALLINFO(js_Object_tn)
 JS_DECLARE_CALLINFO(js_CreateThisFromTrace)
-JS_DECLARE_CALLINFO(js_NonEmptyObject)
+JS_DECLARE_CALLINFO(js_InitializerObject)
 
 /* Defined in jsregexp.cpp. */
 JS_DECLARE_CALLINFO(js_CloneRegExpObject)

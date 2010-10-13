@@ -1207,26 +1207,21 @@ mjit::Compiler::jsop_setelem()
     stubcc.linkExit(guardDense, Uses(3));
 
     /* guard within capacity */
-    Address capacity(objReg, offsetof(JSObject, fslots) +
-                             JSObject::JSSLOT_DENSE_ARRAY_CAPACITY * sizeof(Value));
+    Address capacity(objReg, offsetof(JSObject, capacity));
 
     Jump inRange;
     MaybeRegisterID maybeIdReg;
     if (id->isConstant()) {
-        inRange = masm.branch32(Assembler::LessThanOrEqual,
-                                masm.payloadOf(capacity),
+        inRange = masm.branch32(Assembler::LessThanOrEqual, capacity,
                                 Imm32(id->getValue().toInt32()));
     } else {
         maybeIdReg = frame.copyDataIntoReg(id);
-        inRange = masm.branch32(Assembler::AboveOrEqual, maybeIdReg.reg(),
-                                masm.payloadOf(capacity));
+        inRange = masm.branch32(Assembler::AboveOrEqual, maybeIdReg.reg(), capacity);
     }
     stubcc.linkExit(inRange, Uses(3));
 
-    /* dslots non-NULL */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
-    Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
-    stubcc.linkExit(guardSlots, Uses(3));
+    /* load dslots */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* guard within capacity */
     if (id->isConstant()) {
@@ -1297,7 +1292,7 @@ mjit::Compiler::jsop_setelem()
         extendedObject.linkTo(syncTarget, &stubcc.masm);
 
         /* Update the array length if needed. Don't worry about overflow. */
-        Address arrayLength(baseReg, offsetof(JSObject, fslots[JSObject::JSSLOT_ARRAY_LENGTH]));
+        Address arrayLength(baseReg, offsetof(JSObject, privateData));
         stubcc.masm.load32(arrayLength, T1);
         Jump underLength = stubcc.masm.branch32(Assembler::LessThan, idReg, T1);
         stubcc.masm.move(idReg, T1);
@@ -1307,7 +1302,7 @@ mjit::Compiler::jsop_setelem()
 
         /* Restore the dslots register if we clobbered it with the object. */
         if (baseReg == objReg)
-            stubcc.masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+            stubcc.masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
         /* Rejoin OOL path with inline path to do the store itself. */
         Jump jmpHoleExit = stubcc.masm.jump();
@@ -1360,22 +1355,17 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
     /* Guard within capacity. */
     Jump inRange;
-    Address capacity(objReg, offsetof(JSObject, fslots) +
-                             JSObject::JSSLOT_DENSE_ARRAY_CAPACITY * sizeof(Value));
+    Address capacity(objReg, offsetof(JSObject, capacity));
     if (id->isConstant()) {
-        inRange = masm.branch32(Assembler::LessThanOrEqual,
-                                masm.payloadOf(capacity),
+        inRange = masm.branch32(Assembler::LessThanOrEqual, capacity,
                                 Imm32(id->getValue().toInt32()));
     } else {
-        inRange = masm.branch32(Assembler::AboveOrEqual, idReg.reg(),
-                                masm.payloadOf(capacity));
+        inRange = masm.branch32(Assembler::AboveOrEqual, idReg.reg(), capacity);
     }
     stubcc.linkExit(inRange, Uses(2));
 
-    /* dslots non-NULL */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
-    Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
-    stubcc.linkExit(guardSlots, Uses(2));
+    /* load dslots */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* guard within capacity */
     if (id->isConstant()) {

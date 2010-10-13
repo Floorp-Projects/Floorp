@@ -216,28 +216,28 @@ inline const js::Value &
 JSObject::getRegExpLastIndex() const
 {
     JS_ASSERT(isRegExp());
-    return fslots[JSSLOT_REGEXP_LAST_INDEX];
+    return getSlot(JSSLOT_REGEXP_LAST_INDEX);
 }
 
 inline void
 JSObject::setRegExpLastIndex(const js::Value &v)
 {
     JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX] = v;
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, v);
 }
 
 inline void
 JSObject::setRegExpLastIndex(jsdouble d)
 {
     JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX] = js::NumberValue(d);
+    setSlot(JSSLOT_REGEXP_LAST_INDEX, js::NumberValue(d));
 }
 
 inline void
 JSObject::zeroRegExpLastIndex()
 {
     JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX].setInt32(0);
+    getSlotRef(JSSLOT_REGEXP_LAST_INDEX).setInt32(0);
 }
 
 namespace js { class AutoStringRooter; }

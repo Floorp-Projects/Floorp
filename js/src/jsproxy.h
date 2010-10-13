@@ -128,12 +128,12 @@ class JSProxy {
 };
 
 /* Shared between object and function proxies. */
-const uint32 JSSLOT_PROXY_HANDLER = JSSLOT_PRIVATE + 0;
-const uint32 JSSLOT_PROXY_PRIVATE = JSSLOT_PRIVATE + 1;
-const uint32 JSSLOT_PROXY_EXTRA   = JSSLOT_PRIVATE + 2;
+const uint32 JSSLOT_PROXY_HANDLER = 0;
+const uint32 JSSLOT_PROXY_PRIVATE = 1;
+const uint32 JSSLOT_PROXY_EXTRA   = 2;
 /* Function proxies only. */
-const uint32 JSSLOT_PROXY_CALL = JSSLOT_PRIVATE + 2;
-const uint32 JSSLOT_PROXY_CONSTRUCT = JSSLOT_PRIVATE + 3;
+const uint32 JSSLOT_PROXY_CALL = 2;
+const uint32 JSSLOT_PROXY_CONSTRUCT = 3;
 
 extern JS_FRIEND_API(js::Class) ObjectProxyClass;
 extern JS_FRIEND_API(js::Class) FunctionProxyClass;

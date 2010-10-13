@@ -66,15 +66,8 @@ bool
 JSCompartment::init()
 {
     chunk = NULL;
-    shortStringArena.init();
-    stringArena.init();
-    funArena.init();
-#if JS_HAS_XML_SUPPORT
-    xmlArena.init();
-#endif
-    objArena.init();
-    for (unsigned i = 0; i < JS_EXTERNAL_STRING_LIMIT; i++)
-        externalStringArenas[i].init();
+    for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
+        arenas[i].init();
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         freeLists.finalizables[i] = NULL;
 #ifdef JS_GCMETER
@@ -86,21 +79,10 @@ JSCompartment::init()
 bool
 JSCompartment::arenaListsAreEmpty()
 {
-    bool empty = objArena.isEmpty() &&
-                 funArena.isEmpty() &&
-#if JS_HAS_XML_SUPPORT
-                 xmlArena.isEmpty() &&
-#endif
-                 shortStringArena.isEmpty() &&
-                 stringArena.isEmpty();
-  if (!empty)
-      return false;
-
-  for (unsigned i = 0; i < JS_EXTERNAL_STRING_LIMIT; i++) {
-       if (!externalStringArenas[i].isEmpty())
+  for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
+       if (!arenas[i].isEmpty())
            return false;
   }
-
   return true;
 }
 
