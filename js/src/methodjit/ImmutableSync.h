@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_imm_sync_h__ && defined JS_METHODJIT && defined JS_NUNBOX32
+#if !defined jsjaeger_imm_sync_h__ && defined JS_METHODJIT
 #define jsjaeger_imm_sync_h__
 
 #include "methodjit/MachineRegs.h"
