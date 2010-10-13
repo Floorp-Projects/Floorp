@@ -1118,7 +1118,7 @@ private:
     /*
      * Additional JS parsers.
      */
-    bool recognizeDirectivePrologue(JSParseNode *pn);
+    bool recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember);
 
     enum FunctionType { GETTER, SETTER, GENERAL };
     bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
