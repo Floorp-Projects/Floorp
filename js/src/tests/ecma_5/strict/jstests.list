@@ -37,3 +37,4 @@ script regress-532254.js
 script regress-532041.js
 script unbrand-this.js
 script this-for-function-expression-recursion.js
+script directive-prologue-01.js
