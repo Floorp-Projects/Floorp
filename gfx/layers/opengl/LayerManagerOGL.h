@@ -73,6 +73,11 @@ namespace mozilla {
 namespace layers {
 
 class LayerOGL;
+class ShadowThebesLayer;
+class ShadowContainerLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
+class ShadowColorLayer;
 
 /**
  * This is the LayerManager used for OpenGL 2.1. For now this will render on

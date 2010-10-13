@@ -56,8 +56,10 @@ namespace layers {
 
 class BasicShadowableLayer;
 class ShadowThebesLayer;
+class ShadowContainerLayer;
 class ShadowImageLayer;
 class ShadowCanvasLayer;
+class ShadowColorLayer;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
