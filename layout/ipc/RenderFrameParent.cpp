@@ -41,6 +41,7 @@
 #include "mozilla/layers/ShadowLayersParent.h"
 
 #include "BasicLayers.h"
+#include "LayerManagerOGL.h"
 #include "RenderFrameParent.h"
 
 #include "gfx3DMatrix.h"
@@ -294,13 +295,20 @@ PLayersParent*
 RenderFrameParent::AllocPLayers()
 {
   LayerManager* lm = GetLayerManager();
-  if (LayerManager::LAYERS_BASIC != lm->GetBackendType()) {
-    NS_WARNING("shadow layers no sprechen GL backend yet");
+  switch (lm->GetBackendType()) {
+  case LayerManager::LAYERS_BASIC: {
+    BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
+    return new ShadowLayersParent(bslm);
+  }
+  case LayerManager::LAYERS_OPENGL: {
+    LayerManagerOGL* lmo = static_cast<LayerManagerOGL*>(lm);
+    return new ShadowLayersParent(lmo);
+  }
+  default: {
+    NS_WARNING("shadow layers no sprechen D3D backend yet");
     return nsnull;
-  }    
-
-  BasicShadowLayerManager* bslm = static_cast<BasicShadowLayerManager*>(lm);
-  return new ShadowLayersParent(bslm);
+  }
+  }
 }
 
 bool
