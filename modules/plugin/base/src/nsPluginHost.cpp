@@ -2030,19 +2030,15 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
           *aPluginsChanged = PR_TRUE;
         }
       }
-    }
-    else {
-      // plugin file was added, flag this fact
-      *aPluginsChanged = PR_TRUE;
-    }
 
-    // if we are not creating the list, just continue the loop
-    // no need to proceed if changes are detected
-    if (!aCreatePluginList) {
-      if (*aPluginsChanged)
-        return NS_OK;
-      else
+      // If we're not creating a list and we already know something changed then
+      // we're done.
+      if (!aCreatePluginList) {
+        if (*aPluginsChanged) {
+          return NS_OK;
+        }
         continue;
+      }
     }
 
     // if it is not found in cache info list or has been changed, create a new one
@@ -2130,6 +2126,15 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
 
     // do it if we still want it
     if (bAddIt) {
+      // We have a valid new plugin so report that plugins have changed.
+      *aPluginsChanged = PR_TRUE;
+
+      // If we're not creating a plugin list, simply looking for changes,
+      // then we're done.
+      if (!aCreatePluginList) {
+        return NS_OK;
+      }
+
       pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
