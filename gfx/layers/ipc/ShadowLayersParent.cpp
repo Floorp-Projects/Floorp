@@ -159,7 +159,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpCreateContainerLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateContainerLayer"));
 
-      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayer();
+      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateShadowContainerLayer();
       AsShadowLayer(edit.get_OpCreateContainerLayer())->Bind(layer);
       break;
     }

@@ -135,7 +135,17 @@ ToData(Layer* aLayer)
   return static_cast<BasicImplData*>(aLayer->ImplData());
 }
 
+template<class Container>
+static void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
+template<class Container>
+static void ContainerRemoveChild(Layer* aChild, Container* aContainer);
+
 class BasicContainerLayer : public ContainerLayer, BasicImplData {
+  template<class Container>
+  friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
+  template<class Container>
+  friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
+
 public:
   BasicContainerLayer(BasicLayerManager* aManager) :
     ContainerLayer(aManager, static_cast<BasicImplData*>(this))
@@ -150,12 +160,21 @@ public:
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter);
-  virtual void RemoveChild(Layer* aChild);
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
+  {
+    NS_ASSERTION(BasicManager()->InConstruction(),
+                 "Can only set properties in construction phase");
+    ContainerInsertAfter(aChild, aAfter, this);
+  }
+
+  virtual void RemoveChild(Layer* aChild)
+  { 
+    NS_ASSERTION(BasicManager()->InConstruction(),
+                 "Can only set properties in construction phase");
+    ContainerRemoveChild(aChild, this);
+  }
 
 protected:
-  void RemoveChildInternal(Layer* aChild);
-
   BasicLayerManager* BasicManager()
   {
     return static_cast<BasicLayerManager*>(mManager);
@@ -165,37 +184,36 @@ protected:
 BasicContainerLayer::~BasicContainerLayer()
 {
   while (mFirstChild) {
-    RemoveChildInternal(mFirstChild);
+    ContainerRemoveChild(mFirstChild, this);
   }
 
   MOZ_COUNT_DTOR(BasicContainerLayer);
 }
 
-void
-BasicContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
+template<class Container>
+static void
+ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
 {
-  NS_ASSERTION(BasicManager()->InConstruction(),
-               "Can only set properties in construction phase");
-  NS_ASSERTION(aChild->Manager() == Manager(),
+  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
                "Child has wrong manager");
   NS_ASSERTION(!aChild->GetParent(),
                "aChild already in the tree");
   NS_ASSERTION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
                "aChild already has siblings?");
   NS_ASSERTION(!aAfter ||
-               (aAfter->Manager() == Manager() &&
-                aAfter->GetParent() == this),
+               (aAfter->Manager() == aContainer->Manager() &&
+                aAfter->GetParent() == aContainer),
                "aAfter is not our child");
 
   NS_ADDREF(aChild);
 
-  aChild->SetParent(this);
+  aChild->SetParent(aContainer);
   if (!aAfter) {
-    aChild->SetNextSibling(mFirstChild);
-    if (mFirstChild) {
-      mFirstChild->SetPrevSibling(aChild);
+    aChild->SetNextSibling(aContainer->mFirstChild);
+    if (aContainer->mFirstChild) {
+      aContainer->mFirstChild->SetPrevSibling(aChild);
     }
-    mFirstChild = aChild;
+    aContainer->mFirstChild = aChild;
     return;
   }
 
@@ -208,20 +226,13 @@ BasicContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
   aAfter->SetNextSibling(aChild);
 }
 
-void
-BasicContainerLayer::RemoveChild(Layer* aChild)
+template<class Container>
+static void
+ContainerRemoveChild(Layer* aChild, Container* aContainer)
 {
-  NS_ASSERTION(BasicManager()->InConstruction(),
-               "Can only set properties in construction phase");
-  RemoveChildInternal(aChild);
-}
-
-void
-BasicContainerLayer::RemoveChildInternal(Layer* aChild)
-{
-  NS_ASSERTION(aChild->Manager() == Manager(),
+  NS_ASSERTION(aChild->Manager() == aContainer->Manager(),
                "Child has wrong manager");
-  NS_ASSERTION(aChild->GetParent() == this,
+  NS_ASSERTION(aChild->GetParent() == aContainer,
                "aChild not our child");
 
   Layer* prev = aChild->GetPrevSibling();
@@ -229,7 +240,7 @@ BasicContainerLayer::RemoveChildInternal(Layer* aChild)
   if (prev) {
     prev->SetNextSibling(next);
   } else {
-    mFirstChild = next;
+    aContainer->mFirstChild = next;
   }
   if (next) {
     next->SetPrevSibling(prev);
@@ -1966,6 +1977,32 @@ BasicShadowThebesLayer::Paint(gfxContext* aContext,
   mFrontBuffer.DrawTo(this, isOpaqueContent, target, aOpacity);
 }
 
+class BasicShadowContainerLayer : public ShadowContainerLayer, BasicImplData {
+  template<class Container>
+  friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
+  template<class Container>
+  friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
+
+public:
+  BasicShadowContainerLayer(BasicShadowLayerManager* aLayerManager) :
+    ShadowContainerLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowContainerLayer);
+  }
+  virtual ~BasicShadowContainerLayer()
+  {
+    while (mFirstChild) {
+      ContainerRemoveChild(mFirstChild, this);
+    }
+
+    MOZ_COUNT_DTOR(BasicShadowContainerLayer);
+  }
+
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
+  { ContainerInsertAfter(aChild, aAfter, this); }
+  virtual void RemoveChild(Layer* aChild)
+  { ContainerRemoveChild(aChild, this); }
+};
 
 class BasicShadowImageLayer : public ShadowImageLayer, BasicImplData {
 public:
@@ -2243,6 +2280,14 @@ BasicShadowLayerManager::CreateShadowThebesLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ShadowThebesLayer> layer = new BasicShadowThebesLayer(this);
+  return layer.forget();
+}
+
+already_AddRefed<ShadowContainerLayer>
+BasicShadowLayerManager::CreateShadowContainerLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ShadowContainerLayer> layer = new BasicShadowContainerLayer(this);
   return layer.forget();
 }
 
