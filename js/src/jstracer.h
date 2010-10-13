@@ -1068,7 +1068,7 @@ class TraceRecorder
      * entries of the tracker accordingly.
      */
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation() {
-        if (global_dslots != globalObj->dslots)
+        if (global_dslots != globalObj->getSlots())
             checkForGlobalObjectReallocationHelper();
     }
     JS_REQUIRES_STACK void checkForGlobalObjectReallocationHelper();
@@ -1176,20 +1176,19 @@ class TraceRecorder
                          nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot,
                          nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
-    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
+    void stobj_set_slot(JSObject *obj, nanojit::LIns* obj_ins, unsigned slot,
                         nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
-    void set_array_fslot(nanojit::LIns *obj_ins, unsigned slot, uint32 val);
 
-    nanojit::LIns* stobj_get_fslot_private_ptr(nanojit::LIns* obj_ins,
-                                               unsigned slot);
-    nanojit::LIns* stobj_get_fslot_uint32(nanojit::LIns* obj_ins, unsigned slot);
-    nanojit::LIns* stobj_set_fslot_uint32(nanojit::LIns* value_ins, nanojit::LIns* obj_ins,
-                                          unsigned slot);
+    nanojit::LIns* stobj_get_slot_uint32(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* unbox_slot(JSObject *obj, nanojit::LIns *obj_ins, uint32 slot,
                               VMSideExit *exit);
     nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins);
     nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins);
+    nanojit::LIns* stobj_get_private_uint32(nanojit::LIns* obj_ins);
     nanojit::LIns* stobj_get_proto(nanojit::LIns* obj_ins);
+
+    /* For slots holding private pointers. */
+    nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns *obj_ins, unsigned slot);
 
     JS_REQUIRES_STACK AbortableRecordingStatus name(Value*& vp, nanojit::LIns*& ins, NameResult& nr);
     JS_REQUIRES_STACK AbortableRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins,

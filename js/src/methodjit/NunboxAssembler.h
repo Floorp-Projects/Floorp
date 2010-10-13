@@ -90,13 +90,14 @@ class Assembler : public BaseAssembler
         return BaseIndex(address.base, address.index, address.scale, address.offset + TAG_OFFSET);
     }
 
-    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, RegisterID type, RegisterID data) {
+    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, bool inlineAccess,
+                  RegisterID type, RegisterID data) {
         JS_ASSERT(type != data);
-        Address address(obj, offsetof(JSObject, fslots) + slot * sizeof(Value));
+        Address address(obj, JSObject::getFixedSlotOffset(slot));
         RegisterID activeAddressReg = obj;
-        if (slot >= JS_INITIAL_NSLOTS) {
-            loadPtr(Address(obj, offsetof(JSObject, dslots)), clobber);
-            address = Address(clobber, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+        if (!inlineAccess) {
+            loadPtr(Address(obj, offsetof(JSObject, slots)), clobber);
+            address = Address(clobber, slot * sizeof(Value));
             activeAddressReg = clobber;
         }
         if (activeAddressReg == type) {
@@ -202,9 +203,8 @@ class Assembler : public BaseAssembler
     }
 
     void loadFunctionPrivate(RegisterID base, RegisterID to) {
-        Address privSlot(base, offsetof(JSObject, fslots) +
-                               JSSLOT_PRIVATE * sizeof(Value));
-        loadPtr(privSlot, to);
+        Address priv(base, offsetof(JSObject, privateData));
+        loadPtr(priv, to);
     }
 
     Jump testNull(Assembler::Condition cond, RegisterID reg) {
