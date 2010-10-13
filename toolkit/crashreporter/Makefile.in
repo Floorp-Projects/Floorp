@@ -68,8 +68,13 @@ DIRS += \
 endif
 
 ifeq ($(OS_ARCH),Linux)
-# there's no define for this normally
-DEFINES += -DXP_LINUX
+# There's no define for XP_LINUX normally.
+# MOZ_APP_NAME is needed on Android, where we
+# need to launch by package name.
+DEFINES += \
+  -DXP_LINUX \
+  -DMOZ_APP_NAME=\"$(MOZ_APP_NAME)\" \
+  $(NULL)
 DIRS += \
   google-breakpad/src/common \
   google-breakpad/src/common/linux \

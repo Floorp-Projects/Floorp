@@ -460,11 +460,22 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
   if (pid == -1)
     return false;
   else if (pid == 0) {
+#if !defined(__ANDROID__)
     // need to clobber this, as libcurl might load NSS,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
     (void) execl(crashReporterPath,
                  crashReporterPath, minidumpPath, (char*)0);
+#else
+    // Invoke the reportCrash activity using am
+    (void) execlp("/system/bin/am",
+                 "/system/bin/am",
+                 "start",
+                 "-a", "org.mozilla.gecko.reportCrash",
+                 "-n", crashReporterPath,
+                 "--es", "minidumpPath", minidumpPath,
+                 (char*)0);
+#endif
     _exit(1);
   }
 #endif // XP_MACOSX
@@ -557,11 +568,18 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   exePath->GetPath(crashReporterPath_temp);
 
   crashReporterPath = ToNewUnicode(crashReporterPath_temp);
-#else
+#elif !defined(__ANDROID__)
   nsCString crashReporterPath_temp;
   exePath->GetNativePath(crashReporterPath_temp);
 
   crashReporterPath = ToNewCString(crashReporterPath_temp);
+#else
+  // On Android, we launch using the application package name
+  // instead of a filename, so use MOZ_APP_NAME to do that here.
+  //TODO: don't hardcode org.mozilla here, so other vendors can
+  // ship XUL apps with different package names on Android?
+  nsCString package("org.mozilla." MOZ_APP_NAME "/.CrashReporter");
+  crashReporterPath = ToNewCString(package);
 #endif
 
   // get temp path to use for minidump path
@@ -589,6 +607,13 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
     return NS_ERROR_FAILURE;
 
   tempPath = path;
+
+#elif defined(__ANDROID__)
+  // GeckoAppShell sets this in the environment
+  const char *tempenv = PR_GetEnv("TMPDIR");
+  if (!tempenv)
+    return NS_ERROR_FAILURE;
+  nsCString tempPath(tempenv);
 
 #elif defined(XP_UNIX)
   // we assume it's always /tmp on unix systems
