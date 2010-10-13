@@ -69,6 +69,8 @@ _TEST_FILES =	parser_datreader.js \
 		invalidchar.xml \
 		file_bug534293.sjs \
 		file_bug534293-slow.sjs \
+		test_bug599584.html \
+		iframe_bug599584.html \
 		$(NULL)
 
 # Disabled test due to orange on Linux
