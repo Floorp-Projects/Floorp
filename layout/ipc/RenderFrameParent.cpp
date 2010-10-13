@@ -112,6 +112,43 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
   *aShadowYScale = aConfig.mYScale;
 }
 
+static void
+UpdateShadowSubtree(Layer* aSubtreeRoot)
+{
+  ShadowLayer* shadow = aSubtreeRoot->AsShadowLayer();
+
+  shadow->SetShadowClipRect(aSubtreeRoot->GetClipRect());
+  shadow->SetShadowTransform(aSubtreeRoot->GetTransform());
+  shadow->SetShadowVisibleRegion(aSubtreeRoot->GetVisibleRegion());
+
+  for (Layer* child = aSubtreeRoot->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    UpdateShadowSubtree(child);
+  }
+}
+
+static void
+TransformShadowTreeTo(ContainerLayer* aRoot,
+                      const nsIntRect& aVisibleRect,
+                      const nsIntPoint& aTranslation,
+                      float aXScale, float aYScale)
+{
+  UpdateShadowSubtree(aRoot);
+
+  ShadowLayer* shadow = aRoot->AsShadowLayer();
+  NS_ABORT_IF_FALSE(aRoot->GetTransform() == shadow->GetShadowTransform(),
+                    "transforms should be the same now");
+  NS_ABORT_IF_FALSE(aRoot->GetTransform().Is2D(),
+                    "only 2D transforms expected currently");
+  gfxMatrix shadowTransform;
+  shadow->GetShadowTransform().Is2D(&shadowTransform);
+  // Pre-multiply this transform into the shadow's transform, so that
+  // it occurs before any transform set by the child
+  shadowTransform.Translate(gfxPoint(aTranslation.x, aTranslation.y));
+  shadowTransform.Scale(aXScale, aYScale);
+  shadow->SetShadowTransform(gfx3DMatrix::From2D(shadowTransform));
+}
+
 static Layer*
 ShadowRootOf(ContainerLayer* aContainer)
 {
@@ -172,7 +209,8 @@ RenderFrameParent::ShadowLayersUpdated()
 already_AddRefed<Layer>
 RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
-                              LayerManager* aManager)
+                              LayerManager* aManager,
+                              const nsIntRect& aVisibleRect)
 {
   NS_ABORT_IF_FALSE(aFrame,
                     "makes no sense to have a shadow tree without a frame");
@@ -228,6 +266,10 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                                aBuilder,
                                &shadowTranslation,
                                &shadowXScale, &shadowYScale);
+    TransformShadowTreeTo(shadowRoot, aVisibleRect,
+                          shadowTranslation, shadowXScale, shadowYScale);
+    // FIXME/bug 602431: this is dead code that will be obsoleted in
+    // favor of the above transformations
     gfxMatrix transform;
     transform.Translate(gfxPoint(shadowTranslation.x, shadowTranslation.y));
     transform.Scale(shadowXScale, shadowYScale);
@@ -305,6 +347,8 @@ already_AddRefed<Layer>
 nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager)
 {
-  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager);
+  PRInt32 appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
+  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect);
   return layer.forget();
 }
