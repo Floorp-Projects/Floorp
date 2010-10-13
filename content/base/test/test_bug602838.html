@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602838
+-->
+<head>
+  <title>Test for Bug 602838</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602838">Mozilla Bug 602838</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 602838 **/
+SimpleTest.waitForExplicitFinish();
+var firstRan = false;
+var asyncRan = false;
+
+var s = document.createElement("script");
+s.src = "script_bug602838.sjs";
+document.body.appendChild(s);
+
+s = document.createElement("script");
+s.src = "data:text/javascript,ok(firstRan, 'The first script should have run'); SimpleTest.finish();";
+document.body.appendChild(s);
+
+s = document.createElement("script");
+s.src = "data:text/javascript,ok(!firstRan, 'Non-async should not have run yet.'); asyncRan = true;";
+s.async = true;
+document.body.appendChild(s);
+
+</script>
+</pre>
+</body>
+</html>
+
