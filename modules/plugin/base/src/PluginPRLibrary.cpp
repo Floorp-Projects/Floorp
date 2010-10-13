@@ -211,13 +211,4 @@ PluginPRLibrary::GetSurface(NPP instance, gfxASurface** aSurface)
   return NS_OK;
 }
 
-nsresult
-PluginPRLibrary::UseAsyncPainting(NPP instance, PRBool* aIsAsync)
-{
-  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
-  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
-  *aIsAsync = PR_FALSE;
-  return NS_OK;
-}
-
 } // namespace mozilla
