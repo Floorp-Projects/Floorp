@@ -46,6 +46,14 @@
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
     }
 
+    // invalid/valid state
+    var invalid = ["maxlength","pattern","email","url"];
+    document.getElementById("maxlength").value = "i am too long";
+    for (i in invalid) {
+      testStates(invalid[i], STATE_INVALID);
+      testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
+    }
+
     SimpleTest.finish();
   }
 
@@ -69,6 +77,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=599163"
      title="check disabled state instead of attribute">
     Mozilla Bug 599163
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
+     title="Expose intrinsic invalid state to accessibility API">
+    Mozilla Bug 601205
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
@@ -110,6 +123,16 @@
     <input id="f_input">
     <input id="f_input_disabled" disabled>
   </fieldset>
+
+  <!-- invalid/valid -->
+  <input id="maxlength" maxlength="1">
+  <input id="maxlength2" maxlength="100" value="foo">
+  <input id="pattern" pattern="bar" value="foo">
+  <input id="pattern2" pattern="bar" value="bar">
+  <input id="email" type="email" value="foo">
+  <input id="email2" type="email" value="foo@bar.com">
+  <input id="url" type="url" value="foo">
+  <input id="url2" type="url" value="http://mozilla.org/">
 
   <!-- invalid/valid -->
   <input id="maxlength" maxlength="1">
