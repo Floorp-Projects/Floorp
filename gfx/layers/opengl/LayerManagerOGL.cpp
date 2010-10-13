@@ -372,6 +372,11 @@ LayerManagerOGL::BeginTransaction()
 void
 LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("[----- BeginTransaction"));
+  Log();
+#endif
+
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
@@ -384,6 +389,11 @@ void
 LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
                                 void* aCallbackData)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
+  Log();
+#endif
+
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
@@ -398,6 +408,11 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   mThebesLayerCallbackData = nsnull;
 
   mTarget = NULL;
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
 }
 
 already_AddRefed<ThebesLayer>

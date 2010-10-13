@@ -337,8 +337,13 @@ nsACString&
 ThebesLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   Layer::PrintInfo(aTo, aPrefix);
-  return mValidRegion.IsEmpty() ?
-    aTo : AppendToString(aTo, mValidRegion, " [valid=", "]");
+  if (!mValidRegion.IsEmpty()) {
+    AppendToString(aTo, mValidRegion, " [valid=", "]");
+  }
+  if (mXResolution != 1.0 || mYResolution != 1.0) {
+    aTo.AppendPrintf(" [xres=%g yres=%g]", mXResolution, mYResolution);
+  }
+  return aTo;
 }
 
 nsACString&
