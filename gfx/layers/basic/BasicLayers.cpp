@@ -114,6 +114,14 @@ public:
   virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
 
   /**
+   * Implementations return true here if they *must* retain their
+   * layer contents.  This is true of shadowable layers with shadows,
+   * because there's no target on which to composite directly in the
+   * layer-publishing child process.
+   */
+  virtual bool MustRetainContent() { return false; }
+
+  /**
    * Layers will get this call when their layer manager is destroyed, this
    * indicates they should clear resources they don't really need after their
    * LayerManager ceases to exist.
@@ -440,7 +448,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   if (!BasicManager()->IsRetained() ||
       (aOpacity == 1.0 && !canUseOpaqueSurface &&
        !ShouldRetainTransparentSurface(mContentFlags, targetSurface) &&
-       !AsShadowableLayer())) {
+       !MustRetainContent())) {
     mValidRegion.SetEmpty();
     mBuffer.Clear();
 
@@ -1389,6 +1397,7 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual bool MustRetainContent() { return HasShadow(); }
 
   virtual PRBool SupportsSurfaceDescriptor() const { return PR_TRUE; }
 
