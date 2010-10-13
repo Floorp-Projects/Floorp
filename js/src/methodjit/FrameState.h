@@ -807,10 +807,8 @@ class FrameState
     inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
     inline uint32 localIndex(uint32 n);
     void pushCopyOf(uint32 index);
-#if defined JS_NUNBOX32
     void syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
                    FrameEntry *bottom) const;
-#endif
     inline bool tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
     void resetInternalState();
 
@@ -884,9 +882,7 @@ class FrameState
      */
     RegisterState regstate[Assembler::TotalRegisters];
 
-#if defined JS_NUNBOX32
     mutable ImmutableSync reifier;
-#endif
 
     JSPackedBool *closedVars;
     bool eval;
