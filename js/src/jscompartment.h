@@ -54,17 +54,9 @@ struct JS_FRIEND_API(JSCompartment) {
     JSPrincipals    *principals;
     js::gc::Chunk   *chunk;
 
-    js::gc::ArenaList<JSObject>      objArena;
-    js::gc::ArenaList<JSFunction>    funArena;
-    js::gc::ArenaList<JSShortString> shortStringArena;
-    js::gc::ArenaList<JSString>      stringArena;
-    js::gc::ArenaList<JSString>      externalStringArenas[js::gc::JS_EXTERNAL_STRING_LIMIT];
-#if JS_HAS_XML_SUPPORT
-    js::gc::ArenaList<JSXML>         xmlArena;
-#endif
+    js::gc::ArenaList arenas[js::gc::FINALIZE_LIMIT];
+    js::gc::FreeLists freeLists;
 
-    js::gc::FreeLists                freeLists;
-    
 #ifdef JS_GCMETER
     js::gc::JSGCArenaStats compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif

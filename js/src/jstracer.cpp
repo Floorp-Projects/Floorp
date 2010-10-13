@@ -2700,9 +2700,7 @@ ptrdiff_t
 TraceRecorder::nativeGlobalSlot(const Value* p) const
 {
     JS_ASSERT(isGlobal(p));
-    if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS)
-        return ptrdiff_t(p - globalObj->fslots);
-    return ptrdiff_t((p - globalObj->dslots) + JS_INITIAL_NSLOTS);
+    return ptrdiff_t(p - globalObj->slots);
 }
 
 /* Determine the offset in the native global frame for a jsval we track. */
@@ -2716,8 +2714,7 @@ TraceRecorder::nativeGlobalOffset(const Value* p) const
 bool
 TraceRecorder::isGlobal(const Value* p) const
 {
-    return ((size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS) ||
-            (size_t(p - globalObj->dslots) < (globalObj->numSlots() - JS_INITIAL_NSLOTS)));
+    return (size_t(p - globalObj->slots) < globalObj->numSlots());
 }
 
 bool
@@ -3495,7 +3492,7 @@ struct ArgClosureTraits
 
     // Get the offset of our object slots from the object's dslots pointer.
     static inline uint32 slot_offset(JSObject* obj) {
-        return JSSLOT_START(&js_CallClass) + JSObject::CALL_RESERVED_SLOTS;
+        return JSObject::CALL_RESERVED_SLOTS;
     }
 
     // Get the maximum slot index of this type that should be allowed
@@ -3526,7 +3523,7 @@ struct VarClosureTraits
     }
 
     static inline uint32 slot_offset(JSObject* obj) {
-        return JSSLOT_START(&js_CallClass) + JSObject::CALL_RESERVED_SLOTS +
+        return JSObject::CALL_RESERVED_SLOTS +
                obj->getCallObjCalleeFunction()->nargs;
     }
 
@@ -3991,7 +3988,7 @@ TraceRecorder::known(JSObject** p)
 }
 
 /*
- * The dslots of the global object are sometimes reallocated by the interpreter.
+ * The slots of the global object are sometimes reallocated by the interpreter.
  * This function check for that condition and re-maps the entries of the tracker
  * accordingly.
  */
@@ -4000,8 +3997,8 @@ TraceRecorder::checkForGlobalObjectReallocationHelper()
 {
     debug_only_print0(LC_TMTracer, "globalObj->dslots relocated, updating tracker\n");
     Value* src = global_dslots;
-    Value* dst = globalObj->dslots;
-    jsuint length = globalObj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS;
+    Value* dst = globalObj->getSlots();
+    jsuint length = globalObj->capacity;
     LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
     for (jsuint n = 0; n < length; ++n) {
         map[n] = tracker.get(src);
@@ -4009,7 +4006,7 @@ TraceRecorder::checkForGlobalObjectReallocationHelper()
     }
     for (jsuint n = 0; n < length; ++n)
         tracker.set(dst++, map[n]);
-    global_dslots = globalObj->dslots;
+    global_dslots = globalObj->getSlots();
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
@@ -8837,7 +8834,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
     CHECK_STATUS_A(inc(v, v_ins, incr, pre));
 
     LIns* dslots_ins = NULL;
-    stobj_set_slot(obj_ins, slot, dslots_ins, v, v_ins);
+    stobj_set_slot(obj, obj_ins, slot, dslots_ins, v, v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -9575,7 +9572,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
 void
 TraceRecorder::stobj_set_fslot(LIns *obj_ins, unsigned slot, const Value &v, LIns* v_ins)
 {
-    box_value_into(v, v_ins, obj_ins, offsetof(JSObject, fslots) + slot * sizeof(Value), ACCSET_OTHER);
+    box_value_into(v, v_ins, obj_ins, JSObject::getFixedSlotOffset(slot), ACCSET_OTHER);
 }
 
 void
@@ -9583,49 +9580,32 @@ TraceRecorder::stobj_set_dslot(LIns *obj_ins, unsigned slot, LIns*& dslots_ins,
                                const Value &v, LIns* v_ins)
 {
     if (!dslots_ins)
-        dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER);
+        dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER);
     box_value_into(v, v_ins, dslots_ins, slot * sizeof(Value), ACCSET_OTHER);
 }
 
 void
-TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins,
+TraceRecorder::stobj_set_slot(JSObject *obj, LIns* obj_ins, unsigned slot, LIns*& dslots_ins,
                               const Value &v, LIns* v_ins)
 {
-    if (slot < JS_INITIAL_NSLOTS)
+    /*
+     * A shape guard must have already been generated for obj, which will
+     * ensure that future objects have the same number of fixed slots.
+     */
+    if (!obj->hasSlotsArray()) {
+        JS_ASSERT(slot < obj->numSlots());
         stobj_set_fslot(obj_ins, slot, v, v_ins);
-    else
-        stobj_set_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins, v, v_ins);
+    } else {
+        stobj_set_dslot(obj_ins, slot, dslots_ins, v, v_ins);
+    }
 }
 
 #if JS_BITS_PER_WORD == 32 || JS_BITS_PER_WORD == 64
-void
-TraceRecorder::set_array_fslot(LIns *obj_ins, unsigned slot, uint32 val)
-{
-    /*
-     * We can assume the destination fslot has been appropriately tagged so we
-     * can just overwrite the 32-bit payload.
-     */
-    lir->insStore(INS_CONSTU(val), obj_ins,
-                  offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
-                  ACCSET_OTHER);
-}
-
 LIns*
-TraceRecorder::stobj_get_fslot_uint32(LIns* obj_ins, unsigned slot)
+TraceRecorder::stobj_get_slot_uint32(LIns* obj_ins, unsigned slot)
 {
-    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
-    return lir->insLoad(LIR_ldi, obj_ins,
-                        offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
-                        ACCSET_OTHER);
-}
-
-LIns*
-TraceRecorder::stobj_set_fslot_uint32(LIns* value_ins, LIns* obj_ins, unsigned slot)
-{
-    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
-    return lir->insStore(LIR_sti, value_ins, obj_ins,
-                         offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
-                         ACCSET_OTHER);
+    LIns *vaddr_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER);
+    return lir->insLoad(LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset, ACCSET_OTHER);
 }
 #endif
 
@@ -9634,12 +9614,14 @@ TraceRecorder::unbox_slot(JSObject *obj, LIns *obj_ins, uint32 slot, VMSideExit 
 {
     LIns *vaddr_ins;
     ptrdiff_t offset;
-    if (slot < JS_INITIAL_NSLOTS) {
+
+    /* Same guarantee about fixed slots as stobj_set_slot. */
+    if (!obj->hasSlotsArray()) {
         vaddr_ins = obj_ins;
-        offset = offsetof(JSObject, fslots) + slot * sizeof(Value);
+        offset = JSObject::getFixedSlotOffset(slot);
     } else {
-        vaddr_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER);
-        offset = (slot - JS_INITIAL_NSLOTS) * sizeof(Value);
+        vaddr_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER);
+        offset = slot * sizeof(Value);
     }
 
     const Value &v = obj->getSlot(slot);
@@ -9649,12 +9631,11 @@ TraceRecorder::unbox_slot(JSObject *obj, LIns *obj_ins, uint32 slot, VMSideExit 
 #if JS_BITS_PER_WORD == 32
 
 LIns*
-TraceRecorder::stobj_get_fslot_private_ptr(LIns *obj_ins, unsigned slot)
+TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins, unsigned slot)
 {
-    JS_ASSERT(slot < JS_INITIAL_NSLOTS && slot != JSSLOT_PRIVATE);
-    return lir->insLoad(LIR_ldi, obj_ins,
-                        offsetof(JSObject, fslots) + slot * sizeof(Value) + sPayloadOffset,
-                        ACCSET_OTHER, LOAD_CONST);
+    LIns *vaddr_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER);
+    return lir->insLoad(LIR_ldi, vaddr_ins,
+                        slot * sizeof(Value) + sPayloadOffset, ACCSET_OTHER, LOAD_CONST);
 }
 
 void
@@ -9818,13 +9799,12 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
 #elif JS_BITS_PER_WORD == 64
 
 LIns*
-TraceRecorder::stobj_get_fslot_private_ptr(LIns *obj_ins, unsigned slot)
+TraceRecorder::stobj_get_const_private_ptr(LIns *obj_ins, unsigned slot)
 {
     /* N.B. On 64-bit, privates are encoded differently from other pointers. */
-    JS_ASSERT(slot < JS_INITIAL_NSLOTS && slot != JSSLOT_PRIVATE);
-    LIns *v_ins = lir->insLoad(LIR_ldq, obj_ins,
-                               offsetof(JSObject, fslots) + slot * sizeof(Value),
-                               ACCSET_OTHER, LOAD_CONST);
+    LIns *vaddr_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER);
+    LIns *v_ins = lir->insLoad(LIR_ldq, vaddr_ins,
+                               slot * sizeof(Value) + sPayloadOffset, ACCSET_OTHER, LOAD_CONST);
     return lir->ins2ImmI(LIR_lshq, v_ins, 1);
 }
 
@@ -10002,8 +9982,17 @@ TraceRecorder::stobj_get_parent(nanojit::LIns* obj_ins)
 LIns*
 TraceRecorder::stobj_get_private(nanojit::LIns* obj_ins)
 {
-    JS_STATIC_ASSERT(JSSLOT_PRIVATE == 0);
-    return lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, fslots), ACCSET_OTHER);
+    return lir->insLoad(LIR_ldp, obj_ins,
+                        offsetof(JSObject, privateData),
+                        ACCSET_OTHER);
+}
+
+LIns*
+TraceRecorder::stobj_get_private_uint32(nanojit::LIns* obj_ins)
+{
+    return lir->insLoad(LIR_ldi, obj_ins,
+                        offsetof(JSObject, privateData),
+                        ACCSET_OTHER);
 }
 
 LIns*
@@ -10567,7 +10556,7 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
     guard(false, lir->insEqP_0(argsobj_ins), OOM_EXIT);
 
     if (strict) {
-        LIns* argsData_ins = stobj_get_fslot_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+        LIns* argsData_ins = stobj_get_const_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
         ptrdiff_t slotsOffset = offsetof(ArgumentsData, slots);
         cx->fp()->forEachCanonicalActualArg(BoxArg(this, slotsOffset, argsData_ins));
     }
@@ -10960,7 +10949,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     // that pval is usable.
     JS_ASSERT(!pval.isPrimitive());
     JSObject *proto = &pval.toObject();
-    JS_ASSERT_IF(clasp != &js_ArrayClass, proto->emptyShape->getClass() == clasp);
+    JS_ASSERT_IF(clasp != &js_ArrayClass, proto->emptyShapes[0]->getClass() == clasp);
 
     proto_ins = INS_CONSTOBJ(proto);
     return RECORD_CONTINUE;
@@ -10984,7 +10973,8 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
     /* Double-check that a native proto has a matching emptyShape. */
     if (key != JSProto_Array) {
         JS_ASSERT(proto->isNative());
-        EmptyShape *empty = proto->emptyShape;
+        JS_ASSERT(proto->emptyShapes);
+        EmptyShape *empty = proto->emptyShapes[0];
         JS_ASSERT(empty);
         JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
     }
@@ -11919,7 +11909,7 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
             set(&obj->getSlotRef(slot), v_ins);
         } else {
             LIns* dslots_ins = NULL;
-            stobj_set_slot(obj_ins, slot, dslots_ins, v, v_ins);
+            stobj_set_slot(obj, obj_ins, slot, dslots_ins, v, v_ins);
         }
     }
 
@@ -12088,7 +12078,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, const Shape *sh
         JS_ASSERT(shape->hasShortID());
 
         LIns* dslots_ins = NULL;
-        stobj_set_slot(callobj_ins, slot, dslots_ins, v, v_ins);
+        stobj_set_dslot(callobj_ins, slot, dslots_ins, v, v_ins);
         return RECORD_CONTINUE;
     }
 
@@ -12626,8 +12616,8 @@ static bool OkToTraceTypedArrays = false;
 JS_REQUIRES_STACK void
 TraceRecorder::guardNotHole(LIns *argsobj_ins, LIns *idx_ins)
 {
-    // vp = &argsobj->fslots[JSSLOT_ARGS_DATA].slots[idx]
-    LIns* argsData_ins = stobj_get_fslot_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+    // vp = &argsobj->slots[JSSLOT_ARGS_DATA].slots[idx]
+    LIns* argsData_ins = stobj_get_const_private_ptr(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
     LIns* slotOffset_ins = lir->ins2(LIR_addp,
                                      INS_CONSTWORD(offsetof(ArgumentsData, slots)),
                                      lir->insUI2P(lir->ins2ImmI(LIR_muli, idx_ins, sizeof(Value))));
@@ -13070,22 +13060,14 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // be an integer.
         CHECK_STATUS_A(makeNumberInt32(idx_ins, &idx_ins));
 
-        if (MAX_DSLOTS_LENGTH > MAX_DSLOTS_LENGTH32) {
-            /*
-             * Check for negative values bleeding through on 64-bit machines only,
-             * since we can't allocate large enough arrays for this on 32-bit
-             * machines.
-             */
-            guard(true, lir->ins2ImmI(LIR_gei, idx_ins, 0), mismatchExit);
-        }
-
         if (!js_EnsureDenseArrayCapacity(cx, obj, idx.toInt32()))
             RETURN_STOP_A("couldn't ensure dense array capacity for setelem");
 
         // Grow the array if the index exceeds the capacity.  This happens
         // rarely, eg. less than 1% of the time in SunSpider.
         LIns* capacity_ins =
-            addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_CAPACITY),
+            addName(lir->insLoad(LIR_ldi, obj_ins,
+                                 offsetof(JSObject, capacity), ACCSET_OTHER),
                     "capacity");
         LIns* br = lir->insBranch(LIR_jt, lir->ins2(LIR_ltui, idx_ins, capacity_ins), NULL);
         LIns* args[] = { idx_ins, obj_ins, cx_ins };
@@ -13095,7 +13077,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         // Get the address of the element.
         LIns *dslots_ins =
-            addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER), "dslots");
+            addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER), "dslots");
         JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
         LIns *addr_ins = lir->ins2(LIR_addp, dslots_ins,
                                    lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
@@ -13301,7 +13283,7 @@ TraceRecorder::record_JSOP_GETFCSLOT()
     JSObject& callee = cx->fp()->callee();
     LIns* callee_ins = get(&cx->fp()->calleeValue());
 
-    LIns* upvars_ins = stobj_get_fslot_private_ptr(callee_ins,
+    LIns* upvars_ins = stobj_get_const_private_ptr(callee_ins,
                                                    JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
     unsigned index = GET_UINT16(cx->regs->pc);
@@ -13566,7 +13548,7 @@ TraceRecorder::record_JSOP_APPLY()
             length = aobj->getArrayLength();
             guard(true,
                   lir->ins2ImmI(LIR_eqi,
-                                stobj_get_fslot_uint32(aobj_ins, JSObject::JSSLOT_ARRAY_LENGTH),
+                                stobj_get_private_uint32(aobj_ins),
                                 length),
                   BRANCH_EXIT);
         } else if (aobj->isArguments()) {
@@ -13947,8 +13929,10 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
      * the correct value.
      */
     LIns* capacity_ins =
-        addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_CAPACITY),
+        addName(lir->insLoad(LIR_ldi, obj_ins,
+                             offsetof(JSObject, capacity), ACCSET_OTHER),
                 "capacity");
+
     jsuint capacity = obj->getDenseArrayCapacity();
     bool within = (jsuint(idx) < capacity);
     if (!within) {
@@ -13968,9 +13952,9 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 
     /* Load the value and guard on its type to unbox it. */
     LIns* dslots_ins =
-        addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACCSET_OTHER), "dslots");
-    vp = &obj->dslots[jsuint(idx)];
-    JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
+        addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, slots), ACCSET_OTHER), "dslots");
+    vp = &obj->slots[jsuint(idx)];
+	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
                          lir->ins2ImmI(LIR_lshp, lir->insUI2P(idx_ins), 3));
     v_ins = unbox_value(*vp, addr_ins, 0, branchExit);
@@ -14281,20 +14265,19 @@ TraceRecorder::record_JSOP_UINT16()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_NEWINIT()
 {
-    JSProtoKey key = JSProtoKey(GET_INT8(cx->regs->pc));
+    JSProtoKey key = JSProtoKey(GET_UINT16(cx->regs->pc));
+    uint32 count = GET_UINT16(cx->regs->pc + UINT16_LEN);
+
     LIns* proto_ins;
     CHECK_STATUS_A(getClassPrototype(key, proto_ins));
 
     LIns *v_ins;
     if (key == JSProto_Array) {
-        LIns *args[] = { lir->insImmI(0), proto_ins, cx_ins };
-        v_ins = lir->insCall(&js_NewEmptyArray_ci, args);
+        LIns *args[] = { lir->insImmI(count), cx_ins };
+        v_ins = lir->insCall(&js_InitializerArray_ci, args);
     } else {
-        LIns *args[] = { proto_ins, cx_ins };
-        v_ins = lir->insCall((cx->regs->pc[JSOP_NEWINIT_LENGTH] != JSOP_ENDINIT)
-                             ? &js_NonEmptyObject_ci
-                             : &js_Object_tn_ci,
-                             args);
+        LIns *args[] = { lir->insImmI(count), cx_ins };
+        v_ins = lir->insCall(&js_InitializerObject_ci, args);
     }
     guard(false, lir->insEqP_0(v_ins), OOM_EXIT);
     stack(0, v_ins);
@@ -15256,7 +15239,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 
     if (fun->u.i.nupvars) {
         JSUpvarArray *uva = fun->u.i.script->upvars();
-        LIns* upvars_ins = stobj_get_fslot_private_ptr(closure_ins,
+        LIns* upvars_ins = stobj_get_const_private_ptr(closure_ins,
                                                        JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
         for (uint32 i = 0, n = uva->length; i < n; i++) {
@@ -15340,7 +15323,7 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
     // The following implements JSObject::isArgsLengthOverridden on trace.
     // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
-    LIns *len_ins = stobj_get_fslot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
+    LIns *len_ins = stobj_get_slot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
     LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
     guard(true, lir->insEqI_0(ovr_ins), snapshot(MISMATCH_EXIT));
     return len_ins;
@@ -16044,7 +16027,7 @@ TraceRecorder::record_JSOP_LENGTH()
             JS_ASSERT(obj->isSlowArray());
             guardClass(obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         }
-        v_ins = lir->ins1(LIR_i2d, stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH));
+        v_ins = lir->ins1(LIR_i2d, stobj_get_private_uint32(obj_ins));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), LOAD_NORMAL);

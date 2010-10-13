@@ -6,5 +6,5 @@ function caller(obj) {
   var x = ({ dana : "zuul" });
   return x;
 }
-trap(caller, 20, "x = 'success'; nop()");
+trap(caller, 23, "x = 'success'; nop()");
 assertEq(caller(this), "success");
