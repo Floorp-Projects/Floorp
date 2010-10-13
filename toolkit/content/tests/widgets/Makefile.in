@@ -146,5 +146,9 @@ _TEST_FILES += test_menubar.xul \
                window_menubar.xul
 endif
 
+ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+_TEST_FILES += test_arrowpanel.xul
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
