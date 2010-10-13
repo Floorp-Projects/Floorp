@@ -371,7 +371,7 @@ GCTimer::finish(bool lastGC) {
                 gcFile = fopen("gcTimer.dat", "a");
 
                 fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
-                fprintf(gcFile, " FinStr,  Destroy,  newChunks, destoyChunks\n");
+                fprintf(gcFile, " FinStr,  Destroy,  newChunks, destroyChunks\n");
             }
             JS_ASSERT(gcFile);
             fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f,  %7.1f, ",
