@@ -1848,8 +1848,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Popup Bounding Box */
-#identity-popup,
-#notification-popup {
+#identity-popup {
   -moz-appearance: menupopup;
   color: MenuText;
 }
@@ -1866,7 +1865,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* Notification popup */
 #notification-popup {
   padding: 10px;
-  margin-top: 3px;
 }
 
 .popup-notification-icon {
