@@ -41,45 +41,56 @@
 namespace mozilla {
 namespace layers {
 
-Layer*
-ColorLayerOGL::GetLayer()
+static void
+RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
+                 const nsIntPoint& aOffset)
 {
-  return this;
-}
-
-void
-ColorLayerOGL::RenderLayer(int,
-                           const nsIntPoint& aOffset)
-{
-  mOGLManager->MakeCurrent();
+  aManager->MakeCurrent();
 
   // XXX we might be able to improve performance by using glClear
 
-  nsIntRect visibleRect = GetEffectiveVisibleRegion().GetBounds();
+  nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
   
   /* Multiply color by the layer opacity, as the shader
    * ignores layer opacity and expects a final color to
    * write to the color buffer.  This saves a needless
    * multiply in the fragment shader.
    */
-  float opacity = GetOpacity();
-  gfxRGBA color(mColor);
+  float opacity = aLayer->GetOpacity();
+  gfxRGBA color(aLayer->GetColor());
   color.r *= opacity;
   color.g *= opacity;
   color.b *= opacity;
   color.a *= opacity;
 
-  SolidColorLayerProgram *program = mOGLManager->GetColorLayerProgram();
+  SolidColorLayerProgram *program = aManager->GetColorLayerProgram();
   program->Activate();
   program->SetLayerQuadRect(visibleRect);
-  program->SetLayerTransform(GetEffectiveTransform());
+  program->SetLayerTransform(aLayer->GetEffectiveTransform());
   program->SetRenderOffset(aOffset);
   program->SetRenderColor(color);
 
-  mOGLManager->BindAndDrawQuad(program);
+  aManager->BindAndDrawQuad(program);
 
-  DEBUG_GL_ERROR_CHECK(gl());
+  DEBUG_GL_ERROR_CHECK(aManager->gl());
 }
+
+void
+ColorLayerOGL::RenderLayer(int,
+                           const nsIntPoint& aOffset)
+{
+  return RenderColorLayer(this, mOGLManager, aOffset);
+}
+
+#ifdef MOZ_IPC
+void
+ShadowColorLayerOGL::RenderLayer(int,
+                                 const nsIntPoint& aOffset)
+{
+  return RenderColorLayer(this, mOGLManager, aOffset);
+}
+#endif  // MOZ_IPC
+
 
 } /* layers */
 } /* mozilla */
