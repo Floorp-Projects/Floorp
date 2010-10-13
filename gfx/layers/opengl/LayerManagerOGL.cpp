@@ -928,31 +928,51 @@ void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
 already_AddRefed<ShadowThebesLayer>
 LayerManagerOGL::CreateShadowThebesLayer()
 {
-  return nsnull;
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowThebesLayerOGL>(new ShadowThebesLayerOGL(this)).forget();
 }
 
 already_AddRefed<ShadowContainerLayer>
 LayerManagerOGL::CreateShadowContainerLayer()
 {
-  return nsnull;
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowContainerLayerOGL>(new ShadowContainerLayerOGL(this)).forget();
 }
 
 already_AddRefed<ShadowImageLayer>
 LayerManagerOGL::CreateShadowImageLayer()
 {
-  return nsnull;
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowImageLayerOGL>(new ShadowImageLayerOGL(this)).forget();
 }
 
 already_AddRefed<ShadowColorLayer>
 LayerManagerOGL::CreateShadowColorLayer()
 {
-  return nsnull;
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowColorLayerOGL>(new ShadowColorLayerOGL(this)).forget();
 }
 
 already_AddRefed<ShadowCanvasLayer>
 LayerManagerOGL::CreateShadowCanvasLayer()
 {
-  return nsnull;
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowCanvasLayerOGL>(new ShadowCanvasLayerOGL(this)).forget();
 }
 
 #else
