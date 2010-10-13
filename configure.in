@@ -6279,7 +6279,7 @@ MOZ_ARG_DISABLE_BOOL(crashreporter,
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
 
-  if (test "$OS_ARCH" = "Linux" -o "$OS_ARCH" = "SunOS") && \
+  if (test "$OS_TARGET" = "Linux" -o "$OS_ARCH" = "SunOS") && \
     test -z "$SKIP_LIBRARY_CHECKS"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
     AC_SUBST(MOZ_GTHREAD_CFLAGS)
