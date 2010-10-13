@@ -228,3 +228,10 @@ maybe_clobber_profiledbuild:
 endif
 
 .PHONY: maybe_clobber_profiledbuild
+
+# Look for R_386_PC32 relocations in shared libs, these
+# break x86_64 builds and SELinux users.
+ifeq ($(OS_TARGET)_$(TARGET_XPCOM_ABI),Linux_x86-gcc3)
+scheck::
+	@relcount=`find $(DIST)/bin -name "*.so" | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo "FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?"; exit 1; else echo "PASSED"; fi
+endif
