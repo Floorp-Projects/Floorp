@@ -1916,8 +1916,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 /* Popup Bounding Box */
-#identity-popup,
-#notification-popup {
+#identity-popup {
   -moz-appearance: none;
   -moz-window-shadow: none;
   background-color: transparent;
@@ -1938,8 +1937,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #notification-popup {
   color: #fff;
-  margin-top: -1px;
-  margin-left: -27px;
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 #notification-popup-box {
