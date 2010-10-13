@@ -103,7 +103,7 @@ js_NewGCString(JSContext *cx)
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
-    return (JSShortString *) NewFinalizableGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING);
+    return NewFinalizableGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING);
 }
 
 inline JSString *
@@ -205,21 +205,6 @@ MarkChildren(JSTracer *trc, JSObject *obj)
 }
 
 static inline void
-MarkChildren(JSTracer *trc, JSFunction *fun)
-{
-    JSObject *obj = reinterpret_cast<JSObject *>(fun);
-    if (!obj->map)
-        return;
-    if (JSObject *proto = obj->getProto())
-        MarkObject(trc, *proto, "proto");
-
-    if (JSObject *parent = obj->getParent())
-        MarkObject(trc, *parent, "parent");
-    TraceOp op = obj->getOps()->trace;
-    (op ? op : js_TraceObject)(trc, obj);
-}
-
-static inline void
 MarkChildren(JSTracer *trc, JSString *str)
 {
     if (str->isDependent())
@@ -238,12 +223,6 @@ MarkChildren(JSTracer *trc, JSXML *xml)
 {
     js_TraceXML(trc, xml);
 }
-#endif
-
-#if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((jsuword)(lval) < limit)
-#else
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((jsuword)(lval) > limit)
 #endif
 
 static inline bool
