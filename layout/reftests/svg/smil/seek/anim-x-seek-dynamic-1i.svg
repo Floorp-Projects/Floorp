@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that past dynamic times are still preserved after a backwards seek.
+    // (The converse, that now-future dynamic times are reset during a backwards
+    // seek is covered by anim-x-seek-dynamic-1g.svg)
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    // Generate a series of intervals with dynamic begin points
+    svg.setCurrentTime(1);
+    a.beginElement();
+    svg.setCurrentTime(3);
+    a.beginElement();
+    svg.setCurrentTime(5);
+    a.beginElement();
+    svg.setCurrentTime(7);
+    a.beginElement();
+    svg.setCurrentTime(5); // Backwards seek (1) -- at this point we'll do
+                           // a reset but old dynamic times (e.g. t=1s) should
+                           // be preserved
+    svg.setCurrentTime(1); // Backwards seek (2)
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="15" begin="indefinite" dur="1s" id="a"/>
+  </rect>
+</svg>

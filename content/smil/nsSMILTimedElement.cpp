@@ -1398,11 +1398,10 @@ nsSMILTimedElement::UnpreserveInstanceTimes(InstanceTimeList& aList)
   const nsSMILInstanceTime* cutoff = mCurrentInterval ?
       mCurrentInterval->Begin() :
       prevInterval ? prevInterval->Begin() : nsnull;
-  InstanceTimeComparator cmp;
   PRUint32 count = aList.Length();
   for (PRUint32 i = 0; i < count; ++i) {
     nsSMILInstanceTime* instance = aList[i].get();
-    if (!cutoff || cmp.LessThan(cutoff, instance)) {
+    if (!cutoff || cutoff->Time().CompareTo(instance->Time()) < 0) {
       instance->UnmarkShouldPreserve();
     }
   }
