@@ -119,7 +119,9 @@ public:
     MOZ_COUNT_DTOR(nsMediaCache);
   }
 
-  // Main thread only. Creates the backing cache file.
+  // Main thread only. Creates the backing cache file. If this fails,
+  // then the cache is still in a semi-valid state; mFD will be null,
+  // so all I/O on the cache file will fail.
   nsresult Init();
   // Shut down the global cache if it's no longer needed. We shut down
   // the cache as soon as there are no streams. This means that during
@@ -127,6 +129,10 @@ public:
   // many times, but that's OK since starting it up is cheap and
   // shutting it down cleans things up and releases disk space.
   static void MaybeShutdown();
+
+  // Brutally flush the cache contents. Main thread only.
+  static void Flush();
+  void FlushInternal();
 
   // Cache-file access methods. These are the lowest-level cache methods.
   // mMonitor must be held; these can be called on any thread.
@@ -494,6 +500,7 @@ nsresult
 nsMediaCache::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  NS_ASSERTION(!mFD, "Cache file already open?");
 
   if (!mMonitor) {
     // the constructor failed
@@ -525,6 +532,36 @@ nsMediaCache::Init()
 #endif
 
   return NS_OK;
+}
+
+void
+nsMediaCache::Flush()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  if (!gMediaCache)
+    return;
+
+  gMediaCache->FlushInternal();
+}
+
+void
+nsMediaCache::FlushInternal()
+{
+  nsAutoMonitor mon(mMonitor);
+
+  for (PRInt32 blockIndex = 0; blockIndex < mIndex.Length(); ++blockIndex) {
+    FreeBlock(blockIndex);
+  }
+
+  // Truncate file, close it, and reopen
+  Truncate();
+  NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
+  if (mFD) {
+    PR_Close(mFD);
+    mFD = nsnull;
+  }
+  Init();
 }
 
 void
