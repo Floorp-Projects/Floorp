@@ -35,17 +35,39 @@
  * ***** END LICENSE BLOCK ***** */
 
 let WeaveGlue = {
+  autoConnect: false,
+
   init: function init() {
     Components.utils.import("resource://services-sync/main.js");
 
     this._addListeners();
 
     // Generating keypairs is expensive on mobile, so disable it
-    if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED)
+    if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
       Weave.Service.keyGenEnabled = false;
 
-    // Load the values for the string inputs
-    this.loadInputs();
+      this.autoConnect = Services.prefs.getBoolPref("services.sync.autoconnect");
+      if (this.autoConnect) {
+        // Put the settings UI into a state of "connecting..." if we are going to auto-connect
+        this._settings.account.collapsed = true;
+        this._settings.pass.collapsed = true;
+        this._settings.secret.collapsed = true;
+        this._settings.connect.collapsed = false;
+        this._settings.device.collapsed = false;
+        this._settings.disconnect.collapsed = true;
+        this._settings.sync.collapsed = false;
+
+        this._settings.connect.firstChild.disabled = true;
+        this._settings.sync.firstChild.disabled = true;
+
+        let bundle = Services.strings.createBundle("chrome://weave/locale/services/sync.properties");
+        this._settings.connect.setAttribute("title", bundle.GetStringFromName("connecting.label"));
+
+        try {
+          this._settings.device.value = Services.prefs.getCharPref("services.sync.client.name");
+        } catch(e) {}
+      }
+    }
   },
 
   connect: function connect() {
@@ -110,6 +132,10 @@ let WeaveGlue = {
   observe: function observe(aSubject, aTopic, aData) {
     let loggedIn = Weave.Service.isLoggedIn;
     document.getElementById("cmd_remoteTabs").setAttribute("disabled", !loggedIn);
+
+    // If we are going to auto-connect anyway, fake the settings UI to make it
+    // look like we are connecting
+    loggedIn = loggedIn || this.autoConnect;
 
     // Make sure we're online when connecting/syncing
     Util.forceOnline();
@@ -181,18 +207,18 @@ let WeaveGlue = {
     else
       connect.removeAttribute("desc");
 
-    // Load the values for the string inputs
-    this.loadInputs();
-  },
+    // Reset the auto-connect flag after the first attempted login
+    if (aTopic == "weave:service:login:finish" || aTopic == "weave:service:login:error")
+      this.autoConnect = false;
 
-  loadInputs: function loadInputs() {
-    this._settings.account.value = Weave.Service.account || "";
-    this._settings.pass.value = Weave.Service.password || "";
+    // Load the values for the string inputs
+    account.value = Weave.Service.account || "";
+    pass.value = Weave.Service.password || "";
     let pp = Weave.Service.passphrase || "";
     if (pp.length == 20)
       pp = this.hyphenatePassphrase(pp);
-    this._settings.secret.value = pp;
-    this._settings.device.value = Weave.Clients.localName || "";
+    secret.value = pp;
+    device.value = Weave.Clients.localName || "";
   },
 
   changeName: function changeName(aInput) {
