@@ -55,6 +55,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
+	browser_webconsole_netpanel.js \
 	browser_webconsole_bug_593003_iframe_wrong_hud.js \
 	browser_webconsole_bug_581231_close_button.js \
 	browser_webconsole_bug_595350_multiple_windows_and_tabs.js \
