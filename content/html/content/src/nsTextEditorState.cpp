@@ -73,6 +73,11 @@ static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
 
+struct SelectionState {
+  PRInt32 mStart;
+  PRInt32 mEnd;
+};
+
 /*static*/
 PRBool
 nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
@@ -1321,6 +1326,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   if (mTextListener)
     newEditor->AddEditorObserver(mTextListener);
 
+  // Restore our selection after being bound to a new frame
+  if (mSelState) {
+    mBoundFrame->SetSelectionRange(mSelState->mStart, mSelState->mEnd);
+    mSelState = nsnull;
+  }
+
   return rv;
 }
 
@@ -1350,6 +1361,20 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // going to use it anymore, so retrieve it for now.
   nsAutoString value;
   GetValue(value, PR_TRUE);
+
+  // Save our selection state if needed.
+  // Note that nsTextControlFrame::GetSelectionRange attempts to initialize the
+  // editor before grabbing the range, and because this is not an acceptable
+  // side effect for unbinding from a text control frame, we need to call
+  // GetSelectionRange before calling DestroyEditor, and only if
+  // mEditorInitialized indicates that we actually have an editor available.
+  if (mEditorInitialized) {
+    mSelState = new SelectionState();
+    nsresult rv = mBoundFrame->GetSelectionRange(&mSelState->mStart, &mSelState->mEnd);
+    if (NS_FAILED(rv)) {
+      mSelState = nsnull;
+    }
+  }
 
   // Destroy our editor
   DestroyEditor();

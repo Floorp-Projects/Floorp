@@ -51,6 +51,7 @@ class nsISelectionController;
 class nsFrameSelection;
 class nsIEditor;
 class nsITextControlElement;
+struct SelectionState;
 
 /**
  * nsTextEditorState is a class which is responsible for managing the state of
@@ -250,6 +251,7 @@ private:
 
   nsITextControlElement* const mTextCtrlElement;
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
+  nsAutoPtr<SelectionState> mSelState;
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsIContent> mRootNode;
   nsCOMPtr<nsIContent> mPlaceholderDiv;
