@@ -201,3 +201,13 @@ NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif // !ANDROID
 }
+
+NS_IMETHODIMP nsAlertsService::OnCancel(const nsAString & aAlertName)
+{
+#ifdef ANDROID
+  mozilla::AndroidBridge::Bridge()->AlertsProgressListener_OnCancel(aAlertName);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif // !ANDROID
+}
