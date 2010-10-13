@@ -805,7 +805,7 @@ namespace js {
  * Report an error that the this value passed as |this| in the given arguments
  * vector is not compatible with the specified class.
  */
-bool
+void
 ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp);
 
 /*
