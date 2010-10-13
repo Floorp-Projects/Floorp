@@ -69,6 +69,7 @@ CPPSRCS = \
   testSameValue.cpp \
   testScriptObject.cpp \
   testSetPropertyWithNativeGetterStubSetter.cpp \
+  testBug604087.cpp \
   testTrap.cpp \
   testXDR.cpp \
   $(NULL)
