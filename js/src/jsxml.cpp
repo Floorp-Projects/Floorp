@@ -232,8 +232,8 @@ DEFINE_GETTER(NameURI_getter,
 static void
 namespace_finalize(JSContext *cx, JSObject *obj)
 {
-    if (cx->compartment->functionNamespaceObject == obj)
-        cx->compartment->functionNamespaceObject = NULL;
+    if (obj->compartment()->functionNamespaceObject == obj)
+        obj->compartment()->functionNamespaceObject = NULL;
 }
 
 static JSBool
