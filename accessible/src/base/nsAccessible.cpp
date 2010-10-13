@@ -99,6 +99,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
 #include "nsNetUtil.h"
+#include "nsIEventStateManager.h"
 
 #ifdef NS_DEBUG
 #include "nsIDOMCharacterData.h"
@@ -685,24 +686,20 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   if (aExtraState)
     *aExtraState = 0;
 
-  // Set STATE_UNAVAILABLE state based on disabled attribute
-  // The disabled attribute is mostly used in XUL elements and HTML forms, but
-  // if someone sets it on another attribute, 
-  // it seems reasonable to consider it unavailable
-  PRBool isDisabled;
-  if (mContent->IsHTML()) {
-    // In HTML, just the presence of the disabled attribute means it is disabled,
-    // therefore disabled="false" indicates disabled!
-    isDisabled = mContent->HasAttr(kNameSpaceID_None,
-                                   nsAccessibilityAtoms::disabled);
-  }
-  else {
-    isDisabled = mContent->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::disabled,
-                                       nsAccessibilityAtoms::_true,
-                                       eCaseMatters);
-  }
-  if (isDisabled) {
+  PRInt32 intrinsicState = mContent->IntrinsicState();
+
+  if (intrinsicState & NS_EVENT_STATE_REQUIRED)
+    *aState |= nsIAccessibleStates::STATE_REQUIRED;
+
+  PRBool disabled = mContent->IsHTML() ? 
+    (intrinsicState & NS_EVENT_STATE_DISABLED) :
+    (mContent->AttrValueIs(kNameSpaceID_None,
+                           nsAccessibilityAtoms::disabled,
+                           nsAccessibilityAtoms::_true,
+                           eCaseMatters));
+
+  // Set unavailable state based on disabled state, otherwise set focus states
+  if (disabled) {
     *aState |= nsIAccessibleStates::STATE_UNAVAILABLE;
   }
   else if (mContent->IsElement()) {
