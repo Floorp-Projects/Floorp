@@ -2512,10 +2512,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
             LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
             LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_OTHER, LOAD_VOLATILE);
             LIns* test =  lir->ins2ImmI(LIR_lti, counterValue, MIN_LOOP_ITERS);
-            LIns *branch = lir->insBranch(LIR_jf, test, NULL);
+            LIns *branch = unoptimizableCondBranch(LIR_jf, test);
             counterValue = lir->ins2(LIR_addi, counterValue, INS_CONST(1));
             lir->insStore(counterValue, counterPtr, 0, ACCSET_OTHER);
-            label(branch);
+            labelForBranch(branch);
         }
 #endif
     }
@@ -3964,8 +3964,7 @@ TraceRecorder::addr(Value* p)
 {
     return isGlobal(p)
            ? lir->ins2(LIR_addp, eos_ins, INS_CONSTWORD(nativeGlobalOffset(p)))
-           : lir->ins2(LIR_addp, lirbuf->sp,
-                       INS_CONSTWORD(nativespOffset(p)));
+           : lir->ins2(LIR_addp, lirbuf->sp, INS_CONSTWORD(nativespOffset(p)));
 }
 
 JS_REQUIRES_STACK inline bool
@@ -5374,13 +5373,13 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
 #endif
     LIns* rec = lir->insCall(ci, args);
     LIns* lr = lir->insLoad(LIR_ldp, rec, offsetof(GuardRecord, exit), ACCSET_OTHER);
-    LIns* nested = lir->insBranch(LIR_jt,
-                                  lir->ins2ImmI(LIR_eqi,
-                                             lir->insLoad(LIR_ldi, lr,
-                                                          offsetof(VMSideExit, exitType),
-                                                          ACCSET_OTHER),
-                                             NESTED_EXIT),
-                                  NULL);
+    LIns* nested =
+        unoptimizableCondBranch(LIR_jt,
+                                lir->ins2ImmI(LIR_eqi,
+                                              lir->insLoad(LIR_ldi, lr,
+                                                           offsetof(VMSideExit, exitType),
+                                                           ACCSET_OTHER),
+                                              NESTED_EXIT));
 
     /*
      * If the tree exits on a regular (non-nested) guard, keep updating lastTreeExitGuard
@@ -5395,13 +5394,13 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
      * and we unwind the tree call stack. We store the first (innermost) tree call guard in state
      * and we will try to grow the outer tree the failing call was in starting at that guard.
      */
-    label(nested);
-    LIns* done2 = lir->insBranch(LIR_jf,
-                                 lir->insEqP_0(lir->insLoad(LIR_ldp,
-                                                            lirbuf->state,
-                                                            offsetof(TracerState, lastTreeCallGuard),
-                                                            ACCSET_OTHER)),
-                                 NULL);
+    labelForBranch(nested);
+    LIns* done2 =
+        unoptimizableCondBranch(LIR_jf,
+                                lir->insEqP_0(lir->insLoad(LIR_ldp,
+                                                           lirbuf->state,
+                                                           offsetof(TracerState, lastTreeCallGuard),
+                                                           ACCSET_OTHER)));
     lir->insStore(lr, lirbuf->state, offsetof(TracerState, lastTreeCallGuard), ACCSET_OTHER);
     lir->insStore(lir->ins2(LIR_addp,
                              lir->insLoad(LIR_ldp, lirbuf->state, offsetof(TracerState, rp),
@@ -5413,7 +5412,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
                                                      sizeof(void*) == 4 ? 2 : 3))),
                    lirbuf->state,
                    offsetof(TracerState, rpAtLastTreeCall), ACCSET_OTHER);
-    label(done1, done2);
+    labelForBranches(done1, done2);
 
     /*
      * Keep updating outermostTreeExit so that TracerState always contains the most recent
@@ -8406,12 +8405,14 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * into -2147483648 / -1, because it can raise an overflow exception.
          */
         if (!d1->isImmI()) {
-            LIns* gt = lir->insBranch(LIR_jt, lir->ins2ImmI(LIR_gti, d1, 0), NULL);
-            guard(false, lir->insEqI_0(d1), exit);
-            guard(false, lir->ins2(LIR_andi,
-                                   lir->ins2ImmI(LIR_eqi, d0, 0x80000000),
-                                   lir->ins2ImmI(LIR_eqi, d1, -1)), exit);
-            label(gt);
+            LIns* br;
+            if (condBranch(LIR_jt, lir->ins2ImmI(LIR_gti, d1, 0), &br)) {
+                guard(false, lir->insEqI_0(d1), exit);
+                guard(false, lir->ins2(LIR_andi,
+                                       lir->ins2ImmI(LIR_eqi, d0, 0x80000000),
+                                       lir->ins2ImmI(LIR_eqi, d1, -1)), exit);
+                labelForBranch(br);
+            }
         } else {
             if (d1->immI() == -1)
                 guard(false, lir->ins2ImmI(LIR_eqi, d0, 0x80000000), exit);
@@ -8437,14 +8438,15 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         result = lir->ins1(v = LIR_modi, lir->ins2(LIR_divi, d0, d1));
 
         /* If the result is not 0, it is always within the integer domain. */
-        LIns* branch = lir->insBranch(LIR_jf, lir->insEqI_0(result), NULL);
-
-        /*
-         * If the result is zero, we must exit if the lhs is negative since
-         * the result is -0 in this case, which is not in the integer domain.
-         */
-        guard(false, lir->ins2ImmI(LIR_lti, d0, 0), exit);
-        label(branch);
+        LIns* br;
+        if (condBranch(LIR_jf, lir->insEqI_0(result), &br)) {
+            /*
+             * If the result is zero, we must exit if the lhs is negative since
+             * the result is -0 in this case, which is not in the integer domain.
+             */
+            guard(false, lir->ins2ImmI(LIR_lti, d0, 0), exit);
+            labelForBranch(br);
+        }
         break;
       }
 #endif
@@ -8482,24 +8484,68 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     return lir->ins1(LIR_i2d, result);
 }
 
-/* Inserts a label and updates 'branch' to branch to it, if 'branch' is non-NULL. */
-void
-TraceRecorder::label(LIns* br)
+/*
+ * If the branch is always taken, return false;  the code jumped over by the
+ * branch need not be generated.  If the branch is never taken, return true
+ * and put NULL in *brOut.  Otherwise, return true and put the branch in
+ * *brOut.
+ */
+bool
+TraceRecorder::condBranch(LOpcode op, LIns* cond, LIns** brOut)
 {
-    if (br)
-        br->setTarget(lir->ins0(LIR_label));
+    JS_ASSERT(op == LIR_jt || op == LIR_jf);
+    *brOut = NULL;
+    if (cond->isImmI()) {
+        int32 condval = cond->immI();
+        JS_ASSERT(condval == 0 || condval == 1);
+        if ((op == LIR_jt && condval == 1) || (op == LIR_jf && condval == 0))
+            return false;   /* branch is always taken */
+    }
+    *brOut = lir->insBranch(op, cond, NULL);
+    return true;
 }
 
-/* Similar to the other label(), but for two branches. */
+/*
+ * Like condBranch(), but for when we know the branch condition cannot be
+ * optimized to a constant, eg. because one of the operands is the result of a
+ * volatile load.
+ */
+LIns*
+TraceRecorder::unoptimizableCondBranch(LOpcode op, LIns* cond)
+{
+    JS_ASSERT(op == LIR_jt || op == LIR_jf);
+    JS_ASSERT(!cond->isImmI());
+    return lir->insBranch(op, cond, NULL);
+}
+
+/*
+ * Inserts a label and updates 'branch' to branch to it, if 'branch' is non-NULL.
+ * ('branch' may be NULL if it was a conditional branch and its condition was
+ * a constant value that resulted in the branch never being taken.)
+ */
 void
-TraceRecorder::label(LIns* br1, LIns* br2)
+TraceRecorder::labelForBranch(LIns* br)
+{
+    if (br) {
+        JS_ASSERT(br->isop(LIR_j) || br->isop(LIR_jt) || br->isop(LIR_jf));
+        br->setTarget(lir->ins0(LIR_label));
+    }
+}
+
+/* Similar to the other labelForBranch(), but for two branches. */
+void
+TraceRecorder::labelForBranches(LIns* br1, LIns* br2)
 {
     if (br1 || br2) {
         LIns* label = lir->ins0(LIR_label);
-        if (br1)
+        if (br1) {
+            JS_ASSERT(br1->isop(LIR_j) || br1->isop(LIR_jt) || br1->isop(LIR_jf));
             br1->setTarget(label);
-        if (br2)
+        }
+        if (br2) {
+            JS_ASSERT(br2->isop(LIR_j) || br2->isop(LIR_jt) || br2->isop(LIR_jf));
             br2->setTarget(label);
+        }
     }
 }
 
@@ -10587,17 +10633,22 @@ TraceRecorder::record_JSOP_ARGUMENTS()
 
         LIns* mem_ins = lir->insAlloc(sizeof(JSObject *));
 
-        LIns* br1 = lir->insBranch(LIR_jt, lir->insEqP_0(a_ins), NULL);
-        lir->insStore(a_ins, mem_ins, 0, ACCSET_OTHER);
-        LIns* br2 = lir->insBranch(LIR_j, NULL, NULL);
+        LIns* isZero_ins = lir->insEqP_0(a_ins);
+        if (isZero_ins->isImmI(0)) {
+            lir->insStore(a_ins, mem_ins, 0, ACCSET_OTHER);
+        } else if (isZero_ins->isImmI(1)) {
+            LIns* call_ins = newArguments(callee_ins, strict);
+            lir->insStore(call_ins, mem_ins, 0, ACCSET_OTHER);
+        } else {
+            LIns* br1 = unoptimizableCondBranch(LIR_jt, isZero_ins);
+            lir->insStore(a_ins, mem_ins, 0, ACCSET_OTHER);
+            LIns* br2 = lir->insBranch(LIR_j, NULL, NULL);
+            labelForBranch(br1);
 
-        label(br1);
-
-        LIns* call_ins = newArguments(callee_ins, strict);
-        lir->insStore(call_ins, mem_ins, 0, ACCSET_OTHER);
-
-        label(br2);
-
+            LIns* call_ins = newArguments(callee_ins, strict);
+            lir->insStore(call_ins, mem_ins, 0, ACCSET_OTHER);
+            labelForBranch(br2);
+        }
         args_ins = lir->insLoad(LIR_ldp, mem_ins, 0, ACCSET_OTHER);
     }
 
@@ -12530,13 +12581,16 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
     idx_ins = lir->insUI2P(idx_ins);
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
                                     ACCSET_OTHER);
-    LIns *br = lir->insBranch(LIR_jt,
-                              lir->insEqP_0(lir->ins2(LIR_andp,
-                                                      length_ins,
-                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
-                              NULL);
-    lir->insCall(&js_Flatten_ci, &str_ins);
-    label(br);
+    LIns *br;
+    if (condBranch(LIR_jt,
+                   lir->insEqP_0(lir->ins2(LIR_andp,
+                                           length_ins,
+                                           INS_CONSTWORD(JSString::ROPE_BIT))),
+                   &br))
+    {
+        lir->insCall(&js_Flatten_ci, &str_ins);
+        labelForBranch(br);
+    }
 
     guard(true,
           lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
@@ -12576,13 +12630,16 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode,
     LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
                                     ACCSET_OTHER);
 
-    LIns *br1 = lir->insBranch(LIR_jt,
-                               lir->insEqP_0(lir->ins2(LIR_andp,
-                                                       length_ins,
-                                                       INS_CONSTWORD(JSString::ROPE_BIT))),
-                               NULL);
-    lir->insCall(&js_Flatten_ci, &str_ins);
-    label(br1);
+    LIns *br1;
+    if (condBranch(LIR_jt,
+                   lir->insEqP_0(lir->ins2(LIR_andp,
+                                           length_ins,
+                                           INS_CONSTWORD(JSString::ROPE_BIT))),
+                   &br1))
+    {
+        lir->insCall(&js_Flatten_ci, &str_ins);
+        labelForBranch(br1);
+    }
 
     LIns* inRange = lir->ins2(LIR_ltup,
                               idx_ins,
@@ -12596,11 +12653,12 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode,
         LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
         lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
 
-        LIns* br2 = lir->insBranch(LIR_jf, inRange, NULL);
-        LIns *unitstr_ins = getUnitString(str_ins, idx_ins);
-        lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
-        label(br2);
-
+        LIns* br2;
+        if (condBranch(LIR_jf, inRange, &br2)) {
+            LIns *unitstr_ins = getUnitString(str_ins, idx_ins);
+            lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
+            labelForBranch(br2);
+        }
         *out = lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
     }
     return RECORD_CONTINUE;
@@ -13069,11 +13127,13 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
             addName(lir->insLoad(LIR_ldi, obj_ins,
                                  offsetof(JSObject, capacity), ACCSET_OTHER),
                     "capacity");
-        LIns* br = lir->insBranch(LIR_jt, lir->ins2(LIR_ltui, idx_ins, capacity_ins), NULL);
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
-        LIns* res_ins = lir->insCall(&js_EnsureDenseArrayCapacity_ci, args);
-        guard(false, lir->insEqI_0(res_ins), mismatchExit);
-        label(br);
+        LIns* br;
+        if (condBranch(LIR_jt, lir->ins2(LIR_ltui, idx_ins, capacity_ins), &br)) {
+            LIns* args[] = { idx_ins, obj_ins, cx_ins };
+            LIns* res_ins = lir->insCall(&js_EnsureDenseArrayCapacity_ci, args);
+            guard(false, lir->insEqI_0(res_ins), mismatchExit);
+            labelForBranch(br);
+        }
 
         // Get the address of the element.
         LIns *dslots_ins =
@@ -13096,12 +13156,14 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                                                                 JSVAL_TAG_SHIFT)),
 #endif
                                INS_CONSTU(JSVAL_TAG_MAGIC));
-        LIns* br2 = lir->insBranch(LIR_jf, cond, NULL);
-        LIns* args2[] = { idx_ins, obj_ins, cx_ins };
-        LIns* res_ins2 = addName(lir->insCall(&js_Array_dense_setelem_hole_ci, args2),
-                                 "hasNoIndexedProperties");
-        guard(false, lir->insEqI_0(res_ins2), mismatchExit);
-        label(br2);
+        LIns* br2;
+        if (condBranch(LIR_jf, cond, &br2)) {
+            LIns* args[] = { idx_ins, obj_ins, cx_ins };
+            LIns* res_ins = addName(lir->insCall(&js_Array_dense_setelem_hole_ci, args),
+                                     "hasNoIndexedProperties");
+            guard(false, lir->insEqI_0(res_ins), mismatchExit);
+            labelForBranch(br2);
+        }
 
         // Right, actually set the element.
         box_value_into(v, v_ins, addr_ins, 0, ACCSET_OTHER);
@@ -15347,9 +15409,11 @@ TraceRecorder::record_JSOP_ARGCNT()
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = getFrameObjPtr(fp->addressOfArgs());
     if (callDepth == 0) {
-        LIns *br = lir->insBranch(LIR_jt, lir->insEqP_0(a_ins), NULL);
-        guardArgsLengthNotAssigned(a_ins);
-        label(br);
+        LIns *br;
+        if (condBranch(LIR_jt, lir->insEqP_0(a_ins), &br)) {
+            guardArgsLengthNotAssigned(a_ins);
+            labelForBranch(br);
+        }
     }
     stack(0, lir->insImmD(fp->numActualArgs()));
     return ARECORD_CONTINUE;
