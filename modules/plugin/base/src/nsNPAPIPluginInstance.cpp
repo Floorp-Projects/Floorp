@@ -905,7 +905,8 @@ nsNPAPIPluginInstance::UseAsyncPainting(PRBool* aIsAsync)
   if (!library)
     return NS_ERROR_FAILURE;
 
-  return library->UseAsyncPainting(&mNPP, aIsAsync);
+  *aIsAsync = library->UseAsyncPainting();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

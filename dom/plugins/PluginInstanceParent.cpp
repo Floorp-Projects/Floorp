@@ -568,14 +568,6 @@ PluginInstanceParent::GetSurface(gfxASurface** aSurface)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult
-PluginInstanceParent::UseAsyncPainting(PRBool* aIsAsync)
-{
-    NS_ENSURE_ARG_POINTER(aIsAsync);
-    *aIsAsync = PR_TRUE;
-    return NS_OK;
-}
-
 NPError
 PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 {
