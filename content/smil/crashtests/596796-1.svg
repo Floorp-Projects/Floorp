@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+
+<script>
+function boom()
+{
+  document.documentElement.appendChild(document.getElementById("a"));
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+</script>
+
+<animate end="a.begin" id="a"/>
+
+</svg>
