@@ -262,7 +262,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   program->Activate();
   program->SetLayerQuadRect(mBounds);
-  program->SetLayerTransform(mTransform);
+  program->SetLayerTransform(GetEffectiveTransform());
   program->SetLayerOpacity(GetOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
