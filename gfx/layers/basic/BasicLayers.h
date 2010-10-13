@@ -153,6 +153,8 @@ public:
   { return NULL; }
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
   { return NULL; }
+  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer()
+  { return NULL; }
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
   { return NULL; }
 
@@ -244,6 +246,7 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
+  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer();
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
 
   ShadowableLayer* Hold(Layer* aLayer);

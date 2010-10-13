@@ -175,7 +175,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
     case Edit::TOpCreateColorLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateColorLayer"));
 
-      nsRefPtr<ColorLayer> layer = layer_manager()->CreateColorLayer();
+      nsRefPtr<ShadowColorLayer> layer = layer_manager()->CreateShadowColorLayer();
       AsShadowLayer(edit.get_OpCreateColorLayer())->Bind(layer);
       break;
     }
