@@ -757,7 +757,8 @@ AdvanceReturnPC(JSContext *cx)
     JS_ASSERT(*cx->regs->pc == JSOP_CALL ||
               *cx->regs->pc == JSOP_NEW ||
               *cx->regs->pc == JSOP_EVAL ||
-              *cx->regs->pc == JSOP_APPLY);
+              *cx->regs->pc == JSOP_FUNCALL ||
+              *cx->regs->pc == JSOP_FUNAPPLY);
     cx->regs->pc += JSOP_CALL_LENGTH;
 }
 

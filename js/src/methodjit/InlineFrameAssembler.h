@@ -75,7 +75,6 @@ class InlineFrameAssembler {
 
     Assembler &masm;
     uint32     frameDepth;      // script->nfixed + stack depth at caller call site
-    uint32     argc;            // number of args being passed to the function
     RegisterID funObjReg;       // register containing the function object (callee)
     jsbytecode *pc;             // bytecode location at the caller call site
     uint32     flags;           // frame flags
@@ -91,7 +90,6 @@ class InlineFrameAssembler {
       : masm(masm), pc(ic.pc), flags(flags)
     {
         frameDepth = ic.frameDepth;
-        argc = ic.argc;
         funObjReg = ic.funObjReg;
         tempRegs.takeReg(ic.funPtrReg);
         tempRegs.takeReg(funObjReg);
@@ -101,7 +99,6 @@ class InlineFrameAssembler {
       : masm(masm), pc(gen.pc), flags(flags)
     {
         frameDepth = gen.frameDepth;
-        argc = gen.argc;
         funObjReg = gen.funObjReg;
         tempRegs.takeReg(funObjReg);
     }
