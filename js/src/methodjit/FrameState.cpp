@@ -47,10 +47,7 @@ using namespace js::mjit;
 JS_STATIC_ASSERT(sizeof(FrameEntry) % 8 == 0);
 
 FrameState::FrameState(JSContext *cx, JSScript *script, Assembler &masm)
-  : cx(cx), script(script), masm(masm), entries(NULL),
-#if defined JS_NUNBOX32
-    reifier(cx, *this),
-#endif
+  : cx(cx), script(script), masm(masm), entries(NULL), reifier(cx, *this),
     inTryBlock(false)
 {
 }
@@ -81,10 +78,8 @@ FrameState::init(uint32 nargs)
     if (!cursor)
         return false;
 
-#if defined JS_NUNBOX32
     if (!reifier.init(nslots))
         return false;
-#endif
 
     entries = (FrameEntry *)cursor;
     cursor += sizeof(FrameEntry) * nslots;
@@ -419,7 +414,6 @@ FrameState::assertValidRegisterState() const
 }
 #endif
 
-#if defined JS_NUNBOX32
 void
 FrameState::syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
                       FrameEntry *bottom) const
@@ -433,7 +427,6 @@ FrameState::syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
         reifier.sync(fe);
     }
 }
-#endif
 
 void
 FrameState::sync(Assembler &masm, Uses uses) const
@@ -496,38 +489,12 @@ FrameState::sync(Assembler &masm, Uses uses) const
             backing = fe->copyOf();
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
 
-#if defined JS_PUNBOX64
-            if ((!fe->type.synced() && backing->type.inMemory()) ||
-                (!fe->data.synced() && backing->data.inMemory())) {
-    
-                RegisterID syncReg = Registers::ValueReg;
-
-                /* Load the entire Value into syncReg. */
-                if (backing->type.synced() && backing->data.synced()) {
-                    masm.loadValue(addressOf(backing), syncReg);
-                } else if (backing->type.inMemory()) {
-                    masm.loadTypeTag(addressOf(backing), syncReg);
-                    masm.orPtr(backing->data.reg(), syncReg);
-                } else {
-                    JS_ASSERT(backing->data.inMemory());
-                    masm.loadPayload(addressOf(backing), syncReg);
-                    if (backing->isTypeKnown())
-                        masm.orPtr(ImmType(backing->getKnownType()), syncReg);
-                    else
-                        masm.orPtr(backing->type.reg(), syncReg);
-                }
-
-                masm.storeValue(syncReg, addressOf(fe));
-                continue;
-            }
-#elif defined JS_NUNBOX32
             /* Fall back to a slower sync algorithm if load required. */
             if ((!fe->type.synced() && backing->type.inMemory()) ||
                 (!fe->data.synced() && backing->data.inMemory())) {
                 syncFancy(masm, avail, fe, bottom);
                 return;
             }
-#endif
         }
 
         /* If a part still needs syncing, it is either a copy or constant. */
