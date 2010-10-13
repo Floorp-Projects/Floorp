@@ -530,7 +530,7 @@ FrameState::ensureTypeSynced(const FrameEntry *fe, Assembler &masm) const
     /* Store a double's type bits, even though !isTypeKnown(). */
     if (backing->isConstant())
         masm.storeTypeTag(ImmTag(backing->getKnownTag()), to);
-    else if (fe->isTypeKnown())
+    else if (backing->isTypeKnown())
         masm.storeTypeTag(ImmType(backing->getKnownType()), to); 
     else
         masm.storeTypeTag(backing->type.reg(), to);
