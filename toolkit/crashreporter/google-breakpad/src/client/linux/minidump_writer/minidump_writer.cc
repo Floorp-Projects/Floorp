@@ -50,11 +50,17 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#if defined(__ANDROID__)
+#include "client/linux/android_link.h"
+#else
 #include <link.h>
+#endif
 #include <stdio.h>
 #include <unistd.h>
+#if !defined(__ANDROID__)
 #include <sys/ucontext.h>
 #include <sys/user.h>
+#endif
 #include <sys/utsname.h>
 
 #include "client/minidump_file_writer.h"
@@ -62,6 +68,7 @@
 #include "google_breakpad/common/minidump_cpu_amd64.h"
 #include "google_breakpad/common/minidump_cpu_x86.h"
 
+#include "client/linux/android_ucontext.h"
 #include "client/linux/handler/exception_handler.h"
 #include "client/linux/minidump_writer/line_reader.h"
 #include "client/linux/minidump_writer/linux_dumper.h"
@@ -337,11 +344,13 @@ static void CPUFillFromThreadInfo(MDRawContextARM *out,
     out->iregs[i] = info.regs.uregs[i];
   // No CPSR register in ThreadInfo(it's not accessible via ptrace)
   out->cpsr = 0;
+#if !defined(__ANDROID__)
   out->float_save.fpscr = info.fpregs.fpsr |
     (static_cast<u_int64_t>(info.fpregs.fpcr) << 32);
   //TODO: sort this out, actually collect floating point registers
   memset(&out->float_save.regs, 0, sizeof(out->float_save.regs));
   memset(&out->float_save.extra, 0, sizeof(out->float_save.extra));
+#endif
 }
 
 static void CPUFillFromUContext(MDRawContextARM *out, const ucontext *uc,
@@ -375,11 +384,11 @@ static void CPUFillFromUContext(MDRawContextARM *out, const ucontext *uc,
 }
 
 static uintptr_t InstructionPointer(const ThreadInfo& info) {
-  return info.regs.uregs[R12];
+  return info.regs.ARM_ip;
 }
 
 static uintptr_t StackPointer(const ThreadInfo& info) {
-  return info.regs.uregs[R13];
+  return info.regs.ARM_sp;
 }
 
 static uintptr_t StackPointer(const ucontext* uc) {
@@ -457,7 +466,7 @@ class MinidumpWriter {
     // it to a MD_LINUX_DSO_DEBUG stream.
     struct r_debug* r_debug = NULL;
     uint32_t dynamic_length = 0;
-
+#if !defined(__ANDROID__)
     for (int i = 0;;) {
       ElfW(Dyn) dyn;
       dynamic_length += sizeof(dyn);
@@ -468,6 +477,7 @@ class MinidumpWriter {
       } else if (dyn.d_tag == DT_NULL)
         break;
     }
+#endif
 
     // A minidump file contains a number of tagged streams. This is the number
     // of stream which we write.
@@ -949,6 +959,9 @@ class MinidumpWriter {
 
   bool WriteDSODebugStream(MDRawDirectory* dirent, struct r_debug* r_debug,
                            uint32_t dynamic_length) {
+#if defined(__ANDROID__)
+    return false;
+#else
     // The caller provided us with a pointer to "struct r_debug". We can
     // look up the "r_map" field to get a linked list of all loaded DSOs.
     // Our list of DSOs potentially is different from the ones in the crashing
@@ -1022,6 +1035,7 @@ class MinidumpWriter {
     delete[] dso_debug_data;
 
     return true;
+#endif  // __ANDROID__
   }
 
  private:
