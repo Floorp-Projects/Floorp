@@ -403,6 +403,18 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+#define NS_PARTIALLOCALFILEINPUTSTREAM_CLASSNAME \
+    "nsPartialFileInputStream"
+#define NS_PARTIALLOCALFILEINPUTSTREAM_CONTRACTID \
+    "@mozilla.org/network/partial-file-input-stream;1"
+#define NS_PARTIALLOCALFILEINPUTSTREAM_CID           \
+{ /* 8738afd6-162a-418d-a99b-75b3a6b10a56 */         \
+    0x8738afd6,                                      \
+    0x162a,                                          \
+    0x418d,                                          \
+    {0xa9, 0x9b, 0x75, 0xb3, 0xa6, 0xb1, 0x0a, 0x56} \
+}
+
 #define NS_BUFFEREDINPUTSTREAM_CLASSNAME \
     "nsBufferedInputStream"
 #define NS_BUFFEREDINPUTSTREAM_CONTRACTID \
