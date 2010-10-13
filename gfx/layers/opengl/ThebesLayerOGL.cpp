@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+# include "mozilla/layers/PLayers.h"
+# include "mozilla/layers/ShadowLayers.h"
+#endif
+
 #include "ThebesLayerBuffer.h"
 #include "ThebesLayerOGL.h"
 
@@ -120,8 +125,9 @@ public:
   typedef TextureImage::ContentType ContentType;
   typedef ThebesLayerBuffer::PaintState PaintState;
 
-  ThebesLayerBufferOGL(ThebesLayerOGL* aLayer)
+  ThebesLayerBufferOGL(ThebesLayer* aLayer, LayerOGL* aOGLLayer)
     : mLayer(aLayer)
+    , mOGLLayer(aOGLLayer)
   {}
   virtual ~ThebesLayerBufferOGL() {}
 
@@ -138,9 +144,10 @@ public:
 protected:
   virtual nsIntPoint GetOriginOffset() = 0;
 
-  GLContext* gl() const { return mLayer->gl(); }
+  GLContext* gl() const { return mOGLLayer->gl(); }
 
-  ThebesLayerOGL* mLayer;
+  ThebesLayer* mLayer;
+  LayerOGL* mOGLLayer;
   nsRefPtr<TextureImage> mTexImage;
 };
 
@@ -204,7 +211,7 @@ public:
   typedef ThebesLayerBufferOGL::PaintState PaintState;
 
   SurfaceBufferOGL(ThebesLayerOGL* aLayer)
-    : ThebesLayerBufferOGL(aLayer)
+    : ThebesLayerBufferOGL(aLayer, aLayer)
     , ThebesLayerBuffer(SizedToVisibleBounds)
   {
   }
@@ -242,7 +249,7 @@ class BasicBufferOGL : public ThebesLayerBufferOGL
 {
 public:
   BasicBufferOGL(ThebesLayerOGL* aLayer)
-    : ThebesLayerBufferOGL(aLayer)
+    : ThebesLayerBufferOGL(aLayer, aLayer)
     , mBufferRect(0,0,0,0)
     , mBufferRotation(0,0)
   {}
@@ -387,7 +394,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
     if (mTexImage) {
       // BlitTextureImage depends on the FBO texture target being
       // TEXTURE_2D.  This isn't the case on some older X1600-era Radeons.
-      if (mLayer->mOGLManager->FBOTextureTarget() == LOCAL_GL_TEXTURE_2D) {
+      if (mOGLLayer->OGLManager()->FBOTextureTarget() == LOCAL_GL_TEXTURE_2D) {
         nsIntRect overlap;
         overlap.IntersectRect(mBufferRect, destBufferRect);
 
@@ -547,6 +554,165 @@ ThebesLayerOGL::IsEmpty()
 {
   return !mBuffer;
 }
+
+
+#ifdef MOZ_IPC
+
+class ShadowBufferOGL : public ThebesLayerBufferOGL
+{
+public:
+  ShadowBufferOGL(ShadowThebesLayerOGL* aLayer)
+    : ThebesLayerBufferOGL(aLayer, aLayer)
+  {}
+
+  virtual PaintState BeginPaint(ContentType aContentType) {
+    NS_RUNTIMEABORT("can't BeginPaint for a shadow layer");
+    return PaintState();
+  }
+
+  void
+  CreateTexture(ContentType aType, const nsIntSize& aSize)
+  {
+    NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
+
+    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_REPEAT);
+  }
+
+  void Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
+              const nsIntRect& aRect, const nsIntPoint& aRotation);
+
+protected:
+  virtual nsIntPoint GetOriginOffset() {
+    return mBufferRect.TopLeft() - mBufferRotation;
+  }
+
+private:
+  nsIntRect mBufferRect;
+  nsIntPoint mBufferRotation;
+};
+
+void
+ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
+                        const nsIntRect& aRect, const nsIntPoint& aRotation)
+{
+  nsIntRegion destRegion(aUpdated);
+  // aUpdated is in screen coordinates.  Move it so that the layer's
+  // top-left is 0,0
+  nsIntPoint visTopLeft = mLayer->GetVisibleRegion().GetBounds().TopLeft();
+  destRegion.MoveBy(-visTopLeft);
+  // NB: this gfxContext must not escape EndUpdate() below
+  nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(destRegion);
+
+  dest->SetOperator(gfxContext::OPERATOR_SOURCE);
+  dest->DrawSurface(aUpdate, aUpdate->GetSize());
+
+  mTexImage->EndUpdate();
+
+  mBufferRect = aRect;
+  mBufferRotation = aRotation;
+}
+
+ShadowThebesLayerOGL::ShadowThebesLayerOGL(LayerManagerOGL *aManager)
+  : ShadowThebesLayer(aManager, nsnull)
+  , LayerOGL(aManager)
+{
+  mImplData = static_cast<LayerOGL*>(this);
+}
+
+ShadowThebesLayerOGL::~ShadowThebesLayerOGL()
+{}
+
+void
+ShadowThebesLayerOGL::SetFrontBuffer(const ThebesBuffer& aNewFront,
+                                     const nsIntRegion& aValidRegion,
+                                     float aXResolution, float aYResolution)
+{
+  if (mDestroyed) {
+    return;
+  }
+
+  if (!mBuffer) {
+    mBuffer = new ShadowBufferOGL(this);
+  }
+
+  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
+  gfxIntSize size = surf->GetSize();
+  mBuffer->CreateTexture(surf->GetContentType(),
+                         nsIntSize(size.width, size.height));
+
+
+
+  mDeadweight = aNewFront.buffer();
+}
+
+void
+ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
+                           const nsIntRegion& aUpdatedRegion,
+                           ThebesBuffer* aNewBack,
+                           nsIntRegion* aNewBackValidRegion,
+                           float* aNewXResolution, float* aNewYResolution)
+{
+  if (!mDestroyed && mBuffer) {
+    nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
+    mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation());
+  }
+
+  *aNewBack = aNewFront;
+  *aNewBackValidRegion = mValidRegion;
+  *aNewXResolution = 1.0;
+  *aNewYResolution = 1.0;
+}
+
+void
+ShadowThebesLayerOGL::DestroyFrontBuffer()
+{
+  mBuffer = nsnull;
+  if (SurfaceDescriptor::T__None != mDeadweight.type()) {
+    mOGLManager->DestroySharedSurface(&mDeadweight, mAllocator);
+  }
+}
+
+void
+ShadowThebesLayerOGL::Destroy()
+{
+  if (!mDestroyed) {
+    mDestroyed = PR_TRUE;
+    mBuffer = nsnull;
+  }
+}
+
+Layer*
+ShadowThebesLayerOGL::GetLayer()
+{
+  return this;
+}
+
+PRBool
+ShadowThebesLayerOGL::IsEmpty()
+{
+  return !mBuffer;
+}
+
+void
+ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                                  const nsIntPoint& aOffset)
+{
+  if (!mBuffer) {
+    return;
+  }
+  NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
+
+  mOGLManager->MakeCurrent();
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  DEBUG_GL_ERROR_CHECK(gl());
+
+  gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
+  mBuffer->RenderTo(aOffset, mOGLManager);
+  DEBUG_GL_ERROR_CHECK(gl());
+}
+
+#endif  // MOZ_IPC
+
 
 } /* layers */
 } /* mozilla */

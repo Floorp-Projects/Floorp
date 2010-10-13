@@ -461,6 +461,7 @@ public:
 
   typedef mozilla::gl::GLContext GLContext;
 
+  LayerManagerOGL* OGLManager() const { return mOGLManager; }
   GLContext *gl() const { return mOGLManager->gl(); }
 
   void ApplyFilter(gfxPattern::GraphicsFilter aFilter);
