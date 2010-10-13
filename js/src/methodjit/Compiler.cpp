@@ -1270,7 +1270,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_EVAL)
 
           BEGIN_CASE(JSOP_CALL)
-          BEGIN_CASE(JSOP_APPLY)
+          BEGIN_CASE(JSOP_FUNAPPLY)
+          BEGIN_CASE(JSOP_FUNCALL)
           {
             JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
             inlineCallHelper(GET_ARGC(PC), false);

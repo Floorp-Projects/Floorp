@@ -3776,7 +3776,8 @@ MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
     JSParseNode *pn2;
 
     JS_ASSERT(pn->pn_arity == PN_LIST);
-    JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL || pn->pn_op == JSOP_APPLY);
+    JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL ||
+              pn->pn_op == JSOP_FUNCALL || pn->pn_op == JSOP_FUNAPPLY);
     pn2 = pn->pn_head;
     if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_funbox->tcflags & TCF_GENEXP_LAMBDA)) {
         ReportCompileErrorNumber(cx, TS(tc->parser), pn, JSREPORT_ERROR, msg);
@@ -6419,7 +6420,8 @@ SetLvalKid(JSContext *cx, TokenStream *ts, JSTreeContext *tc,
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
         (kid->pn_type != TOK_LP ||
-         (kid->pn_op != JSOP_CALL && kid->pn_op != JSOP_EVAL && kid->pn_op != JSOP_APPLY)) &&
+         (kid->pn_op != JSOP_CALL && kid->pn_op != JSOP_EVAL &&
+          kid->pn_op != JSOP_FUNCALL && kid->pn_op != JSOP_FUNAPPLY)) &&
 #if JS_HAS_XML_SUPPORT
         (kid->pn_type != TOK_UNARYOP || kid->pn_op != JSOP_XMLNAME) &&
 #endif
@@ -7330,11 +7332,11 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
-                if (pn->pn_atom == context->runtime->atomState.applyAtom ||
-                    pn->pn_atom == context->runtime->atomState.callAtom) {
-                    /* Select JSOP_APPLY given foo.apply(...). */
-                    pn2->pn_op = JSOP_APPLY;
-                }
+                /* Select JSOP_FUNAPPLY given foo.apply(...). */
+                if (pn->pn_atom == context->runtime->atomState.applyAtom)
+                    pn2->pn_op = JSOP_FUNAPPLY;
+                else if (pn->pn_atom == context->runtime->atomState.callAtom)
+                    pn2->pn_op = JSOP_FUNCALL;
             }
 
             pn2->initList(pn);

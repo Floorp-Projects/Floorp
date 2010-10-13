@@ -221,7 +221,7 @@ OPDEF(JSOP_ITER,      75, "iter",       NULL,         2,  1,  1,  0,  JOF_UINT8)
 OPDEF(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  0,  JOF_BYTE)
 OPDEF(JSOP_ENDITER,   77, "enditer",    NULL,         1,  1,  0,  0,  JOF_BYTE)
 
-OPDEF(JSOP_APPLY,     78, "apply",      NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
+OPDEF(JSOP_FUNAPPLY,  78, "funapply",   NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
 OPDEF(JSOP_SWAP,      79, "swap",       NULL,         1,  2,  2,  0,  JOF_BYTE)
 
 /* Push object literal. */
@@ -625,3 +625,4 @@ OPDEF(JSOP_BLOCKCHAIN,    247,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
 OPDEF(JSOP_NULLBLOCKCHAIN,248,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
 /* When changing bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */
+OPDEF(JSOP_FUNCALL,       249,"funcall",       NULL,  3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
