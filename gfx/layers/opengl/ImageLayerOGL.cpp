@@ -592,6 +592,9 @@ PlanarYCbCrImageOGL::AllocateTextures(mozilla::gl::GLContext *gl)
 void
 PlanarYCbCrImageOGL::UpdateTextures(GLContext *gl)
 {
+  if (!mBuffer || !mHasData)
+    return;
+
   GLint alignment;
 
   if (!((ptrdiff_t)mData.mYStride & 0x7) && !((ptrdiff_t)mData.mYChannel & 0x7)) {
