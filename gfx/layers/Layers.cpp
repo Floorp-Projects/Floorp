@@ -477,7 +477,10 @@ PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
   return aTo;
 }
 # else
-static nsACString& PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer) {}
+static nsACString& PrintInfo(nsACString& aTo, ShadowLayer* aShadowLayer)
+{
+  return aTo;
+}
 # endif  // MOZ_IPC
 
 #else  // !MOZ_LAYERS_HAVE_LOG
