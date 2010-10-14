@@ -163,6 +163,24 @@ is(node.getAttributeNode('myAttrib').name, "myAttrib", "(10)");
 is(node.getAttributeNode('myattrib').name, "myAttrib", "(11)");
 is(attrib.name, "myAttrib", "(12)");
 
+var o = document.createElement("div");
+o.setAttribute("myAttrib","htmlattr");
+o.setAttributeNS("","myAttrib","123");
+is(o.getAttributeNodeNS("","myAttrib").nodeName, "myAttrib", "nodeName should be case-sensitive.");
+is(o.getAttributeNode("myAttrib").nodeName, "myattrib", "nodeName shouldn't be case-sensitive.");
+is(o.getAttributeNodeNS("","myAttrib").value, "123", "Should have got the case-sensitive attribute.");
+is(o.attributes.length, 2, "Should have two attributes.");
+o.setAttribute("myAttrib2", "htmlattr");
+o.setAttributeNS("", "myAttrib2", "123");
+is(o.attributes.length, 4, "Should have four attributes.");
+var an = o.attributes.removeNamedItem("myAttrib2");
+is(o.attributes.length, 3, "An attribute should have been removed.");
+is(an.value, "htmlattr", "The removed attribute should have been the case-insensitive attribute.");
+is(o.getAttribute("myAttrib2"), null, "Element shouldn't have case-insensitive attribute anymore.");
+var an2 = o.attributes.removeNamedItemNS("", "myAttrib2");
+is(an2.localName, "myAttrib2", "The removed attribute should be case-sensitive.");
+is(o.attributes.length, 2, "Element should have two attributes.");
+
 </script>
 </pre>
 </body>

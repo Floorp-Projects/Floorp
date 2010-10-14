@@ -225,7 +225,7 @@ private:
                                   nsIDOMNode** aReturn,
                                   PRBool aRemove = PR_FALSE);
 
-  nsDOMAttribute* GetAttribute(nsINodeInfo* aNodeInfo);
+  nsDOMAttribute* GetAttribute(nsINodeInfo* aNodeInfo, PRBool aNsAware);
 
   /**
    * Remove an attribute, returns the removed node.

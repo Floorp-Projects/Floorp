@@ -4601,7 +4601,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  attribute = new nsDOMAttribute(nsnull, nodeInfo.forget(), value);
+  attribute = new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_FALSE);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aReturn);
@@ -4624,7 +4624,7 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 
   nsAutoString value;
   nsDOMAttribute* attribute =
-    new nsDOMAttribute(nsnull, nodeInfo.forget(), value);
+    new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_TRUE);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aResult);
