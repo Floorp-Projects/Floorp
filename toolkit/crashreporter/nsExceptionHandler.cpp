@@ -961,7 +961,7 @@ static PLDHashOperator EnumerateEntries(const nsACString& key,
 
 nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 {
-  if (!gExceptionHandler)
+  if (!GetEnabled())
     return NS_ERROR_NOT_INITIALIZED;
 
   if (DoFindInReadable(key, NS_LITERAL_CSTRING("=")) ||
@@ -993,7 +993,7 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 
 nsresult AppendAppNotesToCrashReport(const nsACString& data)
 {
-  if (!gExceptionHandler)
+  if (!GetEnabled())
     return NS_ERROR_NOT_INITIALIZED;
 
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
