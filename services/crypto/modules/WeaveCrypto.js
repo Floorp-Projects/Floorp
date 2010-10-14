@@ -34,26 +34,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["WeaveCrypto"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-try {
-  Components.utils.import("resource://gre/modules/Services.jsm");
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
-}
-catch(ex) {}
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/ctypes.jsm");
 
 function WeaveCrypto() {
     this.init();
 }
 
 WeaveCrypto.prototype = {
-    classDescription: "WeaveCrypto",
-    contractID: "@labs.mozilla.com/Weave/Crypto;2",
-    classID: Components.ID("{7fa20841-c90e-4432-a1a1-ba3b20cb6b37}"),
     QueryInterface: XPCOMUtils.generateQI([Ci.IWeaveCrypto]),
 
     prefBranch : null,
@@ -1004,7 +999,7 @@ WeaveCrypto.prototype = {
     byteCompress : function (jsString, charArray) {
         let intArray = ctypes.cast(charArray, ctypes.uint8_t.array(charArray.length));
         for (let i = 0; i < jsString.length; i++)
-            intArray[i] = jsString.charCodeAt(i);
+            intArray[i] = jsString.charCodeAt(i) % 256; // convert to bytes
     },
 
     // Expand a normal C string (1-byte chars) into a JS string (2-byte chars)
@@ -1124,13 +1119,3 @@ WeaveCrypto.prototype = {
         }
     }
 };
-
-// Gecko <2.0
-let component = typeof Services == "undefined" || typeof ctypes == "undefined" ? [] : [WeaveCrypto];
-function NSGetModule (compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
-
-// Gecko >=2.0
-if (typeof XPCOMUtils.generateNSGetFactory == "function")
-    const NSGetFactory = XPCOMUtils.generateNSGetFactory([WeaveCrypto]);
