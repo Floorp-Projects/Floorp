@@ -119,7 +119,7 @@ function run_test() {
   do_check_eq(cipherText, "T6fik9Ros+DB2ablH9zZ8FWZ0xm/szSwJjIHZu7sjPs=");
 
   var badkey    = "badkeybadkeybadkeybadk==";
-  var badiv     = "badivbadivbadivbadivbad==";
+  var badiv     = "badivbadivbadivbadivbad=";
   var badcipher = "crapinputcrapinputcrapinputcrapinputcrapinp=";
   var failure;
 
