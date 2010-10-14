@@ -352,6 +352,10 @@ var gSyncSetup = {
     if (!valid)
       return valid;
 
+    // No passphrase strength meter for the generated key.
+    if (!this._haveCustomSyncKey)
+      return valid;
+
     // Display passphrase strength
     let pp = document.getElementById("weavePassphrase").value;
     let bits = Weave.Utils.passphraseStrength(pp);
