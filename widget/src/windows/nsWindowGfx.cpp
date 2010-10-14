@@ -75,6 +75,9 @@ using mozilla::plugins::PluginInstanceParent;
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
+#ifdef MOZ_ENABLE_D3D10_LAYER
+#include "LayerManagerD3D10.h"
+#endif
 
 #ifndef WINCE
 #include "nsUXThemeData.h"
@@ -762,7 +765,18 @@ DDRAW_FAILED:
 #endif
 #ifdef MOZ_ENABLE_D3D10_LAYER
       case LayerManager::LAYERS_D3D10:
-        result = DispatchWindowEvent(&event, eventStatus);
+        {
+          gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
+          LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
+          cairo_device_t *device = gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
+
+          if (!device || layerManagerD3D10->device() != cairo_d2d_device_get_device(device)) {
+            mLayerManager = nsnull;
+            Invalidate(PR_FALSE);
+          } else {
+            result = DispatchWindowEvent(&event, eventStatus);
+          }
+        }
         break;
 #endif
       default:
