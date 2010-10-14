@@ -52,7 +52,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_580001_closing_after_completion.js \
 	browser_webconsole_bug_580400_groups.js \
 	browser_webconsole_bug_588730_text_node_insertion.js \
-	browser_webconsole_completion.js \
 	browser_webconsole_console_logging_api.js \
 	browser_webconsole_display_accessors.js \
 	browser_webconsole_execution_scope.js \
@@ -74,7 +73,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_null_and_undefined_output.js \
 	browser_webconsole_output_order.js \
 	browser_webconsole_property_panel.js \
-	browser_webconsole_property_provider.js \
 	browser_webconsole_registries.js \
 	browser_webconsole_storage_create_display.js \
 	browser_webconsole_storage_iteration.js \
@@ -87,7 +85,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_582201_duplicate_errors.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
-	browser_webconsole_bug_583816_tab_focus.js \
 	browser_webconsole_bug_594477_clickable_output.js \
 	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
@@ -97,6 +94,9 @@ _BROWSER_TEST_FILES = \
 # compartment-disabled
 #	browser_webconsole_consoleonpage.js \
 #	browser_webconsole_bug_593003_iframe_wrong_hud.js \
+#	browser_webconsole_bug_583816_tab_focus.js \
+#	browser_webconsole_property_provider.js \
+#	browser_webconsole_completion.js \
 
 _BROWSER_TEST_PAGES = \
 	test-console.html \
