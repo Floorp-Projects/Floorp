@@ -65,8 +65,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         else {
           var sandbox = new Cu.Sandbox(win, win, false);
 
-          ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
-             "must not see expandos");
+          ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+             "must see expandos for a chrome sandbox");
 
           sandbox = new Cu.Sandbox(win, win, true);
 
