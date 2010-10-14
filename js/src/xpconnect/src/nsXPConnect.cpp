@@ -1965,6 +1965,10 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(aJSContext, aScope))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
     if(!scope)
