@@ -1552,6 +1552,19 @@ nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  *aDPI = widget->GetDPI();
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowWithId(PRUint64 aWindowID,
                                        nsIDOMWindow** aWindow)
 {
