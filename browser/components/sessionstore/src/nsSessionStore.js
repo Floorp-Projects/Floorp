@@ -21,7 +21,7 @@
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
- *   Michael Kraft <morac99-firefox@yahoo.com>
+ *   Michael Kraft <morac99-firefox2@yahoo.com>
  *   Paul O’Shannessy <paul@oshannessy.com>
  *   Nils Maier <maierman@web.de>
  *
@@ -216,6 +216,16 @@ SessionStoreService.prototype = {
 
   // Whether we've been initialized
   _initialized: false,
+
+  // The original "sessionstore.resume_session_once" preference value before it
+  // was modified by saveState.  saveState will set the
+  // "sessionstore.resume_session_once" to true when the
+  // the "sessionstore.resume_from_crash" preference is false (crash recovery
+  // is disabled) so that pinned tabs will be restored in the case of a
+  // crash.  This variable is used to restore the original value so the
+  // previous session is not always restored when
+  // "sessionstore.resume_from_crash" is true.
+  _resume_session_once_on_shutdown: null,
 
 /* ........ Public Getters .............. */
 
@@ -443,6 +453,15 @@ SessionStoreService.prototype = {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
         this._clearingOnShutdown = false;
       }
+      else if (this._resume_session_once_on_shutdown != null) {
+        // if the sessionstore.resume_session_once preference was changed by
+        // saveState because crash recovery is disabled then restore the
+        // preference back to the value it was prior to that.  This will prevent
+        // SessionStore from always restoring the session when crash recovery is
+        // disabled.
+        this._prefBranch.setBoolPref("sessionstore.resume_session_once",
+                                     this._resume_session_once_on_shutdown);
+      }
       this._loadState = STATE_QUITTING; // just to be sure
       this._uninit();
       break;
@@ -550,6 +569,12 @@ SessionStoreService.prototype = {
         break;
       case "sessionstore.resume_from_crash":
         this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
+        // restore original resume_session_once preference if set in saveState
+        if (this._resume_session_once_on_shutdown != null) {
+          this._prefBranch.setBoolPref("sessionstore.resume_session_once",
+                                       this._resume_session_once_on_shutdown);
+          this._resume_session_once_on_shutdown = null;
+        }
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (!this._resume_from_crash)
@@ -1336,19 +1361,14 @@ SessionStoreService.prototype = {
    * Store all session data for a window
    * @param aWindow
    *        Window reference
-   * @param aPinnedOnly
-   *        Bool collect pinned tabs only
    */
-  _saveWindowHistory: function sss_saveWindowHistory(aWindow, aPinnedOnly) {
+  _saveWindowHistory: function sss_saveWindowHistory(aWindow) {
     var tabbrowser = aWindow.gBrowser;
     var tabs = tabbrowser.tabs;
     var tabsData = this._windows[aWindow.__SSi].tabs = [];
     
-    for (var i = 0; i < tabs.length; i++) {
-      if (aPinnedOnly && !tabs[i].pinned)
-        break;
+    for (var i = 0; i < tabs.length; i++)
       tabsData.push(this._collectTabData(tabs[i]));
-    }
     
     this._windows[aWindow.__SSi].selected = tabbrowser.mTabBox.selectedIndex + 1;
   },
@@ -2011,7 +2031,7 @@ SessionStoreService.prototype = {
         if (!this._isWindowLoaded(aWindow)) // window data is still in _statesToRestore
           return;
         if (aUpdateAll || this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
-          this._collectWindowData(aWindow, aPinnedOnly);
+          this._collectWindowData(aWindow);
         }
         else { // always update the window features (whose change alone never triggers a save operation)
           this._updateWindowFeatures(aWindow);
@@ -2063,8 +2083,15 @@ SessionStoreService.prototype = {
 #endif
 
     if (aPinnedOnly) {
+      // perform a deep copy so that existing session variables are not changed.
+      total = JSON.parse(this._toJSONString(total));
       total = total.filter(function (win) {
         win.tabs = win.tabs.filter(function (tab) tab.pinned);
+        // remove closed tabs
+        win._closedTabs = [];
+        // correct selected tab index if it was stripped out
+        if (win.selected > win.tabs.length)
+          win.selected = 1;
         return win.tabs.length > 0;
       });
       if (total.length == 0)
@@ -2077,8 +2104,9 @@ SessionStoreService.prototype = {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     }
     ix = windows.indexOf(this.activeWindowSSiCache);
-    // We don't want to restore focus to a minimized window.
-    if (ix != -1 && total[ix].sizemode == "minimized")
+    // We don't want to restore focus to a minimized window or a window which had all its
+    // tabs stripped out (doesn't exist).
+    if (ix != -1 && total[ix] && total[ix].sizemode == "minimized")
       ix = -1;
 
     return { windows: total, selectedWindow: ix + 1, _closedWindows: lastClosedWindowsCopy };
@@ -2104,12 +2132,12 @@ SessionStoreService.prototype = {
     return { windows: total };
   },
 
-  _collectWindowData: function sss_collectWindowData(aWindow, aPinnedOnly) {
+  _collectWindowData: function sss_collectWindowData(aWindow) {
     if (!this._isWindowLoaded(aWindow))
       return;
     
     // update the internal state data for this window
-    this._saveWindowHistory(aWindow, aPinnedOnly);
+    this._saveWindowHistory(aWindow);
     this._updateTextAndScrollData(aWindow);
     this._updateCookieHosts(aWindow);
     this._updateWindowFeatures(aWindow);
@@ -3016,8 +3044,18 @@ SessionStoreService.prototype = {
     if (!oState)
       return;
 
-    if (pinnedOnly)
-      this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
+    if (pinnedOnly) {
+      // Save original resume_session_once preference for when quiting browser,
+      // otherwise session will be restored next time browser starts and we
+      // only want it to be restored in the case of a crash.
+      if (this._resume_session_once_on_shutdown == null) {
+        this._resume_session_once_on_shutdown =
+          this._prefBranch.getBoolPref("sessionstore.resume_session_once");
+        this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
+        // flush the preference file so preference will be saved in case of a crash
+        Services.prefs.savePrefFile(null);
+      }
+    }
 
     oState.session = {
       state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
