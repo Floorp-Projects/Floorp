@@ -597,19 +597,10 @@ case "$WINSDK_TARGETVER" in
 502|600|601)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
-
 *)
     AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
     ;;
-
 esac
-
-if test -n "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-    # We can't build parental controls either
-    MOZ_DISABLE_PARENTAL_CONTROLS=1
-fi
-fi
 
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince|*-winmo)
@@ -4968,7 +4959,6 @@ USE_ARM_KUSER=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
-
 case "$target_os" in
 darwin*|*wince*|*winmo*)
     ACCESSIBILITY=
@@ -4981,10 +4971,9 @@ esac
 case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
         NS_ENABLE_TSF=1
-        if test -z "$GNU_CC"; then 
-            if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-                NS_ENABLE_TSF=
-            fi
+        if test -z "$GNU_CC" -a "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+            AC_MSG_WARN([Disabling features which require Windows Vista SDK or newer: TSF.])
+            NS_ENABLE_TSF=
         fi
         if test -n "$NS_ENABLE_TSF"; then
             AC_DEFINE(NS_ENABLE_TSF)
@@ -5006,6 +4995,12 @@ case "${target}" in
         MOZ_MEMORY=1
         ;;
 esac
+
+if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+    AC_MSG_WARN([Disabling features which require Windows Vista SDK or newer: IPC and parental controls.])
+    MOZ_IPC=
+    MOZ_DISABLE_PARENTAL_CONTROLS=1
+fi
 
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
@@ -5045,7 +5040,6 @@ else
 fi
 
 # Allow the application to influence configure with a confvars.sh script.
-
 AC_MSG_CHECKING([if app-specific confvars.sh exists])
 if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
   AC_MSG_RESULT([${srcdir}/${MOZ_BUILD_APP}/confvars.sh])
@@ -5092,6 +5086,20 @@ AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
+
+if test -n "$COMPILE_ENVIRONMENT"; then
+dnl ========================================================
+dnl = (Windows) Text Services Framework
+dnl ========================================================
+case "$target_os" in
+    mingw*|mks*|msvc*)
+        if test -z "$GNU_CC" -a -n "$NS_ENABLE_TSF" -a "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+            # (We chose to assume that) TSF is a Windows Vista SDK (or newer) feature. (See bug 88831 comment 135)
+            AC_MSG_ERROR([TSF can't be built with your SDK which only supports Windows up to version $MOZ_WINSDK_MAXVER. Install and use Windows Vista SDK or newer, or do not set NS_ENABLE_TSF=1. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
+        fi
+        ;;
+esac
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl = 
@@ -5751,6 +5759,11 @@ MOZ_ARG_DISABLE_BOOL(ipc,
 [  --disable-ipc           Disable IPC supports for tabs and plugins],
     MOZ_IPC=,
     MOZ_IPC=1)
+
+if test -n "$COMPILE_ENVIRONMENT" -a -n "$MOZ_IPC" -a "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+    # (Chromium) IPC code uses a Windows Vista SDK (or newer) feature. (See bug 555485)
+    AC_MSG_ERROR([IPC can't be built with your SDK which only supports Windows up to version $MOZ_WINSDK_MAXVER. Install and use Windows Vista SDK or newer, or do not configure with --enable-ipc. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
+fi
 
 if test -n "$MOZ_IPC"; then
     AC_DEFINE(MOZ_IPC)
@@ -6593,13 +6606,19 @@ MOZ_ARG_DISABLE_BOOL(tests,
     ENABLE_TESTS=1 )
 
 dnl ========================================================
-dnl parental controls (for Windows Vista)
+dnl = (Windows) Parental controls
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(parental-controls,
 [  --disable-parental-controls
                           Do not build parental controls],
    MOZ_DISABLE_PARENTAL_CONTROLS=1,
    MOZ_DISABLE_PARENTAL_CONTROLS=)
+
+if test -n "$COMPILE_ENVIRONMENT" -a -z "$MOZ_DISABLE_PARENTAL_CONTROLS" -a "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+    # Parental controls are a Windows Vista SDK (or newer) feature.
+    AC_MSG_ERROR([Parental controls can't be built with your SDK which only supports Windows up to version $MOZ_WINSDK_MAXVER. Install and use Windows Vista SDK or newer, or do not configure with --enable-parental-controls. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
+fi
+
 if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
     AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
 fi
@@ -8409,21 +8428,22 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
-        if test -z "$WINCE"; then
+        if test -n "$WINCE"; then
+            WIN32_D2D_SURFACE_FEATURE=
+            WIN32_DWRITE_FONT_FEATURE=
+            WIN32_FONT_FEATURE=
+        else
             WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-            if test "$MOZ_WINSDK_TARGETVER" -ge "06010000"; then
+            if test "$MOZ_WINSDK_TARGETVER" -lt "06010000"; then
+                AC_MSG_WARN([Disabling features which require Windows 7 SDK or newer: D2D surface and DWrite.])
+                WIN32_D2D_SURFACE_FEATURE=
+                WIN32_DWRITE_FONT_FEATURE=
+            else
                 WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
                 WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
                 MOZ_ENABLE_D2D_SURFACE=1
                 MOZ_ENABLE_DWRITE_FONT=1
-            else
-                WIN32_DWRITE_FONT_FEATURE=
-                WIN32_D2D_SURFACE_FEATURE=
             fi
-        else
-            WIN32_FONT_FEATURE=
-            WIN32_DWRITE_FONT_FEATURE=
-            WIN32_D2D_SURFACE_FEATURE=
         fi
 
         AC_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
