@@ -980,8 +980,6 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
 
     void swap(JSAutoEnterCompartment &other) {
         JSCrossCompartmentCall *tmp = call;
-        if (tmp == reinterpret_cast<JSCrossCompartmentCall*>(1))
-            tmp = NULL;
         call = other.call;
         other.call = tmp;
     }
