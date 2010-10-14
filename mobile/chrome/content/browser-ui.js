@@ -338,18 +338,18 @@ var BrowserUI = {
     this._hidePopup();
     this._popup =  { "panel": aPanel,
                      "elements": (aElements instanceof Array) ? aElements : [aElements] };
-    this._dispatchPopupChanged();
+    this._dispatchPopupChanged(true);
   },
 
   popPopup: function popPopup() {
     this._popup = null;
-    this._dispatchPopupChanged();
+    this._dispatchPopupChanged(false);
   },
 
-  _dispatchPopupChanged: function _dispatchPopupChanged() {
+  _dispatchPopupChanged: function _dispatchPopupChanged(aVisible) {
     let stack = document.getElementById("stack");
-    let event = document.createEvent("Events");
-    event.initEvent("PopupChanged", true, false);
+    let event = document.createEvent("UIEvents");
+    event.initUIEvent("PopupChanged", true, true, window, aVisible);
     event.popup = this._popup;
     stack.dispatchEvent(event);
   },
@@ -427,16 +427,14 @@ var BrowserUI = {
 
     BadgeHandlers.register(this._edit.popup);
 
-    let awesomePopup = document.getElementById("popup_autocomplete");
-    awesomePopup.addEventListener("popupshown", this, false);
-    awesomePopup.addEventListener("popuphidden", this, false);
+    window.addEventListener("NavigationPanelShown", this, false);
+    window.addEventListener("NavigationPanelHidden", this, false);
 
     document.getElementById("toolbar-main").ignoreDrag = true;
 
     let tabs = document.getElementById("tabs");
     tabs.addEventListener("TabSelect", this, true);
     tabs.addEventListener("TabOpen", this, true);
-    window.addEventListener("PanBegin", this, true);
     window.addEventListener("PanFinished", this, true);
 
     // listen content messages
@@ -452,10 +450,6 @@ var BrowserUI = {
 
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
-
-    // listening mousedown to let devices with an hardware keyboard do direct
-    // input to the awesome bar
-    window.addEventListener("keydown", this, true);
 
     // listening escape to dismiss dialog on VK_ESCAPE
     window.addEventListener("keypress", this, true);
@@ -611,6 +605,7 @@ var BrowserUI = {
   },
 
   closeAutoComplete: function closeAutoComplete() {
+    dump("=========================== called\n");
     if (this.isAutoCompleteOpen())
       this._edit.popup.closePopup();
 
@@ -818,26 +813,12 @@ var BrowserUI = {
 
         break;
       }
-      case "PanBegin":
-        if (this.activePanel && !this._edit.readOnly) {
-          this._edit.readOnly = true;
-          this._edit.blur();
-        }
-        break;
       case "PanFinished":
         let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
         if (tabsVisibility == 0.0)
           document.getElementById("tabs").removeClosedTab();
         break;
       // Window events
-      case "keydown":
-        // If there is no VKB the user won't be able to enter any letter,
-        // but if the urlbar receive a keydown when it is readOnly this
-        // could be because of a hardware keyboard or a user generated event.
-        // In this case we want the text to be taken into account.
-        if (this.activePanel && this._edit.readOnly)
-          this._edit.readOnly = false;
-        break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
           this.handleEscape(aEvent);
@@ -878,10 +859,10 @@ var BrowserUI = {
         this._favicon.src = "";
         break;
       // Awesome popup event
-      case "popupshown":
+      case "NavigationPanelShown":
         this._edit.setAttribute("open", "true");
         break;
-      case "popuphidden":
+      case "NavigationPanelHidden":
         this._edit.removeAttribute("open");
         break;
     }
@@ -1047,7 +1028,7 @@ var BrowserUI = {
         break;
       }
       case "cmd_opensearch":
-        this._edit.blur();
+        this.blurFocusedElement();
 
         MenuListHelperUI.show({
           title: Elements.browserBundle.getString("opensearch.searchWith"),

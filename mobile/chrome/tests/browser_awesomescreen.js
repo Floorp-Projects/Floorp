@@ -34,6 +34,41 @@ function runNextTest() {
 }
 
 //------------------------------------------------------------------------------
+// Case: Test awesome bar open attribute
+gTests.push({
+  desc: "Test awesome bar open attribute",
+
+  run: function() {
+    window.addEventListener("NavigationPanelShown", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
+      gCurrentTest.onPopupShown();
+    }, false);
+
+    AllPagesList.doCommand();
+  },
+
+  onPopupShown: function() {
+    is(BrowserUI.activePanel == AllPagesList, true, "AllPagesList should be visible");
+    is(BrowserUI._edit.hasAttribute("open"), true, "The urlbar edit element should have the open attribute");
+
+    window.addEventListener("NavigationPanelHidden", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
+      gCurrentTest.onPopupHidden();
+    }, false);
+
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+  },
+
+  onPopupHidden: function() {
+    is(BrowserUI.activePanel == null, true, "AllPagesList should be dismissed");
+    is(BrowserUI._edit.hasAttribute("open"), false, "The urlbar edit element should not have the open attribute");
+
+    runNextTest();
+  }
+});
+
+
+//------------------------------------------------------------------------------
 // Case: Test typing a character should dismiss the awesome header
 gTests.push({
   desc: "Test typing a character should dismiss the awesome header",
@@ -81,9 +116,9 @@ gTests.push({
 
   run: function() {
     window.addEventListener("NavigationPanelShown", function(aEvent) {
-      window.removeEventListener(aEvent.type, arguments.callee, true);
+      window.removeEventListener(aEvent.type, arguments.callee, false);
       gCurrentTest.onPopupReady();
-    }, true);
+    }, false);
     BookmarkList.doCommand();
   },
 
@@ -102,9 +137,9 @@ gTests.push({
     is(BrowserUI._edit.readOnly, false, "urlbar should not be readonly after an input");
 
     window.addEventListener("NavigationPanelHidden", function(aEvent) {
-      window.removeEventListener(aEvent.type, arguments.callee, true);
+      window.removeEventListener(aEvent.type, arguments.callee, false);
       gCurrentTest.onPopupHidden();
-    }, true);
+    }, false);
 
     EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
   },
@@ -178,9 +213,9 @@ gTests.push({
 
   onPageReady: function() {
     window.addEventListener("NavigationPanelShown", function(aEvent) {
-      window.removeEventListener(aEvent.type, arguments.callee, true);
+      window.removeEventListener(aEvent.type, arguments.callee, false);
       gCurrentTest.onPopupReady();
-    }, true);
+    }, false);
 
     AllPagesList.doCommand();
   },
@@ -213,10 +248,8 @@ gTests.push({
 
     BrowserUI.closeTab(this._currentTab);
 
-    Util.executeSoon(function() {
-      BrowserUI.activePanel = null;
-      runNextTest();
-    });
+    BrowserUI.activePanel = null;
+    runNextTest();
   }
 });
 
