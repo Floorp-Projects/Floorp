@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <input onfocus="focused()" autofocus>
+    <script>
+      function focused() {
+        var i = document.querySelector("input");
+        i.style.display = "block";
+        document.offsetWidth;
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>
