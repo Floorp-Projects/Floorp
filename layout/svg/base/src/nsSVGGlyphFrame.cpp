@@ -667,11 +667,11 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
   const gfxFloat radPerDeg = M_PI / 180.0;
 
   nsTArray<float> xList, yList;
-  GetEffectiveXY(xList, yList);
+  GetEffectiveXY(strLength, xList, yList);
   nsTArray<float> dxList, dyList;
-  GetEffectiveDxDy(dxList, dyList);
+  GetEffectiveDxDy(strLength, dxList, dyList);
   nsTArray<float> rotateList;
-  GetEffectiveRotate(rotateList);
+  GetEffectiveRotate(strLength, rotateList);
 
   gfxPoint pos = mPosition;
   gfxFloat angle = 0.0;
@@ -784,7 +784,7 @@ nsSVGGlyphFrame::GetSubStringAdvance(PRUint32 aCharnum,
     mTextRun->GetAdvanceWidth(aCharnum, aFragmentChars, nsnull) * aMetricsScale;
 
   nsTArray<float> dxlist, notUsed;
-  GetEffectiveDxDy(dxlist, notUsed);
+  GetEffectiveDxDy(mTextRun->GetLength(), dxlist, notUsed);
   PRUint32 dxcount = dxlist.Length();
   if (dxcount) {
     gfxFloat pathScale = 1.0;
@@ -1001,7 +1001,7 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransf
   PRUint32 strLength = mTextRun->GetLength();
 
   nsTArray<float> xList, yList;
-  GetEffectiveXY(xList, yList);
+  GetEffectiveXY(strLength, xList, yList);
   PRUint32 xCount = NS_MIN(xList.Length(), strLength);
   PRUint32 yCount = NS_MIN(yList.Length(), strLength);
 
@@ -1030,7 +1030,7 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransf
     pathScale = textPath->GetPathScale();
 
   nsTArray<float> dxList, dyList;
-  GetEffectiveDxDy(dxList, dyList);
+  GetEffectiveDxDy(strLength, dxList, dyList);
 
   PRUint32 dxcount = NS_MIN(dxList.Length(), strLength);
   if (dxcount > 0) {
@@ -1176,12 +1176,11 @@ nsSVGGlyphFrame::SetStartIndex(PRUint32 aStartIndex)
 }
 
 NS_IMETHODIMP_(void)
-nsSVGGlyphFrame::GetEffectiveXY(nsTArray<float> &aX, nsTArray<float> &aY)
+nsSVGGlyphFrame::GetEffectiveXY(PRInt32 strLength, nsTArray<float> &aX, nsTArray<float> &aY)
 {
   nsTArray<float> x, y;
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetEffectiveXY(x, y);
 
-  PRInt32 strLength = GetNumberOfChars();
   PRInt32 xCount = NS_MAX((PRInt32)(x.Length() - mStartIndex), 0);
   xCount = NS_MIN(xCount, strLength);
   aX.AppendElements(x.Elements() + mStartIndex, xCount);
@@ -1198,12 +1197,11 @@ nsSVGGlyphFrame::GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy)
 }
 
 void
-nsSVGGlyphFrame::GetEffectiveDxDy(nsTArray<float> &aDx, nsTArray<float> &aDy)
+nsSVGGlyphFrame::GetEffectiveDxDy(PRInt32 strLength, nsTArray<float> &aDx, nsTArray<float> &aDy)
 {
   nsTArray<float> dx, dy;
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetEffectiveDxDy(dx, dy);
 
-  PRInt32 strLength = GetNumberOfChars();
   PRInt32 dxCount = NS_MAX((PRInt32)(dx.Length() - mStartIndex), 0);
   dxCount = NS_MIN(dxCount, strLength);
   aDx.AppendElements(dx.Elements() + mStartIndex, dxCount);
@@ -1224,12 +1222,11 @@ nsSVGGlyphFrame::GetRotate()
 }
 
 void
-nsSVGGlyphFrame::GetEffectiveRotate(nsTArray<float> &aRotate)
+nsSVGGlyphFrame::GetEffectiveRotate(PRInt32 strLength, nsTArray<float> &aRotate)
 {
   nsTArray<float> rotate;
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetEffectiveRotate(rotate);
 
-  PRInt32 strLength = GetNumberOfChars();
   PRInt32 rotateCount = NS_MAX((PRInt32)(rotate.Length() - mStartIndex), 0);
   rotateCount = NS_MIN(rotateCount, strLength);
   if (rotateCount > 0) {
@@ -1275,7 +1272,7 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
   // for each character within a 'text', 'tspan', 'tref' and 'altGlyph' element
   // which has an x or y attribute value assigned to it explicitly
   nsTArray<float> x, y;
-  GetEffectiveXY(x, y);
+  GetEffectiveXY(GetNumberOfChars(), x, y);
   // Note: the y of descendants of textPath has no effect in horizontal writing
   return (!x.IsEmpty() || (!hasTextPathAncestor && !y.IsEmpty()));
 }
