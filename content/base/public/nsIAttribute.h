@@ -46,8 +46,8 @@ class nsDOMAttributeMap;
 class nsIContent;
 
 #define NS_IATTRIBUTE_IID  \
-{ 0x9bb7e4f2, 0xf89d, 0x46ee, \
-  { 0xa4, 0x62, 0x68, 0xcb, 0x0b, 0xf5, 0x71, 0x53 } }
+{ 0x0330a680, 0x6b05, 0x453b, \
+  { 0x84, 0x7a, 0xb0, 0x6c, 0x9c, 0x5d, 0x08, 0x85 } }
 
 class nsIAttribute : public nsINode
 {
@@ -76,13 +76,15 @@ public:
 
 protected:
 #ifdef MOZILLA_INTERNAL_API
-  nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsINode(aNodeInfo), mAttrMap(aAttrMap)
+  nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsINodeInfo> aNodeInfo,
+               PRBool aNsAware)
+    : nsINode(aNodeInfo), mAttrMap(aAttrMap), mNsAware(aNsAware)
   {
   }
 #endif //MOZILLA_INTERNAL_API
 
   nsDOMAttributeMap *mAttrMap; // WEAK
+  PRBool mNsAware;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)
