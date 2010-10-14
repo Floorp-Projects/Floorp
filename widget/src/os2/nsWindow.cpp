@@ -407,6 +407,10 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
         mWindowType == eWindowType_invisible) {
       mNoPaint = PR_TRUE;
     }
+    // Popup windows should not have an nsWindow parent.
+    else if (mWindowType == eWindowType_popup) {
+      pParent = 0;
+    }
   }
 
   // For toplevel windows, create an instance of our helper class,
@@ -576,28 +580,6 @@ nsIWidget* nsWindow::GetParent()
   return mParent;
 }
 
-static PRInt32 sDPI = 0;
-
-float nsWindow::GetDPI()
-{
-    if (!sDPI) {
-        // create DC compatible with the screen
-        HDC dc = DevOpenDC((HAB)1, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
-        if (dc > 0) {
-            // we do have a DC and we can query the DPI setting from it
-            LONG lDPI;
-            if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
-                sDPI = lDPI;
-            DevCloseDC(dc);
-        }
-        if (sDPI <= 0) {
-            // Fall back to something sane
-            sDPI = 96;
-        }
-    }
-    return sDPI;  
-}
-
 //-----------------------------------------------------------------------------
 
 NS_METHOD nsWindow::Enable(PRBool aState)
@@ -720,6 +702,29 @@ gfxASurface* nsWindow::ConfirmThebesSurface()
     mThebesSurface = new gfxOS2Surface(mWnd);
   }
   return mThebesSurface;
+}
+
+//-----------------------------------------------------------------------------
+
+float nsWindow::GetDPI()
+{
+  static PRInt32 sDPI = 0;
+
+  // Create DC compatible with the screen, then query the DPI setting.
+  // If this fails, fall back to something sensible.
+  if (!sDPI) {
+    HDC dc = DevOpenDC(0, OD_MEMORY,"*",0L, 0, 0);
+    if (dc > 0) {
+      LONG lDPI;
+      if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
+        sDPI = lDPI;
+      DevCloseDC(dc);
+    }
+    if (sDPI <= 0) {
+      sDPI = 96;
+    }
+  }
+  return sDPI;  
 }
 
 //-----------------------------------------------------------------------------
@@ -2910,7 +2915,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
     // (i.e. frame, titlebar, etc.), mark this as a toplevel exit.
     // Note: exits to and from menus will also be marked toplevel.
     if (aEventType == NS_MOUSE_EXIT) {
-      HWND  hTop;
+      HWND  hTop = 0;
       HWND  hCur = mWnd;
       HWND  hDesk = WinQueryDesktopWindow(0, 0);
       while (hCur && hCur != hDesk) {
