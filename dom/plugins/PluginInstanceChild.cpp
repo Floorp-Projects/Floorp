@@ -2483,7 +2483,6 @@ PluginInstanceChild::ShowPluginFrame()
 
     NPRect r = { rect.y, rect.x, rect.YMost(), rect.XMost() };
     SurfaceDescriptor currSurf;
-    SurfaceDescriptor outSurf = null_t();
 #ifdef MOZ_X11
     if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mCurrentSurface.get());
@@ -2500,7 +2499,11 @@ PluginInstanceChild::ShowPluginFrame()
         NS_RUNTIMEABORT("Surface type is not remotable");
         return false;
     }
-    if (!SendShow(r, currSurf, &outSurf)) {
+
+    // Unused, except to possibly return a shmem to us
+    SurfaceDescriptor returnSurf;
+
+    if (!SendShow(r, currSurf, &returnSurf)) {
         return false;
     }
 
