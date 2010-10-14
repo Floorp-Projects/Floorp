@@ -961,7 +961,7 @@ pref("browser.taskbar.lists.frequent.enabled", true);
 pref("browser.taskbar.lists.recent.enabled", false);
 pref("browser.taskbar.lists.maxListItemCount", 7);
 pref("browser.taskbar.lists.tasks.enabled", true);
-pref("browser.taskbar.lists.refreshInSeconds", 30);
+pref("browser.taskbar.lists.refreshInSeconds", 120);
 #endif
 #endif
 
