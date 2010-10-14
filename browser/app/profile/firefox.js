@@ -944,7 +944,6 @@ pref("dom.ipc.plugins.enabled.i386.flash player.plugin", true);
 pref("dom.ipc.plugins.enabled.i386.javaplugin2_npapi.plugin", true);
 // x86_64 ipc preferences
 pref("dom.ipc.plugins.enabled.x86_64", true);
-pref("dom.ipc.plugins.enabled.x86_64.test.plugin", false);
 #elifdef MOZ_IPC
 pref("dom.ipc.plugins.enabled", true);
 #else
