@@ -985,39 +985,49 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
 
 
 /* void getBounds (out long x, out long y, out long width, out long height); */
-NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+NS_IMETHODIMP
+nsAccessible::GetBounds(PRInt32* aX, PRInt32* aY,
+                        PRInt32* aWidth, PRInt32* aHeight)
 {
-  // This routine will get the entire rectange for all the frames in this node
+  NS_ENSURE_ARG_POINTER(aX);
+  *aX = 0;
+  NS_ENSURE_ARG_POINTER(aY);
+  *aY = 0;
+  NS_ENSURE_ARG_POINTER(aWidth);
+  *aWidth = 0;
+  NS_ENSURE_ARG_POINTER(aHeight);
+  *aHeight = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  // Flush layout so that all the frame construction, reflow, and styles are
+  // up-to-date since we rely on frames, and styles when calculating state.
+  // We don't flush the display because we don't care about painting.
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  presShell->FlushPendingNotifications(Flush_Layout);
+
+  // This routine will get the entire rectangle for all the frames in this node.
   // -------------------------------------------------------------------------
   //      Primary Frame for node
   //  Another frame, same node                <- Example
   //  Another frame, same node
 
-  nsPresContext *presContext = GetPresContext();
-  if (!presContext)
-  {
-    *x = *y = *width = *height = 0;
-    return NS_ERROR_FAILURE;
-  }
-
   nsRect unionRectTwips;
-  nsIFrame* aBoundingFrame = nsnull;
-  GetBoundsRect(unionRectTwips, &aBoundingFrame);   // Unions up all primary frames for this node and all siblings after it
-  if (!aBoundingFrame) {
-    *x = *y = *width = *height = 0;
-    return NS_ERROR_FAILURE;
-  }
+  nsIFrame* boundingFrame = nsnull;
+  GetBoundsRect(unionRectTwips, &boundingFrame);   // Unions up all primary frames for this node and all siblings after it
+  NS_ENSURE_STATE(boundingFrame);
 
-  *x      = presContext->AppUnitsToDevPixels(unionRectTwips.x); 
-  *y      = presContext->AppUnitsToDevPixels(unionRectTwips.y);
-  *width  = presContext->AppUnitsToDevPixels(unionRectTwips.width);
-  *height = presContext->AppUnitsToDevPixels(unionRectTwips.height);
+  nsPresContext* presContext = presShell->GetPresContext();
+  *aX = presContext->AppUnitsToDevPixels(unionRectTwips.x);
+  *aY = presContext->AppUnitsToDevPixels(unionRectTwips.y);
+  *aWidth = presContext->AppUnitsToDevPixels(unionRectTwips.width);
+  *aHeight = presContext->AppUnitsToDevPixels(unionRectTwips.height);
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
-
-  nsIntRect orgRectPixels = aBoundingFrame->GetScreenRectExternal();
-  *x += orgRectPixels.x;
-  *y += orgRectPixels.y;
+  nsIntRect orgRectPixels = boundingFrame->GetScreenRectExternal();
+  *aX += orgRectPixels.x;
+  *aY += orgRectPixels.y;
 
   return NS_OK;
 }
