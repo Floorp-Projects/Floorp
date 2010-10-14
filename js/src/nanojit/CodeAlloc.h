@@ -43,9 +43,9 @@
 namespace nanojit
 {
     /**
-     * CodeList is a linked list of non-contigous blocks of code.  Clients use CodeList*
-     * to point to a list, and each CodeList instance tracks a single contiguous
-     * block of code.
+     * CodeList is a single block of code.  The next field is used to
+     * form linked lists of non-contiguous blocks of code.  Clients use CodeList*
+     * to point to the first block in a list.
      */
     class CodeList
     {
@@ -95,13 +95,24 @@ namespace nanojit
     };
 
     /**
-     * Code memory allocator.
-     * Long lived manager for many code blocks,
+     * Code memory allocator is a long lived manager for many code blocks that
      * manages interaction with an underlying code memory allocator,
-     * setting page permissions, api's for allocating and freeing
+     * sets page permissions.  CodeAlloc provides APIs for allocating and freeing
      * individual blocks of code memory (for methods, stubs, or compiled
-     * traces), and also static functions for managing lists of allocated
-     * code.
+     * traces), static functions for managing lists of allocated code, and has
+     * a few pure virtual methods that embedders must implement to provide
+     * memory to the allocator.
+     *
+     * A "chunk" is a region of memory obtained from allocCodeChunk; it must
+     * be page aligned and be a multiple of the system page size.
+     *
+     * A "block" is a region of memory within a chunk.  It can be arbitrarily
+     * sized and aligned, but is always contained within a single chunk.
+     * class CodeList represents one block; the members of CodeList track the
+     * extent of the block and support creating lists of blocks.
+     *
+     * The allocator coalesces free blocks when it can, in free(), but never
+     * coalesces chunks.
      */
     class CodeAlloc
     {
@@ -142,9 +153,9 @@ namespace nanojit
         CodeList* firstBlock(CodeList* term);
 
         //
-        // CodeAlloc's SPI.  Implementations must be defined by nanojit embedder.
-        // allocation failures should cause an exception or longjmp; nanojit
-        // intentionally does not check for null.
+        // CodeAlloc's SPI (Service Provider Interface).  Implementations must be
+        // defined by nanojit embedder.  Allocation failures should cause an exception
+        // or longjmp; nanojit intentionally does not check for null.
         //
 
         /** allocate nbytes of memory to hold code.  Never return null! */
