@@ -677,7 +677,7 @@ jsd_GetValueParent(JSDContext* jsdc, JSDValue* jsdval)
         if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
             return NULL;
         JS_BeginRequest(jsdc->dumbContext);
-        call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, jsdc->glob);
+        call = JS_EnterCrossCompartmentCall(jsdc->dumbContext,obj);
         if(!call) {
             JS_EndRequest(jsdc->dumbContext);
             
