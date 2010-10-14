@@ -192,6 +192,24 @@ IsWindow(const char *name)
     return name[0] == 'W' && !strcmp(name, "Window");
 }
 
+static nsIPrincipal *
+GetPrincipal(JSObject *obj)
+{
+    NS_ASSERTION(!IS_SLIM_WRAPPER(obj), "global object is a slim wrapper?");
+    if (!IS_WN_WRAPPER(obj)) {
+        NS_ASSERTION(!(~obj->getClass()->flags &
+                       (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE)),
+                     "bad object");
+        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
+            do_QueryInterface((nsISupports*)xpc_GetJSPrivate(obj));
+        NS_ASSERTION(objPrin, "global isn't nsIScriptObjectPrincipal?");
+        return objPrin->GetPrincipal();
+    }
+
+    nsIXPConnect *xpc = nsXPConnect::GetRuntimeInstance()->GetXPConnect();
+    return xpc->GetPrincipal(obj, PR_TRUE);
+}
+
 bool
 AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id,
                                           JSWrapper::Action act)
@@ -222,8 +240,6 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     if (IsWindow(name) && IsFrameId(cx, obj, id))
         return true;
 
-    nsIXPConnect *xpc = nsXPConnect::GetRuntimeInstance()->GetXPConnect();
-
     JSObject *scope = nsnull;
     JSStackFrame *fp = nsnull;
     JS_FrameIterator(cx, &fp);
@@ -249,7 +265,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
         if (!ac.enter(cx, scope))
             return false;
 
-        subject = xpc->GetPrincipal(JS_GetGlobalForObject(cx, scope), PR_TRUE);
+        subject = GetPrincipal(JS_GetGlobalForObject(cx, scope));
     }
 
     {
@@ -258,7 +274,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
         if (!ac.enter(cx, obj))
             return false;
 
-        object = xpc->GetPrincipal(JS_GetGlobalForObject(cx, obj), PR_TRUE);
+        object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
     }
 
     PRBool subsumes;
