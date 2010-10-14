@@ -3530,9 +3530,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     SetClickAndHoldHandlers();
 #endif
 
-  // XXX Shouldn't have to do this, but I do
-  if (!gCustomizeSheet)
-    window.focus();
+  window.content.focus();
 }
 
 function BrowserToolboxCustomizeChange() {
