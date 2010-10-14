@@ -47,8 +47,8 @@
 // the generated collation key.
 const PRUint32 kCacheSize = 128;
 // According to the documentation, the length of the key should typically be
-// at least 5 * textLength
-const PRUint32 kCollationValueSizeFactor = 5;
+// at least 5 * textLength, but 6* would be safer.
+const PRUint32 kCollationValueSizeFactor = 6;
 
 class nsCollationMacUC : public nsICollation {
 
