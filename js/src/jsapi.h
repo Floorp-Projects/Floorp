@@ -334,6 +334,7 @@ static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
     jsid id;
+    JS_ASSERT(str);
     JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
     JSID_BITS(id) = (size_t)str;
@@ -491,13 +492,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
-#define JSFUN_THISP_FLAGS(f)  (f)
-#define JSFUN_THISP_TEST(f,t) ((f) & t)
-
-#define JSFUN_THISP_STRING    0x0100    /* |this| may be a primitive string */
-#define JSFUN_THISP_NUMBER    0x0200    /* |this| may be a primitive number */
-#define JSFUN_THISP_BOOLEAN   0x0400    /* |this| may be a primitive boolean */
-#define JSFUN_THISP_PRIMITIVE 0x0700    /* |this| may be any primitive value */
+#define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
 
 #define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
@@ -937,7 +932,9 @@ extern JS_PUBLIC_API(JSCompartmentCallback)
 JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
+JS_SetWrapObjectCallbacks(JSRuntime *rt,
+                          JSWrapObjectCallback callback,
+                          JSPreWrapCallback precallback);
 
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
@@ -957,6 +954,9 @@ JS_WrapObject(JSContext *cx, JSObject **objp);
 extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
+extern JS_PUBLIC_API(JSObject *)
+JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -974,7 +974,7 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
     bool entered() const { return call != NULL; }
 
     ~JSAutoEnterCompartment() {
-        if (call)
+        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
             JS_LeaveCrossCompartmentCall(call);
     }
 
@@ -1718,9 +1718,8 @@ struct JSClass {
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
 /* Additional global reserved slots, beyond those for standard prototypes. */
-#define JSRESERVED_GLOBAL_SLOTS_COUNT     4
-#define JSRESERVED_GLOBAL_COMPARTMENT     (JSProto_LIMIT * 3)
-#define JSRESERVED_GLOBAL_THIS            (JSRESERVED_GLOBAL_COMPARTMENT + 1)
+#define JSRESERVED_GLOBAL_SLOTS_COUNT     3
+#define JSRESERVED_GLOBAL_THIS            (JSProto_LIMIT * 3)
 #define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
 #define JSRESERVED_GLOBAL_REGEXP_STATICS  (JSRESERVED_GLOBAL_THROWTYPEERROR + 1)
 
@@ -2595,6 +2594,39 @@ extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunction(cx, thisObj, fun, argc, argv, rval);
+}
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, const char *name, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunctionName(cx, thisObj, name, argc, argv, rval);
+}
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, jsval fun, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunctionValue(cx, thisObj, fun, argc, argv, rval);
+}
+
+extern JS_PUBLIC_API(bool)
+Call(JSContext *cx, jsval thisv, jsval fun, uintN argc, jsval *argv, jsval *rval);
+
+static inline bool
+Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsval *rval) {
+    return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
+}
+
+} // namespace JS
+
+JS_BEGIN_EXTERN_C
+#endif // __cplusplus
+
 /*
  * These functions allow setting an operation callback that will be called
  * from the thread the context is associated with some time after any thread
@@ -2937,13 +2969,13 @@ JS_PUBLIC_API(void)
 JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);
 
 JS_PUBLIC_API(JSBool)
-JS_ReadPair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2);
+JS_ReadUint32Pair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2);
 
 JS_PUBLIC_API(JSBool)
 JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len);
 
 JS_PUBLIC_API(JSBool)
-JS_WritePair(JSStructuredCloneWriter *w, uint32 tag, uint32 data);
+JS_WriteUint32Pair(JSStructuredCloneWriter *w, uint32 tag, uint32 data);
 
 JS_PUBLIC_API(JSBool)
 JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len);

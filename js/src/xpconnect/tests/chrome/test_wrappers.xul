@@ -27,28 +27,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     var win = $('ifr').contentWindow;
     var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
-    todo_is(utils.getClassName(window), "XPCSafeJSObjectWrapper", "our window is wrapped correctly")
-    todo_is(utils.getClassName(location), "XPCSafeJSObjectWrapper", "our location is wrapped correctly")
-    is(utils.getClassName(win), "XPCNativeWrapper", "win is an XPCNW");
-    is(utils.getClassName(win.location), "XPCNativeWrapper", "deep wrapping works");
+    is(utils.getClassName(window), "Proxy", "our window is wrapped correctly")
+    is(utils.getClassName(location), "Proxy", "our location is wrapped correctly")
+    is(utils.getClassName(win), "Proxy", "win is an Proxy");
+    is(utils.getClassName(win.location), "Proxy", "deep wrapping works");
     is(win.location.href, "http://example.org/tests/js/src/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
        "can still get strings out");
 
     var unsafeWin = win.wrappedJSObject;
-    is(utils.getClassName(unsafeWin), "XPCSafeJSObjectWrapper", "can get a SJOW");
-    is(utils.getClassName(unsafeWin.location), "XPCSafeJSObjectWrapper", "deep wrapping works");
+    is(utils.getClassName(unsafeWin), "Proxy", "can get a Proxy");
+    is(utils.getClassName(unsafeWin.location), "Proxy", "deep wrapping works");
 
     Object.defineProperty(unsafeWin, "defprop1", { value: 1, writable: true, enumerable: true });
     /* TODO (bug 552854): the getter isn't visible in content.
     function checkWrapper(val) {
-        ok(utils.getClassName(val) == "XPCSafeJSObjectWrapper", "wrapped properly");
+        ok(utils.getClassName(val) == "Proxy", "wrapped properly");
     }
     Object.defineProperty(unsafeWin, "defprop2", { set: checkWrapper, enumerable: true });
     */
     unsafeWin.run_test(ok, win, unsafeWin);
 
     win.setTimeout(function() {
-                       is(utils.getClassName(this), "XPCNativeWrapper",
+                       is(utils.getClassName(this), "Proxy",
                           "this is wrapped correctly");
                        SimpleTest.finish();
                    }, 0)

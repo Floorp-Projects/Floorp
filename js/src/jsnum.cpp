@@ -53,7 +53,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsbuiltins.h"
@@ -71,6 +71,7 @@
 #include "jstracer.h"
 #include "jsvector.h"
 
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -559,25 +560,24 @@ Number(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 num_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    char buf[64];
-    JSString *str;
+    double d;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
 
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
-        return JS_FALSE;
-    double d = primp->toNumber();
     ToCStringBuf cbuf;
     char *numStr = NumberToCString(cx, &cbuf, d);
     if (!numStr) {
         JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
+        return false;
     }
+
+    char buf[64];
     JS_snprintf(buf, sizeof buf, "(new %s(%s))", js_NumberClass.name, numStr);
-    str = js_NewStringCopyZ(cx, buf);
+    JSString *str = js_NewStringCopyZ(cx, buf);
     if (!str)
-        return JS_FALSE;
+        return false;
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 #endif
 
@@ -645,10 +645,10 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base);
 static JSBool
 num_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
-        return JS_FALSE;
-    double d = primp->toNumber();
+    double d;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
+
     int32_t base = 10;
     if (argc != 0 && !vp[2].isUndefined()) {
         if (!ValueToECMAInt32(cx, vp[2], &base))
@@ -782,15 +782,12 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 num_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    if (vp[1].isNumber()) {
-        *vp = vp[1];
-        return JS_TRUE;
-    }
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!InstanceOf(cx, obj, &js_NumberClass, vp + 2))
-        return JS_FALSE;
-    *vp = obj->getPrimitiveThis();
-    return JS_TRUE;
+    double d;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
+
+    vp->setNumber(d);
+    return true;
 }
 
 
@@ -805,10 +802,9 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
     char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION+1)];
     char *numStr;
 
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
-        return JS_FALSE;
-    double d = primp->toNumber();
+    double d;
+    if (!GetPrimitiveThis(cx, vp, &d))
+        return false;
 
     double precision;
     if (argc == 0) {
@@ -879,15 +875,15 @@ JS_DEFINE_TRCINFO_2(num_toString,
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       num_toSource,          0,JSFUN_THISP_NUMBER),
+    JS_FN(js_toSource_str,       num_toSource,          0, JSFUN_PRIMITIVE_THIS),
 #endif
-    JS_TN(js_toString_str,       num_toString,          1,JSFUN_THISP_NUMBER, &num_toString_trcinfo),
-    JS_FN(js_toLocaleString_str, num_toLocaleString,    0,JSFUN_THISP_NUMBER),
-    JS_FN(js_valueOf_str,        num_valueOf,           0,JSFUN_THISP_NUMBER),
-    JS_FN(js_toJSON_str,         num_valueOf,           0,JSFUN_THISP_NUMBER),
-    JS_FN("toFixed",             num_toFixed,           1,JSFUN_THISP_NUMBER),
-    JS_FN("toExponential",       num_toExponential,     1,JSFUN_THISP_NUMBER),
-    JS_FN("toPrecision",         num_toPrecision,       1,JSFUN_THISP_NUMBER),
+    JS_TN(js_toString_str,       num_toString,          1, JSFUN_PRIMITIVE_THIS, &num_toString_trcinfo),
+    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_valueOf_str,        num_valueOf,           0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toJSON_str,         num_valueOf,           0, JSFUN_PRIMITIVE_THIS),
+    JS_FN("toFixed",             num_toFixed,           1, JSFUN_PRIMITIVE_THIS),
+    JS_FN("toExponential",       num_toExponential,     1, JSFUN_PRIMITIVE_THIS),
+    JS_FN("toPrecision",         num_toPrecision,       1, JSFUN_PRIMITIVE_THIS),
     JS_FS_END
 };
 

@@ -53,8 +53,8 @@
 #include "jsstdint.h"
 
 #include "jstypes.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsclist.h"
 #include "jsprf.h"
 #include "jsatom.h"
@@ -225,6 +225,7 @@ StackSpace::mark(JSTracer *trc)
      */
     Value *end = firstUnused();
     for (StackSegment *seg = currentSegment; seg; seg = seg->getPreviousInMemory()) {
+        STATIC_ASSERT(ubound(end) >= 0);
         if (seg->inContext()) {
             /* This may be the only pointer to the initialVarObj. */
             if (seg->hasInitialVarObj())
@@ -474,7 +475,9 @@ AllFramesIter::operator++()
 {
     JS_ASSERT(!done());
     if (curfp == curcs->getInitialFrame()) {
-        curcs = curcs->getPreviousInMemory();
+        do {
+            curcs = curcs->getPreviousInMemory();
+        } while (curcs && !curcs->inContext());
         curfp = curcs ? curcs->getCurrentFrame() : NULL;
     } else {
         curfp = curfp->prev();
@@ -507,6 +510,16 @@ JSThreadData::init()
     return true;
 }
 
+MathCache *
+JSThreadData::allocMathCache(JSContext *cx)
+{
+    JS_ASSERT(!mathCache);
+    mathCache = new MathCache;
+    if (!mathCache)
+        js_ReportOutOfMemory(cx);
+    return mathCache;
+}
+
 void
 JSThreadData::finish()
 {
@@ -527,6 +540,7 @@ JSThreadData::finish()
     jmData.Finish();
 #endif
     stackSpace.finish();
+    delete mathCache;
 }
 
 void
@@ -2034,6 +2048,37 @@ JSContext::JSContext(JSRuntime *rt)
     regs(NULL),
     busyArrays(this)
 {}
+
+void
+JSContext::resetCompartment()
+{
+    JSObject *scopeobj;
+    if (hasfp()) {
+        scopeobj = &fp()->scopeChain();
+    } else {
+        scopeobj = globalObject;
+        if (!scopeobj) {
+            compartment = runtime->defaultCompartment;
+            return;
+        }
+
+        /*
+         * Innerize. Assert, but check anyway, that this succeeds. (It
+         * can only fail due to bugs in the engine or embedding.)
+         */
+        OBJ_TO_INNER_OBJECT(this, scopeobj);
+        if (!scopeobj) {
+            /*
+             * Bug. Return NULL, not defaultCompartment, to crash rather
+             * than open a security hole.
+             */
+            JS_ASSERT(0);
+            compartment = NULL;
+            return;
+        }
+    }
+    compartment = scopeobj->getCompartment();
+}
 
 void
 JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)

@@ -181,6 +181,15 @@ namespace nanojit
         #endif
     #endif
 
+    class Noise
+    {
+        public:
+            virtual ~Noise() {}
+
+            // produce a random number from 0-maxValue for the JIT to use in attack mitigation
+            virtual uint32_t getValue(uint32_t maxValue) = 0;
+    };
+
     // error codes
     enum AssmError
     {
@@ -284,6 +293,8 @@ namespace nanojit
             void        assemble(Fragment* frag, LirFilter* reader);
             void        beginAssembly(Fragment *frag);
 
+            void        setNoiseGenerator(Noise* noise)  { _noise = noise; } // used for attack mitigation; setting to 0 disables all mitigations
+
             void        releaseRegisters();
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
@@ -348,6 +359,8 @@ namespace nanojit
             void        evict(LIns* vic);
             RegisterMask hint(LIns* ins);
 
+            void        getBaseIndexScale(LIns* addp, LIns** base, LIns** index, int* scale);
+
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
                                   verbose_only(, size_t &nBytes));
 
@@ -373,6 +386,7 @@ namespace nanojit
             RegAllocMap         _branchStateMap;
             NInsMap             _patches;
             LabelStateMap       _labels;
+            Noise*              _noise;             // object to generate random noise used when hardening enabled.
         #if NJ_USES_IMMD_POOL
             ImmDPoolMap     _immDPool;
         #endif

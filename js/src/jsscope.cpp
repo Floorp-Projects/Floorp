@@ -50,7 +50,7 @@
 #include "jsbit.h"
 #include "jsclist.h"
 #include "jsdhash.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -1170,6 +1170,18 @@ JSObject::removeProperty(JSContext *cx, jsid id)
          */
         JS_ASSERT(shape == lastProp);
         removeLastProperty();
+
+        /*
+         * Revert to fixed slots if this was the first dynamically allocated slot,
+         * preserving invariant that objects with the same shape use the fixed
+         * slots in the same way.
+         */
+        size_t fixed = numFixedSlots();
+        if (shape->slot == fixed) {
+            JS_ASSERT_IF(!lastProp->isEmptyShape() && lastProp->hasSlot(),
+                         lastProp->slot == fixed - 1);
+            revertToFixedSlots(cx);
+        }
     }
     updateShape(cx);
 
@@ -1204,6 +1216,14 @@ JSObject::clear(JSContext *cx)
 
     if (inDictionaryMode())
         shape->listp = &lastProp;
+
+    /*
+     * Revert to fixed slots if we have cleared below the first dynamically
+     * allocated slot, preserving invariant that objects with the same shape
+     * use the fixed slots in the same way.
+     */
+    if (hasSlotsArray() && JSSLOT_FREE(getClass()) <= numFixedSlots())
+        revertToFixedSlots(cx);
 
     /*
      * We have rewound to a uniquely-shaped empty scope, so we don't need an

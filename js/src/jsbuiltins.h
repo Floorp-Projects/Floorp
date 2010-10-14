@@ -184,6 +184,7 @@ struct ClosureVarInfo;
 
 #define _JS_CTYPE_CONTEXT           _JS_CTYPE(JSContext *,            _JS_PTR,"C", "", INFALLIBLE)
 #define _JS_CTYPE_RUNTIME           _JS_CTYPE(JSRuntime *,            _JS_PTR,"R", "", INFALLIBLE)
+#define _JS_CTYPE_MATHCACHE         _JS_CTYPE(js::MathCache *,        _JS_PTR,"M", "", INFALLIBLE)
 #define _JS_CTYPE_THIS              _JS_CTYPE(JSObject *,             _JS_PTR,"T", "", INFALLIBLE)
 #define _JS_CTYPE_THIS_DOUBLE       _JS_CTYPE(jsdouble,               _JS_F64,"D", "", INFALLIBLE)
 #define _JS_CTYPE_THIS_STRING       _JS_CTYPE(JSString *,             _JS_PTR,"S", "", INFALLIBLE)
@@ -577,6 +578,7 @@ js_dmod(jsdouble a, jsdouble b);
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_hole)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewPreallocatedArray)
+JS_DECLARE_CALLINFO(js_InitializerArray)
 JS_DECLARE_CALLINFO(js_ArrayCompPush_tn)
 JS_DECLARE_CALLINFO(js_EnsureDenseArrayCapacity)
 
@@ -612,8 +614,8 @@ JS_DECLARE_CALLINFO(js_NumberToString)
 
 /* Defined in jsobj.cpp. */
 JS_DECLARE_CALLINFO(js_Object_tn)
-JS_DECLARE_CALLINFO(js_NewInstanceFromTrace)
-JS_DECLARE_CALLINFO(js_NonEmptyObject)
+JS_DECLARE_CALLINFO(js_CreateThisFromTrace)
+JS_DECLARE_CALLINFO(js_InitializerObject)
 
 /* Defined in jsregexp.cpp. */
 JS_DECLARE_CALLINFO(js_CloneRegExpObject)

@@ -52,8 +52,8 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsutil.h" /* Added by JSIFY */
-#include "jshash.h" /* Added by JSIFY */
+#include "jsutil.h"
+#include "jshash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -77,10 +77,10 @@
 #include "jsversion.h"
 
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 #include "jsregexpinlines.h"
-#include "jscntxtinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -360,54 +360,48 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 
     /*
      * There are 4 cases, based on whether on whether the left or right is a
-     * rope or non-rope string. This can be handled in a general way, but it's
-     * empirically a little faster and arguably simpler to handle each of the 4
-     * cases independently and directly.
+     * rope or non-rope string.
      */
+    JSRopeBufferInfo *buf = NULL;
+
     if (leftRopeTop) {
+        /* Left child is a rope. */
+        JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
+
+        /* If both children are ropes, steal the larger buffer. */
         if (JS_UNLIKELY(rightRopeTop)) {
-            JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
             JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
 
-            /* Attempt to steal the larger buffer. WLOG, it's the left one. */
+            /* Put the larger buffer into 'leftBuf'. */
             if (leftBuf->capacity >= rightBuf->capacity) {
                 cx->free(rightBuf);
             } else {
                 cx->free(leftBuf);
                 leftBuf = rightBuf;
             }
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, true, true, leftBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, true, true, left, right, length, buf);
-        } else {
-            /* Steal buffer from left if it's big enough. */
-            JSRopeBufferInfo *leftBuf = left->topNodeBuffer();
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, true, false, leftBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, true, false, left, right, length, buf);
         }
+
+        buf = ObtainRopeBuffer(cx, true, rightRopeTop, leftBuf, length, left, right);
+        if (!buf)
+            return NULL;
+    } else if (JS_UNLIKELY(rightRopeTop)) {
+        /* Right child is a rope: steal its buffer if big enough. */
+        JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
+
+        buf = ObtainRopeBuffer(cx, false, true, rightBuf, length, left, right);
+        if (!buf)
+            return NULL;
     } else {
-        if (JS_UNLIKELY(rightRopeTop)) {
-            /* Steal buffer from right if it's big enough. */
-            JSRopeBufferInfo *rightBuf = right->topNodeBuffer();
-
-            JSRopeBufferInfo *buf = ObtainRopeBuffer(cx, false, true, rightBuf,
-                                                     length, left, right);
-            return FinishConcat(cx, false, true, left, right, length, buf);
-        } else {
-            /* Need to make a new buffer. */
-            size_t capacity;
-            size_t allocSize = RopeAllocSize(length, &capacity);
-            JSRopeBufferInfo *buf = (JSRopeBufferInfo *) cx->malloc(allocSize);
-            if (!buf)
-                return NULL;
-
-            buf->capacity = capacity;
-            return FinishConcat(cx, false, false, left, right, length, buf);
-        }
+        /* Neither child is a rope: need to make a new buffer. */
+        size_t capacity;
+        size_t allocSize = RopeAllocSize(length, &capacity);
+        buf = (JSRopeBufferInfo *) cx->malloc(allocSize);
+        if (!buf)
+            return NULL;
+        buf->capacity = capacity;
     }
+
+    return FinishConcat(cx, leftRopeTop, rightRopeTop, left, right, length, buf);
 }
 
 JSString * JS_FASTCALL
@@ -862,14 +856,17 @@ Class js_StringClass = {
 static JSString *
 NormalizeThis(JSContext *cx, Value *vp)
 {
-    if (vp[1].isNull() && (!ComputeThisFromVp(cx, vp) || vp[1].isNull()))
+    if (vp[1].isNullOrUndefined() && !ComputeThisFromVp(cx, vp))
         return NULL;
 
     /*
-     * js_GetPrimitiveThis seems to do a bunch of work (like calls to
-     * JS_THIS_OBJECT) which we don't need in the common case (where
-     * vp[1] is a String object) here.  Note that vp[1] can still be a
-     * primitive value at this point.
+     * String.prototype.{toString,toSource,valueOf} throw a TypeError if the
+     * this-argument is not a string or a String object. So those methods use
+     * js::GetPrimitiveThis which provides that behavior.
+     *
+     * By standard, the rest of the String methods must ToString the
+     * this-argument rather than throw a TypeError. So those methods use
+     * NORMALIZE_THIS (and thus NormalizeThis) instead.
      */
     if (vp[1].isObject()) {
         JSObject *obj = &vp[1].toObject();
@@ -909,23 +906,26 @@ static JSBool
 str_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
-    size_t i, j, k, n;
-    char buf[16];
-    const jschar *s;
-    jschar *t;
+    if (!GetPrimitiveThis(cx, vp, &str))
+        return false;
 
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
-        return JS_FALSE;
-    str = js_QuoteString(cx, primp->toString(), '"');
+    str = js_QuoteString(cx, str, '"');
     if (!str)
-        return JS_FALSE;
-    j = JS_snprintf(buf, sizeof buf, "(new %s(", js_StringClass.name);
+        return false;
+
+    char buf[16];
+    size_t j = JS_snprintf(buf, sizeof buf, "(new String(");
+
+    const jschar *s;
+    size_t k;
     str->getCharsAndLength(s, k);
-    n = j + k + 2;
-    t = (jschar *) cx->malloc((n + 1) * sizeof(jschar));
+
+    size_t n = j + k + 2;
+    jschar *t = (jschar *) cx->malloc((n + 1) * sizeof(jschar));
     if (!t)
-        return JS_FALSE;
+        return false;
+
+    size_t i;
     for (i = 0; i < j; i++)
         t[i] = buf[i];
     for (j = 0; j < k; i++, j++)
@@ -933,13 +933,14 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     t[i++] = ')';
     t[i++] = ')';
     t[i] = 0;
+
     str = js_NewString(cx, t, n);
     if (!str) {
         cx->free(t);
-        return JS_FALSE;
+        return false;
     }
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 #endif /* JS_HAS_TOSOURCE */
@@ -947,10 +948,10 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_str_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    const Value *primp;
-    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
+    JSString *str;
+    if (!GetPrimitiveThis(cx, vp, &str))
         return false;
-    *vp = *primp;
+    vp->setString(str);
     return true;
 }
 
@@ -1983,18 +1984,19 @@ struct ReplaceData
      : g(cx), cb(cx)
     {}
 
-    JSString        *str;           /* 'this' parameter object as a string */
-    RegExpGuard     g;              /* regexp parameter object and private data */
-    JSObject        *lambda;        /* replacement function object or null */
-    JSString        *repstr;        /* replacement string */
-    jschar          *dollar;        /* null or pointer to first $ in repstr */
-    jschar          *dollarEnd;     /* limit pointer for js_strchr_limit */
-    jsint           index;          /* index in result of next replacement */
-    jsint           leftIndex;      /* left context index in str->chars */
-    JSSubString     dollarStr;      /* for "$$" InterpretDollar result */
-    bool            calledBack;     /* record whether callback has been called */
-    InvokeArgsGuard args;           /* arguments for lambda's js_Invoke call */
-    JSCharBuffer    cb;             /* buffer built during DoMatch */
+    JSString           *str;           /* 'this' parameter object as a string */
+    RegExpGuard        g;              /* regexp parameter object and private data */
+    JSObject           *lambda;        /* replacement function object or null */
+    JSString           *repstr;        /* replacement string */
+    jschar             *dollar;        /* null or pointer to first $ in repstr */
+    jschar             *dollarEnd;     /* limit pointer for js_strchr_limit */
+    jsint              index;          /* index in result of next replacement */
+    jsint              leftIndex;      /* left context index in str->chars */
+    JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
+    bool               calledBack;     /* record whether callback has been called */
+    InvokeSessionGuard session;        /* arguments for repeated lambda Invoke call */
+    InvokeArgsGuard    singleShot;     /* arguments for single lambda Invoke call */
+    JSCharBuffer       cb;             /* buffer built during DoMatch */
 };
 
 static bool
@@ -2061,19 +2063,21 @@ InterpretDollar(JSContext *cx, RegExpStatics *res, jschar *dp, jschar *ep, Repla
 
 class PreserveRegExpStatics
 {
-    js::RegExpStatics * const saved;
-    js::RegExpStatics container;
+    js::RegExpStatics *const original;
+    js::RegExpStatics buffer;
 
   public:
-    explicit PreserveRegExpStatics(RegExpStatics *toSave) : saved(toSave) {
-        container.clone(*toSave);
-        container.checkInvariants();
-        saved->checkInvariants();
+    explicit PreserveRegExpStatics(RegExpStatics *original)
+     : original(original),
+       buffer(RegExpStatics::InitBuffer())
+    {}
+
+    bool init(JSContext *cx) {
+        return original->save(cx, &buffer);
     }
 
     ~PreserveRegExpStatics() {
-        saved->clone(container);
-        saved->checkInvariants();
+        original->restore();
     }
 };
 
@@ -2082,8 +2086,6 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 {
     JSObject *lambda = rdata.lambda;
     if (lambda) {
-        LeaveTrace(cx);
-
         /*
          * In the lambda case, not only do we find the replacement string's
          * length, we compute repstr and return it via rdata for use within
@@ -2095,46 +2097,40 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         uintN p = res->getParenCount();
         uintN argc = 1 + p + 2;
 
-        if (!rdata.args.pushed() && !cx->stack().pushInvokeArgs(cx, argc, &rdata.args))
+        InvokeSessionGuard &session = rdata.session;
+        if (!session.started()) {
+            Value lambdav = ObjectValue(*lambda);
+            if (!session.start(cx, lambdav, UndefinedValue(), argc))
+                return false;
+        }
+
+        PreserveRegExpStatics staticsGuard(res);
+        if (!staticsGuard.init(cx))
             return false;
 
-        PreserveRegExpStatics save(res);
-
-        /* Push lambda and its 'this' parameter. */
-        CallArgs &args = rdata.args;
-        args.callee().setObject(*lambda);
-        args.thisv().setNull();
-
-        Value *sp = args.argv();
-
         /* Push $&, $1, $2, ... */
-        if (!res->createLastMatch(cx, sp++))
+        uintN argi = 0;
+        if (!res->createLastMatch(cx, &session[argi++]))
             return false;
 
         for (size_t i = 0; i < res->getParenCount(); ++i) {
-            if (!res->createParen(cx, i, sp++))
+            if (!res->createParen(cx, i, &session[argi++]))
                 return false;
         }
 
         /* Push match index and input string. */
-        sp[0].setInt32(res->get(0, 0));
-        sp[1].setString(rdata.str);
+        session[argi++].setInt32(res->get(0, 0));
+        session[argi].setString(rdata.str);
 
-        if (!Invoke(cx, rdata.args, 0))
+        if (!session.invoke(cx))
             return false;
 
-        /*
-         * NB: we count on the newborn string root to hold any string
-         * created by this js_ValueToString that would otherwise be GC-
-         * able, until we use rdata.repstr in DoReplace.
-         */
-        JSString *repstr = js_ValueToString(cx, args.rval());
-        if (!repstr)
+        /* root repstr: rdata is on the stack, so scanned by conservative gc. */
+        rdata.repstr = ValueToString_TestForStringInline(cx, session.rval());
+        if (!rdata.repstr)
             return false;
 
-        rdata.repstr = repstr;
-        *sizep = repstr->length();
-
+        *sizep = rdata.repstr->length();
         return true;
     }
 
@@ -2408,19 +2404,19 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     /* lambda(matchStr, matchStart, textstr) */
     static const uint32 lambdaArgc = 3;
-    if (!cx->stack().pushInvokeArgs(cx, lambdaArgc, &rdata.args))
+    if (!cx->stack().pushInvokeArgs(cx, lambdaArgc, &rdata.singleShot))
         return false;
 
-    CallArgs &args = rdata.args;
+    CallArgs &args = rdata.singleShot;
     args.callee().setObject(*rdata.lambda);
-    args.thisv().setNull();
+    args.thisv().setUndefined();
 
     Value *sp = args.argv();
     sp[0].setString(matchStr);
     sp[1].setInt32(fm.match());
     sp[2].setString(rdata.str);
 
-    if (!Invoke(cx, rdata.args, 0))
+    if (!Invoke(cx, rdata.singleShot, 0))
         return false;
 
     JSString *repstr = js_ValueToString(cx, args.rval());
@@ -3032,20 +3028,18 @@ JS_DEFINE_TRCINFO_1(str_concat,
     (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
-#define GENERIC           JSFUN_GENERIC_NATIVE
-#define PRIMITIVE         JSFUN_THISP_PRIMITIVE
-#define GENERIC_PRIMITIVE (GENERIC | PRIMITIVE)
+static const uint16 GENERIC_PRIMITIVE = JSFUN_GENERIC_NATIVE | JSFUN_PRIMITIVE_THIS;
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN("quote",             str_quote,             0,GENERIC_PRIMITIVE),
-    JS_FN(js_toSource_str,     str_toSource,          0,JSFUN_THISP_STRING),
+    JS_FN(js_toSource_str,     str_toSource,          0,JSFUN_PRIMITIVE_THIS),
 #endif
 
     /* Java-like methods. */
-    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING),
-    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
-    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
+    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
@@ -3075,19 +3069,19 @@ static JSFunctionSpec string_methods[] = {
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    JS_FN("bold",              str_bold,              0,PRIMITIVE),
-    JS_FN("italics",           str_italics,           0,PRIMITIVE),
-    JS_FN("fixed",             str_fixed,             0,PRIMITIVE),
-    JS_FN("fontsize",          str_fontsize,          1,PRIMITIVE),
-    JS_FN("fontcolor",         str_fontcolor,         1,PRIMITIVE),
-    JS_FN("link",              str_link,              1,PRIMITIVE),
-    JS_FN("anchor",            str_anchor,            1,PRIMITIVE),
-    JS_FN("strike",            str_strike,            0,PRIMITIVE),
-    JS_FN("small",             str_small,             0,PRIMITIVE),
-    JS_FN("big",               str_big,               0,PRIMITIVE),
-    JS_FN("blink",             str_blink,             0,PRIMITIVE),
-    JS_FN("sup",               str_sup,               0,PRIMITIVE),
-    JS_FN("sub",               str_sub,               0,PRIMITIVE),
+    JS_FN("bold",              str_bold,              0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("italics",           str_italics,           0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("fixed",             str_fixed,             0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("fontsize",          str_fontsize,          1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("fontcolor",         str_fontcolor,         1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("link",              str_link,              1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("anchor",            str_anchor,            1,JSFUN_PRIMITIVE_THIS),
+    JS_FN("strike",            str_strike,            0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("small",             str_small,             0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("big",               str_big,               0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("blink",             str_blink,             0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("sup",               str_sup,               0,JSFUN_PRIMITIVE_THIS),
+    JS_FN("sub",               str_sub,               0,JSFUN_PRIMITIVE_THIS),
 #endif
 
     JS_FS_END

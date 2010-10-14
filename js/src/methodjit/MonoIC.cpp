@@ -70,22 +70,21 @@ typedef JSC::MacroAssembler::Call Call;
 #if defined JS_MONOIC
 
 static void
-PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
+PatchGetFallback(VMFrame &f, ic::MICInfo *ic)
 {
-    JSC::RepatchBuffer repatch(mic.stubEntry.executableAddress(), 64);
+    JSC::RepatchBuffer repatch(ic->stubEntry.executableAddress(), 64);
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::GetGlobalName));
-    repatch.relink(mic.stubCall, fptr);
+    repatch.relink(ic->stubCall, fptr);
 }
 
 void JS_FASTCALL
-ic::GetGlobalName(VMFrame &f, uint32 index)
+ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
 {
     JSObject *obj = f.fp()->scopeChain().getGlobal();
-    ic::MICInfo &mic = f.fp()->script()->mics[index];
     JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
-    JS_ASSERT(mic.kind == ic::MICInfo::GET);
+    JS_ASSERT(ic->kind == ic::MICInfo::GET);
 
     JS_LOCK_OBJ(f.cx, obj);
     const Shape *shape = obj->nativeLookup(id);
@@ -95,33 +94,31 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     {
         JS_UNLOCK_OBJ(f.cx, obj);
         if (shape)
-            PatchGetFallback(f, mic);
+            PatchGetFallback(f, ic);
         stubs::GetGlobalName(f);
         return;
     }
     uint32 slot = shape->slot;
     JS_UNLOCK_OBJ(f.cx, obj);
 
-    mic.u.name.touched = true;
+    ic->u.name.touched = true;
 
     /* Patch shape guard. */
-    JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-    repatch.repatch(mic.shape, obj->shape());
+    JSC::RepatchBuffer repatch(ic->entry.executableAddress(), 50);
+    repatch.repatch(ic->shape, obj->shape());
 
     /* Patch loads. */
-    JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
-    slot -= JS_INITIAL_NSLOTS;
     slot *= sizeof(Value);
-    JSC::RepatchBuffer loads(mic.load.executableAddress(), 32, false);
+    JSC::RepatchBuffer loads(ic->load.executableAddress(), 32, false);
 #if defined JS_CPU_X86
-    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_DATA_OFFSET), slot);
-    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
+    loads.repatch(ic->load.dataLabel32AtOffset(MICInfo::GET_DATA_OFFSET), slot);
+    loads.repatch(ic->load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
 #elif defined JS_CPU_ARM
-    // mic.load actually points to the LDR instruction which fetches the offset, but 'repatch'
+    // ic->load actually points to the LDR instruction which fetches the offset, but 'repatch'
     // knows how to dereference it to find the integer value.
-    loads.repatch(mic.load.dataLabel32AtOffset(0), slot);
+    loads.repatch(ic->load.dataLabel32AtOffset(0), slot);
 #elif defined JS_PUNBOX64
-    loads.repatch(mic.load.dataLabel32AtOffset(mic.patchValueOffset), slot);
+    loads.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
 #endif
 
     /* Do load anyway... this time. */
@@ -140,11 +137,11 @@ SetGlobalNameSlow(VMFrame &f, uint32 index)
 }
 
 static void
-PatchSetFallback(VMFrame &f, ic::MICInfo &mic)
+PatchSetFallback(VMFrame &f, ic::MICInfo *ic)
 {
-    JSC::RepatchBuffer repatch(mic.stubEntry.executableAddress(), 64);
+    JSC::RepatchBuffer repatch(ic->stubEntry.executableAddress(), 64);
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, SetGlobalNameSlow));
-    repatch.relink(mic.stubCall, fptr);
+    repatch.relink(ic->stubCall, fptr);
 }
 
 static VoidStubAtom
@@ -159,14 +156,13 @@ GetStubForSetGlobalName(VMFrame &f)
 }
 
 void JS_FASTCALL
-ic::SetGlobalName(VMFrame &f, uint32 index)
+ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
 {
     JSObject *obj = f.fp()->scopeChain().getGlobal();
-    ic::MICInfo &mic = f.fp()->script()->mics[index];
     JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
-    JS_ASSERT(mic.kind == ic::MICInfo::SET);
+    JS_ASSERT(ic->kind == ic::MICInfo::SET);
 
     JS_LOCK_OBJ(f.cx, obj);
     const Shape *shape = obj->nativeLookup(id);
@@ -177,40 +173,38 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     {
         JS_UNLOCK_OBJ(f.cx, obj);
         if (shape)
-            PatchSetFallback(f, mic);
+            PatchSetFallback(f, ic);
         GetStubForSetGlobalName(f)(f, atom);
         return;
     }
     uint32 slot = shape->slot;
     JS_UNLOCK_OBJ(f.cx, obj);
 
-    mic.u.name.touched = true;
+    ic->u.name.touched = true;
 
     /* Patch shape guard. */
-    JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
-    repatch.repatch(mic.shape, obj->shape());
+    JSC::RepatchBuffer repatch(ic->entry.executableAddress(), 50);
+    repatch.repatch(ic->shape, obj->shape());
 
     /* Patch loads. */
-    JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
-    slot -= JS_INITIAL_NSLOTS;
     slot *= sizeof(Value);
 
-    JSC::RepatchBuffer stores(mic.load.executableAddress(), 32, false);
+    JSC::RepatchBuffer stores(ic->load.executableAddress(), 32, false);
 #if defined JS_CPU_X86
-    stores.repatch(mic.load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
+    stores.repatch(ic->load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
 
     uint32 dataOffset;
-    if (mic.u.name.typeConst)
+    if (ic->u.name.typeConst)
         dataOffset = MICInfo::SET_DATA_CONST_TYPE_OFFSET;
     else
         dataOffset = MICInfo::SET_DATA_TYPE_OFFSET;
-    stores.repatch(mic.load.dataLabel32AtOffset(dataOffset), slot);
+    stores.repatch(ic->load.dataLabel32AtOffset(dataOffset), slot);
 #elif defined JS_CPU_ARM
-    // mic.load actually points to the LDR instruction which fetches the offset, but 'repatch'
+    // ic->load actually points to the LDR instruction which fetches the offset, but 'repatch'
     // knows how to dereference it to find the integer value.
-    stores.repatch(mic.load.dataLabel32AtOffset(0), slot);
+    stores.repatch(ic->load.dataLabel32AtOffset(0), slot);
 #elif defined JS_PUNBOX64
-    stores.repatch(mic.load.dataLabel32AtOffset(mic.patchValueOffset), slot);
+    stores.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
 #endif
 
     // Actually implement the op the slow way.
@@ -218,24 +212,16 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
 }
 
 static void * JS_FASTCALL
-SlowCallFromIC(VMFrame &f, uint32 index)
+SlowCallFromIC(VMFrame &f, ic::CallICInfo *ic)
 {
-    JSScript *oldscript = f.fp()->script();
-    CallICInfo &ic= oldscript->callICs[index];
-
-    stubs::SlowCall(f, ic.argc);
-
+    stubs::SlowCall(f, ic->argc);
     return NULL;
 }
 
 static void * JS_FASTCALL
-SlowNewFromIC(VMFrame &f, uint32 index)
+SlowNewFromIC(VMFrame &f, ic::CallICInfo *ic)
 {
-    JSScript *oldscript = f.fp()->script();
-    CallICInfo &ic = oldscript->callICs[index];
-
-    stubs::SlowNew(f, ic.argc);
-
+    stubs::SlowNew(f, ic->argc);
     return NULL;
 }
 
@@ -277,28 +263,24 @@ SlowNewFromIC(VMFrame &f, uint32 index)
  * scripted native, then a small stub is generated which inlines the native
  * invocation.
  */
-class CallCompiler
+class CallCompiler : public BaseCompiler
 {
     VMFrame &f;
-    JSContext *cx;
     CallICInfo &ic;
     Value *vp;
     bool callingNew;
 
   public:
     CallCompiler(VMFrame &f, CallICInfo &ic, bool callingNew)
-      : f(f), cx(f.cx), ic(ic), vp(f.regs.sp - (ic.argc + 2)), callingNew(callingNew)
+      : BaseCompiler(f.cx), f(f), ic(ic), vp(f.regs.sp - (ic.argc + 2)), callingNew(callingNew)
     {
     }
 
     JSC::ExecutablePool *poolForSize(size_t size, CallICInfo::PoolIndex index)
     {
-        mjit::ThreadData *jm = &JS_METHODJIT_DATA(cx);
-        JSC::ExecutablePool *ep = jm->execPool->poolForSize(size);
-        if (!ep) {
-            js_ReportOutOfMemory(f.cx);
+        JSC::ExecutablePool *ep = getExecPool(size);
+        if (!ep)
             return NULL;
-        }
         JS_ASSERT(!ic.pools[index]);
         ic.pools[index] = ep;
         return ep;
@@ -329,8 +311,11 @@ class CallCompiler
          * here since ncode has two failure modes and we need to load out of
          * nmap anyway.
          */
-        masm.loadPtr(Address(t0, offsetof(JSScript, jit)), t0);
-        Jump hasCode = masm.branchTestPtr(Assembler::NonZero, t0, t0);
+        size_t offset = callingNew
+                        ? offsetof(JSScript, jitArityCheckCtor)
+                        : offsetof(JSScript, jitArityCheckNormal);
+        masm.loadPtr(Address(t0, offset), t0);
+        Jump hasCode = masm.branchPtr(Assembler::Above, t0, ImmPtr(JS_UNJITTABLE_SCRIPT));
 
         /* Try and compile. On success we get back the nmap pointer. */
         masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
@@ -349,7 +334,6 @@ class CallCompiler
 
         /* Get nmap[ARITY], set argc, call. */
         masm.move(Imm32(ic.argc), JSParamReg_Argc);
-        masm.loadPtr(Address(t0, offsetof(JITScript, arityCheck)), t0);
         masm.jump(t0);
 
         JSC::ExecutablePool *ep = poolForSize(masm.size(), CallICInfo::Pool_ScriptStub);
@@ -381,9 +365,11 @@ class CallCompiler
 
         ic.fastGuardedObject = obj;
 
+        JITScript *jit = script->getJIT(callingNew);
+
         repatch.repatch(ic.funGuard, obj);
         repatch.relink(ic.funGuard.jumpAtOffset(ic.hotJumpOffset),
-                       JSC::CodeLocationLabel(script->ncode));
+                       JSC::CodeLocationLabel(jit->fastEntry));
 
         JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n", start, ic.fastGuardedObject);
     }
@@ -446,8 +432,7 @@ class CallCompiler
         if (callingNew)
             vp[1].setMagicWithObjectOrNullPayload(NULL);
 
-        Native fn = fun->u.n.native;
-        if (!fn(cx, ic.argc, vp))
+        if (!CallJSNative(cx, fun->u.n.native, ic.argc, vp))
             THROWV(true);
 
         /* Right now, take slow-path for IC misses or multiple stubs. */
@@ -654,52 +639,40 @@ class CallCompiler
 };
 
 void * JS_FASTCALL
-ic::Call(VMFrame &f, uint32 index)
+ic::Call(VMFrame &f, CallICInfo *ic)
 {
-    JSScript *oldscript = f.fp()->script();
-    CallICInfo &ic = oldscript->callICs[index];
-    CallCompiler cc(f, ic, false);
+    CallCompiler cc(f, *ic, false);
     return cc.update();
 }
 
 void * JS_FASTCALL
-ic::New(VMFrame &f, uint32 index)
+ic::New(VMFrame &f, CallICInfo *ic)
 {
-    JSScript *oldscript = f.fp()->script();
-    CallICInfo &ic = oldscript->callICs[index];
-    CallCompiler cc(f, ic, true);
+    CallCompiler cc(f, *ic, true);
     return cc.update();
 }
 
 void JS_FASTCALL
-ic::NativeCall(VMFrame &f, uint32 index)
+ic::NativeCall(VMFrame &f, CallICInfo *ic)
 {
-    JSScript *oldscript = f.fp()->script();
-    CallICInfo &ic = oldscript->callICs[index];
-    CallCompiler cc(f, ic, false);
+    CallCompiler cc(f, *ic, false);
     if (!cc.generateNativeStub())
-        stubs::SlowCall(f, ic.argc);
+        stubs::SlowCall(f, ic->argc);
 }
 
 void JS_FASTCALL
-ic::NativeNew(VMFrame &f, uint32 index)
+ic::NativeNew(VMFrame &f, CallICInfo *ic)
 {
-    JSScript *oldscript = f.fp()->script();
-    CallICInfo &ic = oldscript->callICs[index];
-    CallCompiler cc(f, ic, true);
+    CallCompiler cc(f, *ic, true);
     if (!cc.generateNativeStub())
-        stubs::SlowNew(f, ic.argc);
+        stubs::SlowNew(f, ic->argc);
 }
 
 void
-ic::PurgeMICs(JSContext *cx, JSScript *script)
+JITScript::purgeMICs()
 {
-    /* MICs are purged during GC to handle changing shapes. */
-    JS_ASSERT(cx->runtime->gcRegenShapes);
-
-    uint32 nmics = script->jit->nMICs;
-    for (uint32 i = 0; i < nmics; i++) {
-        ic::MICInfo &mic = script->mics[i];
+    for (uint32 i = 0; i < nMICs; i++) {
+        ic::MICInfo &mic = mics[i];
         switch (mic.kind) {
           case ic::MICInfo::SET:
           case ic::MICInfo::GET:
@@ -725,10 +698,22 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
 }
 
 void
-ic::SweepCallICs(JSScript *script)
+ic::PurgeMICs(JSContext *cx, JSScript *script)
 {
-    for (uint32 i = 0; i < script->jit->nCallICs; i++) {
-        ic::CallICInfo &ic = script->callICs[i];
+    /* MICs are purged during GC to handle changing shapes. */
+    JS_ASSERT(cx->runtime->gcRegenShapes);
+
+    if (script->jitNormal)
+        script->jitNormal->purgeMICs();
+    if (script->jitCtor)
+        script->jitCtor->purgeMICs();
+}
+
+void
+JITScript::sweepCallICs()
+{
+    for (uint32 i = 0; i < nCallICs; i++) {
+        ic::CallICInfo &ic = callICs[i];
 
         /*
          * If the object is unreachable, we're guaranteed not to be currently
@@ -760,6 +745,15 @@ ic::SweepCallICs(JSScript *script)
 
         ic.hit = false;
     }
+}
+
+void
+ic::SweepCallICs(JSScript *script)
+{
+    if (script->jitNormal)
+        script->jitNormal->sweepCallICs();
+    if (script->jitCtor)
+        script->jitCtor->sweepCallICs();
 }
 
 #endif /* JS_MONOIC */

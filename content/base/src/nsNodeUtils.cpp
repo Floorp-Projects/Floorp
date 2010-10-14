@@ -62,6 +62,8 @@
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
 #include "nsImageLoadingContent.h"
+#include "jsobj.h"
+#include "jsgc.h"
 
 using namespace mozilla::dom;
 
@@ -515,6 +517,11 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
   }
   else if (nodeInfoManager) {
+    // FIXME Bug 601803 Need to support adopting a node cross-compartment
+    if (aCx && aOldScope->compartment() != aNewScope->compartment()) {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
     nsIDocument* oldDoc = aNode->GetOwnerDoc();
     PRBool wasRegistered = PR_FALSE;
     if (oldDoc && aNode->IsElement()) {

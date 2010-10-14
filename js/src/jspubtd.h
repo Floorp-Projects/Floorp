@@ -559,7 +559,16 @@ typedef JSBool
  * destination compartment.
  */
 typedef JSObject *
-(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, uintN flags);
+(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
+                         uintN flags);
+
+/*
+ * Callback used by the wrap hook to ask the embedding to prepare an object
+ * for wrapping in a context. This might include unwrapping other wrappers
+ * or even finding a more suitable object for the new compartment.
+ */
+typedef JSObject *
+(* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags);
 
 typedef enum {
     JSCOMPARTMENT_NEW, /* XXX Does it make sense to have a NEW? */
@@ -575,23 +584,23 @@ typedef JSBool
  *
  * tag and data are the pair of uint32 values from the header. The callback may
  * use the JS_Read* APIs to read any other relevant parts of the object from
- * the reader r. On success, it stores an object in *vp and returns JS_TRUE.
+ * the reader r. Return the new object on success, NULL on error/exception.
  */
-typedef JSBool (*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReader *r,
-                                        uint32 tag, uint32 data, jsval *vp);
+typedef JSObject *(*ReadStructuredCloneOp)(JSContext *cx, JSStructuredCloneReader *r,
+                                           uint32 tag, uint32 data);
 
 /*
  * Structured data serialization hook. The engine can write primitive values,
- * Objects, Arrays, Dates, and RegExps. Any other type of object requires
- * application support. This callback must first use the JS_WritePair API to
- * write an object header, passing a value greater than JS_SCTAG_USER to the
- * tag parameter. Then it can use the JS_Write* APIs to write any other
- * relevant parts of the value v to the writer w.
+ * Objects, Arrays, Dates, RegExps, TypedArrays, and ArrayBuffers. Any other
+ * type of object requires application support. This callback must first use
+ * the JS_WriteUint32Pair API to write an object header, passing a value
+ * greater than JS_SCTAG_USER to the tag parameter. Then it can use the
+ * JS_Write* APIs to write any other relevant parts of the value v to the
+ * writer w.
  *
- * If !JSVAL_IS_OBJECT(v), then the callback is expected to report an
- * appropriate (application-specific) error and return JS_FALSE.
+ * Return true on success, false on error/exception.
  */
-typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w, jsval v);
+typedef JSBool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w, JSObject *obj);
 
 /*
  * This is called when JS_WriteStructuredClone finds that the object to be
