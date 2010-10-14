@@ -52,6 +52,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
                           "this is wrapped correctly");
                        SimpleTest.finish();
                    }, 0)
+
+    new $('ifr').contentWindow.XMLHttpRequest();
   }
 
   SimpleTest.waitForExplicitFinish();
