@@ -8751,9 +8751,9 @@ TraceRecorder::tableswitch()
         high = GET_JUMP_OFFSET(pc);
     } else {
         pc += JUMPX_OFFSET_LEN;
-        low = GET_JUMPX_OFFSET(pc);
-        pc += JUMPX_OFFSET_LEN;
-        high = GET_JUMPX_OFFSET(pc);
+        low = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        high = GET_JUMP_OFFSET(pc);
     }
 
     /* 
@@ -8762,6 +8762,7 @@ TraceRecorder::tableswitch()
      * action to handle it.
      */
     int count = high + 1 - low;
+    JS_ASSERT(count >= 0);
     if (count == 0)
         return ARECORD_CONTINUE;
 
