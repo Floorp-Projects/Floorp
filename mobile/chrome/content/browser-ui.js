@@ -436,6 +436,7 @@ var BrowserUI = {
     let tabs = document.getElementById("tabs");
     tabs.addEventListener("TabSelect", this, true);
     tabs.addEventListener("TabOpen", this, true);
+    window.addEventListener("PanBegin", this, true);
     window.addEventListener("PanFinished", this, true);
 
     // listen content messages
@@ -817,6 +818,12 @@ var BrowserUI = {
 
         break;
       }
+      case "PanBegin":
+        if (this.activePanel && !this._edit.readOnly) {
+          this._edit.readOnly = true;
+          this._edit.blur();
+        }
+        break;
       case "PanFinished":
         let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
         if (tabsVisibility == 0.0)
@@ -898,7 +905,7 @@ var BrowserUI = {
           this._updateIcon(Browser.selectedBrowser.mIconURL);
         break;
       case "pagehide":
-        // XXX bug 60419, when a content web page is close the content sometimes
+        // XXX bug 604192, when a content web page is close the content sometimes
         // dismiss the VKB, we're trying to avoid that by adding it back again.
         let utils = Util.getWindowUtils(window);
         if (this.activePanel && !this._edit.readOnly && browser.currentURI.spec != "about:blank" && utils.IMEStatus == utils.IME_STATUS_DISABLED) {
