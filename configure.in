@@ -982,7 +982,7 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.6 python2.5 python2.4 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1828,6 +1828,8 @@ case "$host" in
     ;;
 
 *cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
+    # we need Python 2.5 on Windows
+    PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1901,7 +1903,8 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.5 or newer of Python to build.
+dnl We require version 2.4 or newer of Python to build,
+dnl and 2.5 or newer on Windows.
 AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
 changequote(,)
 $PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
