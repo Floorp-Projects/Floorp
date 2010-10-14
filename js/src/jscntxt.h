@@ -2385,6 +2385,9 @@ private:
      * a boolean flag to minimize the amount of code in its inlined callers.
      */
     JS_FRIEND_API(void) checkMallocGCPressure(void *p);
+
+    /* To silence MSVC warning about using 'this' in a member initializer. */
+    JSContext *thisInInitializer() { return this; }
 };
 
 #ifdef JS_THREADSAFE
