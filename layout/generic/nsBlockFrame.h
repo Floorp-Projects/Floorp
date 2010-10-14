@@ -249,6 +249,7 @@ public:
   // do we have either a 'list-style-type' or 'list-style-image' that is
   // not 'none'?
   PRBool BulletIsEmpty() const;
+  void GetBulletText(nsAString& aText) const;
 
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
@@ -339,6 +340,7 @@ protected:
   virtual ~nsBlockFrame();
 
 #ifdef DEBUG
+#ifdef _IMPL_NS_LAYOUT
   already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
   {
     return aPresContext->StyleSet()->
@@ -346,6 +348,7 @@ protected:
                               nsCSSPseudoElements::ePseudo_firstLetter,
                               mStyleContext);
   }
+#endif
 #endif
 
   /*

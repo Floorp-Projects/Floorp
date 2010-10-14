@@ -6277,20 +6277,7 @@ nsBlockFrame::CreateAccessible()
   }
 
   // Create special list bullet accessible
-  const nsStyleList* myList = GetStyleList();
-  nsAutoString bulletText;
-  if (myList->GetListStyleImage() ||
-      myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
-      myList->mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE ||
-      myList->mListStyleType == NS_STYLE_LIST_STYLE_SQUARE) {
-    bulletText.Assign(PRUnichar(0x2022));; // Unicode bullet character
-  }
-  else if (myList->mListStyleType != NS_STYLE_LIST_STYLE_NONE) {
-    mBullet->GetListItemText(*myList, bulletText);
-  }
-
-  return accService->CreateHTMLLIAccessible(mContent, presContext->PresShell(),
-                                            bulletText);
+  return accService->CreateHTMLLIAccessible(mContent, presContext->PresShell());
 }
 #endif
 
@@ -6533,6 +6520,25 @@ nsBlockFrame::BulletIsEmpty() const
   const nsStyleList* list = GetStyleList();
   return list->mListStyleType == NS_STYLE_LIST_STYLE_NONE &&
          !list->GetListStyleImage();
+}
+
+void
+nsBlockFrame::GetBulletText(nsAString& aText) const
+{
+  aText.Truncate();
+
+  const nsStyleList* myList = GetStyleList();
+  if (myList->GetListStyleImage() ||
+      myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
+      myList->mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE ||
+      myList->mListStyleType == NS_STYLE_LIST_STYLE_SQUARE) {
+    aText.Assign(PRUnichar(0x2022)); // Unicode bullet character
+  }
+  else if (myList->mListStyleType != NS_STYLE_LIST_STYLE_NONE) {
+    nsAutoString text;
+    mBullet->GetListItemText(*myList, text);
+    aText = text;
+  }
 }
 
 // static
