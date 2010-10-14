@@ -759,14 +759,14 @@ nsGeolocationService::StartDevice()
   if (!obs)
     return NS_ERROR_FAILURE;
 
-  for (PRUint32 i = 0; i < mProviders.Count(); i++) {
+  for (PRInt32 i = 0; i < mProviders.Count(); i++) {
     mProviders[i]->Startup();
     mProviders[i]->Watch(this);
     obs->NotifyObservers(mProviders[i],
                          "geolocation-device-events",
                          NS_LITERAL_STRING("starting").get());
   }
-  
+
   return NS_OK;
 }
 
@@ -803,7 +803,7 @@ nsGeolocationService::StopDevice()
   if (!obs)
     return;
 
-  for (PRUint32 i = 0; i <mProviders.Count(); i++) {
+  for (PRInt32 i = 0; i < mProviders.Count(); i++) {
     mProviders[i]->Shutdown();
     obs->NotifyObservers(mProviders[i],
                          "geolocation-device-events",
