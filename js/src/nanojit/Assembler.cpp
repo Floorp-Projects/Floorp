@@ -289,14 +289,18 @@ namespace nanojit
         eip = end;
     }
 
-    void Assembler::reset()
+    void Assembler::clearNInsPtrs()
     {
         _nIns = 0;
         _nExitIns = 0;
         codeStart = codeEnd = 0;
         exitStart = exitEnd = 0;
         codeList = 0;
+    }
 
+    void Assembler::reset()
+    {
+        clearNInsPtrs();
         nativePageReset();
         registerResetAll();
         arReset();
@@ -1114,17 +1118,22 @@ namespace nanojit
         }
     }
 
+    void Assembler::cleanupAfterError()
+    {
+        _codeAlloc.freeAll(codeList);
+        if (_nExitIns)
+            _codeAlloc.free(exitStart, exitEnd);
+        _codeAlloc.free(codeStart, codeEnd);
+        codeList = NULL;
+    }
+
     void Assembler::endAssembly(Fragment* frag)
     {
         // don't try to patch code if we are in an error state since we might have partially
         // overwritten the code cache already
         if (error()) {
             // something went wrong, release all allocated code memory
-            _codeAlloc.freeAll(codeList);
-            if (_nExitIns)
-                _codeAlloc.free(exitStart, exitEnd);
-            _codeAlloc.free(codeStart, codeEnd);
-            codeList = NULL;
+            cleanupAfterError();
             return;
         }
 
