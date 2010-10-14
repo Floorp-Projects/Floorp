@@ -1363,8 +1363,19 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         targetObject = JS_GetGlobalForObject(cx, targetObject);
     }
  
+    JSAutoEnterCompartment ac;
+    if (targetObject && !ac.enter(cx, targetObject)) {
+        NS_ERROR("can't enter compartment");
+        return NS_ERROR_FAILURE;
+    }
+
     JSObject *globalObj = nsnull;
     rv = ImportInto(registryLocation, targetObject, cc, &globalObj);
+
+    if (globalObj && !JS_WrapObject(cx, &globalObj)) {
+        NS_ERROR("can't wrap return value");
+        return NS_ERROR_FAILURE;
+    }
 
     jsval *retval = nsnull;
     cc->GetRetValPtr(&retval);
@@ -1530,7 +1541,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                       JS_GetStringBytes(symbolName));
             }
 
-            if (!JS_SetProperty(mContext, targetObj,
+            JSAutoEnterCompartment target_ac;
+
+            if (!target_ac.enter(mContext, targetObj) ||
+                !JS_WrapValue(mContext, &val) ||
+                !JS_SetProperty(mContext, targetObj,
                                 JS_GetStringBytes(symbolName), &val)) {
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),

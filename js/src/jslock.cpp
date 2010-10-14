@@ -45,7 +45,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jspubtd.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
@@ -507,8 +507,7 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
     JSObject *obj = TITLE_TO_OBJECT(title);
     if (obj) {
         uint32 nslots = obj->slotSpan();
-        JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
-        for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
+        for (uint32 i = 0; i != nslots; ++i) {
             Value v = obj->getSlot(i);
             if (v.isString() &&
                 !js_MakeStringImmutable(cx, v.toString())) {

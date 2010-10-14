@@ -39,11 +39,11 @@ function doTest() {
   offScreenBrowser.contentWindow.focus();
   ok(offScreenBrowser.contentDocument.hasFocus(),"offscreen browser is not visible");
 
-  offScreenSubBrowser.wrappedJSObject.contentWindow.focus();
-  todo(offScreenSubBrowser.wrappedJSObject.contentDocument.hasFocus(),"visible browser in offscreen browser is not visible");
+  offScreenSubBrowser.contentWindow.focus();
+  todo(offScreenSubBrowser.contentDocument.hasFocus(),"visible browser in offscreen browser is not visible");
 
-  offScreenBurriedBrowser.wrappedJSObject.contentWindow.focus();
-  ok(!offScreenBurriedBrowser.wrappedJSObject.contentDocument.hasFocus(),"hidden browser in offscreen browser is visible");
+  offScreenBurriedBrowser.contentWindow.focus();
+  ok(!offScreenBurriedBrowser.contentDocument.hasFocus(),"hidden browser in offscreen browser is visible");
 
   SimpleTest.finish();
 }

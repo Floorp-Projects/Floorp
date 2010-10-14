@@ -316,7 +316,7 @@ public:
 
   nsPIDOMWindow *GetOuterWindow()
   {
-    return mIsInnerWindow ? mOuterWindow : this;
+    return mIsInnerWindow ? mOuterWindow.get() : this;
   }
 
   nsPIDOMWindow *GetCurrentInnerWindow() const
@@ -606,7 +606,7 @@ protected:
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;
-  nsPIDOMWindow         *mOuterWindow;
+  nsCOMPtr<nsPIDOMWindow> mOuterWindow;
 
   // the element within the document that is currently focused when this
   // window is active

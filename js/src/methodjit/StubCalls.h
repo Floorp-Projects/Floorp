@@ -48,9 +48,8 @@ namespace mjit {
 namespace stubs {
 
 void JS_FASTCALL This(VMFrame &f);
-void JS_FASTCALL ComputeThis(VMFrame &f);
-JSObject * JS_FASTCALL NewInitArray(VMFrame &f);
-JSObject * JS_FASTCALL NewInitObject(VMFrame &f);
+JSObject * JS_FASTCALL NewInitArray(VMFrame &f, uint32 count);
+JSObject * JS_FASTCALL NewInitObject(VMFrame &f, uint32 count);
 JSObject * JS_FASTCALL NewArray(VMFrame &f, uint32 len);
 void JS_FASTCALL Trap(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Debugger(VMFrame &f, jsbytecode *pc);
@@ -98,14 +97,13 @@ struct UncachedCallResult {
 void UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
-JSBool JS_FASTCALL NewObject(VMFrame &f, uint32 argc);
+void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
 void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutActivationObjects(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
-void JS_FASTCALL WrapPrimitiveThis(VMFrame &f);
 #if JS_MONOIC
-void * JS_FASTCALL InvokeTracer(VMFrame &f, uint32 index);
+void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::MICInfo *mic);
 #else
 void * JS_FASTCALL InvokeTracer(VMFrame &f);
 #endif
@@ -116,6 +114,7 @@ void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 void JS_FASTCALL BindName(VMFrame &f);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL SetPropNoCache(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
@@ -225,11 +224,6 @@ template<typename FuncPtr>
 inline FuncPtr FunctionTemplateConditional(bool cond, FuncPtr a, FuncPtr b) {
     return cond ? a : b;
 }
-
-/* Return f<true> if the script is strict mode code, f<false> otherwise. */
-#define STRICT_VARIANT(f)                                                     \
-    (FunctionTemplateConditional(script->strictModeCode,                      \
-                                 f<true>, f<false>))
 
 }} /* namespace stubs,mjit,js */
 

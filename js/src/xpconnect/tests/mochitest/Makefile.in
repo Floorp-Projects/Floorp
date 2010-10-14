@@ -49,7 +49,9 @@ _TEST_FILES =	bug500931_helper.html \
 		bug92773_helper.html \
 		bug504877_helper.html \
 		chrome_wrappers_helper.html \
+		file_doublewrappedcompartments.html \
 		file_evalInSandbox.html \
+		file_wrappers-2.html \
 		test_bug92773.html \
 		test_bug361111.xul \
 		test_bug384632.html \
@@ -57,22 +59,18 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug393269.html \
 		test_bug396851.html \
 		test_bug428021.html \
-		test_bug448587.html \
-		test_wrappers.html \
 		test_bug446584.html \
 		test_bug462428.html \
 		test_bug478438.html \
-		test_bug484459.html \
 		test_bug500691.html \
 		test_bug502959.html \
 		test_bug503926.html \
 		test_bug504877.html \
 		test_bug505915.html \
-		test_bug517163.html \
+		file_bug505915.html \
 		test_bug553407.html \
 		test_bug560351.html \
 		test_bug564330.html \
-		test_cows.html \
 		test_frameWrapping.html \
 		test_bug589028.html \
 		bug589028_helper.html \

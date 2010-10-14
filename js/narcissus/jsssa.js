@@ -41,7 +41,7 @@
  * SSA builder and optimizations.
  */
 
-(function() {
+Narcissus.parser.SSABuilder = (function() {
 
     const parser = Narcissus.parser;
     const definitions = Narcissus.definitions;
@@ -717,7 +717,7 @@
             if (allDashes) {
                 return null;
             }
-            rhs.reverse();
+            rhs.children.reverse();
 
             e = new Node(ft, ASSIGN);
             e.push(lhs);
@@ -732,20 +732,21 @@
                 continue;
             }
 
-            rhs = e2[1];
+            rhs = e2.children[1];
 
             // Optimize away phis that are only one branch, but we still need
             // to propagate them!
             if (branches == 1) {
-                rhs = rhs[0];
+                rhs = rhs.children[0];
             } else {
                 // Push a phi use for each operand so the phis can be filled
                 // in during exec.
-                for (var i = 0, j = rhs.length; i < j; i++) {
-                    if (rhs[i].type == INTERVENED) {
+                var rhsc = rhs.children;
+                for (var i = 0, j = rhsc.length; i < j; i++) {
+                    if (rhsc[i].type == INTERVENED) {
                         rhs.intervened = true;
                     }
-                    rhs[i].pushPhiUse(rhs);
+                    rhsc[i].pushPhiUse(rhs);
                 }
                 e.push(e2);
             }
@@ -753,7 +754,7 @@
             propagate(x, rhs);
         }
 
-        return e.length > 0 ? e : null;
+        return e.children.length > 0 ? e : null;
     }
 
     SSAJoin.prototype = {
@@ -904,9 +905,10 @@
                         uu = u[i];
                         // Phi nodes might have stale branches.
                         if (uu.type == PHI) {
-                            for (var k = 0, l = uu.length; k < l; k++) {
-                                if (uu[k] === old.def) {
-                                    uu[k] = rhs;
+                            var uuc = uu.children;
+                            for (var k = 0, l = uuc.length; k < l; k++) {
+                                if (uuc[k] === old.def) {
+                                    uuc[k] = rhs;
                                     rhs.pushPhiUse(uu);
                                 }
                             }
@@ -1279,7 +1281,7 @@
                             // do.
                             var bComma = this.COMMA;
 
-                            e2.push(n.setup[0]);
+                            e2.push(n.setup.children[0]);
                             n.setup = e2;
 
                             var comma = bComma.build(t);
@@ -1318,7 +1320,7 @@
                 this.join = breakJoin.parent;
                 // Add update to the top if we were a for-in
                 if (n.type == FOR_IN) {
-                    n.body.unshift(n.update);
+                    n.body.children.unshift(n.update);
                     n.update = null;
                     n.type = FOR;
                 }
@@ -1973,7 +1975,7 @@
 
         ASSIGN: {
             addOperand: function(n, n2) {
-                if (n.length == 0) {
+                if (n.children.length === 0) {
                     this.binds.inRHS++;
                 }
 
@@ -1981,15 +1983,16 @@
             },
 
             finish: function(n) {
-                if (n.length == 0) {
+                if (n.children.length === 0) {
                     return;
                 }
 
                 var join = this.join;
                 var binds = this.binds;
                 var fb = binds.nearestFunction;
-                var lhs = n[0];
-                var init = n[1];
+                var nc = n.children;
+                var lhs = nc[0];
+                var init = nc[1];
                 var upvars = init.upvars || new Upvars;
 
                 if (--binds.inRHS > 0) {
@@ -2001,7 +2004,7 @@
                     var t = n.tokenizer;
                     // Rebuild as COMMA.
                     n.type = COMMA;
-                    n.length = 0;
+                    n.children = [];
                     desugarDestructuringAssign(this, n, lhs, init);
                     return;
                 }
@@ -2053,12 +2056,11 @@
                         // Transform op= into a normal assignment only if the
                         // lhs is an identifier we _know_ to be from a var.
                         var nt = n.tokenizer;
-                        var lhs = n[0];
                         var n2 = mkRawIdentifier(nt, name, null, true);
                         this.PRIMARY.finish(n2);
                         var o = n.assignOp;
                         n.assignOp = undefined;
-                        n.length = 0;
+                        n.children = [];
                         n.push(lhs);
                         n.push(new Node(nt, o, n2, init));
                         n2.setForward(c.def);
@@ -2066,17 +2068,17 @@
                     }
 
                     // Clear the forward pointer and upvars on lefthand side.
-                    if (n[0].forward) {
-                        n[0].forward = null;
-                        n[0].upvars = null;
+                    if (lhs.forward) {
+                        lhs.forward = null;
+                        lhs.upvars = null;
                     }
                     // Set local to help decomp to do value numbering.
-                    n[0].local = c.type;
+                    lhs.local = c.type;
 
                     // Get the rightmost expression in case of compound
                     // assignment.
                     while (init.type == ASSIGN)
-                        init = init[1];
+                        init = init.children[1];
 
                     if (join) {
                         // If the name is not a local let, we need a phi.
@@ -2124,21 +2126,21 @@
             },
 
             setCondition: function(n, e) {
-                n[0] = e;
+                n.children[0] = e;
                 n.rhsUnionUpvars(e);
                 this.join = new SSAJoin(this.join, this.binds, false);
             },
 
             setThenPart: function(n, n2) {
                 var join = this.join;
-                n[1] = n2;
+                n.children[1] = n2;
                 n.rhsUnionUpvars(n2);
                 join.finishBranch();
                 join.restore(this.binds);
             },
 
             setElsePart: function(n, n2) {
-                n[2] = n2;
+                n.children[2] = n2;
                 n.rhsUnionUpvars(n2);
             },
 
@@ -2158,7 +2160,7 @@
             },
 
             addOperand: function(n, n2) {
-                if (n.length == 0) {
+                if (n.children.length == 0) {
                     // Short circuiting means the right hand expression needs
                     // to be parsed in a new context.
                     var join = this.join = new SSAJoin(this.join, this.binds, false);
@@ -2186,7 +2188,7 @@
             },
 
             addOperand: function(n, n2) {
-                if (n.length == 0) {
+                if (n.children.length == 0) {
                     // Short circuiting means the right hand expression needs
                     // to be parsed in a new context.
                     var join = this.join = new SSAJoin(this.join, this.binds, false);
@@ -2213,7 +2215,9 @@
 
                 var join = this.join;
                 var binds = this.binds;
-                if (!(n[0].type == IDENTIFIER && binds.hasCurrent(n[0].value)))
+                var nc = n.children;
+                var lhs = nc[0];
+                if (!(lhs.type == IDENTIFIER && binds.hasCurrent(lhs.value)))
                     return;
 
                 //
@@ -2230,7 +2234,7 @@
                 // effect, so we do not duplicate side effects in an unsafe
                 // fashion.
                 //
-                var name = n[0].value;
+                var name = lhs.value;
                 var c = binds.current(name);
                 // Don't transform vars inside of withs
                 if (binds.isWith && c.type == VAR)
@@ -2255,7 +2259,7 @@
                 if (n.postfix) {
                     n.parenthesized = true;
                     n.type = COMMA;
-                    n.length = 0;
+                    n.children = [];
                     n.push(mkAssignSimple(this, t, ptmp,
                                           mkIdentifier(this, t, name)));
                 }
@@ -2270,9 +2274,11 @@
                     n.push(mkIdentifier(this, t, ptmp));
                 } else {
                     n.type = ASSIGN;
-                    n.length = 0;
-                    n.push(assign[0]);
-                    n.push(assign[1]);
+                    n.children = [];
+
+                    var assignc = assign.children;
+                    n.push(assignc[0]);
+                    n.push(assignc[1]);
                 }
             }
         },
@@ -2296,12 +2302,13 @@
                 var join = this.join;
                 var binds = this.binds;
                 var fb = binds.nearestFunction;
+                var nc = n.children;
 
                 if (--binds.inRHS > 0) {
                     if (unionOnRight) {
-                        n.upvars = n[1].upvars;
+                        n.upvars = nc[1].upvars;
                     } else {
-                        n.upvars = n[0].upvars;
+                        n.upvars = nc[0].upvars;
                     }
                 }
 
@@ -2357,8 +2364,9 @@
                 // local ones, so blast away context.
                 //
                 var inners = this.binds.inners;
-                var base = baseOfCall(n[0]);
-                var target = targetOfCall(n[0], IDENTIFIER);
+                var call = nc[0];
+                var base = baseOfCall(call);
+                var target = targetOfCall(call, IDENTIFIER);
 
                 if (target == "eval") {
                     escapeEval(join, binds);
@@ -2454,7 +2462,7 @@
                 var unionOnRight = n.type == CALL || n.type == NEW_WITH_ARGS ||
                                    n.type == INDEX;
                 if (unionOnRight) {
-                    escapeVars(join, binds, n[1].upvars || new Upvars);
+                    escapeVars(join, binds, nc[1].upvars || new Upvars);
                 }
             }
         },
@@ -2581,7 +2589,7 @@
             },
 
             finish: function(n) {
-                n.rhsUnionUpvars(n[1]);
+                n.rhsUnionUpvars(n.children[1]);
             }
         },
 
@@ -2837,9 +2845,9 @@
     function baseOfCall(n) {
         switch (n.type) {
           case DOT:
-            return baseOfCall(n[0]);
+            return baseOfCall(n.children[0]);
           case INDEX:
-            return baseOfCall(n[0]);
+            return baseOfCall(n.children[0]);
           default:
             return n;
         }
@@ -2850,9 +2858,9 @@
           case ident:
             return n.value;
           case DOT:
-            return targetOfCall(n[1], IDENTIFIER);
+            return targetOfCall(n.children[1], IDENTIFIER);
           case INDEX:
-            return targetOfCall(n[1], STRING);
+            return targetOfCall(n.children[1], STRING);
           default:
             return null;
         }
@@ -2948,9 +2956,9 @@
                           builder.genDestructuringSym(),
                           e, false);
         builder.binds.block.push(decl);
-        decl[0].setForward(e);
-
-        go(n.destructuredNames, decl[0]);
+        var declc = decl.children[0];
+        declc[0].setForward(e);
+        go(n.destructuredNames, declc[0]);
     }
 
     function desugarDestructuringInit(builder, n, e) {
@@ -2984,8 +2992,9 @@
             var dtmp = builder.genDestructuringSym();
             var decl = mkDecl(builder, "LET", t, dtmp, e, false);
             block.push(decl);
-            decl[0].setForward(e);
-            go(ddecls, decl[0]);
+            var declc = decl.children[0];
+            declc[0].setForward(e);
+            go(ddecls, declc[0]);
         } else {
             // This only happens when we have destructuring for a catch var,
             // in which case that catch var already has let-scoping, so we
@@ -3139,6 +3148,6 @@
         this.phiUses.push(p);
     };
 
-    parser.SSABuilder = SSABuilder;
+    return SSABuilder;
 
 }());
