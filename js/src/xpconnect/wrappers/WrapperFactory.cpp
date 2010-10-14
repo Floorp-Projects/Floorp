@@ -283,8 +283,8 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
 bool
 WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 {
-    if (!JSVAL_IS_OBJECT(*vp))
-        return true;
+    if (JSVAL_IS_PRIMITIVE(*vp))
+        return JS_WrapValue(cx, vp);
 
     JSObject *obj = JSVAL_TO_OBJECT(*vp)->unwrap();
 
