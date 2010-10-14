@@ -1276,33 +1276,39 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
     // based on whether the new compartment is same origin with them.
     Value targetv = ObjectValue(*obj);
     WrapperVector &vector = cx->runtime->compartments;
+    AutoValueVector toTransplant(cx);
+    toTransplant.reserve(vector.length());
+
     for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
         WrapperMap &pmap = (*p)->crossCompartmentWrappers;
         if (WrapperMap::Ptr wp = pmap.lookup(wrapperv)) {
-            // We found a wrapper around the outer window!
-            JSObject *wobj = &wp->value.toObject();
-
-            // NB: Can't use wp after this point. We remove wp from the map in
-            // order to ensure that we create a wrapper with the proper guts
-            // for the brain transplant.
-            pmap.remove(wp);
-
-            // First, we wrap it in the new compartment. This will return a
-            // new wrapper.
-            JSAutoEnterCompartment ec;
-            JSObject *tobj = obj;
-            if (!ec.enter(cx, wobj) || !(*p)->wrap(cx, &tobj))
-                return NULL;
-
-            // Now, because we need to maintain object identity, we do a brain
-            // transplant on the old object. At the same time, we update the
-            // entry in the compartment's wrapper map to point to the old
-            // wrapper.
-            JS_ASSERT(tobj != wobj);
-            if (!wobj->swap(cx, tobj))
-                return NULL;
-            pmap.put(targetv, ObjectValue(*wobj));
+            // We found a wrapper. Remember and root it.
+            toTransplant.append(wp->value);
         }
+    }
+
+    for (Value *begin = toTransplant.begin(), *end = toTransplant.end(); begin != end; ++begin) {
+        JSObject *wobj = &begin->toObject();
+        JSCompartment *wcompartment = wobj->compartment();
+        WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
+        JS_ASSERT(pmap.lookup(wrapperv));
+        pmap.remove(wrapperv);
+
+        // First, we wrap it in the new compartment. This will return a
+        // new wrapper.
+        JSAutoEnterCompartment ec;
+        JSObject *tobj = obj;
+        if (!ec.enter(cx, wobj) || !wcompartment->wrap(cx, &tobj))
+            return NULL;
+
+        // Now, because we need to maintain object identity, we do a brain
+        // transplant on the old object. At the same time, we update the
+        // entry in the compartment's wrapper map to point to the old
+        // wrapper.
+        JS_ASSERT(tobj != wobj);
+        if (!wobj->swap(cx, tobj))
+            return NULL;
+        pmap.put(targetv, ObjectValue(*wobj));
     }
 
     // Lastly, update the old outer window proxy to point to the new one.
