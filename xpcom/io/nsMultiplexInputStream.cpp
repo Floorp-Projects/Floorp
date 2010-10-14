@@ -43,7 +43,7 @@
 
 #ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
-#include "mozilla/net/PHttpChannelParams.h"
+#include "mozilla/net/NeckoMessageUtils.h"
 #endif
 
 #include "nsMultiplexInputStream.h"
