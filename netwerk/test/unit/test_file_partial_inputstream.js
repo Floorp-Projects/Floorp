@@ -59,10 +59,6 @@ var test_file_data;
 
 function run_test()
 {
-  if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
-    do_check_eq("file creation fails randomly", "file creation fails randomly");
-    return;
-  }
   // Binary tests
   let binaryFile = do_get_file(binary_test_file_name);
   let size = binaryFile.fileSize;
@@ -132,8 +128,8 @@ function run_test()
   // Test removing the file when autoclosing
   tempFile = create_temp_file("01234567890123456789");
   tempInputStream = new_partial_file_input_stream(tempFile, 5, 10,
-						  Ci.nsIFileInputStream.CLOSE_ON_EOF |
-						  Ci.nsIFileInputStream.REOPEN_ON_REWIND);
+                                                  Ci.nsIFileInputStream.CLOSE_ON_EOF |
+                                                  Ci.nsIFileInputStream.REOPEN_ON_REWIND);
   tempInputStream.QueryInterface(Ci.nsILineInputStream);
   do_check_eq(read_line_stream(tempInputStream)[1], "5678901234");
   tempFile.remove(false);
@@ -149,8 +145,8 @@ function run_test()
   // Test editing the file when autoclosing
   tempFile = create_temp_file("01234567890123456789");
   tempInputStream = new_partial_file_input_stream(tempFile, 5, 10,
-						  Ci.nsIFileInputStream.CLOSE_ON_EOF |
-						  Ci.nsIFileInputStream.REOPEN_ON_REWIND);
+                                                  Ci.nsIFileInputStream.CLOSE_ON_EOF |
+                                                  Ci.nsIFileInputStream.REOPEN_ON_REWIND);
   tempInputStream.QueryInterface(Ci.nsILineInputStream);
   do_check_eq(read_line_stream(tempInputStream)[1], "5678901234");
   let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
@@ -167,8 +163,8 @@ function run_test()
   // Test auto-delete and auto-close together
   tempFile = create_temp_file("01234567890123456789");
   tempInputStream = new_partial_file_input_stream(tempFile, 5, 10,
-						  Ci.nsIFileInputStream.CLOSE_ON_EOF |
-						  Ci.nsIFileInputStream.DELETE_ON_CLOSE);
+                                                  Ci.nsIFileInputStream.CLOSE_ON_EOF |
+                                                  Ci.nsIFileInputStream.DELETE_ON_CLOSE);
   tempInputStream.QueryInterface(Ci.nsILineInputStream);
   do_check_eq(read_line_stream(tempInputStream)[1], "5678901234");
   do_check_false(tempFile.exists());
@@ -176,7 +172,6 @@ function run_test()
 
 function test_binary_portion(start, length) {
   let subFile = create_temp_file(test_file_data.substr(start, length));
-  do_check_eq(subFile.fileSize, length);
 
   let streamTests = [
     test_4k_read,
@@ -397,7 +392,6 @@ function test_seek_then_read(fileStreamA, fileStreamB, size) {
 
 function test_text_portion(start, length) {
   let subFile = create_temp_file(test_file_data.substr(start, length));
-  do_check_eq(subFile.fileSize, length);
 
   let streamTests = [
     test_readline,
@@ -474,39 +468,39 @@ function test_seek_then_readline(fileStreamA, fileStreamB, size) {
     if (test[0] === read) {
 
       for (let i = 0; i < test[1]; ++i) {
-	let didThrowA = false;
-	let didThrowB = false;
+        let didThrowA = false;
+        let didThrowB = false;
 
-	let lineA, lineB, moreA, moreB;
-	try {
-	  [moreA, lineA] = read_line_stream(fileStreamA);
-	}
-	catch (ex) {
-	  didThrowA = true;
-	}
-	try {
-	  [moreB, lineB] = read_line_stream(fileStreamB);
-	}
-	catch (ex) {
-	  didThrowB = true;
-	}
+        let lineA, lineB, moreA, moreB;
+        try {
+          [moreA, lineA] = read_line_stream(fileStreamA);
+        }
+        catch (ex) {
+          didThrowA = true;
+        }
+        try {
+          [moreB, lineB] = read_line_stream(fileStreamB);
+        }
+        catch (ex) {
+          didThrowB = true;
+        }
 
-	do_check_eq(didThrowA, didThrowB);
-	do_check_eq(moreA, moreB);
-	do_check_true(lineA == lineB);
-	do_check_eq(fileStreamA.tell(), fileStreamB.tell());
-	do_check_eq(fileStreamA.available(), fileStreamB.available());
-	if (!moreA)
-	  break;
+        do_check_eq(didThrowA, didThrowB);
+        do_check_eq(moreA, moreB);
+        do_check_true(lineA == lineB);
+        do_check_eq(fileStreamA.tell(), fileStreamB.tell());
+        do_check_eq(fileStreamA.available(), fileStreamB.available());
+        if (!moreA)
+          break;
       }
     }
     else {
       if (!(test[0] == CUR && (test[1] > fileStreamA.available() ||
-			       test[1] < -fileStreamA.tell()))) {
-	fileStreamA.seek(test[0], test[1]);
-	fileStreamB.seek(test[0], test[1]);
-	do_check_eq(fileStreamA.tell(), fileStreamB.tell());
-	do_check_eq(fileStreamA.available(), fileStreamB.available());
+                               test[1] < -fileStreamA.tell()))) {
+        fileStreamA.seek(test[0], test[1]);
+        fileStreamB.seek(test[0], test[1]);
+        do_check_eq(fileStreamA.tell(), fileStreamB.tell());
+        do_check_eq(fileStreamA.available(), fileStreamB.available());
       }
     }
   }
@@ -543,14 +537,10 @@ function create_temp_file(data) {
 
   let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
                 createInstance(Ci.nsIFileOutputStream);
-  //ostream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
-  //             0666, 0);
-  ostream.init(file, -1, -1, 0);
-  ostream.write(data, data.length);
+  ostream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
+               0666, 0);
+  do_check_eq(ostream.write(data, data.length), data.length);
   ostream.close();
-
-  dump("**** created temporary file " + file.path + " with size " +
-       file.fileSize + " ****\n");
 
   return file;
 }
