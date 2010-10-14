@@ -181,21 +181,10 @@
           <label id="editBookmarkPanelTitle"/>
           <description id="editBookmarkPanelDescription"/>
           <hbox>
-            <button id="editBookmarkPanelUndoRemoveButton"
-                    class="editBookmarkPanelHeaderButton"
-                    hidden="true"
-                    oncommand="StarUI.undoRemoveBookmarkCommand();"
-                    label="&editBookmark.undo.label;"
-                    accesskey="&editBookmark.undo.accessKey;"/>
             <button id="editBookmarkPanelRemoveButton"
                     class="editBookmarkPanelHeaderButton"
                     oncommand="StarUI.removeBookmarkButtonCommand();"
                     accesskey="&editBookmark.removeBookmark.accessKey;"/>
-            <button id="editBookmarkPanelEditButton"
-                    class="editBookmarkPanelHeaderButton"
-                    oncommand="StarUI.editButtonCommand();"
-                    label="&editBookmark.edit.label;"
-                    accesskey="&editBookmark.edit.accessKey;"/>
           </hbox>
         </vbox>
       </row>
