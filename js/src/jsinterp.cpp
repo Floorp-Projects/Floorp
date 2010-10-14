@@ -1657,6 +1657,8 @@ js_DumpOpMeters()
 # define SIGNIFICANT(count,total) (200. * (count) >= (total))
 
     graph = (Edge *) js_calloc(nedges * sizeof graph[0]);
+    if (!graph)
+        return;
     for (i = nedges = 0; i < JSOP_LIMIT; i++) {
         from = js_CodeName[i];
         for (j = 0; j < JSOP_LIMIT; j++) {

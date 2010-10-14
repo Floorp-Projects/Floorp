@@ -328,201 +328,202 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
 
     dval(d) = dinput;
     buffer = (char*) js_malloc(DTOBASESTR_BUFFER_SIZE);
-    if (buffer) {
-        p = buffer;
-        if (dval(d) < 0.0
+    if (!buffer)
+        return NULL;
+    p = buffer;
+
+    if (dval(d) < 0.0
 #if defined(XP_WIN) || defined(XP_OS2)
-            && !((word0(d) & Exp_mask) == Exp_mask && ((word0(d) & Frac_mask) || word1(d))) /* Visual C++ doesn't know how to compare against NaN */
+        && !((word0(d) & Exp_mask) == Exp_mask && ((word0(d) & Frac_mask) || word1(d))) /* Visual C++ doesn't know how to compare against NaN */
 #endif
-           ) {
-            *p++ = '-';
-            dval(d) = -dval(d);
-        }
+       ) {
+        *p++ = '-';
+        dval(d) = -dval(d);
+    }
 
-        /* Check for Infinity and NaN */
-        if ((word0(d) & Exp_mask) == Exp_mask) {
-            strcpy(p, !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN");
-            return buffer;
-        }
+    /* Check for Infinity and NaN */
+    if ((word0(d) & Exp_mask) == Exp_mask) {
+        strcpy(p, !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN");
+        return buffer;
+    }
 
-        /* Output the integer part of d with the digits in reverse order. */
-        pInt = p;
-        dval(di) = floor(dval(d));
-        if (dval(di) <= 4294967295.0) {
-            uint32 n = (uint32)dval(di);
-            if (n)
-                do {
-                    uint32 m = n / base;
-                    digit = n - m*base;
-                    n = m;
-                    JS_ASSERT(digit < (uint32)base);
-                    *p++ = BASEDIGIT(digit);
-                } while (n);
-            else *p++ = '0';
-        } else {
-            int e;
-            int bits;  /* Number of significant bits in di; not used. */
-            Bigint *b = d2b(PASS_STATE di, &e, &bits);
-            if (!b)
-                goto nomem1;
-            b = lshift(PASS_STATE b, e);
-            if (!b) {
-              nomem1:
-                Bfree(PASS_STATE b);
-                js_free(buffer);
-                return NULL;
-            }
+    /* Output the integer part of d with the digits in reverse order. */
+    pInt = p;
+    dval(di) = floor(dval(d));
+    if (dval(di) <= 4294967295.0) {
+        uint32 n = (uint32)dval(di);
+        if (n)
             do {
-                digit = divrem(b, base);
+                uint32 m = n / base;
+                digit = n - m*base;
+                n = m;
                 JS_ASSERT(digit < (uint32)base);
                 *p++ = BASEDIGIT(digit);
-            } while (b->wds);
+            } while (n);
+        else *p++ = '0';
+    } else {
+        int e;
+        int bits;  /* Number of significant bits in di; not used. */
+        Bigint *b = d2b(PASS_STATE di, &e, &bits);
+        if (!b)
+            goto nomem1;
+        b = lshift(PASS_STATE b, e);
+        if (!b) {
+          nomem1:
             Bfree(PASS_STATE b);
+            js_free(buffer);
+            return NULL;
         }
-        /* Reverse the digits of the integer part of d. */
-        q = p-1;
-        while (q > pInt) {
-            char ch = *pInt;
-            *pInt++ = *q;
-            *q-- = ch;
-        }
+        do {
+            digit = divrem(b, base);
+            JS_ASSERT(digit < (uint32)base);
+            *p++ = BASEDIGIT(digit);
+        } while (b->wds);
+        Bfree(PASS_STATE b);
+    }
+    /* Reverse the digits of the integer part of d. */
+    q = p-1;
+    while (q > pInt) {
+        char ch = *pInt;
+        *pInt++ = *q;
+        *q-- = ch;
+    }
 
-        dval(df) = dval(d) - dval(di);
-        if (dval(df) != 0.0) {
-            /* We have a fraction. */
-            int e, bbits;
-            int32 s2, done;
-            Bigint *b, *s, *mlo, *mhi;
+    dval(df) = dval(d) - dval(di);
+    if (dval(df) != 0.0) {
+        /* We have a fraction. */
+        int e, bbits;
+        int32 s2, done;
+        Bigint *b, *s, *mlo, *mhi;
 
-            b = s = mlo = mhi = NULL;
+        b = s = mlo = mhi = NULL;
 
-            *p++ = '.';
-            b = d2b(PASS_STATE df, &e, &bbits);
-            if (!b) {
-              nomem2:
-                Bfree(PASS_STATE b);
-                Bfree(PASS_STATE s);
-                if (mlo != mhi)
-                    Bfree(PASS_STATE mlo);
-                Bfree(PASS_STATE mhi);
-                js_free(buffer);
-                return NULL;
-            }
-            JS_ASSERT(e < 0);
-            /* At this point df = b * 2^e.  e must be less than zero because 0 < df < 1. */
-
-            s2 = -(int32)(word0(d) >> Exp_shift1 & Exp_mask>>Exp_shift1);
-#ifndef Sudden_Underflow
-            if (!s2)
-                s2 = -1;
-#endif
-            s2 += Bias + P;
-            /* 1/2^s2 = (nextDouble(d) - d)/2 */
-            JS_ASSERT(-s2 < e);
-            mlo = i2b(PASS_STATE 1);
-            if (!mlo)
-                goto nomem2;
-            mhi = mlo;
-            if (!word1(d) && !(word0(d) & Bndry_mask)
-#ifndef Sudden_Underflow
-                && word0(d) & (Exp_mask & Exp_mask << 1)
-#endif
-                ) {
-                /* The special case.  Here we want to be within a quarter of the last input
-                   significant digit instead of one half of it when the output string's value is less than d.  */
-                s2 += Log2P;
-                mhi = i2b(PASS_STATE 1<<Log2P);
-                if (!mhi)
-                    goto nomem2;
-            }
-            b = lshift(PASS_STATE b, e + s2);
-            if (!b)
-                goto nomem2;
-            s = i2b(PASS_STATE 1);
-            if (!s)
-                goto nomem2;
-            s = lshift(PASS_STATE s, s2);
-            if (!s)
-                goto nomem2;
-            /* At this point we have the following:
-             *   s = 2^s2;
-             *   1 > df = b/2^s2 > 0;
-             *   (d - prevDouble(d))/2 = mlo/2^s2;
-             *   (nextDouble(d) - d)/2 = mhi/2^s2. */
-
-            done = JS_FALSE;
-            do {
-                int32 j, j1;
-                Bigint *delta;
-
-                b = multadd(PASS_STATE b, base, 0);
-                if (!b)
-                    goto nomem2;
-                digit = quorem2(b, s2);
-                if (mlo == mhi) {
-                    mlo = mhi = multadd(PASS_STATE mlo, base, 0);
-                    if (!mhi)
-                        goto nomem2;
-                }
-                else {
-                    mlo = multadd(PASS_STATE mlo, base, 0);
-                    if (!mlo)
-                        goto nomem2;
-                    mhi = multadd(PASS_STATE mhi, base, 0);
-                    if (!mhi)
-                        goto nomem2;
-                }
-
-                /* Do we yet have the shortest string that will round to d? */
-                j = cmp(b, mlo);
-                /* j is b/2^s2 compared with mlo/2^s2. */
-                delta = diff(PASS_STATE s, mhi);
-                if (!delta)
-                    goto nomem2;
-                j1 = delta->sign ? 1 : cmp(b, delta);
-                Bfree(PASS_STATE delta);
-                /* j1 is b/2^s2 compared with 1 - mhi/2^s2. */
-
-#ifndef ROUND_BIASED
-                if (j1 == 0 && !(word1(d) & 1)) {
-                    if (j > 0)
-                        digit++;
-                    done = JS_TRUE;
-                } else
-#endif
-                if (j < 0 || (j == 0
-#ifndef ROUND_BIASED
-                    && !(word1(d) & 1)
-#endif
-                    )) {
-                    if (j1 > 0) {
-                        /* Either dig or dig+1 would work here as the least significant digit.
-                           Use whichever would produce an output value closer to d. */
-                        b = lshift(PASS_STATE b, 1);
-                        if (!b)
-                            goto nomem2;
-                        j1 = cmp(b, s);
-                        if (j1 > 0) /* The even test (|| (j1 == 0 && (digit & 1))) is not here because it messes up odd base output
-                                     * such as 3.5 in base 3.  */
-                            digit++;
-                    }
-                    done = JS_TRUE;
-                } else if (j1 > 0) {
-                    digit++;
-                    done = JS_TRUE;
-                }
-                JS_ASSERT(digit < (uint32)base);
-                *p++ = BASEDIGIT(digit);
-            } while (!done);
+        *p++ = '.';
+        b = d2b(PASS_STATE df, &e, &bbits);
+        if (!b) {
+          nomem2:
             Bfree(PASS_STATE b);
             Bfree(PASS_STATE s);
             if (mlo != mhi)
                 Bfree(PASS_STATE mlo);
             Bfree(PASS_STATE mhi);
+            js_free(buffer);
+            return NULL;
         }
-        JS_ASSERT(p < buffer + DTOBASESTR_BUFFER_SIZE);
-        *p = '\0';
+        JS_ASSERT(e < 0);
+        /* At this point df = b * 2^e.  e must be less than zero because 0 < df < 1. */
+
+        s2 = -(int32)(word0(d) >> Exp_shift1 & Exp_mask>>Exp_shift1);
+#ifndef Sudden_Underflow
+        if (!s2)
+            s2 = -1;
+#endif
+        s2 += Bias + P;
+        /* 1/2^s2 = (nextDouble(d) - d)/2 */
+        JS_ASSERT(-s2 < e);
+        mlo = i2b(PASS_STATE 1);
+        if (!mlo)
+            goto nomem2;
+        mhi = mlo;
+        if (!word1(d) && !(word0(d) & Bndry_mask)
+#ifndef Sudden_Underflow
+            && word0(d) & (Exp_mask & Exp_mask << 1)
+#endif
+            ) {
+            /* The special case.  Here we want to be within a quarter of the last input
+               significant digit instead of one half of it when the output string's value is less than d.  */
+            s2 += Log2P;
+            mhi = i2b(PASS_STATE 1<<Log2P);
+            if (!mhi)
+                goto nomem2;
+        }
+        b = lshift(PASS_STATE b, e + s2);
+        if (!b)
+            goto nomem2;
+        s = i2b(PASS_STATE 1);
+        if (!s)
+            goto nomem2;
+        s = lshift(PASS_STATE s, s2);
+        if (!s)
+            goto nomem2;
+        /* At this point we have the following:
+         *   s = 2^s2;
+         *   1 > df = b/2^s2 > 0;
+         *   (d - prevDouble(d))/2 = mlo/2^s2;
+         *   (nextDouble(d) - d)/2 = mhi/2^s2. */
+
+        done = JS_FALSE;
+        do {
+            int32 j, j1;
+            Bigint *delta;
+
+            b = multadd(PASS_STATE b, base, 0);
+            if (!b)
+                goto nomem2;
+            digit = quorem2(b, s2);
+            if (mlo == mhi) {
+                mlo = mhi = multadd(PASS_STATE mlo, base, 0);
+                if (!mhi)
+                    goto nomem2;
+            }
+            else {
+                mlo = multadd(PASS_STATE mlo, base, 0);
+                if (!mlo)
+                    goto nomem2;
+                mhi = multadd(PASS_STATE mhi, base, 0);
+                if (!mhi)
+                    goto nomem2;
+            }
+
+            /* Do we yet have the shortest string that will round to d? */
+            j = cmp(b, mlo);
+            /* j is b/2^s2 compared with mlo/2^s2. */
+            delta = diff(PASS_STATE s, mhi);
+            if (!delta)
+                goto nomem2;
+            j1 = delta->sign ? 1 : cmp(b, delta);
+            Bfree(PASS_STATE delta);
+            /* j1 is b/2^s2 compared with 1 - mhi/2^s2. */
+
+#ifndef ROUND_BIASED
+            if (j1 == 0 && !(word1(d) & 1)) {
+                if (j > 0)
+                    digit++;
+                done = JS_TRUE;
+            } else
+#endif
+            if (j < 0 || (j == 0
+#ifndef ROUND_BIASED
+                && !(word1(d) & 1)
+#endif
+                )) {
+                if (j1 > 0) {
+                    /* Either dig or dig+1 would work here as the least significant digit.
+                       Use whichever would produce an output value closer to d. */
+                    b = lshift(PASS_STATE b, 1);
+                    if (!b)
+                        goto nomem2;
+                    j1 = cmp(b, s);
+                    if (j1 > 0) /* The even test (|| (j1 == 0 && (digit & 1))) is not here because it messes up odd base output
+                                 * such as 3.5 in base 3.  */
+                        digit++;
+                }
+                done = JS_TRUE;
+            } else if (j1 > 0) {
+                digit++;
+                done = JS_TRUE;
+            }
+            JS_ASSERT(digit < (uint32)base);
+            *p++ = BASEDIGIT(digit);
+        } while (!done);
+        Bfree(PASS_STATE b);
+        Bfree(PASS_STATE s);
+        if (mlo != mhi)
+            Bfree(PASS_STATE mlo);
+        Bfree(PASS_STATE mhi);
     }
+    JS_ASSERT(p < buffer + DTOBASESTR_BUFFER_SIZE);
+    *p = '\0';
     return buffer;
 }
 
