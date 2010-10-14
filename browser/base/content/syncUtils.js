@@ -299,7 +299,9 @@ let gSyncUtils = {
     let val = el.value;
     let error = "";
 
-    if (val == Weave.Service.username)
+    if (val.length < Weave.MIN_PP_LENGTH)
+      error = "change.synckey.tooShort";
+    else if (val == Weave.Service.username)
       error = "change.synckey.sameAsUsername";
     else if (val == Weave.Service.account)
       error = "change.synckey.sameAsEmail";
@@ -307,8 +309,6 @@ let gSyncUtils = {
       error = "change.synckey.sameAsPassword";
     else if (change && val == Weave.Service.passphrase)
       error = "change.synckey.sameAsSyncKey";
-    else if (val.length < Weave.MIN_PP_LENGTH)
-      error = "change.synckey.tooShort";
     else
       valid = true;
 
