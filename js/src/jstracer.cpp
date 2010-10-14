@@ -10272,8 +10272,9 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
         which.set(vp, (LIns*)0);
 }
 
-struct BoxArg
+class BoxArg
 {
+  public:
     BoxArg(TraceRecorder *tr, ptrdiff_t offset, LIns *base_ins)
         : tr(tr), offset(offset), base_ins(base_ins) {}
     TraceRecorder *tr;
