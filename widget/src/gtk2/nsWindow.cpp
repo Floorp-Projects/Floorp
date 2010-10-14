@@ -3119,8 +3119,6 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, PRBool *aCancelled)
         return PR_FALSE;
     }
 
-    PRUint32 domVirtualKeyCode = GdkKeyCodeToDOMKeyCode(aEvent->keyval);
-
     // send the key down event
     nsEventStatus status;
     nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
