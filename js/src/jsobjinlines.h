@@ -329,13 +329,6 @@ JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
     setSlot(idx, val);
 }
 
-inline bool
-JSObject::ensureDenseArrayElements(JSContext *cx, uintN cap)
-{
-    JS_ASSERT(isDenseArray());
-    return ensureSlots(cx, cap);
-}
-
 inline void
 JSObject::shrinkDenseArrayElements(JSContext *cx, uintN cap)
 {

@@ -750,8 +750,23 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getDenseArrayElement(uintN idx);
     inline js::Value* addressOfDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
-    inline bool ensureDenseArrayElements(JSContext *cx, uintN cap);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
+
+    /*
+     * ensureDenseArrayElements ensures that the dense array can hold at least
+     * index + extra elements. It returns ED_OK on success, ED_FAILED on
+     * failure to grow the array, ED_SPARSE when the array is too sparse to
+     * grow (this includes the case of index + extra overflow). In the last
+     * two cases the array is kept intact.
+     */
+    enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
+    inline EnsureDenseResult ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra);
+
+    /*
+     * Check if after growing the dense array will be too sparse.
+     * newElementsHint is an estimated number of elements to be added.
+     */
+    bool willBeSparseDenseArray(uintN requiredCapacity, uintN newElementsHint);
 
     JSBool makeDenseArraySlow(JSContext *cx);
 
