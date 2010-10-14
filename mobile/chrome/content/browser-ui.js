@@ -1608,6 +1608,7 @@ var BookmarkHelper = {
     BrowserUI.pushPopup(this, this._panel);
 
     let self = this;
+    BrowserUI.lockToolbar();
     Browser.forceChromeReflow();
     self._editor.startEditing();
   },
@@ -1617,6 +1618,7 @@ var BookmarkHelper = {
   },
 
   hide: function BH_hide() {
+    BrowserUI.unlockToolbar();
     BrowserUI.updateStar();
 
     // Note: the _editor will have already saved the data, if needed, by the time
