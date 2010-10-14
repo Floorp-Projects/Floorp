@@ -35,7 +35,44 @@ var testFramesLoaded = function() {
     is(test != null, testExpectedResults[t], "test "+t);
   }
 
-  SimpleTest.finish();
+  // call tests to check principal comparison, e.g. a document can open a window
+  // to a data: or javascript: document which frames an
+  // X-Frame-Options: SAMEORIGIN document and the frame should load
+  testFrameInJSURI();
+}
+
+// test that a document can be framed under a javascript: URL opened by the
+// same site as the frame
+var testFrameInJSURI = function() {
+  var html = '<iframe id="sameorigin3" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=sameorigin3&xfo=sameorigin"></iframe>';
+  var win = window.open();
+  win.onload = function() {
+    var test = win.document.getElementById("sameorigin3")
+              .contentDocument.getElementById("test");
+    ok(test != null, "frame under javascript: URL should have loaded.");
+    win.close();
+
+    // run last test
+    testFrameInDataURI();
+   }
+  win.location.href = "javascript:document.write('"+html+"');document.close();";
+}
+
+// test that a document can be framed under a data: URL opened by the
+// same site as the frame
+var testFrameInDataURI = function() {
+  var html = '<iframe id="sameorigin4" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=sameorigin4&xfo=sameorigin"></iframe>';
+  var win = window.open();
+  win.onload = function() {
+    var test = win.document.getElementById("sameorigin4")
+              .contentDocument.getElementById("test");
+    ok(test != null, "frame under data: URL should have loaded.");
+    win.close();
+
+    // finalize test
+    SimpleTest.finish();
+   }
+  win.location.href = "data:text/html,"+html;
 }
 
 SimpleTest.waitForExplicitFinish();
