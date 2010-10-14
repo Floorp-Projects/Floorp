@@ -148,6 +148,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug401662.html \
 		test_bug403852.html \
 		test_fileapi.html \
+		test_fileapi_slice.html \
 		test_bug403868.xml \
 		test_bug405182.html \
 		test_bug403841.html \
