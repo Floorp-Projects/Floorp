@@ -84,8 +84,7 @@ public:
   virtual already_AddRefed<nsAccessible>
     CreateHTMLLabelAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
-    CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell,
-                           const nsAString& aBulletText);
+    CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
     CreateHTMLListboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
