@@ -2464,12 +2464,10 @@ Tab.prototype = {
   },
 
   startLoading: function startLoading() {
-    if (this._loading) throw "Already Loading!";
     this._loading = true;
   },
 
   endLoading: function endLoading() {
-    if (!this._loading) throw "Not Loading!";
     this._loading = false;
   },
 
