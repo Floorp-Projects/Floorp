@@ -854,7 +854,7 @@ nsPluginThreadRunnable::Run()
   if (mFunc) {
     PluginDestructionGuard guard(mInstance);
 
-    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull, nsnull);
+    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull);
   }
 
   return NS_OK;
