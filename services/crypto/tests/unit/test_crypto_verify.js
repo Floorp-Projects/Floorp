@@ -1,8 +1,14 @@
-Cu.import("resource://services-sync/util.js");
+let cryptoSvc;
+try {
+  Components.utils.import("resource://services-crypto/WeaveCrypto.js");
+  cryptoSvc = new WeaveCrypto();
+} catch (ex) {
+  // Fallback to binary WeaveCrypto
+  cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"]
+                .getService(Ci.IWeaveCrypto);
+}
 
 function run_test() {
-  let cryptoSvc = Svc.Crypto;
-
   var salt = cryptoSvc.generateRandomBytes(16);
   var iv = cryptoSvc.generateRandomIV();
 
