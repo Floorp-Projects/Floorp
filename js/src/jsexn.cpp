@@ -46,7 +46,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -101,7 +101,7 @@ Class js_ErrorClass = {
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    Exception,      /* construct   */
+    NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
     JS_CLASS_TRACE(exn_trace)

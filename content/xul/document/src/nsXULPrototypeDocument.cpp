@@ -738,7 +738,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment(PRUint32 lang_id)
 
       principal->GetOrigin(getter_Copies(origin));
       rv = xpc_CreateGlobalObject(cx, &gSharedGlobalClass, origin, principal,
-                                  &newGlob, &compartment);
+                                  false, &newGlob, &compartment);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       ::JS_SetGlobalObject(cx, newGlob);

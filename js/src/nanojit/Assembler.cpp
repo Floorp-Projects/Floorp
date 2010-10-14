@@ -78,6 +78,7 @@ namespace nanojit
         , _branchStateMap(alloc)
         , _patches(alloc)
         , _labels(alloc)
+        , _noise(NULL)
     #if NJ_USES_IMMD_POOL
         , _immDPool(alloc)
     #endif
@@ -362,8 +363,8 @@ namespace nanojit
         // we enforce this condition between all pairs of instructions, but this is
         // overly restrictive, and would fail if we did not generate unreachable x87
         // stack pops following unconditional branches.
-        NanoAssert((_allocator.active[FST0] && _fpuStkDepth == -1) ||
-                   (!_allocator.active[FST0] && _fpuStkDepth == 0));
+        NanoAssert((_allocator.active[REGNUM(FST0)] && _fpuStkDepth == -1) ||
+                   (!_allocator.active[REGNUM(FST0)] && _fpuStkDepth == 0));
 #endif
         _activation.checkForResourceConsistency(_allocator);
         registerConsistencyCheck();
@@ -391,7 +392,7 @@ namespace nanojit
         for (Register r = lsReg(not_managed); not_managed; r = nextLsReg(not_managed, r)) {
             // A register not managed by register allocation must be
             // neither free nor active.
-            if (r <= LastReg) {
+            if (REGNUM(r) <= LastRegNum) {
                 NanoAssert(!_allocator.isFree(r));
                 NanoAssert(!_allocator.getActive(r));
             }
@@ -756,6 +757,36 @@ namespace nanojit
         // slot (if not).
     }
 
+    // If we have this:
+    //
+    //   W = ld(addp(B, lshp(I, k)))[d] , where int(1) <= k <= int(3)
+    //
+    // then we set base=B, index=I, scale=k.
+    //
+    // Otherwise, we must have this:
+    //
+    //   W = ld(addp(B, I))[d]
+    //
+    // and we set base=B, index=I, scale=0.
+    //
+    void Assembler::getBaseIndexScale(LIns* addp, LIns** base, LIns** index, int* scale)
+    {
+        NanoAssert(addp->isop(LIR_addp));
+
+        *base = addp->oprnd1();
+        LIns* rhs = addp->oprnd2();
+        int k;
+
+        if (rhs->opcode() == LIR_lshp && rhs->oprnd2()->isImmI() &&
+            (k = rhs->oprnd2()->immI(), (1 <= k && k <= 3)))
+        {
+            *index = rhs->oprnd1();
+            *scale = k;
+        } else {
+            *index = rhs;
+            *scale = 0;
+        }
+    }
     void Assembler::patch(GuardRecord *lr)
     {
         if (!lr->jmp) // the guard might have been eliminated as redundant
@@ -2272,7 +2303,7 @@ namespace nanojit
         // 'tosave' is a binary heap stored in an array.  The root is tosave[0],
         // left child is at i+1, right child is at i+2.
 
-        Register tosave[LastReg-FirstReg+1];
+        Register tosave[LastRegNum - FirstRegNum + 1];
         int len=0;
         RegAlloc *regs = &_allocator;
         RegisterMask evict_set = regs->activeMask() & GpRegs & ~ignore;
@@ -2354,17 +2385,17 @@ namespace nanojit
      */
     void Assembler::intersectRegisterState(RegAlloc& saved)
     {
-        Register regsTodo[LastReg + 1];
-        LIns* insTodo[LastReg + 1];
+        Register regsTodo[LastRegNum + 1];
+        LIns* insTodo[LastRegNum + 1];
         int nTodo = 0;
 
         // Do evictions and pops first.
         verbose_only(bool shouldMention=false; )
-        // The obvious thing to do here is to iterate from FirstReg to LastReg.
-        // However, on ARM that causes lower-numbered integer registers
-        // to be be saved at higher addresses, which inhibits the formation
-        // of load/store multiple instructions.  Hence iterate the loop the
-        // other way.
+        // The obvious thing to do here is to iterate from FirstRegNum to
+        // LastRegNum.  However, on ARM that causes lower-numbered integer
+        // registers to be be saved at higher addresses, which inhibits the
+        // formation of load/store multiple instructions.  Hence iterate the
+        // loop the other way.
         RegisterMask reg_set = _allocator.activeMask() | saved.activeMask();
         for (Register r = msReg(reg_set); reg_set; r = nextMsReg(reg_set, r))
         {
@@ -2415,8 +2446,8 @@ namespace nanojit
      */
     void Assembler::unionRegisterState(RegAlloc& saved)
     {
-        Register regsTodo[LastReg + 1];
-        LIns* insTodo[LastReg + 1];
+        Register regsTodo[LastRegNum + 1];
+        LIns* insTodo[LastRegNum + 1];
         int nTodo = 0;
 
         // Do evictions and pops first.

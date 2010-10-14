@@ -17,8 +17,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
   <iframe type="content"
           src="http://example.org/tests/js/src/xpconnect/tests/mochitest/file_evalInSandbox.html"
-          onload="go()"
-          id="ifr">
+          onload="go(this, true)">
+  </iframe>
+  <iframe type="content"
+          src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;script&gt;document.foo %3D 'bar'%3B&lt;%2Fscript&gt;&lt;%2Fbody&gt;&lt;%2Fhtml&gt;"
+          onload="go(this, false)">
   </iframe>
   </body>
 
@@ -29,21 +32,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
 
-      function go() {
-        var win = $('ifr').contentWindow;
-        var sandbox = new Cu.Sandbox(win);
-        is(utils.getClassName(sandbox),
-           "XPCSafeJSObjectWrapper",
-           "sandbox was wrapped correctly");
-        sandbox.__proto__ = new XPCNativeWrapper(win);
+      var testsRun = 0;
+      function checkCrossOriginSandbox(sandbox)
+      {
+          is(utils.getClassName(sandbox),
+             "Proxy",
+             "sandbox was wrapped correctly");
 
-        is(utils.getClassName(Cu.evalInSandbox("this.document", sandbox)),
-           "XPCSafeJSObjectWrapper",
-           "return value was rewrapped correctly");
-        ok(Cu.evalInSandbox("(this.document + '').indexOf('XPCNativeWrapper') >= 0", sandbox),
-           "wrappers inside eIS are XPCNativeWrappers");
+          is(utils.getClassName(Cu.evalInSandbox("this.document", sandbox)),
+             "Proxy",
+             "return value was rewrapped correctly");
+      }
+      function go(ifr, crossOrigin) {
+        var win = ifr.contentWindow;
+        if (crossOrigin) {
+          var sandbox = new Cu.Sandbox(win, win, false);
 
-        SimpleTest.finish();
+          checkCrossOriginSandbox(sandbox);
+
+          ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
+             "wrappers inside eIS are XPCNativeWrappers");
+          ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
+             "must not see expandos");
+
+          sandbox = new Cu.Sandbox(win, win, true);
+
+          checkCrossOriginSandbox(sandbox);
+
+          ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+             "can see expandos");
+        }
+        else {
+          var sandbox = new Cu.Sandbox(win, win, false);
+
+          ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
+             "must not see expandos");
+
+          sandbox = new Cu.Sandbox(win, win, true);
+
+          ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
+             "can see expandos");
+        }
+
+        if (++testsRun == 2)
+          SimpleTest.finish();
       }
 
       SimpleTest.waitForExplicitFinish();

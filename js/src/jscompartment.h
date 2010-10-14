@@ -42,28 +42,21 @@
 
 #include "jscntxt.h"
 #include "jsgc.h"
+#include "jsmath.h"
 #include "jsobj.h"
 #include "jsfun.h"
 #include "jsgcstats.h"
 #include "jsclist.h"
 #include "jsxml.h"
 
-struct JSCompartment {
+struct JS_FRIEND_API(JSCompartment) {
     JSRuntime       *rt;
     JSPrincipals    *principals;
     js::gc::Chunk   *chunk;
 
-    js::gc::ArenaList<JSObject>      objArena;
-    js::gc::ArenaList<JSFunction>    funArena;
-    js::gc::ArenaList<JSShortString> shortStringArena;
-    js::gc::ArenaList<JSString>      stringArena;
-    js::gc::ArenaList<JSString>      externalStringArenas[js::gc::JS_EXTERNAL_STRING_LIMIT];
-#if JS_HAS_XML_SUPPORT
-    js::gc::ArenaList<JSXML>         xmlArena;
-#endif
+    js::gc::ArenaList arenas[js::gc::FINALIZE_LIMIT];
+    js::gc::FreeLists freeLists;
 
-    js::gc::FreeLists                freeLists;
-    
 #ifdef JS_GCMETER
     js::gc::JSGCArenaStats compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
@@ -75,6 +68,16 @@ struct JSCompartment {
 
     /* List all scripts in this compartment. */
     JSCList scripts;
+
+    /*
+     * Weak references to lazily-created, well-known XML singletons.
+     *
+     * NB: Singleton objects must be carefully disconnected from the rest of
+     * the object graph usually associated with a JSContext's global object,
+     * including the set of standard class objects.  See jsxml.c for details.
+     */
+    JSObject            *anynameObject;
+    JSObject            *functionNamespaceObject;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
@@ -91,10 +94,6 @@ struct JSCompartment {
     bool wrapException(JSContext *cx);
 
     void sweep(JSContext *cx);
-#ifdef JS_METHODJIT
-    bool addScript(JSContext *cx, JSScript *script);
-    void removeScript(JSScript *script);
-#endif
     void purge(JSContext *cx);
     void finishArenaLists();
     bool arenaListsAreEmpty();
@@ -126,7 +125,7 @@ class SwitchToCompartment : public PreserveCompartment {
     }
 
     SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
-        cx->compartment = target->getCompartment(cx);
+        cx->compartment = target->getCompartment();
     }
 };
 

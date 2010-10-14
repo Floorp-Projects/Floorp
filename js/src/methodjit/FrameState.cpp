@@ -327,7 +327,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
 #endif
 }
 
-void FrameState::storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg, RegisterID tempReg)
+void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
 {
     JS_ASSERT(dataReg != typeReg && dataReg != tempReg && typeReg != tempReg);
 
@@ -346,6 +346,15 @@ void FrameState::storeTo(FrameEntry *fe, RegisterID dataReg, RegisterID typeReg,
         masm.move(ImmType(fe->getKnownType()), typeReg);
         return;
     }
+
+#ifdef JS_PUNBOX64 
+    // If the value is synced, and requires at least one load, we can do
+    // better on x64.
+    if (fe->type.inMemory() && fe->data.inMemory()) {
+        masm.loadValueAsComponents(addressOf(fe), typeReg, dataReg);
+        return;
+    }
+#endif
 
     RegisterID data = tempRegForData(fe);
     RegisterID type = tempRegForType(fe);
@@ -472,13 +481,10 @@ FrameState::sync(Assembler &masm, Uses uses) const
              * already been synced. Otherwise, see if a constant needs to be
              * synced.
              */
-            if (fe->data.inRegister()) {
+            if (fe->data.inRegister())
                 avail.putReg(fe->data.reg());
-            } else if (!fe->data.synced()) {
+            else if (!fe->data.synced())
                 syncData(fe, address, masm);
-                if (fe->isConstant())
-                    continue;
-            }
 
             if (fe->type.inRegister())
                 avail.putReg(fe->type.reg());
@@ -568,9 +574,7 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
                 tempRegForData(backing);
             syncData(backing, address, masm);
             fe->data.sync();
-            if (fe->isConstant() && !fe->type.synced()) {
-                fe->type.sync();
-            } else if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
+            if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
                 forgetReg(fe->data.reg());
                 fe->data.setMemory();
             }
@@ -781,17 +785,10 @@ FrameState::copyEntryIntoFPReg(Assembler &masm, FrameEntry *fe, FPRegisterID fpr
         fe = fe->copyOf();
 
     /* The entry must be synced to memory. */
-    if (fe->data.isConstant()) {
-        if (!fe->data.synced())
-            syncData(fe, addressOf(fe), masm);
-        if (!fe->type.synced())
-            syncType(fe, addressOf(fe), masm);
-    } else {
-        if (fe->data.inRegister() && !fe->data.synced())
-            syncData(fe, addressOf(fe), masm);
-        if (fe->type.inRegister() && !fe->type.synced())
-            syncType(fe, addressOf(fe), masm);
-    }
+    if (!fe->data.synced())
+        syncData(fe, addressOf(fe), masm);
+    if (!fe->type.synced())
+        syncType(fe, addressOf(fe), masm);
 
     masm.loadDouble(addressOf(fe), fpreg);
     return fpreg;
@@ -891,6 +888,14 @@ FrameState::ownRegForData(FrameEntry *fe)
         masm.loadPayload(addressOf(fe), reg);
     }
     return reg;
+}
+
+void
+FrameState::discardFe(FrameEntry *fe)
+{
+    forgetEntry(fe);
+    fe->type.setMemory();
+    fe->data.setMemory();
 }
 
 void
@@ -1097,39 +1102,37 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
     storeTop(local, popGuaranteed, typeChange);
 
     bool closed = eval || isClosedVar(n);
-    if (closed || inTryBlock) {
-        /* Ensure that the local variable remains synced. */
-        if (local->isCopy()) {
-            FrameEntry *backing = local->copyOf();
-            if (!local->data.synced()) {
-                if (backing->data.inMemory())
-                    tempRegForData(backing);
-                syncData(backing, addressOf(local), masm);
-            }
-            if (!local->type.synced()) {
-                if (backing->type.inMemory())
-                    tempRegForType(backing);
-                syncType(backing, addressOf(local), masm);
-            }
-        } else if (local->isConstant()) {
-            if (!local->data.synced())
-                syncData(local, addressOf(local), masm);
-        } else {
-            if (!local->data.synced()) {
-                syncData(local, addressOf(local), masm);
-                local->data.sync();
-            }
-            if (!local->type.synced()) {
-                syncType(local, addressOf(local), masm);
-                local->type.sync();
-            }
-            if (closed)
-                forgetEntry(local);
-        }
+    if (!closed && !inTryBlock)
+        return;
 
+    /* Ensure that the local variable remains synced. */
+    if (local->isCopy()) {
+        FrameEntry *backing = local->copyOf();
+        if (!local->data.synced()) {
+            if (backing->data.inMemory())
+                tempRegForData(backing);
+            syncData(backing, addressOf(local), masm);
+        }
+        if (!local->type.synced()) {
+            if (backing->type.inMemory())
+                tempRegForType(backing);
+            syncType(backing, addressOf(local), masm);
+        }
+    } else {
+        if (!local->data.synced()) {
+            syncData(local, addressOf(local), masm);
+            local->data.sync();
+        }
+        if (!local->type.synced()) {
+            syncType(local, addressOf(local), masm);
+            local->type.sync();
+        }
         if (closed)
-            local->resetSynced();
+            forgetEntry(local);
     }
+
+    if (closed)
+        local->resetSynced();
 }
 
 void

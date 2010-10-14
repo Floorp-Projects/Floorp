@@ -949,7 +949,7 @@ class TraceRecorder
     /* Carry the return value from a native call to the record_NativeCallComplete. */
     nanojit::LIns*                  native_rval_ins;
 
-    /* Carry the return value of js_NewInstance to record_NativeCallComplete. */
+    /* Carry the return value of js_CreateThis to record_NativeCallComplete. */
     nanojit::LIns*                  newobj_ins;
 
     /* Carry the JSSpecializedNative used to generate a call to record_NativeCallComplete. */
@@ -1032,8 +1032,10 @@ class TraceRecorder
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
     JS_REQUIRES_STACK void importGlobalSlot(unsigned slot);
 
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
-    JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
+    JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, ExitType exitType,
+                                            bool abortIfAlwaysExits = false);
+    JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, VMSideExit* exit,
+                                            bool abortIfAlwaysExits = false);
     JS_REQUIRES_STACK nanojit::LIns* guard_xov(nanojit::LOpcode op, nanojit::LIns* d0,
                                                nanojit::LIns* d1, VMSideExit* exit);
 
@@ -1066,7 +1068,7 @@ class TraceRecorder
      * entries of the tracker accordingly.
      */
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation() {
-        if (global_dslots != globalObj->dslots)
+        if (global_dslots != globalObj->getSlots())
             checkForGlobalObjectReallocationHelper();
     }
     JS_REQUIRES_STACK void checkForGlobalObjectReallocationHelper();
@@ -1113,12 +1115,15 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
                                          nanojit::LIns* s0, nanojit::LIns* s1);
 
-    void label(nanojit::LIns* br);
-    void label(nanojit::LIns* br1, nanojit::LIns* br2);
+    bool condBranch(nanojit::LOpcode op, nanojit::LIns* cond, nanojit::LIns** brOut);
+    nanojit::LIns* unoptimizableCondBranch(nanojit::LOpcode op, nanojit::LIns* cond);
+    void labelForBranch(nanojit::LIns* br);
+    void labelForBranches(nanojit::LIns* br1, nanojit::LIns* br2);
+
     nanojit::LIns* i2d(nanojit::LIns* i);
     nanojit::LIns* d2i(nanojit::LIns* f, bool resultCanBeImpreciseIfFractional = false);
     nanojit::LIns* f2u(nanojit::LIns* f);
-    JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
+    JS_REQUIRES_STACK RecordingStatus makeNumberInt32(nanojit::LIns* d, nanojit::LIns** num_ins);
     JS_REQUIRES_STACK nanojit::LIns* stringify(const Value& v);
 
     JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins, bool strict);
@@ -1174,20 +1179,19 @@ class TraceRecorder
                          nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot,
                          nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
-    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
+    void stobj_set_slot(JSObject *obj, nanojit::LIns* obj_ins, unsigned slot,
                         nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
-    void set_array_fslot(nanojit::LIns *obj_ins, unsigned slot, uint32 val);
 
-    nanojit::LIns* stobj_get_fslot_private_ptr(nanojit::LIns* obj_ins,
-                                               unsigned slot);
-    nanojit::LIns* stobj_get_fslot_uint32(nanojit::LIns* obj_ins, unsigned slot);
-    nanojit::LIns* stobj_set_fslot_uint32(nanojit::LIns* value_ins, nanojit::LIns* obj_ins,
-                                          unsigned slot);
+    nanojit::LIns* stobj_get_slot_uint32(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* unbox_slot(JSObject *obj, nanojit::LIns *obj_ins, uint32 slot,
                               VMSideExit *exit);
     nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins);
     nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins);
+    nanojit::LIns* stobj_get_private_uint32(nanojit::LIns* obj_ins);
     nanojit::LIns* stobj_get_proto(nanojit::LIns* obj_ins);
+
+    /* For slots holding private pointers. */
+    nanojit::LIns* stobj_get_const_private_ptr(nanojit::LIns *obj_ins, unsigned slot);
 
     JS_REQUIRES_STACK AbortableRecordingStatus name(Value*& vp, nanojit::LIns*& ins, NameResult& nr);
     JS_REQUIRES_STACK AbortableRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins,
@@ -1233,11 +1237,13 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
-    JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
-                                                   nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
-    JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
-                                               nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
-                                               JSOp mode);
+    JS_REQUIRES_STACK RecordingStatus getCharCodeAt(JSString *str,
+                                                    nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
+                                                    nanojit::LIns** out_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getUnitString(nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK RecordingStatus getCharAt(JSString *str,
+                                                nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
+                                                JSOp mode, nanojit::LIns** out_ins);
 
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                 const js::Shape* shape,
@@ -1284,6 +1290,7 @@ class TraceRecorder
     void unbox_any_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
                           nanojit::LIns** is_obj_ins, nanojit::AccSet accSet);
     nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet accSet);
+    nanojit::LIns* is_boxed_magic(nanojit::LIns* vaddr_ins, JSWhyMagic why, nanojit::AccSet accSet);
 
     nanojit::LIns* is_string_id(nanojit::LIns* id_ins);
     nanojit::LIns* unbox_string_id(nanojit::LIns* id_ins);
@@ -1326,6 +1333,7 @@ class TraceRecorder
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
     JS_REQUIRES_STACK nanojit::LIns* guardArgsLengthNotAssigned(nanojit::LIns* argsobj_ins);
+    JS_REQUIRES_STACK void guardNotHole(nanojit::LIns *argsobj_ins, nanojit::LIns *ids_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSObject* ctor,
                                                           nanojit::LIns*& proto_ins);
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSProtoKey key,

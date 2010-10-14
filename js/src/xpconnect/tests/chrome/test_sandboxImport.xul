@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       function checkWrapped(obj) {
           var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                             .getInterface(Components.interfaces.nsIDOMWindowUtils);
-          is(utils.getClassName(obj), "XPCSafeJSObjectWrapper", "right type of wrapper");
+          is(utils.getClassName(obj), "Proxy", "right type of wrapper");
       }
 
       var sandbox = new Components.utils.Sandbox("about:blank");

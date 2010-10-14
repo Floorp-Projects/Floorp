@@ -38,12 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jsobj.h"
+#include "jsvalue.h"
 
 #include "WrapperFactory.h"
 #include "CrossOriginWrapper.h"
 #include "FilteringWrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
+#include "XPCWrapper.h"
 
 #include "xpcprivate.h"
 
@@ -62,55 +64,255 @@ JSWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 // chrome, we wrap them into a special cross-compartment wrapper
 // that transitively extends the waiver to all properties we get
 // off it.
-JSCrossCompartmentWrapper XrayWrapperWaivedWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
+CrossOriginWrapper CrossOriginWrapper::singleton(0);
+
+static JSObject *
+DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
+{
+    if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
+        js::SwitchToCompartment sc(cx, obj->compartment());
+        return JSWrapper::New(cx, obj, NULL, obj->getParent(),
+                              &WaiveXrayWrapperWrapper);
+    }
+    return obj;
+}
 
 JSObject *
-WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, uintN flags)
+WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags)
 {
-    NS_ASSERTION(!obj->isWrapper() || obj->getClass()->ext.innerObject,
-                 "wrapped object passed to rewrap");
+    // Don't unwrap an outer window, just double wrap it if needed.
+    if (obj->getClass()->ext.innerObject)
+        return DoubleWrap(cx, obj, flags);
 
-    JSCompartment *origin = obj->getCompartment(cx);
+    // Here are the rules for wrapping:
+    // We should never get a proxy here (the JS engine unwraps those for us).
+    JS_ASSERT(!obj->isWrapper());
+
+    // As soon as an object is wrapped in a security wrapper, it morphs to be
+    // a fat wrapper. (see also: bug XXX).
+    if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
+        return nsnull;
+
+    // We only hand out outer objects to script.
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return nsnull;
+
+    // Now, our object is ready to be wrapped, but several objects (notably
+    // nsJSIIDs) have a wrapper per scope. If we are about to wrap one of
+    // those objects in a security wrapper, then we need to hand back the
+    // wrapper for the new scope instead. Also, global objects don't move
+    // between scopes so for those we also want to return the wrapper. So...
+    if (!IS_WN_WRAPPER(obj) || !obj->getParent())
+        return DoubleWrap(cx, obj, flags);
+
+    XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+
+    // We know that DOM objects only allow one object, we can return early.
+    if (wn->HasProto() && wn->GetProto()->ClassIsDOMObject())
+        return DoubleWrap(cx, obj, flags);
+
+    XPCCallContext ccx(JS_CALLER, cx, obj);
+    if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
+        // We have a precreate hook. This object might enforce that we only
+        // ever create JS object for it.
+        JSObject *originalScope = scope;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->
+            PreCreate(wn->Native(), cx, scope, &scope);
+        NS_ENSURE_SUCCESS(rv, DoubleWrap(cx, obj, flags));
+
+        // If the handed back scope differs from the passed-in scope and is in
+        // a separate compartment, then this object is explicitly requesting
+        // that we don't create a second JS object for it: create a security
+        // wrapper.
+        if (originalScope->getCompartment() != scope->getCompartment())
+            return DoubleWrap(cx, obj, flags);
+
+        // Note: this penalizes objects that only have one wrapper, but are
+        // being accessed across compartments. We would really prefer to
+        // replace the above code with a test that says "do you only have one
+        // wrapper?"
+    }
+
+    // The object we're looking at might allow us to create a new wrapped
+    // native in the new scope. Try it and continue wrapping on the
+    // possibly-new object.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, scope))
+        return nsnull;
+
+    jsval v;
+    nsresult rv =
+        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nsnull,
+                                                           &NS_GET_IID(nsISupports), PR_FALSE,
+                                                           &v, nsnull);
+    if (NS_SUCCEEDED(rv))
+        obj = JSVAL_TO_OBJECT(v);
+
+    return DoubleWrap(cx, obj, flags);
+}
+
+JSObject *
+WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
+                       uintN flags)
+{
+    NS_ASSERTION(!obj->isWrapper() ||
+                 (obj->isWrapper() &&
+                  obj->getProxyHandler() == &WaiveXrayWrapperWrapper) ||
+                 obj->getClass()->ext.innerObject,
+                 "wrapped object passed to rewrap");
+    NS_ASSERTION(JS_GET_CLASS(cx, obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
+
+    JSCompartment *origin = obj->getCompartment();
     JSCompartment *target = cx->compartment;
+    JSObject *xrayHolder = nsnull;
 
     JSWrapper *wrapper;
+    CompartmentPrivate *targetdata = static_cast<CompartmentPrivate *>(target->data);
     if (AccessCheck::isChrome(target)) {
-        NS_ASSERTION(!AccessCheck::isChrome(origin), "we shouldn't rewrap from chrome into chrome");
-
-        // If we waived the X-ray wrapper for this object, wrap it into a
-        // special wrapper to transitively maintain the X-ray waiver.
-        if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
-            wrapper = &XrayWrapperWaivedWrapper;
+        if (AccessCheck::isChrome(origin)) {
+            // Same origin we use a transparent wrapper, unless the compartment asks
+            // for an Xray.
+            if (targetdata && targetdata->preferXrays && IS_WN_WRAPPER(obj)) {
+                typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
+                wrapper = &Xray::singleton;
+                xrayHolder = Xray::createHolder(cx, obj, parent);
+                if (!xrayHolder)
+                    return nsnull;
+            } else {
+                wrapper = &JSCrossCompartmentWrapper::singleton;
+            }
+        } else if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
+            // If we waived the X-ray wrapper for this object, wrap it into a
+            // special wrapper to transitively maintain the X-ray waiver.
+            wrapper = &CrossOriginWrapper::singleton;
         } else {
             // Native objects must be wrapped into an X-ray wrapper.
-            wrapper = IS_WN_WRAPPER_OBJECT(obj)
-                      ? &XrayWrapper<JSCrossCompartmentWrapper>::singleton
-                      : &JSCrossCompartmentWrapper::singleton;
+            if (!obj->getGlobal()->isSystem() &&
+                (IS_WN_WRAPPER(obj) || obj->getClass()->ext.innerObject)) {
+                typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
+                wrapper = &Xray::singleton;
+                xrayHolder = Xray::createHolder(cx, obj, parent);
+                if (!xrayHolder)
+                    return nsnull;
+            } else {
+                wrapper = &JSCrossCompartmentWrapper::singleton;
+            }
         }
     } else if (AccessCheck::isChrome(origin)) {
-        // If an object that needs a system only wrapper crosses into content
-        // from chrome, we have to wrap it into a system only wrapper on the
-        // fly. In this case we don't need to restrict to exposed properties
-        // since only privileged content will be allowed to touch it anyway.
+        wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
+                                    ExposedPropertiesOnly>::singleton;
+    } else if (AccessCheck::isSameOrigin(origin, target)) {
+        // Same origin we use a transparent wrapper, unless the compartment asks
+        // for an Xray or the wrapper needs a SOW.
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
+        } else if (targetdata && targetdata->preferXrays && IS_WN_WRAPPER(obj)) {
+            typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
+            wrapper = &Xray::singleton;
+            xrayHolder = Xray::createHolder(cx, obj, parent);
+            if (!xrayHolder)
+                return nsnull;
         } else {
-            wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
-                                        ExposedPropertiesOnly>::singleton;
+            wrapper = &JSCrossCompartmentWrapper::singleton;
         }
-    } else if (AccessCheck::isSameOrigin(origin, target)) {
-        // Same origin we use a transparent wrapper;
-        wrapper = &JSCrossCompartmentWrapper::singleton;
     } else {
+        NS_ASSERTION(!AccessCheck::needsSystemOnlyWrapper(obj),
+                     "bad object exposed across origins");
+
         // Cross origin we want to disallow scripting and limit access to
         // a predefined set of properties. XrayWrapper adds a property
         // (.wrappedJSObject) which allows bypassing the XrayWrapper, but
         // we filter out access to that property.
-        wrapper = &FilteringWrapper<XrayWrapper<CrossOriginWrapper>,
-                                    CrossOriginAccessiblePropertiesOnly>::singleton;
+        if (!IS_WN_WRAPPER(obj) && !obj->getClass()->ext.innerObject) {
+            wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
+                                        CrossOriginAccessiblePropertiesOnly>::singleton;
+        } else {
+            typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
+
+            // Location objects can become same origin after navigation, so we might
+            // have to grant transparent access later on.
+            if (IsLocationObject(obj)) {
+                wrapper = &FilteringWrapper<Xray,
+                    SameOriginOrCrossOriginAccessiblePropertiesOnly>::singleton;
+            } else {
+                wrapper= &FilteringWrapper<Xray,
+                    CrossOriginAccessiblePropertiesOnly>::singleton;
+            }
+
+            xrayHolder = Xray::createHolder(cx, obj, parent);
+            if (!xrayHolder)
+                return nsnull;
+        }
     }
-    return JSWrapper::New(cx, obj, wrappedProto, NULL, wrapper);
+
+    JSObject *wrapperObj = JSWrapper::New(cx, obj, wrappedProto, parent, wrapper);
+    if (!wrapperObj || !xrayHolder)
+        return wrapperObj;
+
+    // NB: The fact that the only wrappers to use ProxyExtra are XrayWrappers
+    // is relied on by XPCNativeWrapper.unwrap.
+    wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
+    return wrapperObj;
+}
+
+typedef FilteringWrapper<XrayWrapper<JSWrapper, SameCompartmentXray>,
+                         SameOriginOrCrossOriginAccessiblePropertiesOnly> LW;
+
+bool
+WrapperFactory::IsLocationObject(JSObject *obj)
+{
+    const char *name = obj->getClass()->name;
+    return name[0] == 'L' && !strcmp(name, "Location");
+}
+
+JSObject *
+WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
+{
+    JSObject *xrayHolder = LW::createHolder(cx, obj, obj->getParent());
+    if (!xrayHolder)
+        return NULL;
+    JSObject *wrapperObj = JSWrapper::New(cx, obj, obj->getProto(), NULL, &LW::singleton);
+    if (!wrapperObj)
+        return NULL;
+    wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
+    return wrapperObj;
+}
+
+bool
+WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
+{
+    if (!JSVAL_IS_OBJECT(*vp))
+        return true;
+
+    JSObject *obj = JSVAL_TO_OBJECT(*vp)->unwrap();
+
+    // We have to make sure that if we're wrapping an outer window, that
+    // the .wrappedJSObject also wraps the outer window.
+    OBJ_TO_OUTER_OBJECT(cx, obj);
+    if (!obj)
+        return false;
+
+    {
+        js::SwitchToCompartment sc(cx, obj->compartment());
+        obj = JSWrapper::New(cx, obj, NULL, obj->getParent(), &WaiveXrayWrapperWrapper);
+        if (!obj)
+            return false;
+    }
+
+    *vp = OBJECT_TO_JSVAL(obj);
+    return JS_WrapValue(cx, vp);
+}
+
+JSObject *
+WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
+{
+    JSObject *wrapperObj =
+        JSWrapper::New(cx, obj, obj->getProto(), NULL,
+                       &FilteringWrapper<JSWrapper,
+                                         OnlyIfSubjectIsSystem>::singleton);
+    return wrapperObj;
 }
 
 }

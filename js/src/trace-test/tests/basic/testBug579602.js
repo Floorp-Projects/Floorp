@@ -4,7 +4,7 @@ f = function() {
   x = yield
 }
 rv = f()
-for (a in rv) function() {}
+for (a in rv) (function() {})
 x = Proxy.create((function() {
   return {
     defineProperty: gc

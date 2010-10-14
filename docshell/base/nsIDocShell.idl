@@ -535,3 +535,12 @@ interface nsIDocShell : nsISupports
    */
   readonly attribute unsigned long long historyID;
 };
+
+[uuid(5f7a2184-31b6-4d67-9c75-0c17477766e2)]
+interface nsIDocShell_MOZILLA_2_0_BRANCH : nsISupports {
+  /**
+   * Create a new about:blank document and content viewer.
+   * @param aPrincipal the principal to use for the new document.
+   */
+  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
+};

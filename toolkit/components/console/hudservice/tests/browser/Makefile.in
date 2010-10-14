@@ -80,8 +80,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_storage_iteration.js \
 	browser_webconsole_storage_record_entry.js \
 	browser_webconsole_storage_record_many_entries.js \
-	browser_webconsole_bug_593003_iframe_wrong_hud.js \
-	browser_webconsole_consoleonpage.js \
 	browser_webconsole_bug_587617_output_copy.js \
 	browser_webconsole_bug_588342_document_focus.js \
 	browser_webconsole_bug_585237_line_limit.js \
@@ -95,6 +93,10 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
 	head.js \
 	$(NULL)
+
+# compartment-disabled
+#	browser_webconsole_consoleonpage.js \
+#	browser_webconsole_bug_593003_iframe_wrong_hud.js \
 
 _BROWSER_TEST_PAGES = \
 	test-console.html \

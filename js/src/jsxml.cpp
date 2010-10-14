@@ -232,8 +232,8 @@ DEFINE_GETTER(NameURI_getter,
 static void
 namespace_finalize(JSContext *cx, JSObject *obj)
 {
-    if (cx->runtime->functionNamespaceObject == obj)
-        cx->runtime->functionNamespaceObject = NULL;
+    if (obj->compartment()->functionNamespaceObject == obj)
+        obj->compartment()->functionNamespaceObject = NULL;
 }
 
 static JSBool
@@ -339,8 +339,8 @@ static void
 anyname_finalize(JSContext* cx, JSObject* obj)
 {
     /* Make sure the next call to js_GetAnyName doesn't try to use obj. */
-    if (cx->runtime->anynameObject == obj)
-        cx->runtime->anynameObject = NULL;
+    if (obj->compartment()->anynameObject == obj)
+        obj->compartment()->anynameObject = NULL;
 }
 
 static JSBool
@@ -7148,44 +7148,32 @@ js_InitXMLClasses(JSContext *cx, JSObject *obj)
 JSBool
 js_GetFunctionNamespace(JSContext *cx, Value *vp)
 {
-    JSRuntime *rt;
     JSObject *obj;
     JSString *prefix, *uri;
 
-    /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
-    rt = cx->runtime;
-    obj = rt->functionNamespaceObject;
+    obj = cx->compartment->functionNamespaceObject;
     if (!obj) {
-        JS_LOCK_GC(rt);
-        obj = rt->functionNamespaceObject;
-        if (!obj) {
-            JS_UNLOCK_GC(rt);
+        JSRuntime *rt = cx->runtime;
+        prefix = ATOM_TO_STRING(rt->atomState.typeAtoms[JSTYPE_FUNCTION]);
+        uri = ATOM_TO_STRING(rt->atomState.functionNamespaceURIAtom);
+        obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
+        if (!obj)
+            return false;
 
-            prefix = ATOM_TO_STRING(rt->atomState.typeAtoms[JSTYPE_FUNCTION]);
-            uri = ATOM_TO_STRING(rt->atomState.functionNamespaceURIAtom);
-            obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
-            if (!obj)
-                return JS_FALSE;
+        /*
+         * Avoid entraining any in-scope Object.prototype.  The loss of
+         * Namespace.prototype is not detectable, as there is no way to
+         * refer to this instance in scripts.  When used to qualify method
+         * names, its prefix and uri references are copied to the QName.
+         */
+        obj->clearProto();
+        obj->clearParent();
 
-            /*
-             * Avoid entraining any in-scope Object.prototype.  The loss of
-             * Namespace.prototype is not detectable, as there is no way to
-             * refer to this instance in scripts.  When used to qualify method
-             * names, its prefix and uri references are copied to the QName.
-             */
-            obj->clearProto();
-            obj->clearParent();
-
-            JS_LOCK_GC(rt);
-            if (!rt->functionNamespaceObject)
-                rt->functionNamespaceObject = obj;
-            else
-                obj = rt->functionNamespaceObject;
-        }
-        JS_UNLOCK_GC(rt);
+        cx->compartment->functionNamespaceObject = obj;
     }
     vp->setObject(*obj);
-    return JS_TRUE;
+
+    return true;
 }
 
 /*
@@ -7329,66 +7317,38 @@ anyname_toString(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSRuntime *rt;
     JSObject *obj;
-    JSBool ok;
 
-    /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
-    rt = cx->runtime;
-    obj = rt->anynameObject;
+    obj = cx->compartment->anynameObject;
     if (!obj) {
-        JS_LOCK_GC(rt);
-        obj = rt->anynameObject;
-        if (!obj) {
-            JS_UNLOCK_GC(rt);
+        JSRuntime *rt = cx->runtime;
 
-            /*
-             * Protect multiple newborns created below, in the do-while(0)
-             * loop used to ensure that we leave this local root scope.
-             */
-            ok = js_EnterLocalRootScope(cx);
-            if (!ok)
-                return JS_FALSE;
+        obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
+        if (!obj)
+            return false;
 
-            do {
-                obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
-                if (!obj) {
-                    ok = JS_FALSE;
-                    break;
-                }
-                InitXMLQName(obj, rt->emptyString, rt->emptyString,
-                             ATOM_TO_STRING(rt->atomState.starAtom));
-                METER(xml_stats.qname);
+        InitXMLQName(obj, rt->emptyString, rt->emptyString,
+                     ATOM_TO_STRING(rt->atomState.starAtom));
+        METER(xml_stats.qname);
 
-                /*
-                 * Avoid entraining any Object.prototype found via cx's scope
-                 * chain or global object.  This loses the default toString,
-                 * but no big deal: we want to customize toString anyway for
-                 * clearer diagnostics.
-                 */
-                if (!JS_DefineFunction(cx, obj, js_toString_str,
-                                       anyname_toString, 0, 0)) {
-                    ok = JS_FALSE;
-                    break;
-                }
-                JS_ASSERT(!obj->getProto());
-                JS_ASSERT(!obj->getParent());
-            } while (0);
+        /*
+         * Avoid entraining any Object.prototype found via cx's scope
+         * chain or global object.  This loses the default toString,
+         * but no big deal: we want to customize toString anyway for
+         * clearer diagnostics.
+         */
+        if (!JS_DefineFunction(cx, obj, js_toString_str,
+                               anyname_toString, 0, 0))
+            return false;
 
-            js_LeaveLocalRootScopeWithResult(cx, obj);
-            if (!ok)
-                return JS_FALSE;
+        JS_ASSERT(!obj->getProto());
+        JS_ASSERT(!obj->getParent());
 
-            JS_LOCK_GC(rt);
-            if (!rt->anynameObject)
-                rt->anynameObject = obj;
-            else
-                obj = rt->anynameObject;
-        }
-        JS_UNLOCK_GC(rt);
+        cx->compartment->anynameObject = obj;
     }
+
     *idp = OBJECT_TO_JSID(obj);
-    return JS_TRUE;
+    return true;
 }
 
 JSBool

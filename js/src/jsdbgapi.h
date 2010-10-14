@@ -159,6 +159,12 @@ JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 extern JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno);
 
+extern JS_PUBLIC_API(jsbytecode *)
+JS_FirstValidPC(JSContext *cx, JSScript *script);
+
+extern JS_PUBLIC_API(jsbytecode *)
+JS_EndPC(JSContext *cx, JSScript *script);
+
 extern JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun);
 
@@ -245,8 +251,8 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp);
 
-extern JS_PUBLIC_API(JSObject *)
-JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);
+extern JS_PUBLIC_API(JSBool)
+JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
