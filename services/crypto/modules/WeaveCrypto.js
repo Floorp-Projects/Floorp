@@ -71,6 +71,12 @@ WeaveCrypto.prototype = {
         }
     },
 
+    // This is its own method so that it can be overridden.
+    // (Components.Exception isn't thread-safe for instance)
+    makeException : function makeException(message, result) {
+        return Components.Exception(message, result);
+    },
+
     init : function() {
         try {
             // Preferences. Add observer so we get notified of changes.
@@ -124,7 +130,7 @@ WeaveCrypto.prototype = {
             nssfile.append("libnss3.so");
             break;
           default:
-            throw Components.Exception("unsupported platform: " + os, Cr.NS_ERROR_UNEXPECTED);
+            throw this.makeException("unsupported platform: " + os, Cr.NS_ERROR_UNEXPECTED);
         }
         this.log("Using NSS library " + nssfile.path);
 
@@ -524,31 +530,31 @@ WeaveCrypto.prototype = {
         let mechanism = this.nss.PK11_AlgtagToMechanism(this.algorithm);
         mechanism = this.nss.PK11_GetPadMechanism(mechanism);
         if (mechanism == this.nss.CKM_INVALID_MECHANISM)
-            throw Components.Exception("invalid algorithm (can't pad)", Cr.NS_ERROR_FAILURE);
+            throw this.makeException("invalid algorithm (can't pad)", Cr.NS_ERROR_FAILURE);
 
         let ctx, symKey, slot, ivParam;
         try {
             ivParam = this.nss.PK11_ParamFromIV(mechanism, ivItem.address());
             if (ivParam.isNull())
-                throw Components.Exception("can't convert IV to param", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("can't convert IV to param", Cr.NS_ERROR_FAILURE);
 
             slot = this.nss.PK11_GetInternalKeySlot();
             if (slot.isNull())
-                throw Components.Exception("can't get internal key slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("can't get internal key slot", Cr.NS_ERROR_FAILURE);
 
             symKey = this.nss.PK11_ImportSymKey(slot, mechanism, this.nss.PK11_OriginUnwrap, operation, keyItem.address(), null);
             if (symKey.isNull())
-                throw Components.Exception("symkey import failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("symkey import failed", Cr.NS_ERROR_FAILURE);
 
             ctx = this.nss.PK11_CreateContextBySymKey(mechanism, operation, symKey, ivParam);
             if (ctx.isNull())
-                throw Components.Exception("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
 
             let maxOutputSize = output.length;
             let tmpOutputSize = new ctypes.int(); // Note 1: NSS uses a signed int here...
 
             if (this.nss.PK11_CipherOp(ctx, output, tmpOutputSize.address(), maxOutputSize, input, input.length))
-                throw Components.Exception("cipher operation failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("cipher operation failed", Cr.NS_ERROR_FAILURE);
 
             let actualOutputSize = tmpOutputSize.value;
             let finalOutput = output.addressOfElement(actualOutputSize);
@@ -559,7 +565,7 @@ WeaveCrypto.prototype = {
             // cipher operation. You'd think it would be called PK11_CipherOpFinal...
             let tmpOutputSize2 = new ctypes.unsigned_int(); // Note 2: ...but an unsigned here!
             if (this.nss.PK11_DigestFinal(ctx, finalOutput, tmpOutputSize2.address(), maxOutputSize))
-                throw Components.Exception("cipher finalize failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("cipher finalize failed", Cr.NS_ERROR_FAILURE);
 
             actualOutputSize += tmpOutputSize2.value;
             let newOutput = ctypes.cast(output, ctypes.unsigned_char.array(actualOutputSize));
@@ -598,7 +604,7 @@ WeaveCrypto.prototype = {
 
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             // Generate the keypair.
             privKey = this.nss.PK11_GenerateKeyPairWithFlags(slot,
@@ -607,18 +613,18 @@ WeaveCrypto.prototype = {
                                                              pubKey.address(),
                                                              attrFlags, null);
             if (privKey.isNull())
-                throw Components.Exception("keypair generation failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("keypair generation failed", Cr.NS_ERROR_FAILURE);
             
             let s = this.nss.PK11_SetPrivateKeyNickname(privKey, "Weave User PrivKey");
             if (s)
-                throw Components.Exception("key nickname failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("key nickname failed", Cr.NS_ERROR_FAILURE);
 
             let wrappedPrivateKey = this._wrapPrivateKey(privKey, passphrase, salt, iv);
             out_wrappedPrivateKey.value = wrappedPrivateKey; // outparam
 
             let derKey = this.nss.SECKEY_EncodeDERSubjectPublicKeyInfo(pubKey);
             if (derKey.isNull())
-              throw Components.Exception("SECKEY_EncodeDERSubjectPublicKeyInfo failed", Cr.NS_ERROR_FAILURE);
+              throw this.makeException("SECKEY_EncodeDERSubjectPublicKeyInfo failed", Cr.NS_ERROR_FAILURE);
 
             let encodedPublicKey = this.encodeBase64(derKey.contents.data, derKey.contents.len);
             out_encodedPublicKey.value = encodedPublicKey; // outparam
@@ -658,27 +664,27 @@ WeaveCrypto.prototype = {
             break;
 
           default:
-            throw Components.Exception("unknown algorithm", Cr.NS_ERROR_FAILURE);
+            throw this.makeException("unknown algorithm", Cr.NS_ERROR_FAILURE);
         }
 
         let slot, randKey, keydata;
         try {
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             randKey = this.nss.PK11_KeyGen(slot, keygenMech, null, keySize, null);
             if (randKey.isNull())
-                throw Components.Exception("PK11_KeyGen failed.", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_KeyGen failed.", Cr.NS_ERROR_FAILURE);
 
             // Slightly odd API, this call just prepares the key value for
             // extraction, we get the actual bits from the call to PK11_GetKeyData().
             if (this.nss.PK11_ExtractKeyValue(randKey))
-                throw Components.Exception("PK11_ExtractKeyValue failed.", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_ExtractKeyValue failed.", Cr.NS_ERROR_FAILURE);
 
             keydata = this.nss.PK11_GetKeyData(randKey);
             if (keydata.isNull())
-                throw Components.Exception("PK11_GetKeyData failed.", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_GetKeyData failed.", Cr.NS_ERROR_FAILURE);
 
             return this.encodeBase64(keydata.contents.data, keydata.contents.len);
         } catch (e) {
@@ -709,7 +715,7 @@ WeaveCrypto.prototype = {
         // Temporary buffer to hold the generated data.
         let scratch = new ctypes.ArrayType(ctypes.unsigned_char, byteCount)();
         if (this.nss.PK11_GenerateRandom(scratch, byteCount))
-            throw Components.Exception("PK11_GenrateRandom failed", Cr.NS_ERROR_FAILURE);
+            throw this.makeException("PK11_GenrateRandom failed", Cr.NS_ERROR_FAILURE);
 
         return this.encodeBase64(scratch.address(), scratch.length);
     },
@@ -732,7 +738,7 @@ WeaveCrypto.prototype = {
         try {
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             // ImportSymKey wants a mechanism, from which it derives the key type.
             let keyMech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
@@ -741,7 +747,7 @@ WeaveCrypto.prototype = {
             // really matter because we're just going to wrap it up and not use it.
             symKey = this.nss.PK11_ImportSymKey(slot, keyMech, this.nss.PK11_OriginUnwrap, this.nss.CKA_ENCRYPT, symKeyData.address(), null);
             if (symKey.isNull())
-                throw Components.Exception("symkey import failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("symkey import failed", Cr.NS_ERROR_FAILURE);
 
             // Step 3. Put the public key bits into a P11 key object.
 
@@ -749,11 +755,11 @@ WeaveCrypto.prototype = {
             // pubKey = SECKEY_ImportDERPublicKey(&pubKeyData, CKK_RSA);
             pubKeyInfo = this.nss.SECKEY_DecodeDERSubjectPublicKeyInfo(pubKeyData.address());
             if (pubKeyInfo.isNull())
-                throw Components.Exception("SECKEY_DecodeDERSubjectPublicKeyInfo failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("SECKEY_DecodeDERSubjectPublicKeyInfo failed", Cr.NS_ERROR_FAILURE);
 
             pubKey = this.nss.SECKEY_ExtractPublicKey(pubKeyInfo);
             if (pubKey.isNull())
-                throw Components.Exception("SECKEY_ExtractPublicKey failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("SECKEY_ExtractPublicKey failed", Cr.NS_ERROR_FAILURE);
 
             // Step 4. Wrap the symmetric key with the public key.
 
@@ -761,7 +767,7 @@ WeaveCrypto.prototype = {
 
             let s = this.nss.PK11_PubWrapSymKey(wrapMech, pubKey, symKey, wrappedKey.address());
             if (s)
-                throw Components.Exception("PK11_PubWrapSymKey failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_PubWrapSymKey failed", Cr.NS_ERROR_FAILURE);
 
             // Step 5. Base64 encode the wrapped key, cleanup, and return to caller.
             return this.encodeBase64(wrappedKey.data, wrappedKey.len);
@@ -801,16 +807,16 @@ WeaveCrypto.prototype = {
             let wrapMech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
             wrapMech = this.nss.PK11_GetPadMechanism(wrapMech);
             if (wrapMech == this.nss.CKM_INVALID_MECHANISM)
-                throw Components.Exception("unwrapSymKey: unknown key mech", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("unwrapSymKey: unknown key mech", Cr.NS_ERROR_FAILURE);
 
             ivParam = this.nss.PK11_ParamFromIV(wrapMech, ivItem.address());
             if (ivParam.isNull())
-                throw Components.Exception("unwrapSymKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("unwrapSymKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
 
             // Step 3. Unwrap the private key with the key from the passphrase.
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             // Normally, one wants to associate a private key with a public key.
             // P11_UnwrapPrivKey() passes its keyID arg to PK11_MakeIDFromPubKey(),
@@ -831,7 +837,7 @@ WeaveCrypto.prototype = {
                                                   privKeyUsage.addressOfElement(0), privKeyUsageLength,
                                                   null);  // wincx
             if (privKey.isNull())
-                throw Components.Exception("PK11_UnwrapPrivKey failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_UnwrapPrivKey failed", Cr.NS_ERROR_FAILURE);
 
             // Step 4. Unwrap the symmetric key with the user's private key.
 
@@ -840,15 +846,15 @@ WeaveCrypto.prototype = {
             symKey = this.nss.PK11_PubUnwrapSymKey(privKey, wrappedSymKey.address(), wrapMech,
                                                    this.nss.CKA_DECRYPT, 0);
             if (symKey.isNull())
-                throw Components.Exception("PK11_PubUnwrapSymKey failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_PubUnwrapSymKey failed", Cr.NS_ERROR_FAILURE);
 
             // Step 5. Base64 encode the unwrapped key, cleanup, and return to caller.
             if (this.nss.PK11_ExtractKeyValue(symKey))
-                throw Components.Exception("PK11_ExtractKeyValue failed.", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_ExtractKeyValue failed.", Cr.NS_ERROR_FAILURE);
 
             symKeyData = this.nss.PK11_GetKeyData(symKey);
             if (symKeyData.isNull())
-                throw Components.Exception("PK11_GetKeyData failed.", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_GetKeyData failed.", Cr.NS_ERROR_FAILURE);
 
             return this.encodeBase64(symKeyData.contents.data, symKeyData.contents.len);
         } catch (e) {
@@ -888,16 +894,16 @@ WeaveCrypto.prototype = {
             let wrapMech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
             wrapMech = this.nss.PK11_GetPadMechanism(wrapMech);
             if (wrapMech == this.nss.CKM_INVALID_MECHANISM)
-                throw Components.Exception("rewrapSymKey: unknown key mech", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("rewrapSymKey: unknown key mech", Cr.NS_ERROR_FAILURE);
 
             ivParam = this.nss.PK11_ParamFromIV(wrapMech, ivItem.address());
             if (ivParam.isNull())
-                throw Components.Exception("rewrapSymKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("rewrapSymKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
 
             // Step 3. Unwrap the private key with the key from the passphrase.
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             let keyID = ivItem.address();
 
@@ -911,7 +917,7 @@ WeaveCrypto.prototype = {
                                                   privKeyUsage.addressOfElement(0), privKeyUsageLength,
                                                   null);  // wincx
             if (privKey.isNull())
-                throw Components.Exception("PK11_UnwrapPrivKey failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_UnwrapPrivKey failed", Cr.NS_ERROR_FAILURE);
 
             // Step 4. Rewrap the private key with the new passphrase.
             return this._wrapPrivateKey(privKey, newPassphrase, salt, iv);
@@ -950,16 +956,16 @@ WeaveCrypto.prototype = {
             let wrapMech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
             wrapMech = this.nss.PK11_GetPadMechanism(wrapMech);
             if (wrapMech == this.nss.CKM_INVALID_MECHANISM)
-                throw Components.Exception("rewrapSymKey: unknown key mech", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("rewrapSymKey: unknown key mech", Cr.NS_ERROR_FAILURE);
 
             ivParam = this.nss.PK11_ParamFromIV(wrapMech, ivItem.address());
             if (ivParam.isNull())
-                throw Components.Exception("rewrapSymKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("rewrapSymKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
 
             // Step 3. Unwrap the private key with the key from the passphrase.
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             let keyID = ivItem.address();
 
@@ -1053,15 +1059,15 @@ WeaveCrypto.prototype = {
             algid = this.nss.PK11_CreatePBEV2AlgorithmID(pbeAlg, cipherAlg, prfAlg,
                                                         keyLength, iterations, saltItem.address());
             if (algid.isNull())
-                throw Components.Exception("PK11_CreatePBEV2AlgorithmID failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_CreatePBEV2AlgorithmID failed", Cr.NS_ERROR_FAILURE);
 
             slot = this.nss.PK11_GetInternalSlot();
             if (slot.isNull())
-                throw Components.Exception("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("couldn't get internal slot", Cr.NS_ERROR_FAILURE);
 
             symKey = this.nss.PK11_PBEKeyGen(slot, algid, passItem.address(), false, null);
             if (symKey.isNull())
-                throw Components.Exception("PK11_PBEKeyGen failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("PK11_PBEKeyGen failed", Cr.NS_ERROR_FAILURE);
         } catch (e) {
             this.log("_deriveKeyFromPassphrase: failed: " + e);
             throw e;
@@ -1089,11 +1095,11 @@ WeaveCrypto.prototype = {
             let wrapMech = this.nss.PK11_AlgtagToMechanism(this.algorithm);
             wrapMech = this.nss.PK11_GetPadMechanism(wrapMech);
             if (wrapMech == this.nss.CKM_INVALID_MECHANISM)
-                throw Components.Exception("wrapPrivKey: unknown key mech", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("wrapPrivKey: unknown key mech", Cr.NS_ERROR_FAILURE);
 
             let ivParam = this.nss.PK11_ParamFromIV(wrapMech, ivItem.address());
             if (ivParam.isNull())
-                throw Components.Exception("wrapPrivKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("wrapPrivKey: PK11_ParamFromIV failed", Cr.NS_ERROR_FAILURE);
 
             // Use a buffer to hold the wrapped key. NSS says about 1200 bytes for
             // a 2048-bit RSA key, so a 4096 byte buffer should be plenty.
@@ -1105,7 +1111,7 @@ WeaveCrypto.prototype = {
                                               wrapMech, ivParam,
                                               wrappedKey.address(), null);
             if (s)
-                throw Components.Exception("wrapPrivKey: PK11_WrapPrivKey failed", Cr.NS_ERROR_FAILURE);
+                throw this.makeException("wrapPrivKey: PK11_WrapPrivKey failed", Cr.NS_ERROR_FAILURE);
 
             return this.encodeBase64(wrappedKey.data, wrappedKey.len);
         } catch (e) {
