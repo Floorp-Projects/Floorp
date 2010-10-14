@@ -257,7 +257,7 @@ nsHTMLLIAccessible::
   nsHyperTextAccessibleWrap(aContent, aShell)
 {
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
-  if (blockFrame && !blockFrame->BulletIsEmpty()) {
+  if (blockFrame && !blockFrame->BulletIsEmptyExternal()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mContent, mWeakShell);
     if (mBulletAccessible)
       mBulletAccessible->Init();
