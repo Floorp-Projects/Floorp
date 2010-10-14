@@ -795,6 +795,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute AString layerManagerType;
 
   /**
+   * The DPI of the display
+   */
+  readonly attribute float displayDPI;
+
+  /**
    * Return the outer window with the given ID, if any.  Can return null.
    */
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
