@@ -173,7 +173,7 @@ nsFileStream::SetEOF()
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileInputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsFileInputStream, 
+NS_IMPL_ISUPPORTS_INHERITED3(nsFileInputStream,
                              nsFileStream,
                              nsIInputStream,
                              nsIFileInputStream,
@@ -331,6 +331,10 @@ nsFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     // the writer does not consume all data.  If you want to call ReadSegments,
     // wrap a BufferedInputStream around the file stream.  That will call
     // Read().
+
+    // If this is ever implemented you might need to modify
+    // nsPartialFileInputStream::ReadSegments
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -357,6 +361,115 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     }
 
     return nsFileStream::Seek(aWhence, aOffset);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsPartialFileInputStream
+
+// Don't forward to nsFileInputStream as we don't want to QI to
+// nsIFileInputStream
+NS_IMPL_ISUPPORTS_INHERITED3(nsPartialFileInputStream,
+                             nsFileStream,
+                             nsIInputStream,
+                             nsIPartialFileInputStream,
+                             nsILineInputStream)
+
+nsresult
+nsPartialFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID,
+                                 void **aResult)
+{
+    NS_ENSURE_NO_AGGREGATION(aOuter);
+
+    nsPartialFileInputStream* stream = new nsPartialFileInputStream();
+
+    NS_ADDREF(stream);
+    nsresult rv = stream->QueryInterface(aIID, aResult);
+    NS_RELEASE(stream);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsPartialFileInputStream::Init(nsIFile* aFile, PRUint64 aStart,
+                               PRUint64 aLength, PRInt32 aIOFlags,
+                               PRInt32 aPerm, PRInt32 aBehaviorFlags)
+{
+    mStart = aStart;
+    mLength = aLength;
+    mPosition = 0;
+
+    nsresult rv = nsFileInputStream::Init(aFile, aIOFlags, aPerm,
+                                          aBehaviorFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    return nsFileInputStream::Seek(NS_SEEK_SET, mStart);
+}
+
+NS_IMETHODIMP
+nsPartialFileInputStream::Tell(PRInt64 *aResult)
+{
+    PRInt64 tell;
+    nsresult rv = nsFileInputStream::Tell(&tell);
+    if (NS_SUCCEEDED(rv)) {
+        *aResult = tell - mStart;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsPartialFileInputStream::Available(PRUint32* aResult)
+{
+    PRUint32 available;
+    nsresult rv = nsFileInputStream::Available(&available);
+    if (NS_SUCCEEDED(rv)) {
+        *aResult = TruncateSize(available);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsPartialFileInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aResult)
+{
+    PRUint32 readsize = TruncateSize(aCount);
+    if (readsize == 0 && mBehaviorFlags & CLOSE_ON_EOF) {
+        Close();
+        *aResult = 0;
+        return NS_OK;
+    }
+
+    nsresult rv = nsFileInputStream::Read(aBuf, readsize, aResult);
+    if (NS_SUCCEEDED(rv)) {
+        mPosition += readsize;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsPartialFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
+{
+    PRInt64 offset;
+    switch (aWhence) {
+        case NS_SEEK_SET:
+            offset = mStart + aOffset;
+            break;
+        case NS_SEEK_CUR:
+            offset = mStart + mPosition + aOffset;
+            break;
+        case NS_SEEK_END:
+            offset = mStart + mLength + aOffset;
+            break;
+        default:
+            return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    if (offset < (PRInt64)mStart || offset > (PRInt64)(mStart + mLength)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv = nsFileInputStream::Seek(NS_SEEK_SET, offset);
+    if (NS_SUCCEEDED(rv)) {
+        mPosition = offset - mStart;
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

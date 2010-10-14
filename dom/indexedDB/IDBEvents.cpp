@@ -51,16 +51,6 @@
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
 
-#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(_class, _condition)  \
-  if ((_condition) && (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||               \
-                       aIID.Equals(NS_GET_IID(nsXPCClassInfo)))) {            \
-    foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
-    if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
-      return NS_ERROR_OUT_OF_MEMORY;                                          \
-    }                                                                         \
-  } else
-
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
