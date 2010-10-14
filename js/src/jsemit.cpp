@@ -6809,12 +6809,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif /* JS_HAS_GENERATORS */
 
-        /*
-         * Use the slower NEWINIT for arrays in scripts containing sharps, and when
-         * the array length exceeds MIN_SPARSE_INDEX and can be slowified during GC.
-         * :FIXME: bug 607825 handle slowify case.
-         */
-        if (cg->hasSharps() || pn->pn_count >= MIN_SPARSE_INDEX) {
+        /* Use the slower NEWINIT for arrays in scripts containing sharps. */
+        if (cg->hasSharps()) {
             if (!EmitNewInit(cx, cg, JSProto_Array, pn, sharpnum))
                 return JS_FALSE;
         } else {
