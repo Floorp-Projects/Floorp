@@ -115,12 +115,16 @@ PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
     if (entry->kpc == pc && entry->kshape == shape && CX_OWNS_OBJECT_TITLE(cx, obj))
         return true;
 
+#ifdef DEBUG
+    JSObject *orig = obj;
+#endif
     JSAtom *atom = fullTest(cx, pc, &obj, obj2p, entry);
-    JS_ASSERT(atom);
-
-    PCMETER(misses++);
-    PCMETER(setmisses++);
-
+    if (atom) {
+        PCMETER(misses++);
+        PCMETER(setmisses++);
+    } else {
+        JS_ASSERT(obj == orig);
+    }
     *atomp = atom;
     return false;
 }
