@@ -341,7 +341,7 @@ var gSyncSetup = {
     // xxxmpc - hack, sigh
     if (el1.value == document.getElementById("weavePassword").value) {
       valid = false;
-      str = Weave.Utils.getErrorString("change.passphrase.ppSameAsPassword");
+      str = Weave.Utils.getErrorString("change.synckey.sameAsPassword");
     }
     else {
       [valid, str] = gSyncUtils.validatePassphrase(el1);
@@ -349,8 +349,11 @@ var gSyncSetup = {
 
     let feedback = document.getElementById("passphraseFeedbackRow");
     this._setFeedback(feedback, valid, str);
-    if (!valid)
+    if (!valid) {
+      // Hide strength meter if we're displaying an error.
+      document.getElementById("passphraseStrengthRow").hidden = true;
       return valid;
+    }
 
     // No passphrase strength meter for the generated key.
     if (!this._haveCustomSyncKey)
