@@ -961,6 +961,26 @@ NS_NewLocalFileInputStream(nsIInputStream **result,
 }
 
 inline nsresult
+NS_NewPartialLocalFileInputStream(nsIInputStream **result,
+                                  nsIFile         *file,
+                                  PRUint64         offset,
+                                  PRUint64         length,
+                                  PRInt32          ioFlags       = -1,
+                                  PRInt32          perm          = -1,
+                                  PRInt32          behaviorFlags = 0)
+{
+    nsresult rv;
+    nsCOMPtr<nsIPartialFileInputStream> in =
+        do_CreateInstance(NS_PARTIALLOCALFILEINPUTSTREAM_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = in->Init(file, offset, length, ioFlags, perm, behaviorFlags);
+        if (NS_SUCCEEDED(rv))
+            rv = CallQueryInterface(in, result);
+    }
+    return rv;
+}
+
+inline nsresult
 NS_NewLocalFileOutputStream(nsIOutputStream **result,
                             nsIFile          *file,
                             PRInt32           ioFlags       = -1,
