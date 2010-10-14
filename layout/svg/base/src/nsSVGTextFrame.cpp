@@ -101,8 +101,7 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
   } else if (aAttribute == nsGkAtoms::x ||
              aAttribute == nsGkAtoms::y ||
              aAttribute == nsGkAtoms::dx ||
-             aAttribute == nsGkAtoms::dy ||
-             aAttribute == nsGkAtoms::rotate) {
+             aAttribute == nsGkAtoms::dy) {
     NotifyGlyphMetricsChange();
   }
 
