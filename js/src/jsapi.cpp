@@ -1296,9 +1296,9 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
 
         // First, we wrap it in the new compartment. This will return a
         // new wrapper.
-        JSAutoEnterCompartment ec;
+        AutoCompartment ac(cx, wobj);
         JSObject *tobj = obj;
-        if (!ec.enter(cx, wobj) || !wcompartment->wrap(cx, &tobj))
+        if (!ac.enter() || !wcompartment->wrap(cx, &tobj))
             return NULL;
 
         // Now, because we need to maintain object identity, we do a brain
@@ -1313,9 +1313,9 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
 
     // Lastly, update the old outer window proxy to point to the new one.
     {
-        JSAutoEnterCompartment ac;
+        AutoCompartment ac(cx, wrapper);
         JSObject *tobj = obj;
-        if (!ac.enter(cx, wrapper) || !JS_WrapObject(cx, &tobj))
+        if (!ac.enter() || !JS_WrapObject(cx, &tobj))
             return NULL;
         if (!wrapper->swap(cx, tobj))
             return NULL;
