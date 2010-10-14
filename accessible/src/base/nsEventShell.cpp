@@ -455,7 +455,7 @@ nsAccEventQueue::ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
   for (PRUint32 index = aStart; index < aEnd; index ++) {
     AccEvent* accEvent = mEvents[index];
     if (accEvent->mEventType == aEventType &&
-        accEvent->mEventRule != AccEvent::eDoNotEmit &&
+        accEvent->mEventRule != AccEvent::eDoNotEmit && accEvent->mNode &&
         accEvent->mNode->GetNodeParent() == aNode->GetNodeParent()) {
       accEvent->mEventRule = aEventRule;
     }
