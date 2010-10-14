@@ -4594,10 +4594,12 @@ TraceRecorder::compile()
     /* Associate a filename and line number with the fragment. */
     const char* filename = cx->fp()->script()->filename;
     char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
-    sprintf(label, "%s:%u", filename ? filename : "<stdin>",
-            js_FramePCToLineNumber(cx, cx->fp()));
-    lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
-    js_free(label);
+    if (label) {
+        sprintf(label, "%s:%u", filename ? filename : "<stdin>",
+                js_FramePCToLineNumber(cx, cx->fp()));
+        lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
+        js_free(label);
+    }
 #endif
 
     Assembler *assm = traceMonitor->assembler;
