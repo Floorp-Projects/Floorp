@@ -75,14 +75,14 @@ gTests.push({
 
     // Focus the url edit
     let urlbarEdit = document.getElementById("urlbar-edit");
-    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
 
     // Wait for the awesomebar to load, then do the test
-    window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);
+    window.addEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
+    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
   },
 
   onFocusReady: function() {
-    window.removeEventListener("popupshown", gCurrentTest.onFocusReady, false);
+    window.removeEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
 
     // Test mode
     let urlIcons = document.getElementById("urlbar-icons");
@@ -202,14 +202,14 @@ gTests.push({
   onPageReady3: function(){
     let urlbarEdit = document.getElementById("urlbar-edit");
     is(urlbarEdit.value, "Browser Blank Page 01", "The title of the first page must be displayed");
-    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
 
     // Wait for the awesomebar to load, then do the test
-    window.addEventListener("popupshown", gCurrentTest.onFocusReady, false);
+    window.addEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
+    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
   },
 
   onFocusReady: function() {
-    window.removeEventListener("popupshown", gCurrentTest.onFocusReady, false);
+    window.removeEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
     EventUtils.synthesizeString(testURL_02, window);
     EventUtils.synthesizeKey("VK_RETURN", {}, window)
 

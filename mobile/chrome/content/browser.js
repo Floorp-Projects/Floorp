@@ -2490,7 +2490,7 @@ Tab.prototype = {
     this._chromeTab = null;
     this._destroyBrowser();
   },
-  
+
   resurrect: function resurrect() {
     let dead = this._browser;
 
@@ -2550,8 +2550,9 @@ Tab.prototype = {
 
   _destroyBrowser: function _destroyBrowser() {
     if (this._browser) {
-      var browser = this._browser;
+      let browser = this._browser;
       browser.removeProgressListener(this._listener);
+      browser.messageManager.sendAsyncMessage("Browser:Blur", {});
 
       this._browser = null;
       this._listener = null;
