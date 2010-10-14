@@ -12,7 +12,21 @@
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="autocomplete-aligned" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
+      <constructor>
+        <![CDATA[
+          window.addEventListener("keydown", this, true);
+          window.addEventListener("PopupChanged", this, true);
+          window.addEventListener("PanBegin", this, true);
+        ]]>
+      </constructor>
+      <desctructor>
+        <![CDATA[
+          window.removeEventListener("keydown", this, true);
+          window.removeEventListener("PopupChanged", this, true);
+          window.removeEventListener("PanBegin", this, true);
+        ]]>
+      </desctructor>
       <property name="mIgnoreFocus" onget="return true;" onset="val;"/>
       <property name="mIgnoreClick" onget="return true;" onset="val;"/>
       <property name="readOnly" onget="return this.inputField.readOnly;">
@@ -28,6 +42,7 @@
           // to be set properly (bug 488420)
           this.inputField.blur();
           this.inputField.focus();
+
           return val;
         ]]></setter>
       </property>
@@ -47,7 +62,39 @@
             this.showHistoryPopup();
         ]]></body>
       </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.type) {
+            case "keydown":
+              // If there is no VKB the user won't be able to enter any letter,
+              // but if the urlbar receive a keydown when it is readOnly this
+              // could be because of a hardware keyboard or a user generated event.
+              // In this case we want the text to be taken into account.
+              if (this.hasAttribute("open") && !this.hasAttribute("inactive") && this.readOnly &&
+                  !(aEvent.originalTarget instanceof HTMLInputElement))
+                this.readOnly = false;
+
+              break;
+            case "PopupChanged":
+              if (aEvent.detail)
+                this.setAttribute("inactive", "true");
+              else
+                this.removeAttribute("inactive");
+              break;
+
+            case "PanBegin":
+              if (this.hasAttribute("open") && !this.readOnly) {
+                this.readOnly = true;
+                this.blur();
+              }
+            break;
+          }
+        ]]></body>
+      </method>
     </implementation>
+
     <handlers>
       <handler event="text" phase="bubbling">
         <![CDATA[
