@@ -113,8 +113,17 @@ FormAssistant.prototype = {
 
     // Checking if the element is the current focused one while the form assistant is open
     // allow the user to reposition the caret into an input element
-    if (this._open && aElement == this.currentElement)
+    if (this._open && aElement == this.currentElement) {
+      //hack bug 604351
+      // if the element is the same editable element and the VKB is closed, reopen it
+      let utils = Util.getWindowUtils(content);
+      if (utils.IMEStatus == utils.IME_STATUS_DISABLED && aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) {
+        aElement.blur();
+        aElement.focus();
+      }
+
       return false;
+    }
 
     // If form assistant is disabled but the element of a type of choice list
     // we still want to show the simple select list
