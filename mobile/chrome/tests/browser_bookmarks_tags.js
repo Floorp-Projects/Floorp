@@ -65,8 +65,13 @@ gTests.push({
     let bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
     ok(bookmarkItem != -1, testURL_02 + " should be added.");
 
-    // Open the bookmark list
+    // Wait for the bookmarks to load, then do the test
+    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
     BrowserUI.doCommand("cmd_bookmarks");
+  },
+
+  onBookmarksReady: function() {
+    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
 
     // Go into edit mode
     let bookmark = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_02);
@@ -100,8 +105,14 @@ gTests.push({
   desc: "Test editing tags to bookmark",
 
   run: function() {
-    // Open the bookmark list
+    // Wait for the bookmarks to load, then do the test
+    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
     BrowserUI.doCommand("cmd_bookmarks");
+  },
+
+  onBookmarksReady: function() {
+    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+
 
     // Go into edit mode
     let bookmark = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_02);
@@ -143,8 +154,13 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    // Open the bookmark list
+    // Wait for the bookmarks to load, then do the test
+    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
     BrowserUI.doCommand("cmd_bookmarks");
+  },
+
+  onBookmarksReady: function() {
+    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
 
     // Go into edit mode
     let bookmark = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_02);

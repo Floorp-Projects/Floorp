@@ -17,7 +17,9 @@
       <property name="mIgnoreClick" onget="return true;" onset="val;"/>
       <property name="readOnly" onget="return this.inputField.readOnly;">
         <setter><![CDATA[
-          this._ignoreController = true;
+          if (val == this.inputField.readOnly)
+            return;
+
           this.inputField.readOnly = val;
           val ? this.setAttribute("readonly", "true")
               : this.removeAttribute("readonly");
@@ -26,18 +28,9 @@
           // to be set properly (bug 488420)
           this.inputField.blur();
           this.inputField.focus();
-
-          this._ignoreController = false;
           return val;
         ]]></setter>
       </property>
-
-      <method name="attachController">
-        <body><![CDATA[
-          if (!this._ignoreController && this.mController.input != this)
-            this.mController.input = this;
-        ]]></body>
-      </method>
 
       <method name="openPopup">
         <body><![CDATA[
@@ -248,7 +241,6 @@
       <!-- Helper used by active dialog system -->
       <method name="close">
         <body><![CDATA[
-          this.input.reset();
           this.closePopup();
         ]]></body>
       </method>

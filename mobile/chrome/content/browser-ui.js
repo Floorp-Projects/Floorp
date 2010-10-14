@@ -168,13 +168,6 @@ var BrowserUI = {
     this.updateStar();
   },
 
-  showToolbar: function showToolbar(aEdit) {
-    this.hidePanel();
-    this._editURI(aEdit);
-    if (aEdit)
-      this.showAutoComplete();
-  },
-
   _toolbarLocked: 0,
 
   isToolbarLocked: function isToolbarLocked() {
@@ -198,35 +191,31 @@ var BrowserUI = {
   },
 
   _setURI: function _setURI(aCaption) {
-    if (this._edit.hasAttribute("open"))
+    if (this.activePanel)
       this._edit.defaultValue = aCaption;
     else
       this._edit.value = aCaption;
   },
 
   _editURI: function _editURI(aEdit) {
-    if (aEdit) {
-      // If the urlbar is not opened yet, inform the broadcaster and then
-      // save the current value as a default value to display once the awesome
-      // panel will be dismissed
-      let isOpened = this._edit.hasAttribute("open");
-      if (!isOpened) {
-        Elements.urlbarState.setAttribute("mode", "edit");
-        this._edit.defaultValue = this._edit.value;
+    Elements.urlbarState.setAttribute("mode", "edit");
+    this._edit.defaultValue = this._edit.value;
 
-        // Now, replace the web page title by the url of the page
-        let urlString = this.getDisplayURI(Browser.selectedBrowser);
-        if (Util.isURLEmpty(urlString))
-          urlString = "";
-        this._edit.value = urlString;
-      }
-    }
-    else if (!aEdit) {
-      this._updateToolbar();
-    }
+    this._showURI();
+  },
+
+  _showURI: function _showURI() {
+    // Replace the web page title by the url of the page
+    let urlString = this.getDisplayURI(Browser.selectedBrowser);
+    if (Util.isURLEmpty(urlString))
+      urlString = "";
+
+    this._edit.value = urlString;
   },
 
   updateAwesomeHeader: function updateAwesomeHeader(aString) {
+    document.getElementById("awesome-header").hidden = (aString != "");
+
     // During an awesome search we always show the popup_autocomplete/AllPagesList
     // panel since this looks in every places and the rationale behind typing
     // is to find something, whereever it is.
@@ -244,7 +233,9 @@ var BrowserUI = {
       return;
     }
 
-    document.getElementById("awesome-header").hidden = (aString != "");
+    let event = document.createEvent("Events");
+    event.initEvent("onsearchbegin", true, true);
+    this._edit.dispatchEvent(event);
   },
 
   _closeOrQuit: function _closeOrQuit() {
@@ -269,24 +260,48 @@ var BrowserUI = {
     if (this._activePanel == aPanel)
       return;
 
-    let container = document.getElementById("awesome-panels");
+    let awesomePanel = document.getElementById("awesome-panels");
+    let awesomeHeader = document.getElementById("awesome-header");
+
+    let willShowPanel = (!this._activePanel && aPanel);
+    if (willShowPanel) {
+      this.pushDialog(aPanel);
+      this._edit.attachController();
+      this._editURI();
+      awesomePanel.hidden = awesomeHeader.hidden = false;
+    };
+
     if (aPanel) {
-      container.hidden = false;
       aPanel.open();
-    } else {
-      container.hidden = true;
-      this.showToolbar(false);
-      document.getElementById("awesome-header").hidden = false;
+      if (this._edit.value == "")
+        this._showURI();
     }
 
-    this._edit.readOnly = !(aPanel == AllPagesList && Util.isPortrait());
-    if (this._edit.readOnly)
-      this._edit.blur();
+    let willHidePanel = (this._activePanel && !aPanel);
+    if (willHidePanel) {
+      awesomePanel.hidden = true;
+      awesomeHeader.hidden = false;
+      this._updateToolbar();
+      this._edit.reset();
+      this._edit.detachController();
+      this.popDialog();
+    }
 
     if (this._activePanel)
       this._activePanel.close();
 
+    // The readOnly state of the field enabled/disabled the VKB
+    let isReadOnly = !(aPanel == AllPagesList && Util.isPortrait());
+    this._edit.readOnly = isReadOnly;
+    if (isReadOnly)
+      this._edit.blur();
+
     this._activePanel = aPanel;
+    if (willHidePanel || willShowPanel) {
+      let event = document.createEvent("UIEvents");
+      event.initUIEvent("NavigationPanel" + (willHidePanel ? "Hidden" : "Shown"), true, true, window, false);
+      window.dispatchEvent(event);
+    }
   },
 
   get activeDialog() {
@@ -428,6 +443,8 @@ var BrowserUI = {
     messageManager.addMessageListener("DOMTitleChanged", this);
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMWindowClose", this);
+    // XXX bug 604192
+    messageManager.addMessageListener("pagehide", this);
 
     messageManager.addMessageListener("Browser:OpenURI", this);
     messageManager.addMessageListener("Browser:SaveAs:Return", this);
@@ -542,7 +559,7 @@ var BrowserUI = {
 
   /* Set the location to the current content */
   updateURI: function() {
-    var browser = Browser.selectedBrowser;
+    let browser = Browser.selectedBrowser;
 
     // FIXME: deckbrowser should not fire TabSelect on the initial tab (bug 454028)
     if (!browser.currentURI)
@@ -554,7 +571,7 @@ var BrowserUI = {
     // Check for a bookmarked page
     this.updateStar();
 
-    var urlString = this.getDisplayURI(browser);
+    let urlString = this.getDisplayURI(browser);
     if (Util.isURLEmpty(urlString))
       urlString = "";
 
@@ -571,7 +588,7 @@ var BrowserUI = {
 
     // Give the new page lots of room
     Browser.hideSidebars();
-    this.closeAutoComplete(true);
+    this.closeAutoComplete();
 
     this._edit.value = aURI;
 
@@ -592,13 +609,9 @@ var BrowserUI = {
     this.activePanel = AllPagesList;
   },
 
-  closeAutoComplete: function closeAutoComplete(aResetInput) {
-    if (this.isAutoCompleteOpen()) {
-      if (aResetInput)
-        this._edit.popup.close();
-      else
-        this._edit.popup.closePopup();
-    }
+  closeAutoComplete: function closeAutoComplete() {
+    if (this.isAutoCompleteOpen())
+      this._edit.popup.closePopup();
 
     this.activePanel = null;
   },
@@ -613,7 +626,7 @@ var BrowserUI = {
 
     // Give the new page lots of room
     Browser.hideSidebars();
-    this.closeAutoComplete(false);
+    this.closeAutoComplete();
 
     // Make sure we're online before attempting to load
     Util.forceOnline();
@@ -643,12 +656,12 @@ var BrowserUI = {
 
     if (aURI == "about:blank") {
       // Display awesomebar UI
-      this.showToolbar(true);
+      this.showAutoComplete();
     }
     else {
       // Give the new page lots of room
       Browser.hideSidebars();
-      this.closeAutoComplete(true);
+      this.closeAutoComplete();
     }
 
     return tab;
@@ -829,7 +842,7 @@ var BrowserUI = {
             this.doCommand("cmd_menu");
             break;
           case "Search":
-            this.doCommand("cmd_openLocation");
+            AllPagesList.doCommand();
             break;
           default:
             break;
@@ -841,7 +854,7 @@ var BrowserUI = {
         if (this.activePanel && this._edit.readOnly)
           this._edit.readOnly = false;
         else if (!this.activePanel)
-          this.doCommand("cmd_openLocation");
+          AllPagesList.doCommand();
         break;
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
@@ -883,6 +896,15 @@ var BrowserUI = {
       case "DOMLinkAdded":
         if (Browser.selectedBrowser == browser)
           this._updateIcon(Browser.selectedBrowser.mIconURL);
+        break;
+      case "pagehide":
+        // XXX bug 60419, when a content web page is close the content sometimes
+        // dismiss the VKB, we're trying to avoid that by adding it back again.
+        let utils = Util.getWindowUtils(window);
+        if (this.activePanel && !this._edit.readOnly && browser.currentURI.spec != "about:blank" && utils.IMEStatus == utils.IME_STATUS_DISABLED) {
+          this._edit.readOnly = !this._edit.readOnly;
+          this._edit.readOnly = !this._edit.readOnly;
+        }
         break;
       case "Browser:SaveAs:Return":
         if (json.type != Ci.nsIPrintSettings.kOutputFormatPDF)
@@ -993,7 +1015,8 @@ var BrowserUI = {
         this.goToURI();
         break;
       case "cmd_openLocation":
-        this.showToolbar(true);
+        this.hidePanel();
+        this.showAutoComplete();
         break;
       case "cmd_star":
       {
@@ -1471,9 +1494,6 @@ var AwesomePanel = function(aElementId, aCommandId) {
   this.panel = document.getElementById(aElementId),
 
   this.open = function aw_open() {
-    if (!BrowserUI.activePanel)
-      BrowserUI.pushDialog(this);
-
     command.setAttribute("checked", "true");
     this.panel.hidden = false;
 
@@ -1497,8 +1517,10 @@ var AwesomePanel = function(aElementId, aCommandId) {
 
     this.panel.hidden = true;
     command.removeAttribute("checked", "true");
-    if (!BrowserUI.activePanel)
-      BrowserUI.popDialog();
+  },
+
+  this.doCommand = function aw_doCommand() {
+    BrowserUI.doCommand(aCommandId);
   },
 
   this.openLink = function aw_openLink(aEvent) {
