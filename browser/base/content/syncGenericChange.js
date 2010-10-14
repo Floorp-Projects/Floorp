@@ -147,12 +147,16 @@ let Change = {
   },
   
   _updateStatusWithString: function Change__updateStatusWithString(string, state) {
+    this._statusRow.hidden = false;
+    document.getElementById("passphraseStrengthRow").hidden = true;
     this._status.value = string;
     this._statusIcon.setAttribute("status", state);
 
     let error = state == "error";
     this._dialog.getButton("cancel").setAttribute("disabled", !error);
     this._dialog.getButton("accept").setAttribute("disabled", !error);
+    document.getElementById("printSyncKeyButton").disabled = !error;
+    document.getElementById("saveSyncKeyButton").disabled = !error;
 
     if (state == "success")
       window.setTimeout(window.close, 1500);
