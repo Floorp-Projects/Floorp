@@ -384,8 +384,8 @@ var gSyncSetup = {
         this.wizard.getButton("extra1").hidden = true;
         break;
       case NEW_ACCOUNT_PP_PAGE:
+        document.getElementById("saveSyncKeyButton").focus();
         let el = document.getElementById("weavePassphrase");
-        el.blur();
         if (!el.value)
           this.onPassphraseGenerate();
         this.checkFields();
