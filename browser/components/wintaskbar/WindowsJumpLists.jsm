@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jim Mathies <jmathies@mozilla.com>
+ *   Jim Mathies <jmathies@mozilla.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Constants
@@ -67,37 +68,28 @@ let EXPORTED_SYMBOLS = [
  */
 
 XPCOMUtils.defineLazyGetter(this, "_prefs", function() {
-  return Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService)
-           .getBranch(PREF_TASKBAR_BRANCH)
-           .QueryInterface(Ci.nsIPrefBranch2);
+  return Services.prefs.getBranch(PREF_TASKBAR_BRANCH)
+                       .QueryInterface(Ci.nsIPrefBranch2);
 });
 
 XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
-  return Cc["@mozilla.org/intl/stringbundle;1"]
-           .getService(Ci.nsIStringBundleService)
-           .createBundle("chrome://browser/locale/taskbar.properties");
+  return Services.strings
+                 .createBundle("chrome://browser/locale/taskbar.properties");
+});
+
+XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
+  Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+  return PlacesUtils;
+});
+
+XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
+  Components.utils.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "_taskbarService",
                                    "@mozilla.org/windows-taskbar;1",
                                    "nsIWinTaskbar");
-
-XPCOMUtils.defineLazyServiceGetter(this, "_navHistoryService",
-                                   "@mozilla.org/browser/nav-history-service;1",
-                                   "nsINavHistoryService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "_observerService",
-                                   "@mozilla.org/observer-service;1",
-                                   "nsIObserverService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "_directoryService",
-                                   "@mozilla.org/file/directory_service;1",
-                                   "nsIProperties");
-
-XPCOMUtils.defineLazyServiceGetter(this, "_ioService",
-                                   "@mozilla.org/network/io-service;1",
-                                   "nsIIOService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "_winShellService",
                                    "@mozilla.org/browser/shell-service;1",
@@ -205,7 +197,7 @@ var WinTaskbarJumpList =
 
     // retrieve taskbar related prefs.
     this._refreshPrefs();
-    
+
     // observer for private browsing and our prefs branch
     this._initObs();
 
@@ -330,7 +322,7 @@ var WinTaskbarJumpList =
     var items = Cc["@mozilla.org/array;1"].
                 createInstance(Ci.nsIMutableArray);
     var list = this._getNavRecent(this._maxItemCount*2);
-    
+
     if (!list || list.length == 0)
       return;
 
@@ -360,7 +352,7 @@ var WinTaskbarJumpList =
    */
 
   _getHandlerAppItem: function WTBJL__getHandlerAppItem(name, description, args, icon) {
-    var file = _directoryService.get("XCurProcD", Ci.nsILocalFile);
+    var file = Services.dirsvc.get("XCurProcD", Ci.nsILocalFile);
 
     // XXX where can we grab this from in the build? Do we need to?
     file.append("firefox.exe");
@@ -392,8 +384,8 @@ var WinTaskbarJumpList =
    */ 
 
   _getNavFrequent: function WTBJL__getNavFrequent(depth) {
-    var options = _navHistoryService.getNewQueryOptions();
-    var query = _navHistoryService.getNewQuery();
+    var options = PlacesUtils.history.getNewQueryOptions();
+    var query = PlacesUtils.history.getNewQuery();
     
     query.beginTimeReference = query.TIME_RELATIVE_NOW;
     query.beginTime = -24 * 30 * 60 * 60 * 1000000; // one month
@@ -404,7 +396,7 @@ var WinTaskbarJumpList =
     options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
     options.resultType = options.RESULT_TYPE_URI;
 
-    var result = _navHistoryService.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
 
     var list = [];
 
@@ -419,11 +411,11 @@ var WinTaskbarJumpList =
 
     return list;
   },
-  
+
   _getNavRecent: function WTBJL__getNavRecent(depth) {
-    var options = _navHistoryService.getNewQueryOptions();
-    var query = _navHistoryService.getNewQuery();
-    
+    var options = PlacesUtils.history.getNewQueryOptions();
+    var query = PlacesUtils.history.getNewQuery();
+
     query.beginTimeReference = query.TIME_RELATIVE_NOW;
     query.beginTime = -48 * 60 * 60 * 1000000; // two days
     query.endTimeReference = query.TIME_RELATIVE_NOW;
@@ -433,7 +425,7 @@ var WinTaskbarJumpList =
     options.sortingMode = options.SORT_BY_LASTMODIFIED_DESCENDING;
     options.resultType = options.RESULT_TYPE_URI;
 
-    var result = _navHistoryService.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
 
     var list = [];
 
@@ -458,8 +450,7 @@ var WinTaskbarJumpList =
       if (oldItem) {
         try { // in case we get a bad uri
           let uriSpec = oldItem.app.getParameter(0);
-          _navHistoryService.QueryInterface(Ci.nsIBrowserHistory).removePage(
-            _ioService.newURI(uriSpec, null, null));
+          PlacesUtils.bhistory.removePage(NetUtil.newURI(uriSpec));
         } catch (err) { }
       }
     }
@@ -490,16 +481,16 @@ var WinTaskbarJumpList =
   },
 
   _initObs: function WTBJL__initObs() {
-    _observerService.addObserver(this, "private-browsing", false);
-    _observerService.addObserver(this, "quit-application-granted", false);
-    _observerService.addObserver(this, "browser:purge-session-history", false);
+    Services.obs.addObserver(this, "private-browsing", false);
+    Services.obs.addObserver(this, "quit-application-granted", false);
+    Services.obs.addObserver(this, "browser:purge-session-history", false);
     _prefs.addObserver("", this, false);
   },
  
   _freeObs: function WTBJL__freeObs() {
-    _observerService.removeObserver(this, "private-browsing");
-    _observerService.removeObserver(this, "quit-application-granted");
-    _observerService.removeObserver(this, "browser:purge-session-history");
+    Services.obs.removeObserver(this, "private-browsing");
+    Services.obs.removeObserver(this, "quit-application-granted");
+    Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
   },
 
