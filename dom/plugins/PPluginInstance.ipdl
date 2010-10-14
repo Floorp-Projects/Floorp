@@ -169,12 +169,14 @@ parent:
   async NPN_InvalidateRect(NPRect rect);
 
   // Give |newSurface|, containing this instance's updated pixels, to
-  // the browser for compositing.  Get back |prevSurface|, containing
-  // old pixels, to be recycled
+  // the browser for compositing.  When this method returns, any surface 
+  // previously passed to Show may be destroyed.
+  //
   // @param rect - actually updated rectangle, comparing to prevSurface content
   //               could be used for partial render of layer to topLevel context
   // @param newSurface - remotable surface
-  // @param prevSurface - return surface for recycling
+  // @param prevSurface - if the previous surface was shared-memory, returns
+  //                      the shmem for reuse
   sync Show(NPRect updatedRect, SurfaceDescriptor newSurface)
     returns (SurfaceDescriptor prevSurface);
 

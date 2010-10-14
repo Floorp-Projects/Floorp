@@ -498,31 +498,14 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 #endif
 
     mSentPaintNotification = PR_FALSE;
-    if (mFrontSurface) {
-#ifdef MOZ_X11
-        if (mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
-            gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mFrontSurface.get());
-            *prevSurface =
-                SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
-                                    mFrontSurface->GetSize());
-        } else
-#endif
-        if (gfxSharedImageSurface::IsSharedImage(mFrontSurface)) {
-            *prevSurface = static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
-        } else {
-            *prevSurface = null_t();
-        }
-    } else {
+
+    if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
+        *prevSurface = static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
+    else
         *prevSurface = null_t();
-    }
+
     mFrontSurface = surface;
     RecvNPN_InvalidateRect(updatedRect);
-#ifdef MOZ_X11
-    // Sync prevSurface before sending to child
-    if (prevSurface->type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
-        XSync(DefaultXDisplay(), False);
-    }
-#endif
 
     return true;
 }
