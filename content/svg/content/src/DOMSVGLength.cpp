@@ -273,7 +273,7 @@ DOMSVGLength::NewValueSpecifiedUnits(PRUint16 aUnit, float aValue)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
   if (HasOwner()) {
-    InternalItem().SetValueAndUnit(aValue, PRUint8(aUnit));
+    InternalItem().SetValueAndUnit(aValue, aUnit);
     Element()->DidChangeLengthList(mAttrEnum, PR_TRUE);
 #ifdef MOZ_SMIL
     if (mList->mAList->IsAnimating()) {
