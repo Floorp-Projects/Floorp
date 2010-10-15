@@ -214,6 +214,8 @@ WebGLContext::LogMessage(const char *fmt, ...)
 void
 WebGLContext::LogMessage(const char *fmt, va_list ap)
 {
+    if (!fmt) return;
+
     char buf[1024];
     PR_vsnprintf(buf, 1024, fmt, ap);
 
@@ -223,20 +225,6 @@ WebGLContext::LogMessage(const char *fmt, va_list ap)
     JSContext* ccx = nsnull;
     if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx)
         JS_ReportWarning(ccx, "WebGL: %s", buf);
-}
-
-void
-WebGLContext::LogMessage(bool display, const char *fmt, ...)
-{
-    if (!display)
-        return;
-
-    va_list ap;
-    va_start(ap, fmt);
-
-    LogMessage(fmt, ap);
-
-    va_end(ap);
 }
 
 void
@@ -251,6 +239,15 @@ WebGLContext::LogMessageIfVerbose(const char *fmt, ...)
     LogMessage(fmt, ap);
 
     va_end(ap);
+}
+
+void
+WebGLContext::LogMessageIfVerbose(const char *fmt, va_list ap)
+{
+    if (!mVerbose)
+        return;
+
+    LogMessage(fmt, ap);
 }
 
 nsresult
@@ -278,8 +275,7 @@ WebGLContext::SynthesizeGLError(WebGLenum err, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    if (fmt)
-        LogMessage(mVerbose, fmt, va);
+    LogMessageIfVerbose(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(err);
@@ -290,8 +286,7 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    if (fmt)
-        LogMessage(mVerbose, fmt, va);
+    LogMessageIfVerbose(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
@@ -302,8 +297,7 @@ WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    if (fmt)
-        LogMessage(mVerbose, fmt, va);
+    LogMessageIfVerbose(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
@@ -314,8 +308,7 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    if (fmt)
-        LogMessage(mVerbose, fmt, va);
+    LogMessageIfVerbose(fmt, va);
     va_end(va);
 
     return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
