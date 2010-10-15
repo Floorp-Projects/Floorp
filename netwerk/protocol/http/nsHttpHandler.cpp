@@ -293,8 +293,6 @@ nsHttpHandler::Init()
     LOG(("> oscpu = %s\n", mOscpu.get()));
     LOG(("> language = %s\n", mLanguage.get()));
     LOG(("> misc = %s\n", mMisc.get()));
-    LOG(("> vendor = %s\n", mVendor.get()));
-    LOG(("> vendor-sub = %s\n", mVendorSub.get()));
     LOG(("> product = %s\n", mProduct.get()));
     LOG(("> product-sub = %s\n", mProductSub.get()));
     LOG(("> app-name = %s\n", mAppName.get()));
@@ -603,12 +601,10 @@ nsHttpHandler::BuildUserAgent()
                            mMisc.Length() +
                            mProduct.Length() +
                            mProductSub.Length() +
-                           mVendor.Length() +
-                           mVendorSub.Length() +
                            mAppName.Length() +
                            mAppVersion.Length() +
                            mCompatFirefox.Length() +
-                           15);
+                           13);
 
     // Application portion
     mUserAgent.Assign(mLegacyAppName);
@@ -644,16 +640,6 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent += mAppName;
     mUserAgent += '/';
     mUserAgent += mAppVersion;
-
-    // Vendor portion
-    if (!mVendor.IsEmpty()) {
-        mUserAgent += ' ';
-        mUserAgent += mVendor;
-        if (!mVendorSub.IsEmpty()) {
-            mUserAgent += '/';
-            mUserAgent += mVendorSub;
-        }
-    }
 }
 
 #ifdef XP_WIN
@@ -797,18 +783,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     //
     // UA components
     //
-
-    // Gather vendor values.
-    if (PREF_CHANGED(UA_PREF("vendor"))) {
-        prefs->GetCharPref(UA_PREF("vendor"),
-            getter_Copies(mVendor));
-        mUserAgentIsDirty = PR_TRUE;
-    }
-    if (PREF_CHANGED(UA_PREF("vendorSub"))) {
-        prefs->GetCharPref(UA_PREF("vendorSub"),
-            getter_Copies(mVendorSub));
-        mUserAgentIsDirty = PR_TRUE;
-    }
 
     PRBool cVar = PR_FALSE;
 
@@ -1543,20 +1517,6 @@ NS_IMETHODIMP
 nsHttpHandler::GetAppVersion(nsACString &value)
 {
     value = mLegacyAppVersion;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetVendor(nsACString &value)
-{
-    value = mVendor;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetVendorSub(nsACString &value)
-{
-    value = mVendorSub;
     return NS_OK;
 }
 

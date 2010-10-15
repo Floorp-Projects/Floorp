@@ -10335,32 +10335,16 @@ nsNavigator::GetOscpu(nsAString& aOSCPU)
 NS_IMETHODIMP
 nsNavigator::GetVendor(nsAString& aVendor)
 {
-  nsresult rv;
-  nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString vendor;
-    rv = service->GetVendor(vendor);
-    CopyASCIItoUTF16(vendor, aVendor);
-  }
-
-  return rv;
+  aVendor.Truncate();
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsNavigator::GetVendorSub(nsAString& aVendorSub)
 {
-  nsresult rv;
-  nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString vendor;
-    rv = service->GetVendorSub(vendor);
-    CopyASCIItoUTF16(vendor, aVendorSub);
-  }
-
-  return rv;
+  aVendorSub.Truncate();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
