@@ -477,11 +477,13 @@ _do_lookup(soinfo *si, const char *name, unsigned *base)
     for(d = si->dynamic; *d; d += 2) {
         if(d[0] == DT_NEEDED){
             lsi = (soinfo *)d[1];
+#ifndef MOZ_LINKER
             if (!validate_soinfo(lsi)) {
                 DL_ERR("%5d bad DT_NEEDED pointer in %s",
                        pid, si->name);
                 return NULL;
             }
+#endif
 
             DEBUG("%5d %s: looking up %s in %s\n",
                   pid, si->name, name, lsi->name);
@@ -678,6 +680,11 @@ is_prelinked(int fd, const char *name)
     off_t sz;
     prelink_info_t info;
 
+    if (fd < 0) {
+        WARN("Can't do prelinking without fd\n");
+        return 0;
+    }
+
     sz = lseek(fd, -sizeof(prelink_info_t), SEEK_END);
     if (sz < 0) {
         DL_ERR("lseek() failed!");
@@ -827,7 +834,7 @@ static int reserve_mem_region(soinfo *si)
         return -1;
     } else if (base != (void *)si->base) {
         DL_ERR("OOPS: %5d %sprelinked library '%s' mapped at 0x%08x, "
-              "not at 0x%08x", pid, (si->base ? "" : "non-"),
+              "not at 0x%08x", pid, (si->ba_index < 0 ? "" : "non-"),
               si->name, (unsigned)base, si->base);
         munmap(base, si->size);
         return -1;
@@ -888,7 +895,7 @@ err:
  *     0 on success, -1 on failure.
  */
 static int
-load_segments(int fd, void *header, soinfo *si)
+load_segments(int fd, size_t offset, void *header, soinfo *si)
 {
     Elf32_Ehdr *ehdr = (Elf32_Ehdr *)header;
     Elf32_Phdr *phdr = (Elf32_Phdr *)((unsigned char *)header + ehdr->e_phoff);
@@ -919,9 +926,18 @@ load_segments(int fd, void *header, soinfo *si)
             TRACE("[ %d - Trying to load segment from '%s' @ 0x%08x "
                   "(0x%08x). p_vaddr=0x%08x p_offset=0x%08x ]\n", pid, si->name,
                   (unsigned)tmp, len, phdr->p_vaddr, phdr->p_offset);
-            pbase = mmap(tmp, len, PFLAGS_TO_PROT(phdr->p_flags),
-                         MAP_PRIVATE | MAP_FIXED, fd,
-                         phdr->p_offset & (~PAGE_MASK));
+            if (fd == -1) {
+                pbase = mmap(tmp, len, PROT_WRITE,
+                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1,
+                             0);
+                if (pbase != MAP_FAILED) {
+                    memcpy(pbase, header + ((phdr->p_offset) & (~PAGE_MASK)), len);
+                    mprotect(pbase, len, PFLAGS_TO_PROT(phdr->p_flags));
+                }
+            } else
+                pbase = mmap(tmp, len, PFLAGS_TO_PROT(phdr->p_flags),
+                             MAP_PRIVATE | MAP_FIXED, fd,
+                             offset + ((phdr->p_offset) & (~PAGE_MASK)));
             if (pbase == MAP_FAILED) {
                 DL_ERR("%d failed to map segment from '%s' @ 0x%08x (0x%08x). "
                       "p_vaddr=0x%08x p_offset=0x%08x", pid, si->name,
@@ -977,7 +993,7 @@ load_segments(int fd, void *header, soinfo *si)
                 extra_base = mmap((void *)tmp, extra_len,
                                   PFLAGS_TO_PROT(phdr->p_flags),
                                   MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
-                                  -1, 0);
+                                  -1, offset);
                 if (extra_base == MAP_FAILED) {
                     DL_ERR("[ %5d - failed to extend segment from '%s' @ 0x%08x"
                            " (0x%08x) ]", pid, si->name, (unsigned)tmp,
@@ -1149,7 +1165,7 @@ load_library(const char *name)
           pid, name, (void *)si->base, (unsigned) ext_sz);
 
     /* Now actually load the library's segments into right places in memory */
-    if (load_segments(fd, &__header[0], si) < 0) {
+    if (load_segments(fd, 0, &__header[0], si) < 0) {
         if (si->ba_index >= 0) {
             ba_free(&ba_nonprelink, si->ba_index);
             si->ba_index = -1;
@@ -1170,6 +1186,71 @@ load_library(const char *name)
 fail:
     if (si) free_info(si);
     close(fd);
+    return NULL;
+}
+
+static soinfo *
+load_mapped_library(const char * name, int fd,
+                    void *mem, size_t len, size_t offset)
+{
+    int cnt;
+    unsigned ext_sz;
+    unsigned req_base;
+    const char *bname;
+    soinfo *si = NULL;
+    Elf32_Ehdr *hdr;
+
+    /* Parse the ELF header and get the size of the memory footprint for
+     * the library */
+    req_base = get_lib_extents(fd, name, mem, &ext_sz);
+    if (req_base == (unsigned)-1)
+        goto fail;
+    TRACE("[ %5d - '%s' (%s) wants base=0x%08x sz=0x%08x ]\n", pid, name,
+          (req_base ? "prelinked" : "not pre-linked"), req_base, ext_sz);
+
+    /* Now configure the soinfo struct where we'll store all of our data
+     * for the ELF object. If the loading fails, we waste the entry, but
+     * same thing would happen if we failed during linking. Configuring the
+     * soinfo struct here is a lot more convenient.
+     */
+    bname = strrchr(name, '/');
+    si = alloc_info(bname ? bname + 1 : name);
+    if (si == NULL)
+        goto fail;
+
+    /* Carve out a chunk of memory where we will map in the individual
+     * segments */
+    si->base = req_base;
+    si->size = ext_sz;
+    si->flags = 0;
+    si->entry = 0;
+    si->dynamic = (unsigned *)-1;
+    if (alloc_mem_region(si) < 0)
+        goto fail;
+
+    TRACE("[ %5d allocated memory for %s @ %p (0x%08x) ]\n",
+          pid, name, (void *)si->base, (unsigned) ext_sz);
+
+    /* Now actually load the library's segments into right places in memory */
+    if (load_segments(offset ? fd : -1, offset, mem, si) < 0) {
+        if (si->ba_index >= 0) {
+            ba_free(&ba_nonprelink, si->ba_index);
+            si->ba_index = -1;
+        }
+        goto fail;
+    }
+
+    /* this might not be right. Technically, we don't even need this info
+     * once we go through 'load_segments'. */
+    hdr = (Elf32_Ehdr *)si->base;
+    si->phdr = (Elf32_Phdr *)((unsigned char *)si->base + hdr->e_phoff);
+    si->phnum = hdr->e_phnum;
+    /**/
+
+    return si;
+
+fail:
+    if (si) free_info(si);
     return NULL;
 }
 
@@ -1217,6 +1298,32 @@ soinfo *find_library(const char *name)
 
     TRACE("[ %5d '%s' has not been loaded yet.  Locating...]\n", pid, name);
     si = load_library(name);
+    if(si == NULL)
+        return NULL;
+    return init_library(si);
+}
+
+soinfo *find_mapped_library(const char *name, int fd,
+                            void *mem, size_t len, size_t offset)
+{
+    soinfo *si;
+    const char *bname = strrchr(name, '/');
+    bname = bname ? bname + 1 : name;
+
+    for(si = solist; si != 0; si = si->next){
+        if(!strcmp(bname, si->name)) {
+            if(si->flags & FLAG_ERROR) {
+                DL_ERR("%5d '%s' failed to load previously", pid, bname);
+                return NULL;
+            }
+            if(si->flags & FLAG_LINKED) return si;
+            DL_ERR("OOPS: %5d recursive link to '%s'", pid, si->name);
+            return NULL;
+        }
+    }
+
+    TRACE("[ %5d '%s' has not been loaded yet.  Locating...]\n", pid, name);
+    si = load_mapped_library(name, fd, mem, len, offset);
     if(si == NULL)
         return NULL;
     return init_library(si);
@@ -1802,7 +1909,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
         goto fail;
     }
 
-    DEBUG("%5d dynamic = %p\n", pid, si->dynamic);
+    DEBUG("%5d dynamic = 0x%08x\n", pid, si->dynamic);
 
     /* extract useful information from dynamic section */
     for(d = si->dynamic; *d; d++){
@@ -1883,7 +1990,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
             break;
         case DT_INIT_ARRAY:
             si->init_array = (unsigned *)(si->base + *d);
-            DEBUG("%5d %s constructors (init_array) found at %p\n",
+            DEBUG("%5d %s constructors (init_array) found at %08x\n",
                   pid, si->name, si->init_array);
             break;
         case DT_INIT_ARRAYSZ:
@@ -1917,7 +2024,7 @@ static int link_image(soinfo *si, unsigned wr_offset)
         }
     }
 
-    DEBUG("%5d si->base = 0x%08x, si->strtab = %p, si->symtab = %p\n", 
+    DEBUG("%5d si->base = 0x%08x, si->strtab = %08x, si->symtab = %08x\n", 
            pid, si->base, si->strtab, si->symtab);
 
     if((si->strtab == 0) || (si->symtab == 0)) {
@@ -1931,6 +2038,8 @@ static int link_image(soinfo *si, unsigned wr_offset)
         memset(preloads, 0, sizeof(preloads));
         for(i = 0; ldpreload_names[i] != NULL; i++) {
             soinfo *lsi = find_library(ldpreload_names[i]);
+            if(lsi == 0)
+                lsi = dlopen(ldpreload_names[i], RTLD_LAZY);
             if(lsi == 0) {
                 strlcpy(tmp_err_buf, linker_get_error(), sizeof(tmp_err_buf));
                 DL_ERR("%5d could not load needed library '%s' for '%s' (%s)",
@@ -1945,7 +2054,9 @@ static int link_image(soinfo *si, unsigned wr_offset)
     for(d = si->dynamic; *d; d += 2) {
         if(d[0] == DT_NEEDED){
             DEBUG("%5d %s needs %s\n", pid, si->name, si->strtab + d[1]);
-            soinfo *lsi = find_library(si->strtab + d[1]);
+            soinfo *lsi = dlopen(si->strtab + d[1], RTLD_LAZY);
+            if(lsi == 0)
+                lsi = find_library(si->strtab + d[1]);
             if(lsi == 0) {
                 strlcpy(tmp_err_buf, linker_get_error(), sizeof(tmp_err_buf));
                 DL_ERR("%5d could not load needed library '%s' for '%s' (%s)",
@@ -2082,15 +2193,24 @@ static void parse_preloads(char *path, char *delim)
     }
 }
 
+#ifndef MOZ_LINKER
 int main(int argc, char **argv)
 {
     return 0;
 }
+#endif
 
 #define ANDROID_TLS_SLOTS  BIONIC_TLS_SLOTS
 
 static void * __tls_area[ANDROID_TLS_SLOTS];
 
+#ifdef MOZ_LINKER
+void simple_linker_init(void)
+{
+    pid = getpid();
+    ba_init(&ba_nonprelink);
+}
+#else
 unsigned __linker_init(unsigned **elfdata)
 {
     static soinfo linker_soinfo;
@@ -2257,3 +2377,4 @@ unsigned __linker_init(unsigned **elfdata)
           si->entry);
     return si->entry;
 }
+#endif

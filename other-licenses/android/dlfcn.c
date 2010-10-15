@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <dlfcn.h>
+#include "dlfcn.h"
 #include <pthread.h>
 #include <stdio.h>
 #include "linker.h"
@@ -43,16 +43,20 @@ static const char *dl_errors[] = {
 #define unlikely(expr) __builtin_expect (expr, 0)
 
 static pthread_mutex_t dl_lock = PTHREAD_MUTEX_INITIALIZER;
+extern int extractLibs;
 
 static void set_dlerror(int err)
 {
     format_buffer(dl_err_buf, sizeof(dl_err_buf), "%s: %s", dl_errors[err],
              linker_get_error());
     dl_err_str = (const char *)&dl_err_buf[0];
-};
+}
 
-void *dlopen(const char *filename, int flag)
+void *__wrap_dlopen(const char *filename, int flag)
 {
+    if (extractLibs)
+        return dlopen(filename, flag);
+
     soinfo *ret;
 
     pthread_mutex_lock(&dl_lock);
@@ -66,15 +70,37 @@ void *dlopen(const char *filename, int flag)
     return ret;
 }
 
-const char *dlerror(void)
+void *moz_mapped_dlopen(const char *filename, int flag,
+                        int fd, void *mem, unsigned int len, unsigned int offset)
 {
+    soinfo *ret;
+
+    pthread_mutex_lock(&dl_lock);
+    ret = find_mapped_library(filename, fd, mem, len, offset);
+    if (unlikely(ret == NULL)) {
+        set_dlerror(DL_ERR_CANNOT_LOAD_LIBRARY);
+    } else {
+        ret->refcount++;
+    }
+    pthread_mutex_unlock(&dl_lock);
+    return ret;
+}
+
+const char *__wrap_dlerror(void)
+{
+    if (extractLibs)
+        return dlerror();
+
     const char *tmp = dl_err_str;
     dl_err_str = NULL;
     return (const char *)tmp;
 }
 
-void *dlsym(void *handle, const char *symbol)
+void *__wrap_dlsym(void *handle, const char *symbol)
 {
+    if (extractLibs)
+        return dlsym(handle, symbol);
+
     soinfo *found;
     Elf32_Sym *sym;
     unsigned bind;
@@ -124,7 +150,7 @@ err:
     return 0;
 }
 
-int dladdr(void *addr, Dl_info *info)
+int __wrap_dladdr(void *addr, Dl_info *info)
 {
     int ret = 0;
 
@@ -155,8 +181,11 @@ int dladdr(void *addr, Dl_info *info)
     return ret;
 }
 
-int dlclose(void *handle)
+int __wrap_dlclose(void *handle)
 {
+    if (extractLibs)
+        return dlclose(handle);
+
     pthread_mutex_lock(&dl_lock);
     (void)unload_library((soinfo*)handle);
     pthread_mutex_unlock(&dl_lock);
@@ -167,19 +196,19 @@ int dlclose(void *handle)
 //                     0000000 00011111 111112 22222222 2333333 333344444444445555555
 //                     0123456 78901234 567890 12345678 9012345 678901234567890123456
 #define ANDROID_LIBDL_STRTAB \
-                      "dlopen\0dlclose\0dlsym\0dlerror\0dladdr\0dl_unwind_find_exidx\0"
+                      "__wrap_dlopen\0__wrap_dlclose\0__wrap_dlsym\0__wrap_dlerror\0__wrap_dladdr\0dl_unwind_find_exidx\0"
 
 #elif defined(ANDROID_X86_LINKER)
 //                     0000000 00011111 111112 22222222 2333333 3333444444444455
 //                     0123456 78901234 567890 12345678 9012345 6789012345678901
 #define ANDROID_LIBDL_STRTAB \
-                      "dlopen\0dlclose\0dlsym\0dlerror\0dladdr\0dl_iterate_phdr\0"
+                      "__wrap_dlopen\0__wrap_dlclose\0__wrap_dlsym\0__wrap_dlerror\0__wrap_dladdr\0dl_iterate_phdr\0"
 
 #elif defined(ANDROID_SH_LINKER)
 //                     0000000 00011111 111112 22222222 2333333 3333444444444455
 //                     0123456 78901234 567890 12345678 9012345 6789012345678901
 #define ANDROID_LIBDL_STRTAB \
-                      "dlopen\0dlclose\0dlsym\0dlerror\0dladdr\0dl_iterate_phdr\0"
+                      "__wrap_dlopen\0__wrap_dlclose\0__wrap_dlsym\0__wrap_dlerror\0__wrap_dladdr\0dl_iterate_phdr\0"
 
 #else /* !defined(ANDROID_ARM_LINKER) && !defined(ANDROID_X86_LINKER) */
 #error Unsupported architecture. Only ARM and x86 are presently supported.
@@ -194,44 +223,44 @@ static Elf32_Sym libdl_symtab[] = {
     { st_name: sizeof(ANDROID_LIBDL_STRTAB) - 1,
     },
     { st_name: 0,   // starting index of the name in libdl_info.strtab
-      st_value: (Elf32_Addr) &dlopen,
+      st_value: (Elf32_Addr) &__wrap_dlopen,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
-    { st_name: 7,
-      st_value: (Elf32_Addr) &dlclose,
+    { st_name: 14,
+      st_value: (Elf32_Addr) &__wrap_dlclose,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
-    { st_name: 15,
-      st_value: (Elf32_Addr) &dlsym,
+    { st_name: 22,
+      st_value: (Elf32_Addr) &__wrap_dlsym,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
-    { st_name: 21,
-      st_value: (Elf32_Addr) &dlerror,
+    { st_name: 28,
+      st_value: (Elf32_Addr) &__wrap_dlerror,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
-    { st_name: 29,
-      st_value: (Elf32_Addr) &dladdr,
+    { st_name: 36,
+      st_value: (Elf32_Addr) &__wrap_dladdr,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
 #ifdef ANDROID_ARM_LINKER
-    { st_name: 36,
+    { st_name: 43,
       st_value: (Elf32_Addr) &dl_unwind_find_exidx,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
 #elif defined(ANDROID_X86_LINKER)
-    { st_name: 36,
+    { st_name: 43,
       st_value: (Elf32_Addr) &dl_iterate_phdr,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
     },
 #elif defined(ANDROID_SH_LINKER)
-    { st_name: 36,
+    { st_name: 43,
       st_value: (Elf32_Addr) &dl_iterate_phdr,
       st_info: STB_GLOBAL << 4,
       st_shndx: 1,
