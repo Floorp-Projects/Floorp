@@ -32,7 +32,9 @@
 // Changes:
 //  * added BGR8 path, we need it in Mozilla to load textures from DOMElements
 //  * enclosing in a namespace WebGLTexelConversions to make it clear it is, in profilers and in symbol table dumps
-//  * defining uint8_t and uint16_t.
+//  * added __restrict keywords. Although non-standard, this is very well supported across all compilers
+//    that I know of (GCC/LLVM/MSC/ICC/Sun/XLC...)
+//  * optimized scaleFactor computation in Unmultiply functions (1 div instead of 2)
 
 #ifndef WEBGLTEXELCONVERSIONS_H_
 #define WEBGLTEXELCONVERSIONS_H_
@@ -53,7 +55,7 @@ namespace WebGLTexelConversions {
 //----------------------------------------------------------------------
 // Pixel unpacking routines.
 
-void unpackRGBA8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackRGBA8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[1];
@@ -61,7 +63,7 @@ void unpackRGBA8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = source[3];
 }
 
-void unpackRGB8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackRGB8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[1];
@@ -69,7 +71,7 @@ void unpackRGB8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = 0xFF;
 }
 
-void unpackBGRA8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackBGRA8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[2];
     destination[1] = source[1];
@@ -77,7 +79,7 @@ void unpackBGRA8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = source[3];
 }
 
-void unpackBGR8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackBGR8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[2];
     destination[1] = source[1];
@@ -85,7 +87,7 @@ void unpackBGR8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = 0xFF;
 }
 
-void unpackRGBA5551ToRGBA8(const uint16_t* source, uint8_t* destination)
+void unpackRGBA5551ToRGBA8(const uint16_t* __restrict source, uint8_t* __restrict destination)
 {
     uint16_t packedValue = source[0];
     uint8_t r = packedValue >> 11;
@@ -97,7 +99,7 @@ void unpackRGBA5551ToRGBA8(const uint16_t* source, uint8_t* destination)
     destination[3] = (packedValue & 0x1) ? 0xFF : 0x0;
 }
 
-void unpackRGBA4444ToRGBA8(const uint16_t* source, uint8_t* destination)
+void unpackRGBA4444ToRGBA8(const uint16_t* __restrict source, uint8_t* __restrict destination)
 {
     uint16_t packedValue = source[0];
     uint8_t r = packedValue >> 12;
@@ -110,7 +112,7 @@ void unpackRGBA4444ToRGBA8(const uint16_t* source, uint8_t* destination)
     destination[3] = a << 4 | a;
 }
 
-void unpackRGB565ToRGBA8(const uint16_t* source, uint8_t* destination)
+void unpackRGB565ToRGBA8(const uint16_t* __restrict source, uint8_t* __restrict destination)
 {
     uint16_t packedValue = source[0];
     uint8_t r = packedValue >> 11;
@@ -122,7 +124,7 @@ void unpackRGB565ToRGBA8(const uint16_t* source, uint8_t* destination)
     destination[3] = 0xFF;
 }
 
-void unpackR8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackR8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[0];
@@ -130,7 +132,7 @@ void unpackR8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = 0xFF;
 }
 
-void unpackRA8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackRA8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[0];
@@ -138,7 +140,7 @@ void unpackRA8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = source[1];
 }
 
-void unpackA8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void unpackA8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = 0x0;
     destination[1] = 0x0;
@@ -150,17 +152,17 @@ void unpackA8ToRGBA8(const uint8_t* source, uint8_t* destination)
 // Pixel packing routines.
 //
 
-void packRGBA8ToA8(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[3];
 }
 
-void packRGBA8ToR8(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToR8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
 }
 
-void packRGBA8ToR8Premultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToR8Premultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -168,20 +170,20 @@ void packRGBA8ToR8Premultiply(const uint8_t* source, uint8_t* destination)
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToR8Unmultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToR8Unmultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     destination[0] = sourceR;
 }
 
-void packRGBA8ToRA8(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[3];
 }
 
-void packRGBA8ToRA8Premultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRA8Premultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -190,22 +192,22 @@ void packRGBA8ToRA8Premultiply(const uint8_t* source, uint8_t* destination)
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToRA8Unmultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRA8Unmultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     destination[0] = sourceR;
     destination[1] = source[3];
 }
 
-void packRGBA8ToRGB8(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRGB8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[1];
     destination[2] = source[2];
 }
 
-void packRGBA8ToRGB8Premultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRGB8Premultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -217,9 +219,9 @@ void packRGBA8ToRGB8Premultiply(const uint8_t* source, uint8_t* destination)
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToRGB8Unmultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRGB8Unmultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     uint8_t sourceG = static_cast<uint8_t>(static_cast<float>(source[1]) * scaleFactor);
     uint8_t sourceB = static_cast<uint8_t>(static_cast<float>(source[2]) * scaleFactor);
@@ -229,7 +231,7 @@ void packRGBA8ToRGB8Unmultiply(const uint8_t* source, uint8_t* destination)
 }
 
 // This is only used when the source format is different than kSourceFormatRGBA8.
-void packRGBA8ToRGBA8(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRGBA8(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     destination[0] = source[0];
     destination[1] = source[1];
@@ -237,7 +239,7 @@ void packRGBA8ToRGBA8(const uint8_t* source, uint8_t* destination)
     destination[3] = source[3];
 }
 
-void packRGBA8ToRGBA8Premultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRGBA8Premultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -250,9 +252,9 @@ void packRGBA8ToRGBA8Premultiply(const uint8_t* source, uint8_t* destination)
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToRGBA8Unmultiply(const uint8_t* source, uint8_t* destination)
+void packRGBA8ToRGBA8Unmultiply(const uint8_t* __restrict source, uint8_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     uint8_t sourceG = static_cast<uint8_t>(static_cast<float>(source[1]) * scaleFactor);
     uint8_t sourceB = static_cast<uint8_t>(static_cast<float>(source[2]) * scaleFactor);
@@ -262,7 +264,7 @@ void packRGBA8ToRGBA8Unmultiply(const uint8_t* source, uint8_t* destination)
     destination[3] = source[3];
 }
 
-void packRGBA8ToUnsignedShort4444(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort4444(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
     *destination = (((source[0] & 0xF0) << 8)
                     | ((source[1] & 0xF0) << 4)
@@ -270,7 +272,7 @@ void packRGBA8ToUnsignedShort4444(const uint8_t* source, uint16_t* destination)
                     | (source[3] >> 4));
 }
 
-void packRGBA8ToUnsignedShort4444Premultiply(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort4444Premultiply(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -283,9 +285,9 @@ void packRGBA8ToUnsignedShort4444Premultiply(const uint8_t* source, uint16_t* de
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToUnsignedShort4444Unmultiply(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort4444Unmultiply(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     uint8_t sourceG = static_cast<uint8_t>(static_cast<float>(source[1]) * scaleFactor);
     uint8_t sourceB = static_cast<uint8_t>(static_cast<float>(source[2]) * scaleFactor);
@@ -295,7 +297,7 @@ void packRGBA8ToUnsignedShort4444Unmultiply(const uint8_t* source, uint16_t* des
                     | (source[3] >> 4));
 }
 
-void packRGBA8ToUnsignedShort5551(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort5551(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
     *destination = (((source[0] & 0xF8) << 8)
                     | ((source[1] & 0xF8) << 3)
@@ -303,7 +305,7 @@ void packRGBA8ToUnsignedShort5551(const uint8_t* source, uint16_t* destination)
                     | (source[3] >> 7));
 }
 
-void packRGBA8ToUnsignedShort5551Premultiply(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort5551Premultiply(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -316,9 +318,9 @@ void packRGBA8ToUnsignedShort5551Premultiply(const uint8_t* source, uint16_t* de
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToUnsignedShort5551Unmultiply(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort5551Unmultiply(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     uint8_t sourceG = static_cast<uint8_t>(static_cast<float>(source[1]) * scaleFactor);
     uint8_t sourceB = static_cast<uint8_t>(static_cast<float>(source[2]) * scaleFactor);
@@ -328,14 +330,14 @@ void packRGBA8ToUnsignedShort5551Unmultiply(const uint8_t* source, uint16_t* des
                     | (source[3] >> 7));
 }
 
-void packRGBA8ToUnsignedShort565(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort565(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
     *destination = (((source[0] & 0xF8) << 8)
                     | ((source[1] & 0xFC) << 3)
                     | ((source[2] & 0xF8) >> 3));
 }
 
-void packRGBA8ToUnsignedShort565Premultiply(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort565Premultiply(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
     float scaleFactor = source[3] / 255.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
@@ -347,9 +349,9 @@ void packRGBA8ToUnsignedShort565Premultiply(const uint8_t* source, uint16_t* des
 }
 
 // FIXME: this routine is lossy and must be removed.
-void packRGBA8ToUnsignedShort565Unmultiply(const uint8_t* source, uint16_t* destination)
+void packRGBA8ToUnsignedShort565Unmultiply(const uint8_t* __restrict source, uint16_t* __restrict destination)
 {
-    float scaleFactor = 1.0f / (source[3] ? source[3] / 255.0f : 1.0f);
+    float scaleFactor = source[3] ? 255.0f / source[3] : 1.0f;
     uint8_t sourceR = static_cast<uint8_t>(static_cast<float>(source[0]) * scaleFactor);
     uint8_t sourceG = static_cast<uint8_t>(static_cast<float>(source[1]) * scaleFactor);
     uint8_t sourceB = static_cast<uint8_t>(static_cast<float>(source[2]) * scaleFactor);
