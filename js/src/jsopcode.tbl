@@ -623,4 +623,6 @@ OPDEF(JSOP_FORGLOBAL,     246,"forglobal",     NULL,  3,  1,  1, 19,  JOF_GLOBAL
 OPDEF(JSOP_BLOCKCHAIN,    247,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
 OPDEF(JSOP_NULLBLOCKCHAIN,248,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
-/* When changing bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */
+OPDEF(JSOP_BEGIN,         249,"begin",         NULL,  1,  0,  0,  0,  JOF_BYTE|JOF_TMPSLOT)
+
+/* When adding bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */
