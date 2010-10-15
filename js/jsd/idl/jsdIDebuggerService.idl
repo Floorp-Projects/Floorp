@@ -855,7 +855,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object.  In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(18e09893-f461-4b4b-94d3-776fb0069c6f)]
+[scriptable, uuid(53dadd96-69f6-4846-8958-cc8eaa3f9f09)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1001,17 +1001,6 @@ interface jsdIScript : jsdIEphemeral
      * The |pcmap| argument specifies which pc to source line map to use.
      */
     boolean isLineExecutable (in unsigned long line, in unsigned long pcmap);
-    /**
-     * Get the first valid PC in the script. This will be either
-     * (a) the first bytecode in the script, or (b) the next bytecode
-     * in the script, iff the first bytecode is a JSOP_BEGIN.
-     */
-    unsigned long getFirstValidPC ();
-    /**
-     * Return the last valid PC in the script (i.e., the PC just after 
-     * the last bytecode).
-     */
-    unsigned long getEndValidPC ();
     /**
      * Set a breakpoint at a PC in this script.
      */
