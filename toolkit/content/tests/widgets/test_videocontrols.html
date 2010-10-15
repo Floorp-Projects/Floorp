@@ -213,11 +213,37 @@ function runTest(event) {
   testnum++;
 }
 
+var canplaythroughsavedevent = null;
+var gotcanplaythroughevent = false;
+var gotloadevent = false;
+
+function canplaythroughevent(event) {
+  canplaythroughsavedevent = event;
+  gotcanplaythroughevent = true;
+  video.removeEventListener("canplaythrough",  canplaythroughevent, false);
+  video.addEventListener("canplaythrough",  runTest, false);
+  maybeStartTest();
+}
+
+function loadevent(event) {
+  gotloadevent = true;
+  maybeStartTest();
+}
+
+// setTimeout so that test starts after paint suppression ends
+function maybeStartTest() {
+  if (!gotcanplaythroughevent || !gotloadevent)
+    return;
+
+  setTimeout("runTest(canplaythroughsavedevent);", 0);
+}
+
 var testnum = 1;
 var video = document.getElementById("video");
 
 // Kick off test once video has loaded.
-video.addEventListener("canplaythrough",  runTest, false);
+video.addEventListener("canplaythrough",  canplaythroughevent, false);
+window.addEventListener("load",  loadevent, false);
 
 // Other events expected by the test.
 video.addEventListener("play",  runTest, false);
