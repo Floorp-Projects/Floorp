@@ -1575,7 +1575,7 @@ void nsGfxScrollFrameInner::MarkActive()
   }
 }
 
-void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
+void nsGfxScrollFrameInner::ScrollVisual()
 {
   nsRootPresContext* rootPresContext = mOuter->PresContext()->GetRootPresContext();
   if (!rootPresContext) {
@@ -1665,7 +1665,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
 
   // We pass in the amount to move visually
-  ScrollVisual(curPosDevPx - ptDevPx);
+  ScrollVisual();
 
   presContext->PresShell()->SynthesizeMouseMove(PR_TRUE);
   UpdateScrollbarPosition();
