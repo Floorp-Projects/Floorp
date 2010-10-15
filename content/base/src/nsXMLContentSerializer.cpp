@@ -1359,19 +1359,7 @@ nsXMLContentSerializer::AppendToStringConvertLF(const nsAString& aStr,
   }
 
   if (mDoRaw) {
-    nsDependentString str(aStr);
-    PRInt32 lastNewlineOffset = str.RFindChar('\n');
     AppendToString(aStr, aOutputStr);
-
-    if (lastNewlineOffset != kNotFound) {
-      // the string contains at least a line break,
-      // so we should update the mColPos property with
-      // the number of characters between the last line
-      // break and the end of the string
-      mColPos = aStr.Length() - lastNewlineOffset;
-    }
-
-    mIsIndentationAddedOnCurrentLine = (mColPos != 0);
   }
   else {
     // Convert line-endings to mLineBreak
