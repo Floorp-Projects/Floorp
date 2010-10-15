@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<script>
+
+function boom()
+{
+  var r = document.documentElement;
+
+  while (r.firstChild)
+    r.removeChild(r.firstChild);
+
+  var a = document.createTextNode("a");
+  r.appendChild(a);
+  a.splitText(0);
+  a.splitText(0);
+
+  document.documentElement.offsetHeight;
+
+  r.appendChild(document.createTextNode("b"));
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
