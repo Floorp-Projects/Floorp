@@ -654,18 +654,39 @@ empty :=
 space = $(empty) $(empty)
 QUOTED_WILDCARD = $(if $(wildcard $(subst $(space),?,$(1))),"$(1)")
 
-upload:
+# This variable defines which OpenSSL algorithm to use to 
+# generate checksums for files that we upload
+CHECKSUM_ALGORITHM = 'sha512'
+
+# This variable defines where the checksum file will be located
+CHECKSUM_FILE = $(DIST)/$(PKG_PATH)/$(PKG_BASENAME).checksums
+
+UPLOAD_FILES= \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE)) \
+  $(call QUOTED_WILDCARD,$(INSTALLER_PACKAGE)) \
+  $(call QUOTED_WILDCARD,$(DIST)/$(COMPLETE_MAR)) \
+  $(call QUOTED_WILDCARD,$(wildcard $(DIST)/$(PARTIAL_MAR))) \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
+  $(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt) \
+  $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
+
+checksum:
+	@$(PYTHON) $(MOZILLA_DIR)/build/checksums.py \
+		-o $(CHECKSUM_FILE) \
+		-d $(CHECKSUM_ALGORITHM) \
+		-s $(call QUOTED_WILDCARD,$(DIST)) \
+		$(UPLOAD_FILES)
+	@echo "CHECKSUM FILE START"
+	@cat $(CHECKSUM_FILE)
+	@echo "CHECKSUM FILE END"
+
+
+upload: checksum
 	$(PYTHON) $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE)) \
-		$(call QUOTED_WILDCARD,$(INSTALLER_PACKAGE)) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(COMPLETE_MAR)) \
-		$(call QUOTED_WILDCARD,$(wildcard $(DIST)/$(PARTIAL_MAR))) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt) \
-		$(call QUOTED_WILDCARD,$(DIST)/$(LANGPACK)) \
-		$(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
+		$(UPLOAD_FILES) \
+		$(CHECKSUM_FILE)
 
 ifndef MOZ_PKG_SRCDIR
 MOZ_PKG_SRCDIR = $(topsrcdir)
