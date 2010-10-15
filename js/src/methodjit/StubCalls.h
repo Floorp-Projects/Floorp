@@ -65,8 +65,6 @@ void JS_FASTCALL SlowNew(VMFrame &f, uint32 argc);
 void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
-void JS_FASTCALL EnterScript(VMFrame &f);
-void JS_FASTCALL LeaveScript(VMFrame &f);
 
 /*
  * Result struct for UncachedXHelper.
@@ -114,7 +112,6 @@ void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
-void JS_FASTCALL BindNameNoCache(VMFrame &f, JSAtom *atom);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetPropNoCache(VMFrame &f, JSAtom *atom);
@@ -122,7 +119,6 @@ template<JSBool strict> void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom)
 template<JSBool strict> void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
-void JS_FASTCALL GetPropNoCache(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL CallElem(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
