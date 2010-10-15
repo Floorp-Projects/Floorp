@@ -151,7 +151,7 @@
       <image class="spinner"/>
       <label id="updates-noneFound" hidden="true"
              value="&updates.noneFound.label;"/>
-      <button id="updates-manualUpdatesFound" class="button-link"
+      <button id="updates-manualUpdatesFound-btn" class="button-link"
               hidden="true" label="&updates.manualUpdatesFound.label;"
               command="cmd_goToAvailableUpdates"/>
       <label id="updates-progress" hidden="true"
@@ -160,7 +160,7 @@
              value="&updates.installed.label;"/>
       <label id="updates-downloaded" hidden="true"
              value="&updates.downloaded.label;"/>
-      <button id="updates-restart" class="button-link" hidden="true"
+      <button id="updates-restart-btn" class="button-link" hidden="true"
               label="&updates.restart.label;"
               command="cmd_restartApp"/>
     </hbox>
@@ -382,7 +382,7 @@
             <spacer flex="3"/>
           </vbox>
           <hbox id="update-actions" pack="center">
-            <button id="update-selected" hidden="true"
+            <button id="update-selected-btn" hidden="true"
                     label="&updates.updateSelected.label;"
                     tooltiptext="&updates.updateSelected.tooltip;"/>
           </hbox>
@@ -438,13 +438,13 @@
                 <hbox id="pending-container" align="center" class="pending">
                   <image class="pending-icon"/>
                   <label id="detail-pending" flex="1"/>
-                  <button class="button-link"
-                              label="&addon.restartNow.label;"
-                              command="cmd_restartApp"/>
-                  <button id="detail-undo" class="button-link"
-                              label="&addon.undoAction.label;"
-                              tooltipText="&addon.undoAction.tooltip;"
-                              command="cmd_cancelOperation"/>
+                  <button id="detail-restart-btn" class="button-link"
+                          label="&addon.restartNow.label;"
+                          command="cmd_restartApp"/>
+                  <button id="detail-undo-btn" class="button-link"
+                          label="&addon.undoAction.label;"
+                          tooltipText="&addon.undoAction.tooltip;"
+                          command="cmd_cancelOperation"/>
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
               </vbox>
@@ -472,7 +472,7 @@
                     <hbox align="center">
                       <label id="detail-contrib-suggested"/>
                       <spacer flex="1"/>
-                      <button id="detail-contrib-button" class="addon-control"
+                      <button id="detail-contrib-btn" class="addon-control"
                               label="&cmd.contribute.label;"
                               accesskey="&cmd.contribute.accesskey;"
                               tooltiptext="&cmd.contribute.tooltip;"
@@ -502,7 +502,7 @@
                                    tooltiptext="&detail.updateManual.tooltip;"
                                    value="0"/>
                           </radiogroup>
-                          <button id="detail-findUpdates" class="button-link"
+                          <button id="detail-findUpdates-btn" class="button-link"
                                   label="&detail.checkForUpdates.label;"
                                   accesskey="&detail.checkForUpdates.accesskey;"
                                   tooltiptext="&detail.checkForUpdates.tooltip;"
@@ -530,7 +530,7 @@
                     </rows>
                   </grid>
                   <hbox id="detail-controls">
-                    <button id="detail-prefs" class="addon-control"
+                    <button id="detail-prefs-btn" class="addon-control"
 #ifdef XP_WIN
                             label="&detail.showPreferencesWin.label;"
                             accesskey="&detail.showPreferencesWin.accesskey;"
@@ -542,19 +542,19 @@
 #endif
                             command="cmd_showItemPreferences"/>
                     <spacer flex="1"/>
-                    <button id="detail-uninstall" class="addon-control remove"
+                    <button id="detail-uninstall-btn" class="addon-control remove"
                             label="&cmd.uninstallAddon.label;"
                             accesskey="&cmd.uninstallAddon.accesskey;"
                             command="cmd_uninstallItem"/>
-                    <button id="detail-enable" class="addon-control enable"
+                    <button id="detail-enable-btn" class="addon-control enable"
                             label="&cmd.enableAddon.label;"
                             accesskey="&cmd.enableAddon.accesskey;"
                             command="cmd_enableItem"/>
-                    <button id="detail-disable" class="addon-control disable"
+                    <button id="detail-disable-btn" class="addon-control disable"
                             label="&cmd.disableAddon.label;"
                             accesskey="&cmd.disableAddon.accesskey;"
                             command="cmd_disableItem"/>
-                    <button id="detail-install" class="addon-control install"
+                    <button id="detail-install-btn" class="addon-control install"
                             label="&cmd.installAddon.label;"
                             accesskey="&cmd.installAddon.accesskey;"
                             command="cmd_installItem"/>

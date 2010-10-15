@@ -166,12 +166,12 @@
           <xul:hbox class="end-cap"/>
         </xul:hbox>
         <xul:hbox class="status-container">
-          <xul:button anonid="pause" class="pause"
+          <xul:button anonid="pause-btn" class="pause"
                       tooltiptext="&progress.pause.tooltip;"/>
           <xul:spacer flex="1"/>
           <xul:label anonid="status" class="status"/>
           <xul:spacer flex="1"/>
-          <xul:button anonid="cancel" class="cancel"
+          <xul:button anonid="cancel-btn" class="cancel"
                       tooltiptext="&progress.cancel.tooltip;"/>
         </xul:hbox>
       </xul:stack>
@@ -189,10 +189,10 @@
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
       </field>
       <field name="_pause">
-        document.getAnonymousElementByAttribute(this, "anonid", "pause");
+        document.getAnonymousElementByAttribute(this, "anonid", "pause-btn");
       </field>
       <field name="_cancel">
-        document.getAnonymousElementByAttribute(this, "anonid", "cancel");
+        document.getAnonymousElementByAttribute(this, "anonid", "cancel-btn");
       </field>
       <field name="_status">
         document.getAnonymousElementByAttribute(this, "anonid", "status");
@@ -238,14 +238,14 @@
   <!-- Sorters - displays and controls the sort state of a list. -->
   <binding id="sorters">
     <content orient="horizontal">
-      <xul:button anonid="btn-name" class="sorter"
+      <xul:button anonid="name-btn" class="sorter"
                   label="&sort.name.label;" tooltiptext="&sort.name.tooltip;"
                   oncommand="this.parentNode._handleChange('name');"/>
-      <xul:button anonid="btn-date" class="sorter"
+      <xul:button anonid="date-btn" class="sorter"
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
                   oncommand="this.parentNode._handleChange('dateUpdated');"/>
-      <xul:button anonid="btn-relevance" class="sorter" hidden="true"
+      <xul:button anonid="relevance-btn" class="sorter" hidden="true"
                   label="&sort.relevance.label;"
                   tooltiptext="&sort.relevance.tooltip;"
                   oncommand="this.parentNode._handleChange('relevancescore');"/>
@@ -264,13 +264,13 @@
 
       <field name="handler">null</field>
       <field name="_btnName">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-name");
+        document.getAnonymousElementByAttribute(this, "anonid", "name-btn");
       </field>
       <field name="_btnDate">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-date");
+        document.getAnonymousElementByAttribute(this, "anonid", "date-btn");
       </field>
       <field name="_btnRelevance">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-relevance");
+        document.getAnonymousElementByAttribute(this, "anonid", "relevance-btn");
       </field>
 
       <property name="sortBy">
@@ -472,11 +472,11 @@
     <content>
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
-      <xul:button anonid="install-remote" hidden="true"
+      <xul:button anonid="install-remote-btn" hidden="true"
                   class="addon-control" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).installRemote();"/>
-      <xul:button anonid="restart-install" hidden="true"
+      <xul:button anonid="restart-install-btn" hidden="true"
                   class="addon-control" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).restartInstall();"/>
@@ -505,7 +505,7 @@
       </field>
       <field name="_installRemote">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "install-remote");
+                                                "install-remote-btn");
       </field>
       <field name="_restartNeeded">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -513,11 +513,11 @@
       </field>
       <field name="_restartInstall">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "restart-install");
+                                                "restart-install-btn");
       </field>
       <field name="_undo">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "undo");
+                                                "undo-btn");
       </field>
 
       <method name="initWithInstall">
@@ -734,10 +734,10 @@
                 class="pending">
         <xul:image class="pending-icon"/>
         <xul:label anonid="pending" flex="1"/>
-        <xul:button class="button-link"
+        <xul:button anonid="restart-btn" class="button-link"
                     label="&addon.restartNow.label;"
                     oncommand="document.getBindingParent(this).restart();"/>
-        <xul:button anonid="undo" class="button-link"
+        <xul:button anonid="undo-btn" class="button-link"
                     label="&addon.undoAction.label;"
                     tooltipText="&addon.undoAction.tooltip;"
                     oncommand="document.getBindingParent(this).undo();"/>
@@ -768,7 +768,7 @@
             <xul:vbox flex="1">
               <xul:hbox align="center" class="description-container">
                 <xul:label flex="1" anonid="description" class="description" crop="end"/>
-                <xul:button class="details button-link"
+                <xul:button anonid="details-btn" class="details button-link"
                             label="&addon.details.label;"
                             tooltiptext="&addon.details.tooltip;"
                             oncommand="document.getBindingParent(this).showInDetailView();"/>
@@ -782,7 +782,7 @@
                 <xul:vbox anonid="relnotes"/>
               </xul:vbox>
               <xul:hbox pack="start">
-                <xul:button anonid="relnotes-toggle" class="relnotes-toggle"
+                <xul:button anonid="relnotes-toggle-btn" class="relnotes-toggle"
                             hidden="true" label="&cmd.showReleaseNotes.label;"
                             tooltiptext="&cmd.showReleaseNotes.tooltip;"
                             showlabel="&cmd.showReleaseNotes.label;"
@@ -997,7 +997,7 @@
       <field name="_relNotesLoaded">false</field>
       <field name="_relNotesToggle">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "relnotes-toggle");
+                                                "relnotes-toggle-btn");
       </field>
       <field name="_relNotesLoading">
         document.getAnonymousElementByAttribute(this, "anonid",

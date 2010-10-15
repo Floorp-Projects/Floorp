@@ -371,7 +371,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
       is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
@@ -408,7 +408,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on 2 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
       is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
@@ -438,7 +438,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
       is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
@@ -503,7 +503,7 @@ add_test(function() {
       is(get_node(addon, "pending").textContent, "Test add-on 7 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
       info("Undoing");
-      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo"), {}, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
       is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");

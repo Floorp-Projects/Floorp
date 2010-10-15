@@ -488,7 +488,7 @@ add_test(function() {
       info("Part 2");
       is_in_detail(aManager, "addons://list/extension", true, false);
 
-      EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("detail-uninstall"),
+      EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("detail-uninstall-btn"),
                                          { }, aManager);
 
       wait_for_view_load(aManager, function() {

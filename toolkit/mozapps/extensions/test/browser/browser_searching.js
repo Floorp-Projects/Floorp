@@ -386,7 +386,7 @@ function get_install_item(aName) {
 function get_install_button(aItem) {
   isnot(aItem, null, "Item should not be null when checking state of install button");
   var installStatus = getAnonymousElementByAttribute(aItem, "anonid", "install-status");
-  return getAnonymousElementByAttribute(installStatus, "anonid", "install-remote");
+  return getAnonymousElementByAttribute(installStatus, "anonid", "install-remote-btn");
 }
 
 
@@ -454,7 +454,7 @@ add_test(function() {
   var originalHandler = sorters.handler;
 
   var sorterNames = ["name", "dateUpdated"];
-  var buttonIds = ["btn-name", "btn-date"];
+  var buttonIds = ["name-btn", "date-btn"];
   var currentIndex = 0;
   var currentReversed = false;
 
