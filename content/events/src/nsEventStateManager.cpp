@@ -2828,9 +2828,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
+      nsCOMPtr<nsIContent> activeContent;
       if (nsEventStatus_eConsumeNoDefault != *aStatus) {
-        nsCOMPtr<nsIContent> newFocus;
-        nsCOMPtr<nsIContent> activeContent;
+        nsCOMPtr<nsIContent> newFocus;      
         PRBool suppressBlur = PR_FALSE;
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(mPresContext, aEvent, getter_AddRefs(newFocus));
@@ -2935,7 +2935,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             if (par)
               activeContent = par;
           }
-          SetGlobalActiveContent(this, activeContent);
         }
       }
       else {
@@ -2943,11 +2942,12 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // any of our own processing of a drag. Workaround for bug 43258.
         StopTrackingDragGesture();
       }
+      SetGlobalActiveContent(this, activeContent);
     }
     break;
   case NS_MOUSE_BUTTON_UP:
     {
-      SetGlobalActiveContent(this, nsnull);
+      ClearGlobalActiveContent();
       if (IsMouseEventReal(aEvent)) {
         if (!mCurrentTarget) {
           nsIFrame* targ;
@@ -4715,4 +4715,13 @@ nsEventStateManager::SetGlobalActiveContent(nsEventStateManager* aNewESM,
   if (sActiveESM) {
     sActiveESM->SetContentState(aContent, NS_EVENT_STATE_ACTIVE);
   }
+}
+
+void
+nsEventStateManager::ClearGlobalActiveContent()
+{
+  if (sActiveESM) {
+    sActiveESM->SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+  }
+  sActiveESM = nsnull;
 }
