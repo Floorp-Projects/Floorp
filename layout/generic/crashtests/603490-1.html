@@ -1,0 +1,16 @@
+<!DOCTYPE html><html><script>
+
+function boom()
+{
+  while (document.documentElement.firstChild)
+    document.documentElement.removeChild(document.documentElement.firstChild);
+  document.documentElement.contentEditable = "true";
+  document.execCommand("strikethrough", false, null);
+  try { document.execCommand("justifyfull", false, null); } catch(e) { }
+  document.documentElement.offsetHeight;
+  try { document.execCommand("delete", false, null); } catch(e) { }
+  document.execCommand("inserthtml", false, "<span> <\/span>");
+}
+window.addEventListener("load", boom, false);
+
+</script></html>
