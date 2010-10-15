@@ -643,7 +643,11 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
                                       nsAString& aStr,
                                       PRBool aDoEscapeEntities)
 {
-  nsAutoString attrString;
+  nsAutoString attrString_;
+  // For innerHTML we can do faster appending without
+  // temporary strings.
+  PRBool rawAppend = mDoRaw && aDoEscapeEntities;
+  nsAString& attrString = (rawAppend) ? aStr : attrString_;
 
   attrString.Append(PRUnichar(' '));
   if (!aPrefix.IsEmpty()) {
@@ -662,6 +666,9 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     mInAttribute = PR_FALSE;
 
     attrString.Append(PRUnichar('"'));
+    if (rawAppend) {
+      return;
+    }
   }
   else {
     // Depending on whether the attribute value contains quotes or apostrophes we
