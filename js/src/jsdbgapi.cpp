@@ -1015,12 +1015,15 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
     return js_LineNumberToPC(script, lineno);
 }
 
+<<<<<<< local
 JS_PUBLIC_API(jsbytecode *)
 JS_EndPC(JSContext *cx, JSScript *script)
 {
     return script->code + script->length;
 }
 
+=======
+>>>>>>> other
 JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 {
