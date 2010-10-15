@@ -235,6 +235,12 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         return JS_FALSE;
     }
 
+    if (JSOp(*pc) == JSOP_BEGIN) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
+                                     NULL, JSMSG_READ_ONLY, "trap invalid on BEGIN opcode");
+        return JS_FALSE;
+    }
+
     JS_ASSERT((JSOp) *pc != JSOP_TRAP);
     junk = NULL;
     rt = cx->runtime;
@@ -1015,15 +1021,19 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
     return js_LineNumberToPC(script, lineno);
 }
 
-<<<<<<< local
+JS_PUBLIC_API(jsbytecode *)
+JS_FirstValidPC(JSContext *cx, JSScript *script)
+{
+    jsbytecode *pc = script->code;
+    return *pc == JSOP_BEGIN ? pc + JSOP_BEGIN_LENGTH : pc;
+}
+
 JS_PUBLIC_API(jsbytecode *)
 JS_EndPC(JSContext *cx, JSScript *script)
 {
     return script->code + script->length;
 }
 
-=======
->>>>>>> other
 JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 {
