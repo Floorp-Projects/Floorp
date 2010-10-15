@@ -10497,6 +10497,13 @@ TraceRecorder::record_EnterFrame()
         RETURN_STOP_A("recursion started inlining");
     }
 
+    if (fp->isConstructing()) {
+        LIns* args[] = { callee_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
+        LIns* tv_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
+        guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
+        set(&fp->thisValue(), tv_ins);
+    }
+
     return ARECORD_CONTINUE;
 }
 
@@ -11197,20 +11204,6 @@ TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
     LIns* status_ins = loadFromState(LIR_ldi, builtinStatus);
     propagateFailureToBuiltinStatus(ok_ins, status_ins);
     guard(true, lir->insEqI_0(status_ins), STATUS_EXIT);
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_BEGIN()
-{
-    JSStackFrame* fp = cx->fp();
-    if (fp->isConstructing()) {
-        LIns* callee_ins = get(&cx->fp()->calleeValue());
-        LIns* args[] = { callee_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
-        LIns* tv_ins = lir->insCall(&js_CreateThisFromTrace_ci, args);
-        guard(false, lir->insEqP_0(tv_ins), OOM_EXIT);
-        set(&fp->thisValue(), tv_ins);
-    }
-    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK RecordingStatus
