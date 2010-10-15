@@ -5565,8 +5565,8 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
 
     gfxMatrix TM = viewBoxTM * xyTM;
     
-    gfxContext ctx(aTarget->mImage);
-    nsSVGUtils::CompositePatternMatrix(&ctx, thebesPattern, TM, nativeWidth, nativeHeight, 1.0);
+    nsRefPtr<gfxContext> ctx = new gfxContext(aTarget->mImage);
+    nsSVGUtils::CompositePatternMatrix(ctx, thebesPattern, TM, nativeWidth, nativeHeight, 1.0);
   }
 
   return NS_OK;
