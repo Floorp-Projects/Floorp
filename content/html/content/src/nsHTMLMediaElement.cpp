@@ -389,8 +389,7 @@ NS_IMPL_STRING_ATTR(nsHTMLMediaElement, Preload, preload)
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
 NS_IMETHODIMP nsHTMLMediaElement::GetMozAutoplayEnabled(PRBool *aAutoplayEnabled)
 {
-  // Do not allow autoplay on editable nodes
-  *aAutoplayEnabled = !IsEditable() && mAutoplayEnabled;
+  *aAutoplayEnabled = mAutoplayEnabled;
 
   return NS_OK;
 }
@@ -1287,7 +1286,6 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mPlayingBeforeSeek(PR_FALSE),
     mPausedForInactiveDocument(PR_FALSE),
     mWaitingFired(PR_FALSE),
-    mIsBindingToTree(PR_FALSE),
     mIsRunningLoadMethod(PR_FALSE),
     mIsLoadingFromSourceChildren(PR_FALSE),
     mDelayingLoadEvent(PR_FALSE),
@@ -1496,19 +1494,18 @@ nsresult nsHTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aPar
                                         nsIContent* aBindingParent,
                                         PRBool aCompileEventHandlers)
 {
-  if (aDocument) {
-    mIsBindingToTree = PR_TRUE;
-    mAutoplayEnabled =
-      IsAutoplayEnabled() && (!aDocument || !aDocument->IsStaticDocument());
-    // The preload action depends on the value of the autoplay attribute.
-    // It's value may have changed, so update it.
-    UpdatePreloadAction();
-  }
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument,
                                                  aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
-  mIsBindingToTree = PR_FALSE;
+  if (aDocument) {
+    mAutoplayEnabled =
+      IsAutoplayEnabled() && (!aDocument || !aDocument->IsStaticDocument()) &&
+      !IsEditable();
+    // The preload action depends on the value of the autoplay attribute.
+    // It's value may have changed, so update it.
+    UpdatePreloadAction();
+  }
 
   return rv;
 }
@@ -2180,7 +2177,8 @@ PRBool nsHTMLMediaElement::CanActivateAutoplay()
   return mAutoplaying &&
          mPaused &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
-         mAutoplayEnabled;
+         mAutoplayEnabled &&
+         !IsEditable();
 }
 
 void nsHTMLMediaElement::NotifyAutoplayDataReady()

@@ -93,6 +93,7 @@ _TEST_FILES = \
 		test_audio1.html \
 		test_audio2.html \
 		test_autoplay.html \
+		test_autoplay_contentEditable.html \
 		test_buffered.html \
 		test_bug448534.html \
 		test_bug463162.xhtml \
