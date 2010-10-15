@@ -552,9 +552,11 @@ namespace nanojit
         asm_output("mov %d(%s+%s*%c),%d", disp, gpn(base), gpn(index), SIBIDX(scale), imm);
     }
 
+    const uint8_t INT3_OP = 0xcc;
+
     inline void Assembler::RET()   { count_ret(); ALU0(0xc3); asm_output("ret"); }
     inline void Assembler::NOP()   { count_alu(); ALU0(0x90); asm_output("nop"); }
-    inline void Assembler::INT3()  {              ALU0(0xcc); asm_output("int3"); }
+    inline void Assembler::INT3()  {              ALU0(INT3_OP); asm_output("int3"); }
 
     inline void Assembler::PUSHi(I32 i) {
         count_push();
