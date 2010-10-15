@@ -139,8 +139,7 @@ class Compiler : public BaseCompiler
 
 #if defined JS_POLYIC
     struct PICGenInfo {
-        PICGenInfo(ic::PICInfo::Kind kind, bool usePropCache)
-          : kind(kind), usePropCache(usePropCache)
+        PICGenInfo(ic::PICInfo::Kind kind) : kind(kind)
         { }
         ic::PICInfo::Kind kind;
         Label fastPathStart;
@@ -158,25 +157,23 @@ class Compiler : public BaseCompiler
         StateRemat idRemat;
         Call callReturn;
         bool hasTypeCheck;
-        bool usePropCache;
         ValueRemat vr;
 # if defined JS_CPU_X64
         ic::PICLabels labels;
 # endif
 
-        void copySimpleMembersTo(ic::PICInfo &ic) const {
-            ic.kind = kind;
-            ic.shapeReg = shapeReg;
-            ic.objReg = objReg;
-            ic.atom = atom;
-            ic.usePropCache = usePropCache;
+        void copySimpleMembersTo(ic::PICInfo &pi) const {
+            pi.kind = kind;
+            pi.shapeReg = shapeReg;
+            pi.objReg = objReg;
+            pi.atom = atom;
             if (kind == ic::PICInfo::SET) {
-                ic.u.vr = vr;
+                pi.u.vr = vr;
             } else if (kind != ic::PICInfo::NAME) {
-                ic.u.get.idReg = idReg;
-                ic.u.get.typeReg = typeReg;
-                ic.u.get.hasTypeCheck = hasTypeCheck;
-                ic.u.get.objRemat = objRemat.offset;
+                pi.u.get.idReg = idReg;
+                pi.u.get.typeReg = typeReg;
+                pi.u.get.hasTypeCheck = hasTypeCheck;
+                pi.u.get.objRemat = objRemat.offset;
             }
         }
 
@@ -278,10 +275,10 @@ class Compiler : public BaseCompiler
 
     /* Opcode handlers. */
     void jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne = NULL, Jump *slowTwo = NULL);
-    void jsop_bindname(uint32 index, bool usePropCache);
+    void jsop_bindname(uint32 index);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
-    void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
+    void jsop_getprop_slow();
     void jsop_getarg(uint32 index);
     void jsop_this();
     void emitReturn(FrameEntry *fe);
@@ -305,10 +302,10 @@ class Compiler : public BaseCompiler
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_unbrand();
-    void jsop_getprop(JSAtom *atom, bool typeCheck = true, bool usePropCache = true);
+    void jsop_getprop(JSAtom *atom, bool typeCheck = true);
     void jsop_length();
-    void jsop_setprop(JSAtom *atom, bool usePropCache = true);
-    void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);
+    void jsop_setprop(JSAtom *atom);
+    void jsop_setprop_slow(JSAtom *atom);
     bool jsop_callprop_slow(JSAtom *atom);
     bool jsop_callprop(JSAtom *atom);
     bool jsop_callprop_obj(JSAtom *atom);

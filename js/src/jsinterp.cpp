@@ -82,6 +82,7 @@
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+#include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -733,12 +734,27 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
         }
     }
 
+    JSInterpreterHook hook = cx->debugHooks->callHook;
+    void *hookData = NULL;
+    if (JS_UNLIKELY(hook != NULL))
+        hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData);
+
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
     JSBool ok;
     {
         AutoPreserveEnumerators preserve(cx);
+        Probes::enterJSFun(cx, fun);
         ok = RunScript(cx, script, fp);
+        Probes::exitJSFun(cx, fun);
     }
+
+    if (JS_UNLIKELY(hookData != NULL)) {
+        hook = cx->debugHooks->callHook;
+        if (hook)
+            hook(cx, fp, JS_FALSE, &ok, hookData);
+    }
+
+    PutActivationObjects(cx, fp);
 
     args.rval() = fp->returnValue();
     JS_ASSERT_IF(ok && (flags & JSINVOKE_CONSTRUCT), !args.rval().isPrimitive());
@@ -2145,28 +2161,11 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     return js_IteratorNext(cx, iterobj, rval);
 }
 
-static inline bool
-ScriptPrologue(JSContext *cx, JSStackFrame *fp)
-{
-    if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee());
-        if (!obj)
-            return false;
-        fp->functionThis().setObject(*obj);
-    }
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (JS_UNLIKELY(hook != NULL))
-        fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
-
-    Probes::enterJSFun(cx, fp->maybeFun());
-
-    return true;
-}
 
 namespace js {
 
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
-Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInterpMode interpMode)
+Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, uintN interpFlags)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
@@ -2397,7 +2396,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             script->maybeNativeCodeForPC(regs.fp->isConstructing(), regs.pc)) { \
             JS_ASSERT(!TRACE_RECORDER(cx));                                   \
             interpReturnOK = true;                                            \
-            goto leave_on_safe_point;                                         \
+            goto stop_recording;                                              \
         }                                                                     \
     } while (0)
 #else
@@ -2433,25 +2432,13 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    JSFrameRegs regs = *cx->regs;
+    MUST_FLOW_THROUGH("exit");
+    ++cx->interpLevel;
 
     /* Repoint cx->regs to a local variable for faster access. */
-    struct InterpExitGuard {
-        JSContext *cx;
-        const JSFrameRegs &regs;
-        JSFrameRegs *prevContextRegs;
-        InterpExitGuard(JSContext *cx, JSFrameRegs &regs)
-          : cx(cx), regs(regs), prevContextRegs(cx->regs) {
-            cx->setCurrentRegs(&regs);
-            ++cx->interpLevel;
-        }
-        ~InterpExitGuard() {
-            --cx->interpLevel;
-            JS_ASSERT(cx->regs == &regs);
-            *prevContextRegs = regs;
-            cx->setCurrentRegs(prevContextRegs);
-        }
-    } interpGuard(cx, regs);
+    JSFrameRegs *const prevContextRegs = cx->regs;
+    JSFrameRegs regs = *cx->regs;
+    cx->setCurrentRegs(&regs);
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
@@ -2463,7 +2450,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     JS_ASSERT(script->length > 1);
 
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
-    bool leaveOnSafePoint = (interpMode == JSINTERP_SAFEPOINT);
+    bool leaveOnSafePoint = !!(interpFlags & JSINTERP_SAFEPOINT);
 # define CLEAR_LEAVE_ON_TRACE_POINT() ((void) (leaveOnSafePoint = false))
 #else
 # define CLEAR_LEAVE_ON_TRACE_POINT() ((void) 0)
@@ -2483,7 +2470,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp->isGeneratorFrame())) {
-        JS_ASSERT(interpGuard.prevContextRegs == &cx->generatorFor(regs.fp)->regs);
+        JS_ASSERT(prevContextRegs == &cx->generatorFor(regs.fp)->regs);
         JS_ASSERT((size_t) (regs.pc - script->code) <= script->length);
         JS_ASSERT((size_t) (regs.sp - regs.fp->base()) <= StackDepth(script));
 
@@ -2502,7 +2489,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
      * there should already be a valid recorder. Otherwise...
      * we cannot reenter the interpreter while recording.
      */
-    if (interpMode == JSINTERP_RECORD) {
+    if (interpFlags & JSINTERP_RECORD) {
         JS_ASSERT(TRACE_RECORDER(cx));
         ENABLE_INTERRUPTS();
     } else if (TRACE_RECORDER(cx)) {
@@ -2512,15 +2499,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     if (regs.fp->hasImacropc())
         atoms = COMMON_ATOMS_START(&rt->atomState);
 #endif
-
-    /* Don't call the script prologue if executing between Method and Trace JIT. */
-    if (interpMode == JSINTERP_NORMAL) {
-        JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), regs.pc == script->code);
-        if (!ScriptPrologue(cx, regs.fp))
-            goto error;
-    }
-
-    CHECK_INTERRUPT_HANDLER();
 
     /* State communicated between non-local jumps: */
     JSBool interpReturnOK;
@@ -2607,8 +2585,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             AbortableRecordingStatus status = tr->monitorRecording(op);
             JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
 
-            if (interpMode != JSINTERP_NORMAL) {
-                JS_ASSERT(interpMode == JSINTERP_RECORD || JSINTERP_SAFEPOINT);
+            if (interpFlags & (JSINTERP_RECORD | JSINTERP_SAFEPOINT)) {
                 switch (status) {
                   case ARECORD_IMACRO_ABORTED:
                   case ARECORD_ABORTED:
@@ -2783,11 +2760,27 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, &regs.fp->scopeChain(), 0));
-        interpReturnOK = ScriptEpilogue(cx, regs.fp, interpReturnOK);
-        CHECK_INTERRUPT_HANDLER();
+        if (JS_UNLIKELY(regs.fp->hasHookData())) {
+            if (JSInterpreterHook hook = cx->debugHooks->callHook) {
+                hook(cx, regs.fp, JS_FALSE, &interpReturnOK, regs.fp->hookData());
+                CHECK_INTERRUPT_HANDLER();
+            }
+        }
 
-        /* The JIT inlines ScriptEpilogue. */
-  jit_return:
+        PutActivationObjects(cx, regs.fp);
+
+        Probes::exitJSFun(cx, regs.fp->maybeFun());
+
+        /*
+         * If inline-constructing, replace primitive rval with the new object
+         * passed in via |this|, and instrument this constructor invocation.
+         */
+        if (regs.fp->isConstructing()) {
+            if (regs.fp->returnValue().isPrimitive())
+                regs.fp->setReturnValue(ObjectValue(regs.fp->constructorThis()));
+            JS_RUNTIME_METER(cx->runtime, constructs);
+        }
+
         Value *newsp = regs.fp->actualArgs() - 1;
         newsp[-1] = regs.fp->returnValue();
         cx->stack().popInlineFrame(cx, regs.fp->prev(), newsp);
@@ -2810,6 +2803,18 @@ BEGIN_CASE(JSOP_STOP)
         goto error;
     } else {
         JS_ASSERT(regs.sp == regs.fp->base());
+        if (regs.fp->isConstructing() && regs.fp->returnValue().isPrimitive())
+            regs.fp->setReturnValue(ObjectValue(regs.fp->constructorThis()));
+
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
+        /* Hack: re-push rval so either JIT will read it properly. */
+        regs.fp->setBailedAtReturn();
+        if (TRACE_RECORDER(cx)) {
+            AbortRecording(cx, "recording out of Interpret");
+            interpReturnOK = true;
+            goto stop_recording;
+        }
+#endif
     }
     interpReturnOK = true;
     goto exit;
@@ -4564,6 +4569,41 @@ BEGIN_CASE(JSOP_ENUMELEM)
 }
 END_CASE(JSOP_ENUMELEM)
 
+BEGIN_CASE(JSOP_BEGIN)
+{
+    if (regs.fp->isConstructing()) {
+        JSObject *obj2 = js_CreateThisForFunction(cx, &regs.fp->callee());
+        if (!obj2)
+            goto error;
+        regs.fp->functionThis().setObject(*obj2);
+    }
+
+    /* Call the debugger hook if present. */
+    if (JSInterpreterHook hook = cx->debugHooks->callHook) {
+        regs.fp->setHookData(hook(cx, regs.fp, JS_TRUE, 0,
+                                  cx->debugHooks->callHookData));
+        CHECK_INTERRUPT_HANDLER();
+    }
+
+    JS_RUNTIME_METER(rt, inlineCalls);
+
+    Probes::enterJSFun(cx, regs.fp->fun());
+
+#ifdef JS_METHODJIT
+    /* Try to ensure methods are method JIT'd.  */
+    mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp);
+    if (status == mjit::Compile_Error)
+        goto error;
+    if (!TRACE_RECORDER(cx) && status == mjit::Compile_Okay) {
+        if (!mjit::JaegerShot(cx))
+            goto error;
+        interpReturnOK = true;
+        goto inline_return;
+    }
+#endif
+}
+END_CASE(JSOP_BEGIN)
+
 {
     JSFunction *newfun;
     JSObject *callee;
@@ -4663,31 +4703,12 @@ BEGIN_CASE(JSOP_APPLY)
                 goto error;
 
             inlineCallCount++;
-            JS_RUNTIME_METER(rt, inlineCalls);
 
             TRACE_0(EnterFrame);
 
-            CHECK_INTERRUPT_HANDLER();
-
-#ifdef JS_METHODJIT
-            /* Try to ensure methods are method JIT'd.  */
-            mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp);
-            if (status == mjit::Compile_Error)
-                goto error;
-            if (!TRACE_RECORDER(cx) && status == mjit::Compile_Okay) {
-                interpReturnOK = mjit::JaegerShot(cx);
-                CHECK_INTERRUPT_HANDLER();
-                goto jit_return;
-            }
-#endif
-
-            if (!ScriptPrologue(cx, regs.fp))
-                goto error;
-
-            CHECK_INTERRUPT_HANDLER();
-
             /* Load first op and dispatch it (safe since JSOP_STOP). */
             op = (JSOp) *regs.pc;
+            JS_ASSERT(op == JSOP_BEGIN);
             DO_OP();
         }
 
@@ -6912,9 +6933,6 @@ END_CASE(JSOP_ARRAYPUSH)
         goto inline_return;
 
   exit:
-    interpReturnOK = ScriptEpilogue(cx, regs.fp, interpReturnOK);
-    regs.fp->setFinishedInInterpreter();
-
     /*
      * At this point we are inevitably leaving an interpreted function or a
      * top-level script, and returning to one of:
@@ -6927,14 +6945,19 @@ END_CASE(JSOP_ARRAYPUSH)
      * frame pc.
      */
     JS_ASSERT(entryFrame == regs.fp);
+    JS_ASSERT(cx->regs == &regs);
+    *prevContextRegs = regs;
+    cx->setCurrentRegs(prevContextRegs);
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(interpReturnOK && interpMode == JSINTERP_RECORD, !TRACE_RECORDER(cx));
+    JS_ASSERT_IF(interpReturnOK && (interpFlags & JSINTERP_RECORD), !TRACE_RECORDER(cx));
     if (TRACE_RECORDER(cx))
         AbortRecording(cx, "recording out of Interpret");
 #endif
 
     JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), !js_IsActiveWithOrBlock(cx, &regs.fp->scopeChain(), 0));
+
+    --cx->interpLevel;
 
     return interpReturnOK;
 
@@ -6948,13 +6971,12 @@ END_CASE(JSOP_ARRAYPUSH)
         goto error;
     }
 
-    /*
-     * This path is used when it's guaranteed the method can be finished
-     * inside the JIT.
-     */
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
-  leave_on_safe_point:
+  stop_recording:
 #endif
+    JS_ASSERT(cx->regs == &regs);
+    *prevContextRegs = regs;
+    cx->setCurrentRegs(prevContextRegs);
     return interpReturnOK;
 }
 

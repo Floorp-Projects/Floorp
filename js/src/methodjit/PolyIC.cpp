@@ -690,10 +690,10 @@ class SetPropCompiler : public PICStubCompiler
 
 class GetPropCompiler : public PICStubCompiler
 {
-    JSObject    *obj;
-    JSAtom      *atom;
-    VoidStubPIC stub;
-    int         lastStubSecondShapeGuard;
+    JSObject *obj;
+    JSAtom *atom;
+    void   *stub;
+    int lastStubSecondShapeGuard;
 
     static int32 inlineShapeOffset(ic::PICInfo &pic) {
 #if defined JS_NUNBOX32
@@ -733,11 +733,16 @@ class GetPropCompiler : public PICStubCompiler
 
   public:
     GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
+                    VoidStub stub)
+      : PICStubCompiler("getprop", f, script, pic), obj(obj), atom(atom),
+        stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
+        lastStubSecondShapeGuard(pic.secondShapeGuard)
+    { }
+
+    GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
                     VoidStubPIC stub)
-      : PICStubCompiler(pic.kind == ic::PICInfo::CALL ? "callprop" : "getprop", f, script, pic),
-        obj(obj),
-        atom(atom),
-        stub(stub),
+      : PICStubCompiler("callprop", f, script, pic), obj(obj), atom(atom),
+        stub(JS_FUNC_TO_DATA_PTR(void *, stub)),
         lastStubSecondShapeGuard(pic.secondShapeGuard)
     { }
 
@@ -2007,24 +2012,6 @@ class BindNameCompiler : public PICStubCompiler
     }
 };
 
-static void JS_FASTCALL
-DisabledLengthIC(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::Length(f);
-}
-
-static void JS_FASTCALL
-DisabledGetPropIC(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::GetProp(f);
-}
-
-static void JS_FASTCALL
-DisabledGetPropICNoCache(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::GetPropNoCache(f, pic->atom);
-}
-
 void JS_FASTCALL
 ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 {
@@ -2033,7 +2020,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     JSAtom *atom = pic->atom;
     if (atom == f.cx->runtime->atomState.lengthAtom) {
         if (f.regs.sp[-1].isString()) {
-            GetPropCompiler cc(f, script, NULL, *pic, NULL, DisabledLengthIC);
+            GetPropCompiler cc(f, script, NULL, *pic, NULL, stubs::Length);
             if (!cc.generateStringLengthStub()) {
                 cc.disable("error");
                 THROW();
@@ -2044,7 +2031,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden())) {
-                GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledLengthIC);
+                GetPropCompiler cc(f, script, obj, *pic, NULL, stubs::Length);
                 if (obj->isArray()) {
                     if (!cc.generateArrayLengthStub()) {
                         cc.disable("error");
@@ -2069,10 +2056,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         THROW();
 
     if (pic->shouldGenerate()) {
-        VoidStubPIC stub = pic->usePropCache
-                           ? DisabledGetPropIC
-                           : DisabledGetPropICNoCache;
-        GetPropCompiler cc(f, script, obj, *pic, atom, stub);
+        GetPropCompiler cc(f, script, obj, *pic, atom, stubs::GetProp);
         if (!cc.update()) {
             cc.disable("error");
             THROW();
@@ -2116,16 +2100,16 @@ ic::GetElem(VMFrame &f, ic::PICInfo *pic)
 
 template <JSBool strict>
 static void JS_FASTCALL
-DisabledSetPropIC(VMFrame &f, ic::PICInfo *pic)
+SetPropDumb(VMFrame &f, ic::PICInfo *pic)
 {
-    stubs::SetName<strict>(f, pic->atom);
+    stubs::SetPropNoCache<strict>(f, pic->atom);
 }
 
 template <JSBool strict>
 static void JS_FASTCALL
-DisabledSetPropICNoCache(VMFrame &f, ic::PICInfo *pic)
+SetPropSlow(VMFrame &f, ic::PICInfo *pic)
 {
-    stubs::SetPropNoCache<strict>(f, pic->atom);
+    stubs::SetName<strict>(f, pic->atom);
 }
 
 void JS_FASTCALL
@@ -2147,9 +2131,22 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
     // cache can't handle a GET and SET from the same scripted PC.
     //
 
-    VoidStubPIC stub = pic->usePropCache
-                       ? STRICT_VARIANT(DisabledSetPropIC)
-                       : STRICT_VARIANT(DisabledSetPropICNoCache);
+    VoidStubPIC stub;
+    switch (JSOp(*f.regs.pc)) {
+      case JSOP_PROPINC:
+      case JSOP_PROPDEC:
+      case JSOP_INCPROP:
+      case JSOP_DECPROP:
+      case JSOP_NAMEINC:
+      case JSOP_NAMEDEC:
+      case JSOP_INCNAME:
+      case JSOP_DECNAME:
+        stub = STRICT_VARIANT(SetPropDumb);
+        break;
+      default:
+        stub = STRICT_VARIANT(SetPropSlow);
+        break;
+    }
 
     SetPropCompiler cc(f, script, obj, *pic, pic->atom, stub);
     if (!cc.update()) {
@@ -2162,7 +2159,7 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
 }
 
 static void JS_FASTCALL
-DisabledCallPropIC(VMFrame &f, ic::PICInfo *pic)
+CallPropSlow(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::CallProp(f, pic->atom);
 }
@@ -2257,7 +2254,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
         }
     }
 
-    GetPropCompiler cc(f, script, &objv.toObject(), *pic, pic->atom, DisabledCallPropIC);
+    GetPropCompiler cc(f, script, &objv.toObject(), *pic, pic->atom, CallPropSlow);
     if (usePIC) {
         if (lval.isObject()) {
             if (!cc.update()) {
@@ -2286,13 +2283,13 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
 }
 
 static void JS_FASTCALL
-DisabledNameIC(VMFrame &f, ic::PICInfo *pic)
+SlowName(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::Name(f);
 }
 
 static void JS_FASTCALL
-DisabledXNameIC(VMFrame &f, ic::PICInfo *pic)
+SlowXName(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::GetProp(f);
 }
@@ -2305,7 +2302,7 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
     /* GETXPROP is guaranteed to have an object. */
     JSObject *obj = &f.regs.sp[-1].toObject();
 
-    ScopeNameCompiler cc(f, script, obj, *pic, pic->atom, DisabledXNameIC);
+    ScopeNameCompiler cc(f, script, obj, *pic, pic->atom, SlowXName);
 
     if (!cc.updateForXName()) {
         cc.disable("error");
@@ -2323,7 +2320,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
 
-    ScopeNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, DisabledNameIC);
+    ScopeNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, SlowName);
 
     if (!cc.updateForName()) {
         cc.disable("error");
@@ -2337,15 +2334,9 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
 }
 
 static void JS_FASTCALL
-DisabledBindNameIC(VMFrame &f, ic::PICInfo *pic)
+SlowBindName(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::BindName(f);
-}
-
-static void JS_FASTCALL
-DisabledBindNameICNoCache(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::BindNameNoCache(f, pic->atom);
 }
 
 void JS_FASTCALL
@@ -2353,10 +2344,7 @@ ic::BindName(VMFrame &f, ic::PICInfo *pic)
 {
     JSScript *script = f.fp()->script();
 
-    VoidStubPIC stub = pic->usePropCache
-                       ? DisabledBindNameIC
-                       : DisabledBindNameICNoCache;
-    BindNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, stub);
+    BindNameCompiler cc(f, script, &f.fp()->scopeChain(), *pic, pic->atom, SlowBindName);
 
     JSObject *obj = cc.update();
     if (!obj) {
