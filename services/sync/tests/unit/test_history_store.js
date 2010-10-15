@@ -113,6 +113,14 @@ function run_test() {
     do_check_eq(queryres[0].time, TIMESTAMP3);
     do_check_eq(queryres[0].title, "The bird is the word!");
 
+    _("Make sure we handle invalid URLs in places databases gracefully.");
+    let query = "INSERT INTO moz_places "
+      + "(url, title, rev_host, visit_count, last_visit_date) "
+      + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
+    let stmt = Utils.createStatement(Svc.History.DBConnection, query);
+    let result = Utils.queryAsync(stmt);    
+    do_check_eq([id for (id in store.getAllIDs())].length, 3);
+
     _("Remove a record from the store.");
     store.remove({id: fxguid});
     do_check_false(store.itemExists(fxguid));
