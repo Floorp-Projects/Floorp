@@ -208,15 +208,6 @@
 
 #define SHAPE_INVALID_SLOT              0xffffffff
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4307) /* Silence warning about + 1 overflowing. */
-#endif
-JS_STATIC_ASSERT(uint32(SHAPE_INVALID_SLOT + 1) == uint32(0));
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 namespace js {
 
 /*
@@ -383,9 +374,9 @@ struct Shape : public JSObjectMap
      *
      * Any child shape, whether in a shape tree or in a dictionary list, must
      * have a slotSpan either one greater than its slot value (if the child's
-     * slot is SHAPE_INVALID_SLOT, this will yield 0; the static assertion just
-     * after the SHAPE_INVALID_SLOT definition enforces this), or equal to its
-     * parent p's slotSpan, whichever is greater. This is the inductive step.
+     * slot is SHAPE_INVALID_SLOT, this will yield 0; the static assertion
+     * below enforces this), or equal to its parent p's slotSpan, whichever is
+     * greater. This is the inductive step.
      *
      * If we maintained shape paths such that parent slot was always one less
      * than child slot, possibly with an exception for SHAPE_INVALID_SLOT slot
@@ -415,6 +406,7 @@ struct Shape : public JSObjectMap
      * with an auxiliary mechanism based on table.
      */
     void setParent(js::Shape *p) {
+        JS_STATIC_ASSERT(uint32(SHAPE_INVALID_SLOT) == ~uint32(0));
         if (p)
             slotSpan = JS_MAX(p->slotSpan, slot + 1);
         JS_ASSERT(slotSpan < JSObject::NSLOTS_LIMIT);
