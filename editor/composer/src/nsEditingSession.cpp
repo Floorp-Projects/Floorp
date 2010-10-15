@@ -145,12 +145,12 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 {
   mEditorType.Truncate();
   mEditorFlags = 0;
-  mWindowToBeEdited = do_GetWeakReference(aWindow);
 
   // disable plugins
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
+  mDocShell = do_GetWeakReference(docShell);
   mInteractive = aInteractive;
   mMakeWholeDocumentEditable = aMakeWholeDocumentEditable;
 
@@ -909,12 +909,8 @@ nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress,
 PRBool
 nsEditingSession::IsProgressForTargetDocument(nsIWebProgress *aWebProgress)
 {
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  if (aWebProgress)
-    aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  nsCOMPtr<nsIDOMWindow> editedDOMWindow = do_QueryReferent(mWindowToBeEdited);
-
-  return (domWindow && (domWindow == editedDOMWindow));
+  nsCOMPtr<nsIWebProgress> editedWebProgress = do_QueryReferent(mDocShell);
+  return editedWebProgress == aWebProgress;
 }
 
 
@@ -1060,7 +1056,6 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
           NS_ENSURE_SUCCESS(rv, rv);
 
           mEditorStatus = eEditorCreationInProgress;
-          mDocShell = do_GetWeakReference(docShell);
           mLoadBlankDocTimer->InitWithFuncCallback(
                                           nsEditingSession::TimerCallback,
                                           static_cast<void*> (mDocShell.get()),
@@ -1426,7 +1421,7 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 
   // Kill our weak reference to our original window, in case
   // it changes on restore, or otherwise dies.
-  mWindowToBeEdited = nsnull;
+  mDocShell = nsnull;
 
   return NS_OK;
 }
@@ -1442,7 +1437,9 @@ nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
   // old editor ot the window.
   nsresult rv;
 
-  mWindowToBeEdited = do_GetWeakReference(aWindow);
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  mDocShell = do_GetWeakReference(docShell);
 
   // Disable plugins.
   if (!mInteractive)
