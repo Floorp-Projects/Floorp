@@ -595,9 +595,9 @@ JSVAL_IS_STRING_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE jsval_layout
 STRING_TO_JSVAL_IMPL(JSString *str)
 {
-    JS_ASSERT(str);
     jsval_layout l;
     uint64 strBits = (uint64)str;
+    JS_ASSERT(str);
     JS_ASSERT((strBits >> JSVAL_TAG_SHIFT) == 0);
     l.asBits = strBits | JSVAL_SHIFTED_TAG_STRING;
     return l;
