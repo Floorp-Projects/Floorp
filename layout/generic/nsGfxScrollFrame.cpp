@@ -197,8 +197,16 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
       // the layer system wants us to invalidate.
       damage += GetScrollPosition() - mInner.mScrollPosAtLastPaint;
       nsRect r;
-      if (r.IntersectRect(damage, mInner.mScrollPort)) {
-        nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
+      r.IntersectRect(damage, mInner.mScrollPort);
+      PRBool seperateThebes = IsScrollingActive() &&
+        !(aFlags & INVALIDATE_NO_THEBES_LAYERS) && r != damage;
+      if (seperateThebes) {
+        nsHTMLContainerFrame::InvalidateInternal(damage, 0, 0, aForChild,
+          aFlags | INVALIDATE_ONLY_THEBES_LAYERS);
+      }
+      if (!r.IsEmpty()) {
+        nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild,
+          aFlags | (seperateThebes ? INVALIDATE_NO_THEBES_LAYERS : 0));
       }
       if (mInner.mIsRoot && r != damage) {
         // Make sure we notify our prescontext about invalidations outside
@@ -1050,8 +1058,16 @@ nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
     nsRect damage = aDamageRect + nsPoint(aX, aY) +
       GetScrollPosition() - mInner.mScrollPosAtLastPaint;
     nsRect r;
-    if (r.IntersectRect(damage, mInner.mScrollPort)) {
-      nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
+    r.IntersectRect(damage, mInner.mScrollPort);
+    PRBool seperateThebes = IsScrollingActive() &&
+      !(aFlags & INVALIDATE_NO_THEBES_LAYERS) && r != damage;
+    if (seperateThebes) {
+      nsBoxFrame::InvalidateInternal(damage, 0, 0, aForChild,
+        aFlags | INVALIDATE_ONLY_THEBES_LAYERS);
+    }
+    if (!r.IsEmpty()) {
+      nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild,
+        aFlags | (seperateThebes ? INVALIDATE_NO_THEBES_LAYERS : 0));
     }
     return;
   }
