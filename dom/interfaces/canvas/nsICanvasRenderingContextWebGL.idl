@@ -726,6 +726,10 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   [noscript] void texImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+  [noscript] void texImage2D_imageData(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+                                   in WebGLsizei width, in WebGLsizei height,
+                                   in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
                                  in WebGLenum format, in WebGLenum type, in nsIDOMElement element);
@@ -735,6 +739,9 @@ interface nsICanvasRenderingContextWebGL : nsISupports
                                     in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                     in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
   [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
+                                      in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
+                                      in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+  [noscript] void texSubImage2D_imageData(in WebGLenum target, in WebGLint level,
                                       in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
                                       in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement

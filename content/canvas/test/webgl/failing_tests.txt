@@ -12,8 +12,6 @@ conformance/glsl-conformance.html
 conformance/methods.html
 conformance/program-test.html
 conformance/read-pixels-pack-alignment.html
-conformance/tex-image-and-sub-image-2d-with-array-buffer-view.html
-conformance/tex-image-and-sub-image-2d-with-image-data.html
 conformance/tex-image-and-sub-image-2d-with-video.html
 conformance/tex-image-with-format-and-type.html
 conformance/tex-image-with-invalid-data.html

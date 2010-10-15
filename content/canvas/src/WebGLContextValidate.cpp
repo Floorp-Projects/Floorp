@@ -301,9 +301,6 @@ PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
     if (type == LOCAL_GL_UNSIGNED_BYTE)
     {
         switch (format) {
-            case LOCAL_GL_RED:
-            case LOCAL_GL_GREEN:
-            case LOCAL_GL_BLUE:
             case LOCAL_GL_ALPHA:
             case LOCAL_GL_LUMINANCE:
                 *texelSize = 1;
@@ -467,6 +464,9 @@ WebGLContext::InitAndValidateGL()
             gl->fEnable(LOCAL_GL_POINT_SPRITE);
         }
     }
+
+    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT,   (GLint*) &mPixelStorePackAlignment);
+    gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, (GLint*) &mPixelStoreUnpackAlignment);
 
     // Check the shader validator pref
     nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
