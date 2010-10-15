@@ -1270,6 +1270,19 @@
                      label="&syncToolbarButton.label;"
                      oncommand="gSyncUI.handleToolbarButton()"/>
 #endif
+      <toolbarbutton id="feed-button"
+                     type="menu"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     disabled="true"
+                     label="&feedButton.label;"
+                     tooltiptext="&feedButton.tooltip;"
+                     onclick="return FeedHandler.onFeedButtonClick(event);">
+        <menupopup position="after_end"
+                   id="feed-menu"
+                   onpopupshowing="return FeedHandler.buildFeedList(this);"
+                   oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                   onclick="checkForMiddleClick(this, event);"/>
+      </toolbarbutton>
     </toolbarpalette>
   </toolbox>
 
