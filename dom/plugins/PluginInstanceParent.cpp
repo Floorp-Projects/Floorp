@@ -499,6 +499,12 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 
     mSentPaintNotification = PR_FALSE;
 
+#ifdef MOZ_X11
+    if (mFrontSurface &&
+        mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib)
+        XSync(DefaultXDisplay(), False);
+#endif
+
     if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
         *prevSurface = static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
     else
