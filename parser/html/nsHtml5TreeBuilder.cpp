@@ -1026,6 +1026,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
             case NS_HTML5TREE_BUILDER_FONT: {
               reconstructTheActiveFormattingElements();
+              maybeForgetEarlierDuplicateFormattingElement(elementName->name, attributes);
               appendToCurrentNodeAndPushFormattingElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
               attributes = nsnull;
               NS_HTML5_BREAK(starttagloop);
@@ -2387,13 +2388,6 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_A:
-          case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
-          case NS_HTML5TREE_BUILDER_FONT:
-          case NS_HTML5TREE_BUILDER_NOBR: {
-            adoptionAgencyEndTag(name);
-            NS_HTML5_BREAK(endtagloop);
-          }
           case NS_HTML5TREE_BUILDER_OBJECT:
           case NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET: {
             eltPos = findLastInScope(name);
@@ -2442,6 +2436,14 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
 
               NS_HTML5_BREAK(endtagloop);
             } else {
+            }
+          }
+          case NS_HTML5TREE_BUILDER_A:
+          case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+          case NS_HTML5TREE_BUILDER_FONT:
+          case NS_HTML5TREE_BUILDER_NOBR: {
+            if (adoptionAgencyEndTag(name)) {
+              NS_HTML5_BREAK(endtagloop);
             }
           }
           default: {
@@ -3172,10 +3174,10 @@ nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(PRInt32 pos)
   listPtr--;
 }
 
-void 
+PRBool 
 nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
 {
-  for (PRInt32 i = 0; i < NS_HTML5TREE_BUILDER_AAA_MAX_ITERATIONS; ++i) {
+  for (PRInt32 i = 0; i < 8; ++i) {
     PRInt32 formattingEltListPos = listPtr;
     while (formattingEltListPos > -1) {
       nsHtml5StackNode* listNode = listOfActiveFormattingElements[formattingEltListPos];
@@ -3188,8 +3190,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
       formattingEltListPos--;
     }
     if (formattingEltListPos == -1) {
-
-      return;
+      return PR_FALSE;
     }
     nsHtml5StackNode* formattingElt = listOfActiveFormattingElements[formattingEltListPos];
     PRInt32 formattingEltStackPos = currentPtr;
@@ -3206,11 +3207,11 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
     if (formattingEltStackPos == -1) {
 
       removeFromListOfActiveFormattingElements(formattingEltListPos);
-      return;
+      return PR_TRUE;
     }
     if (!inScope) {
 
-      return;
+      return PR_TRUE;
     }
 
     PRInt32 furthestBlockPos = formattingEltStackPos + 1;
@@ -3226,14 +3227,14 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
         pop();
       }
       removeFromListOfActiveFormattingElements(formattingEltListPos);
-      return;
+      return PR_TRUE;
     }
     nsHtml5StackNode* commonAncestor = stack[formattingEltStackPos - 1];
     nsHtml5StackNode* furthestBlock = stack[furthestBlockPos];
     PRInt32 bookmark = formattingEltListPos;
     PRInt32 nodePos = furthestBlockPos;
     nsHtml5StackNode* lastNode = furthestBlock;
-    for (PRInt32 j = 0; j < NS_HTML5TREE_BUILDER_AAA_MAX_ITERATIONS; ++j) {
+    for (PRInt32 j = 0; j < 3; ++j) {
       nodePos--;
       nsHtml5StackNode* node = stack[nodePos];
       PRInt32 nodeListPos = findInListOfActiveFormattingElements(node);
@@ -3287,6 +3288,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
     insertIntoStack(formattingClone, furthestBlockPos);
     ;
   }
+  return PR_TRUE;
 }
 
 void 
@@ -3338,6 +3340,26 @@ nsHtml5TreeBuilder::findInListOfActiveFormattingElementsContainsBetweenEndAndLas
     }
   }
   return -1;
+}
+
+void 
+nsHtml5TreeBuilder::maybeForgetEarlierDuplicateFormattingElement(nsIAtom* name, nsHtml5HtmlAttributes* attributes)
+{
+  PRInt32 candidate = -1;
+  PRInt32 count = 0;
+  for (PRInt32 i = listPtr; i >= 0; i--) {
+    nsHtml5StackNode* node = listOfActiveFormattingElements[i];
+    if (!node) {
+      break;
+    }
+    if (node->name == name && node->attributes->equalsAnother(attributes)) {
+      candidate = i;
+      ++count;
+    }
+  }
+  if (count >= 3) {
+    removeFromListOfActiveFormattingElements(candidate);
+  }
 }
 
 PRInt32 
