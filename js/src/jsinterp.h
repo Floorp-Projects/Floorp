@@ -59,10 +59,11 @@ struct JSFrameRegs
 };
 
 /* Flags to toggle js::Interpret() execution. */
-enum JSInterpFlags
+enum JSInterpMode
 {
-    JSINTERP_RECORD            =     0x1, /* interpreter has been started to record/run traces */
-    JSINTERP_SAFEPOINT         =     0x2  /* interpreter should leave on a method JIT safe point */
+    JSINTERP_NORMAL            =     0, /* Interpreter is running normally. */
+    JSINTERP_RECORD            =     1, /* interpreter has been started to record/run traces */
+    JSINTERP_SAFEPOINT         =     2  /* interpreter should leave on a method JIT safe point */
 };
 
 /* Flags used in JSStackFrame::flags_ */
@@ -83,7 +84,7 @@ enum JSFrameFlags
     /* Temporary frame states */
     JSFRAME_ASSIGNING          =   0x100, /* not-JOF_ASSIGNING op is assigning */
     JSFRAME_YIELDING           =   0x200, /* js::Interpret dispatched JSOP_YIELD */
-    JSFRAME_BAILED_AT_RETURN   =   0x400, /* bailed at JSOP_RETURN */
+    JSFRAME_FINISHED_IN_INTERPRETER = 0x400, /* set if frame finished in Interpret() */
 
     /* Concerning function arguments */
     JSFRAME_OVERRIDE_ARGS      =  0x1000, /* overridden arguments local variable */
@@ -680,12 +681,12 @@ struct JSStackFrame
         flags_ &= ~JSFRAME_YIELDING;
     }
 
-    bool isBailedAtReturn() const {
-        return flags_ & JSFRAME_BAILED_AT_RETURN;
+    void setFinishedInInterpreter() {
+        flags_ |= JSFRAME_FINISHED_IN_INTERPRETER;
     }
 
-    void setBailedAtReturn() {
-        flags_ |= JSFRAME_BAILED_AT_RETURN;
+    bool finishedInInterpreter() const {
+        return !!(flags_ & JSFRAME_FINISHED_IN_INTERPRETER);
     }
 
     /*
@@ -982,7 +983,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
  * pointed to by cx->fp until completion or error.
  */
 extern JS_REQUIRES_STACK JS_NEVER_INLINE bool
-Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0, uintN interpFlags = 0);
+Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0, JSInterpMode mode = JSINTERP_NORMAL);
 
 extern JS_REQUIRES_STACK bool
 RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp);
