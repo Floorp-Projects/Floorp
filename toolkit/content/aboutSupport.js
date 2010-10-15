@@ -90,9 +90,14 @@ window.onload = function () {
 
   // Update the application basics section.
   document.getElementById("application-box").textContent = Services.appinfo.name;
-  document.getElementById("version-box").textContent = Services.appinfo.version;
   document.getElementById("useragent-box").textContent = navigator.userAgent;
   document.getElementById("supportLink").href = supportUrl;
+  let version = Services.appinfo.version;
+  try {
+    version += " (" + Services.prefs.getCharPref("app.support.vendor") + ")";
+  } catch (e) {
+  }
+  document.getElementById("version-box").textContent = version;
 
   // Update the other sections.
   populatePreferencesSection();
