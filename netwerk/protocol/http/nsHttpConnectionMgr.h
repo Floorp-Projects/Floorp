@@ -48,13 +48,18 @@
 #include "nsAutoPtr.h"
 #include "prmon.h"
 
+#include "nsIObserver.h"
+#include "nsITimer.h"
+
 class nsHttpPipeline;
 
 //-----------------------------------------------------------------------------
 
-class nsHttpConnectionMgr
+class nsHttpConnectionMgr : public nsIObserver
 {
 public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
 
     // parameter names
     enum nsParamName {
@@ -86,18 +91,12 @@ public:
     // NOTE: functions below may be called on any thread.
     //-------------------------------------------------------------------------
 
-    nsrefcnt AddRef()
-    {
-        return PR_AtomicIncrement(&mRef);
-    }
+    // Schedules next pruning of dead connection to happen after
+    // given time.
+    void PruneDeadConnectionsAfter(PRUint32 time);
 
-    nsrefcnt Release()
-    {
-        nsrefcnt n = PR_AtomicDecrement(&mRef);
-        if (n == 0)
-            delete this;
-        return n;
-    }
+    // Stops timer scheduled for next pruning of dead connections.
+    void StopPruneDeadConnectionsTimer();
 
     // adds a transaction to the list of managed transactions.
     nsresult AddTransaction(nsHttpTransaction *, PRInt32 priority);
@@ -274,9 +273,17 @@ private:
     void OnMsgReclaimConnection    (PRInt32, void *);
     void OnMsgUpdateParam          (PRInt32, void *);
 
-    // counters
+    // Total number of active connections in all of the ConnectionEntry objects
+    // that are accessed from mCT connection table.
     PRUint16 mNumActiveConns;
+    // Total number of idle connections in all of the ConnectionEntry objects
+    // that are accessed from mCT connection table.
     PRUint16 mNumIdleConns;
+
+    // Holds time in seconds for next wake-up to prune dead connections. 
+    PRUint64 mTimeOfNextWakeUp;
+    // Timer for next pruning of dead connections.
+    nsCOMPtr<nsITimer> mTimer;
 
     //
     // the connection table

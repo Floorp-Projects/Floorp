@@ -210,9 +210,6 @@ nsHttpHandler::nsHttpHandler()
 
 nsHttpHandler::~nsHttpHandler()
 {
-    // We do not deal with the timer cancellation in the destructor since
-    // it is taken care of in xpcom shutdown event in the Observe method.
-
     LOG(("Deleting nsHttpHandler [this=%x]\n", this));
 
     // make sure the connection manager is shutdown
@@ -335,7 +332,6 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
     }
  
-    StartPruneDeadConnectionsTimer();
     return NS_OK;
 }
 
@@ -361,31 +357,6 @@ nsHttpHandler::InitConnectionMgr()
                         mMaxRequestDelay,
                         mMaxPipelinedRequests);
     return rv;
-}
-
-void
-nsHttpHandler::StartPruneDeadConnectionsTimer()
-{
-    LOG(("nsHttpHandler::StartPruneDeadConnectionsTimer\n"));
-
-    mTimer = do_CreateInstance("@mozilla.org/timer;1");
-    NS_ASSERTION(mTimer, "no timer");
-    // failure to create a timer is not a fatal error, but idle connections
-    // will not be cleaned up until we try to use them.
-    if (mTimer)
-        mTimer->Init(this, 15*1000, // every 15 seconds
-                     nsITimer::TYPE_REPEATING_SLACK);
-}
-
-void
-nsHttpHandler::StopPruneDeadConnectionsTimer()
-{
-    LOG(("nsHttpHandler::StopPruneDeadConnectionsTimer\n"));
-
-    if (mTimer) {
-        mTimer->Cancel();
-        mTimer = 0;
-    }
 }
 
 nsresult
@@ -1649,9 +1620,6 @@ nsHttpHandler::Observe(nsISupports *subject,
     else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
              strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
 
-        // kill off the "prune dead connections" timer
-        StopPruneDeadConnectionsTimer();
-
         // clear cache of all authentication credentials.
         mAuthCache.ClearAll();
 
@@ -1666,18 +1634,6 @@ nsHttpHandler::Observe(nsISupports *subject,
     else if (strcmp(topic, "profile-change-net-restore") == 0) {
         // initialize connection manager
         InitConnectionMgr();
-
-        // restart the "prune dead connections" timer
-        StartPruneDeadConnectionsTimer();
-    }
-    else if (strcmp(topic, "timer-callback") == 0) {
-        // prune dead connections
-#ifdef DEBUG
-        nsCOMPtr<nsITimer> timer = do_QueryInterface(subject);
-        NS_ASSERTION(timer == mTimer, "unexpected timer-callback");
-#endif
-        if (mConnMgr)
-            mConnMgr->PruneDeadConnections();
     }
     else if (strcmp(topic, "net:clear-active-logins") == 0) {
         mAuthCache.ClearAll();
