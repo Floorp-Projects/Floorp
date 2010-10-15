@@ -41,9 +41,8 @@ const Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
-                                               Ci.nsIPrefLocalizedString).data;
+                                                Ci.nsIPrefLocalizedString).data;
 
 // We use a preferences whitelist to make sure we only show preferences that
 // are useful for support and won't compromise the user's privacy.  Note that
