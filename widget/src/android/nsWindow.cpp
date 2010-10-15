@@ -592,8 +592,11 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager()
+nsWindow::GetLayerManager(bool* aAllowRetaining)
 {
+    if (aAllowRetaining) {
+        *aAllowRetaining = true;
+    }
     if (mLayerManager) {
         return mLayerManager;
     }
