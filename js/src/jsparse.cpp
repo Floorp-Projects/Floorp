@@ -3640,28 +3640,100 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
     return true;
 }
 
-/*
- * If compile-and-go, and a global object is present, try to bake in either
- * an already available slot or a predicted slot that will be defined after
- * compiling is completed.
- *
- * If not compile-and-go, or compiling for eval, this optimization is invalid.
- */
 static bool
-BindGvar(JSParseNode *pn, JSTreeContext *tc)
+BindTopLevelVar(JSContext *cx, BindData *data, JSAtomListElement *ale, JSParseNode *pn,
+                JSAtom *varname, JSTreeContext *tc)
 {
     JS_ASSERT(pn->pn_op == JSOP_NAME);
     JS_ASSERT(!tc->inFunction());
 
-    if (!tc->compiling() || tc->parser->callerFrame)
+    /* There's no need to optimize bindings if we're not compiling code. */
+    if (!tc->compiling())
         return true;
 
-    JSCodeGenerator *cg = tc->asCodeGenerator();
+    /*
+     * Bindings at top level in eval code aren't like bindings at top level in
+     * regular code, and we must handle them specially.
+     */
+    if (tc->parser->callerFrame) {
+        /*
+         * If the eval code is not strict mode code, such bindings are created
+         * from scratch in the the caller's environment (if the eval is direct)
+         * or in the global environment (if the eval is indirect) -- and they
+         * can be deleted.  Therefore we can't bind early.
+         */
+        if (!tc->inStrictMode())
+            return true;
+
+        /*
+         * But if the eval code is strict mode code, bindings are added to a
+         * new environment specifically for that eval code's compilation, and
+         * they can't be deleted.  Thus strict mode eval code does not affect
+         * the caller's environment, and we can bind such names early.  (But
+         * note: strict mode eval code can still affect the global environment
+         * by performing an indirect eval of non-strict mode code.)
+         *
+         * However, optimizing such bindings requires either precarious
+         * type-punning or, ideally, a new kind of Call object specifically for
+         * strict mode eval frames.  Further, strict mode eval is not (yet)
+         * common.  So for now (until we rewrite the scope chain to not use
+         * objects?) just disable optimizations for top-level names in eval
+         * code.
+         */
+        return true;
+    }
 
     if (pn->pn_dflags & PND_CONST)
         return true;
 
-    return DefineGlobal(pn, cg, pn->pn_atom);
+    /*
+     * If this is a global variable, we're compile-and-go, and a global object
+     * is present, try to bake in either an already available slot or a
+     * predicted slot that will be defined after compiling is completed.
+     */
+    return DefineGlobal(pn, tc->asCodeGenerator(), pn->pn_atom);
+}
+
+static bool
+BindFunctionLocal(JSContext *cx, BindData *data, JSAtomListElement *ale, JSParseNode *pn,
+                  JSAtom *name, JSTreeContext *tc)
+{
+    JS_ASSERT(tc->inFunction());
+
+    if (name == cx->runtime->atomState.argumentsAtom) {
+        pn->pn_op = JSOP_ARGUMENTS;
+        pn->pn_dflags |= PND_BOUND;
+        return true;
+    }
+
+    BindingKind kind = tc->bindings.lookup(cx, name, NULL);
+    if (kind == NONE) {
+        /*
+         * Property not found in current variable scope: we have not seen this
+         * variable before, so bind a new local variable for it. Any locals
+         * declared in a with statement body are handled at runtime, by script
+         * prolog JSOP_DEFVAR opcodes generated for global and heavyweight-
+         * function-local vars.
+         */
+        kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
+
+        uintN index = tc->bindings.countVars();
+        if (!BindLocalVariable(cx, tc, name, kind, false))
+            return false;
+        pn->pn_op = JSOP_GETLOCAL;
+        pn->pn_cookie.set(tc->staticLevel, index);
+        pn->pn_dflags |= PND_BOUND;
+        return true;
+    }
+
+    if (kind == ARGUMENT) {
+        JS_ASSERT(tc->inFunction());
+        JS_ASSERT(ale && ALE_DEFN(ale)->kind() == JSDefinition::ARG);
+    } else {
+        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+    }
+
+    return true;
 }
 
 static JSBool
@@ -3815,44 +3887,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    if (!tc->inFunction())
-        return BindGvar(pn, tc);
+    if (tc->inFunction())
+        return BindFunctionLocal(cx, data, ale, pn, atom, tc);
 
-    if (atom == cx->runtime->atomState.argumentsAtom) {
-        pn->pn_op = JSOP_ARGUMENTS;
-        pn->pn_dflags |= PND_BOUND;
-        return JS_TRUE;
-    }
-
-    BindingKind kind = tc->bindings.lookup(cx, atom, NULL);
-    if (kind == NONE) {
-        /*
-         * Property not found in current variable scope: we have not seen this
-         * variable before. Define a new local variable by adding a property to
-         * the function's scope and allocating one slot in the function's vars
-         * frame. Any locals declared in a with statement body are handled at
-         * runtime, by script prolog JSOP_DEFVAR opcodes generated for global
-         * and heavyweight-function-local vars.
-         */
-        kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
-
-        uintN index = tc->bindings.countVars();
-        if (!BindLocalVariable(cx, tc, atom, kind, false))
-            return JS_FALSE;
-        pn->pn_op = JSOP_GETLOCAL;
-        pn->pn_cookie.set(tc->staticLevel, index);
-        pn->pn_dflags |= PND_BOUND;
-        return JS_TRUE;
-    }
-
-    if (kind == ARGUMENT) {
-        /* We checked errors and strict warnings earlier -- see above. */
-        JS_ASSERT(ale && ALE_DEFN(ale)->kind() == JSDefinition::ARG);
-    } else {
-        /* Not an argument, must be a redeclared local var. */
-        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-    }
-    return JS_TRUE;
+    return BindTopLevelVar(cx, data, ale, pn, atom, tc);
 }
 
 static bool
