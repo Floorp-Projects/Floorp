@@ -72,6 +72,10 @@
 
 #include "nsBrowserStatusFilter.h"
 
+#ifdef ANDROID
+#include "nsWebappsSupport.h"
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
@@ -125,6 +129,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnescapeHTML)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 
+#ifdef ANDROID
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebappsSupport)
+#endif
+
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
 #ifdef ALERTS_SERVICE
@@ -150,6 +158,10 @@ NS_DEFINE_NAMED_CID(NS_SCRIPTABLEUNESCAPEHTML_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_BROWSERSTATUSFILTER_CID);
 NS_DEFINE_NAMED_CID(NS_CHARSETMENU_CID);
+
+#ifdef ANDROID
+NS_DEFINE_NAMED_CID(NS_WEBAPPSSUPPORT_CID);
+#endif
 
 static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, NULL, nsAppStartupConstructor },
@@ -177,6 +189,9 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 #endif
   { &kNS_BROWSERSTATUSFILTER_CID, false, NULL, nsBrowserStatusFilterConstructor },
   { &kNS_CHARSETMENU_CID, false, NULL, NS_NewCharsetMenu },
+#ifdef ANDROID
+  { &kNS_WEBAPPSSUPPORT_CID, false, NULL, nsWebappsSupportConstructor },
+#endif
   { NULL }
 };
 
@@ -207,6 +222,9 @@ static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
 #endif
   { NS_BROWSERSTATUSFILTER_CONTRACTID, &kNS_BROWSERSTATUSFILTER_CID },
   { NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, &kNS_CHARSETMENU_CID },
+#ifdef ANDROID
+  { NS_WEBAPPSSUPPORT_CONTRACTID, &kNS_WEBAPPSSUPPORT_CID },
+#endif
   { NULL }
 };
 

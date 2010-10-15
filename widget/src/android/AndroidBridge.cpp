@@ -577,3 +577,8 @@ extern "C" JNIEnv * GetJNIForThread()
 {
     return mozilla::AndroidBridge::JNIForThread();
 }
+
+jclass GetGeckoAppShellClass()
+{
+    return mozilla::AndroidBridge::GetGeckoAppShellClass();
+}
