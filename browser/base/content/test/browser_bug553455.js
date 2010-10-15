@@ -591,6 +591,7 @@ function runNextTest() {
 };
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("extensions.logging.enabled", true);
