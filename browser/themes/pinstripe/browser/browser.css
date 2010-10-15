@@ -712,6 +712,13 @@ toolbar[mode="icons"] #zoom-in-button {
   -moz-image-region: rect(0, 20px, 20px, 0px);
 }
 
+/* feed button */
+
+#feed-button {
+  -moz-image-region: rect(0, 460px, 20px, 440px);
+}
+
+
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 
 #minimize-button,

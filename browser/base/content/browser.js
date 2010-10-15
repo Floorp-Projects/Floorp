@@ -6581,7 +6581,22 @@ function convertFromUnicode(charset, str)
  */
 var FeedHandler = {
   /**
-   * Called when the user clicks on the Subscribe to This Page... menu item.
+   * The click handler for the Feed icon in the toolbar. Opens the
+   * subscription page if user is not given a choice of feeds.
+   * (Otherwise the list of available feeds will be presented to the
+   * user in a popup menu.)
+   */
+  onFeedButtonClick: function(event) {
+    event.stopPropagation();
+
+    if (event.target.hasAttribute("feed") &&
+        event.eventPhase == Event.AT_TARGET &&
+        (event.button == 0 || event.button == 1)) {
+        this.subscribeToFeed(null, event);
+    }
+  },
+
+ /** Called when the user clicks on the Subscribe to This Page... menu item.
    * Builds a menu of unique feeds associated with the page, and if there
    * is only one, shows the feed inline in the browser window.
    * @param   menuPopup
@@ -6605,6 +6620,13 @@ var FeedHandler = {
 
     while (menuPopup.firstChild)
       menuPopup.removeChild(menuPopup.firstChild);
+
+    if (feeds.length == 1) {
+      var feedButton = document.getElementById("feed-button");
+      if (feedButton)
+        feedButton.setAttribute("feed", feeds[0].href);
+      return false;
+    }
 
     // Build the menu showing the available feed choices for viewing.
     for (var i = 0; i < feeds.length; ++i) {
@@ -6677,16 +6699,30 @@ var FeedHandler = {
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
+    var feedButton = document.getElementById("feed-button");
+
     var feeds = gBrowser.selectedBrowser.feeds;
     if (!feeds || feeds.length == 0) {
+      if (feedButton) {
+        feedButton.disabled = true;
+        feedButton.removeAttribute("feed");
+      }
       this._feedMenuitem.setAttribute("disabled", "true");
       this._feedMenupopup.setAttribute("hidden", "true");
       this._feedMenuitem.removeAttribute("hidden");
     } else {
+      if (feedButton)
+        feedButton.disabled = false;
+
       if (feeds.length > 1) {
         this._feedMenuitem.setAttribute("hidden", "true");
         this._feedMenupopup.removeAttribute("hidden");
+        if (feedButton)
+          feedButton.removeAttribute("feed");
       } else {
+        if (feedButton)
+          feedButton.setAttribute("feed", feeds[0].href);
+
         this._feedMenuitem.setAttribute("feed", feeds[0].href);
         this._feedMenuitem.removeAttribute("disabled");
         this._feedMenuitem.removeAttribute("hidden");
@@ -6707,6 +6743,12 @@ var FeedHandler = {
       browserForLink.feeds = [];
 
     browserForLink.feeds.push({ href: link.href, title: link.title });
+
+    if (browserForLink == gBrowser.selectedBrowser) {
+      var feedButton = document.getElementById("feed-button");
+      if (feedButton)
+        feedButton.collapsed = false;
+    }
   }
 };
 
