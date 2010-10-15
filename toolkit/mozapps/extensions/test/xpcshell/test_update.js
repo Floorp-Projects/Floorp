@@ -204,6 +204,8 @@ function check_test_2() {
 
     shutdownManager();
 
+    do_check_false(isExtensionInAddonsList(profileDir, olda1.id));
+
     startupManager();
 
     do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
