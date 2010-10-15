@@ -419,7 +419,7 @@ protected:
     nsresult TexParameter_base(WebGLenum target, WebGLenum pname,
                                WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 
-    void ConvertImage(size_t width, size_t height, size_t srcStride,
+    void ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
                       const PRUint8*src, PRUint8 *dst,
                       int srcFormat, PRBool srcPremultiplied,
                       int dstFormat, PRBool dstPremultiplied,
