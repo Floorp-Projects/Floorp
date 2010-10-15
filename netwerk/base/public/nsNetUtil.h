@@ -51,7 +51,6 @@
 
 #include "nsCRT.h"
 #include "nsIURI.h"
-#include "nsIStandardURL.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsISafeOutputStream.h"
@@ -1630,7 +1629,7 @@ NS_SecurityHashURI(nsIURI* aURI)
 
     nsCAutoString host;
     PRUint32 hostHash = 0;
-    if (NS_SUCCEEDED(baseURI->GetAsciiHost(host)))
+    if (NS_SUCCEEDED(baseURI->GetHost(host)))
         hostHash = nsCRT::HashCode(host.get());
 
     // XOR to combine hash values
@@ -1732,13 +1731,6 @@ NS_SecurityCompareURIs(nsIURI* aSourceURI,
     nsCAutoString sourceHost;
     if (NS_FAILED( targetBaseURI->GetAsciiHost(targetHost) ) ||
         NS_FAILED( sourceBaseURI->GetAsciiHost(sourceHost) ))
-    {
-        return PR_FALSE;
-    }
-
-    nsCOMPtr<nsIStandardURL> targetURL(do_QueryInterface(targetBaseURI));
-    nsCOMPtr<nsIStandardURL> sourceURL(do_QueryInterface(sourceBaseURI));
-    if (!targetURL || !sourceURL)
     {
         return PR_FALSE;
     }
