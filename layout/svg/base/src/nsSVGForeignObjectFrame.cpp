@@ -256,9 +256,12 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
   kidDirtyRect.IntersectRect(kidDirtyRect, kid->GetRect());
 
+  PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
+  if (aContext->IsPaintingToWindow()) {
+    flags |= nsLayoutUtils::PAINT_TO_WINDOW;
+  }
   nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kidDirtyRect),
-                                          NS_RGBA(0,0,0,0),
-                                          nsLayoutUtils::PAINT_IN_TRANSFORM);
+                                          NS_RGBA(0,0,0,0), flags);
 
   gfx->Restore();
 
