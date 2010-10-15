@@ -198,7 +198,8 @@ INNER_MAKE_PACKAGE	= \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     rm -rf lib && \
     mkdir -p lib/armeabi && \
-    cp lib*.so lib/armeabi && \
+    cp lib*.so lib && \
+    mv lib/libmozutils.so lib/armeabi && \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) ) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
   $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
@@ -210,6 +211,7 @@ INNER_UNMAKE_PACKAGE	= \
   cd $(MOZ_PKG_DIR) && \
   $(UNZIP) $(UNPACKAGE) && \
   mv lib/armeabi/*.so . && \
+  mv lib/*.so . && \
   rm -rf lib
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)

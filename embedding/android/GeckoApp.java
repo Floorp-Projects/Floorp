@@ -172,7 +172,7 @@ abstract public class GeckoApp
             // Load our JNI libs; we need to do this before launch() because
             // setInitialSize will be called even before Gecko is actually up
             // and running.
-            GeckoAppShell.loadGeckoLibs();
+            GeckoAppShell.loadGeckoLibs(getApplication().getPackageResourcePath());
 
             if (useLaunchButton) {
                 final Button b = new Button(this);
