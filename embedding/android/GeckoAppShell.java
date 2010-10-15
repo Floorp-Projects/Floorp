@@ -97,16 +97,15 @@ class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
+    public static native void loadLibs(String apkName);
 
     // java-side stuff
-    public static void loadGeckoLibs() {
+    public static void loadGeckoLibs(String apkName) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
-
-        // MozAlloc
-        System.loadLibrary("mozalloc");
         System.loadLibrary("mozutils");
+
                 
         Intent i = GeckoApp.mAppContext.getIntent();
         String env = i.getStringExtra("env0");
@@ -121,35 +120,13 @@ class GeckoAppShell
                           GeckoApp.mAppContext.getAppName() +"/tmp");
         if (!f.exists())
             f.mkdirs();
+
         GeckoAppShell.putenv("TMPDIR=" + f.getPath());
 
         f = Environment.getDownloadCacheDirectory();
         GeckoAppShell.putenv("EXTERNAL_STORAGE" + f.getPath());
 
-        // NSPR
-        System.loadLibrary("nspr4");
-        System.loadLibrary("plc4");
-        System.loadLibrary("plds4");
-
-        // SQLite
-        System.loadLibrary("mozsqlite3");
-
-        // NSS
-        System.loadLibrary("nssutil3");
-        System.loadLibrary("nss3");
-        System.loadLibrary("ssl3");
-        System.loadLibrary("smime3");
-
-        // XUL
-        System.loadLibrary("xul");
-
-        // xpcom glue -- needed to load binary components
-        System.loadLibrary("xpcom");                                          
-
-        // Root certs. someday we may teach security/manager/ssl/src/nsNSSComponent.cpp to find ckbi itself
-        System.loadLibrary("nssckbi");
-        System.loadLibrary("freebl3");
-        System.loadLibrary("softokn3");
+        loadLibs(apkName);
     }
 
     public static void runGecko(String apkPath, String args, String url) {
