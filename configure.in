@@ -3141,7 +3141,14 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     if test "$ac_cv_have_usable_wchar_option_v2" = "yes"; then
         AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
         HAVE_CPP_2BYTE_WCHAR_T=1
-        WCHAR_CFLAGS="-fshort-wchar"
+        if test "$OS_TARGET" = Android; then
+            WCHAR_CFLAGS="-fshort-wchar -Wl,--no-wchar-size-warning"
+            CXXFLAGS="$CXXFLAGS -Wl,--no-wchar-size-warning"
+            CFLAGS="$CFLAGS -Wl,--no-wchar-size-warning"
+            DSO_LDOPTS="$DSO_LDOPTS -Wl,--no-wchar-size-warning"
+        else
+            WCHAR_CFLAGS="-fshort-wchar"
+        fi
     else    
         CXXFLAGS=$_SAVE_CXXFLAGS
     fi
