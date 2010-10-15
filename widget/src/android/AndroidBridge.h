@@ -90,6 +90,10 @@ public:
           return sBridge->AttachThread();
         return nsnull;
     }
+    
+    static jclass GetGeckoAppShellClass() {
+        return sBridge->mGeckoAppShellClass;
+    }
 
     // The bridge needs to be constructed via ConstructBridge first,
     // and then once the Gecko main thread is spun up (Gecko side),
@@ -236,5 +240,6 @@ protected:
 
 extern "C" JNIEnv * GetJNIForThread();
 extern PRBool mozilla_AndroidBridge_SetMainThread(void *);
+extern jclass GetGeckoAppShellClass();
 
 #endif /* AndroidBridge_h__ */
