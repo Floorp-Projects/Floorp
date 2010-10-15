@@ -2674,7 +2674,7 @@ var BadgeHandlers = {
         req.open("GET", "https://mail.google.com/mail/feed/atom", true, login.username, login.password);
         req.onreadystatechange = function(aEvent) {
           if (req.readyState == 4) {
-            if (req.status == 200) {
+            if (req.status == 200 && req.responseXML) {
               let count = req.responseXML.getElementsByTagName("fullcount");
               this._lastCount = count ? count[0].childNodes[0].nodeValue : 0;
             } else {
