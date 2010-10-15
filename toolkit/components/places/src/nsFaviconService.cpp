@@ -97,8 +97,7 @@ class ExpireFaviconsStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
   ExpireFaviconsStatementCallbackNotifier(bool* aFaviconsExpirationRunning);
-  NS_DECL_ISUPPORTS
-  NS_DECL_ASYNCSTATEMENTCALLBACK
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
 
 private:
   bool* mFaviconsExpirationRunning;
@@ -171,29 +170,19 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBGetIconInfoWithPage, NS_LITERAL_CSTRING(
     "SELECT id, length(data), expiration, data, mime_type, "
     "IFNULL(url = (SELECT f.url "
-                  "FROM ( "
-                    "SELECT favicon_id FROM moz_places_temp "
-                    "WHERE url = :page_url "
-                    "UNION ALL "
-                    "SELECT favicon_id FROM moz_places "
-                    "WHERE url = :page_url "
-                  ") AS h "
+                  "FROM moz_places h "
                   "JOIN moz_favicons f ON h.favicon_id = f.id "
+                  "WHERE h.url = :page_url "
                   "LIMIT 1), "
-           "0)"
+           "0) "
     "FROM moz_favicons WHERE url = :icon_url"));
 
   RETURN_IF_STMT(mDBGetURL, NS_LITERAL_CSTRING(
     "SELECT f.id, f.url, length(f.data), f.expiration "
-    "FROM ( "
-      "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places_temp "
-      "WHERE url = :page_url "
-      "UNION ALL "
-      "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places "
-      "WHERE url = :page_url "
-    ") AS h JOIN moz_favicons f ON h.favicon_id = f.id "
+    "FROM moz_places h "
+    "JOIN moz_favicons f ON h.favicon_id = f.id "
+    "WHERE h.url = :page_url "
     "LIMIT 1"));
-
 
   RETURN_IF_STMT(mDBGetData, NS_LITERAL_CSTRING(
     "SELECT f.data, f.mime_type FROM moz_favicons f WHERE url = :icon_url"));
@@ -208,10 +197,10 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "WHERE id = :icon_id"));
 
   RETURN_IF_STMT(mDBSetPageFavicon, NS_LITERAL_CSTRING(
-    "UPDATE moz_places_view SET favicon_id = :icon_id WHERE id = :page_id"));
+    "UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id"));
 
   RETURN_IF_STMT(mDBAssociateFaviconURIToPageURI, NS_LITERAL_CSTRING(
-    "UPDATE moz_places_view "
+    "UPDATE moz_places "
     "SET favicon_id = (SELECT id FROM moz_favicons WHERE url = :icon_url) "
     "WHERE url = :page_url"));
 
@@ -220,15 +209,8 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SET favicon_id = NULL "
     "WHERE favicon_id NOT NULL"));
 
-  RETURN_IF_STMT(mDBRemoveTempReferences, NS_LITERAL_CSTRING(
-    "UPDATE moz_places_temp "
-    "SET favicon_id = NULL "
-    "WHERE favicon_id NOT NULL"));
-
   RETURN_IF_STMT(mDBRemoveAllFavicons, NS_LITERAL_CSTRING(
     "DELETE FROM moz_favicons WHERE id NOT IN ("
-      "SELECT favicon_id FROM moz_places_temp WHERE favicon_id NOT NULL "
-      "UNION ALL "
       "SELECT favicon_id FROM moz_places WHERE favicon_id NOT NULL "
     ")"));
 
@@ -262,16 +244,11 @@ nsFaviconService::ExpireAllFavicons()
 {
   mFaviconsExpirationRunning = true;
 
-  // We do this in 2 steps, first we null-out all favicons in the disk table,
-  // then we do the same in the temp table.  This is because the view UPDATE
-  // trigger does not allow setting a NULL value to prevent dataloss.
-
   mozIStorageBaseStatement *stmts[] = {
     GetStatement(mDBRemoveOnDiskReferences),
-    GetStatement(mDBRemoveTempReferences),
     GetStatement(mDBRemoveAllFavicons),
   };
-  NS_ENSURE_STATE(stmts[0] && stmts[1] && stmts[2]);
+  NS_ENSURE_STATE(stmts[0] && stmts[1]);
   nsCOMPtr<mozIStoragePendingStatement> ps;
   nsCOMPtr<ExpireFaviconsStatementCallbackNotifier> callback =
     new ExpireFaviconsStatementCallbackNotifier(&mFaviconsExpirationRunning);
@@ -1051,7 +1028,6 @@ nsFaviconService::FinalizeStatements() {
     mDBUpdateIcon,
     mDBSetPageFavicon,
     mDBRemoveOnDiskReferences,
-    mDBRemoveTempReferences,
     mDBRemoveAllFavicons,
     mDBAssociateFaviconURIToPageURI,
   };
@@ -1081,9 +1057,6 @@ nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
 ////////////////////////////////////////////////////////////////////////////////
 //// ExpireFaviconsStatementCallbackNotifier
 
-NS_IMPL_ISUPPORTS1(ExpireFaviconsStatementCallbackNotifier,
-                   mozIStorageStatementCallback)
-
 ExpireFaviconsStatementCallbackNotifier::ExpireFaviconsStatementCallbackNotifier(
   bool* aFaviconsExpirationRunning)
 : mFaviconsExpirationRunning(aFaviconsExpirationRunning)
@@ -1109,13 +1082,5 @@ ExpireFaviconsStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
                                            nsnull);
   }
 
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-ExpireFaviconsStatementCallbackNotifier::HandleResult(mozIStorageResultSet* aResultSet)
-{
-  NS_ASSERTION(PR_FALSE, "You cannot use this statement callback to get async statements resultset");
   return NS_OK;
 }
