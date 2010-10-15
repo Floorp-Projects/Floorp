@@ -174,7 +174,7 @@ nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
   nsRegion* region = (aFlags & INVALIDATE_CROSS_DOC)
     ? &mSubDocDirtyRegion : &mSameDocDirtyRegion;
   region->Or(*region, aDamageRect + nsPoint(aX, aY));
-  FlushDirtyRegion();
+  FlushDirtyRegion(aFlags);
 }
 
 
@@ -422,7 +422,7 @@ nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
     if (GetStateBits() & NS_STATE_SVG_DIRTY) {
       UpdateGraphic(); // invalidate our entire area
     } else {
-      FlushDirtyRegion(); // only invalidate areas dirtied by our descendants
+      FlushDirtyRegion(0); // only invalidate areas dirtied by our descendants
     }
   }
   return NS_OK;
@@ -612,7 +612,7 @@ nsSVGForeignObjectFrame::DoReflow()
                     NS_FRAME_NO_MOVE_FRAME);
   
   mInReflow = PR_FALSE;
-  FlushDirtyRegion();
+  FlushDirtyRegion(0);
 }
 
 void
@@ -640,7 +640,7 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
 }
 
 void
-nsSVGForeignObjectFrame::FlushDirtyRegion()
+nsSVGForeignObjectFrame::FlushDirtyRegion(PRUint32 aFlags)
 {
   if ((mSameDocDirtyRegion.IsEmpty() && mSubDocDirtyRegion.IsEmpty()) ||
       mInReflow)
@@ -655,8 +655,9 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   if (outerSVGFrame->IsRedrawSuspended())
     return;
 
-  InvalidateDirtyRect(outerSVGFrame, mSameDocDirtyRegion.GetBounds(), 0);
-  InvalidateDirtyRect(outerSVGFrame, mSubDocDirtyRegion.GetBounds(), INVALIDATE_CROSS_DOC);
+  InvalidateDirtyRect(outerSVGFrame, mSameDocDirtyRegion.GetBounds(), aFlags);
+  InvalidateDirtyRect(outerSVGFrame, mSubDocDirtyRegion.GetBounds(),
+                      aFlags | INVALIDATE_CROSS_DOC);
 
   mSameDocDirtyRegion.SetEmpty();
   mSubDocDirtyRegion.SetEmpty();
