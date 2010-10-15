@@ -43,6 +43,16 @@ typedef struct {
                                in dli_sname */
 } Dl_info;
 
+#pragma GCC visibility push(default)
+extern void* moz_mapped_dlopen(const char*  filename, int flag,
+                               int fd, void *mem, unsigned int len, unsigned int offset);
+extern void*        __wrap_dlopen(const char*  filename, int flag);
+extern int          __wrap_dlclose(void*  handle);
+extern const char*  __wrap_dlerror(void);
+extern void*        __wrap_dlsym(void*  handle, const char*  symbol);
+extern int          __wrap_dladdr(void* addr, Dl_info *info);
+#pragma GCC visibility pop
+
 extern void*        dlopen(const char*  filename, int flag);
 extern int          dlclose(void*  handle);
 extern const char*  dlerror(void);

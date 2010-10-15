@@ -160,8 +160,8 @@ extern soinfo libdl_info;
 #define LIBLAST 0x70000000
 #define LIBINC  0x00100000
 #else
-#define LIBBASE 0x80000000
-#define LIBLAST 0x90000000
+#define LIBBASE 0x90000000
+#define LIBLAST 0xA0000000
 #define LIBINC  0x00100000
 #endif
 
@@ -222,12 +222,15 @@ extern soinfo libdl_info;
 #endif
 
 soinfo *find_library(const char *name);
+soinfo *find_mapped_library(const char *name, int fd,
+                            void *mem, size_t len, size_t offset);
 unsigned unload_library(soinfo *si);
 Elf32_Sym *lookup_in_library(soinfo *si, const char *name);
 Elf32_Sym *lookup(const char *name, soinfo **found, soinfo *start);
 soinfo *find_containing_library(void *addr);
 Elf32_Sym *find_containing_symbol(void *addr, soinfo *si);
 const char *linker_get_error(void);
+void simple_linker_init(void);
 
 #ifdef ANDROID_ARM_LINKER 
 typedef long unsigned int *_Unwind_Ptr;

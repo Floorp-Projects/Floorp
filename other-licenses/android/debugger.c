@@ -37,7 +37,9 @@
 #include "linker.h"
 
 #include <sys/socket.h>
+#ifndef MOZ_LINKER
 #include <cutils/sockets.h>
+#endif
 
 void notify_gdb_of_libraries();
 
@@ -55,8 +57,12 @@ void debugger_signal_handler(int n)
     signal(SIGUSR1, SIG_IGN);
 
     tid = gettid();
+#ifndef MOZ_LINKER
     s = socket_local_client("android:debuggerd",
             ANDROID_SOCKET_NAMESPACE_ABSTRACT, SOCK_STREAM);
+#else
+    s = -1;
+#endif
 
     if(s >= 0) {
         /* debugger knows our pid from the credentials on the

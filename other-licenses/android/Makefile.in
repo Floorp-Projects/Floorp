@@ -35,16 +35,43 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-MODULE         = mozutils
-LIBRARY_NAME   = mozutils
-FORCE_SHARED_LIB = 1
 
-CPPSRCS = nsGeckoUtils.cpp
+MODULE           = mozutils
+LIBRARY_NAME     = mozutils
+FORCE_SHARED_LIB = 1
+DIST_INSTALL     = 1
+
+DEFINES += \
+  -DLINKER_DEBUG=0 \
+  -DANDROID_ARM_LINKER \
+  -DMOZ_LINKER \
+  -DLINKER_TEXT_BASE=0xB0001000 \
+  -DLINKER_AREA_SIZE=0x01000000 \
+  $(NULL)
+
+CPPSRCS = \
+  nsGeckoUtils.cpp \
+  APKOpen.cpp \
+  $(NULL)
+
+CSRCS = \
+  ba.c \
+  debugger.c \
+  dlfcn.c \
+  linker.c \
+  linker_format.c \
+  rt.c \
+  $(NULL)
+
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+
+WRAP_MALLOC_LIB =
+WRAP_MALLOC_CFLAGS =
 
 include $(topsrcdir)/config/rules.mk
