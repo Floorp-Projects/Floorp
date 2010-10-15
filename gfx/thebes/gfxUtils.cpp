@@ -270,9 +270,9 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     if (!temp || temp->CairoStatus())
         return nsnull;
 
-    gfxContext tmpCtx(temp);
-    tmpCtx.SetOperator(OptimalFillOperator());
-    aDrawable->Draw(&tmpCtx, needed - needed.pos, PR_TRUE,
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
+    tmpCtx->SetOperator(OptimalFillOperator());
+    aDrawable->Draw(tmpCtx, needed - needed.pos, PR_TRUE,
                     gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.pos));
 
     nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);

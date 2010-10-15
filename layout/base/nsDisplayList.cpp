@@ -379,8 +379,9 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                  "Reference frame must be a display root for us to use the layer manager");
     nsIWidget* window = referenceFrame->GetNearestWidget();
     if (window) {
-      layerManager = window->GetLayerManager();
-      if (layerManager) {
+      bool allowRetaining = true;
+      layerManager = window->GetLayerManager(&allowRetaining);
+      if (layerManager && allowRetaining) {
         aBuilder->LayerBuilder()->WillBeginRetainedLayerTransaction(layerManager);
       }
     }

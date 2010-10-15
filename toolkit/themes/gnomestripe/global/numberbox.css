@@ -56,7 +56,6 @@ html|*.numberbox-input {
 .numberbox-input-box {
   -moz-box-align: center;
   -moz-appearance: spinner-textfield;
-  cursor: text;
   margin-right: -1px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
