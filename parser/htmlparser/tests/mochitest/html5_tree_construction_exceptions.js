@@ -7,4 +7,5 @@
 var html5Exceptions = {
   "<!doctype html><keygen><frameset>" : true, // Bug 101019
   "<select><keygen>" : true, // Bug 101019
+  "<math><mi><div><object><div><span></span></div></object></div></mi><mi>" : true, // Bug 606925
 }

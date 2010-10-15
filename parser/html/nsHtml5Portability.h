@@ -77,6 +77,7 @@ class nsHtml5Portability
     static PRBool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
     static PRBool lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
     static PRBool literalEqualsString(const char* literal, nsString* string);
+    static PRBool stringEqualsString(nsString* one, nsString* other);
     static void initializeStatics();
     static void releaseStatics();
 };
