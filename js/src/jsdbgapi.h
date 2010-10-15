@@ -159,9 +159,6 @@ JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 extern JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno);
 
-extern JS_PUBLIC_API(jsbytecode *)
-JS_EndPC(JSContext *cx, JSScript *script);
-
 extern JS_PUBLIC_API(uintN)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun);
 
