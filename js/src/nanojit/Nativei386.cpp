@@ -2815,6 +2815,16 @@ namespace nanojit
         NanoAssert(!_inExit);
         if (!_nIns)
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+
+        // add some random padding, so functions aren't predictably placed.
+        if (_config.harden_function_alignment)
+        {
+            int32_t pad = _noise->getValue(LARGEST_UNDERRUN_PROT);
+            underrunProtect(pad);
+            _nIns -= pad;
+            VMPI_memset(_nIns, INT3_OP, pad);
+            PERFM_NVPROF("hardening:func-align", pad);
+        }
     }
 
     // enough room for n bytes
