@@ -205,10 +205,6 @@ static void _PR_InitStuff(void)
     _pr_sleeplock = PR_NewLock();
     PR_ASSERT(NULL != _pr_sleeplock);
 
-#ifdef GC_LEAK_DETECTOR
-    _PR_InitGarbageCollector();
-#endif
-
     _PR_InitThreads(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     
 #ifdef WIN16

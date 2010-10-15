@@ -108,8 +108,9 @@ static PRStatus PR_CALLBACK print_thread(PRThread *thread, int i, void *arg)
         (PR_GLOBAL_THREAD == PR_GetThreadScope(thread)) ?
         "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD", i);
     registers = PR_GetGCRegisters(thread, 0, (int *)&words);
-    printf("Regsters R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
-        registers[0],registers[1],registers[2],registers[3]);
+    if (registers)
+        printf("Registers R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
+            registers[0],registers[1],registers[2],registers[3]);
     printf("Stack Pointer = 0x%lx\n", PR_GetSP(thread));
     return PR_SUCCESS;
 }
@@ -149,8 +150,9 @@ static void Level_0_Thread(PRThreadScope scope1, PRThreadScope scope2)
     PR_SuspendAll();
     PR_EnumerateThreads(print_thread, NULL);
     registers = PR_GetGCRegisters(me, 1, (int *)&words);
-    printf("My Registers: R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
-        registers[0],registers[1],registers[2],registers[3]);
+    if (registers)
+        printf("My Registers: R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
+            registers[0],registers[1],registers[2],registers[3]);
     printf("My Stack Pointer = 0x%lx\n", PR_GetSP(me));
     PR_ResumeAll();
 
