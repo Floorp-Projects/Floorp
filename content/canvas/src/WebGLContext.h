@@ -83,6 +83,16 @@ class WebGLContextBoundObject;
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
 
+struct WebGLTexelFormat {
+    enum { Generic, Auto, RGBA8, RGB8, RGBX8, BGRA8, BGR8, BGRX8, RGBA5551, RGBA4444, RGB565, R8, RA8, A8 };
+};
+
+struct WebGLTexelPremultiplicationOp {
+    enum { Generic, None, Premultiply, Unmultiply };
+};
+
+int GetWebGLTexelFormat(GLenum format, GLenum type);
+
 inline PRBool is_pot_assuming_nonnegative(WebGLsizei x)
 {
     return (x & (x-1)) == 0;
@@ -394,22 +404,30 @@ protected:
 
     // helpers
     nsresult TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum internalformat,
-                             WebGLsizei width, WebGLsizei height, WebGLint border,
+                             WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero, WebGLint border,
                              WebGLenum format, WebGLenum type,
-                             void *data, PRUint32 byteLength);
+                             void *data, PRUint32 byteLength,
+                             int srcFormat, PRBool srcPremultiplied);
     nsresult TexSubImage2D_base(WebGLenum target, WebGLint level,
                                 WebGLint xoffset, WebGLint yoffset,
-                                WebGLsizei width, WebGLsizei height,
+                                WebGLsizei width, WebGLsizei height, WebGLsizei srcStrideOrZero,
                                 WebGLenum format, WebGLenum type,
-                                void *pixels, PRUint32 byteLength);
+                                void *pixels, PRUint32 byteLength,
+                                int srcFormat, PRBool srcPremultiplied);
     nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
                              WebGLenum format, WebGLenum type, void *data, PRUint32 byteLength);
     nsresult TexParameter_base(WebGLenum target, WebGLenum pname,
                                WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 
+    void ConvertImage(size_t width, size_t height, size_t srcStride,
+                      const PRUint8*src, PRUint8 *dst,
+                      int srcFormat, PRBool srcPremultiplied,
+                      int dstFormat, PRBool dstPremultiplied,
+                      size_t dstTexelSize);
+
     nsresult DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
                                       gfxImageSurface **imageOut,
-                                      PRBool flipY, PRBool premultiplyAlpha);
+                                      int *format);
 
     // Conversion from public nsI* interfaces to concrete objects
     template<class ConcreteObjectType, class BaseInterfaceType>
@@ -472,7 +490,8 @@ protected:
     nsRefPtrHashtable<nsUint32HashKey, WebGLFramebuffer> mMapFramebuffers;
     nsRefPtrHashtable<nsUint32HashKey, WebGLRenderbuffer> mMapRenderbuffers;
 
-    // WebGL-specific PixelStore parameters
+    // PixelStore parameters
+    PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment;
     PRBool mPixelStoreFlipY, mPixelStorePremultiplyAlpha;
 
     FakeBlackStatus mFakeBlackStatus;
