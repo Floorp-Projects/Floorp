@@ -109,8 +109,8 @@ function run_test() {
 function continue_test() {
   let stmt = DBConn().createStatement(
     "SELECT v.id, h.url, v.from_visit, v.visit_date, v.visit_type, v.session " +
-    "FROM moz_historyvisits_view v " +
-    "JOIN moz_places_view h on h.id = v.place_id " +
+    "FROM moz_historyvisits v " +
+    "JOIN moz_places h on h.id = v.place_id " +
     "ORDER BY v.id ASC");
   const EXPECTED = [
     { id: 1,

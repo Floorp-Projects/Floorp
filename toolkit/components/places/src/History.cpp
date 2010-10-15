@@ -159,11 +159,9 @@ Step::HandleCompletion(PRUint16 aReason)
 
 namespace {
 
-class VisitedQuery : public mozIStorageStatementCallback
+class VisitedQuery : public AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS
-
   static nsresult Start(nsIURI* aURI)
   {
     NS_PRECONDITION(aURI, "Null URI");
@@ -172,7 +170,7 @@ public:
   // If we are a content process, always remote the request to the
   // parent process.
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mozilla::dom::ContentChild * cpc = 
+    mozilla::dom::ContentChild* cpc =
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     (void)cpc->SendStartVisitedQuery(aURI);
@@ -180,9 +178,8 @@ public:
   }
 #endif
 
-    nsNavHistory* navHist = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navHist, NS_ERROR_FAILURE);
-    mozIStorageStatement* stmt = navHist->GetStatementById(DB_IS_PAGE_VISITED);
+    mozIStorageAsyncStatement* stmt =
+      History::GetService()->GetIsVisitedStatement();
     NS_ENSURE_STATE(stmt);
 
     // Bind by index for performance.
@@ -250,10 +247,6 @@ private:
   nsCOMPtr<nsIURI> mURI;
   bool mIsVisited;
 };
-NS_IMPL_ISUPPORTS1(
-  VisitedQuery,
-  mozIStorageStatementCallback
-)
 
 /**
  * Fail-safe mechanism for ensuring that your task completes, no matter what.
@@ -266,7 +259,7 @@ class FailSafeFinishTask
 {
 public:
   FailSafeFinishTask()
-  : mAppended(false) 
+  : mAppended(false)
   {
   }
 
@@ -315,8 +308,6 @@ struct VisitURIData : public FailSafeFinishTask
 class UpdateFrecencyAndNotifyStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   UpdateFrecencyAndNotifyStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -346,10 +337,7 @@ public:
     NS_WARN_IF_FALSE(bookmarks, "Could not get bookmarks service");
     if (history && bookmarks) {
       // Update frecency *after* the visit info is in the db
-      nsresult rv = history->UpdateFrecency(
-        mData->placeId,
-        bookmarks->IsRealBookmark(mData->placeId)
-      );
+      nsresult rv = history->UpdateFrecency(mData->placeId);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not update frecency");
 
       // Notify nsNavHistory observers of visit, but only for certain types of
@@ -378,10 +366,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  UpdateFrecencyAndNotifyStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 5: Get newly created visit ID from moz_history_visits table.
@@ -389,8 +373,6 @@ NS_IMPL_ISUPPORTS1(
 class GetVisitIDStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   GetVisitIDStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -419,10 +401,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  GetVisitIDStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 4: Add visit to moz_history_visits table.
@@ -430,8 +408,6 @@ NS_IMPL_ISUPPORTS1(
 class AddVisitStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   AddVisitStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -509,10 +485,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  AddVisitStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 3: Callback for inserting or updating a moz_places entry.
@@ -521,8 +493,6 @@ NS_IMPL_ISUPPORTS1(
 class CheckLastVisitStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   CheckLastVisitStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -574,10 +544,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  CheckLastVisitStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 2a: Called only when a new entry is put into moz_places.
@@ -586,8 +552,6 @@ NS_IMPL_ISUPPORTS1(
 class FindNewIdStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   FindNewIdStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -615,10 +579,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  FindNewIdStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 2: Callback for checking for an existing URI in moz_places.
@@ -627,8 +587,6 @@ NS_IMPL_ISUPPORTS1(
 class CheckExistingStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   CheckExistingStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -712,10 +670,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  CheckExistingStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 1: See if there is an existing URI.
@@ -723,8 +677,6 @@ NS_IMPL_ISUPPORTS1(
 class StartVisitURIStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   StartVisitURIStep(nsAutoPtr<VisitURIData> aData)
   : mData(aData)
   {
@@ -755,10 +707,6 @@ public:
 protected:
   nsAutoPtr<VisitURIData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  StartVisitURIStep
-, Step
-)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Steps for SetURITitle
@@ -775,8 +723,6 @@ struct SetTitleData : public FailSafeFinishTask
 class TitleNotifyStep: public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   TitleNotifyStep(nsAutoPtr<SetTitleData> aData)
   : mData(aData)
   {
@@ -794,10 +740,6 @@ public:
 protected:
   nsAutoPtr<SetTitleData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  TitleNotifyStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 2: Set title.
@@ -805,8 +747,6 @@ NS_IMPL_ISUPPORTS1(
 class SetTitleStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   SetTitleStep(nsAutoPtr<SetTitleData> aData)
   : mData(aData)
   {
@@ -865,10 +805,6 @@ public:
 protected:
   nsAutoPtr<SetTitleData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  SetTitleStep
-, mozIStorageStatementCallback
-)
 
 /**
  * Step 1: See if there is an existing URI.
@@ -876,8 +812,6 @@ NS_IMPL_ISUPPORTS1(
 class StartSetURITitleStep : public Step
 {
 public:
-  NS_DECL_ISUPPORTS
-
   StartSetURITitleStep(nsAutoPtr<SetTitleData> aData)
   : mData(aData)
   {
@@ -907,10 +841,6 @@ public:
 protected:
   nsAutoPtr<SetTitleData> mData;
 };
-NS_IMPL_ISUPPORTS1(
-  StartSetURITitleStep
-, Step
-)
 
 } // anonymous namespace
 
@@ -1021,6 +951,37 @@ History::NotifyVisited(nsIURI* aURI)
   mObservers.RemoveEntry(aURI);
 }
 
+mozIStorageAsyncStatement*
+History::GetIsVisitedStatement()
+{
+  if (mIsVisitedStatement) {
+    return mIsVisitedStatement;
+  }
+
+  // If we don't yet have a database connection, go ahead and clone it now.
+  if (!mReadOnlyDBConn) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(history, nsnull);
+
+    nsCOMPtr<mozIStorageConnection> dbConn;
+    (void)history->GetDBConnection(getter_AddRefs(dbConn));
+    NS_ENSURE_TRUE(dbConn, nsnull);
+
+    (void)dbConn->Clone(PR_TRUE, getter_AddRefs(mReadOnlyDBConn));
+    NS_ENSURE_TRUE(mReadOnlyDBConn, nsnull);
+  }
+
+  // Now we can create our cached statement.
+  nsresult rv = mReadOnlyDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "SELECT h.id "
+    "FROM moz_places h "
+    "WHERE url = ?1 "
+      "AND EXISTS(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1) "
+  ),  getter_AddRefs(mIsVisitedStatement));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  return mIsVisitedStatement;
+}
+
 /* static */
 History*
 History::GetService()
@@ -1074,6 +1035,14 @@ History::Shutdown()
   while (mPendingVisits.PeekFront()) {
     nsCOMPtr<Step> deadTaskWalking =
       dont_AddRef(static_cast<Step*>(mPendingVisits.PopFront()));
+  }
+
+  // Clean up our statements and connection.
+  if (mReadOnlyDBConn) {
+    if (mIsVisitedStatement) {
+      (void)mIsVisitedStatement->Finalize();
+    }
+    (void)mReadOnlyDBConn->AsyncClose(nsnull);
   }
 }
 

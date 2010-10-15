@@ -271,7 +271,8 @@ AsyncStatement::~AsyncStatement()
     // nsCOMPtr.  Which it is not; it's an nsRefPtr.
     Connection *forgottenConn = nsnull;
     mDBConnection.swap(forgottenConn);
-    (void)::NS_ProxyRelease(forgottenConn->threadOpenedOn, forgottenConn);
+    (void)::NS_ProxyRelease(forgottenConn->threadOpenedOn,
+                            static_cast<mozIStorageConnection *>(forgottenConn));
   }
 }
 
