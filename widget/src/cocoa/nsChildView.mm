@@ -192,6 +192,8 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (float)beginMaybeResetUnifiedToolbar;
 - (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
 
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -2598,11 +2600,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
    [self update];
 }
 
-- (BOOL) isUsingOpenGL
-{
-    return mGeckoChild && mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL;
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2619,6 +2616,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   [self endMaybeResetUnifiedToolbar:oldHeight];
+}
+
+- (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext
+{
+  // Title bar drawing only works if we really draw into aContext, which only
+  // the basic layer manager will do.
+  nsBaseWidget::AutoUseBasicLayerManager setupLayerManager(mGeckoChild);
+  [self drawRect:aRect inContext:aContext];
 }
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
