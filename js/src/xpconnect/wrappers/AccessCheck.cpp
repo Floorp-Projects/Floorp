@@ -192,6 +192,12 @@ IsWindow(const char *name)
     return name[0] == 'W' && !strcmp(name, "Window");
 }
 
+static bool
+IsLocation(const char *name)
+{
+    return name[0] == 'L' && !strcmp(name, "Location");
+}
+
 static nsIPrincipal *
 GetPrincipal(JSObject *obj)
 {
@@ -240,46 +246,50 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     if (IsWindow(name) && IsFrameId(cx, obj, id))
         return true;
 
-    JSObject *scope = nsnull;
-    JSStackFrame *fp = nsnull;
-    JS_FrameIterator(cx, &fp);
-    if (fp) {
-        while (fp->isDummyFrame()) {
-            if (!JS_FrameIterator(cx, &fp))
-                break;
+    // We only reach this point for cross origin location objects (see
+    // SameOriginOrCrossOriginAccessiblePropertiesOnly::check).
+    if (!IsLocation(name)) {
+        JSObject *scope = nsnull;
+        JSStackFrame *fp = nsnull;
+        JS_FrameIterator(cx, &fp);
+        if (fp) {
+            while (fp->isDummyFrame()) {
+                if (!JS_FrameIterator(cx, &fp))
+                    break;
+            }
+
+            if (fp)
+                scope = &fp->scopeChain();
         }
 
-        if (fp)
-            scope = &fp->scopeChain();
+        if (!scope)
+            scope = JS_GetScopeChain(cx);
+
+        nsIPrincipal *subject;
+        nsIPrincipal *object;
+
+        {
+            JSAutoEnterCompartment ac;
+
+            if (!ac.enter(cx, scope))
+                return false;
+
+            subject = GetPrincipal(JS_GetGlobalForObject(cx, scope));
+        }
+
+        {
+            JSAutoEnterCompartment ac;
+
+            if (!ac.enter(cx, obj))
+                return false;
+
+            object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
+        }
+
+        PRBool subsumes;
+        if (NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes)
+            return true;
     }
-
-    if (!scope)
-        scope = JS_GetScopeChain(cx);
-
-    nsIPrincipal *subject;
-    nsIPrincipal *object;
-
-    {
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(cx, scope))
-            return false;
-
-        subject = GetPrincipal(JS_GetGlobalForObject(cx, scope));
-    }
-
-    {
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(cx, obj))
-            return false;
-
-        object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
-    }
-
-    PRBool subsumes;
-    if (NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes)
-        return true;
 
     return (act == JSWrapper::SET)
            ? nsContentUtils::IsCallerTrustedForWrite()
