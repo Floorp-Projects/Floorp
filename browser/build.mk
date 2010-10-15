@@ -51,6 +51,11 @@ tier_app_dirs += toolkit/components/console/hudservice
 
 tier_app_dirs += browser
 
+ifdef MOZ_SERVICES_SYNC
+tier_app_dirs += services/crypto
+tier_app_dirs += services/sync
+endif
+
 installer:
 	@$(MAKE) -C browser/installer installer
 
