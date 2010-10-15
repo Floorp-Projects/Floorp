@@ -330,6 +330,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
         mObserverService->AddObserver(this, "net:clear-active-logins", PR_TRUE);
         mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
+        mObserverService->AddObserver(this, "net:prune-dead-connections", PR_TRUE);
     }
  
     return NS_OK;
@@ -1643,6 +1644,11 @@ nsHttpHandler::Observe(nsISupports *subject,
             mInPrivateBrowsingMode = PR_TRUE;
         else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(data))
             mInPrivateBrowsingMode = PR_FALSE;
+    }
+    else if (strcmp(topic, "net:prune-dead-connections") == 0) {
+        if (mConnMgr) {
+            mConnMgr->PruneDeadConnections();
+        }
     }
   
     return NS_OK;
