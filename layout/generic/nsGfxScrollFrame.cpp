@@ -1436,36 +1436,9 @@ nsGfxScrollFrameInner::ScrollTo(nsPoint aScrollPosition,
   }
 }
 
-static void InvalidateWidgets(nsIView* aView)
-{
-  if (aView->HasWidget()) {
-    nsIWidget* widget = aView->GetWidget();
-    nsWindowType type;
-    widget->GetWindowType(type);
-    if (type != eWindowType_popup) {
-      // Force the widget and everything in it to repaint. We can't
-      // just use Invalidate because the widget might have child
-      // widgets and they wouldn't get updated. We can't call
-      // UpdateView(aView) because the area to be repainted might be
-      // outside aView's clipped bounds. This isn't the greatest way
-      // to achieve this, perhaps, but it works.
-      widget->Show(PR_FALSE);
-      widget->Show(PR_TRUE);
-    }
-    return;
-  }
-
-  for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    InvalidateWidgets(v);
-  }
-}
-
 // We can't use nsContainerFrame::PositionChildViews here because
 // we don't want to invalidate views that have moved.
-// aInvalidateWidgets is set to true if we should invalidate the area
-// covered by every widget in the subtree.
-static void AdjustViewsAndWidgets(nsIFrame* aFrame,
-                                  PRBool aInvalidateWidgets)
+static void AdjustViews(nsIFrame* aFrame)
 {
   nsIView* view = aFrame->GetView();
   if (view) {
@@ -1474,9 +1447,6 @@ static void AdjustViewsAndWidgets(nsIFrame* aFrame,
     pt += aFrame->GetPosition();
     view->SetPosition(pt.x, pt.y);
 
-    if (aInvalidateWidgets) {
-      InvalidateWidgets(view);
-    }
     return;
   }
 
@@ -1490,7 +1460,7 @@ static void AdjustViewsAndWidgets(nsIFrame* aFrame,
     // Recursively walk aFrame's child frames
     nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
     while (childFrame) {
-      AdjustViewsAndWidgets(childFrame, aInvalidateWidgets);
+      AdjustViews(childFrame);
 
       // Get the next sibling child frame
       childFrame = childFrame->GetNextSibling();
@@ -1614,9 +1584,9 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
 
   rootPresContext->RequestUpdatePluginGeometry(mOuter);
 
-  AdjustViewsAndWidgets(mScrolledFrame, PR_FALSE);
-  // We need to call this after fixing up the widget and view positions
-  // to be consistent with the view and frame hierarchy.
+  AdjustViews(mScrolledFrame);
+  // We need to call this after fixing up the view positions
+  // to be consistent with the frame hierarchy.
   PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
   if (IsScrollingActive() && CanScrollWithBlitting(mOuter, displayRoot)) {
