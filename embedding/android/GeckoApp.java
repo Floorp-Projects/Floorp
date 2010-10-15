@@ -142,12 +142,17 @@ abstract public class GeckoApp
                     new BufferedReader(new FileReader("/proc/cpuinfo"));
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    int index = line.indexOf("CPU architecture:");
+                    int index = line.indexOf("Processor");
                     if (index == -1)
                         continue;
-                    String versionStr = line.substring(18);
-                    Log.i("GeckoApp", "cpu version: " + versionStr);
-                    int version = Integer.parseInt(versionStr);
+
+                    int version = 5;
+                    if (line.indexOf("(v8l)") != -1)
+                        version = 8;
+                    if (line.indexOf("(v7l)") != -1)
+                        version = 7;
+                    if (line.indexOf("(v6l)") != -1)
+                        version = 6;
 
                     if (version < getMinCPUVersion()) {
                         showErrorDialog(
