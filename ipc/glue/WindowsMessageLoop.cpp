@@ -292,11 +292,16 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_GETMINMAXINFO:
     case WM_GETTEXT:
     case WM_NCHITTEST:
-    case WM_STYLECHANGING:
-    case WM_SYNCPAINT: // Intentional fall-through.
-    case WM_WINDOWPOSCHANGING: {
+    case WM_STYLECHANGING:  // Intentional fall-through.
+    case WM_WINDOWPOSCHANGING: { 
       return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
+
+    // Just return, prevents DefWindowProc from messaging the window
+    // syncronously with other events, which may be deferred. Prevents 
+    // random shutdown of aero composition on the window. 
+    case WM_SYNCPAINT:
+      return 0;
 
     // Unknown messages only.
     default: {
