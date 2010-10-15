@@ -105,7 +105,7 @@ function installSearchResult(aCallback) {
     ok(!!item, "Should see the search result in the list");
 
     let status = get_node(item, "install-status");
-    EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote"), {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote-btn"), {}, gManagerWindow);
 
     item.mInstall.addListener({
       onInstallEnded: function() {
@@ -146,7 +146,7 @@ function check_undo_install() {
   is_element_visible(get_node(item, "pending"), "Pending message should be visible");
   is(get_node(item, "pending").textContent, "Install Tests will be installed after you restart " + gApp + ".", "Pending message should be correct");
 
-  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo"), {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo-btn"), {}, gManagerWindow);
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 
@@ -164,7 +164,7 @@ function check_undo_upgrade() {
   is_element_visible(get_node(item, "pending"), "Pending message should be visible");
   is(get_node(item, "pending").textContent, "Install Tests will be updated after you restart " + gApp + ".", "Pending message should be correct");
 
-  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo"), {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo-btn"), {}, gManagerWindow);
 
   is(get_list_item_count(), 1, "Should be only one item in the list");
 

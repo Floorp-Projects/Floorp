@@ -660,7 +660,7 @@ var gViewController = {
         gViewController.updateCommand("cmd_findAllUpdates");
         document.getElementById("updates-noneFound").hidden = true;
         document.getElementById("updates-progress").hidden = false;
-        document.getElementById("updates-manualUpdatesFound").hidden = true;
+        document.getElementById("updates-manualUpdatesFound-btn").hidden = true;
 
         var pendingChecks = 0;
         var numUpdated = 0;
@@ -679,7 +679,7 @@ var gViewController = {
           gUpdatesView.maybeRefresh();
 
           if (numManualUpdates > 0 && numUpdated == 0) {
-            document.getElementById("updates-manualUpdatesFound").hidden = false;
+            document.getElementById("updates-manualUpdatesFound-btn").hidden = false;
             return;
           }
 
@@ -690,7 +690,7 @@ var gViewController = {
 
           if (restartNeeded) {
             document.getElementById("updates-downloaded").hidden = false;
-            document.getElementById("updates-restart").hidden = false;
+            document.getElementById("updates-restart-btn").hidden = false;
           } else {
             document.getElementById("updates-installed").hidden = false;
           }
@@ -2003,13 +2003,13 @@ var gDetailView = {
       this._autoUpdate.hidden = false;
       this._autoUpdate.value = aAddon.applyBackgroundUpdates;
       let hideFindUpdates = shouldAutoUpdate(this._addon);
-      document.getElementById("detail-findUpdates").hidden = hideFindUpdates;
+      document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     } else {
       this._autoUpdate.hidden = true;
-      document.getElementById("detail-findUpdates").hidden = false;
+      document.getElementById("detail-findUpdates-btn").hidden = false;
     }
 
-    document.getElementById("detail-prefs").hidden = !aIsRemote && !aAddon.optionsURL;
+    document.getElementById("detail-prefs-btn").hidden = !aIsRemote && !aAddon.optionsURL;
     
     var gridRows = document.querySelectorAll("#detail-grid rows row");
     for (var i = 0, first = true; i < gridRows.length; ++i) {
@@ -2183,7 +2183,7 @@ var gDetailView = {
     if (aProperties.indexOf("applyBackgroundUpdates") != -1) {
       this._autoUpdate.value = this._addon.applyBackgroundUpdates;
       let hideFindUpdates = shouldAutoUpdate(this._addon);
-      document.getElementById("detail-findUpdates").hidden = hideFindUpdates;
+      document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     }
   },
 
@@ -2213,7 +2213,7 @@ var gUpdatesView = {
 
     this._categoryItem = gCategories.get("addons://updates/available");
 
-    this._updateSelected = document.getElementById("update-selected");
+    this._updateSelected = document.getElementById("update-selected-btn");
     this._updateSelected.addEventListener("command", function() {
       gUpdatesView.installSelected();
     }, false);
