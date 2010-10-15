@@ -4099,6 +4099,9 @@ nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
         aDamageRect + nsPoint(aX, aY));
     // Don't need to invalidate any more Thebes layers
     aFlags |= INVALIDATE_NO_THEBES_LAYERS;
+    if (aFlags & INVALIDATE_ONLY_THEBES_LAYERS) {
+      return;
+    }
   }
   if (IsTransformed()) {
     nsRect newDamageRect;
@@ -4232,6 +4235,9 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
   if ((mState & NS_FRAME_HAS_CONTAINER_LAYER) &&
       !(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
     FrameLayerBuilder::InvalidateThebesLayerContents(this, aDamageRect);
+    if (aFlags & INVALIDATE_ONLY_THEBES_LAYERS) {
+      return;
+    }
   }
 
   PRUint32 flags =

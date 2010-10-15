@@ -369,6 +369,9 @@ ViewportFrame::InvalidateInternal(const nsRect& aDamageRect,
     FrameLayerBuilder::InvalidateThebesLayerContents(this, r);
     // Don't need to invalidate any more Thebes layers
     aFlags |= INVALIDATE_NO_THEBES_LAYERS;
+    if (aFlags & INVALIDATE_ONLY_THEBES_LAYERS) {
+      return;
+    }
   }
 
   nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
