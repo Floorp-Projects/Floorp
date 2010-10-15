@@ -984,11 +984,8 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
   background-color: rgb(95%,95%,95%);
   background-image: -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
   color: #444;
-  -moz-border-end: 1px solid rgba(0,0,0,.1);
-}
-
-#identity-box:-moz-locale-dir(rtl) {
-  -moz-border-start: 1px solid rgba(0,0,0,.1);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1) inset;
+  border-radius: 1.5px;
 }
 
 #identity-box:-moz-focusring {
