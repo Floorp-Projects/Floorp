@@ -932,10 +932,10 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 LayerManager*
-nsCocoaWindow::GetLayerManager()
+nsCocoaWindow::GetLayerManager(bool* aAllowRetaining)
 {
   if (mPopupContentView) {
-    return mPopupContentView->GetLayerManager();
+    return mPopupContentView->GetLayerManager(aAllowRetaining);
   }
   return nsnull;
 }
@@ -2435,23 +2435,15 @@ ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
   CGContextTranslateCTM(aContext, 0.0f, -[window frame].size.height);
 
   NSRect titlebarRect = NSMakeRect(0, 0, [window frame].size.width, [window titlebarHeight]);
-  [(ChildView*)view drawRect:titlebarRect inContext:aContext];
+  [(ChildView*)view drawRect:titlebarRect inTitlebarContext:aContext];
 }
 
 - (void)setFill
 {
-  CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  CGPatternDrawPatternCallback cb;
-  float patternWidth;
-  NSView* view = [[[mWindow contentView] subviews] lastObject];
-  if (view && [view isKindOfClass:[ChildView class]] && [(ChildView*)view isUsingOpenGL]) {
-    cb = &RepeatedPatternDrawCallback;
-    patternWidth = sPatternWidth;
-  } else {
-    cb = [mWindow drawsContentsIntoWindowFrame] ?
+  CGPatternDrawPatternCallback cb = [mWindow drawsContentsIntoWindowFrame] ?
                                       &ContentPatternDrawCallback : &RepeatedPatternDrawCallback;
-    patternWidth = [mWindow drawsContentsIntoWindowFrame] ? [mWindow frame].size.width : sPatternWidth;
-  }
+  float patternWidth = [mWindow drawsContentsIntoWindowFrame] ? [mWindow frame].size.width : sPatternWidth;
+
   CGPatternCallbacks callbacks = {0, cb, NULL};
   CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height), 
                                          CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
@@ -2460,6 +2452,7 @@ ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
   // Set the pattern as the fill, which is what we were asked to do. All our
   // drawing will take place in the patternDraw callback.
   CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
+  CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   CGContextSetFillColorSpace(context, patternSpace);
   CGColorSpaceRelease(patternSpace);
   CGFloat component = 1.0f;

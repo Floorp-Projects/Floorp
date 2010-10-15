@@ -3180,8 +3180,12 @@ nsWindow::HasPendingInputEvent()
  **************************************************************/
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager()
+nsWindow::GetLayerManager(bool* aAllowRetaining)
 {
+  if (aAllowRetaining) {
+    *aAllowRetaining = true;
+  }
+
 #ifndef WINCE
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
