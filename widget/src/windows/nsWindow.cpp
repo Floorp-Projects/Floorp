@@ -2745,6 +2745,7 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   if (nsUXThemeData::CheckForCompositor()) {
     style = GetWindowLong(mWnd, GWL_STYLE);
     SetWindowLong(mWnd, GWL_STYLE, style | WS_VISIBLE);
+    Invalidate(PR_FALSE);
   }
 
   // Let the dom know via web shell window
