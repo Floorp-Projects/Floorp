@@ -2785,7 +2785,7 @@ struct WebGLImageConverter
 };
 
 void
-WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride,
+WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
                            const PRUint8*src, PRUint8 *dst,
                            int srcFormat, PRBool srcPremultiplied,
                            int dstFormat, PRBool dstPremultiplied,
@@ -2794,9 +2794,31 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride,
     if (width <= 0 || height <= 0)
         return;
 
-    size_t dstPlainRowSize = dstTexelSize * width;
-    size_t unpackAlignment = mPixelStoreUnpackAlignment;
-    size_t dstStride = ((dstPlainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
+    if (srcFormat == dstFormat &&
+        srcPremultiplied == dstPremultiplied)
+    {
+        // fast exit path: we just have to memcpy all the rows.
+        //
+        // The case where absolutely nothing needs to be done is supposed to have
+        // been handled earlier (in TexImage2D_base, etc).
+        //
+        // So the case we're handling here is when even though no format conversion is needed,
+        // we still might have to flip vertically and/or to adjust to a different stride.
+
+        size_t row_size = width * dstTexelSize; // doesn't matter, src and dst formats agree
+        const PRUint8* src_row = src;
+        const PRUint8* src_end = src + height * srcStride;
+
+        PRUint8* dst_row = mPixelStoreFlipY ? dst + (height-1) * dstStride : dst;
+        ptrdiff_t dst_delta = mPixelStoreFlipY ? -dstStride : dstStride;
+
+        while(src_row != src_end) {
+            memcpy(dst_row, src_row, row_size);
+            src_row += srcStride;
+            dst_row += dst_delta;
+        }
+        return;
+    }
 
     WebGLImageConverter converter;
     converter.flip = mPixelStoreFlipY;
@@ -3585,18 +3607,31 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     MakeContextCurrent();
 
     if (byteLength) {
-        nsAutoArrayPtr<PRUint8> convertedData(new PRUint8[bytesNeeded]);
-
         int dstFormat = GetWebGLTexelFormat(format, type);
         int actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
-        PRUint32 srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
+        size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
-        ConvertImage(width, height, srcStride,
-                     (PRUint8*)data, convertedData,
-                     actualSrcFormat, srcPremultiplied,
-                     dstFormat, mPixelStorePremultiplyAlpha, texelSize);
+        size_t dstPlainRowSize = texelSize * width;
+        size_t unpackAlignment = mPixelStoreUnpackAlignment;
+        size_t dstStride = ((dstPlainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
 
-        gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, convertedData);
+        if (actualSrcFormat == dstFormat &&
+            srcPremultiplied == mPixelStorePremultiplyAlpha &&
+            srcStride == dstStride &&
+            !mPixelStoreFlipY)
+        {
+            // no conversion, no flipping, so we avoid copying anything and just pass the source pointer
+            gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, data);
+        }
+        else
+        {
+            nsAutoArrayPtr<PRUint8> convertedData(new PRUint8[bytesNeeded]);
+            ConvertImage(width, height, srcStride, dstStride,
+                         (PRUint8*)data, convertedData,
+                         actualSrcFormat, srcPremultiplied,
+                         dstFormat, mPixelStorePremultiplyAlpha, texelSize);
+            gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, convertedData);
+        }
     } else {
         // We need some zero pages, because GL doesn't guarantee the
         // contents of a texture allocated with NULL data.
@@ -3755,18 +3790,31 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
 
     MakeContextCurrent();
 
-    nsAutoArrayPtr<PRUint8> convertedData(new PRUint8[bytesNeeded]);
-
     int dstFormat = GetWebGLTexelFormat(format, type);
     int actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
-    PRUint32 srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
+    size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
-    ConvertImage(width, height, srcStride,
-                 (PRUint8*)pixels, convertedData,
-                 actualSrcFormat, srcPremultiplied,
-                 dstFormat, mPixelStorePremultiplyAlpha, texelSize);
+    size_t dstPlainRowSize = texelSize * width;
+    size_t dstStride = ((dstPlainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
 
-    gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, convertedData);
+    if (actualSrcFormat == dstFormat &&
+        srcPremultiplied == mPixelStorePremultiplyAlpha &&
+        srcStride == dstStride &&
+        !mPixelStoreFlipY)
+    {
+        // no conversion, no flipping, so we avoid copying anything and just pass the source pointer
+        gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+    }
+    else
+    {
+        nsAutoArrayPtr<PRUint8> convertedData(new PRUint8[bytesNeeded]);
+        ConvertImage(width, height, srcStride, dstStride,
+                    (const PRUint8*)pixels, convertedData,
+                    actualSrcFormat, srcPremultiplied,
+                    dstFormat, mPixelStorePremultiplyAlpha, texelSize);
+
+        gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, convertedData);
+    }
 
     return NS_OK;
 }
