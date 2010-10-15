@@ -6904,6 +6904,11 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                           aEvent->message == NS_MOUSE_BUTTON_DOWN);
 
+    if (NS_IS_TRUSTED_EVENT(aEvent) && aEvent->message == NS_MOUSE_MOVE) {
+      nsIPresShell::AllowMouseCapture(
+        nsEventStateManager::GetActiveEventStateManager() == manager);
+    }
+
     nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
 
     // FIXME. If the event was reused, we need to clear the old target,
@@ -6961,6 +6966,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       // reset the capturing content now that the mouse button is up
       SetCapturingContent(nsnull, 0);
+    } else if (aEvent->message == NS_MOUSE_MOVE) {
+      nsIPresShell::AllowMouseCapture(PR_FALSE);
     }
   }
   return rv;

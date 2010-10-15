@@ -155,6 +155,7 @@ public:
 
   static nsIDocument* sMouseOverDocument;
 
+  static nsIEventStateManager* GetActiveEventStateManager() { return sActiveESM; }
 protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
@@ -411,6 +412,7 @@ protected:
   
   static void SetGlobalActiveContent(nsEventStateManager* aNewESM,
                                      nsIContent* aContent);
+  static void ClearGlobalActiveContent();
 
   // Functions used for click hold context menus
   PRBool mClickHoldContextMenu;
