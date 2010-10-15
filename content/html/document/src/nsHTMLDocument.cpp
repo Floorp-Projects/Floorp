@@ -1832,7 +1832,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     // change the principals of a document for security reasons we'll have to
     // refuse to go ahead with this call.
 
-    NS_WARNING("No caller doc for open call.");
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -1852,7 +1851,21 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   PRBool equals = PR_FALSE;
   if (NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &equals)) ||
       !equals) {
-    NS_WARNING("Principals unequal for open call.");
+
+#ifdef DEBUG
+    nsCOMPtr<nsIURI> callerDocURI = callerDoc->GetDocumentURI();
+    nsCOMPtr<nsIURI> thisURI = nsIDocument::GetDocumentURI();
+    nsCAutoString callerSpec;
+    nsCAutoString thisSpec;
+    if (callerDocURI) {
+      callerDocURI->GetSpec(callerSpec);
+    }
+    if (thisURI) {
+      thisURI->GetSpec(thisSpec);
+    }
+    printf("nsHTMLDocument::OpenCommon callerDoc %s this %s\n", callerSpec.get(), thisSpec.get());
+#endif
+
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
