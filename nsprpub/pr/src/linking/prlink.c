@@ -485,10 +485,16 @@ pr_LoadMachDyldModule(const char *name)
             == NSObjectFileImageSuccess) {
         h = NSLinkModule(ofi, name, NSLINKMODULE_OPTION_PRIVATE
                          | NSLINKMODULE_OPTION_RETURN_ON_ERROR);
-        /*
-         * TODO: If NSLinkModule fails, use NSLinkEditError to retrieve
-         * error information.
-         */
+        if (h == NULL) {
+            NSLinkEditErrors linkEditError;
+            int errorNum;
+            const char *fileName;
+            const char *errorString;
+            NSLinkEditError(&linkEditError, &errorNum, &fileName, &errorString);
+            PR_LOG(_pr_linker_lm, PR_LOG_MIN, 
+                   ("LoadMachDyldModule error %d:%d for file %s:\n%s",
+                    linkEditError, errorNum, fileName, errorString));
+        }
         if (NSDestroyObjectFileImage(ofi) == FALSE) {
             if (h) {
                 (void)NSUnLinkModule(h, NSUNLINKMODULE_OPTION_NONE);
@@ -648,8 +654,8 @@ pr_LoadViaDyld(const char *name, PRLibrary *lm)
         if (lm->image == NULL) {
             NSLinkEditErrors linkEditError;
             int errorNum;
-            const char *errorString;
             const char *fileName;
+            const char *errorString;
             NSLinkEditError(&linkEditError, &errorNum, &fileName, &errorString);
             PR_LOG(_pr_linker_lm, PR_LOG_MIN, 
                    ("LoadMachDyldModule error %d:%d for file %s:\n%s",

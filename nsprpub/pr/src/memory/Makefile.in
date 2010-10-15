@@ -48,17 +48,9 @@ include $(topsrcdir)/config/config.mk
 
 CSRCS = prseg.c prshm.c prshma.c
 
-ifdef GC_LEAK_DETECTOR
-CSRCS += prgcleak.c
-endif
-
 TARGETS	= $(OBJS)
 
 INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
-
-ifdef GC_LEAK_DETECTOR
-INCLUDES += -I$(dist_includedir)/.. -I$(dist_includedir)/../boehm
-endif
 
 DEFINES += -D_NSPR_BUILD_
 

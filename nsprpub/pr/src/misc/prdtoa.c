@@ -84,6 +84,8 @@ void _PR_CleanupDtoa(void)
 #define ULong PRUint32
 #define NO_LONG_LONG
 
+#define No_Hex_NaN
+
 /****************************************************************
  *
  * The author of this software is David M. Gay.

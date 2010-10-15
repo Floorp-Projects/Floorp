@@ -205,12 +205,12 @@ ifeq ($(OS_ARCH),WINCE)
 OS_LIBS		= ws2.lib
 endif
 
-ifeq ($(OS_TARGET),MacOSX)
-OS_LIBS		= -framework CoreServices -framework CoreFoundation
+ifeq ($(OS_TARGET),Android)
+OS_LIBS		+= -llog
 endif
 
-ifdef GC_LEAK_DETECTOR
-EXTRA_LIBS	= -L$(dist_libdir) -lboehm
+ifeq ($(OS_TARGET),MacOSX)
+OS_LIBS		= -framework CoreServices -framework CoreFoundation
 endif
 
 EXTRA_LIBS += $(OS_LIBS)
@@ -309,10 +309,6 @@ OBJS += \
 	cplus/$(OBJDIR)/rctime.$(OBJ_SUFFIX)
 endif
 
-ifdef GC_LEAK_DETECTOR
-OBJS += memory/$(OBJDIR)/prgcleak.$(OBJ_SUFFIX)
-endif
-
 ifeq ($(OS_ARCH), WINNT)
 RES=$(OBJDIR)/nspr.res
 RESNAME=nspr.rc
@@ -384,12 +380,19 @@ endif
 #
 
 
+# We use a 'build' target here to ensure that we build $(TARGETS) after
+# looping over $(DIRS) to create the object files in a parallel build.
+# Recipe commands are executed sequentially in a parallel build while
+# target dependencies are executed in parallel.
+export::
+	$(MAKE) build
+
 #
 # The Client build wants the shared libraries in $(dist_bindir)
 # so we also install them there.
 #
 
-export:: $(TARGETS)
+build:: $(TARGETS)
 	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
 ifdef SHARED_LIBRARY
 ifeq ($(OS_ARCH),HP-UX)
