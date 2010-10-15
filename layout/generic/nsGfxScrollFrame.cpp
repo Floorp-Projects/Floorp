@@ -109,9 +109,10 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsHTMLScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsHTMLScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                            PRUint32 aFilter)
 {
-  mInner.AppendAnonymousContentTo(aElements);
+  mInner.AppendAnonymousContentTo(aElements, aFilter);
 }
 
 void
@@ -973,9 +974,10 @@ nsXULScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsXULScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsXULScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                           PRUint32 aFilter)
 {
-  mInner.AppendAnonymousContentTo(aElements);
+  mInner.AppendAnonymousContentTo(aElements, aFilter);
 }
 
 void
@@ -2232,7 +2234,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsGfxScrollFrameInner::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsGfxScrollFrameInner::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                                PRUint32 aFilter)
 {
   aElements.MaybeAppendElement(mHScrollbarContent);
   aElements.MaybeAppendElement(mVScrollbarContent);
