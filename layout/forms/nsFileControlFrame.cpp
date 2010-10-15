@@ -345,7 +345,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                             PRUint32 aFilter)
 {
   aElements.MaybeAppendElement(mTextContent);
   aElements.MaybeAppendElement(mBrowse);

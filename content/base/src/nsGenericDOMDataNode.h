@@ -194,7 +194,7 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual already_AddRefed<nsINodeList> GetChildren(PRInt32 aChildType);
+  virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
 
   virtual nsIAtom *GetIDAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
