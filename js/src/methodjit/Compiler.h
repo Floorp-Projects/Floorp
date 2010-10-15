@@ -151,7 +151,8 @@ class Compiler : public BaseCompiler
 
 #if defined JS_POLYIC
     struct PICGenInfo {
-        PICGenInfo(ic::PICInfo::Kind kind) : kind(kind)
+        PICGenInfo(ic::PICInfo::Kind kind, bool usePropCache)
+          : kind(kind), usePropCache(usePropCache)
         { }
         ic::PICInfo::Kind kind;
         Label fastPathStart;
@@ -163,6 +164,7 @@ class Compiler : public BaseCompiler
         RegisterID objReg;
         RegisterID idReg;
         RegisterID typeReg;
+        bool usePropCache;
         Label shapeGuard;
         JSAtom *atom;
         StateRemat objRemat;
@@ -179,6 +181,7 @@ class Compiler : public BaseCompiler
             pi.shapeReg = shapeReg;
             pi.objReg = objReg;
             pi.atom = atom;
+            pi.usePropCache = usePropCache;
             if (kind == ic::PICInfo::SET) {
                 pi.u.vr = vr;
             } else if (kind != ic::PICInfo::NAME) {
@@ -315,10 +318,10 @@ class Compiler : public BaseCompiler
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_unbrand();
-    bool jsop_getprop(JSAtom *atom, bool typeCheck = true);
+    bool jsop_getprop(JSAtom *atom, bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
-    bool jsop_setprop(JSAtom *atom);
-    void jsop_setprop_slow(JSAtom *atom);
+    bool jsop_setprop(JSAtom *atom, bool usePropCache = true);
+    void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);
     bool jsop_callprop_slow(JSAtom *atom);
     bool jsop_callprop(JSAtom *atom);
     bool jsop_callprop_obj(JSAtom *atom);
