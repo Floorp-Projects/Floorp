@@ -307,6 +307,12 @@ mjit::Compiler::generatePrologue()
         }
     }
 
+    if (isConstructing)
+        constructThis();
+
+    if (debugMode)
+        stubCall(stubs::EnterScript);
+
     return Compile_Okay;
 }
 
@@ -1343,16 +1349,16 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LOCALDEC)
 
           BEGIN_CASE(JSOP_BINDNAME)
-            jsop_bindname(fullAtomIndex(PC));
+            jsop_bindname(fullAtomIndex(PC), true);
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETPROP)
-            jsop_setprop(script->getAtom(fullAtomIndex(PC)));
+            jsop_setprop(script->getAtom(fullAtomIndex(PC)), true);
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETMETHOD)
-            jsop_setprop(script->getAtom(fullAtomIndex(PC)));
+            jsop_setprop(script->getAtom(fullAtomIndex(PC)), true);
           END_CASE(JSOP_SETNAME)
 
           BEGIN_CASE(JSOP_THROW)
@@ -1702,11 +1708,6 @@ mjit::Compiler::generateMethod()
             break;
           END_CASE(JSOP_GLOBALINC)
 
-          BEGIN_CASE(JSOP_BEGIN)
-            if (isConstructing)
-                constructThis();
-          END_CASE(JSOP_BEGIN)
-
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
@@ -1929,6 +1930,11 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     /* Only the top of the stack can be returned. */
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
+
+    if (debugMode) {
+        prepareStubCall(Uses(0));
+        stubCall(stubs::LeaveScript);
+    }
 
     /*
      * If there's a function object, deal with the fact that it can escape.
@@ -2362,20 +2368,28 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 }
 
 void
-mjit::Compiler::jsop_setprop_slow(JSAtom *atom)
+mjit::Compiler::jsop_setprop_slow(JSAtom *atom, bool usePropCache)
 {
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(STRICT_VARIANT(stubs::SetName));
+    if (usePropCache)
+        stubCall(STRICT_VARIANT(stubs::SetName));
+    else
+        stubCall(STRICT_VARIANT(stubs::SetPropNoCache));
     JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
     frame.shimmy(1);
 }
 
 void
-mjit::Compiler::jsop_getprop_slow()
+mjit::Compiler::jsop_getprop_slow(JSAtom *atom, bool usePropCache)
 {
     prepareStubCall(Uses(1));
-    stubCall(stubs::GetProp);
+    if (usePropCache) {
+        stubCall(stubs::GetProp);
+    } else {
+        masm.move(ImmPtr(atom), Registers::ArgReg1);
+        stubCall(stubs::GetPropNoCache);
+    }
     frame.pop();
     frame.pushSynced();
 }
@@ -2440,7 +2454,7 @@ mjit::Compiler::passPICAddress(PICGenInfo &pic)
 }
 
 void
-mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
+mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck, bool usePropCache)
 {
     FrameEntry *top = frame.peek(-1);
 
@@ -2448,7 +2462,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_OBJECT) {
         JS_ASSERT_IF(atom == cx->runtime->atomState.lengthAtom,
                      top->getKnownType() != JSVAL_TYPE_STRING);
-        jsop_getprop_slow();
+        jsop_getprop_slow(atom, usePropCache);
         return;
     }
 
@@ -2464,7 +2478,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
         shapeReg = frame.allocReg();
     }
 
-    PICGenInfo pic(ic::PICInfo::GET);
+    PICGenInfo pic(ic::PICInfo::GET, usePropCache);
 
     /* Guard that the type is an object. */
     Jump typeCheck;
@@ -2571,7 +2585,7 @@ void
 mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID objReg,
                                  RegisterID idReg, RegisterID shapeReg)
 {
-    PICGenInfo pic(ic::PICInfo::GETELEM);
+    PICGenInfo pic(ic::PICInfo::GETELEM, true);
 
     pic.objRemat = frame.dataRematInfo(obj);
     pic.idRemat = frame.dataRematInfo(id);
@@ -2684,7 +2698,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     RegisterID objReg = frame.copyDataIntoReg(top);
     RegisterID shapeReg = frame.allocReg();
 
-    PICGenInfo pic(ic::PICInfo::CALL);
+    PICGenInfo pic(ic::PICInfo::CALL, true);
 
     /* Guard that the type is an object. */
     pic.typeReg = frame.copyTypeIntoReg(top);
@@ -2852,7 +2866,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 {
     FrameEntry *top = frame.peek(-1);
 
-    PICGenInfo pic(ic::PICInfo::CALL);
+    PICGenInfo pic(ic::PICInfo::CALL, true);
 
     JS_ASSERT(top->isTypeKnown());
     JS_ASSERT(top->getKnownType() == JSVAL_TYPE_OBJECT);
@@ -2969,20 +2983,20 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 }
 
 void
-mjit::Compiler::jsop_setprop(JSAtom *atom)
+mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 {
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
 
     /* If the incoming type will never PIC, take slow path. */
     if (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT) {
-        jsop_setprop_slow(atom);
+        jsop_setprop_slow(atom, usePropCache);
         return;
     }
 
     JSOp op = JSOp(*PC);
 
-    PICGenInfo pic(op == JSOP_SETMETHOD ? ic::PICInfo::SETMETHOD : ic::PICInfo::SET);
+    PICGenInfo pic(op == JSOP_SETMETHOD ? ic::PICInfo::SETMETHOD : ic::PICInfo::SET, usePropCache);
     pic.atom = atom;
 
     /* Guard that the type is an object. */
@@ -2998,19 +3012,11 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         pic.typeCheck = stubcc.linkExit(j, Uses(2));
         stubcc.leave();
 
-        /*
-         * This gets called from PROPINC/PROPDEC which aren't compatible with
-         * the normal SETNAME property cache logic.
-         */
-        JSOp op = JSOp(*PC);
         stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
-        if (op == JSOP_SETNAME || op == JSOP_SETPROP || op == JSOP_SETGNAME || op ==
-            JSOP_SETMETHOD) {
+        if (usePropCache)
             stubcc.call(STRICT_VARIANT(stubs::SetName));
-        } else {
+        else
             stubcc.call(STRICT_VARIANT(stubs::SetPropNoCache));
-        }
-
         typeCheck = stubcc.masm.jump();
         pic.hasTypeCheck = true;
     } else {
@@ -3113,7 +3119,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
 void
 mjit::Compiler::jsop_name(JSAtom *atom)
 {
-    PICGenInfo pic(ic::PICInfo::NAME);
+    PICGenInfo pic(ic::PICInfo::NAME, true);
 
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
@@ -3145,7 +3151,7 @@ mjit::Compiler::jsop_name(JSAtom *atom)
 void
 mjit::Compiler::jsop_xname(JSAtom *atom)
 {
-    PICGenInfo pic(ic::PICInfo::XNAME);
+    PICGenInfo pic(ic::PICInfo::XNAME, true);
 
     FrameEntry *fe = frame.peek(-1);
     if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
@@ -3187,9 +3193,9 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 }
 
 void
-mjit::Compiler::jsop_bindname(uint32 index)
+mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 {
-    PICGenInfo pic(ic::PICInfo::BIND);
+    PICGenInfo pic(ic::PICInfo::BIND, usePropCache);
 
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
@@ -3250,9 +3256,9 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 }
 
 void
-mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck)
+mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck, bool usePropCache)
 {
-    jsop_getprop_slow();
+    jsop_getprop_slow(atom, usePropCache);
 }
 
 bool
@@ -3262,13 +3268,13 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 }
 
 void
-mjit::Compiler::jsop_setprop(JSAtom *atom)
+mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 {
-    jsop_setprop_slow(atom);
+    jsop_setprop_slow(atom, usePropCache);
 }
 
 void
-mjit::Compiler::jsop_bindname(uint32 index)
+mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 {
     RegisterID reg = frame.allocReg();
     Address scopeChain(JSFrameReg, JSStackFrame::offsetOfScopeChain());
@@ -3280,7 +3286,12 @@ mjit::Compiler::jsop_bindname(uint32 index)
 
     stubcc.linkExit(j, Uses(0));
     stubcc.leave();
-    stubcc.call(stubs::BindName);
+    if (usePropCache) {
+        stubcc.call(stubs::BindName);
+    } else {
+        masm.move(ImmPtr(script->getAtom(index)), Registers::ArgReg1);
+        stubcc.call(stubs::BindNameNoCache);
+    }
 
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
 
@@ -3423,7 +3434,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         jsop_binary(JSOP_SUB, stubs::Sub);
         // N+1
 
-        jsop_bindname(index);
+        jsop_bindname(index, false);
         // V+1 OBJ
 
         frame.dup2();
@@ -3435,7 +3446,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shift(-1);
         // OBJ V+1
 
-        jsop_setprop(atom);
+        jsop_setprop(atom, false);
         // V+1
 
         if (pop)
@@ -3458,7 +3469,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         jsop_binary(JSOP_ADD, stubs::Add);
         // N N+1
 
-        jsop_bindname(index);
+        jsop_bindname(index, false);
         // N N+1 OBJ
 
         frame.dup2();
@@ -3470,7 +3481,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shift(-1);
         // N OBJ N+1
 
-        jsop_setprop(atom);
+        jsop_setprop(atom, false);
         // N N+1
 
         frame.pop();
@@ -3516,7 +3527,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             jsop_binary(JSOP_SUB, stubs::Sub);
             // OBJ V+1
 
-            jsop_setprop(atom);
+            jsop_setprop(atom, false);
             // V+1
 
             if (pop)
@@ -3548,7 +3559,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             frame.dupAt(-2);
             // OBJ N N+1 OBJ N+1
 
-            jsop_setprop(atom);
+            jsop_setprop(atom, false);
             // OBJ N N+1 N+1
 
             frame.popn(2);
@@ -4353,7 +4364,7 @@ mjit::Compiler::constructThis()
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, calleeReg);
 
     // Get callee.prototype.
-    jsop_getprop(cx->runtime->atomState.classPrototypeAtom);
+    jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false, false);
 
     // Reach into the proto Value and grab a register for its data.
     FrameEntry *protoFe = frame.peek(-1);
