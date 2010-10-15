@@ -3716,10 +3716,15 @@ bad:
 JSBool
 js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
+    CG_SWITCH_TO_PROLOG(cg);
+    JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
+    if (js_Emit1(cx, cg, JSOP_BEGIN) < 0)
+        return false;
+    CG_SWITCH_TO_MAIN(cg);
+
     if (cg->flags & TCF_FUN_IS_GENERATOR) {
-        /* JSOP_GENERATOR must be the first instruction. */
+        /* JSOP_GENERATOR must be the first real instruction. */
         CG_SWITCH_TO_PROLOG(cg);
-        JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return false;
         CG_SWITCH_TO_MAIN(cg);
