@@ -1056,7 +1056,7 @@ GestureModule.prototype = {
 
     // create the AnimatedZoom object for fast arbitrary zooming
     this._pinchZoom = AnimatedZoom;
-    this._pinchZoomRect = AnimatedZoom.getStartRect()
+    this._pinchStartRect = AnimatedZoom.getStartRect();
 
     // start from current zoom level
     this._pinchStartScale = this._pinchScale = getBrowser().scale;
@@ -1068,8 +1068,8 @@ GestureModule.prototype = {
     this._scalingFactor = Services.prefs.getIntPref("browser.ui.pinch.scalingFactor");
 
     // save the initial gesture start point as reference
-    this._pinchClientX = aEvent.clientX;
-    this._pinchClientY = aEvent.clientY;
+    this._pinchStartX = aEvent.clientX;
+    this._pinchStartY = aEvent.clientY;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
@@ -1082,28 +1082,24 @@ GestureModule.prototype = {
     let oldScale = this._pinchScale;
     let newScale = Browser.selectedTab.clampZoomLevel(oldScale * (1 + delta / this._scalingFactor));
 
-    let scaleRatio = oldScale / newScale;
+    let startScale = this._pinchStartScale;
+    let scaleRatio = startScale / newScale;
     let [cX, cY] = [aEvent.clientX, aEvent.clientY];
 
     // Calculate the new zoom rect.
-    let rect = this._pinchZoomRect.clone();
-    rect.translate(this._pinchClientX - cX + (1-scaleRatio) * cX * rect.width / window.innerWidth,
-                   this._pinchClientY - cY + (1-scaleRatio) * cY * rect.height / window.innerHeight);
+    let rect = this._pinchStartRect.clone();
+    rect.translate(this._pinchStartX - cX + (1-scaleRatio) * cX * rect.width / window.innerWidth,
+                   this._pinchStartY - cY + (1-scaleRatio) * cY * rect.height / window.innerHeight);
 
     rect.width *= scaleRatio;
     rect.height *= scaleRatio;
 
-    let startScale = this._pinchStartScale;
     rect.translateInside(new Rect(0, 0, getBrowser().contentDocumentWidth * startScale,
                                         getBrowser().contentDocumentHeight * startScale));
 
     // redraw zoom canvas according to new zoom rect
-    this._pinchZoomRect = rect;
-    this._pinchZoom.updateTo(this._pinchZoomRect);
-
+    this._pinchZoom.updateTo(rect);
     this._pinchScale = newScale;
-    this._pinchClientX = cX;
-    this._pinchClientY = cY;
   },
 
   _pinchEnd: function _pinchEnd(aEvent) {
