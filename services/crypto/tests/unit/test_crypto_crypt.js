@@ -1,8 +1,14 @@
-Cu.import("resource://services-sync/util.js");
+let cryptoSvc;
+try {
+  Components.utils.import("resource://services-crypto/threaded.js");
+  cryptoSvc = new ThreadedCrypto();
+} catch (ex) {
+  // Fallback to binary WeaveCrypto
+  cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"]
+                .getService(Ci.IWeaveCrypto);
+}
 
 function run_test() {
-  let cryptoSvc = Svc.Crypto;
-
   // First, do a normal run with expected usage... Generate a random key and
   // iv, encrypt and decrypt a string.
   var iv = cryptoSvc.generateRandomIV();
@@ -119,7 +125,7 @@ function run_test() {
   do_check_eq(cipherText, "T6fik9Ros+DB2ablH9zZ8FWZ0xm/szSwJjIHZu7sjPs=");
 
   var badkey    = "badkeybadkeybadkeybadk==";
-  var badiv     = "badivbadivbadivbadivbad==";
+  var badiv     = "badivbadivbadivbadivbad=";
   var badcipher = "crapinputcrapinputcrapinputcrapinputcrapinp=";
   var failure;
 
