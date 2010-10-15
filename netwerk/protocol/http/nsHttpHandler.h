@@ -306,8 +306,6 @@ private:
     nsCString      mOscpu;
     nsCString      mLanguage;
     nsCString      mMisc;
-    nsXPIDLCString mVendor;
-    nsXPIDLCString mVendorSub;
     nsCString      mProduct;
     nsXPIDLCString mProductSub;
     nsXPIDLCString mAppName;
