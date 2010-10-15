@@ -430,13 +430,47 @@
         ]]></body>
       </method>
 
+      <method name="_getRemoteTabs">
+        <body><![CDATA[
+          // This method does as little as possible to retrieve data about remote
+          // tabs. Only the raw data is returned. Nothing is post-processed, which
+          // could happen in the remotetabs-list binding method of the same name.
+
+          // Don't do anything if the Weave isn't ready
+          if (document.getElementById("cmd_remoteTabs").getAttribute("disabled") == "true")
+            return [];
+
+          // Don't do anything if the tabs engine isn't ready
+          let engine = Weave.Engines.get("tabs");
+          if (!engine)
+            return [];
+
+          // Generate the list of tabs we already have locally. Do not force a
+          // tab engine sync.
+          let tabs = [];
+          for (let [guid, client] in Iterator(engine.getAllClients())) {
+            client.tabs.forEach(function({ title, urlHistory, icon }) {
+              let pageURL = urlHistory[0];
+
+              tabs.push({
+                title: title || pageURL,
+                uri: pageURL,
+                icon: icon
+              });
+            });
+          };
+
+          return tabs;
+        ]]></body>
+      </method>
+
       <method name="_invalidateBadges">
         <body><![CDATA[
           window.clearTimeout(this._badgesTimeout);
 
           this._badgesTimeout = window.setTimeout(function(self) {
 #ifdef MOZ_SERVICES_SYNC
-            let remoteItems = RemoteTabsList.panel._getRemoteTabs();
+            let remoteItems = self._getRemoteTabs();
 #endif
             for (let i = 0; i < self._items.childNodes.length; i++) {
               let item = self._items.childNodes[i];
@@ -444,17 +478,13 @@
                 continue;
 
               let itemURL = item.getAttribute("url");
-              let itemURI = Services.io.newURI(itemURL, null, null);
 
 #ifdef MOZ_SERVICES_SYNC
               // check if the tab is in the remote list
               for (let i = 0; i < remoteItems.length; i++) {
                 let remoteURL = remoteItems[i].uri;
-                if (remoteURL) {
-                  let remoteURI = Services.io.newURI(remoteURL, null, null);
-                  if (itemURI.equals(remoteURI))
-                    item.setAttribute("remote", "true");
-                }
+                if (remoteURL == itemURL)
+                  item.setAttribute("remote", "true");
               }
 #endif
 
@@ -1311,10 +1341,6 @@
 
             client.tabs.forEach(function({title, urlHistory, icon}) {
               let pageURL = urlHistory[0];
-
-              // Skip tabs that are already open
-              if (engine.locallyOpenTabMatchesURL(pageURL))
-                return;
 
               tabs.push({
                 title: title || pageURL,
