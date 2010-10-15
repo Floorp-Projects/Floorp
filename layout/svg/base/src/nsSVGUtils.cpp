@@ -1536,18 +1536,18 @@ nsSVGUtils::GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex)
 // ----------------------------------------------------------------------
 
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
-  mRenderMode(NORMAL), mRenderingContext(aContext)
+  mRenderMode(NORMAL), mRenderingContext(aContext), mPaintingToWindow(PR_FALSE)
 {
   mGfxContext = aContext->ThebesContext();
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
-  mRenderMode(NORMAL), mGfxContext(aContext)
+  mRenderMode(NORMAL), mGfxContext(aContext), mPaintingToWindow(PR_FALSE)
 {
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
-  mRenderMode(NORMAL)
+  mRenderMode(NORMAL), mPaintingToWindow(PR_FALSE)
 {
   mGfxContext = new gfxContext(aSurface);
 }

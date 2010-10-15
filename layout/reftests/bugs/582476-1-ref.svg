@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <script>
+    iframeLoadedFirst = false;
+    parentLoadedFirst = false;
+
+    function iframeLoad() {
+      if (parentLoadedFirst) {
+        setup();
+      } else {
+        iframeLoadedFirst = true;
+      }
+    }
+
+    window.onload = function() {
+      if (iframeLoadedFirst) {
+        setup();
+      } else {
+        parentLoadedFirst = true;
+      }
+    }
+
+    function setup() {
+      var scrollTarget = document.getElementById("ifrm").contentWindow;
+      scrollTarget.scrollTo(0,100000);
+    }
+  </script>
+  <foreignObject height="100%" width="100%">
+    <iframe id="ifrm" onload="iframeLoad();" width="100%" height="100%" xmlns="http://www.w3.org/1999/xhtml" src="582476-1-ref-helper.html"/>
+  </foreignObject>
+</svg>

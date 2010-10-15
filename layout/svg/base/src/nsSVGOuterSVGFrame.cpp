@@ -466,7 +466,7 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
                     nsIRenderingContext* aCtx)
 {
   static_cast<nsSVGOuterSVGFrame*>(mFrame)->
-    Paint(*aCtx, mVisibleRect, ToReferenceFrame());
+    Paint(aBuilder, *aCtx, mVisibleRect, ToReferenceFrame());
 }
 
 // helper
@@ -541,7 +541,8 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
+nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
+                          nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect, nsPoint aPt)
 {
   // initialize Mozilla rendering context
@@ -564,6 +565,10 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   nsIntRect dirtyPxRect = dirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
 
   nsSVGRenderState ctx(&aRenderingContext);
+
+  if (aBuilder->IsPaintingToWindow()) {
+    ctx.SetPaintingToWindow(PR_TRUE);
+  }
 
 #ifdef XP_MACOSX
   if (mEnableBitmapFallback) {
