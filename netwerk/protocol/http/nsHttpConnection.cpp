@@ -206,6 +206,15 @@ nsHttpConnection::CanReuse()
                          && IsAlive();
 }
 
+PRUint32 nsHttpConnection::TimeToLive()
+{
+    PRInt32 tmp = mIdleTimeout - (NowInSeconds() - mLastReadTime);
+    if (0 > tmp)
+        tmp = 0;
+
+    return tmp;
+}
+
 PRBool
 nsHttpConnection::IsAlive()
 {
