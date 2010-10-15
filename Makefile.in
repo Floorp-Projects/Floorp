@@ -68,6 +68,10 @@ ifndef LIBXUL_SDK
 tier_base_dirs += \
 	memory \
 	$(NULL)
+ifeq ($(OS_TARGET),Android)
+tier_base_dirs += other-licenses/android
+endif
+
 endif
 
 ifdef COMPILE_ENVIRONMENT
