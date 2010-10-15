@@ -208,7 +208,6 @@ nsAppShell::nsAppShell()
 , mRunningEventLoop(PR_FALSE)
 , mStarted(PR_FALSE)
 , mTerminated(PR_FALSE)
-, mNotifiedWillTerminate(PR_FALSE)
 , mSkippedNativeCallback(PR_FALSE)
 , mHadMoreEventsCount(0)
 , mRecursionDepth(0)
@@ -465,20 +464,14 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
 void
 nsAppShell::WillTerminate()
 {
-  mNotifiedWillTerminate = PR_TRUE;
   if (mTerminated)
     return;
-  mTerminated = PR_TRUE;
 
-  // Calling [NSApp terminate:] causes (among other things) an
-  // NSApplicationWillTerminate notification to be posted and the main run
-  // loop to die before returning (in the call to [NSApp run]).  So this is
-  // our last crack at processing any remaining Gecko events.
+  // Make sure that the nsAppExitEvent posted by nsAppStartup::Quit() (called
+  // from [MacApplicationDelegate applicationShouldTerminate:]) gets run.
   NS_ProcessPendingEvents(NS_GetCurrentThread());
 
-  // Unless we call nsBaseAppShell::Exit() here, it might not get called
-  // at all.
-  nsBaseAppShell::Exit();
+  mTerminated = PR_TRUE;
 }
 
 // ScheduleNativeEventCallback
@@ -961,14 +954,21 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 
 @end
 
-// We hook these methods in order to maintain a list of Cocoa app-modal
-// windows (and the "sessions" to which they correspond).  We need this in
-// order to deal with the consequences of a Cocoa app-modal dialog being
-// "interrupted" by a Gecko-modal dialog.  See nsCocoaAppModalWindowList::
-// CurrentSession() and nsAppShell::ProcessNextNativeEvent() above.
+// We hook beginModalSessionForWindow: and endModalSession: in order to
+// maintain a list of Cocoa app-modal windows (and the "sessions" to which
+// they correspond).  We need this in order to deal with the consequences
+// of a Cocoa app-modal dialog being "interrupted" by a Gecko-modal dialog.
+// See nsCocoaAppModalWindowList::CurrentSession() and
+// nsAppShell::ProcessNextNativeEvent() above.
+//
+// We hook terminate: in order to make OS-initiated termination work nicely
+// with Gecko's shutdown sequence.  (Two ways to trigger OS-initiated
+// termination:  1) Quit from the Dock menu; 2) Log out from (or shut down)
+// your computer while the browser is active.)
 @interface NSApplication (MethodSwizzling)
 - (NSModalSession)nsAppShell_NSApplication_beginModalSessionForWindow:(NSWindow *)aWindow;
 - (void)nsAppShell_NSApplication_endModalSession:(NSModalSession)aSession;
+- (void)terminate:(id)sender;
 @end
 
 @implementation NSApplication (MethodSwizzling)
@@ -996,6 +996,22 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   if (gCocoaAppModalWindowList &&
       wasRunningAppModal && (prevAppModalWindow != [NSApp modalWindow]))
     gCocoaAppModalWindowList->PopCocoa(prevAppModalWindow, aSession);
+}
+
+// Called by the OS after [MacApplicationDelegate applicationShouldTerminate:]
+// has returned NSTerminateNow.  This method "subclasses" and replaces the
+// OS's original implementation.  The only thing the orginal method does which
+// we need is that it posts NSApplicationWillTerminateNotification.  Everything
+// else is unneeded (because it's handled elsewhere), or actively interferes
+// with Gecko's shutdown sequence.  For example the original terminate: method
+// causes the app to exit() inside [NSApp run] (called from nsAppShell::Run()
+// above), which means that nothing runs after the call to nsAppStartup::Run()
+// in XRE_Main(), which in particular means that ScopedXPCOMStartup's destructor
+// and NS_ShutdownXPCOM() never get called.
+- (void)terminate:(id)sender
+{
+  [[NSNotificationCenter defaultCenter] postNotificationName:NSApplicationWillTerminateNotification
+                                                      object:NSApp];
 }
 
 @end
