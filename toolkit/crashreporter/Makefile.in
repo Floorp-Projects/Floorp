@@ -98,6 +98,10 @@ DIRS += \
   $(NULL)
 endif
 
+ifeq ($(OS_TARGET),Android)
+DIRS += fileid
+endif
+
 DIRS += client
 
 LOCAL_INCLUDES = -I$(srcdir)/google-breakpad/src
