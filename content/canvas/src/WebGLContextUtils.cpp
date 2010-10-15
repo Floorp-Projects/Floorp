@@ -43,7 +43,8 @@
 
 #include "prprf.h"
 
-#include "nsIConsoleService.h"
+#include "nsIJSContextStack.h"
+#include "jsapi.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
@@ -214,13 +215,14 @@ void
 WebGLContext::LogMessage(const char *fmt, va_list ap)
 {
     char buf[1024];
+    PR_vsnprintf(buf, 1024, fmt, ap);
 
-    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-    if (console) {
-        PR_vsnprintf(buf, 1024, fmt, ap);
-        console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
-        fprintf(stderr, "%s\n", buf);
-    }
+    // no need to print to stderr, as JS_ReportWarning takes care of this for us.
+
+    nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    JSContext* ccx = nsnull;
+    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx)
+        JS_ReportWarning(ccx, "WebGL: %s", buf);
 }
 
 void
