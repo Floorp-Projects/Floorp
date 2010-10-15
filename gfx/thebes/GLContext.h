@@ -919,7 +919,8 @@ public:
     }
 
     void PushScissorRect() {
-        mScissorStack.AppendElement(ScissorRect());
+        nsIntRect copy(ScissorRect());
+        mScissorStack.AppendElement(copy);
     }
 
     void PushScissorRect(const nsIntRect& aRect) {
@@ -964,7 +965,8 @@ public:
     }
 
     void PushViewportRect() {
-        mViewportStack.AppendElement(ViewportRect());
+        nsIntRect copy(ViewportRect());
+        mViewportStack.AppendElement(copy);
     }
 
     void PushViewportRect(const nsIntRect& aRect) {
