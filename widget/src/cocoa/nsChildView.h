@@ -211,7 +211,7 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
+- (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext;
 
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
@@ -227,8 +227,6 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 - (void) _surfaceNeedsUpdate:(NSNotification*)notification;
 
 - (BOOL)isPluginView;
-
-- (BOOL)isUsingOpenGL;
 
 // Simple gestures support
 //

@@ -117,6 +117,7 @@ extern "C" {
   extern CGSConnection _CGSDefaultConnection();
   extern CGError CGSGetScreenRectForWindow(const CGSConnection cid, CGSWindow wid, CGRect *outRect);
   extern CGError CGSGetWindowLevel(const CGSConnection cid, CGSWindow wid, CGWindowLevel *level);
+  extern CGError CGSGetWindowAlpha(const CGSConnection cid, const CGSWindow wid, float* alpha);
 }
 
 // defined in nsMenuBarX.mm
@@ -190,6 +191,8 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 - (float)beginMaybeResetUnifiedToolbar;
 - (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
+
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
@@ -2597,11 +2600,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
    [self update];
 }
 
-- (BOOL) isUsingOpenGL
-{
-    return mGeckoChild && mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL;
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2618,6 +2616,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   [self endMaybeResetUnifiedToolbar:oldHeight];
+}
+
+- (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext
+{
+  // Title bar drawing only works if we really draw into aContext, which only
+  // the basic layer manager will do.
+  nsBaseWidget::AutoUseBasicLayerManager setupLayerManager(mGeckoChild);
+  [self drawRect:aRect inContext:aContext];
 }
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
@@ -2654,6 +2660,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create the event so we can fill in its region
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
 
+  nsIntRect boundingRect =
+    nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
   const NSRect *rects;
   NSInteger count, i;
   [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
@@ -2664,9 +2672,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
       paintEvent.region.Or(paintEvent.region,
         nsIntRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
     }
+    paintEvent.region.And(paintEvent.region, boundingRect);
   } else {
-    paintEvent.region =
-      nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
+    paintEvent.region = boundingRect;
   }
 
 #ifndef NP_NO_QUICKDRAW
@@ -6318,6 +6326,12 @@ static BOOL WindowNumberIsUnderPoint(NSInteger aWindowNumber, NSPoint aPoint) {
       (level == kDockWindowLevel ||     // Transparent layer, spanning the whole screen
        level == kFloatingWindowLevel || // invisible Jing window
        level > kPopupWindowLevel))      // Snapz Pro X while recording a screencast
+    return false;
+
+  // Ignore transparent windows.
+  float alpha;
+  if ((kCGErrorSuccess == CGSGetWindowAlpha(cid, aWindowNumber, &alpha)) &&
+      alpha < 0.1f)
     return false;
 
   CGRect rect;
