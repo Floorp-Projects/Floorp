@@ -1435,10 +1435,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-height: 7.3mozmm;
 }
 
-.tabbrowser-tabs:not([overflow="true"]) {
-  -moz-margin-start: 3px;
-}
-
 /* Tabs */
 .tabbrowser-tab,
 .tabs-newtab-button {
