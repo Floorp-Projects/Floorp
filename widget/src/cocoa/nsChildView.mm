@@ -2660,6 +2660,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create the event so we can fill in its region
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
 
+  nsIntRect boundingRect =
+    nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
   const NSRect *rects;
   NSInteger count, i;
   [[NSView focusView] getRectsBeingDrawn:&rects count:&count];
@@ -2670,9 +2672,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
       paintEvent.region.Or(paintEvent.region,
         nsIntRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
     }
+    paintEvent.region.And(paintEvent.region, boundingRect);
   } else {
-    paintEvent.region =
-      nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
+    paintEvent.region = boundingRect;
   }
 
 #ifndef NP_NO_QUICKDRAW
