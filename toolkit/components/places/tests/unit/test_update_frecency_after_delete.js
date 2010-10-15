@@ -45,27 +45,17 @@
  * bookmark is deleted.
  */
 
-const bmServ =
-  Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-  getService(Ci.nsINavBookmarksService);
-const histServ =
-  Cc["@mozilla.org/browser/nav-history-service;1"].
-  getService(Ci.nsINavHistoryService);
-const lmServ =
-  Cc["@mozilla.org/browser/livemark-service;2"].
-  getService(Ci.nsILivemarkService);
+const bmServ = PlacesUtils.bookmarks;
+const histServ = PlacesUtils.history;
+const lmServ = PlacesUtils.livemarks;
 
-const dbConn =
-  Cc["@mozilla.org/browser/nav-history-service;1"].
-  getService(Ci.nsPIPlacesDatabase).
-  DBConnection;
+let tests = [
 
-var tests = [];
-
-tests.push({
+{
   desc: ["Frecency of unvisited, separately bookmarked livemark item's URI ",
          "should be zero after bookmark removed."].join(""),
-  run: function () {
+  run: function ()
+  {
     // Add livemark and bookmark.  Bookmark's URI is the URI of the livemark's
     // only item.
     let lmItemURL = "http://example.com/livemark-item";
@@ -75,22 +65,31 @@ tests.push({
                                      lmItemURI,
                                      bmServ.DEFAULT_INDEX,
                                      "bookmark title");
+    waitForFrecency(lmItemURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [lmItemURL, bmId]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(lmItemURL), 0);
-
-    bmServ.removeItem(bmId);
-
-    // URI's only "bookmark" is now unvisited livemark item => frecency = 0.
-    do_check_eq(getFrecency(lmItemURL), 0);
-    runNextTest();
+    bmServ.removeItem(aItemId);
+    waitForFrecency(aUrl, function(aFrecency) aFrecency == 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("URI's only bookmark is now unvisited livemark item => frecency = 0");
+    do_check_eq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["Frecency of visited, separately bookmarked livemark item's URI ",
          "should not be zero after bookmark removed."].join(""),
-  run: function () {
+  run: function ()
+  {
     // Add livemark and bookmark.  Bookmark's URI is the URI of the livemark's
     // only item.
     let lmItemURL = "http://example.com/livemark-item";
@@ -100,44 +99,62 @@ tests.push({
                                      lmItemURI,
                                      bmServ.DEFAULT_INDEX,
                                      "bookmark title");
+    waitForFrecency(lmItemURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [lmItemURL, bmId]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(lmItemURL), 0);
-
-    visit(lmItemURI);
-    bmServ.removeItem(bmId);
-
-    // URI's only "bookmark" is now *visited* livemark item => frecency != 0.
-    do_check_neq(getFrecency(lmItemURL), 0);
-    runNextTest();
+    visit(uri(aUrl));
+    bmServ.removeItem(aItemId);
+    waitForFrecency(aUrl, function(aFrecency) aFrecency > 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("URI's only bookmark is now *visited* livemark item => frecency != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["After removing bookmark, frecency of bookmark's URI should be zero ",
          "if URI is unvisited and no longer bookmarked."].join(""),
-  run: function () {
+  run: function ()
+  {
     let url = "http://example.com/1";
     let bmId = bmServ.insertBookmark(bmServ.unfiledBookmarksFolder,
                                      uri(url),
                                      bmServ.DEFAULT_INDEX,
                                      "bookmark title");
+    waitForFrecency(url, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [url, bmId]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(url), 0);
-
-    bmServ.removeItem(bmId);
-
-    // Unvisited URI no longer bookmarked => frecency should = 0.
-    do_check_eq(getFrecency(url), 0);
-    runNextTest();
+    bmServ.removeItem(aItemId);
+    waitForFrecency(aUrl, function(aFrecency) aFrecency == 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("Unvisited URI no longer bookmarked => frecency should = 0");
+    do_check_eq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["After removing bookmark, frecency of bookmark's URI should not be ",
          "zero if URI is visited."].join(""),
-  run: function () {
+  run: function ()
+  {
     let bmURL = "http://example.com/1";
     let bmURI = uri(bmURL);
 
@@ -145,23 +162,32 @@ tests.push({
                                      bmURI,
                                      bmServ.DEFAULT_INDEX,
                                      "bookmark title");
+    waitForFrecency(bmURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [bmURL, bmId]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-
-    visit(bmURI);
-    bmServ.removeItem(bmId);
-
-    // *Visited* URI no longer bookmarked => frecency should != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-    runNextTest();
+    visit(uri(aUrl));
+    bmServ.removeItem(aItemId);
+    waitForFrecency(aUrl, function(aFrecency) aFrecency > 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("*Visited* URI no longer bookmarked => frecency should != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["After removing bookmark, frecency of bookmark's URI should not be ",
          "zero if URI is still bookmarked."].join(""),
-  run: function () {
+  run: function ()
+  {
     let bmURL = "http://example.com/1";
     let bmURI = uri(bmURL);
 
@@ -174,23 +200,32 @@ tests.push({
                           bmURI,
                           bmServ.DEFAULT_INDEX,
                           "bookmark 2 title");
+    waitForFrecency(bmURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [bmURL, bm1Id]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-
-    bmServ.removeItem(bm1Id);
-
-    // URI still bookmarked => frecency should != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-    runNextTest();
+    bmServ.removeItem(aItemId);
+    waitForFrecency(aUrl, function(aFrecency) aFrecency > 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("URI still bookmarked => frecency should != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["Frecency of unvisited, separately bookmarked livemark item's URI ",
          "should be zero after all children removed from bookmark's ",
          "parent."].join(""),
-  run: function () {
+  run: function ()
+  {
     // Add livemark and bookmark.  Bookmark's URI is the URI of the livemark's
     // only item.
     let lmItemURL = "http://example.com/livemark-item";
@@ -201,23 +236,32 @@ tests.push({
                           lmItemURI,
                           bmServ.DEFAULT_INDEX,
                           "bookmark title");
-
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(lmItemURL), 0);
+    waitForFrecency(lmItemURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [lmItemURL]);
+  },
+  check1: function (aUrl)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
     bmServ.removeFolderChildren(bmServ.unfiledBookmarksFolder);
-
-    // URI's only "bookmark" is now unvisited livemark item => frecency = 0.
-    do_check_eq(getFrecency(lmItemURL), 0);
-    runNextTest();
+    waitForFrecency(aUrl, function(aFrecency) aFrecency == 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("URI's only bookmark is now unvisited livemark item => frecency = 0");
+    do_check_eq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["Frecency of visited, separately bookmarked livemark item's URI ",
          "should not be zero after all children removed from bookmark's ",
          "parent."].join(""),
-  run: function () {
+  run: function ()
+  {
     // Add livemark and bookmark.  Bookmark's URI is the URI of the livemark's
     // only item.
     let lmItemURL = "http://example.com/livemark-item";
@@ -227,45 +271,63 @@ tests.push({
                           lmItemURI,
                           bmServ.DEFAULT_INDEX,
                           "bookmark title");
+    waitForFrecency(lmItemURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [lmItemURL]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(lmItemURL), 0);
-
-    visit(lmItemURI);
+    visit(uri(aUrl));
     bmServ.removeFolderChildren(bmServ.unfiledBookmarksFolder);
-
-    // URI's only "bookmark" is now *visited* livemark item => frecency != 0.
-    do_check_neq(getFrecency(lmItemURL), 0);
-    runNextTest();
+    waitForFrecency(aUrl, function(aFrecency) aFrecency > 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("URI's only bookmark is now *visited* livemark item => frecency != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["After removing all children from bookmark's parent, frecency of ",
          "bookmark's URI should be zero if URI is unvisited and no longer ",
          "bookmarked."].join(""),
-  run: function () {
+  run: function ()
+  {
     let url = "http://example.com/1";
     bmServ.insertBookmark(bmServ.unfiledBookmarksFolder,
                           uri(url),
                           bmServ.DEFAULT_INDEX,
                           "bookmark title");
-
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(url), 0);
+    waitForFrecency(url, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [url]);
+  },
+  check1: function (aUrl, aItemId)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
     bmServ.removeFolderChildren(bmServ.unfiledBookmarksFolder);
-
-    // Unvisited URI no longer bookmarked => frecency should = 0.
-    do_check_eq(getFrecency(url), 0);
-    runNextTest();
+    waitForFrecency(aUrl, function(aFrecency) aFrecency == 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("Unvisited URI no longer bookmarked => frecency should = 0");
+    do_check_eq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["After removing all children from bookmark's parent, frecency of ",
          "bookmark's URI should not be zero if URI is visited."].join(""),
-  run: function () {
+  run: function ()
+  {
     let bmURL = "http://example.com/1";
     let bmURI = uri(bmURL);
 
@@ -273,24 +335,33 @@ tests.push({
                           bmURI,
                           bmServ.DEFAULT_INDEX,
                           "bookmark title");
+    waitForFrecency(bmURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [bmURL]);
+  },
+  check1: function (aUrl)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-
-    visit(bmURI);
+    visit(uri(aUrl));
     bmServ.removeFolderChildren(bmServ.unfiledBookmarksFolder);
-
-    // *Visited* URI no longer bookmarked => frecency should != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-    runNextTest();
+    waitForFrecency(aUrl, function(aFrecency) aFrecency > 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
+    print("*Visited* URI no longer bookmarked => frecency should != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
 
-tests.push({
+{
   desc: ["After removing all children from bookmark's parent, frecency of ",
          "bookmark's URI should not be zero if URI is still ",
          "bookmarked."].join(""),
-  run: function () {
+  run: function ()
+  {
     let bmURL = "http://example.com/1";
     let bmURI = uri(bmURL);
 
@@ -303,17 +374,27 @@ tests.push({
                           bmURI,
                           bmServ.DEFAULT_INDEX,
                           "bookmark 2 title");
-
-    // Bookmarked => frecency of URI should be != 0.
-    do_check_neq(getFrecency(bmURL), 0);
+    waitForFrecency(bmURL, function(aFrecency) aFrecency > 0,
+                    this.check1, this, [bmURL]);
+  },
+  check1: function (aUrl)
+  {
+    print("Bookmarked => frecency of URI should be != 0");
+    do_check_neq(frecencyForUrl(aUrl), 0);
 
     bmServ.removeFolderChildren(bmServ.unfiledBookmarksFolder);
-
+    waitForFrecency(aUrl, function(aFrecency) aFrecency > 0,
+                    this.check2, this, [aUrl]);
+  },
+  check2: function (aUrl)
+  {
     // URI still bookmarked => frecency should != 0.
-    do_check_neq(getFrecency(bmURL), 0);
-    runNextTest();
+    do_check_neq(frecencyForUrl(aUrl), 0);
+    run_next_test();
   }
-});
+},
+
+];
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -330,30 +411,10 @@ function createLivemark(aLmChildItemURI) {
                                                  uri("http://example.com/"),
                                                  uri("http://example.com/rdf"),
                                                  -1);
-  let lmChildItemId = bmServ.insertBookmark(lmItemId,
-                                            aLmChildItemURI,
-                                            bmServ.DEFAULT_INDEX,
-                                            "livemark item title");
-  return lmChildItemId;
-}
-
-/**
- * Returns the frecency of a Place.
- *
- * @param  aURL
- *         the URL of a Place
- * @return the frecency of aURL
- */
-function getFrecency(aURL) {
-  let sql = "SELECT frecency FROM moz_places_view WHERE url = :url";
-  let stmt = dbConn.createStatement(sql);
-  stmt.params.url = aURL;
-  do_check_true(stmt.executeStep());
-  let frecency = stmt.getInt32(0);
-  print("frecency=" + frecency);
-  stmt.finalize();
-
-  return frecency;
+  return bmServ.insertBookmark(lmItemId,
+                               aLmChildItemURI,
+                               bmServ.DEFAULT_INDEX,
+                               "livemark item title");
 }
 
 /**
@@ -375,15 +436,18 @@ function visit(aURI) {
 
 function run_test() {
   do_test_pending();
-  runNextTest();
+  run_next_test();
 }
 
-function runNextTest() {
+function run_next_test() {
   if (tests.length) {
     let test = tests.shift();
-    print("Test " +  + ": " + test.desc);
-    remove_all_bookmarks();
-    waitForClearHistory(test.run);
+    print("\n ***Test: " + test.desc);
+    waitForClearHistory(function() {
+      DBConn().executeSimpleSQL("DELETE FROM moz_places");
+      remove_all_bookmarks();
+      test.run.call(test);
+    });
   }
   else {
     do_test_finished();

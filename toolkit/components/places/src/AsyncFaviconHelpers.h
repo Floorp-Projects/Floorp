@@ -112,11 +112,9 @@ class AsyncFaviconStepper;
  * Executes a single async step on a favicon resource.
  * Once done, call backs to the stepper to proceed to the next step.
  */
-class AsyncFaviconStep : public nsISupports
+class AsyncFaviconStep : public AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS
-
   AsyncFaviconStep() {}
 
   /**
@@ -135,7 +133,6 @@ public:
 protected:
   nsCOMPtr<AsyncFaviconStepperInternal> mStepper;
 };
-
 
 /**
  * Status definitions for the stepper.
@@ -276,10 +273,8 @@ private:
  * associate it with.
  */
 class GetEffectivePageStep : public AsyncFaviconStep
-                           , public mozilla::places::AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
   GetEffectivePageStep();
@@ -297,10 +292,8 @@ private:
  * Fetch an existing icon and associated information from the database.
  */
 class FetchDatabaseIconStep : public AsyncFaviconStep
-                            , public mozilla::places::AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
   FetchDatabaseIconStep() {};
@@ -313,11 +306,10 @@ public:
  * Requires mDBInsertIcon statement.
  */
 class EnsureDatabaseEntryStep : public AsyncFaviconStep
-                              , public mozilla::places::AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
+  NS_IMETHOD HandleError(mozIStorageError* aError);
 
   EnsureDatabaseEntryStep() {};
   void Run();
@@ -361,11 +353,10 @@ private:
  * Saves icon data in the database if it has changed.
  */
 class SetFaviconDataStep : public AsyncFaviconStep
-                         , public mozilla::places::AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
+  NS_IMETHOD HandleError(mozIStorageError* aError);
 
   SetFaviconDataStep() {};
   void Run();
@@ -376,11 +367,10 @@ public:
  * Associate icon with page.
  */
 class AssociateIconWithPageStep : public AsyncFaviconStep
-                                , public mozilla::places::AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
+  NS_IMETHOD HandleError(mozIStorageError* aError);
 
   AssociateIconWithPageStep() {};
   void Run();
@@ -393,8 +383,6 @@ public:
 class NotifyStep : public AsyncFaviconStep
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   NotifyStep() {};
   void Run();
 };
