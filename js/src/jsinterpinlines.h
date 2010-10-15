@@ -1,5 +1,4 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -112,7 +111,7 @@ JSStackFrame::resetInvokeCallFrame()
                            JSFRAME_HAS_RVAL |
                            JSFRAME_HAS_SCOPECHAIN |
                            JSFRAME_HAS_ANNOTATION |
-                           JSFRAME_FINISHED_IN_INTERPRETER)));
+                           JSFRAME_BAILED_AT_RETURN)));
     flags_ &= JSFRAME_FUNCTION |
               JSFRAME_OVERFLOW_ARGS |
               JSFRAME_HAS_PREVPC |
@@ -263,11 +262,6 @@ JSStackFrame::stealFrameAndSlots(js::Value *vp, JSStackFrame *otherfp,
     if (hasCallObj()) {
         callObj().setPrivate(this);
         otherfp->flags_ &= ~JSFRAME_HAS_CALL_OBJ;
-        if (js_IsNamedLambda(fun())) {
-            JSObject *env = callObj().getParent();
-            JS_ASSERT(env->getClass() == &js_DeclEnvClass);
-            env->setPrivate(this);
-        }
     }
     if (hasArgsObj()) {
         argsObj().setPrivate(this);
@@ -677,35 +671,6 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
     if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
         return NULL;
     return pobj;
-}
-
-static inline bool
-ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
-{
-    Probes::exitJSFun(cx, fp->maybeFun());
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (hook && fp->hasHookData())
-        hook(cx, fp, JS_FALSE, &ok, fp->hookData());
-
-    /*
-     * An eval frame's parent owns its activation objects. A yielding frame's
-     * activation objects are transferred to the floating frame, stored in the
-     * generator.
-     */
-    if (fp->isFunctionFrame() && !fp->isEvalFrame() && !fp->isYielding())
-        PutActivationObjects(cx, fp);
-
-    /*
-     * If inline-constructing, replace primitive rval with the new object
-     * passed in via |this|, and instrument this constructor invocation.
-     */
-    if (fp->isConstructing()) {
-        if (fp->returnValue().isPrimitive())
-            fp->setReturnValue(ObjectValue(fp->constructorThis()));
-        JS_RUNTIME_METER(cx->runtime, constructs);
-    }
-
-    return ok;
 }
 
 }

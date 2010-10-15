@@ -2008,7 +2008,7 @@ struct JSContext
 
   public:
     friend class js::StackSpace;
-    friend bool js::Interpret(JSContext *, JSStackFrame *, uintN, JSInterpMode);
+    friend bool js::Interpret(JSContext *, JSStackFrame *, uintN, uintN);
 
     void resetCompartment();
 
