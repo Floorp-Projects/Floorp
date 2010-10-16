@@ -308,20 +308,20 @@ nsresult nsWebMReader::ReadMetadata()
         r = vorbis_synthesis_headerin(&mVorbisInfo,
                                       &mVorbisComment,
                                       &opacket);
-        if (r != 0) {
+        if (r < 0) {
           Cleanup();
           return NS_ERROR_FAILURE;
         }
       }
 
       r = vorbis_synthesis_init(&mVorbisDsp, &mVorbisInfo);
-      if (r != 0) {
+      if (r < 0) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
 
       r = vorbis_block_init(&mVorbisDsp, &mVorbisBlock);
-      if (r != 0) {
+      if (r < 0) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
