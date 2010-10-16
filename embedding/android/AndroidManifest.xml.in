@@ -77,5 +77,15 @@
             <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" />
           </intent-filter>
         </receiver>
+#if MOZ_CRASHREPORTER
+	<activity android:name="CrashReporter"
+                  android:label="@MOZ_APP_DISPLAYNAME@ Crash Reporter"
+		  android:icon="@drawable/crash_reporter"
+		  android:process="org.mozilla.@MOZ_APP_NAME@.crashReporter" >
+          <intent-filter>
+            <action android:name="org.mozilla.gecko.reportCrash" />
+          </intent-filter>
+	</activity>
+#endif
     </application>
 </manifest> 
