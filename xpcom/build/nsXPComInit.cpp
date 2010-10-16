@@ -179,6 +179,10 @@ static BrowserProcessSubThread* sIOThread;
 extern nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 
+#ifdef XP_WIN
+extern nsresult nsMediaCacheRemover_Startup();
+#endif
+
 #ifdef DEBUG
 extern void _FreeAutoLockStatics();
 #endif
@@ -555,7 +559,10 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, 
                                   nsnull,
                                   NS_XPCOM_STARTUP_OBSERVER_ID);
-    
+#ifdef XP_WIN
+    nsMediaCacheRemover_Startup();
+#endif
+
     return NS_OK;
 }
 

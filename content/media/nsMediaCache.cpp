@@ -559,9 +559,23 @@ nsMediaCache::Init()
   if (NS_FAILED(rv))
     return rv;
   nsCOMPtr<nsILocalFile> tmpFile = do_QueryInterface(tmp);
+
+  // We put the media cache file in
+  // ${TempDir}/mozilla-media-cache/media_cache
   if (!tmpFile)
     return NS_ERROR_FAILURE;
-  rv = tmpFile->AppendNative(nsDependentCString("moz_media_cache"));
+  rv = tmpFile->AppendNative(nsDependentCString("mozilla-media-cache"));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
+    return rv;
+
+  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
+    return rv;
+
+  rv = tmpFile->AppendNative(nsDependentCString("media_cache"));
   if (NS_FAILED(rv))
     return rv;
   rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
