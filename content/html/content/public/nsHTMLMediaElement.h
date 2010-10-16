@@ -653,8 +653,8 @@ protected:
   // PR_TRUE if we're running the "load()" method.
   PRPackedBool mIsRunningLoadMethod;
 
-  // PR_TRUE if we're loading exclusively from the src attribute's resource.
-  PRPackedBool mIsLoadingFromSrcAttribute;
+  // PR_TRUE if we're loading the resource from the child source elements.
+  PRPackedBool mIsLoadingFromSourceChildren;
 
   // PR_TRUE if we're delaying the "load" event. They are delayed until either
   // an error occurs, or the first frame is loaded.
