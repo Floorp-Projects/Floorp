@@ -217,6 +217,50 @@ GetPrincipal(JSObject *obj)
 }
 
 bool
+AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
+{
+    JSObject *scope = nsnull;
+    JSStackFrame *fp = nsnull;
+    JS_FrameIterator(cx, &fp);
+    if (fp) {
+        while (fp->isDummyFrame()) {
+            if (!JS_FrameIterator(cx, &fp))
+                break;
+        }
+
+        if (fp)
+            scope = &fp->scopeChain();
+    }
+
+    if (!scope)
+        scope = JS_GetScopeChain(cx);
+
+    nsIPrincipal *subject;
+    nsIPrincipal *object;
+
+    {
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(cx, scope))
+            return false;
+
+        subject = GetPrincipal(JS_GetGlobalForObject(cx, scope));
+    }
+
+    {
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(cx, obj))
+            return false;
+
+        object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
+    }
+
+    PRBool subsumes;
+    return NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes;
+}
+
+bool
 AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id,
                                           JSWrapper::Action act)
 {
@@ -248,48 +292,8 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
 
     // We only reach this point for cross origin location objects (see
     // SameOriginOrCrossOriginAccessiblePropertiesOnly::check).
-    if (!IsLocation(name)) {
-        JSObject *scope = nsnull;
-        JSStackFrame *fp = nsnull;
-        JS_FrameIterator(cx, &fp);
-        if (fp) {
-            while (fp->isDummyFrame()) {
-                if (!JS_FrameIterator(cx, &fp))
-                    break;
-            }
-
-            if (fp)
-                scope = &fp->scopeChain();
-        }
-
-        if (!scope)
-            scope = JS_GetScopeChain(cx);
-
-        nsIPrincipal *subject;
-        nsIPrincipal *object;
-
-        {
-            JSAutoEnterCompartment ac;
-
-            if (!ac.enter(cx, scope))
-                return false;
-
-            subject = GetPrincipal(JS_GetGlobalForObject(cx, scope));
-        }
-
-        {
-            JSAutoEnterCompartment ac;
-
-            if (!ac.enter(cx, obj))
-                return false;
-
-            object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
-        }
-
-        PRBool subsumes;
-        if (NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes)
-            return true;
-    }
+    if (!IsLocation(name) && documentDomainMakesSameOrigin(cx, obj))
+        return true;
 
     return (act == JSWrapper::SET)
            ? nsContentUtils::IsCallerTrustedForWrite()
