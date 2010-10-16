@@ -108,6 +108,11 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
     XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
 
+    // If the object doesn't have classinfo we want to return the same
+    // XPCWrappedNative so that we keep the same set of interfaces.
+    if (!wn->GetClassInfo())
+        return DoubleWrap(cx, obj, flags);
+
     // We know that DOM objects only allow one object, we can return early.
     if (wn->HasProto() && wn->GetProto()->ClassIsDOMObject())
         return DoubleWrap(cx, obj, flags);
