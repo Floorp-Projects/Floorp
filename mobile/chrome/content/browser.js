@@ -1716,7 +1716,8 @@ IdentityHandler.prototype = {
       BrowserUI.activeDialog.close();
 
     this._identityPopup.hidden = false;
-    this._identityPopup.top = BrowserUI.toolbarH;
+    this._identityPopup.top = BrowserUI.toolbarH - this._identityPopup.offset;
+    this._identityPopup.anchorTo(this._identityBox);
     this._identityPopup.focus();
 
     this._identityBox.setAttribute("open", "true");

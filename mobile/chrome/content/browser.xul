@@ -314,7 +314,7 @@
     </scrollbox>
 
     <!-- popup for site identity information -->
-    <vbox id="identity-container" hidden="true" class="panel-dark window-width" mode="unknownIdentity">
+    <arrowbox id="identity-container" hidden="true" class="window-width" mode="unknownIdentity" offset="18" flex="1">
       <hbox id="identity-popup-container" flex="1" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box" flex="1">
@@ -351,7 +351,7 @@
           onclick="PageActions.clearPagePermissions(event);"/>
         <pageaction id="pageaction-search" title="&pageactions.search.addNew;"/>
       </hbox>
-    </vbox>
+    </arrowbox>
 
     <vbox id="bookmark-popup" hidden="true" class="dialog-dark" align="center">
       <label value="&bookmarkPopup.label;"/>
