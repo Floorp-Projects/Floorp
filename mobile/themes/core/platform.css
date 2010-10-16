@@ -83,12 +83,6 @@ textbox[isempty="true"] {
   color: gray;
 }
 
-/* panels ------------------------------------------------------------------ */
-.panel-dark {
-  color: white;
-  background: rgb(94,97,102);
-}
-
 /* sidebars spacer --------------------------------------------------------- */
 .sidebar-spacer {
   background-color: #767973;
@@ -691,6 +685,52 @@ progressmeter {
 
 .progress-bar {
   background-color: #8db8d8;
+}
+
+/* panels / arrowboxes------------------------------------------------------ */
+arrowbox {
+  -moz-appearance: none;
+  background: transparent !important;
+  border: none;
+}
+
+.panel-dark {
+  color: white;
+  background-color: #36373b;
+}
+
+.panel-arrowcontent {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: black 0 2px 2px, black 0 -2px 2px;
+  padding: 8px 0;
+}
+
+.panel-arrow[side="top"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
+  margin-bottom: -8px;
+}
+
+.panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
+  margin-left: 6px;
+  margin-right: 6px;
+  margin-top: -12px;
+}
+
+.panel-arrow[side="left"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  margin-top: 6px;
+  margin-bottom: 6px;
+  margin-right: -12px;
+}
+
+.panel-arrow[side="right"] {
+  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
+  -moz-transform: scaleX(-1);
+  margin-top: 6px;
+  margin-bottom: 6px;
+  margin-left: -12px;
 }
 
 /*.panel-row-header ------------------------------------------------------------ */

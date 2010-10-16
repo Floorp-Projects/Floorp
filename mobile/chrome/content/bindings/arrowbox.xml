@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Mobile Browser.
+   -
+   - The Initial Developer of the Original Code is Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2010
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Finkle <mfinkle@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="arrowbox" extends="xul:box">
+    <content orient="vertical">
+      <xul:box anonid="container" class="panel-arrowcontainer">
+        <xul:box anonid="arrowbox" class="panel-arrowbox">
+          <xul:image anonid="arrow" class="panel-arrow"/>
+        </xul:box>
+        <xul:box class="panel-arrowcontent" flex="1">
+          <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack,flex">
+            <children/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+    </content>
+    <implementation>
+      <field name="_fadeTimer"/>
+
+      <property name="offset" onget="return parseInt(this.getAttribute('offset')) || 0;"
+                              onset="this.setAttribute('offset', val); return val;"/>
+
+      <method name="anchorTo">
+         <parameter name="aAnchorNode"/>
+         <body>
+            <![CDATA[
+              let container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+              let arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
+              let arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
+
+              if (!aAnchorNode) {
+                arrow.hidden = true;
+                return;
+              }
+
+              let anchorRect = aAnchorNode.getBoundingClientRect();
+              let popupRect = this.getBoundingClientRect();
+              let offset = this.offset;
+
+              let horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left + offset)) ? -1 :
+                             (Math.round(popupRect.left) >= Math.round(anchorRect.right - offset)) ? 1 : 0;
+              let vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top + offset)) ? -1 :
+                            (Math.round(popupRect.top) >= Math.round(anchorRect.bottom - offset)) ? 1 : 0;
+
+              let HALF_ARROW_WIDTH = 16;
+
+              let anchorClass = "";
+              let hideArrow = false;
+              if (horizPos == 0) {
+                container.orient = "vertical";
+                arrowbox.orient = "";
+                if (vertPos == 0) {
+                  hideArrow = true;
+                } else {
+                  arrowbox.style.MozMarginStart = (anchorRect.left + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
+                  if (vertPos == 1) {
+                    container.dir = ""; 
+                    anchorClass = "top";
+                  } else if (vertPos == -1) {
+                    container.dir = "reverse"; 
+                    anchorClass = "bottom";
+                  }
+                }
+              } else if (vertPos == 0) {
+                container.orient = "";
+                arrowbox.orient = "vertical";
+                arrowbox.style.MozMarginStart = (anchorRect.top + (anchorRect.height / 2) - HALF_ARROW_WIDTH) + "px";
+                if (horizPos == 1) {
+                  container.dir = ""; 
+                  anchorClass = "left";
+                } else if (horizPos == -1) {
+                  container.dir = "reverse";
+                  anchorClass = "right";
+                }
+              } else {
+                hideArrow = true;
+              }
+              arrow.hidden = hideArrow;
+              arrow.setAttribute("side", anchorClass);
+            ]]>
+         </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

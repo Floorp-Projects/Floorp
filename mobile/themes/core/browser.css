@@ -928,23 +928,15 @@ documenttab[reload="true"] .documenttab-reload {
 }
 
 /* Identity popup   -------------------------------------------------------- */
-#identity-container {
-  background: rgb(94,97,102);
-  -moz-box-shadow: black 0 2px 2px;
-  -moz-border-radius-bottomleft: 8px;
-  -moz-border-radius-bottomright: 8px;
-}
-
 #identity-popup-container {
   padding: 8px; /* core spacing */
-  background-color: rgb(94,95,99);
   padding-bottom: 16px;
 }
 
 /* Popup Icons */
 #identity-popup-icon {
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/larry-48.png");
+  list-style-image: url("chrome://browser/skin/images/identity-48.png");
 }
 
 /* Popup Body Text */
@@ -995,8 +987,6 @@ documenttab[reload="true"] .documenttab-reload {
   padding: 0;
   -moz-user-focus: ignore;
   display: inline-block;
-  -moz-border-radius-bottomleft: 8px;
-  -moz-border-radius-bottomright: 8px;
 }
 
 .prompt-button,
