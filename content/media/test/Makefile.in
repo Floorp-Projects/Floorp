@@ -109,6 +109,7 @@ _TEST_FILES = \
 		test_decoder_disable.html \
 		test_delay_load.html \
 		test_error_on_404.html \
+		test_error_in_video_document.html \
 		test_info_leak.html \
 		test_load.html \
 		test_load_candidates.html \
