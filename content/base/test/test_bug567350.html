@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=567350
+-->
+<head>
+  <title>Test for Bug 567350</title>
+  <script src="/MochiKit/packed.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=567350">Mozilla Bug 567350</a>
+<p id="display"><span style="color: blue;"></span></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 567350 **/
+is(getComputedStyle(document.getElementById("display").firstChild).color,
+   "rgb(0, 0, 255)");
+</script>
+</pre>
+</body>
+</html>
