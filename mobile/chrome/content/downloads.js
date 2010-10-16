@@ -313,7 +313,20 @@ var DownloadsView = {
     // Insert 2 is the eTLD + 1 or other variations of the host
     let [displayHost, fullHost] = DownloadUtils.getURIHost(this._getReferrerOrSource(aItem));
     status = this._replaceInsert(status, 2, displayHost);
+  
+    // Insert 3 is the left time if download status is DOWNLOADING
+    let currstate = Number(aItem.getAttribute("state"));
+    if (currstate == Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING) {
+      let downloadSize = Number(aItem.getAttribute("currBytes"));
+      let passedTime = (Date.now() - aItem.getAttribute("startTime"))/1000;
+      let totalTime = (passedTime / downloadSize) * fileSize;
+      let leftTime = totalTime - passedTime;
+      let [time, lastTime] = DownloadUtils.getTimeLeft(leftTime);
 
+      let stringTime = this._replaceInsert(strings.getString("downloadsTime"), 1, time);
+      status = status + " " + stringTime;
+    } 
+      
     aItem.setAttribute("status", status);
   },
 
