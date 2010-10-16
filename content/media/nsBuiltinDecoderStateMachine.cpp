@@ -1405,23 +1405,22 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
   mDecoder->GetMonitor().AssertCurrentThreadIn();
 
   LOG(PR_LOG_DEBUG, ("Loading Media Headers"));
-
+  nsresult res;
   {
     MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    mReader->ReadMetadata();
+    res = mReader->ReadMetadata();
   }
-  mDecoder->StartProgressUpdates();
   const nsVideoInfo& info = mReader->GetInfo();
 
-  mGotDurationFromMetaData = (GetDuration() != -1);
-
-  if (!info.mHasVideo && !info.mHasAudio) {
+  if (NS_FAILED(res) || (!info.mHasVideo && !info.mHasAudio)) {
     mState = DECODER_STATE_SHUTDOWN;      
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::DecodeError);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
     return;
   }
+  mDecoder->StartProgressUpdates();
+  mGotDurationFromMetaData = (GetDuration() != -1);
 }
 
 void nsBuiltinDecoderStateMachine::StartBuffering()
