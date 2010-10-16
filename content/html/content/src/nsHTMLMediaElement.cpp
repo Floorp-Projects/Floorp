@@ -831,9 +831,11 @@ static PRBool IsAutoplayEnabled()
 void nsHTMLMediaElement::UpdatePreloadAction()
 {
   PreloadAction nextAction = PRELOAD_UNDEFINED;
-  // If autoplay is set, we should always preload data, as we'll need it
-  // to play.
-  if (IsAutoplayEnabled() && HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) {
+  // If autoplay is set, or we're playing, we should always preload data,
+  // as we'll need it to play.
+  if ((IsAutoplayEnabled() && HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
+      !mPaused)
+  {
     nextAction = nsHTMLMediaElement::PRELOAD_ENOUGH;
   } else {
     // Find the appropriate preload action by looking at the attribute.
@@ -1394,7 +1396,9 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
   mPaused = PR_FALSE;
   mAutoplaying = PR_FALSE;
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
+  // and our preload status.
   AddRemoveSelfReference();
+  UpdatePreloadAction();
 
   return NS_OK;
 }
