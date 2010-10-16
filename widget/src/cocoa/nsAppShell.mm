@@ -323,6 +323,12 @@ nsAppShell::Init()
                               @selector(nsAppShell_NSApplication_beginModalSessionForWindow:));
     nsToolkit::SwizzleMethods([NSApplication class], @selector(endModalSession:),
                               @selector(nsAppShell_NSApplication_endModalSession:));
+    // We should only replace the original terminate: method if we're not
+    // running in a Cocoa embedder (like Camino).  See bug 604901.
+    if (!mRunningCocoaEmbedded) {
+      nsToolkit::SwizzleMethods([NSApplication class], @selector(terminate:),
+                                @selector(nsAppShell_NSApplication_terminate:));
+    }
     if (!nsToolkit::OnSnowLeopardOrLater()) {
       dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/Print.framework/Versions/Current/Plugins/PrintCocoaUI.bundle/Contents/MacOS/PrintCocoaUI",
              RTLD_LAZY);
@@ -968,7 +974,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 @interface NSApplication (MethodSwizzling)
 - (NSModalSession)nsAppShell_NSApplication_beginModalSessionForWindow:(NSWindow *)aWindow;
 - (void)nsAppShell_NSApplication_endModalSession:(NSModalSession)aSession;
-- (void)terminate:(id)sender;
+- (void)nsAppShell_NSApplication_terminate:(id)sender;
 @end
 
 @implementation NSApplication (MethodSwizzling)
@@ -1008,7 +1014,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // above), which means that nothing runs after the call to nsAppStartup::Run()
 // in XRE_Main(), which in particular means that ScopedXPCOMStartup's destructor
 // and NS_ShutdownXPCOM() never get called.
-- (void)terminate:(id)sender
+- (void)nsAppShell_NSApplication_terminate:(id)sender
 {
   [[NSNotificationCenter defaultCenter] postNotificationName:NSApplicationWillTerminateNotification
                                                       object:NSApp];
