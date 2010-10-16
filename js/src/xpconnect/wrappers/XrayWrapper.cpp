@@ -739,10 +739,10 @@ XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoI
     // Go through the properties we got and enumerate all native ones.
     for (size_t n = 0; n < wnProps.length(); ++n) {
         jsid id = wnProps[n];
-        JSPropertyDescriptor dummy;
-        if (!ResolveNativeProperty(cx, wrapper, holder, id, false, &dummy))
+        JSBool hasProp;
+        if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
             return false;
-        if (dummy.obj)
+        if (hasProp)
             props.append(id);
     }
     return true;
