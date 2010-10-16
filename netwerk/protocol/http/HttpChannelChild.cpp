@@ -59,7 +59,8 @@ namespace net {
 //-----------------------------------------------------------------------------
 
 HttpChannelChild::HttpChannelChild()
-  : mIsFromCache(PR_FALSE)
+  : ChannelEventQueue<HttpChannelChild>(this)
+  , mIsFromCache(PR_FALSE)
   , mCacheEntryAvailable(PR_FALSE)
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
   , mSendResumeAt(false)
@@ -139,43 +140,6 @@ HttpChannelChild::ReleaseIPDLReference()
   NS_ABORT_IF_FALSE(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
   Release();
-}
-
-void
-HttpChannelChild::FlushEventQueue()
-{
-  NS_ABORT_IF_FALSE(mQueuePhase != PHASE_UNQUEUED,
-                    "Queue flushing should not occur if PHASE_UNQUEUED");
-  
-  // Queue already being flushed, or the channel's suspended.
-  if (mQueuePhase != PHASE_FINISHED_QUEUEING || mSuspendCount)
-    return;
-  
-  if (mEventQueue.Length() > 0) {
-    // It is possible for new callbacks to be enqueued as we are
-    // flushing the queue, so the queue must not be cleared until
-    // all callbacks have run.
-    mQueuePhase = PHASE_FLUSHING;
-    
-    nsRefPtr<HttpChannelChild> kungFuDeathGrip(this);
-    PRUint32 i;
-    for (i = 0; i < mEventQueue.Length(); i++) {
-      mEventQueue[i]->Run();
-      // If the callback ended up suspending us, abort all further flushing.
-      if (mSuspendCount)
-        break;
-    }
-    // We will always want to remove at least one finished callback.
-    if (i < mEventQueue.Length())
-      i++;
-
-    mEventQueue.RemoveElementsAt(0, i);
-  }
-
-  if (mSuspendCount)
-    mQueuePhase = PHASE_QUEUEING;
-  else
-    mQueuePhase = PHASE_UNQUEUED;
 }
 
 class StartRequestEvent : public ChannelEvent
