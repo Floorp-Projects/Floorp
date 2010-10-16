@@ -44,6 +44,8 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 
 const TOPIC_SHUTDOWN = "places-shutdown";
 
@@ -52,26 +54,10 @@ const TOPIC_SHUTDOWN = "places-shutdown";
  */
 function TaggingService() {
   // Observe bookmarks changes.
-  this._bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-  this._bms.addObserver(this, false);
+  PlacesUtils.bookmarks.addObserver(this, false);
 
   // Cleanup on shutdown.
-  this._obss = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
-  this._obss.addObserver(this, TOPIC_SHUTDOWN, false);
-
-  XPCOMUtils.defineLazyServiceGetter(this, "_history",
-                                     "@mozilla.org/browser/nav-history-service;1",
-                                     "nsINavHistoryService");
-
-  XPCOMUtils.defineLazyServiceGetter(this, "_annos",
-                                     "@mozilla.org/browser/annotation-service;1",
-                                     "nsIAnnotationService");
-
-  XPCOMUtils.defineLazyServiceGetter(this, "_ios",
-                                     "@mozilla.org/network/io-service;1",
-                                     "nsIIOService");
+  Services.obs.addObserver(this, TOPIC_SHUTDOWN, false);
 }
 
 TaggingService.prototype = {
@@ -91,10 +77,10 @@ TaggingService.prototype = {
     if (tagId == -1)
       return null;
 
-    var options = this._history.getNewQueryOptions();
-    var query = this._history.getNewQuery();
+    var options = PlacesUtils.history.getNewQueryOptions();
+    var query = PlacesUtils.history.getNewQuery();
     query.setFolders([tagId], 1);
-    var result = this._history.executeQuery(query, options);
+    var result = PlacesUtils.history.executeQuery(query, options);
     return result;
   },
 
@@ -106,8 +92,9 @@ TaggingService.prototype = {
    * @returns the id of the new tag container.
    */
   _createTag: function TS__createTag(aTagName) {
-    var newFolderId = this._bms.createFolder(this._bms.tagsFolder, aTagName,
-                                             this._bms.DEFAULT_INDEX);
+    var newFolderId = PlacesUtils.bookmarks.createFolder(
+      PlacesUtils.tagsFolderId, aTagName, PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
     // Add the folder to our local cache, so we can avoid doing this in the
     // observer that would have to check itemType.
     this._tagFolders[newFolderId] = aTagName;
@@ -129,9 +116,9 @@ TaggingService.prototype = {
     var tagId = this._getItemIdForTag(aTagName);
     if (tagId == -1)
       return -1;
-    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI);
+    var bookmarkIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(aURI);
     for (var i=0; i < bookmarkIds.length; i++) {
-      var parent = this._bms.getFolderIdForItem(bookmarkIds[i]);
+      var parent = PlacesUtils.bookmarks.getFolderIdForItem(bookmarkIds[i]);
       if (parent == tagId)
         return bookmarkIds[i];
     }
@@ -157,7 +144,7 @@ TaggingService.prototype = {
     if (!aURI || !aTags)
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    this._bms.runInBatchMode({
+    PlacesUtils.bookmarks.runInBatchMode({
       _self: this,
       runBatched: function(aUserData) {
         for (var i = 0; i < aTags.length; i++) {
@@ -179,15 +166,17 @@ TaggingService.prototype = {
           }
 
           var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
-          if (itemId == -1)
-            this._self._bms.insertBookmark(tagId, aURI,
-                                           this._self._bms.DEFAULT_INDEX, null);
+          if (itemId == -1) {
+            PlacesUtils.bookmarks.insertBookmark(
+              tagId, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX, null
+            );
+          }
 
           // Rename the tag container so the Places view would match the
           // most-recent user-typed values.
-          var currentTagTitle = this._self._bms.getItemTitle(tagId);
+          var currentTagTitle = PlacesUtils.bookmarks.getItemTitle(tagId);
           if (currentTagTitle != tag) {
-            this._self._bms.setItemTitle(tagId, tag);
+            PlacesUtils.bookmarks.setItemTitle(tagId, tag);
             this._self._tagFolders[tagId] = tag;
           }
         }
@@ -211,7 +200,7 @@ TaggingService.prototype = {
     var cc = node.childCount;
     node.containerOpen = false;
     if (cc == 0)
-      this._bms.removeItem(node.itemId);
+      PlacesUtils.bookmarks.removeItem(node.itemId);
   },
 
   // nsITaggingService
@@ -225,7 +214,7 @@ TaggingService.prototype = {
       aTags = this.getTagsForURI(aURI);
     }
 
-    this._bms.runInBatchMode({
+    PlacesUtils.bookmarks.runInBatchMode({
       _self: this,
       runBatched: function(aUserData) {
         for (var i = 0; i < aTags.length; i++) {
@@ -246,7 +235,7 @@ TaggingService.prototype = {
           if (tagId != -1) {
             var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
             if (itemId != -1) {
-              this._self._bms.removeItem(itemId);
+              PlacesUtils.bookmarks.removeItem(itemId);
               this._self._removeTagIfEmpty(tagId);
             }
           }
@@ -269,7 +258,7 @@ TaggingService.prototype = {
       var cc = tagNode.childCount;
       for (var i = 0; i < cc; i++) {
         try {
-          uris.push(this._ios.newURI(tagNode.getChild(i).uri, null, null));
+          uris.push(Services.io.newURI(tagNode.getChild(i).uri, null, null));
         } catch (ex) {
           // This is an invalid node, tags should only contain valid uri nodes.
           // continue to next node.
@@ -286,9 +275,9 @@ TaggingService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
 
     var tags = [];
-    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI);
+    var bookmarkIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(aURI);
     for (var i=0; i < bookmarkIds.length; i++) {
-      var folderId = this._bms.getFolderIdForItem(bookmarkIds[i]);
+      var folderId = PlacesUtils.bookmarks.getFolderIdForItem(bookmarkIds[i]);
       if (this._tagFolders[folderId])
         tags.push(this._tagFolders[folderId]);
     }
@@ -306,10 +295,10 @@ TaggingService.prototype = {
   get _tagFolders() {
     if (!this.__tagFolders) {
       this.__tagFolders = [];
-      var options = this._history.getNewQueryOptions();
-      var query = this._history.getNewQuery();
-      query.setFolders([this._bms.tagsFolder], 1);
-      var tagsResult = this._history.executeQuery(query, options);
+      var options = PlacesUtils.history.getNewQueryOptions();
+      var query = PlacesUtils.history.getNewQuery();
+      query.setFolders([PlacesUtils.tagsFolderId], 1);
+      var tagsResult = PlacesUtils.history.executeQuery(query, options);
       var root = tagsResult.root;
       root.containerOpen = true;
       var cc = root.childCount;
@@ -338,8 +327,8 @@ TaggingService.prototype = {
   // nsIObserver
   observe: function TS_observe(aSubject, aTopic, aData) {
     if (aTopic == TOPIC_SHUTDOWN) {
-      this._bms.removeObserver(this);
-      this._obss.removeObserver(this, TOPIC_SHUTDOWN);
+      PlacesUtils.bookmarks.removeObserver(this);
+      Services.obs.removeObserver(this, TOPIC_SHUTDOWN);
     }
   },
 
@@ -357,10 +346,10 @@ TaggingService.prototype = {
   _getTagsIfUnbookmarkedURI: function TS__getTagsIfUnbookmarkedURI(aURI) {
     var tagIds = [];
     var isBookmarked = false;
-    var itemIds = this._bms.getBookmarkIdsForURI(aURI);
+    var itemIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(aURI);
 
     for (let i = 0; !isBookmarked && i < itemIds.length; i++) {
-      var parentId = this._bms.getFolderIdForItem(itemIds[i]);
+      var parentId = PlacesUtils.bookmarks.getFolderIdForItem(itemIds[i]);
       if (this._tagFolders[parentId])
         tagIds.push(parentId);
       else
@@ -386,16 +375,16 @@ TaggingService.prototype = {
 
   onItemAdded: function(aItemId, aFolderId, aIndex, aItemType) {
     // Nothing to do if this is not a tag.
-    if (aFolderId != this._bms.tagsFolder ||
-        aItemType != this._bms.TYPE_FOLDER)
+    if (aFolderId != PlacesUtils.tagsFolderId ||
+        aItemType != PlacesUtils.bookmarks.TYPE_FOLDER)
       return;
 
-    this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
+    this._tagFolders[aItemId] = PlacesUtils.bookmarks.getItemTitle(aItemId);
   },
 
   onBeforeItemRemoved: function(aItemId, aItemType) {
-    if (aItemType == this._bms.TYPE_BOOKMARK)
-      this._itemsInRemoval[aItemId] = this._bms.getBookmarkURI(aItemId);
+    if (aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK)
+      this._itemsInRemoval[aItemId] = PlacesUtils.bookmarks.getBookmarkURI(aItemId);
   },
 
   onItemRemoved: function(aItemId, aFolderId, aIndex, aItemType) {
@@ -403,7 +392,7 @@ TaggingService.prototype = {
     delete this._itemsInRemoval[aItemId];
 
     // Item is a tag folder.
-    if (aFolderId == this._bms.tagsFolder && this._tagFolders[aItemId])
+    if (aFolderId == PlacesUtils.tagsFolderId && this._tagFolders[aItemId])
       delete this._tagFolders[aItemId];
 
     // Item is a bookmark that was removed from a non-tag folder.
@@ -421,15 +410,15 @@ TaggingService.prototype = {
   onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aNewValue,
                           aLastModified, aItemType) {
     if (aProperty == "title" && this._tagFolders[aItemId])
-      this._tagFolders[aItemId] = this._bms.getItemTitle(aItemId);
+      this._tagFolders[aItemId] = PlacesUtils.bookmarks.getItemTitle(aItemId);
   },
 
   onItemVisited: function(aItemId, aVisitID, time) {},
 
   onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
                         aItemType) {
-    if (this._tagFolders[aItemId] && this._bms.tagFolder == aOldParent &&
-        this._bms.tagFolder != aNewParent)
+    if (this._tagFolders[aItemId] && PlacesUtils.tagsFolderId == aOldParent &&
+        PlacesUtils.tagsFolderId != aNewParent)
       delete this._tagFolders[aItemId];
   },
 
