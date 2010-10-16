@@ -165,8 +165,8 @@ function onDebugKeyPress(ev) {
 }
 
 var Browser = {
-  _tabs : [],
-  _selectedTab : null,
+  _tabs: [],
+  _selectedTab: null,
   windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils),
   controlsScrollbox: null,

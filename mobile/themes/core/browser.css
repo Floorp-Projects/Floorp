@@ -1525,3 +1525,9 @@ echrome-select-option[disabled="true"] {
   background: #8db8d8;
 }
 
+
+/* full-screen video ------------------------------------------------------- */
+.full-screen {
+  position: absolute;
+  z-index: 500;
+}

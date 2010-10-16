@@ -96,6 +96,7 @@
 <!ENTITY contextShareVideo.label      "Share Video">
 <!ENTITY contextPlayMedia.label       "Play">
 <!ENTITY contextPauseMedia.label      "Pause">
+<!ENTITY contextFullScreen.label      "Full Screen">
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">
 

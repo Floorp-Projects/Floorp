@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mark Finkle <mfinkle@mozilla.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -482,6 +483,7 @@ var BrowserUI = {
       DownloadsView.init();
       PreferencesView.init();
       ConsoleView.init();
+      FullScreenVideo.init();
 
 #ifdef MOZ_IPC
       // Pre-start the content process
@@ -2546,14 +2548,9 @@ var ContextCommands = {
     SharingUI.show(ContextHelper.popupState.mediaURL, null);
   },
 
-  playMedia: function cc_playVideo() {
+  sendCommand: function cc_playVideo(aCommand) {
     let browser = ContextHelper.popupState.target;
-    browser.messageManager.sendAsyncMessage("Browser:MediaCommand", { command: "play"});
-  },
-
-  pauseMedia: function cc_playVideo() {
-    let browser = ContextHelper.popupState.target;
-    browser.messageManager.sendAsyncMessage("Browser:MediaCommand", { command: "pause" });
+    browser.messageManager.sendAsyncMessage("Browser:ContextCommand", { command: aCommand });
   },
 
   editBookmark: function cc_editBookmark() {
@@ -2716,5 +2713,71 @@ var BadgeHandlers = {
       aBadge.set("");
     }
     return aValue;
+  }
+};
+
+var FullScreenVideo = {
+  browser: null,
+
+  init: function fsv_init() {
+    messageManager.addMessageListener("Browser:FullScreenVideo:Start", this.show.bind(this));
+    messageManager.addMessageListener("Browser:FullScreenVideo:Close", this.hide.bind(this));
+  },
+
+  show: function fsv_show() {
+    this.createBrowser();
+    window.fullScreen = true;
+    BrowserUI.pushPopup(this, this.browser);
+  },
+
+  hide: function fsv_hide() {
+    this.destroyBrowser();
+    window.fullScreen = false;
+    BrowserUI.popPopup();
+  },
+
+  createBrowser: function fsv_createBrowser() {
+    let browser = this.browser = document.createElement("browser");
+    browser.className = "window-width window-height full-screen";
+    browser.setAttribute("type", "content");
+    browser.setAttribute("remote", "true");
+    browser.setAttribute("src", "chrome://browser/content/fullscreen-video.xhtml");
+    document.getElementById("main-window").appendChild(browser);
+
+    let mm = browser.messageManager;
+    mm.loadFrameScript("chrome://browser/content/fullscreen-video.js", true);
+
+    browser.addEventListener("TapDown", this, true);
+    browser.addEventListener("TapSingle", this, false);
+
+    return browser;
+  },
+
+  destroyBrowser: function fsv_destroyBrowser() {
+    let browser = this.browser;
+    browser.removeEventListener("TapDown", this, false);
+    browser.removeEventListener("TapSingle", this, false);
+    browser.parentNode.removeChild(browser);
+    this.browser = null;
+  },
+
+  handleEvent: function fsv_handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "TapDown":
+        this._dispatchMouseEvent("Browser:MouseDown", aEvent.clientX, aEvent.clientY);
+        break;
+      case "TapSingle":
+        this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
+        break;
+    }
+  },
+
+  _dispatchMouseEvent: function fsv_dispatchMouseEvent(aName, aX, aY) {
+    let pos = this.browser.transformClientToBrowser(aX, aY);
+    this.browser.messageManager.sendAsyncMessage(aName, {
+      x: pos.x,
+      y: pos.y,
+      messageId: null
+    });
   }
 };
