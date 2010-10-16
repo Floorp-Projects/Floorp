@@ -1016,6 +1016,29 @@ FrameState::isClosedVar(uint32 slot)
     return closedVars[slot];
 }
 
+class PinRegAcrossSyncAndKill
+{
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    FrameState &frame;
+    MaybeRegisterID maybeReg;
+  public:
+    PinRegAcrossSyncAndKill(FrameState &frame, RegisterID reg)
+      : frame(frame), maybeReg(reg)
+    {
+        frame.pinReg(reg);
+    }
+    PinRegAcrossSyncAndKill(FrameState &frame, MaybeRegisterID maybeReg)
+      : frame(frame), maybeReg(maybeReg)
+    {
+        if (maybeReg.isSet())
+            frame.pinReg(maybeReg.reg());
+    }
+    ~PinRegAcrossSyncAndKill() {
+        if (maybeReg.isSet())
+            frame.unpinKilledReg(maybeReg.reg());
+    }
+};
+
 } /* namespace mjit */
 } /* namespace js */
 

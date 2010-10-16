@@ -151,6 +151,7 @@ struct JSFunction : public JSObject_Slots2
             JSNativeTraceInfo *trcinfo;
         } n;
         struct Scripted {
+            JSScript    *script;  /* interpreted bytecode descriptor or null */
             uint16      nvars;    /* number of local variables */
             uint16      nupvars;  /* number of upvars (computable from script
                                      but here for faster access) */
@@ -163,9 +164,9 @@ struct JSFunction : public JSObject_Slots2
                                      then escaped via the debugger or a rogue
                                      indirect eval; if true, then this function
                                      object's proto is the wrapped object */
-            JSScript    *script;  /* interpreted bytecode descriptor or null */
             js::Shape   *names;   /* argument and variable names */
         } i;
+        void            *nativeOrScript;
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
@@ -306,6 +307,12 @@ struct JSFunction : public JSObject_Slots2
     JSScript *script() const {
         JS_ASSERT(isInterpreted());
         return u.i.script;
+    }
+
+    static uintN offsetOfNativeOrScript() {
+        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script));
+        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
+        return offsetof(JSFunction, u.nativeOrScript);
     }
 
     /* Number of extra fixed function object slots. */
