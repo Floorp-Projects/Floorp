@@ -119,9 +119,7 @@ class Compiler : public BaseCompiler
     /* InlineFrameAssembler wants to see this. */
   public:
     struct CallGenInfo {
-        CallGenInfo(uint32 argc)
-          : argc(argc)
-        { }
+        CallGenInfo(jsbytecode *pc) : pc(pc) {}
 
         /*
          * These members map to members in CallICInfo. See that structure for
@@ -153,9 +151,11 @@ class Compiler : public BaseCompiler
      * absolute address of the join point is known.
      */
     struct CallPatchInfo {
+        CallPatchInfo() : hasFastNcode(false), hasSlowNcode(false) {}
         Label joinPoint;
         DataLabelPtr fastNcodePatch;
         DataLabelPtr slowNcodePatch;
+        bool hasFastNcode;
         bool hasSlowNcode;
     };
 
@@ -354,6 +354,10 @@ class Compiler : public BaseCompiler
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);
+    void checkCallSpeculation(uint32 argc, FrameEntry *origCallee, FrameEntry *origThis,
+                              MaybeRegisterID origCalleeType, RegisterID origCalleeData,
+                              MaybeRegisterID origThisType, RegisterID origThisData,
+                              Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     void inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);

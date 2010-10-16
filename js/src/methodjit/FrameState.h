@@ -859,6 +859,8 @@ class FrameState
     bool inTryBlock;
 };
 
+class AutoPreserveAcrossSyncAndKill;
+
 } /* namespace mjit */
 } /* namespace js */
 
