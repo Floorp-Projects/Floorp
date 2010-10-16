@@ -415,49 +415,7 @@ Transparent(JSContext *cx, JSObject *wrapper)
             return true;
     }
 
-    JSObject *scope = nsnull;
-    JSStackFrame *fp = nsnull;
-    JS_FrameIterator(cx, &fp);
-    if (fp) {
-        while (fp->isDummyFrame()) {
-            if (!JS_FrameIterator(cx, &fp))
-                break;
-        }
-
-        if (fp)
-            scope = &fp->scopeChain();
-    }
-
-    if (!scope)
-        scope = JS_GetScopeChain(cx);
-
-    nsIPrincipal *subject;
-    nsIPrincipal *object;
-
-    nsIXPConnect *xpc = nsXPConnect::GetXPConnect();
-    {
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(cx, scope))
-            return false;
-
-        subject = xpc->GetPrincipal(JS_GetGlobalForObject(cx, scope), PR_TRUE);
-    }
-
-    {
-        JSAutoEnterCompartment ac;
-
-        JSObject *obj = wrapper->unwrap();
-        if (!ac.enter(cx, obj))
-            return false;
-
-        object = xpc->GetPrincipal(JS_GetGlobalForObject(cx, obj), PR_TRUE);
-    }
-
-    PRBool subsumes;
-    if (NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes)
-        return true;
-    return false;
+    return AccessCheck::documentDomainMakesSameOrigin(cx, wrapper->unwrap());
 }
 
 namespace XrayUtils {
