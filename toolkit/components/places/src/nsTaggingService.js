@@ -139,47 +139,79 @@ TaggingService.prototype = {
     return -1;
   },
 
+  /**
+   * Makes a proper array of tag objects like  { id: number, name: string }.
+   *
+   * @param aTags
+   *        Array of tags.  Entries can be tag names or concrete item id.
+   * @return Array of tag objects like { id: number, name: string }.
+   *
+   * @throws Cr.NS_ERROR_INVALID_ARG if any element of the input array is not
+   *         a valid tag.
+   */
+  _convertInputMixedTagsArray: function TS__convertInputMixedTagsArray(aTags)
+  {
+    return aTags.map(function (val)
+    {
+      let tag = { _self: this };
+      if (typeof(val) == "number" && this._tagFolders[val]) {
+        // This is a tag folder id.
+        tag.id = val;
+        // We can't know the name at this point, since a previous tag could
+        // want to change it.
+        tag.__defineGetter__("name", function () this._self._tagFolders[this.id]);
+      }
+      else if (typeof(val) == "string" && val.length > 0) {
+        // This is a tag name.
+        tag.name = val;
+        // We can't know the id at this point, since a previous tag could
+        // have created it.
+        tag.__defineGetter__("id", function () this._self._getItemIdForTag(this.name));
+      }
+      else {
+        throw Cr.NS_ERROR_INVALID_ARG;
+      }
+      return tag;
+    }, this);
+  },
+
   // nsITaggingService
-  tagURI: function TS_tagURI(aURI, aTags) {
-    if (!aURI || !aTags)
+  tagURI: function TS_tagURI(aURI, aTags)
+  {
+    if (!aURI || !aTags || !Array.isArray(aTags)) {
       throw Cr.NS_ERROR_INVALID_ARG;
+    }
 
+    // This also does some input validation.
+    let tags = this._convertInputMixedTagsArray(aTags);
+
+    let taggingService = this;
     PlacesUtils.bookmarks.runInBatchMode({
-      _self: this,
-      runBatched: function(aUserData) {
-        for (var i = 0; i < aTags.length; i++) {
-          var tag = aTags[i];
-          var tagId = null;
-          if (typeof(tag) == "number") {
-            // is it a tag folder id?
-            if (this._self._tagFolders[tag]) {
-              tagId = tag;
-              tag = this._self._tagFolders[tagId];
-            }
-            else
-              throw Cr.NS_ERROR_INVALID_ARG;
-          }
-          else {
-            tagId = this._self._getItemIdForTag(tag);
-            if (tagId == -1)
-              tagId = this._self._createTag(tag);
+      runBatched: function (aUserData)
+      {
+        tags.forEach(function (tag)
+        {
+          if (tag.id == -1) {
+            // Tag does not exist yet, create it.
+            tag.id = this._createTag(tag.name);
           }
 
-          var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
-          if (itemId == -1) {
+          if (this._getItemIdForTaggedURI(aURI, tag.name) == -1) {
+            // The provided URI is not yet tagged, add a tag for it.
+            // Note that bookmarks under tag containers must have null titles.
             PlacesUtils.bookmarks.insertBookmark(
-              tagId, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX, null
+              tag.id, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX, null
             );
           }
 
-          // Rename the tag container so the Places view would match the
-          // most-recent user-typed values.
-          var currentTagTitle = PlacesUtils.bookmarks.getItemTitle(tagId);
-          if (currentTagTitle != tag) {
-            PlacesUtils.bookmarks.setItemTitle(tagId, tag);
-            this._self._tagFolders[tagId] = tag;
+          // Try to preserve user's tag name casing.
+          // Rename the tag container so the Places view matches the most-recent
+          // user-typed value.
+          if (PlacesUtils.bookmarks.getItemTitle(tag.id) != tag.name) {
+            // this._tagFolders is updated by the bookmarks observer.
+            PlacesUtils.bookmarks.setItemTitle(tag.id, tag.name);
           }
-        }
+        }, taggingService);
       }
     }, null);
   },
@@ -204,42 +236,37 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  untagURI: function TS_untagURI(aURI, aTags) {
-    if (!aURI)
+  untagURI: function TS_untagURI(aURI, aTags)
+  {
+    if (!aURI || (aTags && !Array.isArray(aTags))) {
       throw Cr.NS_ERROR_INVALID_ARG;
+    }
 
     if (!aTags) {
-      // see IDL.
+      // Passing null should clear all tags for aURI, see the IDL.
       // XXXmano: write a perf-sensitive version of this code path...
       aTags = this.getTagsForURI(aURI);
     }
 
-    PlacesUtils.bookmarks.runInBatchMode({
-      _self: this,
-      runBatched: function(aUserData) {
-        for (var i = 0; i < aTags.length; i++) {
-          var tag = aTags[i];
-          var tagId = null;
-          if (typeof(tag) == "number") {
-            // is it a tag folder id?
-            if (this._self._tagFolders[tag]) {
-              tagId = tag;
-              tag = this._self._tagFolders[tagId];
-            }
-            else
-              throw Cr.NS_ERROR_INVALID_ARG;
-          }
-          else
-            tagId = this._self._getItemIdForTag(tag);
+    // This also does some input validation.
+    let tags = this._convertInputMixedTagsArray(aTags);
 
-          if (tagId != -1) {
-            var itemId = this._self._getItemIdForTaggedURI(aURI, tag);
+    let taggingService = this;
+    PlacesUtils.bookmarks.runInBatchMode({
+      runBatched: function (aUserData)
+      {
+        tags.forEach(function (tag)
+        {
+          if (tag.id != -1) {
+            // A tag could exist.
+            let itemId = this._getItemIdForTaggedURI(aURI, tag.name);
             if (itemId != -1) {
+              // There is a tagged item.
               PlacesUtils.bookmarks.removeItem(itemId);
-              this._self._removeTagIfEmpty(tagId);
+              this._removeTagIfEmpty(tag.id);
             }
           }
-        }
+        }, taggingService);
       }
     }, null);
   },

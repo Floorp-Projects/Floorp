@@ -457,6 +457,19 @@ nsPlacesDBUtils.prototype = {
     removeLivemarkStaticItems.params["lmfailed"] = "about:livemark-failed";
     cleanupStatements.push(removeLivemarkStaticItems);
 
+    // D.12 Fix empty-named tags.
+    //      Tags were allowed to have empty names due to a UI bug.  Fix them
+    //      replacing their title with "(notitle)".
+    let fixEmptyNamedTags = this._dbConn.createStatement(
+      "UPDATE moz_bookmarks SET title = :empty_title " +
+      "WHERE length(title) = 0 AND type = :folder_type " +
+        "AND parent = :tags_folder"
+    );
+    fixEmptyNamedTags.params["empty_title"] = "(notitle)";
+    fixEmptyNamedTags.params["folder_type"] = this._bms.TYPE_FOLDER;
+    fixEmptyNamedTags.params["tags_folder"] = this._bms.tagsFolder;
+    cleanupStatements.push(fixEmptyNamedTags);
+
     // MOZ_FAVICONS
     // E.1 remove orphan icons
     let deleteOrphanIcons = this._dbConn.createStatement(
