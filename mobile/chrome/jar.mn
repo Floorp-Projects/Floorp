@@ -59,5 +59,7 @@ chrome.jar:
   content/sync.js                      (content/sync.js)
 #endif
   content/LoginManagerChild.js         (content/LoginManagerChild.js)
+  content/fullscreen-video.js          (content/fullscreen-video.js)
+  content/fullscreen-video.xhtml       (content/fullscreen-video.xhtml)
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul

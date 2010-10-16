@@ -656,7 +656,7 @@ var ContextHandler = {
   init: function ch_init() {
     addEventListener("contextmenu", this, false);
     addEventListener("pagehide", this, false);
-    addMessageListener("Browser:MediaCommand", this, false);
+    addMessageListener("Browser:ContextCommand", this, false);
     this.popupNode = null;
   },
 
@@ -735,10 +735,23 @@ var ContextHandler = {
   },
 
   receiveMessage: function ch_receiveMessage(aMessage) {
-    switch (aMessage.name) {
-      case "Browser:MediaCommand":
-        if (this.popupNode instanceof Ci.nsIDOMHTMLMediaElement)
-          this.popupNode[aMessage.json.command]();
+    let node = this.popupNode;
+    let command = aMessage.json.command;
+
+    switch (command) {
+      case "play":
+      case "pause":
+        if (node instanceof Ci.nsIDOMHTMLMediaElement)
+          node[command]();
+        break;
+
+      case "fullscreen":
+        if (node instanceof Ci.nsIDOMHTMLVideoElement) {
+          node.pause();
+          Cu.import("resource:///modules/video.jsm");
+          Video.fullScreenSourceElement = node;
+          sendAsyncMessage("Browser:FullScreenVideo:Start");
+        }
         break;
     }
   },

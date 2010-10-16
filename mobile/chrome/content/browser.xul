@@ -564,11 +564,14 @@
           <richlistitem class="context-command" id="context-share-image" type="image-shareable" onclick="ContextCommands.shareMedia();">
             <label value="&contextShareImage.label;"/>
           </richlistitem>
-          <richlistitem class="context-command" id="context-play-media" type="media-paused" onclick="ContextCommands.playMedia();">
+          <richlistitem class="context-command" id="context-play-media" type="media-paused" onclick="ContextCommands.sendCommand('play');">
             <label value="&contextPlayMedia.label;"/>
           </richlistitem>
-          <richlistitem class="context-command" id="context-pause-video" type="media-playing" onclick="ContextCommands.pauseMedia();">
+          <richlistitem class="context-command" id="context-pause-video" type="media-playing" onclick="ContextCommands.sendCommand('pause');">
             <label value="&contextPauseMedia.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-fullscreen" type="video" onclick="ContextCommands.sendCommand('fullscreen');">
+            <label value="&contextFullScreen.label;"/>
           </richlistitem>
           <richlistitem class="context-command" id="context-save-video" type="video" onclick="ContextCommands.saveImage();">
             <label value="&contextSaveVideo.label;"/>
