@@ -39,6 +39,7 @@
 #define mozilla_net_WyciwygChannelChild_h
 
 #include "mozilla/net/PWyciwygChannelChild.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
@@ -66,6 +67,7 @@ enum WyciwygChannelChildState {
 // Header file contents
 class WyciwygChannelChild : public PWyciwygChannelChild
                           , public nsIWyciwygChannel
+                          , public ChannelEventQueue<WyciwygChannelChild>
 {
 public:
   NS_DECL_ISUPPORTS
@@ -81,6 +83,8 @@ public:
 
   nsresult Init(nsIURI *uri);
 
+  bool IsSuspended();
+
 protected:
   bool RecvOnStartRequest(const nsresult& statusCode,
                           const PRInt32& contentLength,
@@ -90,6 +94,15 @@ protected:
   bool RecvOnDataAvailable(const nsCString& data,
                            const PRUint32& offset);
   bool RecvOnStopRequest(const nsresult& statusCode);
+
+  void OnStartRequest(const nsresult& statusCode,
+                      const PRInt32& contentLength,
+                      const PRInt32& source,
+                      const nsCString& charset,
+                      const nsCString& securityInfo);
+  void OnDataAvailable(const nsCString& data,
+                       const PRUint32& offset);
+  void OnStopRequest(const nsresult& statusCode);
 
 private:
   nsresult                          mStatus;
@@ -112,7 +125,17 @@ private:
   enum WyciwygChannelChildState mState;
 
   bool mIPCOpen;
+
+  friend class WyciwygStartRequestEvent;
+  friend class WyciwygDataAvailableEvent;
+  friend class WyciwygStopRequestEvent;
 };
+
+bool
+WyciwygChannelChild::IsSuspended()
+{
+  return false;
+}
 
 } // namespace net
 } // namespace mozilla
