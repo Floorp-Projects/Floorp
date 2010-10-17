@@ -772,6 +772,30 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
   return PR_TRUE;
 }
 
+PRUint32
+nsSVGGlyphFrame::GetTextRunFlags(PRUint32 strLength)
+{
+  // Keep the logic here consistent with GetCharacterPositions
+
+  if (FindTextPathParent()) {
+    return gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
+  }
+
+  nsTArray<float> xList, yList;
+  GetEffectiveXY(strLength, xList, yList);
+  nsTArray<float> dxList, dyList;
+  GetEffectiveDxDy(strLength, dxList, dyList);
+  nsTArray<float> rotateList;
+  GetEffectiveRotate(strLength, rotateList);
+
+  return (xList.Length() > 1 ||
+          yList.Length() > 1 ||
+          dxList.Length() > 1 ||
+          dyList.Length() > 1 ||
+          !rotateList.IsEmpty()) ?
+    gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES : 0;
+}
+
 float
 nsSVGGlyphFrame::GetSubStringAdvance(PRUint32 aCharnum, 
                                      PRUint32 aFragmentChars,
@@ -1527,6 +1551,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
       gfxPlatform::GetPlatform()->CreateFontGroup(font.name, &fontStyle, presContext->GetUserFontSet());
 
     PRUint32 flags = gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX |
+      GetTextRunFlags(text.Length()) |
       nsLayoutUtils::GetTextRunFlagsForStyle(GetStyleContext(), GetStyleText(), GetStyleFont());
 
     // XXX We should use a better surface here! But then we'd have to
