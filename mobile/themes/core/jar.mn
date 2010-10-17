@@ -26,6 +26,8 @@ chrome.jar:
   skin/images/arrowrightdark-16.png         (images/arrowrightdark-16.png)
   skin/images/arrowupdark-16.png            (images/arrowupdark-16.png)
   skin/images/arrowdowndark-16.png          (images/arrowdowndark-16.png)
+  skin/images/popup-bg-hdpi.png             (images/popup-bg-hdpi.png)
+  skin/images/popup-selected-item-hdpi.png  (images/popup-selected-item-hdpi.png)
   skin/images/arrowbox-up.png               (images/arrowbox-up.png)
   skin/images/arrowbox-down.png             (images/arrowbox-down.png)
   skin/images/arrowbox-horiz.png            (images/arrowbox-horiz.png)
