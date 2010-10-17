@@ -3334,8 +3334,10 @@ nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
 {
-    if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(x,y)) {
+        *retVal = PR_FALSE;
+        return NS_OK;
+    }
 
     *retVal = mThebes->PointInFill(gfxPoint(x,y));
     return NS_OK;
