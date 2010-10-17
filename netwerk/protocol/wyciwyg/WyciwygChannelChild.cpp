@@ -57,7 +57,8 @@ NS_IMPL_ISUPPORTS3(WyciwygChannelChild,
 
 
 WyciwygChannelChild::WyciwygChannelChild()
-  : mStatus(NS_OK)
+  : ChannelEventQueue<WyciwygChannelChild>(this)
+  , mStatus(NS_OK)
   , mIsPending(PR_FALSE)
   , mLoadFlags(LOAD_NORMAL)
   , mContentLength(-1)
@@ -107,12 +108,50 @@ WyciwygChannelChild::Init(nsIURI* uri)
 // WyciwygChannelChild::PWyciwygChannelChild
 //-----------------------------------------------------------------------------
 
+class WyciwygStartRequestEvent : public ChannelEvent
+{
+public:
+  WyciwygStartRequestEvent(WyciwygChannelChild* child,
+                           const nsresult& statusCode,
+                           const PRInt32& contentLength,
+                           const PRInt32& source,
+                           const nsCString& charset,
+                           const nsCString& securityInfo)
+  : mChild(child), mStatusCode(statusCode), mContentLength(contentLength),
+    mSource(source), mCharset(charset), mSecurityInfo(securityInfo) {}
+  void Run() { mChild->OnStartRequest(mStatusCode, mContentLength, mSource,
+                                     mCharset, mSecurityInfo); }
+private:
+  WyciwygChannelChild* mChild;
+  nsresult mStatusCode;
+  PRInt32 mContentLength;
+  PRInt32 mSource;
+  nsCString mCharset;
+  nsCString mSecurityInfo;
+};
+
 bool
 WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
                                         const PRInt32& contentLength,
                                         const PRInt32& source,
                                         const nsCString& charset,
                                         const nsCString& securityInfo)
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new WyciwygStartRequestEvent(this, statusCode, contentLength,
+                                              source, charset, securityInfo));
+  } else {
+    OnStartRequest(statusCode, contentLength, source, charset, securityInfo);
+  }
+  return true;
+}
+
+void
+WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
+                                    const PRInt32& contentLength,
+                                    const PRInt32& source,
+                                    const nsCString& charset,
+                                    const nsCString& securityInfo)
 {
   LOG(("WyciwygChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
@@ -127,21 +166,46 @@ WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
     NS_DeserializeObject(securityInfo, getter_AddRefs(mSecurityInfo));
   }
 
+  AutoEventEnqueuer ensureSerialDispatch(this);
+
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv)) {
     // TODO: Cancel request:
     //  - Send Cancel msg to parent
     //  - drop any in flight OnDataAvail msgs we receive
     //  - make sure we do call OnStopRequest eventually
-    //  - return true here, not false
-    return false;
   }
-  return true;
 }
+
+class WyciwygDataAvailableEvent : public ChannelEvent
+{
+public:
+  WyciwygDataAvailableEvent(WyciwygChannelChild* child,
+                            const nsCString& data,
+                            const PRUint32& offset)
+  : mChild(child), mData(data), mOffset(offset) {}
+  void Run() { mChild->OnDataAvailable(mData, mOffset); }
+private:
+  WyciwygChannelChild* mChild;
+  nsCString mData;
+  PRUint32 mOffset;
+};
 
 bool
 WyciwygChannelChild::RecvOnDataAvailable(const nsCString& data,
                                          const PRUint32& offset)
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new WyciwygDataAvailableEvent(this, data, offset));
+  } else {
+    OnDataAvailable(data, offset);
+  }
+  return true;
+}
+
+void
+WyciwygChannelChild::OnDataAvailable(const nsCString& data,
+                                     const PRUint32& offset)
 {
   LOG(("WyciwygChannelChild::RecvOnDataAvailable [this=%x]\n", this));
 
@@ -159,48 +223,73 @@ WyciwygChannelChild::RecvOnDataAvailable(const nsCString& data,
                                       NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
     // TODO:  what to do here?  Cancel request?  Very unlikely to fail.
-    return false;
   }
+
+  AutoEventEnqueuer ensureSerialDispatch(this);
+  
   rv = mListener->OnDataAvailable(this, mListenerContext,
                                   stringStream, offset, data.Length());
   if (NS_FAILED(rv)) {
     // TODO: Cancel request: see notes in OnStartRequest
-    return false;
   }
 
   if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
     mProgressSink->OnProgress(this, nsnull, PRUint64(offset + data.Length()),
                               PRUint64(mContentLength));
-
-  return true;
 }
+
+class WyciwygStopRequestEvent : public ChannelEvent
+{
+public:
+  WyciwygStopRequestEvent(WyciwygChannelChild* child,
+                          const nsresult& statusCode)
+  : mChild(child), mStatusCode(statusCode) {}
+  void Run() { mChild->OnStopRequest(mStatusCode); }
+private:
+  WyciwygChannelChild* mChild;
+  nsresult mStatusCode;
+};
 
 bool
 WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new WyciwygStopRequestEvent(this, statusCode));
+  } else {
+    OnStopRequest(statusCode);
+  }
+  return true;
+}
+
+void
+WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
+{
   LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%x status=%u]\n",
            this, statusCode));
 
-  mState = WCC_ONSTOP;
+  { // We need to ensure that all IPDL message dispatching occurs
+    // before we delete the protocol below
+    AutoEventEnqueuer ensureSerialDispatch(this);
+    
+    mState = WCC_ONSTOP;
 
-  mIsPending = PR_FALSE;
-  mStatus = statusCode;
+    mIsPending = PR_FALSE;
+    mStatus = statusCode;
 
-  mListener->OnStopRequest(this, mListenerContext, statusCode);
+    mListener->OnStopRequest(this, mListenerContext, statusCode);
 
-  mListener = 0;
-  mListenerContext = 0;
+    mListener = 0;
+    mListenerContext = 0;
 
-  if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    if (mLoadGroup)
+      mLoadGroup->RemoveRequest(this, nsnull, mStatus);
 
-  mCallbacks = 0;
-  mProgressSink = 0;
+    mCallbacks = 0;
+    mProgressSink = 0;
+  }
 
   if (mIPCOpen)
     PWyciwygChannelChild::Send__delete__(this);
-
-  return true;
 }
 
 
