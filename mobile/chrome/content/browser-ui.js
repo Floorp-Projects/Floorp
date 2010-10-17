@@ -1386,24 +1386,11 @@ var PageActions = {
     let visibleNodes = container.querySelectorAll("pageaction:not([hidden=true])");
     let visibleCount = visibleNodes.length;
 
-    let first = null, last = null;
-    for (let i = 0; i < visibleCount; i++) {
-      let node = visibleNodes[i];
-      node.removeAttribute("selector");
-      // Note: CSS indexes start at one, so even/odd are swapped.
-      node.setAttribute("even", (i % 2) ? "true" : "false");
-    }
+    for (let i = 0; i < visibleCount; i++)
+      visibleNodes[i].classList.remove("odd-last-child");
 
-    if (visibleCount >= 1) {
-      visibleNodes[visibleCount - 1].setAttribute("selector", "last-child");
-      visibleNodes[0].setAttribute("selector", "first-child");
-    }
-
-    if (visibleCount >= 2) {
-      visibleNodes[visibleCount - 2].setAttribute("selector", "second-last-child");
-      visibleNodes[0].setAttribute("selector", "first-child");
-      visibleNodes[1].setAttribute("selector", "second-child");
-    }
+    if (visibleCount % 2)
+      visibleNodes[visibleCount - 1].classList.add("odd-last-child");
   }
 };
 
@@ -1515,10 +1502,9 @@ var BookmarkPopup = {
     delete this.box;
     this.box = document.getElementById("bookmark-popup");
 
-    const margin = 10;
     let [tabsSidebar, controlsSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
-    this.box.setAttribute(tabsSidebar.left < controlsSidebar.left ? "right" : "left", controlsSidebar.width + margin);
-    this.box.top  = BrowserUI.starButton.getBoundingClientRect().top + margin;
+    this.box.setAttribute(tabsSidebar.left < controlsSidebar.left ? "right" : "left", controlsSidebar.width - this.box.offset);
+    this.box.top = BrowserUI.starButton.getBoundingClientRect().top - this.box.offset;
 
     // Hide the popup if there is any new page loading
     let self = this;
@@ -1542,6 +1528,7 @@ var BookmarkPopup = {
 
   show : function show(aAutoClose) {
     this.box.hidden = false;
+    this.box.anchorTo(BrowserUI.starButton);
 
     if (aAutoClose) {
       this._bookmarkPopupTimeout = setTimeout(function (self) {

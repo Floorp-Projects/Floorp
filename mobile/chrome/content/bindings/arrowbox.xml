@@ -92,7 +92,7 @@
                 if (vertPos == 0) {
                   hideArrow = true;
                 } else {
-                  arrowbox.style.MozMarginStart = (anchorRect.left + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
+                  arrowbox.style.MozMarginStart = ((anchorRect.left - popupRect.left) + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
                   if (vertPos == 1) {
                     container.dir = ""; 
                     anchorClass = "top";
@@ -104,7 +104,7 @@
               } else if (vertPos == 0) {
                 container.orient = "";
                 arrowbox.orient = "vertical";
-                arrowbox.style.MozMarginStart = (anchorRect.top + (anchorRect.height / 2) - HALF_ARROW_WIDTH) + "px";
+                arrowbox.style.marginTop = ((anchorRect.top - popupRect.top) + (anchorRect.height / 2) - HALF_ARROW_WIDTH) + "px";
                 if (horizPos == 1) {
                   container.dir = ""; 
                   anchorClass = "left";

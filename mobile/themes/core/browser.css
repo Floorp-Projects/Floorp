@@ -994,8 +994,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 /* Page Actions popup   ---------------------------------------------------- */
 .prompt-buttons,
 #pageactions-container {
-  background: rgb(210, 210, 210) -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%, rgba(235,235,235,0.4) 90%, rgba(185,185,185,0.4) 100%);
-  border: none;
+  border-top: 1px solid rgb(205,205,205);
   padding: 0;
   -moz-user-focus: ignore;
   display: inline-block;
@@ -1003,11 +1002,10 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 
 .prompt-button,
 pageaction {
-  -moz-border-top-colors: rgb(235, 235, 235);
-  -moz-border-right-colors: rgb(205, 205, 205);
-  -moz-border-bottom-colors: rgb(205, 205, 205);
-  -moz-border-left-colors: rgb(235, 235, 235);
-  background-color: rgb(235,235,235);
+  -moz-border-top-colors: white;
+  -moz-border-right-colors: rgb(175,175,175);
+  -moz-border-bottom-colors: rgb(175,175,175);
+  -moz-border-left-colors: white;
   border-style: solid;
   border-width: 1px !important;
   height: 64px;
@@ -1030,67 +1028,19 @@ pageaction {
     width: 50%;
   }
 
-  .prompt-button:nth-last-child(2):not(:nth-child(even)),
-  pageaction[selector="second-last-child"][even=false] {
-    background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
-    border-bottom: 1px solid #fff;
-    -moz-border-radius-bottomleft: 8px;
-  }
-
-  .prompt-button:first-child,
-  .prompt-button:nth-child(2),
-  pageaction[selector="first-child"],
-  pageaction[selector="second-child"] {
-    background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%) !important;
-  }
-
-  .prompt-button:last-child:not(:nth-child(even)),
-  pageaction[selector="last-child"][even=false] {
-    border-bottom: 1px solid #fff;
-    -moz-border-radius-bottomleft: 8px;
-    -moz-border-radius-bottomright: 8px;
+  .prompt-button:last-child:nth-child(odd),
+  pageaction.odd-last-child {
     width: 100%;
   }
-
-  .prompt-button:last-child:not(:nth-child(odd)),
-  pageaction[selector="last-child"][even=true] {
-    border-bottom: 1px solid #fff;
-    -moz-border-radius-bottomright: 8px;
-  }
-
-  .prompt-button:nth-last-child(2):not(:nth-child(even)):-moz-locale-dir(rtl) {
-    -moz-border-radius-bottomleft: 0;
-    -moz-border-radius-bottomright: 8px;
-  }
-
-  .prompt-button:last-child:not(:nth-child(odd)):-moz-locale-dir(rtl) {
-    -moz-border-radius-bottomright: 0;
-    -moz-border-radius-bottomleft: 8px;
-  }
-}
-
-@media (max-width: 499px) {
-  .prompt-button:last-child,
-  pageaction[selector="last-child"] {
-    -moz-border-radius-bottomleft: 8px;
-    -moz-border-radius-bottomright: 8px;
-  }
-}
-
-.prompt-button:last-child,
-pageaction[selector="last-child"] {
-  background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
-}
-
-.prompt-button:first-child,
-pageaction[selector="first-child"] {
-  background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
 .prompt-button:not([disabled]):hover:active,
 pageaction:not([disabled]):hover:active {
-  background-image: none !important;
-  background-color: #8db8d8 !important;
+  background: url("chrome://browser/skin/images/popup-selected-item-hdpi.png") repeat-x !important;
+  background-origin: border-box !important;
+  background-clip: border-box !important;
+  -moz-border-top-colors: transparent;
+  -moz-border-left-colors: transparent;
 }
 
 pageaction > hbox > .pageaction-image {
@@ -1112,10 +1062,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
 .pageaction-desc {
   font-size: 14px !important;
   color: #414141;
-}
-
-pageaction:hover:active > vbox > .pageaction-desc {
-  color: white;
 }
 
 .pageaction-desc[value=""] {

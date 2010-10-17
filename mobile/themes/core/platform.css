@@ -108,28 +108,22 @@ textbox[isempty="true"] {
 .modal-block {
   -moz-box-align: center;
   -moz-box-pack: center;
-  background-color: rgba(128, 128, 128, 0.5);
+  background-color: rgba(0,0,0,.6);
   padding: 64px;
 }
 
-dialog {
-  color: #fff !important;
-  background-color: transparent;
-  -moz-border-radius: 8px;
-  -moz-box-shadow: black 0 2px 2px;
+dialog,
+.panel-arrowcontent {
+  background: url("chrome://browser/skin/images/popup-bg-hdpi.png") left bottom repeat-x;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: black 0 2px 2px, black 0 -1px 2px;
+  padding: 8px 0; /* core spacing on top/bottom */
 }
 
 dialog > .prompt-header {
   padding: 8px;
   font-size: 18px !important;
-  -moz-border-radius: 8px 8px 0 0;
-  background-color: #767973;
-  border-style: solid;
-  border-width: 4px 3px 2px 3px;
-  -moz-border-top-colors: black #4a4b4f;
-  -moz-border-left-colors: black #4a4b4f;
-  -moz-border-bottom-colors: black #4a4b4f;
-  -moz-border-right-colors: black #4a4b4f;
 }
 
 dialog > .prompt-header > .prompt-title {
@@ -312,7 +306,6 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
 
 /* checkbox buttons ----------------------------------------------------------- */
 .button-checkbox {
-  color: #fff;
   padding: 0 !important;
   background: none !important;
   border: none !important;
@@ -699,13 +692,6 @@ arrowbox {
   background: rgb(94,97,102);
 }
 
-.panel-arrowcontent {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: black 0 2px 2px, black 0 -2px 2px;
-  padding: 8px 0;
-}
-
 .panel-arrow[side="top"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
   margin-bottom: -8px;
@@ -713,24 +699,18 @@ arrowbox {
 
 .panel-arrow[side="bottom"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-left: 6px;
-  margin-right: 6px;
-  margin-top: -12px;
+  margin-top: -8px;
 }
 
 .panel-arrow[side="left"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-top: 6px;
-  margin-bottom: 6px;
-  margin-right: -12px;
+  margin-right: -8px;
+  -moz-transform: scaleX(-1);
 }
 
 .panel-arrow[side="right"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  -moz-transform: scaleX(-1);
-  margin-top: 6px;
-  margin-bottom: 6px;
-  margin-left: -12px;
+  margin-left: -8px;
 }
 
 /*.panel-row-header ------------------------------------------------------------ */

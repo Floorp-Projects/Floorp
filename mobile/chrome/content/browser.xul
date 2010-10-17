@@ -353,15 +353,15 @@
       </hbox>
     </arrowbox>
 
-    <vbox id="bookmark-popup" hidden="true" class="dialog-dark" align="center">
+    <arrowbox id="bookmark-popup" hidden="true" align="center" offset="12">
       <label value="&bookmarkPopup.label;"/>
       <separator class="thin"/>
       <vbox>
-        <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" class="button-dark" oncommand="BookmarkHelper.edit();"/>
+        <button id="bookmark-popup-edit" label="&bookmarkEdit.label;" oncommand="BookmarkHelper.edit();"/>
         <spacer/>
-        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" class="button-dark" oncommand="BookmarkPopup.hide(); BookmarkHelper.removeBookmarksForURI(getBrowser().currentURI);"/>
+        <button id="bookmark-popup-remove" label="&bookmarkRemove.label;" oncommand="BookmarkPopup.hide(); BookmarkHelper.removeBookmarksForURI(getBrowser().currentURI);"/>
       </vbox>
-    </vbox>
+    </arrowbox>
 
     <vbox id="bookmark-container" hidden="true" class="panel-dark window-width">
       <hbox id="bookmark-form" align="start">
