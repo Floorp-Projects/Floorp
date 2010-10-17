@@ -197,6 +197,7 @@ protected:
   PRBool GetCharacterData(nsAString & aCharacterData);
   PRBool GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPositions,
                                float aMetricsScale);
+  PRUint32 GetTextRunFlags(PRUint32 strLength);
 
   void AddCharactersToPath(CharacterIterator *aIter,
                            gfxContext *aContext);
