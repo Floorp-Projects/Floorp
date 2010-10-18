@@ -51,6 +51,11 @@ ifdef MOZ_EXTENSIONS
 tier_app_dirs += extensions
 endif
 
+ifdef MOZ_SERVICES_SYNC
+tier_app_dirs += services/crypto
+tier_app_dirs += services/sync
+endif
+
 tier_app_dirs += \
   $(MOZ_BRANDING_DIRECTORY) \
   mobile \
