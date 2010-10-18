@@ -3785,7 +3785,7 @@ function findCompletionBeginning(aStr)
  */
 function JSPropertyProvider(aScope, aInputValue)
 {
-  let obj = aScope;
+  let obj = XPCNativeWrapper.unwrap(aScope);
 
   // Analyse the aInputValue and find the beginning of the last part that
   // should be completed.
