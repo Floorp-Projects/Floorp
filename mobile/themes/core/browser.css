@@ -117,12 +117,15 @@ toolbarbutton.urlbar-button {
 %endif
 
 /* URL bar ----------------------------------------------------------------- */
+#toolbar-main {
+  background-image: url("chrome://browser/skin/images/toolbar-bg.png");
+}
+
 #urlbar-container {
   color: #000;
   border-radius: 8px;
   margin: 8px;
-  background-color: #fff;
-  border-bottom: 3px rgba(0,0,0,0.1) solid;
+  background-image: url("chrome://browser/skin/images/urlbar-bg.png");
 }
 
 #urlbar-container[mode="edit"] > #identity-box {
@@ -159,7 +162,7 @@ toolbarbutton.urlbar-button {
 
 .urlbar-cap-button[open="true"],
 .urlbar-cap-button:hover:active {
-  background-color: rgb(189,192,197);
+  background-color: rgba(189,192,197,0.4);
 }
 
 /* left cap button --------------------------------------------------------- */
@@ -292,8 +295,8 @@ toolbarbutton.urlbar-button {
   -moz-box-align: start;
   padding: 0;
   -moz-border-start: 3px solid #262629;
-  background: rgb(94,97,102);
   min-width: 80px !important;
+  background: #2e2e2f url("chrome://browser/skin/images/sidebar-bg.png") top left repeat-x;
 }
 
 toolbarbutton.button-control {
@@ -815,7 +818,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
   -moz-border-end: 3px solid #262629;
-  background: rgb(94,97,102);
+  background: #2e2e2f url("chrome://browser/skin/images/sidebar-bg.png") top left repeat-x;
 }
 
 #tabs:-moz-locale-dir(rtl) {

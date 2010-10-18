@@ -15,6 +15,9 @@ chrome.jar:
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 
   skin/images/aboutBackground.jpg           (images/aboutBackground.jpg)
+  skin/images/sidebar-bg.png                (images/sidebar-bg.png)
+  skin/images/toolbar-bg.png                (images/toolbar-bg.png)
+  skin/images/urlbar-bg.png                 (images/urlbar-bg.png)
   skin/images/browseaddons-bg.jpg           (images/browseaddons-bg.jpg)
   skin/images/addons-32.png                 (images/addons-32.png)
   skin/images/arrowleft-16.png              (images/arrowleft-16.png)
