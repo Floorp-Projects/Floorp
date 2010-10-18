@@ -310,6 +310,7 @@ function SetClickAndHoldHandlers() {
   var unifiedButton = document.getElementById("unified-back-forward-button");
   if (unifiedButton && !unifiedButton._clickHandlersAttached) {
     var popup = document.getElementById("backForwardMenu").cloneNode(true);
+    popup.removeAttribute("id");
     var backButton = document.getElementById("back-button");
     backButton.setAttribute("type", "menu");
     backButton.appendChild(popup);
