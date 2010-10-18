@@ -1234,7 +1234,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
   
 #ifdef MOZ_XUL
   if (!wasVisible && bState)
-    Invalidate(PR_TRUE);
+    Invalidate(PR_FALSE);
 #endif
 
   return NS_OK;
