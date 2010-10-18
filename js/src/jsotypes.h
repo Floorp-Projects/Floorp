@@ -75,7 +75,7 @@ typedef JSUintn uint;
 
 typedef JSUintn uintn;
 typedef JSUint64 uint64;
-#if !defined(_WIN32) && !defined(XP_OS2)
+#if !defined(XP_OS2)
 typedef JSUint32 uint32;
 #else
 typedef unsigned long uint32;
@@ -99,7 +99,7 @@ typedef JSIntn intn;
 typedef JSInt64 int64;
 
 /* /usr/include/model.h on HP-UX defines int8, int16, and int32 */
-#if !defined(_WIN32) && !defined(XP_OS2)
+#if !defined(XP_OS2)
 typedef JSInt32 int32;
 #else
 typedef long int32;
