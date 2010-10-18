@@ -3,7 +3,7 @@ A representation of makefile data structures.
 """
 
 import logging, re, os, sys
-import parserdata, parser, functions, process, util, builtins
+import parserdata, parser, functions, process, util, implicit
 from cStringIO import StringIO
 
 _log = logging.getLogger('pymake.data')
@@ -1142,17 +1142,18 @@ def splitcommand(command):
 
 def findmodifiers(command):
     """
-    Find any of +-@ prefixed on the command.
-    @returns (command, isHidden, isRecursive, ignoreErrors)
+    Find any of +-@% prefixed on the command.
+    @returns (command, isHidden, isRecursive, ignoreErrors, isNative)
     """
 
     isHidden = False
     isRecursive = False
     ignoreErrors = False
+    isNative = False
 
-    realcommand = command.lstrip(' \t\n@+-')
+    realcommand = command.lstrip(' \t\n@+-%')
     modset = set(command[:-len(realcommand)])
-    return realcommand, '@' in modset, '+' in modset, '-' in modset
+    return realcommand, '@' in modset, '+' in modset, '-' in modset, '%' in modset
 
 class _CommandWrapper(object):
     def __init__(self, cline, ignoreErrors, loc, context, **kwargs):
@@ -1173,6 +1174,32 @@ class _CommandWrapper(object):
         self.usercb = cb
         process.call(self.cline, loc=self.loc, cb=self._cb, context=self.context, **self.kwargs)
 
+class _NativeWrapper(_CommandWrapper):
+    def __init__(self, cline, ignoreErrors, loc, context,
+                 pycommandpath, **kwargs):
+        _CommandWrapper.__init__(self, cline, ignoreErrors, loc, context,
+                                 **kwargs)
+        # get the module and method to call
+        parts, badchar = process.clinetoargv(cline)
+        if parts is None:
+            raise DataError("native command '%s': shell metacharacter '%s' in command line" % (cline, badchar), self.loc)
+        if len(parts) < 2:
+            raise DataError("native command '%s': no method name specified" % cline, self.loc)
+        if pycommandpath:
+            self.pycommandpath = re.split('[%s\s]+' % os.pathsep,
+                                          pycommandpath)
+        else:
+            self.pycommandpath = None
+        self.module = parts[0]
+        self.method = parts[1]
+        self.cline_list = parts[2:]
+
+    def __call__(self, cb):
+        self.usercb = cb
+        process.call_native(self.module, self.method, self.cline_list,
+                            loc=self.loc, cb=self._cb, context=self.context,
+                            pycommandpath=self.pycommandpath, **self.kwargs)
+
 def getcommandsforrule(rule, target, makefile, prerequisites, stem):
     v = Variables(parent=target.variables)
     setautomaticvariables(v, makefile, target, prerequisites)
@@ -1184,13 +1211,22 @@ def getcommandsforrule(rule, target, makefile, prerequisites, stem):
     for c in rule.commands:
         cstring = c.resolvestr(makefile, v)
         for cline in splitcommand(cstring):
-            cline, isHidden, isRecursive, ignoreErrors = findmodifiers(cline)
+            cline, isHidden, isRecursive, ignoreErrors, isNative = findmodifiers(cline)
             if isHidden or makefile.silent:
                 echo = None
             else:
                 echo = "%s$ %s" % (c.loc, cline)
-            yield _CommandWrapper(cline, ignoreErrors=ignoreErrors, env=env, cwd=makefile.workdir, loc=c.loc, context=makefile.context,
-                                 echo=echo)
+            if not isNative:
+                yield _CommandWrapper(cline, ignoreErrors=ignoreErrors, env=env, cwd=makefile.workdir, loc=c.loc, context=makefile.context,
+                                      echo=echo)
+            else:
+                f, s, e = v.get("PYCOMMANDPATH", True)
+                if e:
+                    e = e.resolvestr(makefile, v, ["PYCOMMANDPATH"])
+                yield _NativeWrapper(cline, ignoreErrors=ignoreErrors,
+                                     env=env, cwd=makefile.workdir,
+                                     loc=c.loc, context=makefile.context,
+                                     echo=echo, pycommandpath=e)
 
 class Rule(object):
     """
@@ -1370,6 +1406,8 @@ class Makefile(object):
         self.variables.set('MAKE_RESTARTS', Variables.FLAVOR_SIMPLE,
                            Variables.SOURCE_AUTOMATIC, restarts > 0 and str(restarts) or '')
 
+        self.variables.set('.PYMAKE', Variables.FLAVOR_SIMPLE,
+                           Variables.SOURCE_MAKEFILE, "1")
         if make is not None:
             self.variables.set('MAKE', Variables.FLAVOR_SIMPLE,
                                Variables.SOURCE_MAKEFILE, make)
@@ -1394,7 +1432,7 @@ class Makefile(object):
         self.variables.set('MAKECMDGOALS', Variables.FLAVOR_SIMPLE,
                            Variables.SOURCE_AUTOMATIC, ' '.join(targets))
 
-        for vname, val in builtins.variables.iteritems():
+        for vname, val in implicit.variables.iteritems():
             self.variables.set(vname,
                                Variables.FLAVOR_SIMPLE,
                                Variables.SOURCE_IMPLICIT, val)
