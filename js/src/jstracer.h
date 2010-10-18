@@ -1033,8 +1033,6 @@ class TraceRecorder
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
     JS_REQUIRES_STACK void importGlobalSlot(unsigned slot);
 
-    void ensureCond(nanojit::LIns** ins, bool* cond);
-
     JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, ExitType exitType,
                                             bool abortIfAlwaysExits = false);
     JS_REQUIRES_STACK RecordingStatus guard(bool expected, nanojit::LIns* cond, VMSideExit* exit,
