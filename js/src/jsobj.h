@@ -1665,10 +1665,6 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
 extern JSBool
 js_CheckContentSecurityPolicy(JSContext *cx);
 
-/* Infallible -- returns its argument if there is no wrapped object. */
-extern JSObject *
-js_GetWrappedObject(JSContext *cx, JSObject *obj);
-
 /* NB: Infallible. */
 extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,

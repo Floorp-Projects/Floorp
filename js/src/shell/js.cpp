@@ -4072,38 +4072,6 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-Snarl(JSContext *cx, uintN argc, jsval *vp)
-{
-    if (argc < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "compile", "0", "s");
-    }
-
-    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
-    if (!thisobj)
-        return JS_FALSE;
-
-    jsval arg0 = JS_ARGV(cx, vp)[0];
-    if (!JSVAL_IS_STRING(arg0)) {
-        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, arg0));
-        JS_ReportError(cx, "expected string to compile, got %s", typeName);
-        return JS_FALSE;
-    }
-
-    JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    JSScript *script = JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
-                                          JS_GetStringLength(scriptContents), "<string>", 0);
-    if (!script)
-        return JS_FALSE;
-
-    JS_ExecuteScript(cx, thisobj, script, NULL);
-    JS_DestroyScript(cx, script);
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
 JSBool
 Wrap(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -4254,7 +4222,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FN("snarf",          Snarf,          0,0),
-    JS_FN("snarl",          Snarl,          0,0),
     JS_FN("read",           Snarf,          0,0),
     JS_FN("compile",        Compile,        1,0),
     JS_FN("parse",          Parse,          1,0),
@@ -4380,7 +4347,6 @@ static const char *const shell_help_messages[] = {
 "scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 "snarf(filename)          Read filename into returned string",
-"snarl(codestring)        Eval code, without being eval.",
 "read(filename)           Synonym for snarf",
 "compile(code)            Compiles a string to bytecode, potentially throwing",
 "parse(code)              Parses a string, potentially throwing",

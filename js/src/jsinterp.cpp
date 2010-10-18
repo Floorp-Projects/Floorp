@@ -1657,6 +1657,8 @@ js_DumpOpMeters()
 # define SIGNIFICANT(count,total) (200. * (count) >= (total))
 
     graph = (Edge *) js_calloc(nedges * sizeof graph[0]);
+    if (!graph)
+        return;
     for (i = nedges = 0; i < JSOP_LIMIT; i++) {
         from = js_CodeName[i];
         for (j = 0; j < JSOP_LIMIT; j++) {
@@ -4287,8 +4289,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
         JSObject *obj2;
         JSAtom *atom;
         if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
-            JS_ASSERT(obj->isExtensible());
-
             /*
              * Fast property cache hit, only partially confirmed by
              * testForSet. We know that the entry applies to regs.pc and
@@ -4328,6 +4328,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
                     break;
                 }
             } else {
+                JS_ASSERT(obj->isExtensible());
+
                 if (obj->nativeEmpty()) {
                     /*
                      * We check that cx owns obj here and will continue to own

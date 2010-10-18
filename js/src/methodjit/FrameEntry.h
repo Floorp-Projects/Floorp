@@ -195,6 +195,7 @@ class FrameEntry
 
     FrameEntry *copyOf() const {
         JS_ASSERT(isCopy());
+        JS_ASSERT(copy < this);
         return copy;
     }
 
