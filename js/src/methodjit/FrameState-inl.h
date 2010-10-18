@@ -925,12 +925,16 @@ FrameState::dataRematInfo(const FrameEntry *fe) const
 {
     if (fe->isCopy())
         fe = fe->copyOf();
-
-    if (fe->data.inRegister())
-        return StateRemat::FromRegister(fe->data.reg());
-
-    JS_ASSERT(fe->data.synced());
-    return StateRemat::FromAddress(addressOf(fe));
+    StateRemat remat;
+    if (fe->data.inRegister()) {
+        remat.reg = fe->data.reg();
+        remat.inReg = true;
+    } else {
+        JS_ASSERT(fe->data.synced());
+        remat.offset = addressOf(fe).offset;
+        remat.inReg = false;
+    }
+    return remat;
 }
 
 inline void
