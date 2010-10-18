@@ -151,6 +151,8 @@ static volatile bool gCanceled = false;
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 
+static bool printTiming = false;
+
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t);
 
@@ -436,13 +438,18 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         }
         ungetc(ch, file);
 
+        int64 t1 = PRMJ_Now();
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
         if (script) {
-            if (!compileOnly)
+            if (!compileOnly) {
                 (void)JS_ExecuteScript(cx, obj, script, NULL);
+                int64 t2 = PRMJ_Now() - t1;
+                if (printTiming)
+                    printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
+            }
             JS_DestroyScript(cx, script);
         }
 
@@ -560,7 +567,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCijmd] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
+    fprintf(gErrFile, "usage: js [-zKPswWxCijmdb] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
@@ -734,6 +741,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_XML);
             break;
 
+        case 'b':
+            printTiming = true;
+            break;
+            
         case 'j':
             enableTraceJit = !enableTraceJit;
             JS_ToggleOptions(cx, JSOPTION_JIT);
