@@ -696,7 +696,7 @@ arrowbox {
 
 .panel-dark {
   color: white;
-  background-color: #36373b;
+  background: rgb(94,97,102);
 }
 
 .panel-arrowcontent {
