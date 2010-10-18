@@ -168,10 +168,6 @@ let historyObserver = {
 PlacesUtils.history.addObserver(historyObserver, false);
 
 function run_test() {
-  // Since we are checking frecency, we have to disable some stuff that could
-  // change values during test run.  On idle-daily frecencies are updated.
-  Services.obs.removeObserver(PlacesUtils.history, "idle-daily");
-
   // places-init-complete is notified after run_test, and it will
   // run a first frecency fix through async statements.
   // To avoid random failures we have to run after all of this.
