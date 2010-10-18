@@ -253,7 +253,6 @@ function UpdateBackForwardCommands(aWebNavigation) {
   }
 }
 
-#ifdef XP_MACOSX
 /**
  * Click-and-Hold implementation for the Back and Forward buttons
  * XXXmano: should this live in toolbarbutton.xml?
@@ -310,8 +309,7 @@ function SetClickAndHoldHandlers() {
   // the forward buttons.
   var unifiedButton = document.getElementById("unified-back-forward-button");
   if (unifiedButton && !unifiedButton._clickHandlersAttached) {
-    var popup = document.getElementById("back-forward-dropmarker")
-                        .firstChild.cloneNode(true);
+    var popup = document.getElementById("backForwardMenu").cloneNode(true);
     var backButton = document.getElementById("back-button");
     backButton.setAttribute("type", "menu");
     backButton.appendChild(popup);
@@ -324,7 +322,6 @@ function SetClickAndHoldHandlers() {
     unifiedButton._clickHandlersAttached = true;
   }
 }
-#endif
 
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
@@ -1462,12 +1459,10 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
 
-#ifdef XP_MACOSX
   // Setup click-and-hold gestures access to the session history
   // menus if global click-and-hold isn't turned on
   if (!getBoolPref("ui.click_hold_context_menus", false))
     SetClickAndHoldHandlers();
-#endif
 
   // Initialize the full zoom setting.
   // We do this before the session restore service gets initialized so we can
@@ -3492,12 +3487,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
 
-    var backForwardDropmarker = document.getElementById("back-forward-dropmarker");
-    if (backForwardDropmarker)
-      backForwardDropmarker.disabled =
-        document.getElementById('Browser:Back').hasAttribute('disabled') &&
-        document.getElementById('Browser:Forward').hasAttribute('disabled');
-
 #ifndef XP_MACOSX
     updateEditUIVisibility();
 #endif
@@ -3524,11 +3513,9 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
 
-#ifdef XP_MACOSX
   // make sure to re-enable click-and-hold
   if (!getBoolPref("ui.click_hold_context_menus", false))
     SetClickAndHoldHandlers();
-#endif
 
   window.content.focus();
 }
