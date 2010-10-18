@@ -187,7 +187,57 @@ union PICLabels {
 };
 #endif
 
-struct PICInfo {
+struct BaseIC {
+    // Address of inline fast-path.
+    JSC::CodeLocationLabel fastPathStart;
+
+    // Address to rejoin to the fast-path.
+    JSC::CodeLocationLabel fastPathRejoin;
+
+    // Start of the slow path.
+    JSC::CodeLocationLabel slowPathStart;
+
+    // Slow path stub call.
+    JSC::CodeLocationCall slowPathCall;
+
+    // Address of the start of the last generated stub, if any.
+    JSC::CodeLocationLabel lastStubStart;
+
+    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
+
+    // ExecutablePools that IC stubs were generated into.
+    ExecPoolVector execPools;
+
+    // Return the start address of the last path in this PIC, which is the
+    // inline path if no stubs have been generated yet.
+    JSC::CodeLocationLabel lastPathStart() {
+        return stubsGenerated > 0 ? lastStubStart : fastPathStart;
+    }
+
+    // Whether or not the callsite has been hit at least once.
+    bool hit : 1;
+
+    // Number of stubs generated.
+    uint32 stubsGenerated : 5;
+
+    // Release ExecutablePools referred to by this PIC.
+    void releasePools() {
+        for (JSC::ExecutablePool **pExecPool = execPools.begin();
+             pExecPool != execPools.end();
+             ++pExecPool) {
+            (*pExecPool)->release();
+        }
+    }
+
+    void reset() {
+        hit = false;
+        stubsGenerated = 0;
+        releasePools();
+        execPools.clear();
+    }
+};
+
+struct PICInfo : public BaseIC {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
     // Operation this is a PIC for.
@@ -207,7 +257,6 @@ struct PICInfo {
     };
 
     union {
-        // This struct comes out to 93 bits with GCC.
         struct {
             RegisterID typeReg  : 5;  // reg used for checking type
             bool hasTypeCheck   : 1;  // type check and reg are present
@@ -216,11 +265,9 @@ struct PICInfo {
             int32 typeCheckOffset;
 
             // Remat info for the object reg.
-            uint32 objRemat     : 20;
+            int32 objRemat      : MIN_STATE_REMAT_BITS;
             bool objNeedsRemat  : 1;
             RegisterID idReg    : 5;  // only used in GETELEM PICs.
-            uint32 idRemat      : 20;
-            bool idNeedsRemat   : 1;
         } get;
         ValueRemat vr;
     } u;
@@ -237,25 +284,18 @@ struct PICInfo {
     bool shapeRegHasBaseShape : 1;
 
     // State flags.
-    bool hit : 1;                   // this PIC has been executed
     bool inlinePathPatched : 1;     // inline path has been patched
 
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
 
-    // Number of stubs generated.
-    uint32 stubsGenerated : 5;
-
     // Offset from start of fast path to initial shape guard.
     uint32 shapeGuard;
     
-    // Return address of slow path call, as an offset from slowPathStart.
-    uint32 callReturn;
-
-    inline bool isSet() {
+    inline bool isSet() const {
         return kind == SET || kind == SETMETHOD;
     }
-    inline bool isGet() {
+    inline bool isGet() const {
         return kind == GET || kind == CALL || kind == GETELEM;
     }
     inline RegisterID typeReg() {
@@ -266,21 +306,13 @@ struct PICInfo {
         JS_ASSERT(isGet());
         return u.get.hasTypeCheck;
     }
-    inline uint32 objRemat() {
+    inline const StateRemat objRemat() const {
         JS_ASSERT(isGet());
-        return u.get.objRemat;
-    }
-    inline uint32 idRemat() {
-        JS_ASSERT(isGet());
-        return u.get.idRemat;
+        return StateRemat::FromInt32(u.get.objRemat);
     }
     inline bool objNeedsRemat() {
         JS_ASSERT(isGet());
         return u.get.objNeedsRemat;
-    }
-    inline bool idNeedsRemat() {
-        JS_ASSERT(isGet());
-        return u.get.idNeedsRemat;
     }
     inline bool shapeNeedsRemat() {
         return !shapeRegHasBaseShape;
@@ -288,6 +320,12 @@ struct PICInfo {
     inline bool isFastCall() {
         JS_ASSERT(kind == CALL);
         return !hasTypeCheck();
+    }
+
+    inline void setObjRemat(const StateRemat &sr) {
+        JS_ASSERT(isGet());
+        u.get.objRemat = sr.toInt32();
+        JS_ASSERT(u.get.objRemat == sr.toInt32());
     }
 
 #if defined JS_CPU_X64
@@ -298,56 +336,19 @@ struct PICInfo {
     // Index into the script's atom table.
     JSAtom *atom;
 
-    // Address of inline fast-path.
-    JSC::CodeLocationLabel fastPathStart;
-
-    // Address of store back at the end of the inline fast-path.
-    JSC::CodeLocationLabel storeBack;
-
-    // Offset from callReturn to the start of the slow case.
-    JSC::CodeLocationLabel slowPathStart;
-
-    // Address of the start of the last generated stub, if any.
-    JSC::CodeLocationLabel lastStubStart;
-
-    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
-
-    // ExecutablePools that PIC stubs were generated into.
-    ExecPoolVector execPools;
-
-    // Return the start address of the last path in this PIC, which is the
-    // inline path if no stubs have been generated yet.
-    JSC::CodeLocationLabel lastPathStart() {
-        return stubsGenerated > 0 ? lastStubStart : fastPathStart;
-    }
-
     bool shouldGenerate() {
         return stubsGenerated < MAX_PIC_STUBS || !inlinePathPatched;
-    }
-
-    // Release ExecutablePools referred to by this PIC.
-    void releasePools() {
-        for (JSC::ExecutablePool **pExecPool = execPools.begin();
-             pExecPool != execPools.end();
-             ++pExecPool)
-        {
-            (*pExecPool)->release();
-        }
     }
 
     // Reset the data members to the state of a fresh PIC before any patching
     // or stub generation was done.
     void reset() {
-        hit = false;
         inlinePathPatched = false;
-        if (kind == GET || kind == CALL || kind == GETELEM) {
+        if (kind == GET || kind == CALL || kind == GETELEM)
             u.get.objNeedsRemat = false;
-        }
         secondShapeGuard = 0;
         shapeRegHasBaseShape = true;
-        stubsGenerated = 0;
-        releasePools();
-        execPools.clear();
+        BaseIC::reset();
     }
 };
 

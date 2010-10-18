@@ -49,9 +49,72 @@
 #include "assembler/moco/MocoStubs.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MachineRegs.h"
+#include "CodeGenIncludes.h"
 
 namespace js {
 namespace mjit {
+
+class MaybeRegisterID {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+  public:
+    MaybeRegisterID()
+      : reg_(Registers::ReturnReg), set(false)
+    { }
+
+    MaybeRegisterID(RegisterID reg)
+      : reg_(reg), set(true)
+    { }
+
+    inline RegisterID reg() const { JS_ASSERT(set); return reg_; }
+    inline void setReg(const RegisterID r) { reg_ = r; set = true; }
+    inline bool isSet() const { return set; }
+
+    MaybeRegisterID & operator =(const MaybeRegisterID &other) {
+        set = other.set;
+        reg_ = other.reg_;
+        return *this;
+    }
+
+    MaybeRegisterID & operator =(RegisterID r) {
+        setReg(r);
+        return *this;
+    }
+
+  private:
+    RegisterID reg_;
+    bool set;
+};
+
+// Represents an int32 property name in generated code, which must be either
+// a RegisterID or a constant value.
+struct Int32Key {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+    MaybeRegisterID reg_;
+    int32 index_;
+
+    Int32Key() : index_(0) { }
+
+    static Int32Key FromRegister(RegisterID reg) {
+        Int32Key key;
+        key.reg_ = reg;
+        return key;
+    }
+    static Int32Key FromConstant(int32 index) {
+        Int32Key key;
+        key.index_ = index;
+        return key;
+    }
+
+    int32 index() const {
+        JS_ASSERT(!reg_.isSet());
+        return index_;
+    }
+
+    RegisterID reg() const { return reg_.reg(); }
+    bool isConstant() const { return !reg_.isSet(); }
+};
 
 class MaybeJump {
     typedef JSC::MacroAssembler::Jump Jump;
@@ -72,8 +135,6 @@ class MaybeJump {
     bool set;
 };
 
-//#define JS_METHODJIT_PROFILE_STUBS
-
 struct FrameAddress : JSC::MacroAssembler::Address
 {
     FrameAddress(int32 offset)
@@ -88,7 +149,7 @@ struct ImmIntPtr : public JSC::MacroAssembler::ImmPtr
     { }
 };
 
-class BaseAssembler : public JSC::MacroAssembler
+class Assembler : public ValueAssembler
 {
     struct CallPatch {
         CallPatch(Call cl, void *fun)
@@ -116,7 +177,7 @@ class BaseAssembler : public JSC::MacroAssembler
     // This callLabel is to record the Label exactly after the call.
     Label callLabel;
 #endif
-    BaseAssembler()
+    Assembler()
       : callPatches(SystemAllocPolicy())
     {
         startLabel = label();
@@ -124,15 +185,6 @@ class BaseAssembler : public JSC::MacroAssembler
 
     /* Total number of floating-point registers. */
     static const uint32 TotalFPRegisters = FPRegisters::TotalFPRegisters;
-
-    /*
-     * JSFrameReg is used to home the current JSStackFrame*.
-     */
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-    static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
-#elif defined(JS_CPU_ARM)
-    static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
-#endif
 
     /* Register pair storing returned type/data for calls. */
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
@@ -144,14 +196,6 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::ARMRegiste
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegisters::r1;
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
 #endif
-
-    bool addressUsesRegister(Address address, RegisterID reg) {
-        return address.base == reg;
-    }
-
-    bool addressUsesRegister(BaseIndex address, RegisterID reg) {
-        return (address.base == reg) || (address.index == reg);
-    }
 
     size_t distanceOf(Label l) {
         return differenceBetween(startLabel, l);
@@ -270,13 +314,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     }
 
     Call wrapCall(void *pfun) {
-#ifdef JS_METHODJIT_PROFILE_STUBS
-        push(Registers::ArgReg0);
-        push(Registers::ArgReg1);
-        call(JS_FUNC_TO_DATA_PTR(void *, mjit::ProfileStubCall));
-        pop(Registers::ArgReg1);
-        pop(Registers::ArgReg0);
-#endif
 #if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
         push(Registers::ArgReg1);
         push(Registers::ArgReg0);
@@ -335,6 +372,61 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             linker.link(patch.call, JSC::FunctionPtr(patch.fun));
         }
     }
+
+    struct FastArrayLoadFails {
+        Jump rangeCheck;
+        Jump holeCheck;
+    };
+
+    // Load a jsval from an array slot, given a key. |objReg| is clobbered.
+    FastArrayLoadFails fastArrayLoad(RegisterID objReg, const Int32Key &key,
+                                     RegisterID typeReg, RegisterID dataReg) {
+        JS_ASSERT(objReg != typeReg);
+
+        FastArrayLoadFails fails;
+        Address capacity(objReg, offsetof(JSObject, capacity));
+
+        // Check that the id is within range.
+        if (key.isConstant()) {
+            JS_ASSERT(key.index() >= 0);
+            fails.rangeCheck = branch32(LessThanOrEqual, payloadOf(capacity), Imm32(key.index()));
+        } else {
+            fails.rangeCheck = branch32(LessThanOrEqual, payloadOf(capacity), key.reg());
+        }
+
+        RegisterID dslotsReg = objReg;
+        loadPtr(Address(objReg, offsetof(JSObject, slots)), dslotsReg);
+
+        // Load the slot out of the array.
+        if (key.isConstant()) {
+            Address slot(objReg, key.index() * sizeof(Value));
+            fails.holeCheck = fastArrayLoadSlot(slot, typeReg, dataReg);
+        } else {
+            BaseIndex slot(objReg, key.reg(), JSVAL_SCALE);
+            fails.holeCheck = fastArrayLoadSlot(slot, typeReg, dataReg);
+        }
+
+        return fails;
+    }
+
+    void loadObjClass(RegisterID objReg, RegisterID destReg) {
+        loadPtr(Address(objReg, offsetof(JSObject, clasp)), destReg);
+    }
+
+    Jump testClass(Condition cond, RegisterID claspReg, js::Class *clasp) {
+        return branchPtr(cond, claspReg, ImmPtr(clasp));
+    }
+
+    Jump testObjClass(Condition cond, RegisterID objReg, js::Class *clasp) {
+        return branchPtr(cond, Address(objReg, offsetof(JSObject, clasp)), ImmPtr(clasp));
+    }
+
+    void rematPayload(const StateRemat &remat, RegisterID reg) {
+        if (remat.inMemory())
+            loadPayload(remat.address(), reg);
+        else
+            move(remat.reg(), reg);
+    }
 };
 
 /* Return f<true> if the script is strict mode code, f<false> otherwise. */
@@ -343,10 +435,9 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
                                  f<true>, f<false>))
 
 /* Save some typing. */
-static const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = BaseAssembler::JSReturnReg_Type;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = BaseAssembler::JSReturnReg_Data;
-static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = BaseAssembler::JSParamReg_Argc;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = Assembler::JSReturnReg_Type;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = Assembler::JSReturnReg_Data;
+static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = Assembler::JSParamReg_Argc;
 
 struct FrameFlagsAddress : JSC::MacroAssembler::Address
 {

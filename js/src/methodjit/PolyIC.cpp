@@ -121,9 +121,7 @@ class PICStubCompiler : public BaseCompiler
         JITCode jitCode(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         CodeBlock codeBlock(jitCode);
         RepatchBuffer repatcher(&codeBlock);
-        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
-        MacroAssemblerCodePtr target(stub);
-        repatcher.relinkCallerToTrampoline(retPtr, target);
+        repatcher.relink(pic.slowPathCall, FunctionPtr(stub));
         return true;
     }
 
@@ -163,9 +161,9 @@ class SetPropCompiler : public PICStubCompiler
 
     static int32 dslotsLoadOffset(ic::PICInfo &pic) {
 #if defined JS_NUNBOX32
-        if (pic.u.vr.isConstant)
+        if (pic.u.vr.isConstant())
             return SETPROP_DSLOTS_BEFORE_CONSTANT;
-        if (pic.u.vr.u.s.isTypeKnown)
+        if (pic.u.vr.isTypeKnown())
             return SETPROP_DSLOTS_BEFORE_KTYPE;
         return SETPROP_DSLOTS_BEFORE_DYNAMIC;
 #elif defined JS_PUNBOX64
@@ -175,9 +173,9 @@ class SetPropCompiler : public PICStubCompiler
 
 #if defined JS_NUNBOX32
     inline int32 inlineTypeOffset() {
-        if (pic.u.vr.isConstant)
+        if (pic.u.vr.isConstant())
             return SETPROP_INLINE_STORE_CONST_TYPE;
-        if (pic.u.vr.u.s.isTypeKnown)
+        if (pic.u.vr.isTypeKnown())
             return SETPROP_INLINE_STORE_KTYPE_TYPE;
         return SETPROP_INLINE_STORE_DYN_TYPE;
     }
@@ -185,9 +183,9 @@ class SetPropCompiler : public PICStubCompiler
 
 #if defined JS_NUNBOX32
     inline int32 inlineDataOffset() {
-        if (pic.u.vr.isConstant)
+        if (pic.u.vr.isConstant())
             return SETPROP_INLINE_STORE_CONST_DATA;
-        if (pic.u.vr.u.s.isTypeKnown)
+        if (pic.u.vr.isTypeKnown())
             return SETPROP_INLINE_STORE_KTYPE_DATA;
         return SETPROP_INLINE_STORE_DYN_DATA;
     }
@@ -236,7 +234,7 @@ class SetPropCompiler : public PICStubCompiler
     static void reset(ic::PICInfo &pic)
     {
         RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.repatchLEAToLoadPtr(pic.storeBack.instructionAtOffset(dslotsLoadOffset(pic)));
+        repatcher.repatchLEAToLoadPtr(pic.fastPathRejoin.instructionAtOffset(dslotsLoadOffset(pic)));
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
                            pic.shapeGuard + inlineShapeOffset(pic)),
                           int32(JSObjectMap::INVALID_SHAPE));
@@ -245,9 +243,8 @@ class SetPropCompiler : public PICStubCompiler
                          pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::SetProp));
-        repatcher.relinkCallerToTrampoline(retPtr, target);
+        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, ic::SetProp));
+        repatcher.relink(pic.slowPathCall, target);
     }
 
     bool patchInline(const Shape *shape, bool inlineSlot)
@@ -260,7 +257,7 @@ class SetPropCompiler : public PICStubCompiler
         int32 offset;
         if (inlineSlot) {
             JSC::CodeLocationInstruction istr;
-            istr = pic.storeBack.instructionAtOffset(dslotsLoadOffset());
+            istr = pic.fastPathRejoin.instructionAtOffset(dslotsLoadOffset());
             repatcher.repatchLoadPtrToLEA(istr);
 
             // 
@@ -281,10 +278,10 @@ class SetPropCompiler : public PICStubCompiler
         uint32 shapeOffs = pic.shapeGuard + inlineShapeOffset();
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(shapeOffs), obj->shape());
 #if defined JS_NUNBOX32
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(inlineTypeOffset()), offset + 4);
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(inlineDataOffset()), offset);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(inlineTypeOffset()), offset + 4);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(inlineDataOffset()), offset);
 #elif defined JS_PUNBOX64
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(SETPROP_INLINE_STORE_VALUE), offset);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(SETPROP_INLINE_STORE_VALUE), offset);
 #endif
 
         pic.inlinePathPatched = true;
@@ -374,11 +371,11 @@ class SetPropCompiler : public PICStubCompiler
                  */
                 JS_ASSERT(shape->isMethod());
                 JSObject *funobj = &shape->methodObject();
-                if (pic.u.vr.isConstant) {
-                    JS_ASSERT(funobj == &Valueify(pic.u.vr.u.v).toObject());
+                if (pic.u.vr.isConstant()) {
+                    JS_ASSERT(funobj == &pic.u.vr.value().toObject());
                 } else {
                     Jump mismatchedFunction =
-                        masm.branchPtr(Assembler::NotEqual, pic.u.vr.u.s.data, ImmPtr(funobj));
+                        masm.branchPtr(Assembler::NotEqual, pic.u.vr.dataReg(), ImmPtr(funobj));
                     if (!slowExits.append(mismatchedFunction))
                         return false;
                 }
@@ -496,9 +493,9 @@ class SetPropCompiler : public PICStubCompiler
             buffer.link(slowExit.get(), pic.slowPathStart);
         for (Jump *pj = slowExits.begin(); pj != slowExits.end(); ++pj)
             buffer.link(*pj, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
         if (skipOver.isSet())
-            buffer.link(skipOver.get(), pic.storeBack);
+            buffer.link(skipOver.get(), pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %d %d at %p\n",
                    (void*)&pic,
@@ -749,7 +746,7 @@ class GetPropCompiler : public PICStubCompiler
     static void reset(ic::PICInfo &pic)
     {
         RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.repatchLEAToLoadPtr(pic.storeBack.instructionAtOffset(dslotsLoad(pic)));
+        repatcher.repatchLEAToLoadPtr(pic.fastPathRejoin.instructionAtOffset(dslotsLoad(pic)));
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
                            pic.shapeGuard + inlineShapeOffset(pic)),
                           int32(JSObjectMap::INVALID_SHAPE));
@@ -762,7 +759,6 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
 
         VoidStubPIC stub;
         switch (pic.kind) {
@@ -777,16 +773,15 @@ class GetPropCompiler : public PICStubCompiler
             return;
         }
 
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
-        repatcher.relinkCallerToTrampoline(retPtr, target);
+        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
+        repatcher.relink(pic.slowPathCall, target);
     }
 
     bool generateArgsLengthStub()
     {
         Assembler masm;
 
-        Address clasp(pic.objReg, offsetof(JSObject, clasp));
-        Jump notArgs = masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(obj->getClass()));
+        Jump notArgs = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
 
         masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
         masm.load32(Address(pic.objReg, JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
@@ -804,7 +799,7 @@ class GetPropCompiler : public PICStubCompiler
 
         buffer.link(notArgs, pic.slowPathStart);
         buffer.link(overridden, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
 
         CodeLocationLabel start = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate args length stub at %p\n",
@@ -822,10 +817,9 @@ class GetPropCompiler : public PICStubCompiler
     {
         Assembler masm;
 
-        masm.loadPtr(Address(pic.objReg, offsetof(JSObject, clasp)), pic.shapeReg);
-        Jump isDense = masm.branchPtr(Assembler::Equal, pic.shapeReg, ImmPtr(&js_ArrayClass));
-        Jump notArray = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
-                                       ImmPtr(&js_SlowArrayClass));
+        masm.loadObjClass(pic.objReg, pic.shapeReg);
+        Jump isDense = masm.testClass(Assembler::Equal, pic.shapeReg, &js_ArrayClass);
+        Jump notArray = masm.testClass(Assembler::NotEqual, pic.shapeReg, &js_SlowArrayClass);
 
         isDense.linkTo(masm.label(), &masm);
         masm.load32(Address(pic.objReg, offsetof(JSObject, privateData)), pic.objReg);
@@ -839,7 +833,7 @@ class GetPropCompiler : public PICStubCompiler
 
         buffer.link(notArray, pic.slowPathStart);
         buffer.link(oob, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
 
         CodeLocationLabel start = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate array length stub at %p\n",
@@ -926,7 +920,7 @@ class GetPropCompiler : public PICStubCompiler
 
         buffer.link(notString, pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
         buffer.link(shapeMismatch, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
 
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate string call stub at %p\n",
@@ -962,7 +956,7 @@ class GetPropCompiler : public PICStubCompiler
             return false;
 
         buffer.link(notString, pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
 
         CodeLocationLabel start = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate string length stub at %p\n",
@@ -986,7 +980,7 @@ class GetPropCompiler : public PICStubCompiler
         int32 offset;
         if (!holder->hasSlotsArray()) {
             JSC::CodeLocationInstruction istr;
-            istr = pic.storeBack.instructionAtOffset(dslotsLoad());
+            istr = pic.fastPathRejoin.instructionAtOffset(dslotsLoad());
             repatcher.repatchLoadPtrToLEA(istr);
 
             // 
@@ -1007,10 +1001,10 @@ class GetPropCompiler : public PICStubCompiler
         uint32 shapeOffs = pic.shapeGuard + inlineShapeOffset();
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(shapeOffs), obj->shape());
 #if defined JS_NUNBOX32
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(GETPROP_TYPE_LOAD), offset + 4);
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(GETPROP_DATA_LOAD), offset);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(GETPROP_TYPE_LOAD), offset + 4);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(GETPROP_DATA_LOAD), offset);
 #elif defined JS_PUNBOX64
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(pic.labels.getprop.inlineValueOffset), offset);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(pic.labels.getprop.inlineValueOffset), offset);
 #endif
 
         pic.inlinePathPatched = true;
@@ -1025,10 +1019,7 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
 
         if (pic.objNeedsRemat()) {
-            if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.loadPayload(Address(JSFrameReg, pic.objRemat()), pic.objReg);
-            else
-                masm.move(RegisterID(pic.objRemat()), pic.objReg);
+            masm.rematPayload(pic.objRemat(), pic.objReg);
             pic.u.get.objNeedsRemat = false;
         }
 
@@ -1037,9 +1028,8 @@ class GetPropCompiler : public PICStubCompiler
         Jump argsLenGuard;
         if (obj->isDenseArray()) {
             start = masm.label();
-            shapeGuard = masm.branchPtr(Assembler::NotEqual,
-                                        Address(pic.objReg, offsetof(JSObject, clasp)),
-                                        ImmPtr(obj->getClass()));
+            shapeGuard = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
+
             /* 
              * No need to assert validity of GETPROP_STUB_SHAPE_JUMP in this case:
              * the IC is disabled after a dense array hit, so no patching can occur.
@@ -1125,7 +1115,7 @@ class GetPropCompiler : public PICStubCompiler
             buffer.link(*pj, pic.slowPathStart);
 
         // The final exit jumps to the store-back in the inline stub.
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
@@ -1292,7 +1282,7 @@ class GetElemCompiler : public PICStubCompiler
         JS_ASSERT(pic.kind == ic::PICInfo::GETELEM);
 
         RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.repatchLEAToLoadPtr(pic.storeBack.instructionAtOffset(dslotsLoad(pic)));
+        repatcher.repatchLEAToLoadPtr(pic.fastPathRejoin.instructionAtOffset(dslotsLoad(pic)));
 
         /* Only the shape needs to be patched to fail -- atom jump will never be taken. */
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
@@ -1304,10 +1294,9 @@ class GetElemCompiler : public PICStubCompiler
                          pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
 
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::GetElem));
-        repatcher.relinkCallerToTrampoline(retPtr, target);
+        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, ic::GetElem));
+        repatcher.relink(pic.slowPathCall, target);
     }
 
     bool patchInline(JSObject *holder, const Shape *shape)
@@ -1317,7 +1306,7 @@ class GetElemCompiler : public PICStubCompiler
 
         int32 offset;
         if (!holder->hasSlotsArray()) {
-            JSC::CodeLocationInstruction istr = pic.storeBack.instructionAtOffset(dslotsLoad());
+            JSC::CodeLocationInstruction istr = pic.fastPathRejoin.instructionAtOffset(dslotsLoad());
             repatcher.repatchLoadPtrToLEA(istr);
 
             // 
@@ -1339,10 +1328,10 @@ class GetElemCompiler : public PICStubCompiler
         uint32 idOffset = pic.shapeGuard + inlineAtomOffset();
         repatcher.repatch(pic.fastPathStart.dataLabelPtrAtOffset(idOffset), id);
 #if defined JS_NUNBOX32
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(GETELEM_TYPE_LOAD), offset + 4);
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(GETELEM_DATA_LOAD), offset);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(GETELEM_TYPE_LOAD), offset + 4);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(GETELEM_DATA_LOAD), offset);
 #elif defined JS_PUNBOX64
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(pic.labels.getelem.inlineValueOffset), offset);
+        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(pic.labels.getelem.inlineValueOffset), offset);
 #endif
         pic.inlinePathPatched = true;
 
@@ -1381,19 +1370,8 @@ class GetElemCompiler : public PICStubCompiler
         Assembler masm;
 
         if (pic.objNeedsRemat()) {
-            if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.loadPayload(Address(JSFrameReg, pic.objRemat()), pic.objReg);
-            else
-                masm.move(RegisterID(pic.objRemat()), pic.objReg);
+            masm.rematPayload(pic.objRemat(), pic.objReg);
             pic.u.get.objNeedsRemat = false;
-        }
-
-        if (pic.idNeedsRemat()) {
-            if (pic.idRemat() >= sizeof(JSStackFrame))
-                masm.loadPayload(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
-            else
-                masm.move(RegisterID(pic.idRemat()), pic.u.get.idReg);
-            pic.u.get.idNeedsRemat = false;
         }
 
         if (pic.shapeNeedsRemat()) {
@@ -1478,7 +1456,7 @@ class GetElemCompiler : public PICStubCompiler
             buffer.link(*pj, pic.slowPathStart);
 
         // The final exit jumps to the store-back in the inline stub.
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
 #if DEBUG
         char *chars = js_DeflateString(cx, id->chars(), id->length());
@@ -1583,10 +1561,9 @@ class ScopeNameCompiler : public PICStubCompiler
                          pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
         VoidStubPIC stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
-        repatcher.relinkCallerToTrampoline(retPtr, target);
+        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
+        repatcher.relink(pic.slowPathCall, target);
     }
 
     typedef Vector<Jump, 8, ContextAllocPolicy> JumpList;
@@ -1681,7 +1658,7 @@ class ScopeNameCompiler : public PICStubCompiler
             return false;
 
         buffer.link(failJump, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generated %s global stub at %p\n", type, cs.executableAddress());
         spew("NAME stub", "global");
@@ -1785,7 +1762,7 @@ class ScopeNameCompiler : public PICStubCompiler
             return false;
 
         buffer.link(failJump, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generated %s call stub at %p\n", type, cs.executableAddress());
 
@@ -1921,9 +1898,8 @@ class BindNameCompiler : public PICStubCompiler
         repatcher.relink(pic.shapeGuard + inlineJumpOffset(pic), pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::BindName));
-        repatcher.relinkCallerToTrampoline(retPtr, target);
+        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, ic::BindName));
+        repatcher2.relink(pic.slowPathCall, target);
     }
 
     bool generateStub(JSObject *obj)
@@ -1972,7 +1948,7 @@ class BindNameCompiler : public PICStubCompiler
             return false;
 
         buffer.link(failJump, pic.slowPathStart);
-        buffer.link(done, pic.storeBack);
+        buffer.link(done, pic.fastPathRejoin);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
