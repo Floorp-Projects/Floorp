@@ -55,22 +55,6 @@
 
 namespace js {
 
-/*
- * TM-specific access regions:
- *
- * - STACK: the stack.  STACK loads/stores always use 'sp' or 'sp+k' as the
- *   base pointer.
- *
- * - RSTACK: the return stack.  RSTACK loads/stores always use 'rp' as the
- *   base pointer.
- *
- * - OTHER: all other regions of memory.
- */
-static const nanojit::AccSet ACCSET_STACK   = (1 << 0);
-static const nanojit::AccSet ACCSET_RSTACK  = (1 << 1);
-static const nanojit::AccSet ACCSET_OTHER   = (1 << 2);
-static const uint8_t TM_NUM_USED_ACCS = 3;  // number of access regions used by TraceMonkey
-
 #if defined(DEBUG) && !defined(JS_JIT_SPEW)
 #define JS_JIT_SPEW
 #endif
@@ -881,6 +865,7 @@ class TraceRecorder
 
     /* The LIR-generation pipeline used to build |fragment|. */
     nanojit::LirWriter* const       lir;
+    nanojit::CseFilter* const       cse_filter;
 
     /* Instructions yielding the corresponding trace-const members of TracerState. */
     nanojit::LIns* const            cx_ins;
@@ -916,8 +901,8 @@ class TraceRecorder
     /* Maps interpreter stack values to the instruction writing back to the native stack. */
     Tracker                         nativeFrameTracker;
 
-    /* The start of the global object's dslots we assume for the trackers. */
-    Value*                          global_dslots;
+    /* The start of the global object's slots we assume for the trackers. */
+    Value*                          global_slots;
 
     /* The number of interpreted calls entered (and not yet left) since recording began. */
     unsigned                        callDepth;
@@ -972,6 +957,16 @@ class TraceRecorder
 
     /************************************************************* 10 bajillion member functions */
 
+    /* 
+     * These can be put around a control-flow diamond if it's important that
+     * CSE work across the diamond.  Duplicated expressions within the diamond
+     * will be CSE'd, but expressions defined within the diamond won't be
+     * added to the tables of CSEable expressions.  Loads are still
+     * invalidated if they alias any stores that occur within diamonds.
+     */
+    void suspendCSE()   { if (cse_filter) cse_filter->suspend(); }
+    void resumeCSE()    { if (cse_filter) cse_filter->resume();  }
+
     nanojit::LIns* insImmVal(const Value& val);
     nanojit::LIns* insImmObj(JSObject* obj);
     nanojit::LIns* insImmFun(JSFunction* fun);
@@ -1020,9 +1015,11 @@ class TraceRecorder
     JS_REQUIRES_STACK ptrdiff_t nativeStackSlot(const Value* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativespOffsetImpl(const void* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativespOffset(const Value* p) const;
-    JS_REQUIRES_STACK void importImpl(nanojit::LIns* base, ptrdiff_t offset, const void* p, JSValueType t,
+    JS_REQUIRES_STACK void importImpl(nanojit::LIns* base, ptrdiff_t offset, nanojit::AccSet accSet,
+                                      const void* p, JSValueType t,
                                       const char *prefix, uintN index, JSStackFrame *fp);
-    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, const Value* p, JSValueType t,
+    JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, nanojit::AccSet accSet,
+                                  const Value* p, JSValueType t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeFragment* tree, nanojit::LIns* sp, unsigned stackSlots,
                                   unsigned callDepth, unsigned ngslots, JSValueType* typeMap);
@@ -1065,12 +1062,12 @@ class TraceRecorder
     JS_REQUIRES_STACK bool known(const Value* p);
     JS_REQUIRES_STACK bool known(JSObject** p);
     /*
-     * The dslots of the global object are sometimes reallocated by the
+     * The slots of the global object are sometimes reallocated by the
      * interpreter.  This function checks for that condition and re-maps the
      * entries of the tracker accordingly.
      */
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation() {
-        if (global_dslots != globalObj->getSlots())
+        if (global_slots != globalObj->getSlots())
             checkForGlobalObjectReallocationHelper();
     }
     JS_REQUIRES_STACK void checkForGlobalObjectReallocationHelper();
@@ -1169,6 +1166,7 @@ class TraceRecorder
     void forgetGuardedShapes();
 
     inline nanojit::LIns* shape_ins(nanojit::LIns *obj_ins);
+    inline nanojit::LIns* slots(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                                      JSObject*& obj2, PCVal& pcval);
     JS_REQUIRES_STACK RecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
@@ -1180,9 +1178,9 @@ class TraceRecorder
     void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot, const Value &v,
                          nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot,
-                         nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
+                         nanojit::LIns*& slots_ins, const Value &v, nanojit::LIns* v_ins);
     void stobj_set_slot(JSObject *obj, nanojit::LIns* obj_ins, unsigned slot,
-                        nanojit::LIns*& dslots_ins, const Value &v, nanojit::LIns* v_ins);
+                        nanojit::LIns*& slots_ins, const Value &v, nanojit::LIns* v_ins);
 
     nanojit::LIns* stobj_get_slot_uint32(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* unbox_slot(JSObject *obj, nanojit::LIns *obj_ins, uint32 slot,
@@ -1237,6 +1235,7 @@ class TraceRecorder
                                                                   nanojit::LIns* obj_ins,
                                                                   const js::Shape* shape);
 
+    JS_REQUIRES_STACK nanojit::LIns* getStringLengthAndFlags(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
     JS_REQUIRES_STACK RecordingStatus getCharCodeAt(JSString *str,
@@ -1287,7 +1286,7 @@ class TraceRecorder
 #endif
 
     nanojit::LIns* unbox_value(const Value& v, nanojit::LIns* vaddr_ins,
-                               ptrdiff_t offset, VMSideExit* exit,
+                               ptrdiff_t offset, nanojit::AccSet accSet, VMSideExit* exit,
                                bool force_double=false);
     void unbox_any_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
                           nanojit::LIns** is_obj_ins, nanojit::AccSet accSet);
