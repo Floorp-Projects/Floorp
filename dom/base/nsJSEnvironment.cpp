@@ -3069,8 +3069,23 @@ static JSClass OptionsClass = {
 #include "nsTraceMalloc.h"
 
 static JSBool
+CheckUniversalXPConnectForTraceMalloc(JSContext *cx)
+{
+    PRBool hasCap = PR_FALSE;
+    nsresult rv = nsContentUtils::GetSecurityManager()->
+                    IsCapabilityEnabled("UniversalXPConnect", &hasCap);
+    if (NS_SUCCEEDED(rv) && hasCap)
+        return JS_TRUE;
+    JS_ReportError(cx, "trace-malloc functions require UniversalXPConnect");
+    return JS_FALSE;
+}
+
+static JSBool
 TraceMallocDisable(JSContext *cx, uintN argc, jsval *vp)
 {
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
+
     NS_TraceMallocDisable();
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -3079,6 +3094,9 @@ TraceMallocDisable(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocEnable(JSContext *cx, uintN argc, jsval *vp)
 {
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
+
     NS_TraceMallocEnable();
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -3090,6 +3108,9 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
     int fd;
     JSString *str;
     char *filename;
+
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
 
     if (argc == 0) {
         fd = -1;
@@ -3113,6 +3134,9 @@ TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
 {
     int32 fd, oldfd;
 
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
+
     if (argc == 0) {
         oldfd = -1;
     } else {
@@ -3133,6 +3157,9 @@ TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
 {
     int32 fd;
 
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     if (argc == 0)
         return JS_TRUE;
@@ -3148,6 +3175,9 @@ TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     const char *caption;
 
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
+
     str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return JS_FALSE;
@@ -3162,6 +3192,9 @@ TraceMallocDumpAllocations(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     const char *pathname;
+
+    if (!CheckUniversalXPConnectForTraceMalloc(cx))
+        return JS_FALSE;
 
     str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
