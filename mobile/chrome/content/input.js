@@ -234,8 +234,7 @@ MouseModule.prototype = {
     this._onMouseMove(aEvent);
 
     let dragData = this._dragData;
-    if (dragData.dragging)
-      this._doDragStop();
+    this._doDragStop();
 
     // Do tap
     if (this._target) {
@@ -318,13 +317,16 @@ MouseModule.prototype = {
 
   /** Finish a drag. */
   _doDragStop: function _doDragStop() {
-    this._dragData.endDrag();
+    let dragData = this._dragData;
+    if (!dragData.dragging)
+      return;
+
+    dragData.endDrag();
 
     // Note: it is possible for kinetic scrolling to be active from a
     // mousedown/mouseup event previous to this one. In this case, we
     // want the kinetic panner to tell our drag interface to stop.
 
-    let dragData = this._dragData;
     if (!dragData.isPan() && !this._kinetic.isActive()) {
       // There was no pan and no kinetic scrolling, so just stop dragger.
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
