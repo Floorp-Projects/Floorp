@@ -279,7 +279,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
         DumpArenaStats(&rt->globalArenaStats[0], fp);
         fprintf(fp, "            bytes allocated: %lu\n", UL(rt->gcBytes));
         fprintf(fp, "        allocation failures: %lu\n", ULSTAT(fail));
-        fprintf(fp, "allocation retries after GC: %lu\n", ULSTAT(retry));
+        fprintf(fp, "         last ditch GC runs: %lu\n", ULSTAT(lastditch));
         fprintf(fp, "           valid lock calls: %lu\n", ULSTAT(lock));
         fprintf(fp, "         valid unlock calls: %lu\n", ULSTAT(unlock));
         fprintf(fp, "      delayed tracing calls: %lu\n", ULSTAT(unmarked));

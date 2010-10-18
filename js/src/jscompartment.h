@@ -49,6 +49,11 @@
 #include "jsclist.h"
 #include "jsxml.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4251) /* Silence warning about JS_FRIEND_API and data members. */
+#endif
+
 struct JS_FRIEND_API(JSCompartment) {
     JSRuntime       *rt;
     JSPrincipals    *principals;
@@ -98,6 +103,10 @@ struct JS_FRIEND_API(JSCompartment) {
     void finishArenaLists();
     bool arenaListsAreEmpty();
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 namespace js {
 

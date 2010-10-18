@@ -585,6 +585,8 @@ class SetPropCompiler : public PICStubCompiler
             /* Adding a property to the object. */
             if (obj->isDelegate())
                 return disable("delegate");
+            if (!obj->isExtensible())
+                return disable("not extensible");
 
             if (clasp->addProperty != PropertyStub)
                 return disable("add property hook");

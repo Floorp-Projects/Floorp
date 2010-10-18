@@ -76,9 +76,6 @@ js_GetDependentStringChars(JSString *str);
 extern JSString * JS_FASTCALL
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
-extern JSString * JS_FASTCALL
-js_ConcatStringsZ(JSContext *cx, const char *left, JSString *right);
-
 JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
 
 struct JSRopeBufferInfo {

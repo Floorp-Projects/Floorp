@@ -20,4 +20,4 @@ skip-if(!xulRuntime.shell) script clone-regexp.js
 skip-if(!xulRuntime.shell) script clone-object.js
 skip-if(!xulRuntime.shell) script clone-typed-array.js
 skip-if(!xulRuntime.shell) script clone-errors.js
-skip-if(!xulRuntime.shell) script set-property-non-extensible.js # methodjit mis-implements extensibility checking, bug 602441
+script set-property-non-extensible.js

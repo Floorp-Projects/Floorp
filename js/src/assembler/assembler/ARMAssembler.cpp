@@ -416,7 +416,8 @@ void* ARMAssembler::executableCopy(ExecutablePool* allocator)
         bkpt(0);
 
     void * data = m_buffer.executableCopy(allocator);
-    fixUpOffsets(data);
+    if (data)
+        fixUpOffsets(data);
     return data;
 }
 
@@ -426,6 +427,9 @@ void* ARMAssembler::executableCopy(ExecutablePool* allocator)
 // have been flushed.
 void* ARMAssembler::executableCopy(void * buffer)
 {
+    if (m_buffer.oom())
+        return NULL;
+
     ASSERT(m_buffer.sizeOfConstantPool() == 0);
 
     memcpy(buffer, m_buffer.data(), m_buffer.size());

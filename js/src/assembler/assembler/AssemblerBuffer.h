@@ -48,6 +48,7 @@ namespace JSC {
             : m_buffer(m_inlineBuffer)
             , m_capacity(inlineCapacity)
             , m_size(0)
+            , m_oom(false)
         {
         }
 
@@ -127,8 +128,20 @@ namespace JSC {
             return m_size;
         }
 
+        bool oom() const
+        {
+            return m_oom;
+        }
+
+        /*
+         * The user must check for a NULL return value, which means
+         * no code was generated, or there was an OOM.
+         */
         void* executableCopy(ExecutablePool* allocator)
         {
+            if (m_oom)
+                return 0;
+
             if (!m_size)
                 return 0;
 
@@ -143,6 +156,7 @@ namespace JSC {
         }
 
         unsigned char *buffer() const {
+            ASSERT(!m_oom);
             return reinterpret_cast<unsigned char *>(m_buffer);
         }
 
@@ -152,25 +166,59 @@ namespace JSC {
             if (m_size > m_capacity - size)
                 grow(size);
 
+            // If we OOM and size > inlineCapacity, this would crash.
+            if (m_oom)
+                return;
             memcpy(m_buffer + m_size, data, size);
             m_size += size;
         }
 
+        /*
+         * OOM handling: This class can OOM in the grow() method trying to
+         * allocate a new buffer. In response to an OOM, we need to avoid
+         * crashing and report the error. We also want to make it so that
+         * users of this class need to check for OOM only at certain points
+         * and not after every operation.
+         *
+         * Our strategy for handling an OOM is to set m_oom, and then set
+         * m_size to 0, preserving the current buffer. This way, the user
+         * can continue assembling into the buffer, deferring OOM checking
+         * until the user wants to read code out of the buffer.
+         *
+         * See also the |executableCopy| and |buffer| methods.
+         */
+
         void grow(int extraCapacity = 0)
         {
-            m_capacity += m_capacity / 2 + extraCapacity;
+            int newCapacity = m_capacity + m_capacity / 2 + extraCapacity;
+            char* newBuffer;
 
             if (m_buffer == m_inlineBuffer) {
-                char* newBuffer = static_cast<char*>(malloc(m_capacity));
-                m_buffer = static_cast<char*>(memcpy(newBuffer, m_buffer, m_size));
-            } else
-                m_buffer = static_cast<char*>(realloc(m_buffer, m_capacity));
+                newBuffer = static_cast<char*>(malloc(newCapacity));
+                if (!newBuffer) {
+                    m_size = 0;
+                    m_oom = true;
+                    return;
+                }
+                memcpy(newBuffer, m_buffer, m_size);
+            } else {
+                newBuffer = static_cast<char*>(realloc(m_buffer, newCapacity));
+                if (!newBuffer) {
+                    m_size = 0;
+                    m_oom = true;
+                    return;
+                }
+            }
+
+            m_buffer = newBuffer;
+            m_capacity = newCapacity;
         }
 
         char m_inlineBuffer[inlineCapacity];
         char* m_buffer;
         int m_capacity;
         int m_size;
+        bool m_oom;
     };
 
 } // namespace JSC

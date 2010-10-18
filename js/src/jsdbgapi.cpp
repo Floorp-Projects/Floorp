@@ -2315,6 +2315,8 @@ ethogram_construct(JSContext *cx, uintN argc, jsval *vp)
     EthogramEventBuffer *p;
 
     p = (EthogramEventBuffer *) JS_malloc(cx, sizeof(EthogramEventBuffer));
+    if (!p)
+        return JS_FALSE;
 
     p->mReadPos = p->mWritePos = 0;
     p->mScripts = NULL;

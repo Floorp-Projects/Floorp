@@ -107,7 +107,7 @@ struct JSGCStats {
     uint32  unlock;     /* valid unlock calls */
     uint32  unmarked;   /* number of times marking of GC thing's children were
                            delayed due to a low C stack */
-    uint32  retry;      /* allocation retries after running the GC */
+    uint32  lastditch;  /* number of times the last ditch GC run */
     uint32  fail;       /* allocation failures */
 #ifdef DEBUG
     uint32  maxunmarked;/* maximum number of things with children to mark

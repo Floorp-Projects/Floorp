@@ -39,3 +39,4 @@ script 15.2.3.6-define-over-method.js
 script mutation-prevention-methods.js
 script object-toString-01.js
 script vacuous-accessor-unqualified-name.js
+script add-property-non-extensible.js

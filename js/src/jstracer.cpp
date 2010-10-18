@@ -4594,10 +4594,12 @@ TraceRecorder::compile()
     /* Associate a filename and line number with the fragment. */
     const char* filename = cx->fp()->script()->filename;
     char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
-    sprintf(label, "%s:%u", filename ? filename : "<stdin>",
-            js_FramePCToLineNumber(cx, cx->fp()));
-    lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
-    js_free(label);
+    if (label) {
+        sprintf(label, "%s:%u", filename ? filename : "<stdin>",
+                js_FramePCToLineNumber(cx, cx->fp()));
+        lirbuf->printer->addrNameMap->addAddrRange(fragment, sizeof(Fragment), 0, label);
+        js_free(label);
+    }
 #endif
 
     Assembler *assm = traceMonitor->assembler;
@@ -8751,9 +8753,9 @@ TraceRecorder::tableswitch()
         high = GET_JUMP_OFFSET(pc);
     } else {
         pc += JUMPX_OFFSET_LEN;
-        low = GET_JUMPX_OFFSET(pc);
-        pc += JUMPX_OFFSET_LEN;
-        high = GET_JUMPX_OFFSET(pc);
+        low = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        high = GET_JUMP_OFFSET(pc);
     }
 
     /* 
@@ -8762,6 +8764,7 @@ TraceRecorder::tableswitch()
      * action to handle it.
      */
     int count = high + 1 - low;
+    JS_ASSERT(count >= 0);
     if (count == 0)
         return ARECORD_CONTINUE;
 
@@ -10269,8 +10272,9 @@ TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
         which.set(vp, (LIns*)0);
 }
 
-struct BoxArg
+class BoxArg
 {
+  public:
     BoxArg(TraceRecorder *tr, ptrdiff_t offset, LIns *base_ins)
         : tr(tr), offset(offset), base_ins(base_ins) {}
     TraceRecorder *tr;

@@ -927,7 +927,8 @@ class TypedArrayTemplate
                 return false;
             }
 
-            tarray->copyFrom(src, offset);
+            if (!tarray->copyFrom(cx, src, offset))
+                return false;
         } else if (arg0->wrappedObject(cx)->isArray()) {
             jsuint len;
             if (!js_GetLengthProperty(cx, arg0, &len))
@@ -1007,7 +1008,8 @@ class TypedArrayTemplate
 
             if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), tarray->length))
                 return false;
-            copyFrom(tarray);
+            if (!copyFrom(cx, tarray))
+                return false;
         } else if (other->getClass() == &ArrayBuffer::jsclass) {
             ArrayBuffer *abuf = ArrayBuffer::fromJSObject(other);
 
@@ -1154,21 +1156,19 @@ class TypedArrayTemplate
         return true;
     }
 
-    void
-    copyFrom(TypedArray *tarray, jsuint offset = 0)
+    bool
+    copyFrom(JSContext *cx, TypedArray *tarray, jsuint offset = 0)
     {
         JS_ASSERT(offset <= length);
         JS_ASSERT(tarray->length <= length - offset);
-        if (tarray->buffer == buffer) {
-            copyFromWithOverlap(tarray, offset);
-            return;
-        }
+        if (tarray->buffer == buffer)
+            return copyFromWithOverlap(cx, tarray, offset);
 
         NativeType *dest = static_cast<NativeType*>(data) + offset;
 
         if (tarray->type == type) {
             memcpy(dest, tarray->data, tarray->byteLength);
-            return;
+            return true;
         }
 
         uintN srclen = tarray->length;
@@ -1226,10 +1226,12 @@ class TypedArrayTemplate
             JS_NOT_REACHED("copyFrom with a TypedArray of unknown type");
             break;
         }
+
+        return true;
     }
 
-    void
-    copyFromWithOverlap(TypedArray *tarray, jsuint offset = 0)
+    bool
+    copyFromWithOverlap(JSContext *cx, TypedArray *tarray, jsuint offset = 0)
     {
         JS_ASSERT(offset < length);
 
@@ -1237,12 +1239,16 @@ class TypedArrayTemplate
 
         if (tarray->type == type) {
             memmove(dest, tarray->data, tarray->byteLength);
-            return;
+            return true;
         }
 
         // We have to make a copy of the source array here, since
         // there's overlap, and we have to convert types.
         void *srcbuf = js_malloc(tarray->byteLength);
+        if (!srcbuf) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
         memcpy(srcbuf, tarray->data, tarray->byteLength);
 
         switch (tarray->type) {
@@ -1301,6 +1307,7 @@ class TypedArrayTemplate
         }
 
         js_free(srcbuf);
+        return true;
     }
 
     bool
