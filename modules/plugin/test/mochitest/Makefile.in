@@ -108,6 +108,7 @@ _MOCHICHROME_FILES = \
   test_npruntime.xul   \
   test_privatemode.xul \
   test_wmode.xul \
+  test_bug479979.xul \
   $(NULL)
 
 # Temporarily disable the tests on Linux, see bug 573290 and bug 583591.
@@ -122,13 +123,6 @@ _MOCHICHROME_FILES += \
   $(NULL)
 endif
 endif
-endif
-
-# Temporarily disable these tests on Mac OS X, see bug 599267.
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-_MOCHICHROME_FILES += \
-  test_bug479979.xul \
-  $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
