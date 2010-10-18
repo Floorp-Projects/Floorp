@@ -1048,3 +1048,6 @@ contentaction/contentaction.h
 #ifndef MOZ_TREE_PIXMAN
 pixman.h
 #endif
+#if MOZ_ENABLE_MEEGOTOUCHSHARE
+shareuiinterface.h
+#endif
