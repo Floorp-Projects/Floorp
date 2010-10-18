@@ -49,6 +49,95 @@
 #undef THIS
 #endif
 
+namespace js {
+
+/*
+ * See ValidateWriter::checkAccSet() for what each of these access regions
+ * mean.
+ *
+ * *** WARNING WARNING WARNING ***
+ *
+ * Any incorrect access region annotations on loads/stores/calls could lead to
+ * subtle bugs that manifest rarely, eg. when two loads are CSE'd that
+ * shouldn't be.
+ *
+ * If you add a new access region you will need to add some sanity checking to
+ * ValidateWriter::checkAccSet().  Do not skimp on this checking!  Make it as
+ * strong as you can.  Look at the existing cases for inspiration.  This
+ * checking helps prevent these subtle bugs.
+ *
+ * Furthermore, do not add a "catch-all" region such as "ACCSET_OTHER".  There
+ * are two reasons for this.  First, no checking could be done on loads/stores
+ * bearing it.  Second, it would be too easy for someone in the future who
+ * doesn't understand how AccSets work to use it inappropriately.  Only
+ * ACCSET_ALL (the union of all access regions) should be used as a catch-all,
+ * it can always be used safely, but it reduces optimization possibilities.
+ *
+ * Most of the access regions are type-based, ie. all structs of a particular
+ * type combined together form a region.  This is less precise than
+ * considering each struct separately, but also much simpler.
+ *
+ * - ACCSET_STATE:         The TracerState struct.
+ * - ACCSET_STACK:         The stack.
+ * - ACCSET_RSTACK:        The return stack.
+ * - ACCSET_CX:            All JSContext structs.
+ * - ACCSET_EOS:           The globals area.
+ * - ACCSET_ALLOC:         All memory blocks allocated with LIR_allocp (in
+ *                         other words, this region is the AR space).
+ * - ACCSET_FRAMEREGS:     All JSFrameRegs structs.
+ * - ACCSET_STACKFRAME:    All JSStackFrame objects.
+ * - ACCSET_RUNTIME:       The JSRuntime object.
+ * - ACCSET_OBJ_CLASP:     The 'clasp'    field of all JSObjects.
+ * - ACCSET_OBJ_SHAPE:     The 'shape'    field of all JSObjects.
+ * - ACCSET_OBJ_PROTO:     The 'proto'    field of all JSObjects.
+ * - ACCSET_OBJ_PARENT:    The 'parent'   field of all JSObjects.
+ * - ACCSET_OBJ_PRIVATE:   The 'private'  field of all JSObjects.
+ * - ACCSET_OBJ_CAPACITY:  The 'capacity' field of all JSObjects.
+ * - ACCSET_OBJ_SLOTS:     The 'slots'    field of all JSObjects.
+ * - ACCSET_SLOTS:         The slots (be they fixed or dynamic) of all JSObjects.
+ * - ACCSET_TARRAY:        All TypedArray structs.
+ * - ACCSET_TARRAY_DATA:   All TypedArray data arrays.
+ * - ACCSET_ITER:          All NativeIterator structs.
+ * - ACCSET_ITER_PROPS:    The props_arrays of all NativeIterator structs.
+ * - ACCSET_STRING:        All JSString structs.
+ * - ACCSET_STRING_MCHARS: All JSString mchars arrays.
+ * - ACCSET_TYPEMAP:       All typemaps form a single region.
+ * - ACCSET_FCSLOTS:       All fcslots arrays form a single region.
+ * - ACCSET_ARGS_DATA:     All Arguments data arrays form a single region.
+ */
+static const nanojit::AccSet ACCSET_STATE         = (1 <<  0);
+static const nanojit::AccSet ACCSET_STACK         = (1 <<  1);
+static const nanojit::AccSet ACCSET_RSTACK        = (1 <<  2);
+static const nanojit::AccSet ACCSET_CX            = (1 <<  3);
+static const nanojit::AccSet ACCSET_EOS           = (1 <<  4);
+static const nanojit::AccSet ACCSET_ALLOC         = (1 <<  5);
+static const nanojit::AccSet ACCSET_FRAMEREGS     = (1 <<  6);
+static const nanojit::AccSet ACCSET_STACKFRAME    = (1 <<  7);
+static const nanojit::AccSet ACCSET_RUNTIME       = (1 <<  8);
+
+// Nb: JSObject::{lastProp,map,flags} don't have an AccSet because they are never accessed on trace
+static const nanojit::AccSet ACCSET_OBJ_CLASP     = (1 <<  9);
+static const nanojit::AccSet ACCSET_OBJ_SHAPE     = (1 << 10);
+static const nanojit::AccSet ACCSET_OBJ_PROTO     = (1 << 11);
+static const nanojit::AccSet ACCSET_OBJ_PARENT    = (1 << 12);
+static const nanojit::AccSet ACCSET_OBJ_PRIVATE   = (1 << 13);
+static const nanojit::AccSet ACCSET_OBJ_CAPACITY  = (1 << 14);
+static const nanojit::AccSet ACCSET_OBJ_SLOTS     = (1 << 15);  // the pointer to the slots
+
+static const nanojit::AccSet ACCSET_SLOTS         = (1 << 16);  // the slots themselves
+static const nanojit::AccSet ACCSET_TARRAY        = (1 << 17);
+static const nanojit::AccSet ACCSET_TARRAY_DATA   = (1 << 18);
+static const nanojit::AccSet ACCSET_ITER          = (1 << 19);
+static const nanojit::AccSet ACCSET_ITER_PROPS    = (1 << 20);
+static const nanojit::AccSet ACCSET_STRING        = (1 << 21);
+static const nanojit::AccSet ACCSET_STRING_MCHARS = (1 << 22);
+static const nanojit::AccSet ACCSET_TYPEMAP       = (1 << 23);
+static const nanojit::AccSet ACCSET_FCSLOTS       = (1 << 24);
+static const nanojit::AccSet ACCSET_ARGS_DATA     = (1 << 25);
+}
+
+static const uint8_t TM_NUM_USED_ACCS = 26; // number of access regions used by TraceMonkey
+
 enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_NEITHER };
 enum { 
     JSTN_ERRTYPE_MASK        = 0x07,
