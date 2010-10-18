@@ -422,11 +422,15 @@ function handleLoad() {
         ok(popup, "got popup notification");
         clickPopupButton(popup, kChangeButton);
         popup.remove();
-        
+
         // Housekeeping: change it back
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest",
-                      "mochiuser1", "mochipass1-new", "", "");
-        pwmgr.modifyLogin(tmpLogin, login3A);
+        function resetIt() {
+          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+          tmpLogin.init("http://mochi.test:8888", null, "mochitest",
+                        "mochiuser1", "mochipass1-new", "", "");
+          pwmgr.modifyLogin(tmpLogin, login3A);
+        }
+        setTimeout(resetIt, 0);
 
         // Same as last test, but for a realm we haven't already authenticated
         // to (but have an existing saved login for, so that we'll trigger
