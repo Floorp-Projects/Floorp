@@ -303,6 +303,7 @@ class Oracle {
     avmplus::BitSet _stackDontDemote;
     avmplus::BitSet _globalDontDemote;
     avmplus::BitSet _pcDontDemote;
+    avmplus::BitSet _pcSlowZeroTest;
 public:
     Oracle();
 
@@ -314,6 +315,8 @@ public:
     JS_REQUIRES_STACK bool isStackSlotUndemotable(JSContext* cx, unsigned slot, const void* pc) const;
     void markInstructionUndemotable(jsbytecode* pc);
     bool isInstructionUndemotable(jsbytecode* pc) const;
+    void markInstructionSlowZeroTest(jsbytecode* pc);
+    bool isInstructionSlowZeroTest(jsbytecode* pc) const;
 
     void clearDemotability();
     void clear() {
@@ -369,6 +372,7 @@ public:
      */                                                                         \
     _(OOM)                                                                      \
     _(OVERFLOW)                                                                 \
+    _(MUL_ZERO)                                                                 \
     _(UNSTABLE_LOOP)                                                            \
     _(TIMEOUT)                                                                  \
     _(DEEP_BAIL)                                                                \
@@ -1111,6 +1115,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* stack(int n);
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
+    JS_REQUIRES_STACK void guardNonNeg(nanojit::LIns* d0, nanojit::LIns* d1, VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
                                          nanojit::LIns* s0, nanojit::LIns* s1);
 
