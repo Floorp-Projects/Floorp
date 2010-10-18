@@ -60,3 +60,4 @@ fails == t1202-counters-10-b-test.html t1202-counters-10-b-reference.html # need
 == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
 == counter-hebrew-test.html counter-hebrew-reference.html
 == counters-hebrew-test.html counters-hebrew-reference.html
+== counter-reset-integer-range.html counter-reset-integer-range-ref.html
