@@ -1219,6 +1219,10 @@ pageaction:hover:active > vbox > .pageaction-desc {
   display: none;
 }
 
+#find-helper-textbox[status="1"] { /* Ci.nsITypeAheadFind.FIND_NOTFOUND */
+  background-color: rgb(255,200,200);
+}
+
 #content-navigator[type="find"],
 #content-navigator[type="form"] {
   display: -moz-box;
