@@ -1137,15 +1137,6 @@ namespace nanojit
             btr RegAlloc::free[ecx], eax    // free &= ~rmask(i)
             mov r, eax
         }
-    #elif defined __SUNPRO_CC
-        // Workaround for Sun Studio bug on handler embeded asm code.
-        // See bug 544447 for detail.
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=544447
-         asm(
-             "bsf    %1, %%edi\n\t"
-             "btr    %%edi, (%2)\n\t"
-             "movl   %%edi, %0\n\t"
-             : "=a"(r) : "d"(set), "c"(&regs.free) : "%edi", "memory" );
     #else
         asm(
             "bsf    %1, %%eax\n\t"
