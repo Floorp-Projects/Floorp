@@ -5068,6 +5068,15 @@ AddonInstall.prototype = {
       return;
     }
 
+    // Find and cancel any pending installs for the same add-on in the same
+    // install location
+    XPIProvider.installs.forEach(function(aInstall) {
+      if (aInstall.state == AddonManager.STATE_INSTALLED &&
+          aInstall.installLocation == this.installLocation &&
+          aInstall.addon.id == this.addon.id)
+        aInstall.cancel();
+    }, this);
+
     let isUpgrade = this.existingAddon &&
                     this.existingAddon._installLocation == this.installLocation;
     let requiresRestart = XPIProvider.installRequiresRestart(this.addon);
