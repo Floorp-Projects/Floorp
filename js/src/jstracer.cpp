@@ -4391,23 +4391,6 @@ TraceRecorder::createGuardRecord(VMSideExit* exit)
     return gr;
 }
 
-/* Test if 'ins' is in a form that can be used as a guard/branch condition. */
-static bool
-isCond(LIns* ins)
-{
-    return ins->isCmp() || ins->isImmI(0) || ins->isImmI(1);
-}
-
-/* Ensure 'ins' is in a form suitable for a guard/branch condition. */
-void
-TraceRecorder::ensureCond(LIns** ins, bool* cond)
-{
-    if (!isCond(*ins)) {
-        *cond = !*cond;
-        *ins = (*ins)->isI() ? lir->insEqI_0(*ins) : lir->insEqP_0(*ins);
-    }
-}
-
 /*
  * Emit a guard for condition (cond), expecting to evaluate to boolean result
  * (expected) and using the supplied side exit if the condition doesn't hold.
@@ -4440,7 +4423,10 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit,
     if (exit->exitType == LOOP_EXIT)
         tree->sideExits.add(exit);
 
-    JS_ASSERT(isCond(cond));
+    if (!cond->isCmp()) {
+        expected = !expected;
+        cond = cond->isI() ? lir->insEqI_0(cond) : lir->insEqP_0(cond);
+    }
 
     if ((cond->isImmI(0) && expected) || (cond->isImmI(1) && !expected)) {
         if (abortIfAlwaysExits) {
@@ -5548,12 +5534,6 @@ JS_REQUIRES_STACK void
 TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
 {
     ExitType exitType;
-    /*
-     * Put 'x' in a form suitable for a guard/branch condition if it isn't
-     * already.  This lets us detect if the comparison is optimized to 0 or 1,
-     * in which case we avoid the guard() call below.
-     */
-    ensureCond(&x, &cond);
     if (IsLoopEdge(pc, (jsbytecode*)tree->ip)) {
         exitType = LOOP_EXIT;
 
@@ -7322,11 +7302,7 @@ TraceRecorder::monitorRecording(JSOp op)
 
     /* Handle one-shot request from finishGetProp or INSTANCEOF to snapshot post-op state and guard. */
     if (pendingGuardCondition) {
-        LIns* cond = pendingGuardCondition;
-        bool expected = true;
-        /* Put 'cond' in a form suitable for a guard/branch condition if it's not already. */
-        ensureCond(&cond, &expected);
-        guard(expected, cond, STATUS_EXIT);
+        guard(true, pendingGuardCondition, STATUS_EXIT);
         pendingGuardCondition = NULL;
     }
 
@@ -8434,9 +8410,9 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
             LIns* br;
             if (condBranch(LIR_jt, lir->ins2ImmI(LIR_gti, d1, 0), &br)) {
                 guard(false, lir->insEqI_0(d1), exit);
-                guard(true, lir->insEqI_0(lir->ins2(LIR_andi,
-                                                    lir->ins2ImmI(LIR_eqi, d0, 0x80000000),
-                                                    lir->ins2ImmI(LIR_eqi, d1, -1))), exit);
+                guard(false, lir->ins2(LIR_andi,
+                                       lir->ins2ImmI(LIR_eqi, d0, 0x80000000),
+                                       lir->ins2ImmI(LIR_eqi, d1, -1)), exit);
                 labelForBranch(br);
             }
         } else {
@@ -16200,7 +16176,7 @@ TraceRecorder::record_JSOP_UNBRAND()
 {
     LIns* args_ins[] = { stack(-1), cx_ins };
     LIns* call_ins = lir->insCall(&js_Unbrand_ci, args_ins);
-    guard(false, lir->insEqI_0(call_ins), OOM_EXIT);
+    guard(true, call_ins, OOM_EXIT);
     return ARECORD_CONTINUE;
 }
 
@@ -16214,7 +16190,7 @@ TraceRecorder::record_JSOP_UNBRANDTHIS()
 
     LIns* args_ins[] = { this_ins, cx_ins };
     LIns* call_ins = lir->insCall(&js_Unbrand_ci, args_ins);
-    guard(false, lir->insEqI_0(call_ins), OOM_EXIT);
+    guard(true, call_ins, OOM_EXIT);
     return ARECORD_CONTINUE;
 }
 
