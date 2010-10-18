@@ -264,15 +264,15 @@ class EqualityCompiler : public BaseCompiler
     
     void generateStringPath(Assembler &masm)
     {
-        ValueRemat &lvr = ic.lvr;
-        ValueRemat &rvr = ic.rvr;
+        const ValueRemat &lvr = ic.lvr;
+        const ValueRemat &rvr = ic.rvr;
 
-        if (!lvr.isConstant && !lvr.isType(JSVAL_TYPE_STRING)) {
+        if (!lvr.isConstant() && !lvr.isType(JSVAL_TYPE_STRING)) {
             Jump lhsFail = masm.testString(Assembler::NotEqual, lvr.typeReg());
             linkToStub(lhsFail);
         }
         
-        if (!rvr.isConstant && !rvr.isType(JSVAL_TYPE_STRING)) {
+        if (!rvr.isConstant() && !rvr.isType(JSVAL_TYPE_STRING)) {
             Jump rhsFail = masm.testString(Assembler::NotEqual, rvr.typeReg());
             linkToStub(rhsFail);
         }
@@ -287,15 +287,15 @@ class EqualityCompiler : public BaseCompiler
         Jump lhsNotAtomized = masm.branch32(Assembler::NotEqual, tmp, atomizedFlags);
         linkToStub(lhsNotAtomized);
 
-        if (!rvr.isConstant) {
+        if (!rvr.isConstant()) {
             masm.load32(Address(rvr.dataReg(), offsetof(JSString, mLengthAndFlags)), tmp);
             masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), tmp);
             Jump rhsNotAtomized = masm.branch32(Assembler::NotEqual, tmp, atomizedFlags);
             linkToStub(rhsNotAtomized);
         }
 
-        if (rvr.isConstant) {
-            JSString *str = Valueify(rvr.u.v).toString();
+        if (rvr.isConstant()) {
+            JSString *str = rvr.value().toString();
             JS_ASSERT(str->isAtomized());
             Jump test = masm.branchPtr(ic.cond, lvr.dataReg(), ImmPtr(str));
             linkTrue(test);
@@ -313,12 +313,12 @@ class EqualityCompiler : public BaseCompiler
         ValueRemat &lvr = ic.lvr;
         ValueRemat &rvr = ic.rvr;
         
-        if (!lvr.isConstant && !lvr.isType(JSVAL_TYPE_OBJECT)) {
+        if (!lvr.isConstant() && !lvr.isType(JSVAL_TYPE_OBJECT)) {
             Jump lhsFail = masm.testObject(Assembler::NotEqual, lvr.typeReg());
             linkToStub(lhsFail);
         }
         
-        if (!rvr.isConstant && !rvr.isType(JSVAL_TYPE_OBJECT)) {
+        if (!rvr.isConstant() && !rvr.isType(JSVAL_TYPE_OBJECT)) {
             Jump rhsFail = masm.testObject(Assembler::NotEqual, rvr.typeReg());
             linkToStub(rhsFail);
         }
@@ -329,8 +329,8 @@ class EqualityCompiler : public BaseCompiler
                                           Imm32(JSObject::HAS_EQUALITY));
         linkToStub(lhsHasEq);
 
-        if (rvr.isConstant) {
-            JSObject *obj = &Valueify(rvr.u.v).toObject();
+        if (rvr.isConstant()) {
+            JSObject *obj = &rvr.value().toObject();
             Jump test = masm.branchPtr(ic.cond, lvr.dataReg(), ImmPtr(obj));
             linkTrue(test);
         } else {
@@ -579,9 +579,7 @@ class CallCompiler : public BaseCompiler
         RegisterID t0 = tempRegs.takeAnyReg();
 
         /* Guard that it's actually a function object. */
-        Jump claspGuard = masm.branchPtr(Assembler::NotEqual,
-                                         Address(ic.funObjReg, offsetof(JSObject, clasp)),
-                                         ImmPtr(&js_FunctionClass));
+        Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, &js_FunctionClass);
 
         /* Guard that it's the same function. */
         JSFunction *fun = obj->getFunctionPrivate();
