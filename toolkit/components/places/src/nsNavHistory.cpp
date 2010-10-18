@@ -3476,7 +3476,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
         // Set day before month, setting month without day could cause issues.
         // For example setting month to February when today is 30, since
         // February has not 30 days, will return March instead.
-        tm.tm_mday = 1;
+        // Also, we use day 2 instead of day 1, so that the GMT month is always
+        // the same as the local month. (Bug 603002)
+        tm.tm_mday = 2;
         tm.tm_month -= MonthIndex;
         // Notice we use GMTParameters because we just want to get the first
         // day of each month.  Using LocalTimeParameters would instead force us
