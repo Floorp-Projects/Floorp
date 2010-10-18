@@ -409,13 +409,6 @@ class FrameState
     inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) const;
 
     /*
-     * Forcibly loads the type tag for the specified FrameEntry
-     * into a register already marked as owning the type.
-     */
-    inline void emitLoadTypeTag(FrameEntry *fe, RegisterID reg) const;
-    inline void emitLoadTypeTag(Assembler &masm, FrameEntry *fe, RegisterID reg) const;
-
-    /*
      * Convert an integer to a double without applying
      * additional Register pressure.
      */
@@ -490,7 +483,7 @@ class FrameState
     void unpinEntry(const ValueRemat &vr);
 
     /* Syncs fe to memory, given its state as constructed by a call to pinEntry. */
-    void syncEntry(Assembler &masm, FrameEntry *fe, const ValueRemat &vr);
+    void ensureValueSynced(Assembler &masm, FrameEntry *fe, const ValueRemat &vr);
 
     struct BinaryAlloc {
         MaybeRegisterID lhsType;
@@ -798,15 +791,26 @@ class FrameState
     void evictReg(RegisterID reg);
     inline FrameEntry *rawPush();
     inline void addToTracker(FrameEntry *fe);
-    inline void syncType(const FrameEntry *fe, Address to, Assembler &masm) const;
-    inline void syncData(const FrameEntry *fe, Address to, Assembler &masm) const;
+
+    /* Guarantee sync, but do not set any sync flag. */
+    inline void ensureFeSynced(const FrameEntry *fe, Assembler &masm) const;
+    inline void ensureTypeSynced(const FrameEntry *fe, Assembler &masm) const;
+    inline void ensureDataSynced(const FrameEntry *fe, Assembler &masm) const;
+
+    /* Guarantee sync, even if register allocation is required, and set sync. */
+    inline void syncFe(FrameEntry *fe);
+    inline void syncType(FrameEntry *fe);
+    inline void syncData(FrameEntry *fe);
+
     inline FrameEntry *getLocal(uint32 slot);
     inline void forgetAllRegs(FrameEntry *fe);
     inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
     inline uint32 localIndex(uint32 n);
     void pushCopyOf(uint32 index);
+#if defined JS_NUNBOX32
     void syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
                    FrameEntry *bottom) const;
+#endif
     inline bool tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
     void resetInternalState();
 
@@ -880,7 +884,9 @@ class FrameState
      */
     RegisterState regstate[Assembler::TotalRegisters];
 
+#if defined JS_NUNBOX32
     mutable ImmutableSync reifier;
+#endif
 
     JSPackedBool *closedVars;
     bool eval;

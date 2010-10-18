@@ -52,6 +52,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
                           "this is wrapped correctly");
                        SimpleTest.finish();
                    }, 0)
+
+   var saw0 = false;
+   for (let i in $('ifr').contentDocument.getElementsByTagName('body')) {
+       if (i === "0")
+           saw0 = true;
+   }
+   ok(saw0, "properly enumerated the 0 value");
   }
 
   SimpleTest.waitForExplicitFinish();
