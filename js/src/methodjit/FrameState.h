@@ -50,6 +50,15 @@
 namespace js {
 namespace mjit {
 
+struct StateRemat {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    union {
+        RegisterID reg : 31;
+        uint32 offset  : 31;
+    };
+    bool inReg : 1;
+};
+
 struct Uses {
     explicit Uses(uint32 nuses)
       : nuses(nuses)
@@ -62,6 +71,38 @@ struct Changes {
       : nchanges(nchanges)
     { }
     uint32 nchanges;
+};
+
+class MaybeRegisterID {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+  public:
+    MaybeRegisterID()
+      : reg_(Registers::ReturnReg), set(false)
+    { }
+
+    MaybeRegisterID(RegisterID reg)
+      : reg_(reg), set(true)
+    { }
+
+    inline RegisterID reg() const { JS_ASSERT(set); return reg_; }
+    inline void setReg(const RegisterID r) { reg_ = r; set = true; }
+    inline bool isSet() const { return set; }
+
+    MaybeRegisterID & operator =(const MaybeRegisterID &other) {
+        set = other.set;
+        reg_ = other.reg_;
+        return *this;
+    }
+
+    MaybeRegisterID & operator =(RegisterID r) {
+        setReg(r);
+        return *this;
+    }
+
+  private:
+    RegisterID reg_;
+    bool set;
 };
 
 /*
@@ -676,11 +717,6 @@ class FrameState
      * Same as unpinReg(), but does not restore the FrameEntry.
      */
     inline void unpinKilledReg(RegisterID reg);
-
-    /* Pins a data or type register if one exists. */
-    MaybeRegisterID maybePinData(FrameEntry *fe);
-    MaybeRegisterID maybePinType(FrameEntry *fe);
-    void maybeUnpinReg(MaybeRegisterID reg);
 
     /*
      * Dups the top item on the stack.
