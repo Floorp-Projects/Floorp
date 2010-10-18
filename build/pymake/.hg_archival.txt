@@ -1,2 +1,5 @@
 repo: f5ab154deef2ffa97f1b2139589ae4a1962090a4
-node: 7ae0b4af32617677698f9de3ab76bcb154bbf085
+node: 84ced2ab192d4b2ad796110d4c62fabc9ac6968d
+branch: default
+latesttag: null
+latesttagdistance: 257
