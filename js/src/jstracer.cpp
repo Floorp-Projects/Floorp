@@ -1266,12 +1266,27 @@ Oracle::isInstructionUndemotable(jsbytecode* pc) const
     return _pcDontDemote.get(PCHash(pc));
 }
 
+/* Tell the oracle that the instruction at bytecode location should use a stronger (slower) test for -0. */
+void
+Oracle::markInstructionSlowZeroTest(jsbytecode* pc)
+{
+    _pcSlowZeroTest.set(PCHash(pc));
+}
+
+/* Consult with the oracle whether we should use a stronger (slower) test for -0. */
+bool
+Oracle::isInstructionSlowZeroTest(jsbytecode* pc) const
+{
+    return _pcSlowZeroTest.get(PCHash(pc));
+}
+
 void
 Oracle::clearDemotability()
 {
     _stackDontDemote.reset();
     _globalDontDemote.reset();
     _pcDontDemote.reset();
+    _pcSlowZeroTest.reset();
 }
 
 JS_REQUIRES_STACK void
@@ -6250,8 +6265,12 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
                : ARECORD_ABORTED;
       }
 
+      case MUL_ZERO_EXIT:
       case OVERFLOW_EXIT:
-        traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
+        if (lr->exitType == MUL_ZERO_EXIT)
+            traceMonitor->oracle->markInstructionSlowZeroTest(cx->regs->pc);
+        else
+            traceMonitor->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
       case CASE_EXIT:
@@ -7221,8 +7240,12 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 #endif
           return RecordingIfTrue(rv);
 
+      case MUL_ZERO_EXIT:
       case OVERFLOW_EXIT:
-          tm->oracle->markInstructionUndemotable(cx->regs->pc);
+        if (lr->exitType == MUL_ZERO_EXIT)
+            tm->oracle->markInstructionSlowZeroTest(cx->regs->pc);
+        else
+            tm->oracle->markInstructionUndemotable(cx->regs->pc);
         /* FALL THROUGH */
       case BRANCH_EXIT:
       case CASE_EXIT:
@@ -8330,6 +8353,21 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i);
 }
 
+/* Leave trace iff one operand is negative and the other is non-negative. */
+JS_REQUIRES_STACK void
+TraceRecorder::guardNonNeg(LIns* d0, LIns* d1, VMSideExit* exit)
+{
+    if (d0->isImmI())
+        JS_ASSERT(d0->immI() >= 0);
+    else
+        guard(false, lir->ins2ImmI(LIR_lti, d0, 0), exit);
+
+    if (d1->isImmI())
+        JS_ASSERT(d1->immI() >= 0);
+    else
+        guard(false, lir->ins2ImmI(LIR_lti, d1, 0), exit);
+}
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 {
@@ -8360,7 +8398,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         break;
     case LIR_muld:
         r = v0 * v1;
-        if (r == 0.0)
+        if (r == 0.0 && (v0 < 0.0 || v1 < 0.0))
             goto out;
         break;
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
@@ -8475,11 +8513,30 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
             result = lir->ins2(v, d0, d1);
         }
         if (needsNegZeroCheck) {
-            // make sure we don't lose a -0
             JS_ASSERT(v == LIR_muli);
-            if (!exit)
-                exit = snapshot(OVERFLOW_EXIT);
-            guard(false, lir->insEqI_0(result), exit);
+
+            /*
+             * Make sure we don't lose a -0. We exit if the result is zero and if
+             * either operand is negative. We start out using a weaker guard, checking
+             * if either argument is negative. If this ever fails, we recompile with
+             * a stronger, but slower, guard.
+             */
+            if (v0 < 0.0 || v1 < 0.0
+                || !oracle || oracle->isInstructionSlowZeroTest(cx->regs->pc))
+            {
+                if (!exit)
+                    exit = snapshot(OVERFLOW_EXIT);
+
+                guard(true,
+                      lir->insEqI_0(lir->ins2(LIR_andi,
+                                              lir->insEqI_0(result),
+                                              lir->ins2(LIR_ori,
+                                                        lir->ins2ImmI(LIR_lti, d0, 0),
+                                                        lir->ins2ImmI(LIR_lti, d1, 0)))),
+                      exit);
+            } else {
+                guardNonNeg(d0, d1, snapshot(MUL_ZERO_EXIT));
+            }
         }
         break;
     }
@@ -16597,8 +16654,12 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
                     return TPA_RanStuff;
                 break;
 
+              case MUL_ZERO_EXIT:
               case OVERFLOW_EXIT:
-                tm->oracle->markInstructionUndemotable(cx->regs->pc);
+                if (lr->exitType == MUL_ZERO_EXIT)
+                    tm->oracle->markInstructionSlowZeroTest(cx->regs->pc);
+                else
+                    tm->oracle->markInstructionUndemotable(cx->regs->pc);
                 /* FALL THROUGH */
               case BRANCH_EXIT:
               case CASE_EXIT:
