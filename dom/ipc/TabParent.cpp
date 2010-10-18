@@ -530,8 +530,17 @@ bool
 TabParent::RecvSetIMEEnabled(const PRUint32& aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget)
+  if (widget) {
     widget->SetIMEEnabled(aValue);
+
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (observerService) {
+      nsAutoString state;
+      state.AppendInt(aValue);
+      observerService->NotifyObservers(nsnull, "ime-enabled-state-changed", state.get());
+    }
+  }
+
   return true;
 }
 
