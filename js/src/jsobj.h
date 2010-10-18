@@ -239,10 +239,6 @@ struct NativeIterator;
 
 struct JSFunction;
 
-namespace nanojit {
-class ValidateWriter;
-}
-
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
@@ -275,19 +271,13 @@ class ValidateWriter;
  * hasSlotsArray().  In all cases, capacity gives the number of usable slots.
  * Two objects with the same shape have the same number of fixed slots,
  * and either both have or neither have dynamically allocated slot arrays.
- *
- * If you change this struct, you'll probably need to change the AccSet values
- * in jsbuiltins.h.
  */
 struct JSObject : js::gc::Cell {
     /*
      * TraceRecorder must be a friend because it generates code that
      * manipulates JSObjects, which requires peeking under any encapsulation.
-     * ValidateWriter must be a friend because it works in tandem with
-     * TraceRecorder.
      */
     friend class js::TraceRecorder;
-    friend class nanojit::ValidateWriter;
 
     /*
      * Private pointer to the last added property and methods to manipulate the
