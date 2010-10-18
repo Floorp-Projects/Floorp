@@ -2496,6 +2496,7 @@ var ContextHelper = {
     label.value = this.popupState.label || "";
 
     this._panel.hidden = false;
+    BrowserUI.blurFocusedElement();
     window.addEventListener("resize", this, true);
 
     this.sizeToContent();
