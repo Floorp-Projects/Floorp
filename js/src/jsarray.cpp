@@ -1905,7 +1905,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
             }
         } else {
             CompareArgs ca(cx);
-            if (!ca.session.start(cx, fval, NullValue(), 2))
+            if (!ca.session.start(cx, fval, UndefinedValue(), 2))
                 return false;
 
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
