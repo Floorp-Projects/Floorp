@@ -113,15 +113,12 @@ _MOCHICHROME_FILES = \
 
 # Temporarily disable the tests on Linux, see bug 573290 and bug 583591.
 ifneq ($(OS_ARCH),Linux)
-# Temporarily disable the tests on Mac OS X, see bug 599087.
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_CRASHREPORTER
 _MOCHICHROME_FILES += \
   test_crash_notify.xul \
   test_crash_notify_no_report.xul \
   test_crash_submit.xul \
   $(NULL)
-endif
 endif
 endif
 
