@@ -255,7 +255,8 @@ protected:
                             nsIDocument* aDocument,
                             nsISupports* aTarget,
                             PRUint32 aFocusMethod,
-                            PRBool aWindowRaised);
+                            PRBool aWindowRaised,
+                            PRBool aIsRefocus = PR_FALSE);
 
   /**
    * Scrolls aContent into view unless the FLAG_NOSCROLL flag is set.
