@@ -116,24 +116,7 @@ function installSearchResult(aCallback) {
 }
 
 function get_list_item_count() {
-  var tests = "@tests.mozilla.org";
-
-  let view = gManagerWindow.document.getElementById("view-port").selectedPanel;
-  let listid = view.id == "search-view" ? "search-list" : "addon-list";
-  let item = gManagerWindow.document.getElementById(listid).firstChild;
-  let count = 0;
-
-  while (item) {
-    if (!item.mAddon || item.mAddon.id.substring(item.mAddon.id.length - tests.length) == tests)
-      count++;
-    item = item.nextSibling;
-  }
-
-  // Remove the show all results item
-  if (view.id == "search-view")
-    count--;
-
-  return count;
+  return get_test_items_in_list(gManagerWindow).length;
 }
 
 function check_undo_install() {
