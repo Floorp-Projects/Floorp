@@ -1305,39 +1305,32 @@ FrameState::shift(int32 n)
 void
 FrameState::pinEntry(FrameEntry *fe, ValueRemat &vr)
 {
-    if (fe->isConstant()) {
-        vr = ValueRemat::FromConstant(fe->getValue());
-    } else {
-        // Pin the type register so it can't spill.
-        MaybeRegisterID maybePinnedType = maybePinType(fe);
-
-        // Get and pin the data register.
-        RegisterID dataReg = tempRegForData(fe);
-        pinReg(dataReg);
-
-        if (fe->isTypeKnown()) {
-            vr = ValueRemat::FromKnownType(fe->getKnownType(), dataReg);
-        } else {
-            // The type might not be loaded yet, so unpin for simplicity.
-            maybeUnpinReg(maybePinnedType);
-
-            vr = ValueRemat::FromRegisters(tempRegForType(fe), dataReg);
-            pinReg(vr.typeReg());
-        }
-    }
-
-    // Set these bits last, since allocation could have caused a sync.
     vr.isDataSynced = fe->data.synced();
     vr.isTypeSynced = fe->type.synced();
+    if (fe->isConstant()) {
+        vr.isConstant = true;
+        vr.u.v = Jsvalify(fe->getValue());
+    } else {
+        vr.isConstant = false;
+        vr.u.s.isTypeKnown = fe->isTypeKnown();
+        if (vr.u.s.isTypeKnown) {
+            vr.u.s.type.knownType = fe->getKnownType();
+        } else {
+            vr.u.s.type.reg = tempRegForType(fe);
+            pinReg(vr.u.s.type.reg);
+        }
+        vr.u.s.data = tempRegForData(fe);
+        pinReg(vr.u.s.data);
+    }
 }
 
 void
 FrameState::unpinEntry(const ValueRemat &vr)
 {
-    if (!vr.isConstant()) {
-        if (!vr.isTypeKnown())
-            unpinReg(vr.typeReg());
-        unpinReg(vr.dataReg());
+    if (!vr.isConstant) {
+        if (!vr.u.s.isTypeKnown)
+            unpinReg(vr.u.s.type.reg);
+        unpinReg(vr.u.s.data);
     }
 }
 
@@ -1348,17 +1341,17 @@ FrameState::ensureValueSynced(Assembler &masm, FrameEntry *fe, const ValueRemat 
     if (!vr.isDataSynced || !vr.isTypeSynced)
         masm.storeValue(vr, addressOf(fe));
 #elif defined JS_NUNBOX32
-    if (vr.isConstant()) {
+    if (vr.isConstant) {
         if (!vr.isDataSynced || !vr.isTypeSynced)
-            masm.storeValue(vr.value(), addressOf(fe));
+            masm.storeValue(Valueify(vr.u.v), addressOf(fe));
     } else {
         if (!vr.isDataSynced)
-            masm.storePayload(vr.dataReg(), addressOf(fe));
+            masm.storePayload(vr.u.s.data, addressOf(fe));
         if (!vr.isTypeSynced) {
-            if (vr.isTypeKnown())
-                masm.storeTypeTag(ImmType(vr.knownType()), addressOf(fe));
+            if (vr.u.s.isTypeKnown)
+                masm.storeTypeTag(ImmType(vr.u.s.type.knownType), addressOf(fe));
             else
-                masm.storeTypeTag(vr.typeReg(), addressOf(fe));
+                masm.storeTypeTag(vr.u.s.type.reg, addressOf(fe));
         }
     }
 #endif
@@ -1584,32 +1577,5 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
         unpinReg(backingLeft->data.reg());
     if (backingRight->data.inRegister())
         unpinReg(backingRight->data.reg());
-}
-
-MaybeRegisterID
-FrameState::maybePinData(FrameEntry *fe)
-{
-    if (fe->data.inRegister()) {
-        pinReg(fe->data.reg());
-        return fe->data.reg();
-    }
-    return MaybeRegisterID();
-}
-
-MaybeRegisterID
-FrameState::maybePinType(FrameEntry *fe)
-{
-    if (fe->type.inRegister()) {
-        pinReg(fe->type.reg());
-        return fe->type.reg();
-    }
-    return MaybeRegisterID();
-}
-
-void
-FrameState::maybeUnpinReg(MaybeRegisterID reg)
-{
-    if (reg.isSet())
-        unpinReg(reg.reg());
 }
 
