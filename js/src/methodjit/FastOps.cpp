@@ -1601,7 +1601,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         /* False iff NaN. */
         if (lhs->isTypeKnown() && lhs->isNotType(JSVAL_TYPE_DOUBLE)) {
             frame.popn(2);
-            frame.push(BooleanValue(true));
+            frame.push(BooleanValue(op == JSOP_STRICTEQ));
             return;
         }
         
