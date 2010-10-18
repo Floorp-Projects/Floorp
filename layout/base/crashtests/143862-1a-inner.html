@@ -4,9 +4,11 @@ html { overflow: hidden; }
 </style>
 <script>
 dump("143862-1-inner.html: A\n");
-setTimeout(o, 100);
+window.addEventListener("load", o, false);
 function o()
 {
+  dump("143862-1-inner.html: B*\n");
+  document.documentElement.offsetHeight;
   dump("143862-1-inner.html: B\n");
   document.open();
   dump("143862-1-inner.html: C\n");
