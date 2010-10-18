@@ -519,7 +519,7 @@ namespace nanojit
                 evict(ins);
                 r = registerAlloc(ins, allow, hint(ins));
             } else
-#elif defined(NANOJIT_PPC) || defined(NANOJIT_MIPS)
+#elif defined(NANOJIT_PPC) || defined(NANOJIT_MIPS) || defined(NANOJIT_SPARC)
             if (((rmask(r)&GpRegs) && !(allow&GpRegs)) ||
                 ((rmask(r)&FpRegs) && !(allow&FpRegs)))
             {
