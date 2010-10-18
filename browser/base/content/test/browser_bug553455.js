@@ -548,9 +548,8 @@ function test_renotify_installed() {
               is(notification.id, "addon-install-complete-notification", "Should have seen the second install complete");
 
               AddonManager.getAllInstalls(function(aInstalls) {
-              is(aInstalls.length, 2, "Should be two pending installs");
+              is(aInstalls.length, 1, "Should be one pending installs");
                 aInstalls[0].cancel();
-                aInstalls[1].cancel();
 
                 gBrowser.removeTab(gBrowser.selectedTab);
                 runNextTest();
