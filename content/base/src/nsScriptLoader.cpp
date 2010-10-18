@@ -591,10 +591,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       }
       return NS_OK;
     }
-    if (!request->mLoading) {
-      // The request has already been loaded. If the script comes from the
-      // network stream, cheat for performance reasons and avoid a trip
-      // through the event loop.
+    if (!request->mLoading && ReadyToExecuteScripts()) {
+      // The request has already been loaded and there are no pending style
+      // sheets. If the script comes from the network stream, cheat for
+      // performance reasons and avoid a trip through the event loop.
       if (aElement->GetParserCreated() == NS_FROM_PARSER_NETWORK) {
         return ProcessRequest(request);
       }
@@ -607,8 +607,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       ProcessPendingRequestsAsync();
       return NS_ERROR_HTMLPARSER_BLOCK;
     }
-    // The script hasn't loaded yet and is parser-inserted and non-async.
-    // It'll be executed when it has loaded.
+    // The script hasn't loaded yet or there's a style sheet blocking it.
+    // The script will be run when it loads or the style sheet loads.
     NS_ASSERTION(!mParserBlockingRequest,
         "There can be only one parser-blocking script at a time");
     mParserBlockingRequest = request;
