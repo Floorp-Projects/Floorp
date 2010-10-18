@@ -5766,6 +5766,7 @@ Parser::statement()
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
             obj->setParent(tc->blockChain());
+            blockbox->parent = tc->blockChainBox;
             tc->blockChainBox = blockbox;
             stmt->blockBox = blockbox;
 

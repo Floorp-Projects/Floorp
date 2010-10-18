@@ -1378,6 +1378,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObjectBox *blockBox,
 {
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
+    blockBox->parent = tc->blockChainBox;
     blockBox->object->setParent(tc->blockChain());
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
@@ -1591,11 +1592,7 @@ js_PopStatement(JSTreeContext *tc)
     if (STMT_LINKS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
         if (stmt->flags & SIF_SCOPE) {
-            if (stmt->downScope) {
-                tc->blockChainBox = stmt->downScope->blockBox;
-            } else {
-                tc->blockChainBox = NULL;
-            }
+            tc->blockChainBox = stmt->blockBox->parent;
             JS_SCOPE_DEPTH_METERING(--tc->scopeDepth);
         }
     }
@@ -4361,7 +4358,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 if (popScope) {
                     cg->topStmt = stmt;
                     cg->topScopeStmt = scopeStmt;
-                    cg->blockChainBox = scopeStmt->blockBox;
+                    JS_ASSERT(cg->blockChainBox == scopeStmt->blockBox);
                 }
 #endif
             }
