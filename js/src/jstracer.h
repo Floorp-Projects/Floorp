@@ -1356,6 +1356,8 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus callSpecializedNative(JSNativeTraceInfo* trcinfo, uintN argc,
                                                               bool constructing);
     JS_REQUIRES_STACK RecordingStatus callNative(uintN argc, JSOp mode);
+    JS_REQUIRES_STACK RecordingStatus callFloatReturningInt(uintN argc,
+                                                            const nanojit::CallInfo *ci);
     JS_REQUIRES_STACK RecordingStatus functionCall(uintN argc, JSOp mode);
 
     JS_REQUIRES_STACK void trackCfgMerges(jsbytecode* pc);

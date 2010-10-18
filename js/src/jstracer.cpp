@@ -11337,6 +11337,50 @@ next_specialization:;
     return RECORD_STOP;
 }
 
+static JSBool FASTCALL
+ceilReturningInt(jsdouble x, int32 *out)
+{
+    jsdouble r = js_math_ceil_impl(x);
+    return JSDOUBLE_IS_INT32(r, out);
+}
+
+static JSBool FASTCALL
+floorReturningInt(jsdouble x, int32 *out)
+{
+    jsdouble r = js_math_floor_impl(x);
+    return JSDOUBLE_IS_INT32(r, out);
+}
+
+static JSBool FASTCALL
+roundReturningInt(jsdouble x, int32 *out)
+{
+    jsdouble r = js_math_round_impl(x);
+    return JSDOUBLE_IS_INT32(r, out);
+}
+
+JS_DEFINE_CALLINFO_2(static, BOOL, ceilReturningInt, DOUBLE, INT32PTR, 1, ACCSET_NONE)
+JS_DEFINE_CALLINFO_2(static, BOOL, floorReturningInt, DOUBLE, INT32PTR, 1, ACCSET_NONE)
+JS_DEFINE_CALLINFO_2(static, BOOL, roundReturningInt, DOUBLE, INT32PTR, 1, ACCSET_NONE)
+
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::callFloatReturningInt(uintN argc, const nanojit::CallInfo *ci)
+{
+    Value& arg = stackval(-1);
+    LIns* resptr_ins = lir->insAlloc(sizeof(int32));
+    LIns* args[] = { resptr_ins, get(&arg) };
+    LIns* fits_ins = lir->insCall(ci, args);
+
+    guard(false, lir->insEqI_0(fits_ins), OVERFLOW_EXIT);
+
+    LIns* res_ins = lir->insLoad(LIR_ldi, resptr_ins, 0, ACCSET_ALLOC);
+
+    set(&stackval(0 - (2 + argc)), lir->ins1(LIR_i2d, res_ins));
+
+    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+
+    return RECORD_CONTINUE;
+}
+
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::callNative(uintN argc, JSOp mode)
 {
@@ -11354,10 +11398,21 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (vp[2].isNumber() && mode == JSOP_CALL) {
             if (native == js_math_ceil || native == js_math_floor || native == js_math_round) {
                 LIns* a = get(&vp[2]);
+                int32 result;
                 if (isPromote(a)) {
                     set(&vp[0], a);
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
+                }
+                if (native == js_math_floor) {
+                    if (floorReturningInt(vp[2].toNumber(), &result))
+                        return callFloatReturningInt(argc, &floorReturningInt_ci);
+                } else if (native == js_math_ceil) {
+                    if (ceilReturningInt(vp[2].toNumber(), &result))
+                        return callFloatReturningInt(argc, &ceilReturningInt_ci);
+                } else if (native == js_math_round) {
+                    if (roundReturningInt(vp[2].toNumber(), &result))
+                        return callFloatReturningInt(argc, &roundReturningInt_ci);
                 }
             }
             if (vp[1].isString()) {
