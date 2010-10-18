@@ -7016,6 +7016,11 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     return NS_OK;
   }
 
+  if (!JS_WrapObject(cx, &winObj)) {
+    *_retval = nsnull;
+    return NS_ERROR_UNEXPECTED;
+  }
+
   *_retval = winObj;
   return NS_OK;
 }
