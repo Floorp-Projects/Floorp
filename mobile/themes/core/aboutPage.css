@@ -51,6 +51,10 @@
   margin-top: -32px;
 }
 
+body[dir="rtl"] #update {
+  float: left;
+}
+
 #update-message-checking,
 #update-message-none,
 #update-message-found {
@@ -83,6 +87,10 @@
   display: block;
   color: #3a3834;
   background: url("images/arrowright-16.png") right center no-repeat;
+}
+
+body[dir="rtl"] #aboutLinks > li > a {
+  background: url("images/arrowleft-16.png") left center no-repeat;
 }
 
 #aboutDetails {
