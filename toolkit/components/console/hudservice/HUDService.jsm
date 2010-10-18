@@ -696,10 +696,10 @@ function NetworkPanel(aParent, aHttpActivity)
     close: "true"
   });
 
-  // Create the browser that displays the NetworkPanel XHTML.
-  this.browser = createAndAppendElement(this.panel, "browser", {
+  // Create the iframe that displays the NetworkPanel XHTML.
+  this.browser = createAndAppendElement(this.panel, "iframe", {
     src: "chrome://browser/content/NetworkPanel.xhtml",
-    disablehistory: "true",
+    type: "content",
     flex: "1"
   });
 
