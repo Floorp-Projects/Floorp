@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<title>Expected integer range</title>
+<style>
+
+span::after { content: counter(c); }
+
+</style>
+<span style="counter-reset: c 0"></span>
+<span style="counter-reset: c 2147483647"></span>
+<span style="counter-reset: c 2147483648"></span>
+<span style="counter-reset: c 2147483649"></span>
+<span style="counter-reset: c -2147483647"></span>
+<span style="counter-reset: c -2147483648"></span>
+<span style="counter-reset: c -2147483649"></span>
