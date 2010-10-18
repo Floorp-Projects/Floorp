@@ -107,7 +107,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         return nsnull;
 
     // We only hand out outer objects to script.
-    GetCurrentOuter(cx, obj);
+    obj = GetCurrentOuter(cx, obj);
     if (obj->getClass()->ext.innerObject)
         return DoubleWrap(cx, obj, flags);
 
