@@ -68,6 +68,7 @@ _BROWSER_FILES = \
                  browser_tabview_startup_transitions.js \
                  browser_tabview_undo_group.js \
                  browser_tabview_firstrun_pref.js \
+                 head.js \
                  search1.html \
                  search2.html \
                  $(NULL)
