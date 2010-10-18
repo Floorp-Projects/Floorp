@@ -817,6 +817,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
+  padding-top: 8px;
   -moz-border-end: 3px solid #262629;
   background: #2e2e2f url("chrome://browser/skin/images/sidebar-bg.png") top left repeat-x;
 }
@@ -825,7 +826,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
   -moz-box-align: start;
 }
 
-#tabs > * {
+#tabs > .tabs-list {
   display: block;
   -moz-column-width: 121px;
   -moz-column-gap: 0;
@@ -835,10 +836,6 @@ autocompleteresult.noresults > .autocomplete-item-container {
   margin: 0;
   -moz-padding-end: 8px; /* core spacing */
   -moz-padding-start: 4px; /* allow the thumbnails to get close to the edge */
-}
-
-#tabs documenttab:only-child .documenttab-close {
-  display: none;
 }
 
 #tabs-controls {
@@ -855,54 +852,66 @@ documenttab {
   margin-bottom: 8px;
   width: 121px;
   padding: 8px;
-  background-color: rgb(101,121,227);
-  border-bottom: 3px rgb(66,78,146) solid;
-  border-radius: 4px;
-  opacity: 0.5;
-}
-
-documenttab .documenttab-thumbnail {
-  background-color: white;
-}
-
-documenttab .documenttab-close-container {
-  -moz-margin-end: 49px;
-}
-
-documenttab .documenttab-close-container > .documenttab-close {
-  width: 40px;
-  height: 40px;
-  list-style-image: url("chrome://browser/skin/images/close-default-40.png");
-}
-
-documenttab .documenttab-close-container:hover:active > .documenttab-close {
-  list-style-image: url("chrome://browser/skin/images/close-active-40.png");
-}
-
-documenttab .documenttab-reload {
-  display: none;
+  padding-bottom: 11px;
+  background: url("chrome://browser/skin/images/tab-inactive-hdpi.png") bottom repeat-x;
+  border-radius: 6px;
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.1);
+  border-bottom-width: 3px;
 }
 
 documenttab[selected="true"] {
-  opacity: 1;
+  border-bottom-color: rgba(0,0,0,.2);
+  background: url("chrome://browser/skin/images/tab-active-hdpi.png") bottom repeat-x;
 }
 
-documenttab[reload="true"] {
-  background-color: rgb(70,70,70);
-  border-bottom: 3px rgb(60,60,60) solid;
-  opacity: 1;
-}
-
-documenttab[reload="true"] .documenttab-thumbnail {
+.documenttab-thumbnail {
+  background-color: white;
   opacity: 0.5;
 }
 
-documenttab[reload="true"] .documenttab-close-container {
+documenttab[selected="true"] > stack > .documenttab-thumbnail {
+  opacity: 1.0;
+}
+
+.documenttab-close-container {
+  position: relative;
+  left: -16px;
+  -moz-margin-end: 49px;
+}
+
+.documenttab-close {
+  width: 40px;
+  height: 40px;
+  list-style-image: url("chrome://browser/skin/images/close-inactive-tab-hdpi.png");
+}
+
+documenttab[selected="true"] > stack > hbox > .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/close-default-hdpi.png");
+}
+
+.documenttab-close-container:hover:active > .documenttab-close {
+  list-style-image: url("chrome://browser/skin/images/close-active-hdpi.png");
+}
+
+documenttab:only-child > stack > hbox > .documenttab-close {
   display: none;
 }
 
-documenttab[reload="true"] .documenttab-reload {
-  background: rgba(137,215,21,0.8) url("chrome://browser/skin/images/reload-tab.png") no-repeat center center;
+documenttab[reload="true"] {
+  background: url("chrome://browser/skin/images/tab-closed-hdpi.png") bottom repeat-x;
+}
+
+.documenttab-reload {
+  background: url("chrome://browser/skin/images/tab-reopen-hdpi.png");
+  display: none;
+}
+
+documenttab[reload="true"] > stack > .documenttab-close-container {
+  display: none;
+}
+
+documenttab[reload="true"] > stack > .documenttab-reload {
   display: -moz-box;
 }
 
