@@ -1651,6 +1651,20 @@ var FindHelperUI = {
     close: "cmd_findClose"
   },
 
+  _status: null,
+
+  get status() {
+    return this._status;
+  },
+
+  set status(val) {
+    if (val != this._status) {
+      this._status = val;
+      this._textbox.setAttribute("status", val);
+      this.updateCommands(this._textbox.value);
+    }
+  },
+
   init: function findHelperInit() {
     this._textbox = document.getElementById("find-helper-textbox");
     this._container = document.getElementById("content-navigator");
@@ -1671,6 +1685,7 @@ var FindHelperUI = {
     let json = aMessage.json;
     switch(aMessage.name) {
       case "FindAssist:Show":
+        this.status = json.result;
         if (json.rect)
           this._zoom(Rect.fromRect(json.rect));
         break;
@@ -1713,8 +1728,9 @@ var FindHelperUI = {
   },
 
   updateCommands: function findHelperUpdateCommands(aValue) {
-    this._cmdPrevious.setAttribute("disabled", aValue == "");
-    this._cmdNext.setAttribute("disabled", aValue == "");
+    let disabled = (this._status == Ci.nsITypeAheadFind.FIND_NOTFOUND) || (aValue == "");
+    this._cmdPrevious.setAttribute("disabled", disabled);
+    this._cmdNext.setAttribute("disabled", disabled);
   },
 
   _zoom: function _findHelperZoom(aElementRect) {
