@@ -40,6 +40,8 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 relativesrcdir  = mobile/chrome
+TESTXPI  = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/addons
+ADDONSRC = $(srcdir)/addons
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -58,6 +60,7 @@ _BROWSER_FILES = \
   browser_click_content.js \
   browser_contacts.js \
   browser_find.js \
+  browser_addons.js \
   browser_forms.html \
   browser_forms.js \
   browser_mainui.js \
@@ -77,7 +80,21 @@ _BROWSER_FILES = \
   browser_viewport.sjs \
   browser_no_title.html \
   browser_english_title.html \
+  browser_install.xml \
+  browser_upgrade.rdf\
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+
+libs::
+	rm -rf $(TESTXPI)
+	$(NSINSTALL) -D $(TESTXPI)
+	if [ -d $(ADDONSRC) ]; then \
+		$(EXIT_ON_ERROR) \
+		for dir in $(ADDONSRC)/*; do \
+			base=`basename $$dir` ; \
+			(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
+		done \
+	fi
+
