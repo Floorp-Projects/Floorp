@@ -1404,11 +1404,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
         mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
       } else {
         // Just 'margin-top' is 'auto'
-        mComputedMargin.top = availMarginSpace - mComputedMargin.bottom;
+        mComputedMargin.top = availMarginSpace;
       }
     } else {
       // Just 'margin-bottom' is 'auto'
-      mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
+      mComputedMargin.bottom = availMarginSpace;
     }
   }
 }

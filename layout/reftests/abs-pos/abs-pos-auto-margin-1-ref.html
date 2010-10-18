@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<title>'auto' top and bottom margins on absolutely positioned elements</title>
+<style>
+
+body > div {
+  position: relative;
+  height: 100px;
+  border: medium solid;
+}
+
+body > div > div {
+  position: absolute;
+  top: 0;
+  height: 40px;
+  width: 10px;
+  background: blue;
+}
+
+</style>
+<div>
+  <div style="left: 10px;top: 10px"></div>
+  <div style="left: 30px;top: 40px"></div>
+  <div style="left: 50px;top: 10px"></div>
+  <div style="left: 70px;top: 30px"></div>
+</div>
