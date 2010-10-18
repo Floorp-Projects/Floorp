@@ -132,8 +132,8 @@ const uint32 JSSLOT_PROXY_HANDLER = 0;
 const uint32 JSSLOT_PROXY_PRIVATE = 1;
 const uint32 JSSLOT_PROXY_EXTRA   = 2;
 /* Function proxies only. */
-const uint32 JSSLOT_PROXY_CALL = 2;
-const uint32 JSSLOT_PROXY_CONSTRUCT = 3;
+const uint32 JSSLOT_PROXY_CALL = 3;
+const uint32 JSSLOT_PROXY_CONSTRUCT = 4;
 
 extern JS_FRIEND_API(js::Class) ObjectProxyClass;
 extern JS_FRIEND_API(js::Class) FunctionProxyClass;
