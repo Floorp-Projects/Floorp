@@ -2045,7 +2045,7 @@ var FormHelperUI = {
         aCaretRect.x = aElementRect.x;
       }
 
-      let zoomLevel = browser.scale;
+      let oldZoomLevel = zoomLevel = browser.scale;
       let enableZoom = Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom");
       if (enableZoom) {
         zoomLevel = (viewAreaHeight / caretLines) / harmonizedCaretHeight;
@@ -2064,21 +2064,22 @@ var FormHelperUI = {
                : aCaretRect.x - viewAreaWidth + margin + marginRight;
       // Use the adjusted Caret Y minus a margin for our visible rect
       let y = harmonizedCaretY - margin;
-      x *= browser.scale;
-      y *= browser.scale;
+      x *= oldZoomLevel;
+      y *= oldZoomLevel;
 
       let scroll = browser.getPosition();
 
       // from here on play with zoomed values
       // if we want to have it animated, build up zoom rect and animate.
-      if (enableZoom && browser.scale != zoomLevel) {
+      if (enableZoom) {
         // don't use browser functions they are bogus for this case
-        let zoomRatio = zoomLevel / browser.scale;
+        let zoomRatio = zoomLevel / oldZoomLevel;
 
         let visW = window.innerWidth, visH = window.innerHeight;
         let newVisW = visW / zoomRatio, newVisH = visH / zoomRatio;
         let zoomRect = new Rect(x, y, newVisW, newVisH);
-
+        zoomRect.translateInside(new Rect(0, 0, browser.contentDocumentWidth * oldZoomLevel,
+                                                browser.contentDocumentHeight * oldZoomLevel));
         Browser.animatedZoomTo(zoomRect);
       }
       else { // no zooming at all
