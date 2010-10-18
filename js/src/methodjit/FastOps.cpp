@@ -1220,9 +1220,7 @@ mjit::Compiler::jsop_setelem()
 
     /* obj.isDenseArray() */
     RegisterID objReg = frame.copyDataIntoReg(obj);
-    Jump guardDense = masm.branchPtr(Assembler::NotEqual,
-                                      Address(objReg, offsetof(JSObject, clasp)),
-                                      ImmPtr(&js_ArrayClass));
+    Jump guardDense = masm.testObjClass(Assembler::NotEqual, objReg, &js_ArrayClass);
     stubcc.linkExit(guardDense, Uses(3));
 
     /* guard within capacity */
@@ -1367,54 +1365,18 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
                                    MaybeRegisterID &idReg, RegisterID tmpReg)
 {
     /* Note: idReg is only valid if id is not a constant. */
-    Jump guardDense = masm.branchPtr(Assembler::NotEqual,
-                                     Address(objReg, offsetof(JSObject, clasp)),
-                                     ImmPtr(&js_ArrayClass));
+    Jump guardDense = masm.testObjClass(Assembler::NotEqual, objReg, &js_ArrayClass);
     stubcc.linkExit(guardDense, Uses(2));
 
-    /* Guard within capacity. */
-    Jump inRange;
-    Address capacity(objReg, offsetof(JSObject, capacity));
-    if (id->isConstant()) {
-        inRange = masm.branch32(Assembler::LessThanOrEqual, capacity,
-                                Imm32(id->getValue().toInt32()));
-    } else {
-        inRange = masm.branch32(Assembler::AboveOrEqual, idReg.reg(), capacity);
-    }
-    stubcc.linkExit(inRange, Uses(2));
+    Int32Key key = idReg.isSet()
+                   ? Int32Key::FromRegister(idReg.reg())
+                   : Int32Key::FromConstant(id->getValue().toInt32());
 
-    /* load dslots */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    Assembler::FastArrayLoadFails fails =
+        masm.fastArrayLoad(objReg, key, tmpReg, objReg);
 
-    /* guard within capacity */
-    if (id->isConstant()) {
-        /* guard not a hole */
-        Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
-#if defined JS_NUNBOX32
-        masm.loadTypeTag(slot, tmpReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
-        masm.loadPayload(slot, objReg);
-#elif defined JS_PUNBOX64
-        masm.loadValueAsComponents(slot, tmpReg, objReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
-#endif
-        stubcc.linkExit(notHole, Uses(2));
-    } else {
-        /* guard not a hole */
-        BaseIndex slot(objReg, idReg.reg(), Assembler::JSVAL_SCALE);
-#if defined JS_NUNBOX32
-        masm.loadTypeTag(slot, tmpReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
-        masm.loadPayload(slot, objReg);
-#elif defined JS_PUNBOX64
-        masm.loadValueAsComponents(slot, tmpReg, objReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, tmpReg, ImmType(JSVAL_TYPE_MAGIC));
-#endif
-        stubcc.linkExit(notHole, Uses(2));
-    }
-    /* Postcondition: type must be in tmpReg, data must be in objReg. */
-
-    /* Note: linkExits will be hooked up to a leave() after this method completes. */
+    stubcc.linkExit(fails.rangeCheck, Uses(2));
+    stubcc.linkExit(fails.holeCheck, Uses(2));
 }
 
 bool
