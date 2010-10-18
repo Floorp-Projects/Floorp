@@ -683,6 +683,9 @@ PRBool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty);
+  if (propID == eCSSProperty_UNKNOWN) {
+    return PR_FALSE;
+  }
   return GetValueIsImportant(propID);
 }
 
