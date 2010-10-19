@@ -491,18 +491,8 @@ namespace nanojit
         NanoAssert(op == LIR_xt || op == LIR_xf);
         return LOpcode(op ^ 1);
     }
-    inline LOpcode invertCmpIOpcode(LOpcode op) {
-        NanoAssert(isCmpIOpcode(op));
-        return LOpcode(op ^ 1);
-    }
-#ifdef NANOJIT_64BIT
-    inline LOpcode invertCmpQOpcode(LOpcode op) {
-        NanoAssert(isCmpQOpcode(op));
-        return LOpcode(op ^ 1);
-    }
-#endif
-    inline LOpcode invertCmpDOpcode(LOpcode op) {
-        NanoAssert(isCmpDOpcode(op));
+    inline LOpcode invertCmpOpcode(LOpcode op) {
+        NanoAssert(isCmpOpcode(op));
         return LOpcode(op ^ 1);
     }
 
