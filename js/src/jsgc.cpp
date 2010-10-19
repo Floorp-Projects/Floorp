@@ -2563,7 +2563,13 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
 #ifdef DEBUG
     int stackDummy;
-    JS_ASSERT(JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy));
+# if JS_STACK_GROWTH_DIRECTION > 0
+    /* cx->stackLimit is set to jsuword(-1). */
+    JS_ASSERT_IF(cx->stackLimit, JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy));
+# else
+    /* -4k because it is possible to perform a GC during an overrecursion report. */
+    JS_ASSERT_IF(cx->stackLimit, JS_CHECK_STACK_SIZE(cx->stackLimit - 4096, &stackDummy));
+# endif
 #endif
 
     GCTIMER_BEGIN();
