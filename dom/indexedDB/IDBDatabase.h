@@ -122,8 +122,6 @@ public:
   void Invalidate();
   bool IsInvalidated();
 
-  void WaitForConnectionReleased();
-
 private:
   IDBDatabase();
   ~IDBDatabase();
