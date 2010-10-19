@@ -4254,7 +4254,7 @@ mjit::Compiler::jsop_instanceof()
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
 
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false, false))
         return false;
 
     /* Primitive prototypes are invalid. */
