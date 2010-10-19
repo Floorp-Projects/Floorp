@@ -212,6 +212,13 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
+namespace js {
+
+extern JSBool
+GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp);
+
+} /* namespace js */
+
 extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp, JSBool strict);
 

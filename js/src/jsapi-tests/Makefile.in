@@ -60,6 +60,7 @@ CPPSRCS = \
   testExtendedEq.cpp \
   testFuncCallback.cpp \
   testGCChunkAlloc.cpp \
+  testGetPropertyDefault.cpp \
   testIntString.cpp \
   testIsAboutToBeFinalized.cpp \
   testLookup.cpp \
