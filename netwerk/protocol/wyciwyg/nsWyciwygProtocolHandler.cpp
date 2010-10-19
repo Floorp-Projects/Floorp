@@ -48,8 +48,8 @@
 #include "mozilla/net/NeckoChild.h"
 #endif
 
-using namespace mozilla::net;
 #ifdef MOZ_IPC
+using namespace mozilla::net;
 #include "mozilla/net/WyciwygChannelChild.h"
 #endif
 
