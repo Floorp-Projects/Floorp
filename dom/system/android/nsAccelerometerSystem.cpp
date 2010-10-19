@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -53,10 +54,12 @@ nsAccelerometerSystem::~nsAccelerometerSystem()
 
 void nsAccelerometerSystem::Startup()
 {
-    AndroidBridge::Bridge()->EnableAccelerometer(true);
+    if (AndroidBridge::Bridge())
+        AndroidBridge::Bridge()->EnableAccelerometer(true);
 }
 
 void nsAccelerometerSystem::Shutdown()
 {
-    AndroidBridge::Bridge()->EnableAccelerometer(false);
+    if (AndroidBridge::Bridge())
+        AndroidBridge::Bridge()->EnableAccelerometer(false);
 }
