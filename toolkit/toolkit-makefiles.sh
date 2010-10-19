@@ -316,6 +316,13 @@ MAKEFILES_libvorbis="
   media/libvorbis/include/vorbis/Makefile
 "
 
+MAKEFILES_libtremor="
+  media/libtremor/Makefile
+  media/libtremor/lib/Makefile
+  media/libtremor/include/Makefile
+  media/libtremor/include/tremor/Makefile
+"
+
 MAKEFILES_libvpx="
   media/libvpx/Makefile
 "
@@ -1213,6 +1220,13 @@ fi
 if [ "$MOZ_VORBIS" ]; then
  add_makefiles "
    $MAKEFILES_libvorbis
+   $MAKEFILES_libogg
+ "
+fi
+
+if [ "$MOZ_TREMOR" ]; then
+ add_makefiles "
+   $MAKEFILES_libtremor
    $MAKEFILES_libogg
  "
 fi

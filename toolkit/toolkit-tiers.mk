@@ -148,6 +148,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_TREMOR
+tier_platform_dirs += \
+		media/libtremor \
+		$(NULL)
+endif
+
 ifdef MOZ_WEBM
 tier_platform_dirs += \
 		media/libnestegg \

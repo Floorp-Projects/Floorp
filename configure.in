@@ -4958,6 +4958,7 @@ MOZ_OGG=1
 MOZ_RAW=
 MOZ_SYDNEYAUDIO=
 MOZ_VORBIS=
+MOZ_TREMOR=
 MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_WEBM=1
@@ -5955,7 +5956,14 @@ if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
-    MOZ_VORBIS=1
+    case "$target_cpu" in
+    arm*)
+        MOZ_TREMOR=1
+    ;;
+    *)
+        MOZ_VORBIS=1
+    ;;
+    esac
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5991,7 +5999,15 @@ if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
-    MOZ_VORBIS=1
+    case "$target_cpu" in
+    arm*)
+        MOZ_TREMOR=1
+    ;;
+    *)
+        MOZ_VORBIS=1
+    ;;
+    esac
+
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all platforms and require yasm 1.1.0 on Win32.
@@ -6081,8 +6097,16 @@ if test -n "$MOZ_MEDIA"; then
     AC_DEFINE(MOZ_MEDIA)
 fi
 
+if test -n "$MOZ_VORBIS" -a -n "$MOZ_TREMOR"; then
+    AC_MSG_ERROR([MOZ_VORBIS and MOZ_TREMOR are mutually exclusive!  The build system should not allow them both to be set, but they are.  Please file a bug at https://bugzilla.mozilla.org/])
+fi
+
 if test -n "$MOZ_VORBIS"; then
     AC_DEFINE(MOZ_VORBIS)
+fi
+
+if test -n "$MOZ_TREMOR"; then
+    AC_DEFINE(MOZ_TREMOR)
 fi
 
 dnl ========================================================
@@ -9071,6 +9095,7 @@ AC_SUBST(MOZ_MEDIA)
 AC_SUBST(MOZ_SYDNEYAUDIO)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
+AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
