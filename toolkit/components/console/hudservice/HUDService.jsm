@@ -697,7 +697,7 @@ function NetworkPanel(aParent, aHttpActivity)
   });
 
   // Create the iframe that displays the NetworkPanel XHTML.
-  this.browser = createAndAppendElement(this.panel, "iframe", {
+  this.iframe = createAndAppendElement(this.panel, "iframe", {
     src: "chrome://browser/content/NetworkPanel.xhtml",
     type: "content",
     flex: "1"
@@ -710,7 +710,7 @@ function NetworkPanel(aParent, aHttpActivity)
     self.panel.removeEventListener("popuphidden", onPopupHide, false);
     self.panel.parentNode.removeChild(self.panel);
     self.panel = null;
-    self.browser = null;
+    self.iframe = null;
     self.document = null;
     self.httpActivity = null;
 
@@ -723,7 +723,7 @@ function NetworkPanel(aParent, aHttpActivity)
   // Set the document object and update the content once the panel is loaded.
   this.panel.addEventListener("load", function onLoad() {
     self.panel.removeEventListener("load", onLoad, true)
-    self.document = self.browser.contentWindow.document;
+    self.document = self.iframe.contentWindow.document;
     self.update();
   }, true);
 
@@ -1184,14 +1184,14 @@ NetworkPanel.prototype =
   },
 
   /**
-   * Updates the content of the NetworkPanel's browser.
+   * Updates the content of the NetworkPanel's iframe.
    *
    * @returns void
    */
   update: function NP_update()
   {
     /**
-     * After the browser contentWindow is ready, the document object is set.
+     * After the iframe's contentWindow is ready, the document object is set.
      * If the document object isn't set yet, then the page is loaded and nothing
      * can be updated.
      */
