@@ -68,7 +68,7 @@ using namespace mozilla::services;
 
 namespace {
 
-bool gShutdown = false;
+PRInt32 gShutdown = 0;
 
 // Does not hold a reference.
 IndexedDatabaseManager* gInstance = nsnull;
@@ -116,7 +116,7 @@ IndexedDatabaseManager::GetOrCreate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (gShutdown) {
+  if (IsShuttingDown()) {
     NS_ERROR("Calling GetOrCreateInstance() after shutdown!");
     return nsnull;
   }
@@ -153,7 +153,8 @@ IndexedDatabaseManager::GetOrCreate()
 
     // Make a lazy thread for any IO we need (like clearing or enumerating the
     // contents of indexedDB database directories).
-    instance->mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS);
+    instance->mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                             LazyIdleThread::ManualShutdown);
 
     // The observer service will hold our last reference, don't AddRef here.
     gInstance = instance;
@@ -187,7 +188,7 @@ IndexedDatabaseManager::RegisterDatabase(IDBDatabase* aDatabase)
   NS_ASSERTION(aDatabase, "Null pointer!");
 
   // Don't allow any new databases to be created after shutdown.
-  if (gShutdown) {
+  if (IsShuttingDown()) {
     return false;
   }
 
@@ -205,6 +206,8 @@ IndexedDatabaseManager::RegisterDatabase(IDBDatabase* aDatabase)
     NS_WARNING("Out of memory?");
     return false;
   }
+
+  aDatabase->mRegistered = true;
   return true;
 }
 
@@ -285,6 +288,13 @@ IndexedDatabaseManager::WaitForClearAndDispatch(const nsACString& aOrigin,
   // We aren't currently clearing databases for this origin, so dispatch the
   // runnable immediately.
   return NS_DispatchToCurrentThread(aRunnable);
+}
+
+// static
+bool
+IndexedDatabaseManager::IsShuttingDown()
+{
+  return !!gShutdown;
 }
 
 NS_IMPL_ISUPPORTS2(IndexedDatabaseManager, nsIIndexedDatabaseManager,
@@ -445,9 +455,11 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID)) {
-    // Setting this flag prevents the servic from being recreated and prevents
+    // Setting this flag prevents the service from being recreated and prevents
     // further databases from being created.
-    gShutdown = true;
+    if (PR_AtomicSet(&gShutdown, 1)) {
+      NS_ERROR("Shutdown more than once?!");
+    }
 
     // Make sure to join with our IO thread.
     if (NS_FAILED(mIOThread->Shutdown())) {
