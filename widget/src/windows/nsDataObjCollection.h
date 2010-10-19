@@ -154,14 +154,6 @@ class nsDataObjCollection : public nsIDataObjCollection, public nsDataObj
 
     // Return the adapter
     //CfDragDrop& GetDragDrop() const;
-        
-    // IAsyncOperation methods
-    STDMETHOD(EndOperation)(HRESULT hResult, IBindCtx *pbcReserved,
-                            DWORD dwEffects);
-    STDMETHOD(GetAsyncMode)(BOOL *pfIsOpAsync);
-    STDMETHOD(InOperation)(BOOL *pfInAsyncOp);
-    STDMETHOD(SetAsyncMode)(BOOL fDoOpAsync);
-    STDMETHOD(StartOperation)(IBindCtx *pbcReserved);
 
   protected:
     BOOL FormatsMatch(const FORMATETC& source, const FORMATETC& target) const;
