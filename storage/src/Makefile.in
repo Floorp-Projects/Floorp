@@ -80,6 +80,7 @@ CPPSRCS = \
   mozStorageAsyncStatementParams.cpp \
   StorageBaseStatementInternal.cpp \
   SQLCollations.cpp \
+  VacuumManager.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
