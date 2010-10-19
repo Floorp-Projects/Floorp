@@ -309,6 +309,7 @@
 #titlebar-content {
   margin-left: 15px;
   margin-right: 15px;
+  -moz-box-align: start;
 }
 
 @media all and (-moz-windows-classic) {
@@ -319,7 +320,6 @@
 
 #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box;
-  -moz-box-align: start;
 }
 
 #main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
