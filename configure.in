@@ -7072,6 +7072,8 @@ if test -n "$MOZ_THUMB2"; then
   esac
 fi
 
+AC_SUBST(MOZ_THUMB2)
+
 dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================
