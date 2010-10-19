@@ -40,6 +40,15 @@
 #include "nsISupports.idl"
 #include "nsIPrefBranch.idl"
 
+%{C++
+struct PrefTuple;
+template<class E> class nsTArray;
+%}
+
+[ptr] native nsPreferencesArrayPtr(nsTArray<PrefTuple>);
+[ptr] native nsPreferencePtr(PrefTuple);
+[ptr] native nsPreferencePtrConst(const PrefTuple);
+
 interface nsIFile;
 interface nsILocalFile;
 
@@ -169,19 +178,19 @@ interface nsIPrefServiceInternal : nsISupports
    */
   void readExtensionPrefs(in nsILocalFile aFile);
 
-  ACString serializePreferences();
-  ACString serializePreference(in ACString aPrefName);
-  void readPrefBuffer(in ACString aBuffer);
+  [noscript] void mirrorPreferences(in nsPreferencesArrayPtr aArray);
+  [noscript] void mirrorPreference(in ACString aPrefName, in nsPreferencePtr aPref);
+  [noscript] void setPreference(in nsPreferencePtrConst aPref);
 };
 
 %{C++
 
 #define NS_PREFSERVICE_CID                             \
   { /* {1cd91b88-1dd2-11b2-92e1-ed22ed298000} */       \
-    0x1cd91b88,                                        \
-    0x1dd2,                                            \
-    0x11b2,                                            \
-    { 0x92, 0xe1, 0xed, 0x22, 0xed, 0x29, 0x80, 0x00 } \
+    0x91ca2441,                                        \
+    0x050f,                                            \
+    0x4f7c,                                            \
+    { 0x9d, 0xf8, 0x75, 0xb4, 0x0e, 0xa4, 0x01, 0x56 } \
   }
 
 #define NS_PREFSERVICE_CONTRACTID "@mozilla.org/preferences-service;1"

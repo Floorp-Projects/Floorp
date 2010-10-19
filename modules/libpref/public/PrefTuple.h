@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla preference service code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mike Kristoffersen <moz@mikek.dk> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,31 +34,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Data shared between prefapi.c and nsPref.cpp */
+#ifndef preftuple_included
+#define preftuple_included
 
-extern PLDHashTable			gHashTable;
-extern PRBool               gDirty;
+#include "nsTArray.h"
+#include "nsString.h"
 
-struct PrefTuple;
+struct PrefTuple
+{
+  nsCAutoString key;
 
-enum pref_SaveTypes { SAVE_NONSHARED, SAVE_SHARED, SAVE_ALL, SAVE_ALL_AND_DEFAULTS };
+  // We don't use a union to avoid allocations when using the string component
+  // NOTE: Only one field will be valid at any given time, as indicated by the type enum
+  nsCAutoString stringVal;
+  PRInt32       intVal;
+  bool          boolVal;
 
-// Passed as the arg to pref_savePref
-struct pref_saveArgs {
-  char **prefArray;
-  pref_SaveTypes saveTypes;
+  enum {
+    PREF_STRING,
+    PREF_INT,
+    PREF_BOOL
+  } type;
+
 };
 
-PLDHashOperator
-pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
+#endif
 
-PLDHashOperator
-pref_MirrorPrefs(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
-
-nsresult
-pref_SetPrefTuple(const PrefTuple &aPref,PRBool set_default = PR_FALSE);
-
-int pref_CompareStrings(const void *v1, const void *v2, void* unused);
-PrefHashEntry* pref_HashTableLookup(const void *key);
-
-void pref_GetTupleFromEntry(PrefHashEntry *aHashEntry, PrefTuple *aTuple);
