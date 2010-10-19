@@ -105,7 +105,7 @@ void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutActivationObjects(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
 #if JS_MONOIC
-void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::MICInfo *mic);
+void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::TraceICInfo *tic);
 #else
 void * JS_FASTCALL InvokeTracer(VMFrame &f);
 #endif

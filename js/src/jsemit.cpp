@@ -111,7 +111,8 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     constList(parser->context),
     globalUses(ContextAllocPolicy(parser->context)),
     closedArgs(ContextAllocPolicy(parser->context)),
-    closedVars(ContextAllocPolicy(parser->context))
+    closedVars(ContextAllocPolicy(parser->context)),
+    traceIndex(0)
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -1400,6 +1401,15 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
     *lastp = offset;
     JS_ASSERT(delta > 0);
     return EmitJump(cx, cg, op, delta);
+}
+
+static ptrdiff_t
+EmitTraceOp(JSContext *cx, JSCodeGenerator *cg)
+{
+    uint32 index = cg->traceIndex;
+    if (index < UINT16_MAX)
+        cg->traceIndex++;
+    return js_Emit3(cx, cg, JSOP_TRACE, UINT16_HI(index), UINT16_LO(index));
 }
 
 /*
@@ -4821,7 +4831,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = js_Emit1(cx, cg, JSOP_TRACE);
+        top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
@@ -4844,7 +4854,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /* Compile the loop body. */
-        top = js_Emit1(cx, cg, JSOP_TRACE);
+        top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_DO_LOOP, top);
@@ -4944,7 +4954,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
-            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+            if (EmitTraceOp(cx, cg) < 0)
                 return JS_FALSE;
 
 #ifdef DEBUG
@@ -5171,7 +5181,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             SET_STATEMENT_TOP(&stmtInfo, top);
 
             /* Emit code for the loop body. */
-            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+            if (EmitTraceOp(cx, cg) < 0)
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
@@ -6471,7 +6481,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_FILTER, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = js_Emit1(cx, cg, JSOP_TRACE);
+        top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))

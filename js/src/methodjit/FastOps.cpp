@@ -670,10 +670,21 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
 
             if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
                 (op == JSOP_NE && fused == JSOP_IFEQ)) {
-                Jump j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
-                jumpAndTrace(j, target);
-                j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
-                jumpAndTrace(j, target);
+                /*
+                 * It would be easier to just have two jumpAndTrace calls here, but since
+                 * each jumpAndTrace creates a TRACE IC, and since we want the bytecode
+                 * to have a reference to the TRACE IC at the top of the loop, it's much
+                 * better to have only one TRACE IC per loop, and hence at most one
+                 * jumpAndTrace.
+                 */
+                Jump b1 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
+                Jump b2 = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
+                Jump j1 = masm.jump();
+                b1.linkTo(masm.label(), &masm);
+                b2.linkTo(masm.label(), &masm);
+                Jump j2 = masm.jump();
+                jumpAndTrace(j2, target);
+                j1.linkTo(masm.label(), &masm);
             } else {
                 Jump j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
                 Jump j2 = masm.branchPtr(Assembler::NotEqual, reg, ImmType(JSVAL_TYPE_NULL));
