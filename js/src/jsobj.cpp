@@ -5152,6 +5152,23 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
+js::GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp)
+{
+    JSProperty *prop;
+    JSObject *obj2;
+    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
+        return false;
+
+    if (!prop) {
+        *vp = def;
+        return true;
+    }
+
+    obj2->dropProperty(cx, prop);
+    return js_GetProperty(cx, obj2, id, vp);
+}
+
+JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 {
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);

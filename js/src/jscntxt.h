@@ -2907,6 +2907,23 @@ class AutoReleasePtr {
     ~AutoReleasePtr() { cx->free(ptr); }
 };
 
+/*
+ * FIXME: bug 602774: cleaner API for AutoReleaseNullablePtr
+ */
+class AutoReleaseNullablePtr {
+    JSContext   *cx;
+    void        *ptr;
+    AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other);
+  public:
+    explicit AutoReleaseNullablePtr(JSContext *cx, void *ptr) : cx(cx), ptr(ptr) {}
+    void reset(void *ptr2) {
+        if (ptr)
+            cx->free(ptr);
+        ptr = ptr2;
+    }
+    ~AutoReleaseNullablePtr() { if (ptr) cx->free(ptr); }
+};
+
 class AutoLocalNameArray {
   public:
     explicit AutoLocalNameArray(JSContext *cx, JSFunction *fun
