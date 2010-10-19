@@ -1060,8 +1060,9 @@ GestureModule.prototype = {
     this._pinchZoom = AnimatedZoom;
     this._pinchStartRect = AnimatedZoom.getStartRect();
 
-    // start from current zoom level
-    this._pinchStartScale = this._pinchScale = getBrowser().scale;
+    let browser = getBrowser();
+    this._pinchStartScale = this._pinchScale = browser.scale;
+
     this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
     // cache gesture limit values
@@ -1069,9 +1070,10 @@ GestureModule.prototype = {
     this._maxShrink = Services.prefs.getIntPref("browser.ui.pinch.maxShrink");
     this._scalingFactor = Services.prefs.getIntPref("browser.ui.pinch.scalingFactor");
 
-    // save the initial gesture start point as reference
-    this._pinchStartX = aEvent.clientX;
-    this._pinchStartY = aEvent.clientY;
+    // Adjust the client coordinates to be relative to the browser element's top left corner.
+    this._browserBCR = browser.getBoundingClientRect();
+    this._pinchStartX = aEvent.clientX - this._browserBCR.left;
+    this._pinchStartY = aEvent.clientY - this._browserBCR.top;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
@@ -1086,7 +1088,8 @@ GestureModule.prototype = {
 
     let startScale = this._pinchStartScale;
     let scaleRatio = startScale / newScale;
-    let [cX, cY] = [aEvent.clientX, aEvent.clientY];
+    let cX = aEvent.clientX - this._browserBCR.left;
+    let cY = aEvent.clientY - this._browserBCR.top;
 
     // Calculate the new zoom rect.
     let rect = this._pinchStartRect.clone();

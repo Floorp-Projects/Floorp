@@ -75,14 +75,15 @@ const AnimatedZoom = {
     }
   },
 
+  /** Get the visible rect, in device pixels relative to the content origin. */
   getStartRect: function getStartRect() {
     let browser = getBrowser();
-    let browserRect = Rect.fromRect(browser.getBoundingClientRect());
+    let bcr = browser.getBoundingClientRect();
     let scroll = browser.getPosition();
-    return browserRect.translate(scroll.x, scroll.y);
+    return new Rect(scroll.x, scroll.y, bcr.width, bcr.height);
   },
 
-  /** Updates the zoom to new rect. */
+  /** Update the visible rect, in device pixels relative to the content origin. */
   updateTo: function(nextRect) {
     let zoomRatio = window.innerWidth / nextRect.width;
     let zoomLevel = getBrowser().scale * zoomRatio;
