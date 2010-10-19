@@ -425,14 +425,14 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
       return PR_FALSE;
     }
 
-    float** pcm = 0;
+    VorbisPCMValue** pcm = 0;
     PRInt32 samples = 0;
     while ((samples = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
-      float* buffer = new float[samples * mChannels];
-      float* p = buffer;
-      for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
-        for (PRUint32 j = 0; j < mChannels; ++j) {
-          *p++ = pcm[j][i];
+      SoundDataValue* buffer = new SoundDataValue[samples * mChannels];
+      for (PRUint32 j = 0; j < mChannels; ++j) {
+        VorbisPCMValue* channel = pcm[j];
+        for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
+          buffer[i*mChannels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
         }
       }
 

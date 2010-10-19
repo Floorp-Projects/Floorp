@@ -46,7 +46,11 @@
 #include "nestegg/nestegg.h"
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
+#ifdef MOZ_TREMOR
+#include "tremor/ivorbiscodec.h"
+#else
 #include "vorbis/codec.h"
+#endif
 
 class nsMediaDecoder;
 
