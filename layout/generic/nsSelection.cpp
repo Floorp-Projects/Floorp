@@ -5146,14 +5146,21 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
 
   if (NS_FAILED(res))
     return res;
+  // We pass |disconnected| to the following ComparePoints calls in order
+  // to avoid assertions, and there is no special handling required, since
+  // ComparePoints returns 1 in the disconnected case.
+  PRBool disconnected = PR_FALSE;
   PRInt32 result1 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                  focusNode, focusOffset);
+                                                  focusNode, focusOffset,
+                                                  &disconnected);
   //compare old cursor to new cursor
   PRInt32 result2 = nsContentUtils::ComparePoints(focusNode, focusOffset,
-                                                  aParentNode, aOffset);
+                                                  aParentNode, aOffset,
+                                                  &disconnected);
   //compare anchor to new cursor
   PRInt32 result3 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                  aParentNode, aOffset);
+                                                  aParentNode, aOffset,
+                                                  &disconnected);
 
   if (result2 == 0) //not selecting anywhere
     return NS_OK;
