@@ -185,6 +185,11 @@ button:focus > .button-box {
   border: 1px solid transparent;
 }
 
+/* Override GTK2 system setting */
+.button-icon {
+  display: -moz-initial !important;
+}
+
 /* dark buttons ------------------------------------------------------------ */
 /*
   we set notification buttons here as well, since the style can't be set in

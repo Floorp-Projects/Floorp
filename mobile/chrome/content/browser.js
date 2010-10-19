@@ -1207,6 +1207,61 @@ nsBrowserAccess.prototype = {
 
 
 const BrowserSearch = {
+  get _popup() {
+    delete this._popup;
+    return this._popup = document.getElementById("search-engines-popup");
+  },
+
+  get _list() {
+    delete this._list;
+    return this._list = document.getElementById("search-engines-list");
+  },
+
+  get _button() {
+    delete this._button;
+    return this._button = document.getElementById("tool-search");
+  },
+
+  toggle: function bs_toggle() {
+    if (this._popup.hidden)
+      this.show();
+    else
+      this.hide();
+  },
+
+  show: function bs_show() {
+    let popup = this._popup;
+    let list = this._list;
+    while (list.lastChild)
+      list.removeChild(list.lastChild);
+
+    this.engines.forEach(function(aEngine) {
+      let button = document.createElement("button");
+      button.className = "prompt-button";
+      button.setAttribute("label", aEngine.name);
+      button.setAttribute("pack", "start");
+      button.setAttribute("image", aEngine.iconURI ? aEngine.iconURI.spec : null);
+      button.onclick = function() {
+        popup.hidden = true;
+        BrowserUI.doOpenSearch(aEngine.name);
+      }
+      list.appendChild(button);
+    });
+
+    popup.hidden = false;
+    popup.top = BrowserUI.toolbarH - popup.offset;
+    popup.anchorTo(document.getElementById("tool-search"));
+
+    document.getElementById("urlbar-icons").setAttribute("open", "true");
+    BrowserUI.pushPopup(this, [popup, this._button]);
+  },
+
+  hide: function bs_hide() {
+    this._popup.hidden = true;
+    document.getElementById("urlbar-icons").removeAttribute("open");
+    BrowserUI.popPopup();
+  },
+
   observe: function bs_observe(aSubject, aTopic, aData) {
     if (aTopic != "browser-search-engine-modified")
       return;
@@ -1238,16 +1293,8 @@ const BrowserSearch = {
     if (this._engines)
       return this._engines;
 
-    let engines = Services.search.getVisibleEngines({ }).map(
-      function(item, index, array) {
-        return { 
-          label: item.name,
-          default: (item == Services.search.defaultEngine),
-          image: item.iconURI ? item.iconURI.spec : null
-        }
-    });
-
-    return this._engines = engines;
+    this._engines = Services.search.getVisibleEngines({ });
+    return this._engines;
   },
 
   updatePageSearchEngines: function updatePageSearchEngines(aNode) {
@@ -1275,7 +1322,7 @@ const BrowserSearch = {
 
   isPermanentSearchEngine: function isPermanentSearchEngine(aEngine) {
     return !BrowserSearch.engines.some(function(item) {
-      return aEngine.title == item.label;
+      return aEngine.title == item.name;
     });
   }
 };
@@ -1740,13 +1787,6 @@ IdentityHandler.prototype = {
   },
 
   toggle: function ih_toggle() {
-    // When the urlbar is active the identity button is used to show the
-    // list of search engines
-    if (Elements.urlbarState.getAttribute("mode") == "edit") {
-      CommandUpdater.doCommand("cmd_opensearch");
-      return;
-    }
-
     if (this._identityPopup.hidden)
       this.show();
     else

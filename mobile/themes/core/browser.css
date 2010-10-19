@@ -41,7 +41,7 @@
   -moz-box-align: center;
   padding: 0 8px; /* core spacing */
   border: none;
-  background: #444444;
+  background: #5e6166;
 }
 
 #toolbar-moveable-container[top="0"] {
@@ -293,7 +293,7 @@ toolbarbutton.urlbar-button {
   padding: 0;
   -moz-border-start: 3px solid #262629;
   min-width: 80px !important;
-  background: #444444;
+  background: #5e6166;
 }
 
 toolbarbutton.button-control {
@@ -819,7 +819,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
 #tabs-container {
   padding-top: 8px;
   -moz-border-end: 3px solid #262629;
-  background: #444444;
+  background: #5e6166;
 }
 
 #tabs:-moz-locale-dir(rtl) {
