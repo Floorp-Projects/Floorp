@@ -113,7 +113,8 @@
       }
       yield;
 
-      objectStore = db.objectStore(objectStoreName);
+      objectStore = db.transaction(objectStoreName)
+                      .objectStore(objectStoreName);
 
       // Check global properties to make sure they are correct.
       is(objectStore.indexNames.length, indexData.length, "Good index count");
@@ -210,7 +211,8 @@
       is(keyIndex, objectStoreData.length - 1, "Saw all the expected keys");
 
       // Check that the name index enforces its unique constraint.
-      objectStore = db.objectStore(objectStoreName, READ_WRITE);
+      objectStore = db.transaction(objectStoreName, READ_WRITE)
+                      .objectStore(objectStoreName);
       request = objectStore.add({ name: "Bob", height: 62, weight: 170 },
                                 "237-23-7738");
       request.onerror = new ExpectError(CONSTRAINT_ERR);
