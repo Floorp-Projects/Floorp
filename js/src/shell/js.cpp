@@ -150,6 +150,7 @@ static volatile bool gCanceled = false;
 
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
+static bool enableProfiling = false;
 
 static bool printTiming = false;
 
@@ -567,7 +568,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCijmdb] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
+    fprintf(gErrFile, "usage: js [-zKPswWxCijmpdb] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
 #ifdef JS_GC_ZEAL
 "[-Z gczeal] "
 #endif
@@ -590,6 +591,7 @@ static const struct {
     {"atline",          JSOPTION_ATLINE},
     {"tracejit",        JSOPTION_JIT},
     {"methodjit",       JSOPTION_METHODJIT},
+    {"jitprofiling",    JSOPTION_PROFILING},
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
@@ -760,6 +762,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_METHODJIT);
             break;
 
+        case 'p':
+            enableProfiling = !enableProfiling;
+            JS_ToggleOptions(cx, JSOPTION_PROFILING);
+            break;
+           
         case 'o':
           {
             if (++i == argc)

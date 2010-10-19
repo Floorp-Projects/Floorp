@@ -63,7 +63,8 @@ enum JSInterpMode
 {
     JSINTERP_NORMAL            =     0, /* Interpreter is running normally. */
     JSINTERP_RECORD            =     1, /* interpreter has been started to record/run traces */
-    JSINTERP_SAFEPOINT         =     2  /* interpreter should leave on a method JIT safe point */
+    JSINTERP_SAFEPOINT         =     2, /* interpreter should leave on a method JIT safe point */
+    JSINTERP_PROFILE           =     3  /* interpreter should profile a loop */
 };
 
 /* Flags used in JSStackFrame::flags_ */
