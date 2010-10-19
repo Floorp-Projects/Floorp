@@ -941,7 +941,16 @@ RunTracer(VMFrame &f)
 
     bool blacklist;
     uintN inlineCallCount = 0;
-    tpa = MonitorTracePoint(f.cx, inlineCallCount, blacklist);
+    void **traceData;
+    uintN *traceEpoch;
+#if JS_MONOIC
+    traceData = &tic.traceData;
+    traceEpoch = &tic.traceEpoch;
+#else
+    traceData = NULL;
+    traceEpoch = NULL;
+#endif
+    tpa = MonitorTracePoint(f.cx, inlineCallCount, &blacklist, traceData, traceEpoch);
     JS_ASSERT(!TRACE_RECORDER(cx));
 
 #if JS_MONOIC

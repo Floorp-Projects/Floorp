@@ -155,6 +155,7 @@ typedef Queue<uint16> SlotList;
 class TypeMap;
 struct REFragment;
 typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
+class LoopProfile;
 
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
@@ -924,6 +925,12 @@ typedef HashMap<jsbytecode*,
                 DefaultHasher<jsbytecode*>,
                 SystemAllocPolicy> RecordAttemptMap;
 
+/* Holds the profile data for loops. */
+typedef HashMap<jsbytecode*,
+                LoopProfile*,
+                DefaultHasher<jsbytecode*>,
+                SystemAllocPolicy> LoopProfileMap;
+
 class Oracle;
 
 /*
@@ -987,12 +994,21 @@ struct TraceMonitor {
     nanojit::Assembler*     assembler;
     FrameInfoCache*         frameCache;
 
+    /* This gets incremented every time the monitor is flushed. */
+    uintN                   flushEpoch;
+
     Oracle*                 oracle;
     TraceRecorder*          recorder;
+
+    /* If we are profiling a loop, this tracks the current profile. Otherwise NULL. */
+    LoopProfile*            profile;
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
     TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
     RecordAttemptMap*       recordAttempts;
+
+    /* A hashtable mapping PC values to loop profiles for those loops. */
+    LoopProfileMap*         loopProfiles;
 
     /*
      * Maximum size of the code cache before we start flushing. 1/16 of this
@@ -2233,6 +2249,7 @@ struct JSContext
 
 #ifdef JS_METHODJIT
     bool                 methodJitEnabled;
+    bool                 profilingEnabled;
 #endif
 
     /* Caller must be holding runtime->gcLock. */
