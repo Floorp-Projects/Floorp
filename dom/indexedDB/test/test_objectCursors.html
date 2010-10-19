@@ -70,7 +70,8 @@
 
       for (let i in objectStores) {
         for (let j in indexes) {
-          let objectStore = db.objectStore(objectStores[i].name);
+          let objectStore = db.transaction(objectStores[i].name)
+                              .objectStore(objectStores[i].name);
           let index = objectStore.index(indexes[j].name);
 
           request = index.openObjectCursor();

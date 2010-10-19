@@ -53,7 +53,7 @@
       // loop.
       for (let i = 0; i < 20; i++) {
         readerCount++;
-        request = db.objectStore("foo").get(key);
+        request = db.transaction("foo").objectStore("foo").get(key);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           callbackCount++;
@@ -62,13 +62,15 @@
 
       while (continueReading) {
         readerCount++;
-        request = db.objectStore("foo").get(key);
+        request = db.transaction("foo").objectStore("foo").get(key);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           is(event.transaction.mode, READ_ONLY, "Correct mode");
           callbackCount++;
           if (callbackCount == 100) {
-            request = db.objectStore("foo", READ_WRITE).add({}, readerCount);
+            request = db.transaction("foo", READ_WRITE)
+                        .objectStore("foo")
+                        .add({}, readerCount);
             request.onerror = errorHandler;
             request.onsuccess = function(event) {
               continueReading = false;

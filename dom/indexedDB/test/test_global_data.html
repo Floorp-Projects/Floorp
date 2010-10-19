@@ -55,7 +55,8 @@
       is(objectStore1.autoIncrement, objectStore.autoIncrement,
          "Same value for autoIncrement");
 
-      let objectStore2 = db1.objectStore(objectStore.name);
+      let objectStore2 = db1.transaction(objectStore.name)
+                            .objectStore(objectStore.name);
 
       ok(objectStore1 !== objectStore2, "Different objectStores");
       is(objectStore1.name, objectStore2.name, "Same name");

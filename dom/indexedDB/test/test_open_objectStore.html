@@ -39,7 +39,8 @@
       is(db.objectStoreNames.length, 1, "Bad objectStores list");
       is(db.objectStoreNames.item(0), objectStoreName, "Bad name");
 
-      let objectStore = db.objectStore(objectStoreName);
+      let objectStore = db.transaction(objectStoreName)
+                          .objectStore(objectStoreName);
       is(objectStore.name, objectStoreName, "Bad name");
       is(objectStore.mode, nsIIDBObjectStore.READ_ONLY, "Bad mode");
       is(objectStore.keyPath, "foo", "Bad keyPath");
