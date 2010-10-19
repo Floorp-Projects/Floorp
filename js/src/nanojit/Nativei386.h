@@ -379,13 +379,16 @@ namespace nanojit
         void JNO(NIns* t); \
         void SSE(int32_t c, Register d, Register s); \
         void SSEm(int32_t c, Register r, int32_t d, Register b); \
+        void SSEsib(int32_t c, Register rr, int32_t d, Register rb, Register ri, int32_t scale); \
         void LDSDm(Register r, const double* addr); \
-        void SSE_LDSD(Register r, int32_t d, Register b); \
         void SSE_LDQ( Register r, int32_t d, Register b); \
         void SSE_LDSS(Register r, int32_t d, Register b); \
+        void SSE_LDQsib(Register r, int32_t d, Register rb, Register ri, int32_t scale); \
+        void SSE_LDSSsib(Register r, int32_t d, Register rb, Register ri, int32_t scale); \
         void SSE_STSD(int32_t d, Register b, Register r); \
         void SSE_STQ( int32_t d, Register b, Register r); \
         void SSE_STSS(int32_t d, Register b, Register r); \
+        void SSE_STQsib(int32_t d, Register rb, Register ri, int32_t scale, Register rv); \
         void SSE_CVTSI2SD(Register xr, Register gr); \
         void SSE_CVTSD2SI(Register gr, Register xr); \
         void SSE_CVTSD2SS(Register xr, Register gr); \
