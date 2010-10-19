@@ -2049,14 +2049,6 @@ var PlacesUtils = {
     }
 
   },
-
-  /**
-   * Starts the database coherence check and executes update tasks on a timer,
-   * this method is called by browser.js in delayed startup.
-   */
-  startPlacesDBUtils: function PU_startPlacesDBUtils() {
-    Cu.import("resource://gre/modules/PlacesDBUtils.jsm");
-  }
 };
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "history",
