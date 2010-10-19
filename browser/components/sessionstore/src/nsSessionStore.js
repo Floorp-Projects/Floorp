@@ -2620,13 +2620,14 @@ SessionStoreService.prototype = {
       browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = aTab;
 
+      didStartLoad = true;
       try {
-        didStartLoad = true;
         browser.webNavigation.gotoIndex(activeIndex);
       }
       catch (ex) {
         // ignore page load errors
         aTab.removeAttribute("busy");
+        didStartLoad = false;
       }
     }
 
