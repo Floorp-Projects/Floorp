@@ -150,6 +150,8 @@ public:
 
   NS_IMETHOD_(PRBool) IsHandlingUserInputExternal() { return IsHandlingUserInput(); }
   
+  nsPresContext* GetPresContext() { return mPresContext; }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
                                            nsIEventStateManager)
 

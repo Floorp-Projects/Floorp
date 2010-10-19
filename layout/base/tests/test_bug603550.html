@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=603550
+-->
+<head>
+  <title>Test for Bug 603550</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .test {
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
+    -moz-user-select: none;
+  }
+  </style>
+</head>
+<body onload="setTimeout('runTest()', 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=603550">Mozilla Bug 603550</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 603550 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function sendMouseMoveFaraway(el) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var rect = el.getBoundingClientRect();
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent('mousemove', rect.left + 5000, rect.top + 5000, 0, 0, 0);
+}
+
+function sendMouseDown(el) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var rect = el.getBoundingClientRect();
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent('mousedown', rect.left + 5, rect.top + 5, 0, 1, 0);
+}
+
+function sendMouseUp(el) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var rect = el.getBoundingClientRect();
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent('mouseup', rect.left + 5, rect.top + 5, 0, 1, 0);
+}
+
+function runTest() {
+  var d1 = document.getElementById("d1");
+  var didGetMouseMove = false;
+  sendMouseDown(d1);
+  document.addEventListener("mousemove",
+    function (e) {
+      didGetMouseMove = (e.target == document);
+    },
+    true);
+  sendMouseMoveFaraway(d1);
+  ok(didGetMouseMove, "Should have got mousemove!");
+  sendMouseUp(d1)
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+<div class="test" id="d1">&nbsp;</div>
+</body>
+</html>

@@ -6609,6 +6609,33 @@ PresShell::HandleEvent(nsIView         *aView,
 
     PresShell* shell =
         static_cast<PresShell*>(frame->PresContext()->PresShell());
+
+    // Check if we have an active EventStateManager which isn't the
+    // EventStateManager of the current PresContext.
+    // If that is the case, and mouse is over some ancestor document,
+    // forward event handling to the active document.
+    // This way content can get mouse events even when
+    // mouse is over the chrome or outside the window.
+    //
+    // Note, currently for backwards compatibility we don't forward mouse events
+    // to the active document when mouse is over some subdocument.
+    nsIEventStateManager* activeESM =
+      nsEventStateManager::GetActiveEventStateManager();
+    if (activeESM && NS_IS_MOUSE_EVENT(aEvent) &&
+        activeESM != shell->GetPresContext()->EventStateManager() &&
+        static_cast<nsEventStateManager*>(activeESM)->GetPresContext()) {
+      nsIPresShell* activeShell =
+        static_cast<nsEventStateManager*>(activeESM)->GetPresContext()->GetPresShell();
+      if (activeShell &&
+          nsContentUtils::ContentIsCrossDocDescendantOf(activeShell->GetDocument(),
+                                                        shell->GetDocument())) {
+        shell = static_cast<PresShell*>(activeShell);
+        nsIView* activeShellRootView;
+        shell->GetViewManager()->GetRootView(activeShellRootView);
+        frame = static_cast<nsIFrame*>(activeShellRootView->GetClientData());
+      }
+    }
+
     if (shell != this) {
       // Handle the event in the correct shell.
       // Prevent deletion until we're done with event handling (bug 336582).
