@@ -658,6 +658,66 @@ xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
                      nsIVariant *p,
                      jsval *rval);
 
+/**
+ * Convert a jsval to PRInt64. Return JS_TRUE on success.
+ */
+inline JSBool
+xpc_qsValueToInt64(JSContext *cx,
+                   jsval v,
+                   PRInt64 *result)
+{
+    if (JSVAL_IS_INT(v)) {
+        int32 intval;
+        if (!JS_ValueToECMAInt32(cx, v, &intval))
+            return JS_FALSE;
+        *result = static_cast<PRInt64>(intval);
+    }
+    else {
+        jsdouble doubleval;
+        if (!JS_ValueToNumber(cx, v, &doubleval))
+            return JS_FALSE;
+        *result = static_cast<PRInt64>(doubleval);
+    }
+    return JS_TRUE;
+}
+
+/**
+ * Convert a jsdouble to PRUint64. Needed for traceable quickstubs too.
+ */
+inline PRUint64
+xpc_qsDoubleToUint64(jsdouble doubleval)
+{
+#ifdef XP_WIN
+    // Note: Win32 can't handle double to uint64 directly
+    return static_cast<PRUint64>(static_cast<PRInt64>(doubleval));
+#else
+    return static_cast<PRUint64>(doubleval);
+#endif
+}
+
+/**
+ * Convert a jsval to PRUint64. Return JS_TRUE on success.
+ */
+inline JSBool
+xpc_qsValueToUint64(JSContext *cx,
+                    jsval v,
+                    PRUint64 *result)
+{
+    if (JSVAL_IS_INT(v)) {
+        uint32 intval;
+        if (!JS_ValueToECMAUint32(cx, v, &intval))
+            return JS_FALSE;
+        *result = static_cast<PRUint64>(intval);
+    }
+    else {
+        jsdouble doubleval;
+        if (!JS_ValueToNumber(cx, v, &doubleval))
+            return JS_FALSE;
+        *result = xpc_qsDoubleToUint64(doubleval);
+    }
+    return JS_TRUE;
+}
+
 #ifdef DEBUG
 void
 xpc_qsAssertContextOK(JSContext *cx);

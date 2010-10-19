@@ -27,28 +27,26 @@ function testSteps()
 
   let db = event.result;
 
-  // Check default state.
-  is(db.version, "", "Correct default version for a new database.");
+  request = db.setVersion("1");
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
 
-  const versions = [
-    "1.0",
-    "",
-  ];
+  let objectStore = db.createObjectStore("foo", "");
+  let index = objectStore.createIndex("bar", "baz");
 
-  for (let i = 0; i < versions.length; i++) {
-    let version = versions[i];
+  is(db.version, "1", "Correct version");
+  is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+  is(objectStore.indexNames.length, 1, "Correct indexNames length");
 
-    request = db.setVersion(version);
-    request.onerror = errorHandler;
-    request.onsuccess = grabEventAndContinueHandler;
-    event = yield;
+  event.transaction.oncomplete = unexpectedSuccessHandler;
+  event.transaction.onabort = grabEventAndContinueHandler;
+  event.transaction.abort();
 
-    is(db.version, version, "Database version number updated correctly");
-    is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+  event = yield;
 
-    SimpleTest.executeSoon(function() { testGenerator.next(); });
-    yield;
-  }
+  is(db.version, "", "Correct version");
+  is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
   finishTest();
   yield;

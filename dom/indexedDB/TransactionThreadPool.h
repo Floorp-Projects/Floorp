@@ -80,12 +80,9 @@ public:
                     bool aFinish,
                     nsIRunnable* aFinishRunnable);
 
-  typedef void (*DatabaseCompleteCallback)(IDBDatabase* aDatabase,
-                                           void* aClosure);
-
-  bool WaitForAllTransactionsToComplete(IDBDatabase* aDatabase,
-                                        DatabaseCompleteCallback aCallback,
-                                        void* aUserData);
+  bool WaitForAllDatabasesToComplete(
+                                   nsTArray<nsRefPtr<IDBDatabase> >& aDatabases,
+                                   nsIRunnable* aCallback);
 
 protected:
   class TransactionQueue : public nsIRunnable
@@ -142,26 +139,10 @@ protected:
     bool finish;
   };
 
-  class DatabaseCompleteCallbackRunnable : public nsIRunnable
+  struct DatabasesCompleteCallback
   {
-    friend class TransactionThreadPool;
-
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
-
-    DatabaseCompleteCallbackRunnable(IDBDatabase* aDatabase,
-                                     DatabaseCompleteCallback aCallback,
-                                     void* aUserData)
-    : mDatabase(aDatabase),
-      mCallback(aCallback),
-      mUserData(aUserData)
-    { }
-
-  private:
-    nsRefPtr<IDBDatabase> mDatabase;
-    DatabaseCompleteCallback mCallback;
-    void* mUserData;
+    nsTArray<nsRefPtr<IDBDatabase> > mDatabases;
+    nsCOMPtr<nsIRunnable> mCallback;
   };
 
   TransactionThreadPool();
@@ -182,6 +163,8 @@ protected:
                     aInfo.finishRunnable);
   }
 
+  void MaybeFireCallback(PRUint32 aCallbackIndex);
+
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
   nsClassHashtable<nsUint32HashKey, DatabaseTransactionInfo>
@@ -189,7 +172,7 @@ protected:
 
   nsTArray<QueuedDispatchInfo> mDelayedDispatchQueue;
 
-  nsTArray<nsRefPtr<DatabaseCompleteCallbackRunnable> > mCompleteRunnables;
+  nsTArray<DatabasesCompleteCallback> mCompleteCallbacks;
 };
 
 END_INDEXEDDB_NAMESPACE

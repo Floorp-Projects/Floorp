@@ -76,6 +76,8 @@ TEST_FILES = \
   test_request_readyState.html \
   test_transaction_abort.html \
   test_setVersion.html \
+  test_setVersion_abort.html \
+  test_setVersion_events.html \
   test_writer_starvation.html \
   $(NULL)
 

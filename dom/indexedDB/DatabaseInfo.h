@@ -49,20 +49,12 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 struct DatabaseInfo
 {
-  nsString name;
-  nsString description;
-  nsString version;
-  PRUint32 id;
-  nsString filePath;
-
-  nsAutoRefCnt referenceCount;
-
 #ifdef NS_BUILD_REFCNT_LOGGING
   DatabaseInfo();
   ~DatabaseInfo();
 #else
   DatabaseInfo()
-  : id(0) { }
+  : id(0), nextObjectStoreId(1), nextIndexId(1) { }
 #endif
 
   static bool Get(PRUint32 aId,
@@ -74,6 +66,16 @@ struct DatabaseInfo
 
   bool GetObjectStoreNames(nsTArray<nsString>& aNames);
   bool ContainsStoreName(const nsAString& aName);
+
+  nsString name;
+  nsString description;
+  nsString version;
+  PRUint32 id;
+  nsString filePath;
+  PRInt64 nextObjectStoreId;
+  PRInt64 nextIndexId;
+
+  nsAutoRefCnt referenceCount;
 };
 
 struct IndexInfo
@@ -95,13 +97,6 @@ struct IndexInfo
 
 struct ObjectStoreInfo
 {
-  nsString name;
-  PRInt64 id;
-  nsString keyPath;
-  bool autoIncrement;
-  PRUint32 databaseId;
-  nsTArray<IndexInfo> indexes;
-
 #ifdef NS_BUILD_REFCNT_LOGGING
   ObjectStoreInfo();
   ~ObjectStoreInfo();
@@ -118,6 +113,13 @@ struct ObjectStoreInfo
 
   static void Remove(PRUint32 aDatabaseId,
                      const nsAString& aName);
+
+  nsString name;
+  PRInt64 id;
+  nsString keyPath;
+  bool autoIncrement;
+  PRUint32 databaseId;
+  nsTArray<IndexInfo> indexes;
 };
 
 struct IndexUpdateInfo

@@ -34,20 +34,17 @@
       let db = event.result;
 
       for (let i in objectStores) {
-        request = db.createObjectStore(objectStores[i].name, "id",
-                                       objectStores[i].autoIncrement);
+        request = db.setVersion("1");
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         let event = yield;
 
-        let objectStore = event.result;
+        let objectStore =
+          db.createObjectStore(objectStores[i].name, "id",
+                              objectStores[i].autoIncrement);
 
         for (let j in indexes) {
-          request = objectStore.createIndex(indexes[j].name, "name",
-                                            indexes[j].unique);
-          request.onerror = errorHandler;
-          request.onsuccess = grabEventAndContinueHandler;
-          event = yield;
+          objectStore.createIndex(indexes[j].name, "name", indexes[j].unique);
         }
 
         let data = { name: "Ben" };

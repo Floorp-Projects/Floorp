@@ -26,14 +26,14 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("foo", "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       event.transaction.oncomplete = continueToNextStep;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("foo", "", true);
 
       let firstKey;
       for (let i = 0; i < entryCount; i++) {

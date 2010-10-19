@@ -30,16 +30,8 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("foo", "");
+      request = db.setVersion("1");
       is(request.readyState, LOADING, "Correct readyState");
-
-      try {
-        request.abort();
-        ok(false, "Can't abort a writing request");
-      }
-      catch (e) {
-        ok(true, "Can't abort a writing request");
-      }
 
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
@@ -47,7 +39,7 @@
 
       is(request.readyState, DONE, "Correct readyState");
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("foo", "");
       let key = 10;
 
       request = objectStore.add({}, key);

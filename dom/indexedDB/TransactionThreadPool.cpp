@@ -191,14 +191,25 @@ TransactionThreadPool::Cleanup()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mTransactionsInProgress.Count()) {
-    // This is actually really bad, but if we don't force everything awake then
-    // we will deadlock on shutdown...
-    NS_ERROR("Transactions still in progress!");
-  }
-
   nsresult rv = mThreadPool->Shutdown();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure the pool is still accessible while any callbacks generated from
+  // the other threads are processed.
+  rv = NS_ProcessPendingEvents(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mCompleteCallbacks.IsEmpty()) {
+    // Run all callbacks manually now.
+    for (PRUint32 index = 0; index < mCompleteCallbacks.Length(); index++) {
+      mCompleteCallbacks[index].mCallback->Run();
+    }
+    mCompleteCallbacks.Clear();
+
+    // And make sure they get processed.
+    rv = NS_ProcessPendingEvents(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -226,7 +237,7 @@ TransactionThreadPool::FinishTransaction(IDBTransaction* aTransaction)
   PRUint32 transactionCount = transactionsInProgress.Length();
 
 #ifdef DEBUG
-  if (aTransaction->mMode == IDBTransaction::FULL_LOCK) {
+  if (aTransaction->mMode == IDBTransaction::VERSION_CHANGE) {
     NS_ASSERTION(dbTransactionInfo->locked, "Should be locked!");
     NS_ASSERTION(transactionCount == 1,
                  "More transactions running than should be!");
@@ -243,16 +254,8 @@ TransactionThreadPool::FinishTransaction(IDBTransaction* aTransaction)
     mTransactionsInProgress.Remove(databaseId);
 
     // See if we need to fire any complete callbacks.
-    for (PRUint32 index = 0; index < mCompleteRunnables.Length(); index++) {
-      nsRefPtr<DatabaseCompleteCallbackRunnable>& runnable =
-        mCompleteRunnables[index];
-      if (runnable->mDatabase == aTransaction->Database()) {
-        if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-          NS_WARNING("Failed to dispatch to current thread?!");
-        }
-        mCompleteRunnables.RemoveElementAt(index);
-        index--;
-      }
+    for (PRUint32 index = 0; index < mCompleteCallbacks.Length(); index++) {
+      MaybeFireCallback(index);
     }
   }
   else {
@@ -341,7 +344,7 @@ TransactionThreadPool::TransactionCanRun(IDBTransaction* aTransaction,
   PRUint32 transactionCount = transactionsInProgress.Length();
   NS_ASSERTION(transactionCount, "Should never be 0!");
 
-  if (mode == IDBTransaction::FULL_LOCK) {
+  if (mode == IDBTransaction::VERSION_CHANGE) {
     dbTransactionInfo->lockPending = true;
   }
 
@@ -430,7 +433,7 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
   const PRUint32 databaseId = aTransaction->mDatabase->Id();
 
 #ifdef DEBUG
-  if (aTransaction->mMode == IDBTransaction::FULL_LOCK) {
+  if (aTransaction->mMode == IDBTransaction::VERSION_CHANGE) {
     NS_ASSERTION(!mTransactionsInProgress.Get(databaseId, nsnull),
                  "Shouldn't have anything in progress!");
   }
@@ -445,7 +448,7 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
     dbTransactionInfo = autoDBTransactionInfo;
   }
 
-  if (aTransaction->mMode == IDBTransaction::FULL_LOCK) {
+  if (aTransaction->mMode == IDBTransaction::VERSION_CHANGE) {
     NS_ASSERTION(!dbTransactionInfo->locked, "Already locked?!");
     dbTransactionInfo->locked = true;
   }
@@ -491,36 +494,48 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
 }
 
 bool
-TransactionThreadPool::WaitForAllTransactionsToComplete(
-                                             IDBDatabase* aDatabase,
-                                             DatabaseCompleteCallback aCallback,
-                                             void* aUserData)
+TransactionThreadPool::WaitForAllDatabasesToComplete(
+                                   nsTArray<nsRefPtr<IDBDatabase> >& aDatabases,
+                                   nsIRunnable* aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aDatabase, "Null pointer!");
+  NS_ASSERTION(!aDatabases.IsEmpty(), "No databases to wait on!");
   NS_ASSERTION(aCallback, "Null pointer!");
 
-  nsRefPtr<DatabaseCompleteCallbackRunnable> runnable =
-    new DatabaseCompleteCallbackRunnable(aDatabase, aCallback, aUserData);
-
-  // See if this database has any active transactions. If not then we can
-  // dispatch the callback immediately.
-  const PRUint32 databaseId = aDatabase->Id();
-  if (!mTransactionsInProgress.Get(databaseId, nsnull)) {
-    if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-      NS_WARNING("Failed to dispatch to current thread?!");
-      return false;
-    }
-    return true;
-  }
-
-  // The database has active transactions, wait and fire the callback later.
-  if (!mCompleteRunnables.AppendElement(runnable)) {
+  DatabasesCompleteCallback* callback = mCompleteCallbacks.AppendElement();
+  if (!callback) {
     NS_WARNING("Out of memory!");
     return false;
   }
 
+  callback->mCallback = aCallback;
+  if (!callback->mDatabases.SwapElements(aDatabases)) {
+    NS_ERROR("This should never fail!");
+  }
+
+  MaybeFireCallback(mCompleteCallbacks.Length() - 1);
   return true;
+}
+
+void
+TransactionThreadPool::MaybeFireCallback(PRUint32 aCallbackIndex)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  DatabasesCompleteCallback& callback = mCompleteCallbacks[aCallbackIndex];
+
+  bool freeToRun = true;
+  for (PRUint32 index = 0; index < callback.mDatabases.Length(); index++) {
+    if (mTransactionsInProgress.Get(callback.mDatabases[index]->Id(), nsnull)) {
+      freeToRun = false;
+      break;
+    }
+  }
+
+  if (freeToRun) {
+    callback.mCallback->Run();
+    mCompleteCallbacks.RemoveElementAt(aCallbackIndex);
+  }
 }
 
 TransactionThreadPool::
@@ -642,20 +657,5 @@ FinishTransactionRunnable::Run()
     mFinishRunnable = nsnull;
   }
 
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS1(TransactionThreadPool::DatabaseCompleteCallbackRunnable,
-                   nsIRunnable)
-
-NS_IMETHODIMP
-TransactionThreadPool::DatabaseCompleteCallbackRunnable::Run()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  // Call our callback.
-  nsRefPtr<IDBDatabase> database;
-  database.swap(mDatabase);
-  mCallback(database, mUserData);
   return NS_OK;
 }

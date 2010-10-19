@@ -44,10 +44,13 @@
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
 
 #include "nsIIDBObjectStore.h"
+#include "nsIIDBTransaction.h"
 
 #include "nsDOMEventTargetHelper.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
+
+class AsyncConnectionHelper;
 
 struct ObjectStoreInfo;
 struct IndexInfo;
@@ -221,8 +224,7 @@ public:
 
   static already_AddRefed<IDBObjectStore>
   Create(IDBTransaction* aTransaction,
-         const ObjectStoreInfo* aInfo,
-         PRUint16 aMode);
+         const ObjectStoreInfo* aInfo);
 
   static nsresult
   GetKeyFromVariant(nsIVariant* aKeyVariant,
@@ -262,6 +264,10 @@ public:
                 PRInt64 aObjectDataId,
                 const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
+  const nsString& Name() const
+  {
+    return mName;
+  }
 
   bool TransactionIsOpen() const
   {
@@ -280,6 +286,7 @@ public:
 
   PRInt64 Id() const
   {
+    NS_ASSERTION(mId != LL_MININT, "Don't ask for this yet!");
     return mId;
   }
 
@@ -314,7 +321,6 @@ private:
   nsString mKeyPath;
   PRBool mAutoIncrement;
   PRUint32 mDatabaseId;
-  PRUint16 mMode;
 
   // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;

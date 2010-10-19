@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,50 +38,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_savepoint_h__
-#define mozilla_dom_indexeddb_savepoint_h__
+#include "nsISupports.idl"
 
-// Only meant to be included in IndexedDB source files, not exported.
-#include "IDBTransaction.h"
+interface nsIDOMEventListener;
 
-BEGIN_INDEXEDDB_NAMESPACE
-
-NS_STACK_CLASS
-class Savepoint
+/**
+ * IDBReqeust interface.  See
+ * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
+ * information.
+ */
+[scriptable, uuid(aeaabb0d-594a-4c58-ac5e-68ef3bff927d)]
+interface nsIIDBVersionChangeRequest : nsISupports
 {
-public:
-  Savepoint(IDBTransaction* aTransaction)
-  : mTransaction(aTransaction)
-  , mHasSavepoint(false)
-  {
-    NS_ASSERTION(mTransaction, "Null pointer!");
-
-    mHasSavepoint = mTransaction->StartSavepoint();
-    NS_WARN_IF_FALSE(mHasSavepoint, "Failed to make savepoint!");
-  }
-
-  ~Savepoint()
-  {
-    if (mHasSavepoint) {
-      mTransaction->RollbackSavepoint();
-    }
-  }
-
-  nsresult Release()
-  {
-    nsresult rv = NS_OK;
-    if (mHasSavepoint) {
-      rv = mTransaction->ReleaseSavepoint();
-      mHasSavepoint = false;
-    }
-    return rv;
-  }
-
-private:
-  IDBTransaction* mTransaction;
-  bool mHasSavepoint;
+  attribute nsIDOMEventListener onblocked;
 };
-
-END_INDEXEDDB_NAMESPACE
-
-#endif // mozilla_dom_indexeddb_savepoint_h__

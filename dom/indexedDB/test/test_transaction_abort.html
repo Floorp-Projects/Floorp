@@ -19,6 +19,7 @@
       const DONE = Ci.nsIIDBTransaction.DONE;
       const READ_ONLY = Ci.nsIIDBTransaction.READ_ONLY;
       const READ_WRITE = Ci.nsIIDBTransaction.READ_WRITE;
+      const VERSION_CHANGE = Ci.nsIIDBTransaction.VERSION_CHANGE;
 
       const NOT_FOUND_ERR = Ci.nsIIDBDatabaseException.NOT_FOUND_ERR;
 
@@ -36,17 +37,17 @@
       let transaction;
       let objectStore;
 
-      request = db.createObjectStore("foo", "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
       transaction = event.transaction;
-      objectStore = event.result;
+      objectStore = db.createObjectStore("foo", "", true);
 
       is(transaction.db, db, "Correct database");
       is(transaction.readyState, LOADING, "Correct readyState");
-      is(transaction.mode, READ_WRITE, "Correct mode");
+      is(transaction.mode, VERSION_CHANGE, "Correct mode");
       is(transaction.objectStoreNames.length, 1, "Correct names length");
       is(transaction.objectStoreNames.item(0), "foo", "Correct name");
       is(transaction.objectStore("foo").name, "foo", "Can get stores");
@@ -63,7 +64,7 @@
 
       is(transaction.db, db, "Correct database");
       is(transaction.readyState, DONE, "Correct readyState");
-      is(transaction.mode, READ_WRITE, "Correct mode");
+      is(transaction.mode, VERSION_CHANGE, "Correct mode");
       is(transaction.objectStoreNames.length, 1, "Correct names length");
       is(transaction.objectStoreNames.item(0), "foo", "Correct name");
       is(transaction.oncomplete, null, "No complete listener");

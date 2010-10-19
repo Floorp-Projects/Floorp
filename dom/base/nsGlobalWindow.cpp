@@ -227,6 +227,7 @@
 #include "prlog.h"
 
 #include "mozilla/dom/indexedDB/IDBFactory.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 #include "nsRefreshDriver.h"
 
@@ -1103,6 +1104,13 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     JSAutoSuspendRequest asr(cx);
 
     dts->CancelWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
+
+  // Close all IndexedDB databases for this window.
+  indexedDB::IndexedDatabaseManager* idbManager =
+    indexedDB::IndexedDatabaseManager::Get();
+  if (idbManager) {
+    idbManager->CloseDatabasesForWindow(this);
   }
 
   ClearAllTimeouts();
@@ -7846,7 +7854,7 @@ NS_IMETHODIMP
 nsGlobalWindow::GetMoz_indexedDB(nsIIDBFactory** _retval)
 {
   if (!mIndexedDB) {
-    mIndexedDB = mozilla::dom::indexedDB::IDBFactory::Create();
+    mIndexedDB = indexedDB::IDBFactory::Create();
     NS_ENSURE_TRUE(mIndexedDB, NS_ERROR_FAILURE);
   }
 

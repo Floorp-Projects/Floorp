@@ -23,12 +23,12 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("foo", "");
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("foo", "");
 
       request = objectStore.add({}, null);
       request.onerror = errorHandler;
