@@ -2198,14 +2198,11 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     callIC.frameDepth = frame.frameDepth();
 
     /* Grab type and data registers up-front. */
-    MaybeRegisterID typeReg;
-    frame.ensureFullRegs(fe);
-
-    if (!fe->isTypeKnown()) {
-        typeReg = frame.tempRegForType(fe);
+    MaybeRegisterID typeReg, maybeDataReg;
+    frame.ensureFullRegs(fe, &typeReg, &maybeDataReg);
+    RegisterID dataReg = maybeDataReg.reg();
+    if (!fe->isTypeKnown())
         frame.pinReg(typeReg.reg());
-    }
-    RegisterID dataReg = frame.tempRegForData(fe);
     frame.pinReg(dataReg);
 
     /*
