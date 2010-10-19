@@ -221,10 +221,6 @@ struct TracerState
     uintN          nativeVpLen;
     js::Value*     nativeVp;
 
-    // The regs pointed to by cx->regs while a deep-bailed slow native
-    // completes execution.
-    JSFrameRegs    bailedSlowNativeRegs;
-
     TracerState(JSContext *cx, TraceMonitor *tm, TreeFragment *ti,
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
     ~TracerState();
