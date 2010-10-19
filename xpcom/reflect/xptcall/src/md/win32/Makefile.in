@@ -108,5 +108,7 @@ DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../..
 
+GARBAGE += ../../$(LIBRARY) ../../$(FAKE_LIBRARY)
+
 libs:: $(LIBRARY)
 	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..
