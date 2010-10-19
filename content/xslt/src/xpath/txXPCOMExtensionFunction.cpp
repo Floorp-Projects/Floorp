@@ -544,6 +544,9 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
     }
     else {
         returnParam.SetPtrIsData();
+        if (returnType == eNODESET || returnType == eOBJECT) {
+            returnParam.SetValIsInterface();
+        }
         returnParam.ptr = &returnParam.val;
     }
 
