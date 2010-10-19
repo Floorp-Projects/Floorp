@@ -2323,7 +2323,7 @@ ProgressController.prototype = {
 };
 
 var OfflineApps = {
-  offlineAppRequested: function(aRequest) {
+  offlineAppRequested: function(aRequest, aTarget) {
     if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
       return;
 
@@ -2356,7 +2356,7 @@ var OfflineApps = {
         accessKey: null,
         callback: function() {
           for (let i = 0; i < notification.documents.length; i++)
-            OfflineApps.allowSite(notification.documents[i]);
+            OfflineApps.allowSite(notification.documents[i], aTarget);
         }
       },{
         label: strings.getString("offlineApps.never"),
@@ -2379,13 +2379,14 @@ var OfflineApps = {
     }
   },
 
-  allowSite: function(aRequest) {
+  allowSite: function(aRequest, aTarget) {
     let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
     Services.perms.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will start
     // fetching immediately.  This one time we need to do it ourselves.
-    this._startFetching(aRequest);
+    // The update must be started on the content process.
+    aTarget.messageManager.sendAsyncMessage("Browser:MozApplicationCache:Fetch", aRequest);
   },
 
   disallowSite: function(aRequest) {
@@ -2393,17 +2394,9 @@ var OfflineApps = {
     Services.perms.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
   },
 
-  _startFetching: function(aRequest) {
-    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
-    let manifestURI = Services.io.newURI(aRequest.manifest, aRequest.charset, currentURI);
-
-    let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, currentURI);
-  },
-
   receiveMessage: function receiveMessage(aMessage) {
     if (aMessage.name == "Browser:MozApplicationManifest") {
-      this.offlineAppRequested(aMessage.json);
+      this.offlineAppRequested(aMessage.json, aMessage.target);
     }
   }
 };

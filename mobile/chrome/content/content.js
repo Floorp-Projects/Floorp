@@ -293,6 +293,7 @@ function Content() {
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
+  addMessageListener("Browser:MozApplicationCache:Fetch", this);
 
   if (Util.isParentProcess())
     addEventListener("DOMActivate", this, true);
@@ -452,6 +453,15 @@ Content.prototype = {
         if (element)
           rect = getBoundingContentRect(element);
         sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
+        break;
+      }
+      
+      case "Browser:MozApplicationCache:Fetch": {
+        let currentURI = Services.io.newURI(json.location, json.charset, null);
+        let manifestURI = Services.io.newURI(json.manifest, json.charset, currentURI);
+        let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"]
+                            .getService(Ci.nsIOfflineCacheUpdateService);
+        updateService.scheduleUpdate(manifestURI, currentURI, content);
         break;
       }
     }
