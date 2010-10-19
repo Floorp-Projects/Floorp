@@ -320,11 +320,11 @@ toolbarbutton.button-control:not([disabled="true"]):hover:active {
 }
 
 #tool-star {
-  list-style-image: url("chrome://browser/skin/images/bookmark-default-64.png");
+  list-style-image: url("chrome://browser/skin/images/bookmark-default-hdpi.png");
 }
 
 #tool-star[starred="true"] {
-  list-style-image: url("chrome://browser/skin/images/bookmarked-default-64.png");
+  list-style-image: url("chrome://browser/skin/images/bookmark-starred-hdpi.png");
 }
 
 #tool-back,
