@@ -439,10 +439,14 @@ var ExtensionsView = {
   },
 
   _isSafeURI: function ev_isSafeURI(aURL) {
+    if (!aURL)
+      return true;
+
     try {
       var uri = Services.io.newURI(aURL, null, null);
       var scheme = uri.scheme;
     } catch (ex) {}
+
     return (uri && (scheme == "http" || scheme == "https" || scheme == "ftp"));
   },
 
@@ -487,7 +491,6 @@ var ExtensionsView = {
 
   appendSearchResults: function(aAddons, aShowRating) {
     var urlproperties = [ "iconURL", "homepageURL" ];
-    var properties = [ "name", "iconURL", "homepageURL", "screenshots" ];
     var foundItem = false;
     for (let i = 0; i < aAddons.length; i++) {
       let addon = aAddons[i];
@@ -501,9 +504,10 @@ var ExtensionsView = {
       // Check for any items with potentially unsafe urls
       if (urlproperties.some(function (p) !this._isSafeURI(addon[p]), this))
         continue;
-      if (addon.screenshots && addon.screenshots.some(function (aScreenshot) !this._isSafeURI(aScreenshot), this))
-        continue;
-
+      if (addon.screenshots && addon.screenshots.length) {
+        if (addon.screenshots.some(function (aScreenshot) !this._isSafeURI(aScreenshot), this))
+          continue;
+      }
       // Convert the numeric type to a string
       let types = {"2":"extension", "4":"theme", "8":"locale"};
       addon.type = types[addon.type];
