@@ -703,27 +703,30 @@ placeitem[src=""] .bookmark-item-container > image {
 }
 
 .autocomplete-item-container[favorite="true"] {
-  background: url(images/star-24.png) no-repeat 100% 2px;
+  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat 100% 2px;
+  background-size: 24px 24px;
 }
 
 .autocomplete-item-container[remote="true"] {
-  background: url(images/remotetabs-24.png) no-repeat 100% 2px;
+  background: url(images/autocomplete-desktop-hdpi.png) no-repeat 100% 2px;
+  background-size: 24px 24px;
 }
 
 .autocomplete-item-container[favorite="true"][remote="true"] {
-  background: url(images/remotetabs-24.png) no-repeat 100% 2px, url(images/star-24.png) no-repeat 96% 2px;
+  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat 100% 2px, url(images/autocomplete-desktop-hdpi.png) no-repeat 94% 2px;
+  background-size: 24px 24px;
 }
 
 .autocomplete-item-container[favorite="true"]:-moz-locale-dir(rtl) {
-  background: url(images/star-24.png) no-repeat left 2px;
+  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat left 2px;
 }
 
 .autocomplete-item-container[remote="true"]:-moz-locale-dir(rtl) {
-  background: url(images/remotetabs-24.png) no-repeat left 2px;
+  background: url(images/autocomplete-desktop-hdpi.png) no-repeat left 2px;
 }
 
 .autocomplete-item-container[favorite="true"][remote="true"]:-moz-locale-dir(rtl) {
-  background: url(images/remotetabs-24.png) no-repeat left 2px, url(images/star-24.png) no-repeat 4% 2px;
+  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat left 2px, url(images/autocomplete-desktop-hdpi.png) no-repeat 6% 2px;
 }
 
 .autocomplete-item-url,
