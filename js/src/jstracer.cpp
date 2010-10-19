@@ -6553,8 +6553,7 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     startTime(rdtsc()),
 #endif
     builtinStatus(0),
-    nativeVp(NULL),
-    bailedSlowNativeRegs(bailedSlowNativeRegs)
+    nativeVp(NULL)
 {
     JS_ASSERT(!tm->tracecx);
     tm->tracecx = cx;
