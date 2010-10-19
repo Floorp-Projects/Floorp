@@ -55,13 +55,16 @@ function testSteps()
 
   for (let i = 0; i < data.length; i++) {
     let test = data[i];
-    let request = db.createObjectStore(test.name, test.keyName,
-                                       test.autoIncrement);
+
+
+    let request = db.setVersion("1");
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    let objectStore = event.result;
+    let objectStore = db.createObjectStore(test.name, test.keyName,
+                                           test.autoIncrement);
+
     request = objectStore.add(test.storedObject, test.keyValue);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;

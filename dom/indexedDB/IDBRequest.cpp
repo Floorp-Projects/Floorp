@@ -132,3 +132,58 @@ NS_IMPL_ADDREF_INHERITED(IDBRequest, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(IDBRequest, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBRequest, IDBRequest)
+
+// static
+already_AddRefed<IDBVersionChangeRequest>
+IDBVersionChangeRequest::Create(nsISupports* aSource,
+                                nsIScriptContext* aScriptContext,
+                                nsPIDOMWindow* aOwner)
+{
+  if (!aScriptContext || !aOwner) {
+    NS_ERROR("Null context and owner!");
+    return nsnull;
+  }
+
+  nsRefPtr<IDBVersionChangeRequest> request(new IDBVersionChangeRequest());
+
+  request->mSource = aSource;
+  request->mScriptContext = aScriptContext;
+  request->mOwner = aOwner;
+
+  return request.forget();
+}
+
+NS_IMETHODIMP
+IDBVersionChangeRequest::SetOnblocked(nsIDOMEventListener* aBlockedListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(BLOCKED_EVT_STR),
+                                mOnBlockedListener, aBlockedListener);
+}
+
+NS_IMETHODIMP
+IDBVersionChangeRequest::GetOnblocked(nsIDOMEventListener** aBlockedListener)
+{
+  return GetInnerEventListener(mOnBlockedListener, aBlockedListener);
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBVersionChangeRequest)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBVersionChangeRequest,
+                                                  IDBRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnBlockedListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBVersionChangeRequest,
+                                                IDBRequest)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnBlockedListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBVersionChangeRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIIDBVersionChangeRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBVersionChangeRequest)
+NS_INTERFACE_MAP_END_INHERITING(IDBRequest)
+
+NS_IMPL_ADDREF_INHERITED(IDBVersionChangeRequest, IDBRequest)
+NS_IMPL_RELEASE_INHERITED(IDBVersionChangeRequest, IDBRequest)
+
+DOMCI_DATA(IDBVersionChangeRequest, IDBVersionChangeRequest)

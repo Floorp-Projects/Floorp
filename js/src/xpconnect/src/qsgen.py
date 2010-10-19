@@ -443,6 +443,16 @@ argumentUnboxingTemplates = {
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
+    'long long':
+        "    PRInt64 ${name};\n"
+        "    if (!xpc_qsValueToInt64(cx, ${argVal}, &${name}))\n"
+        "        return JS_FALSE;\n",
+
+    'unsigned long long':
+        "    PRUint64 ${name};\n"
+        "    if (!xpc_qsValueToUint64(cx, ${argVal}, &${name}))\n"
+        "        return JS_FALSE;\n",
+
     'float':
         "    jsdouble ${name}_dbl;\n"
         "    if (!JS_ValueToNumber(cx, ${argVal}, &${name}_dbl))\n"
@@ -1026,6 +1036,8 @@ traceReturnTypeMap = {
     'unsigned short':   ("uint32 ", "UINT32", "0"),
     'long':             ("int32 ", "INT32", "0"),
     'unsigned long':    ("uint32 ", "UINT32", "0"),
+    'long long':        ("jsdouble ", "DOUBLE", "0"),
+    'unsigned long long': ("jsdouble ", "DOUBLE", "0"),
     'float':            ("jsdouble ", "DOUBLE", "0"),
     'double':           ("jsdouble ", "DOUBLE", "0"),
     'octet':            ("uint32 ", "UINT32", "0"),
@@ -1046,6 +1058,8 @@ traceParamTypeMap.update({
     'unsigned short':   ("uint32 ", "UINT32"),
     'long':             ("int32 ", "INT32"),
     'unsigned long':    ("uint32 ", "UINT32"),
+    'long long':        ("jsdouble ", "DOUBLE"),
+    'unsigned long long': ("jsdouble ", "DOUBLE"),
     'float':            ("jsdouble ", "DOUBLE"),
     'double':           ("jsdouble ", "DOUBLE"),
     'octet':            ("uint32 ", "UINT32"),
@@ -1111,6 +1125,10 @@ traceableArgumentConversionTemplates = {
           "    PRInt32 ${name} = (PRInt32) ${argVal};\n",
     'unsigned long':
           "    PRUint32 ${name} = (PRUint32) ${argVal};\n",
+    'long long':
+          "    PRInt64 ${name} = (PRInt64) ${argVal};\n",
+    'unsigned long long':
+          "    PRUint64 ${name} = xpc_qsDoubleToUint64(${argVal});\n",
     'boolean':
           "    PRBool ${name} = (PRBool) ${argVal};\n",
     'float':
@@ -1201,6 +1219,10 @@ traceableResultConvTemplates = {
         "    return int32(result);\n",
     'unsigned long':
         "    return uint32(result);\n",
+    'long long':
+        "    return jsdouble(result);\n",
+    'unsigned long long':
+        "    return jsdouble(result);\n",
     'boolean':
         "    return result ? JS_TRUE : JS_FALSE;\n",
     'float':

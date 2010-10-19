@@ -83,7 +83,9 @@ EnumerateObjectStoreNames(const nsAString& aKey,
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 DatabaseInfo::DatabaseInfo()
-: id(0)
+: id(0),
+  nextObjectStoreId(1),
+  nextIndexId(1)
 {
   MOZ_COUNT_CTOR(DatabaseInfo);
 }
@@ -123,6 +125,7 @@ IndexUpdateInfo::IndexUpdateInfo()
 {
   MOZ_COUNT_CTOR(IndexUpdateInfo);
 }
+
 IndexUpdateInfo::~IndexUpdateInfo()
 {
   MOZ_COUNT_DTOR(IndexUpdateInfo);
@@ -220,24 +223,19 @@ DatabaseInfo::GetObjectStoreNames(nsTArray<nsString>& aNames)
   return true;
 }
 
-// static
 bool
 DatabaseInfo::ContainsStoreName(const nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(Get(id, nsnull), "Don't know anything about this one!");
 
-  if (!gDatabaseHash) {
-    return false;
-  }
+  DatabaseInfoHash* hash;
+  ObjectStoreInfo* info;
 
-  DatabaseInfoHash* info;
-  if (!gDatabaseHash->Get(id, &info)) {
-    return false;
-  }
-
-  return info && info->objectStoreHash &&
-         info->objectStoreHash->Get(aName, nsnull);
+  return gDatabaseHash &&
+         gDatabaseHash->Get(id, &hash) &&
+         hash->objectStoreHash &&
+         hash->objectStoreHash->Get(aName, &info);
 }
 
 // static

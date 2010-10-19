@@ -64,21 +64,25 @@ public:
 
   CheckPermissionsHelper(AsyncConnectionHelper* aHelper,
                          nsIDOMWindow* aWindow,
+                         const nsAString& aName,
                          const nsACString& aASCIIOrigin)
   : mHelper(aHelper),
     mWindow(aWindow),
+    mName(aName),
     mASCIIOrigin(aASCIIOrigin),
     mHasPrompted(PR_FALSE),
     mPromptResult(0)
   {
     NS_ASSERTION(aHelper, "Null pointer!");
     NS_ASSERTION(aWindow, "Null pointer!");
-    NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty host!");
+    NS_ASSERTION(!aName.IsEmpty(), "Empty name!");
+    NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
   }
 
 private:
   nsRefPtr<AsyncConnectionHelper> mHelper;
   nsCOMPtr<nsIDOMWindow> mWindow;
+  nsString mName;
   nsCString mASCIIOrigin;
   PRBool mHasPrompted;
   PRUint32 mPromptResult;
