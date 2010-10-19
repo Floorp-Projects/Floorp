@@ -727,9 +727,7 @@ IDBFactory::Open(const nsAString& aName,
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
     new CheckPermissionsHelper(openHelper, thread, innerWindow, origin);
 
-  nsRefPtr<IndexedDatabaseManager> mgr =
-    already_AddRefed<IndexedDatabaseManager>(
-      IndexedDatabaseManager::GetOrCreateInstance());
+  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
   NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
 
   rv = mgr->WaitForClearAndDispatch(origin, permissionHelper);
