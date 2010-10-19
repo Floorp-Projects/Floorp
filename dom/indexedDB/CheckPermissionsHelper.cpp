@@ -53,6 +53,8 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 
+#include "IndexedDatabaseManager.h"
+
 #define PERMISSION_INDEXEDDB "indexedDB"
 #define PREF_INDEXEDDB_ENABLED "dom.indexedDB.enabled"
 #define TOPIC_PERMISSIONS_PROMPT "indexedDB-permissions-prompt"
@@ -194,5 +196,11 @@ CheckPermissionsHelper::Observe(nsISupports* aSubject,
   mPromptResult = nsDependentString(aData).ToInteger(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_DispatchToCurrentThread(this);
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+  NS_ASSERTION(mgr, "This should never be null!");
+
+  rv = mgr->WaitForClearAndDispatch(mASCIIOrigin, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
