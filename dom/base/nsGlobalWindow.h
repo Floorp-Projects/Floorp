@@ -147,6 +147,7 @@ class nsRunnable;
 
 class nsDOMOfflineResourceList;
 class nsGeolocation;
+class nsDesktopNotificationCenter;
 
 #ifdef MOZ_DISABLE_DOMCRYPTO
 class nsIDOMCrypto;
@@ -1043,6 +1044,7 @@ protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
   nsRefPtr<nsGeolocation> mGeolocation;
+  nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsIDocShell* mDocShell; // weak reference
 };
 

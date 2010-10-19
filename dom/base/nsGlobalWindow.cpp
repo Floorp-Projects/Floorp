@@ -10201,6 +10201,12 @@ nsNavigator::SetDocShell(nsIDocShell *aDocShell)
     mGeolocation->Shutdown();
     mGeolocation = nsnull;
   }
+
+  if (mNotification)
+  {
+    mNotification->Shutdown();
+    mNotification = nsnull;
+  }
 }
 
 //*****************************************************************************
@@ -10588,6 +10594,13 @@ nsNavigator::LoadingNewDocument()
     mGeolocation->Shutdown();
     mGeolocation = nsnull;
   }
+
+  if (mNotification)
+  {
+    mNotification->Shutdown();
+    mNotification = nsnull;
+  }
+
 }
 
 nsresult
@@ -10751,6 +10764,11 @@ NS_IMETHODIMP nsNavigator::GetMozNotification(nsIDOMDesktopNotificationCenter **
   NS_ENSURE_ARG_POINTER(aRetVal);
   *aRetVal = nsnull;
 
+  if (mNotification) {
+    NS_ADDREF(*aRetVal = mNotification);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
     
@@ -10763,14 +10781,12 @@ NS_IMETHODIMP nsNavigator::GetMozNotification(nsIDOMDesktopNotificationCenter **
   nsIScriptContext *scx = sgo->GetContext();
   NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
 
-  nsRefPtr<nsDesktopNotificationCenter> notification =
-    new nsDesktopNotificationCenter(window->GetCurrentInnerWindow(),
-                                    scx);
-
-  if (!notification) {
+  mNotification = new nsDesktopNotificationCenter(window->GetCurrentInnerWindow(),
+                                                  scx);
+  if (!mNotification) {
     return NS_ERROR_FAILURE;
   }
 
-  *aRetVal = notification.forget().get();
+  NS_ADDREF(*aRetVal = mNotification);    
   return NS_OK; 
 }
