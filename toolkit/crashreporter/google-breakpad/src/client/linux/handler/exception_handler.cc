@@ -88,11 +88,13 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 #include "common/memory.h"
+#include "client/linux/minidump_writer/linux_dumper.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/guid_creator.h"
 #include "common/linux/eintr_wrapper.h"
@@ -437,8 +439,11 @@ void ExceptionHandler::WaitForContinueSignal() {
 // Runs on the cloned process.
 bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                               size_t context_size) {
-  return google_breakpad::WriteMinidump(
-      next_minidump_path_c_, crashing_process, context, context_size);
+  return google_breakpad::WriteMinidump(next_minidump_path_c_,
+                                        crashing_process,
+                                        context,
+                                        context_size,
+                                        mapping_info_);
 }
 
 // static
@@ -513,6 +518,23 @@ bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
 
   return callback ? callback(eh.dump_path_c_, eh.next_minidump_id_c_,
                              callback_context, true) : true;
+}
+
+void ExceptionHandler::AddMappingInfo(const std::string& name,
+                                      const u_int8_t identifier[sizeof(MDGUID)],
+                                      uintptr_t start_address,
+                                      size_t mapping_size,
+                                      size_t file_offset) {
+   MappingInfo info;
+   info.start_addr = start_address;
+   info.size = mapping_size;
+   info.offset = file_offset;
+   strncpy(info.name, name.c_str(), std::min(name.size() + 1, sizeof(info)));
+ 
+   std::pair<MappingInfo, u_int8_t[sizeof(MDGUID)]> mapping;
+   mapping.first = info;
+   memcpy(mapping.second, identifier, sizeof(MDGUID));
+   mapping_info_.push_back(mapping);
 }
 
 }  // namespace google_breakpad

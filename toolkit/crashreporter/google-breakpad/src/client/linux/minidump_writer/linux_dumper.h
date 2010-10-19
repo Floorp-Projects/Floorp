@@ -163,7 +163,7 @@ class LinuxDumper {
   void BuildProcPath(char* path, pid_t pid, const char* node) const;
 
   // Generate a File ID from the .text section of a mapped entry
-  bool ElfFileIdentifierForMapping(unsigned int mapping_id,
+  bool ElfFileIdentifierForMapping(const MappingInfo& mapping,
                                    uint8_t identifier[sizeof(MDGUID)]);
 
   // Utility method to find the location of where the kernel has
