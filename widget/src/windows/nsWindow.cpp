@@ -3136,7 +3136,7 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
     PRBool accelerateByDefault = PR_TRUE;
     PRBool disableAcceleration = PR_FALSE;
     PRBool preferOpenGL = PR_FALSE;
-    PRBool useD3D10 = PR_FALSE;
+    PRBool preferD3D9 = PR_FALSE;
     if (prefs) {
       prefs->GetBoolPref("layers.accelerate-all",
                          &accelerateByDefault);
@@ -3144,8 +3144,8 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
                          &disableAcceleration);
       prefs->GetBoolPref("layers.prefer-opengl",
                          &preferOpenGL);
-      prefs->GetBoolPref("layers.use-d3d10",
-                         &useD3D10);
+      prefs->GetBoolPref("layers.prefer-d3d9",
+                         &preferD3D9);
     }
 
     const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -3170,7 +3170,7 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
 
     if (mUseAcceleratedRendering) {
 #ifdef MOZ_ENABLE_D3D10_LAYER
-      if (useD3D10) {
+      if (!preferD3D9) {
         nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
           new mozilla::layers::LayerManagerD3D10(this);
         if (layerManager->Initialize()) {
