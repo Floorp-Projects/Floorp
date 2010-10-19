@@ -5643,9 +5643,10 @@ namespace js {
  * TODO: a per-thread shape-based cache would be faster and simpler.
  */
 static JS_ALWAYS_INLINE bool
-StringMethodIsNative(JSContext *cx, JSObject *obj, jsid methodid, Native native)
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *classp, jsid methodid,
+                    Native native)
 {
-    JS_ASSERT(obj->getClass() == &js_StringClass);
+    JS_ASSERT(obj->getClass() == classp);
 
     JS_LOCK_OBJ(cx, obj);
     JSObject *lockedobj = obj;
@@ -5655,7 +5656,7 @@ StringMethodIsNative(JSContext *cx, JSObject *obj, jsid methodid, Native native)
     if (!shape) {
         pobj = obj->getProto();
 
-        if (pobj && pobj->getClass() == &js_StringClass) {
+        if (pobj && pobj->getClass() == classp) {
             JS_UNLOCK_OBJ(cx, obj);
             JS_LOCK_OBJ(cx, pobj);
             lockedobj = pobj;
@@ -5688,7 +5689,8 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
     if (hint == JSTYPE_STRING) {
         /* Optimize (new String(...)).toString(). */
         if (obj->getClass() == &js_StringClass &&
-            StringMethodIsNative(cx, obj,
+            ClassMethodIsNative(cx, obj,
+                                 &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
                                  js_str_toString)) {
             *vp = obj->getPrimitiveThis();
@@ -5703,10 +5705,15 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
         }
     } else {
         /* Optimize (new String(...)).valueOf(). */
-        if (obj->getClass() == &js_StringClass &&
-            StringMethodIsNative(cx, obj,
+        Class *clasp = obj->getClass();
+        if ((clasp == &js_StringClass &&
+             ClassMethodIsNative(cx, obj, &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
-                                 js_str_toString)) {
+                                 js_str_toString)) ||
+            (clasp == &js_NumberClass &&
+             ClassMethodIsNative(cx, obj, &js_NumberClass,
+                                 ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
+                                 js_num_valueOf))) {
             *vp = obj->getPrimitiveThis();
             return true;
         }
