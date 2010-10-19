@@ -214,9 +214,9 @@ ImageLayerD3D10::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 
 PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(mozilla::layers::LayerManagerD3D10* aManager)
   : PlanarYCbCrImage(static_cast<ImageD3D10*>(this))
-  , mManager(aManager)
   , mHasData(PR_FALSE)
 {
+  mDevice = aManager->device();
 }
 
 void
@@ -319,12 +319,12 @@ PlanarYCbCrImageD3D10::AllocateTextures()
   dataCr.pSysMem = mData.mCrChannel;
   dataCr.SysMemPitch = mData.mCbCrStride;
 
-  mManager->device()->CreateTexture2D(&descY, &dataY, getter_AddRefs(mYTexture));
-  mManager->device()->CreateTexture2D(&descCbCr, &dataCb, getter_AddRefs(mCbTexture));
-  mManager->device()->CreateTexture2D(&descCbCr, &dataCr, getter_AddRefs(mCrTexture));
-  mManager->device()->CreateShaderResourceView(mYTexture, NULL, getter_AddRefs(mYView));
-  mManager->device()->CreateShaderResourceView(mCbTexture, NULL, getter_AddRefs(mCbView));
-  mManager->device()->CreateShaderResourceView(mCrTexture, NULL, getter_AddRefs(mCrView));
+  mDevice->CreateTexture2D(&descY, &dataY, getter_AddRefs(mYTexture));
+  mDevice->CreateTexture2D(&descCbCr, &dataCb, getter_AddRefs(mCbTexture));
+  mDevice->CreateTexture2D(&descCbCr, &dataCr, getter_AddRefs(mCrTexture));
+  mDevice->CreateShaderResourceView(mYTexture, NULL, getter_AddRefs(mYView));
+  mDevice->CreateShaderResourceView(mCbTexture, NULL, getter_AddRefs(mCbView));
+  mDevice->CreateShaderResourceView(mCrTexture, NULL, getter_AddRefs(mCrView));
 }
 
 already_AddRefed<gfxASurface>
