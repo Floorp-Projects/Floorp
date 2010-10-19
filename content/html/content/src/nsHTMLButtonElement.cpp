@@ -226,7 +226,7 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormMethod, formmethod,
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, FormNoValidate, formnovalidate)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormTarget, formtarget)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, Type, type,
                                 kButtonDefaultType->tag)

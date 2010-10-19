@@ -1121,7 +1121,7 @@ NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
  * SetAttr methods.
  */
 #define NS_IMPL_INT_ATTR(_class, _method, _atom)                    \
-  NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
+  NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0)
 
 #define NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
   NS_IMETHODIMP                                                           \

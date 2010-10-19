@@ -146,7 +146,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
 NS_IMPL_URI_ATTR(nsHTMLAreaElement, Href, href)
 NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAreaElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
 
 NS_IMETHODIMP
 nsHTMLAreaElement::GetTarget(nsAString& aValue)
