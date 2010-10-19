@@ -4254,7 +4254,7 @@ mjit::Compiler::jsop_instanceof()
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
 
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false, false))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false))
         return false;
 
     /* Primitive prototypes are invalid. */
@@ -4437,7 +4437,7 @@ mjit::Compiler::constructThis()
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, calleeReg);
 
     // Get callee.prototype.
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, false, false))
         return false;
 
     // Reach into the proto Value and grab a register for its data.
