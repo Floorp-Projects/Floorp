@@ -556,8 +556,7 @@ ifndef GNU_CC
 ifeq (x86_64,$(OS_TEST))
 xptcstubs_asm_x86_64_solaris_SUNW.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_x86_64_solaris_SUNW.s
 	sed \
-	  -e 's/^\(STUB_ENTRY\)(\([0
--9]\))/\11\(\2\)/' \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
 	$(DIST)/include/xptcstubsdef.inc > ./xptcstubsdef_asm.solx86
