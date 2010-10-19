@@ -206,6 +206,7 @@ public:
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
   NS_IMETHOD CreateEditor();
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
   NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);

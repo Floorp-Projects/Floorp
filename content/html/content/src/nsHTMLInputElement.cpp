@@ -1290,6 +1290,17 @@ nsHTMLInputElement::GetRootEditorNode()
 }
 
 NS_IMETHODIMP_(nsIContent*)
+nsHTMLInputElement::CreatePlaceholderNode()
+{
+  nsTextEditorState *state = GetEditorState();
+  if (state) {
+    NS_ENSURE_SUCCESS(state->CreatePlaceholderNode(), nsnull);
+    return state->GetPlaceholderNode();
+  }
+  return nsnull;
+}
+
+NS_IMETHODIMP_(nsIContent*)
 nsHTMLInputElement::GetPlaceholderNode()
 {
   nsTextEditorState *state = GetEditorState();
@@ -2747,6 +2758,8 @@ nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   } else if (aAttribute == nsGkAtoms::size &&
              IsSingleLineTextControl(PR_FALSE)) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
+  } else if (PlaceholderApplies() && aAttribute == nsGkAtoms::placeholder) {
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
   return retval;
 }

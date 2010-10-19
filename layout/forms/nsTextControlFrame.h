@@ -383,6 +383,8 @@ private:
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   PRPackedBool mFireChangeEventState;
   PRPackedBool mInSecureKeyboardInputMode;
+  // Keep track if we have asked a placeholder node creation.
+  PRPackedBool mUsePlaceholder;
 
 #ifdef DEBUG
   PRPackedBool mInEditorInitialization;

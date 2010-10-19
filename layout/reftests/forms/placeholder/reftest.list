@@ -2,14 +2,15 @@
 == placeholder-1-password.html placeholder-visible-ref.html
 == placeholder-1-textarea.html placeholder-visible-textarea-ref.html
 == placeholder-2.html placeholder-visible-ref.html
+== placeholder-2-textarea.html placeholder-visible-textarea-ref.html
 == placeholder-3.html placeholder-overridden-ref.html
 == placeholder-4.html placeholder-overridden-ref.html
 == placeholder-5.html placeholder-visible-ref.html
 == placeholder-6.html placeholder-overflow-ref.html
 == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html
-== placeholder-7.html placeholder-readonly-focus-ref.html
-== placeholder-8.html placeholder-readonly-focus-ref.html
-== placeholder-9.html placeholder-readonly-focus-ref.html
+== placeholder-7.html placeholder-focus-ref.html
+== placeholder-8.html placeholder-focus-ref.html
+== placeholder-9.html placeholder-focus-ref.html
 == placeholder-10.html placeholder-visible-ref.html
 == placeholder-11.html placeholder-visible-ref.html
 == placeholder-12.html placeholder-visible-ref.html
@@ -20,3 +21,6 @@
 == placeholder-17.html placeholder-focus-ref.html
 == placeholder-18.html placeholder-overridden-ref.html
 == placeholder-19.xul  placeholder-overridden-ref.xul
+== placeholder-20.html placeholder-focus-ref.html
+== placeholder-21.html placeholder-focus-ref.html
+== placeholder-22.html placeholder-focus-ref.html
