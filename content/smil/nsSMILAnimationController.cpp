@@ -256,6 +256,27 @@ nsSMILAnimationController::Unlink()
 }
 
 //----------------------------------------------------------------------
+// Refresh driver lifecycle related methods
+
+void
+nsSMILAnimationController::NotifyRefreshDriverCreated(
+    nsRefreshDriver* aRefreshDriver)
+{
+  if (!mPauseState && !mDeferredStartSampling) {
+    StartSampling(aRefreshDriver);
+  }
+}
+
+void
+nsSMILAnimationController::NotifyRefreshDriverDestroying(
+    nsRefreshDriver* aRefreshDriver)
+{
+  if (!mPauseState && !mDeferredStartSampling) {
+    StopSampling(aRefreshDriver);
+  }
+}
+
+//----------------------------------------------------------------------
 // Timer-related implementation helpers
 
 void

@@ -1867,9 +1867,7 @@ PresShell::Init(nsIDocument* aDocument,
 #ifdef MOZ_SMIL
   if (mDocument->HasAnimationController()) {
     nsSMILAnimationController* animCtrl = mDocument->GetAnimationController();
-    if (!animCtrl->IsPaused()) {
-      animCtrl->StartSampling(GetPresContext()->RefreshDriver());
-    }
+    animCtrl->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
 #endif // MOZ_SMIL
 
@@ -2002,7 +2000,7 @@ PresShell::Destroy()
 
 #ifdef MOZ_SMIL
     if (mDocument->HasAnimationController()) {
-      mDocument->GetAnimationController()->StopSampling(rd);
+      mDocument->GetAnimationController()->NotifyRefreshDriverDestroying(rd);
     }
 #endif // MOZ_SMIL
   }
