@@ -196,6 +196,9 @@ protected:
   mozilla::TimeStamp         mCurrentSampleTime;
   mozilla::TimeStamp         mStartTime;
   PRPackedBool               mResampleNeeded;
+  // If we're told to start sampling but there are no animation elements we just
+  // record the time, set the following flag, and then wait until we have an
+  // animation element. Then we'll reset this flag and actually start sampling.
   PRPackedBool               mDeferredStartSampling;
 #ifdef DEBUG
   PRPackedBool               mRunningSample;

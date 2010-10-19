@@ -135,6 +135,7 @@ nsSMILAnimationController::Pause(PRUint32 aType)
   nsSMILTimeContainer::Pause(aType);
 
   if (mPauseState) {
+    mDeferredStartSampling = PR_FALSE;
     StopSampling(GetRefreshDriverForDoc(mDocument));
   }
 }
@@ -261,6 +262,8 @@ void
 nsSMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver)
 {
   NS_ASSERTION(mPauseState == 0, "Starting sampling but controller is paused");
+  NS_ASSERTION(!mDeferredStartSampling,
+               "Started sampling but the deferred start flag is still set");
   if (aRefreshDriver) {
     NS_ABORT_IF_FALSE(!GetRefreshDriverForDoc(mDocument) ||
                       aRefreshDriver == GetRefreshDriverForDoc(mDocument),
