@@ -75,5 +75,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE += $(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX)  $(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX).fake
+
 libs::
 	$(INSTALL) $(PLATFORM_DIR)/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) $(wildcard $(PLATFORM_DIR)/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX).fake) .
