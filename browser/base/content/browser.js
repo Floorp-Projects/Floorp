@@ -4473,7 +4473,7 @@ var TabsProgressListener = {
     // document URI is not yet the about:-uri of the error page.
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        /^about:/.test(aBrowser.contentWindow.document.documentURI)) {
+        /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
       aBrowser.addEventListener("click", BrowserOnClick, false);
       aBrowser.addEventListener("pagehide", function () {
         aBrowser.removeEventListener("click", BrowserOnClick, false);
