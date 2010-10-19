@@ -71,6 +71,7 @@ CPPSRCS = \
   testSetPropertyWithNativeGetterStubSetter.cpp \
   testBug604087.cpp \
   testTrap.cpp \
+  testUTF8.cpp \
   testXDR.cpp \
   $(NULL)
 
