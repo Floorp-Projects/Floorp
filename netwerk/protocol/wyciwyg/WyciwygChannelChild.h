@@ -131,7 +131,7 @@ private:
   friend class WyciwygStopRequestEvent;
 };
 
-bool
+inline bool
 WyciwygChannelChild::IsSuspended()
 {
   return false;
