@@ -4514,13 +4514,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     JSBool ok, useful, wantval;
     JSStmtInfo *stmt, stmtInfo;
-    ptrdiff_t top, off, tmp, beq, jmp;
+    ptrdiff_t top, off, tmp, beq, jmp, tmp2, tmp3;
     JSParseNode *pn2, *pn3;
     JSAtom *atom;
     JSAtomListElement *ale;
     jsatomid atomIndex;
     uintN index;
-    ptrdiff_t noteIndex;
+    ptrdiff_t noteIndex, noteIndex2;
     JSSrcNoteType noteType;
     jsbytecode *pc;
     JSOp op;
@@ -4831,6 +4831,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
+        noteIndex2 = js_NewSrcNote(cx, cg, SRC_TRACE);
+        if (noteIndex2 < 0)
+            return JS_FALSE;
         top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
@@ -4842,6 +4845,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
         if (beq < 0)
             return JS_FALSE;
+        /*
+         * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
+         * note gets bigger.
+         */
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex2, 0, beq - top))
+            return JS_FALSE;
         if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, beq - jmp))
             return JS_FALSE;
         ok = js_PopStatementCG(cx, cg);
@@ -4851,6 +4860,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* Emit an annotated nop so we know to decompile a 'do' keyword. */
         noteIndex = js_NewSrcNote(cx, cg, SRC_WHILE);
         if (noteIndex < 0 || js_Emit1(cx, cg, JSOP_NOP) < 0)
+            return JS_FALSE;
+
+        noteIndex2 = js_NewSrcNote(cx, cg, SRC_TRACE);
+        if (noteIndex2 < 0)
             return JS_FALSE;
 
         /* Compile the loop body. */
@@ -4878,6 +4891,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
         if (beq < 0)
+            return JS_FALSE;
+        /*
+         * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
+         * note gets bigger.
+         */
+        if (!js_SetSrcNoteOffset(cx, cg, noteIndex2, 0, beq - top))
             return JS_FALSE;
         if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, 1 + (beq - top)))
             return JS_FALSE;
@@ -4952,6 +4971,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (jmp < 0)
                 return JS_FALSE;
 
+            noteIndex2 = js_NewSrcNote(cx, cg, SRC_TRACE);
+            if (noteIndex2 < 0)
+                return JS_FALSE;
+            
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
             if (EmitTraceOp(cx, cg) < 0)
@@ -5099,9 +5122,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /* The stack should be balanced around the JSOP_FOR* opcode sequence. */
             JS_ASSERT(cg->stackDepth == loopDepth);
 
-            /* Set the first srcnote offset so we can find the start of the loop body. */
-            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, CG_OFFSET(cg) - jmp))
-                return JS_FALSE;
+            tmp2 = CG_OFFSET(cg);
 
             /* Emit code for the loop body. */
             if (!js_EmitTree(cx, cg, pn->pn_right))
@@ -5123,6 +5144,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (beq < 0)
                 return JS_FALSE;
 
+            /*
+             * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
+             * note gets bigger.
+             */
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex2, 0, beq - top))
+                return JS_FALSE;
+            /* Set the first srcnote offset so we can find the start of the loop body. */
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, tmp2 - jmp))
+                return JS_FALSE;
             /* Set the second srcnote offset so we can find the closing jump. */
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1, beq - jmp))
                 return JS_FALSE;
@@ -5180,6 +5210,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
 
+            noteIndex2 = js_NewSrcNote(cx, cg, SRC_TRACE);
+            if (noteIndex2 < 0)
+                return JS_FALSE;
+            
             /* Emit code for the loop body. */
             if (EmitTraceOp(cx, cg) < 0)
                 return JS_FALSE;
@@ -5188,10 +5222,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             /* Set the second note offset so we can find the update part. */
             JS_ASSERT(noteIndex != -1);
-            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
-                                     CG_OFFSET(cg) - tmp)) {
-                return JS_FALSE;
-            }
+            tmp2 = CG_OFFSET(cg);
 
             /* Set loop and enclosing "update" offsets, for continue. */
             stmt = &stmtInfo;
@@ -5225,11 +5256,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
             }
 
-            /* Set the first note offset so we can find the loop condition. */
-            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
-                                     CG_OFFSET(cg) - tmp)) {
-                return JS_FALSE;
-            }
+            tmp3 = CG_OFFSET(cg);
 
             if (pn2->pn_kid2) {
                 /* Fix up the goto from top to target the loop condition. */
@@ -5240,6 +5267,23 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
             }
 
+            /*
+             * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
+             * note gets bigger.
+             */
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex2, 0,
+                                     CG_OFFSET(cg) - top)) {
+                return JS_FALSE;
+            }
+            /* Set the first note offset so we can find the loop condition. */
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
+                                     tmp3 - tmp)) {
+                return JS_FALSE;
+            }
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
+                                     tmp2 - tmp)) {
+                return JS_FALSE;
+            }
             /* The third note offset helps us find the loop-closing jump. */
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 2,
                                      CG_OFFSET(cg) - tmp)) {
