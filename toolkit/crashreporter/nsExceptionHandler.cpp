@@ -103,6 +103,7 @@
 #include "nsInterfaceHashtable.h"
 #include "prprf.h"
 #include "nsIXULAppInfo.h"
+#include <vector>
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
@@ -240,6 +241,30 @@ static cpu_type_t pref_cpu_types[2] = {
                                  CPU_TYPE_ANY };
 
 static posix_spawnattr_t spawnattr;
+#endif
+
+#if defined(__ANDROID__)
+// Android builds use a custom library loader,
+// so the embedding will provide a list of shared
+// libraries that are mapped into anonymous mappings.
+typedef struct {
+  std::string name;
+  std::string debug_id;
+  uintptr_t   start_address;
+  size_t      length;
+  size_t      file_offset;
+} mapping_info;
+static std::vector<mapping_info> library_mappings;
+
+void FileIDToGUID(const char* file_id, u_int8_t guid[sizeof(MDGUID)])
+{
+  for (int i = 0; i < sizeof(MDGUID); i++) {
+    int c;
+    sscanf(file_id, "%02X", &c);
+    guid[i] = (u_int8_t)(c & 0xFF);
+    file_id += 2;
+  }
+}
 #endif
 
 #ifdef XP_LINUX
@@ -681,6 +706,18 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                                                         &keyExistsAndHasValidFormat);
   if (keyExistsAndHasValidFormat)
     showOSCrashReporter = prefValue;
+#endif
+
+#if defined(__ANDROID__)
+  for (unsigned int i = 0; i < library_mappings.size(); i++) {
+    u_int8_t guid[sizeof(MDGUID)];
+    FileIDToGUID(library_mappings[i].debug_id.c_str(), guid);
+    gExceptionHandler->AddMappingInfo(library_mappings[i].name,
+                                      guid,
+                                      library_mappings[i].start_address,
+                                      library_mappings[i].length,
+                                      library_mappings[i].file_offset);
+  }
 #endif
 
   return NS_OK;
@@ -1960,5 +1997,33 @@ UnsetRemoteExceptionHandler()
 }
 
 #endif  // MOZ_IPC
+
+#if defined(__ANDROID__)
+void AddLibraryMapping(const char* library_name,
+                       const char* file_id,
+                       uintptr_t   start_address,
+                       size_t      mapping_length,
+                       size_t      file_offset)
+{
+  if (!gExceptionHandler) {
+    mapping_info info;
+    info.name = library_name;
+    info.debug_id = file_id;
+    info.start_address = start_address;
+    info.length = mapping_length;
+    info.file_offset = file_offset;
+    library_mappings.push_back(info);
+  }
+  else {
+    u_int8_t guid[sizeof(MDGUID)];
+    FileIDToGUID(file_id, guid);
+    gExceptionHandler->AddMappingInfo(library_name,
+                                      guid,
+                                      start_address,
+                                      mapping_length,
+                                      file_offset);
+  }
+}
+#endif
 
 } // namespace CrashReporter
