@@ -742,7 +742,8 @@ arrowbox {
 
 .panel-row-button {
   -moz-appearance: none;
-  background-color: rgb(94,97,102);
+  background: rgb(94,97,102) url(images/panelrow-default-hdpi.png) no-repeat;
+  background-size: 100% 100%;
   color: white;
   border: 0px solid transparent !important;
   -moz-border-start: 1px solid rgba(255,255,255,0.2) !important;
@@ -757,7 +758,8 @@ arrowbox {
 }
 
 .panel-row-button:hover:active {
-  background-color: rgb(94,97,102);
+  background: rgb(94,97,102) url(images/panelrow-active-hdpi.png) no-repeat;
+  background-size: 100% 100%;
 }
 
 .panel-row-button:first-child {
@@ -801,7 +803,8 @@ arrowbox {
 
 .panel-row-button[checked="true"] {
   color: white !important;
-  background-color: rgb(94,97,102) !important;
+  background: rgb(94, 97, 102) url(images/panelrow-selected-hdpi.png) no-repeat !important;
+  background-size: 100% 100% !important;
 }
 
 .panel-row-button[checked="true"],
