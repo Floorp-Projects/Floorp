@@ -601,6 +601,18 @@
           if (this.mControl.getAttribute("remote") != "true")
             return;
 
+          if (this.mControl.mAddon.eula) {
+            var eula = {
+              name: this.mControl.mAddon.name,
+              text: this.mControl.mAddon.eula,
+              accepted: false
+            };
+            window.openDialog("chrome://mozapps/content/extensions/eula.xul", "_blank",
+                              "chrome,dialog,modal,centerscreen,resizable=no", eula);
+            if (!eula.accepted)
+              return;
+          }
+
           delete this.mControl.mAddon;
           this.mControl.mInstall = this.mInstall;
           this.mControl.setAttribute("status", "installing");
