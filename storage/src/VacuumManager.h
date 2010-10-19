@@ -13,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Storage code.
+ * The Original Code is mozStorage.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,34 +37,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_storage_h_
-#define mozilla_storage_h_
+#ifndef mozilla_storage_VacuumManager_h__
+#define mozilla_storage_VacuumManager_h__
 
-////////////////////////////////////////////////////////////////////////////////
-//// Public Interfaces
-
-#include "mozStorageCID.h"
-#include "mozIStorageAggregateFunction.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageError.h"
-#include "mozIStorageFunction.h"
-#include "mozIStoragePendingStatement.h"
-#include "mozIStorageProgressHandler.h"
-#include "mozIStorageResultSet.h"
-#include "mozIStorageRow.h"
-#include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
+#include "nsCOMPtr.h"
+#include "nsIObserver.h"
 #include "mozIStorageStatementCallback.h"
-#include "mozIStorageBindingParamsArray.h"
-#include "mozIStorageBindingParams.h"
-#include "mozIStorageServiceQuotaManagement.h"
 #include "mozIStorageVacuumParticipant.h"
+#include "nsCategoryCache.h"
+#include "nsIPrefService.h"
 
-////////////////////////////////////////////////////////////////////////////////
-//// Native Language Helpers
+namespace mozilla {
+namespace storage {
 
-#include "mozStorageHelper.h"
+class VacuumManager : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
-#include "mozilla/storage/Variant.h"
+  VacuumManager();
 
-#endif // mozilla_storage_h_
+  /**
+   * Obtains the VacuumManager object.
+   */
+  static VacuumManager * getSingleton();
+
+  /**
+   * Initializes the VacuumManager object.  Must be called just once.
+   */
+  nsresult initialize();
+
+private:
+  ~VacuumManager();
+
+  static VacuumManager *gVacuumManager;
+
+  // Cache of components registered in "vacuum-participant" category.
+  nsCategoryCache<mozIStorageVacuumParticipant> mParticipants;
+
+  // Pref branch for PREF_VACUUM_BRANCH.
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
+};
+
+} // namespace storage
+} // namespace mozilla
+
+#endif

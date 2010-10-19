@@ -1,0 +1,94 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozStorage.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Marco Bonardo <mak77@bonardo.net> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface mozIStorageConnection;
+
+/**
+ * This interface contains the information that the Storage service needs to
+ * vacuum a database.  This interface is created as a service through the
+ * category manager with the category "vacuum-participant".
+ * Please see https://developer.mozilla.org/en/mozIStorageVacuumParticipant for
+ * more information.
+ */
+[scriptable, uuid(8f367508-1d9a-4d3f-be0c-ac11b6dd7dbf)]
+interface mozIStorageVacuumParticipant : nsISupports {
+  /**
+   * The expected page size in bytes for the database.  The vacuum manager will
+   * try to correct the page size during idle based on this value.
+   *
+   * @note If the database is using the WAL journal mode and the current page
+   *       size is not the expected one, the journal mode will be changed to
+   *       TRUNCATE because WAL does not allow page size changes.
+   *       The vacuum manager will try to restore WAL mode, but for this to
+   *       work reliably the participant must ensure to always reset statements.
+   *       If restoring the journal mode should fail it will stick to TRUNCATE.
+   * @note Valid page size values are from 512 to 65536.
+   *       The suggested value is mozIStorageConnection::DEFAULT_PAGE_SIZE.
+   */
+  readonly attribute long expectedDatabasePageSize;
+
+  /**
+   * Connection to the database file to be vacuumed.
+   */
+  readonly attribute mozIStorageConnection databaseConnection;
+
+  /**
+   * Notifies when a vacuum operation begins.  Listeners should avoid using the
+   * database till onEndVacuum is received.
+   *
+   * @return true to proceed with the vacuum, false if the participant wants to
+   *         opt-out for now, it will be retried later.  Useful when participant
+   *         is running some other heavy operation that can't be interrupted.
+   *
+   * @note When a vacuum operation starts or ends it will also dispatch a global
+   *       "heavy-io-task" notification through the observer service with the
+   *       data argument being either "vacuum-begin" or "vacuum-end".
+   */
+  boolean onBeginVacuum();
+
+  /**
+   * Notifies when a vacuum operation ends.
+   *
+   * @param aSucceeded
+   *        reports if the vacuum succeeded or failed.
+   */
+  void onEndVacuum(in boolean aSucceeded);
+};
