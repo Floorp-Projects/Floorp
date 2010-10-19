@@ -3935,7 +3935,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
 static int
 SetMemoryGCFrequencyPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  PRInt32 triggerFactor = nsContentUtils::GetIntPref(aPrefName, 1600);
+  PRInt32 triggerFactor = nsContentUtils::GetIntPref(aPrefName, 300);
   JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_TRIGGER_FACTOR, triggerFactor);
   return 0;
 }
