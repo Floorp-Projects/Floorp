@@ -41,16 +41,13 @@
 #define mozilla_dom_indexeddb_idbdatabase_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
-#include "mozilla/dom/indexedDB/LazyIdleThread.h"
 
 #include "nsIIDBDatabase.h"
-#include "nsIObserver.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsDOMLists.h"
 
-class mozIStorageConnection;
 class nsIScriptContext;
 class nsPIDOMWindow;
 
@@ -59,17 +56,17 @@ BEGIN_INDEXEDDB_NAMESPACE
 class AsyncConnectionHelper;
 struct DatabaseInfo;
 class IDBTransaction;
+class IndexedDatabaseManager;
 
 class IDBDatabase : public nsDOMEventTargetHelper,
-                    public nsIIDBDatabase,
-                    public nsIObserver
+                    public nsIIDBDatabase
 {
   friend class AsyncConnectionHelper;
+  friend class IndexedDatabaseManager;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBDATABASE
-  NS_DECL_NSIOBSERVER
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase,
                                            nsDOMEventTargetHelper)
@@ -78,16 +75,7 @@ public:
   Create(nsIScriptContext* aScriptContext,
          nsPIDOMWindow* aOwner,
          DatabaseInfo* aDatabaseInfo,
-         LazyIdleThread* aThread,
-         nsCOMPtr<mozIStorageConnection>& aConnection,
          const nsACString& aASCIIOrigin);
-
-  nsIThread* ConnectionThread()
-  {
-    return mConnectionThread;
-  }
-
-  void CloseConnection();
 
   PRUint32 Id()
   {
@@ -111,8 +99,7 @@ public:
     return mOwner;
   }
 
-  bool
-  IsQuotaDisabled();
+  bool IsQuotaDisabled();
 
   nsCString& Origin()
   {
@@ -126,21 +113,13 @@ private:
   IDBDatabase();
   ~IDBDatabase();
 
-  // Only meant to be called on mStorageThread!
-  nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
-
   PRUint32 mDatabaseId;
   nsString mName;
   nsString mDescription;
   nsString mFilePath;
   nsCString mASCIIOrigin;
   PRInt32 mInvalidated;
-
-  nsRefPtr<LazyIdleThread> mConnectionThread;
-
-  // Only touched on mStorageThread! These must be destroyed in the
-  // FireCloseConnectionRunnable method.
-  nsCOMPtr<mozIStorageConnection> mConnection;
+  bool mRegistered;
 
   // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;

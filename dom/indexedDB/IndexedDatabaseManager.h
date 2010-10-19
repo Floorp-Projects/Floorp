@@ -80,6 +80,14 @@ public:
   nsresult WaitForClearAndDispatch(const nsACString& aOrigin,
                                    nsIRunnable* aRunnable);
 
+  nsIThread* IOThread()
+  {
+    NS_ASSERTION(mIOThread, "This should never be null!");
+    return mIOThread;
+  }
+
+  static bool IsShuttingDown();
+
 private:
   IndexedDatabaseManager();
   ~IndexedDatabaseManager();

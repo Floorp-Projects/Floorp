@@ -147,14 +147,14 @@ CheckPermissionsHelper::Run()
   nsRefPtr<AsyncConnectionHelper> helper;
   helper.swap(mHelper);
 
-  nsCOMPtr<nsIThread> thread;
-  thread.swap(mThread);
-
   nsCOMPtr<nsIDOMWindow> window;
   window.swap(mWindow);
 
   if (permission == nsIPermissionManager::ALLOW_ACTION) {
-    return helper->Dispatch(thread);
+    IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+    NS_ASSERTION(mgr, "This should never be null!");
+
+    return helper->Dispatch(mgr->IOThread());
   }
 
   NS_ASSERTION(permission == nsIPermissionManager::UNKNOWN_ACTION ||

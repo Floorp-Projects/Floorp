@@ -224,14 +224,10 @@ already_AddRefed<IDBDatabase>
 IDBDatabase::Create(nsIScriptContext* aScriptContext,
                     nsPIDOMWindow* aOwner,
                     DatabaseInfo* aDatabaseInfo,
-                    LazyIdleThread* aThread,
-                    nsCOMPtr<mozIStorageConnection>& aConnection,
                     const nsACString& aASCIIOrigin)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabaseInfo, "Null pointer!");
-  NS_ASSERTION(aThread, "Null pointer!");
-  NS_ASSERTION(aConnection, "Null pointer!");
   NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
 
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
@@ -245,16 +241,11 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
   db->mFilePath = aDatabaseInfo->filePath;
   db->mASCIIOrigin = aASCIIOrigin;
 
-  aThread->SetWeakIdleObserver(db);
-  db->mConnectionThread = aThread;
-
-  db->mConnection.swap(aConnection);
-
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never be null!");
 
   if (!mgr->RegisterDatabase(db)) {
-    NS_WARNING("Out of memory?");
+    // Either out of memory or shutting down.
     return nsnull;
   }
 
@@ -263,7 +254,8 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
 
 IDBDatabase::IDBDatabase()
 : mDatabaseId(0),
-  mInvalidated(0)
+  mInvalidated(0),
+  mRegistered(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -276,16 +268,13 @@ IDBDatabase::IDBDatabase()
 IDBDatabase::~IDBDatabase()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  if (mgr) {
-    mgr->UnregisterDatabase(this);
-  }
 
-  if (mConnectionThread) {
-    mConnectionThread->SetWeakIdleObserver(nsnull);
+  if (mRegistered) {
+    IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+    if (mgr) {
+      mgr->UnregisterDatabase(this);
+    }
   }
-
-  CloseConnection();
 
   if (mDatabaseId && !mInvalidated) {
     DatabaseInfo* info;
@@ -311,40 +300,6 @@ IDBDatabase::~IDBDatabase()
 
     delete gPromptHelpersMutex;
     gPromptHelpersMutex = nsnull;
-  }
-}
-
-nsresult
-IDBDatabase::GetOrCreateConnection(mozIStorageConnection** aResult)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-  if (mInvalidated) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (!mConnection) {
-    mConnection = IDBFactory::GetConnection(mFilePath);
-    NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
-  }
-
-  nsCOMPtr<mozIStorageConnection> result(mConnection);
-  result.forget(aResult);
-  return NS_OK;
-}
-
-void
-IDBDatabase::CloseConnection()
-{
-  if (mConnection) {
-    if (mConnectionThread) {
-      NS_ProxyRelease(mConnectionThread, mConnection, PR_TRUE);
-    }
-    else {
-      NS_ERROR("Leaking connection!");
-      mozIStorageConnection* leak;
-      mConnection.forget(&leak);
-    }
   }
 }
 
@@ -415,7 +370,6 @@ IDBDatabase::Invalidate()
   }
 
   PR_AtomicSet(&mInvalidated, 1);
-  CloseConnection();
 
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabaseId, &info)) {
@@ -448,7 +402,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -653,6 +606,10 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (IndexedDatabaseManager::IsShuttingDown()) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   if (aOptionalArgCount) {
     if (aMode != nsIIDBTransaction::READ_WRITE &&
         aMode != nsIIDBTransaction::READ_ONLY &&
@@ -827,19 +784,6 @@ IDBDatabase::ObjectStore(const nsAString& aName,
 
   nsresult rv = transaction->ObjectStore(aName, _retval);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabase::Observe(nsISupports* aSubject,
-                     const char* aTopic,
-                     const PRUnichar* aData)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ENSURE_FALSE(strcmp(aTopic, IDLE_THREAD_TOPIC), NS_ERROR_UNEXPECTED);
-
-  CloseConnection();
 
   return NS_OK;
 }

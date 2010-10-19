@@ -172,12 +172,6 @@ AsyncConnectionHelper::Run()
       NS_ASSERTION(connection, "This should never be null!");
     }
   }
-  else if (mDatabase) {
-    rv = mDatabase->GetOrCreateConnection(getter_AddRefs(connection));
-    if (NS_SUCCEEDED(rv)) {
-      NS_ASSERTION(connection, "This should never be null!");
-    }
-  }
 
   if (connection) {
     rv = connection->SetProgressHandler(kProgressHandlerGranularity, this,
