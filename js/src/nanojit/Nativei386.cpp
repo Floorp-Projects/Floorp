@@ -679,19 +679,25 @@ namespace nanojit
     inline void Assembler::SSE(I32 c, R d, R s) {
         underrunProtect(9);
         MODRM(REGNUM(d)&7, REGNUM(s)&7);
-        _nIns -= 3;
-        _nIns[0] = uint8_t((c >> 16) & 0xff);
-        _nIns[1] = uint8_t((c >>  8) & 0xff);
-        _nIns[2] = uint8_t(c & 0xff);
+        *(--_nIns) = uint8_t(c & 0xff);
+        *(--_nIns) = uint8_t((c >>  8) & 0xff);
+        *(--_nIns) = uint8_t((c >> 16) & 0xff);
     }
 
     inline void Assembler::SSEm(I32 c, R r, I32 d, R b) {
         underrunProtect(9);
         MODRMm(REGNUM(r)&7, d, b);
-        _nIns -= 3;
-        _nIns[0] = uint8_t((c >> 16) & 0xff);
-        _nIns[1] = uint8_t((c >>  8) & 0xff);
-        _nIns[2] = uint8_t(c & 0xff);
+        *(--_nIns) = uint8_t(c & 0xff);
+        *(--_nIns) = uint8_t((c >>  8) & 0xff);
+        *(--_nIns) = uint8_t((c >> 16) & 0xff);
+    }
+
+    inline void Assembler::SSEsib(I32 c, R rr, I32 d, R rb, R ri, I32 scale) {
+        underrunProtect(9);
+        MODRMsib(REGNUM(rr)&7, rb, ri, scale, d);
+        *(--_nIns) = uint8_t(c & 0xff);
+        *(--_nIns) = uint8_t((c >>  8) & 0xff);
+        *(--_nIns) = uint8_t((c >> 16) & 0xff);
     }
 
     inline void Assembler::LDSDm(R r, const double* addr) {
@@ -705,12 +711,32 @@ namespace nanojit
         asm_output("movsd %s,(%p) // =%f", gpn(r), (void*)addr, *addr);
     }
 
-    inline void Assembler::SSE_LDSD(R r, I32 d, R b) { count_ldq(); SSEm(0xf20f10, r, d, b); asm_output("movsd %s,%d(%s)", gpn(r), d, gpn(b)); }
     inline void Assembler::SSE_LDQ( R r, I32 d, R b) { count_ldq(); SSEm(0xf30f7e, r, d, b); asm_output("movq %s,%d(%s)", gpn(r), d, gpn(b)); }
     inline void Assembler::SSE_LDSS(R r, I32 d, R b) { count_ld();  SSEm(0xf30f10, r, d, b); asm_output("movss %s,%d(%s)", gpn(r), d, gpn(b)); }
+
+    inline void Assembler::SSE_LDQsib(R rr, I32 d, R rb, R ri, I32 scale)
+    {
+        count_ldq();
+        SSEsib(0xf30f7e, rr, d, rb, ri, scale);
+        asm_output("movq %s,%d(%s+%s*%d)", gpn(rr), d, gpn(rb), gpn(ri), SIBIDX(scale));
+    }
+
+    inline void Assembler::SSE_LDSSsib(R rr, I32 d, R rb, R ri, I32 scale)
+    {
+        count_ld();
+        SSEsib(0xf30f10, rr, d, rb, ri, scale);
+        asm_output("movss %s,%d(%s+%s*%d)", gpn(rr), d, gpn(rb), gpn(ri), SIBIDX(scale));
+    }
+
     inline void Assembler::SSE_STSD(I32 d, R b, R r) { count_stq(); SSEm(0xf20f11, r, d, b); asm_output("movsd %d(%s),%s", d, gpn(b), gpn(r)); }
     inline void Assembler::SSE_STQ( I32 d, R b, R r) { count_stq(); SSEm(0x660fd6, r, d, b); asm_output("movq %d(%s),%s", d, gpn(b), gpn(r)); }
     inline void Assembler::SSE_STSS(I32 d, R b, R r) { count_st();  SSEm(0xf30f11, r, d, b); asm_output("movss %d(%s),%s", d, gpn(b), gpn(r)); }
+
+    inline void Assembler::SSE_STQsib(I32 d, R rb, R ri, I32 scale, R rv) {
+        count_stq();
+        SSEsib(0x660fd6, rv, d, rb, ri, scale);
+        asm_output("movq %d(%s+%s*%d),%s", d, gpn(rb), gpn(ri), scale, gpn(rv));
+    }
 
     inline void Assembler::SSE_CVTSI2SD(R xr, R gr)  { count_fpu(); SSE(0xf20f2a, xr, gr); asm_output("cvtsi2sd %s,%s", gpn(xr), gpn(gr)); }
     inline void Assembler::SSE_CVTSD2SI(R gr, R xr)  { count_fpu(); SSE(0xf20f2d, gr, xr); asm_output("cvtsd2si %s,%s", gpn(gr), gpn(xr)); }
@@ -1351,9 +1377,7 @@ namespace nanojit
     void Assembler::asm_load64(LIns* ins)
     {
         LIns* base = ins->oprnd1();
-        int db = ins->disp();
-
-        Register rb = getBaseReg(base, db, GpRegs);
+        int d = ins->disp();
 
         // There are two cases:
         // - 'ins' is in FpRegs: load it.
@@ -1365,48 +1389,65 @@ namespace nanojit
         //   because it mandates bringing the value into a register.
         //
         if (ins->isInReg()) {
-            Register rr = ins->getReg();
-            asm_maybe_spill(ins, false);    // if also in memory in post-state, spill it now
-            switch (ins->opcode()) {
-            case LIR_ldd:
+            Register rr = prepareResultReg(ins, rmask(ins->getReg()));
+
+            if (base->opcode() == LIR_addp && rmask(rr) & XmmRegs) {
+                LIns* index;
+                int scale;
+                getBaseIndexScale(base, &base, &index, &scale);
+
+                // (**) We don't have the usual opportunity to clobber 'base'
+                // or 'ins' with the result because it has a different type.
+                Register rb, ri;
+                RegisterMask allow = GpRegs & ~rmask(rr);
+                getBaseReg2(allow, index, ri, allow, base, rb, d);
+
+                switch (ins->opcode()) {
+                case LIR_ldd:   SSE_LDQsib(rr, d, rb, ri, scale);  break;
+                case LIR_ldf2d: SSE_CVTSS2SD(rr, rr);
+                                SSE_LDSSsib(rr, d, rb, ri, scale);
+                                SSE_XORPDr(rr, rr);                 break;
+                default:        NanoAssert(0);                      break;
+                }
+
+            } else {
+                // (**) We don't have the usual opportunity to clobber 'base'
+                // or 'ins' with the result because it has a different type.
+                Register rb = getBaseReg(base, d, GpRegs);
                 if (rmask(rr) & XmmRegs) {
-                    SSE_LDQ(rr, db, rb);
+                    switch (ins->opcode()) {
+                    case LIR_ldd:   SSE_LDQ(rr, d, rb);     break;
+                    case LIR_ldf2d: SSE_CVTSS2SD(rr, rr);
+                                    SSE_LDSS(rr, d, rb);
+                                    SSE_XORPDr(rr, rr);     break;
+                    default:        NanoAssert(0);          break;
+                    }
                 } else {
                     NanoAssert(rr == FST0);
-                    FLDQ(db, rb);
+                    switch (ins->opcode()) {
+                    case LIR_ldd:   FLDQ(d, rb);            break;
+                    case LIR_ldf2d: FLD32(d, rb);           break;
+                    default:        NanoAssert(0);          break;
+                    }
                 }
-                break;
-
-            case LIR_ldf2d:
-                if (rmask(rr) & XmmRegs) {
-                    SSE_CVTSS2SD(rr, rr);
-                    SSE_LDSS(rr, db, rb);
-                    SSE_XORPDr(rr,rr);
-                } else {
-                    NanoAssert(rr == FST0);
-                    FLD32(db, rb);
-                }
-                break;
-
-            default:
-                NanoAssert(0);
-                break;
             }
 
         } else {
+            Register rb = getBaseReg(base, d, GpRegs);
+
             NanoAssert(ins->isInAr());
             int dr = arDisp(ins);
 
             switch (ins->opcode()) {
             case LIR_ldd:
                 // Don't use an fpu reg to simply load & store the value.
-                asm_mmq(FP, dr, rb, db);
+                asm_mmq(FP, dr, rb, d);
                 break;
 
             case LIR_ldf2d:
                 // Need to use fpu to expand 32->64.
                 FSTPQ(dr, FP);
-                FLD32(db, rb);
+                FLD32(d, rb);
                 break;
 
             default:
@@ -1416,13 +1457,14 @@ namespace nanojit
         }
 
         freeResourcesOf(ins);
+        // Nb: no need for a possible findSpecificRegForUnallocated() call
+        // here because of (**) above.
     }
 
-    void Assembler::asm_store64(LOpcode op, LIns* value, int dr, LIns* base)
+    void Assembler::asm_store64(LOpcode op, LIns* value, int d, LIns* base)
     {
-        Register rb = getBaseReg(base, dr, GpRegs);
-
         if (op == LIR_std2f) {
+            Register rb = getBaseReg(base, d, GpRegs);
             bool pop = !value->isInReg();
             Register rv = ( pop
                           ? findRegFor(value, _config.i386_sse2 ? XmmRegs : FpRegs)
@@ -1433,47 +1475,48 @@ namespace nanojit
                 Register rt = registerAllocTmp(XmmRegs);
 
                 // cvt to single-precision and store
-                SSE_STSS(dr, rb, rt);
+                SSE_STSS(d, rb, rt);
                 SSE_CVTSD2SS(rt, rv);
                 SSE_XORPDr(rt, rt);     // zero dest to ensure no dependency stalls
 
             } else {
-                FST32(pop, dr, rb);
+                FST32(pop, d, rb);
             }
 
         } else if (value->isImmD()) {
-            STi(rb, dr+4, value->immDhi());
-            STi(rb, dr,   value->immDlo());
+            Register rb = getBaseReg(base, d, GpRegs);
+            STi(rb, d+4, value->immDhi());
+            STi(rb, d,   value->immDlo());
 
-        } else if (value->isop(LIR_ldd)) {
-            // value is 64bit struct or int64_t, or maybe a double.
-            // It may be live in an FPU reg.  Either way, don't put it in an
-            // FPU reg just to load & store it.
+        } else if (base->opcode() == LIR_addp && _config.i386_sse2) {
+            LIns* index;
+            int scale;
+            getBaseIndexScale(base, &base, &index, &scale);
 
-            // a) If we know it's not a double, this is right.
-            // b) If we guarded that it's a double, this store could be on the
-            //    side exit, copying a non-double.
-            // c) Maybe it's a double just being stored.  Oh well.
+            Register rb, ri;
+            getBaseReg2(GpRegs, index, ri, GpRegs, base, rb, d);
 
-            if (_config.i386_sse2) {
-                Register rv = findRegFor(value, XmmRegs);
-                SSE_STQ(dr, rb, rv);
-            } else {
-                int da = findMemFor(value);
-                asm_mmq(rb, dr, FP, da);
-            }
+            Register rv = value->isInReg() ? value->getReg() : findRegFor(value, XmmRegs);
+            NanoAssert(rmask(rv) & XmmRegs);
+            SSE_STQsib(d, rb, ri, scale, rv);
+
+        } else if (value->isop(LIR_ldd) && !_config.i386_sse2) {
+            // 'value' may be live in an FPU reg.  Either way, don't put it on
+            // the FPU stack just to load & store it.
+            Register rb = getBaseReg(base, d, GpRegs);
+            int da = findMemFor(value);
+            asm_mmq(rb, d, FP, da);
 
         } else {
+            Register rb = getBaseReg(base, d, GpRegs);
             bool pop = !value->isInReg();
             Register rv = ( pop
                           ? findRegFor(value, _config.i386_sse2 ? XmmRegs : FpRegs)
                           : value->getReg() );
-
-            if (rmask(rv) & XmmRegs) {
-                SSE_STQ(dr, rb, rv);
-            } else {
-                FSTQ(pop, dr, rb);
-            }
+            if (rmask(rv) & XmmRegs)
+                SSE_STQ(d, rb, rv);
+            else
+                FSTQ(pop, d, rb);
         }
     }
 
@@ -1953,7 +1996,6 @@ namespace nanojit
             freeResourcesOf(ins);
 
         } else if (base->opcode() == LIR_addp) {
-            // Search for add(X,Y).
             LIns* index;
             int scale;
             getBaseIndexScale(base, &base, &index, &scale);
@@ -2525,7 +2567,7 @@ namespace nanojit
             SSE_ADDSDm(rr, &k_NEGONE);
 
             SSE_CVTSI2SD(rr, rt);
-            SSE_XORPDr(rr,rr);  // zero rr to ensure no dependency stalls
+            SSE_XORPDr(rr, rr);  // zero rr to ensure no dependency stalls
 
             if (lhs->isInRegMask(GpRegs)) {
                 Register ra = lhs->getReg();
