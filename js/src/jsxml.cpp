@@ -213,6 +213,20 @@ AppendString(JSCharBuffer &cb, JSString *str)
     return cb.append(chars, end);
 }
 
+/*
+ * This wrapper is needed because NewBuiltinClassInstance doesn't
+ * call the constructor, and we need a place to set the
+ * HAS_EQUALITY bit.
+ */
+static inline JSObject *
+NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
+{
+    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    if (obj && clasp->ext.equality)
+        obj->flags |= JSObject::HAS_EQUALITY;
+    return obj;
+}
+
 #define DEFINE_GETTER(name,code)                                               \
     static JSBool                                                              \
     name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
@@ -309,7 +323,7 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
 {
     JSObject *obj;
 
-    obj = NewBuiltinClassInstance(cx, &js_NamespaceClass);
+    obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
     if (!obj)
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefix()));
@@ -520,7 +534,7 @@ static JSObject *
 NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
             Class *clasp = &js_QNameClass)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    JSObject *obj = NewBuiltinClassInstanceXML(cx, clasp);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -633,7 +647,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             return JS_TRUE;
         }
 
-        obj = NewBuiltinClassInstance(cx, &js_NamespaceClass);
+        obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
         if (!obj)
             return JS_FALSE;
     }
@@ -698,6 +712,8 @@ Namespace(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    if (thisobj)
+        thisobj->flags |= JSObject::HAS_EQUALITY;
     return NamespaceHelper(cx, thisobj, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
@@ -739,7 +755,7 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
          * Create and return a new QName or AttributeName object exactly as if
          * constructed.
          */
-        obj = NewBuiltinClassInstance(cx, clasp);
+        obj = NewBuiltinClassInstanceXML(cx, clasp);
         if (!obj)
             return JS_FALSE;
     }
@@ -833,6 +849,8 @@ QName(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    if (thisobj)
+        thisobj->flags |= JSObject::HAS_EQUALITY;
     return QNameHelper(cx, thisobj, &js_QNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 

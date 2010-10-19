@@ -88,6 +88,7 @@ namespace js {
  * - ACCSET_STACKFRAME:    All JSStackFrame objects.
  * - ACCSET_RUNTIME:       The JSRuntime object.
  * - ACCSET_OBJ_CLASP:     The 'clasp'    field of all JSObjects.
+ * - ACCSET_OBJ_FLAGS:     The 'flags'    field of all JSObjects.
  * - ACCSET_OBJ_SHAPE:     The 'shape'    field of all JSObjects.
  * - ACCSET_OBJ_PROTO:     The 'proto'    field of all JSObjects.
  * - ACCSET_OBJ_PARENT:    The 'parent'   field of all JSObjects.
@@ -115,28 +116,29 @@ static const nanojit::AccSet ACCSET_FRAMEREGS     = (1 <<  6);
 static const nanojit::AccSet ACCSET_STACKFRAME    = (1 <<  7);
 static const nanojit::AccSet ACCSET_RUNTIME       = (1 <<  8);
 
-// Nb: JSObject::{lastProp,map,flags} don't have an AccSet because they are never accessed on trace
+// Nb: JSObject::{lastProp,map} don't have an AccSet because they are never accessed on trace
 static const nanojit::AccSet ACCSET_OBJ_CLASP     = (1 <<  9);
-static const nanojit::AccSet ACCSET_OBJ_SHAPE     = (1 << 10);
-static const nanojit::AccSet ACCSET_OBJ_PROTO     = (1 << 11);
-static const nanojit::AccSet ACCSET_OBJ_PARENT    = (1 << 12);
-static const nanojit::AccSet ACCSET_OBJ_PRIVATE   = (1 << 13);
-static const nanojit::AccSet ACCSET_OBJ_CAPACITY  = (1 << 14);
-static const nanojit::AccSet ACCSET_OBJ_SLOTS     = (1 << 15);  // the pointer to the slots
+static const nanojit::AccSet ACCSET_OBJ_FLAGS     = (1 << 10);
+static const nanojit::AccSet ACCSET_OBJ_SHAPE     = (1 << 11);
+static const nanojit::AccSet ACCSET_OBJ_PROTO     = (1 << 12);
+static const nanojit::AccSet ACCSET_OBJ_PARENT    = (1 << 13);
+static const nanojit::AccSet ACCSET_OBJ_PRIVATE   = (1 << 14);
+static const nanojit::AccSet ACCSET_OBJ_CAPACITY  = (1 << 15);
+static const nanojit::AccSet ACCSET_OBJ_SLOTS     = (1 << 16);  // the pointer to the slots
 
-static const nanojit::AccSet ACCSET_SLOTS         = (1 << 16);  // the slots themselves
-static const nanojit::AccSet ACCSET_TARRAY        = (1 << 17);
-static const nanojit::AccSet ACCSET_TARRAY_DATA   = (1 << 18);
-static const nanojit::AccSet ACCSET_ITER          = (1 << 19);
-static const nanojit::AccSet ACCSET_ITER_PROPS    = (1 << 20);
-static const nanojit::AccSet ACCSET_STRING        = (1 << 21);
-static const nanojit::AccSet ACCSET_STRING_MCHARS = (1 << 22);
-static const nanojit::AccSet ACCSET_TYPEMAP       = (1 << 23);
-static const nanojit::AccSet ACCSET_FCSLOTS       = (1 << 24);
-static const nanojit::AccSet ACCSET_ARGS_DATA     = (1 << 25);
+static const nanojit::AccSet ACCSET_SLOTS         = (1 << 17);  // the slots themselves
+static const nanojit::AccSet ACCSET_TARRAY        = (1 << 18);
+static const nanojit::AccSet ACCSET_TARRAY_DATA   = (1 << 19);
+static const nanojit::AccSet ACCSET_ITER          = (1 << 20);
+static const nanojit::AccSet ACCSET_ITER_PROPS    = (1 << 21);
+static const nanojit::AccSet ACCSET_STRING        = (1 << 22);
+static const nanojit::AccSet ACCSET_STRING_MCHARS = (1 << 23);
+static const nanojit::AccSet ACCSET_TYPEMAP       = (1 << 24);
+static const nanojit::AccSet ACCSET_FCSLOTS       = (1 << 25);
+static const nanojit::AccSet ACCSET_ARGS_DATA     = (1 << 26);
 }
 
-static const uint8_t TM_NUM_USED_ACCS = 26; // number of access regions used by TraceMonkey
+static const uint8_t TM_NUM_USED_ACCS = 27; // number of access regions used by TraceMonkey
 
 enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_NEITHER };
 enum { 

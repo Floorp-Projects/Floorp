@@ -193,23 +193,24 @@ nanojit::LInsPrinter::accNames[] = {
     "rt",           // (1 <<  8) == ACCSET_RUNTIME
 
     "objclasp",     // (1 <<  9) == ACCSET_OBJ_CLASP
-    "objshape",     // (1 << 10) == ACCSET_OBJ_SHAPE
-    "objproto",     // (1 << 11) == ACCSET_OBJ_PROTO
-    "objparent",    // (1 << 12) == ACCSET_OBJ_PARENT
-    "objprivate",   // (1 << 13) == ACCSET_OBJ_PRIVATE
-    "objcapacity",  // (1 << 14) == ACCSET_OBJ_CAPACITY
-    "objslots",     // (1 << 15) == ACCSET_OBJ_SLOTS
+    "objflags",     // (1 << 10) == ACCSET_OBJ_FLAGS
+    "objshape",     // (1 << 11) == ACCSET_OBJ_SHAPE
+    "objproto",     // (1 << 12) == ACCSET_OBJ_PROTO
+    "objparent",    // (1 << 13) == ACCSET_OBJ_PARENT
+    "objprivate",   // (1 << 14) == ACCSET_OBJ_PRIVATE
+    "objcapacity",  // (1 << 15) == ACCSET_OBJ_CAPACITY
+    "objslots",     // (1 << 16) == ACCSET_OBJ_SLOTS
 
-    "slots",        // (1 << 16) == ACCSET_SLOTS
-    "tarray",       // (1 << 17) == ACCSET_TARRAY
-    "tdata",        // (1 << 18) == ACCSET_TARRAY_DATA
-    "iter",         // (1 << 19) == ACCSET_ITER
-    "iterprops",    // (1 << 20) == ACCSET_ITER_PROPS
-    "str",          // (1 << 21) == ACCSET_STRING
-    "strmchars",    // (1 << 22) == ACCSET_STRING_MCHARS
-    "typemap",      // (1 << 23) == ACCSET_TYPEMAP
-    "fcslots",      // (1 << 24) == ACCSET_FCSLOTS
-    "argsdata",     // (1 << 25) == ACCSET_ARGS_DATA
+    "slots",        // (1 << 17) == ACCSET_SLOTS
+    "tarray",       // (1 << 18) == ACCSET_TARRAY
+    "tdata",        // (1 << 19) == ACCSET_TARRAY_DATA
+    "iter",         // (1 << 20) == ACCSET_ITER
+    "iterprops",    // (1 << 21) == ACCSET_ITER_PROPS
+    "str",          // (1 << 22) == ACCSET_STRING
+    "strmchars",    // (1 << 23) == ACCSET_STRING_MCHARS
+    "typemap",      // (1 << 24) == ACCSET_TYPEMAP
+    "fcslots",      // (1 << 25) == ACCSET_FCSLOTS
+    "argsdata",     // (1 << 26) == ACCSET_ARGS_DATA
 
     "?!"            // this entry should never be used, have it just in case
 };
@@ -9067,6 +9068,11 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
         } else if (l.isObject()) {
             if (l.toObject().getClass()->ext.equality)
                 RETURN_STOP_A("Can't trace extended class equality operator");
+            LIns* flags_ins = lir->insLoad(LIR_ldi, l_ins, offsetof(JSObject, flags),
+                                           ACCSET_OBJ_FLAGS);
+            LIns* flag_ins = lir->ins2(LIR_andi, flags_ins, INS_CONSTU(JSObject::HAS_EQUALITY));
+            guard(true, lir->insEqI_0(flag_ins), BRANCH_EXIT);
+
             op = LIR_eqp;
             cond = (l == r);
         } else if (l.isBoolean()) {
@@ -16906,6 +16912,10 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet ac
 
       case ACCSET_OBJ_CLASP:
         ok = OK_OBJ_FIELD(LIR_ldp, clasp);
+        break;
+
+      case ACCSET_OBJ_FLAGS:
+        ok = OK_OBJ_FIELD(LIR_ldi, flags);
         break;
 
       case ACCSET_OBJ_SHAPE:

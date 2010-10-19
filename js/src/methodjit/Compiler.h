@@ -81,8 +81,7 @@ class Compiler : public BaseCompiler
         ic::MICInfo::Kind kind;
         jsbytecode *jumpTarget;
         Jump traceHint;
-        MaybeJump slowTraceHintOne;
-        MaybeJump slowTraceHintTwo;
+        MaybeJump slowTraceHint;
         union {
             struct {
                 bool typeConst;
@@ -94,6 +93,19 @@ class Compiler : public BaseCompiler
         } u;
     };
 
+    struct EqualityGenInfo {
+        DataLabelPtr addrLabel;
+        Label stubEntry;
+        Call stubCall;
+        BoolStub stub;
+        MaybeJump jumpToStub;
+        Label fallThrough;
+        jsbytecode *jumpTarget;
+        ValueRemat lvr, rvr;
+        Assembler::Condition cond;
+        JSC::MacroAssembler::RegisterID tempReg;
+    };
+    
     /* InlineFrameAssembler wants to see this. */
   public:
     struct CallGenInfo {
@@ -215,6 +227,7 @@ class Compiler : public BaseCompiler
 #if defined JS_MONOIC
     js::Vector<MICGenInfo, 64> mics;
     js::Vector<CallGenInfo, 64> callICs;
+    js::Vector<EqualityGenInfo, 64> equalityICs;
 #endif
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 16> pics;
@@ -274,7 +287,7 @@ class Compiler : public BaseCompiler
     bool constructThis();
 
     /* Opcode handlers. */
-    void jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne = NULL, Jump *slowTwo = NULL);
+    void jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
     void jsop_bindname(uint32 index);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);

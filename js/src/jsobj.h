@@ -331,9 +331,10 @@ struct JSObject : js::gc::Cell {
         BRANDED         = 0x08,
         GENERIC         = 0x10,
         METHOD_BARRIER  = 0x20,
-        INDEXED         =  0x40,
-        OWN_SHAPE       =  0x80,
-        BOUND_FUNCTION  = 0x100
+        INDEXED         = 0x40,
+        OWN_SHAPE       = 0x80,
+        BOUND_FUNCTION  = 0x100,
+        HAS_EQUALITY    = 0x200
     };
 
     /*
@@ -419,6 +420,8 @@ struct JSObject : js::gc::Cell {
     bool generic()              { return !!(flags & GENERIC); }
     void setGeneric()           { flags |= GENERIC; }
 
+    bool hasSpecialEquality()   { return !!(flags & HAS_EQUALITY); }
+    
   private:
     void generateOwnShape(JSContext *cx);
 
