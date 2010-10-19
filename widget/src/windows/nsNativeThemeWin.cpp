@@ -1917,6 +1917,19 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
+      QueryForButtonData(aFrame);
+      aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cx;
+      aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy
+                        - GetSystemMetrics(SM_CYFRAME);
+      if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) {
+        aResult->width += 1;
+        aResult->height -= 2;
+      }
+      *aIsOverridable = PR_FALSE;
+      return NS_OK;
+
     case NS_THEME_WINDOW_FRAME_LEFT:
     case NS_THEME_WINDOW_FRAME_RIGHT:
     case NS_THEME_WINDOW_FRAME_BOTTOM:

@@ -108,9 +108,10 @@ enum WindowsThemeColor {
   WINTHEMECOLOR_METALLIC     = 3
 };
 
-#define CMDBUTTONIDX_MINIMIZE 0
-#define CMDBUTTONIDX_RESTORE  1
-#define CMDBUTTONIDX_CLOSE    2
+#define CMDBUTTONIDX_MINIMIZE    0
+#define CMDBUTTONIDX_RESTORE     1
+#define CMDBUTTONIDX_CLOSE       2
+#define CMDBUTTONIDX_BUTTONBOX   3
 
 class nsUXThemeData {
   static HMODULE sThemeDLL;
@@ -131,7 +132,7 @@ public:
   static PRPackedBool sIsVistaOrLater;
   static PRPackedBool sHaveCompositor;
   static PRBool sTitlebarInfoPopulated;
-  static SIZE sCommandButtons[3];
+  static SIZE sCommandButtons[4];
   static nsILookAndFeel::WindowsThemeIdentifier sThemeId;
   static PRBool sIsDefaultWindowsTheme;
 
