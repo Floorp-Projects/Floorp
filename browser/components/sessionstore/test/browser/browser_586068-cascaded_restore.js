@@ -49,7 +49,7 @@ function test() {
   waitForExplicitFinish();
   // This test does a lot of window opening / closing and waiting for loads.
   // In order to prevent timeouts, we'll extend the default that mochitest uses.
-  requestLongerTimeout(2);
+  requestLongerTimeout(4);
   runNextTest();
 }
 
