@@ -323,7 +323,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   // Make sure that the thread event queue does not block on its monitor, as
   // it normally would do if it did not have any pending events.  To avoid
   // that, we simply insert a dummy event into its queue during shutdown.
-  if (needEvent && !NS_HasPendingEvents(thr)) {  
+  if (needEvent && !mExiting && !NS_HasPendingEvents(thr)) {  
     if (!mDummyEvent)
       mDummyEvent = new nsRunnable();
     thr->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
