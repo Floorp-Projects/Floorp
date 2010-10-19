@@ -291,10 +291,10 @@ class Compiler : public BaseCompiler
 
     /* Opcode handlers. */
     void jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
-    void jsop_bindname(uint32 index);
+    void jsop_bindname(uint32 index, bool usePropCache);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
-    void jsop_getprop_slow();
+    void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
     void jsop_getarg(uint32 index);
     void jsop_this();
     void emitReturn(FrameEntry *fe);
