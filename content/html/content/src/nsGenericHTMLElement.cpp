@@ -264,7 +264,7 @@ NS_INTERFACE_TABLE_HEAD(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 
-NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLElement, TabIndex, tabindex, -1)
 NS_IMPL_BOOL_ATTR(nsGenericHTMLElement, Hidden, hidden)
 
 nsresult
@@ -2310,7 +2310,7 @@ nsGenericHTMLElement::GetIsContentEditable(PRBool* aContentEditable)
 
 //----------------------------------------------------------------------
 
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLFrameElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR(nsGenericHTMLFrameElement, TabIndex, tabindex)
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
