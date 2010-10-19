@@ -579,6 +579,23 @@ AlertDownloadProgressListener.prototype = {
     progressListener.onProgress(notificationName, aDownload.percentComplete, 100);
   },
 
+  onDownloadStateChange: function(aState, aDownload) {
+    let state = aDownload.state;
+    switch (state) {
+      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
+      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL:
+      case Ci.nsIDownloadManager.DOWNLOAD_DIRTY:
+      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED: {
+        let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+        let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+        let notificationName = aDownload.target.spec.replace("file:", "download:");
+        progressListener.onCancel(notificationName);
+        break;
+      }
+    }
+  },
+
   onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) { },
   onSecurityChange: function(aWebProgress, aRequest, aState, aDownload) { },
 
