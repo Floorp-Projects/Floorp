@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: placeholder has to be used if set via javascript -->
+  <script type="text/javascript">
+    function setPlaceholder()
+    {
+      document.getElementById('p1').placeholder = "my placeholder";
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setPlaceholder(); disableReftestWait();">
+    <textarea id="p1" placeholder=""></textarea>
+  </body>
+</html>
