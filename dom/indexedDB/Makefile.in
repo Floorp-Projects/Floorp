@@ -101,8 +101,9 @@ XPIDLSRCS = \
   nsIIDBCursor.idl \
   nsIIDBDatabase.idl \
   nsIIDBDatabaseException.idl \
-  nsIIDBEvent.idl \
   nsIIDBErrorEvent.idl \
+  nsIIDBEvent.idl \
+  nsIIDBFactory.idl \
   nsIIDBIndex.idl \
   nsIIDBKeyRange.idl \
   nsIIDBObjectStore.idl \
@@ -110,7 +111,8 @@ XPIDLSRCS = \
   nsIIDBSuccessEvent.idl \
   nsIIDBTransaction.idl \
   nsIIDBTransactionEvent.idl \
-  nsIIDBFactory.idl \
+  nsIIDBVersionChangeEvent.idl \
+  nsIIDBVersionChangeRequest.idl \
   nsIIndexedDatabaseManager.idl \
   $(NULL)
 

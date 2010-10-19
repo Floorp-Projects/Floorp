@@ -37,54 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIIDBEvent.idl"
 
-interface nsIDOMEventListener;
-interface nsIIDBObjectStore;
-interface nsIIDBRequest;
-interface nsIIDBDatabase;
-interface nsIDOMDOMStringList;
-
-/**
- * IDBDTransaction interface.  See
- * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
- * for more information.
- */
-[scriptable, uuid(99bb825e-56aa-4cb9-b640-4fadb00b874d)]
-interface nsIIDBTransaction : nsISupports
+[scriptable, uuid(07519073-e626-4d86-994c-801c170d263a)]
+interface nsIIDBVersionChangeEvent : nsIIDBEvent
 {
-  readonly attribute nsIIDBDatabase db;
-
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
-
-  const unsigned short READ_WRITE = 0;
-  const unsigned short READ_ONLY = 1;
-  const unsigned short SNAPSHOT_READ = 2;
-  const unsigned short VERSION_CHANGE = 3;
-  readonly attribute unsigned short mode;
-
-  readonly attribute nsIDOMDOMStringList objectStoreNames;
-
-  nsIIDBObjectStore
-  objectStore(in AString name);
-
-  // Don't commit the transaction.
-  void abort();
-
-  // Event listener that fires when the transaction is completed
-  // successfully. Receives an Event.
-  attribute nsIDOMEventListener oncomplete;
-
-  // Event listener that fires when the transaction is aborted.
-  // Receives an Event.
-  attribute nsIDOMEventListener onabort;
-
-  // Event listener that fires when the transaction times out while
-  // attempting to grab the relevant locks, as specified by the
-  // timeoutSeconds parameter
-  // Receives an Event.
-  attribute nsIDOMEventListener ontimeout;
+  readonly attribute AString version;
 };

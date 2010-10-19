@@ -27,15 +27,14 @@
       let db = event.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
-      for (let i in objectStores) {
-        request = db.createObjectStore(objectStores[i], "", true);
-        request.onerror = errorHandler;
-        request.onsuccess = function(event) {
-          if (db.objectStoreNames.length == objectStores.length) {
-            event.transaction.oncomplete = grabEventAndContinueHandler;
-          }
-        };
-      }
+      request = db.setVersion("1");
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        event.transaction.oncomplete = grabEventAndContinueHandler;
+        for (let i in objectStores) {
+          db.createObjectStore(objectStores[i], "", true);
+        }
+      };
       yield;
 
       is(db.objectStoreNames.length, objectStores.length,
