@@ -84,6 +84,7 @@ LayerManagerD3D10::LayerManagerD3D10(nsIWidget *aWidget)
 
 LayerManagerD3D10::~LayerManagerD3D10()
 {
+  Destroy();
 }
 
 bool
@@ -199,6 +200,17 @@ LayerManagerD3D10::Initialize()
   dxgiFactory->MakeWindowAssociation(swapDesc.OutputWindow, DXGI_MWA_NO_WINDOW_CHANGES);
 
   return true;
+}
+
+void
+LayerManagerD3D10::Destroy()
+{
+  if (!IsDestroyed()) {
+    if (mRoot) {
+      static_cast<LayerD3D10*>(mRoot->ImplData())->LayerManagerDestroyed();
+    }
+  }
+  LayerManager::Destroy();
 }
 
 void
