@@ -52,6 +52,9 @@
 == deleted-interval-simple-4.svg green-box-ref.svg
 == deleted-interval-simple-5.svg green-box-ref.svg
 
+# Trimmed intervals
+== trimmed-interval-1.svg green-box-ref.svg
+
 # Cyclic dependencies
 == cycle-ok-1.svg green-box-ref.svg
 == cycle-ok-2.svg green-box-ref.svg

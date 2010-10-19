@@ -1859,20 +1859,24 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
       if (changed || aForceChangeNotice) {
         NotifyChangedInterval();
       }
-   }
+    }
 
     // There's a chance our next milestone has now changed, so update the time
     // container
     RegisterMilestone();
-  } else {
-    if (mElementState == STATE_ACTIVE && mClient) {
-      // Only apply a fill if it was already being applied before the (now
-      // deleted) interval was created
-      PRBool applyFill = HasPlayed() && mFillMode == FILL_FREEZE;
-      mClient->Inactivate(applyFill);
-    }
-
-    if (mElementState == STATE_ACTIVE || mElementState == STATE_WAITING) {
+  } else { // GetNextInterval failed: Current interval is no longer valid
+    if (mElementState == STATE_ACTIVE) {
+      // The interval is active so we can't just delete it, instead trim it so
+      // that begin==end.
+      if (!mCurrentInterval->End()->SameTimeAndBase(*mCurrentInterval->Begin()))
+      {
+        mCurrentInterval->SetEnd(*mCurrentInterval->Begin());
+        NotifyChangedInterval();
+      }
+      // The transition to the postactive state will take place on the next
+      // sample (along with firing end events, clearing intervals etc.)
+      RegisterMilestone();
+    } else if (mElementState == STATE_WAITING) {
       mElementState = STATE_POSTACTIVE;
       ResetCurrentInterval();
     }
