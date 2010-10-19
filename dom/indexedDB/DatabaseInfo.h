@@ -57,8 +57,13 @@ struct DatabaseInfo
 
   nsAutoRefCnt referenceCount;
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+  DatabaseInfo();
+  ~DatabaseInfo();
+#else
   DatabaseInfo()
   : id(0) { }
+#endif
 
   static bool Get(PRUint32 aId,
                   DatabaseInfo** aInfo);
@@ -73,8 +78,13 @@ struct DatabaseInfo
 
 struct IndexInfo
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
+  IndexInfo();
+  ~IndexInfo();
+#else
   IndexInfo()
   : id(LL_MININT), unique(false), autoIncrement(false) { }
+#endif
 
   PRInt64 id;
   nsString name;
@@ -92,8 +102,13 @@ struct ObjectStoreInfo
   PRUint32 databaseId;
   nsTArray<IndexInfo> indexes;
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+  ObjectStoreInfo();
+  ~ObjectStoreInfo();
+#else
   ObjectStoreInfo()
   : id(0), autoIncrement(false), databaseId(0) { }
+#endif
 
   static bool Get(PRUint32 aDatabaseId,
                   const nsAString& aName,
@@ -107,6 +122,11 @@ struct ObjectStoreInfo
 
 struct IndexUpdateInfo
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
+  IndexUpdateInfo();
+  ~IndexUpdateInfo();
+#endif
+
   IndexInfo info;
   Key value;
 };

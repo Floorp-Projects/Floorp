@@ -53,6 +53,7 @@
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
 
+class mozIStorageConnection;
 class mozIStorageStatement;
 class nsIThread;
 

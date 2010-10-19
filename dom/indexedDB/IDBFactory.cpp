@@ -128,30 +128,24 @@ public:
   OpenDatabaseHelper(IDBRequest* aRequest,
                      const nsAString& aName,
                      const nsAString& aDescription,
-                     const nsACString& aASCIIOrigin,
-                     LazyIdleThread* aThread)
+                     const nsACString& aASCIIOrigin)
   : AsyncConnectionHelper(static_cast<IDBDatabase*>(nsnull), aRequest),
     mName(aName), mDescription(aDescription), mASCIIOrigin(aASCIIOrigin),
-    mThread(aThread), mDatabaseId(0)
+    mDatabaseId(0)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
-  PRUint16 DoDatabaseWorkInternal(mozIStorageConnection* aConnection);
-
   // In-params.
   nsString mName;
   nsString mDescription;
   nsCString mASCIIOrigin;
-  nsRefPtr<LazyIdleThread> mThread;
 
   // Out-params.
   nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
   nsString mVersion;
-
-  nsCOMPtr<mozIStorageConnection> mConnection;
   nsString mDatabaseFilePath;
   PRUint32 mDatabaseId;
 };
@@ -718,14 +712,11 @@ IDBFactory::Open(const nsAString& aName,
   nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow);
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
-  nsRefPtr<LazyIdleThread> thread(new LazyIdleThread(kDefaultThreadTimeoutMS,
-                                                     nsnull));
-
   nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, aDescription, origin, thread);
+    new OpenDatabaseHelper(request, aName, aDescription, origin);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
-    new CheckPermissionsHelper(openHelper, thread, innerWindow, origin);
+    new CheckPermissionsHelper(openHelper, innerWindow, origin);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
   NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
@@ -840,29 +831,25 @@ IDBFactory::MakeBoundKeyRange(nsIVariant* aLeft,
 PRUint16
 OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  PRUint16 result = DoDatabaseWorkInternal(aConnection);
-  if (result != OK) {
-    mConnection = nsnull;
-  }
-  return result;
-}
-
-PRUint16
-OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
-{
 #ifdef DEBUG
   {
     PRBool correctThread;
-    NS_ASSERTION(NS_SUCCEEDED(mThread->IsOnCurrentThread(&correctThread)) &&
+    NS_ASSERTION(NS_SUCCEEDED(IndexedDatabaseManager::Get()->IOThread()->
+                              IsOnCurrentThread(&correctThread)) &&
                  correctThread,
                  "Running on the wrong thread!");
   }
 #endif
   NS_ASSERTION(!aConnection, "Huh?!");
 
+  if (IndexedDatabaseManager::IsShuttingDown()) {
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsCOMPtr<mozIStorageConnection> connection;
   nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDescription,
                                          mDatabaseFilePath,
-                                         getter_AddRefs(mConnection));
+                                         getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mDatabaseId = HashString(mDatabaseFilePath);
@@ -872,7 +859,7 @@ OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
 
   { // Load object store names and ids.
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT name, id, key_path, auto_increment "
       "FROM object_store"
     ), getter_AddRefs(stmt));
@@ -910,7 +897,7 @@ OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
 
   { // Load index information
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT object_store_id, id, name, key_path, unique_index, "
              "object_store_autoincrement "
       "FROM object_store_index"
@@ -951,7 +938,7 @@ OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
 
   { // Load version information.
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT version "
       "FROM database"
     ), getter_AddRefs(stmt));
@@ -975,8 +962,6 @@ OpenDatabaseHelper::DoDatabaseWorkInternal(mozIStorageConnection* aConnection)
 PRUint16
 OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  NS_ASSERTION(mConnection, "Should have a connection!");
-
   DatabaseInfo* dbInfo;
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
     NS_ASSERTION(dbInfo->referenceCount, "Bad reference count!");
@@ -1064,10 +1049,10 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 
   nsRefPtr<IDBDatabase> db =
     IDBDatabase::Create(mRequest->ScriptContext(), mRequest->Owner(), dbInfo,
-                        mThread, mConnection, mASCIIOrigin);
-  NS_ASSERTION(db, "This can't fail!");
-
-  NS_ASSERTION(!mConnection, "Should have swapped out!");
+                        mASCIIOrigin);
+  if (!db) {
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
 
   aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(db));
   return OK;
