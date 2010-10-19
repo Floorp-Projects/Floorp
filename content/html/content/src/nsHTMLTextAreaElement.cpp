@@ -155,6 +155,7 @@ public:
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
   NS_IMETHOD CreateEditor();
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
   NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
@@ -502,6 +503,13 @@ nsHTMLTextAreaElement::GetRootEditorNode()
 }
 
 NS_IMETHODIMP_(nsIContent*)
+nsHTMLTextAreaElement::CreatePlaceholderNode()
+{
+  NS_ENSURE_SUCCESS(mState->CreatePlaceholderNode(), nsnull);
+  return mState->GetPlaceholderNode();
+}
+
+NS_IMETHODIMP_(nsIContent*)
 nsHTMLTextAreaElement::GetPlaceholderNode()
 {
   return mState->GetPlaceholderNode();
@@ -624,6 +632,8 @@ nsHTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   } else if (aAttribute == nsGkAtoms::wrap) {
     NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+  } else if (aAttribute == nsGkAtoms::placeholder) {
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
   return retval;
 }
