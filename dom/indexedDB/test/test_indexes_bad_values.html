@@ -104,7 +104,8 @@
       }
       yield;
 
-      objectStore = db.objectStore(objectStoreName);
+      objectStore = db.transaction(objectStoreName)
+                      .objectStore(objectStoreName);
 
       let keyIndex = 0;
 

@@ -737,57 +737,6 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBDatabase::ObjectStore(const nsAString& aName,
-                         PRUint16 aMode,
-                         JSContext* aCx,
-                         PRUint8 aOptionalArgCount,
-                         nsIIDBObjectStore** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (aOptionalArgCount) {
-    if (aMode != nsIIDBTransaction::READ_WRITE &&
-        aMode != nsIIDBTransaction::READ_ONLY &&
-        aMode != nsIIDBTransaction::SNAPSHOT_READ) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-  else {
-    aMode = nsIIDBTransaction::READ_ONLY;
-  }
-
-  DatabaseInfo* info;
-  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
-    NS_ERROR("This should never fail!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!info->ContainsStoreName(aName)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsTArray<nsString> storesToOpen;
-  if (!storesToOpen.AppendElement(aName)) {
-    NS_ERROR("Out of memory?");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(this, storesToOpen, aMode,
-                           kDefaultDatabaseTimeoutSeconds);
-  NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
-
-  nsresult rv = transaction->ObjectStore(aName, _retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 PRUint16
 SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {

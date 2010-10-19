@@ -162,7 +162,7 @@
         ok(true, "RemoveIndex threw");
       }
 
-      request = db.objectStore("foo", READ_WRITE).add({});
+      request = db.transaction("foo", READ_WRITE).objectStore("foo").add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -177,7 +177,7 @@
 
       let key;
 
-      request = db.objectStore("foo", READ_WRITE).add({});
+      request = db.transaction("foo", READ_WRITE).objectStore("foo").add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -197,7 +197,7 @@
 
       is(event.type, "abort", "Right kind of event");
 
-      request = db.objectStore("foo").get(key);
+      request = db.transaction("foo").objectStore("foo").get(key);
       request.onerror = new ExpectError(NOT_FOUND_ERR);
       request.onsuccess = unexpectedSuccessHandler;
       event = yield;
@@ -206,7 +206,7 @@
       yield;
 
       let keys = [];
-      objectStore = db.objectStore("foo", READ_WRITE);
+      objectStore = db.transaction("foo", READ_WRITE).objectStore("foo");
 
       for (let i = 0; i < 10; i++) {
         request = objectStore.add({});
@@ -226,7 +226,7 @@
       is(keys.length, 10, "Not enough keys!");
 
       for (let i = 0; i < 10; i++) {
-        request = db.objectStore("foo").get(keys[i]);
+        request = db.transaction("foo").objectStore("foo").get(keys[i]);
         request.onerror = new ExpectError(NOT_FOUND_ERR);
         request.onsuccess = unexpectedSuccessHandler;
         event = yield;
