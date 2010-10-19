@@ -88,6 +88,10 @@
 #include "jscntxtinlines.h"
 #include "jsopcodeinlines.h"
 
+#ifdef JS_METHODJIT
+#include "methodjit/MethodJIT.h"
+#endif
+
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
 
@@ -1386,17 +1390,31 @@ static void
 Blacklist(jsbytecode* pc)
 {
     AUDIT(blacklisted);
-    JS_ASSERT(*pc == JSOP_TRACE || *pc == JSOP_NOP);
-    *pc = JSOP_NOP;
+    JS_ASSERT(*pc == JSOP_TRACE || *pc == JSOP_NOTRACE);
+    *pc = JSOP_NOTRACE;
+}
+
+static void
+Unblacklist(JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_NOTRACE || *pc == JSOP_TRACE);
+    if (*pc == JSOP_NOTRACE) {
+        *pc = JSOP_TRACE;
+
+#ifdef JS_METHODJIT
+        /* This code takes care of unblacklisting in the method JIT. */
+        js::mjit::EnableTraceHint(script, pc, GET_UINT16(pc));
+#endif
+    }
 }
 
 static bool
 IsBlacklisted(jsbytecode* pc)
 {
-    if (*pc == JSOP_NOP)
+    if (*pc == JSOP_NOTRACE)
         return true;
     if (*pc == JSOP_CALL)
-        return *(pc + JSOP_CALL_LENGTH) == JSOP_NOP;
+        return *(pc + JSOP_CALL_LENGTH) == JSOP_NOTRACE;
     return false;
 }
 
@@ -1590,13 +1608,13 @@ AssertTreeIsUnique(TraceMonitor* tm, TreeFragment* f)
 #endif
 
 static void
-AttemptCompilation(JSContext *cx, JSObject* globalObj, jsbytecode* pc, uint32 argc)
+AttemptCompilation(JSContext *cx, JSObject* globalObj,
+                   JSScript* script, jsbytecode* pc, uint32 argc)
 {
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
 
     /* If we already permanently blacklisted the location, undo that. */
-    JS_ASSERT(*pc == JSOP_NOP || *pc == JSOP_TRACE);
-    *pc = JSOP_TRACE;
+    Unblacklist(script, pc);
     ResetRecordingAttempts(cx, pc);
 
     /* Breathe new life into all peer fragments at the designated loop header. */
@@ -2322,15 +2340,16 @@ InitConst(const T &t)
 JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* fragment,
                              unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
-                             VMSideExit* innermost, jsbytecode* outer, uint32 outerArgc,
-                             bool speculate)
+                             VMSideExit* innermost, JSScript* outerScript, jsbytecode* outerPC,
+                             uint32 outerArgc, bool speculate)
   : cx(cx),
     traceMonitor(&JS_TRACE_MONITOR(cx)),
     oracle(speculate ? JS_TRACE_MONITOR(cx).oracle : NULL),
     fragment(fragment),
     tree(fragment->root),
     globalObj(tree->globalObj),
-    outer(outer),
+    outerScript(outerScript),
+    outerPC(outerPC),
     outerArgc(outerArgc),
     anchor(anchor),
     lir(NULL),
@@ -4963,9 +4982,9 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     /*
      * We should have arrived back at the loop header, and hence we don't want
      * to be in an imacro here and the opcode should be either JSOP_TRACE or, in
-     * case this loop was blacklisted in the meantime, JSOP_NOP.
+     * case this loop was blacklisted in the meantime, JSOP_NOTRACE.
      */
-    JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOP) &&
+    JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOTRACE) &&
               !cx->fp()->hasImacropc());
 
     if (callDepth != 0) {
@@ -5085,8 +5104,8 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
      * If this is a newly formed tree, and the outer tree has not been compiled yet, we
      * should try to compile the outer tree again.
      */
-    if (outer)
-        AttemptCompilation(cx, globalObj, outer, outerArgc);
+    if (outerPC)
+        AttemptCompilation(cx, globalObj, outerScript, outerPC, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via closeLoop (FragID=%06u)\n",
@@ -5251,8 +5270,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
      * If this is a newly formed tree, and the outer tree has not been compiled
      * yet, we should try to compile the outer tree again.
      */
-    if (outer)
-        AttemptCompilation(cx, globalObj, outer, outerArgc);
+    if (outerPC)
+        AttemptCompilation(cx, globalObj, outerScript, outerPC, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via endLoop (FragID=%06u)\n",
@@ -5698,14 +5717,16 @@ bool JS_REQUIRES_STACK
 TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
                              unsigned stackSlots, unsigned ngslots,
                              JSValueType* typeMap, VMSideExit* expectedInnerExit,
-                             jsbytecode* outer, uint32 outerArgc, bool speculate)
+                             JSScript* outerScript, jsbytecode* outerPC, uint32 outerArgc,
+                             bool speculate)
 {
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(!tm->needFlush);
     JS_ASSERT_IF(cx->fp()->hasImacropc(), f->root != f);
 
     tm->recorder = new TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
-                                     expectedInnerExit, outer, outerArgc, speculate);
+                                     expectedInnerExit, outerScript, outerPC, outerArgc,
+                                     speculate);
 
     if (!tm->recorder || tm->outOfMemory() || OverfullJITCache(tm)) {
         ResetJIT(cx, FR_OOM);
@@ -5800,7 +5821,7 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
 }
 
 static JS_REQUIRES_STACK bool
-RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
+RecordTree(JSContext* cx, TreeFragment* first, JSScript* outerScript, jsbytecode* outerPC,
            uint32 outerArgc, SlotList* globalSlots)
 {
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -5863,7 +5884,7 @@ RecordTree(JSContext* cx, TreeFragment* first, jsbytecode* outer,
     return TraceRecorder::startRecorder(cx, NULL, f, f->nStackTypes,
                                         f->globalSlots->length(),
                                         f->typeMap.data(), NULL,
-                                        outer, outerArgc, speculate);
+                                        outerScript, outerPC, outerArgc, speculate);
 }
 
 static JS_REQUIRES_STACK TypeConsensus
@@ -5909,8 +5930,8 @@ FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, TreeFragment** peerp)
 }
 
 static JS_REQUIRES_STACK bool
-AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsbytecode* outer,
-                       uint32 outerArgc)
+AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit,
+                       JSScript* outerScript, jsbytecode* outerPC, uint32 outerArgc)
 {
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->needFlush) {
@@ -5952,10 +5973,10 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
     JS_ASSERT(from == from->root);
 
     /* If this tree has been blacklisted, don't try to record a new one. */
-    if (*(jsbytecode*)from->ip == JSOP_NOP)
+    if (*(jsbytecode*)from->ip == JSOP_NOTRACE)
         return false;
 
-    return RecordTree(cx, from->first, outer, outerArgc, globalSlots);
+    return RecordTree(cx, from->first, outerScript, outerPC, outerArgc, globalSlots);
 }
 
 static JS_REQUIRES_STACK VMFragment*
@@ -5984,7 +6005,8 @@ CreateBranchFragment(JSContext* cx, TreeFragment* root, VMSideExit* anchor)
 }
 
 static JS_REQUIRES_STACK bool
-AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer
+AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom,
+                    JSScript *outerScript, jsbytecode* outerPC
 #ifdef MOZ_TRACEVIS
     , TraceVisStateObj* tvso = NULL
 #endif
@@ -6036,7 +6058,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
     int32_t maxHits = HOTEXIT + MAXEXIT;
     if (anchor->exitType == CASE_EXIT)
         maxHits *= anchor->switchInfo->count;
-    if (outer || (hits++ >= HOTEXIT && hits <= maxHits)) {
+    if (outerPC || (hits++ >= HOTEXIT && hits <= maxHits)) {
         /* start tracing secondary trace from this point */
         unsigned stackSlots;
         unsigned ngslots;
@@ -6070,7 +6092,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
         bool rv = TraceRecorder::startRecorder(cx, anchor, c, stackSlots, ngslots, typeMap,
-                                               exitedFrom, outer, entryFrameArgc(cx),
+                                               exitedFrom, outerScript, outerPC, entryFrameArgc(cx),
                                                hits < maxHits);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
@@ -6146,14 +6168,15 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         AUDIT(noCompatInnerTrees);
 
         TreeFragment* outerFragment = root;
-        jsbytecode* outer = (jsbytecode*) outerFragment->ip;
+        JSScript* outerScript = outerFragment->script;
+        jsbytecode* outerPC = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
         JS_ASSERT(entryFrameArgc(cx) == first->argc);
 
         if (AbortRecording(cx, "No compatible inner tree") == JIT_RESET)
             return MONITOR_NOT_RECORDING;
 
-        return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots));
+        return RecordingIfTrue(RecordTree(cx, first, outerScript, outerPC, outerArgc, globalSlots));
     }
 
     AbortableRecordingStatus status = r->attemptTreeCall(f, inlineCallCount);
@@ -6213,7 +6236,8 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     }
 
     TreeFragment* outerFragment = tree;
-    jsbytecode* outer = (jsbytecode*) outerFragment->ip;
+    JSScript* outerScript = outerFragment->script;
+    jsbytecode* outerPC = (jsbytecode*) outerFragment->ip;
     switch (lr->exitType) {
       case LOOP_EXIT:
         /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
@@ -6222,7 +6246,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
                                    "recording and grow nesting tree") == JIT_RESET) {
                 return ARECORD_ABORTED;
             }
-            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outer)
+            return AttemptToExtendTree(localCx, innermostNestedGuard, lr, outerScript, outerPC)
                    ? ARECORD_CONTINUE
                    : ARECORD_ABORTED;
         }
@@ -6241,7 +6265,8 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
                                "abort outer recording") == JIT_RESET) {
             return ARECORD_ABORTED;
         }
-        return AttemptToStabilizeTree(localCx, _globalObj, lr, outer, outerFragment->argc)
+        return AttemptToStabilizeTree(localCx, _globalObj, lr, outerScript, outerPC,
+                                      outerFragment->argc)
                ? ARECORD_CONTINUE
                : ARECORD_ABORTED;
       }
@@ -6260,7 +6285,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
                                "abort outer recording") == JIT_RESET) {
             return ARECORD_ABORTED;
         }
-        return AttemptToExtendTree(localCx, lr, NULL, outer)
+        return AttemptToExtendTree(localCx, lr, NULL, outerScript, outerPC)
                ? ARECORD_CONTINUE
                : ARECORD_ABORTED;
 
@@ -7161,7 +7186,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
          * it will walk the peer list and find us a free slot or allocate a new
          * tree if needed.
          */
-        bool rv = RecordTree(cx, f->first, NULL, 0, globalSlots);
+        bool rv = RecordTree(cx, f->first, NULL, 0, NULL, globalSlots);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_RECORD_TREE;
@@ -7213,12 +7238,12 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     bool rv;
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
-          rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0);
+        rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL);
 #ifdef MOZ_TRACEVIS
-          if (!rv)
-              tvso.r = R_FAIL_STABILIZE;
+        if (!rv)
+            tvso.r = R_FAIL_STABILIZE;
 #endif
-          return RecordingIfTrue(rv);
+        return RecordingIfTrue(rv);
 
       case MUL_ZERO_EXIT:
       case OVERFLOW_EXIT:
@@ -7229,7 +7254,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
         /* FALL THROUGH */
       case BRANCH_EXIT:
       case CASE_EXIT:
-        rv = AttemptToExtendTree(cx, lr, NULL, NULL
+        rv = AttemptToExtendTree(cx, lr, NULL, NULL, NULL
 #ifdef MOZ_TRACEVIS
                                                    , &tvso
 #endif
@@ -7238,7 +7263,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
       case LOOP_EXIT:
         if (innermostNestedGuard) {
-            rv = AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL
+            rv = AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL, NULL
 #ifdef MOZ_TRACEVIS
                                                                        , &tvso
 #endif
@@ -15668,13 +15693,6 @@ TraceRecorder::record_JSOP_REGEXP()
     return ARECORD_CONTINUE;
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_UNUSED180()
-{
-    JS_NOT_REACHED("recording JSOP_UNUSED180?!?");
-    return ARECORD_ERROR;
-}
-
 // begin JS_HAS_XML_SUPPORT
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -16252,6 +16270,12 @@ TraceRecorder::record_JSOP_TRACE()
     return ARECORD_CONTINUE;
 }
 
+AbortableRecordingStatus
+TraceRecorder::record_JSOP_NOTRACE()
+{
+    return ARECORD_CONTINUE;
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_SETMETHOD()
 {
@@ -16629,7 +16653,7 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
 
             switch (lr->exitType) {
               case UNSTABLE_LOOP_EXIT:
-                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0))
+                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL))
                     return TPA_RanStuff;
                 break;
 
@@ -16642,14 +16666,14 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
                 /* FALL THROUGH */
               case BRANCH_EXIT:
               case CASE_EXIT:
-                if (!AttemptToExtendTree(cx, lr, NULL, NULL))
+                if (!AttemptToExtendTree(cx, lr, NULL, NULL, NULL))
                     return TPA_RanStuff;
                 break;
 
               case LOOP_EXIT:
                 if (!innermostNestedGuard)
                     return TPA_RanStuff;
-                if (!AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL))
+                if (!AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL, NULL))
                     return TPA_RanStuff;
                 break;
 
@@ -16673,7 +16697,7 @@ MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
         return TPA_Nothing;
     if (!ScopeChainCheck(cx, tree))
         return TPA_Nothing;
-    if (!RecordTree(cx, tree->first, NULL, 0, globalSlots))
+    if (!RecordTree(cx, tree->first, NULL, 0, NULL, globalSlots))
         return TPA_Nothing;
 
   interpret:

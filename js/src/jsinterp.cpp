@@ -2410,7 +2410,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         op = (JSOp) *regs.pc;                                                 \
         if ((n) <= 0) {                                                       \
             CHECK_BRANCH();                                                   \
-            if (op == JSOP_NOP) {                                             \
+            if (op == JSOP_NOTRACE) {                                         \
                 if (TRACE_RECORDER(cx)) {                                     \
                     MONITOR_BRANCH();                                         \
                     op = (JSOp) *regs.pc;                                     \
@@ -2672,11 +2672,11 @@ ADD_EMPTY_CASE(JSOP_TRY)
 ADD_EMPTY_CASE(JSOP_STARTXML)
 ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
 #endif
-ADD_EMPTY_CASE(JSOP_UNUSED180)
 ADD_EMPTY_CASE(JSOP_NULLBLOCKCHAIN)
 END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_TRACE)
+BEGIN_CASE(JSOP_NOTRACE)
     LEAVE_ON_SAFE_POINT();
 END_CASE(JSOP_TRACE)
 

@@ -887,9 +887,6 @@ JITScript::purgeMICs()
              */
             break;
           }
-          case ic::MICInfo::TRACER:
-            /* Nothing to patch! */
-            break;
           default:
             JS_NOT_REACHED("Unknown MIC type during purge");
             break;

@@ -430,7 +430,7 @@ OPDEF(JSOP_TOXML,         176,"toxml",      NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_TOXMLLIST,     177,"toxmllist",  NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_XMLTAGEXPR,    178,"xmltagexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_XMLELTEXPR,    179,"xmleltexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED180,     180,"unused180",  NULL,     1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_NOTRACE,       180,"notrace",    NULL,     3,  0,  0,  0,  JOF_UINT16)
 OPDEF(JSOP_XMLCDATA,      181,"xmlcdata",   NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
@@ -582,7 +582,8 @@ OPDEF(JSOP_LAMBDA_FC,     226,"lambda_fc",     NULL,  3,  0,  1, 19,  JOF_OBJECT
  */
 OPDEF(JSOP_OBJTOP,        227,"objtop",        NULL,  3,  0,  0,  0,  JOF_UINT16)
 
-OPDEF(JSOP_TRACE,         228, "trace",         NULL,  1,  0,  0,  0,  JOF_BYTE)
+/* This opcode stores an index that is unique to the given loop. */
+OPDEF(JSOP_TRACE,         228, "trace",         NULL,  3,  0,  0,  0,  JOF_UINT16)
 
 /*
  * Debugger versions of JSOP_{GET,CALL}UPVAR and the flat closure (_FC) ops.

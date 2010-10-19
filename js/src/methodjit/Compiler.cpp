@@ -99,6 +99,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     mics(ContextAllocPolicy(cx)),
     callICs(ContextAllocPolicy(cx)),
     equalityICs(ContextAllocPolicy(cx)),
+    traceICs(ContextAllocPolicy(cx)),
 #endif
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
@@ -373,6 +374,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                         sizeof(ic::MICInfo) * mics.length() +
                         sizeof(ic::CallICInfo) * callICs.length() +
                         sizeof(ic::EqualityICInfo) * equalityICs.length() +
+                        sizeof(ic::TraceICInfo) * traceICs.length() +
 #endif
 #if defined JS_POLYIC
                         sizeof(ic::PICInfo) * pics.length() +
@@ -435,16 +437,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                 scriptMICs[i].patchValueOffset = mics[i].patchValueOffset;
 #endif
                 break;
-              case ic::MICInfo::TRACER: {
-                uint32 offs = uint32(mics[i].jumpTarget - script->code);
-                JS_ASSERT(jumpMap[offs].isValid());
-                scriptMICs[i].traceHint = fullCode.locationOf(mics[i].traceHint);
-                scriptMICs[i].load = fullCode.locationOf(jumpMap[offs]);
-                scriptMICs[i].u.hints.hasSlowTraceHint = mics[i].slowTraceHint.isSet();
-                if (mics[i].slowTraceHint.isSet())
-                    scriptMICs[i].slowTraceHint = stubCode.locationOf(mics[i].slowTraceHint.get());
-                break;
-              }
               default:
                 JS_NOT_REACHED("Bad MIC kind");
             }
@@ -538,6 +530,32 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             scriptEICs[i].fallThrough = fullCode.locationOf(equalityICs[i].fallThrough);
             
             stubCode.patch(equalityICs[i].addrLabel, &scriptEICs[i]);
+        }
+    }
+
+    jit->nTraceICs = traceICs.length();
+    if (traceICs.length()) {
+        jit->traceICs = (ic::TraceICInfo *)cursor;
+        cursor += sizeof(ic::TraceICInfo) * traceICs.length();
+    } else {
+        jit->traceICs = NULL;
+    }
+
+    if (ic::TraceICInfo *scriptTICs = jit->traceICs) {
+        for (size_t i = 0; i < traceICs.length(); i++) {
+            uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
+            JS_ASSERT(jumpMap[offs].isValid());
+            scriptTICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
+            scriptTICs[i].jumpTarget = fullCode.locationOf(jumpMap[offs]);
+            scriptTICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
+#ifdef DEBUG
+            scriptTICs[i].jumpTargetPC = traceICs[i].jumpTarget;
+#endif
+            scriptTICs[i].hasSlowTraceHint = traceICs[i].slowTraceHint.isSet();
+            if (traceICs[i].slowTraceHint.isSet())
+                scriptTICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
+            
+            stubCode.patch(traceICs[i].addrLabel, &scriptTICs[i]);
         }
     }
 #endif /* JS_MONOIC */
@@ -1715,6 +1733,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LAMBDA_FC)
 
           BEGIN_CASE(JSOP_TRACE)
+          BEGIN_CASE(JSOP_NOTRACE)
           {
             if (analysis[PC].nincoming > 0)
                 interruptCheckHelper();
@@ -4324,7 +4343,9 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     if (slow)
         stubcc.jumpInScript(*slow, target);
 #else
-    if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
+    if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE
+        || GET_UINT16(target) == BAD_TRACEIC_INDEX)
+    {
         jumpInScript(j, target);
         if (slow)
             stubcc.jumpInScript(*slow, target);
@@ -4332,13 +4353,17 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     }
 
 # if JS_MONOIC
-    MICGenInfo mic(ic::MICInfo::TRACER);
+    TraceGenInfo ic;
 
-    mic.entry = masm.label();
-    mic.jumpTarget = target;
-    mic.traceHint = j;
+    ic.stubEntry = stubcc.masm.label();
+    ic.jumpTarget = target;
+    ic.traceHint = j;
     if (slow)
-        mic.slowTraceHint = *slow;
+        ic.slowTraceHint = *slow;
+
+    uint16 index = GET_UINT16(target);
+    if (traceICs.length() <= index)
+        traceICs.resizeUninitialized(index+1);
 # endif
 
     Label traceStart = stubcc.masm.label();
@@ -4347,7 +4372,8 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     if (slow)
         slow->linkTo(traceStart, &stubcc.masm);
 # if JS_MONOIC
-    passMICAddress(mic);
+    ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
+    traceICs[index] = ic;
 # endif
 
     /* Save and restore compiler-tracked PC, so cx->regs is right in InvokeTracer. */
@@ -4366,10 +4392,6 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     stubcc.masm.jump(Registers::ReturnReg);
     no.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.jumpInScript(stubcc.masm.jump(), target);
-
-# if JS_MONOIC
-    mics.append(mic);
-# endif
 #endif
 }
 
