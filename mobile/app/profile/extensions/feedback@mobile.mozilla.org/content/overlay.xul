@@ -40,7 +40,7 @@
 <?xml-stylesheet href="chrome://feedback/skin/overlay.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY % feedbackDTD SYSTEM "chrome://feedback/locale/overlay.dtd">
+<!ENTITY % feedbackDTD SYSTEM "chrome://browser/locale/feedback.dtd">
 %feedbackDTD;
 ]>
 
