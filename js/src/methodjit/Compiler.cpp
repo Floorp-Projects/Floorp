@@ -543,6 +543,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     if (ic::TraceICInfo *scriptTICs = jit->traceICs) {
         for (size_t i = 0; i < traceICs.length(); i++) {
+            if (!traceICs[i].initialized)
+                continue;
+
             uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
             JS_ASSERT(jumpMap[offs].isValid());
             scriptTICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
@@ -4355,6 +4358,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 # if JS_MONOIC
     TraceGenInfo ic;
 
+    ic.initialized = true;
     ic.stubEntry = stubcc.masm.label();
     ic.jumpTarget = target;
     ic.traceHint = j;
@@ -4363,7 +4367,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 
     uint16 index = GET_UINT16(target);
     if (traceICs.length() <= index)
-        traceICs.resizeUninitialized(index+1);
+        traceICs.resize(index+1);
 # endif
 
     Label traceStart = stubcc.masm.label();
