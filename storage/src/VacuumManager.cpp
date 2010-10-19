@@ -482,14 +482,6 @@ VacuumManager::initialize()
 {
   NS_PRECONDITION(NS_IsMainThread(), "Must be running on the main thread!");
 
-  // Observe idle-daily to run a single vacuum per day.
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  NS_ENSURE_STATE(os);
-  nsresult rv = os->AddObserver(this, OBSERVER_TOPIC_IDLE_DAILY, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(this, OBSERVER_TOPIC_XPCOM_SHUTDOWN, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Used to store last vacuum times.
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_STATE(prefs);
@@ -539,15 +531,8 @@ VacuumManager::Observe(nsISupports *aSubject,
       }
     }
     (void)mPrefBranch->SetIntPref(NS_LITERAL_CSTRING("index").get(), index);
-    return NS_OK;
   }
-  else if (strcmp(aTopic, OBSERVER_TOPIC_XPCOM_SHUTDOWN) == 0) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      (void)os->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
-      (void)os->RemoveObserver(this, OBSERVER_TOPIC_XPCOM_SHUTDOWN);
-    }
-  }
+
   return NS_OK;
 }
 

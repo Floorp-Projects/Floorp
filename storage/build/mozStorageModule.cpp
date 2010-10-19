@@ -78,7 +78,7 @@ static const mozilla::Module::ContractIDEntry kStorageContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kStorageCategories[] = {
-    { "profile-after-change", "MozStorage Vacuum Manager", VACUUMMANAGER_CONTRACTID },
+    { "idle-daily", "MozStorage Vacuum Manager", VACUUMMANAGER_CONTRACTID },
     { NULL }
 };
 
