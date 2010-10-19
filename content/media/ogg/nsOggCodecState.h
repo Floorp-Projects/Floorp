@@ -41,7 +41,11 @@
 
 #include <ogg/ogg.h>
 #include <theora/theoradec.h>
+#ifdef MOZ_TREMOR
+#include <tremor/ivorbiscodec.h>
+#else
 #include <vorbis/codec.h>
+#endif
 #include <nsDeque.h>
 #include <nsTArray.h>
 #include <nsClassHashtable.h>
