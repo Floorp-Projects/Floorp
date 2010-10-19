@@ -511,7 +511,7 @@ class FrameState
                         bool resultNeeded = true);
 
     /* Ensures that an FE has both type and data remat'd in registers. */
-    void ensureFullRegs(FrameEntry *fe);
+    void ensureFullRegs(FrameEntry *fe, MaybeRegisterID *typeReg, MaybeRegisterID *dataReg);
 
     /*
      * Similar to allocForBinary, except works when the LHS and RHS have the
