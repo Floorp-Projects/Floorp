@@ -781,11 +781,8 @@ DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
 
     DisableTraceHintSingle(mic.traceHint, mic.load);
 
-    if (mic.u.hints.hasSlowTraceHintOne)
-        DisableTraceHintSingle(mic.slowTraceHintOne, mic.load);
-
-    if (mic.u.hints.hasSlowTraceHintTwo)
-        DisableTraceHintSingle(mic.slowTraceHintTwo, mic.load);
+    if (mic.u.hints.hasSlowTraceHint)
+        DisableTraceHintSingle(mic.slowTraceHint, mic.load);
 }
 #endif
 

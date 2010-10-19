@@ -89,8 +89,7 @@ struct MICInfo {
 
     /* Used by TRACER. */
     JSC::CodeLocationJump traceHint;
-    JSC::CodeLocationJump slowTraceHintOne;
-    JSC::CodeLocationJump slowTraceHintTwo;
+    JSC::CodeLocationJump slowTraceHint;
 
     /* Used by all MICs. */
     Kind kind : 3;
@@ -103,14 +102,32 @@ struct MICInfo {
         } name;
         /* Used by TRACER. */
         struct {
-            bool hasSlowTraceHintOne : 1;
-            bool hasSlowTraceHintTwo : 1;
+            bool hasSlowTraceHint : 1;
         } hints;
     } u;
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
 void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
+
+struct EqualityICInfo {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationCall stubCall;
+    BoolStub stub;
+    JSC::CodeLocationLabel target;
+    JSC::CodeLocationLabel fallThrough;
+    JSC::CodeLocationJump jumpToStub;
+
+    ValueRemat lvr, rvr;
+
+    bool generated : 1;
+    JSC::MacroAssembler::RegisterID tempReg : 5;
+    Assembler::Condition cond : 6;
+};
+
+JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
 struct CallICInfo {
