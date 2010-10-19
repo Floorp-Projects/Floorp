@@ -2457,7 +2457,8 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
 
     // The minimum glass height must be the caption buttons height,
     // otherwise the buttons are drawn incorrectly.
-    margins.cyTopHeight = PR_MAX(largest.y, mCaptionButtons.height);
+    margins.cyTopHeight = PR_MAX(largest.y,
+                                 nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
   }
 
   // Only update glass area if there are changes
@@ -2501,65 +2502,6 @@ void nsWindow::UpdateGlass()
     nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 #endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-}
-#endif
-
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-void nsWindow::UpdateCaptionButtonsClippingRect()
-{
-  NS_ASSERTION(mWnd, "UpdateCaptionButtonsClippingRect called with invalid mWnd.");
-
-  RECT captionButtons;
-  mCaptionButtonsRoundedRegion.SetEmpty();
-  mCaptionButtons.Empty();
-
-  if (!mCustomNonClient ||
-      mSizeMode == nsSizeMode_Fullscreen || 
-      mSizeMode == nsSizeMode_Minimized ||
-      !nsUXThemeData::CheckForCompositor() ||
-      FAILED(nsUXThemeData::dwmGetWindowAttributePtr(mWnd,
-                                                     DWMWA_CAPTION_BUTTON_BOUNDS,
-                                                     &captionButtons,
-                                                     sizeof(captionButtons)))) {
-    return;
-  }
-
-  mCaptionButtons = nsWindowGfx::ToIntRect(captionButtons);
-
-  // Adjustments to reported area
-  PRInt32 leftMargin = (mNonClientMargins.left == -1) ? mHorResizeMargin  : mNonClientMargins.left;
-
-  // "leftMargin - 1" represents the resizer border and an
-  // one pixel adjustment to hide the semi-transparent highlight.
-  // The extra width is already excluded when the window is maximized.
-  mCaptionButtons.x -= leftMargin - 1;
-
-  if (mSizeMode != nsSizeMode_Maximized) {
-    mCaptionButtons.width += leftMargin - 1;
-    mCaptionButtons.height -= mVertResizeMargin + 1;
-  } else {
-    // Adjustments to the buttons' shift from the edge of the screen,
-    // plus some apparently transparent drop shadow below them.
-    mCaptionButtons.width -= 2;
-    mCaptionButtons.height -= 3;
-  }
-
-  // Create a rounded region by shrinking the 2 bottommost pixel rows from
-  // the rect by 1 and 2 pixels.
-  // mCaptionButtons:        mCaptionButtonsRoundedRegion:
-  //  +-----------+                  +-----------+
-  //  |           |                  |           |
-  //  |           |                   |         |
-  //  +-----------+                    +-------+
-  nsIntRect round1(mCaptionButtons.x, mCaptionButtons.y,
-                   mCaptionButtons.width, mCaptionButtons.height - 2);
-  nsIntRect round2(mCaptionButtons.x + 1, mCaptionButtons.YMost() - 2,
-                   mCaptionButtons.width - 2, 1);
-  nsIntRect round3(mCaptionButtons.x + 2, mCaptionButtons.YMost() - 1,
-                   mCaptionButtons.width - 4, 1);
-  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round1);
-  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round2);
-  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round3);
 }
 #endif
 
@@ -7139,10 +7081,6 @@ PRBool nsWindow::OnResize(nsIntRect &aWindowRect)
     mD2DWindowSurface = NULL;
     Invalidate(PR_FALSE);
   }
-#endif
-
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-  UpdateCaptionButtonsClippingRect();
 #endif
 
   // call the event callback
