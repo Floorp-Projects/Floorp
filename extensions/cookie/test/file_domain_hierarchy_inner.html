@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <META HTTP-EQUIV="Set-Cookie" CONTENT="meta=tag">
+  <script type="text/javascript">
+    document.cookie = "can=has";
+
+    // send a message to our test document, to say we're done loading
+    window.opener.postMessage("message", "http://mochi.test:8888");
+  </script>
+<body>
+<iframe name="frame1" src="http://example.com/tests/extensions/cookie/test/file_domain_hierarchy_inner_inner.html"></iframe>
+</body>
+</html>

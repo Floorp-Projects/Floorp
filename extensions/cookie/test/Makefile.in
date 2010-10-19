@@ -51,6 +51,10 @@ _TEST_FILES = \
   file_domain_inner.html \
   file_domain_inner_inner.html \
   test_differentdomain.html \
+  test_different_domain_in_hierarchy.html \
+  file_domain_hierarchy_inner.html \
+  file_domain_hierarchy_inner_inner.html \
+  file_domain_hierarchy_inner_inner_inner.html \
   test_image.html \
   file_image_inner.html \
   file_image_inner_inner.html \
