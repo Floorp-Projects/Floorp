@@ -597,13 +597,13 @@ FrameState::syncFe(FrameEntry *fe)
 
         /* Get a register if necessary, without clobbering its pair. */
         if (needTypeReg) {
-            if (backing->data.inRegister()) {
+            if (backing->data.inRegister() && !regstate[backing->data.reg()].isPinned()) {
                 pairReg = backing->data.reg();
                 pinReg(backing->data.reg());
             }
             tempRegForType(backing);
         } else if (needDataReg) {
-            if (backing->type.inRegister()) {
+            if (backing->type.inRegister() && !regstate[backing->type.reg()].isPinned()) {
                 pairReg = backing->type.reg();
                 pinReg(backing->type.reg());
             }
