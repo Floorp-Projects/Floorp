@@ -106,6 +106,14 @@ class Compiler : public BaseCompiler
         JSC::MacroAssembler::RegisterID tempReg;
     };
     
+    struct TraceGenInfo {
+        Label stubEntry;
+        DataLabelPtr addrLabel;
+        jsbytecode *jumpTarget;
+        Jump traceHint;
+        MaybeJump slowTraceHint;
+    };
+
     /* InlineFrameAssembler wants to see this. */
   public:
     struct CallGenInfo {
@@ -231,6 +239,7 @@ class Compiler : public BaseCompiler
     js::Vector<MICGenInfo, 64> mics;
     js::Vector<CallGenInfo, 64> callICs;
     js::Vector<EqualityGenInfo, 64> equalityICs;
+    js::Vector<TraceGenInfo, 64> traceICs;
 #endif
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 16> pics;

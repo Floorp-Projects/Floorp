@@ -860,7 +860,7 @@ FinishExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 
 #if JS_MONOIC
 static void
-DisableTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
+UpdateTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
 {
     /*
      * Hack: The value that will be patched is before the executable address,
@@ -876,20 +876,46 @@ DisableTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target
 }
 
 static void
-DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
+DisableTraceHint(VMFrame &f, ic::TraceICInfo &tic)
 {
-    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
+    UpdateTraceHintSingle(tic.traceHint, tic.jumpTarget);
 
-    DisableTraceHintSingle(mic.traceHint, mic.load);
+    if (tic.hasSlowTraceHint)
+        UpdateTraceHintSingle(tic.slowTraceHint, tic.jumpTarget);
+}
 
-    if (mic.u.hints.hasSlowTraceHint)
-        DisableTraceHintSingle(mic.slowTraceHint, mic.load);
+static void
+EnableTraceHintAt(JSScript *script, js::mjit::JITScript *jit, jsbytecode *pc, uint16_t index)
+{
+    JS_ASSERT(index < jit->nTraceICs);
+    ic::TraceICInfo &tic = jit->traceICs[index];
+
+    JS_ASSERT(tic.jumpTargetPC == pc);
+
+    JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index, script);
+
+    UpdateTraceHintSingle(tic.traceHint, tic.stubEntry);
+
+    if (tic.hasSlowTraceHint)
+        UpdateTraceHintSingle(tic.slowTraceHint, tic.stubEntry);
 }
 #endif
 
+void
+js::mjit::EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index)
+{
+#if JS_MONOIC
+    if (script->jitNormal)
+        EnableTraceHintAt(script, script->jitNormal, pc, index);
+
+    if (script->jitCtor)
+        EnableTraceHintAt(script, script->jitCtor, pc, index);
+#endif
+}
+
 #if JS_MONOIC
 void *
-RunTracer(VMFrame &f, ic::MICInfo &mic)
+RunTracer(VMFrame &f, ic::TraceICInfo &tic)
 #else
 void *
 RunTracer(VMFrame &f)
@@ -920,7 +946,7 @@ RunTracer(VMFrame &f)
 
 #if JS_MONOIC
     if (blacklist)
-        DisableTraceHint(f, mic);
+        DisableTraceHint(f, tic);
 #endif
 
     // Even though ExecuteTree() bypasses the interpreter, it should propagate
@@ -1003,10 +1029,9 @@ RunTracer(VMFrame &f)
 #if defined JS_TRACER
 # if defined JS_MONOIC
 void *JS_FASTCALL
-stubs::InvokeTracer(VMFrame &f, ic::MICInfo *mic)
+stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *tic)
 {
-    JS_ASSERT(mic->kind == ic::MICInfo::TRACER);
-    return RunTracer(f, *mic);
+    return RunTracer(f, *tic);
 }
 
 # else

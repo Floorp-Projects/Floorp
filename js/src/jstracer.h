@@ -858,10 +858,13 @@ class TraceRecorder
     /* The global object from the start of recording until now. */
     JSObject* const                 globalObj;
 
-    /* If non-null, the (pc of the) outer loop aborted to start recording this loop. */
-    jsbytecode* const               outer;
+    /* If non-null, the script of outer loop aborted to start recording this loop. */
+    JSScript* const                 outerScript;
+    
+    /* If non-null, the pc of the outer loop aborted to start recording this loop. */
+    jsbytecode* const               outerPC;
 
-    /* If |outer|, the argc to use when looking up |outer| in the fragments table. */
+    /* If |outerPC|, the argc to use when looking up |outerPC| in the fragments table. */
     uint32 const                    outerArgc;
 
     /* If non-null, the side exit from which we are growing. */
@@ -1414,7 +1417,7 @@ class TraceRecorder
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
-                  VMSideExit* expectedInnerExit, jsbytecode* outerTree,
+                  VMSideExit* expectedInnerExit, JSScript* outerScript, jsbytecode* outerPC,
                   uint32 outerArgc, bool speculate);
 
     /* The destructor should only be called through finish*, not directly. */
@@ -1447,7 +1450,7 @@ class TraceRecorder
     static bool JS_REQUIRES_STACK
     startRecorder(JSContext*, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
-                  VMSideExit* expectedInnerExit, jsbytecode* outerTree,
+                  VMSideExit* expectedInnerExit, JSScript* outerScript, jsbytecode* outerPC,
                   uint32 outerArgc, bool speculate);
 
     /* Accessors. */
