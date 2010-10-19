@@ -11879,7 +11879,16 @@ DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
     Value v = BooleanValue(false);
-    jsid id = INT_TO_JSID(i);
+    jsid id;
+    if (INT_FITS_IN_JSID(i)) {
+        id = INT_TO_JSID(i);
+    } else {
+        if (!js_ValueToStringId(cx, Int32Value(i), &id)) {
+            SetBuiltinError(cx);
+            return false;
+        }
+    }
+
     if (!obj->deleteProperty(cx, id, &v, strict))
         SetBuiltinError(cx);
     return v.toBoolean();
