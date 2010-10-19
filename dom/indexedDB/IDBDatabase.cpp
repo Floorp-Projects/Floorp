@@ -396,6 +396,24 @@ void
 IDBDatabase::Invalidate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
+
+  // Cancel any quota prompts that are currently being displayed.
+  {
+    MutexAutoLock lock(*gPromptHelpersMutex);
+
+    if (gPromptHelpers) {
+      PRUint32 count = gPromptHelpers->Length();
+      for (PRUint32 index = 0; index < count; index++) {
+        nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
+        if (helper->WindowSerial() == Owner()->GetSerial()) {
+          helper->Cancel();
+          break;
+        }
+      }
+    }
+  }
+
   PR_AtomicSet(&mInvalidated, 1);
   CloseConnection();
 
