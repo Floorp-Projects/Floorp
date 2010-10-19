@@ -68,6 +68,7 @@ class nsIChannel;
 class mozIStorageService;
 class mozIStorageStatementCallback;
 class mozIStorageCompletionCallback;
+class mozIThirdPartyUtil;
 class ReadCookieDBListener;
 
 struct nsCookieAttributes;
@@ -229,9 +230,9 @@ class nsCookieService : public nsICookieService
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, PRBool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
-    void                          GetCookieStringInternal(nsIURI *aHostURI, nsIURI *aOriginatingURI, PRBool aHttpBound, nsCString &aCookie);
+    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, PRBool aHttpBound, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
-    void                          SetCookieStringInternal(nsIURI *aHostURI, nsIURI *aOriginatingURI, const nsCString &aCookieHeader, const nsCString &aServerTime, PRBool aFromHttp);
+    void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, const nsCString &aCookieHeader, const nsCString &aServerTime, PRBool aFromHttp);
     PRBool                        SetCookieInternal(nsIURI *aHostURI, const nsCString& aBaseDomain, PRBool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
     void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = NULL);
@@ -239,9 +240,8 @@ class nsCookieService : public nsICookieService
     void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed, mozIStorageBindingParamsArray *aParamsArray);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
-    PRBool                        IsForeign(const nsCString &aBaseDomain, PRBool aRequireHostMatch, nsIURI *aFirstURI);
-    void                          GetOriginatingURI(nsIChannel *aChannel, nsIURI **aURI);
-    CookieStatus                  CheckPrefs(nsIURI *aHostURI, nsIURI *aOriginatingURI, const nsCString &aBaseDomain, PRBool aRequireHostMatch, const char *aCookieHeader);
+    bool                          RequireThirdPartyCheck();
+    CookieStatus                  CheckPrefs(nsIURI *aHostURI, bool aIsForeign, const nsCString &aBaseDomain, PRBool aRequireHostMatch, const char *aCookieHeader);
     PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, PRBool aRequireHostMatch);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
@@ -256,6 +256,7 @@ class nsCookieService : public nsICookieService
     // cached members.
     nsCOMPtr<nsIObserverService>     mObserverService;
     nsCOMPtr<nsICookiePermission>    mPermissionService;
+    nsCOMPtr<mozIThirdPartyUtil>     mThirdPartyUtil;
     nsCOMPtr<nsIEffectiveTLDService> mTLDService;
     nsCOMPtr<nsIIDNService>          mIDNService;
     nsCOMPtr<mozIStorageService>     mStorageService;

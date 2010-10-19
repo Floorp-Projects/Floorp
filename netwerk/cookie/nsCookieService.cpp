@@ -66,6 +66,7 @@
 #include "nsILineInputStream.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
+#include "mozIThirdPartyUtil.h"
 
 #include "nsTArray.h"
 #include "nsCOMArray.h"
@@ -1096,11 +1097,13 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG(aCookie);
 
-  nsCOMPtr<nsIURI> originatingURI;
-  GetOriginatingURI(aChannel, getter_AddRefs(originatingURI));
+  // Determine whether the request is foreign. Failure is acceptable.
+  PRBool isForeign = true;
+  if (RequireThirdPartyCheck())
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsCAutoString result;
-  GetCookieStringInternal(aHostURI, originatingURI, aHttpBound, result);
+  GetCookieStringInternal(aHostURI, isForeign, aHttpBound, result);
   *aCookie = result.IsEmpty() ? nsnull : ToNewCString(result);
   return NS_OK;
 }
@@ -1136,19 +1139,21 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG(aCookieHeader);
 
-  nsCOMPtr<nsIURI> originatingURI;
-  GetOriginatingURI(aChannel, getter_AddRefs(originatingURI));
+  // Determine whether the request is foreign. Failure is acceptable.
+  PRBool isForeign = true;
+  if (RequireThirdPartyCheck())
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
-  SetCookieStringInternal(aHostURI, originatingURI, cookieString,
+  SetCookieStringInternal(aHostURI, isForeign, cookieString,
                           serverTime, aFromHttp);
   return NS_OK;
 }
 
 void
 nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
-                                         nsIURI          *aOriginatingURI,
+                                         bool             aIsForeign,
                                          const nsCString &aCookieHeader,
                                          const nsCString &aServerTime,
                                          PRBool           aFromHttp) 
@@ -1170,7 +1175,7 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   }
 
   // check default prefs
-  CookieStatus cookieStatus = CheckPrefs(aHostURI, aOriginatingURI, baseDomain,
+  CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, baseDomain,
                                          requireHostMatch, aCookieHeader.get());
   // fire a notification if cookie was rejected (but not if there was an error)
   switch (cookieStatus) {
@@ -1251,6 +1256,12 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
   PRBool boolval;
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
     mThirdPartySession = boolval;
+
+  // Lazily instantiate the third party service if necessary.
+  if (!mThirdPartyUtil && RequireThirdPartyCheck()) {
+    mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    NS_ABORT_IF_FALSE(mThirdPartyUtil, "require ThirdPartyUtil service");
+  }
 }
 
 /******************************************************************************
@@ -1884,7 +1895,7 @@ public:
 
 void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
-                                         nsIURI *aOriginatingURI,
+                                         bool aIsForeign,
                                          PRBool aHttpBound,
                                          nsCString &aCookieString)
 {
@@ -1911,7 +1922,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   }
 
   // check default prefs
-  CookieStatus cookieStatus = CheckPrefs(aHostURI, aOriginatingURI, baseDomain,
+  CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, baseDomain,
                                          requireHostMatch, nsnull);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
@@ -2593,52 +2604,16 @@ static inline PRBool IsSubdomainOf(const nsCString &a, const nsCString &b)
   return PR_FALSE;
 }
 
-PRBool
-nsCookieService::IsForeign(const nsCString &aBaseDomain,
-                           PRBool           aRequireHostMatch,
-                           nsIURI          *aFirstURI)
+bool
+nsCookieService::RequireThirdPartyCheck()
 {
-  nsCAutoString firstHost;
-  if (NS_FAILED(aFirstURI->GetAsciiHost(firstHost))) {
-    // assume foreign
-    return PR_TRUE;
-  }
-
-  // trim any trailing dot
-  if (!firstHost.IsEmpty() && firstHost.Last() == '.')
-    firstHost.Truncate(firstHost.Length() - 1);
-
-  // check whether the host is either an IP address, an alias such as
-  // 'localhost', an eTLD such as 'co.uk', or the empty string. in these
-  // cases, require an exact string match for the domain. note that the base
-  // domain parameter will be equivalent to the host in this case.
-  if (aRequireHostMatch)
-    return !firstHost.Equals(aBaseDomain);
-
-  // ensure the originating domain is also derived from the host's base domain.
-  return !IsSubdomainOf(firstHost, aBaseDomain);
-}
-
-void
-nsCookieService::GetOriginatingURI(nsIChannel *aChannel,
-                                   nsIURI **aURI)
-{
-  // Determine the originating URI. We only need to do this if we're
-  // rejecting or altering the lifetime of third-party cookies.
-  if (mCookieBehavior != BEHAVIOR_REJECTFOREIGN && !mThirdPartySession)
-    return;
-
-  if (!mPermissionService) {
-    NS_WARNING("nsICookiePermission unavailable! Cookie may be rejected");
-    return;
-  }
-
-  mPermissionService->GetOriginatingURI(aChannel, aURI);
+  // 'true' iff we need to perform a third party test.
+  return mCookieBehavior == BEHAVIOR_REJECTFOREIGN || mThirdPartySession;
 }
 
 CookieStatus
 nsCookieService::CheckPrefs(nsIURI          *aHostURI,
-                            nsIURI          *aOriginatingURI,
+                            bool             aIsForeign,
                             const nsCString &aBaseDomain,
                             PRBool           aRequireHostMatch,
                             const char      *aCookieHeader)
@@ -2679,16 +2654,13 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     return STATUS_REJECTED;
   }
 
-  if (mCookieBehavior == BEHAVIOR_REJECTFOREIGN || mThirdPartySession) {
+  if (RequireThirdPartyCheck() && aIsForeign) {
     // check if cookie is foreign
-    if (!aOriginatingURI ||
-        IsForeign(aBaseDomain, aRequireHostMatch, aOriginatingURI)) {
-      if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
-        return STATUS_ACCEPT_SESSION;
+    if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
+      return STATUS_ACCEPT_SESSION;
 
-      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
-      return STATUS_REJECTED;
-    }
+    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
+    return STATUS_REJECTED;
   }
 
   // if nothing has complained, accept cookie
