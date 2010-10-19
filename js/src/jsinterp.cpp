@@ -2460,7 +2460,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     CHECK_INTERRUPT_HANDLER();
 
     JS_ASSERT(!script->isEmpty());
-    JS_ASSERT(script->length > 1);
+    JS_ASSERT(script->length >= 1);
 
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
     bool leaveOnSafePoint = (interpMode == JSINTERP_SAFEPOINT);
