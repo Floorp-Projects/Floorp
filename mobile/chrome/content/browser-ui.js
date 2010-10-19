@@ -1020,15 +1020,7 @@ var BrowserUI = {
       }
       case "cmd_opensearch":
         this.blurFocusedElement();
-
-        MenuListHelperUI.show({
-          title: Elements.browserBundle.getString("opensearch.searchWith"),
-          menupopup: { children: BrowserSearch.engines },
-          set selectedIndex(aIndex) {
-            let name = this.menupopup.children[aIndex].label;
-            BrowserUI.doOpenSearch(name);
-          }
-        });
+        BrowserSearch.toggle();
         break;
       case "cmd_bookmarks":
         this.activePanel = BookmarkList;
