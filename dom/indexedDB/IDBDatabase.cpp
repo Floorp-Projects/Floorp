@@ -250,7 +250,7 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
 
   db->mConnection.swap(aConnection);
 
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetInstance();
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never be null!");
 
   if (!mgr->RegisterDatabase(db)) {
@@ -276,7 +276,7 @@ IDBDatabase::IDBDatabase()
 IDBDatabase::~IDBDatabase()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetInstance();
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   if (mgr) {
     mgr->UnregisterDatabase(this);
   }
@@ -287,7 +287,7 @@ IDBDatabase::~IDBDatabase()
 
   CloseConnection();
 
-  if (mDatabaseId) {
+  if (mDatabaseId && !mInvalidated) {
     DatabaseInfo* info;
     if (!DatabaseInfo::Get(mDatabaseId, &info)) {
       NS_ERROR("This should never fail!");
@@ -398,22 +398,22 @@ IDBDatabase::Invalidate()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   PR_AtomicSet(&mInvalidated, 1);
   CloseConnection();
+
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+  }
+
+  NS_ASSERTION(info->referenceCount, "Bad reference count!");
+  if (--info->referenceCount == 0) {
+    DatabaseInfo::Remove(mDatabaseId);
+  }
 }
 
 bool
 IDBDatabase::IsInvalidated()
 {
   return !!mInvalidated;
-}
-
-void
-IDBDatabase::WaitForConnectionReleased()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  TransactionThreadPool* threadPool = TransactionThreadPool::Get();
-  if (threadPool) {
-    threadPool->WaitForAllTransactionsToComplete(this);
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)

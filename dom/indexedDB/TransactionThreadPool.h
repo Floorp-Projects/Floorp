@@ -44,6 +44,7 @@
 #include "IndexedDatabase.h"
 
 #include "nsIObserver.h"
+#include "nsIRunnable.h"
 
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
@@ -53,7 +54,6 @@
 
 #include "IDBTransaction.h"
 
-class nsIRunnable;
 class nsIThreadPool;
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -61,17 +61,18 @@ BEGIN_INDEXEDDB_NAMESPACE
 class FinishTransactionRunnable;
 class QueuedDispatchInfo;
 
-class TransactionThreadPool : public nsIObserver
+class TransactionThreadPool
 {
+  friend class nsAutoPtr<TransactionThreadPool>;
   friend class FinishTransactionRunnable;
 
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
   // returns a non-owning ref!
   static TransactionThreadPool* GetOrCreate();
+
+  // returns a non-owning ref!
   static TransactionThreadPool* Get();
+
   static void Shutdown();
 
   nsresult Dispatch(IDBTransaction* aTransaction,
@@ -79,7 +80,12 @@ public:
                     bool aFinish,
                     nsIRunnable* aFinishRunnable);
 
-  void WaitForAllTransactionsToComplete(IDBDatabase* aDatabase);
+  typedef void (*DatabaseCompleteCallback)(IDBDatabase* aDatabase,
+                                           void* aClosure);
+
+  bool WaitForAllTransactionsToComplete(IDBDatabase* aDatabase,
+                                        DatabaseCompleteCallback aCallback,
+                                        void* aUserData);
 
 protected:
   class TransactionQueue : public nsIRunnable
@@ -136,6 +142,28 @@ protected:
     bool finish;
   };
 
+  class DatabaseCompleteCallbackRunnable : public nsIRunnable
+  {
+    friend class TransactionThreadPool;
+
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+
+    DatabaseCompleteCallbackRunnable(IDBDatabase* aDatabase,
+                                     DatabaseCompleteCallback aCallback,
+                                     void* aUserData)
+    : mDatabase(aDatabase),
+      mCallback(aCallback),
+      mUserData(aUserData)
+    { }
+
+  private:
+    nsRefPtr<IDBDatabase> mDatabase;
+    DatabaseCompleteCallback mCallback;
+    void* mUserData;
+  };
+
   TransactionThreadPool();
   ~TransactionThreadPool();
 
@@ -160,6 +188,8 @@ protected:
     mTransactionsInProgress;
 
   nsTArray<QueuedDispatchInfo> mDelayedDispatchQueue;
+
+  nsTArray<nsRefPtr<DatabaseCompleteCallbackRunnable> > mCompleteRunnables;
 };
 
 END_INDEXEDDB_NAMESPACE
