@@ -2701,18 +2701,19 @@ CType::Finalize(JSContext* cx, JSObject* obj)
       delete static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot));
     break;
   }
-  case TYPE_struct:
-    // Free the FieldInfo array.
+
+  case TYPE_struct: {
+    // Free the FieldInfoHash table.
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       void* info = JSVAL_TO_PRIVATE(slot);
       delete static_cast<FieldInfoHash*>(info);
     }
+  }
 
     // Fall through.
   case TYPE_array: {
     // Free the ffi_type info.
-    jsval slot;
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FFITYPE, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       ffi_type* ffiType = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
@@ -4023,21 +4024,18 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
          NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
     return JS_FALSE;
 
-  // Create a hash of FieldInfo objects to stash on the type object.
-  FieldInfoHash* fields(new FieldInfoHash);
-  if (!fields || !fields->init(len)) {
+  // Create a FieldInfoHash to stash on the type object, and an array to root
+  // its constituents. (We cannot simply stash the hash in a reserved slot now
+  // to get GC safety for free, since if anything in this function fails we
+  // do not want to mutate 'typeObj'.)
+  AutoPtr<FieldInfoHash> fields(new FieldInfoHash);
+  Array<jsval, 16> fieldRootsArray;
+  if (!fields || !fields->init(len) || !fieldRootsArray.appendN(JSVAL_VOID, len)) {
     JS_ReportOutOfMemory(cx);
-    delete fields;
     return JS_FALSE;
   }
-
-  // Stash the FieldInfo hash in a reserved slot now, for GC safety of its
-  // constituents.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
-         PRIVATE_TO_JSVAL(fields))) {
-    delete fields;
-    return JS_FALSE;
-  }
+  js::AutoArrayRooter fieldRoots(cx, fieldRootsArray.length(), 
+    fieldRootsArray.begin());
 
   // Process the field types.
   size_t structSize, structAlign;
@@ -4054,6 +4052,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
       JSString* name = ExtractStructField(cx, item.jsval_value(), &fieldType);
       if (!name)
         return JS_FALSE;
+      fieldRootsArray[i] = OBJECT_TO_JSVAL(fieldType);
 
       // Make sure each field name is unique, and add it to the hash.
       FieldInfoHash::AddPtr entryPtr = fields->lookupForAdd(name);
@@ -4110,6 +4109,11 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
   jsval sizeVal;
   if (!SizeTojsval(cx, structSize, &sizeVal))
     return JS_FALSE;
+
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
+         PRIVATE_TO_JSVAL(fields.get())))
+    return JS_FALSE;
+  fields.forget();
 
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, sizeVal) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
@@ -4347,8 +4351,9 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
 
   // Prepare a new array for the 'fields' property of the StructType.
   Array<jsval, 16> fieldsVec;
-  if (!fieldsVec.resize(len))
+  if (!fieldsVec.appendN(JSVAL_VOID, len))
     return NULL;
+  js::AutoArrayRooter root(cx, fieldsVec.length(), fieldsVec.begin());
 
   for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
     const FieldInfoHash::Entry& entry = r.front();
@@ -4800,13 +4805,10 @@ FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
     jsuint len;
     ASSERT_OK(JS_GetArrayLength(cx, arrayObj, &len));
 
-    if (!argTypes.resize(len)) {
+    if (!argTypes.appendN(JSVAL_VOID, len)) {
       JS_ReportOutOfMemory(cx);
       return JS_FALSE;
     }
-
-    for (jsuint i = 0; i < len; ++i)
-      argTypes[i] = JSVAL_VOID;
   }
 
   // Pull out the argument types from the array, if any.
@@ -5355,13 +5357,10 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
 
   // Set up an array for converted arguments.
   Array<jsval, 16> argv;
-  if (!argv.resize(cif->nargs)) {
+  if (!argv.appendN(JSVAL_VOID, cif->nargs)) {
     JS_ReportOutOfMemory(cx);
     return;
   }
-
-  for (JSUint32 i = 0; i < cif->nargs; ++i)
-    argv[i] = JSVAL_VOID;
 
   js::AutoArrayRooter roots(cx, argv.length(), argv.begin());
   for (JSUint32 i = 0; i < cif->nargs; ++i) {

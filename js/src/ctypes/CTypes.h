@@ -402,7 +402,7 @@ enum CTypeSlot {
   SLOT_ELEMENT_T = 7, // (ArrayTypes only) 'elementType' property
   SLOT_LENGTH    = 8, // (ArrayTypes only) 'length' property
   SLOT_FIELDS    = 7, // (StructTypes only) 'fields' property
-  SLOT_FIELDINFO = 8, // (StructTypes only) FieldInfo array
+  SLOT_FIELDINFO = 8, // (StructTypes only) FieldInfoHash table
   SLOT_FNINFO    = 7, // (FunctionTypes only) FunctionInfo struct
   SLOT_ARGS_T    = 8, // (FunctionTypes only) 'argTypes' property (cached)
   CTYPE_SLOTS
