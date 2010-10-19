@@ -261,11 +261,11 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-reload {
-  list-style-image: url("chrome://browser/skin/images/reload-30.png");
+  list-style-image: url("chrome://browser/skin/images/reload-hdpi.png");
 }
 
 #tool-stop {
-  list-style-image: url("chrome://browser/skin/images/stop-30.png");
+  list-style-image: url("chrome://browser/skin/images/stop-hdpi.png");
 }
 
 #tool-search {
