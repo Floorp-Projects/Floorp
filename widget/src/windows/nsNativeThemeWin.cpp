@@ -1418,6 +1418,42 @@ RENDER_AGAIN:
       nsUXThemeData::drawThemeBG(theme, hdc, gripPart, state, &widgetRect, &clipRect);
     }
   }
+  else if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
+           aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED)
+  {
+    // The caption buttons are drawn by the DWM, we just need to clear the area where they
+    // are because we might have drawn something above them (like a background-image).
+    ctx->Save();
+    ctx->ResetClip();
+    ctx->Translate(dr.pos);
+
+    // Create a rounded rectangle to follow the buttons' look.
+    gfxRect buttonbox1(0.0, 0.0, dr.size.width, dr.size.height - 2.0);
+    gfxRect buttonbox2(1.0, dr.size.height - 2.0, dr.size.width - 1.0, 1.0);
+    gfxRect buttonbox3(2.0, dr.size.height - 1.0, dr.size.width - 3.0, 1.0);
+
+    gfxContext::GraphicsOperator currentOp = ctx->CurrentOperator();
+    ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+
+   // Each rectangle is drawn individually because OPERATOR_CLEAR takes
+   // the fallback path to cairo_d2d_acquire_dest if the area to fill
+   // is a complex region.
+    ctx->NewPath();
+    ctx->Rectangle(buttonbox1, PR_TRUE);
+    ctx->Fill();
+
+    ctx->NewPath();
+    ctx->Rectangle(buttonbox2, PR_TRUE);
+    ctx->Fill();
+
+    ctx->NewPath();
+    ctx->Rectangle(buttonbox3, PR_TRUE);
+    ctx->Fill();
+
+    ctx->Restore();
+    ctx->SetOperator(currentOp);
+  }
+
 
   nativeDrawing.EndNativeDrawing();
 
