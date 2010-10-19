@@ -115,7 +115,7 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
   }
 }
 
-void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
+void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioData,
                                                          PRUint32 aAudioDataLength,
                                                          PRUint64 aEndTimeSampleOffset)
 {
@@ -133,7 +133,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
     }
     mSignalBufferLength = currentBufferSize;
   }
-  float* audioData = aAudioData;
+  SoundDataValue* audioData = aAudioData;
   PRUint32 audioDataLength = aAudioDataLength;
   PRUint32 signalBufferTail = mSignalBufferLength - mSignalBufferPosition;
 
@@ -147,8 +147,11 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
     }
 
     // Fill the signalBuffer.
-    memcpy(mSignalBuffer.get() + mSignalBufferPosition,
-           audioData, sizeof(float) * signalBufferTail);
+    PRUint32 i;
+    float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
+    for (i = 0; i < signalBufferTail; ++i) {
+      signalBuffer[i] = MOZ_CONVERT_SOUND_SAMPLE(audioData[i]);
+    }
     audioData += signalBufferTail;
     audioDataLength -= signalBufferTail;
 
@@ -187,8 +190,11 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
 
   if (audioDataLength > 0) {
     // Add data to the signalBuffer.
-    memcpy(mSignalBuffer.get() + mSignalBufferPosition,
-           audioData, sizeof(float) * audioDataLength);
+    PRUint32 i;
+    float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
+    for (i = 0; i < audioDataLength; ++i) {
+      signalBuffer[i] = MOZ_CONVERT_SOUND_SAMPLE(audioData[i]);
+    }
     mSignalBufferPosition += audioDataLength;
   }
 }

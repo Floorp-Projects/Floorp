@@ -496,12 +496,12 @@ PRUint32 nsBuiltinDecoderStateMachine::PlaySilence(PRUint32 aSamples,
   }
   PRUint32 maxSamples = SILENCE_BYTES_CHUNK / aChannels;
   PRUint32 samples = NS_MIN(aSamples, maxSamples);
-  PRUint32 numFloats = samples * aChannels;
-  nsAutoArrayPtr<float> buf(new float[numFloats]);
-  memset(buf.get(), 0, sizeof(float) * numFloats);
-  mAudioStream->Write(buf, numFloats, PR_TRUE);
+  PRUint32 numValues = samples * aChannels;
+  nsAutoArrayPtr<SoundDataValue> buf(new SoundDataValue[numValues]);
+  memset(buf.get(), 0, sizeof(SoundDataValue) * numValues);
+  mAudioStream->Write(buf, numValues, PR_TRUE);
   // Dispatch events to the DOM for the audio just written.
-  mEventManager.QueueWrittenAudioData(buf.get(), numFloats,
+  mEventManager.QueueWrittenAudioData(buf.get(), numValues,
                                       (aSampleOffset + samples) * aChannels);
   return samples;
 }
@@ -614,7 +614,7 @@ void nsBuiltinDecoderStateMachine::StartPlayback()
       mAudioStream = new nsAudioStream();
       mAudioStream->Init(info.mAudioChannels,
                          info.mAudioRate,
-                         nsAudioStream::FORMAT_FLOAT32);
+                         MOZ_SOUND_DATA_FORMAT);
       mAudioStream->SetVolume(mVolume);
     }
   }
