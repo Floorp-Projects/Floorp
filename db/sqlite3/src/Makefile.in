@@ -101,7 +101,8 @@ CSRCS = \
 # -DSQLITE_ENABLE_FTS3=1 enables the full-text index module.
 # -DSQLITE_CORE=1 statically links that module into the SQLite library.
 # -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
-# increases the page size from 1k, see bug 416330.
+# increases the page size from 1k, see bug 416330.  The value must stay in sync
+# with mozIStorageConnection::DEFAULT_PAGE_SIZE.
 # Note: Be sure to update the configure.in checks when these change!
 DEFINES = \
   -DSQLITE_SECURE_DELETE=1 \
