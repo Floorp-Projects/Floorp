@@ -41,6 +41,7 @@
   -moz-box-align: center;
   padding: 0 8px; /* core spacing */
   border: none;
+  background: #444444;
 }
 
 #toolbar-moveable-container[top="0"] {
@@ -117,10 +118,6 @@ toolbarbutton.urlbar-button {
 %endif
 
 /* URL bar ----------------------------------------------------------------- */
-#toolbar-main {
-  background-image: url("chrome://browser/skin/images/toolbar-bg.png");
-}
-
 #urlbar-container {
   color: #000;
   border-radius: 8px;
@@ -296,7 +293,7 @@ toolbarbutton.urlbar-button {
   padding: 0;
   -moz-border-start: 3px solid #262629;
   min-width: 80px !important;
-  background: #2e2e2f url("chrome://browser/skin/images/sidebar-bg.png") top left repeat-x;
+  background: #444444;
 }
 
 toolbarbutton.button-control {
@@ -822,7 +819,7 @@ autocompleteresult.noresults > .autocomplete-item-container {
 #tabs-container {
   padding-top: 8px;
   -moz-border-end: 3px solid #262629;
-  background: #2e2e2f url("chrome://browser/skin/images/sidebar-bg.png") top left repeat-x;
+  background: #444444;
 }
 
 #tabs:-moz-locale-dir(rtl) {
