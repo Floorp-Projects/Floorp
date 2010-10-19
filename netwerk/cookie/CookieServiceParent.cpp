@@ -61,28 +61,27 @@ CookieServiceParent::~CookieServiceParent()
 
 bool
 CookieServiceParent::RecvGetCookieString(const IPC::URI& aHost,
-                                         const IPC::URI& aOriginating,
+                                         const bool& aIsForeign,
                                          const bool& aFromHttp,
                                          nsCString* aResult)
 {
   if (!mCookieService)
     return true;
 
-  // Deserialize URIs. Having a host URI is mandatory and should always be
+  // Deserialize URI. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
   nsCOMPtr<nsIURI> hostURI(aHost);
-  nsCOMPtr<nsIURI> originatingURI(aOriginating);
   if (!hostURI)
     return false;
 
-  mCookieService->GetCookieStringInternal(hostURI, originatingURI,
+  mCookieService->GetCookieStringInternal(hostURI, aIsForeign,
                                           aFromHttp, *aResult);
   return true;
 }
 
 bool
 CookieServiceParent::RecvSetCookieString(const IPC::URI& aHost,
-                                         const IPC::URI& aOriginating,
+                                         const bool& aIsForeign,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
                                          const bool& aFromHttp)
@@ -90,14 +89,13 @@ CookieServiceParent::RecvSetCookieString(const IPC::URI& aHost,
   if (!mCookieService)
     return true;
 
-  // Deserialize URIs. Having a host URI is mandatory and should always be
+  // Deserialize URI. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
   nsCOMPtr<nsIURI> hostURI(aHost);
-  nsCOMPtr<nsIURI> originatingURI(aOriginating);
   if (!hostURI)
     return false;
 
-  mCookieService->SetCookieStringInternal(hostURI, originatingURI,
+  mCookieService->SetCookieStringInternal(hostURI, aIsForeign,
                                           aCookieString, aServerTime,
                                           aFromHttp);
   return true;
