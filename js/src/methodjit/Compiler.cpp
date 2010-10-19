@@ -98,6 +98,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 #if defined JS_MONOIC
     mics(ContextAllocPolicy(cx)),
     callICs(ContextAllocPolicy(cx)),
+    equalityICs(ContextAllocPolicy(cx)),
 #endif
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
@@ -361,6 +362,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #if defined JS_MONOIC
                         sizeof(ic::MICInfo) * mics.length() +
                         sizeof(ic::CallICInfo) * callICs.length() +
+                        sizeof(ic::EqualityICInfo) * equalityICs.length() +
 #endif
 #if defined JS_POLYIC
                         sizeof(ic::PICInfo) * pics.length() +
@@ -428,12 +430,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                 JS_ASSERT(jumpMap[offs].isValid());
                 scriptMICs[i].traceHint = fullCode.locationOf(mics[i].traceHint);
                 scriptMICs[i].load = fullCode.locationOf(jumpMap[offs]);
-                scriptMICs[i].u.hints.hasSlowTraceHintOne = mics[i].slowTraceHintOne.isSet();
-                if (mics[i].slowTraceHintOne.isSet())
-                    scriptMICs[i].slowTraceHintOne = stubCode.locationOf(mics[i].slowTraceHintOne.get());
-                scriptMICs[i].u.hints.hasSlowTraceHintTwo = mics[i].slowTraceHintTwo.isSet();
-                if (mics[i].slowTraceHintTwo.isSet())
-                    scriptMICs[i].slowTraceHintTwo = stubCode.locationOf(mics[i].slowTraceHintTwo.get());
+                scriptMICs[i].u.hints.hasSlowTraceHint = mics[i].slowTraceHint.isSet();
+                if (mics[i].slowTraceHint.isSet())
+                    scriptMICs[i].slowTraceHint = stubCode.locationOf(mics[i].slowTraceHint.get());
                 break;
               }
               default:
@@ -502,6 +501,34 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             stubCode.patch(callICs[i].addrLabel1, &cics[i]);
             stubCode.patch(callICs[i].addrLabel2, &cics[i]);
         } 
+    }
+
+    jit->nEqualityICs = equalityICs.length();
+    if (equalityICs.length()) {
+        jit->equalityICs = (ic::EqualityICInfo *)cursor;
+        cursor += sizeof(ic::EqualityICInfo) * equalityICs.length();
+    } else {
+        jit->equalityICs = NULL;
+    }
+
+    if (ic::EqualityICInfo *scriptEICs = jit->equalityICs) {
+        for (size_t i = 0; i < equalityICs.length(); i++) {
+            uint32 offs = uint32(equalityICs[i].jumpTarget - script->code);
+            JS_ASSERT(jumpMap[offs].isValid());
+            scriptEICs[i].target = fullCode.locationOf(jumpMap[offs]);
+            scriptEICs[i].stubEntry = stubCode.locationOf(equalityICs[i].stubEntry);
+            scriptEICs[i].stubCall = stubCode.locationOf(equalityICs[i].stubCall);
+            scriptEICs[i].stub = equalityICs[i].stub;
+            scriptEICs[i].lvr = equalityICs[i].lvr;
+            scriptEICs[i].rvr = equalityICs[i].rvr;
+            scriptEICs[i].tempReg = equalityICs[i].tempReg;
+            scriptEICs[i].cond = equalityICs[i].cond;
+            if (equalityICs[i].jumpToStub.isSet())
+                scriptEICs[i].jumpToStub = fullCode.locationOf(equalityICs[i].jumpToStub.get());
+            scriptEICs[i].fallThrough = fullCode.locationOf(equalityICs[i].fallThrough);
+            
+            stubCode.patch(equalityICs[i].addrLabel, &scriptEICs[i]);
+        }
     }
 #endif /* JS_MONOIC */
 
@@ -4277,21 +4304,17 @@ mjit::Compiler::jsop_instanceof()
  * after rejoin()s.
  */
 void
-mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne, Jump *slowTwo)
+mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 {
 #ifndef JS_TRACER
     jumpInScript(j, target);
-    if (slowOne)
-        stubcc.jumpInScript(*slowOne, target);
-    if (slowTwo)
-        stubcc.jumpInScript(*slowTwo, target);
+    if (slow)
+        stubcc.jumpInScript(*slow, target);
 #else
     if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
         jumpInScript(j, target);
-        if (slowOne)
-            stubcc.jumpInScript(*slowOne, target);
-        if (slowTwo)
-            stubcc.jumpInScript(*slowTwo, target);
+        if (slow)
+            stubcc.jumpInScript(*slow, target);
         return;
     }
 
@@ -4301,19 +4324,15 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne, Jump *sl
     mic.entry = masm.label();
     mic.jumpTarget = target;
     mic.traceHint = j;
-    if (slowOne)
-        mic.slowTraceHintOne = *slowOne;
-    if (slowTwo)
-        mic.slowTraceHintTwo = *slowTwo;
+    if (slow)
+        mic.slowTraceHint = *slow;
 # endif
 
     Label traceStart = stubcc.masm.label();
 
     stubcc.linkExitDirect(j, traceStart);
-    if (slowOne)
-        slowOne->linkTo(traceStart, &stubcc.masm);
-    if (slowTwo)
-        slowTwo->linkTo(traceStart, &stubcc.masm);
+    if (slow)
+        slow->linkTo(traceStart, &stubcc.masm);
 # if JS_MONOIC
     passMICAddress(mic);
 # endif

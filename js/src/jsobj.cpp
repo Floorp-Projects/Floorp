@@ -6570,6 +6570,7 @@ js_DumpObject(JSObject *obj)
     if (flags & JSObject::METHOD_BARRIER) fprintf(stderr, " method_barrier");
     if (flags & JSObject::INDEXED) fprintf(stderr, " indexed");
     if (flags & JSObject::OWN_SHAPE) fprintf(stderr, " own_shape");
+    if (flags & JSObject::HAS_EQUALITY) fprintf(stderr, " has_equality");
 
     bool anyFlags = flags != 0;
     if (obj->isNative()) {
