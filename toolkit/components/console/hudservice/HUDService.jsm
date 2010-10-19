@@ -228,7 +228,7 @@ ResponseListener.prototype =
 
     if (HUDService.saveRequestAndResponseBodies &&
         this.receivedData.length < RESPONSE_BODY_LIMIT) {
-    this.receivedData += data;
+      this.receivedData += data;
     }
 
     binaryOutputStream.writeBytes(data, aCount);
